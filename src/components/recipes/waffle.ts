@@ -1,6 +1,7 @@
 import type { CustomLayout } from "../stream/customLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
+import { createSafeDatum } from "./recipeUtils"
 
 export interface WaffleConfig {
   /** Number of rows in the grid. @default 10 */
@@ -113,6 +114,39 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
     floored[remainders[k % remainders.length].i].count += 1
   }
 
+  // Resolve string accessor names once for the datum-emit loop. Each
+  // cell's datum surfaces the category and the category's TOTAL value
+  // (not the per-cell count) under user-friendly keys so the default
+  // tooltip picks them up — without these, the cell datum only carried
+  // `_waffleCategory` / `_waffleIndex`, both underscore-prefixed and
+  // therefore filtered out as "internal" by the default tooltip's key
+  // scanner, producing empty tooltips. Mirrors the marimekko recipe's
+  // datum-shaping pattern.
+  const categoryKey = typeof cfg.categoryAccessor === "string" ? cfg.categoryAccessor : "category"
+  const valueKey = typeof cfg.valueAccessor === "string" ? cfg.valueAccessor : "value"
+  const buildCellDatum = (cat: string, cellIndex: number, count: number): Datum =>
+    createSafeDatum((set) => {
+      // Canonical keys so consumers writing portable tooltips can rely
+      // on `data.category` / `data.value` regardless of accessor names.
+      set("category", cat)
+      set("value", totals.get(cat) ?? 0)
+      // User-accessor names (when string-form) so a chart configured
+      // with `categoryAccessor: "region"` reads `data.region` in custom
+      // tooltips and tickFormats. Skip when the canonical key already
+      // matches so we don't double-write.
+      if (categoryKey !== "category") set(categoryKey, cat)
+      if (valueKey !== "value") set(valueKey, totals.get(cat) ?? 0)
+      // The per-category cell count (how many grid cells this category
+      // occupies) is occasionally what a custom tooltip wants — pass it
+      // through under an explicit name rather than burying it.
+      set("cells", count)
+      // Internal-by-convention. Preserved for any consumer that was
+      // already pattern-matching on these (the waffle layout has been
+      // shipped with them since v0).
+      set("_waffleCategory", cat)
+      set("_waffleIndex", cellIndex)
+    })
+
   const nodes: RectSceneNode[] = []
   let cellIndex = 0
   for (const slot of floored) {
@@ -129,7 +163,7 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
         w: cellW,
         h: cellH,
         style: { fill: color, stroke: "none" },
-        datum: { _waffleCategory: slot.cat, _waffleIndex: cellIndex },
+        datum: buildCellDatum(slot.cat, cellIndex, slot.count),
         group: slot.cat,
       })
       cellIndex++

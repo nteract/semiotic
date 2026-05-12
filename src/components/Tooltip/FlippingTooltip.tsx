@@ -1,4 +1,5 @@
 import * as React from "react"
+import { defaultTooltipStyle } from "./Tooltip"
 
 interface FlippingTooltipProps {
   /** X position within the chart area (relative to margin.left) */
@@ -20,12 +21,75 @@ interface FlippingTooltipProps {
 }
 
 /**
+ * True when the tooltip content's root element looks like the
+ * consumer is handling chrome themselves. Three signals, any one of
+ * which is enough:
+ *
+ *   1. A non-empty `className`. Three real cases that all hit this:
+ *      `.semiotic-tooltip` from the shared helpers; bespoke classes
+ *      like `.tooltip-content` whose chrome lives in a CSS file the
+ *      consumer ships alongside the chart; per-chart custom classes
+ *      for theming. We can't inspect computed CSS to know for sure,
+ *      but ANY className is a strong intent signal — the consumer
+ *      reached for the class hook because they're styling it.
+ *   2. An inline `background` declaration on `style`. Catches the
+ *      Landing-page gallery pattern (`style={{ background: "white",
+ *      ... }}` with no className).
+ *   3. An inline `backgroundColor` declaration on `style`. Same
+ *      intent as (2) just spelled differently.
+ *
+ * When none of these fire, `FlippingTooltip` paints
+ * `defaultTooltipStyle` on its own wrapper so the tooltip can never
+ * come out chrome-less. The footgun this guards against: chart-
+ * specific `tooltipContent` callbacks have recurringly returned
+ * `<div style={{ minWidth: 160 }}>...</div>` — no class, no
+ * background, just sizing — producing transparent floating boxes
+ * (the ProcessSankey and original-DifferenceChart regressions).
+ *
+ * The "any className" rule was originally narrower ("only the exact
+ * `.semiotic-tooltip` word"), but that mis-fired on consumers using
+ * CSS-class-only chrome — the `/cookbook/canvas-interaction` example
+ * uses `className="tooltip-content"` with the actual chrome in a
+ * sibling CSS file. The narrow rule was double-wrapping that. The
+ * broader rule trusts the consumer's intent when they reached for
+ * the class hook, at the cost of letting through a genuinely chrome-
+ * less classed div — which is an acceptable trade for the recurring
+ * "extra black box around the user's tooltip" regression.
+ */
+function hasOwnChrome(node: React.ReactNode): boolean {
+  if (!React.isValidElement(node)) return false
+  const props = node.props as { className?: unknown; style?: React.CSSProperties }
+  if (typeof props.className === "string" && props.className.trim().length > 0) return true
+  const style = props.style
+  if (style && typeof style === "object") {
+    if (style.background != null && style.background !== "") return true
+    if (style.backgroundColor != null && style.backgroundColor !== "") return true
+  }
+  return false
+}
+
+/**
  * Viewport-aware tooltip wrapper that flips horizontally and vertically
  * when the tooltip would overflow the chart container.
  *
  * On first render, uses a heuristic (similar to the old 70%/30% thresholds).
  * After measuring the actual tooltip size via ref, repositions precisely to
  * prevent clipping against container edges.
+ *
+ * Two defensive behaviors:
+ *
+ *   - **Chrome guarantee.** If the rendered tooltip content lacks the
+ *     `semiotic-tooltip` className on its root, the wrapper applies
+ *     `defaultTooltipStyle` to itself so the tooltip always has a
+ *     visible background, padding, and shadow. Shared tooltip helpers
+ *     keep working unchanged (their `semiotic-tooltip` class causes the
+ *     wrapper to stay transparent).
+ *   - **Non-finite position guard.** Returns `null` when `x` or `y` is
+ *     `NaN` / `Infinity`. The frame's hover plumbing can occasionally
+ *     produce a non-finite hit-test result during a scale rebuild or
+ *     when a custom layout emits a degenerate vertex; without the
+ *     guard, React throws `'NaN' is an invalid value for the 'top' css
+ *     style property` and the entire frame stops rendering.
  */
 export function FlippingTooltip({
   x,
@@ -37,6 +101,14 @@ export function FlippingTooltip({
   className = "stream-frame-tooltip",
   zIndex = 1
 }: FlippingTooltipProps) {
+  // Position guard. The early-return form (before hooks) tripped React's
+  // "static flag" hook-order check when y oscillated between NaN and a
+  // finite number (the hover handler can emit either as a frame transitions
+  // through a degenerate hit-test). Treat the guard as a render-time
+  // decision instead so the hooks always run in the same order, and emit
+  // null at the very end when the position is unusable.
+  const positionFinite = Number.isFinite(x) && Number.isFinite(y)
+
   const ref = React.useRef<HTMLDivElement>(null)
   const [measured, setMeasured] = React.useState<{
     width: number
@@ -79,18 +151,35 @@ export function FlippingTooltip({
     transform = `translate(${tx}, ${ty})`
   }
 
+  // Chrome auto-apply: if the rendered content's root already carries
+  // `.semiotic-tooltip`, the user/helper handled chrome — don't double
+  // up. Otherwise apply `defaultTooltipStyle` to the wrapper itself so
+  // the tooltip is never transparent. `width: max-content` overrides
+  // the chrome's `maxWidth` constraint to keep the existing flip math
+  // working; the chrome's `wordWrap: break-word` still handles long
+  // tokens. `pointerEvents` is set on the wrapper regardless.
+  const ownsChrome = hasOwnChrome(children)
+  const chromeStyle = ownsChrome ? null : defaultTooltipStyle
+  const compositeClassName = ownsChrome ? className : `${className} semiotic-tooltip`.trim()
+  // Late guard return: bail AFTER all hooks have run so the hook call
+  // order stays stable across re-renders. An earlier early-return form
+  // (before useRef / useState / useLayoutEffect) tripped React's
+  // "Expected static flag was missing" check whenever y oscillated
+  // between NaN and a finite number.
+  if (!positionFinite) return null
   return (
     <div
       ref={ref}
-      className={className}
+      className={compositeClassName}
       style={{
+        ...(chromeStyle || {}),
         position: "absolute",
         left: margin.left + x,
         top: margin.top + y,
         transform,
         pointerEvents: "none",
         zIndex,
-        width: "max-content"
+        width: "max-content",
       }}
     >
       {children}
