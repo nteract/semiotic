@@ -73,6 +73,49 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     expect(wrapper.style.background).toBe("")
   })
 
+  it("respects an inline `background` style as chrome ownership (no double-wrap)", () => {
+    // Regression: Landing-page gallery tooltips paint their own chrome
+    // via `style={{ background: "white", padding: ... }}` without
+    // adding the `.semiotic-tooltip` class. The auto-chrome path was
+    // wrapping those in a dark `defaultTooltipStyle` outer box,
+    // visible as a black strip around the user's tooltip.
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <div style={{ background: "white", padding: "8px 12px", color: "#333" }}>
+          Custom-styled
+        </div>
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    // Wrapper should NOT have its own background — chrome ownership
+    // detected via the inline style.
+    expect(wrapper.style.background).toBe("")
+  })
+
+  it("respects an inline `backgroundColor` style as chrome ownership", () => {
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <div style={{ backgroundColor: "#222", color: "white", padding: 8 }}>
+          Pre-styled via backgroundColor
+        </div>
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBe("")
+  })
+
+  it("still applies chrome when style is set but background is not", () => {
+    // A user style with only padding / fontSize is still chrome-less;
+    // wrap it. Pinning so the detection doesn't over-fire.
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <div style={{ padding: 8, fontSize: 12 }}>plain</div>
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBeTruthy()
+  })
+
   it("auto-applies chrome when content is a plain text node", () => {
     const { container } = render(
       <FlippingTooltip {...baseProps}>just a string</FlippingTooltip>

@@ -21,26 +21,41 @@ interface FlippingTooltipProps {
 }
 
 /**
- * True when `node` is a React element whose root has `semiotic-tooltip`
- * in its className — i.e., the tooltip producer already applied its own
- * chrome (background, padding, shadow, etc. from `defaultTooltipStyle`
- * or an equivalent inline rule). When the producer hasn't, this returns
- * false and `FlippingTooltip` paints the chrome on its own wrapper so
- * the tooltip can never come out transparent.
+ * True when `node` is a React element whose root already carries
+ * tooltip chrome — either via the canonical `.semiotic-tooltip`
+ * className (the shared helpers' pattern) OR via an inline
+ * `background` / `backgroundColor` style declaration. When neither
+ * is present, `FlippingTooltip` paints `defaultTooltipStyle` on its
+ * own wrapper so the tooltip can never come out chrome-less.
  *
  * Why this exists: chart-specific `tooltipContent` callbacks have
- * recurringly forgotten to include the `semiotic-tooltip` class +
- * `defaultTooltipStyle`, producing chrome-less floating divs (the
- * ProcessSankey and DifferenceChart regressions of 2026-05-12). The
- * shared `Tooltip()` / `MultiLineTooltip()` / `buildDefaultTooltip()`
+ * recurringly forgotten the `.semiotic-tooltip` class +
+ * `defaultTooltipStyle`, producing transparent floating divs (the
+ * ProcessSankey and DifferenceChart regressions of 2026-05-12).
+ * The shared `Tooltip()` / `MultiLineTooltip()` / `buildDefaultTooltip()`
  * helpers do it right; bespoke per-chart tooltips don't. Auto-applying
  * chrome at the wrapper level converts the "you forgot the wrapper"
  * footgun into a no-op.
+ *
+ * The inline-background fallback catches bespoke tooltips that paint
+ * their OWN visual chrome via `style={{ background: "white", ... }}`
+ * — applying `defaultTooltipStyle` on top of those wraps the user's
+ * tooltip in a second, contrasting box (the Landing-page gallery
+ * regression). The check is intentionally narrow: presence of either
+ * declaration is treated as "chrome handled" — no attempt to parse
+ * or validate the values, because partial declarations (just a
+ * background with no padding, etc.) are still the consumer's call.
  */
 function hasOwnChrome(node: React.ReactNode): boolean {
   if (!React.isValidElement(node)) return false
-  const cls = (node.props as { className?: unknown })?.className
-  return typeof cls === "string" && cls.split(/\s+/).includes("semiotic-tooltip")
+  const props = node.props as { className?: unknown; style?: React.CSSProperties }
+  if (typeof props.className === "string" && props.className.split(/\s+/).includes("semiotic-tooltip")) return true
+  const style = props.style
+  if (style && typeof style === "object") {
+    if (style.background != null && style.background !== "") return true
+    if (style.backgroundColor != null && style.backgroundColor !== "") return true
+  }
+  return false
 }
 
 /**
