@@ -239,21 +239,21 @@ describe("AreaChart", () => {
   // LineChart forecast tests and the hook's own unit tests.
   describe("seriesFeatures prop wiring", () => {
     it("accepts a forecast prop without crashing", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <AreaChart data={sampleData} forecast={{ trainEnd: 2, steps: 3 }} />
         </TooltipProvider>
       )
-      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+      expect(lastXYFrameProps).toMatchObject({ chartType: "area", data: sampleData })
     })
 
     it("accepts an anomaly prop without crashing", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <AreaChart data={sampleData} anomaly={{ threshold: 2 }} />
         </TooltipProvider>
       )
-      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+      expect(lastXYFrameProps).toMatchObject({ chartType: "area", data: sampleData })
     })
 
     it("does not inject annotations when forecast/anomaly are unset", () => {

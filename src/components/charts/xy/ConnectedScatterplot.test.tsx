@@ -207,21 +207,21 @@ describe("ConnectedScatterplot", () => {
   // smoke-level wiring so the props don't silently fall off.
   describe("seriesFeatures prop wiring", () => {
     it("accepts a forecast prop without crashing", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <ConnectedScatterplot data={sampleData} forecast={{ trainEnd: 2, steps: 3 }} />
         </TooltipProvider>
       )
-      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+      expect(lastXYFrameProps).toMatchObject({ chartType: "scatter", data: sampleData })
     })
 
     it("accepts an anomaly prop without crashing", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <ConnectedScatterplot data={sampleData} anomaly={{ threshold: 2 }} />
         </TooltipProvider>
       )
-      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+      expect(lastXYFrameProps).toMatchObject({ chartType: "scatter", data: sampleData })
     })
 
     it("forwards data to the frame untouched when forecast/anomaly are unset", () => {

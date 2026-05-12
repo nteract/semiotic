@@ -670,7 +670,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     // LineRow (line hover). For LineRow, `__sourceDatum` is absent;
     // look up the source row by x to recover both A and B values.
     const hd = hover.data as Datum | undefined
-    let xVal: number | undefined = hd?.__x as number | undefined
+    const xVal: number | undefined = hd?.__x as number | undefined
     let aVal: number | undefined = hd?.__valA as number | undefined
     let bVal: number | undefined = hd?.__valB as number | undefined
     if (xVal != null && (aVal == null || bVal == null)) {
