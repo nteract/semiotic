@@ -8,7 +8,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 
 // Mock ResizeObserver for jsdom
 if (typeof globalThis.ResizeObserver === "undefined") {
-  (globalThis as any).ResizeObserver = class {
+  (globalThis as unknown).ResizeObserver = class {
     observe() {}
     unobserve() {}
     disconnect() {}
@@ -638,7 +638,7 @@ describe("StreamOrdinalFrame", () => {
         }
       }
       const getMockCtx = () =>
-        (HTMLCanvasElement.prototype.getContext as any)() as CanvasContextMock
+        (HTMLCanvasElement.prototype.getContext as unknown)() as CanvasContextMock
 
       it("paints an explicit background color via fillRect", () => {
         const ctx = getMockCtx()

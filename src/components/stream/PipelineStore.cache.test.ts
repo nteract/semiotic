@@ -123,14 +123,14 @@ describe("resolveGroupColor after data changes", () => {
     const store = makeStore({
       colorScheme: ["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9"],
     })
-    const cap = (PipelineStore as any).GROUP_COLOR_MAP_CAP
+    const cap = (PipelineStore as unknown).GROUP_COLOR_MAP_CAP
     const total = cap + Math.floor(cap / 2)
     // Push well past the configured cap — prevents unbounded growth on streams with unique group IDs.
     for (let i = 0; i < total; i++) {
       store.resolveGroupColor(`g${i}`)
     }
     // Internal map bounded by the cap.
-    expect((store as any)._groupColorMap.size).toBeLessThanOrEqual(cap)
+    expect((store as unknown)._groupColorMap.size).toBeLessThanOrEqual(cap)
 
     // The most-recent group is still resolvable and holds its monotonically-assigned palette slot
     // (counter was `total - 1` at the time of that group's insertion).

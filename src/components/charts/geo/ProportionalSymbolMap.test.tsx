@@ -207,7 +207,7 @@ describe("ProportionalSymbolMap", () => {
       const bgAreas = [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [] } }]
       render(
         <Wrapper>
-          <ProportionalSymbolMap points={samplePoints} sizeBy="population" areas={bgAreas as any} />
+          <ProportionalSymbolMap points={samplePoints} sizeBy="population" areas={bgAreas as unknown} />
         </Wrapper>
       )
       expect(lastGeoFrameProps.areas).toBe(bgAreas)
@@ -219,7 +219,7 @@ describe("ProportionalSymbolMap", () => {
       const customStyle = { fill: "#eef", stroke: "#999" }
       render(
         <Wrapper>
-          <ProportionalSymbolMap points={samplePoints} sizeBy="population" areas={bgAreas as any} areaStyle={customStyle} />
+          <ProportionalSymbolMap points={samplePoints} sizeBy="population" areas={bgAreas as unknown} areaStyle={customStyle} />
         </Wrapper>
       )
       expect(lastGeoFrameProps.areaStyle).toBe(customStyle)

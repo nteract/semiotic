@@ -592,7 +592,7 @@ describe("Standalone SSR — Network node inference from edges", () => {
       chartType: "sankey",
       edges: sankeyEdges,
       size: [500, 300],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     // 4 unique nodes
@@ -607,7 +607,7 @@ describe("Standalone SSR — Network node inference from edges", () => {
       nodes: [{ id: "Revenue" }, { id: "Product" }, { id: "Services" }, { id: "Profit" }],
       edges: sankeyEdges,
       size: [500, 300],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect((svg.match(/<rect /g) || []).length).toBeGreaterThanOrEqual(4)
@@ -619,7 +619,7 @@ describe("Standalone SSR — Network node inference from edges", () => {
       chartType: "force",
       edges: networkEdges,
       size: [400, 400],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect((svg.match(/<circle /g) || []).length).toBeGreaterThanOrEqual(4)
@@ -630,7 +630,7 @@ describe("Standalone SSR — Network node inference from edges", () => {
       chartType: "sankey",
       edges: [],
       size: [500, 300],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect((svg.match(/<rect /g) || []).length).toBe(0)
@@ -701,7 +701,7 @@ describe("SSR mark count contracts", () => {
       chartType: "sankey",
       edges,
       size: [500, 300],
-    } as any)
+    } as unknown)
 
     expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
     // 4 unique nodes → 4 rects
@@ -748,10 +748,10 @@ const geoLines = [
 describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
   it("renders area polygons as SVG path elements", () => {
     const svg = renderGeoToStaticSVG({
-      areas: geoAreas as any,
+      areas: geoAreas as unknown,
       projection: "equalEarth",
       size: [600, 400],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect(svg).not.toContain("<canvas")
@@ -766,7 +766,7 @@ describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
       yAccessor: "lat",
       projection: "equalEarth",
       size: [600, 400],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect(svg).not.toContain("<canvas")
@@ -782,7 +782,7 @@ describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
       lineDataAccessor: "coordinates",
       projection: "equalEarth",
       size: [600, 400],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect(svg).not.toContain("<canvas")
@@ -791,13 +791,13 @@ describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
 
   it("renders areas + points together", () => {
     const svg = renderGeoToStaticSVG({
-      areas: geoAreas as any,
+      areas: geoAreas as unknown,
       points: geoPoints,
       xAccessor: "lon",
       yAccessor: "lat",
       projection: "equalEarth",
       size: [600, 400],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     // At least 3 area paths + 3 point circles
@@ -809,7 +809,7 @@ describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
     const svg = renderGeoToStaticSVG({
       projection: "equalEarth",
       size: [600, 400],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect((svg.match(/<path /g) || []).length).toBe(0)
@@ -818,22 +818,22 @@ describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
 
   it("renders title text when provided", () => {
     const svg = renderGeoToStaticSVG({
-      areas: geoAreas as any,
+      areas: geoAreas as unknown,
       projection: "equalEarth",
       size: [600, 400],
       title: "World GDP",
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("World GDP")
   })
 
   it("applies className to SVG element", () => {
     const svg = renderGeoToStaticSVG({
-      areas: geoAreas as any,
+      areas: geoAreas as unknown,
       projection: "equalEarth",
       size: [600, 400],
       className: "my-geo-chart",
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("my-geo-chart")
     expect(svg).toContain("stream-geo-frame")
@@ -841,10 +841,10 @@ describe("Standalone SSR — Geo Charts (renderGeoToStaticSVG)", () => {
 
   it("supports mercator projection", () => {
     const svg = renderGeoToStaticSVG({
-      areas: geoAreas as any,
+      areas: geoAreas as unknown,
       projection: "mercator",
       size: [600, 400],
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect((svg.match(/<path /g) || []).length).toBeGreaterThanOrEqual(3)
@@ -863,10 +863,10 @@ describe("SSR mark count contracts — Geo", () => {
         }
       }))
       const svg = renderGeoToStaticSVG({
-        areas: areas as any,
+        areas: areas as unknown,
         projection: "equalEarth",
         size: [600, 400],
-      } as any)
+      } as unknown)
       expect((svg.match(/<path /g) || []).length).toBe(n)
     }
   })
@@ -883,7 +883,7 @@ describe("SSR mark count contracts — Geo", () => {
         yAccessor: "lat",
         projection: "equalEarth",
         size: [600, 400],
-      } as any)
+      } as unknown)
       expect((svg.match(/<circle /g) || []).length).toBe(n)
     }
   })

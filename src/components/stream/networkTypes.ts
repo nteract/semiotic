@@ -316,6 +316,8 @@ export interface NetworkBezierEdge {
   bezierCache?: BezierCache
   style: Style
   datum: SceneDatum
+  /** Internal gradient used by circular sankey stub bands. */
+  _gradient?: { x0: number; x1: number; from: number; to: number }
   _pulseIntensity?: number
   _pulseColor?: string
   /** Lazily-built Path2D for hit testing; invalidated when pathD changes. */

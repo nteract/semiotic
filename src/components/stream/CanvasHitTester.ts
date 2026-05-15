@@ -253,7 +253,8 @@ function hitTestLine(node: LineSceneNode, px: number, py: number, maxDistance: n
   }
 
   // Use the larger of stroke-based tolerance and caller's maxDistance
-  const strokeWidth = (node.style as any)?.strokeWidth ?? (node.style as any)?.lineWidth ?? 1
+  const style = node.style as { strokeWidth?: number; lineWidth?: number }
+  const strokeWidth = style.strokeWidth ?? style.lineWidth ?? 1
   const tolerance = Math.max(5, strokeWidth / 2 + 2, maxDistance)
   if (dist > tolerance) return null
 

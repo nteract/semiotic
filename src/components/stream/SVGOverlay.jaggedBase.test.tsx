@@ -26,7 +26,7 @@ import { SVGUnderlay, SVGOverlay } from "./SVGOverlay"
 function makeStubScales(): { x: ((v: number) => number) & { ticks: (n: number) => number[] }, y: ((v: number) => number) & { ticks: (n: number) => number[] } } {
   const x = Object.assign((v: number) => v, { ticks: () => [0, 50, 100], domain: () => [0, 100] })
   const y = Object.assign((v: number) => v, { ticks: () => [4000, 5000], domain: () => [4000, 5000] })
-  return { x: x as any, y: y as any }
+  return { x: x as unknown, y: y as unknown }
 }
 
 const baseProps = {
@@ -45,7 +45,7 @@ describe("jaggedBase rendering", () => {
     const { container } = render(
       <SVGUnderlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         axes={[
           { orient: "left", baseline: false, jaggedBase: true },
@@ -77,7 +77,7 @@ describe("jaggedBase rendering", () => {
     const { container } = render(
       <SVGUnderlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         axes={[
           { orient: "left" },
@@ -101,7 +101,7 @@ describe("jaggedBase rendering", () => {
     const { container } = render(
       <SVGUnderlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         axes={[
           { orient: "left", baseline: false, jaggedBase: true },
@@ -119,7 +119,7 @@ describe("jaggedBase rendering", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         axes={[
           { orient: "left", baseline: false, jaggedBase: true },
@@ -143,7 +143,7 @@ describe("jaggedBase rendering", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         underlayRendered={true}
         axes={[
@@ -164,7 +164,7 @@ describe("jaggedBase rendering", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         showGrid={true}
         underlayRendered={true}
@@ -193,7 +193,7 @@ describe("jaggedBase rendering", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         underlayRendered={true}
         canvasObscuresUnderlay={false}
@@ -213,7 +213,7 @@ describe("jaggedBase rendering", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         showGrid={true}
         underlayRendered={true}

@@ -364,8 +364,8 @@ describe("LinkedCharts", () => {
 
     beforeEach(() => {
       captured = []
-      originalRO = (globalThis as any).ResizeObserver
-      ;(globalThis as any).ResizeObserver = class {
+      originalRO = (globalThis as unknown).ResizeObserver
+      ;(globalThis as unknown).ResizeObserver = class {
         constructor(private cb: ResizeObserverCallback) {}
         observe(target: Element) { captured.push({ target, cb: this.cb }) }
         unobserve() {}
@@ -373,7 +373,7 @@ describe("LinkedCharts", () => {
       }
     })
     afterEach(() => {
-      (globalThis as any).ResizeObserver = originalRO
+      (globalThis as unknown).ResizeObserver = originalRO
     })
 
     const fireResize = (w: number, h = 30) => {

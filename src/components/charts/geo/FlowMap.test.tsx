@@ -62,7 +62,7 @@ describe("FlowMap", () => {
   beforeEach(() => {
     lastGeoFrameProps = null
     Object.values(fakeFrameHandle).forEach((fn) => {
-      if (typeof (fn as any)?.mockClear === "function") (fn as any).mockClear()
+      if (typeof (fn as unknown)?.mockClear === "function") (fn as unknown).mockClear()
     })
   })
 
@@ -133,7 +133,7 @@ describe("FlowMap", () => {
       const areaStyle = { fill: "#eee", stroke: "#999" }
       render(
         <Wrapper>
-          <FlowMap nodes={sampleNodes} flows={sampleFlows} areas={areas as any} areaStyle={areaStyle} />
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} areas={areas as unknown} areaStyle={areaStyle} />
         </Wrapper>
       )
       expect(lastGeoFrameProps.areas).toBe(areas)
@@ -339,7 +339,7 @@ describe("FlowMap", () => {
       ref.current?.push({ source: "A", target: "B", passengers: 100 })
 
       expect(fakeFrameHandle.pushLine).toHaveBeenCalledTimes(1)
-      const line = (fakeFrameHandle.pushLine as any).mock.calls[0][0]
+      const line = (fakeFrameHandle.pushLine as unknown).mock.calls[0][0]
       expect(line.source).toBe("A")
       expect(line.target).toBe("B")
       expect(line.passengers).toBe(100)
@@ -412,7 +412,7 @@ describe("FlowMap", () => {
       ])
 
       expect(fakeFrameHandle.pushManyLines).toHaveBeenCalledTimes(1)
-      const lines = (fakeFrameHandle.pushManyLines as any).mock.calls[0][0]
+      const lines = (fakeFrameHandle.pushManyLines as unknown).mock.calls[0][0]
       expect(lines).toHaveLength(2)
     })
 

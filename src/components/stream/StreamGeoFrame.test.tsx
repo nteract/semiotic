@@ -72,9 +72,9 @@ describe("StreamGeoFrame — legend category emission", () => {
 
   beforeEach(() => {
     const ctx = createMockCanvasContext()
-    getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx as any)
-    if (!(globalThis as any).Path2D) {
-      (globalThis as any).Path2D = class { constructor() {} } as any
+    getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx as unknown)
+    if (!(globalThis as unknown).Path2D) {
+      (globalThis as unknown).Path2D = class { constructor() {} } as unknown
     }
   })
   afterEach(() => {

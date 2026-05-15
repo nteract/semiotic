@@ -683,7 +683,7 @@ describe("DifferenceChart accessor coercion", () => {
           data={[
             { x: "0", a: "10", b: "5" },
             { x: "1", a: "4", b: "9" },
-          ] as any}
+          ] as unknown}
           xAccessor="x"
           seriesAAccessor="a"
           seriesBAccessor="b"

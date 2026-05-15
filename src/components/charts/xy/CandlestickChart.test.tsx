@@ -184,7 +184,7 @@ describe("CandlestickChart", () => {
       const missingOpenClose = [{ t: 1, h: 15, l: 8 }, { t: 2, h: 18, l: 11 }]
       render(
         <TooltipProvider>
-          <CandlestickChart data={missingOpenClose as any} xAccessor="t"
+          <CandlestickChart data={missingOpenClose as unknown} xAccessor="t"
             openAccessor="o" highAccessor="h" lowAccessor="l" closeAccessor="c" />
         </TooltipProvider>
       )

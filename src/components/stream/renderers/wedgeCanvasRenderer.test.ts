@@ -98,7 +98,7 @@ describe("wedgeCanvasRenderer", () => {
     // asserting on `fill` call counts, which would break on any future
     // batching refactor that doesn't change what's actually painted.
     const ctx = createMockCtx()
-    const ops = recordCanvasOps(ctx as any)
+    const ops = recordCanvasOps(ctx as unknown)
     const node = makeWedge({
       style: { fill: "#e41a1c" },
       _pulseIntensity: 0.8,
@@ -112,7 +112,7 @@ describe("wedgeCanvasRenderer", () => {
 
   it("skips pulse overlay when _pulseIntensity is 0", () => {
     const ctx = createMockCtx()
-    const ops = recordCanvasOps(ctx as any)
+    const ops = recordCanvasOps(ctx as unknown)
     const node = makeWedge({ style: { fill: "#e41a1c" }, _pulseIntensity: 0 })
     wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
@@ -122,14 +122,14 @@ describe("wedgeCanvasRenderer", () => {
 
   it("skips non-wedge nodes", () => {
     const ctx = createMockCtx()
-    const rect = { type: "rect", x: 0, y: 0, width: 50, height: 100, style: {}, datum: {} } as any
+    const rect = { type: "rect", x: 0, y: 0, width: 50, height: 100, style: {}, datum: {} } as unknown
     wedgeCanvasRenderer(ctx, [rect], makeScales(), makeLayout())
     expect(ctx.fill).not.toHaveBeenCalled()
   })
 
   it("renders every wedge in the input list with its own fill", () => {
     const ctx = createMockCtx()
-    const ops = recordCanvasOps(ctx as any)
+    const ops = recordCanvasOps(ctx as unknown)
     const nodes = [
       makeWedge({ startAngle: 0, endAngle: Math.PI, style: { fill: "#e41a1c" } }),
       makeWedge({ startAngle: Math.PI, endAngle: 2 * Math.PI, style: { fill: "#377eb8" } })

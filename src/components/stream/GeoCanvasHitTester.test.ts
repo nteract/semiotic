@@ -11,11 +11,11 @@ function createMockHitCtx() {
     isPointInPath: vi.fn((path: Path2D, _x: number, _y: number) => {
       // Simulate: any path whose data starts with "M0" is "hit" for point (50,50)
       // We use the pathsInPoint set to control which paths register hits
-      return pathsInPoint.has((path as any).__testId)
+      return pathsInPoint.has((path as unknown).__testId)
     }),
     _registerHit: (id: string) => pathsInPoint.add(id),
     _clearHits: () => pathsInPoint.clear()
-  } as any
+  } as unknown
 }
 
 // Helper to create a Path2D mock that carries an ID
@@ -27,7 +27,7 @@ beforeEach(() => {
     constructor(d?: string) {
       this.__testId = d || `path-${counter++}`
     }
-  } as any
+  } as unknown
 })
 
 describe("findNearestGeoNode", () => {

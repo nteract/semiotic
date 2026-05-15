@@ -227,7 +227,7 @@ describe("Chart Repro — MultiAxisLineChart unitization", () => {
       let min = Infinity,
         max = -Infinity
       for (const d of multiAxisData) {
-        const v = (d as any)[s.yAccessor]
+        const v = (d as unknown)[s.yAccessor]
         if (v < min) min = v
         if (v > max) max = v
       }
@@ -238,7 +238,7 @@ describe("Chart Repro — MultiAxisLineChart unitization", () => {
     const result: Datum[] = []
     for (const d of multiAxisData) {
       for (let i = 0; i < 2; i++) {
-        const val = (d as any)[series[i].yAccessor]
+        const val = (d as unknown)[series[i].yAccessor]
         result.push({
           ...d,
           [UNITIZED_FIELD]: unitize(val, extents[i]),

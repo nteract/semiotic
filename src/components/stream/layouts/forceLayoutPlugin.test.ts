@@ -178,7 +178,7 @@ describe("forceLayoutPlugin", () => {
       iterations: 100
     }
     // Stash previous positions on config
-    ;(config as any).__previousPositions = prevPositions
+    ;(config as unknown).__previousPositions = prevPositions
 
     forceLayoutPlugin.computeLayout(nodes, edges, config, [600, 600])
 

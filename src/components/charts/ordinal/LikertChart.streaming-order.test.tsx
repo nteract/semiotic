@@ -7,7 +7,7 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
 // Mock ResizeObserver for jsdom
 if (typeof globalThis.ResizeObserver === "undefined") {
-  (globalThis as any).ResizeObserver = class {
+  (globalThis as unknown).ResizeObserver = class {
     observe() {}
     unobserve() {}
     disconnect() {}

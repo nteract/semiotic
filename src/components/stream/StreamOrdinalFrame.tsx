@@ -54,7 +54,7 @@ import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./u
 import { useStableShallow } from "./useStableShallow"
 import { resolveCSSColor } from "./renderers/resolveCSSColor"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
-import { FocusRing } from "./FocusRing"
+import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
@@ -704,7 +704,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // ── Keyboard navigation ───────────────────────────────────────────
 
     const kbFocusIndexRef = useRef(-1)
-    const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+    const focusedNavPointRef = useRef<{ shape?: FocusRingProps["shape"]; w?: number; h?: number } | null>(null)
     const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
 
     const onKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -886,7 +886,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const layout: OrdinalLayout = { width: adjustedWidth, height: adjustedHeight }
 
       for (const renderer of renderers) {
-        renderer(ctx, store.scene as any, store.scales as any, layout)
+        renderer(ctx, store.scene, store.scales, layout)
       }
 
       if (isRadial) {
@@ -1251,7 +1251,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           hoverPoint={hoverPoint}
           margin={margin}
           size={size}
-          shape={focusedNavPointRef.current?.shape as any}
+          shape={focusedNavPointRef.current?.shape}
           width={focusedNavPointRef.current?.w}
           height={focusedNavPointRef.current?.h}
         />

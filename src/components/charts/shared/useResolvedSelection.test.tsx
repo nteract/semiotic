@@ -15,7 +15,7 @@ describe("useResolvedSelection", () => {
     // light theme defaults provide selectionOpacity, so use a theme that
     // explicitly clears it for this case
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: undefined } as any }}>
+      <ThemeProvider theme={{ colors: { selectionOpacity: undefined } as unknown }}>
         {children}
       </ThemeProvider>
     )
@@ -25,7 +25,7 @@ describe("useResolvedSelection", () => {
 
   it("picks up the theme's colors.selectionOpacity as default unselectedOpacity", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as any }}>
+      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as unknown }}>
         {children}
       </ThemeProvider>
     )
@@ -39,7 +39,7 @@ describe("useResolvedSelection", () => {
 
   it("per-chart selection.unselectedOpacity overrides the theme", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as any }}>
+      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as unknown }}>
         {children}
       </ThemeProvider>
     )
@@ -52,7 +52,7 @@ describe("useResolvedSelection", () => {
 
   it("flows the theme value through wrapStyleWithSelection dimming", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: 0.1 } as any }}>
+      <ThemeProvider theme={{ colors: { selectionOpacity: 0.1 } as unknown }}>
         {children}
       </ThemeProvider>
     )
@@ -72,7 +72,7 @@ describe("useResolvedSelection", () => {
 
   it("preserves unselectedStyle and selectedStyle from the selection config", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as any }}>
+      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as unknown }}>
         {children}
       </ThemeProvider>
     )

@@ -10006,7 +10006,7 @@ var ZodObject = class _ZodObject extends ZodType {
   //         ...def.shape(),
   //         ...augmentation,
   //       }),
-  //     }) as any;
+  //     });
   //   };
   extend(augmentation) {
     return new _ZodObject({
@@ -10066,7 +10066,7 @@ var ZodObject = class _ZodObject extends ZodType {
   //     shape: () =>
   //       objectUtil.mergeShapes(this._def.shape(), merging._def.shape()),
   //     typeName: ZodFirstPartyTypeKind.ZodObject,
-  //   }) as any;
+  //   });
   //   return merged;
   // }
   setKey(key, schema2) {
@@ -10090,7 +10090,7 @@ var ZodObject = class _ZodObject extends ZodType {
   //     shape: () =>
   //       objectUtil.mergeShapes(this._def.shape(), merging._def.shape()),
   //     typeName: ZodFirstPartyTypeKind.ZodObject,
-  //   }) as any;
+  //   });
   //   return merged;
   // }
   catchall(index) {

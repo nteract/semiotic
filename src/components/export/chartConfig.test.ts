@@ -113,11 +113,11 @@ describe("fromConfig", () => {
   })
 
   it("throws for missing component", () => {
-    expect(() => fromConfig({ props: {}, version: "1", createdAt: "" } as any)).toThrow("missing component")
+    expect(() => fromConfig({ props: {}, version: "1", createdAt: "" } as unknown)).toThrow("missing component")
   })
 
   it("throws for missing props", () => {
-    expect(() => fromConfig({ component: "LineChart", version: "1", createdAt: "" } as any)).toThrow("missing component or props")
+    expect(() => fromConfig({ component: "LineChart", version: "1", createdAt: "" } as unknown)).toThrow("missing component or props")
   })
 
   it("throws for unknown component", () => {

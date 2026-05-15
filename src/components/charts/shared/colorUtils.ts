@@ -162,7 +162,7 @@ export function createColorScale(
   // Get unique stringified values. d3 ordinal scales stringify domain
   // entries internally (it's how the lookup table is keyed), so we do
   // it explicitly here to thread a `string[]` through the typed
-  // `scaleOrdinal<string, string>` constructor without an `as any`
+  // `scaleOrdinal<string, string>` constructor without an unsafe cast.
   // cast at the seam.
   const uniqueValues = Array.from(
     new Set(data.map(d => d?.[colorBy]).filter(v => v != null).map(v => String(v))),

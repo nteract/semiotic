@@ -6,7 +6,7 @@ describe("Swimlane extent padding", () => {
       chartType: "swimlane",
       windowSize: 100,
       windowMode: "sliding",
-      extentPadding: extentPadding as any,
+      extentPadding: extentPadding as unknown,
       projection: "horizontal",
       oAccessor: "lane",
       rAccessor: "value",
@@ -94,7 +94,7 @@ describe("Swimlane extent padding", () => {
     let maxRight = 0
     for (const node of store.scene) {
       if (node.type === "rect") {
-        const right = (node as any).x + (node as any).w
+        const right = (node as unknown).x + (node as unknown).w
         if (right > maxRight) maxRight = right
       }
     }

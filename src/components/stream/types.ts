@@ -145,6 +145,10 @@ export interface Style {
   icon?: HTMLImageElement | HTMLCanvasElement
   /** Padding between stamped icons */
   iconPadding?: number
+  /** Optional radius when style callbacks drive point size directly. */
+  r?: number
+  /** Internal geo line flag: fade line ends at projection clipping edges. */
+  _edgeFade?: boolean
 }
 
 export type SceneNode =

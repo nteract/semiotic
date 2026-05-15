@@ -47,16 +47,16 @@ const networkEdges = [{ source: "a", target: "b" }, { source: "b", target: "c" }
 const FRAME_RENDERERS = {
   xy: (extra: Record<string, unknown> = {}) => renderXYToStaticSVG({
     chartType: "line", data: xyData, xAccessor: "x", yAccessor: "y", size: [400, 300], ...extra,
-  } as any),
+  } as unknown),
   ordinal: (extra: Record<string, unknown> = {}) => renderOrdinalToStaticSVG({
     chartType: "bar", data: ordinalData, oAccessor: "c", rAccessor: "v", size: [400, 300], ...extra,
-  } as any),
+  } as unknown),
   network: (extra: Record<string, unknown> = {}) => renderNetworkToStaticSVG({
     chartType: "force", edges: networkEdges, nodeIDAccessor: "id", size: [400, 300], ...extra,
-  } as any),
+  } as unknown),
   geo: (extra: Record<string, unknown> = {}) => renderGeoToStaticSVG({
     chartType: "geo", areas: [], size: [400, 300], ...extra,
-  } as any),
+  } as unknown),
 }
 
 // ── Title / description (accessibility) ───────────────────────────────
@@ -161,7 +161,7 @@ describe("SSR feature parity: annotations", () => {
       }],
       size: [400, 300],
       annotations: [{ type: "label", coordinates: [5, 5], label: "PROBE" }],
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-annotations")
     expect(svg).toContain("PROBE")
   })
@@ -240,7 +240,7 @@ describe("SSR feature parity: legend", () => {
       colorBy: "status",
       showLegend: true,
       size: [400, 300],
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-legend")
   })
 
@@ -255,7 +255,7 @@ describe("SSR feature parity: legend", () => {
       colorBy: "region",
       showLegend: true,
       size: [400, 300],
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-legend")
   })
 })

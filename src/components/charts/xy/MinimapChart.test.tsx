@@ -33,8 +33,8 @@ describe("MinimapChart", () => {
     vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
   })
   afterEach(() => {
-    if ((window.requestAnimationFrame as any).mockRestore) (window.requestAnimationFrame as any).mockRestore()
-    if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
+    if ((window.requestAnimationFrame as unknown).mockRestore) (window.requestAnimationFrame as unknown).mockRestore()
+    if ((window.cancelAnimationFrame as unknown).mockRestore) (window.cancelAnimationFrame as unknown).mockRestore()
   })
 
   const sampleData = [

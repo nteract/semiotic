@@ -60,7 +60,7 @@ describe("StackedBarChart", () => {
   it("shows error when stackBy is missing", () => {
     const { container } = render(
       <TooltipProvider>
-        <StackedBarChart data={sampleData} stackBy={undefined as any} />
+        <StackedBarChart data={sampleData} stackBy={undefined as unknown} />
       </TooltipProvider>
     )
 

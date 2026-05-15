@@ -891,19 +891,26 @@ export function createDefaultAnnotationRules(
 
         // Prefer the raw ordinal band scale (available in ordinal frames via context.scales.o).
         // Fall back to checking x/y for band scales (XY frames with band axes).
-        const rawO = (context.scales as any)?.o
+        type BandLikeScale = {
+          (value: string): number | undefined
+          bandwidth: () => number
+        }
+        const isBandScale = (scale: unknown): scale is BandLikeScale =>
+          typeof scale === "function" &&
+          typeof (scale as { bandwidth?: unknown }).bandwidth === "function"
+        const rawO = context.scales?.o
         const oScale = context.scales?.x
         const altScale = context.scales?.y
-        const scale = rawO?.bandwidth
+        const scale = isBandScale(rawO)
           ? rawO
-          : (oScale as any)?.bandwidth ? oScale
-          : (altScale as any)?.bandwidth ? altScale
+          : isBandScale(oScale) ? oScale
+          : isBandScale(altScale) ? altScale
           : null
         if (!scale) return null
 
-        const pos = scale(catValue)
+        const pos = scale(String(catValue))
         if (pos == null) return null
-        const bandwidth = (scale as any).bandwidth()
+        const bandwidth = scale.bandwidth()
         // Determine orientation: use projection from context (ordinal frames),
         // or fall back to checking which axis has the band scale (XY frames)
         const isVertical = context.projection

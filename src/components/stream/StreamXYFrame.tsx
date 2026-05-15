@@ -35,7 +35,7 @@ import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./u
 import { useStableShallow } from "./useStableShallow"
 import { resolveCSSColor } from "./renderers/resolveCSSColor"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
-import { FocusRing } from "./FocusRing"
+import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 
@@ -325,7 +325,7 @@ function drawLineHighlight(
   if (!hoveredNode) return
 
   // Find the group of the hovered line
-  const hoveredGroup = (hoveredNode as any).group
+  const hoveredGroup = "group" in hoveredNode ? hoveredNode.group : undefined
   if (hoveredGroup === undefined) return
 
   // Re-draw all lines in the same group with highlight style
@@ -827,12 +827,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const key = typeof lineDataAccessor === "string" ? lineDataAccessor : "coordinates"
         const hasCoords = safeData[0][key]
         if (Array.isArray(hasCoords)) {
-          const flat: any[] = []
+          const flat: Datum[] = []
           for (const line of safeData) {
-            const coords = (line as any)[key]
+            const coords = line[key]
             if (Array.isArray(coords)) {
               // Stamp group key onto each datum for grouping
-              const groupKey = (line as any).label || (line as any).id || (line as any).key
+              const groupKey = line.label || line.id || line.key
               if (groupKey != null) {
                 for (const c of coords) flat.push({ ...c, _lineGroup: groupKey })
               } else {
@@ -1013,7 +1013,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // ── Keyboard navigation ───────────────────────────────────────────
 
     const kbFocusIndexRef = useRef(-1)
-    const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+    const focusedNavPointRef = useRef<{ shape?: FocusRingProps["shape"]; w?: number; h?: number } | null>(null)
     const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
 
     const onKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -1363,7 +1363,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         hoverPoint={hoverPoint}
         margin={margin}
         size={size}
-        shape={fnp?.shape as any}
+        shape={fnp?.shape}
         width={fnp?.w}
         height={fnp?.h}
       />

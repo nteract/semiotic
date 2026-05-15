@@ -561,7 +561,7 @@ describe("defaultDivergingScheme", () => {
   })
 
   it("falls back to Carbon palette when scheme name is unknown", () => {
-    const palette = defaultDivergingScheme(5, "NotARealScheme" as any)
+    const palette = defaultDivergingScheme(5, "NotARealScheme" as unknown)
     expect(palette[0]).toBe("#da1e28")
   })
 

@@ -90,7 +90,7 @@ describe("Theme inlining", () => {
       rAccessor: "value",
       size: [400, 300],
       theme: "dark",
-    } as any)
+    } as unknown)
     // DARK_THEME uses #aaa for textSecondary
     expect(svg).toContain("#aaa")
     // DARK_THEME uses #555 for border
@@ -105,7 +105,7 @@ describe("Theme inlining", () => {
       rAccessor: "value",
       size: [400, 300],
       theme: "tufte",
-    } as any)
+    } as unknown)
     expect(svg).toContain("Georgia")
   })
 
@@ -117,7 +117,7 @@ describe("Theme inlining", () => {
       rAccessor: "value",
       size: [400, 300],
       theme: "carbon",
-    } as any)
+    } as unknown)
     expect(svg).toContain("IBM Plex Sans")
   })
 
@@ -129,7 +129,7 @@ describe("Theme inlining", () => {
       rAccessor: "value",
       size: [400, 300],
       theme: { colors: { primary: "#ff00ff" } },
-    } as any)
+    } as unknown)
     // Custom theme should still render with inherited light theme defaults
     expect(svg).toContain("<svg")
   })
@@ -142,7 +142,7 @@ describe("Theme inlining", () => {
       yAccessor: "y",
       size: [400, 300],
       theme: "journalist",
-    } as any)
+    } as unknown)
     expect(svg).toContain("Franklin Gothic")
   })
 
@@ -153,7 +153,7 @@ describe("Theme inlining", () => {
       edges: [{ source: "A", target: "B" }],
       size: [400, 400],
       theme: "dark",
-    } as any)
+    } as unknown)
     expect(svg).toContain("sans-serif")
   })
 
@@ -164,7 +164,7 @@ describe("Theme inlining", () => {
       xAccessor: "x",
       yAccessor: "y",
       size: [300, 200],
-    } as any)).not.toThrow()
+    } as unknown)).not.toThrow()
 
     expect(() => renderToStaticSVG("ordinal", {
       chartType: "bar",
@@ -172,21 +172,21 @@ describe("Theme inlining", () => {
       oAccessor: "category",
       rAccessor: "value",
       size: [300, 200],
-    } as any)).not.toThrow()
+    } as unknown)).not.toThrow()
 
     expect(() => renderToStaticSVG("network", {
       chartType: "force",
       nodes: [null, { id: "A" }, undefined, { id: "B" }],
       edges: [null, { source: "A", target: "B" }, undefined],
       size: [300, 200],
-    } as any)).not.toThrow()
+    } as unknown)).not.toThrow()
 
     expect(() => renderToStaticSVG("geo", {
       points: [null, { x: -122.4, y: 37.8 }, undefined],
       xAccessor: "x",
       yAccessor: "y",
       size: [300, 200],
-    } as any)).not.toThrow()
+    } as unknown)).not.toThrow()
   })
 })
 
@@ -225,7 +225,7 @@ describe("Accessibility", () => {
       oAccessor: "category",
       rAccessor: "value",
       description: "A bar chart showing revenue",
-    } as any)
+    } as unknown)
     expect(svg).toContain("<desc")
     expect(svg).toContain("A bar chart showing revenue")
     expect(svg).toContain('aria-labelledby')
@@ -240,7 +240,7 @@ describe("Accessibility", () => {
       rAccessor: "value",
       title: "Chart Title",
       description: "Chart description",
-    } as any)
+    } as unknown)
     expect(svg).toContain('aria-labelledby="semiotic-title semiotic-desc"')
   })
 
@@ -260,7 +260,7 @@ describe("Accessibility", () => {
       data: [{ x: 0, y: 10 }],
       xAccessor: "x",
       yAccessor: "y",
-    } as any)
+    } as unknown)
     expect(svg).toContain('role="img"')
   })
 
@@ -270,7 +270,7 @@ describe("Accessibility", () => {
       nodes: [{ id: "A" }],
       edges: [],
       size: [200, 200],
-    } as any)
+    } as unknown)
     expect(svg).toContain('role="img"')
   })
 })
@@ -288,7 +288,7 @@ describe("Grid lines", () => {
       yAccessor: "y",
       size: [400, 300],
       showGrid: true,
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-grid")
   })
 
@@ -299,7 +299,7 @@ describe("Grid lines", () => {
       xAccessor: "x",
       yAccessor: "y",
       size: [400, 300],
-    } as any)
+    } as unknown)
     expect(svg).not.toContain("semiotic-grid")
   })
 
@@ -311,7 +311,7 @@ describe("Grid lines", () => {
       rAccessor: "value",
       size: [400, 300],
       showGrid: true,
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-grid")
   })
 
@@ -324,7 +324,7 @@ describe("Grid lines", () => {
       projection: "horizontal",
       size: [400, 300],
       showGrid: true,
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-grid")
   })
 
@@ -337,7 +337,7 @@ describe("Grid lines", () => {
       projection: "radial",
       size: [400, 400],
       showGrid: true,
-    } as any)
+    } as unknown)
     expect(svg).not.toContain("semiotic-grid")
   })
 })
@@ -356,7 +356,7 @@ describe("Legend rendering", () => {
       colorAccessor: "group",
       size: [500, 300],
       showLegend: true,
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-legend")
     expect(svg).toContain(">X<")
     expect(svg).toContain(">Y<")
@@ -383,7 +383,7 @@ describe("Legend rendering", () => {
       colorAccessor: "color",
       size: [500, 300],
       showLegend: true,
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-legend")
     expect(svg).toContain(">A<")
     expect(svg).toContain(">B<")
@@ -397,7 +397,7 @@ describe("Legend rendering", () => {
       rAccessor: "value",
       size: [500, 300],
       showLegend: true,
-    } as any)
+    } as unknown)
     // No color accessor = no categories = no legend
     expect(svg).not.toContain("semiotic-legend")
   })
@@ -416,7 +416,7 @@ describe("Annotations in server SVG", () => {
       yAccessor: "y",
       size: [400, 300],
       annotations: [{ type: "y-threshold", value: 15, label: "Target", color: "#e45050" }],
-    } as any)
+    } as unknown)
     expect(svg).toContain("semiotic-annotations")
     expect(svg).toContain("Target")
     expect(svg).toContain("#e45050")
@@ -430,7 +430,7 @@ describe("Annotations in server SVG", () => {
       rAccessor: "value",
       size: [400, 300],
       annotations: [{ type: "y-threshold", value: 15, label: "Goal" }],
-    } as any)
+    } as unknown)
     expect(svg).toContain("Goal")
   })
 
@@ -445,7 +445,7 @@ describe("Annotations in server SVG", () => {
         { type: "y-threshold", value: 15, label: "Target" },
         { type: "x-threshold", value: 1, label: "Midpoint" },
       ],
-    } as any)
+    } as unknown)
     expect(svg).toContain("Target")
     expect(svg).toContain("Midpoint")
   })
@@ -718,7 +718,7 @@ describe("renderChart", () => {
   })
 
   it("throws for unknown component", () => {
-    expect(() => renderChart("UnknownChart" as any, {})).toThrow(
+    expect(() => renderChart("UnknownChart" as unknown, {})).toThrow(
       /Unknown chart component/
     )
   })
@@ -886,7 +886,7 @@ describe("Parity: renderChart vs frame-level API", () => {
       oAccessor: "category",
       rAccessor: "value",
       size: [400, 300],
-    } as any)
+    } as unknown)
 
     // Both should be valid SVGs with bars
     expect(hoc).toContain("<svg")
@@ -913,7 +913,7 @@ describe("Parity: renderChart vs frame-level API", () => {
       rAccessor: "value",
       projection: "radial",
       size: [400, 400],
-    } as any)
+    } as unknown)
 
     const hocPaths = countMatches(hoc, /<path /g)
     const framePaths = countMatches(frame, /<path /g)
@@ -930,7 +930,7 @@ describe("Parity: renderChart vs frame-level API", () => {
       chartType: "sankey",
       edges: networkEdges,
       size: [500, 300],
-    } as any)
+    } as unknown)
 
     const hocRects = countMatches(hoc, /<rect /g)
     const frameRects = countMatches(frame, /<rect /g)

@@ -8,6 +8,7 @@ import { vi } from "vitest"
  * directly via `ctx.fillRect.mock.calls` etc.
  */
 export type CanvasContextMock = Record<string, unknown>
+type CanvasMockFn = (...args: unknown[]) => unknown
 
 /**
  * Creates a mock 2D canvas rendering context with all commonly used
@@ -110,19 +111,19 @@ export function recordCanvasOps(ctx: CanvasContextMock): CanvasOpLog {
     strokeAlphas: [],
     strokeLineWidths: []
   }
-  const origFill = ctx.fill as (...args: any[]) => void
-  const origStroke = ctx.stroke as (...args: any[]) => void
-  ctx.fill = ((...args: any[]) => {
+  const origFill = ctx.fill as CanvasMockFn | undefined
+  const origStroke = ctx.stroke as CanvasMockFn | undefined
+  ctx.fill = (...args: unknown[]) => {
     log.fillStyles.push(String(ctx.fillStyle))
     log.fillAlphas.push(Number(ctx.globalAlpha))
     return origFill?.apply(ctx, args)
-  }) as any
-  ctx.stroke = ((...args: any[]) => {
+  }
+  ctx.stroke = (...args: unknown[]) => {
     log.strokeStyles.push(String(ctx.strokeStyle))
     log.strokeAlphas.push(Number(ctx.globalAlpha))
     log.strokeLineWidths.push(Number(ctx.lineWidth))
     return origStroke?.apply(ctx, args)
-  }) as any
+  }
   return log
 }
 
@@ -180,12 +181,16 @@ export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => voi
   // files via the shared HTMLCanvasElement.prototype / globalThis. The
   // helper's "restore the mocked globals" docstring is now accurate.
   const originalGetContext = HTMLCanvasElement.prototype.getContext
-  const path2DWasMissing = !(globalThis as any).Path2D
+  const path2DWasMissing = !globalThis.Path2D
 
-  ;(HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ctx)
+  HTMLCanvasElement.prototype.getContext = vi.fn(
+    () => ctx as unknown as CanvasRenderingContext2D
+  ) as unknown as HTMLCanvasElement["getContext"]
 
   if (path2DWasMissing) {
-    (globalThis as any).Path2D = class { constructor() {} }
+    globalThis.Path2D = class MockPath2D {
+      constructor(_path?: string | Path2D) {}
+    } as typeof Path2D
   }
 
   let rafSpy: ReturnType<typeof vi.spyOn> | undefined
@@ -242,7 +247,7 @@ export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => voi
   return () => {
     HTMLCanvasElement.prototype.getContext = originalGetContext
     if (path2DWasMissing) {
-      delete (globalThis as any).Path2D
+      Reflect.deleteProperty(globalThis, "Path2D")
     }
     if (rafSpy?.mockRestore) rafSpy.mockRestore()
     if (cafSpy?.mockRestore) cafSpy.mockRestore()

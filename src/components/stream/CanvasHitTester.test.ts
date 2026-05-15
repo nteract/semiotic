@@ -375,7 +375,7 @@ describe("findAllNodesAtX", () => {
       style: { fill: "orange" },
       datum: { id: "p1" },
     }
-    const results = findAllNodesAtX([point as any, lineA], 50, 30)
+    const results = findAllNodesAtX([point as unknown, lineA], 50, 30)
     expect(results).toHaveLength(1)
     expect(results[0].group).toBe("Series A")
   })

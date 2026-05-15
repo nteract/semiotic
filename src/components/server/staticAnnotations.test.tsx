@@ -17,7 +17,7 @@ function renderAnnotationsString(config: Parameters<typeof renderStaticAnnotatio
 const xScale = scaleLinear().domain([0, 100]).range([0, 400])
 const yScale = scaleLinear().domain([0, 100]).range([300, 0])
 const baseConfig = {
-  scales: { x: xScale as any, y: yScale as any },
+  scales: { x: xScale as unknown, y: yScale as unknown },
   layout: { width: 400, height: 300 },
   theme: LIGHT_THEME,
 }
@@ -28,7 +28,7 @@ describe("renderStaticAnnotations", () => {
   })
 
   it("returns null for undefined annotations", () => {
-    expect(renderStaticAnnotations({ ...baseConfig, annotations: undefined as any })).toBeNull()
+    expect(renderStaticAnnotations({ ...baseConfig, annotations: undefined as unknown })).toBeNull()
   })
 
   describe("y-threshold", () => {
@@ -89,7 +89,7 @@ describe("renderStaticAnnotations", () => {
     it("skips without x scale", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,
-        scales: { y: yScale as any },
+        scales: { y: yScale as unknown },
         annotations: [{ type: "x-threshold", value: 50 }],
       })
       expect(svg).toBe("")
@@ -169,7 +169,7 @@ describe("renderStaticAnnotations", () => {
       )
       const svg = renderAnnotationsString({
         ...baseConfig,
-        scales: { o: bandScale as any },
+        scales: { o: bandScale as unknown },
         annotations: [{ type: "category-highlight", category: "A", color: "#ff6600" }],
       })
       expect(svg).toContain("<rect")

@@ -160,12 +160,12 @@ describe("pipelineTransitions — candlestick", () => {
     // still in the scene, snapshotPositions must not reassign them an
     // index-based id (which would reshuffle which stub matches which key).
     const exitStub = makeCandle({
-      datum: null as any,
+      datum: null as unknown,
       _transitionKey: "c:7",
     })
     expect(getNodeIdentity(ctx, exitStub, 0)).toBe("c:7")
     // Index-based fallback only kicks in when neither datum nor key is set.
-    const stranded = makeCandle({ datum: null as any })
+    const stranded = makeCandle({ datum: null as unknown })
     expect(getNodeIdentity(ctx, stranded, 3)).toBe("c:3")
   })
 

@@ -113,6 +113,6 @@ export function createHatchPattern(
 
   // Create the pattern on the target context if provided, otherwise use the tile's own context
   const patternCtx = targetCtx || ctx
-  const pattern = patternCtx.createPattern(tileCanvas as any, "repeat")
+  const pattern = patternCtx.createPattern(tileCanvas, "repeat")
   return pattern
 }

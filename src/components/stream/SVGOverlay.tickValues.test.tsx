@@ -31,7 +31,7 @@ function makeStubScales() {
     domain: () => [0, 10000],
     range: () => [200, 0],
   })
-  return { x: x as any, y: y as any }
+  return { x: x as unknown, y: y as unknown }
 }
 
 const baseProps = {
@@ -47,7 +47,7 @@ describe("tickValues on XY axes", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         axes={[
           // Use distinct tick numbers on the left axis (3000s) so we
@@ -72,7 +72,7 @@ describe("tickValues on XY axes", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         axes={[
           { orient: "left", tickValues: [3000, 5000, 7000] },
@@ -93,7 +93,7 @@ describe("tickValues on XY axes", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         axes={[
           {
@@ -118,7 +118,7 @@ describe("tickValues on XY axes", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales() as unknown}
         showAxes={true}
         axisExtent="exact"
         axes={[

@@ -53,7 +53,7 @@ describe("resolveTheme", () => {
   })
 
   it("preserves typography overrides", () => {
-    const theme = resolveTheme({ typography: { fontFamily: "Courier" } } as any)
+    const theme = resolveTheme({ typography: { fontFamily: "Courier" } } as unknown)
     expect(theme.typography.fontFamily).toBe("Courier")
     expect(theme.typography.titleSize).toBe(LIGHT_THEME.typography.titleSize)
   })

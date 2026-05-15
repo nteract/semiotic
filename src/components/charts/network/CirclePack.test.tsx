@@ -47,7 +47,7 @@ describe("CirclePack", () => {
   it("handles missing data gracefully", () => {
     const { container } = render(
       <TooltipProvider>
-        <CirclePack data={null as any} />
+        <CirclePack data={null as unknown} />
       </TooltipProvider>
     )
 

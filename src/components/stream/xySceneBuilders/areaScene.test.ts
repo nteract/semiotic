@@ -7,7 +7,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as any,
+    scales: { x: identityScale, y: identityScale } as unknown,
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -65,7 +65,7 @@ describe("buildStackedAreaScene", () => {
       config: { pointStyle: () => ({ fill: "blue", r: 3 }) },
     })
     const nodes = buildStackedAreaScene(ctx, stackedData)
-    const pointNodes = nodes.filter((n) => n.type === "point") as any[]
+    const pointNodes = nodes.filter((n) => n.type === "point") as unknown[]
     expect(pointNodes.length).toBe(4)
 
     // Groups sorted by key: A first, then B stacks on top
@@ -82,7 +82,7 @@ describe("buildStackedAreaScene", () => {
       config: { normalize: true, pointStyle: () => ({ fill: "blue", r: 3 }) },
     })
     const nodes = buildStackedAreaScene(ctx, stackedData)
-    const pointNodes = nodes.filter((n) => n.type === "point") as any[]
+    const pointNodes = nodes.filter((n) => n.type === "point") as unknown[]
     expect(pointNodes.length).toBe(4)
 
     // At x=1: total=15. A=10/15≈0.667, B=(10+5)/15=1.0
@@ -118,7 +118,7 @@ describe("buildStackedAreaScene", () => {
       config: { pointStyle: () => ({ fill: "blue", r: 3 }) },
     })
     const nodes = buildStackedAreaScene(ctx, data)
-    const pointNodes = nodes.filter((n) => n.type === "point") as any[]
+    const pointNodes = nodes.filter((n) => n.type === "point") as unknown[]
 
     // Group A at x=1: aggregated y=5+3=8, both datums get stacked Y=8
     const groupAPoints = pointNodes.filter((n: any) => n.datum.group === "A")

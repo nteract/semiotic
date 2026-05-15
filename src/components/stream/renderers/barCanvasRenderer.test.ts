@@ -377,7 +377,7 @@ describe("barCanvasRenderer", () => {
 
   // ── per-corner cornerRadii (swimlane two-sided rounding) ────────────────
   describe("cornerRadii", () => {
-    it("traces a path (not fillRect) when cornerRadii has any radius > 0", () => {
+    it("traces a path (not fillRect) when cornerRadii has unknown radius > 0", () => {
       const ctx = createMockCanvasContext()
       const node = makeRectNode({ cornerRadii: { tl: 4, bl: 4 } })
       barCanvasRenderer(ctx, [node], makeScales(), makeLayout())

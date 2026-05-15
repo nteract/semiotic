@@ -26,7 +26,7 @@ describe("scalePadding", () => {
       ],
       bounded: true,
     })
-    ;(store as any).computeScene({ width: 400, height: 300 })
+    ;(store as unknown).computeScene({ width: 400, height: 300 })
     return store
   }
 

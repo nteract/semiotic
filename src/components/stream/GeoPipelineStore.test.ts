@@ -64,7 +64,7 @@ describe("GeoPipelineStore", () => {
     expect(store.scene.length).toBe(2)
     expect(store.scene[0].type).toBe("geoarea")
 
-    const node = store.scene[0] as any
+    const node = store.scene[0] as unknown
     expect(node.pathData).toBeTruthy()
     expect(node.centroid).toHaveLength(2)
     expect(node.bounds).toHaveLength(2)
@@ -80,7 +80,7 @@ describe("GeoPipelineStore", () => {
     const points = store.scene.filter(n => n.type === "point")
     expect(points.length).toBe(3)
 
-    const sf = points[0] as any
+    const sf = points[0] as unknown
     expect(typeof sf.x).toBe("number")
     expect(isFinite(sf.x)).toBe(true)
     expect(typeof sf.y).toBe("number")
@@ -99,7 +99,7 @@ describe("GeoPipelineStore", () => {
     const lines = store.scene.filter(n => n.type === "line")
     expect(lines.length).toBe(1)
 
-    const route = lines[0] as any
+    const route = lines[0] as unknown
     expect(route.path.length).toBe(2)
     expect(route.datum).toBe(routes[0])
   })
@@ -147,7 +147,7 @@ describe("GeoPipelineStore", () => {
 
     // Graticule + 2 areas = 3 nodes
     expect(store.scene.length).toBe(3)
-    const grat = store.scene[0] as any
+    const grat = store.scene[0] as unknown
     expect(grat.type).toBe("geoarea")
     expect(grat.interactive).toBe(false)
     expect(grat.style.fill).toBe("none")
@@ -194,7 +194,7 @@ describe("GeoPipelineStore", () => {
       store.setPoints(costCities)
       store.computeScene({ width: 600, height: 400 })
 
-      const points = store.scene.filter(n => n.type === "point") as any[]
+      const points = store.scene.filter(n => n.type === "point") as unknown[]
       expect(points.length).toBe(3)
 
       // Rome should stay at its projected position (center)
@@ -221,7 +221,7 @@ describe("GeoPipelineStore", () => {
       const geoStore = new GeoPipelineStore(makeConfig({ pointIdAccessor: "id" }))
       geoStore.setPoints(costCities)
       geoStore.computeScene({ width: 600, height: 400 })
-      const geoPoints = geoStore.scene.filter(n => n.type === "point") as any[]
+      const geoPoints = geoStore.scene.filter(n => n.type === "point") as unknown[]
 
       // Cartogram with strength=0
       const cartoStore = new GeoPipelineStore(makeConfig({
@@ -235,7 +235,7 @@ describe("GeoPipelineStore", () => {
       }))
       cartoStore.setPoints(costCities)
       cartoStore.computeScene({ width: 600, height: 400 })
-      const cartoPoints = cartoStore.scene.filter(n => n.type === "point") as any[]
+      const cartoPoints = cartoStore.scene.filter(n => n.type === "point") as unknown[]
 
       // Positions should be identical when strength=0
       expect(cartoPoints[0].x).toBeCloseTo(geoPoints[0].x, 1)
@@ -267,7 +267,7 @@ describe("GeoPipelineStore", () => {
       }
       store.computeScene({ width: 600, height: 400 })
 
-      const points = store.scene.filter(n => n.type === "point") as any[]
+      const points = store.scene.filter(n => n.type === "point") as unknown[]
       expect(points.length).toBe(5)
 
       // Oldest point should have lowest opacity
@@ -286,7 +286,7 @@ describe("GeoPipelineStore", () => {
       store.computeScene({ width: 600, height: 400 })
 
       expect(store.scales).not.toBeNull()
-      const points = store.scene.filter(n => n.type === "point") as any[]
+      const points = store.scene.filter(n => n.type === "point") as unknown[]
       expect(points.length).toBe(3)
     })
   })

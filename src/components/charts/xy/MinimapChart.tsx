@@ -147,7 +147,7 @@ function BrushOverlay({
   useEffect(() => {
     if (!svgRef.current || !scales) return
 
-    const g = select(svgRef.current).select(".brush-group")
+    const g = select(svgRef.current).select<SVGGElement>(".brush-group")
 
     const brush = brushDirection === "x"
       ? brushX().extent([[0, 0], [width, height]])
@@ -174,7 +174,7 @@ function BrushOverlay({
       onBrush(domain)
     })
 
-    g.call(brush as any)
+    g.call(brush)
     brushRef.current = brush
 
     // Style the brush selection

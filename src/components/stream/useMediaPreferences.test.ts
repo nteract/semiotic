@@ -13,7 +13,7 @@ function mockMatchMedia(matches: boolean) {
     },
   }
   const original = window.matchMedia
-  window.matchMedia = vi.fn().mockReturnValue(mql) as any
+  window.matchMedia = vi.fn().mockReturnValue(mql) as unknown
   return {
     mql,
     listeners,
@@ -21,7 +21,7 @@ function mockMatchMedia(matches: boolean) {
       if (original) {
         window.matchMedia = original
       } else {
-        delete (window as any).matchMedia
+        delete (window as unknown).matchMedia
       }
     }
   }

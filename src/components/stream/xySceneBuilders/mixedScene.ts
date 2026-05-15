@@ -34,7 +34,7 @@ export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[]
       const style = ctx.resolveAreaStyle(g.key, g.data[0])
       const node = buildAreaNode(g.data, ctx.scales, ctx.getX, ctx.getY, baseline, style, g.key, y0Get)
       if (ctx.config.gradientFill) {
-        node.fillGradient = ctx.config.gradientFill as any
+        node.fillGradient = ctx.config.gradientFill
       }
       if (ctx.config.curve && ctx.config.curve !== "linear") {
         node.curve = ctx.config.curve

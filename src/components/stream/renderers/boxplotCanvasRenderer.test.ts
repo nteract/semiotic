@@ -82,8 +82,8 @@ describe("boxplotCanvasRenderer", () => {
     boxplotCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
     // Median line at medianPos=150
-    const moveToArgs = (ctx.moveTo as any).mock.calls
-    const lineToArgs = (ctx.lineTo as any).mock.calls
+    const moveToArgs = (ctx.moveTo as unknown).mock.calls
+    const lineToArgs = (ctx.lineTo as unknown).mock.calls
     // Should have a moveTo at (80, 150) and lineTo at (120, 150) for median
     expect(moveToArgs).toContainEqual([80, 150])
     expect(lineToArgs).toContainEqual([120, 150])
@@ -110,7 +110,7 @@ describe("boxplotCanvasRenderer", () => {
 
   it("skips non-boxplot nodes", () => {
     const ctx = createMockCtx()
-    const point = { type: "point", x: 50, y: 50, r: 3, style: {}, datum: {} } as any
+    const point = { type: "point", x: 50, y: 50, r: 3, style: {}, datum: {} } as unknown
     boxplotCanvasRenderer(ctx, [point], makeScales(), makeLayout())
 
     // No drawing calls for point nodes

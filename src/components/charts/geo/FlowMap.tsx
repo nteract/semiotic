@@ -497,7 +497,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
       fillOpacity: 0,
     }
     return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, {
-      ...((setup.resolvedSelection as any) || {}),
+      ...(setup.resolvedSelection || {}),
       unselectedStyle: mergedUnselectedStyle,
     }) as (d: Datum) => Style
   }, [baseLineStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection, stroke, strokeWidth, opacity])
@@ -557,8 +557,8 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     // supplied we hand the translated `lineData` over as usual.
     ...(flows != null && { lines: lineData }),
     points: safeNodes,
-    xAccessor: xReader as any,
-    yAccessor: yReader as any,
+    xAccessor: xReader,
+    yAccessor: yReader,
     lineDataAccessor: "coordinates",
     ...(lineIdAccessor != null && { lineIdAccessor }),
     lineType,

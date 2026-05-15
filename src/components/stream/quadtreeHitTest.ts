@@ -1,4 +1,4 @@
-import type { Quadtree } from "d3-quadtree"
+import type { Quadtree, QuadtreeLeaf } from "d3-quadtree"
 import { getHitRadius } from "./hitTestUtils"
 
 export interface QuadtreeHit<T> {
@@ -41,11 +41,11 @@ export function findHitPointInQuadtree<T extends { x: number; y: number; r: numb
     // Leaf nodes in d3-quadtree are objects with `.data` and optional `.next`
     // (linked list for co-located points); internal nodes are array-like with
     // `.length === 4`. The absence of a numeric `length` distinguishes leaves.
-    const node = rawNode as any
+    const node = rawNode
     if (!node.length) {
-      let leaf: any = node
+      let leaf: QuadtreeLeaf<T> | undefined = node
       do {
-        const point = leaf.data as T
+        const point = leaf.data
         const dx = point.x - px
         const dy = point.y - py
         const dist = Math.sqrt(dx * dx + dy * dy)

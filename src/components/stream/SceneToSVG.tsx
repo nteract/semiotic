@@ -12,7 +12,7 @@ import { arc as d3Arc, type DefaultArcObject } from "d3-shape"
  * Sentinel arg for d3-shape arc generators that have all four
  * accessors set to constants. The generator's call signature requires
  * a `DefaultArcObject` even though it never reads the argument when
- * accessors are non-functional. Typing this once avoids `as any` at
+ * accessors are non-functional. Typing this once avoids local unsafe casts at
  * the three arc-emit sites below.
  */
 const ARC_NOOP: DefaultArcObject = {
@@ -46,6 +46,7 @@ import type {
 } from "./networkTypes"
 
 import { hasAnyCornerRadius, clampCornerRadii } from "./renderers/cornerRadii"
+import { annularSectorPath } from "./renderers/wedgePathBuilder"
 
 import type {
   OrdinalSceneNode,
@@ -570,14 +571,39 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
     case "wedge": {
       const n = node as WedgeSceneNode
       // Scene stores angles in canvas convention (0 = 3 o'clock).
-      // d3-shape arc expects 0 = 12 o'clock. Add π/2 to compensate.
-      const arcGen = d3Arc()
-        .innerRadius(n.innerRadius)
-        .outerRadius(n.outerRadius)
-        .startAngle(n.startAngle + Math.PI / 2)
-        .endAngle(n.endAngle + Math.PI / 2)
-      if (n.cornerRadius) arcGen.cornerRadius(n.cornerRadius)
-      const arcPath = arcGen(ARC_NOOP) || ""
+      // d3-shape arc expects 0 = 12 o'clock; the manual path builder
+      // accepts canvas convention directly. Pick the builder when the
+      // node opts into per-end rounding (gauge endpoints), fall back to
+      // d3-arc for uniform all-corner rounding and the unrounded fast
+      // path.
+      let arcPath: string
+      if (n.roundedEnds) {
+        // Per-end rounding opted in. The `roundedEnds` object — even
+        // when BOTH flags are false — is the authoritative signal: the
+        // caller has explicitly chosen which sides round. Middle
+        // wedges in a multi-zone gauge fall here with both flags false
+        // and short-circuit to a square sector; without this they'd
+        // inherit d3-arc's uniform all-corner rounding via the
+        // fallback branch.
+        arcPath = annularSectorPath({
+          innerRadius: n.innerRadius,
+          outerRadius: n.outerRadius,
+          startAngle: n.startAngle,
+          endAngle: n.endAngle,
+          cornerRadius: n.cornerRadius,
+          roundStart: n.roundedEnds.start,
+          roundEnd: n.roundedEnds.end,
+        })
+      } else {
+        // Uniform all-corner rounding (regular donut) or unrounded.
+        const arcGen = d3Arc()
+          .innerRadius(n.innerRadius)
+          .outerRadius(n.outerRadius)
+          .startAngle(n.startAngle + Math.PI / 2)
+          .endAngle(n.endAngle + Math.PI / 2)
+        if (n.cornerRadius) arcGen.cornerRadius(n.cornerRadius)
+        arcPath = arcGen(ARC_NOOP) || ""
+      }
       return (
         <path
           key={baseKey}

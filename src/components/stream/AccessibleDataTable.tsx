@@ -502,8 +502,8 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
   for (const e of safeEdges) {
     if (!e || typeof e !== "object") continue
     const raw = e.datum ?? e
-    const srcRaw = typeof raw.source === "object" ? (raw.source as any)?.id : raw.source
-    const tgtRaw = typeof raw.target === "object" ? (raw.target as any)?.id : raw.target
+    const srcRaw = typeof raw.source === "object" ? raw.source?.id : raw.source
+    const tgtRaw = typeof raw.target === "object" ? raw.target?.id : raw.target
     const hasVal = typeof raw.value === "number" && Number.isFinite(raw.value)
     const val = hasVal ? raw.value : 0
     if (srcRaw != null && srcRaw !== "") {

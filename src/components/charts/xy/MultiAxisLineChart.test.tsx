@@ -164,7 +164,7 @@ describe("MultiAxisLineChart", () => {
   })
 
   it("supports push API ref handle", () => {
-    const ref = { current: null as any }
+    const ref = { current: null as unknown }
     render(
       <MultiAxisLineChart
         ref={ref}

@@ -179,7 +179,7 @@ describe("hierarchyLayoutPlugin", () => {
 
       // Nodes should have radius stored
       for (const node of nodes) {
-        expect((node as any).__radius).toBeDefined()
+        expect((node as unknown).__radius).toBeDefined()
       }
     })
 

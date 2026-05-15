@@ -48,7 +48,7 @@ describe("TreeDiagram", () => {
   it("handles missing data gracefully", () => {
     const { container } = render(
       <TooltipProvider>
-        <TreeDiagram data={undefined as any} />
+        <TreeDiagram data={undefined as unknown} />
       </TooltipProvider>
     )
     const frame = container.querySelector(".stream-network-frame")

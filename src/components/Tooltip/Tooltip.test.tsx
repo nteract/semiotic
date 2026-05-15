@@ -72,8 +72,8 @@ describe("Tooltip", () => {
 
   it("returns null for null/undefined data", () => {
     const tooltipFn = Tooltip({ title: "category" })
-    expect(tooltipFn(null as any)).toBeNull()
-    expect(tooltipFn(undefined as any)).toBeNull()
+    expect(tooltipFn(null as unknown)).toBeNull()
+    expect(tooltipFn(undefined as unknown)).toBeNull()
   })
 
   it("applies custom style", () => {
@@ -132,8 +132,8 @@ describe("MultiLineTooltip", () => {
 
   it("returns null for null/undefined data", () => {
     const tooltipFn = MultiLineTooltip({ fields: ["x"] })
-    expect(tooltipFn(null as any)).toBeNull()
-    expect(tooltipFn(undefined as any)).toBeNull()
+    expect(tooltipFn(null as unknown)).toBeNull()
+    expect(tooltipFn(undefined as unknown)).toBeNull()
   })
 })
 
@@ -203,7 +203,7 @@ describe("normalizeTooltip", () => {
     const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
     // Simulate HoverData wrapper from StreamNetworkFrame (has type + data)
     const hoverData = { type: "node", data: { task: "Fix bug" }, x: 10, y: 20 }
-    const rendered = wrapped(hoverData) as any
+    const rendered = wrapped(hoverData) as unknown
     expect(rendered).not.toBeNull()
     // The string "Fix bug" should be inside the tooltip chrome div
     expect(rendered.props.children).toBe("Fix bug")
@@ -218,7 +218,7 @@ describe("normalizeTooltip", () => {
       y: 20,
       __semioticHoverData: true,
     }
-    const rendered = wrapped(hoverData) as any
+    const rendered = wrapped(hoverData) as unknown
     expect(rendered).not.toBeNull()
     expect(rendered.props.children).toBe("hello")
   })
@@ -232,7 +232,7 @@ describe("normalizeTooltip", () => {
       data: { fieldName: "nested value" },
       fieldName: "top-level value",
     }
-    const rendered = wrapped(rawDatum) as any
+    const rendered = wrapped(rawDatum) as unknown
     expect(rendered).not.toBeNull()
     expect(rendered.props.children).toBe("top-level value")
   })
@@ -247,13 +247,13 @@ describe("normalizeTooltip", () => {
       category: "A",
       label: "visible label",
     }
-    const rendered = wrapped(rawDatum) as any
+    const rendered = wrapped(rawDatum) as unknown
     expect(rendered).not.toBeNull()
     expect(rendered.props.children).toBe("visible label")
   })
 
   it("returns false for undefined", () => {
-    expect(normalizeTooltip(undefined as any)).toBe(false)
+    expect(normalizeTooltip(undefined as unknown)).toBe(false)
   })
 })
 
@@ -344,7 +344,7 @@ describe("MultiPointTooltip", () => {
 
   it("normalizeTooltip returns a generic tooltip function for 'multi' (HOC handles it before normalizeTooltip)", () => {
     // "multi" is intercepted at the HOC level; if it reaches normalizeTooltip it falls through to generic
-    const result = normalizeTooltip("multi" as any)
+    const result = normalizeTooltip("multi" as unknown)
     expect(typeof result).toBe("function")
   })
 })

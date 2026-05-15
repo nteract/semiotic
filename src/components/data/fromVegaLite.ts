@@ -135,7 +135,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
   if (spec.hconcat || spec.vconcat || spec.concat) {
     warnings.push("Concatenated views (\"hconcat\"/\"vconcat\"/\"concat\") are not supported. Translate each sub-spec individually.")
   }
-  if (spec.facet || (spec.encoding && (spec.encoding as any).facet) || (spec.encoding && ((spec.encoding as any).row || (spec.encoding as any).column))) {
+  if (spec.facet || enc.facet || enc.row || enc.column) {
     warnings.push("Faceted views are not supported. Use Semiotic's LinkedCharts or render multiple charts manually.")
   }
   if (spec.repeat) {
@@ -215,8 +215,9 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       if (x?.field) props.categoryAccessor = x.field
       if (y.axis?.title) props.valueLabel = y.axis.title
     }
-    const maxbins = typeof (x?.bin || y?.bin) === "object"
-      ? (x?.bin as any)?.maxbins || (y?.bin as any)?.maxbins
+    const binConfig = x?.bin || y?.bin
+    const maxbins = typeof binConfig === "object"
+      ? binConfig.maxbins
       : undefined
     if (maxbins) props.bins = maxbins
 

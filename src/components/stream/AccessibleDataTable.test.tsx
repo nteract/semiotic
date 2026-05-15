@@ -20,8 +20,8 @@ import type { Datum } from "../charts/shared/datumTypes"
 
 describe("computeCanvasAriaLabel", () => {
   it("handles null/undefined scene", () => {
-    expect(computeCanvasAriaLabel(null as any, "XY")).toBe("XY, empty")
-    expect(computeCanvasAriaLabel(undefined as any, "XY")).toBe("XY, empty")
+    expect(computeCanvasAriaLabel(null as unknown, "XY")).toBe("XY, empty")
+    expect(computeCanvasAriaLabel(undefined as unknown, "XY")).toBe("XY, empty")
   })
 
   it("handles empty scene array", () => {
@@ -53,7 +53,7 @@ describe("computeCanvasAriaLabel", () => {
   })
 
   it("handles nodes with missing type", () => {
-    const scene = [{ x: 1, y: 2 } as any]
+    const scene = [{ x: 1, y: 2 } as unknown]
     // type is undefined — should use "undefined" as type string
     const result = computeCanvasAriaLabel(scene, "XY")
     expect(result).toContain("XY")
@@ -403,14 +403,14 @@ describe("computeFieldStats resilience", () => {
   })
 
   it("handles null rows in array", () => {
-    const rows = [null, { values: { x: 5 } }, null] as any[]
+    const rows = [null, { values: { x: 5 } }, null] as unknown[]
     const stats = computeFieldStats(rows)
     expect(stats[0].count).toBe(1)
     expect(stats[0].min).toBe(5)
   })
 
   it("handles rows with missing values property", () => {
-    const rows = [{ oops: "wrong" }, { values: { x: 10 } }] as any[]
+    const rows = [{ oops: "wrong" }, { values: { x: 10 } }] as unknown[]
     const stats = computeFieldStats(rows)
     expect(stats[0].count).toBe(1)
   })
@@ -482,10 +482,10 @@ describe("fmt helper resilience", () => {
   it("handles Infinity", () => expect(fmt(Infinity)).toBe("Infinity"))
   it("handles -Infinity", () => expect(fmt(-Infinity)).toBe("-Infinity"))
   it("handles very small decimals", () => expect(fmt(0.001)).toBe("0"))
-  it("handles string coercion", () => expect(fmt("42" as any)).toBe("42"))
+  it("handles string coercion", () => expect(fmt("42" as unknown)).toBe("42"))
   it("handles boolean coercion", () => {
     // true * 100 = 100, round = 100
-    expect(fmt(true as any)).toBe("1")
+    expect(fmt(true as unknown)).toBe("1")
   })
 })
 
@@ -546,9 +546,9 @@ describe("network degree distribution", () => {
     const edges = [{ source: 1, target: 2 }, { source: 1, target: 3 }]
     const degrees = computeDegrees(edges)
     // typeof 1 !== "object", so raw number is used as key
-    expect(degrees.get(1 as any)).toBe(2)
-    expect(degrees.get(2 as any)).toBe(1)
-    expect(degrees.get(3 as any)).toBe(1)
+    expect(degrees.get(1 as unknown)).toBe(2)
+    expect(degrees.get(2 as unknown)).toBe(1)
+    expect(degrees.get(3 as unknown)).toBe(1)
   })
 
   it("handles self-loops", () => {

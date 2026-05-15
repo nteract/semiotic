@@ -47,7 +47,7 @@ describe("Treemap", () => {
   it("handles missing data gracefully", () => {
     const { container } = render(
       <TooltipProvider>
-        <Treemap data={null as any} />
+        <Treemap data={null as unknown} />
       </TooltipProvider>
     )
 

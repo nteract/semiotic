@@ -55,7 +55,7 @@ describe("BubbleChart", () => {
   it("shows error when sizeBy is missing", () => {
     const { container } = render(
       <TooltipProvider>
-        <BubbleChart data={sampleData} sizeBy={undefined as any} />
+        <BubbleChart data={sampleData} sizeBy={undefined as unknown} />
       </TooltipProvider>
     )
 
@@ -320,7 +320,7 @@ describe("BubbleChart", () => {
 
     // This should handle gracefully or throw a clear error
     expect(() => {
-      const _result = tooltipFn(arrayData as any)
+      const _result = tooltipFn(arrayData as unknown)
       // Should return null or handle gracefully
     }).not.toThrow()
   })
@@ -341,7 +341,7 @@ describe("BubbleChart", () => {
     }
 
     expect(() => {
-      const result = tooltipFn(annotationData as any)
+      const result = tooltipFn(annotationData as unknown)
       expect(result).toBeTruthy()
     }).not.toThrow()
   })

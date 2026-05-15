@@ -90,9 +90,9 @@ describe("SVG generation (end-to-end)", () => {
   })
 
   it("renderToStaticSVG dispatches correctly for all frame types", () => {
-    const xy = renderToStaticSVG("xy", { chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y", size: [300, 200] } as any)
-    const ordinal = renderToStaticSVG("ordinal", { chartType: "bar", data: barData, oAccessor: "category", rAccessor: "value", size: [300, 200] } as any)
-    const network = renderToStaticSVG("network", { chartType: "force", edges: networkEdges, size: [300, 200] } as any)
+    const xy = renderToStaticSVG("xy", { chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y", size: [300, 200] } as unknown)
+    const ordinal = renderToStaticSVG("ordinal", { chartType: "bar", data: barData, oAccessor: "category", rAccessor: "value", size: [300, 200] } as unknown)
+    const network = renderToStaticSVG("network", { chartType: "force", edges: networkEdges, size: [300, 200] } as unknown)
 
     expect(isValidSVG(xy)).toBe(true)
     expect(isValidSVG(ordinal)).toBe(true)
@@ -189,7 +189,7 @@ describe("PNG generation (end-to-end)", () => {
   })
 
   it("renderToImage with frame-level API", async () => {
-    const png = await renderToImage("xy" as any, {
+    const png = await renderToImage("xy" as unknown, {
       chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y",
       size: [200, 150],
     }, { format: "png" })
@@ -316,7 +316,7 @@ describe("Cross-format consistency", () => {
     const frame = renderToStaticSVG("ordinal", {
       chartType: "bar", data: barData, oAccessor: "category", rAccessor: "value",
       size: [300, 200],
-    } as any)
+    } as unknown)
 
     const hocRects = (hoc.match(/<rect /g) || []).length
     const frameRects = (frame.match(/<rect /g) || []).length
@@ -379,7 +379,7 @@ describe("Geo SSR", () => {
       { lon: 5, lat: 5, pop: 1000, name: "A" },
       { lon: 25, lat: 25, pop: 5000, name: "B" },
     ]
-    const svg = renderChart("ProportionalSymbolMap" as any, {
+    const svg = renderChart("ProportionalSymbolMap" as unknown, {
       points,
       xAccessor: "lon",
       yAccessor: "lat",
@@ -537,7 +537,7 @@ describe("Graceful handling of invalid props", () => {
 
   it("renderChart with unknown component name throws a descriptive error", () => {
     expect(() => {
-      renderChart("NonexistentChart" as any, {
+      renderChart("NonexistentChart" as unknown, {
         data: barData,
         width: 300, height: 200,
       })
@@ -547,7 +547,7 @@ describe("Graceful handling of invalid props", () => {
   it("renderChart with null/undefined data does not crash", () => {
     expect(() => {
       renderChart("BarChart", {
-        data: null as any,
+        data: null as unknown,
         categoryAccessor: "category",
         valueAccessor: "value",
         width: 300, height: 200,

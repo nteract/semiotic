@@ -18,14 +18,14 @@ function makeLinearScale(domain: [number, number], range: [number, number]) {
   const [r0, r1] = range
   // Cast to `any` so we can stash a function into the slot the
   // shared type narrows to ScaleLinear<number, number>.
-  return ((v: number) => r0 + ((v - d0) / (d1 - d0)) * (r1 - r0)) as any
+  return ((v: number) => r0 + ((v - d0) / (d1 - d0)) * (r1 - r0)) as unknown
 }
 
 // Band-style category-name → pixel-center scale, mirroring
 // OrdinalSVGOverlay's `oCentered`. Stable category order is implied
 // by the input map.
 function makeBandScale(centers: Record<string, number>) {
-  return ((name: string) => centers[name]) as any
+  return ((name: string) => centers[name]) as unknown
 }
 
 const rules = createDefaultAnnotationRules("ordinal")
@@ -51,7 +51,7 @@ describe("trend annotation — ordinal frame", () => {
       scales: {
         x: makeBandScale({ Q1: 50, Q2: 150, Q3: 250, Q4: 350 }),
         y: makeLinearScale([0, 50], [200, 0]), // inverted Y (typical SVG)
-        o: undefined as any,
+        o: undefined as unknown,
       },
     }
 
@@ -102,7 +102,7 @@ describe("trend annotation — ordinal frame", () => {
         // axis flips.
         x: makeLinearScale([0, 30], [0, 400]),
         y: makeBandScale({ Low: 100, Mid: 150, High: 200 }),
-        o: undefined as any,
+        o: undefined as unknown,
       },
     }
 
@@ -146,7 +146,7 @@ describe("trend annotation — ordinal frame", () => {
       scales: {
         x: makeBandScale({ Q1: 50, Q2: 200, Q3: 350 }),
         y: makeLinearScale([0, 50], [200, 0]),
-        o: undefined as any,
+        o: undefined as unknown,
       },
     }
 
@@ -180,7 +180,7 @@ describe("trend annotation — ordinal frame", () => {
       scales: {
         x: makeBandScale({ A: 50, B: 150, C: 250, D: 350, E: 450 }),
         y: makeLinearScale([0, 15], [300, 0]),
-        o: undefined as any,
+        o: undefined as unknown,
       },
     }
 
@@ -207,7 +207,7 @@ describe("trend annotation — ordinal frame", () => {
       scales: {
         x: makeBandScale({ A: 50, B: 150 }),
         y: makeLinearScale([0, 100], [200, 0]),
-        o: undefined as any,
+        o: undefined as unknown,
       },
     }
 

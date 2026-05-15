@@ -1,7 +1,8 @@
-import { arc as d3Arc } from "d3-shape"
+import { arc as d3Arc, type DefaultArcObject } from "d3-shape"
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, WedgeSceneNode } from "../ordinalTypes"
 import { renderPathPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { annularSectorPath } from "./wedgePathBuilder"
 
 /** Trace the wedge arc path (donut or pie) onto the current context — fast path for no cornerRadius. */
 function drawWedgeManual(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
@@ -18,15 +19,17 @@ function drawWedgeManual(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): v
 
 /** Draw a wedge using d3-shape arc (for cornerRadius) with canvas context rotation. */
 function drawWedgeRounded(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
-  const arcGen = d3Arc()
-    .innerRadius(node.innerRadius)
-    .outerRadius(node.outerRadius)
-    // d3-shape: 0 = 12 o'clock. Scene stores canvas convention (0 = 3 o'clock).
-    // Add π/2 to convert scene → d3-shape, same as SVG renderer.
-    .startAngle(node.startAngle + Math.PI / 2)
-    .endAngle(node.endAngle + Math.PI / 2)
+  // d3-shape: 0 = 12 o'clock. Scene stores canvas convention (0 = 3 o'clock).
+  // Add π/2 to convert scene → d3-shape, same as SVG renderer.
+  const arcDatum: DefaultArcObject = {
+    innerRadius: node.innerRadius,
+    outerRadius: node.outerRadius,
+    startAngle: node.startAngle + Math.PI / 2,
+    endAngle: node.endAngle + Math.PI / 2,
+  }
+  const arcGen = d3Arc<DefaultArcObject>()
     .cornerRadius(node.cornerRadius!)
-  const pathStr = arcGen({} as any)
+  const pathStr = arcGen(arcDatum)
   if (!pathStr) return
   // d3-shape arc centered at (0,0) — translate to node center
   ctx.save()
@@ -55,8 +58,37 @@ export const wedgeCanvasRenderer = (
     ctx.globalAlpha = fillOpacity * transitionOpacity
     ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
 
-    if (node.cornerRadius) {
-      // Rounded corners — use d3-shape arc + Path2D
+    if (node.roundedEnds) {
+      // Per-end rounding opted in (gauge convention). The `roundedEnds`
+      // object — even when BOTH flags are false — is the authoritative
+      // signal: the caller has explicitly chosen which sides round.
+      // Middle wedges in a multi-zone gauge fall here with both flags
+      // false; the manual path builder short-circuits to a square
+      // sector. Without this, those wedges would inherit d3-arc's
+      // uniform all-corner rounding via the fallback branch below.
+      if (node.style.stroke && node.style.stroke !== "none") {
+        ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
+        ctx.lineWidth = node.style.strokeWidth || 1
+      }
+      const d = annularSectorPath({
+        innerRadius: node.innerRadius,
+        outerRadius: node.outerRadius,
+        startAngle: node.startAngle,
+        endAngle: node.endAngle,
+        cornerRadius: node.cornerRadius,
+        roundStart: node.roundedEnds.start,
+        roundEnd: node.roundedEnds.end,
+      })
+      ctx.save()
+      ctx.translate(node.cx, node.cy)
+      const path = new Path2D(d)
+      ctx.fill(path)
+      if (node.style.stroke && node.style.stroke !== "none") ctx.stroke(path)
+      ctx.restore()
+    } else if (node.cornerRadius) {
+      // Uniform all-corner rounding (regular donut chart). `roundedEnds`
+      // is unset, so the d3-arc fast path applies cornerRadius to all
+      // four corners — the existing pie/donut contract.
       if (node.style.stroke && node.style.stroke !== "none") {
         ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
         ctx.lineWidth = node.style.strokeWidth || 1

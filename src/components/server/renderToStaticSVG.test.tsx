@@ -347,14 +347,14 @@ describe("renderToStaticSVG dispatch", () => {
       ],
       oAccessor: "category",
       rAccessor: "value"
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("stream-ordinal-frame")
     expect(countMatches(svg, /<rect /g)).toBeGreaterThanOrEqual(2)
   })
 
   it("throws for unknown frame type", () => {
-    expect(() => renderToStaticSVG("unknown" as any, {} as any)).toThrow(
+    expect(() => renderToStaticSVG("unknown" as unknown, {} as unknown)).toThrow(
       /Unknown frame type/
     )
   })
@@ -374,7 +374,7 @@ describe("renderXYToStaticSVG - regression", () => {
       xAccessor: "x",
       yAccessor: "y",
       size: [400, 300]
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect(svg).toContain("stream-xy-frame")
@@ -393,7 +393,7 @@ describe("renderNetworkToStaticSVG - regression", () => {
         { source: "B", target: "C" }
       ],
       size: [400, 400]
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect(svg).toContain("stream-network-frame")
@@ -413,7 +413,7 @@ describe("renderNetworkToStaticSVG - node inference", () => {
         { source: "Services", target: "Profit", value: 40 },
       ],
       size: [500, 300]
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     // 4 unique nodes: Revenue, Product, Services, Profit
@@ -435,7 +435,7 @@ describe("renderNetworkToStaticSVG - node inference", () => {
         { source: "C", target: "A" },
       ],
       size: [400, 400]
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     // 3 unique nodes
@@ -446,7 +446,7 @@ describe("renderNetworkToStaticSVG - node inference", () => {
     const svg = renderNetworkToStaticSVG({
       chartType: "sankey",
       size: [500, 300]
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect(countMatches(svg, /<rect /g)).toBe(0)
@@ -459,7 +459,7 @@ describe("renderNetworkToStaticSVG - node inference", () => {
       nodes: [{ id: "X" }, { id: "Y" }],
       edges: [{ source: "X", target: "Y" }],
       size: [400, 400]
-    } as any)
+    } as unknown)
 
     expect(svg).toContain("<svg")
     expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(2)
@@ -472,18 +472,18 @@ describe("renderGeoToStaticSVG - reference string error", () => {
   it("throws a descriptive error when areas is a reference string", () => {
     expect(() =>
       renderGeoToStaticSVG({
-        areas: "world-110m" as any,
+        areas: "world-110m" as unknown,
         size: [600, 400]
-      } as any)
+      } as unknown)
     ).toThrow(/resolveReferenceGeography/)
   })
 
   it("includes the reference string name in the error message", () => {
     expect(() =>
       renderGeoToStaticSVG({
-        areas: "world-50m" as any,
+        areas: "world-50m" as unknown,
         size: [600, 400]
-      } as any)
+      } as unknown)
     ).toThrow(/world-50m/)
   })
 })
