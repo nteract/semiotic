@@ -877,6 +877,24 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     if (!layout) return null
     const { centerlines, laneLifetime, nodeData, valueScale: S, compressedPadding,
       crossingsBefore, crossingsAfter, lengthBefore, lengthAfter } = layout
+    // Axis follows the data, not the domain — the bands extend only as
+    // far as their mass profile carries them, so when the user's
+    // `domain` overshoots the latest event there's an empty stretch
+    // past the last band. Anchor the axis line and gridline span to
+    // the actual lane lifetimes so the chrome can't get out of step
+    // with the bands.
+    let dataMinX: number | null = null
+    let dataMaxX: number | null = null
+    for (const n of nodes) {
+      const lt = laneLifetime[n.id]
+      if (!lt || lt.start === null || lt.end === null) continue
+      const sx = xScale(lt.start as number)
+      const ex = xScale(lt.end as number)
+      if (dataMinX === null || sx < dataMinX) dataMinX = sx
+      if (dataMaxX === null || ex > dataMaxX) dataMaxX = ex
+    }
+    const axisLeft = dataMinX ?? 0
+    const axisRight = dataMaxX ?? plotW
     return (
       <g>
         {showQualityReadout && (crossingsAfter ?? null) !== null && (
@@ -892,6 +910,9 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
         )}
         {axisTicks.map((tick, i) => {
           const x = xScale(toTime(tick.date))
+          // Hide gridlines outside the actual data extent — they would
+          // sit in empty space and falsely imply data continues there.
+          if (x < axisLeft - 0.5 || x > axisRight + 0.5) return null
           return (
             <line key={`grid-${i}`} x1={x} y1={0} x2={x} y2={plotH}
               stroke="#94a3b8" strokeOpacity={0.15} strokeDasharray="2 4" />
@@ -916,10 +937,11 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
             </g>
           )
         })}
-        <line x1={0} y1={plotH + 4} x2={plotW} y2={plotH + 4} stroke="#94a3b8" />
+        <line x1={axisLeft} y1={plotH + 4} x2={axisRight} y2={plotH + 4} stroke="#94a3b8" />
         {axisTicks.map((tick, i) => {
           const t = toTime(tick.date)
           const x = xScale(t)
+          if (x < axisLeft - 0.5 || x > axisRight + 0.5) return null
           // Prefer an explicit `tick.label` over the global
           // `timeFormat`. Lets a consumer set up a default formatter
           // for tooltips and most ticks while still spelling certain

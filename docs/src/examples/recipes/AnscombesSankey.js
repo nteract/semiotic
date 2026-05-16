@@ -227,10 +227,14 @@ export default function AnscombesSankey() {
   // aggregate SankeyDiagram re-run its entry animation every time
   // the 2×2 grid below produced a hover event.
   const aggregateEdges = useMemo(() => buildEdges(SURGE_TIMES), [])
-  // Domain extended to Day 8 so the post-surge / outbreak / shift-change
-  // scenarios — whose late admits push some patient journeys past the
-  // end of a strict 7-day window — don't clip at the chart's right edge.
-  const dayTicks = useMemo(() => Array.from({ length: 9 }, (_, i) => ({ date: i, label: `Day ${i}` })), [])
+  // The 2x2 panels are tight on horizontal space — labels at every day
+  // overlap. Keep the gridlines but blank the labels; the surrounding
+  // prose carries the time orientation. The aggregate SankeyDiagram
+  // above doesn't show day labels either, so this is consistent.
+  const dayTicksNoLabel = useMemo(
+    () => Array.from({ length: 8 }, (_, i) => ({ date: i, label: "" })),
+    []
+  )
   // Match the day-axis labels in tooltips. ProcessSankey ships a Date
   // formatter as default; without an explicit `timeFormat`, our small
   // day-index values would render as 1970-01-01.
@@ -313,8 +317,8 @@ export default function AnscombesSankey() {
                     startTimeAccessor="startDay"
                     endTimeAccessor="endDay"
                     systemInTimeAccessor="systemInDay"
-                    domain={[0, 8]}
-                    axisTicks={dayTicks}
+                    domain={[0, 7]}
+                    axisTicks={dayTicksNoLabel}
                     timeFormat={dayLabel}
                     colorBy="id"
                     colorScheme={carbonScheme}
