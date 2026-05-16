@@ -299,7 +299,7 @@ describe("buildPointScene", () => {
     const doubleScale = Object.assign(double, { domain: () => [0, 100], range: () => [0, 800] })
     const data = [{ x: 10, y: 25 }]
     const ctx = makeCtx({
-      scales: { x: doubleScale, y: doubleScale } as unknown,
+      scales: { x: doubleScale, y: doubleScale } as unknown as XYSceneContext["scales"],
     })
     const nodes = buildPointScene(ctx, data)
 

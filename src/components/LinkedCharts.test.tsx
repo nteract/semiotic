@@ -360,20 +360,25 @@ describe("LinkedCharts", () => {
     // 0 for everything).
     type Entry = { target: Element; cb: ResizeObserverCallback }
     let captured: Entry[] = []
-    let originalRO: typeof ResizeObserver
+    const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+    let originalRO: typeof ResizeObserver | undefined
 
     beforeEach(() => {
       captured = []
-      originalRO = (globalThis as unknown).ResizeObserver
-      ;(globalThis as unknown).ResizeObserver = class {
+      originalRO = resizeObserverGlobal.ResizeObserver
+      resizeObserverGlobal.ResizeObserver = class {
         constructor(private cb: ResizeObserverCallback) {}
         observe(target: Element) { captured.push({ target, cb: this.cb }) }
         unobserve() {}
         disconnect() {}
-      }
+      } as typeof ResizeObserver
     })
     afterEach(() => {
-      (globalThis as unknown).ResizeObserver = originalRO
+      if (originalRO) {
+        resizeObserverGlobal.ResizeObserver = originalRO
+      } else {
+        delete resizeObserverGlobal.ResizeObserver
+      }
     })
 
     const fireResize = (w: number, h = 30) => {

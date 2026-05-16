@@ -44,7 +44,7 @@
     "src/components/charts/xy/MultiAxisLineChart.test.tsx": 5,
     "src/components/data/transforms.test.ts": 1,
     "src/components/export/chartConfig.test.ts": 3,
-    "src/components/LinkedCharts.test.tsx": 4,
+    "src/components/LinkedCharts.test.tsx": 1,
     "src/components/recipes/networkRecipes.test.ts": 10,
     "src/components/recipes/recipes.test.ts": 2,
     "src/components/server/componentSSR.test.tsx": 16,
@@ -104,6 +104,6 @@
     "src/components/stream/xySceneBuilders/swarmScene.test.ts": 1,
     "src/components/stream/xySceneBuilders/waterfallScene.test.ts": 2,
     "src/components/ThemeProvider.test.tsx": 1,
-    "src/components/Tooltip/Tooltip.test.tsx": 10
+    "src/components/Tooltip/Tooltip.test.tsx": 2
   }
 }

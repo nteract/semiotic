@@ -12,6 +12,7 @@ import type { SceneNode } from "../types"
 import { buildAreaNode, buildStackedAreaNodes } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { emitPointNodes } from "./emitPointNodes"
+import { resolveAreaGradient } from "./areaGradient"
 
 export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
@@ -30,9 +31,7 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
   for (const g of groups) {
     const style = ctx.resolveAreaStyle(g.key, g.data[0])
     const node = buildAreaNode(g.data, ctx.scales, ctx.getX, ctx.getY, baseline, style, g.key, y0Get)
-    const fillGradient = ctx.config.gradientFill === true
-      ? { topOpacity: 0.8, bottomOpacity: 0.05 }
-      : ctx.config.gradientFill
+    const fillGradient = resolveAreaGradient(ctx.config.gradientFill)
     if (fillGradient) {
       node.fillGradient = fillGradient
     }

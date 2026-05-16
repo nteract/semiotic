@@ -8,7 +8,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as unknown,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -277,7 +277,7 @@ describe("buildBoundsForGroup", () => {
     const double = (v: number) => v * 2
     const doubleScale = Object.assign(double, { domain: () => [0, 50], range: () => [0, 100] })
     const ctx = makeCtx({
-      scales: { x: doubleScale, y: doubleScale } as unknown,
+      scales: { x: doubleScale, y: doubleScale } as unknown as XYSceneContext["scales"],
       getBounds: (d) => d.offset,
     })
     const data = [

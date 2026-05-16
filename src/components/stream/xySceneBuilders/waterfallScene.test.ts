@@ -329,8 +329,8 @@ describe("buildWaterfallScene", () => {
       const dataPos = [{ x: 0, y: 10 }]
       const dataNeg = [{ x: 0, y: -10 }]
       const ctx = makeCtx()
-      expect((buildWaterfallScene(ctx, dataPos, defaultLayout)[0] as unknown).style.fill).toBe("#28a745")
-      expect((buildWaterfallScene(ctx, dataNeg, defaultLayout)[0] as unknown).style.fill).toBe("#dc3545")
+      expect(buildWaterfallScene(ctx, dataPos, defaultLayout)[0].style.fill).toBe("#28a745")
+      expect(buildWaterfallScene(ctx, dataNeg, defaultLayout)[0].style.fill).toBe("#dc3545")
     })
   })
 })

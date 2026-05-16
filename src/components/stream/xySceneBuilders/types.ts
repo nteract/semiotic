@@ -1,4 +1,5 @@
 import type { Datum } from "../../charts/shared/datumTypes"
+import type { AreaGradientConfig } from "./areaGradient"
 /**
  * XYSceneContext — shared context passed to all XY scene builder functions.
  *
@@ -49,7 +50,7 @@ export interface XYSceneConfig {
   baseline?: "zero" | "wiggle" | "silhouette"
   /** Stack order — see PipelineConfig.stackOrder. */
   stackOrder?: "key" | "insideOut" | "asc" | "desc"
-  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  gradientFill?: AreaGradientConfig
   areaGroups?: Set<string>
   lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
   annotations?: Datum[]

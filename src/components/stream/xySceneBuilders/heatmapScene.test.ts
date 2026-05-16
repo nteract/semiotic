@@ -509,7 +509,7 @@ describe("buildStreamingHeatmapScene", () => {
     const identity = (v: number) => v
     const negScale = Object.assign(identity, { domain: () => [-50, 50], range: () => [0, 400] })
     const ctx = makeStreamCtx({
-      scales: { x: negScale, y: negScale } as unknown,
+      scales: { x: negScale, y: negScale } as unknown as XYSceneContext["scales"],
       config: { heatmapAggregation: "count", heatmapXBins: 10, heatmapYBins: 10, valueAccessor: "value" },
     })
     // Point at (-25, -25): xi = floor((-25 - (-50))/10) = floor(25/10) = 2

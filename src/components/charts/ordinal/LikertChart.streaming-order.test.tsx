@@ -1,17 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { render, act } from "@testing-library/react"
-import { LikertChart } from "./LikertChart"
+import { LikertChart, type LikertChartHandle } from "./LikertChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
 // Mock ResizeObserver for jsdom
-if (typeof globalThis.ResizeObserver === "undefined") {
-  (globalThis as unknown).ResizeObserver = class {
+const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+if (typeof resizeObserverGlobal.ResizeObserver === "undefined") {
+  resizeObserverGlobal.ResizeObserver = class {
+    constructor(_callback: ResizeObserverCallback) {}
     observe() {}
     unobserve() {}
     disconnect() {}
-  }
+  } as typeof ResizeObserver
 }
 
 // This file tests LikertChart end-to-end with the real StreamOrdinalFrame
@@ -29,7 +31,7 @@ describe("LikertChart streaming category order", () => {
   const levels = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
 
   it("preserves question order across pushes where the value-ranked order changes", async () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<LikertChartHandle>()
     render(
       <TooltipProvider>
         <LikertChart
@@ -76,7 +78,7 @@ describe("LikertChart streaming category order", () => {
   })
 
   it("appends a newly-arriving question at the end, not at the top by value", async () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<LikertChartHandle>()
     render(
       <TooltipProvider>
         <LikertChart

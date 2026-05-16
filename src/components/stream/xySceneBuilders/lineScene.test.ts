@@ -2,13 +2,22 @@ import { describe, it, expect } from "vitest"
 import { buildLineScene } from "./lineScene"
 import type { XYSceneContext } from "./types"
 import type { Datum } from "../../charts/shared/datumTypes"
+import type { LineSceneNode, PointSceneNode, SceneNode } from "../types"
+
+function isLineNode(node: SceneNode): node is LineSceneNode {
+  return node.type === "line"
+}
+
+function isPointNode(node: SceneNode): node is PointSceneNode {
+  return node.type === "point"
+}
 
 /** Minimal identity scales for testing — no pixel transform */
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as unknown,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -18,7 +27,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
     resolveColorMap: () => new Map(),
     resolveGroupColor: () => null,
     groupData: (data) => {
-      const map = new Map<string, any[]>()
+      const map = new Map<string, Datum[]>()
       for (const d of data) {
         const key = d.group ?? "default"
         if (!map.has(key)) map.set(key, [])
@@ -39,7 +48,7 @@ describe("buildLineScene", () => {
     ]
     const ctx = makeCtx()
     const nodes = buildLineScene(ctx, data)
-    const lineNodes = nodes.filter((n) => n.type === "line") as unknown[]
+    const lineNodes = nodes.filter(isLineNode)
 
     expect(lineNodes.length).toBe(1)
     expect(lineNodes[0].group).toBe("default")
@@ -60,20 +69,20 @@ describe("buildLineScene", () => {
     ]
     const ctx = makeCtx()
     const nodes = buildLineScene(ctx, data)
-    const lineNodes = nodes.filter((n) => n.type === "line") as unknown[]
+    const lineNodes = nodes.filter(isLineNode)
 
     expect(lineNodes.length).toBe(2)
 
-    const groupA = lineNodes.find((n: any) => n.group === "A")
-    const groupB = lineNodes.find((n: any) => n.group === "B")
+    const groupA = lineNodes.find((n) => n.group === "A")
+    const groupB = lineNodes.find((n) => n.group === "B")
     expect(groupA).toBeDefined()
     expect(groupB).toBeDefined()
 
-    expect(groupA.path).toEqual([
+    expect(groupA?.path).toEqual([
       [1, 10],
       [2, 20],
     ])
-    expect(groupB.path).toEqual([
+    expect(groupB?.path).toEqual([
       [1, 30],
       [2, 40],
     ])
@@ -94,17 +103,17 @@ describe("buildLineScene", () => {
       },
     })
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
-    expect(lineNode.colorThresholds).toBeDefined()
-    expect(lineNode.colorThresholds.length).toBe(2)
-    expect(lineNode.colorThresholds[0]).toEqual({
+    expect(lineNode?.colorThresholds).toBeDefined()
+    expect(lineNode?.colorThresholds).toHaveLength(2)
+    expect(lineNode?.colorThresholds?.[0]).toEqual({
       value: 15,
       color: "red",
       thresholdType: "greater",
     })
     // Default thresholdType is "greater" when not specified
-    expect(lineNode.colorThresholds[1]).toEqual({
+    expect(lineNode?.colorThresholds?.[1]).toEqual({
       value: 5,
       color: "blue",
       thresholdType: "greater",
@@ -124,10 +133,10 @@ describe("buildLineScene", () => {
       },
     })
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
     // colorThresholds should be absent since the filtered list is empty
-    expect(lineNode.colorThresholds).toBeUndefined()
+    expect(lineNode?.colorThresholds).toBeUndefined()
   })
 
   it("bounds areas render behind lines when getBounds is set", () => {
@@ -164,9 +173,9 @@ describe("buildLineScene", () => {
       config: { curve: "monotoneX" },
     })
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
-    expect(lineNode.curve).toBe("monotoneX")
+    expect(lineNode?.curve).toBe("monotoneX")
   })
 
   it("curve is not set when config.curve is linear", () => {
@@ -178,9 +187,9 @@ describe("buildLineScene", () => {
       config: { curve: "linear" },
     })
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
-    expect(lineNode.curve).toBeUndefined()
+    expect(lineNode?.curve).toBeUndefined()
   })
 
   it("curve is not set when config.curve is absent", () => {
@@ -190,9 +199,9 @@ describe("buildLineScene", () => {
     ]
     const ctx = makeCtx()
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
-    expect(lineNode.curve).toBeUndefined()
+    expect(lineNode?.curve).toBeUndefined()
   })
 
   it("points emitted when pointStyle is set", () => {
@@ -205,7 +214,7 @@ describe("buildLineScene", () => {
       config: { pointStyle: () => ({ fill: "red", r: 5 }) },
     })
     const nodes = buildLineScene(ctx, data)
-    const pointNodes = nodes.filter((n) => n.type === "point") as unknown[]
+    const pointNodes = nodes.filter(isPointNode)
 
     expect(pointNodes.length).toBe(3)
     // Verify point coordinates match data
@@ -247,13 +256,13 @@ describe("buildLineScene", () => {
       { x: 10, y: 25 },
     ]
     const ctx = makeCtx({
-      scales: { x: doubleScale, y: doubleScale } as unknown,
+      scales: { x: doubleScale, y: doubleScale } as unknown as XYSceneContext["scales"],
     })
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
     // scale(5) = 10, scale(15) = 30, scale(10) = 20, scale(25) = 50
-    expect(lineNode.path).toEqual([
+    expect(lineNode?.path).toEqual([
       [10, 30],
       [20, 50],
     ])
@@ -272,13 +281,13 @@ describe("buildLineScene", () => {
       resolveLineStyle: (group: string) => styleMap[group] ?? { stroke: "#000" },
     })
     const nodes = buildLineScene(ctx, data)
-    const lineNodes = nodes.filter((n) => n.type === "line") as unknown[]
+    const lineNodes = nodes.filter(isLineNode)
 
-    const groupA = lineNodes.find((n: any) => n.group === "A")
-    const groupB = lineNodes.find((n: any) => n.group === "B")
+    const groupA = lineNodes.find((n) => n.group === "A")
+    const groupB = lineNodes.find((n) => n.group === "B")
 
-    expect(groupA.style).toEqual({ stroke: "red", strokeWidth: 2 })
-    expect(groupB.style).toEqual({ stroke: "blue", strokeWidth: 3 })
+    expect(groupA?.style).toEqual({ stroke: "red", strokeWidth: 2 })
+    expect(groupB?.style).toEqual({ stroke: "blue", strokeWidth: 3 })
   })
 
   it("rawValues on line node correspond to unscaled Y values", () => {
@@ -289,10 +298,10 @@ describe("buildLineScene", () => {
     ]
     const ctx = makeCtx()
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
     // buildLineNode sorts by x, so order is x=1,2,3 → rawValues = [100, 200, 50]
-    expect(lineNode.rawValues).toEqual([100, 200, 50])
+    expect(lineNode?.rawValues).toEqual([100, 200, 50])
   })
 
   it("line path is sorted by x pixel coordinate", () => {
@@ -304,12 +313,12 @@ describe("buildLineScene", () => {
     ]
     const ctx = makeCtx()
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
     // Path should be sorted by x: [10, 20, 30]
-    expect(lineNode.path[0][0]).toBe(10)
-    expect(lineNode.path[1][0]).toBe(20)
-    expect(lineNode.path[2][0]).toBe(30)
+    expect(lineNode?.path[0]?.[0]).toBe(10)
+    expect(lineNode?.path[1]?.[0]).toBe(20)
+    expect(lineNode?.path[2]?.[0]).toBe(30)
   })
 
   it("points get group color via resolveGroupColor when pointStyle has no fill", () => {
@@ -322,7 +331,7 @@ describe("buildLineScene", () => {
       resolveGroupColor: (group: string) => (group === "A" ? "green" : null),
     })
     const nodes = buildLineScene(ctx, data)
-    const pointNodes = nodes.filter((n) => n.type === "point") as unknown[]
+    const pointNodes = nodes.filter(isPointNode)
 
     expect(pointNodes.length).toBe(2)
     expect(pointNodes[0].style.fill).toBe("green")
@@ -338,11 +347,11 @@ describe("buildLineScene", () => {
     ]
     const ctx = makeCtx()
     const nodes = buildLineScene(ctx, data)
-    const lineNode = nodes.find((n) => n.type === "line") as unknown
+    const lineNode = nodes.find(isLineNode)
 
     // Only x=1 and x=4 are valid
-    expect(lineNode.path.length).toBe(2)
-    expect(lineNode.path[0]).toEqual([1, 10])
-    expect(lineNode.path[1]).toEqual([4, 40])
+    expect(lineNode?.path).toHaveLength(2)
+    expect(lineNode?.path[0]).toEqual([1, 10])
+    expect(lineNode?.path[1]).toEqual([4, 40])
   })
 })
