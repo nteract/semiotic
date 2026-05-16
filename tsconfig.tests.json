@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": true,
     "pretty": false,
-    "strict": false
+    "strict": true
   },
   "include": [
     "./src/**/*.test.ts",

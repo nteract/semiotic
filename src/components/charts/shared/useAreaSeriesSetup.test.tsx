@@ -8,7 +8,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) =>
   <TooltipProvider>{children}</TooltipProvider>
 
 const baseInput = {
-  lineDataAccessor: "coordinates",
+  lineDataAccessor: "coordinates" as const,
   colorScale: undefined as ((v: string) => string) | undefined,
   effectiveSelectionHook: null,
   resolvedSelection: undefined,
@@ -17,8 +17,8 @@ const baseInput = {
   lineWidth: 2,
   showPoints: false,
   pointRadius: 3,
-  xAccessor: "x",
-  yAccessor: "y",
+  xAccessor: "x" as const,
+  yAccessor: "y" as const,
 }
 
 describe("useAreaSeriesSetup", () => {
@@ -102,7 +102,7 @@ describe("useAreaSeriesSetup", () => {
         }),
         { wrapper },
       )
-      const style = result.current.lineStyle({ cat: "A" } as unknown)
+      const style = result.current.lineStyle({ cat: "A" })
       expect(style.fill).toBe("#aaa")
       expect(style.stroke).toBe("#aaa")
       expect(style.strokeWidth).toBe(2)
@@ -118,7 +118,7 @@ describe("useAreaSeriesSetup", () => {
         }),
         { wrapper },
       )
-      const style = result.current.lineStyle({} as unknown)
+      const style = result.current.lineStyle({})
       expect(style.fill).toBe("tomato")
       expect(style.stroke).toBe("tomato")
     })
@@ -134,7 +134,7 @@ describe("useAreaSeriesSetup", () => {
         }),
         { wrapper },
       )
-      const style = result.current.lineStyle({ cat: "A" } as unknown)
+      const style = result.current.lineStyle({ cat: "A" })
       // No fill / stroke — frame paints from its own palette
       expect(style.fill).toBeUndefined()
       expect(style.stroke).toBeUndefined()
@@ -150,7 +150,7 @@ describe("useAreaSeriesSetup", () => {
         }),
         { wrapper },
       )
-      const style = result.current.lineStyle({} as unknown)
+      const style = result.current.lineStyle({})
       expect(style.stroke).toBe("none")
       expect(style.strokeWidth).toBeUndefined()
     })
@@ -165,7 +165,7 @@ describe("useAreaSeriesSetup", () => {
         }),
         { wrapper },
       )
-      const style = result.current.lineStyle({} as unknown)
+      const style = result.current.lineStyle({})
       expect(style.fillOpacity).toBe(0.4)
     })
 
@@ -182,7 +182,7 @@ describe("useAreaSeriesSetup", () => {
         }),
         { wrapper },
       )
-      const style = result.current.lineStyle({} as unknown)
+      const style = result.current.lineStyle({})
       expect(style.stroke).toBe("purple")
       expect(style.strokeWidth).toBe(7)
       expect(style.opacity).toBe(0.3)
@@ -215,7 +215,7 @@ describe("useAreaSeriesSetup", () => {
         { wrapper },
       )
       const ps = result.current.pointStyle!
-      const style = ps({} as unknown)
+      const style = ps({})
       expect(style.r).toBe(5)
       expect(style.fillOpacity).toBe(1)
     })
@@ -235,7 +235,7 @@ describe("useAreaSeriesSetup", () => {
       )
       const ps = result.current.pointStyle!
       // Row carries parentLine with the group key
-      const style = ps({ x: 1, y: 2, parentLine: { cat: "A" } } as unknown)
+      const style = ps({ x: 1, y: 2, parentLine: { cat: "A" } })
       expect(style.fill).toBe("c-A")
     })
 
@@ -251,7 +251,7 @@ describe("useAreaSeriesSetup", () => {
         { wrapper },
       )
       const ps = result.current.pointStyle!
-      const style = ps({} as unknown)
+      const style = ps({})
       expect(style.fill).toBe("tomato")
     })
   })

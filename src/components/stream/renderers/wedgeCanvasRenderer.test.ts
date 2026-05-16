@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest"
 import { wedgeCanvasRenderer } from "./wedgeCanvasRenderer"
 import { scaleLinear, scaleBand } from "d3-scale"
-import type { WedgeSceneNode, OrdinalScales, OrdinalLayout } from "../ordinalTypes"
-import { createMockCanvasContext, recordCanvasOps } from "../../../test-utils/canvasMock"
+import type { WedgeSceneNode, OrdinalScales, OrdinalLayout, RectSceneNode } from "../ordinalTypes"
+import { createMockCanvasContext, recordCanvasOps, type CanvasContextMock } from "../../../test-utils/canvasMock"
 
 function createMockCtx() {
-  return createMockCanvasContext() as unknown as CanvasRenderingContext2D
+  return createMockCanvasContext() as CanvasContextMock & CanvasRenderingContext2D
 }
 
 function makeScales(): OrdinalScales {
@@ -98,7 +98,7 @@ describe("wedgeCanvasRenderer", () => {
     // asserting on `fill` call counts, which would break on any future
     // batching refactor that doesn't change what's actually painted.
     const ctx = createMockCtx()
-    const ops = recordCanvasOps(ctx as unknown)
+    const ops = recordCanvasOps(ctx)
     const node = makeWedge({
       style: { fill: "#e41a1c" },
       _pulseIntensity: 0.8,
@@ -112,7 +112,7 @@ describe("wedgeCanvasRenderer", () => {
 
   it("skips pulse overlay when _pulseIntensity is 0", () => {
     const ctx = createMockCtx()
-    const ops = recordCanvasOps(ctx as unknown)
+    const ops = recordCanvasOps(ctx)
     const node = makeWedge({ style: { fill: "#e41a1c" }, _pulseIntensity: 0 })
     wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
@@ -122,14 +122,14 @@ describe("wedgeCanvasRenderer", () => {
 
   it("skips non-wedge nodes", () => {
     const ctx = createMockCtx()
-    const rect = { type: "rect", x: 0, y: 0, width: 50, height: 100, style: {}, datum: {} } as unknown
+    const rect: RectSceneNode = { type: "rect", x: 0, y: 0, w: 50, h: 100, style: {}, datum: {} }
     wedgeCanvasRenderer(ctx, [rect], makeScales(), makeLayout())
     expect(ctx.fill).not.toHaveBeenCalled()
   })
 
   it("renders every wedge in the input list with its own fill", () => {
     const ctx = createMockCtx()
-    const ops = recordCanvasOps(ctx as unknown)
+    const ops = recordCanvasOps(ctx)
     const nodes = [
       makeWedge({ startAngle: 0, endAngle: Math.PI, style: { fill: "#e41a1c" } }),
       makeWedge({ startAngle: Math.PI, endAngle: 2 * Math.PI, style: { fill: "#377eb8" } })

@@ -4,6 +4,7 @@ import { render } from "@testing-library/react"
 import { ChoroplethMap } from "./ChoroplethMap"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
+import type { AreasProp } from "../../geo/useReferenceAreas"
 
 // Mock StreamGeoFrame to capture props
 let lastGeoFrameProps: any = null
@@ -21,11 +22,11 @@ vi.mock("../../geo/useReferenceAreas", () => ({
   useReferenceAreas: () => mockResolvedAreas
 }))
 
-const sampleAreas = [
+const sampleAreas: AreasProp = [
   { type: "Feature", properties: { name: "CountryA", gdp: 100 }, geometry: { type: "Polygon", coordinates: [[[0,0],[1,0],[1,1],[0,1],[0,0]]] } },
   { type: "Feature", properties: { name: "CountryB", gdp: 200 }, geometry: { type: "Polygon", coordinates: [[[2,0],[3,0],[3,1],[2,1],[2,0]]] } },
   { type: "Feature", properties: { name: "CountryC", gdp: 50 }, geometry: { type: "Polygon", coordinates: [[[4,0],[5,0],[5,1],[4,1],[4,0]]] } },
-] as unknown[]
+]
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <TooltipProvider>{children}</TooltipProvider>

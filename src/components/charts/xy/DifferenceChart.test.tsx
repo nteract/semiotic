@@ -1,7 +1,7 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { DifferenceChart, computeDifferenceSegments } from "./DifferenceChart"
+import { DifferenceChart, computeDifferenceSegments, type DifferenceChartProps } from "./DifferenceChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
 
@@ -683,7 +683,7 @@ describe("DifferenceChart accessor coercion", () => {
           data={[
             { x: "0", a: "10", b: "5" },
             { x: "1", a: "4", b: "9" },
-          ] as unknown}
+          ] as unknown as DifferenceChartProps["data"]}
           xAccessor="x"
           seriesAAccessor="a"
           seriesBAccessor="b"

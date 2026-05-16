@@ -82,7 +82,7 @@ export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
   /** Point radius when `showPoints`. @default 3 */
   pointRadius: number
   // ── Tooltip pieces ────────────────────────────────────────────
-  xAccessor: ChartAccessor<TDatum, number>
+  xAccessor: ChartAccessor<TDatum, number | Date | string>
   yAccessor: ChartAccessor<TDatum, number>
   xLabel?: string
   yLabel?: string

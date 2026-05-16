@@ -269,7 +269,7 @@ describe("LinkedCharts", () => {
       return <span data-testid="active">{String(isActive)}</span>
     }
 
-    const { container, _getByTestId } = render(
+    const { container } = render(
       <CategoryColorProvider colors={{ North: "#f00", South: "#0f0" }}>
         <LinkedCharts
           showLegend
@@ -377,7 +377,7 @@ describe("LinkedCharts", () => {
       if (originalRO) {
         resizeObserverGlobal.ResizeObserver = originalRO
       } else {
-        delete resizeObserverGlobal.ResizeObserver
+        Reflect.deleteProperty(resizeObserverGlobal, "ResizeObserver")
       }
     })
 

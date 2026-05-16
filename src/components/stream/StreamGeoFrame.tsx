@@ -132,9 +132,11 @@ function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
   // Skip wrapper-internal keys when iterating so the default tooltip
   // shows the user's actual datum fields, not "data: [object]".
   const source = data.data != null ? data.data : data
-  const entries = Object.entries(Object(source) as Record<string, unknown>)
+  if (!source || typeof source !== "object") return null
+  const entries = Object.entries(source as Record<string, unknown>)
     .filter(([k]) => k !== "data" && !k.startsWith("__"))
     .slice(0, 3)
+  if (entries.length === 0) return null
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
       {entries.map(([k, v]) => (

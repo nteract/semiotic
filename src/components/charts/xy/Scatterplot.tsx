@@ -33,9 +33,13 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   /** Array of data points. Each point should have x and y properties. */
   data?: TDatum[]
   /** Field name or function to access x values @default "x" */
-  xAccessor?: ChartAccessor<TDatum, number>
+  xAccessor?: ChartAccessor<TDatum, number | Date | string>
   /** Field name or function to access y values @default "y" */
   yAccessor?: ChartAccessor<TDatum, number>
+  /** X scale type @default "linear" */
+  xScaleType?: "linear" | "log" | "time"
+  /** Y scale type @default "linear" */
+  yScaleType?: "linear" | "log"
   /** Field name or function to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for categorical data or custom colors array @default "category10" */
@@ -172,6 +176,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     yFormat,
     xAccessor = "x",
     yAccessor = "y",
+    xScaleType,
+    yScaleType,
     colorBy,
     colorScheme,
     sizeBy,
@@ -417,6 +423,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     ...(data != null && { data: featureEffectiveData }),
     xAccessor,
     yAccessor,
+    xScaleType,
+    yScaleType,
     colorAccessor: colorBy || undefined,
     sizeAccessor: sizeBy || undefined,
     sizeRange,

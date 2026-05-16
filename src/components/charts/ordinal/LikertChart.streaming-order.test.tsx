@@ -45,7 +45,7 @@ describe("LikertChart streaming category order", () => {
 
     // Seed with responses across three questions in insertion order Q1 → Q2 → Q3.
     await act(async () => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { question: "Q1", score: 3 },
         { question: "Q1", score: 4 },
         { question: "Q2", score: 2 },
@@ -54,7 +54,7 @@ describe("LikertChart streaming category order", () => {
     })
     await new Promise(r => queueMicrotask(() => r(null))) // let adapter microtask flush
 
-    const firstDomain = ref.current.getScales()?.o.domain()
+    const firstDomain = ref.current!.getScales()?.o.domain()
     expect(firstDomain).toEqual(["Q1", "Q2", "Q3"])
 
     // Push a batch that flips the per-question total-response counts —
@@ -62,7 +62,7 @@ describe("LikertChart streaming category order", () => {
     // old value-desc ordering this would put Q3 first and Q1 last.
     // preserveCategoryOrder should keep Q1 → Q2 → Q3.
     await act(async () => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { question: "Q3", score: 5 },
         { question: "Q3", score: 4 },
         { question: "Q3", score: 5 },
@@ -73,7 +73,7 @@ describe("LikertChart streaming category order", () => {
     })
     await new Promise(r => queueMicrotask(() => r(null)))
 
-    const secondDomain = ref.current.getScales()?.o.domain()
+    const secondDomain = ref.current!.getScales()?.o.domain()
     expect(secondDomain).toEqual(["Q1", "Q2", "Q3"])
   })
 
@@ -91,18 +91,18 @@ describe("LikertChart streaming category order", () => {
     )
 
     await act(async () => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { question: "Q1", score: 3 },
         { question: "Q2", score: 4 },
       ])
     })
     await new Promise(r => queueMicrotask(() => r(null)))
-    expect(ref.current.getScales()?.o.domain()).toEqual(["Q1", "Q2"])
+    expect(ref.current!.getScales()?.o.domain()).toEqual(["Q1", "Q2"])
 
     // Q3 arrives late but gets a huge number of responses. It should
     // still land at the end of the axis (FIFO), not at the front.
     await act(async () => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { question: "Q3", score: 5 },
         { question: "Q3", score: 5 },
         { question: "Q3", score: 5 },
@@ -112,6 +112,6 @@ describe("LikertChart streaming category order", () => {
     })
     await new Promise(r => queueMicrotask(() => r(null)))
 
-    expect(ref.current.getScales()?.o.domain()).toEqual(["Q1", "Q2", "Q3"])
+    expect(ref.current!.getScales()?.o.domain()).toEqual(["Q1", "Q2", "Q3"])
   })
 })

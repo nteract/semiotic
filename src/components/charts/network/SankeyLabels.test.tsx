@@ -43,7 +43,7 @@ describe("SankeyDiagram label bug", () => {
         <SankeyDiagram
           nodes={nodes}
           edges={edges}
-          nodeIDAccessor="id"
+          nodeIdAccessor="id"
           sourceAccessor="source"
           targetAccessor="target"
           valueAccessor="value"
@@ -63,7 +63,7 @@ describe("SankeyDiagram label bug", () => {
         <SankeyDiagram
           nodes={nodes}
           edges={edges}
-          nodeIDAccessor="id"
+          nodeIdAccessor="id"
           sourceAccessor="source"
           targetAccessor="target"
           valueAccessor="value"
@@ -86,7 +86,7 @@ describe("SankeyDiagram label bug", () => {
         <SankeyDiagram
           nodes={nodes}
           edges={edges}
-          nodeIDAccessor="id"
+          nodeIdAccessor="id"
           nodeLabel="name"
           showLabels={true}
           width={700}
@@ -117,7 +117,7 @@ describe("SankeyDiagram label bug", () => {
         <SankeyDiagram
           nodes={nodes}
           edges={edges}
-          nodeIDAccessor="id"
+          nodeIdAccessor="id"
           nodeLabel="name"
           showLabels={true}
           width={700}
@@ -245,7 +245,7 @@ describe("SankeyDiagram label bug", () => {
         <SankeyDiagram
           nodes={nodes}
           edges={edges}
-          nodeIDAccessor="id"
+          nodeIdAccessor="id"
           sourceAccessor="source"
           targetAccessor="target"
           valueAccessor="value"

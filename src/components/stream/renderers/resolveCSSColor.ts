@@ -59,7 +59,7 @@ function ensureGlobalObserver(): void {
         installedMql.addEventListener("change", installedMqlHandler)
       } else if (typeof (installedMql as LegacyMediaQueryList).addListener === "function") {
         // Safari 14 fallback
-        ;(installedMql as LegacyMediaQueryList).addListener?.(installedMqlHandler)
+        ;(installedMql as LegacyMediaQueryList).addListener(installedMqlHandler)
       }
     } catch {
       // matchMedia can throw in older browsers / jsdom — safe to ignore
@@ -125,7 +125,7 @@ export function _resetCSSColorCacheForTest(): void {
     if (typeof installedMql.removeEventListener === "function") {
       installedMql.removeEventListener("change", installedMqlHandler)
     } else if (typeof (installedMql as LegacyMediaQueryList).removeListener === "function") {
-      ;(installedMql as LegacyMediaQueryList).removeListener?.(installedMqlHandler)
+      ;(installedMql as LegacyMediaQueryList).removeListener(installedMqlHandler)
     }
     installedMql = null
     installedMqlHandler = null

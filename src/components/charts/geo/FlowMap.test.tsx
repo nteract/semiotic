@@ -3,6 +3,7 @@ import React from "react"
 import { render } from "@testing-library/react"
 import { FlowMap } from "./FlowMap"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { AreasProp } from "../../geo/useReferenceAreas"
 
 // Mock StreamGeoFrame to capture props AND expose a fake imperative
 // handle so push-API tests can spy on `pushLine`/`pushManyLines`/etc.
@@ -62,7 +63,7 @@ describe("FlowMap", () => {
   beforeEach(() => {
     lastGeoFrameProps = null
     Object.values(fakeFrameHandle).forEach((fn) => {
-      if (typeof (fn as unknown)?.mockClear === "function") (fn as unknown).mockClear()
+      fn.mockClear()
     })
   })
 
@@ -129,11 +130,11 @@ describe("FlowMap", () => {
     })
 
     it("forwards areas and areaStyle", () => {
-      const areas = [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [] } }]
+      const areas: AreasProp = [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [] } }]
       const areaStyle = { fill: "#eee", stroke: "#999" }
       render(
         <Wrapper>
-          <FlowMap nodes={sampleNodes} flows={sampleFlows} areas={areas as unknown} areaStyle={areaStyle} />
+          <FlowMap nodes={sampleNodes} flows={sampleFlows} areas={areas} areaStyle={areaStyle} />
         </Wrapper>
       )
       expect(lastGeoFrameProps.areas).toBe(areas)
@@ -339,7 +340,7 @@ describe("FlowMap", () => {
       ref.current?.push({ source: "A", target: "B", passengers: 100 })
 
       expect(fakeFrameHandle.pushLine).toHaveBeenCalledTimes(1)
-      const line = (fakeFrameHandle.pushLine as unknown).mock.calls[0][0]
+      const line = fakeFrameHandle.pushLine.mock.calls[0][0]
       expect(line.source).toBe("A")
       expect(line.target).toBe("B")
       expect(line.passengers).toBe(100)
@@ -412,7 +413,7 @@ describe("FlowMap", () => {
       ])
 
       expect(fakeFrameHandle.pushManyLines).toHaveBeenCalledTimes(1)
-      const lines = (fakeFrameHandle.pushManyLines as unknown).mock.calls[0][0]
+      const lines = fakeFrameHandle.pushManyLines.mock.calls[0][0]
       expect(lines).toHaveLength(2)
     })
 

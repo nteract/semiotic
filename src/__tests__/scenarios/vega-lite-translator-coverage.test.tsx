@@ -23,6 +23,7 @@ import { render } from "@testing-library/react"
 import * as React from "react"
 import * as Semiotic from "../../components/semiotic"
 import { fromVegaLite } from "../../components/data/fromVegaLite"
+import type { VegaLiteSpec } from "../../components/data/fromVegaLite"
 
 // The exhaustive set of component names `fromVegaLite` can return.
 // Pulled from the switch logic in `src/components/data/fromVegaLite.ts`
@@ -46,7 +47,7 @@ const EMITTED_COMPONENTS = [
 
 // Minimal valid Vega-Lite specs that produce each component. If
 // `fromVegaLite` changes its routing, these probes catch drift.
-const SPEC_PROBES: Record<string, Record<string, unknown>> = {
+const SPEC_PROBES: Record<string, VegaLiteSpec> = {
   BarChart: {
     mark: "bar",
     data: { values: [{ region: "N", v: 1 }] },

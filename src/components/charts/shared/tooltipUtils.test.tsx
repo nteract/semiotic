@@ -10,6 +10,9 @@ import {
 } from "./tooltipUtils"
 import type { Datum } from "./datumTypes"
 
+type DefaultHover = Parameters<ReturnType<typeof buildDefaultTooltip>>[0]
+const hover = (data: Datum | null): DefaultHover => ({ data, x: 0, y: 0 })
+
 // ── formatVal ────────────────────────────────────────────────────────────
 
 describe("formatVal", () => {
@@ -92,7 +95,7 @@ describe("buildDefaultTooltip", () => {
 
   it("returns null when hover.data is falsy", () => {
     const fn = buildDefaultTooltip([{ label: "X", accessor: "x" }])
-    const result = fn({ data: null } as unknown)
+    const result = fn(hover(null))
     expect(result).toBeNull()
   })
 
@@ -101,7 +104,7 @@ describe("buildDefaultTooltip", () => {
       { label: "Score", accessor: "score" },
       { label: "Name", accessor: "name" },
     ])
-    const node = fn({ data: { score: 42, name: "Alice" } } as unknown)
+    const node = fn(hover({ score: 42, name: "Alice" }))
     const { container } = render(<>{node}</>)
     expect(container.textContent).toContain("Score:")
     expect(container.textContent).toContain("42")
@@ -114,7 +117,7 @@ describe("buildDefaultTooltip", () => {
       { label: "Name", accessor: "name", role: "title" },
       { label: "Val", accessor: "val" },
     ])
-    const node = fn({ data: { name: "Group A", val: 100 } } as unknown)
+    const node = fn(hover({ name: "Group A", val: 100 }))
     const { container } = render(<>{node}</>)
     const bold = container.querySelector("div[style*='bold']")
     expect(bold).not.toBeNull()
@@ -126,7 +129,7 @@ describe("buildDefaultTooltip", () => {
       { label: "Category", accessor: "cat", role: "title" },
       { label: "Value", accessor: "val" },
     ])
-    const node = fn({ data: { cat: "X", val: 7 } } as unknown)
+    const node = fn(hover({ cat: "X", val: 7 }))
     const { container } = render(<>{node}</>)
     // "Category:" should NOT appear as a label (it's the title, not a body row)
     expect(container.textContent).not.toContain("Category:")
@@ -136,14 +139,14 @@ describe("buildDefaultTooltip", () => {
     const fn = buildDefaultTooltip([
       { label: "Computed", accessor: (d: Datum) => d.a + d.b },
     ])
-    const node = fn({ data: { a: 3, b: 4 } } as unknown)
+    const node = fn(hover({ a: 3, b: 4 }))
     const { container } = render(<>{node}</>)
     expect(container.textContent).toContain("7")
   })
 
   it("renders the semiotic-tooltip class", () => {
     const fn = buildDefaultTooltip([{ label: "X", accessor: "x" }])
-    const node = fn({ data: { x: 1 } } as unknown)
+    const node = fn(hover({ x: 1 }))
     const { container } = render(<>{node}</>)
     expect(container.querySelector(".semiotic-tooltip")).not.toBeNull()
   })
@@ -301,7 +304,7 @@ describe("buildDefaultTooltip format cascade", () => {
         format: (v: any) => `$${v.toLocaleString()}`,
       },
     ])
-    const node = fn({ data: { month: 3, revenue: 22000 } } as unknown)
+    const node = fn(hover({ month: 3, revenue: 22000 }))
     const { container } = render(<>{node}</>)
     expect(container.textContent).toContain("M3")
     expect(container.textContent).toContain("$22,000")
@@ -316,7 +319,7 @@ describe("buildDefaultTooltip format cascade", () => {
         format: (v: any) => String(v).toUpperCase(),
       },
     ])
-    const node = fn({ data: { name: "alice" } } as unknown)
+    const node = fn(hover({ name: "alice" }))
     const { container } = render(<>{node}</>)
     expect(container.textContent).toContain("ALICE")
   })
@@ -329,7 +332,7 @@ describe("buildDefaultTooltip format cascade", () => {
         format: () => { throw new Error("nope") },
       },
     ])
-    const node = fn({ data: { v: 7 } } as unknown)
+    const node = fn(hover({ v: 7 }))
     const { container } = render(<>{node}</>)
     expect(container.textContent).toContain("7")
   })
@@ -342,7 +345,7 @@ describe("buildDefaultTooltip format cascade", () => {
         format: (v: any) => <strong data-testid="rn">{v}×</strong>,
       },
     ])
-    const node = fn({ data: { v: 5 } } as unknown)
+    const node = fn(hover({ v: 5 }))
     const { container } = render(<>{node}</>)
     expect(container.querySelector("[data-testid='rn']")).not.toBeNull()
     expect(container.textContent).toContain("5×")

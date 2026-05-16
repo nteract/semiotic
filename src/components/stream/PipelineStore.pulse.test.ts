@@ -78,7 +78,7 @@ describe("PipelineStore — Pulse", () => {
     })
     store.computeScene({ width: 100, height: 100 })
 
-    const points = store.scene.filter(n => n.type === "point") as unknown[]
+    const points = store.scene.filter(n => n.type === "point")
     expect(points.length).toBe(1)
     expect(points[0]._pulseIntensity).toBeGreaterThan(0)
     expect(points[0]._pulseColor).toBe("red")

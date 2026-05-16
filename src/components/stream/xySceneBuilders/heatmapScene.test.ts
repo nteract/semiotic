@@ -208,7 +208,7 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
 
     // After sorting: x=5 gets xi=0, x=10 gets xi=1
     // cellW = 400/2 = 200
-    const byX = nodes.map((n) => ({ x: n.x, val: n.datum.value }))
+    const byX = nodes.map((n) => ({ x: n.x, val: n.datum!.value }))
     const at0 = byX.find((n) => n.x === 0)
     const at200 = byX.find((n) => n.x === 200)
     expect(at0!.val).toBe(2) // x=5 (smaller) → xi=0 → pixel x=0
@@ -302,9 +302,9 @@ describe("buildStreamingHeatmapScene", () => {
     // Both land in bin (0, 0) with domain [0,100] and 5 bins => binSize=20
     expect(nodes).toHaveLength(1)
     const datum = nodes[0].datum
-    expect(datum.count).toBe(2)
+    expect(datum!.count).toBe(2)
     // For count aggregation, the cell value should be the count
-    expect(datum.value).toBe(2)
+    expect(datum!.value).toBe(2)
   })
 
   it("sum aggregation sums values per bin", () => {
@@ -318,8 +318,8 @@ describe("buildStreamingHeatmapScene", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
     const datum = nodes[0].datum
-    expect(datum.sum).toBe(35)
-    expect(datum.value).toBe(35)
+    expect(datum!.sum).toBe(35)
+    expect(datum!.value).toBe(35)
   })
 
   it("mean aggregation averages values per bin", () => {
@@ -334,9 +334,9 @@ describe("buildStreamingHeatmapScene", () => {
     expect(nodes).toHaveLength(1)
     const datum = nodes[0].datum
     // mean = (10 + 30) / 2 = 20
-    expect(datum.value).toBe(20)
-    expect(datum.count).toBe(2)
-    expect(datum.sum).toBe(40)
+    expect(datum!.value).toBe(20)
+    expect(datum!.count).toBe(2)
+    expect(datum!.sum).toBe(40)
   })
 
   it("cell positions are correct for streaming bins", () => {
@@ -361,8 +361,8 @@ describe("buildStreamingHeatmapScene", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
     const datum = nodes[0].datum
-    expect(datum.xi).toBe(4)
-    expect(datum.yi).toBe(4)
+    expect(datum!.xi).toBe(4)
+    expect(datum!.yi).toBe(4)
   })
 
   it("empty data produces no nodes in streaming mode", () => {
@@ -392,6 +392,7 @@ describe("buildStreamingHeatmapScene", () => {
     // Sort by xi so positional asserts are stable.
     const datums = nodes
       .map((n) => n.datum)
+      .filter((d): d is NonNullable<typeof d> => d != null)
       .sort((a, b) => a.xi - b.xi)
 
     // Bin (0, 0) — top-left of the data domain.
@@ -418,13 +419,13 @@ describe("buildStreamingHeatmapScene", () => {
       makeStreamCtx({ config: { heatmapAggregation: "sum", heatmapXBins: 5, heatmapYBins: 5, valueAccessor: "value" } }),
       data, defaultLayout,
     )
-    expect(sumNodes[0].datum.agg).toBe("sum")
+    expect(sumNodes[0].datum!.agg).toBe("sum")
 
     const meanNodes = buildHeatmapScene(
       makeStreamCtx({ config: { heatmapAggregation: "mean", heatmapXBins: 5, heatmapYBins: 5, valueAccessor: "value" } }),
       data, defaultLayout,
     )
-    expect(meanNodes[0].datum.agg).toBe("mean")
+    expect(meanNodes[0].datum!.agg).toBe("mean")
   })
 
   it("showValues sets label metadata in streaming mode", () => {
@@ -451,7 +452,7 @@ describe("buildStreamingHeatmapScene", () => {
     const ctx = makeStreamCtx()
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(2)
-    const xis = nodes.map((n) => n.datum.xi).sort()
+    const xis = nodes.map((n) => n.datum!.xi).sort()
     expect(xis).toEqual([0, 4])
   })
 
@@ -467,8 +468,8 @@ describe("buildStreamingHeatmapScene", () => {
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    expect(nodes[0].datum.count).toBe(100)
-    expect(nodes[0].datum.value).toBe(100)
+    expect(nodes[0].datum!.count).toBe(100)
+    expect(nodes[0].datum!.value).toBe(100)
   })
 
   it("typed array binning: sum aggregation accumulates across all points in bin", () => {
@@ -485,8 +486,8 @@ describe("buildStreamingHeatmapScene", () => {
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    expect(nodes[0].datum.value).toBe(150)
-    expect(nodes[0].datum.sum).toBe(150)
+    expect(nodes[0].datum!.value).toBe(150)
+    expect(nodes[0].datum!.sum).toBe(150)
   })
 
   it("NaN/Infinity values are skipped during binning", () => {
@@ -502,7 +503,7 @@ describe("buildStreamingHeatmapScene", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     // Only 2 valid points: (5,5) and (15,15) — both land in bin (0,0)
     expect(nodes).toHaveLength(1)
-    expect(nodes[0].datum.count).toBe(2)
+    expect(nodes[0].datum!.count).toBe(2)
   })
 
   it("negative values in domain are binned correctly", () => {
@@ -516,8 +517,8 @@ describe("buildStreamingHeatmapScene", () => {
     const data = [{ x: -25, y: -25, value: 1 }]
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    expect(nodes[0].datum.xi).toBe(2)
-    expect(nodes[0].datum.yi).toBe(2)
+    expect(nodes[0].datum!.xi).toBe(2)
+    expect(nodes[0].datum!.yi).toBe(2)
   })
 
   it("fills vary across bins with different aggregated values", () => {

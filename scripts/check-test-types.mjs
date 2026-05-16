@@ -1,9 +1,23 @@
 import { spawnSync } from "node:child_process"
 import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { isAbsolute, join, relative } from "node:path"
 
 const baseline = JSON.parse(readFileSync("scripts/test-typecheck-baseline.json", "utf8"))
-const known = baseline.files ?? {}
+if (!baseline || typeof baseline !== "object" || Array.isArray(baseline) || !baseline.files || typeof baseline.files !== "object" || Array.isArray(baseline.files)) {
+  const topLevelFiles = baseline && typeof baseline === "object" && !Array.isArray(baseline)
+    ? Object.keys(baseline).filter((key) => /\.(?:ts|tsx)$/.test(key.replace(/\\/g, "/")))
+    : []
+  const hint = topLevelFiles.length > 0
+    ? " Did you mean to wrap file counts in a top-level \"files\" object?"
+    : ""
+  console.error(`Invalid scripts/test-typecheck-baseline.json: expected { "files": { ... } }.${hint}`)
+  process.exit(1)
+}
+const known = baseline.files
+if (Object.keys(known).length === 0) {
+  console.error("Invalid scripts/test-typecheck-baseline.json: baseline.files is empty.")
+  process.exit(1)
+}
 const tscBin = join("node_modules", ".bin", process.platform === "win32" ? "tsc.cmd" : "tsc")
 
 const result = spawnSync(tscBin, ["-p", "tsconfig.tests.json", "--noEmit", "--pretty", "false"], {
@@ -22,11 +36,25 @@ if (result.status === 0) {
   process.exit(0)
 }
 
+function normalizeDiagnosticPath(file) {
+  const normalized = file.replace(/\\/g, "/")
+  const cwd = process.cwd().replace(/\\/g, "/")
+  if (normalized.startsWith(`${cwd}/`)) {
+    return normalized.slice(cwd.length + 1)
+  }
+  if (isAbsolute(file)) {
+    const rel = relative(process.cwd(), file).replace(/\\/g, "/")
+    return rel.startsWith("../") ? normalized : rel
+  }
+  return normalized.replace(/^\.\//, "")
+}
+
 const counts = new Map()
 for (const line of output.split(/\r?\n/)) {
-  const match = line.match(/^(src\/[^(:]+\.(?:ts|tsx))\(/)
+  const match = line.match(/^(.+\.(?:ts|tsx))\(\d+,\d+\):\s+error\s+TS\d+:/)
   if (!match) continue
-  counts.set(match[1], (counts.get(match[1]) ?? 0) + 1)
+  const file = normalizeDiagnosticPath(match[1])
+  counts.set(file, (counts.get(file) ?? 0) + 1)
 }
 
 const newFiles = []
@@ -41,6 +69,11 @@ for (const [file, count] of counts) {
     regressions.push([file, count, expected])
   } else if (count < expected) {
     improvements.push([file, expected - count, expected, count])
+  }
+}
+for (const [file, expected] of Object.entries(known)) {
+  if (!counts.has(file)) {
+    improvements.push([file, expected, expected, 0])
   }
 }
 

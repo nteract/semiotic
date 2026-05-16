@@ -17,8 +17,8 @@ import type { CandlestickSceneNode, SceneNode, TransitionConfig } from "./types"
 
 const ctx: TransitionContext = {
   runtimeMode: "streaming",
-  getX: (d: any) => d?.x ?? 0,
-  getY: (d: any) => d?.y ?? 0,
+  getX: (d) => d?.x ?? 0,
+  getY: (d) => d?.y ?? 0,
 }
 
 const transition: TransitionConfig = { duration: 300 }
@@ -160,12 +160,12 @@ describe("pipelineTransitions — candlestick", () => {
     // still in the scene, snapshotPositions must not reassign them an
     // index-based id (which would reshuffle which stub matches which key).
     const exitStub = makeCandle({
-      datum: null as unknown,
+      datum: null,
       _transitionKey: "c:7",
     })
     expect(getNodeIdentity(ctx, exitStub, 0)).toBe("c:7")
     // Index-based fallback only kicks in when neither datum nor key is set.
-    const stranded = makeCandle({ datum: null as unknown })
+    const stranded = makeCandle({ datum: null })
     expect(getNodeIdentity(ctx, stranded, 3)).toBe("c:3")
   })
 

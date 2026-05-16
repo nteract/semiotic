@@ -732,7 +732,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
 
   const tooltipContent = useCallback((d: HoverData): React.ReactNode => {
     if (!d || !d.data) return null
-    const payload = d.data as unknown
+    const payload = d.data
     if (!isProcessSankeyScenePayload(payload)) {
       // Fallthrough — should not happen for ProcessSankey scenes, but
       // guard so a bad datum can't crash the tooltip pipeline.
@@ -986,7 +986,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       onObservation={onObservation}
       customClickBehavior={onClick ? (h) => {
         if (!h || !h.data) return
-        const payload = h.data as unknown
+        const payload = h.data
         if (!isProcessSankeyScenePayload(payload)) return
         onClick(payload.data, { x: h.x, y: h.y })
       } : undefined}

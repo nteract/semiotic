@@ -85,7 +85,7 @@ describe("toConfig", () => {
   })
 
   it("embeds selections when provided", () => {
-    const selections = { version: "1" as const, selections: [] }
+    const selections = {}
     const config = toConfig("LineChart", { xAccessor: "x" }, { selections })
     expect(config.selections).toEqual(selections)
   })
@@ -113,11 +113,11 @@ describe("fromConfig", () => {
   })
 
   it("throws for missing component", () => {
-    expect(() => fromConfig({ props: {}, version: "1", createdAt: "" } as unknown)).toThrow("missing component")
+    expect(() => fromConfig({ props: {}, version: "1", createdAt: "" } as ChartConfig)).toThrow("missing component")
   })
 
   it("throws for missing props", () => {
-    expect(() => fromConfig({ component: "LineChart", version: "1", createdAt: "" } as unknown)).toThrow("missing component or props")
+    expect(() => fromConfig({ component: "LineChart", version: "1", createdAt: "" } as ChartConfig)).toThrow("missing component or props")
   })
 
   it("throws for unknown component", () => {

@@ -38,7 +38,7 @@ export const waterfallCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, la
     const next = rects[i + 1]
     const currDatum = curr.datum as WaterfallDatum | null
     const nextDatum = next.datum as WaterfallDatum | null
-    if (!currDatum?.cumEnd || !nextDatum?.baseline) continue
+    if (currDatum?.cumEnd == null || nextDatum?.baseline == null) continue
 
     // Connect from end of current bar to start of next bar at cumEnd level
     const yConn = scales.y(currDatum.cumEnd)

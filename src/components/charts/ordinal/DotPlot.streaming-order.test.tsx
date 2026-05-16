@@ -44,13 +44,13 @@ describe("DotPlot streaming category order", () => {
     // (the pre-"auto" default of `sort=true`), the domain would come
     // out ["B", "A", "C"]. "auto" under streaming should preserve FIFO.
     await act(async () => {
-      ref.current.push({ category: "C", value: 10 })
+      ref.current!.push({ category: "C", value: 10 })
     })
     await act(async () => {
-      ref.current.push({ category: "A", value: 30 })
+      ref.current!.push({ category: "A", value: 30 })
     })
     await act(async () => {
-      ref.current.push({ category: "B", value: 20 })
+      ref.current!.push({ category: "B", value: 20 })
     })
 
     const domain = getOrdinalScales(ref)?.o.domain()
@@ -95,9 +95,9 @@ describe("DotPlot streaming category order", () => {
         />
       </TooltipProvider>
     )
-    await act(async () => { ref.current.push({ category: "Low", value: 10 }) })
-    await act(async () => { ref.current.push({ category: "High", value: 100 }) })
-    await act(async () => { ref.current.push({ category: "Mid", value: 50 }) })
+    await act(async () => { ref.current!.push({ category: "Low", value: 10 }) })
+    await act(async () => { ref.current!.push({ category: "High", value: 100 }) })
+    await act(async () => { ref.current!.push({ category: "Mid", value: 50 }) })
 
     const domain = getOrdinalScales(ref)?.o.domain()
     expect(domain).toEqual(["High", "Mid", "Low"])

@@ -27,7 +27,7 @@ function makeLineNode(overrides: Partial<LineSceneNode> = {}): LineSceneNode {
     type: "line",
     path: [[0, 100], [50, 50], [100, 0]],
     style: { stroke: "#007bff" },
-    datum: {},
+    datum: [],
     ...overrides
   }
 }
@@ -314,7 +314,7 @@ describe("lineCanvasRenderer", () => {
         type: "line",
         path: [[0, 100], [50, 50], [100, 0]],
         style: { stroke: "#007bff" },
-        datum: {}
+        datum: []
       }
       if (opts.curve !== "none") node.curve = opts.curve
       if (opts.decay) {

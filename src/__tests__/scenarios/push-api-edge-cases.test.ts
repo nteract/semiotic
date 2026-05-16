@@ -1,4 +1,3 @@
-import type { Datum } from "../../components/charts/shared/datumTypes"
 /**
  * Push API edge case scenarios.
  *
@@ -9,12 +8,15 @@ import type { Datum } from "../../components/charts/shared/datumTypes"
 import { PipelineStore } from "../../components/stream/PipelineStore"
 import { OrdinalPipelineStore } from "../../components/stream/OrdinalPipelineStore"
 import { NetworkPipelineStore } from "../../components/stream/NetworkPipelineStore"
+import type { PipelineConfig } from "../../components/stream/PipelineStore"
+import type { OrdinalPipelineConfig } from "../../components/stream/ordinalTypes"
 
-function makeXYStore(overrides: Datum = {}) {
+function makeXYStore(overrides: Partial<PipelineConfig> = {}) {
   return new PipelineStore({
     chartType: "scatter",
     windowSize: 100,
     windowMode: "sliding" as const,
+    arrowOfTime: "right",
     extentPadding: 0,
     xAccessor: "x",
     yAccessor: "y",
@@ -23,7 +25,7 @@ function makeXYStore(overrides: Datum = {}) {
   })
 }
 
-function makeOrdinalStore(overrides: Datum = {}) {
+function makeOrdinalStore(overrides: Partial<OrdinalPipelineConfig> = {}) {
   return new OrdinalPipelineStore({
     chartType: "bar",
     windowSize: 100,

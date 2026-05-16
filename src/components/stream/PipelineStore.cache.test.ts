@@ -11,6 +11,18 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { PipelineStore } from "./PipelineStore"
 import type { HeatcellSceneNode, PointSceneNode, RectSceneNode } from "./types"
 
+type PipelineStoreColorCacheInternals = {
+  _groupColorMap: Map<string, string>
+  resolveGroupColor(group: string): string | null
+}
+type PipelineStoreClassInternals = {
+  GROUP_COLOR_MAP_CAP: number
+}
+
+function resolveGroupColor(store: PipelineStore, group: string): string | null {
+  return (store as unknown as PipelineStoreColorCacheInternals).resolveGroupColor(group)
+}
+
 function makeStore(overrides: Datum = {}) {
   return new PipelineStore({
     xAccessor: "x",
@@ -18,6 +30,7 @@ function makeStore(overrides: Datum = {}) {
     chartType: "scatter",
     windowSize: 100,
     windowMode: "sliding" as const,
+    arrowOfTime: "right",
     extentPadding: 0,
     ...overrides,
   })
@@ -56,9 +69,9 @@ describe("resolveGroupColor after data changes", () => {
     store.computeScene({ width: 400, height: 300 })
 
     // resolveGroupColor should return distinct colors for each group
-    const colorA = store.resolveGroupColor("A")
-    const colorB = store.resolveGroupColor("B")
-    const colorC = store.resolveGroupColor("C")
+    const colorA = resolveGroupColor(store, "A")
+    const colorB = resolveGroupColor(store, "B")
+    const colorC = resolveGroupColor(store, "C")
     expect(colorA).toBeDefined()
     expect(colorB).toBeDefined()
     expect(colorC).toBeDefined()
@@ -77,7 +90,7 @@ describe("resolveGroupColor after data changes", () => {
       { x: 2, y: 20, group: "B" },
     ])
     store.computeScene({ width: 400, height: 300 })
-    expect(store.resolveGroupColor("A")).toBeDefined()
+    expect(resolveGroupColor(store, "A")).toBeDefined()
 
     store.clear()
     setData(store, [
@@ -87,8 +100,8 @@ describe("resolveGroupColor after data changes", () => {
     store.computeScene({ width: 400, height: 300 })
 
     // New groups should get colors (X and Y are valid)
-    const colorX = store.resolveGroupColor("X")
-    const colorY = store.resolveGroupColor("Y")
+    const colorX = resolveGroupColor(store, "X")
+    const colorY = resolveGroupColor(store, "Y")
     expect(colorX).toBeDefined()
     expect(colorY).toBeDefined()
     expect(colorX).not.toBe(colorY)
@@ -97,14 +110,14 @@ describe("resolveGroupColor after data changes", () => {
   it("uses a monotonic counter for palette indexing (stable across lookups)", () => {
     // Palette length 2 makes the counter/size distinction observable.
     const store = makeStore({ colorScheme: ["red", "blue"] })
-    expect(store.resolveGroupColor("A")).toBe("red")   // counter 0 → red
-    expect(store.resolveGroupColor("B")).toBe("blue")  // counter 1 → blue
-    expect(store.resolveGroupColor("C")).toBe("red")   // counter 2 → red
+    expect(resolveGroupColor(store, "A")).toBe("red")   // counter 0 → red
+    expect(resolveGroupColor(store, "B")).toBe("blue")  // counter 1 → blue
+    expect(resolveGroupColor(store, "C")).toBe("red")   // counter 2 → red
 
     // Re-querying existing groups doesn't increment the counter or mutate colors.
-    expect(store.resolveGroupColor("A")).toBe("red")
-    expect(store.resolveGroupColor("B")).toBe("blue")
-    expect(store.resolveGroupColor("C")).toBe("red")
+    expect(resolveGroupColor(store, "A")).toBe("red")
+    expect(resolveGroupColor(store, "B")).toBe("blue")
+    expect(resolveGroupColor(store, "C")).toBe("red")
   })
 
   it("returns a non-empty color when user palettes are empty, falling through to STREAMING_PALETTE", () => {
@@ -114,7 +127,7 @@ describe("resolveGroupColor after data changes", () => {
       colorScheme: [],           // empty user scheme
       themeCategorical: [],      // empty theme palette
     })
-    const color = store.resolveGroupColor("A")
+    const color = resolveGroupColor(store, "A")
     expect(color).toBeTruthy()
     expect(typeof color).toBe("string")
   })
@@ -123,23 +136,23 @@ describe("resolveGroupColor after data changes", () => {
     const store = makeStore({
       colorScheme: ["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9"],
     })
-    const cap = (PipelineStore as unknown).GROUP_COLOR_MAP_CAP
+    const cap = (PipelineStore as unknown as PipelineStoreClassInternals).GROUP_COLOR_MAP_CAP
     const total = cap + Math.floor(cap / 2)
     // Push well past the configured cap — prevents unbounded growth on streams with unique group IDs.
     for (let i = 0; i < total; i++) {
-      store.resolveGroupColor(`g${i}`)
+      resolveGroupColor(store, `g${i}`)
     }
     // Internal map bounded by the cap.
-    expect((store as unknown)._groupColorMap.size).toBeLessThanOrEqual(cap)
+    expect((store as unknown as PipelineStoreColorCacheInternals)._groupColorMap.size).toBeLessThanOrEqual(cap)
 
     // The most-recent group is still resolvable and holds its monotonically-assigned palette slot
     // (counter was `total - 1` at the time of that group's insertion).
-    expect(store.resolveGroupColor(`g${total - 1}`)).toBe(`c${(total - 1) % 10}`)
+    expect(resolveGroupColor(store, `g${total - 1}`)).toBe(`c${(total - 1) % 10}`)
 
     // A previously-evicted group re-appearing gets a fresh palette slot off the running counter,
     // not its original color. Counter is now `total`. The test's point is that eviction-then-
     // reappearance doesn't throw, collide, or corrupt the rest of the map.
-    const revived = store.resolveGroupColor("g0")
+    const revived = resolveGroupColor(store, "g0")
     expect(revived).toBe(`c${total % 10}`)
   })
 })
@@ -267,7 +280,7 @@ describe("scene rebuilds after config changes", () => {
       { x: 2, y: 20, group: "B" },
     ])
     store.computeScene({ width: 400, height: 300 })
-    const colorBefore = store.resolveGroupColor("A")
+    const colorBefore = resolveGroupColor(store, "A")
 
     // Change color scheme — this should invalidate the color cache
     store.updateConfig({
@@ -281,7 +294,7 @@ describe("scene rebuilds after config changes", () => {
       colorScheme: ["green", "orange"],
     })
     store.computeScene({ width: 400, height: 300 })
-    const colorAfter = store.resolveGroupColor("A")
+    const colorAfter = resolveGroupColor(store, "A")
 
     // Color should have changed from red to green
     expect(colorAfter).not.toBe(colorBefore)
@@ -299,7 +312,7 @@ describe("scene rebuilds after config changes", () => {
       { x: 2, y: 20, group: "B" },
     ])
     store.computeScene({ width: 400, height: 300 })
-    const before = store.resolveGroupColor("A")
+    const before = resolveGroupColor(store, "A")
 
     store.updateConfig({
       xAccessor: "x",
@@ -312,7 +325,7 @@ describe("scene rebuilds after config changes", () => {
       themeCategorical: ["#111", "#222", "#333"],
     })
     store.computeScene({ width: 400, height: 300 })
-    const after = store.resolveGroupColor("A")
+    const after = resolveGroupColor(store, "A")
 
     expect(after).not.toBe(before)
   })
@@ -330,7 +343,7 @@ describe("scene rebuilds after config changes", () => {
     store.computeScene({ width: 400, height: 300 })
     // Warm the cache for group "B" so the subsequent colorAccessor swap has
     // something stale to invalidate. Return value intentionally unused.
-    store.resolveGroupColor("B")
+    resolveGroupColor(store, "B")
 
     // Switch the colorAccessor — categories change from {A, B} to {north, south},
     // so the cached map is wrong. This must invalidate.
@@ -348,8 +361,8 @@ describe("scene rebuilds after config changes", () => {
     // After the swap, "B" is no longer a valid category in the colorAccessor,
     // but resolveGroupColor falls back to _groupColorMap which should also have
     // been reset. The fact that we don't return the stale "B" color is the key.
-    const northColor = store.resolveGroupColor("north")
-    const southColor = store.resolveGroupColor("south")
+    const northColor = resolveGroupColor(store, "north")
+    const southColor = resolveGroupColor(store, "south")
     expect(northColor).not.toBe(southColor)
     expect([northColor, southColor]).toContain("red")
   })
@@ -464,8 +477,8 @@ describe("rapid push/clear cycles", () => {
     expect(store.getData()).toHaveLength(2)
 
     // Group color map should reflect new categories, not stale from cycle 1
-    const colorX = store.resolveGroupColor("X")
-    const colorY = store.resolveGroupColor("Y")
+    const colorX = resolveGroupColor(store, "X")
+    const colorY = resolveGroupColor(store, "Y")
     expect(colorX).toBeDefined()
     expect(colorY).toBeDefined()
     expect(colorX).not.toBe(colorY)

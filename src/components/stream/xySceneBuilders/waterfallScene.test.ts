@@ -46,21 +46,21 @@ describe("buildWaterfallScene", () => {
     // Bar 1: baseline=0, cumEnd=10, delta=10
     const bar1 = nodes[0]
     expect(bar1.type).toBe("rect")
-    expect(bar1.datum.baseline).toBe(0)
-    expect(bar1.datum.cumEnd).toBe(10)
-    expect(bar1.datum.delta).toBe(10)
+    expect(bar1.datum!.baseline).toBe(0)
+    expect(bar1.datum!.cumEnd).toBe(10)
+    expect(bar1.datum!.delta).toBe(10)
 
     // Bar 2: baseline=10, cumEnd=30, delta=20
     const bar2 = nodes[1]
-    expect(bar2.datum.baseline).toBe(10)
-    expect(bar2.datum.cumEnd).toBe(30)
-    expect(bar2.datum.delta).toBe(20)
+    expect(bar2.datum!.baseline).toBe(10)
+    expect(bar2.datum!.cumEnd).toBe(30)
+    expect(bar2.datum!.delta).toBe(20)
 
     // Bar 3: baseline=30, cumEnd=25, delta=-5
     const bar3 = nodes[2]
-    expect(bar3.datum.baseline).toBe(30)
-    expect(bar3.datum.cumEnd).toBe(25)
-    expect(bar3.datum.delta).toBe(-5)
+    expect(bar3.datum!.baseline).toBe(30)
+    expect(bar3.datum!.cumEnd).toBe(25)
+    expect(bar3.datum!.delta).toBe(-5)
   })
 
   it("assigns positiveColor for positive deltas and negativeColor for negative", () => {
@@ -112,8 +112,8 @@ describe("buildWaterfallScene", () => {
     // Only x=0 and x=30 survive filtering
     expect(nodes).toHaveLength(2)
     // Second valid bar baseline is cumEnd of first (10)
-    expect(nodes[1].datum.baseline).toBe(10)
-    expect(nodes[1].datum.cumEnd).toBe(15)
+    expect(nodes[1].datum!.baseline).toBe(10)
+    expect(nodes[1].datum!.cumEnd).toBe(15)
   })
 
   it("filters out non-finite X values", () => {
@@ -128,8 +128,8 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(2)
-    expect(nodes[0].datum.x).toBe(0)
-    expect(nodes[1].datum.x).toBe(20)
+    expect(nodes[0].datum!.x).toBe(0)
+    expect(nodes[1].datum!.x).toBe(20)
   })
 
   it("filters out null X values", () => {
@@ -141,7 +141,7 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(1)
-    expect(nodes[0].datum.x).toBe(5)
+    expect(nodes[0].datum!.x).toBe(5)
   })
 
   it("applies gap symmetrically, narrowing bars", () => {
@@ -253,8 +253,8 @@ describe("buildWaterfallScene", () => {
     })
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
-    expect(nodes[0].datum._connectorStroke).toBe("#999")
-    expect(nodes[0].datum._connectorWidth).toBe(1.5)
+    expect(nodes[0].datum!._connectorStroke).toBe("#999")
+    expect(nodes[0].datum!._connectorWidth).toBe(1.5)
   })
 
   it("skips bars with zero or negative width after gap is applied", () => {

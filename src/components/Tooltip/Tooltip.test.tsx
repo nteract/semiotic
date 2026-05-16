@@ -4,7 +4,13 @@ import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { ReactElement, ReactNode } from "react"
 
-type NullableTooltipFn<TFn extends (datum: Record<string, unknown>) => unknown> = (
+type TooltipRenderer =
+  | ReturnType<typeof Tooltip>
+  | ReturnType<typeof MultiLineTooltip>
+  | ReturnType<typeof MultiPointTooltip>
+  | ReturnType<typeof buildDefaultTooltip>
+
+type NullableTooltipFn<TFn extends TooltipRenderer> = (
   datum: Parameters<TFn>[0] | null | undefined
 ) => ReturnType<TFn>
 
@@ -273,7 +279,7 @@ describe("buildDefaultTooltip with title role", () => {
       { label: "share", accessor: "share", role: "x" },
       { label: "growth", accessor: "growth", role: "y" },
     ])
-    const hoverData = { data: { product: "TurboEncabulator", share: 0.75, growth: 0.82 } }
+    const hoverData = { data: { product: "TurboEncabulator", share: 0.75, growth: 0.82 }, x: 0, y: 0 }
     const { container } = render(<>{fn(hoverData)}</>)
 
     // Title should be bold
@@ -293,7 +299,7 @@ describe("buildDefaultTooltip with title role", () => {
       { label: "x", accessor: "x", role: "x" },
       { label: "y", accessor: "y", role: "y" },
     ])
-    const hoverData = { data: { x: 1, y: 2 } }
+    const hoverData = { data: { x: 1, y: 2 }, x: 0, y: 0 }
     const { container } = render(<>{fn(hoverData)}</>)
 
     expect(container.textContent).toContain("x")

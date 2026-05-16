@@ -84,8 +84,8 @@ describe("useStableShallow", () => {
     // `{ a: undefined }` and `{ b: undefined }` both have one own key
     // and both look up `undefined` for any missing key. Without an
     // explicit key-presence check the two would falsely compare equal.
-    const a = { a: undefined as unknown as number }
-    const b = { b: undefined as unknown as number }
+    const a: Record<string, number | undefined> = { a: undefined }
+    const b: Record<string, number | undefined> = { b: undefined }
     const { result, rerender } = renderHook(
       ({ value }) => useStableShallow(value),
       { initialProps: { value: a } },
@@ -143,8 +143,9 @@ describe("useStableShallow", () => {
   })
 
   it("does not falsely stabilize when nested key sets differ", () => {
-    const a = { pulse: { duration: 600 } }
-    const b = { pulse: { color: "#abc" } } // single key, but different name
+    type PulseConfigShape = { pulse: { duration?: number; color?: string } }
+    const a: PulseConfigShape = { pulse: { duration: 600 } }
+    const b: PulseConfigShape = { pulse: { color: "#abc" } } // single key, but different name
     const { result, rerender } = renderHook(
       ({ value }) => useStableShallow(value),
       { initialProps: { value: a } },

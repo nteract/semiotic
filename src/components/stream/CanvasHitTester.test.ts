@@ -308,7 +308,7 @@ describe("findAllNodesAtX", () => {
     topPath: [[10, 90], [50, 50], [90, 15]],
     bottomPath: [[10, 100], [50, 100], [90, 100]],
     style: { fill: "green", stroke: "green" },
-    datum: { id: "area1" },
+    datum: [{ id: "area1" }],
     group: "Area C",
   }
 
@@ -375,7 +375,7 @@ describe("findAllNodesAtX", () => {
       style: { fill: "orange" },
       datum: { id: "p1" },
     }
-    const results = findAllNodesAtX([point as unknown, lineA], 50, 30)
+    const results = findAllNodesAtX([point, lineA], 50, 30)
     expect(results).toHaveLength(1)
     expect(results[0].group).toBe("Series A")
   })

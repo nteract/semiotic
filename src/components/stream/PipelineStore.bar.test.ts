@@ -34,7 +34,7 @@ describe("PipelineStore — Bar category cache", () => {
 
     const firstScene = store.scene.filter(n => n.type === "rect")
     // Only errors bars should exist
-    const firstGroups = new Set(firstScene.map(n => (n as unknown).group))
+    const firstGroups = new Set(firstScene.map(n => n.group))
     expect(firstGroups.has("errors")).toBe(true)
     expect(firstGroups.has("warnings")).toBe(false)
 
@@ -52,7 +52,7 @@ describe("PipelineStore — Bar category cache", () => {
     store.computeScene({ width: 400, height: 300 })
 
     const secondScene = store.scene.filter(n => n.type === "rect")
-    const secondGroups = new Set(secondScene.map(n => (n as unknown).group))
+    const secondGroups = new Set(secondScene.map(n => n.group))
 
     // All three categories must now render
     expect(secondGroups.has("errors")).toBe(true)
@@ -74,7 +74,7 @@ describe("PipelineStore — Bar category cache", () => {
     })
     store.computeScene({ width: 400, height: 300 })
 
-    const groups = new Set(store.scene.filter(n => n.type === "rect").map(n => (n as unknown).group))
+    const groups = new Set(store.scene.filter(n => n.type === "rect").map(n => n.group))
     expect(groups.has("A")).toBe(true)
     expect(groups.has("B")).toBe(true)
   })

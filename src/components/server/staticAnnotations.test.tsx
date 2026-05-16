@@ -4,7 +4,7 @@ Object.assign(global, { TextEncoder, TextDecoder })
 
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
-import { renderStaticAnnotations } from "./staticAnnotations"
+import { renderStaticAnnotations, type StaticAnnotationConfig } from "./staticAnnotations"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
 import { scaleLinear } from "d3-scale"
 
@@ -16,8 +16,8 @@ function renderAnnotationsString(config: Parameters<typeof renderStaticAnnotatio
 
 const xScale = scaleLinear().domain([0, 100]).range([0, 400])
 const yScale = scaleLinear().domain([0, 100]).range([300, 0])
-const baseConfig = {
-  scales: { x: xScale as unknown, y: yScale as unknown },
+const baseConfig: Omit<StaticAnnotationConfig, "annotations"> = {
+  scales: { x: xScale, y: yScale },
   layout: { width: 400, height: 300 },
   theme: LIGHT_THEME,
 }
@@ -28,7 +28,7 @@ describe("renderStaticAnnotations", () => {
   })
 
   it("returns null for undefined annotations", () => {
-    expect(renderStaticAnnotations({ ...baseConfig, annotations: undefined as unknown })).toBeNull()
+    expect(renderStaticAnnotations({ ...baseConfig, annotations: undefined })).toBeNull()
   })
 
   describe("y-threshold", () => {
@@ -89,7 +89,7 @@ describe("renderStaticAnnotations", () => {
     it("skips without x scale", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,
-        scales: { y: yScale as unknown },
+        scales: { y: yScale },
         annotations: [{ type: "x-threshold", value: 50 }],
       })
       expect(svg).toBe("")
@@ -169,7 +169,7 @@ describe("renderStaticAnnotations", () => {
       )
       const svg = renderAnnotationsString({
         ...baseConfig,
-        scales: { o: bandScale as unknown },
+        scales: { o: bandScale },
         annotations: [{ type: "category-highlight", category: "A", color: "#ff6600" }],
       })
       expect(svg).toContain("<rect")

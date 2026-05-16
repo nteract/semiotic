@@ -15,15 +15,28 @@
  * subsequent ingests on a fresh store re-run normally.
  */
 import { describe, it, expect } from "vitest"
-import { PipelineStore } from "./PipelineStore"
+import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+
+function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
+  return {
+    chartType: "line",
+    windowSize: 10,
+    windowMode: "sliding",
+    arrowOfTime: "right",
+    extentPadding: 0.1,
+    xAccessor: "x",
+    yAccessor: "y",
+    ...overrides,
+  }
+}
 
 describe("PipelineStore.ingest — bounded idempotency", () => {
   it("returns false on the second call with the same inserts ref (no-op fast path)", () => {
-    const store = new PipelineStore({
+    const store = new PipelineStore(makeConfig({
       chartType: "line",
       xAccessor: "x",
       yAccessor: "y",
-    })
+    }))
     const data = [{ x: 0, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 3 }]
 
     const first = store.ingest({ inserts: data, bounded: true })
@@ -34,11 +47,11 @@ describe("PipelineStore.ingest — bounded idempotency", () => {
   })
 
   it("does NOT short-circuit when the inserts array reference differs (even with same contents)", () => {
-    const store = new PipelineStore({
+    const store = new PipelineStore(makeConfig({
       chartType: "line",
       xAccessor: "x",
       yAccessor: "y",
-    })
+    }))
     const a = [{ x: 0, y: 1 }, { x: 1, y: 2 }]
     const b = [{ x: 0, y: 1 }, { x: 1, y: 2 }] // structurally equal but new ref
 
@@ -51,11 +64,11 @@ describe("PipelineStore.ingest — bounded idempotency", () => {
   })
 
   it("clear() resets the dedupe ref so the next ingest re-runs", () => {
-    const store = new PipelineStore({
+    const store = new PipelineStore(makeConfig({
       chartType: "line",
       xAccessor: "x",
       yAccessor: "y",
-    })
+    }))
     const data = [{ x: 0, y: 1 }, { x: 1, y: 2 }]
 
     store.ingest({ inserts: data, bounded: true })
@@ -68,12 +81,12 @@ describe("PipelineStore.ingest — bounded idempotency", () => {
   })
 
   it("streaming (non-bounded) ingests are NOT deduped — each call meaningful", () => {
-    const store = new PipelineStore({
+    const store = new PipelineStore(makeConfig({
       chartType: "line",
       xAccessor: "x",
       yAccessor: "y",
       runtimeMode: "streaming",
-    })
+    }))
     const point = { x: 0, y: 1 }
 
     // Streaming consumers push individual datums, often the same

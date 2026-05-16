@@ -24,7 +24,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({ cat: "A" } as unknown)
+    const style = result.current({ cat: "A" })
     expect(style.fill).toBe("#aaa")
   })
 
@@ -36,7 +36,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({} as unknown)
+    const style = result.current({})
     expect(style.fill).toBe("tomato")
   })
 
@@ -49,7 +49,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({ cat: "A" } as unknown)
+    const style = result.current({ cat: "A" })
     expect(style.fill).toBeUndefined()
   })
 
@@ -61,7 +61,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({ q: "TR" } as unknown)
+    const style = result.current({ q: "TR" })
     expect(style.fill).toBe("#q-TR")
   })
 
@@ -73,7 +73,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({} as unknown)
+    const style = result.current({})
     expect(style.r).toBe(8)
   })
 
@@ -86,7 +86,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({ size: 25 } as unknown)
+    const style = result.current({ size: 25 })
     expect(style.r).toBe(25)
   })
 
@@ -98,7 +98,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({} as unknown)
+    const style = result.current({})
     expect(style.fillOpacity).toBe(0.4)
   })
 
@@ -110,7 +110,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({} as unknown)
+    const style = result.current({})
     expect(style.stroke).toBe("#fff")
     expect(style.strokeWidth).toBe(1.5)
   })
@@ -125,7 +125,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({ cat: "A" } as unknown)
+    const style = result.current({ cat: "A" })
     expect(style.fill).toBe("#viridis-7")
   })
 
@@ -140,7 +140,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({} as unknown)
+    const style = result.current({})
     expect(style.stroke).toBe("purple")
     expect(style.strokeWidth).toBe(4)
     expect(style.opacity).toBe(0.2)
@@ -157,7 +157,7 @@ describe("useXYPointStyle", () => {
       }),
       { wrapper },
     )
-    const style = result.current({ x: 1, y: 2, parentLine: { cat: "A" } } as unknown)
+    const style = result.current({ x: 1, y: 2, parentLine: { cat: "A" } })
     expect(style.fill).toBe("c-A")
   })
 })

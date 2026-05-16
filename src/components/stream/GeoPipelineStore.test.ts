@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest"
 import { GeoPipelineStore } from "./GeoPipelineStore"
-import type { GeoPipelineConfig } from "./geoTypes"
+import type { GeoAreaSceneNode, GeoLineSceneNode, GeoPipelineConfig, GeoSceneNode } from "./geoTypes"
+import type { PointSceneNode } from "./types"
+
+const isGeoArea = (node: GeoSceneNode): node is GeoAreaSceneNode => node.type === "geoarea"
+const isGeoLine = (node: GeoSceneNode): node is GeoLineSceneNode => node.type === "line"
+const isPoint = (node: GeoSceneNode): node is PointSceneNode => node.type === "point"
 
 // Simple test features
 const usStates: GeoJSON.Feature[] = [
@@ -64,7 +69,9 @@ describe("GeoPipelineStore", () => {
     expect(store.scene.length).toBe(2)
     expect(store.scene[0].type).toBe("geoarea")
 
-    const node = store.scene[0] as unknown
+    const node = store.scene[0]
+    expect(isGeoArea(node)).toBe(true)
+    if (!isGeoArea(node)) throw new Error("Expected geoarea scene node")
     expect(node.pathData).toBeTruthy()
     expect(node.centroid).toHaveLength(2)
     expect(node.bounds).toHaveLength(2)
@@ -77,10 +84,10 @@ describe("GeoPipelineStore", () => {
     store.setPoints(cities)
     store.computeScene({ width: 600, height: 400 })
 
-    const points = store.scene.filter(n => n.type === "point")
+    const points = store.scene.filter(isPoint)
     expect(points.length).toBe(3)
 
-    const sf = points[0] as unknown
+    const sf = points[0]
     expect(typeof sf.x).toBe("number")
     expect(isFinite(sf.x)).toBe(true)
     expect(typeof sf.y).toBe("number")
@@ -96,10 +103,10 @@ describe("GeoPipelineStore", () => {
     store.setLines(routes)
     store.computeScene({ width: 600, height: 400 })
 
-    const lines = store.scene.filter(n => n.type === "line")
+    const lines = store.scene.filter(isGeoLine)
     expect(lines.length).toBe(1)
 
-    const route = lines[0] as unknown
+    const route = lines[0]
     expect(route.path.length).toBe(2)
     expect(route.datum).toBe(routes[0])
   })
@@ -147,7 +154,9 @@ describe("GeoPipelineStore", () => {
 
     // Graticule + 2 areas = 3 nodes
     expect(store.scene.length).toBe(3)
-    const grat = store.scene[0] as unknown
+    const grat = store.scene[0]
+    expect(isGeoArea(grat)).toBe(true)
+    if (!isGeoArea(grat)) throw new Error("Expected graticule geoarea scene node")
     expect(grat.type).toBe("geoarea")
     expect(grat.interactive).toBe(false)
     expect(grat.style.fill).toBe("none")
@@ -194,16 +203,19 @@ describe("GeoPipelineStore", () => {
       store.setPoints(costCities)
       store.computeScene({ width: 600, height: 400 })
 
-      const points = store.scene.filter(n => n.type === "point") as unknown[]
+      const points = store.scene.filter(isPoint)
       expect(points.length).toBe(3)
 
       // Rome should stay at its projected position (center)
-      const rome = points.find((p: any) => p.datum.id === "rome")
+      const rome = points.find((p) => p.datum?.id === "rome")
       expect(rome).toBeTruthy()
 
       // Athens (5 days) should be closer to center than London (30 days)
-      const athens = points.find((p: any) => p.datum.id === "athens")
-      const london = points.find((p: any) => p.datum.id === "london")
+      const athens = points.find((p) => p.datum?.id === "athens")
+      const london = points.find((p) => p.datum?.id === "london")
+      expect(athens).toBeTruthy()
+      expect(london).toBeTruthy()
+      if (!rome || !athens || !london) throw new Error("Expected cartogram point nodes")
 
       const distAthens = Math.sqrt((athens.x - rome.x) ** 2 + (athens.y - rome.y) ** 2)
       const distLondon = Math.sqrt((london.x - rome.x) ** 2 + (london.y - rome.y) ** 2)
@@ -221,7 +233,7 @@ describe("GeoPipelineStore", () => {
       const geoStore = new GeoPipelineStore(makeConfig({ pointIdAccessor: "id" }))
       geoStore.setPoints(costCities)
       geoStore.computeScene({ width: 600, height: 400 })
-      const geoPoints = geoStore.scene.filter(n => n.type === "point") as unknown[]
+      const geoPoints = geoStore.scene.filter(isPoint)
 
       // Cartogram with strength=0
       const cartoStore = new GeoPipelineStore(makeConfig({
@@ -235,7 +247,7 @@ describe("GeoPipelineStore", () => {
       }))
       cartoStore.setPoints(costCities)
       cartoStore.computeScene({ width: 600, height: 400 })
-      const cartoPoints = cartoStore.scene.filter(n => n.type === "point") as unknown[]
+      const cartoPoints = cartoStore.scene.filter(isPoint)
 
       // Positions should be identical when strength=0
       expect(cartoPoints[0].x).toBeCloseTo(geoPoints[0].x, 1)
@@ -267,7 +279,7 @@ describe("GeoPipelineStore", () => {
       }
       store.computeScene({ width: 600, height: 400 })
 
-      const points = store.scene.filter(n => n.type === "point") as unknown[]
+      const points = store.scene.filter(isPoint)
       expect(points.length).toBe(5)
 
       // Oldest point should have lowest opacity
@@ -286,7 +298,7 @@ describe("GeoPipelineStore", () => {
       store.computeScene({ width: 600, height: 400 })
 
       expect(store.scales).not.toBeNull()
-      const points = store.scene.filter(n => n.type === "point") as unknown[]
+      const points = store.scene.filter(isPoint)
       expect(points.length).toBe(3)
     })
   })

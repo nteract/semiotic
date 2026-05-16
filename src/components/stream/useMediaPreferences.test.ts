@@ -23,7 +23,7 @@ function mockMatchMedia(matches: boolean) {
       if (original) {
         window.matchMedia = original
       } else {
-        delete (window as Window & { matchMedia?: typeof window.matchMedia }).matchMedia
+        Reflect.deleteProperty(window, "matchMedia")
       }
     }
   }

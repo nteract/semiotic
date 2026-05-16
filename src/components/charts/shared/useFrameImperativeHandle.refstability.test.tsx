@@ -22,16 +22,7 @@ import { useRef, useCallback } from "react"
 import { render, act } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
 import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
-
-interface Frame {
-  push: () => void
-  pushMany: () => void
-  remove: () => unknown[]
-  update: () => unknown[]
-  clear: () => void
-  getData: () => unknown[]
-  getScales: () => null
-}
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 describe("useFrameImperativeHandle reference stability", () => {
   it("emits the same handle reference across parent re-renders (callback-ref attach pattern)", async () => {
@@ -94,7 +85,7 @@ describe("useFrameImperativeHandle reference stability", () => {
 
     function Inner() {
       const initialized = useRef(false)
-      const frameRef = useRef<Frame>({
+      const frameRef = useRef<RealtimeFrameHandle>({
         push: () => { pushCalls++ },
         pushMany: () => { pushCalls++ },
         remove: () => [],
@@ -103,16 +94,16 @@ describe("useFrameImperativeHandle reference stability", () => {
         getData: () => [],
         getScales: () => null,
       })
-      const initRef = useCallback((handle: Frame | null) => {
+      const initRef = useCallback((handle: RealtimeFrameHandle | null) => {
         if (!handle) { initialized.current = false; return }
         if (!initialized.current) {
           initialized.current = true
-          handle.push()
-          handle.push()
-          handle.push()
+          handle.push({})
+          handle.push({})
+          handle.push({})
         }
       }, [])
-      useFrameImperativeHandle(initRef as unknown as React.Ref<unknown>, { variant: "xy", frameRef: frameRef as React.RefObject<unknown> })
+      useFrameImperativeHandle(initRef, { variant: "xy", frameRef })
       return null
     }
 

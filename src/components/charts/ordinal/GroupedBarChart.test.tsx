@@ -4,9 +4,12 @@ import { render } from "@testing-library/react"
 import { GroupedBarChart } from "./GroupedBarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import {
-  STACKED_SAMPLE as sampleData,
-  GROUP_SERIES_CUSTOM as customData,
+  STACKED_SAMPLE,
+  GROUP_SERIES_CUSTOM,
 } from "../../../test-utils/ordinalFixtures"
+
+const sampleData = [...STACKED_SAMPLE]
+const customData = [...GROUP_SERIES_CUSTOM]
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null

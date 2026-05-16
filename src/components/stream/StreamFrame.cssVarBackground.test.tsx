@@ -54,9 +54,11 @@ function captureFillStyleAssignments(): {
       if (installed) return
       installed = true
       originalGetContext = proto.getContext
-      proto.getContext = function patchedGetContext(this: HTMLCanvasElement, contextId: string, ...rest: unknown[]) {
-        // @ts-expect-error - rest spread to original signature
-        const ctx = originalGetContext.call(this, contextId, ...rest)
+      proto.getContext = function patchedGetContext(
+        this: HTMLCanvasElement,
+        ...args: Parameters<typeof proto.getContext>
+      ) {
+        const ctx = originalGetContext.apply(this, args)
         if (!ctx || (ctx as { __fillStyleSpyInstalled?: boolean }).__fillStyleSpyInstalled) return ctx
         let stored: unknown = ""
         Object.defineProperty(ctx, "fillStyle", {
@@ -173,6 +175,7 @@ describe("Stream Frame: background prop with var() syntax", () => {
         <StreamGeoFrame
           areas={[]}
           points={[{ lon: 0, lat: 0 }]}
+          projection="equalEarth"
           size={[400, 300]}
           background={VAR_BG}
         />,

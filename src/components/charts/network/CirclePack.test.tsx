@@ -1,7 +1,7 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { CirclePack } from "./CirclePack"
+import { CirclePack, type CirclePackProps } from "./CirclePack"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock NetworkFrame to capture props
@@ -32,6 +32,7 @@ describe("CirclePack", () => {
       ]}
     ]
   }
+  type CirclePackData = CirclePackProps<typeof sampleData>["data"]
 
   it("renders without crashing with minimal props", () => {
     const { container } = render(
@@ -47,7 +48,7 @@ describe("CirclePack", () => {
   it("handles missing data gracefully", () => {
     const { container } = render(
       <TooltipProvider>
-        <CirclePack data={null as unknown} />
+        <CirclePack data={null as unknown as CirclePackData} />
       </TooltipProvider>
     )
 

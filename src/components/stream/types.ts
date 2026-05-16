@@ -15,6 +15,7 @@ import type {
   AnnotationAnchorMode
 } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { CoercibleNumber } from "./accessorUtils"
 
 export type SceneDatum = Datum | null
 export type SeriesDatum = Datum[] | null
@@ -448,10 +449,10 @@ export interface StreamXYFrameProps<T = Datum> {
   chunkSize?: number
 
   // ── Accessors ────────────────────────────────────
-  xAccessor?: string | ((d: T) => number)
-  yAccessor?: string | ((d: T) => number)
+  xAccessor?: string | ((d: T) => CoercibleNumber)
+  yAccessor?: string | ((d: T) => CoercibleNumber)
   colorAccessor?: string | ((d: T) => string)
-  sizeAccessor?: string | ((d: T) => number)
+  sizeAccessor?: string | ((d: T) => CoercibleNumber)
   groupAccessor?: string | ((d: T) => string)
 
   // ── Line/area specifics ──────────────────────────

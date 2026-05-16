@@ -4,14 +4,20 @@ import { act, render } from "@testing-library/react"
 import { BarChart } from "./BarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import {
-  BAR_SAMPLE as sampleData,
-  BAR_INITIAL as initialData,
-  BAR_EXTENDED as newData,
-  BAR_COLORED as coloredData,
-  NAMED_COUNT_DATA as customData,
+  BAR_SAMPLE,
+  BAR_INITIAL,
+  BAR_EXTENDED,
+  BAR_COLORED,
+  NAMED_COUNT_DATA,
 } from "../../../test-utils/ordinalFixtures"
 import type { Datum } from "../shared/datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+
+const sampleData = [...BAR_SAMPLE]
+const initialData = [...BAR_INITIAL]
+const newData = [...BAR_EXTENDED]
+const coloredData = [...BAR_COLORED]
+const customData = [...NAMED_COUNT_DATA]
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null

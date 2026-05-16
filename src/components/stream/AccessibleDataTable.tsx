@@ -3,7 +3,7 @@ import * as React from "react"
 import { useDataSummary } from "../DataSummaryContext"
 
 /** Scene node type used by the accessible data table — accepts any frame's scene nodes */
-type AnySceneNode = { type: string; [key: string]: any }
+type AnySceneNode = { type?: string; [key: string]: any }
 
 const SR_ONLY_STYLE: React.CSSProperties = {
   position: "absolute",
@@ -21,14 +21,15 @@ const SR_ONLY_STYLE: React.CSSProperties = {
  * Compute an aria-label describing the chart type and data shape from the scene graph.
  */
 export function computeCanvasAriaLabel(
-  scene: AnySceneNode[],
+  scene: AnySceneNode[] | null | undefined,
   chartType: string
 ): string {
   if (!scene || scene.length === 0) return `${chartType}, empty`
 
   const typeCounts: Record<string, number> = {}
   for (const node of scene) {
-    typeCounts[node.type] = (typeCounts[node.type] || 0) + 1
+    const type = String(node.type)
+    typeCounts[type] = (typeCounts[type] || 0) + 1
   }
 
   const parts: string[] = []

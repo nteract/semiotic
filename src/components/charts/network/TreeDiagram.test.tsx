@@ -1,7 +1,7 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { TreeDiagram } from "./TreeDiagram"
+import { TreeDiagram, type TreeDiagramProps } from "./TreeDiagram"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock NetworkFrame to capture props
@@ -44,11 +44,12 @@ describe("TreeDiagram", () => {
       }
     ]
   }
+  type TreeData = TreeDiagramProps<typeof sampleHierarchy>["data"]
 
   it("handles missing data gracefully", () => {
     const { container } = render(
       <TooltipProvider>
-        <TreeDiagram data={undefined as unknown} />
+        <TreeDiagram data={undefined as unknown as TreeData} />
       </TooltipProvider>
     )
     const frame = container.querySelector(".stream-network-frame")

@@ -18,23 +18,26 @@ vi.mock("../../stream/StreamXYFrame", () => {
 })
 
 describe("MinimapChart", () => {
+  let rafSpy: ReturnType<typeof vi.spyOn>
+  let cafSpy: ReturnType<typeof vi.spyOn>
+
   beforeEach(() => {
     xyFrameRenders.length = 0
     // rAF mock: call callback once then become a no-op to avoid infinite recursion
     // from MinimapChart's scale polling loop
     let rafCallCount = 0
-    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+    rafSpy = vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
       rafCallCount++
       if (rafCallCount <= 2) {
         cb(performance.now())
       }
       return rafCallCount
     })
-    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+    cafSpy = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
   })
   afterEach(() => {
-    if ((window.requestAnimationFrame as unknown).mockRestore) (window.requestAnimationFrame as unknown).mockRestore()
-    if ((window.cancelAnimationFrame as unknown).mockRestore) (window.cancelAnimationFrame as unknown).mockRestore()
+    rafSpy.mockRestore()
+    cafSpy.mockRestore()
   })
 
   const sampleData = [

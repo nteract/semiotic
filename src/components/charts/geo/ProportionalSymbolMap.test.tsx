@@ -1,8 +1,9 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { ProportionalSymbolMap } from "./ProportionalSymbolMap"
+import { ProportionalSymbolMap, type ProportionalSymbolMapProps } from "./ProportionalSymbolMap"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { AreasProp } from "../../geo/useReferenceAreas"
 
 // Mock StreamGeoFrame to capture props
 let lastGeoFrameProps: any = null
@@ -27,6 +28,9 @@ const samplePoints = [
   { id: "New York", lon: -74.0, lat: 40.71, population: 8300000, region: "Americas" },
   { id: "Sydney", lon: 151.21, lat: -33.87, population: 5300000, region: "Oceania" },
 ]
+type SamplePoint = (typeof samplePoints)[number]
+type SymbolMapXAccessor = ProportionalSymbolMapProps<SamplePoint>["xAccessor"]
+type SymbolMapYAccessor = ProportionalSymbolMapProps<SamplePoint>["yAccessor"]
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <TooltipProvider>{children}</TooltipProvider>
@@ -134,7 +138,12 @@ describe("ProportionalSymbolMap", () => {
     it("forwards custom xAccessor and yAccessor", () => {
       render(
         <Wrapper>
-          <ProportionalSymbolMap points={samplePoints} sizeBy="population" xAccessor="longitude" yAccessor="latitude" />
+          <ProportionalSymbolMap
+            points={samplePoints}
+            sizeBy="population"
+            xAccessor={"longitude" as unknown as SymbolMapXAccessor}
+            yAccessor={"latitude" as unknown as SymbolMapYAccessor}
+          />
         </Wrapper>
       )
       expect(lastGeoFrameProps.xAccessor).toBe("longitude")
@@ -204,10 +213,10 @@ describe("ProportionalSymbolMap", () => {
 
   describe("background areas", () => {
     it("forwards areas and areaStyle", () => {
-      const bgAreas = [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [] } }]
+      const bgAreas: AreasProp = [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [] } }]
       render(
         <Wrapper>
-          <ProportionalSymbolMap points={samplePoints} sizeBy="population" areas={bgAreas as unknown} />
+          <ProportionalSymbolMap points={samplePoints} sizeBy="population" areas={bgAreas} />
         </Wrapper>
       )
       expect(lastGeoFrameProps.areas).toBe(bgAreas)
@@ -215,11 +224,11 @@ describe("ProportionalSymbolMap", () => {
     })
 
     it("forwards custom areaStyle", () => {
-      const bgAreas = [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [] } }]
+      const bgAreas: AreasProp = [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [] } }]
       const customStyle = { fill: "#eef", stroke: "#999" }
       render(
         <Wrapper>
-          <ProportionalSymbolMap points={samplePoints} sizeBy="population" areas={bgAreas as unknown} areaStyle={customStyle} />
+          <ProportionalSymbolMap points={samplePoints} sizeBy="population" areas={bgAreas} areaStyle={customStyle} />
         </Wrapper>
       )
       expect(lastGeoFrameProps.areaStyle).toBe(customStyle)

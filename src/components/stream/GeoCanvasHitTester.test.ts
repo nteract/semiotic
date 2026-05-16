@@ -3,19 +3,26 @@ import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import type { GeoAreaSceneNode } from "./geoTypes"
 import type { PointSceneNode, LineSceneNode } from "./types"
 
+type TestPath2D = Path2D & { __testId: string }
+type MockHitContext = Pick<CanvasRenderingContext2D, "isPointInPath"> & {
+  _registerHit: (id: string) => void
+  _clearHits: () => void
+}
+
 // Mock canvas context with isPointInPath
-function createMockHitCtx() {
+function createMockHitCtx(): CanvasRenderingContext2D & MockHitContext {
   const pathsInPoint = new Set<string>()
 
-  return {
+  const hitCtx: MockHitContext = {
     isPointInPath: vi.fn((path: Path2D, _x: number, _y: number) => {
       // Simulate: any path whose data starts with "M0" is "hit" for point (50,50)
       // We use the pathsInPoint set to control which paths register hits
-      return pathsInPoint.has((path as unknown).__testId)
+      return pathsInPoint.has((path as TestPath2D).__testId)
     }),
     _registerHit: (id: string) => pathsInPoint.add(id),
     _clearHits: () => pathsInPoint.clear()
-  } as unknown
+  }
+  return hitCtx as unknown as CanvasRenderingContext2D & MockHitContext
 }
 
 // Helper to create a Path2D mock that carries an ID
@@ -27,7 +34,7 @@ beforeEach(() => {
     constructor(d?: string) {
       this.__testId = d || `path-${counter++}`
     }
-  } as unknown
+  } as unknown as typeof Path2D
 })
 
 describe("findNearestGeoNode", () => {

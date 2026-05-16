@@ -1,6 +1,6 @@
 
 import { render, fireEvent } from "@testing-library/react"
-import { BubbleChart } from "./BubbleChart"
+import { BubbleChart, type BubbleChartProps } from "./BubbleChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { MultiLineTooltip } from "../../Tooltip/Tooltip"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
@@ -11,6 +11,9 @@ describe("BubbleChart", () => {
     { x: 2, y: 20, size: 30 },
     { x: 3, y: 15, size: 70 }
   ]
+  type BubbleDatum = (typeof sampleData)[number]
+  type BubbleSizeBy = BubbleChartProps<BubbleDatum>["sizeBy"]
+  type MultiLineTooltipDatum = Parameters<ReturnType<typeof MultiLineTooltip>>[0]
 
   let cleanup: () => void
   beforeEach(() => { cleanup = setupCanvasMock() })
@@ -55,7 +58,7 @@ describe("BubbleChart", () => {
   it("shows error when sizeBy is missing", () => {
     const { container } = render(
       <TooltipProvider>
-        <BubbleChart data={sampleData} sizeBy={undefined as unknown} />
+        <BubbleChart data={sampleData} sizeBy={undefined as unknown as BubbleSizeBy} />
       </TooltipProvider>
     )
 
@@ -320,7 +323,7 @@ describe("BubbleChart", () => {
 
     // This should handle gracefully or throw a clear error
     expect(() => {
-      const _result = tooltipFn(arrayData as unknown)
+      const _result = tooltipFn(arrayData as unknown as MultiLineTooltipDatum)
       // Should return null or handle gracefully
     }).not.toThrow()
   })
@@ -341,7 +344,7 @@ describe("BubbleChart", () => {
     }
 
     expect(() => {
-      const result = tooltipFn(annotationData as unknown)
+      const result = tooltipFn(annotationData)
       expect(result).toBeTruthy()
     }).not.toThrow()
   })
