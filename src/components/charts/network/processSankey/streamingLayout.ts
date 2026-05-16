@@ -23,15 +23,36 @@ import type { Datum } from "../../shared/datumTypes"
 export interface ProcessSankeyBandSpec {
   id: string
   pathD: string
+  /** Optional outer-perimeter path used only for stroke. Set together
+   *  with the cutout fill so each cutout's rectangular subpath
+   *  doesn't pick up the band stroke. */
+  strokePathD?: string
   fill: string
   stroke?: string
   strokeWidth?: number
+  /** Optional SVG/canvas fill rule. ProcessSankey sets this to
+   *  "evenodd" when the band's pathD contains punched-out subpaths
+   *  for systemInTime / systemOutTime cutouts. */
+  fillRule?: "nonzero" | "evenodd"
+  /** Per-cutout gradient stubs (20 px sweeps that soft-fade the
+   *  band-color into each cutout's right edge). Painted as separate
+   *  bezier scene-edges underneath the band so the cutout's
+   *  transparency lets the gradient show through. */
+  gradientStubs?: BandGradientStub[]
   /** The user's raw node datum, surfaced as `data` in HoverData. */
   rawDatum: Datum
   /** Pre-computed label x/y for the node band. */
   labelX: number
   labelY: number
   labelText: string
+}
+
+export interface BandGradientStub {
+  pathD: string
+  x0: number
+  x1: number
+  from: 0 | 1
+  to: 0 | 1
 }
 
 export interface ProcessSankeyRibbonSpec {
@@ -101,15 +122,50 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
     })
   }
 
+  // Gradient stubs paint underneath the bands. The bands have evenodd
+  // cutouts at the same slot, so the band's transparent hole reveals
+  // the gradient — net effect is a soft fade-in at each systemInTime.
+  // Marked non-interactive so they don't claim hover from the band
+  // they're decorating.
   for (const b of bands) {
+    if (!b.gradientStubs) continue
+    for (let i = 0; i < b.gradientStubs.length; i++) {
+      const stub = b.gradientStubs[i]
+      sceneEdges.push({
+        type: "bezier",
+        pathD: stub.pathD,
+        interactive: false,
+        style: {
+          fill: b.fill,
+          fillOpacity: 0.86,
+          stroke: "none",
+        },
+        _gradient: { x0: stub.x0, x1: stub.x1, from: stub.from, to: stub.to },
+        datum: {
+          __kind: "band",
+          data: b.rawDatum,
+          id: `${b.id}__stub${i}`,
+        } satisfies SceneDatumPayload as unknown as Datum,
+      })
+    }
+  }
+
+  for (const b of bands) {
+    // When the band carries gradient stubs, drop the flat fill — the
+    // node should read as "outline + stubs only", so the stubs are
+    // the only colored regions inside the perimeter. Otherwise paint
+    // the usual translucent band.
+    const hasStubs = !!(b.gradientStubs && b.gradientStubs.length > 0)
     sceneEdges.push({
       type: "bezier",
-      pathD: b.pathD,
+      pathD: hasStubs ? (b.strokePathD ?? b.pathD) : b.pathD,
       style: {
-        fill: b.fill,
-        fillOpacity: 0.86,
+        ...(hasStubs
+          ? { fill: "none" }
+          : { fill: b.fill, fillOpacity: 0.86 }),
         stroke: b.stroke ?? b.fill,
         strokeWidth: b.strokeWidth ?? 0.5,
+        ...(!hasStubs && b.fillRule && { fillRule: b.fillRule }),
       },
       datum: {
         __kind: "band",

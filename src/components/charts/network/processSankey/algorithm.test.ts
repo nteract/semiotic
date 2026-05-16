@@ -236,4 +236,25 @@ describe("computeProcessSankeyLayout", () => {
     expect(typeof layout.lengthBefore === "number" || layout.lengthBefore === null).toBe(true)
     expect(typeof layout.lengthAfter === "number" || layout.lengthAfter === null).toBe(true)
   })
+
+  it("preserves layout/mass profile regardless of edge.systemInTime / systemOutTime", () => {
+    // Sanity check: systemInTime/systemOutTime are rendering hints
+    // only — the algorithm output (mass profile, peak, samples)
+    // must be byte-identical to the same edge without those fields.
+    const nodes: ProcessSankeyNode[] = [{ id: "A" }, { id: "B" }]
+    const edgesPlain: ProcessSankeyEdge[] = [
+      { id: "e1", source: "A", target: "B", value: 1, startTime: 2, endTime: 3 },
+      { id: "e2", source: "A", target: "B", value: 1, startTime: 4, endTime: 5 },
+    ]
+    const edgesWithHints: ProcessSankeyEdge[] = [
+      { id: "e1", source: "A", target: "B", value: 1, startTime: 2, endTime: 3, systemInTime: 0.5, systemOutTime: 6 },
+      { id: "e2", source: "A", target: "B", value: 1, startTime: 4, endTime: 5, systemInTime: 1.5, systemOutTime: 7 },
+    ]
+    const plain = computeProcessSankeyLayout(nodes, edgesPlain, opts)
+    const hinted = computeProcessSankeyLayout(nodes, edgesWithHints, opts)
+    expect(hinted.nodeData.A.peak).toBe(plain.nodeData.A.peak)
+    expect(hinted.nodeData.B.peak).toBe(plain.nodeData.B.peak)
+    expect(hinted.nodeData.A.samples).toEqual(plain.nodeData.A.samples)
+    expect(hinted.nodeData.B.samples).toEqual(plain.nodeData.B.samples)
+  })
 })

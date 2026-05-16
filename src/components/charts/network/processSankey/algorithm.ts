@@ -28,6 +28,25 @@ export interface ProcessSankeyEdge {
   value: number
   startTime: number
   endTime: number
+  /** Optional: time at which this unit of mass actually "arrived" at
+   *  the SOURCE node (e.g., the hospital admit time for an ER patient
+   *  whose transfer to ICU happens later at `startTime`). Purely a
+   *  rendering hint — the layout/mass profile is unchanged. The
+   *  renderer cuts a rectangular slot out of the source node's band
+   *  from the node's left edge up to the scaled `systemInTime`, with
+   *  height equal to this edge's ribbon thickness. Edges without
+   *  `systemInTime` are drawn as-is. Result: a staircase profile on
+   *  the source side as units enter the system one by one.
+   *  Default: undefined. */
+  systemInTime?: number
+  /** Optional: time at which this unit of mass leaves the TARGET node
+   *  (e.g., the discharge time for a patient who arrived at the ward
+   *  at `endTime`). Symmetric to `systemInTime`: the renderer cuts a
+   *  rectangular slot out of the target node's band from the scaled
+   *  `systemOutTime` to the node's right edge, with height equal to
+   *  this edge's ribbon thickness. Layout/mass profile unchanged.
+   *  Default: undefined. */
+  systemOutTime?: number
 }
 
 export interface ProcessSankeyIssue {
@@ -303,8 +322,12 @@ export function computeNode(
   const incoming = edgeIndex.incoming[node.id]
   const outgoing = edgeIndex.outgoing[node.id]
   const events: NodeEvent[] = []
-  for (const e of incoming) events.push({ time: e.endTime, delta: +e.value, edge: e, kind: "in", side: sides.get(e.id)!.targetSide! })
-  for (const e of outgoing) events.push({ time: e.startTime, delta: -e.value, edge: e, kind: "out", side: sides.get(e.id)!.sourceSide! })
+  for (const e of incoming) {
+    events.push({ time: e.endTime, delta: +e.value, edge: e, kind: "in", side: sides.get(e.id)!.targetSide! })
+  }
+  for (const e of outgoing) {
+    events.push({ time: e.startTime, delta: -e.value, edge: e, kind: "out", side: sides.get(e.id)!.sourceSide! })
+  }
 
   const kindOrder: Record<EventKind, number> = { create: 0, in: 1, "transfer-out": 2, "transfer-in": 3, out: 4 }
   const sortEvents = () => {
@@ -499,6 +522,134 @@ export function buildBandPath(
     path += ` L${xScale(sm[i].t)},${yBot(i)}`
   }
   return path + " Z"
+}
+
+/**
+ * One 20-px gradient stub at an attachment with `systemInTime` /
+ * `systemOutTime`. The rect punches a transparent slot in the
+ * band's fill (evenodd) and the same rect is emitted as a
+ * separate bezier scene-edge with `_gradient`, so the visible
+ * effect is a short band-color fade-in at the ribbon's source
+ * (or fade-out at the target) — no long horizontal stripe.
+ */
+export interface BandCutoutSpec {
+  /** Subpath for the cutout rect — append to band path, evenodd fill. */
+  cutoutPathD: string
+  /** Gradient stub: rendered as its own bezier scene-edge so the
+   *  band's stroke doesn't outline it. */
+  stub: {
+    /** Rect path (M-L-L-L-Z). */
+    pathD: string
+    /** Gradient extent in screen pixels. */
+    x0: number
+    x1: number
+    /** Color stops — 0 = transparent end, 1 = band-color end. */
+    from: 0 | 1
+    to: 0 | 1
+  }
+}
+
+/**
+ * Build 20-px gradient stubs for a node band. For each outgoing edge
+ * with `systemInTime`, returns a 20-px cutout + gradient stub at
+ * `[systemInTime - 20px, systemInTime]` on the source-attachment
+ * slot. Mirror geometry for incoming edges with `systemOutTime`:
+ * `[systemOutTime, systemOutTime + 20px]` on the target-attachment
+ * slot.
+ *
+ * The cutout subpaths get appended to the band's fill path (caller
+ * sets `fillRule="evenodd"` so they punch holes). The stubs get
+ * emitted as separate bezier scene-edges with `_gradient` set — they
+ * paint underneath the band's evenodd hole, so the visible effect
+ * is a brief 20-px band-color fade-in/out at each attachment.
+ *
+ * The band's perimeter stroke stays intact (caller sets
+ * `strokePathD` to the outer band path so the cutout subpaths don't
+ * pick up the stroke).
+ *
+ * Layout-neutral: the cutouts and stubs are pure rendering. The
+ * mass profile, samples, peak, and attachment data are unchanged.
+ *
+ * Returns empty arrays when the node has no qualifying edges.
+ */
+export function buildBandCutoutsForNode(
+  nodeId: string,
+  edges: ProcessSankeyEdge[],
+  layout: ProcessSankeyLayout,
+  xScale: (t: number) => number,
+  domain: Domain,
+): BandCutoutSpec[] {
+  const data = layout.nodeData[nodeId]
+  if (!data || data.samples.length === 0) return []
+  const S = layout.valueScale
+  const cl = layout.centerlines[nodeId]
+  const sm = clampSamples(data.samples, domain)
+  const firstNonZero = sm.find((s) => s.topMass + s.botMass > 0) || sm[0]
+  const lastNonZero = [...sm].reverse().find((s) => s.topMass + s.botMass > 0) || sm[sm.length - 1]
+  const xLeft = xScale(firstNonZero.t)
+  const xRight = xScale(lastNonZero.t)
+  const clampX = (t: number): number => xScale(clampTime(t, domain))
+  // 20 screen pixels of gradient — width-independent of zoom/domain.
+  const FADE_PX = 20
+  const specs: BandCutoutSpec[] = []
+  const rect = (x0: number, yT: number, x1: number, yB: number): string =>
+    `M${x0},${yT} L${x1},${yT} L${x1},${yB} L${x0},${yB} Z`
+  for (const e of edges) {
+    if (e.source === nodeId && e.systemInTime != null && Number.isFinite(e.systemInTime)) {
+      const att = data.localAttachments.get(e.id)
+      if (att && att.kind === "out" && e.systemInTime < e.startTime) {
+        const xSysIn = clampX(e.systemInTime)
+        const xStart = clampX(e.startTime)
+        const xFade = Math.max(xLeft, xSysIn - FADE_PX)
+        // Stub spans the fade-in PLUS the patient's tenure in the
+        // source (systemInTime → startTime). The gradient stops
+        // saturate at the fade-in's right edge, so beyond `xSysIn`
+        // the rect renders as solid band-color, matching the
+        // "patient sits in ER" visual the user wants.
+        if (xStart > xFade) {
+          const [yT, yB] = attachmentYRange(att, cl, S)
+          const rectPath = rect(xFade, yT, xStart, yB)
+          specs.push({
+            cutoutPathD: " " + rectPath,
+            stub: {
+              pathD: rectPath,
+              x0: xFade,
+              x1: xSysIn,
+              from: 0,  // transparent at the far-from-attachment end
+              to: 1,    // band-color at the attachment end
+            },
+          })
+        }
+      }
+    }
+    if (e.target === nodeId && e.systemOutTime != null && Number.isFinite(e.systemOutTime)) {
+      const att = data.localAttachments.get(e.id)
+      if (att && att.kind === "in" && e.systemOutTime > e.endTime) {
+        const xSysOut = clampX(e.systemOutTime)
+        const xEnd = clampX(e.endTime)
+        const xFade = Math.min(xRight, xSysOut + FADE_PX)
+        // Mirror: stub spans the patient's tenure in the target
+        // (endTime → systemOutTime) plus a fade-out tail. Solid
+        // band-color from `xEnd` to `xSysOut`, then fade to
+        // transparent across the 20-px tail.
+        if (xFade > xEnd) {
+          const [yT, yB] = attachmentYRange(att, cl, S)
+          const rectPath = rect(xEnd, yT, xFade, yB)
+          specs.push({
+            cutoutPathD: " " + rectPath,
+            stub: {
+              pathD: rectPath,
+              x0: xSysOut,
+              x1: xFade,
+              from: 1,  // band-color at the attachment end (left)
+              to: 0,    // transparent at the far end (right)
+            },
+          })
+        }
+      }
+    }
+  }
+  return specs
 }
 
 // `buildRibbonPath` lived here originally. It's been replaced by:

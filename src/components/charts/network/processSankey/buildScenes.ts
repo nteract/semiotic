@@ -9,6 +9,7 @@ import {
   computeProcessSankeyLayout,
   validateProcessSankey,
   buildBandPath,
+  buildBandCutoutsForNode,
   clampSamples,
   type ProcessSankeyOptions,
   type ProcessSankeyLayout,
@@ -36,6 +37,12 @@ export interface ProcessSankeyNormalizedEdge {
   value: number
   startTime: number
   endTime: number
+  /** Optional render-only hint: when this unit of mass actually
+   *  entered the source node. Triggers a cutout in the source band. */
+  systemInTime?: number
+  /** Optional render-only hint: when this unit of mass left the
+   *  target node. Triggers a cutout in the target band. */
+  systemOutTime?: number
   __raw?: Datum
 }
 
@@ -98,12 +105,18 @@ export function buildProcessSankeyScenes(input: BuildScenesInput): BuildScenesRe
     const visualOffset = ((firstNonZero.botMass - firstNonZero.topMass) * S) / 2
     const labelY = centerlines[n.id] + visualOffset
     const c = colorOf(n.id, idx)
+    const cutoutSpecs = buildBandCutoutsForNode(n.id, edges, layout, xScale, domain)
+    const cutoutPath = cutoutSpecs.map((s) => s.cutoutPathD).join("")
+    const stubs = cutoutSpecs.map((s) => s.stub)
     bands.push({
       id: n.id,
-      pathD: path,
+      pathD: cutoutPath ? path + cutoutPath : path,
+      ...(cutoutPath && { strokePathD: path }),
       fill: c,
       stroke: c,
       strokeWidth: 0.5,
+      ...(cutoutPath && { fillRule: "evenodd" as const }),
+      ...(stubs.length > 0 && { gradientStubs: stubs }),
       rawDatum: (n.__raw ?? (n as Datum)),
       labelX: xScale(firstNonZero.t) - 4,
       labelY,

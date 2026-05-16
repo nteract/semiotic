@@ -53,8 +53,11 @@ export function findNearestNetworkNode(
 
   if (bestNode) return bestNode
 
-  // Check edges if no node hit
+  // Check edges if no node hit. Decorative edges (e.g. ProcessSankey's
+  // gradient stubs) carry `interactive: false` to opt out — they paint
+  // but shouldn't intercept hover.
   for (const edge of sceneEdges) {
+    if ((edge as { interactive?: boolean }).interactive === false) continue
     const result = hitTestEdge(edge, px, py)
     if (result && result.distance < bestDist) {
       bestNode = result
@@ -199,6 +202,32 @@ function getEdgePath2D(
   }
 }
 
+/**
+ * For hit testing on bezier bands carrying cutout subpaths, use the
+ * outer-perimeter path (`strokePathD`) when present. Without this,
+ * the appended cutout rectangles split the band fill under nonzero
+ * and the cursor reads as "outside" anywhere a cutout slot overlaps
+ * the band interior — including most of an outline-only band where
+ * many cutouts share the slot region.
+ */
+function getEdgeHitPath2D(
+  edge: { pathD: string; strokePathD?: string; _cachedPath2D?: Path2D; _cachedPath2DSource?: string; _cachedStrokePath2D?: Path2D; _cachedStrokePath2DSource?: string }
+): Path2D | null {
+  if (edge.strokePathD) {
+    if (edge._cachedStrokePath2D && edge._cachedStrokePath2DSource === edge.strokePathD) {
+      return edge._cachedStrokePath2D
+    }
+    try {
+      edge._cachedStrokePath2D = new Path2D(edge.strokePathD)
+      edge._cachedStrokePath2DSource = edge.strokePathD
+      return edge._cachedStrokePath2D
+    } catch {
+      // fall through to fill path
+    }
+  }
+  return getEdgePath2D(edge)
+}
+
 // ── Edge hit testing ────────────────────────────────────────────────────
 
 function hitTestEdge(
@@ -228,12 +257,16 @@ function hitTestBezierEdge(
   // Use Path2D for approximate point-in-path testing
   if (!edge.pathD) return null
 
-  const path = getEdgePath2D(edge)
+  // Prefer the outer perimeter path (`strokePathD`) when set — for
+  // ProcessSankey bands carrying gradient-stub cutouts, the fill
+  // path has multiple subpaths whose evenodd parity excludes the
+  // band interior. The outer perimeter is a single closed shape
+  // whose interior is unambiguous under both fill rules.
+  const path = getEdgeHitPath2D(edge)
   const ctx = getHitContext()
   if (!path || !ctx) return null
 
   try {
-    // First check isPointInPath for filled/wide bezier bands (sankey ribbons)
     if (ctx.isPointInPath(path, px, py)) {
       // Return midpoint of the band as hover position
       const sourceNode = typeof edge.datum?.source === "object" ? edge.datum.source : null

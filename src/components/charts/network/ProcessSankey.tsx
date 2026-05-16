@@ -9,6 +9,7 @@ import {
   validateProcessSankey,
   formatProcessSankeyIssue,
   buildBandPath,
+  buildBandCutoutsForNode,
   clampSamples,
 } from "./processSankey/algorithm"
 import { massHistoryRows, pickMassQuantiles } from "./processSankey/tooltipUtils"
@@ -69,6 +70,24 @@ export interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends D
   valueAccessor?: ChartAccessor<TEdge, number>
   startTimeAccessor?: ChartAccessor<TEdge, TimeLike>
   endTimeAccessor?: ChartAccessor<TEdge, TimeLike>
+  /**
+   * Optional accessor for the per-edge "system in" time — when
+   * `value` is added to the SOURCE node's mass. Use when the
+   * source node has an intake event distinct from when this edge
+   * departs (e.g. a patient is admitted to the ER at 7pm and
+   * transferred out at 9pm — the ER node carries the patient's
+   * weight between 7pm and 9pm). Without this, the source node's
+   * mass is synthesized as a flat baseline and the band reads as
+   * "always there." Set it and the node band climbs / falls as
+   * units arrive and depart — a true staircase profile.
+   */
+  systemInTimeAccessor?: ChartAccessor<TEdge, TimeLike>
+  /**
+   * Optional accessor for the per-edge "system out" time — when
+   * `value` is removed from the TARGET node's mass. Mirror of
+   * `systemInTimeAccessor` for the inbound side.
+   */
+  systemOutTimeAccessor?: ChartAccessor<TEdge, TimeLike>
   /**
    * Accessor for a node's explicit lifetime extent — a `[start, end]`
    * tuple of time-likes. Lane spans
@@ -142,6 +161,14 @@ interface NormalizedEdge {
   value: number
   startTime: number
   endTime: number
+  /** When set, source node mass climbs by `value` at this time
+   *  (then falls by `value` at `startTime`). Lets a source ward /
+   *  reservoir / branch carry inventory between distinct admit and
+   *  depart times — visible as a staircase profile. */
+  systemInTime?: number
+  /** Mirror for the target node: mass falls by `value` at this time
+   *  (after rising at `endTime`). */
+  systemOutTime?: number
   __raw?: Datum
 }
 
@@ -231,6 +258,8 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     valueAccessor = "value",
     startTimeAccessor = "startTime",
     endTimeAccessor = "endTime",
+    systemInTimeAccessor,
+    systemOutTimeAccessor,
     xExtentAccessor = "xExtent",
     edgeIdAccessor = "id",
     colorBy,
@@ -508,15 +537,30 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       }
       return o
     })
-    const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => ({
-      id: getEdgeId(e, i),
-      source: String(accessor(sourceAccessor, e)),
-      target: String(accessor(targetAccessor, e)),
-      value: Number(accessor(valueAccessor, e)),
-      startTime: toTime(accessor(startTimeAccessor, e) as TimeLike),
-      endTime: toTime(accessor(endTimeAccessor, e) as TimeLike),
-      __raw: e as Datum,
-    }))
+    const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => {
+      const out: NormalizedEdge = {
+        id: getEdgeId(e, i),
+        source: String(accessor(sourceAccessor, e)),
+        target: String(accessor(targetAccessor, e)),
+        value: Number(accessor(valueAccessor, e)),
+        startTime: toTime(accessor(startTimeAccessor, e) as TimeLike),
+        endTime: toTime(accessor(endTimeAccessor, e) as TimeLike),
+        __raw: e as Datum,
+      }
+      // System in/out are opt-in. When the accessor is unset OR
+      // the read value is non-finite, we leave the field undefined
+      // so the algorithm falls back to its legacy synthetic-baseline
+      // behavior on a per-edge basis.
+      if (systemInTimeAccessor) {
+        const v = toTime(accessor(systemInTimeAccessor, e) as TimeLike)
+        if (Number.isFinite(v)) out.systemInTime = v
+      }
+      if (systemOutTimeAccessor) {
+        const v = toTime(accessor(systemOutTimeAccessor, e) as TimeLike)
+        if (Number.isFinite(v)) out.systemOutTime = v
+      }
+      return out
+    })
     const dom: [number, number] = [toTime(rawDomain[0]), toTime(rawDomain[1])]
     const nodeMap = new Map<string, Datum>()
     for (const n of ns) if (n.__raw != null) nodeMap.set(n.id, n.__raw)
@@ -526,6 +570,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   }, [
     rawNodes, rawEdges, rawDomain, getNodeId, getEdgeId, xExtentAccessor,
     sourceAccessor, targetAccessor, valueAccessor, startTimeAccessor, endTimeAccessor,
+    systemInTimeAccessor, systemOutTimeAccessor,
   ])
 
   // ── Consolidated network setup (aligned with SankeyDiagram et al). ──
@@ -639,12 +684,20 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       const labelY = centerlines[n.id] + visualOffset
       const c = colorOf(n.id, idx)
       const raw = rawNodeById.get(n.id) ?? (n as Datum)
+      const cutoutSpecs = buildBandCutoutsForNode(n.id, edges, layout, xScale, domain)
+      const cutoutPath = cutoutSpecs.map((s) => s.cutoutPathD).join("")
+      const stubs = cutoutSpecs.map((s) => s.stub)
       bands.push({
         id: n.id,
-        pathD: path,
+        pathD: cutoutPath ? path + cutoutPath : path,
+        // When we have cutouts, stroke the outer band path only so each
+        // cutout rect doesn't get its own visible outline.
+        ...(cutoutPath && { strokePathD: path }),
         fill: c,
         stroke: c,
         strokeWidth: 0.5,
+        ...(cutoutPath && { fillRule: "evenodd" as const }),
+        ...(stubs.length > 0 && { gradientStubs: stubs }),
         rawDatum: raw,
         labelX: xScale(firstNonZero.t) - 4,
         labelY,

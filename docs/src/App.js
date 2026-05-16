@@ -115,6 +115,7 @@ import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
 import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
 import MinardsMarchPage from "./pages/recipes/MinardsMarchPage"
 import RoslingBubbleChartPage from "./pages/recipes/RoslingBubbleChartPage"
+import ProcessSankeyVsSankeyPage from "./pages/recipes/ProcessSankeyVsSankeyPage"
 import StreamingMigrationMapPage from "./pages/recipes/StreamingMigrationMapPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
 import SSRGalleryPage from "./pages/SSRGalleryPage"
@@ -338,6 +339,7 @@ export default function DocsApp() {
               <Route path="minards-map" element={<MinardsMarchPage />} />
               <Route path="streaming-migration-map" element={<StreamingMigrationMapPage />} />
               <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />
+              <Route path="process-vs-classic-sankey" element={<ProcessSankeyVsSankeyPage />} />
             </Route>
 
             {/* Playground routes */}

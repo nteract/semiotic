@@ -313,6 +313,16 @@ export interface NetworkLineEdge {
 export interface NetworkBezierEdge {
   type: "bezier"
   pathD: string
+  /** Optional separate path used only for stroking. When set, the
+   *  renderer fills `pathD` and strokes `strokePathD`. Lets
+   *  ProcessSankey paint cutout subpaths into the fill (via evenodd)
+   *  while keeping the band's stroke on the outer perimeter only —
+   *  otherwise every cutout rect gets its own visible outline. */
+  strokePathD?: string
+  /** When false, the hit tester skips this edge. Used for
+   *  decorative scene-edges like ProcessSankey's gradient stubs —
+   *  they paint visually but shouldn't intercept hover. */
+  interactive?: boolean
   bezierCache?: BezierCache
   style: Style
   datum: SceneDatum
@@ -323,6 +333,9 @@ export interface NetworkBezierEdge {
   /** Lazily-built Path2D for hit testing; invalidated when pathD changes. */
   _cachedPath2D?: Path2D
   _cachedPath2DSource?: string
+  /** Lazily-built Path2D for stroking (when strokePathD is set). */
+  _cachedStrokePath2D?: Path2D
+  _cachedStrokePath2DSource?: string
 }
 
 /** Ribbon edge — used by chord */
