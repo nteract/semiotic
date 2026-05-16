@@ -407,37 +407,12 @@ export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.
     }
     case "bezier": {
       const e = edge as NetworkBezierEdge
-      // When `strokePathD` is set, split the fill and stroke into two
-      // <path> elements so the cutout subpaths in the fill don't pick
-      // up the perimeter stroke. Mirrors the canvas split.
-      if (e.strokePathD) {
-        return (
-          <React.Fragment key={`net-edge-${i}`}>
-            <path
-              d={e.pathD}
-              fill={svgFill(e.style.fill, "#999")}
-              fillOpacity={e.style.fillOpacity}
-              fillRule={e.style.fillRule}
-              stroke="none"
-              opacity={e.style.opacity}
-            />
-            <path
-              d={e.strokePathD}
-              fill="none"
-              stroke={e.style.stroke || "none"}
-              strokeWidth={e.style.strokeWidth}
-              opacity={e.style.opacity}
-            />
-          </React.Fragment>
-        )
-      }
       return (
         <path
           key={`net-edge-${i}`}
           d={e.pathD}
           fill={svgFill(e.style.fill, "#999")}
           fillOpacity={e.style.fillOpacity}
-          fillRule={e.style.fillRule}
           stroke={e.style.stroke || "none"}
           strokeWidth={e.style.strokeWidth}
           opacity={e.style.opacity}

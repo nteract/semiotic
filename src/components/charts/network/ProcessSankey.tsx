@@ -684,19 +684,13 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       const labelY = centerlines[n.id] + visualOffset
       const c = colorOf(n.id, idx)
       const raw = rawNodeById.get(n.id) ?? (n as Datum)
-      const cutoutSpecs = buildBandCutoutsForNode(n.id, edges, layout, xScale, domain)
-      const cutoutPath = cutoutSpecs.map((s) => s.cutoutPathD).join("")
-      const stubs = cutoutSpecs.map((s) => s.stub)
+      const stubs = buildBandCutoutsForNode(n.id, edges, layout, xScale, domain)
       bands.push({
         id: n.id,
-        pathD: cutoutPath ? path + cutoutPath : path,
-        // When we have cutouts, stroke the outer band path only so each
-        // cutout rect doesn't get its own visible outline.
-        ...(cutoutPath && { strokePathD: path }),
+        pathD: path,
         fill: c,
         stroke: c,
         strokeWidth: 0.5,
-        ...(cutoutPath && { fillRule: "evenodd" as const }),
         ...(stubs.length > 0 && { gradientStubs: stubs }),
         rawDatum: raw,
         labelX: xScale(firstNonZero.t) - 4,

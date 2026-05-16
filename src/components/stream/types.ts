@@ -141,10 +141,6 @@ export interface Style {
   /** Fill color or CanvasPattern (e.g. from createHatchPattern) */
   fill?: string | CanvasPattern
   fillOpacity?: number
-  /** SVG/canvas fill rule. "evenodd" lets a closed subpath punched
-   *  into a larger one act as a cutout (used by ProcessSankey to
-   *  cut systemInTime/systemOutTime slots out of node bands). */
-  fillRule?: "nonzero" | "evenodd"
   opacity?: number
   /** For icon/isotype bars: an image to stamp instead of filling */
   icon?: HTMLImageElement | HTMLCanvasElement

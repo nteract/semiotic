@@ -105,17 +105,13 @@ export function buildProcessSankeyScenes(input: BuildScenesInput): BuildScenesRe
     const visualOffset = ((firstNonZero.botMass - firstNonZero.topMass) * S) / 2
     const labelY = centerlines[n.id] + visualOffset
     const c = colorOf(n.id, idx)
-    const cutoutSpecs = buildBandCutoutsForNode(n.id, edges, layout, xScale, domain)
-    const cutoutPath = cutoutSpecs.map((s) => s.cutoutPathD).join("")
-    const stubs = cutoutSpecs.map((s) => s.stub)
+    const stubs = buildBandCutoutsForNode(n.id, edges, layout, xScale, domain)
     bands.push({
       id: n.id,
-      pathD: cutoutPath ? path + cutoutPath : path,
-      ...(cutoutPath && { strokePathD: path }),
+      pathD: path,
       fill: c,
       stroke: c,
       strokeWidth: 0.5,
-      ...(cutoutPath && { fillRule: "evenodd" as const }),
       ...(stubs.length > 0 && { gradientStubs: stubs }),
       rawDatum: (n.__raw ?? (n as Datum)),
       labelX: xScale(firstNonZero.t) - 4,

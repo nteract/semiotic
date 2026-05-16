@@ -227,7 +227,10 @@ export default function AnscombesSankey() {
   // aggregate SankeyDiagram re-run its entry animation every time
   // the 2×2 grid below produced a hover event.
   const aggregateEdges = useMemo(() => buildEdges(SURGE_TIMES), [])
-  const dayTicks = useMemo(() => Array.from({ length: 8 }, (_, i) => ({ date: i, label: `Day ${i}` })), [])
+  // Domain extended to Day 8 so the post-surge / outbreak / shift-change
+  // scenarios — whose late admits push some patient journeys past the
+  // end of a strict 7-day window — don't clip at the chart's right edge.
+  const dayTicks = useMemo(() => Array.from({ length: 9 }, (_, i) => ({ date: i, label: `Day ${i}` })), [])
   // Memoize per-scenario edges too so each ProcessSankey only re-runs
   // its layout when its own data actually changes (i.e., never).
   const scenarioEdges = useMemo(() => scenarios.map((s) => buildEdges(s.times)), [])
@@ -302,7 +305,7 @@ export default function AnscombesSankey() {
                     startTimeAccessor="startDay"
                     endTimeAccessor="endDay"
                     systemInTimeAccessor="systemInDay"
-                    domain={[0, 7]}
+                    domain={[0, 8]}
                     axisTicks={dayTicks}
                     colorBy="id"
                     colorScheme={carbonScheme}

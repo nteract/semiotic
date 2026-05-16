@@ -23,18 +23,6 @@ function getOrBuildEdgePath2D(
   return edge._cachedPath2D
 }
 
-function getOrBuildEdgeStrokePath2D(
-  edge: { strokePathD?: string; _cachedStrokePath2D?: Path2D; _cachedStrokePath2DSource?: string }
-): Path2D | null {
-  if (!edge.strokePathD) return null
-  if (edge._cachedStrokePath2D && edge._cachedStrokePath2DSource === edge.strokePathD) {
-    return edge._cachedStrokePath2D
-  }
-  edge._cachedStrokePath2D = new Path2D(edge.strokePathD)
-  edge._cachedStrokePath2DSource = edge.strokePathD
-  return edge._cachedStrokePath2D
-}
-
 /**
  * Canvas painter for all network edge types.
  *
@@ -74,7 +62,6 @@ function renderBezierEdge(
   ctx.save()
 
   const path = getOrBuildEdgePath2D(edge)
-  const fillRule: CanvasFillRule = edge.style.fillRule === "evenodd" ? "evenodd" : "nonzero"
 
   // Fill the band
   if (edge.style.fill && edge.style.fill !== "none") {
@@ -93,25 +80,22 @@ function renderBezierEdge(
       ctx.fillStyle = typeof edge.style.fill === "string" ? (resolveCSSColor(ctx, edge.style.fill) || edge.style.fill) : edge.style.fill
       ctx.globalAlpha = edge.style.fillOpacity ?? edge.style.opacity ?? 0.5
     }
-    ctx.fill(path, fillRule)
+    ctx.fill(path)
   }
 
-  // Stroke the band outline. When `strokePathD` is set, stroke that
-  // outer-only path instead of the combined fill path — keeps the
-  // perimeter stroke without outlining each cutout subpath.
+  // Stroke the band outline
   if (edge.style.stroke && edge.style.stroke !== "none") {
-    const strokePath = getOrBuildEdgeStrokePath2D(edge) ?? path
     ctx.strokeStyle = resolveCSSColor(ctx, edge.style.stroke) || edge.style.stroke
     ctx.lineWidth = edge.style.strokeWidth ?? 0.5
     ctx.globalAlpha = (edge.style.opacity ?? 1) * 0.5
-    ctx.stroke(strokePath)
+    ctx.stroke(path)
   }
 
   // Pulse overlay
   if (edge._pulseIntensity && edge._pulseIntensity > 0) {
     ctx.fillStyle = edge._pulseColor || "rgba(255,255,255,0.6)"
     ctx.globalAlpha = edge._pulseIntensity * 0.2
-    ctx.fill(path, fillRule)
+    ctx.fill(path)
   }
 
   ctx.restore()

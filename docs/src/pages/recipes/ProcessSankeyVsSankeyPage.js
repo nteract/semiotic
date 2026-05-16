@@ -123,9 +123,10 @@ export default function ProcessSankeyVsSankeyPage() {
         <li>
           <strong>Patient journeys</strong> — discrete events (one
           patient × one ward transition) with real timestamps. The
-          classic Sankey collapses 35 events into 5 aggregate ribbons
-          and loses the story; the Process Sankey paints every event
-          at its actual time and the readmission cycles become visible.
+          classic Sankey collapses every transition into source→target
+          aggregate ribbons and loses the story; the Process Sankey
+          paints every event at its actual time and the readmission
+          cycles become visible.
         </li>
       </ul>
       <p>
@@ -273,7 +274,7 @@ export default function ProcessSankeyVsSankeyPage() {
 
       <h3 id="patient-classic-readout">What the classic Sankey shows here</h3>
       <p>
-        The diagram aggregates all 41 patient-transition events into
+        The diagram aggregates all patient-transition events into
         ribbons keyed by source-target pair. You get a clean utilization
         readout — most patients hit ICU before General, the General ward
         is the most common discharge launchpad — useful for the monthly
@@ -315,10 +316,11 @@ export default function ProcessSankeyVsSankeyPage() {
       </p>
       <p>
         Capacity-planning context that only the temporal view surfaces:
-        three patients (P5, P8, P9) from the surge cohort remain
-        admitted at the week's end. P9 has spent the entire week in
-        ICU since arrival. Anyone making Monday admit decisions needs
-        to know that.
+        three patients from the surge cohort never reach the Discharge
+        node by the week's end — their flow stops at whichever ward
+        they were last transferred to (P5 and P8 still in General, P9
+        still in ICU). Anyone making Monday admit decisions needs to
+        know which beds are carrying held-over patients.
       </p>
 
       <h2 id="anscombes-sankey">Anscombe's Sankey</h2>
@@ -355,23 +357,20 @@ export default function ProcessSankeyVsSankeyPage() {
       <p>
         Notice the <strong>ER node</strong> in each of the four
         ProcessSankeys — instead of a single flat "always there" band,
-        the ER lane shows thin notches where each patient's slot is
-        cut out before they arrive. The unpainted region narrows from
-        left to right as more patients enter, producing a staircase
-        whose riser shape <em>is</em> the admit schedule. The pattern
-        is diagnostic on its own — a vertical wall in the surge week,
-        even risers under normal ops, a flat start with a Wednesday
-        cliff in the outbreak, regular twin steps per day in the
-        shift-change week. The mechanism is each patient's first edge
-        carries a <code>systemInDay</code> field equal to admit time;
-        ProcessSankey reads it through{" "}
-        <code>systemInTimeAccessor</code> and renders a cutout
-        rectangle from the band's left edge to the scaled admit time,
-        with height equal to that edge's ribbon width. Edges without
-        the field render normally, and the underlying layout / mass
-        balance is unchanged — the cutouts are pure rendering. The
-        aggregate Sankey can't draw any of this, because it has no
-        x-axis.
+        the ER lane is outline-only, and each patient appears as a
+        20-px gradient stub fading in at their admit time. The
+        cumulative effect is a staircase whose riser shape <em>is</em>
+        the admit schedule. The pattern is diagnostic on its own — a
+        vertical wall in the surge week, even risers under normal ops,
+        a flat start with a Wednesday cliff in the outbreak, regular
+        twin steps per day in the shift-change week. In this example
+        each patient's first edge carries a <code>systemInDay</code>
+        field equal to admit time (the column name is consumer-chosen);
+        the chart wires it in via{" "}
+        <code>systemInTimeAccessor=&quot;systemInDay&quot;</code>. The
+        underlying layout / mass balance is unchanged — the stubs are
+        pure rendering. The aggregate Sankey can't draw any of this,
+        because it has no x-axis.
       </p>
 
       <div style={{
@@ -464,9 +463,10 @@ export default function ProcessSankeyVsSankeyPage() {
         the year wrap.
       </p>
       <p>
-        <strong>Patient journeys:</strong> 12 fictional patients and 41
-        transition events spread across 7 days. Each event is one row;
-        every row counts as <code>value: 1</code>, so the aggregated
+        <strong>Patient journeys:</strong> 12 fictional patients and
+        roughly 40 transition events spread across 7 days. Each event
+        is one row; every row counts as <code>value: 1</code>, so the
+        aggregated
         Sankey naturally shows patient counts. The dataset has a
         deliberate three-act shape: pre-surge trickle (Days 0–1.7),
         mass-casualty event clustering six trauma patients into a

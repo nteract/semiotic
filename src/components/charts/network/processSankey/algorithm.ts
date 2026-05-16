@@ -526,51 +526,32 @@ export function buildBandPath(
 
 /**
  * One 20-px gradient stub at an attachment with `systemInTime` /
- * `systemOutTime`. The rect punches a transparent slot in the
- * band's fill (evenodd) and the same rect is emitted as a
- * separate bezier scene-edge with `_gradient`, so the visible
- * effect is a short band-color fade-in at the ribbon's source
- * (or fade-out at the target) — no long horizontal stripe.
+ * `systemOutTime`. Rendered as its own bezier scene-edge with a
+ * horizontal gradient, painted underneath the band. The band
+ * paints with `fill: none` whenever any stubs are present, so the
+ * stub gradients are the only colored regions inside the band's
+ * outline.
  */
-export interface BandCutoutSpec {
-  /** Subpath for the cutout rect — append to band path, evenodd fill. */
-  cutoutPathD: string
-  /** Gradient stub: rendered as its own bezier scene-edge so the
-   *  band's stroke doesn't outline it. */
-  stub: {
-    /** Rect path (M-L-L-L-Z). */
-    pathD: string
-    /** Gradient extent in screen pixels. */
-    x0: number
-    x1: number
-    /** Color stops — 0 = transparent end, 1 = band-color end. */
-    from: 0 | 1
-    to: 0 | 1
-  }
+export interface BandGradientStub {
+  /** Rect path (M-L-L-L-Z). */
+  pathD: string
+  /** Gradient extent in screen pixels. */
+  x0: number
+  x1: number
+  /** Color stops — 0 = transparent end, 1 = band-color end. */
+  from: 0 | 1
+  to: 0 | 1
 }
 
 /**
- * Build 20-px gradient stubs for a node band. For each outgoing edge
- * with `systemInTime`, returns a 20-px cutout + gradient stub at
- * `[systemInTime - 20px, systemInTime]` on the source-attachment
- * slot. Mirror geometry for incoming edges with `systemOutTime`:
- * `[systemOutTime, systemOutTime + 20px]` on the target-attachment
- * slot.
+ * Build the per-edge 20-px gradient stubs that visualize
+ * `systemInTime` / `systemOutTime` on a node band. Each stub is
+ * a rect on the edge's attachment slot, painted with a horizontal
+ * gradient that fades the band color in (or out) over 20 screen
+ * pixels and saturates through the rest of the rect.
  *
- * The cutout subpaths get appended to the band's fill path (caller
- * sets `fillRule="evenodd"` so they punch holes). The stubs get
- * emitted as separate bezier scene-edges with `_gradient` set — they
- * paint underneath the band's evenodd hole, so the visible effect
- * is a brief 20-px band-color fade-in/out at each attachment.
- *
- * The band's perimeter stroke stays intact (caller sets
- * `strokePathD` to the outer band path so the cutout subpaths don't
- * pick up the stroke).
- *
- * Layout-neutral: the cutouts and stubs are pure rendering. The
- * mass profile, samples, peak, and attachment data are unchanged.
- *
- * Returns empty arrays when the node has no qualifying edges.
+ * Pure rendering hint — layout/mass-profile unchanged. Returns an
+ * empty array when the node has no qualifying edges.
  */
 export function buildBandCutoutsForNode(
   nodeId: string,
@@ -578,7 +559,7 @@ export function buildBandCutoutsForNode(
   layout: ProcessSankeyLayout,
   xScale: (t: number) => number,
   domain: Domain,
-): BandCutoutSpec[] {
+): BandGradientStub[] {
   const data = layout.nodeData[nodeId]
   if (!data || data.samples.length === 0) return []
   const S = layout.valueScale
@@ -591,7 +572,7 @@ export function buildBandCutoutsForNode(
   const clampX = (t: number): number => xScale(clampTime(t, domain))
   // 20 screen pixels of gradient — width-independent of zoom/domain.
   const FADE_PX = 20
-  const specs: BandCutoutSpec[] = []
+  const stubs: BandGradientStub[] = []
   const rect = (x0: number, yT: number, x1: number, yB: number): string =>
     `M${x0},${yT} L${x1},${yT} L${x1},${yB} L${x0},${yB} Z`
   for (const e of edges) {
@@ -602,22 +583,17 @@ export function buildBandCutoutsForNode(
         const xStart = clampX(e.startTime)
         const xFade = Math.max(xLeft, xSysIn - FADE_PX)
         // Stub spans the fade-in PLUS the patient's tenure in the
-        // source (systemInTime → startTime). The gradient stops
-        // saturate at the fade-in's right edge, so beyond `xSysIn`
-        // the rect renders as solid band-color, matching the
-        // "patient sits in ER" visual the user wants.
+        // source (systemInTime → startTime). Gradient stops saturate
+        // at the fade-in's right edge so beyond `xSysIn` the rect
+        // renders as solid band-color.
         if (xStart > xFade) {
           const [yT, yB] = attachmentYRange(att, cl, S)
-          const rectPath = rect(xFade, yT, xStart, yB)
-          specs.push({
-            cutoutPathD: " " + rectPath,
-            stub: {
-              pathD: rectPath,
-              x0: xFade,
-              x1: xSysIn,
-              from: 0,  // transparent at the far-from-attachment end
-              to: 1,    // band-color at the attachment end
-            },
+          stubs.push({
+            pathD: rect(xFade, yT, xStart, yB),
+            x0: xFade,
+            x1: xSysIn,
+            from: 0,
+            to: 1,
           })
         }
       }
@@ -628,28 +604,20 @@ export function buildBandCutoutsForNode(
         const xSysOut = clampX(e.systemOutTime)
         const xEnd = clampX(e.endTime)
         const xFade = Math.min(xRight, xSysOut + FADE_PX)
-        // Mirror: stub spans the patient's tenure in the target
-        // (endTime → systemOutTime) plus a fade-out tail. Solid
-        // band-color from `xEnd` to `xSysOut`, then fade to
-        // transparent across the 20-px tail.
         if (xFade > xEnd) {
           const [yT, yB] = attachmentYRange(att, cl, S)
-          const rectPath = rect(xEnd, yT, xFade, yB)
-          specs.push({
-            cutoutPathD: " " + rectPath,
-            stub: {
-              pathD: rectPath,
-              x0: xSysOut,
-              x1: xFade,
-              from: 1,  // band-color at the attachment end (left)
-              to: 0,    // transparent at the far end (right)
-            },
+          stubs.push({
+            pathD: rect(xEnd, yT, xFade, yB),
+            x0: xSysOut,
+            x1: xFade,
+            from: 1,
+            to: 0,
           })
         }
       }
     }
   }
-  return specs
+  return stubs
 }
 
 // `buildRibbonPath` lived here originally. It's been replaced by:

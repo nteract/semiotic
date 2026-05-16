@@ -202,32 +202,6 @@ function getEdgePath2D(
   }
 }
 
-/**
- * For hit testing on bezier bands carrying cutout subpaths, use the
- * outer-perimeter path (`strokePathD`) when present. Without this,
- * the appended cutout rectangles split the band fill under nonzero
- * and the cursor reads as "outside" anywhere a cutout slot overlaps
- * the band interior — including most of an outline-only band where
- * many cutouts share the slot region.
- */
-function getEdgeHitPath2D(
-  edge: { pathD: string; strokePathD?: string; _cachedPath2D?: Path2D; _cachedPath2DSource?: string; _cachedStrokePath2D?: Path2D; _cachedStrokePath2DSource?: string }
-): Path2D | null {
-  if (edge.strokePathD) {
-    if (edge._cachedStrokePath2D && edge._cachedStrokePath2DSource === edge.strokePathD) {
-      return edge._cachedStrokePath2D
-    }
-    try {
-      edge._cachedStrokePath2D = new Path2D(edge.strokePathD)
-      edge._cachedStrokePath2DSource = edge.strokePathD
-      return edge._cachedStrokePath2D
-    } catch {
-      // fall through to fill path
-    }
-  }
-  return getEdgePath2D(edge)
-}
-
 // ── Edge hit testing ────────────────────────────────────────────────────
 
 function hitTestEdge(
@@ -257,12 +231,7 @@ function hitTestBezierEdge(
   // Use Path2D for approximate point-in-path testing
   if (!edge.pathD) return null
 
-  // Prefer the outer perimeter path (`strokePathD`) when set — for
-  // ProcessSankey bands carrying gradient-stub cutouts, the fill
-  // path has multiple subpaths whose evenodd parity excludes the
-  // band interior. The outer perimeter is a single closed shape
-  // whose interior is unambiguous under both fill rules.
-  const path = getEdgeHitPath2D(edge)
+  const path = getEdgePath2D(edge)
   const ctx = getHitContext()
   if (!path || !ctx) return null
 

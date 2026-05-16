@@ -22,22 +22,15 @@ import type { Datum } from "../../shared/datumTypes"
 
 export interface ProcessSankeyBandSpec {
   id: string
+  /** Outer band perimeter — same path used for fill and stroke. */
   pathD: string
-  /** Optional outer-perimeter path used only for stroke. Set together
-   *  with the cutout fill so each cutout's rectangular subpath
-   *  doesn't pick up the band stroke. */
-  strokePathD?: string
   fill: string
   stroke?: string
   strokeWidth?: number
-  /** Optional SVG/canvas fill rule. ProcessSankey sets this to
-   *  "evenodd" when the band's pathD contains punched-out subpaths
-   *  for systemInTime / systemOutTime cutouts. */
-  fillRule?: "nonzero" | "evenodd"
-  /** Per-cutout gradient stubs (20 px sweeps that soft-fade the
-   *  band-color into each cutout's right edge). Painted as separate
-   *  bezier scene-edges underneath the band so the cutout's
-   *  transparency lets the gradient show through. */
+  /** Per-edge 20-px gradient stubs (band-color fade-in for
+   *  systemInTime, fade-out for systemOutTime). When at least one
+   *  stub is present, the band paints outline-only and the stubs
+   *  are the only colored regions inside the perimeter. */
   gradientStubs?: BandGradientStub[]
   /** The user's raw node datum, surfaced as `data` in HoverData. */
   rawDatum: Datum
@@ -158,14 +151,13 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
     const hasStubs = !!(b.gradientStubs && b.gradientStubs.length > 0)
     sceneEdges.push({
       type: "bezier",
-      pathD: hasStubs ? (b.strokePathD ?? b.pathD) : b.pathD,
+      pathD: b.pathD,
       style: {
         ...(hasStubs
           ? { fill: "none" }
           : { fill: b.fill, fillOpacity: 0.86 }),
         stroke: b.stroke ?? b.fill,
         strokeWidth: b.strokeWidth ?? 0.5,
-        ...(!hasStubs && b.fillRule && { fillRule: b.fillRule }),
       },
       datum: {
         __kind: "band",
