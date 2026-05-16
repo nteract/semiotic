@@ -13,6 +13,7 @@ import * as React from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
 import { SVGOverlay } from "./SVGOverlay"
+import type { StreamScales } from "./types"
 
 // Scale stubs sized so that arbitrary picked tick values land far enough
 // apart pixel-wise to survive `filterTicksByPixelDistance` (22 px on Y,
@@ -20,7 +21,7 @@ import { SVGOverlay } from "./SVGOverlay"
 // numeric vocabulary (10/40/70 for X, 3000/5000/7000 for Y) so we can
 // substring-match cleanly without colliding with d3 auto-ticks like
 // "25" appearing inside "2500".
-function makeStubScales() {
+function makeStubScales(): StreamScales {
   const x = Object.assign((v: number) => v * 3, {
     ticks: () => [0, 250, 500, 750, 1000],
     domain: () => [0, 100],
@@ -31,7 +32,7 @@ function makeStubScales() {
     domain: () => [0, 10000],
     range: () => [200, 0],
   })
-  return { x: x as any, y: y as any }
+  return { x, y } as unknown as StreamScales
 }
 
 const baseProps = {
@@ -47,7 +48,7 @@ describe("tickValues on XY axes", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales()}
         showAxes={true}
         axes={[
           // Use distinct tick numbers on the left axis (3000s) so we
@@ -72,7 +73,7 @@ describe("tickValues on XY axes", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales()}
         showAxes={true}
         axes={[
           { orient: "left", tickValues: [3000, 5000, 7000] },
@@ -93,7 +94,7 @@ describe("tickValues on XY axes", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales()}
         showAxes={true}
         axes={[
           {
@@ -118,7 +119,7 @@ describe("tickValues on XY axes", () => {
     const { container } = render(
       <SVGOverlay
         {...baseProps}
-        scales={makeStubScales() as any}
+        scales={makeStubScales()}
         showAxes={true}
         axisExtent="exact"
         axes={[

@@ -1,0 +1,32 @@
+{
+  "description": "Known legacy test typecheck errors. scripts/check-test-types.mjs fails only on new files or increased per-file counts so CI stays non-noisy while this baseline is burned down.",
+  "files": {
+    "src/__tests__/scenarios/wedge-transition.test.tsx": 16,
+    "src/components/charts/geo/hydration.test.tsx": 4,
+    "src/components/charts/network/hydration.test.tsx": 6,
+    "src/components/charts/network/OrbitDiagram.test.tsx": 1,
+    "src/components/charts/network/processSankey/streamingLayout.test.ts": 4,
+    "src/components/charts/ordinal/hydration.test.tsx": 2,
+    "src/components/charts/shared/useFrameImperativeHandle.refstability.test.tsx": 1,
+    "src/components/charts/xy/hydration.test.tsx": 3,
+    "src/components/charts/xy/LineChart.dex-integration.test.tsx": 4,
+    "src/components/charts/xy/MinimapChart.test.tsx": 1,
+    "src/components/recipes/networkRecipes.test.ts": 11,
+    "src/components/recipes/recipes.test.ts": 11,
+    "src/components/server/componentSSR.test.tsx": 3,
+    "src/components/server/networkColoring.test.tsx": 11,
+    "src/components/server/renderToStaticSVG.test.tsx": 2,
+    "src/components/server/ssr-csr-parity.test.tsx": 1,
+    "src/components/stream/GeoCanvasHitTester.test.ts": 2,
+    "src/components/stream/hoverUtils.test.ts": 1,
+    "src/components/stream/keyboardNav.test.ts": 81,
+    "src/components/stream/OrdinalCanvasHitTester.test.ts": 1,
+    "src/components/stream/OrdinalPipelineStore.swimlane.test.ts": 1,
+    "src/components/stream/ordinalSceneBuilders/ordinalSceneBuilders.test.ts": 45,
+    "src/components/stream/PipelineStore.accessor.test.ts": 16,
+    "src/components/stream/PipelineStore.heatmap.test.ts": 10,
+    "src/components/stream/PipelineStore.transition.test.ts": 1,
+    "src/components/stream/StreamXYFrame.hydration.test.tsx": 2,
+    "src/components/stream/useHydration.test.tsx": 2
+  }
+}

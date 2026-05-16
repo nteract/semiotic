@@ -76,6 +76,11 @@ const multiAxisData = Array.from({ length: 20 }, (_, i) => ({
   requests: 50 + ((i * 37) % 150),
   latencyMs: 3000 + ((i * 173) % 3500)
 }))
+type MultiAxisDatum = (typeof multiAxisData)[number]
+type MultiAxisSeries = {
+  yAccessor: keyof Pick<MultiAxisDatum, "requests" | "latencyMs">
+  label: string
+}
 
 describe("Chart Repro — LineChart with Date xAccessor", () => {
   it("produces line scene nodes with function xAccessor returning Date", () => {
@@ -217,7 +222,7 @@ describe("Chart Repro — MultiAxisLineChart unitization", () => {
 
   function makeUnitizedData() {
     // Replicate what MultiAxisLineChart does internally
-    const series = [
+    const series: MultiAxisSeries[] = [
       { yAccessor: "requests", label: "requests" },
       { yAccessor: "latencyMs", label: "latencyMs" }
     ]
@@ -227,7 +232,7 @@ describe("Chart Repro — MultiAxisLineChart unitization", () => {
       let min = Infinity,
         max = -Infinity
       for (const d of multiAxisData) {
-        const v = (d as any)[s.yAccessor]
+        const v = d[s.yAccessor]
         if (v < min) min = v
         if (v > max) max = v
       }
@@ -238,7 +243,7 @@ describe("Chart Repro — MultiAxisLineChart unitization", () => {
     const result: Datum[] = []
     for (const d of multiAxisData) {
       for (let i = 0; i < 2; i++) {
-        const val = (d as any)[series[i].yAccessor]
+        const val = d[series[i].yAccessor]
         result.push({
           ...d,
           [UNITIZED_FIELD]: unitize(val, extents[i]),

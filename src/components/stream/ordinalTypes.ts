@@ -64,8 +64,19 @@ export interface WedgeSceneNode {
   startAngle: number
   /** End angle in radians, canvas convention */
   endAngle: number
-  /** Corner radius for rounded wedge arcs (d3-shape arc.cornerRadius) */
+  /** Corner radius for rounded wedge arcs (d3-shape arc.cornerRadius).
+   *  When set on its own, rounds ALL FOUR corners (the d3-shape default).
+   *  Pair with `roundedEnds` to round only the gauge's outer endpoints —
+   *  the swimlane analogue for radial sectors: first wedge's start side
+   *  + last wedge's end side rounded, internal zone seams stay square. */
   cornerRadius?: number
+  /** Selective per-end rounding. When omitted, `cornerRadius` rounds all
+   *  four corners. When provided, `cornerRadius` rounds ONLY the sides
+   *  marked `true` — `{ start: true }` rounds the wedge's startAngle
+   *  side (both inner and outer corners at that angle), `{ end: true }`
+   *  rounds the endAngle side. The gauge scene builder uses this to
+   *  paint outer endpoints rounded but internal zone seams square. */
+  roundedEnds?: { start?: boolean; end?: boolean }
   style: Style
   datum: SceneDatum
   category?: string

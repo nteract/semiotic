@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render } from "@testing-library/react"
+import * as React from "react"
 import { MultiAxisLineChart } from "./MultiAxisLineChart"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 // Suppress ResizeObserver warning in test environment
 beforeEach(() => {
@@ -164,7 +166,7 @@ describe("MultiAxisLineChart", () => {
   })
 
   it("supports push API ref handle", () => {
-    const ref = { current: null as any }
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <MultiAxisLineChart
         ref={ref}
@@ -179,9 +181,11 @@ describe("MultiAxisLineChart", () => {
     )
     // Ref should expose push API
     expect(ref.current).toBeTruthy()
-    expect(typeof ref.current.push).toBe("function")
-    expect(typeof ref.current.pushMany).toBe("function")
-    expect(typeof ref.current.clear).toBe("function")
-    expect(typeof ref.current.getData).toBe("function")
+    const handle = ref.current
+    if (!handle) throw new Error("Expected MultiAxisLineChart to provide a ref handle")
+    expect(typeof handle.push).toBe("function")
+    expect(typeof handle.pushMany).toBe("function")
+    expect(typeof handle.clear).toBe("function")
+    expect(typeof handle.getData).toBe("function")
   })
 })

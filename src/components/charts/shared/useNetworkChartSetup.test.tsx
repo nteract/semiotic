@@ -64,12 +64,12 @@ describe("useNetworkChartSetup", () => {
   })
 
   it("drops null/non-object edges via filterSparseArray", () => {
-    const edges = [
+    const edges: Array<{ source: string; target: string; value: number } | null | undefined> = [
       { source: "A", target: "B", value: 1 },
       null,
       undefined,
       { source: "B", target: "C", value: 1 },
-    ] as unknown[]
+    ]
     const { result } = renderHook(
       () => useNetworkChartSetup({
         ...baseInput,

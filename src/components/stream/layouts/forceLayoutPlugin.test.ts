@@ -1,6 +1,10 @@
 import { forceLayoutPlugin } from "./forceLayoutPlugin"
 import type { RealtimeNode, RealtimeEdge, NetworkPipelineConfig } from "../networkTypes"
 
+type ForceLayoutConfigWithPreviousPositions = NetworkPipelineConfig & {
+  __previousPositions?: Map<string, { x: number; y: number }>
+}
+
 function makeNode(id: string): RealtimeNode {
   return { id, x: 0, y: 0, x0: 0, x1: 0, y0: 0, y1: 0, width: 0, height: 0, value: 0 }
 }
@@ -178,7 +182,7 @@ describe("forceLayoutPlugin", () => {
       iterations: 100
     }
     // Stash previous positions on config
-    ;(config as any).__previousPositions = prevPositions
+    ;(config as ForceLayoutConfigWithPreviousPositions).__previousPositions = prevPositions
 
     forceLayoutPlugin.computeLayout(nodes, edges, config, [600, 600])
 

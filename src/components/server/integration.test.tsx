@@ -49,6 +49,11 @@ function isValidPNG(buf: Buffer): boolean {
   return buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47 // PNG header
 }
 
+type StaticFrameProps = Parameters<typeof renderToStaticSVG>[1]
+type RenderChartName = Parameters<typeof renderChart>[0]
+type RenderChartProps = Parameters<typeof renderChart>[1]
+type RenderImageTarget = Parameters<typeof renderToImage>[0]
+
 // ═══════════════════════════════════════════════════════════════════════
 // SVG Generation — end-to-end
 // ═══════════════════════════════════════════════════════════════════════
@@ -90,9 +95,9 @@ describe("SVG generation (end-to-end)", () => {
   })
 
   it("renderToStaticSVG dispatches correctly for all frame types", () => {
-    const xy = renderToStaticSVG("xy", { chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y", size: [300, 200] } as any)
-    const ordinal = renderToStaticSVG("ordinal", { chartType: "bar", data: barData, oAccessor: "category", rAccessor: "value", size: [300, 200] } as any)
-    const network = renderToStaticSVG("network", { chartType: "force", edges: networkEdges, size: [300, 200] } as any)
+    const xy = renderToStaticSVG("xy", { chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y", size: [300, 200] } as StaticFrameProps)
+    const ordinal = renderToStaticSVG("ordinal", { chartType: "bar", data: barData, oAccessor: "category", rAccessor: "value", size: [300, 200] } as StaticFrameProps)
+    const network = renderToStaticSVG("network", { chartType: "force", edges: networkEdges, size: [300, 200] } as StaticFrameProps)
 
     expect(isValidSVG(xy)).toBe(true)
     expect(isValidSVG(ordinal)).toBe(true)
@@ -189,7 +194,7 @@ describe("PNG generation (end-to-end)", () => {
   })
 
   it("renderToImage with frame-level API", async () => {
-    const png = await renderToImage("xy" as any, {
+    const png = await renderToImage("xy" as RenderImageTarget, {
       chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y",
       size: [200, 150],
     }, { format: "png" })
@@ -316,7 +321,7 @@ describe("Cross-format consistency", () => {
     const frame = renderToStaticSVG("ordinal", {
       chartType: "bar", data: barData, oAccessor: "category", rAccessor: "value",
       size: [300, 200],
-    } as any)
+    } as StaticFrameProps)
 
     const hocRects = (hoc.match(/<rect /g) || []).length
     const frameRects = (frame.match(/<rect /g) || []).length
@@ -379,7 +384,7 @@ describe("Geo SSR", () => {
       { lon: 5, lat: 5, pop: 1000, name: "A" },
       { lon: 25, lat: 25, pop: 5000, name: "B" },
     ]
-    const svg = renderChart("ProportionalSymbolMap" as any, {
+    const svg = renderChart("ProportionalSymbolMap" as RenderChartName, {
       points,
       xAccessor: "lon",
       yAccessor: "lat",
@@ -537,7 +542,7 @@ describe("Graceful handling of invalid props", () => {
 
   it("renderChart with unknown component name throws a descriptive error", () => {
     expect(() => {
-      renderChart("NonexistentChart" as any, {
+      renderChart("NonexistentChart" as RenderChartName, {
         data: barData,
         width: 300, height: 200,
       })
@@ -547,7 +552,7 @@ describe("Graceful handling of invalid props", () => {
   it("renderChart with null/undefined data does not crash", () => {
     expect(() => {
       renderChart("BarChart", {
-        data: null as any,
+        data: null as RenderChartProps["data"],
         categoryAccessor: "category",
         valueAccessor: "value",
         width: 300, height: 200,

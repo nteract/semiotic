@@ -35,6 +35,9 @@ jobs:
       - name: Run type check
         run: npm run typescript
 
+      - name: Run test type check
+        run: npm run typescript:tests
+
       - name: Run MCP type check
         run: npm run typescript:mcp
 

@@ -82,7 +82,7 @@ export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
   /** Point radius when `showPoints`. @default 3 */
   pointRadius: number
   // ── Tooltip pieces ────────────────────────────────────────────
-  xAccessor: ChartAccessor<TDatum, number>
+  xAccessor: ChartAccessor<TDatum, number | Date | string>
   yAccessor: ChartAccessor<TDatum, number>
   xLabel?: string
   yLabel?: string
@@ -158,11 +158,12 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
       groupedAreas = safeData
     } else {
       // areaBy is non-null here (guarded by the early return above)
+      const areaAccessor = areaBy!
       const grouped = safeData.reduce((acc, d) => {
-        const key = typeof areaBy === "function" ? (areaBy as any)(d) : d[areaBy as string]
+        const key = typeof areaAccessor === "function" ? areaAccessor(d) : d[areaAccessor]
         if (!acc[key]) {
           const areaObj: Datum = { [lineDataAccessor]: [] }
-          if (typeof areaBy === "string") areaObj[areaBy] = key
+          if (typeof areaAccessor === "string") areaObj[areaAccessor] = key
           acc[key] = areaObj
         }
         acc[key][lineDataAccessor].push(d)

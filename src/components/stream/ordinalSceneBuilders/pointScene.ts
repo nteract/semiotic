@@ -18,7 +18,7 @@ export function buildPointScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout
       const val = d.__rValue ?? getR(d)
       const scale = hasMultiAxis ? (multiScales[rIndex] || rScale) : rScale
       const style = resolvePieceStyle(d, col.name)
-      const r = (style as any).r || 5
+      const r = style.r || 5
 
       let px: number, py: number
 
@@ -56,7 +56,7 @@ export function buildSwarmScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout
       const d = col.pieceData[i]
       const val = getR(d)
       const style = resolvePieceStyle(d, col.name)
-      const r = (style as any).r || 4
+      const r = style.r || 4
 
       // Deterministic jitter based on index
       const jitter = (((i * 7919) % 100) / 100 - 0.5) * halfWidth * 0.8

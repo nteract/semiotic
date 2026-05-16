@@ -7,11 +7,12 @@ import "@testing-library/jest-dom/vitest"
 // it never fires in tests. Individual tests that need to drive resize
 // events typically install a richer mock on top of this no-op.
 if (typeof globalThis.ResizeObserver === "undefined") {
-  ;(globalThis as any).ResizeObserver = class {
+  globalThis.ResizeObserver = class NoopResizeObserver implements ResizeObserver {
+    constructor(_callback?: ResizeObserverCallback) {}
     observe() {}
     unobserve() {}
     disconnect() {}
-  }
+  } as typeof ResizeObserver
 }
 
 // JSDOM does not implement a full Canvas 2D context. Provide stubs for
@@ -54,21 +55,28 @@ const canvasMethods = [
   "resetTransform",
 ] as const
 
+type CanvasStubMethod = (typeof canvasMethods)[number]
+
 // Guard: HTMLCanvasElement only exists in jsdom environments, not in Node SSR tests
 if (typeof HTMLCanvasElement !== "undefined") {
 
 const originalGetContext = HTMLCanvasElement.prototype.getContext
 
-HTMLCanvasElement.prototype.getContext = function (
+const patchedGetContext = function (
   this: HTMLCanvasElement,
   contextId: string,
-  ...args: any[]
+  ...args: unknown[]
 ) {
-  const ctx = originalGetContext.call(this, contextId, ...args) as any
+  const ctx = originalGetContext.call(
+    this,
+    contextId as never,
+    ...(args as never[])
+  ) as CanvasRenderingContext2D | null
   if (ctx) {
+    const methodBag = ctx as unknown as Record<CanvasStubMethod, unknown>
     for (const method of canvasMethods) {
-      if (typeof ctx[method] !== "function") {
-        ctx[method] =
+      if (typeof methodBag[method] !== "function") {
+        methodBag[method] =
           method === "measureText"
             ? () => ({ width: 0 })
             : method === "getImageData"
@@ -83,6 +91,8 @@ HTMLCanvasElement.prototype.getContext = function (
     }
   }
   return ctx
-} as any
+} as HTMLCanvasElement["getContext"]
+
+HTMLCanvasElement.prototype.getContext = patchedGetContext
 
 } // end HTMLCanvasElement guard

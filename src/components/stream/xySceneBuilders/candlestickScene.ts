@@ -6,10 +6,10 @@ import type { Datum } from "../../charts/shared/datumTypes"
  *
  * Consumed by: PipelineStore.buildSceneNodes (chartType "candlestick")
  */
-import type { SceneNode, CandlestickSceneNode, StreamLayout } from "../types"
+import type { CandlestickSceneNode, StreamLayout } from "../types"
 import type { XYSceneContext } from "./types"
 
-export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], _layout: StreamLayout): SceneNode[] {
+export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], _layout: StreamLayout): CandlestickSceneNode[] {
   if (!ctx.getHigh || !ctx.getLow || !ctx.scales) return []
 
   // Range mode: detected by PipelineStore when both open/close accessors are missing.
@@ -17,7 +17,7 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], _layou
   const isRangeMode = ctx.config.candlestickRangeMode ?? false
   if (!isRangeMode && (!ctx.getOpen || !ctx.getClose)) return []
 
-  const nodes: SceneNode[] = []
+  const nodes: CandlestickSceneNode[] = []
   const cs = ctx.config.candlestickStyle || {}
   const rangeColor = cs.rangeColor || "#6366f1"
   const upColor = isRangeMode ? rangeColor : (cs.upColor || "#28a745")
@@ -62,7 +62,7 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], _layou
 
     const isUp = close >= open
 
-    const node: any = {
+    const node: CandlestickSceneNode = {
       type: "candlestick",
       x: ctx.scales.x(xVal),
       openY: ctx.scales.y(open),

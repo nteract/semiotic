@@ -6,11 +6,11 @@ import type { Datum } from "../../charts/shared/datumTypes"
  *
  * Consumed by: PipelineStore.buildSceneNodes (chartType "swarm")
  */
-import type { SceneNode, PointSceneNode } from "../types"
+import type { PointSceneNode } from "../types"
 import type { XYSceneContext } from "./types"
 
-export function buildSwarmScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
-  const nodes: SceneNode[] = []
+export function buildSwarmScene(ctx: XYSceneContext, data: Datum[]): PointSceneNode[] {
+  const nodes: PointSceneNode[] = []
   const swarm = ctx.config.swarmStyle || {}
   const radius = swarm.radius ?? 3
   // Default swarm fill: user swarmStyle.fill > theme primary > hardcoded #007bff.

@@ -2,6 +2,7 @@ import * as React from "react"
 import { describe, it, expect } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { ThemeProvider } from "../../ThemeProvider"
+import { LIGHT_THEME } from "../../store/ThemeStore"
 import { useResolvedSelection } from "./useResolvedSelection"
 import { wrapStyleWithSelection, type SelectionHookResult } from "./selectionUtils"
 
@@ -10,12 +11,16 @@ const activeHook: SelectionHookResult = {
   predicate: (d) => d.category === "A",
 }
 
+const selectionTheme = (selectionOpacity: number | undefined) => ({
+  colors: { ...LIGHT_THEME.colors, selectionOpacity },
+})
+
 describe("useResolvedSelection", () => {
   it("returns undefined when neither selection nor theme supply opacity", () => {
     // light theme defaults provide selectionOpacity, so use a theme that
     // explicitly clears it for this case
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: undefined } as any }}>
+      <ThemeProvider theme={selectionTheme(undefined)}>
         {children}
       </ThemeProvider>
     )
@@ -25,7 +30,7 @@ describe("useResolvedSelection", () => {
 
   it("picks up the theme's colors.selectionOpacity as default unselectedOpacity", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as any }}>
+      <ThemeProvider theme={selectionTheme(0.3)}>
         {children}
       </ThemeProvider>
     )
@@ -39,7 +44,7 @@ describe("useResolvedSelection", () => {
 
   it("per-chart selection.unselectedOpacity overrides the theme", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as any }}>
+      <ThemeProvider theme={selectionTheme(0.3)}>
         {children}
       </ThemeProvider>
     )
@@ -52,7 +57,7 @@ describe("useResolvedSelection", () => {
 
   it("flows the theme value through wrapStyleWithSelection dimming", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: 0.1 } as any }}>
+      <ThemeProvider theme={selectionTheme(0.1)}>
         {children}
       </ThemeProvider>
     )
@@ -72,7 +77,7 @@ describe("useResolvedSelection", () => {
 
   it("preserves unselectedStyle and selectedStyle from the selection config", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ colors: { selectionOpacity: 0.3 } as any }}>
+      <ThemeProvider theme={selectionTheme(0.3)}>
         {children}
       </ThemeProvider>
     )

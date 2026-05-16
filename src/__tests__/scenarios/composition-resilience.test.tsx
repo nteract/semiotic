@@ -13,11 +13,12 @@ import {
   renderEmptyState,
   renderLoadingState,
 } from "../../components/charts/shared/withChartWrapper"
+import type { ReactElement } from "react"
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
 /** A component that always throws during render */
-function ThrowingChart({ message = "Boom!" }: { message?: string }) {
+function ThrowingChart({ message = "Boom!" }: { message?: string }): ReactElement {
   throw new Error(message)
 }
 

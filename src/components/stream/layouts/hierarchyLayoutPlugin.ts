@@ -37,7 +37,7 @@ type HierarchyLayoutType = "tree" | "cluster" | "treemap" | "circlepack" | "part
  * Uses d3-hierarchy for all layout computations. This plugin is `hierarchical: true`,
  * meaning the input data is a single root node object rather than flat nodes+edges arrays.
  *
- * The hierarchy root is passed via `(config as any).__hierarchyRoot`, set by the store
+ * The hierarchy root is passed via `config.__hierarchyRoot`, set by the store
  * before calling computeLayout. The plugin builds the d3 hierarchy internally, runs the
  * appropriate layout algorithm, and populates the nodes/edges arrays.
  *
@@ -367,4 +367,3 @@ function setCirclePositions(
   // Store radius on the node for buildScene
   node.__radius = r
 }
-

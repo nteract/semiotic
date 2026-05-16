@@ -225,11 +225,11 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
       const id = nextRafId++
       rafCallbacks.push({ id, cb })
       return id
-    }) as any
+    })
     global.cancelAnimationFrame = ((id: number) => {
       cancelledIds.push(id)
       rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
-    }) as any
+    })
   })
 
   afterEach(() => {
@@ -333,10 +333,10 @@ describe("useFrame — theme-change effect", () => {
       const id = nextRafId++
       rafCallbacks.push({ id, cb })
       return id
-    }) as any
+    })
     global.cancelAnimationFrame = ((id: number) => {
       rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
-    }) as any
+    })
   })
 
   afterEach(() => {
@@ -446,11 +446,11 @@ describe("useFrame — hover coalescing", () => {
       const id = nextRafId++
       rafCallbacks.push({ id, cb })
       return id
-    }) as any
+    })
     global.cancelAnimationFrame = ((id: number) => {
       cancelledIds.push(id)
       rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
-    }) as any
+    })
   })
 
   afterEach(() => {

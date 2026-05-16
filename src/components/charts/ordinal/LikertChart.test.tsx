@@ -108,7 +108,7 @@ describe("LikertChart", () => {
       <TooltipProvider>
         <LikertChart
           data={preAggData}
-          valueAccessor="score"
+          valueAccessor={(d: Record<string, unknown>) => Number(d.score)}
           levelAccessor="level"
           countAccessor="count"
           levels={levels5}
@@ -561,7 +561,7 @@ describe("defaultDivergingScheme", () => {
   })
 
   it("falls back to Carbon palette when scheme name is unknown", () => {
-    const palette = defaultDivergingScheme(5, "NotARealScheme" as any)
+    const palette = defaultDivergingScheme(5, "NotARealScheme")
     expect(palette[0]).toBe("#da1e28")
   })
 

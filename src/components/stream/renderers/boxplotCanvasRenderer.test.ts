@@ -1,7 +1,8 @@
 import { vi, describe, it, expect } from "vitest"
 import { boxplotCanvasRenderer } from "./boxplotCanvasRenderer"
 import { scaleLinear, scaleBand } from "d3-scale"
-import type { BoxplotSceneNode, OrdinalScales, OrdinalLayout } from "../ordinalTypes"
+import type { BoxplotSceneNode, OrdinalScales, OrdinalLayout, PointSceneNode } from "../ordinalTypes"
+import type { Mock } from "vitest"
 
 function createMockCtx() {
   return {
@@ -82,8 +83,8 @@ describe("boxplotCanvasRenderer", () => {
     boxplotCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
     // Median line at medianPos=150
-    const moveToArgs = (ctx.moveTo as any).mock.calls
-    const lineToArgs = (ctx.lineTo as any).mock.calls
+    const moveToArgs = (ctx.moveTo as Mock).mock.calls
+    const lineToArgs = (ctx.lineTo as Mock).mock.calls
     // Should have a moveTo at (80, 150) and lineTo at (120, 150) for median
     expect(moveToArgs).toContainEqual([80, 150])
     expect(lineToArgs).toContainEqual([120, 150])
@@ -110,7 +111,7 @@ describe("boxplotCanvasRenderer", () => {
 
   it("skips non-boxplot nodes", () => {
     const ctx = createMockCtx()
-    const point = { type: "point", x: 50, y: 50, r: 3, style: {}, datum: {} } as any
+    const point: PointSceneNode = { type: "point", x: 50, y: 50, r: 3, style: {}, datum: {} }
     boxplotCanvasRenderer(ctx, [point], makeScales(), makeLayout())
 
     // No drawing calls for point nodes

@@ -63,7 +63,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 1. Small bounded data → single synchronous changeset
   it("small bounded dataset emits a single synchronous changeset", () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     const data = generateData(100)
     adapter.setBoundedData(data)
@@ -77,7 +77,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   it("same bounded data reference is a no-op", () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     const data = generateData(100)
     adapter.setBoundedData(data)
@@ -88,7 +88,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
 
   it("same large bounded data reference does not restart chunking", () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     const data = generateData(12000)
     adapter.setBoundedData(data)
@@ -102,7 +102,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 2. Large bounded data chunks progressively
   it("large bounded dataset (>5000) chunks: first synchronous, rest on rAF", () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     const data = generateData(12000)
     adapter.setBoundedData(data)
@@ -132,7 +132,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 3. Push after bounded data appends (hybrid mode)
   it("push after setBoundedData appends without clearing", async () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     adapter.setBoundedData(generateData(10))
     expect(changesets).toHaveLength(1)
@@ -149,7 +149,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 4. pushMany emits single changeset after microtask flush
   it("pushMany emits a single changeset with all items", async () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     adapter.pushMany([
       { id: 1, value: 10 },
@@ -166,7 +166,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 5. pushMany with empty array is no-op
   it("pushMany with empty array does not emit a changeset", async () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     adapter.pushMany([])
     await flushMicrotasks()
@@ -176,7 +176,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 6. New setBoundedData cancels previous chunking
   it("setting new bounded data cancels in-flight chunking from previous data", () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     // Start chunking a large dataset
     adapter.setBoundedData(generateData(10000))
@@ -199,7 +199,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 7. clearLastData allows same reference to re-ingest
   it("clearLastData resets dedup so same reference can be re-ingested", () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     const data = generateData(10)
     adapter.setBoundedData(data)
@@ -214,7 +214,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 8. Rapid setBoundedData calls — only last dataset completes chunking
   it("rapid setBoundedData calls: only the last dataset's chunks complete", () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     // Fire off 3 large datasets rapidly
     adapter.setBoundedData(generateData(8000))
@@ -237,7 +237,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 9. Rapid push() calls are batched into a single changeset via microtask
   it("rapid push() calls within the same task are batched", async () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     // Simulate high-frequency pushes — all within the same synchronous task
     for (let i = 0; i < 1000; i++) {
@@ -257,7 +257,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 10. Mixed push() and pushMany() within same task are coalesced
   it("mixed push() and pushMany() within same task are coalesced", async () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
     adapter.pushMany([
@@ -275,7 +275,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 11. clear() discards buffered pushes
   it("clear() discards buffered push data", async () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
     adapter.push({ id: 2, value: 20 })
@@ -288,7 +288,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 12. Successive flushes across microtask boundaries produce separate changesets
   it("pushes across separate microtask ticks produce separate changesets", async () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
     await flushMicrotasks() // first flush
@@ -304,7 +304,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 13. flush() provides synchronous escape hatch
   it("flush() immediately processes buffered pushes synchronously", () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
     adapter.push({ id: 2, value: 20 })
@@ -322,7 +322,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
   // 14. clearLastData discards buffered pushes
   it("clearLastData discards buffered push data", async () => {
     const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter((cs) => changesets.push(cs))
+    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
 
     adapter.push({ id: 1, value: 10 })
     adapter.clearLastData()

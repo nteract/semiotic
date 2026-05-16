@@ -269,7 +269,7 @@ describe("LinkedCharts", () => {
       return <span data-testid="active">{String(isActive)}</span>
     }
 
-    const { container, _getByTestId } = render(
+    const { container } = render(
       <CategoryColorProvider colors={{ North: "#f00", South: "#0f0" }}>
         <LinkedCharts
           showLegend
@@ -360,20 +360,25 @@ describe("LinkedCharts", () => {
     // 0 for everything).
     type Entry = { target: Element; cb: ResizeObserverCallback }
     let captured: Entry[] = []
-    let originalRO: typeof ResizeObserver
+    const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+    let originalRO: typeof ResizeObserver | undefined
 
     beforeEach(() => {
       captured = []
-      originalRO = (globalThis as any).ResizeObserver
-      ;(globalThis as any).ResizeObserver = class {
+      originalRO = resizeObserverGlobal.ResizeObserver
+      resizeObserverGlobal.ResizeObserver = class {
         constructor(private cb: ResizeObserverCallback) {}
         observe(target: Element) { captured.push({ target, cb: this.cb }) }
         unobserve() {}
         disconnect() {}
-      }
+      } as typeof ResizeObserver
     })
     afterEach(() => {
-      (globalThis as any).ResizeObserver = originalRO
+      if (originalRO) {
+        resizeObserverGlobal.ResizeObserver = originalRO
+      } else {
+        Reflect.deleteProperty(resizeObserverGlobal, "ResizeObserver")
+      }
     })
 
     const fireResize = (w: number, h = 30) => {

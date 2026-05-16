@@ -43,7 +43,7 @@ import type {
   BarStyle,
   ThemeSemanticColors
 } from "./types"
-import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
+import { resolveAccessor, resolveStringAccessor, accessorsEquivalent, type CoercibleNumber } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { computeDecayOpacity as computeDecayOpacityFn, applyDecay as applyDecayFn } from "./pipelineDecay"
@@ -95,12 +95,12 @@ export interface PipelineConfig {
   maxCapacity?: number
 
   // Accessors
-  xAccessor?: string | ((d: Datum) => number)
-  yAccessor?: string | ((d: Datum) => number)
-  timeAccessor?: string | ((d: Datum) => number)
-  valueAccessor?: string | ((d: Datum) => number)
+  xAccessor?: string | ((d: Datum) => CoercibleNumber)
+  yAccessor?: string | ((d: Datum) => CoercibleNumber)
+  timeAccessor?: string | ((d: Datum) => CoercibleNumber)
+  valueAccessor?: string | ((d: Datum) => CoercibleNumber)
   colorAccessor?: string | ((d: Datum) => string)
-  sizeAccessor?: string | ((d: Datum) => number)
+  sizeAccessor?: string | ((d: Datum) => CoercibleNumber)
   groupAccessor?: string | ((d: Datum) => string)
   categoryAccessor?: string | ((d: Datum) => string)
   lineDataAccessor?: string
@@ -123,20 +123,20 @@ export interface PipelineConfig {
   stackOrder?: "key" | "insideOut" | "asc" | "desc"
 
   // Candlestick accessors
-  openAccessor?: string | ((d: Datum) => number)
-  highAccessor?: string | ((d: Datum) => number)
-  lowAccessor?: string | ((d: Datum) => number)
-  closeAccessor?: string | ((d: Datum) => number)
+  openAccessor?: string | ((d: Datum) => CoercibleNumber)
+  highAccessor?: string | ((d: Datum) => CoercibleNumber)
+  lowAccessor?: string | ((d: Datum) => CoercibleNumber)
+  closeAccessor?: string | ((d: Datum) => CoercibleNumber)
   candlestickStyle?: CandlestickStyle
   /** Internal: set by PipelineStore when open/close accessors are both missing */
   candlestickRangeMode?: boolean
 
   // Bounds/uncertainty
-  boundsAccessor?: string | ((d: Datum) => number)
+  boundsAccessor?: string | ((d: Datum) => CoercibleNumber)
   boundsStyle?: any
 
   // Per-point area baseline (for band/ribbon charts like percentile bands)
-  y0Accessor?: string | ((d: Datum) => number)
+  y0Accessor?: string | ((d: Datum) => CoercibleNumber)
 
   // Area gradient fill (opacity or multi-color)
   gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }

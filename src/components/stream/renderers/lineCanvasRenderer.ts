@@ -120,7 +120,7 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     ctx.lineCap = (node.style.strokeLinecap as CanvasLineCap) || "butt"
 
     // Edge-fade for anti-meridian split segments
-    if ((node.style as any)._edgeFade) {
+    if (node.style._edgeFade) {
       const baseOpacity = node.style.opacity ?? 1
       renderEdgeFadeLine(
         ctx,

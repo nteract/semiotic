@@ -11,19 +11,46 @@
  * from blank after the server already painted the chart.
  */
 import { describe, it, expect } from "vitest"
-import { PipelineStore } from "./PipelineStore"
+import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import type { OrdinalPipelineConfig } from "./ordinalTypes"
+
+function makeXYConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
+  return {
+    chartType: "line",
+    windowSize: 10,
+    windowMode: "sliding",
+    arrowOfTime: "right",
+    extentPadding: 0.1,
+    xAccessor: "x",
+    yAccessor: "y",
+    ...overrides,
+  }
+}
+
+function makeOrdinalConfig(overrides: Partial<OrdinalPipelineConfig> = {}): OrdinalPipelineConfig {
+  return {
+    chartType: "bar",
+    windowSize: 10,
+    windowMode: "sliding",
+    extentPadding: 0.1,
+    projection: "vertical",
+    oAccessor: "region",
+    rAccessor: "value",
+    ...overrides,
+  }
+}
 
 describe("PipelineStore.cancelIntroAnimation", () => {
   it("clears prevPositionMap and activeTransition after intro is installed", () => {
-    const store = new PipelineStore({
+    const store = new PipelineStore(makeXYConfig({
       chartType: "line",
       xAccessor: "x",
       yAccessor: "y",
       transition: { duration: 300, easing: "ease-out" },
       introAnimation: true,
-    })
+    }))
     store.ingest({ inserts: [{ x: 0, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 3 }], bounded: true })
     store.computeScene({ width: 400, height: 200 })
 
@@ -46,13 +73,13 @@ describe("PipelineStore.cancelIntroAnimation", () => {
     // If `cancelIntroAnimation` only clears prev maps + activeTransition
     // but leaves `_introClipFraction = 0` on nodes, the first canvas
     // paint after SSR hydration draws a fully-clipped (blank) line.
-    const store = new PipelineStore({
+    const store = new PipelineStore(makeXYConfig({
       chartType: "line",
       xAccessor: "x",
       yAccessor: "y",
       transition: { duration: 300, easing: "ease-out" },
       introAnimation: true,
-    })
+    }))
     store.ingest({ inserts: [{ x: 0, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 3 }], bounded: true })
     store.computeScene({ width: 400, height: 200 })
 
@@ -73,13 +100,13 @@ describe("PipelineStore.cancelIntroAnimation", () => {
   })
 
   it("is idempotent — calling twice is a no-op", () => {
-    const store = new PipelineStore({
+    const store = new PipelineStore(makeXYConfig({
       chartType: "line",
       xAccessor: "x",
       yAccessor: "y",
       transition: { duration: 300, easing: "ease-out" },
       introAnimation: true,
-    })
+    }))
     store.ingest({ inserts: [{ x: 0, y: 1 }, { x: 1, y: 2 }], bounded: true })
     store.computeScene({ width: 400, height: 200 })
 
@@ -91,13 +118,13 @@ describe("PipelineStore.cancelIntroAnimation", () => {
 
 describe("OrdinalPipelineStore.cancelIntroAnimation", () => {
   it("clears intro state after computeScene installed it", () => {
-    const store = new OrdinalPipelineStore({
+    const store = new OrdinalPipelineStore(makeOrdinalConfig({
       chartType: "bar",
       oAccessor: "region",
       rAccessor: "value",
       transition: { duration: 300, easing: "ease-out" },
       introAnimation: true,
-    })
+    }))
     store.ingest({
       inserts: [
         { region: "AMER", value: 10 },

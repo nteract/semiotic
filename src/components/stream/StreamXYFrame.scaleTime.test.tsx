@@ -21,16 +21,17 @@ describe("PipelineStore xScaleType=time produces Date ticks", () => {
       runtimeMode: "bounded",
       windowSize: 200,
       windowMode: "sliding",
+      arrowOfTime: "right",
       extentPadding: 0.05,
     })
 
     store.ingest({ inserts: data, bounded: true })
 
     // computeScene triggers scale building
-    ;(store as any).computeScene({ width: 600, height: 300 })
+    store.computeScene({ width: 600, height: 300 })
 
     expect(store.scales).not.toBeNull()
-    const ticks = store.scales!.x.ticks(8)
+    const ticks = store.scales!.x.ticks(8) as unknown as Date[]
 
     // scaleTime ticks are Date instances
     expect(ticks.length).toBeGreaterThan(2)
@@ -57,11 +58,12 @@ describe("PipelineStore xScaleType=time produces Date ticks", () => {
       runtimeMode: "bounded",
       windowSize: 200,
       windowMode: "sliding",
+      arrowOfTime: "right",
       extentPadding: 0.05,
     })
 
     // No data ingested — force scale computation
-    ;(store as any).computeScene({ width: 600, height: 300 })
+    store.computeScene({ width: 600, height: 300 })
 
     expect(store.scales).not.toBeNull()
     const domain = store.scales!.x.domain()
@@ -84,11 +86,12 @@ describe("PipelineStore xScaleType=time produces Date ticks", () => {
       runtimeMode: "bounded",
       windowSize: 200,
       windowMode: "sliding",
+      arrowOfTime: "right",
       extentPadding: 0.05,
     })
 
     store.ingest({ inserts: data, bounded: true })
-    ;(store as any).computeScene({ width: 600, height: 300 })
+    store.computeScene({ width: 600, height: 300 })
 
     const ticks = store.scales!.x.ticks(8)
     expect(ticks[0]).not.toBeInstanceOf(Date)

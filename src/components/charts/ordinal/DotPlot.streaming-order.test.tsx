@@ -4,14 +4,18 @@ import { render, act } from "@testing-library/react"
 import { DotPlot } from "./DotPlot"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
+import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { OrdinalScales } from "../../stream/ordinalTypes"
 
 // Mock ResizeObserver for jsdom
-if (typeof globalThis.ResizeObserver === "undefined") {
-  (globalThis as any).ResizeObserver = class {
+const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+if (typeof resizeObserverGlobal.ResizeObserver === "undefined") {
+  resizeObserverGlobal.ResizeObserver = class {
+    constructor(_callback: ResizeObserverCallback) {}
     observe() {}
     unobserve() {}
     disconnect() {}
-  }
+  } as typeof ResizeObserver
 }
 
 // End-to-end test (real StreamOrdinalFrame) for DotPlot's default
@@ -25,8 +29,11 @@ describe("DotPlot streaming category order", () => {
   beforeEach(() => { cleanup = setupCanvasMock() })
   afterEach(() => { cleanup() })
 
+  const getOrdinalScales = (ref: React.RefObject<RealtimeFrameHandle | null>) =>
+    ref.current?.getScales?.() as OrdinalScales | null | undefined
+
   it("default sort='auto' preserves insertion order under streaming", async () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <DotPlot ref={ref} categoryAccessor="category" valueAccessor="value" />
@@ -37,21 +44,21 @@ describe("DotPlot streaming category order", () => {
     // (the pre-"auto" default of `sort=true`), the domain would come
     // out ["B", "A", "C"]. "auto" under streaming should preserve FIFO.
     await act(async () => {
-      ref.current.push({ category: "C", value: 10 })
+      ref.current!.push({ category: "C", value: 10 })
     })
     await act(async () => {
-      ref.current.push({ category: "A", value: 30 })
+      ref.current!.push({ category: "A", value: 30 })
     })
     await act(async () => {
-      ref.current.push({ category: "B", value: 20 })
+      ref.current!.push({ category: "B", value: 20 })
     })
 
-    const domain = ref.current.getScales()?.o.domain()
+    const domain = getOrdinalScales(ref)?.o.domain()
     expect(domain).toEqual(["C", "A", "B"])
   })
 
   it("default sort='auto' falls through to value-desc on static data", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <DotPlot
@@ -68,7 +75,7 @@ describe("DotPlot streaming category order", () => {
     )
     // No push — purely static data. sort="auto" should behave like the
     // old default of sort=true: value-descending.
-    const domain = ref.current.getScales()?.o.domain()
+    const domain = getOrdinalScales(ref)?.o.domain()
     expect(domain).toEqual(["Big", "Medium", "Small"])
   })
 
@@ -77,7 +84,7 @@ describe("DotPlot streaming category order", () => {
     // (e.g. "I want this to always value-sort, shuffle be damned") must
     // get that behavior. "auto" applies only when sort is unset or
     // explicitly "auto".
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <DotPlot
@@ -88,11 +95,11 @@ describe("DotPlot streaming category order", () => {
         />
       </TooltipProvider>
     )
-    await act(async () => { ref.current.push({ category: "Low", value: 10 }) })
-    await act(async () => { ref.current.push({ category: "High", value: 100 }) })
-    await act(async () => { ref.current.push({ category: "Mid", value: 50 }) })
+    await act(async () => { ref.current!.push({ category: "Low", value: 10 }) })
+    await act(async () => { ref.current!.push({ category: "High", value: 100 }) })
+    await act(async () => { ref.current!.push({ category: "Mid", value: 50 }) })
 
-    const domain = ref.current.getScales()?.o.domain()
+    const domain = getOrdinalScales(ref)?.o.domain()
     expect(domain).toEqual(["High", "Mid", "Low"])
   })
 })

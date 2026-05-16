@@ -23,7 +23,7 @@ import {
   interpolateCividis,
   interpolateTurbo,
 } from "../../charts/shared/colorPalettes"
-import type { SceneNode, StreamLayout } from "../types"
+import type { HeatcellSceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor } from "../accessorUtils"
 import type { XYSceneContext } from "./types"
@@ -61,7 +61,7 @@ function getColorLut(schemeName: string): string[] {
   return lut
 }
 
-export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): SceneNode[] {
+export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): HeatcellSceneNode[] {
   // Streaming heatmap: 2D grid binning with aggregation
   if (ctx.config.heatmapAggregation) {
     return buildStreamingHeatmapScene(ctx, data, layout)
@@ -167,7 +167,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const cellH = layout.height / yCount
   const showValues = ctx.config.showValues
   const valueFormat = ctx.config.heatmapValueFormat
-  const nodes: SceneNode[] = []
+  const nodes: HeatcellSceneNode[] = []
 
   for (let i = 0; i < cellCount; i++) {
     const val = cellVals[i]
@@ -191,7 +191,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   return nodes
 }
 
-function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): SceneNode[] {
+function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): HeatcellSceneNode[] {
   const xBins = Math.max(1, Math.floor(ctx.config.heatmapXBins ?? 20))
   const yBins = Math.max(1, Math.floor(ctx.config.heatmapYBins ?? 20))
   const agg = ctx.config.heatmapAggregation ?? "count"
@@ -252,7 +252,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
   const cellH = layout.height / yBins
   const showValues = ctx.config.showValues
   const valueFormat = ctx.config.heatmapValueFormat
-  const nodes: SceneNode[] = []
+  const nodes: HeatcellSceneNode[] = []
 
   for (let yi = 0; yi < yBins; yi++) {
     const rowOffset = yi * xBins

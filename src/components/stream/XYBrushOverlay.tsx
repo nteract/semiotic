@@ -113,8 +113,7 @@ export function XYBrushOverlay({
     if (!svgRef.current) return
 
     // Type the brush group selection as `SVGGElement` so the
-    // brush's typed `move` / behavior call signatures resolve
-    // without `as any` casts.
+    // brush's typed `move` / behavior call signatures resolve.
     const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
 
     const brushFn =
@@ -177,7 +176,7 @@ export function XYBrushOverlay({
           g.call(brushFn.move, [snappedPx0, snappedPx1])
         } else if (dimension === "xy") {
           const sel = event.selection as [[number, number], [number, number]]
-          g.call(brushFn.move as any, [[snappedPx0, sel[0][1]], [snappedPx1, sel[1][1]]])
+          g.call(brushFn.move, [[snappedPx0, sel[0][1]], [snappedPx1, sel[1][1]]])
         }
         isProgrammaticMoveRef.current = false
       }

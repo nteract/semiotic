@@ -8,12 +8,12 @@
  * Consumed by: PipelineStore.buildSceneNodes (chartType "waterfall")
  */
 import type { Datum } from "../../charts/shared/datumTypes"
-import type { SceneNode, StreamLayout, Style } from "../types"
+import type { RectSceneNode, StreamLayout, Style } from "../types"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 
-export function buildWaterfallScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): SceneNode[] {
-  const nodes: SceneNode[] = []
+export function buildWaterfallScene(ctx: XYSceneContext, data: Datum[], layout: StreamLayout): RectSceneNode[] {
+  const nodes: RectSceneNode[] = []
   const scales = ctx.scales
   const ws = ctx.config.waterfallStyle
 

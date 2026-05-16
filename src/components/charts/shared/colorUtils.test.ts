@@ -171,8 +171,8 @@ describe("createColorScale", () => {
       { score: 100 },
     ]
     const scale = createColorScale(numericData, "score", "blues")
-    const c0 = scale("0" as any)
-    const c100 = scale("100" as any)
+    const c0 = scale("0")
+    const c100 = scale("100")
     expect(typeof c0).toBe("string")
     expect(typeof c100).toBe("string")
     // Low and high values should produce different colors
@@ -180,7 +180,7 @@ describe("createColorScale", () => {
   })
 
   it("falls back to category10 for unknown scheme name", () => {
-    const scale = createColorScale(categoricalData, "cat", "nonexistent" as any)
+    const scale = createColorScale(categoricalData, "cat", "nonexistent")
     // Should still produce valid colors (using default palette)
     expect(typeof scale("A")).toBe("string")
   })

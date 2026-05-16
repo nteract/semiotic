@@ -32,8 +32,7 @@ function createWrapper(options?: { categoryColors?: Record<string, string> }) {
     if (options?.categoryColors) {
       return React.createElement(
         CategoryColorProvider,
-        { colors: options.categoryColors },
-        inner
+        { colors: options.categoryColors, children: inner }
       )
     }
     return inner

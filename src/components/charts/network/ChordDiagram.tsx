@@ -190,7 +190,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       } else {
         const palette = Array.isArray(colorScheme) ? colorScheme : (COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES] || DEFAULT_COLORS)
         const colors = Array.isArray(palette) ? palette : DEFAULT_COLORS
-        const index = (d as any).index ?? i ?? 0
+        const index = (d as { index?: number }).index ?? i ?? 0
         baseStyle.fill = colors[index % colors.length]
       }
       return baseStyle

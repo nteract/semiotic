@@ -270,6 +270,41 @@ export default function GaugeChartPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="rounded-ends">Rounded Ends</h3>
+      <p>
+        Pass <code>cornerRadius</code> (pixels) to round the gauge's
+        outer endpoints — the start of the first zone and the end of
+        the last zone. Internal zone boundaries stay square so threshold
+        seams remain visually distinct (mirrors the swimlane convention
+        for radial sectors).
+      </p>
+
+      <LiveExample
+        frameProps={{
+          value: 72,
+          thresholds: [
+            { value: 50, color: "#4caf50", label: "Good" },
+            { value: 80, color: "#ff9800", label: "Warning" },
+            { value: 100, color: "#f44336", label: "Critical" },
+          ],
+          cornerRadius: 10,
+          arcWidth: 0.35,
+          width: 280,
+          height: 220,
+        }}
+        type={GaugeChart}
+        overrideProps={{
+          thresholds: `[
+  { value: 50,  color: "#4caf50", label: "Good" },
+  { value: 80,  color: "#ff9800", label: "Warning" },
+  { value: 100, color: "#f44336", label: "Critical" },
+]`,
+          cornerRadius: "10",
+          arcWidth: "0.35",
+        }}
+        hiddenProps={{}}
+      />
+
       <h3 id="thick-arc">Thick Arc</h3>
       <p>
         Increase <code>arcWidth</code> for a chunkier ring. Decrease for a thin

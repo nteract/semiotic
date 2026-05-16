@@ -21,6 +21,7 @@ describe("PipelineStore xScaleType=time integration", () => {
       runtimeMode: "bounded",
       windowSize: 200,
       windowMode: "sliding",
+      arrowOfTime: "right",
       extentPadding: 0.05,
     })
 
@@ -29,8 +30,8 @@ describe("PipelineStore xScaleType=time integration", () => {
 
     // Force scale computation
     const layout = { width: 600, height: 300 }
-    // Call the private computeScene to trigger scale building
-    ;(store as any).computeScene(layout)
+    // Call computeScene to trigger scale building
+    store.computeScene(layout)
 
     expect(store.scales).not.toBeNull()
     const xScale = store.scales!.x
@@ -66,11 +67,12 @@ describe("PipelineStore xScaleType=time integration", () => {
       runtimeMode: "bounded",
       windowSize: 200,
       windowMode: "sliding",
+      arrowOfTime: "right",
       extentPadding: 0.05,
     })
 
     store.ingest({ inserts: data, bounded: true })
-    ;(store as any).computeScene({ width: 600, height: 300 })
+    store.computeScene({ width: 600, height: 300 })
 
     expect(store.scales).not.toBeNull()
     const ticks = store.scales!.x.ticks(8)

@@ -275,8 +275,9 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     // For vertical bars: x = category center (o + bandwidth/2), y = value (r)
     // For horizontal bars: x = value (r), y = category center (o + bandwidth/2)
     const isHoriz = scales?.projection === "horizontal"
+    type AnnotationAxisScale = NonNullable<NonNullable<AnnotationContext["scales"]>["x"]>
     const oCentered = scales?.o
-      ? ((v: any) => (scales.o(v) ?? 0) + scales.o.bandwidth() / 2) as any
+      ? ((v: string) => (scales.o(v) ?? 0) + scales.o.bandwidth() / 2) as unknown as AnnotationAxisScale
       : null
 
     const context: AnnotationContext = {

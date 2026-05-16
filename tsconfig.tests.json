@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "pretty": false,
+    "strict": true
+  },
+  "include": [
+    "./src/**/*.test.ts",
+    "./src/**/*.test.tsx",
+    "./src/setupTests.ts",
+    "./src/test-utils/**/*.ts",
+    "./src/test-utils/**/*.tsx"
+  ],
+  "exclude": ["./src/docs/**/*", "*.png"]
+}

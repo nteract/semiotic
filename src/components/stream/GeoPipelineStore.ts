@@ -571,7 +571,7 @@ export class GeoPipelineStore {
         .filter(n => n.type === "point")
         .map(n => ({ ...n, x: cx, y: cy }))
       if (syntheticPrev.length > 0) {
-        this.startTransition(syntheticPrev as any)
+        this.startTransition(syntheticPrev)
       }
     }
     this._hasRenderedOnce = true
@@ -1005,7 +1005,7 @@ export class GeoPipelineStore {
           const lineNode: GeoLineSceneNode = {
             type: "line",
             path: segment,
-            style: { ...style, _edgeFade: true } as any,
+            style: { ...style, _edgeFade: true },
             datum: line
           }
           nodes.push(lineNode)
@@ -1051,7 +1051,7 @@ export class GeoPipelineStore {
         ? config.pointStyle(d)
         : { ...pointDefault }
 
-      const r = (baseStyle as any).r || 4
+      const r = baseStyle.r || 4
 
       const pointNode: PointSceneNode = {
         type: "point",

@@ -8,7 +8,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as any,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -86,7 +86,7 @@ describe("buildCandlestickScene", () => {
     const nodes = buildCandlestickScene(noOC, data, defaultLayout)
     // Should produce range-mode nodes, not empty
     expect(nodes.length).toBe(1)
-    expect((nodes[0] as any).isRange).toBe(true)
+    expect(nodes[0].isRange).toBe(true)
   })
 
   it("skips data with null/NaN OHLC values", () => {
@@ -369,6 +369,6 @@ describe("Range / dumbbell mode", () => {
     })
     const nodes = buildCandlestickScene(ctx, rangeData, defaultLayout)
     const node = asCandlestick(nodes[0])
-    expect((node as any).isRange).toBe(true)
+    expect(node.isRange).toBe(true)
   })
 })

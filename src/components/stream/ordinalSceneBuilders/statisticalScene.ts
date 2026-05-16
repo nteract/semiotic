@@ -279,7 +279,7 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
   const numBins = config.bins || 20
   const isHorizontal = projection === "horizontal"
   // Amplitude controls how far the density extends (can overlap neighbors)
-  const amplitude = (config as any).amplitude || 1.5
+  const amplitude = config.amplitude || 1.5
 
   for (const col of Object.values(columns)) {
     const values = col.pieceData

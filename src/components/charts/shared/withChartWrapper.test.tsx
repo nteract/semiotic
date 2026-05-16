@@ -162,7 +162,7 @@ describe("warnDataShape", () => {
 
   it("does not warn when first element is not an object", () => {
     const spy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    warnDataShape("BarChart", [42 as any], ["category"], "hint")
+    warnDataShape("BarChart", [42], ["category"], "hint")
     expect(spy).not.toHaveBeenCalled()
   })
 })

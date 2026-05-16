@@ -10,7 +10,13 @@ import type { SemioticTheme } from "../store/ThemeStore"
 import { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME, applyThemeAccessibility } from "../store/ThemeStore"
 import { THEME_PRESETS } from "../semiotic-themes"
 
-export type ThemeInput = string | Partial<SemioticTheme> | undefined
+type PartialThemeObject = Omit<Partial<SemioticTheme>, "colors" | "typography" | "tooltip"> & {
+  colors?: Partial<SemioticTheme["colors"]>
+  typography?: Partial<SemioticTheme["typography"]>
+  tooltip?: Partial<NonNullable<SemioticTheme["tooltip"]>>
+}
+
+export type ThemeInput = string | PartialThemeObject | undefined
 
 /**
  * Resolve a theme input to a full SemioticTheme object.

@@ -8,8 +8,13 @@ export function addMqlListener(mql: MediaQueryList, handler: (e: MediaQueryListE
     return () => mql.removeEventListener("change", handler)
   }
   // Safari 14 and older: legacy API
-  mql.addListener(handler as any)
-  return () => mql.removeListener(handler as any)
+  type LegacyMediaQueryList = MediaQueryList & {
+    addListener: (listener: (event: MediaQueryListEvent) => void) => void
+    removeListener: (listener: (event: MediaQueryListEvent) => void) => void
+  }
+  const legacyMql = mql as LegacyMediaQueryList
+  legacyMql.addListener(handler)
+  return () => legacyMql.removeListener(handler)
 }
 
 /** SSR-safe matchMedia check */

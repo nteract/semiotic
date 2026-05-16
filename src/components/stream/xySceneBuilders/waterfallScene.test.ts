@@ -7,7 +7,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as any,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -46,21 +46,21 @@ describe("buildWaterfallScene", () => {
     // Bar 1: baseline=0, cumEnd=10, delta=10
     const bar1 = nodes[0]
     expect(bar1.type).toBe("rect")
-    expect(bar1.datum.baseline).toBe(0)
-    expect(bar1.datum.cumEnd).toBe(10)
-    expect(bar1.datum.delta).toBe(10)
+    expect(bar1.datum!.baseline).toBe(0)
+    expect(bar1.datum!.cumEnd).toBe(10)
+    expect(bar1.datum!.delta).toBe(10)
 
     // Bar 2: baseline=10, cumEnd=30, delta=20
     const bar2 = nodes[1]
-    expect(bar2.datum.baseline).toBe(10)
-    expect(bar2.datum.cumEnd).toBe(30)
-    expect(bar2.datum.delta).toBe(20)
+    expect(bar2.datum!.baseline).toBe(10)
+    expect(bar2.datum!.cumEnd).toBe(30)
+    expect(bar2.datum!.delta).toBe(20)
 
     // Bar 3: baseline=30, cumEnd=25, delta=-5
     const bar3 = nodes[2]
-    expect(bar3.datum.baseline).toBe(30)
-    expect(bar3.datum.cumEnd).toBe(25)
-    expect(bar3.datum.delta).toBe(-5)
+    expect(bar3.datum!.baseline).toBe(30)
+    expect(bar3.datum!.cumEnd).toBe(25)
+    expect(bar3.datum!.delta).toBe(-5)
   })
 
   it("assigns positiveColor for positive deltas and negativeColor for negative", () => {
@@ -81,10 +81,10 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(3)
-    expect((nodes[0] as any).style.fill).toBe("#0f0")
-    expect((nodes[1] as any).style.fill).toBe("#f00")
+    expect(nodes[0].style.fill).toBe("#0f0")
+    expect(nodes[1].style.fill).toBe("#f00")
     // zero delta >= 0, so positive
-    expect((nodes[2] as any).style.fill).toBe("#0f0")
+    expect(nodes[2].style.fill).toBe("#0f0")
   })
 
   it("uses default colors when waterfallStyle is not provided", () => {
@@ -95,8 +95,8 @@ describe("buildWaterfallScene", () => {
     const ctx = makeCtx()
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
-    expect((nodes[0] as any).style.fill).toBe("#28a745")
-    expect((nodes[1] as any).style.fill).toBe("#dc3545")
+    expect(nodes[0].style.fill).toBe("#28a745")
+    expect(nodes[1].style.fill).toBe("#dc3545")
   })
 
   it("filters out null/NaN Y values", () => {
@@ -112,8 +112,8 @@ describe("buildWaterfallScene", () => {
     // Only x=0 and x=30 survive filtering
     expect(nodes).toHaveLength(2)
     // Second valid bar baseline is cumEnd of first (10)
-    expect(nodes[1].datum.baseline).toBe(10)
-    expect(nodes[1].datum.cumEnd).toBe(15)
+    expect(nodes[1].datum!.baseline).toBe(10)
+    expect(nodes[1].datum!.cumEnd).toBe(15)
   })
 
   it("filters out non-finite X values", () => {
@@ -128,8 +128,8 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(2)
-    expect(nodes[0].datum.x).toBe(0)
-    expect(nodes[1].datum.x).toBe(20)
+    expect(nodes[0].datum!.x).toBe(0)
+    expect(nodes[1].datum!.x).toBe(20)
   })
 
   it("filters out null X values", () => {
@@ -141,7 +141,7 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(1)
-    expect(nodes[0].datum.x).toBe(5)
+    expect(nodes[0].datum!.x).toBe(5)
   })
 
   it("applies gap symmetrically, narrowing bars", () => {
@@ -157,12 +157,12 @@ describe("buildWaterfallScene", () => {
 
     expect(nodes).toHaveLength(2)
     // Both bars have barWidth = 10 - 4 = 6
-    expect((nodes[0] as any).w).toBe(6)
-    expect((nodes[1] as any).w).toBe(6)
+    expect(nodes[0].w).toBe(6)
+    expect(nodes[1].w).toBe(6)
     // First bar starts at gap/2 = 2
-    expect((nodes[0] as any).x).toBe(2)
+    expect(nodes[0].x).toBe(2)
     // Second bar starts at 10 + gap/2 = 12
-    expect((nodes[1] as any).x).toBe(12)
+    expect(nodes[1].x).toBe(12)
   })
 
   it("uses fallback bar width for single data point", () => {
@@ -174,7 +174,7 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(1)
-    const bar = nodes[0] as any
+    const bar = nodes[0]
     // rawX0 = 5, rawX1 = 5 + 400/10 = 45
     // x0 = 5 + 0.5 = 5.5, x1 = 45 - 0.5 = 44.5
     expect(bar.x).toBe(5.5)
@@ -214,13 +214,13 @@ describe("buildWaterfallScene", () => {
     const ctx = makeCtx({ config: { waterfallStyle: { gap: 0 } } })
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
-    const bar1 = nodes[0] as any
+    const bar1 = nodes[0]
     expect(bar1.x).toBe(0)
     expect(bar1.y).toBe(0)
     expect(bar1.w).toBe(10)
     expect(bar1.h).toBe(10)
 
-    const bar2 = nodes[1] as any
+    const bar2 = nodes[1]
     expect(bar2.x).toBe(10)
     expect(bar2.y).toBe(7)
     expect(bar2.w).toBe(10)
@@ -236,8 +236,8 @@ describe("buildWaterfallScene", () => {
     })
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
-    expect((nodes[0] as any).style.stroke).toBe("#333")
-    expect((nodes[0] as any).style.strokeWidth).toBe(2)
+    expect(nodes[0].style.stroke).toBe("#333")
+    expect(nodes[0].style.strokeWidth).toBe(2)
   })
 
   it("stores connector metadata on datum for downstream rendering", () => {
@@ -253,8 +253,8 @@ describe("buildWaterfallScene", () => {
     })
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
-    expect(nodes[0].datum._connectorStroke).toBe("#999")
-    expect(nodes[0].datum._connectorWidth).toBe(1.5)
+    expect(nodes[0].datum!._connectorStroke).toBe("#999")
+    expect(nodes[0].datum!._connectorWidth).toBe(1.5)
   })
 
   it("skips bars with zero or negative width after gap is applied", () => {
@@ -288,7 +288,7 @@ describe("buildWaterfallScene", () => {
       const ctx = makeCtx({
         config: { themeSemantic: { success: "#0b8457", danger: "#c23030" } },
       })
-      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as any[]
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout)
       expect(nodes[0].style.fill).toBe("#0b8457")
     })
 
@@ -297,7 +297,7 @@ describe("buildWaterfallScene", () => {
       const ctx = makeCtx({
         config: { themeSemantic: { success: "#0b8457", danger: "#c23030" } },
       })
-      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as any[]
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout)
       expect(nodes[0].style.fill).toBe("#c23030")
     })
 
@@ -309,7 +309,7 @@ describe("buildWaterfallScene", () => {
           themeSemantic: { success: "#0b8457" },
         },
       })
-      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as any[]
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout)
       expect(nodes[0].style.fill).toBe("#ff00aa")
     })
 
@@ -321,7 +321,7 @@ describe("buildWaterfallScene", () => {
           themeSemantic: { danger: "#c23030" },
         },
       })
-      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as any[]
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout)
       expect(nodes[0].style.fill).toBe("#ff00aa")
     })
 
@@ -329,8 +329,8 @@ describe("buildWaterfallScene", () => {
       const dataPos = [{ x: 0, y: 10 }]
       const dataNeg = [{ x: 0, y: -10 }]
       const ctx = makeCtx()
-      expect((buildWaterfallScene(ctx, dataPos, defaultLayout)[0] as any).style.fill).toBe("#28a745")
-      expect((buildWaterfallScene(ctx, dataNeg, defaultLayout)[0] as any).style.fill).toBe("#dc3545")
+      expect(buildWaterfallScene(ctx, dataPos, defaultLayout)[0].style.fill).toBe("#28a745")
+      expect(buildWaterfallScene(ctx, dataNeg, defaultLayout)[0].style.fill).toBe("#dc3545")
     })
   })
 })

@@ -34,6 +34,14 @@ const { suggestCharts, chartSatisfiesCapabilities, explainCapabilityMismatch, VA
     VALID_CAPABILITY_KEYS: string[]
   }
 
+function expectOk(result: SuggestChartsResult): asserts result is Extract<SuggestChartsResult, { ok: true }> {
+  expect(result.ok).toBe(true)
+}
+
+function expectError(result: SuggestChartsResult): asserts result is Extract<SuggestChartsResult, { ok: false }> {
+  expect(result.ok).toBe(false)
+}
+
 describe("chartSuggestions — capability filter", () => {
   describe("VALID_CAPABILITY_KEYS", () => {
     it("exposes the supported capability constraints", () => {
@@ -117,7 +125,7 @@ describe("chartSuggestions — capability filter", () => {
       // Network data normally suggests SankeyDiagram + ForceDirectedGraph.
       // Both should support push (verified in chartSpecs).
       const result = suggestCharts({ data: networkData, capabilities: { push: true } })
-      expect(result.ok).toBe(true)
+      expectOk(result)
       // Every returned suggestion should claim push support.
       for (const s of result.suggestions) {
         expect(chartSatisfiesCapabilities(s.component, { push: true })).toBe(true)
@@ -126,7 +134,7 @@ describe("chartSuggestions — capability filter", () => {
 
     it("preserves confidence ordering after filtering", () => {
       const result = suggestCharts({ data: numericData, capabilities: { push: true } })
-      expect(result.ok).toBe(true)
+      expectOk(result)
       expect(result.suggestions.length).toBeGreaterThan(0)
       // Scatterplot is the highest-confidence suggestion for two-numeric data.
       expect(result.suggestions[0].component).toBe("Scatterplot")
@@ -136,14 +144,16 @@ describe("chartSuggestions — capability filter", () => {
       // Force a constraint that nothing satisfies — `push: false` for
       // tabular numeric data which only suggests push-supporting charts.
       const allPushOnlySuggested = suggestCharts({ data: numericData })
+      expectOk(allPushOnlySuggested)
       expect(allPushOnlySuggested.suggestions.every((s) =>
         chartSatisfiesCapabilities(s.component, { push: true })
       )).toBe(true)
 
       const filtered = suggestCharts({ data: numericData, capabilities: { push: false } })
-      expect(filtered.ok).toBe(true)
+      expectOk(filtered)
       expect(filtered.suggestions.length).toBe(0)
       expect(filtered.filteredOut).toBeDefined()
+      if (!filtered.filteredOut) throw new Error("Expected filteredOut suggestions")
       expect(filtered.filteredOut.length).toBeGreaterThan(0)
       expect(filtered.filteredOut[0]).toHaveProperty("component")
       expect(filtered.filteredOut[0]).toHaveProperty("reason")
@@ -154,9 +164,10 @@ describe("chartSuggestions — capability filter", () => {
       // here anyway) — instead use Scatterplot which we know
       // supports push, and forbid push to force a mismatch.
       const filtered = suggestCharts({ data: numericData, capabilities: { push: false } })
-      expect(filtered.ok).toBe(true)
+      expectOk(filtered)
       const scatterFiltered = filtered.filteredOut?.find((f) => f.component === "Scatterplot")
       expect(scatterFiltered).toBeDefined()
+      if (!scatterFiltered) throw new Error("Expected Scatterplot in filteredOut")
       // Reason should mention the failed constraint, not the data-shape rationale.
       expect(scatterFiltered.reason).toMatch(/push=false/)
       expect(scatterFiltered.reason).toMatch(/supportsPush=true/)
@@ -170,7 +181,7 @@ describe("chartSuggestions — capability filter", () => {
         data: numericData,
         capabilities: { wibble: true },
       })
-      expect(result.ok).toBe(false)
+      expectError(result)
       expect(result.error).toContain("Unknown capability")
     })
 
@@ -179,13 +190,14 @@ describe("chartSuggestions — capability filter", () => {
         data: numericData,
         capabilities: "push",
       })
-      expect(result.ok).toBe(false)
+      expectError(result)
       expect(result.error).toContain("must be an object")
     })
 
     it("echoes the capabilities arg in the result for caller visibility", () => {
       const reqs = { push: true, ssr: true }
       const result = suggestCharts({ data: numericData, capabilities: reqs })
+      expectOk(result)
       expect(result.capabilities).toEqual(reqs)
     })
   })

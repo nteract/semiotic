@@ -234,12 +234,13 @@ describe("useChartObserver", () => {
 
       act(() => {
         result.current.push(makeHover())
-        result.current.push(makeClick({ datum: { value: 1 } } as any))
-        result.current.push(makeClick({ datum: { value: 2 } } as any))
+        result.current.push(makeClick({ datum: { value: 1 } }))
+        result.current.push(makeClick({ datum: { value: 2 } }))
       })
 
       expect(result.current.latest?.type).toBe("click")
-      expect((result.current.latest as any)?.datum?.value).toBe(2)
+      if (result.current.latest?.type !== "click") throw new Error("Expected latest observation to be a click")
+      expect(result.current.latest.datum.value).toBe(2)
     })
   })
 })

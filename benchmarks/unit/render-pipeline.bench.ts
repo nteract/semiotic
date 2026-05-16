@@ -28,7 +28,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
     range: () => [0, 800],
   })
   return {
-    scales: { x: identityScale, y: identityScale } as any,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,

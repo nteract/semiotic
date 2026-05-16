@@ -38,7 +38,7 @@ describe("bin", () => {
 
   it("filters NaN values", () => {
     const withNaN = [{ v: 1 }, { v: "bad" }, { v: 3 }]
-    const result = bin(withNaN as any, { field: "v", bins: 2 })
+    const result = bin(withNaN, { field: "v", bins: 2 })
     const total = result.reduce((sum, b) => sum + b.value, 0)
     expect(total).toBe(2)
   })

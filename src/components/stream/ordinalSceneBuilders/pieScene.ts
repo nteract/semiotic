@@ -18,12 +18,27 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   // sweepAngle limits the total arc (default: full circle). Used by GaugeChart for partial arcs.
   const totalArc = config.sweepAngle != null ? (config.sweepAngle * Math.PI) / 180 : Math.PI * 2
 
-  for (const col of Object.values(columns)) {
+  // Gauge mode: partial-sweep arcs (sweepAngle < 360) where multiple
+  // wedges line up end-to-end and the visual contract is "round only
+  // the gauge's outer endpoints, leave internal zone seams square."
+  // d3-shape arc().cornerRadius() rounds all 4 corners of every wedge,
+  // which would round the seams too. The renderer honors `roundedEnds`
+  // to override that on a per-side basis; we only mark the FIRST
+  // wedge's start side and the LAST wedge's end side.
+  const isGauge = config.sweepAngle != null && config.sweepAngle < 360
+  const wedgeCount = Object.keys(columns).length
+  const isMultiZoneGauge = isGauge && wedgeCount > 1 && (config.cornerRadius ?? 0) > 0
+
+  const cols = Object.values(columns)
+  for (let i = 0; i < cols.length; i++) {
+    const col = cols[i]
     const startAngle = startAngleOffset + col.pctStart * totalArc
     const endAngle = startAngleOffset + (col.pctStart + col.pct) * totalArc
     const style = resolvePieceStyle(col.pieceData[0], col.name)
+    const isFirst = i === 0
+    const isLast = i === cols.length - 1
 
-    nodes.push({
+    const node: WedgeSceneNode = {
       type: "wedge",
       cx, cy,
       innerRadius,
@@ -33,8 +48,12 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
       ...(config.cornerRadius && { cornerRadius: config.cornerRadius }),
       style,
       datum: col.pieceData,
-      category: col.name
-    })
+      category: col.name,
+    }
+    if (isMultiZoneGauge) {
+      node.roundedEnds = { start: isFirst, end: isLast }
+    }
+    nodes.push(node)
   }
 
   return nodes

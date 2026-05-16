@@ -44,7 +44,7 @@ describe("useEncodingDomain", () => {
     })
 
     it("ignores non-finite / nullish values", () => {
-      const data = [{ x: 1 }, { x: NaN }, { x: null as any }, { x: 5 }, { x: Infinity }]
+      const data: Array<{ x: number | null }> = [{ x: 1 }, { x: NaN }, { x: null }, { x: 5 }, { x: Infinity }]
       const { result } = renderHook(
         () => useEncodingDomain({ accessor: "x", data, isPushMode: false }),
         { wrapper },
@@ -58,7 +58,7 @@ describe("useEncodingDomain", () => {
       // pass them through (it coerces internally) but the stored
       // value would still be a string — downstream `d3-scale` math
       // and consumers expecting numbers would silently break.
-      const data = [{ size: "5" as any }, { size: "12" as any }, { size: "1" as any }]
+      const data = [{ size: "5" }, { size: "12" }, { size: "1" }]
       const { result } = renderHook(
         () => useEncodingDomain({ accessor: "size", data, isPushMode: false }),
         { wrapper },
@@ -69,7 +69,7 @@ describe("useEncodingDomain", () => {
     })
 
     it("ignores non-numeric strings", () => {
-      const data = [{ size: "5" as any }, { size: "bogus" as any }, { size: "10" as any }]
+      const data = [{ size: "5" }, { size: "bogus" }, { size: "10" }]
       const { result } = renderHook(
         () => useEncodingDomain({ accessor: "size", data, isPushMode: false }),
         { wrapper },
@@ -81,7 +81,7 @@ describe("useEncodingDomain", () => {
   describe("push mode", () => {
     it("starts with undefined domain", () => {
       const { result } = renderHook(
-        () => useEncodingDomain({ accessor: "size", data: [], isPushMode: true }),
+        () => useEncodingDomain<{ size: number }>({ accessor: "size", data: [], isPushMode: true }),
         { wrapper },
       )
       expect(result.current.domain).toBeUndefined()
@@ -89,7 +89,7 @@ describe("useEncodingDomain", () => {
 
     it("trackPushed updates the running domain", () => {
       const { result } = renderHook(
-        () => useEncodingDomain({ accessor: "size", data: [], isPushMode: true }),
+        () => useEncodingDomain<{ size: number }>({ accessor: "size", data: [], isPushMode: true }),
         { wrapper },
       )
       act(() => {
@@ -110,7 +110,7 @@ describe("useEncodingDomain", () => {
 
     it("reset clears the running domain", () => {
       const { result } = renderHook(
-        () => useEncodingDomain({ accessor: "size", data: [], isPushMode: true }),
+        () => useEncodingDomain<{ size: number }>({ accessor: "size", data: [], isPushMode: true }),
         { wrapper },
       )
       act(() => {
@@ -125,11 +125,11 @@ describe("useEncodingDomain", () => {
 
     it("coerces numeric strings on the push-mode path too", () => {
       const { result } = renderHook(
-        () => useEncodingDomain({ accessor: "size", data: [], isPushMode: true }),
+        () => useEncodingDomain<{ size: string }>({ accessor: "size", data: [], isPushMode: true }),
         { wrapper },
       )
       act(() => {
-        result.current.trackPushed([{ size: "3" as any }, { size: "10" as any }])
+        result.current.trackPushed([{ size: "3" }, { size: "10" }])
       })
       expect(result.current.domain).toEqual([3, 10])
       expect(typeof result.current.domain![0]).toBe("number")
@@ -137,7 +137,7 @@ describe("useEncodingDomain", () => {
 
     it("trackPushed is a no-op when accessor is undefined", () => {
       const { result } = renderHook(
-        () => useEncodingDomain({ accessor: undefined, data: [], isPushMode: true }),
+        () => useEncodingDomain<{ size: number }>({ accessor: undefined, data: [], isPushMode: true }),
         { wrapper },
       )
       act(() => {

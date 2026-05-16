@@ -65,7 +65,7 @@ function renderBezierEdge(
 
   // Fill the band
   if (edge.style.fill && edge.style.fill !== "none") {
-    const grad = (edge as any)._gradient
+    const grad = edge._gradient
     if (grad) {
       // Gradient fill for stub circular edges
       const gradient = ctx.createLinearGradient(grad.x0, 0, grad.x1, 0)
@@ -161,9 +161,9 @@ function renderRibbonEdge(
   }
 
   // Pulse overlay
-  if ((edge as any)._pulseIntensity && (edge as any)._pulseIntensity > 0) {
-    ctx.fillStyle = (edge as any)._pulseColor || "rgba(255,255,255,0.6)"
-    ctx.globalAlpha = (edge as any)._pulseIntensity * 0.25
+  if (edge._pulseIntensity && edge._pulseIntensity > 0) {
+    ctx.fillStyle = edge._pulseColor || "rgba(255,255,255,0.6)"
+    ctx.globalAlpha = edge._pulseIntensity * 0.25
     ctx.fill(path)
   }
 

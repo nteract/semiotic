@@ -2,18 +2,20 @@ import { vi, describe, it, expect } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import { useReducedMotion, useHighContrast } from "./useMediaPreferences"
 
+type MediaQueryListener = (event: { matches: boolean }) => void
+
 function mockMatchMedia(matches: boolean) {
-  const listeners: Array<(e: { matches: boolean }) => void> = []
+  const listeners: MediaQueryListener[] = []
   const mql = {
     matches,
-    addEventListener: (_event: string, fn: any) => { listeners.push(fn) },
-    removeEventListener: (_event: string, fn: any) => {
+    addEventListener: (_event: string, fn: MediaQueryListener) => { listeners.push(fn) },
+    removeEventListener: (_event: string, fn: MediaQueryListener) => {
       const idx = listeners.indexOf(fn)
       if (idx >= 0) listeners.splice(idx, 1)
     },
-  }
+  } as unknown as MediaQueryList
   const original = window.matchMedia
-  window.matchMedia = vi.fn().mockReturnValue(mql) as any
+  window.matchMedia = vi.fn().mockReturnValue(mql) as unknown as typeof window.matchMedia
   return {
     mql,
     listeners,
@@ -21,7 +23,7 @@ function mockMatchMedia(matches: boolean) {
       if (original) {
         window.matchMedia = original
       } else {
-        delete (window as any).matchMedia
+        Reflect.deleteProperty(window, "matchMedia")
       }
     }
   }

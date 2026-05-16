@@ -134,7 +134,7 @@ export function generateFrameSVGs(
       const frameData = data.slice(startIdx, endIdx)
 
       const config: OrdinalPipelineConfig = {
-        chartType: chartType as any,
+        chartType: chartType as OrdinalPipelineConfig["chartType"],
         windowSize: 10000,
         windowMode: "sliding",
         extentPadding: 0.05,
@@ -169,7 +169,7 @@ export function generateFrameSVGs(
       const frameData = data.slice(startIdx, endIdx)
 
       const config: PipelineConfig = {
-        chartType: chartType as any,
+        chartType: chartType as PipelineConfig["chartType"],
         windowSize: frameData.length + 10,
         windowMode: "sliding",
         arrowOfTime: "right",
@@ -239,7 +239,7 @@ export function generateFrameSequence(
 ): string[] {
   return snapshots.map(snapshot => {
     try {
-      return renderChart(component as any, { ...baseProps, ...snapshot })
+      return renderChart(component as Parameters<typeof renderChart>[0], { ...baseProps, ...snapshot })
     } catch {
       const w = baseProps.width || snapshot.width || 600
       const h = baseProps.height || snapshot.height || 400

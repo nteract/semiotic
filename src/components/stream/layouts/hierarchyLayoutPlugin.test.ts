@@ -1,6 +1,8 @@
 import { hierarchyLayoutPlugin } from "./hierarchyLayoutPlugin"
 import type { RealtimeNode, RealtimeEdge, NetworkPipelineConfig } from "../networkTypes"
 
+type CirclePackPositionedNode = RealtimeNode & { __radius?: number }
+
 describe("hierarchyLayoutPlugin", () => {
   const sampleHierarchy = {
     name: "root",
@@ -179,7 +181,7 @@ describe("hierarchyLayoutPlugin", () => {
 
       // Nodes should have radius stored
       for (const node of nodes) {
-        expect((node as any).__radius).toBeDefined()
+        expect((node as CirclePackPositionedNode).__radius).toBeDefined()
       }
     })
 

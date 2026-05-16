@@ -138,6 +138,8 @@
     "docs:api:json": "typedoc --json docs/public/api/api.json && node scripts/generate-component-descriptions.mjs",
     "docs:descriptions:json": "node scripts/generate-component-descriptions.mjs",
     "typescript": "tsc --noEmit",
+    "typescript:tests": "node scripts/check-test-types.mjs",
+    "typescript:tests:raw": "tsc -p tsconfig.tests.json --noEmit --pretty false",
     "typescript:mcp": "tsc -p tsconfig.mcp.json --noEmit",
     "size": "size-limit",
     "check:pack": "node scripts/smoke-pack.mjs",
@@ -160,8 +162,8 @@
     "check:docs-routes": "node scripts/check-docs-routes.mjs",
     "check:bundle-sizes": "node scripts/sync-bundle-sizes.mjs --check",
     "docs:bundle-sizes": "node scripts/sync-bundle-sizes.mjs",
-    "release:check": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:bundle-sizes && npm run size"
+    "release:check": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:bundle-sizes && npm run size"
   },
   "targets": {
     "website": {

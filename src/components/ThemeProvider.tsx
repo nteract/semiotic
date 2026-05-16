@@ -8,7 +8,7 @@ import {
   HIGH_CONTRAST_THEME,
   resolveThemeUpdate
 } from "./store/ThemeStore"
-import type { SemioticTheme, ThemeStoreState, ThemeStoreUpdate } from "./store/ThemeStore"
+import type { SemioticTheme, SemioticThemeUpdate, ThemeStoreState, ThemeStoreUpdate } from "./store/ThemeStore"
 import { resolveThemePreset } from "./semiotic-themes"
 import type { ThemePresetName } from "./semiotic-themes"
 import { addMqlListener } from "./stream/useMediaPreferences"
@@ -17,7 +17,7 @@ import { addMqlListener } from "./stream/useMediaPreferences"
 
 interface ThemeProviderProps {
   /** Theme preset name (e.g. "tufte", "pastels-dark", "bi-tool") or a partial SemioticTheme object. */
-  theme?: ThemePresetName | Partial<SemioticTheme>
+  theme?: ThemePresetName | SemioticThemeUpdate
   children: React.ReactNode
 }
 
@@ -33,7 +33,7 @@ function isForcedColorsActive(): boolean {
 }
 
 function themeToStoreUpdate(
-  theme: ThemePresetName | Partial<SemioticTheme>
+  theme: ThemePresetName | SemioticThemeUpdate
 ): ThemeStoreUpdate {
   if (typeof theme !== "string") return theme
   if (theme === "light" || theme === "dark" || theme === "high-contrast") return theme
@@ -52,7 +52,7 @@ function themeToStoreUpdate(
 }
 
 function resolveInitialTheme(
-  theme: ThemePresetName | Partial<SemioticTheme> | undefined
+  theme: ThemePresetName | SemioticThemeUpdate | undefined
 ): SemioticTheme {
   if (theme !== undefined) {
     return resolveThemeUpdate(LIGHT_THEME, themeToStoreUpdate(theme))
@@ -62,7 +62,7 @@ function resolveInitialTheme(
 
 function setResolvedTheme(
   setTheme: ThemeStoreState["setTheme"],
-  theme: Partial<SemioticTheme>
+  theme: SemioticThemeUpdate
 ) {
   if (theme === LIGHT_THEME) {
     setTheme("light")
@@ -83,7 +83,7 @@ function setResolvedTheme(
 function ThemeInitializer({
   theme
 }: {
-  theme?: ThemePresetName | Partial<SemioticTheme>
+  theme?: ThemePresetName | SemioticThemeUpdate
 }) {
   const setTheme = useThemeSelector(
     (state: ThemeStoreState) => state.setTheme
@@ -97,7 +97,7 @@ function ThemeInitializer({
   currentThemeRef.current = currentTheme
 
   // Remember the theme before forced-colors override so we can restore it
-  const themeBeforeForcedColorsRef = React.useRef<Partial<SemioticTheme> | null>(null)
+  const themeBeforeForcedColorsRef = React.useRef<SemioticThemeUpdate | null>(null)
 
   // Auto-detect forced-colors / high-contrast mode
   React.useEffect(() => {

@@ -201,7 +201,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
 
     // Focus the first legend option directly
     const firstOption = testCase.locator("[role='option']").first()
-    await firstOption.evaluate((el) => (el as any).focus())
+    await firstOption.evaluate((el) => (el as HTMLElement).focus())
 
     const firstLabel = await page.locator(":focus").getAttribute("aria-label")
     expect(firstLabel).toBeTruthy()
@@ -222,7 +222,7 @@ test.describe("Accessibility - Legend keyboard traversal", () => {
 
     // Focus the first legend option
     const firstOption = testCase.locator("[role='option']").first()
-    await firstOption.evaluate((el) => (el as any).focus())
+    await firstOption.evaluate((el) => (el as HTMLElement).focus())
 
     // Press Enter to toggle isolation
     await page.keyboard.press("Enter")
@@ -272,7 +272,7 @@ test.describe("Accessibility - Focus rings", () => {
 
     // Focus a legend item via keyboard
     const firstOption = testCase.locator("[role='option']").first()
-    await firstOption.evaluate((el) => (el as any).focus())
+    await firstOption.evaluate((el) => (el as HTMLElement).focus())
     await waitForRafs(page)
 
     // After focus, the ring within the focused item should be visible
@@ -290,7 +290,7 @@ test.describe("Accessibility - Focus rings", () => {
 
     // Focus a legend item
     const firstOption = testCase.locator("[role='option']").first()
-    await firstOption.evaluate((el) => (el as any).focus())
+    await firstOption.evaluate((el) => (el as HTMLElement).focus())
     await waitForRafs(page)
 
     // Blur by focusing something else

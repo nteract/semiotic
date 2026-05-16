@@ -301,7 +301,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
-  } as any
+  }
 
   return <SafeRender componentName="FunnelChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

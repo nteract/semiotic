@@ -16,6 +16,7 @@ describe("scalePadding", () => {
       runtimeMode: "bounded",
       windowSize: 200,
       windowMode: "sliding",
+      arrowOfTime: "right",
       extentPadding: 0,
       scalePadding,
     })
@@ -26,7 +27,7 @@ describe("scalePadding", () => {
       ],
       bounded: true,
     })
-    ;(store as any).computeScene({ width: 400, height: 300 })
+    store.computeScene({ width: 400, height: 300 })
     return store
   }
 

@@ -49,6 +49,7 @@ import { TooltipProvider } from "../../components/store/TooltipStore"
 import { STREAMING_PALETTE } from "../../components/charts/shared/colorUtils"
 import { ITALIAN_LIGHT } from "../../components/semiotic-themes"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
+import type { RealtimeFrameHandle } from "../../components/realtime/types"
 
 // rAF is left async (the jsdom default) because `StreamGeoFrame`
 // schedules a re-render whenever `canvas.style.width` changes; a
@@ -115,7 +116,7 @@ function normalizeColor(input: string): string {
 describe("push-mode legend color regression", () => {
   describe("LineChart (xy)", () => {
     it("provider category map wins over every other source", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const providerColors = { A: "#ff00ff", B: "#00ffff" }
       const { container } = render(
         <TooltipProvider>
@@ -123,7 +124,7 @@ describe("push-mode legend color regression", () => {
             {/* explicit scheme + theme are present and SHOULD be ignored */}
             <ThemeProvider theme={ITALIAN_LIGHT}>
               <LineChart
-                ref={ref as React.Ref<unknown>}
+                ref={ref}
                 xAccessor="x"
                 yAccessor="y"
                 lineBy="cat"
@@ -150,13 +151,13 @@ describe("push-mode legend color regression", () => {
     })
 
     it("explicit colorScheme array wins over theme and STREAMING_PALETTE", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const scheme = ["#abc123", "#321cba"]
       const { container } = render(
         <TooltipProvider>
           <ThemeProvider theme={ITALIAN_LIGHT}>
             <LineChart
-              ref={ref as React.Ref<unknown>}
+              ref={ref}
               xAccessor="x"
               yAccessor="y"
               lineBy="cat"
@@ -185,11 +186,11 @@ describe("push-mode legend color regression", () => {
     })
 
     it("string colorScheme name resolves to a distinct per-category swatch", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const { container } = render(
         <TooltipProvider>
           <LineChart
-            ref={ref as React.Ref<unknown>}
+            ref={ref}
             xAccessor="x"
             yAccessor="y"
             lineBy="cat"
@@ -215,12 +216,12 @@ describe("push-mode legend color regression", () => {
     })
 
     it("ThemeProvider categorical wins when no explicit scheme is set", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const { container } = render(
         <TooltipProvider>
           <ThemeProvider theme={ITALIAN_LIGHT}>
             <LineChart
-              ref={ref as React.Ref<unknown>}
+              ref={ref}
               xAccessor="x"
               yAccessor="y"
               lineBy="cat"
@@ -254,11 +255,11 @@ describe("push-mode legend color regression", () => {
       // `LIGHT_THEME` as the resolved default. STREAMING_PALETTE is the
       // last-resort tier for the (currently unreachable) case where the
       // ambient theme exposes an empty/missing categorical palette.
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const { container } = render(
         <TooltipProvider>
           <LineChart
-            ref={ref as React.Ref<unknown>}
+            ref={ref}
             xAccessor="x"
             yAccessor="y"
             lineBy="cat"
@@ -298,14 +299,14 @@ describe("push-mode legend color regression", () => {
     }
 
     it("provider category map wins over every other source", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const providerColors = { A: "#aa00aa", B: "#00aaaa" }
       const { container } = render(
         <TooltipProvider>
           <CategoryColorProvider colors={providerColors}>
             <ThemeProvider theme={ITALIAN_LIGHT}>
               <ProportionalSymbolMap
-                ref={ref as React.Ref<unknown>}
+                ref={ref}
                 {...baseProps}
                 colorScheme={["#111111", "#222222"]}
               />
@@ -326,13 +327,13 @@ describe("push-mode legend color regression", () => {
     })
 
     it("explicit colorScheme array wins over theme and STREAMING_PALETTE", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const scheme = ["#cafe00", "#00face"]
       const { container } = render(
         <TooltipProvider>
           <ThemeProvider theme={ITALIAN_LIGHT}>
             <ProportionalSymbolMap
-              ref={ref as React.Ref<unknown>}
+              ref={ref}
               {...baseProps}
               colorScheme={scheme}
             />
@@ -354,11 +355,11 @@ describe("push-mode legend color regression", () => {
     })
 
     it("string colorScheme name resolves to a distinct per-category swatch", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const { container } = render(
         <TooltipProvider>
           <ProportionalSymbolMap
-            ref={ref as React.Ref<unknown>}
+            ref={ref}
             {...baseProps}
             colorScheme="category10"
           />
@@ -378,11 +379,11 @@ describe("push-mode legend color regression", () => {
     })
 
     it("ThemeProvider categorical wins when no explicit scheme is set", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const { container } = render(
         <TooltipProvider>
           <ThemeProvider theme={ITALIAN_LIGHT}>
-            <ProportionalSymbolMap ref={ref as React.Ref<unknown>} {...baseProps} />
+            <ProportionalSymbolMap ref={ref} {...baseProps} />
           </ThemeProvider>
         </TooltipProvider>,
       )
@@ -401,10 +402,10 @@ describe("push-mode legend color regression", () => {
     })
 
     it("falls back to default theme categorical when no provider/scheme/explicit theme is set", async () => {
-      const ref = React.createRef<{ pushMany: (rows: object[]) => void }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       const { container } = render(
         <TooltipProvider>
-          <ProportionalSymbolMap ref={ref as React.Ref<unknown>} {...baseProps} />
+          <ProportionalSymbolMap ref={ref} {...baseProps} />
         </TooltipProvider>,
       )
 

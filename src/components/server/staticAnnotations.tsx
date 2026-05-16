@@ -35,7 +35,7 @@ interface AnnotationLayout {
 }
 
 export interface StaticAnnotationConfig {
-  annotations: Datum[]
+  annotations?: Datum[]
   scales: AnnotationScales
   layout: AnnotationLayout
   theme: SemioticTheme

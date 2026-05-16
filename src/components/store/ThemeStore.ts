@@ -261,7 +261,17 @@ export interface ThemeStoreState {
   setTheme: (theme: ThemeStoreUpdate) => void
 }
 
-export type ThemeStoreUpdate = Partial<SemioticTheme> | "light" | "dark" | "high-contrast"
+export type SemioticThemeUpdate = Omit<
+  Partial<SemioticTheme>,
+  "colors" | "typography" | "tooltip" | "accessibility"
+> & {
+  colors?: Partial<SemioticTheme["colors"]>
+  typography?: Partial<SemioticTheme["typography"]>
+  tooltip?: Partial<NonNullable<SemioticTheme["tooltip"]>>
+  accessibility?: Partial<NonNullable<SemioticTheme["accessibility"]>>
+}
+
+export type ThemeStoreUpdate = SemioticThemeUpdate | "light" | "dark" | "high-contrast"
 
 export function resolveThemeUpdate(
   current: SemioticTheme,

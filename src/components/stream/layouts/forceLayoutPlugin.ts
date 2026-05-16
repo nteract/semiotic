@@ -61,7 +61,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // Retrieve previous positions if stashed by the pipeline store
     // (used for bounded re-ingestion where nodes are recreated)
     const previousPositions: Map<string, { x: number; y: number }> | undefined =
-      (config as any).__previousPositions
+      config.__previousPositions
 
     // Classify nodes: positioned (have non-zero x/y or a previous position) vs new
     let positionedCount = 0
@@ -196,8 +196,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
           target: typeof e.target === "string" ? e.target : e.target.id
         }))
 
+        linkForce.links(linkData)
         simulation.force("link", linkForce)
-        ;(simulation.force("link") as any).links(linkData)
       }
 
       // For warm start, use a lower initial alpha since the layout is mostly converged

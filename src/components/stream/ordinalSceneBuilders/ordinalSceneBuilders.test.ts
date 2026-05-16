@@ -9,7 +9,7 @@ import { buildFunnelScene } from "./funnelScene"
 import { buildBarFunnelScene } from "./barFunnelScene"
 import { buildSwimlaneScene } from "./swimlaneScene"
 import type { OrdinalSceneContext } from "./types"
-import type { OrdinalScales, OrdinalColumn, OrdinalLayout, OrdinalPipelineConfig } from "../ordinalTypes"
+import type { OrdinalScales, OrdinalColumn, OrdinalLayout, OrdinalPipelineConfig, WedgeSceneNode } from "../ordinalTypes"
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
 
@@ -452,6 +452,63 @@ describe("buildPieScene", () => {
     const nodes = buildPieScene(ctx, layout)
     expect(nodes).toHaveLength(0)
   })
+
+  // ── Gauge-mode roundedEnds ─────────────────────────────────────────────
+  describe("gauge mode (sweepAngle < 360 + cornerRadius)", () => {
+    it("marks roundedEnds.start on the first wedge and roundedEnds.end on the last", () => {
+      const ctx = makeCtx({
+        config: makeConfig({ chartType: "donut", sweepAngle: 240, cornerRadius: 8 }),
+        columns: {
+          A: makeColumn("A", [{ value: 33 }], { pct: 0.33, pctStart: 0 }),
+          B: makeColumn("B", [{ value: 33 }], { pct: 0.33, pctStart: 0.33 }),
+          C: makeColumn("C", [{ value: 34 }], { pct: 0.34, pctStart: 0.66 }),
+        }
+      })
+      const nodes = buildPieScene(ctx, layout)
+      expect(nodes).toHaveLength(3)
+      expect(nodes[0].roundedEnds).toEqual({ start: true, end: false })
+      expect(nodes[1].roundedEnds).toEqual({ start: false, end: false })
+      expect(nodes[2].roundedEnds).toEqual({ start: false, end: true })
+    })
+
+    it("does not mark roundedEnds when sweepAngle is full circle (regular donut)", () => {
+      const ctx = makeCtx({
+        config: makeConfig({ chartType: "donut", cornerRadius: 8 }),  // no sweepAngle → full 360
+        columns: {
+          A: makeColumn("A", [{ value: 50 }], { pct: 0.5, pctStart: 0 }),
+          B: makeColumn("B", [{ value: 50 }], { pct: 0.5, pctStart: 0.5 }),
+        }
+      })
+      const nodes = buildPieScene(ctx, layout)
+      expect(nodes[0].roundedEnds).toBeUndefined()
+      expect(nodes[1].roundedEnds).toBeUndefined()
+    })
+
+    it("does not mark roundedEnds when there is only one wedge (single-zone gauge)", () => {
+      // Single-wedge gauge has no internal seams to worry about — d3-arc's
+      // all-corner rounding is exactly the right behavior. The override
+      // is only needed when ≥ 2 wedges create internal boundaries.
+      const ctx = makeCtx({
+        config: makeConfig({ chartType: "donut", sweepAngle: 240, cornerRadius: 8 }),
+        columns: { A: makeColumn("A", [{ value: 100 }], { pct: 1, pctStart: 0 }) }
+      })
+      const nodes = buildPieScene(ctx, layout)
+      expect(nodes[0].roundedEnds).toBeUndefined()
+    })
+
+    it("does not mark roundedEnds when cornerRadius is unset", () => {
+      const ctx = makeCtx({
+        config: makeConfig({ chartType: "donut", sweepAngle: 240 }),  // no cornerRadius
+        columns: {
+          A: makeColumn("A", [{ value: 50 }], { pct: 0.5, pctStart: 0 }),
+          B: makeColumn("B", [{ value: 50 }], { pct: 0.5, pctStart: 0.5 }),
+        }
+      })
+      const nodes = buildPieScene(ctx, layout)
+      expect(nodes[0].roundedEnds).toBeUndefined()
+      expect(nodes[1].roundedEnds).toBeUndefined()
+    })
+  })
 })
 
 // ── pointScene ──────────────────────────────────────────────────────────
@@ -521,8 +578,9 @@ describe("buildPointScene", () => {
   })
 
   it("uses r from style when provided", () => {
+    const styleWithRadius: Style & { r: number } = { fill: "#000", r: 12 }
     const ctx = makeCtx({
-      resolvePieceStyle: () => ({ fill: "#000", r: 12 } as any),
+      resolvePieceStyle: () => styleWithRadius,
       columns: {
         A: makeColumn("A", [{ value: 50 }])
       }
@@ -892,8 +950,8 @@ describe("buildHistogramScene", () => {
     })
 
     const nodes = buildHistogramScene(ctx, layout)
-    const rectsA = nodes.filter(n => n.type === "rect" && (n as any).group === "A")
-    const rectsB = nodes.filter(n => n.type === "rect" && (n as any).group === "B")
+    const rectsA = nodes.filter(n => n.type === "rect" && n.group === "A")
+    const rectsB = nodes.filter(n => n.type === "rect" && n.group === "B")
 
     expect(rectsA.length).toBeGreaterThan(0)
     expect(rectsB.length).toBeGreaterThan(0)
@@ -1177,9 +1235,9 @@ describe("buildConnectors", () => {
 
   it("ignores node types other than point and rect", () => {
     const scales = makeScales()
-    const pieceNodes = [
+    const pieceNodes: WedgeSceneNode[] = [
       { type: "wedge" as const, cx: 0, cy: 0, innerRadius: 0, outerRadius: 50, startAngle: 0, endAngle: Math.PI, style: defaultStyle, datum: { category: "A", group: "g1" } },
-    ] as any[]
+    ]
     const ctx = makeCtx({
       scales,
       getConnector: (d: Datum) => d.group,

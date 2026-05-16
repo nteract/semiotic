@@ -2,6 +2,19 @@ import { render } from "@testing-library/react"
 import { Tooltip, MultiLineTooltip, MultiPointTooltip, normalizeTooltip } from "./Tooltip"
 import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { ReactElement, ReactNode } from "react"
+
+type TooltipRenderer =
+  | ReturnType<typeof Tooltip>
+  | ReturnType<typeof MultiLineTooltip>
+  | ReturnType<typeof MultiPointTooltip>
+  | ReturnType<typeof buildDefaultTooltip>
+
+type NullableTooltipFn<TFn extends TooltipRenderer> = (
+  datum: Parameters<TFn>[0] | null | undefined
+) => ReturnType<TFn>
+
+type TooltipElement = ReactElement<{ children?: ReactNode }>
 
 describe("Tooltip", () => {
   const sampleData = { x: 1, y: 5, category: "A", size: 10 }
@@ -72,8 +85,9 @@ describe("Tooltip", () => {
 
   it("returns null for null/undefined data", () => {
     const tooltipFn = Tooltip({ title: "category" })
-    expect(tooltipFn(null as any)).toBeNull()
-    expect(tooltipFn(undefined as any)).toBeNull()
+    const nullableTooltipFn = tooltipFn as NullableTooltipFn<typeof tooltipFn>
+    expect(nullableTooltipFn(null)).toBeNull()
+    expect(nullableTooltipFn(undefined)).toBeNull()
   })
 
   it("applies custom style", () => {
@@ -132,8 +146,9 @@ describe("MultiLineTooltip", () => {
 
   it("returns null for null/undefined data", () => {
     const tooltipFn = MultiLineTooltip({ fields: ["x"] })
-    expect(tooltipFn(null as any)).toBeNull()
-    expect(tooltipFn(undefined as any)).toBeNull()
+    const nullableTooltipFn = tooltipFn as NullableTooltipFn<typeof tooltipFn>
+    expect(nullableTooltipFn(null)).toBeNull()
+    expect(nullableTooltipFn(undefined)).toBeNull()
   })
 })
 
@@ -200,46 +215,46 @@ describe("normalizeTooltip", () => {
 
   it("unwraps HoverData for user tooltip functions", () => {
     const fn = (d: Datum) => d.task
-    const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
     // Simulate HoverData wrapper from StreamNetworkFrame (has type + data)
     const hoverData = { type: "node", data: { task: "Fix bug" }, x: 10, y: 20 }
-    const rendered = wrapped(hoverData) as any
+    const rendered = wrapped(hoverData)
     expect(rendered).not.toBeNull()
     // The string "Fix bug" should be inside the tooltip chrome div
-    expect(rendered.props.children).toBe("Fix bug")
+    expect(rendered?.props.children).toBe("Fix bug")
   })
 
   it("unwraps explicitly marked HoverData so the user fn receives the raw datum", () => {
     const fn = (d: Datum) => d.fieldName
-    const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
     const hoverData = {
       data: { fieldName: "hello" },
       x: 10,
       y: 20,
       __semioticHoverData: true,
     }
-    const rendered = wrapped(hoverData) as any
+    const rendered = wrapped(hoverData)
     expect(rendered).not.toBeNull()
-    expect(rendered.props.children).toBe("hello")
+    expect(rendered?.props.children).toBe("hello")
   })
 
   it("does not unwrap raw user data that happens to have x, y, and data fields", () => {
     const fn = (d: Datum) => d.fieldName
-    const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
     const rawDatum = {
       x: 10,
       y: 20,
       data: { fieldName: "nested value" },
       fieldName: "top-level value",
     }
-    const rendered = wrapped(rawDatum) as any
+    const rendered = wrapped(rawDatum)
     expect(rendered).not.toBeNull()
-    expect(rendered.props.children).toBe("top-level value")
+    expect(rendered?.props.children).toBe("top-level value")
   })
 
   it("does not unwrap raw user data with a primitive data field and category", () => {
     const fn = (d: Datum) => d.label
-    const wrapped = normalizeTooltip(fn) as ((...args: any[]) => any)
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
     const rawDatum = {
       x: 10,
       y: 20,
@@ -247,13 +262,13 @@ describe("normalizeTooltip", () => {
       category: "A",
       label: "visible label",
     }
-    const rendered = wrapped(rawDatum) as any
+    const rendered = wrapped(rawDatum)
     expect(rendered).not.toBeNull()
-    expect(rendered.props.children).toBe("visible label")
+    expect(rendered?.props.children).toBe("visible label")
   })
 
   it("returns false for undefined", () => {
-    expect(normalizeTooltip(undefined as any)).toBe(false)
+    expect(normalizeTooltip(undefined)).toBe(false)
   })
 })
 
@@ -264,7 +279,7 @@ describe("buildDefaultTooltip with title role", () => {
       { label: "share", accessor: "share", role: "x" },
       { label: "growth", accessor: "growth", role: "y" },
     ])
-    const hoverData = { data: { product: "TurboEncabulator", share: 0.75, growth: 0.82 } }
+    const hoverData = { data: { product: "TurboEncabulator", share: 0.75, growth: 0.82 }, x: 0, y: 0 }
     const { container } = render(<>{fn(hoverData)}</>)
 
     // Title should be bold
@@ -284,7 +299,7 @@ describe("buildDefaultTooltip with title role", () => {
       { label: "x", accessor: "x", role: "x" },
       { label: "y", accessor: "y", role: "y" },
     ])
-    const hoverData = { data: { x: 1, y: 2 } }
+    const hoverData = { data: { x: 1, y: 2 }, x: 0, y: 0 }
     const { container } = render(<>{fn(hoverData)}</>)
 
     expect(container.textContent).toContain("x")
@@ -344,7 +359,7 @@ describe("MultiPointTooltip", () => {
 
   it("normalizeTooltip returns a generic tooltip function for 'multi' (HOC handles it before normalizeTooltip)", () => {
     // "multi" is intercepted at the HOC level; if it reaches normalizeTooltip it falls through to generic
-    const result = normalizeTooltip("multi" as any)
+    const result = normalizeTooltip("multi")
     expect(typeof result).toBe("function")
   })
 })

@@ -7,12 +7,14 @@ import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvas
 import type { Datum } from "../charts/shared/datumTypes"
 
 // Mock ResizeObserver for jsdom
-if (typeof globalThis.ResizeObserver === "undefined") {
-  (globalThis as any).ResizeObserver = class {
+const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+if (typeof resizeObserverGlobal.ResizeObserver === "undefined") {
+  resizeObserverGlobal.ResizeObserver = class {
+    constructor(_callback: ResizeObserverCallback) {}
     observe() {}
     unobserve() {}
     disconnect() {}
-  }
+  } as typeof ResizeObserver
 }
 
 // Regression: /cookbook/marginal-graphics (and anywhere else using the
@@ -601,8 +603,8 @@ describe("StreamXYFrame", () => {
       // mock's lifecycle ever changes.
       function captureFillRectStyles(ctx: CanvasContextMock) {
         const styles: string[] = []
-        const orig = ctx.fillRect as (...args: any[]) => void
-        ctx.fillRect = vi.fn((...args: any[]) => {
+        const orig = ctx.fillRect as ((...args: unknown[]) => unknown) | undefined
+        ctx.fillRect = vi.fn((...args: unknown[]) => {
           styles.push(String(ctx.fillStyle))
           return orig?.apply(ctx, args)
         })
@@ -612,7 +614,10 @@ describe("StreamXYFrame", () => {
         }
       }
       const getMockCtx = () =>
-        (HTMLCanvasElement.prototype.getContext as any)() as CanvasContextMock
+        HTMLCanvasElement.prototype.getContext.call(
+          document.createElement("canvas"),
+          "2d"
+        ) as unknown as CanvasContextMock
 
       it("paints an explicit background color via fillRect", () => {
         const ctx = getMockCtx()

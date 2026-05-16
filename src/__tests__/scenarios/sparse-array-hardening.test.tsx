@@ -44,6 +44,7 @@ import { SankeyDiagram } from "../../components/charts/network/SankeyDiagram"
 import { ProportionalSymbolMap } from "../../components/charts/geo/ProportionalSymbolMap"
 import { FlowMap } from "../../components/charts/geo/FlowMap"
 import { ChoroplethMap } from "../../components/charts/geo/ChoroplethMap"
+import type { RealtimeFrameHandle } from "../../components/realtime/types"
 
 let restoreCanvas: () => void
 beforeEach(() => {
@@ -258,10 +259,10 @@ describe("sparse-array prop hardening", () => {
     // so a `ref.pushMany([null, valid])` doesn't crash the pipeline
     // store on extent / accessor reads.
     it("LineChart ref.pushMany silently drops null entries", async () => {
-      const ref = React.createRef<{ pushMany: (rows: unknown[]) => void; getData: () => unknown[] }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       render(
         <LineChart
-          ref={ref as React.Ref<unknown>}
+          ref={ref}
           xAccessor="x"
           yAccessor="y"
           lineBy="cat"
@@ -276,7 +277,7 @@ describe("sparse-array prop hardening", () => {
           { x: 0, y: 0, cat: "A" },
           undefined,
           { x: 1, y: 1, cat: "B" },
-        ])
+        ] as unknown as Parameters<RealtimeFrameHandle["pushMany"]>[0])
       })
       // Wait one microtask for the adapter's batched flush, then one
       // rAF tick for the frame to ingest.
@@ -291,10 +292,10 @@ describe("sparse-array prop hardening", () => {
     })
 
     it("ProportionalSymbolMap ref.pushMany silently drops null entries", async () => {
-      const ref = React.createRef<{ pushMany: (rows: unknown[]) => void; getData: () => unknown[] }>()
+      const ref = React.createRef<RealtimeFrameHandle>()
       render(
         <ProportionalSymbolMap
-          ref={ref as React.Ref<unknown>}
+          ref={ref}
           xAccessor="lon"
           yAccessor="lat"
           sizeBy="size"
@@ -310,7 +311,7 @@ describe("sparse-array prop hardening", () => {
           { id: "a", lon: 0, lat: 0, size: 5, cat: "A" },
           undefined,
           { id: "b", lon: 10, lat: 10, size: 5, cat: "B" },
-        ])
+        ] as unknown as Parameters<RealtimeFrameHandle["pushMany"]>[0])
       })
       await new Promise((r) => setTimeout(r, 50))
       const data = ref.current!.getData()

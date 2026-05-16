@@ -69,6 +69,20 @@ import type { SemioticTheme } from "../store/ThemeStore"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo"
+type StaticFrameProps =
+  (StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps | StreamGeoFrameProps) &
+  ThemeAwareProps
+type CategoricalAccessor = string | ((d: Datum) => string)
+type EdgeEndpoint = RealtimeEdge["source"] | RealtimeEdge["target"] | null | undefined
+
+function edgeEndpointId(endpoint: EdgeEndpoint): string | null {
+  if (typeof endpoint === "string") return endpoint
+  if (endpoint && typeof endpoint === "object") {
+    const id = (endpoint as { id?: unknown }).id
+    return id == null ? null : String(id)
+  }
+  return null
+}
 
 /** Generate a short stable ID from chart props for unique SVG element IDs */
 function chartUID(props: Datum): string {
@@ -612,10 +626,10 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     if (propsNodes.length === 0 && edges.length > 0) {
       const nodeIds = new Set<string>()
       for (const e of edges) {
-        const src = typeof e.source === "string" ? e.source : e.source.id
-        const tgt = typeof e.target === "string" ? e.target : e.target.id
-        nodeIds.add(src)
-        nodeIds.add(tgt)
+        const src = edgeEndpointId(e.source)
+        const tgt = edgeEndpointId(e.target)
+        if (src) nodeIds.add(src)
+        if (tgt) nodeIds.add(tgt)
       }
       nodes = Array.from(nodeIds).map((id) => ({
         id,
@@ -734,7 +748,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   // accepts either form, and stripping functions to undefined would silently
   // drop the legend for any caller using a typed accessor function.
   const networkLegend = props.showLegend ? (() => {
-    const isAccessor = (a: any): a is string | ((d: any) => string) =>
+    const isAccessor = (a: unknown): a is CategoricalAccessor =>
       typeof a === "string" || typeof a === "function"
     const colorAccessor = isAccessor(props.colorBy)
       ? props.colorBy
@@ -743,12 +757,12 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       ? nodes.map((node) => node.data || { id: node.id })
       : Array.from(new Set(
         edges.flatMap((e) => {
-          const src = typeof e.source === "string" ? e.source : (e.source as any)?.id
-          const tgt = typeof e.target === "string" ? e.target : (e.target as any)?.id
+          const src = edgeEndpointId(e.source)
+          const tgt = edgeEndpointId(e.target)
           return [src, tgt]
         }).filter(Boolean)
       )).map((id) => ({ id }))
-    const categories = extractCategories(legendSource, colorAccessor as any)
+    const categories = extractCategories(legendSource, colorAccessor)
     if (categories.length === 0) return null
     return renderStaticLegend({
       categories,
@@ -767,8 +781,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   // form ({legendGroups} or {gradient}) — those are SVGOverlay-side concerns
   // and aren't yet wired through SSR; auto-build covers the categorical case
   // either way.
-  const networkLegendOut = React.isValidElement((props as any).legend)
-    ? (props as any).legend as React.ReactNode
+  const networkLegendOut = React.isValidElement(props.legend)
+    ? props.legend
     : networkLegend
 
   const content = (
@@ -1129,9 +1143,9 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
     lineDataAccessor: props.lineDataAccessor,
     pointIdAccessor: props.pointIdAccessor,
     lineType: props.lineType,
-    areaStyle: props.areaStyle as any,
-    pointStyle: props.pointStyle as any,
-    lineStyle: props.lineStyle as any,
+    areaStyle: props.areaStyle,
+    pointStyle: props.pointStyle,
+    lineStyle: props.lineStyle,
     graticule: props.graticule,
     fitPadding: props.fitPadding,
     projectionTransform: props.projectionTransform,
@@ -1150,8 +1164,8 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
     }
     store.setAreas(areas)
   }
-  if (props.points) store.setPoints(points as any[])
-  if (props.lines) store.setLines(lines as any[])
+  if (props.points) store.setPoints(points)
+  if (props.lines) store.setLines(lines)
 
   store.computeScene({ width, height })
 
@@ -1210,28 +1224,28 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   }) : null
 
   // Geo legend: auto-build from `colorBy` on either points (proportional
-  // symbol maps) or areas (choropleth maps). `colorBy` is now declared on
-  // `StreamGeoFrameProps`; the previous `(props as any)` cast is gone.
+  // symbol maps) or areas (choropleth maps). `colorBy` is declared on
+  // `StreamGeoFrameProps`, so SSR can use it directly.
   // Matches the XY/Network auto-build pattern; categories come from whichever
   // data input is present.
   const geoAutoLegend = props.showLegend ? (() => {
-    const isAccessor = (a: any): a is string | ((d: any) => string) =>
+    const isAccessor = (a: unknown): a is CategoricalAccessor =>
       typeof a === "string" || typeof a === "function"
     const colorAccessor = isAccessor(props.colorBy) ? props.colorBy : undefined
-    const legendSource: any[] = (() => {
-      if (points.length > 0) return points as any[]
+    const legendSource: Datum[] = (() => {
+      if (points.length > 0) return points
       if (Array.isArray(areas) && areas.length > 0) {
         // For string accessors, GeoJSON features carry attributes under
         // `properties` — flatten so `extractCategories` can read the field.
         // Function accessors get raw features so they can decide what to read.
         if (typeof colorAccessor === "string") {
-          return (areas as any[]).map(f => ({ ...(f.properties || {}), ...f }))
+          return areas.map(f => ({ ...(f.properties || {}), ...f }))
         }
-        return areas as any[]
+        return areas as unknown as Datum[]
       }
       return []
     })()
-    const categories = extractCategories(legendSource, colorAccessor as any)
+    const categories = extractCategories(legendSource, colorAccessor)
     if (categories.length === 0) return null
     return renderStaticLegend({
       categories,
@@ -1278,7 +1292,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
 
 export function renderToStaticSVG(
   frameType: FrameType,
-  props: (StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps | StreamGeoFrameProps) & ThemeAwareProps
+  props: StaticFrameProps
 ): string {
   switch (frameType) {
     case "xy":
@@ -1457,7 +1471,7 @@ export async function renderToImage(
   let svg: string
   const frameTypes = ["xy", "ordinal", "network", "geo"]
   if (frameTypes.includes(frameTypeOrComponent)) {
-    svg = renderToStaticSVG(frameTypeOrComponent as FrameType, props as any)
+    svg = renderToStaticSVG(frameTypeOrComponent as FrameType, props as StaticFrameProps)
   } else {
     svg = renderChart(frameTypeOrComponent as ChartName, props)
   }
@@ -1604,7 +1618,7 @@ export function renderDashboard(
     if (chart.component) {
       svgStr = renderChart(chart.component, chartProps)
     } else if (chart.frameType) {
-      svgStr = renderToStaticSVG(chart.frameType, chartProps as any)
+      svgStr = renderToStaticSVG(chart.frameType, chartProps as StaticFrameProps)
     } else {
       svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"></svg>`
     }

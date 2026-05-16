@@ -1,17 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { render, act } from "@testing-library/react"
-import { LikertChart } from "./LikertChart"
+import { LikertChart, type LikertChartHandle } from "./LikertChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
 // Mock ResizeObserver for jsdom
-if (typeof globalThis.ResizeObserver === "undefined") {
-  (globalThis as any).ResizeObserver = class {
+const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+if (typeof resizeObserverGlobal.ResizeObserver === "undefined") {
+  resizeObserverGlobal.ResizeObserver = class {
+    constructor(_callback: ResizeObserverCallback) {}
     observe() {}
     unobserve() {}
     disconnect() {}
-  }
+  } as typeof ResizeObserver
 }
 
 // This file tests LikertChart end-to-end with the real StreamOrdinalFrame
@@ -29,7 +31,7 @@ describe("LikertChart streaming category order", () => {
   const levels = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
 
   it("preserves question order across pushes where the value-ranked order changes", async () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<LikertChartHandle>()
     render(
       <TooltipProvider>
         <LikertChart
@@ -43,7 +45,7 @@ describe("LikertChart streaming category order", () => {
 
     // Seed with responses across three questions in insertion order Q1 → Q2 → Q3.
     await act(async () => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { question: "Q1", score: 3 },
         { question: "Q1", score: 4 },
         { question: "Q2", score: 2 },
@@ -52,7 +54,7 @@ describe("LikertChart streaming category order", () => {
     })
     await new Promise(r => queueMicrotask(() => r(null))) // let adapter microtask flush
 
-    const firstDomain = ref.current.getScales()?.o.domain()
+    const firstDomain = ref.current!.getScales()?.o.domain()
     expect(firstDomain).toEqual(["Q1", "Q2", "Q3"])
 
     // Push a batch that flips the per-question total-response counts —
@@ -60,7 +62,7 @@ describe("LikertChart streaming category order", () => {
     // old value-desc ordering this would put Q3 first and Q1 last.
     // preserveCategoryOrder should keep Q1 → Q2 → Q3.
     await act(async () => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { question: "Q3", score: 5 },
         { question: "Q3", score: 4 },
         { question: "Q3", score: 5 },
@@ -71,12 +73,12 @@ describe("LikertChart streaming category order", () => {
     })
     await new Promise(r => queueMicrotask(() => r(null)))
 
-    const secondDomain = ref.current.getScales()?.o.domain()
+    const secondDomain = ref.current!.getScales()?.o.domain()
     expect(secondDomain).toEqual(["Q1", "Q2", "Q3"])
   })
 
   it("appends a newly-arriving question at the end, not at the top by value", async () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<LikertChartHandle>()
     render(
       <TooltipProvider>
         <LikertChart
@@ -89,18 +91,18 @@ describe("LikertChart streaming category order", () => {
     )
 
     await act(async () => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { question: "Q1", score: 3 },
         { question: "Q2", score: 4 },
       ])
     })
     await new Promise(r => queueMicrotask(() => r(null)))
-    expect(ref.current.getScales()?.o.domain()).toEqual(["Q1", "Q2"])
+    expect(ref.current!.getScales()?.o.domain()).toEqual(["Q1", "Q2"])
 
     // Q3 arrives late but gets a huge number of responses. It should
     // still land at the end of the axis (FIFO), not at the front.
     await act(async () => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { question: "Q3", score: 5 },
         { question: "Q3", score: 5 },
         { question: "Q3", score: 5 },
@@ -110,6 +112,6 @@ describe("LikertChart streaming category order", () => {
     })
     await new Promise(r => queueMicrotask(() => r(null)))
 
-    expect(ref.current.getScales()?.o.domain()).toEqual(["Q1", "Q2", "Q3"])
+    expect(ref.current!.getScales()?.o.domain()).toEqual(["Q1", "Q2", "Q3"])
   })
 })

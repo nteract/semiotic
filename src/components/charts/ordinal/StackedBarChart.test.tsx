@@ -1,9 +1,9 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { StackedBarChart } from "./StackedBarChart"
+import { StackedBarChart, type StackedBarChartProps } from "./StackedBarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
-import { STACKED_SAMPLE as sampleData } from "../../../test-utils/ordinalFixtures"
+import { STACKED_SAMPLE, type StackedBarDatum } from "../../../test-utils/ordinalFixtures"
 import type { Datum } from "../shared/datumTypes"
 
 // Mock OrdinalFrame to capture props
@@ -17,6 +17,9 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
     })
   }
 })
+
+const sampleData: StackedBarDatum[] = [...STACKED_SAMPLE]
+type StackByAccessor = StackedBarChartProps<StackedBarDatum>["stackBy"]
 
 describe("StackedBarChart", () => {
   beforeEach(() => {
@@ -60,7 +63,7 @@ describe("StackedBarChart", () => {
   it("shows error when stackBy is missing", () => {
     const { container } = render(
       <TooltipProvider>
-        <StackedBarChart data={sampleData} stackBy={undefined as any} />
+        <StackedBarChart data={sampleData} stackBy={undefined as unknown as StackByAccessor} />
       </TooltipProvider>
     )
 

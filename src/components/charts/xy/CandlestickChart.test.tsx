@@ -1,7 +1,7 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { CandlestickChart } from "./CandlestickChart"
+import { CandlestickChart, type CandlestickChartProps } from "./CandlestickChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 let lastXYFrameProps: any = null
@@ -184,7 +184,7 @@ describe("CandlestickChart", () => {
       const missingOpenClose = [{ t: 1, h: 15, l: 8 }, { t: 2, h: 18, l: 11 }]
       render(
         <TooltipProvider>
-          <CandlestickChart data={missingOpenClose as any} xAccessor="t"
+          <CandlestickChart data={missingOpenClose as unknown as CandlestickChartProps["data"]} xAccessor="t"
             openAccessor="o" highAccessor="h" lowAccessor="l" closeAccessor="c" />
         </TooltipProvider>
       )

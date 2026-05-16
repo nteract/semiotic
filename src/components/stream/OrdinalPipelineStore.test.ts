@@ -820,7 +820,7 @@ describe("OrdinalPipelineStore", () => {
       expect(rects.length).toBeGreaterThan(0)
 
       // All rects should have the same bin width (same grid)
-      const widths = rects.map(r => Math.round((r as any).w * 100) / 100)
+      const widths = rects.map(r => Math.round(r.w * 100) / 100)
       const uniqueWidths = new Set(widths)
       expect(uniqueWidths.size).toBe(1)
     })

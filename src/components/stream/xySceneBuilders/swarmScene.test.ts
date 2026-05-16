@@ -6,7 +6,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as any,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -190,7 +190,7 @@ describe("buildSwarmScene", () => {
     const doubleScale = Object.assign(double, { domain: () => [0, 100], range: () => [0, 800] })
     const data = [{ x: 15, y: 25 }]
     const ctx = makeCtx({
-      scales: { x: doubleScale, y: doubleScale } as any,
+      scales: { x: doubleScale, y: doubleScale } as unknown as XYSceneContext["scales"],
     })
     const nodes = buildSwarmScene(ctx, data)
 
@@ -253,14 +253,14 @@ describe("buildSwarmScene", () => {
     const ctx = makeCtx({
       config: { themeSemantic: { primary: "#0f62fe" } },
     })
-    const nodes = buildSwarmScene(ctx, data) as any[]
+    const nodes = buildSwarmScene(ctx, data)
     expect(nodes[0].style.fill).toBe("#0f62fe")
   })
 
   it("hardcoded hex fallback remains when no theme is in scope", () => {
     const data = [{ x: 10, y: 20 }]
     const ctx = makeCtx({ config: {} })
-    const nodes = buildSwarmScene(ctx, data) as any[]
+    const nodes = buildSwarmScene(ctx, data)
     expect(nodes[0].style.fill).toBe("#007bff")
   })
 
@@ -272,7 +272,7 @@ describe("buildSwarmScene", () => {
         themeSemantic: { primary: "#0f62fe" },
       },
     })
-    const nodes = buildSwarmScene(ctx, data) as any[]
+    const nodes = buildSwarmScene(ctx, data)
     expect(nodes[0].style.fill).toBe("#ff00aa")
   })
 
@@ -285,7 +285,7 @@ describe("buildSwarmScene", () => {
       },
       getCategory: (d) => d.category,
     })
-    const nodes = buildSwarmScene(ctx, data) as any[]
+    const nodes = buildSwarmScene(ctx, data)
     expect(nodes[0].style.fill).toBe("#ff00aa")
   })
 })

@@ -35,6 +35,11 @@ import {
   renderGeoToStaticSVG,
 } from "./renderToStaticSVG"
 
+type StaticXYProps = Parameters<typeof renderXYToStaticSVG>[0]
+type StaticOrdinalProps = Parameters<typeof renderOrdinalToStaticSVG>[0]
+type StaticNetworkProps = Parameters<typeof renderNetworkToStaticSVG>[0]
+type StaticGeoProps = Parameters<typeof renderGeoToStaticSVG>[0]
+
 // ── Fixtures ──────────────────────────────────────────────────────────
 
 const xyData = [{ x: 0, y: 10, s: "a" }, { x: 1, y: 20, s: "a" }, { x: 0, y: 5, s: "b" }, { x: 1, y: 25, s: "b" }]
@@ -47,16 +52,16 @@ const networkEdges = [{ source: "a", target: "b" }, { source: "b", target: "c" }
 const FRAME_RENDERERS = {
   xy: (extra: Record<string, unknown> = {}) => renderXYToStaticSVG({
     chartType: "line", data: xyData, xAccessor: "x", yAccessor: "y", size: [400, 300], ...extra,
-  } as any),
+  } as StaticXYProps),
   ordinal: (extra: Record<string, unknown> = {}) => renderOrdinalToStaticSVG({
     chartType: "bar", data: ordinalData, oAccessor: "c", rAccessor: "v", size: [400, 300], ...extra,
-  } as any),
+  } as StaticOrdinalProps),
   network: (extra: Record<string, unknown> = {}) => renderNetworkToStaticSVG({
     chartType: "force", edges: networkEdges, nodeIDAccessor: "id", size: [400, 300], ...extra,
-  } as any),
+  } as StaticNetworkProps),
   geo: (extra: Record<string, unknown> = {}) => renderGeoToStaticSVG({
-    chartType: "geo", areas: [], size: [400, 300], ...extra,
-  } as any),
+    chartType: "geo", areas: [], projection: "equalEarth", size: [400, 300], ...extra,
+  } as StaticGeoProps),
 }
 
 // ── Title / description (accessibility) ───────────────────────────────
@@ -159,9 +164,10 @@ describe("SSR feature parity: annotations", () => {
         geometry: { type: "Polygon" as const, coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]] },
         properties: {},
       }],
+      projection: "equalEarth",
       size: [400, 300],
       annotations: [{ type: "label", coordinates: [5, 5], label: "PROBE" }],
-    } as any)
+    } as StaticGeoProps)
     expect(svg).toContain("semiotic-annotations")
     expect(svg).toContain("PROBE")
   })
@@ -239,8 +245,9 @@ describe("SSR feature parity: legend", () => {
       yAccessor: "lat",
       colorBy: "status",
       showLegend: true,
+      projection: "equalEarth",
       size: [400, 300],
-    } as any)
+    } as StaticGeoProps)
     expect(svg).toContain("semiotic-legend")
   })
 
@@ -254,8 +261,9 @@ describe("SSR feature parity: legend", () => {
       ],
       colorBy: "region",
       showLegend: true,
+      projection: "equalEarth",
       size: [400, 300],
-    } as any)
+    } as StaticGeoProps)
     expect(svg).toContain("semiotic-legend")
   })
 })

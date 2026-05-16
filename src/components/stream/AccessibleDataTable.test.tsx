@@ -20,8 +20,8 @@ import type { Datum } from "../charts/shared/datumTypes"
 
 describe("computeCanvasAriaLabel", () => {
   it("handles null/undefined scene", () => {
-    expect(computeCanvasAriaLabel(null as any, "XY")).toBe("XY, empty")
-    expect(computeCanvasAriaLabel(undefined as any, "XY")).toBe("XY, empty")
+    expect(computeCanvasAriaLabel(null, "XY")).toBe("XY, empty")
+    expect(computeCanvasAriaLabel(undefined, "XY")).toBe("XY, empty")
   })
 
   it("handles empty scene array", () => {
@@ -53,7 +53,7 @@ describe("computeCanvasAriaLabel", () => {
   })
 
   it("handles nodes with missing type", () => {
-    const scene = [{ x: 1, y: 2 } as any]
+    const scene = [{ x: 1, y: 2 }]
     // type is undefined — should use "undefined" as type string
     const result = computeCanvasAriaLabel(scene, "XY")
     expect(result).toContain("XY")
@@ -264,7 +264,7 @@ describe("extractAllRows — data shape resilience", () => {
 
 describe("computeFieldStats resilience", () => {
   // Replicate the production logic for direct testing
-  function computeFieldStats(rows: Array<{ values: Datum } | null>): any[] {
+  function computeFieldStats(rows: Array<{ values?: Datum } | null>): any[] {
     if (!rows || rows.length === 0) return []
     const fieldNames = new Set<string>()
     for (const r of rows) {
@@ -403,14 +403,14 @@ describe("computeFieldStats resilience", () => {
   })
 
   it("handles null rows in array", () => {
-    const rows = [null, { values: { x: 5 } }, null] as any[]
+    const rows = [null, { values: { x: 5 } }, null]
     const stats = computeFieldStats(rows)
     expect(stats[0].count).toBe(1)
     expect(stats[0].min).toBe(5)
   })
 
   it("handles rows with missing values property", () => {
-    const rows = [{ oops: "wrong" }, { values: { x: 10 } }] as any[]
+    const rows = [{ oops: "wrong" }, { values: { x: 10 } }]
     const stats = computeFieldStats(rows)
     expect(stats[0].count).toBe(1)
   })
@@ -467,9 +467,9 @@ describe("computeFieldStats resilience", () => {
 
 describe("fmt helper resilience", () => {
   // Replicate for testing
-  const fmt = (v: any): string => {
+  const fmt = (v: number | string | boolean | null | undefined): string => {
     if (v == null) return ""
-    const n = Math.round(v * 100) / 100
+    const n = Math.round(Number(v) * 100) / 100
     if (Number.isNaN(n)) return ""
     return String(n)
   }
@@ -482,18 +482,19 @@ describe("fmt helper resilience", () => {
   it("handles Infinity", () => expect(fmt(Infinity)).toBe("Infinity"))
   it("handles -Infinity", () => expect(fmt(-Infinity)).toBe("-Infinity"))
   it("handles very small decimals", () => expect(fmt(0.001)).toBe("0"))
-  it("handles string coercion", () => expect(fmt("42" as any)).toBe("42"))
+  it("handles string coercion", () => expect(fmt("42")).toBe("42"))
   it("handles boolean coercion", () => {
     // true * 100 = 100, round = 100
-    expect(fmt(true as any)).toBe("1")
+    expect(fmt(true)).toBe("1")
   })
 })
 
 // ── Network degree distribution resilience ──────────────────────────────
 
 describe("network degree distribution", () => {
-  function computeDegrees(edges: Array<{ source?: any; target?: any }>): Map<string, number> {
-    const degreeMap = new Map<string, number>()
+  type NetworkEndpoint = string | number | ({ id?: string | number } & Record<string, unknown>) | null | undefined
+  function computeDegrees(edges: Array<{ source?: NetworkEndpoint; target?: NetworkEndpoint }>): Map<string | number, number> {
+    const degreeMap = new Map<string | number, number>()
     for (const e of edges) {
       const src = typeof e.source === "object" ? e.source?.id : e.source
       const tgt = typeof e.target === "object" ? e.target?.id : e.target
@@ -546,9 +547,9 @@ describe("network degree distribution", () => {
     const edges = [{ source: 1, target: 2 }, { source: 1, target: 3 }]
     const degrees = computeDegrees(edges)
     // typeof 1 !== "object", so raw number is used as key
-    expect(degrees.get(1 as any)).toBe(2)
-    expect(degrees.get(2 as any)).toBe(1)
-    expect(degrees.get(3 as any)).toBe(1)
+    expect(degrees.get(1)).toBe(2)
+    expect(degrees.get(2)).toBe(1)
+    expect(degrees.get(3)).toBe(1)
   })
 
   it("handles self-loops", () => {

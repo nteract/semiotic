@@ -1,7 +1,7 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { Treemap } from "./Treemap"
+import { Treemap, type TreemapProps } from "./Treemap"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock NetworkFrame to capture props
@@ -32,6 +32,7 @@ describe("Treemap", () => {
       ]}
     ]
   }
+  type TreemapData = TreemapProps<typeof sampleData>["data"]
 
   it("renders without crashing with minimal props", () => {
     const { container } = render(
@@ -47,7 +48,7 @@ describe("Treemap", () => {
   it("handles missing data gracefully", () => {
     const { container } = render(
       <TooltipProvider>
-        <Treemap data={null as any} />
+        <Treemap data={null as unknown as TreemapData} />
       </TooltipProvider>
     )
 
@@ -111,7 +112,7 @@ describe("Treemap", () => {
         <Treemap
           data={customData}
           childrenAccessor="items"
-          valueAccessor="size"
+          valueAccessor={(d) => d.size as number}
           nodeIdAccessor="id"
         />
       </TooltipProvider>

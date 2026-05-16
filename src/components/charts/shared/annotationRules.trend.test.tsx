@@ -7,6 +7,7 @@
 import { describe, it, expect } from "vitest"
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { scaleLinear } from "d3-scale"
 import { createDefaultAnnotationRules } from "./annotationRules"
 import type { AnnotationContext } from "../../realtime/types"
 
@@ -14,18 +15,15 @@ import type { AnnotationContext } from "../../realtime/types"
 // need their interpolation: a function that maps domain → range is
 // the entire shape the trend handler reads.
 function makeLinearScale(domain: [number, number], range: [number, number]) {
-  const [d0, d1] = domain
-  const [r0, r1] = range
-  // Cast to `any` so we can stash a function into the slot the
-  // shared type narrows to ScaleLinear<number, number>.
-  return ((v: number) => r0 + ((v - d0) / (d1 - d0)) * (r1 - r0)) as any
+  return scaleLinear().domain(domain).range(range)
 }
 
 // Band-style category-name → pixel-center scale, mirroring
 // OrdinalSVGOverlay's `oCentered`. Stable category order is implied
 // by the input map.
 function makeBandScale(centers: Record<string, number>) {
-  return ((name: string) => centers[name]) as any
+  type AnnotationAxisScale = NonNullable<NonNullable<AnnotationContext["scales"]>["x"]>
+  return ((name: string) => centers[name]) as unknown as AnnotationAxisScale
 }
 
 const rules = createDefaultAnnotationRules("ordinal")
@@ -51,7 +49,6 @@ describe("trend annotation — ordinal frame", () => {
       scales: {
         x: makeBandScale({ Q1: 50, Q2: 150, Q3: 250, Q4: 350 }),
         y: makeLinearScale([0, 50], [200, 0]), // inverted Y (typical SVG)
-        o: undefined as any,
       },
     }
 
@@ -64,7 +61,7 @@ describe("trend annotation — ordinal frame", () => {
       // First trend point: index 0 → x = scaleX("Q1") = 50, y = scaleY(10) = 160.
       // Last: index 3 → x = scaleX("Q4") = 350, y = scaleY(40) = 40.
       expect(html).toContain("50,160")
-      expect(html).toContain("350,40")
+      expect(html).toMatch(/350,(?:40|39\.9+)/)
     })
 
     it("renders a label at the line's right end when label is set", () => {
@@ -102,7 +99,6 @@ describe("trend annotation — ordinal frame", () => {
         // axis flips.
         x: makeLinearScale([0, 30], [0, 400]),
         y: makeBandScale({ Low: 100, Mid: 150, High: 200 }),
-        o: undefined as any,
       },
     }
 
@@ -146,7 +142,6 @@ describe("trend annotation — ordinal frame", () => {
       scales: {
         x: makeBandScale({ Q1: 50, Q2: 200, Q3: 350 }),
         y: makeLinearScale([0, 50], [200, 0]),
-        o: undefined as any,
       },
     }
 
@@ -180,7 +175,6 @@ describe("trend annotation — ordinal frame", () => {
       scales: {
         x: makeBandScale({ A: 50, B: 150, C: 250, D: 350, E: 450 }),
         y: makeLinearScale([0, 15], [300, 0]),
-        o: undefined as any,
       },
     }
 
@@ -207,7 +201,6 @@ describe("trend annotation — ordinal frame", () => {
       scales: {
         x: makeBandScale({ A: 50, B: 150 }),
         y: makeLinearScale([0, 100], [200, 0]),
-        o: undefined as any,
       },
     }
 

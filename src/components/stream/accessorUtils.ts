@@ -25,8 +25,10 @@ export function accessorsEquivalent(
   return false
 }
 
+export type CoercibleNumber = number | Date | string
+
 export function resolveAccessor<T extends Record<string, unknown>>(
-  accessor: string | ((d: T) => number) | undefined,
+  accessor: string | ((d: T) => CoercibleNumber) | undefined,
   fallback: string
 ): (d: T) => number {
   if (typeof accessor === "function") return (d: T) => +accessor(d)

@@ -1,7 +1,7 @@
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
-import { ForceDirectedGraph } from "./ForceDirectedGraph"
+import { ForceDirectedGraph, type ForceDirectedGraphProps } from "./ForceDirectedGraph"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock NetworkFrame to capture props
@@ -92,7 +92,7 @@ describe("ForceDirectedGraph", () => {
           nodes={sampleNodes}
           edges={sampleEdges}
           nodeIdAccessor="id"
-          nodeIDAccessor="legacy_id_field"
+          nodeIDAccessor={"legacy_id_field" as unknown as ForceDirectedGraphProps<typeof sampleNodes[number], typeof sampleEdges[number]>["nodeIDAccessor"]}
         />
       </TooltipProvider>
     )
