@@ -241,6 +241,7 @@ function DefaultTooltip({ hover }: { hover: HoverData }) {
     </div>
   )
 }
+;(DefaultTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
 
 // ── Crosshair drawing ──────────────────────────────────────────────────
 

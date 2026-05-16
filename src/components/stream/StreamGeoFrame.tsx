@@ -148,6 +148,7 @@ function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
     </div>
   )
 }
+;(DefaultGeoTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
 
 // ── StreamGeoFrame ─────────────────────────────────────────────────────
 

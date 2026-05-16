@@ -177,6 +177,11 @@ function DefaultNetworkTooltip({
     </div>
   )
 }
+// Tell FlippingTooltip's chrome detector that this component paints its
+// own chrome internally. Without this, the wrapper double-wraps and a
+// theme with a light tooltip background (Carbon, journalist-light, etc.)
+// reads as a white box around the tooltip text.
+;(DefaultNetworkTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
 
 // ── StreamNetworkFrame ─────────────────────────────────────────────────
 

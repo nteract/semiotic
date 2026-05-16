@@ -162,6 +162,27 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     const wrapper = container.firstChild as HTMLElement
     expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
   })
+
+  it("respects a component-level `ownsChrome` flag (DefaultNetworkTooltip pattern)", () => {
+    // Regression: the inline prop checks below only see the React
+    // element's props at JSX time, not its rendered output. The
+    // Default*Tooltip components paint chrome internally via the
+    // semiotic-tooltip className. Without the flag, FlippingTooltip
+    // would double-wrap them — visible on a Carbon-light theme as
+    // a white box around the tooltip.
+    function ChromedTooltip() {
+      return <div className="semiotic-tooltip" style={{ background: "white" }}>chrome</div>
+    }
+    ;(ChromedTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
+
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <ChromedTooltip />
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBe("")
+  })
 })
 
 describe("FlippingTooltip — non-finite position guard", () => {
