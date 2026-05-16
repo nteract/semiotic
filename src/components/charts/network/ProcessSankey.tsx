@@ -769,6 +769,18 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
 
   const formatTime = useCallback((t: number): React.ReactNode => {
     if (timeFormat) return timeFormat(new Date(t))
+    // When `timeFormat` isn't supplied, sniff the value scale. Real
+    // timestamps (ms since epoch) sit above ~1e10; small integers /
+    // floats below that are "tick numbers" — day indices, week
+    // counts, sequence positions — and have to print as-is or
+    // they collapse into 1970-01-01. The old default ran every
+    // value through `new Date(t).toISOString()`, which printed
+    // every short-domain ProcessSankey (Day 0–7, Month 1–12, etc.)
+    // as the Unix epoch.
+    if (!Number.isFinite(t)) return ""
+    if (Math.abs(t) < 1e10) {
+      return Number.isInteger(t) ? String(t) : t.toFixed(2)
+    }
     return new Date(t).toISOString().slice(0, 10)
   }, [timeFormat])
 

@@ -231,6 +231,14 @@ export default function AnscombesSankey() {
   // scenarios — whose late admits push some patient journeys past the
   // end of a strict 7-day window — don't clip at the chart's right edge.
   const dayTicks = useMemo(() => Array.from({ length: 9 }, (_, i) => ({ date: i, label: `Day ${i}` })), [])
+  // Match the day-axis labels in tooltips. ProcessSankey ships a Date
+  // formatter as default; without an explicit `timeFormat`, our small
+  // day-index values would render as 1970-01-01.
+  const dayLabel = useMemo(() => (d) => {
+    const day = Number(d)
+    if (!Number.isFinite(day)) return ""
+    return Number.isInteger(day) ? `Day ${day}` : `Day ${day.toFixed(2)}`
+  }, [])
   // Memoize per-scenario edges too so each ProcessSankey only re-runs
   // its layout when its own data actually changes (i.e., never).
   const scenarioEdges = useMemo(() => scenarios.map((s) => buildEdges(s.times)), [])
@@ -307,6 +315,7 @@ export default function AnscombesSankey() {
                     systemInTimeAccessor="systemInDay"
                     domain={[0, 8]}
                     axisTicks={dayTicks}
+                    timeFormat={dayLabel}
                     colorBy="id"
                     colorScheme={carbonScheme}
                     showLegend={false}

@@ -467,6 +467,16 @@ const dayTicks = Array.from({ length: 8 }, (_, i) => ({
   label: `Day ${i}`,
 }))
 
+// Tooltip time formatter — match the axis-label convention so the
+// tooltip's start/end fields read as "Day N" too. Without this the
+// chart's default `new Date(t).toISOString()` formatter renders the
+// small day numbers as 1970-01-01.
+const dayLabel = (d) => {
+  const day = Number(d)
+  if (!Number.isFinite(day)) return ""
+  return Number.isInteger(day) ? `Day ${day}` : `Day ${day.toFixed(2)}`
+}
+
 // Carbon palette — same 5-element subset for both diagrams so the
 // ward identities are visually consistent across them.
 const carbonScheme = [
@@ -574,6 +584,7 @@ export default function PatientJourneys() {
               systemInTimeAccessor="systemInDay"
               domain={[0, 7]}
               axisTicks={dayTicks}
+              timeFormat={dayLabel}
               colorBy="id"
               colorScheme={carbonScheme}
               showLegend

@@ -92,10 +92,22 @@ const carbonScheme = [
 // Month-label tick set for ProcessSankey's x-axis. The chart accepts
 // arbitrary `{ date, label }` ticks; using calendar months keeps the
 // reading mental-model intuitive.
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 const monthTicks = Array.from({ length: 12 }, (_, i) => ({
   date: i + 1,
-  label: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][i],
+  label: MONTHS[i],
 }))
+
+// Tooltip time formatter — match the axis labels so the tooltip's
+// start/end fields read as month names too. Default formatter assumes
+// ms-since-epoch, which renders our 1..13 month indices as 1970-01-01.
+const monthLabel = (m) => {
+  const n = Number(m)
+  if (!Number.isFinite(n)) return ""
+  const idx = Math.floor(n) - 1
+  if (idx >= 0 && idx < 12) return MONTHS[idx]
+  return n === 13 ? "Dec end" : String(n)
+}
 
 // ProcessSankey passes `startMonth` / `endMonth` through verbatim, so
 // `domain` is just `[1, 13]` (the 13 is "end-of-year" — a sentinel
@@ -188,6 +200,7 @@ export default function WaterCycleFlow() {
               endTimeAccessor="endMonth"
               domain={[1, 13]}
               axisTicks={monthTicks}
+              timeFormat={monthLabel}
               colorBy="id"
               colorScheme={carbonScheme}
               showLegend
