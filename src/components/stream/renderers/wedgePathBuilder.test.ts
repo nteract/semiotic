@@ -16,16 +16,8 @@
 import { describe, it, expect } from "vitest"
 import { annularSectorPath } from "./wedgePathBuilder"
 
-// Count `A r r` arc commands in a path string. Each rounded corner
-// emits an A command with the cornerRadius value; arc segments on the
-// outer / inner radius emit A commands with R / innerR.
-function countArcs(path: string): { corner: number; total: number; commands: string[] } {
-  const commands = path.match(/[MLAZ]/g) ?? []
-  const total = (path.match(/A/g) ?? []).length
-  // Corner radius arcs use a small radius; outer / inner radius arcs
-  // use the wedge's actual radii. The helper doesn't tag them, so we
-  // count by matching A followed by the small `cr,cr` pair.
-  return { corner: 0, total, commands }
+function countArcCommands(path: string): number {
+  return (path.match(/A/g) ?? []).length
 }
 
 describe("annularSectorPath", () => {
@@ -40,17 +32,15 @@ describe("annularSectorPath", () => {
     const d = annularSectorPath(baseAnnular)
     // Square: M, outer-arc A, L (radial), inner-arc A, Z. No corner-r A.
     expect(d).toMatch(/^M[^A]+A[^A]+A[^A]+Z$/)
-    const { total } = countArcs(d)
     // Outer arc + inner arc = 2 A commands; no corner roundings.
-    expect(total).toBe(2)
+    expect(countArcCommands(d)).toBe(2)
   })
 
   it("emits a square sector when cornerRadius is set but no end is opted in", () => {
     const d = annularSectorPath({ ...baseAnnular, cornerRadius: 10 })
     // Without `roundStart` / `roundEnd`, the helper short-circuits to
     // the no-rounding fast path even though cornerRadius is set.
-    const { total } = countArcs(d)
-    expect(total).toBe(2)
+    expect(countArcCommands(d)).toBe(2)
   })
 
   it("middle-wedge case: cornerRadius set + both flags false ⇒ square sector", () => {
@@ -65,28 +55,24 @@ describe("annularSectorPath", () => {
       roundStart: false,
       roundEnd: false,
     })
-    const { total } = countArcs(d)
-    expect(total).toBe(2)
+    expect(countArcCommands(d)).toBe(2)
   })
 
   it("emits four arc commands when only start is rounded", () => {
     const d = annularSectorPath({ ...baseAnnular, cornerRadius: 8, roundStart: true })
     // Outer arc + inner arc + 2 corner arcs (outer-start + inner-start).
-    const { total } = countArcs(d)
-    expect(total).toBe(4)
+    expect(countArcCommands(d)).toBe(4)
   })
 
   it("emits four arc commands when only end is rounded", () => {
     const d = annularSectorPath({ ...baseAnnular, cornerRadius: 8, roundEnd: true })
-    const { total } = countArcs(d)
-    expect(total).toBe(4)
+    expect(countArcCommands(d)).toBe(4)
   })
 
   it("emits six arc commands when both ends are rounded", () => {
     const d = annularSectorPath({ ...baseAnnular, cornerRadius: 8, roundStart: true, roundEnd: true })
     // Outer + inner arcs + 4 corner arcs (one per corner).
-    const { total } = countArcs(d)
-    expect(total).toBe(6)
+    expect(countArcCommands(d)).toBe(6)
   })
 
   it("clamps cornerRadius to ringWidth/2 (corner circles never cross the ring midline)", () => {
@@ -103,8 +89,7 @@ describe("annularSectorPath", () => {
     })
     // Verify the path still has 6 A commands (well-formed); a broken
     // clamp would produce a non-closed or self-intersecting path.
-    const { total } = countArcs(d)
-    expect(total).toBe(6)
+    expect(countArcCommands(d)).toBe(6)
   })
 
   it("falls back to unrounded path when angular sweep is too narrow for cornerRadius to fit", () => {
@@ -120,8 +105,7 @@ describe("annularSectorPath", () => {
       roundEnd: true,
     })
     // Fall back: should produce the square fast path (2 A's only).
-    const { total } = countArcs(d)
-    expect(total).toBe(2)
+    expect(countArcCommands(d)).toBe(2)
   })
 
   it("supports pie sectors (innerRadius = 0)", () => {

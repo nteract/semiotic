@@ -73,6 +73,16 @@ type StaticFrameProps =
   (StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps | StreamGeoFrameProps) &
   ThemeAwareProps
 type CategoricalAccessor = string | ((d: Datum) => string)
+type EdgeEndpoint = RealtimeEdge["source"] | RealtimeEdge["target"] | null | undefined
+
+function edgeEndpointId(endpoint: EdgeEndpoint): string | null {
+  if (typeof endpoint === "string") return endpoint
+  if (endpoint && typeof endpoint === "object") {
+    const id = (endpoint as { id?: unknown }).id
+    return id == null ? null : String(id)
+  }
+  return null
+}
 
 /** Generate a short stable ID from chart props for unique SVG element IDs */
 function chartUID(props: Datum): string {
@@ -616,10 +626,10 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     if (propsNodes.length === 0 && edges.length > 0) {
       const nodeIds = new Set<string>()
       for (const e of edges) {
-        const src = typeof e.source === "string" ? e.source : e.source.id
-        const tgt = typeof e.target === "string" ? e.target : e.target.id
-        nodeIds.add(src)
-        nodeIds.add(tgt)
+        const src = edgeEndpointId(e.source)
+        const tgt = edgeEndpointId(e.target)
+        if (src) nodeIds.add(src)
+        if (tgt) nodeIds.add(tgt)
       }
       nodes = Array.from(nodeIds).map((id) => ({
         id,
@@ -747,8 +757,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
       ? nodes.map((node) => node.data || { id: node.id })
       : Array.from(new Set(
         edges.flatMap((e) => {
-          const src = typeof e.source === "string" ? e.source : e.source.id
-          const tgt = typeof e.target === "string" ? e.target : e.target.id
+          const src = edgeEndpointId(e.source)
+          const tgt = edgeEndpointId(e.target)
           return [src, tgt]
         }).filter(Boolean)
       )).map((id) => ({ id }))

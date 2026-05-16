@@ -89,7 +89,7 @@ export function annularSectorPath(opts: AnnularPathOptions): string {
   const ringWidth = outerRadius - innerRadius
   const cr = Math.max(0, Math.min(opts.cornerRadius ?? 0, ringWidth / 2))
   if (cr === 0) {
-    return annularSectorPath({ ...opts, cornerRadius: 0 })
+    return annularSectorPath({ ...opts, cornerRadius: 0, roundStart: false, roundEnd: false })
   }
 
   // Angular setback at each radius. `(R - cr)` is the corner-circle
@@ -109,7 +109,7 @@ export function annularSectorPath(opts: AnnularPathOptions): string {
   const roundEnd = !!opts.roundEnd && phiOuter < maxPhiPerEnd
 
   if (!roundStart && !roundEnd) {
-    return annularSectorPath({ ...opts, cornerRadius: 0 })
+    return annularSectorPath({ ...opts, cornerRadius: 0, roundStart: false, roundEnd: false })
   }
 
   // Effective inner/outer arc endpoints after accounting for rounded
@@ -133,18 +133,16 @@ export function annularSectorPath(opts: AnnularPathOptions): string {
   // Radial-line tangent points (outer side). Distance from origin to
   // the foot of perpendicular from the corner circle's center to the
   // radial line: (R - cr) * cos(phi).
-  const tStartOuterDist = (outerRadius - cr) * Math.cos(phiOuter)
-  const tEndOuterDist = (outerRadius - cr) * Math.cos(phiOuter)
-  const tStartOuter = polar(tStartOuterDist, startAngle)
-  const tEndOuter = polar(tEndOuterDist, endAngle)
+  const outerCornerDist = (outerRadius - cr) * Math.cos(phiOuter)
+  const tStartOuter = polar(outerCornerDist, startAngle)
+  const tEndOuter = polar(outerCornerDist, endAngle)
 
   // Inner arc endpoints + radial-line tangent points.
   const C = isPie ? null : polar(innerRadius, bInner)
   const D = isPie ? null : polar(innerRadius, aInner)
-  const tStartInnerDist = isPie ? 0 : (innerRadius + cr) * Math.cos(phiInner)
-  const tEndInnerDist = isPie ? 0 : (innerRadius + cr) * Math.cos(phiInner)
-  const tStartInner = isPie ? null : polar(tStartInnerDist, startAngle)
-  const tEndInner = isPie ? null : polar(tEndInnerDist, endAngle)
+  const innerCornerDist = isPie ? 0 : (innerRadius + cr) * Math.cos(phiInner)
+  const tStartInner = isPie ? null : polar(innerCornerDist, startAngle)
+  const tEndInner = isPie ? null : polar(innerCornerDist, endAngle)
 
   // Outer arc sweep flag.
   const outerSweepLarge = (bOuter - aOuter) > Math.PI ? 1 : 0

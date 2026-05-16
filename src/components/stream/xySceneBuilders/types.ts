@@ -41,7 +41,7 @@ export interface XYSceneContext {
 
 /** Subset of PipelineConfig fields that scene builders need */
 export interface XYSceneConfig {
-  chartType: string
+  chartType?: string
   curve?: CurveType
   colorScheme?: string | string[]
   normalize?: boolean
@@ -49,7 +49,7 @@ export interface XYSceneConfig {
   baseline?: "zero" | "wiggle" | "silhouette"
   /** Stack order — see PipelineConfig.stackOrder. */
   stackOrder?: "key" | "insideOut" | "asc" | "desc"
-  gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+  gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   areaGroups?: Set<string>
   lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
   annotations?: Datum[]
@@ -77,7 +77,7 @@ export interface XYSceneConfig {
   // Theme-resolved semantic role colors — default fallbacks when no user
   // color is set. Populated by the Stream Frame from active SemioticTheme.
   // See `ThemeSemanticColors` in ../types for the canonical definition.
-  themeSemantic?: ThemeSemanticColors
+  themeSemantic?: Partial<ThemeSemanticColors>
   /** Theme sequential scheme name — fallback when colorScheme is not set (heatmap). */
   themeSequential?: string
   /** Theme diverging scheme name — fallback when colorScheme is not set. */

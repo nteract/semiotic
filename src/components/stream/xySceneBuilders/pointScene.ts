@@ -8,12 +8,12 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * Dependencies: SceneGraph (buildPointNode)
  * Consumed by: PipelineStore.buildSceneNodes (chartTypes "scatter", "bubble")
  */
-import type { SceneNode } from "../types"
+import type { PointSceneNode } from "../types"
 import { buildPointNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 
-export function buildPointScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
-  const nodes: SceneNode[] = []
+export function buildPointScene(ctx: XYSceneContext, data: Datum[]): PointSceneNode[] {
+  const nodes: PointSceneNode[] = []
   const defaultR = ctx.config.chartType === "bubble" ? 10 : 5
   const sizeRange = ctx.config.sizeRange || [3, 15]
 

@@ -7,7 +7,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as unknown,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -81,10 +81,10 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(3)
-    expect((nodes[0] as unknown).style.fill).toBe("#0f0")
-    expect((nodes[1] as unknown).style.fill).toBe("#f00")
+    expect(nodes[0].style.fill).toBe("#0f0")
+    expect(nodes[1].style.fill).toBe("#f00")
     // zero delta >= 0, so positive
-    expect((nodes[2] as unknown).style.fill).toBe("#0f0")
+    expect(nodes[2].style.fill).toBe("#0f0")
   })
 
   it("uses default colors when waterfallStyle is not provided", () => {
@@ -95,8 +95,8 @@ describe("buildWaterfallScene", () => {
     const ctx = makeCtx()
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
-    expect((nodes[0] as unknown).style.fill).toBe("#28a745")
-    expect((nodes[1] as unknown).style.fill).toBe("#dc3545")
+    expect(nodes[0].style.fill).toBe("#28a745")
+    expect(nodes[1].style.fill).toBe("#dc3545")
   })
 
   it("filters out null/NaN Y values", () => {
@@ -157,12 +157,12 @@ describe("buildWaterfallScene", () => {
 
     expect(nodes).toHaveLength(2)
     // Both bars have barWidth = 10 - 4 = 6
-    expect((nodes[0] as unknown).w).toBe(6)
-    expect((nodes[1] as unknown).w).toBe(6)
+    expect(nodes[0].w).toBe(6)
+    expect(nodes[1].w).toBe(6)
     // First bar starts at gap/2 = 2
-    expect((nodes[0] as unknown).x).toBe(2)
+    expect(nodes[0].x).toBe(2)
     // Second bar starts at 10 + gap/2 = 12
-    expect((nodes[1] as unknown).x).toBe(12)
+    expect(nodes[1].x).toBe(12)
   })
 
   it("uses fallback bar width for single data point", () => {
@@ -174,7 +174,7 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(1)
-    const bar = nodes[0] as unknown
+    const bar = nodes[0]
     // rawX0 = 5, rawX1 = 5 + 400/10 = 45
     // x0 = 5 + 0.5 = 5.5, x1 = 45 - 0.5 = 44.5
     expect(bar.x).toBe(5.5)
@@ -214,13 +214,13 @@ describe("buildWaterfallScene", () => {
     const ctx = makeCtx({ config: { waterfallStyle: { gap: 0 } } })
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
-    const bar1 = nodes[0] as unknown
+    const bar1 = nodes[0]
     expect(bar1.x).toBe(0)
     expect(bar1.y).toBe(0)
     expect(bar1.w).toBe(10)
     expect(bar1.h).toBe(10)
 
-    const bar2 = nodes[1] as unknown
+    const bar2 = nodes[1]
     expect(bar2.x).toBe(10)
     expect(bar2.y).toBe(7)
     expect(bar2.w).toBe(10)
@@ -236,8 +236,8 @@ describe("buildWaterfallScene", () => {
     })
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
-    expect((nodes[0] as unknown).style.stroke).toBe("#333")
-    expect((nodes[0] as unknown).style.strokeWidth).toBe(2)
+    expect(nodes[0].style.stroke).toBe("#333")
+    expect(nodes[0].style.strokeWidth).toBe(2)
   })
 
   it("stores connector metadata on datum for downstream rendering", () => {
@@ -288,7 +288,7 @@ describe("buildWaterfallScene", () => {
       const ctx = makeCtx({
         config: { themeSemantic: { success: "#0b8457", danger: "#c23030" } },
       })
-      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as unknown[]
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout)
       expect(nodes[0].style.fill).toBe("#0b8457")
     })
 
@@ -297,7 +297,7 @@ describe("buildWaterfallScene", () => {
       const ctx = makeCtx({
         config: { themeSemantic: { success: "#0b8457", danger: "#c23030" } },
       })
-      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as unknown[]
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout)
       expect(nodes[0].style.fill).toBe("#c23030")
     })
 
@@ -309,7 +309,7 @@ describe("buildWaterfallScene", () => {
           themeSemantic: { success: "#0b8457" },
         },
       })
-      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as unknown[]
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout)
       expect(nodes[0].style.fill).toBe("#ff00aa")
     })
 
@@ -321,7 +321,7 @@ describe("buildWaterfallScene", () => {
           themeSemantic: { danger: "#c23030" },
         },
       })
-      const nodes = buildWaterfallScene(ctx, data, defaultLayout) as unknown[]
+      const nodes = buildWaterfallScene(ctx, data, defaultLayout)
       expect(nodes[0].style.fill).toBe("#ff00aa")
     })
 

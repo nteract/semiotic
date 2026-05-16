@@ -9,13 +9,13 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * Dependencies: BinAccumulator (computeBins), SceneGraph (buildRectNode)
  * Consumed by: PipelineStore.buildSceneNodes (chartType "bar")
  */
-import type { SceneNode } from "../types"
+import type { RectSceneNode } from "../types"
 import { computeBins } from "../../realtime/BinAccumulator"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 
 export interface BarSceneResult {
-  nodes: SceneNode[]
+  nodes: RectSceneNode[]
   /** Sorted bin boundary values (edges of all bins) for data-driven brush snapping */
   binBoundaries: number[]
 }
@@ -48,7 +48,7 @@ export function buildBarScene(ctx: XYSceneContext, data: Datum[]): BarSceneResul
     }
   }
 
-  const nodes: SceneNode[] = []
+  const nodes: RectSceneNode[] = []
   const scales = ctx.scales
   const [domainMin, domainMax] = scales.x.domain() as [number, number]
 

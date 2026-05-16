@@ -7,7 +7,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as unknown,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -332,14 +332,14 @@ describe("buildPointScene", () => {
     const ctx = makeCtx({
       config: { chartType: "scatter", themeSemantic: { primary: "#0f62fe" } },
     })
-    const nodes = buildPointScene(ctx, data) as unknown[]
+    const nodes = buildPointScene(ctx, data)
     expect(nodes[0].style.fill).toBe("#0f62fe")
   })
 
   it("hardcoded hex fallback remains when no theme is in scope", () => {
     const data = [{ x: 10, y: 20 }]
     const ctx = makeCtx({ config: { chartType: "scatter" } })
-    const nodes = buildPointScene(ctx, data) as unknown[]
+    const nodes = buildPointScene(ctx, data)
     expect(nodes[0].style.fill).toBe("#4e79a7")
   })
 
@@ -352,7 +352,7 @@ describe("buildPointScene", () => {
         themeSemantic: { primary: "#0f62fe" },
       },
     })
-    const nodes = buildPointScene(ctx, data) as unknown[]
+    const nodes = buildPointScene(ctx, data)
     expect(nodes[0].style.fill).toBe("#ff00aa")
   })
 })

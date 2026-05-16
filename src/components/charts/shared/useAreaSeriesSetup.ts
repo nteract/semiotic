@@ -158,8 +158,7 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
       groupedAreas = safeData
     } else {
       // areaBy is non-null here (guarded by the early return above)
-      const areaAccessor = areaBy
-      if (!areaAccessor) return safeData
+      const areaAccessor = areaBy!
       const grouped = safeData.reduce((acc, d) => {
         const key = typeof areaAccessor === "function" ? areaAccessor(d) : d[areaAccessor]
         if (!acc[key]) {

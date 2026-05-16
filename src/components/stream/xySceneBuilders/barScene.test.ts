@@ -6,7 +6,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as unknown,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -70,7 +70,7 @@ describe("buildBarScene", () => {
     const ctx = makeCtx({ config: { binSize: 10 } })
     const result = buildBarScene(ctx, data)
     expect(result.nodes).toHaveLength(1)
-    const node = result.nodes[0] as unknown
+    const node = result.nodes[0]
     // With identity scales, the datum total should be 2 (sum of y values)
     expect(node.datum.total).toBe(2)
     expect(node.datum.binStart).toBe(10)
@@ -89,7 +89,7 @@ describe("buildBarScene", () => {
     const result = buildBarScene(ctx, data)
     // Only the bin [50, 60) should produce a node
     expect(result.nodes).toHaveLength(1)
-    expect((result.nodes[0] as unknown).datum.binStart).toBe(50)
+    expect(result.nodes[0].datum.binStart).toBe(50)
     // But binBoundaries still includes the out-of-domain bin from computeBins
     expect(result.binBoundaries).toContain(150)
     expect(result.binBoundaries).toContain(160)
@@ -108,8 +108,8 @@ describe("buildBarScene", () => {
     // Same bin [0, 10), two categories => two rect nodes stacked
     expect(result.nodes).toHaveLength(2)
 
-    const nodeA = result.nodes.find((n) => (n as unknown).group === "A") as unknown
-    const nodeB = result.nodes.find((n) => (n as unknown).group === "B") as unknown
+    const nodeA = result.nodes.find((n) => n.group === "A")
+    const nodeB = result.nodes.find((n) => n.group === "B")
     expect(nodeA).toBeDefined()
     expect(nodeB).toBeDefined()
 
@@ -135,8 +135,8 @@ describe("buildBarScene", () => {
       getCategory: (d) => d.cat,
     })
     const result = buildBarScene(ctx, data)
-    const nodeX = result.nodes.find((n) => (n as unknown).group === "X") as unknown
-    const nodeY = result.nodes.find((n) => (n as unknown).group === "Y") as unknown
+    const nodeX = result.nodes.find((n) => n.group === "X")
+    const nodeY = result.nodes.find((n) => n.group === "Y")
     expect(nodeX.style.fill).toBe("#ff0000")
     expect(nodeY.style.fill).toBe("#00ff00")
   })
@@ -149,7 +149,7 @@ describe("buildBarScene", () => {
     })
     const result = buildBarScene(ctx, data)
     expect(result.nodes).toHaveLength(1)
-    expect((result.nodes[0] as unknown).style.fill).toBe("#4e79a7")
+    expect(result.nodes[0].style.fill).toBe("#4e79a7")
   })
 
   it("empty bins are skipped — no zero-height bars", () => {
@@ -158,7 +158,7 @@ describe("buildBarScene", () => {
     const ctx = makeCtx({ config: { binSize: 10 } })
     const result = buildBarScene(ctx, data)
     expect(result.nodes).toHaveLength(1)
-    expect((result.nodes[0] as unknown).datum.binStart).toBe(20)
+    expect(result.nodes[0].datum.binStart).toBe(20)
   })
 
   it("gap is applied to bar width — bars are narrower than full bin width", () => {
@@ -168,7 +168,7 @@ describe("buildBarScene", () => {
     const data = [{ x: 5, y: 1 }]
     const ctx = makeCtx({ config: { binSize: 10 } })
     const result = buildBarScene(ctx, data)
-    const node = result.nodes[0] as unknown
+    const node = result.nodes[0]
     expect(node.x).toBe(0.5)
     expect(node.w).toBe(9)
   })
@@ -226,7 +226,7 @@ describe("buildBarScene", () => {
     const ctx = makeCtx({ config: { binSize: 10 } })
     const result = buildBarScene(ctx, data)
     expect(result.nodes).toHaveLength(1)
-    const node = result.nodes[0] as unknown
+    const node = result.nodes[0]
     expect(node.style.fill).toBe("#007bff")
     expect(node.datum.total).toBe(7)
     expect(node.group).toBeUndefined()
@@ -242,7 +242,7 @@ describe("buildBarScene", () => {
     const ctx = makeCtx({ config: { binSize: 10 } })
     const result = buildBarScene(ctx, data)
     expect(result.nodes).toHaveLength(2)
-    const starts = result.nodes.map((n) => (n as unknown).datum.binStart).sort((a: number, b: number) => a - b)
+    const starts = result.nodes.map((n) => n.datum.binStart).sort((a: number, b: number) => a - b)
     expect(starts).toEqual([10, 20])
   })
 
@@ -261,7 +261,7 @@ describe("buildBarScene", () => {
       config: { binSize: 10, themeSemantic: { primary: "#0f62fe" } },
     })
     const result = buildBarScene(ctx, data)
-    expect((result.nodes[0] as unknown).style.fill).toBe("#0f62fe")
+    expect(result.nodes[0].style.fill).toBe("#0f62fe")
   })
 
   it("stacked bars use themeSemantic.primary when category not in barColors", () => {
@@ -272,7 +272,7 @@ describe("buildBarScene", () => {
     })
     const result = buildBarScene(ctx, data)
     // Z isn't in barColors, so falls through to themeSemantic.primary
-    expect((result.nodes[0] as unknown).style.fill).toBe("#0f62fe")
+    expect(result.nodes[0].style.fill).toBe("#0f62fe")
   })
 
   it("barColors wins over themeSemantic.primary for listed categories", () => {
@@ -282,7 +282,7 @@ describe("buildBarScene", () => {
       getCategory: (d) => d.cat,
     })
     const result = buildBarScene(ctx, data)
-    expect((result.nodes[0] as unknown).style.fill).toBe("#ff00aa")
+    expect(result.nodes[0].style.fill).toBe("#ff00aa")
   })
 
   it("barStyle.fill wins over themeSemantic.primary for unstacked bars", () => {
@@ -295,7 +295,7 @@ describe("buildBarScene", () => {
       },
     })
     const result = buildBarScene(ctx, data)
-    expect((result.nodes[0] as unknown).style.fill).toBe("#ff00aa")
+    expect(result.nodes[0].style.fill).toBe("#ff00aa")
   })
 
   it("barStyle.fill wins over themeSemantic.primary for stacked fall-through", () => {
@@ -314,14 +314,14 @@ describe("buildBarScene", () => {
     })
     const result = buildBarScene(ctx, data)
     // Z is not in barColors → next in precedence is barStyle.fill
-    expect((result.nodes[0] as unknown).style.fill).toBe("#ff00aa")
+    expect(result.nodes[0].style.fill).toBe("#ff00aa")
   })
 
   it("hardcoded hex fallback remains when no theme or user color", () => {
     const data = [{ x: 5, y: 2 }]
     const ctx = makeCtx({ config: { binSize: 10 } })
     const result = buildBarScene(ctx, data)
-    expect((result.nodes[0] as unknown).style.fill).toBe("#007bff")
+    expect(result.nodes[0].style.fill).toBe("#007bff")
   })
 
   it("barStyle.stroke + strokeWidth thread into rect style", () => {
@@ -333,7 +333,7 @@ describe("buildBarScene", () => {
       },
     })
     const result = buildBarScene(ctx, data)
-    const node = result.nodes[0] as unknown
+    const node = result.nodes[0]
     expect(node.style.stroke).toBe("var(--semiotic-border)")
     expect(node.style.strokeWidth).toBe(2)
   })
@@ -354,8 +354,8 @@ describe("buildBarScene", () => {
     const result = buildBarScene(ctx, data)
     expect(result.nodes).toHaveLength(2)
     for (const node of result.nodes) {
-      expect((node as unknown).style.stroke).toBe("#111")
-      expect((node as unknown).style.strokeWidth).toBe(1)
+      expect(node.style.stroke).toBe("#111")
+      expect(node.style.strokeWidth).toBe(1)
     }
   })
 
@@ -366,7 +366,7 @@ describe("buildBarScene", () => {
       config: { binSize: 10, barStyle: { gap: 3 } },
     })
     const result = buildBarScene(ctx, data)
-    const node = result.nodes[0] as unknown
+    const node = result.nodes[0]
     // rawWidth=10, effectiveGap=3, barWidth = 10 - 3 = 7
     expect(node.w).toBe(7)
     expect(node.x).toBe(1.5)
@@ -378,7 +378,7 @@ describe("buildBarScene", () => {
       config: { binSize: 10, barStyle: { gap: 0 } },
     })
     const result = buildBarScene(ctx, data)
-    const node = result.nodes[0] as unknown
+    const node = result.nodes[0]
     expect(node.w).toBe(10)
     expect(node.x).toBe(0)
   })

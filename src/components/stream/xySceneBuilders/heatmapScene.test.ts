@@ -7,7 +7,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as unknown,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -60,7 +60,7 @@ describe("buildHeatmapScene (static mode)", () => {
     // x=0 => xi=0, x=1 => xi=1
     // y=0 => yi=0 => screen y = (2-1-0)*200 = 200
     // y=1 => yi=1 => screen y = (2-1-1)*200 = 0
-    const byPos = nodes.map((n) => ({ x: (n as unknown).x, y: (n as unknown).y, w: (n as unknown).w, h: (n as unknown).h }))
+    const byPos = nodes.map((n) => ({ x: n.x, y: n.y, w: n.w, h: n.h }))
 
     // (x=0, y=0) => pixel (0, 200)
     expect(byPos).toContainEqual({ x: 0, y: 200, w: 200, h: 200 })
@@ -81,7 +81,7 @@ describe("buildHeatmapScene (static mode)", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(2)
 
-    const fills = nodes.map((n) => (n as unknown).fill)
+    const fills = nodes.map((n) => n.fill)
     // Min and max values should produce different colors from the sequential scale
     expect(fills[0]).not.toBe(fills[1])
   })
@@ -100,7 +100,7 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(nodes).toHaveLength(3)
 
     // With 2 x-values and 2 y-values: cellW = 400/2 = 200, cellH = 400/2 = 200
-    const widths = nodes.map((n) => (n as unknown).w)
+    const widths = nodes.map((n) => n.w)
     expect(widths.every((w: number) => w === 200)).toBe(true)
   })
 
@@ -132,7 +132,7 @@ describe("buildHeatmapScene (static mode)", () => {
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    const node = nodes[0] as unknown
+    const node = nodes[0]
     expect(node.showValues).toBe(true)
     expect(node.value).toBe(42)
   })
@@ -147,7 +147,7 @@ describe("buildHeatmapScene (static mode)", () => {
       },
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
-    const node = nodes[0] as unknown
+    const node = nodes[0]
     expect(node.valueFormat).toBe(fmt)
   })
 })
@@ -163,8 +163,8 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
     const nodes1 = buildHeatmapScene(ctx, data, defaultLayout)
     const nodes2 = buildHeatmapScene(ctx, data, defaultLayout)
 
-    const fills1 = nodes1.map((n) => (n as unknown).fill)
-    const fills2 = nodes2.map((n) => (n as unknown).fill)
+    const fills1 = nodes1.map((n) => n.fill)
+    const fills2 = nodes2.map((n) => n.fill)
     expect(fills1).toEqual(fills2)
   })
 
@@ -178,8 +178,8 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
     const nodesBlues = buildHeatmapScene(ctxBlues, data, defaultLayout)
     const nodesReds = buildHeatmapScene(ctxReds, data, defaultLayout)
 
-    const fillsBlues = nodesBlues.map((n) => (n as unknown).fill)
-    const fillsReds = nodesReds.map((n) => (n as unknown).fill)
+    const fillsBlues = nodesBlues.map((n) => n.fill)
+    const fillsReds = nodesReds.map((n) => n.fill)
     // At least one cell should differ between schemes
     expect(fillsBlues).not.toEqual(fillsReds)
   })
@@ -193,7 +193,7 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
     // Last write wins — value should be 99
-    expect((nodes[0] as unknown).value).toBe(99)
+    expect(nodes[0].value).toBe(99)
   })
 
   it("numeric x/y axes are sorted — cell positions reflect sorted order", () => {
@@ -208,7 +208,7 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
 
     // After sorting: x=5 gets xi=0, x=10 gets xi=1
     // cellW = 400/2 = 200
-    const byX = nodes.map((n) => ({ x: (n as unknown).x, val: (n as unknown).datum.value }))
+    const byX = nodes.map((n) => ({ x: n.x, val: n.datum.value }))
     const at0 = byX.find((n) => n.x === 0)
     const at200 = byX.find((n) => n.x === 200)
     expect(at0!.val).toBe(2) // x=5 (smaller) → xi=0 → pixel x=0
@@ -227,8 +227,8 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1000)
     // Cell dimensions: 400/100 = 4 wide, 400/10 = 40 tall
-    expect((nodes[0] as unknown).w).toBe(4)
-    expect((nodes[0] as unknown).h).toBe(40)
+    expect(nodes[0].w).toBe(4)
+    expect(nodes[0].h).toBe(40)
   })
 
   it("all-same-value data produces uniform fill", () => {
@@ -239,7 +239,7 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
     ]
     const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
-    const fills = new Set(nodes.map((n) => (n as unknown).fill))
+    const fills = new Set(nodes.map((n) => n.fill))
     // When min === max, all cells get the same color
     expect(fills.size).toBe(1)
   })
@@ -250,7 +250,7 @@ describe("buildStreamingHeatmapScene", () => {
     const identity = (v: number) => v
     const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
     return {
-      scales: { x: identityScale, y: identityScale } as unknown,
+      scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
       config: { heatmapAggregation: "count", heatmapXBins: 5, heatmapYBins: 5, valueAccessor: "value" },
       getX: (d) => d.x,
       getY: (d) => d.y,
@@ -301,7 +301,7 @@ describe("buildStreamingHeatmapScene", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     // Both land in bin (0, 0) with domain [0,100] and 5 bins => binSize=20
     expect(nodes).toHaveLength(1)
-    const datum = (nodes[0] as unknown).datum
+    const datum = nodes[0].datum
     expect(datum.count).toBe(2)
     // For count aggregation, the cell value should be the count
     expect(datum.value).toBe(2)
@@ -317,7 +317,7 @@ describe("buildStreamingHeatmapScene", () => {
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    const datum = (nodes[0] as unknown).datum
+    const datum = nodes[0].datum
     expect(datum.sum).toBe(35)
     expect(datum.value).toBe(35)
   })
@@ -332,7 +332,7 @@ describe("buildStreamingHeatmapScene", () => {
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    const datum = (nodes[0] as unknown).datum
+    const datum = nodes[0].datum
     // mean = (10 + 30) / 2 = 20
     expect(datum.value).toBe(20)
     expect(datum.count).toBe(2)
@@ -347,7 +347,7 @@ describe("buildStreamingHeatmapScene", () => {
     const ctx = makeStreamCtx()
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    const node = nodes[0] as unknown
+    const node = nodes[0]
     expect(node.x).toBe(160)
     expect(node.y).toBe(160)
     expect(node.w).toBe(80)
@@ -360,7 +360,7 @@ describe("buildStreamingHeatmapScene", () => {
     const ctx = makeStreamCtx()
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    const datum = (nodes[0] as unknown).datum
+    const datum = nodes[0].datum
     expect(datum.xi).toBe(4)
     expect(datum.yi).toBe(4)
   })
@@ -391,7 +391,7 @@ describe("buildStreamingHeatmapScene", () => {
 
     // Sort by xi so positional asserts are stable.
     const datums = nodes
-      .map((n) => (n as unknown).datum)
+      .map((n) => n.datum)
       .sort((a, b) => a.xi - b.xi)
 
     // Bin (0, 0) — top-left of the data domain.
@@ -418,13 +418,13 @@ describe("buildStreamingHeatmapScene", () => {
       makeStreamCtx({ config: { heatmapAggregation: "sum", heatmapXBins: 5, heatmapYBins: 5, valueAccessor: "value" } }),
       data, defaultLayout,
     )
-    expect((sumNodes[0] as unknown).datum.agg).toBe("sum")
+    expect(sumNodes[0].datum.agg).toBe("sum")
 
     const meanNodes = buildHeatmapScene(
       makeStreamCtx({ config: { heatmapAggregation: "mean", heatmapXBins: 5, heatmapYBins: 5, valueAccessor: "value" } }),
       data, defaultLayout,
     )
-    expect((meanNodes[0] as unknown).datum.agg).toBe("mean")
+    expect(meanNodes[0].datum.agg).toBe("mean")
   })
 
   it("showValues sets label metadata in streaming mode", () => {
@@ -436,7 +436,7 @@ describe("buildStreamingHeatmapScene", () => {
       },
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
-    const node = nodes[0] as unknown
+    const node = nodes[0]
     expect(node.showValues).toBe(true)
     // count aggregation for a single point => value is 1
     expect(node.value).toBe(1)
@@ -451,7 +451,7 @@ describe("buildStreamingHeatmapScene", () => {
     const ctx = makeStreamCtx()
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(2)
-    const xis = nodes.map((n) => (n as unknown).datum.xi).sort()
+    const xis = nodes.map((n) => n.datum.xi).sort()
     expect(xis).toEqual([0, 4])
   })
 
@@ -467,8 +467,8 @@ describe("buildStreamingHeatmapScene", () => {
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    expect((nodes[0] as unknown).datum.count).toBe(100)
-    expect((nodes[0] as unknown).datum.value).toBe(100)
+    expect(nodes[0].datum.count).toBe(100)
+    expect(nodes[0].datum.value).toBe(100)
   })
 
   it("typed array binning: sum aggregation accumulates across all points in bin", () => {
@@ -485,8 +485,8 @@ describe("buildStreamingHeatmapScene", () => {
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    expect((nodes[0] as unknown).datum.value).toBe(150)
-    expect((nodes[0] as unknown).datum.sum).toBe(150)
+    expect(nodes[0].datum.value).toBe(150)
+    expect(nodes[0].datum.sum).toBe(150)
   })
 
   it("NaN/Infinity values are skipped during binning", () => {
@@ -502,7 +502,7 @@ describe("buildStreamingHeatmapScene", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     // Only 2 valid points: (5,5) and (15,15) — both land in bin (0,0)
     expect(nodes).toHaveLength(1)
-    expect((nodes[0] as unknown).datum.count).toBe(2)
+    expect(nodes[0].datum.count).toBe(2)
   })
 
   it("negative values in domain are binned correctly", () => {
@@ -516,8 +516,8 @@ describe("buildStreamingHeatmapScene", () => {
     const data = [{ x: -25, y: -25, value: 1 }]
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(1)
-    expect((nodes[0] as unknown).datum.xi).toBe(2)
-    expect((nodes[0] as unknown).datum.yi).toBe(2)
+    expect(nodes[0].datum.xi).toBe(2)
+    expect(nodes[0].datum.yi).toBe(2)
   })
 
   it("fills vary across bins with different aggregated values", () => {
@@ -531,7 +531,7 @@ describe("buildStreamingHeatmapScene", () => {
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes).toHaveLength(2)
-    const fills = nodes.map((n) => (n as unknown).fill)
+    const fills = nodes.map((n) => n.fill)
     expect(fills[0]).not.toBe(fills[1])
   })
 
@@ -570,8 +570,8 @@ describe("buildStreamingHeatmapScene", () => {
       getX: (d) => d.x,
       getY: (d) => d.y,
     })
-    const nodesBlues = buildHeatmapScene(ctxBlues, data, defaultLayout) as unknown[]
-    const nodesViridis = buildHeatmapScene(ctxViridis, data, defaultLayout) as unknown[]
+    const nodesBlues = buildHeatmapScene(ctxBlues, data, defaultLayout)
+    const nodesViridis = buildHeatmapScene(ctxViridis, data, defaultLayout)
 
     // Cell fills resolve through getColorLut — so different scheme names
     // should produce different hex values at the same data value.
@@ -592,8 +592,8 @@ describe("buildStreamingHeatmapScene", () => {
       getX: (d) => d.x,
       getY: (d) => d.y,
     })
-    const nodesA = buildHeatmapScene(ctxA, data, defaultLayout) as unknown[]
-    const nodesB = buildHeatmapScene(ctxB, data, defaultLayout) as unknown[]
+    const nodesA = buildHeatmapScene(ctxA, data, defaultLayout)
+    const nodesB = buildHeatmapScene(ctxB, data, defaultLayout)
     // themeSequential is shadowed by explicit colorScheme, so both runs
     // produce identical fills even with different themeSequential values.
     expect(nodesA[1].fill).toBe(nodesB[1].fill)

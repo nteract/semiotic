@@ -6,7 +6,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
   const identityScale = Object.assign(identity, { domain: () => [0, 100], range: () => [0, 400] })
   return {
-    scales: { x: identityScale, y: identityScale } as unknown,
+    scales: { x: identityScale, y: identityScale } as unknown as XYSceneContext["scales"],
     config: {},
     getX: (d) => d.x,
     getY: (d) => d.y,
@@ -47,7 +47,7 @@ describe("buildMixedScene", () => {
 
     expect(areaNodes).toHaveLength(2)
     expect(lineNodes).toHaveLength(1)
-    expect((lineNodes[0] as unknown).group).toBe("C")
+    expect(lineNodes[0].group).toBe("C")
   })
 
   it("renders all as lines when areaGroups is empty", () => {
@@ -63,8 +63,8 @@ describe("buildMixedScene", () => {
     const ctx = makeCtx({ config: { areaGroups: new Set(["A"]), gradientFill: gradient } })
     const nodes = buildMixedScene(ctx, data)
 
-    const areaNodes = nodes.filter(n => n.type === "area") as unknown[]
-    const lineNodes = nodes.filter(n => n.type === "line") as unknown[]
+    const areaNodes = nodes.filter(n => n.type === "area")
+    const lineNodes = nodes.filter(n => n.type === "line")
 
     expect(areaNodes[0].fillGradient).toEqual(gradient)
     // Line nodes should NOT have fillGradient
@@ -79,7 +79,7 @@ describe("buildMixedScene", () => {
     const nodes = buildMixedScene(ctx, data)
 
     for (const node of nodes) {
-      expect((node as unknown).strokeGradient).toEqual(lineGrad)
+      expect(node.strokeGradient).toEqual(lineGrad)
     }
   })
 
@@ -88,7 +88,7 @@ describe("buildMixedScene", () => {
     const nodes = buildMixedScene(ctx, data)
 
     for (const node of nodes) {
-      expect((node as unknown).curve).toBe("monotoneX")
+      expect(node.curve).toBe("monotoneX")
     }
   })
 })
