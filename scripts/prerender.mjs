@@ -126,16 +126,39 @@ export function copyDocsApiAssets(publicApiDir = PUBLIC_API_DIR, buildDir = BUIL
   return copied
 }
 
+// ── Blog metadata loader ───────────────────────────────────────────────
+//
+// Reads docs/src/blog/entries-meta.js for the slug list + per-entry
+// title / description / OG image. The full entries.js can't be
+// imported here — it pulls in React + JSX — so the metadata mirror
+// is the build-time source of truth.
+
+async function loadBlogEntries() {
+  try {
+    const metaPath = resolve(__dirname, "../docs/src/blog/entries-meta.js")
+    if (!existsSync(metaPath)) return []
+    const mod = await import(pathToFileURL(metaPath).href)
+    return mod.blogEntriesMeta || []
+  } catch (err) {
+    console.warn("[prerender] could not load blog metadata:", err.message)
+    return []
+  }
+}
+
 // ── Generate pre-rendered HTML for a route ──────────────────────────────
 
-export function generatePage(shellHtml, routePath) {
+export function generatePage(shellHtml, routePath, blogMeta = null) {
   const title = routePath
     .split("/")
     .filter(Boolean)
     .map(s => s.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" "))
     .join(" \u2014 ")
 
-  const fullTitle = title ? `${title} \u2014 Semiotic` : "Semiotic \u2014 Data Visualization for React"
+  // For blog entry routes, prefer the entry's own title + subtitle
+  // over the slug-derived heuristic.
+  const fullTitle = blogMeta?.title
+    ? `${blogMeta.title} \u2014 Semiotic Blog`
+    : (title ? `${title} \u2014 Semiotic` : "Semiotic \u2014 Data Visualization for React")
 
   const navHtml = `
     <nav style="max-width:800px;margin:0 auto;padding:20px;font-family:system-ui,sans-serif;">
@@ -159,16 +182,64 @@ export function generatePage(shellHtml, routePath) {
       .replace(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])(?=[^>]*\bdata-jsonld=["']semiotic["'])[^>]*>[\s\S]*?<\/script>/g, "")
   } while (normalizedShell !== previousShell)
 
-  return normalizedShell
+  let html = normalizedShell
     .replace(/<title>[^<]*<\/title>/, `${llmsAlternate}<title>${fullTitle}</title>${jsonLd}`)
     .replace(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>${navHtml}</noscript>`)
     .replace(/<meta\b(?=[^>]*\bproperty=["']?og:url["']?)[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`)
     .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`)
+
+  // Blog-entry enrichment: per-entry OG description / image / type and
+  // Twitter summary_large_image markup. Inserted into <head> just
+  // before </head>. The Parcel-built shell carries placeholder og:*
+  // meta tags pointing at the docs landing — for blog entries we
+  // override with the entry's subtitle and the rendered card PNG.
+  if (blogMeta) {
+    const ogImage = `${SITE_URL}/blog/og/${blogMeta.slug}.png`
+    const description = blogMeta.subtitle || blogMeta.excerpt || ""
+    const blogJsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: blogMeta.title,
+      description,
+      datePublished: blogMeta.date,
+      author: { "@type": "Person", name: blogMeta.author },
+      keywords: (blogMeta.tags || []).join(", "),
+      image: ogImage,
+      url: canonicalUrl,
+    }).replace(/<\//g, "<\\/")
+    const escDescription = description
+      .replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const blogMetaTags = [
+      `<meta name="description" content="${escDescription}" />`,
+      `<meta property="og:type" content="article" />`,
+      `<meta property="og:title" content="${blogMeta.title.replace(/"/g, "&quot;")}" />`,
+      `<meta property="og:description" content="${escDescription}" />`,
+      `<meta property="og:image" content="${ogImage}" />`,
+      `<meta property="article:published_time" content="${blogMeta.date}" />`,
+      `<meta property="article:author" content="${blogMeta.author}" />`,
+      ...(blogMeta.tags || []).map((t) => `<meta property="article:tag" content="${t}" />`),
+      `<meta name="twitter:card" content="summary_large_image" />`,
+      `<meta name="twitter:title" content="${blogMeta.title.replace(/"/g, "&quot;")}" />`,
+      `<meta name="twitter:description" content="${escDescription}" />`,
+      `<meta name="twitter:image" content="${ogImage}" />`,
+      `<script type="application/ld+json" data-jsonld="blog-entry">${blogJsonLd}</script>`,
+    ].join("\n    ")
+    // Drop any existing description/og:type/og:image/og:title/twitter:* tags
+    // first so the entry-specific ones aren't fighting them.
+    html = html
+      .replace(/<meta\s+name=["']?description["']?[^>]*>\s*/gi, "")
+      .replace(/<meta\b[^>]*\bproperty=["']?og:(?:type|title|description|image)["']?[^>]*>\s*/gi, "")
+      .replace(/<meta\b[^>]*\bname=["']?twitter:[^"' >]+["']?[^>]*>\s*/gi, "")
+      .replace(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])(?=[^>]*\bdata-jsonld=["']blog-entry["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
+      .replace(/<\/head>/, `    ${blogMetaTags}\n  </head>`)
+  }
+
+  return html
 }
 
 // ── Main ────────────────────────────────────────────────────────────────
 
-export function prerender() {
+export async function prerender() {
   const shellPath = resolve(BUILD_DIR, "index.html")
   if (!existsSync(shellPath)) {
     console.error("docs/build/index.html not found. Run 'npm run website:build' first.")
@@ -177,8 +248,9 @@ export function prerender() {
 
   const shellHtml = readFileSync(shellPath, "utf-8")
   const routes = extractRoutes()
+  const blogEntries = await loadBlogEntries()
 
-  console.log(`Pre-rendering ${routes.length} routes...`)
+  console.log(`Pre-rendering ${routes.length} routes (+ ${blogEntries.length} blog entries)...`)
 
   writeFileSync(shellPath, generatePage(shellHtml, ""))
   let created = 1
@@ -190,11 +262,23 @@ export function prerender() {
     created++
   }
 
-  const sitemapPaths = routes
+  // Expand the `blog/:slug` parameterized route into one static
+  // page per registered entry, with entry-specific OG / Twitter /
+  // schema.org metadata baked in.
+  for (const entry of blogEntries) {
+    const route = `blog/${entry.slug}`
+    const dir = resolve(BUILD_DIR, route)
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, entry))
+    created++
+  }
+
+  const routeUrls = routes
     .filter(r => r && r !== "*" && r !== "/" && !r.includes(":"))
-    .map(r => `https://semiotic3.nteract.io/${r}`)
-    .join("\n")
-  writeFileSync(resolve(BUILD_DIR, "sitemap.txt"), `https://semiotic3.nteract.io/\n${sitemapPaths}\n`)
+    .map(r => `${SITE_URL}/${r}`)
+  const blogUrls = blogEntries.map((e) => `${SITE_URL}/blog/${e.slug}`)
+  const sitemapPaths = [...routeUrls, ...blogUrls].join("\n")
+  writeFileSync(resolve(BUILD_DIR, "sitemap.txt"), `${SITE_URL}/\n${sitemapPaths}\n`)
   const copiedApiAssets = copyDocsApiAssets()
 
   console.log(`\u2705 ${created} pages pre-rendered`)
@@ -205,5 +289,8 @@ export function prerender() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  prerender()
+  prerender().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
 }

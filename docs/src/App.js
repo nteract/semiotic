@@ -113,10 +113,10 @@ import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
 import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
-import MinardsMarchPage from "./pages/recipes/MinardsMarchPage"
 import RoslingBubbleChartPage from "./pages/recipes/RoslingBubbleChartPage"
-import ProcessSankeyVsSankeyPage from "./pages/recipes/ProcessSankeyVsSankeyPage"
 import StreamingMigrationMapPage from "./pages/recipes/StreamingMigrationMapPage"
+import BlogIndexPage from "./blog/BlogIndexPage"
+import BlogEntryPage from "./blog/BlogEntryPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
 import SSRGalleryPage from "./pages/SSRGalleryPage"
 import RenderStudioPage from "./pages/server/RenderStudioPage"
@@ -336,11 +336,16 @@ export default function DocsApp() {
               <Route path="time-series-brush" element={<TimeSeriesBrushPage />} />
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
               <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
-              <Route path="minards-map" element={<MinardsMarchPage />} />
               <Route path="streaming-migration-map" element={<StreamingMigrationMapPage />} />
               <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />
-              <Route path="process-vs-classic-sankey" element={<ProcessSankeyVsSankeyPage />} />
+              {/* `minards-map` and `process-vs-classic-sankey` graduated to /blog/. */}
+              <Route path="minards-map" element={<Navigate to="/blog/minards-march" replace />} />
+              <Route path="process-vs-classic-sankey" element={<Navigate to="/blog/process-sankey-vs-classic-sankey" replace />} />
             </Route>
+
+            {/* Blog routes — magazine-style chrome (no docs sidebar). */}
+            <Route path="blog" element={<BlogIndexPage />} />
+            <Route path="blog/:slug" element={<BlogEntryPage />} />
 
             {/* Playground routes */}
             <Route path="playground" element={<Outlet />}>
