@@ -41,24 +41,25 @@ export default function BlogIndexPage() {
 
 const styles = {
   empty: {
-    maxWidth: 720,
+    maxWidth: 960,
     margin: "0 auto",
-    padding: "40px 24px",
+    padding: "48px 32px",
   },
   previews: {
-    maxWidth: 720,
+    maxWidth: 960,
     margin: "0 auto",
-    padding: "0 24px 40px",
+    padding: "0 32px 48px",
   },
   previewsHeader: {
-    fontSize: 14,
+    fontSize: 12,
     textTransform: "uppercase",
-    letterSpacing: "0.08em",
+    letterSpacing: "0.1em",
     color: "var(--text-secondary, #94a3b8)",
     margin: 0,
     marginBottom: 8,
-    paddingTop: 32,
+    paddingTop: 36,
     paddingBottom: 4,
     borderTop: "1px solid var(--surface-3, #2a2a35)",
+    fontWeight: 600,
   },
 }

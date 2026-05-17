@@ -44,9 +44,9 @@ export default function BlogEntryPage() {
 
 const styles = {
   backstrip: {
-    maxWidth: 720,
+    maxWidth: 960,
     margin: "0 auto",
-    padding: "20px 24px 0",
+    padding: "24px 32px 0",
   },
   back: {
     color: "var(--text-secondary, #94a3b8)",
@@ -54,14 +54,14 @@ const styles = {
     fontSize: 13,
   },
   nav: {
-    maxWidth: 720,
+    maxWidth: 960,
     margin: "0 auto",
-    padding: "0 24px 40px",
+    padding: "0 32px 48px",
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 24,
     borderTop: "1px solid var(--surface-3, #2a2a35)",
-    paddingTop: 24,
+    paddingTop: 28,
   },
   navLink: {
     display: "flex",
@@ -71,10 +71,11 @@ const styles = {
     color: "inherit",
   },
   navLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: "var(--text-secondary, #94a3b8)",
     textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    letterSpacing: "0.08em",
+    fontWeight: 600,
   },
   navTitle: {
     fontSize: 15,

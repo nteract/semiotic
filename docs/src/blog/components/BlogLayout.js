@@ -2,51 +2,34 @@ import React from "react"
 import { Link } from "react-router-dom"
 
 /**
- * BlogLayout is the chrome wrapper for /blog/ and /blog/:slug/. It's
- * deliberately minimal: a top bar with the Semiotic mark, a "Docs"
- * link back into the main site, a "Blog" link to the index, GitHub,
- * and the title of the current view; a content container; and a
- * compact footer.
+ * BlogLayout is the chrome wrapper for /blog/ and /blog/:slug/.
  *
- * The docs' regular header/sidebar is bypassed for blog routes —
- * the blog wants a reading-first chrome, not a docs sidebar. The
- * existing PageLayout (TOC, breadcrumbs, prev/next) is for reference
- * docs and doesn't fit a magazine-style blog feed.
+ * Design intent: the blog is its own corner of the site, distinct
+ * from the reference docs. No top nav bar, no sidebar — the page
+ * starts at the article. A small "Semiotic Blog" wordmark sits in
+ * the top-left corner as the only persistent chrome above the
+ * content. The footer carries the only "back to docs" jump.
  */
 export default function BlogLayout({ children }) {
   return (
     <div style={styles.shell}>
-      <header style={styles.header}>
-        <div style={styles.headerInner}>
-          <div style={styles.brand}>
-            <Link to="/" style={styles.brandLink}>Semiotic</Link>
-            <span style={styles.brandSep}>·</span>
-            <Link to="/blog" style={styles.brandBlogLink}>Blog</Link>
-          </div>
-          <nav style={styles.nav}>
-            <Link to="/getting-started" style={styles.navLink}>Docs</Link>
-            <Link to="/charts" style={styles.navLink}>Charts</Link>
-            <a
-              href="https://github.com/nteract/semiotic"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={styles.navLink}
-            >
-              GitHub
-            </a>
-          </nav>
-        </div>
-      </header>
+      <div style={styles.wordmark}>
+        <Link to="/blog" style={styles.wordmarkLink}>
+          <span style={styles.wordmarkBrand}>Semiotic</span>
+          <span style={styles.wordmarkSep}>—</span>
+          <span style={styles.wordmarkSection}>Blog</span>
+        </Link>
+      </div>
 
       <main style={styles.main}>{children}</main>
 
       <footer style={styles.footer}>
         <div style={styles.footerInner}>
           <span>
-            <Link to="/" style={styles.footerLink}>Semiotic</Link>
-            {" · "}
+            <Link to="/" style={styles.footerLink}>← Semiotic home</Link>
+            <span style={styles.footerSep}>·</span>
             <Link to="/getting-started" style={styles.footerLink}>Documentation</Link>
-            {" · "}
+            <span style={styles.footerSep}>·</span>
             <a
               href="https://github.com/nteract/semiotic"
               target="_blank"
@@ -70,53 +53,42 @@ const styles = {
     minHeight: "100vh",
     background: "var(--bg-primary, #0a0a0f)",
     color: "var(--text-primary, #e5e7eb)",
+    // Slightly tighter letter-spacing on the body gives the blog a
+    // bookier feel than the docs without changing fonts.
+    letterSpacing: "-0.005em",
   },
-  header: {
-    borderBottom: "1px solid var(--surface-3, #2a2a35)",
-    background: "var(--bg-primary, #0a0a0f)",
-    position: "sticky",
-    top: 0,
-    zIndex: 10,
-  },
-  headerInner: {
-    maxWidth: 880,
+  // Wordmark — small, top-left, no banner background. Just a piece
+  // of typography. The serif-mono mix evokes editorial mastheads
+  // without committing to a real serif (the docs site doesn't ship
+  // one).
+  wordmark: {
+    maxWidth: 1100,
+    width: "100%",
     margin: "0 auto",
-    padding: "16px 24px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
+    padding: "28px 32px 0",
   },
-  brand: {
-    display: "flex",
+  wordmarkLink: {
+    display: "inline-flex",
     alignItems: "baseline",
-    gap: 8,
-    fontFamily: "var(--semiotic-font-family, system-ui, sans-serif)",
-  },
-  brandLink: {
-    fontSize: 16,
-    fontWeight: 600,
+    gap: 10,
+    textDecoration: "none",
     color: "var(--text-primary, #e5e7eb)",
-    textDecoration: "none",
   },
-  brandSep: {
+  wordmarkBrand: {
+    fontSize: 18,
+    fontWeight: 600,
+    letterSpacing: "-0.01em",
+  },
+  wordmarkSep: {
     color: "var(--text-secondary, #94a3b8)",
+    opacity: 0.6,
+    fontSize: 16,
   },
-  brandBlogLink: {
-    fontSize: 15,
-    fontWeight: 500,
+  wordmarkSection: {
+    fontSize: 18,
+    fontWeight: 400,
     color: "var(--text-secondary, #94a3b8)",
-    textDecoration: "none",
-  },
-  nav: {
-    display: "flex",
-    gap: 18,
-    fontSize: 14,
-  },
-  navLink: {
-    color: "var(--text-secondary, #94a3b8)",
-    textDecoration: "none",
-    fontWeight: 500,
+    fontStyle: "italic",
   },
   main: {
     flex: 1,
@@ -125,14 +97,14 @@ const styles = {
   footer: {
     borderTop: "1px solid var(--surface-3, #2a2a35)",
     padding: "24px 0",
-    marginTop: 48,
+    marginTop: 64,
     fontSize: 13,
     color: "var(--text-secondary, #94a3b8)",
   },
   footerInner: {
-    maxWidth: 880,
+    maxWidth: 1100,
     margin: "0 auto",
-    padding: "0 24px",
+    padding: "0 32px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -142,6 +114,10 @@ const styles = {
   footerLink: {
     color: "var(--text-secondary, #94a3b8)",
     textDecoration: "none",
+  },
+  footerSep: {
+    margin: "0 10px",
+    opacity: 0.5,
   },
   footerCopy: {
     opacity: 0.6,

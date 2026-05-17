@@ -166,11 +166,6 @@ const navData = [
     ]
   },
   {
-    title: "Blog",
-    path: "/blog",
-    children: []
-  },
-  {
     title: "Playground",
     path: "/playground",
     children: [

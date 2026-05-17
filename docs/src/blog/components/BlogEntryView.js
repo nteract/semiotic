@@ -1,10 +1,19 @@
 import React from "react"
 
 /**
- * Full-page rendering of one entry. Header is the title + subtitle +
- * byline + date + tags. The body is whatever JSX the entry's
- * `component` returns. Container width is reading-friendly (~720 px)
- * — wider charts can opt to overflow via their own wrappers.
+ * Single-entry rendering. Layout:
+ *
+ *   Title (full content-width, large)
+ *   Subtitle (one or two lines, slightly muted)
+ *   ── thin separator ──
+ *   Author · Date  Tags as pill chips (right-aligned on one row)
+ *   Body
+ *
+ * The container is wider than a reference-doc reading column (max
+ * 960 px instead of 720) because the blog has no sidebar; the
+ * extra width gives charts and tables more room without crowding
+ * the text. Body paragraphs still cap at a readable measure via
+ * the `bodyText` style.
  */
 export default function BlogEntryView({ entry }) {
   const Body = entry.component
@@ -13,22 +22,28 @@ export default function BlogEntryView({ entry }) {
   })
   return (
     <article style={styles.article}>
-      <header style={styles.header}>
+      {/* `div` instead of semantic `<header>` because the docs'
+          global stylesheet pins every `header` to `display: flex`
+          (it owns the docs top bar). That collapsed the entry's
+          title onto a 235-px column inside the flex header. */}
+      <div style={styles.header}>
         <h1 style={styles.title}>{entry.title}</h1>
         <p style={styles.subtitle}>{entry.subtitle}</p>
-        <div style={styles.meta}>
-          <span style={styles.author}>{entry.author}</span>
-          <span style={styles.dot}>·</span>
-          <time dateTime={entry.date}>{dateLabel}</time>
+        <div style={styles.metaRow}>
+          <div style={styles.byline}>
+            <span style={styles.author}>{entry.author}</span>
+            <span style={styles.dot}>·</span>
+            <time dateTime={entry.date}>{dateLabel}</time>
+          </div>
+          {entry.tags?.length > 0 && (
+            <ul style={styles.tags}>
+              {entry.tags.map((t) => (
+                <li key={t} style={styles.tag}>{t}</li>
+              ))}
+            </ul>
+          )}
         </div>
-        {entry.tags?.length > 0 && (
-          <ul style={styles.tags}>
-            {entry.tags.map((t) => (
-              <li key={t} style={styles.tag}>#{t}</li>
-            ))}
-          </ul>
-        )}
-      </header>
+      </div>
       <div style={styles.body}>
         <Body />
       </div>
@@ -38,58 +53,78 @@ export default function BlogEntryView({ entry }) {
 
 const styles = {
   article: {
-    maxWidth: 720,
+    maxWidth: 960,
     margin: "0 auto",
-    padding: "40px 24px",
+    padding: "48px 32px 24px",
   },
   header: {
-    marginBottom: 32,
-    paddingBottom: 20,
+    marginBottom: 36,
+    paddingBottom: 24,
     borderBottom: "1px solid var(--surface-3, #2a2a35)",
   },
+  // Title scales with the wider container — bigger than a doc h1
+  // because the blog header is the chart of the page.
   title: {
-    fontSize: 32,
+    fontSize: 44,
     fontWeight: 700,
-    lineHeight: 1.2,
+    lineHeight: 1.15,
     margin: 0,
-    marginBottom: 12,
+    marginBottom: 14,
     color: "var(--text-primary, #e5e7eb)",
+    letterSpacing: "-0.02em",
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 20,
     color: "var(--text-secondary, #94a3b8)",
     lineHeight: 1.5,
     margin: 0,
-    marginBottom: 16,
+    marginBottom: 20,
     fontWeight: 400,
+    maxWidth: 760,
   },
-  meta: {
-    fontSize: 13,
-    color: "var(--text-secondary, #94a3b8)",
+  metaRow: {
     display: "flex",
-    gap: 6,
+    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    gap: 16,
+    flexWrap: "wrap",
   },
-  author: { fontWeight: 500 },
+  byline: {
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+    fontSize: 14,
+    color: "var(--text-secondary, #94a3b8)",
+  },
+  author: { fontWeight: 600, color: "var(--text-primary, #e5e7eb)" },
   dot: { opacity: 0.5 },
   tags: {
     listStyle: "none",
     margin: 0,
     padding: 0,
     display: "flex",
-    gap: 10,
+    gap: 6,
     flexWrap: "wrap",
-    fontSize: 12,
   },
+  // Bean / pill tag. Pinned to the carbon-blue token so the chips
+  // stand out without dominating the byline. Lowercase content, no
+  // hash prefix — the chip shape carries the "this is a tag"
+  // signal.
   tag: {
-    color: "var(--text-secondary, #94a3b8)",
-    fontFamily: "var(--semiotic-tick-font-family, ui-monospace, SFMono-Regular, Menlo, monospace)",
-    opacity: 0.7,
+    fontSize: 12,
+    fontWeight: 500,
+    color: "var(--text-primary, #e5e7eb)",
+    background: "var(--surface-2, #1a1a22)",
+    border: "1px solid var(--surface-3, #2a2a35)",
+    padding: "3px 10px",
+    borderRadius: 999,
+    fontFamily: "var(--semiotic-font-family, system-ui, sans-serif)",
+    letterSpacing: 0,
   },
   body: {
-    fontSize: 16,
+    fontSize: 17,
     lineHeight: 1.7,
     color: "var(--text-primary, #e5e7eb)",
+    maxWidth: 760,
   },
 }

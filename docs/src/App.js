@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Routes, Route, Outlet, Link, Navigate } from "react-router-dom"
+import { Routes, Route, Outlet, Link, Navigate, useLocation } from "react-router-dom"
 
 // New components
 import Sidebar, { SidebarToggle } from "./components/Sidebar"
@@ -231,6 +231,26 @@ export default function DocsApp() {
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"))
+  }
+
+  // Blog routes opt out of the docs chrome. The blog has its own
+  // typographic identity (full-bleed article, no sidebar, minimal
+  // top strip) so the docs header + sidebar would just compete with
+  // the article. Pathname inspection is sufficient — react-router's
+  // route-level layouts would require a deeper restructure we don't
+  // need.
+  const location = useLocation()
+  const isBlogRoute = location.pathname === "/blog" || location.pathname.startsWith("/blog/")
+
+  if (isBlogRoute) {
+    return (
+      <div className="App App--blog">
+        <Routes>
+          <Route path="blog" element={<BlogIndexPage />} />
+          <Route path="blog/:slug" element={<BlogEntryPage />} />
+        </Routes>
+      </div>
+    )
   }
 
   return (

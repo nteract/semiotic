@@ -944,6 +944,9 @@ export default function Landing() {
             <Link to="/cookbook" style={styles.btnSecondary}>
               See Examples
             </Link>
+            <Link to="/blog" style={styles.btnSecondary}>
+              Blog
+            </Link>
           </div>
 
           <div style={styles.installBlock}>
@@ -1109,6 +1112,9 @@ export default function Landing() {
           </Link>
           <Link to="/cookbook" style={styles.btnSecondary}>
             See Examples
+          </Link>
+          <Link to="/blog" style={styles.btnSecondary}>
+            Blog
           </Link>
         </div>
       </section>
