@@ -9,6 +9,7 @@ import {
   validateProcessSankey,
   formatProcessSankeyIssue,
   buildBandPath,
+  buildBandCutoutsForNode,
   clampSamples,
 } from "./processSankey/algorithm"
 import { massHistoryRows, pickMassQuantiles } from "./processSankey/tooltipUtils"
@@ -69,6 +70,24 @@ export interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends D
   valueAccessor?: ChartAccessor<TEdge, number>
   startTimeAccessor?: ChartAccessor<TEdge, TimeLike>
   endTimeAccessor?: ChartAccessor<TEdge, TimeLike>
+  /**
+   * Optional accessor for the per-edge "system in" time — when
+   * `value` is added to the SOURCE node's mass. Use when the
+   * source node has an intake event distinct from when this edge
+   * departs (e.g. a patient is admitted to the ER at 7pm and
+   * transferred out at 9pm — the ER node carries the patient's
+   * weight between 7pm and 9pm). Without this, the source node's
+   * mass is synthesized as a flat baseline and the band reads as
+   * "always there." Set it and the node band climbs / falls as
+   * units arrive and depart — a true staircase profile.
+   */
+  systemInTimeAccessor?: ChartAccessor<TEdge, TimeLike>
+  /**
+   * Optional accessor for the per-edge "system out" time — when
+   * `value` is removed from the TARGET node's mass. Mirror of
+   * `systemInTimeAccessor` for the inbound side.
+   */
+  systemOutTimeAccessor?: ChartAccessor<TEdge, TimeLike>
   /**
    * Accessor for a node's explicit lifetime extent — a `[start, end]`
    * tuple of time-likes. Lane spans
@@ -142,6 +161,14 @@ interface NormalizedEdge {
   value: number
   startTime: number
   endTime: number
+  /** When set, source node mass climbs by `value` at this time
+   *  (then falls by `value` at `startTime`). Lets a source ward /
+   *  reservoir / branch carry inventory between distinct admit and
+   *  depart times — visible as a staircase profile. */
+  systemInTime?: number
+  /** Mirror for the target node: mass falls by `value` at this time
+   *  (after rising at `endTime`). */
+  systemOutTime?: number
   __raw?: Datum
 }
 
@@ -231,6 +258,8 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     valueAccessor = "value",
     startTimeAccessor = "startTime",
     endTimeAccessor = "endTime",
+    systemInTimeAccessor,
+    systemOutTimeAccessor,
     xExtentAccessor = "xExtent",
     edgeIdAccessor = "id",
     colorBy,
@@ -508,15 +537,30 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       }
       return o
     })
-    const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => ({
-      id: getEdgeId(e, i),
-      source: String(accessor(sourceAccessor, e)),
-      target: String(accessor(targetAccessor, e)),
-      value: Number(accessor(valueAccessor, e)),
-      startTime: toTime(accessor(startTimeAccessor, e) as TimeLike),
-      endTime: toTime(accessor(endTimeAccessor, e) as TimeLike),
-      __raw: e as Datum,
-    }))
+    const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => {
+      const out: NormalizedEdge = {
+        id: getEdgeId(e, i),
+        source: String(accessor(sourceAccessor, e)),
+        target: String(accessor(targetAccessor, e)),
+        value: Number(accessor(valueAccessor, e)),
+        startTime: toTime(accessor(startTimeAccessor, e) as TimeLike),
+        endTime: toTime(accessor(endTimeAccessor, e) as TimeLike),
+        __raw: e as Datum,
+      }
+      // System in/out are opt-in. When the accessor is unset OR
+      // the read value is non-finite, we leave the field undefined
+      // so the algorithm falls back to its legacy synthetic-baseline
+      // behavior on a per-edge basis.
+      if (systemInTimeAccessor) {
+        const v = toTime(accessor(systemInTimeAccessor, e) as TimeLike)
+        if (Number.isFinite(v)) out.systemInTime = v
+      }
+      if (systemOutTimeAccessor) {
+        const v = toTime(accessor(systemOutTimeAccessor, e) as TimeLike)
+        if (Number.isFinite(v)) out.systemOutTime = v
+      }
+      return out
+    })
     const dom: [number, number] = [toTime(rawDomain[0]), toTime(rawDomain[1])]
     const nodeMap = new Map<string, Datum>()
     for (const n of ns) if (n.__raw != null) nodeMap.set(n.id, n.__raw)
@@ -526,6 +570,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   }, [
     rawNodes, rawEdges, rawDomain, getNodeId, getEdgeId, xExtentAccessor,
     sourceAccessor, targetAccessor, valueAccessor, startTimeAccessor, endTimeAccessor,
+    systemInTimeAccessor, systemOutTimeAccessor,
   ])
 
   // ── Consolidated network setup (aligned with SankeyDiagram et al). ──
@@ -639,12 +684,14 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       const labelY = centerlines[n.id] + visualOffset
       const c = colorOf(n.id, idx)
       const raw = rawNodeById.get(n.id) ?? (n as Datum)
+      const stubs = buildBandCutoutsForNode(n.id, edges, layout, xScale, domain)
       bands.push({
         id: n.id,
         pathD: path,
         fill: c,
         stroke: c,
         strokeWidth: 0.5,
+        ...(stubs.length > 0 && { gradientStubs: stubs }),
         rawDatum: raw,
         labelX: xScale(firstNonZero.t) - 4,
         labelY,
@@ -722,6 +769,18 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
 
   const formatTime = useCallback((t: number): React.ReactNode => {
     if (timeFormat) return timeFormat(new Date(t))
+    // When `timeFormat` isn't supplied, sniff the value scale. Real
+    // timestamps (ms since epoch) sit above ~1e10; small integers /
+    // floats below that are "tick numbers" — day indices, week
+    // counts, sequence positions — and have to print as-is or
+    // they collapse into 1970-01-01. The old default ran every
+    // value through `new Date(t).toISOString()`, which printed
+    // every short-domain ProcessSankey (Day 0–7, Month 1–12, etc.)
+    // as the Unix epoch.
+    if (!Number.isFinite(t)) return ""
+    if (Math.abs(t) < 1e10) {
+      return Number.isInteger(t) ? String(t) : t.toFixed(2)
+    }
     return new Date(t).toISOString().slice(0, 10)
   }, [timeFormat])
 
@@ -818,6 +877,24 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     if (!layout) return null
     const { centerlines, laneLifetime, nodeData, valueScale: S, compressedPadding,
       crossingsBefore, crossingsAfter, lengthBefore, lengthAfter } = layout
+    // Axis follows the data, not the domain — the bands extend only as
+    // far as their mass profile carries them, so when the user's
+    // `domain` overshoots the latest event there's an empty stretch
+    // past the last band. Anchor the axis line and gridline span to
+    // the actual lane lifetimes so the chrome can't get out of step
+    // with the bands.
+    let dataMinX: number | null = null
+    let dataMaxX: number | null = null
+    for (const n of nodes) {
+      const lt = laneLifetime[n.id]
+      if (!lt || lt.start === null || lt.end === null) continue
+      const sx = xScale(lt.start as number)
+      const ex = xScale(lt.end as number)
+      if (dataMinX === null || sx < dataMinX) dataMinX = sx
+      if (dataMaxX === null || ex > dataMaxX) dataMaxX = ex
+    }
+    const axisLeft = dataMinX ?? 0
+    const axisRight = dataMaxX ?? plotW
     return (
       <g>
         {showQualityReadout && (crossingsAfter ?? null) !== null && (
@@ -833,6 +910,9 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
         )}
         {axisTicks.map((tick, i) => {
           const x = xScale(toTime(tick.date))
+          // Hide gridlines outside the actual data extent — they would
+          // sit in empty space and falsely imply data continues there.
+          if (x < axisLeft - 0.5 || x > axisRight + 0.5) return null
           return (
             <line key={`grid-${i}`} x1={x} y1={0} x2={x} y2={plotH}
               stroke="#94a3b8" strokeOpacity={0.15} strokeDasharray="2 4" />
@@ -857,10 +937,11 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
             </g>
           )
         })}
-        <line x1={0} y1={plotH + 4} x2={plotW} y2={plotH + 4} stroke="#94a3b8" />
+        <line x1={axisLeft} y1={plotH + 4} x2={axisRight} y2={plotH + 4} stroke="#94a3b8" />
         {axisTicks.map((tick, i) => {
           const t = toTime(tick.date)
           const x = xScale(t)
+          if (x < axisLeft - 0.5 || x > axisRight + 0.5) return null
           // Prefer an explicit `tick.label` over the global
           // `timeFormat`. Lets a consumer set up a default formatter
           // for tooltips and most ticks while still spelling certain

@@ -28,6 +28,25 @@ export interface ProcessSankeyEdge {
   value: number
   startTime: number
   endTime: number
+  /** Optional: time at which this unit of mass actually "arrived" at
+   *  the SOURCE node (e.g., the hospital admit time for an ER patient
+   *  whose transfer to ICU happens later at `startTime`). Purely a
+   *  rendering hint — the layout/mass profile is unchanged. The
+   *  renderer cuts a rectangular slot out of the source node's band
+   *  from the node's left edge up to the scaled `systemInTime`, with
+   *  height equal to this edge's ribbon thickness. Edges without
+   *  `systemInTime` are drawn as-is. Result: a staircase profile on
+   *  the source side as units enter the system one by one.
+   *  Default: undefined. */
+  systemInTime?: number
+  /** Optional: time at which this unit of mass leaves the TARGET node
+   *  (e.g., the discharge time for a patient who arrived at the ward
+   *  at `endTime`). Symmetric to `systemInTime`: the renderer cuts a
+   *  rectangular slot out of the target node's band from the scaled
+   *  `systemOutTime` to the node's right edge, with height equal to
+   *  this edge's ribbon thickness. Layout/mass profile unchanged.
+   *  Default: undefined. */
+  systemOutTime?: number
 }
 
 export interface ProcessSankeyIssue {
@@ -303,8 +322,12 @@ export function computeNode(
   const incoming = edgeIndex.incoming[node.id]
   const outgoing = edgeIndex.outgoing[node.id]
   const events: NodeEvent[] = []
-  for (const e of incoming) events.push({ time: e.endTime, delta: +e.value, edge: e, kind: "in", side: sides.get(e.id)!.targetSide! })
-  for (const e of outgoing) events.push({ time: e.startTime, delta: -e.value, edge: e, kind: "out", side: sides.get(e.id)!.sourceSide! })
+  for (const e of incoming) {
+    events.push({ time: e.endTime, delta: +e.value, edge: e, kind: "in", side: sides.get(e.id)!.targetSide! })
+  }
+  for (const e of outgoing) {
+    events.push({ time: e.startTime, delta: -e.value, edge: e, kind: "out", side: sides.get(e.id)!.sourceSide! })
+  }
 
   const kindOrder: Record<EventKind, number> = { create: 0, in: 1, "transfer-out": 2, "transfer-in": 3, out: 4 }
   const sortEvents = () => {
@@ -499,6 +522,102 @@ export function buildBandPath(
     path += ` L${xScale(sm[i].t)},${yBot(i)}`
   }
   return path + " Z"
+}
+
+/**
+ * One 20-px gradient stub at an attachment with `systemInTime` /
+ * `systemOutTime`. Rendered as its own bezier scene-edge with a
+ * horizontal gradient, painted underneath the band. The band
+ * paints with `fill: none` whenever any stubs are present, so the
+ * stub gradients are the only colored regions inside the band's
+ * outline.
+ */
+export interface BandGradientStub {
+  /** Rect path (M-L-L-L-Z). */
+  pathD: string
+  /** Gradient extent in screen pixels. */
+  x0: number
+  x1: number
+  /** Color stops — 0 = transparent end, 1 = band-color end. */
+  from: 0 | 1
+  to: 0 | 1
+}
+
+/**
+ * Build the per-edge 20-px gradient stubs that visualize
+ * `systemInTime` / `systemOutTime` on a node band. Each stub is
+ * a rect on the edge's attachment slot, painted with a horizontal
+ * gradient that fades the band color in (or out) over 20 screen
+ * pixels and saturates through the rest of the rect.
+ *
+ * Pure rendering hint — layout/mass-profile unchanged. Returns an
+ * empty array when the node has no qualifying edges.
+ */
+export function buildBandCutoutsForNode(
+  nodeId: string,
+  edges: ProcessSankeyEdge[],
+  layout: ProcessSankeyLayout,
+  xScale: (t: number) => number,
+  domain: Domain,
+): BandGradientStub[] {
+  const data = layout.nodeData[nodeId]
+  if (!data || data.samples.length === 0) return []
+  const S = layout.valueScale
+  const cl = layout.centerlines[nodeId]
+  const sm = clampSamples(data.samples, domain)
+  const firstNonZero = sm.find((s) => s.topMass + s.botMass > 0) || sm[0]
+  const lastNonZero = [...sm].reverse().find((s) => s.topMass + s.botMass > 0) || sm[sm.length - 1]
+  const xLeft = xScale(firstNonZero.t)
+  const xRight = xScale(lastNonZero.t)
+  const clampX = (t: number): number => xScale(clampTime(t, domain))
+  // 20 screen pixels of gradient — width-independent of zoom/domain.
+  const FADE_PX = 20
+  const stubs: BandGradientStub[] = []
+  const rect = (x0: number, yT: number, x1: number, yB: number): string =>
+    `M${x0},${yT} L${x1},${yT} L${x1},${yB} L${x0},${yB} Z`
+  for (const e of edges) {
+    if (e.source === nodeId && e.systemInTime != null && Number.isFinite(e.systemInTime)) {
+      const att = data.localAttachments.get(e.id)
+      if (att && att.kind === "out" && e.systemInTime < e.startTime) {
+        const xSysIn = clampX(e.systemInTime)
+        const xStart = clampX(e.startTime)
+        const xFade = Math.max(xLeft, xSysIn - FADE_PX)
+        // Stub spans the fade-in PLUS the patient's tenure in the
+        // source (systemInTime → startTime). Gradient stops saturate
+        // at the fade-in's right edge so beyond `xSysIn` the rect
+        // renders as solid band-color.
+        if (xStart > xFade) {
+          const [yT, yB] = attachmentYRange(att, cl, S)
+          stubs.push({
+            pathD: rect(xFade, yT, xStart, yB),
+            x0: xFade,
+            x1: xSysIn,
+            from: 0,
+            to: 1,
+          })
+        }
+      }
+    }
+    if (e.target === nodeId && e.systemOutTime != null && Number.isFinite(e.systemOutTime)) {
+      const att = data.localAttachments.get(e.id)
+      if (att && att.kind === "in" && e.systemOutTime > e.endTime) {
+        const xSysOut = clampX(e.systemOutTime)
+        const xEnd = clampX(e.endTime)
+        const xFade = Math.min(xRight, xSysOut + FADE_PX)
+        if (xFade > xEnd) {
+          const [yT, yB] = attachmentYRange(att, cl, S)
+          stubs.push({
+            pathD: rect(xEnd, yT, xFade, yB),
+            x0: xSysOut,
+            x1: xFade,
+            from: 1,
+            to: 0,
+          })
+        }
+      }
+    }
+  }
+  return stubs
 }
 
 // `buildRibbonPath` lived here originally. It's been replaced by:

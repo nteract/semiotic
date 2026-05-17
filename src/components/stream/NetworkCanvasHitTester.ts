@@ -53,8 +53,11 @@ export function findNearestNetworkNode(
 
   if (bestNode) return bestNode
 
-  // Check edges if no node hit
+  // Check edges if no node hit. Decorative edges (e.g. ProcessSankey's
+  // gradient stubs) carry `interactive: false` to opt out — they paint
+  // but shouldn't intercept hover.
   for (const edge of sceneEdges) {
+    if ((edge as { interactive?: boolean }).interactive === false) continue
     const result = hitTestEdge(edge, px, py)
     if (result && result.distance < bestDist) {
       bestNode = result
@@ -233,7 +236,6 @@ function hitTestBezierEdge(
   if (!path || !ctx) return null
 
   try {
-    // First check isPointInPath for filled/wide bezier bands (sankey ribbons)
     if (ctx.isPointInPath(path, px, py)) {
       // Return midpoint of the band as hover position
       const sourceNode = typeof edge.datum?.source === "object" ? edge.datum.source : null

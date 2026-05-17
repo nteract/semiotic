@@ -163,7 +163,8 @@ const navData = [
       { title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" },
       { title: "Minard's Map", path: "/recipes/minards-map" },
       { title: "Streaming Migration Map", path: "/recipes/streaming-migration-map" },
-      { title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" }
+      { title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" },
+      { title: "ProcessSankey vs Classic", path: "/recipes/process-vs-classic-sankey" }
     ]
   },
   {

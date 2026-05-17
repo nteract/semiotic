@@ -313,6 +313,10 @@ export interface NetworkLineEdge {
 export interface NetworkBezierEdge {
   type: "bezier"
   pathD: string
+  /** When false, the hit tester skips this edge. Used for
+   *  decorative scene-edges like ProcessSankey's gradient stubs —
+   *  they paint visually but shouldn't intercept hover. */
+  interactive?: boolean
   bezierCache?: BezierCache
   style: Style
   datum: SceneDatum

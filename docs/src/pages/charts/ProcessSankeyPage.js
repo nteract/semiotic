@@ -189,6 +189,48 @@ const FANOUT_FIXTURE = {
   ],
 }
 
+// Helpdesk ticket flow used by the systemInTime / systemOutTime
+// example below. Each ticket has three timestamps the timeline needs
+// to express:
+//
+//   • ticketed (systemInTime): when a customer opened the ticket
+//     and joined the queue
+//   • triaged (startTime / endTime): when an agent picked it up
+//     and routed it to the resolution team
+//   • closed (systemOutTime): when the team finished and removed
+//     the ticket from the system
+//
+// The Sankey edge itself only encodes the routing transition (start
+// → end). The systemIn/systemOut accessors carry the queue-arrival
+// and team-departure stamps so the source band shows the wait time
+// before triage, and the target band shows the active work time
+// before close — both as soft 20-px gradient fades at the lifecycle
+// boundary, with the band's outline tracing the full lifetime.
+const HELPDESK_FIXTURE = {
+  label: "Helpdesk tickets",
+  domain: [0, 12],
+  axisTicks: [0, 2, 4, 6, 8, 10, 12].map((d) => ({ date: d, label: `Hr ${d}` })),
+  nodes: [
+    { id: "Queue", category: "queue" },
+    { id: "Closed", category: "closed" },
+  ],
+  edges: [
+    // Each ticket: opens at systemInTime, triaged at start, closed at systemOutTime.
+    { id: "t1", source: "Queue", target: "Closed", value: 1,
+      systemInTime: 0.6,  startTime: 1.6, endTime: 1.8,  systemOutTime: 3.0  },
+    { id: "t2", source: "Queue", target: "Closed", value: 1,
+      systemInTime: 1.4,  startTime: 2.5, endTime: 2.7,  systemOutTime: 5.4  },
+    { id: "t3", source: "Queue", target: "Closed", value: 1,
+      systemInTime: 2.2,  startTime: 3.4, endTime: 3.6,  systemOutTime: 6.8  },
+    { id: "t4", source: "Queue", target: "Closed", value: 1,
+      systemInTime: 3.5,  startTime: 4.6, endTime: 4.8,  systemOutTime: 7.2  },
+    { id: "t5", source: "Queue", target: "Closed", value: 1,
+      systemInTime: 5.0,  startTime: 6.1, endTime: 6.3,  systemOutTime: 9.0  },
+    { id: "t6", source: "Queue", target: "Closed", value: 1,
+      systemInTime: 6.4,  startTime: 7.5, endTime: 7.7,  systemOutTime: 10.5 },
+  ],
+}
+
 const FIXTURES = {
   team: TEAM_FIXTURE,
   library: LIBRARY_FIXTURE,
@@ -789,6 +831,73 @@ export default function ProcessSankeyPage() {
         />
       </div>
 
+      <h3 id="example-system-in-out">systemInTime / systemOutTime — arrival + departure stubs</h3>
+      <p>
+        An edge&rsquo;s <code>startTime</code> and <code>endTime</code>{" "}
+        describe when it leaves the source and arrives at the target.
+        Real systems often have a third and fourth moment that matter
+        for the band layout: <em>when did the unit of mass first
+        appear at the source?</em> and <em>when did it finally leave
+        the target?</em> The optional <code>systemInTime</code> and{" "}
+        <code>systemOutTime</code> fields carry those.
+      </p>
+      <p>
+        When an edge carries <code>systemInTime</code> &lt;{" "}
+        <code>startTime</code>, the source band stops painting its
+        flat fill and instead traces just the perimeter outline.
+        Inside, the renderer drops a 20-px gradient stub at that
+        edge&rsquo;s source slot — band-color saturated from{" "}
+        <code>systemInTime</code> through <code>startTime</code>,
+        fading transparent → band-color in the 20 px immediately to
+        the left of <code>systemInTime</code>. The same mechanic
+        runs on the target side when an edge carries{" "}
+        <code>systemOutTime</code> &gt; <code>endTime</code>: solid
+        band-color from <code>endTime</code> through{" "}
+        <code>systemOutTime</code>, then a 20-px fade to transparent
+        on the right. Wire the fields through with the matching
+        accessors:
+      </p>
+      <CodeBlock language="jsx">{`<ProcessSankey
+  // ... usual accessors ...
+  systemInTimeAccessor="ticketed"
+  systemOutTimeAccessor="closed"
+/>`}</CodeBlock>
+      <p>
+        The helpdesk-ticket fixture below has six tickets. Each one
+        opens (<code>systemInTime</code>), waits in queue, gets
+        triaged (the visible ribbon spans{" "}
+        <code>startTime</code> → <code>endTime</code>), is worked
+        on by the closing team, then finally closes (
+        <code>systemOutTime</code>). The Queue band shows the wait
+        time as a saturated stub leading into the soft fade-in at
+        each ticket&rsquo;s open time; the Closed band shows the
+        active work time as a saturated stub that fades out at each
+        ticket&rsquo;s close. The bands&rsquo; outer strokes trace
+        the full lifetime envelope, so the chart still reads as
+        node-shaped even where the interior is empty.
+      </p>
+      <div style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "auto", marginBottom: 16 }}>
+        <ProcessSankey
+          nodes={HELPDESK_FIXTURE.nodes}
+          edges={HELPDESK_FIXTURE.edges}
+          domain={HELPDESK_FIXTURE.domain}
+          axisTicks={HELPDESK_FIXTURE.axisTicks}
+          sourceAccessor="source"
+          targetAccessor="target"
+          valueAccessor="value"
+          nodeIdAccessor="id"
+          edgeIdAccessor="id"
+          startTimeAccessor="startTime"
+          endTimeAccessor="endTime"
+          systemInTimeAccessor="systemInTime"
+          systemOutTimeAccessor="systemOutTime"
+          colorBy="category"
+          showLegend
+          packing="reuse"
+          ribbonLane="both"
+        />
+      </div>
+
       <h2 id="props">Props reference</h2>
 
       <h3>Data</h3>
@@ -814,6 +923,25 @@ export default function ProcessSankeyPage() {
         <li><code>sourceAccessor</code> / <code>targetAccessor</code> / <code>valueAccessor</code></li>
         <li><code>startTimeAccessor</code> / <code>endTimeAccessor</code> / <code>xExtentAccessor</code></li>
         <li><code>edgeIdAccessor</code> (defaults to a synthesized id)</li>
+        <li>
+          <code>systemInTimeAccessor</code> — optional per-edge
+          stamp on the source attachment. When supplied AND less
+          than <code>startTime</code>, the source band drops its
+          flat fill in favor of an outline and paints a 20-px
+          gradient stub at the edge&rsquo;s slot fading transparent →
+          band-color in the 20 px before <code>systemInTime</code>;
+          the slot stays saturated through <code>startTime</code>.
+          See the <a href="#example-system-in-out">arrival + departure
+          stubs</a> example.
+        </li>
+        <li>
+          <code>systemOutTimeAccessor</code> — mirror on the
+          target side. When supplied AND greater than{" "}
+          <code>endTime</code>, the target band shows a saturated
+          stub from <code>endTime</code> through{" "}
+          <code>systemOutTime</code>, then a 20-px fade to
+          transparent past <code>systemOutTime</code>.
+        </li>
         <li>
           Time accessors return <code>number</code>, <code>Date</code>, or
           a parseable date string. Internal computation uses ms since

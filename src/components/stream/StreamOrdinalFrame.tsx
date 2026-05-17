@@ -228,6 +228,7 @@ function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
     </div>
   )
 }
+;(DefaultOrdinalTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
 
 // ── Component ──────────────────────────────────────────────────────────
 

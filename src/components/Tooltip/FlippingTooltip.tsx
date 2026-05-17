@@ -58,6 +58,18 @@ interface FlippingTooltipProps {
  */
 function hasOwnChrome(node: React.ReactNode): boolean {
   if (!React.isValidElement(node)) return false
+  // Component-level opt-in. The auto-chrome path only inspects props
+  // on the *immediate* React element, which works for intrinsic
+  // HTML (`<div className="…">`) but misses components whose render
+  // output paints chrome internally. Result: <DefaultNetworkTooltip />
+  // (and any other "I own my chrome" component) silently got the
+  // wrapper's chrome layered on top, producing the double-padded
+  // double-background "box around the tooltip" regression. A static
+  // `ownsChrome` flag on the component type lets those declare
+  // ownership without exposing the className on their wrapping
+  // React element.
+  const type = node.type as { ownsChrome?: boolean } | string
+  if (typeof type !== "string" && type && type.ownsChrome === true) return true
   const props = node.props as { className?: unknown; style?: React.CSSProperties }
   if (typeof props.className === "string" && props.className.trim().length > 0) return true
   const style = props.style
