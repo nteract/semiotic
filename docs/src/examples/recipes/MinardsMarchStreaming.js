@@ -102,6 +102,22 @@ const widthScale = scaleLinear()
   .domain([Math.min(...allSurvivors), Math.max(...allSurvivors)])
   .range([2, 72])
 
+// Button style for the playback controls. Both light + dark themes
+// route through the same Semiotic CSS vars: `--surface-2` for the
+// button face, `--surface-3` for the border, `--text-primary` for
+// the label. The previous hardcoded `#fff` + `#ccc` made the
+// buttons unreadable in dark mode (white text on white surface).
+const streamBtnStyle = {
+  padding: "4px 12px",
+  borderRadius: 4,
+  border: "1px solid var(--surface-3, #2a2a35)",
+  background: "var(--surface-2, #1a1a22)",
+  color: "var(--text-primary, #e5e7eb)",
+  cursor: "pointer",
+  fontFamily: "inherit",
+  fontSize: 13,
+}
+
 // ── Component ─────────────────────────────────────────────────────────
 
 export default function MinardsMarchStreaming({ width = 900 }) {
@@ -250,43 +266,24 @@ export default function MinardsMarchStreaming({ width = 900 }) {
             onClick={() => setPlaying(p => !p)}
             disabled={isComplete}
             style={{
-              padding: "4px 16px",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              background: playing ? "#eee" : "#fff",
+              ...streamBtnStyle,
+              background: playing ? "var(--surface-3, #2a2a35)" : "var(--surface-2, #1a1a22)",
               cursor: isComplete ? "default" : "pointer",
-              fontWeight: 600
+              fontWeight: 600,
+              opacity: isComplete ? 0.5 : 1,
             }}
           >
             {playing ? "Pause" : isComplete ? "Done" : "Play"}
           </button>
           {!playing && !isComplete && (
-            <button
-              onClick={advanceStep}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 4,
-                border: "1px solid #ccc",
-                background: "#fff",
-                cursor: "pointer"
-              }}
-            >
+            <button onClick={advanceStep} style={streamBtnStyle}>
               Step
             </button>
           )}
-          <button
-            onClick={reset}
-            style={{
-              padding: "4px 12px",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              background: "#fff",
-              cursor: "pointer"
-            }}
-          >
+          <button onClick={reset} style={streamBtnStyle}>
             Reset
           </button>
-          <span style={{ color: "#666" }}>
+          <span style={{ color: "var(--text-secondary, #94a3b8)" }}>
             {step} / {flowSequence.length} segments
             {isComplete && " — campaign complete"}
           </span>

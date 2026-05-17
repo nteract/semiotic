@@ -1,24 +1,52 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
+const semioticLogo = new URL("../../../public/assets/img/semiotic.png", import.meta.url).href
+const semioticLogoDark = new URL("../../../public/assets/img/semiotic-darkmode.png", import.meta.url).href
+
 /**
- * BlogLayout is the chrome wrapper for /blog/ and /blog/:slug/.
+ * BlogLayout — chrome for /blog/ and /blog/:slug/.
  *
- * Design intent: the blog is its own corner of the site, distinct
- * from the reference docs. No top nav bar, no sidebar — the page
- * starts at the article. A small "Semiotic Blog" wordmark sits in
- * the top-left corner as the only persistent chrome above the
- * content. The footer carries the only "back to docs" jump.
+ * Two clickable anchors in the top strip:
+ *   - Semiotic logo → "/" (back to the docs landing)
+ *   - "Blog" → "/blog/" (anchor for readers who jumped into an
+ *     individual entry from a social link and want to see the
+ *     full index)
+ *
+ * The logo image follows the same dark/light theme attribute the
+ * docs app reads, so a user landing directly on a blog URL still
+ * gets the right brand mark for their preference.
  */
 export default function BlogLayout({ children }) {
+  // Track the document's data-theme attribute. DocsApp owns the
+  // theme toggle / localStorage write; blog routes opt out of the
+  // docs chrome but still inherit the same data-theme on <html>.
+  // Watching it via MutationObserver keeps the logo in step even
+  // when a user navigates blog → docs → flips theme → back to blog.
+  const [theme, setTheme] = useState(() => {
+    if (typeof document === "undefined") return "dark"
+    return document.documentElement.getAttribute("data-theme") || "dark"
+  })
+  useEffect(() => {
+    if (typeof document === "undefined") return
+    const obs = new MutationObserver(() => {
+      setTheme(document.documentElement.getAttribute("data-theme") || "dark")
+    })
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] })
+    return () => obs.disconnect()
+  }, [])
+
   return (
     <div style={styles.shell}>
-      <div style={styles.wordmark}>
-        <Link to="/blog" style={styles.wordmarkLink}>
-          <span style={styles.wordmarkBrand}>Semiotic</span>
-          <span style={styles.wordmarkSep}>—</span>
-          <span style={styles.wordmarkSection}>Blog</span>
+      <div style={styles.topBar}>
+        <Link to="/" style={styles.logoLink} aria-label="Semiotic home">
+          <img
+            src={theme === "dark" ? semioticLogoDark : semioticLogo}
+            alt="Semiotic"
+            style={styles.logoImg}
+          />
         </Link>
+        <Link to="/blog" style={styles.blogLink}>Blog</Link>
       </div>
 
       <main style={styles.main}>{children}</main>
@@ -53,42 +81,33 @@ const styles = {
     minHeight: "100vh",
     background: "var(--bg-primary, #0a0a0f)",
     color: "var(--text-primary, #e5e7eb)",
-    // Slightly tighter letter-spacing on the body gives the blog a
-    // bookier feel than the docs without changing fonts.
     letterSpacing: "-0.005em",
   },
-  // Wordmark — small, top-left, no banner background. Just a piece
-  // of typography. The serif-mono mix evokes editorial mastheads
-  // without committing to a real serif (the docs site doesn't ship
-  // one).
-  wordmark: {
+  topBar: {
     maxWidth: 1100,
     width: "100%",
     margin: "0 auto",
-    padding: "28px 32px 0",
+    padding: "22px 32px 0",
+    display: "flex",
+    alignItems: "center",
+    gap: 18,
   },
-  wordmarkLink: {
+  logoLink: {
     display: "inline-flex",
-    alignItems: "baseline",
-    gap: 10,
+    alignItems: "center",
     textDecoration: "none",
-    color: "var(--text-primary, #e5e7eb)",
   },
-  wordmarkBrand: {
+  logoImg: {
+    height: 40,
+    width: "auto",
+    display: "block",
+  },
+  blogLink: {
     fontSize: 18,
-    fontWeight: 600,
-    letterSpacing: "-0.01em",
-  },
-  wordmarkSep: {
-    color: "var(--text-secondary, #94a3b8)",
-    opacity: 0.6,
-    fontSize: 16,
-  },
-  wordmarkSection: {
-    fontSize: 18,
-    fontWeight: 400,
-    color: "var(--text-secondary, #94a3b8)",
+    fontWeight: 500,
     fontStyle: "italic",
+    color: "var(--text-secondary, #94a3b8)",
+    textDecoration: "none",
   },
   main: {
     flex: 1,

@@ -2,42 +2,56 @@ import React from "react"
 import { Link } from "react-router-dom"
 import { OrbitDiagram, ThemeProvider } from "semiotic"
 
-// Small hierarchy to demo: a fake org chart, three levels.
-const ORG = {
-  id: "CEO",
+// Solar system — depth = orbit, leaf value = relative mass (log-
+// scaled to keep the dots in a readable range). The metaphor IS
+// the layout, which is exactly the case OrbitDiagram is good at.
+// Each planet's moons (a few of them, anyway) ride along on a
+// second-level orbit, so the chart actually has the hierarchy
+// the visual implies — not just decorative rings.
+const SOLAR_SYSTEM = {
+  id: "Sun",
+  value: 333000, // ~earth-masses; gets a huge center dot
   children: [
+    { id: "Mercury", value: 0.055 },
+    { id: "Venus",   value: 0.815 },
     {
-      id: "VP Engineering",
+      id: "Earth", value: 1.0,
+      children: [{ id: "Moon", value: 0.012 }],
+    },
+    {
+      id: "Mars", value: 0.107,
       children: [
-        { id: "Platform", value: 12 },
-        { id: "Product Eng", value: 18 },
-        { id: "Infra", value: 9 },
-        { id: "Security", value: 6 },
+        { id: "Phobos", value: 0.001 },
+        { id: "Deimos", value: 0.001 },
       ],
     },
     {
-      id: "VP Sales",
+      id: "Jupiter", value: 318,
       children: [
-        { id: "NA Enterprise", value: 14 },
-        { id: "EMEA", value: 8 },
-        { id: "APAC", value: 5 },
+        { id: "Io",       value: 0.015 },
+        { id: "Europa",   value: 0.008 },
+        { id: "Ganymede", value: 0.025 },
+        { id: "Callisto", value: 0.018 },
       ],
     },
     {
-      id: "VP Marketing",
+      id: "Saturn", value: 95,
       children: [
-        { id: "Brand", value: 4 },
-        { id: "Growth", value: 7 },
-        { id: "Content", value: 3 },
+        { id: "Titan",    value: 0.023 },
+        { id: "Rhea",     value: 0.0004 },
+        { id: "Iapetus",  value: 0.0003 },
       ],
     },
     {
-      id: "COO",
+      id: "Uranus", value: 14.5,
       children: [
-        { id: "Finance", value: 5 },
-        { id: "People", value: 6 },
-        { id: "Legal", value: 3 },
+        { id: "Titania", value: 0.0006 },
+        { id: "Oberon",  value: 0.0005 },
       ],
+    },
+    {
+      id: "Neptune", value: 17.1,
+      children: [{ id: "Triton", value: 0.004 }],
     },
   ],
 }
@@ -94,21 +108,24 @@ function Body() {
 
       <h2 id="demo">Live demo</h2>
       <p>
-        A fake four-VP org. Three levels of hierarchy; depth
-        renders as ring radius. The size of each leaf encodes
-        headcount.
+        The solar system, because the metaphor IS the layout. Sun
+        at the center, eight planets on the first orbit out, the
+        named moons of each planet on a second orbit ring around
+        their planet. Sizes are scaled (log) earth-masses, so
+        Jupiter and Saturn dominate their inner-system neighbors
+        and the Moon is a recognizable dot next to Earth.
       </p>
       <div style={chartFrame}>
         <ThemeProvider theme="carbon-dark">
           <OrbitDiagram
-            data={ORG}
+            data={SOLAR_SYSTEM}
             childrenAccessor="children"
             valueAccessor="value"
             colorByDepth
-            width={600}
-            height={520}
+            width={700}
+            height={560}
             orbitMode="flat"
-            speed={0.15}
+            speed={0.08}
             showLabels
           />
         </ThemeProvider>
@@ -205,6 +222,45 @@ function Body() {
         toward the viewer, faux-3-D). Both rotate continuously
         unless <code>animated={"{false}"}</code> is set —
         useful for screenshot snapshots.
+      </p>
+
+      <h2 id="streaming">Streaming / push mode</h2>
+      <p>
+        OrbitDiagram is the one chart family in Semiotic where{" "}
+        <strong>push mode doesn't apply.</strong> The hierarchy
+        layout has to consider the whole tree at once — sibling
+        positions on each orbit depend on how many children each
+        parent has, the orbit radii depend on tree depth, the
+        animation speed reads against the full ring. There's no
+        "push one more leaf" that has a sensible meaning;
+        appending a node restructures the layout.
+      </p>
+      <p>
+        The supported pattern when the underlying hierarchy
+        changes is: keep your tree in state, mutate it,{" "}
+        pass the new tree as the <code>data</code> prop. The
+        chart's animated transitions still pick up: orbit radii
+        ease, nodes that survive between trees keep their angular
+        position, new nodes fade in, removed nodes fade out.
+        Same visual result as push for charts that support it;
+        just a different mechanism under the hood.
+      </p>
+      <pre style={{ background: "var(--surface-1)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>
+{`const [tree, setTree] = useState(initialTree)
+
+// Adding a moon to Saturn —
+setTree((root) => structuredClone(root, (...) => /* mutate */))
+
+<OrbitDiagram data={tree} childrenAccessor="children" valueAccessor="mass" />`}
+      </pre>
+      <p>
+        Same family applies to{" "}
+        <Link to="/charts/tree-diagram">TreeDiagram</Link>,{" "}
+        <Link to="/charts/treemap">Treemap</Link>, and{" "}
+        <Link to="/charts/circle-pack">CirclePack</Link>: all
+        hierarchy HOCs are state-prop driven rather than
+        push-driven. Flat-data chart families (XY, ordinal,
+        network with explicit edges, geo) all support push.
       </p>
 
       <h2 id="related">Related</h2>

@@ -1,18 +1,22 @@
-import React from "react"
+import React, { useRef } from "react"
 import { Link } from "react-router-dom"
 import { DifferenceChart, ThemeProvider } from "semiotic"
+import BlogPushDemo from "../components/BlogPushDemo.js"
 
 // Synthetic year-over-year metric. seriesA undershoots Q1 then
 // overshoots Q3 — two clear crossover regions, which is exactly
-// what DifferenceChart is built to make obvious.
+// what DifferenceChart is built to make obvious. Numeric x lets
+// the chart's crossover-interpolation math run on a linear axis;
+// xFormat / tooltip rewrites the bare 0–11 back into month names.
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const YOY = (() => {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
   // Last year ("b") drifts steadily. This year ("a") starts cold,
   // catches up by April, runs hot through August, slumps in fall.
   const a = [180, 196, 215, 240, 268, 295, 312, 305, 282, 258, 238, 222]
   const b = [220, 228, 232, 238, 244, 252, 260, 268, 276, 282, 285, 288]
-  return months.map((m, i) => ({ month: m, a: a[i], b: b[i] }))
+  return a.map((v, i) => ({ month: i, monthLabel: MONTH_LABELS[i], a: v, b: b[i] }))
 })()
+const monthFormat = (m) => MONTH_LABELS[Math.round(m)] ?? ""
 
 const chartFrame = {
   background: "var(--surface-1)",
@@ -20,6 +24,43 @@ const chartFrame = {
   padding: 16,
   border: "1px solid var(--surface-3)",
   margin: "20px 0",
+}
+
+function PushDemo() {
+  const chartRef = useRef(null)
+  return (
+    <div style={chartFrame}>
+      <ThemeProvider theme="carbon-dark">
+        <BlogPushDemo
+          chartRef={chartRef}
+          frames={YOY}
+          pushAt={(ref, row) => ref?.push?.(row)}
+          resetAt={(ref) => ref?.clear?.()}
+        >
+          <DifferenceChart
+            ref={chartRef}
+            xAccessor="month"
+            seriesAAccessor="a"
+            seriesBAccessor="b"
+            seriesALabel="This year"
+            seriesBLabel="Last year"
+            xFormat={monthFormat}
+            xExtent={[0, 11]}
+            yExtent={[170, 320]}
+            frameProps={{
+              axes: [
+                { orient: "left" },
+                { orient: "bottom", tickValues: [0, 2, 4, 6, 8, 10] },
+              ],
+            }}
+            width={680}
+            height={300}
+            tooltip
+          />
+        </BlogPushDemo>
+      </ThemeProvider>
+    </div>
+  )
 }
 
 function Body() {
@@ -91,7 +132,13 @@ function Body() {
             seriesBAccessor="b"
             seriesALabel="This year"
             seriesBLabel="Last year"
-            xScaleType="band"
+            xFormat={monthFormat}
+            frameProps={{
+              axes: [
+                { orient: "left" },
+                { orient: "bottom", tickValues: [0, 2, 4, 6, 8, 10] },
+              ],
+            }}
             width={680}
             height={300}
             showLegend
@@ -178,16 +225,66 @@ function Body() {
         x-values; <code>"band"</code> works for categorical x.
       </p>
 
-      <h2 id="streaming">Streaming</h2>
+      <h2 id="streaming">Streaming / push mode</h2>
       <p>
-        DifferenceChart supports the push API: omit{" "}
-        <code>data</code>, take a ref, call{" "}
-        <code>ref.current.push({"{ x, a, b }"})</code>. The chart
-        owns its raw-data buffer internally; push triggers
-        segment recomputation. Use the new{" "}
-        <code>windowSize</code> prop to cap the buffer with FIFO
-        eviction for long-running streams.
+        Every Semiotic HOC can be driven by either a static{" "}
+        <code>data</code> prop OR a forwarded ref that exposes{" "}
+        <code>push()</code> / <code>pushMany()</code> /{" "}
+        <code>clear()</code>. Push mode is the right reach when
+        rows arrive over time — server-sent events, WebSocket
+        ticks, a setInterval poll, an event stream — and you want
+        the chart to fold them in without unmounting / remounting.
+        DifferenceChart in particular has to recompute its
+        crossover segments every push (it can't precompute them
+        ahead of the data) but the ref-driven internal buffer
+        absorbs that cost without bouncing React state.
       </p>
+      <p>
+        Step through the year one month at a time. Watch the
+        chart pick up the new month and recompute the fill
+        between the two series, including the crossover
+        interpolation when the lines cross.
+      </p>
+      <PushDemo />
+      <p>
+        Wiring is identical to a static chart minus the{" "}
+        <code>data</code> prop:
+      </p>
+      <pre style={{ background: "var(--surface-1)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>
+{`const chartRef = useRef()
+
+// somewhere a stream feeds the chart...
+chartRef.current.push({ month: 12, a: 240, b: 295 })
+
+<DifferenceChart
+  ref={chartRef}
+  xAccessor="month"
+  seriesAAccessor="a"
+  seriesBAccessor="b"
+  windowSize={36}  // FIFO cap — keep the last 36 rows
+/>`}
+      </pre>
+      <p>
+        Why use push mode here vs setting{" "}
+        <code>data={"{rows}"}</code> on each update? Two reasons:
+      </p>
+      <ul>
+        <li>
+          <strong>No remount cost.</strong> Setting <code>data</code>
+          to a new array on every tick is a perfectly valid
+          pattern, and Semiotic absorbs it. But push mode skips
+          the React reconciliation for the data prop — the chart
+          reads its internal buffer directly. On long-running
+          streams (minutes of ticks) that's measurable.
+        </li>
+        <li>
+          <strong>Bounded buffer.</strong>{" "}
+          <code>windowSize</code> evicts the oldest rows on a
+          FIFO basis so a multi-hour stream doesn't accumulate
+          unbounded memory. Setting <code>data</code> would mean
+          your code maintains the sliding window manually.
+        </li>
+      </ul>
 
       <h2 id="related">Related</h2>
       <ul>

@@ -5,10 +5,10 @@ import BlogEntryCard from "./components/BlogEntryCard.js"
 import { entriesByDateDesc } from "./entries.js"
 
 /**
- * /blog/ — show the most recent entry in full, then a list of
- * preview cards for the next 10 entries below. "Most recent in
- * full" matches Joel-style classic blog layout: a fresh reader
- * lands on an actual article, not a TOC.
+ * /blog/ — most recent entry full, then a preview list of the
+ * next 10 underneath. The break between article and list has its
+ * own thick band + label so a scrolling reader doesn't lose
+ * track of where the article ends.
  */
 export default function BlogIndexPage() {
   const entries = entriesByDateDesc()
@@ -28,12 +28,19 @@ export default function BlogIndexPage() {
     <BlogLayout>
       <BlogEntryView entry={latest} />
       {previews.length > 0 && (
-        <section style={styles.previews}>
-          <h2 style={styles.previewsHeader}>More from the blog</h2>
-          {previews.map((e) => (
-            <BlogEntryCard key={e.slug} entry={e} />
-          ))}
-        </section>
+        <>
+          <div style={styles.divider}>
+            <div style={styles.dividerInner}>
+              <span style={styles.dividerLabel}>More from the blog</span>
+              <span style={styles.dividerCount}>{previews.length} more {previews.length === 1 ? "entry" : "entries"}</span>
+            </div>
+          </div>
+          <section style={styles.previews}>
+            {previews.map((e) => (
+              <BlogEntryCard key={e.slug} entry={e} />
+            ))}
+          </section>
+        </>
       )}
     </BlogLayout>
   )
@@ -45,21 +52,43 @@ const styles = {
     margin: "0 auto",
     padding: "48px 32px",
   },
+  // Heavier divider band — the article above ends with body text
+  // and the cards below open with bold titles, so the reader needs
+  // a clear "section change" beat between them. A full-bleed strip
+  // with a tinted background + section label does the lift.
+  divider: {
+    background: "var(--surface-1, #111118)",
+    borderTop: "1px solid var(--surface-3, #2a2a35)",
+    borderBottom: "1px solid var(--surface-3, #2a2a35)",
+    marginTop: 56,
+    marginBottom: 0,
+  },
+  dividerInner: {
+    maxWidth: 960,
+    margin: "0 auto",
+    padding: "20px 32px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  dividerLabel: {
+    fontSize: 13,
+    textTransform: "uppercase",
+    letterSpacing: "0.12em",
+    color: "var(--text-primary, #e5e7eb)",
+    fontWeight: 700,
+  },
+  dividerCount: {
+    fontSize: 12,
+    color: "var(--text-secondary, #94a3b8)",
+    letterSpacing: "0.04em",
+    fontFamily: "var(--font-code, ui-monospace, SFMono-Regular, Menlo, monospace)",
+  },
   previews: {
     maxWidth: 960,
     margin: "0 auto",
-    padding: "0 32px 48px",
-  },
-  previewsHeader: {
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: "0.1em",
-    color: "var(--text-secondary, #94a3b8)",
-    margin: 0,
-    marginBottom: 8,
-    paddingTop: 36,
-    paddingBottom: 4,
-    borderTop: "1px solid var(--surface-3, #2a2a35)",
-    fontWeight: 600,
+    padding: "8px 32px 48px",
   },
 }

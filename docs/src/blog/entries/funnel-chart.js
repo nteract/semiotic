@@ -1,6 +1,7 @@
-import React from "react"
+import React, { useRef } from "react"
 import { Link } from "react-router-dom"
 import { FunnelChart, ThemeProvider } from "semiotic"
+import BlogPushDemo from "../components/BlogPushDemo.js"
 
 // Classic SaaS signup funnel — each step shrinks, the drop-off
 // rate is what the chart is meant to surface.
@@ -18,6 +19,33 @@ const chartFrame = {
   padding: 16,
   border: "1px solid var(--surface-3)",
   margin: "20px 0",
+}
+
+function PushDemo() {
+  const chartRef = useRef(null)
+  return (
+    <div style={chartFrame}>
+      <ThemeProvider theme="carbon-dark">
+        <BlogPushDemo
+          chartRef={chartRef}
+          frames={FUNNEL}
+          pushAt={(ref, row) => ref?.push?.(row)}
+          resetAt={(ref) => ref?.clear?.()}
+        >
+          <FunnelChart
+            ref={chartRef}
+            stepAccessor="step"
+            valueAccessor="count"
+            dataIdAccessor="step"
+            orientation="horizontal"
+            width={680}
+            height={360}
+            tooltip
+          />
+        </BlogPushDemo>
+      </ThemeProvider>
+    </div>
+  )
 }
 
 function Body() {
@@ -80,6 +108,7 @@ function Body() {
             data={FUNNEL}
             stepAccessor="step"
             valueAccessor="count"
+            orientation="horizontal"
             width={680}
             height={360}
             tooltip
@@ -92,6 +121,61 @@ function Body() {
         — that's onboarding's job. Activated → Subscribed loses
         63% — that's pricing/value-prop's job. Subscribed →
         Retained loses 22% — that's product's job.
+      </p>
+
+      <h2 id="orientation">Vertical vs horizontal</h2>
+      <p>
+        FunnelChart ships in two orientations and they're not
+        interchangeable. The default is{" "}
+        <code>orientation="horizontal"</code> (the chart above —
+        bars run horizontally, the stages stack top to bottom).
+        The same data with{" "}
+        <code>orientation="vertical"</code> below puts the stages
+        across the x-axis and bars run downward from a baseline:
+      </p>
+      <div style={chartFrame}>
+        <ThemeProvider theme="carbon-dark">
+          <FunnelChart
+            data={FUNNEL}
+            stepAccessor="step"
+            valueAccessor="count"
+            orientation="vertical"
+            width={680}
+            height={300}
+            tooltip
+          />
+        </ThemeProvider>
+      </div>
+      <p>
+        Which one to pick comes down to three questions:
+      </p>
+      <ul>
+        <li>
+          <strong>Stage labels.</strong> Long labels ("Email
+          verification confirmed in &lt;5 min") read cleanly on the
+          horizontal layout — the label sits flush against its
+          bar with room to breathe. The vertical layout forces
+          labels under each bar and they wrap or angle.
+        </li>
+        <li>
+          <strong>Number of stages.</strong> Horizontal handles
+          7–10 stages without crowding; the chart just gets
+          taller. Vertical works up to ~6 stages before the bars
+          get too thin to read.
+        </li>
+        <li>
+          <strong>Narrative direction.</strong> Horizontal feels
+          like "down the funnel" (top → bottom is the literal
+          metaphor). Vertical feels like a timeline ("over time,
+          stages drop off") and pairs well with sequential
+          conversion across a flow that has time in the x-axis.
+        </li>
+      </ul>
+      <p>
+        Default to horizontal. Switch to vertical when stages are
+        few and the chart shares an x-axis with neighboring time
+        series (e.g. a dashboard where the funnel sits next to a
+        weekly line chart).
       </p>
 
       <h2 id="how-to-read">How to read it</h2>
@@ -176,6 +260,50 @@ function Body() {
         per-category coloring across the same funnel. Tooltips,
         legends, annotations, and themes all work the same way
         as the rest of the chart family.
+      </p>
+
+      <h2 id="streaming">Streaming / push mode</h2>
+      <p>
+        Funnels are the classic dashboard chart, and dashboards
+        are the classic place where data updates in real time —
+        marketing watches today's signup numbers grow through the
+        day, ops watches the orders-shipped count tick up as
+        warehouses log scans. Push mode lets the funnel update
+        live without any re-render dance.
+      </p>
+      <p>
+        The demo below pushes one stage at a time, the way the
+        chart might fill in as a daily extract job finishes each
+        stage's count:
+      </p>
+      <PushDemo />
+      <p>
+        Wiring:
+      </p>
+      <pre style={{ background: "var(--surface-1)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>
+{`const ref = useRef()
+
+// Every time a stage count finishes computing —
+ref.current.push({ step: "Subscribed", count: 2100 })
+
+// Counts that change over time go through update() —
+ref.current.update("Subscribed", (d) => ({ ...d, count: 2104 }))
+
+<FunnelChart
+  ref={ref}
+  stepAccessor="step"
+  valueAccessor="count"
+  dataIdAccessor="step"  // required for update() / remove()
+/>`}
+      </pre>
+      <p>
+        Why push mode helps: bar-and-trapezoid charts animate
+        size transitions naturally — a tick that bumps a stage's
+        count from 2100 to 2104 reads as the bar growing slightly.
+        With <code>data</code> resets, the chart redraws from
+        scratch and the animation is lost. Push triggers the
+        chart's transition path, so the size delta is the
+        animated motion the viewer actually wants to see.
       </p>
 
       <h2 id="related">Related</h2>

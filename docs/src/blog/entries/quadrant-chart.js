@@ -1,23 +1,34 @@
-import React from "react"
+import React, { useRef } from "react"
 import { Link } from "react-router-dom"
 import { QuadrantChart, ThemeProvider } from "semiotic"
+import BlogPushDemo from "../components/BlogPushDemo.js"
 
-// Effort × impact for an imaginary backlog. The quadrant config
-// names each cell — "quick wins" sits low-effort high-impact;
-// "money pits" is the bottom-right anti-pattern.
+// Effort × impact for a 16-feature roadmap. Each item carries a
+// short name so the dots are not just dots — the eye recognizes
+// individual proposals and the quadrant they landed in. Layout
+// intentionally has at least 3 items in every quadrant so the
+// labels matter; the bottom-right "money pit" cluster is the
+// punchline the chart exists to surface.
 const BACKLOG = [
-  { id: "search-typeahead",      effort: 2, impact: 9 },
-  { id: "billing-rewrite",       effort: 9, impact: 8 },
-  { id: "dark-mode",             effort: 3, impact: 5 },
-  { id: "i18n-french",           effort: 7, impact: 4 },
-  { id: "fix-csv-export",        effort: 1, impact: 7 },
-  { id: "onboarding-redesign",   effort: 6, impact: 8 },
-  { id: "admin-audit-log",       effort: 4, impact: 3 },
-  { id: "remove-old-api",        effort: 8, impact: 2 },
-  { id: "marketing-page-revamp", effort: 3, impact: 4 },
-  { id: "alerting-v2",           effort: 7, impact: 7 },
-  { id: "dependency-cleanup",    effort: 5, impact: 2 },
-  { id: "experiment-platform",   effort: 9, impact: 9 },
+  // Quick wins (low effort, high impact)
+  { id: "Search typeahead",         effort: 2, impact: 9 },
+  { id: "Fix CSV export bug",       effort: 1, impact: 7 },
+  { id: "Email digest opt-out",     effort: 2, impact: 6 },
+  { id: "Dark mode",                effort: 3, impact: 6 },
+  // Strategic bets (high effort, high impact)
+  { id: "Billing rewrite",          effort: 9, impact: 8 },
+  { id: "Onboarding redesign",      effort: 7, impact: 8 },
+  { id: "Experiment platform",      effort: 9, impact: 9 },
+  { id: "Alerting v2",              effort: 8, impact: 7 },
+  // Fill-in (low effort, low impact)
+  { id: "Admin audit log",          effort: 4, impact: 4 },
+  { id: "Marketing page revamp",    effort: 3, impact: 4 },
+  { id: "Per-user keyboard shortcuts", effort: 3, impact: 3 },
+  // Money pits (high effort, low impact)
+  { id: "i18n: French",             effort: 8, impact: 4 },
+  { id: "Remove deprecated API",    effort: 8, impact: 2 },
+  { id: "Migrate to new ORM",       effort: 9, impact: 3 },
+  { id: "Dependency cleanup sprint", effort: 7, impact: 2 },
 ]
 
 const chartFrame = {
@@ -26,6 +37,44 @@ const chartFrame = {
   padding: 16,
   border: "1px solid var(--surface-3)",
   margin: "20px 0",
+}
+
+function PushDemo() {
+  const chartRef = useRef(null)
+  return (
+    <div style={chartFrame}>
+      <ThemeProvider theme="carbon-dark">
+        <BlogPushDemo
+          chartRef={chartRef}
+          frames={BACKLOG}
+          pushAt={(ref, row) => ref?.push?.(row)}
+          resetAt={(ref) => ref?.clear?.()}
+        >
+          <QuadrantChart
+            ref={chartRef}
+            xAccessor="effort"
+            yAccessor="impact"
+            pointIdAccessor="id"
+            xCenter={5.5}
+            yCenter={5.5}
+            xExtent={[0, 10]}
+            yExtent={[0, 10]}
+            pointRadius={8}
+            pointOpacity={0.9}
+            quadrants={{
+              topLeft:     { label: "Quick wins",      color: "#22c55e" },
+              topRight:    { label: "Strategic bets",  color: "#3b82f6" },
+              bottomLeft:  { label: "Fill-in",         color: "#94a3b8" },
+              bottomRight: { label: "Money pits",      color: "#ef4444" },
+            }}
+            width={680}
+            height={420}
+            tooltip
+          />
+        </BlogPushDemo>
+      </ThemeProvider>
+    </div>
+  )
 }
 
 function Body() {
@@ -105,14 +154,27 @@ function Body() {
             yAccessor="impact"
             xCenter={5.5}
             yCenter={5.5}
+            pointRadius={8}
+            pointOpacity={0.9}
+            xExtent={[0, 10]}
+            yExtent={[0, 10]}
             quadrants={{
-              topLeft:     { label: "Quick wins",      color: "var(--semiotic-success)" },
-              topRight:    { label: "Strategic bets",  color: "var(--semiotic-info)" },
-              bottomLeft:  { label: "Fill-in",         color: "var(--semiotic-secondary)" },
-              bottomRight: { label: "Money pits",      color: "var(--semiotic-danger)" },
+              topLeft:     { label: "Quick wins",      color: "#22c55e" },
+              topRight:    { label: "Strategic bets",  color: "#3b82f6" },
+              bottomLeft:  { label: "Fill-in",         color: "#94a3b8" },
+              bottomRight: { label: "Money pits",      color: "#ef4444" },
             }}
-            width={680}
-            height={420}
+            annotations={BACKLOG.map((b) => ({
+              type: "label",
+              x: b.effort,
+              y: b.impact,
+              label: b.id,
+              dy: -10,
+              dx: 0,
+              style: { fontSize: 11, fill: "var(--text-primary, #e5e7eb)" },
+            }))}
+            width={760}
+            height={520}
             tooltip
           />
         </ThemeProvider>
@@ -199,6 +261,49 @@ function Body() {
   }}
 />`}
       </pre>
+
+      <h2 id="streaming">Streaming / push mode</h2>
+      <p>
+        Quadrant charts are usually authored — someone sat down,
+        scored each item, dropped it on the grid. But streaming
+        becomes interesting when the scores themselves come from
+        live signals: ticket effort tracked from an issue
+        tracker's labels, impact tracked from an analytics rollup
+        the moment a feature ships. The grid becomes a live
+        dashboard, not a static slide.
+      </p>
+      <p>
+        The demo below pushes items into the chart one at a time,
+        like backlog tickets arriving from a planning session.
+      </p>
+      <PushDemo />
+      <p>
+        Wiring:
+      </p>
+      <pre style={{ background: "var(--surface-1)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>
+{`const ref = useRef()
+
+ref.current.push({ id: "Search typeahead", effort: 2, impact: 9 })
+// later, scores update —
+ref.current.update("Search typeahead", (d) => ({ ...d, impact: 8 }))
+
+<QuadrantChart
+  ref={ref}
+  xAccessor="effort" yAccessor="impact"
+  pointIdAccessor="id"  // required for update() / remove()
+  xCenter={5.5} yCenter={5.5}
+  quadrants={...}
+/>`}
+      </pre>
+      <p>
+        Why push mode helps:{" "}
+        <code>update(id, fn)</code> mutates a single point in
+        place without re-keying the rest. With{" "}
+        <code>data={"{...}"}</code> on each tick, the whole array
+        re-renders and the chart's hover state, animations, and
+        any in-flight tooltip get reset. Push mode keeps the
+        interaction context.
+      </p>
 
       <h2 id="related">Related</h2>
       <ul>
