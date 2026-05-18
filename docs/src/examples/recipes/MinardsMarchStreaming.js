@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import {
-  CategoryColorProvider,
-  ConnectedScatterplot
-} from "semiotic"
+import { CategoryColorProvider, ConnectedScatterplot } from "semiotic"
 import { StreamGeoFrame } from "semiotic/geo"
 import { scaleLinear } from "d3-scale"
 
@@ -25,7 +22,7 @@ const marchNodes = [
   { id: "Dorogobuzh", lon: 33.9, lat: 54.9 },
   { id: "Chjat", lon: 34.5, lat: 55.2 },
   { id: "Mojaisk", lon: 35.8, lat: 55.5 },
-  { id: "Moscow", lon: 37.6, lat: 55.8 }
+  { id: "Moscow", lon: 37.6, lat: 55.8 },
 ]
 
 // Ordered sequence for progressive reveal — advance, detachments, then retreat
@@ -64,24 +61,61 @@ const flowSequence = [
 // Temperature data — pushed to scatterplot as retreat segments appear
 const temperatureData = [
   { city: "Moscow", source: "Moscow", target: "Mojaisk", survivors: 100, temperature: 0, order: 0 },
-  { city: "Mojaisk", source: "Mojaisk", target: "Smolensk", survivors: 55, temperature: -9, order: 1 },
-  { city: "Smolensk", source: "Smolensk", target: "Orsha", survivors: 37, temperature: -21, order: 2 },
+  {
+    city: "Mojaisk",
+    source: "Mojaisk",
+    target: "Smolensk",
+    survivors: 55,
+    temperature: -9,
+    order: 1,
+  },
+  {
+    city: "Smolensk",
+    source: "Smolensk",
+    target: "Orsha",
+    survivors: 37,
+    temperature: -21,
+    order: 2,
+  },
   { city: "Orsha", source: "Orsha", target: "Bobr", survivors: 24, temperature: -24, order: 3 },
   { city: "Bobr", source: "Bobr", target: "Studianka", survivors: 50, temperature: -30, order: 4 },
-  { city: "Studianka", source: "Studianka", target: "Molodeczno", survivors: 55, temperature: -26, order: 5 },
-  { city: "Molodeczno", source: "Molodeczno", target: "Smorgoni", survivors: 28, temperature: -33, order: 6 },
-  { city: "Smorgoni", source: "Smorgoni", target: "Wilna", survivors: 12, temperature: -36, order: 7 },
+  {
+    city: "Studianka",
+    source: "Studianka",
+    target: "Molodeczno",
+    survivors: 55,
+    temperature: -26,
+    order: 5,
+  },
+  {
+    city: "Molodeczno",
+    source: "Molodeczno",
+    target: "Smorgoni",
+    survivors: 28,
+    temperature: -33,
+    order: 6,
+  },
+  {
+    city: "Smorgoni",
+    source: "Smorgoni",
+    target: "Wilna",
+    survivors: 12,
+    temperature: -36,
+    order: 7,
+  },
   { city: "Wilna", source: "Wilna", target: "Kowno", survivors: 10, temperature: -38, order: 8 },
-  { city: "Kowno", source: "Wilna", target: "Kowno", survivors: 10, temperature: -28, order: 9 }
+  { city: "Kowno", source: "Wilna", target: "Kowno", survivors: 10, temperature: -28, order: 9 },
 ]
 
 // Map retreat flow source to temperature data index
 const retreatSourceToTemp = {}
-temperatureData.forEach((d, i) => { retreatSourceToTemp[d.source] = i })
+temperatureData.forEach((d, i) => {
+  retreatSourceToTemp[d.source] = i
+})
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
-const nodeLookup = new Map(marchNodes.map(n => [n.id, n]))
+const nodeLookup = new Map(marchNodes.map((n) => [n.id, n]))
 
 function flowToLine(flow) {
   const src = nodeLookup.get(flow.source)
@@ -91,13 +125,13 @@ function flowToLine(flow) {
     ...flow,
     coordinates: [
       { lon: src.lon, lat: src.lat },
-      { lon: tgt.lon, lat: tgt.lat }
-    ]
+      { lon: tgt.lon, lat: tgt.lat },
+    ],
   }
 }
 
 // Width scale (same domain as the full dataset)
-const allSurvivors = flowSequence.map(f => f.survivors)
+const allSurvivors = flowSequence.map((f) => f.survivors)
 const widthScale = scaleLinear()
   .domain([Math.min(...allSurvivors), Math.max(...allSurvivors)])
   .range([2, 72])
@@ -120,7 +154,7 @@ const streamBtnStyle = {
 
 // ── Component ─────────────────────────────────────────────────────────
 
-export default function MinardsMarchStreaming({ width = 900 }) {
+export default function MinardsMarchStreaming({ width = 800 }) {
   const mapHeight = Math.round(width * 0.5)
   const chartHeight = Math.round(width * 0.22)
 
@@ -135,7 +169,7 @@ export default function MinardsMarchStreaming({ width = 900 }) {
 
   // Advance one step
   const advanceStep = useCallback(() => {
-    setStep(prev => {
+    setStep((prev) => {
       const next = prev + 1
       if (next > flowSequence.length) {
         setPlaying(false)
@@ -146,11 +180,11 @@ export default function MinardsMarchStreaming({ width = 900 }) {
       const line = flowToLine(flow)
 
       // Add the flow line
-      setVisibleFlows(f => line ? [...f, line] : f)
+      setVisibleFlows((f) => (line ? [...f, line] : f))
 
       // Add source/target nodes if not already visible
-      setVisibleNodes(existing => {
-        const ids = new Set(existing.map(n => n.id))
+      setVisibleNodes((existing) => {
+        const ids = new Set(existing.map((n) => n.id))
         const toAdd = []
         if (!ids.has(flow.source)) {
           const n = nodeLookup.get(flow.source)
@@ -167,9 +201,9 @@ export default function MinardsMarchStreaming({ width = 900 }) {
       if (flow.direction === "retreat") {
         const tempIdx = retreatSourceToTemp[flow.source]
         if (tempIdx !== undefined) {
-          setScatterData(prev => {
+          setScatterData((prev) => {
             // Avoid duplicates
-            if (prev.some(d => d.order === temperatureData[tempIdx].order)) return prev
+            if (prev.some((d) => d.order === temperatureData[tempIdx].order)) return prev
             return [...prev, temperatureData[tempIdx]]
           })
         }
@@ -204,34 +238,44 @@ export default function MinardsMarchStreaming({ width = 900 }) {
   // No custom point style needed — ConnectedScatterplot handles viridis coloring
 
   // Map line style
-  const lineStyle = useCallback((d) => ({
-    stroke: d.direction === "advance" ? "#deb887" : "#333",
-    strokeWidth: widthScale(d.survivors ?? 0),
-    strokeLinecap: "round",
-    opacity: 0.85
-  }), [])
+  const lineStyle = useCallback(
+    (d) => ({
+      stroke: d.direction === "advance" ? "#deb887" : "#333",
+      strokeWidth: widthScale(d.survivors ?? 0),
+      strokeLinecap: "round",
+      opacity: 0.85,
+    }),
+    [],
+  )
 
   // Map point style
-  const mapPointStyle = useCallback(() => ({
-    fill: "#333",
-    r: 5,
-    fillOpacity: 0.8
-  }), [])
+  const mapPointStyle = useCallback(
+    () => ({
+      fill: "#333",
+      r: 5,
+      fillOpacity: 0.8,
+    }),
+    [],
+  )
 
   // Map tooltip
   const mapTooltip = useCallback((d) => {
     const datum = d.data || d
     return (
-      <div style={{
-        background: "rgba(30,30,30,0.95)",
-        color: "white",
-        padding: "8px 12px",
-        borderRadius: 4,
-        fontSize: 12
-      }}>
+      <div
+        style={{
+          background: "rgba(30,30,30,0.95)",
+          color: "white",
+          padding: "8px 12px",
+          borderRadius: 4,
+          fontSize: 12,
+        }}
+      >
         {datum.source ? (
           <>
-            <div style={{ fontWeight: 600 }}>{datum.source} → {datum.target}</div>
+            <div style={{ fontWeight: 600 }}>
+              {datum.source} → {datum.target}
+            </div>
             <div style={{ opacity: 0.7 }}>
               {((datum.survivors ?? 0) * 1000).toLocaleString()} troops
             </div>
@@ -245,7 +289,7 @@ export default function MinardsMarchStreaming({ width = 900 }) {
   }, [])
 
   const isComplete = step >= flowSequence.length
-  const retreatStarted = visibleFlows.some(f => f.direction === "retreat")
+  const retreatStarted = visibleFlows.some((f) => f.direction === "retreat")
 
   return (
     <CategoryColorProvider
@@ -254,16 +298,18 @@ export default function MinardsMarchStreaming({ width = 900 }) {
     >
       <div>
         {/* Controls */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 8,
-          fontFamily: "system-ui, sans-serif",
-          fontSize: 13
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 8,
+            fontFamily: "system-ui, sans-serif",
+            fontSize: 13,
+          }}
+        >
           <button
-            onClick={() => setPlaying(p => !p)}
+            onClick={() => setPlaying((p) => !p)}
             disabled={isComplete}
             style={{
               ...streamBtnStyle,
@@ -313,12 +359,14 @@ export default function MinardsMarchStreaming({ width = 900 }) {
 
         {/* Scatterplot — only visible once retreat begins */}
         {retreatStarted && (
-          <div style={{
-            marginTop: 4,
-            background: "#fafafa",
-            border: "1px solid #e0e0e0",
-            borderRadius: 4
-          }}>
+          <div
+            style={{
+              marginTop: 4,
+              background: "#fafafa",
+              border: "1px solid #e0e0e0",
+              borderRadius: 4,
+            }}
+          >
             <ConnectedScatterplot
               data={scatterData}
               xAccessor="temperature"
@@ -331,13 +379,15 @@ export default function MinardsMarchStreaming({ width = 900 }) {
               margin={{ top: 30, right: 40, bottom: 50, left: 70 }}
               showGrid
               tooltip={(d) => (
-                <div style={{
-                  background: "rgba(30,30,30,0.95)",
-                  color: "white",
-                  padding: "8px 12px",
-                  borderRadius: 4,
-                  fontSize: 12
-                }}>
+                <div
+                  style={{
+                    background: "rgba(30,30,30,0.95)",
+                    color: "white",
+                    padding: "8px 12px",
+                    borderRadius: 4,
+                    fontSize: 12,
+                  }}
+                >
                   <div style={{ fontWeight: 600 }}>{d.city}</div>
                   <div>{d.temperature}°C</div>
                   <div>{(d.survivors * 1000).toLocaleString()} troops</div>

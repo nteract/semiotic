@@ -80,7 +80,7 @@ const styles = {
     margin: 0,
     marginBottom: 20,
     fontWeight: 400,
-    maxWidth: 760,
+    maxWidth: 860,
   },
   metaRow: {
     display: "flex",
@@ -125,6 +125,6 @@ const styles = {
     fontSize: 17,
     lineHeight: 1.7,
     color: "var(--text-primary, #e5e7eb)",
-    maxWidth: 760,
+    maxWidth: 860,
   },
 }

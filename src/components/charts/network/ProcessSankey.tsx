@@ -122,6 +122,10 @@ export interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends D
   lifetimeMode?: "full" | "half"
   showLaneRails?: boolean
   showQualityReadout?: boolean
+  /** Render the per-band node id label at the band's left edge.
+   *  Default `true`. Set `false` for dense layouts where labels
+   *  would overlap, or when the legend already names every band. */
+  showLabels?: boolean
   edgeOpacity?: number
 
   // Interaction
@@ -273,6 +277,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     lifetimeMode = "half",
     showLaneRails = false,
     showQualityReadout = false,
+    showLabels = true,
     // Match BaseChartProps defaults so ProcessSankey shares the
     // chart-grid sizing other HOCs use; the Process Sankey-specific
     // larger default of 760×520 was confusing in dashboards that mixed
@@ -610,19 +615,27 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   })
 
   // Margin extension for the legend. The setup hook's
-  // `useChartLegendAndMargin` is suppressed via `showLegend: false`,
-  // so we apply the same right/bottom reservation here that the hook
-  // would otherwise do — keeps the band/ribbon layout consistent
-  // whether the auto-legend or our custom legend is rendering.
+  // `useChartLegendAndMargin` is suppressed via `showLegend: false`
+  // (ProcessSankey renders its own legend), so it never applies the
+  // legend's auto-reservation. We apply that reservation here when
+  // the legend is active — but ONLY for sides the user didn't set
+  // explicitly. Without this guard, a caller passing
+  // `margin={{ right: 30 }}` (e.g. positioning their own external
+  // legend) would silently get 140 px reserved out from under them.
   const legendActive = (showLegend ?? !!colorBy) && !!colorBy
+  const userMarginSet = useCallback((side: keyof typeof setup.margin): boolean => {
+    if (userMargin == null) return false
+    if (typeof userMargin === "number") return true
+    return (userMargin as Partial<typeof setup.margin>)[side] != null
+  }, [userMargin])
   const margin = useMemo(() => {
     const merged = { ...setup.margin }
     if (legendActive) {
-      if (legendPosition === "right" && merged.right < 140) merged.right = 140
-      else if (legendPosition === "bottom" && merged.bottom < 80) merged.bottom = 80
+      if (legendPosition === "right" && !userMarginSet("right") && merged.right < 140) merged.right = 140
+      else if (legendPosition === "bottom" && !userMarginSet("bottom") && merged.bottom < 80) merged.bottom = 80
     }
     return merged
-  }, [setup.margin, legendActive, legendPosition])
+  }, [setup.margin, legendActive, legendPosition, userMarginSet])
 
   const plotW = width - margin.left - margin.right
   const plotH = height - margin.top - margin.bottom
@@ -732,8 +745,8 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   const layoutConfig: ProcessSankeyLayoutConfig = useMemo(() => ({
     bands: sceneSpecs.bands,
     ribbons: sceneSpecs.ribbons,
-    showLabels: true,
-  }), [sceneSpecs])
+    showLabels,
+  }), [sceneSpecs, showLabels])
 
   // ── Legend groups (mirror the auto-legend's shape; pass via frame's `legend` prop). ──
   const legendNode = useMemo(() => {
@@ -882,7 +895,12 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     // `domain` overshoots the latest event there's an empty stretch
     // past the last band. Anchor the axis line and gridline span to
     // the actual lane lifetimes so the chrome can't get out of step
-    // with the bands.
+    // with the bands. Clamp the result to `[0, plotW]` so a lane that
+    // sits past `domain` (which `clampSamples` clips on the band
+    // side) doesn't drag the axis line into the right/left margins —
+    // d3 scales don't clamp by default, so without this the axis
+    // overshoots the plot area whenever the data has a tail past the
+    // chart's stated time window.
     let dataMinX: number | null = null
     let dataMaxX: number | null = null
     for (const n of nodes) {
@@ -893,8 +911,8 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       if (dataMinX === null || sx < dataMinX) dataMinX = sx
       if (dataMaxX === null || ex > dataMaxX) dataMaxX = ex
     }
-    const axisLeft = dataMinX ?? 0
-    const axisRight = dataMaxX ?? plotW
+    const axisLeft = Math.max(0, dataMinX ?? 0)
+    const axisRight = Math.min(plotW, dataMaxX ?? plotW)
     return (
       <g>
         {showQualityReadout && (crossingsAfter ?? null) !== null && (

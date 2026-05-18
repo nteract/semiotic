@@ -271,6 +271,64 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       const result = findNearestNetworkNode([], [bezier], 100, 100)
       expect(result).toBeNull()
     })
+
+    // Regression: customNetworkLayout consumers (ProcessSankey) emit bezier
+    // scene-edges whose datum lacks the d3-sankey-shape fields (source/target
+    // as resolved node refs, y0/y1 numbers). The hit tester used to read
+    // those fields to compute a ribbon-midpoint hit position, producing
+    // `y: NaN` for any non-sankey datum. FlippingTooltip silently drops
+    // non-finite positions, so tooltips never appeared on the band/ribbon
+    // body — only on the stroke fallback band (which already returned px,py).
+    // Lock in the contract that hit position is always the pointer position,
+    // regardless of datum shape.
+    it("returns finite (px, py) for bezier hits regardless of datum shape", async () => {
+      // jsdom ships no Path2D and no real isPointInPath. Stub both with
+      // a fake Path2D class that records its source and a stub context
+      // whose isPointInPath returns true for our test path. Reset the
+      // hit tester module's cached canvas/ctx by reimporting.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const g = globalThis as unknown as {
+        Path2D?: typeof Path2D
+        HTMLCanvasElement: typeof HTMLCanvasElement
+      }
+      const origPath2D = g.Path2D
+      const origGetContext = HTMLCanvasElement.prototype.getContext
+      g.Path2D = class FakePath2D {
+        constructor(public d: string) {}
+      } as unknown as typeof Path2D
+      const stubCtx = {
+        isPointInPath: () => true,
+        isPointInStroke: () => false,
+        lineWidth: 1,
+      } as unknown as CanvasRenderingContext2D
+      HTMLCanvasElement.prototype.getContext = function () {
+        return stubCtx
+      } as HTMLCanvasElement["getContext"]
+      // Reimport with stubs in place so module-level `_hitCanvas`/`_hitCtx`
+      // capture the stubbed factories.
+      vi.resetModules()
+      const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+      try {
+        const processSankeyBezier: NetworkBezierEdge = {
+          type: "bezier",
+          pathD: "M0,0 L10,0 L10,10 L0,10 Z",
+          style: { fill: "#ccc" },
+          // ProcessSankey-style payload: no source/target node refs,
+          // no y0/y1 numbers — just a marker, the user datum, and an id.
+          datum: { __kind: "band", data: { id: "n1" }, id: "n1" } as unknown as Record<string, unknown>,
+        }
+        const result = hitTest([], [processSankeyBezier], 5, 5)
+        expect(result).not.toBeNull()
+        expect(result!.type).toBe("edge")
+        expect(Number.isFinite(result!.x)).toBe(true)
+        expect(Number.isFinite(result!.y)).toBe(true)
+        expect(result!.x).toBe(5)
+        expect(result!.y).toBe(5)
+      } finally {
+        g.Path2D = origPath2D
+        HTMLCanvasElement.prototype.getContext = origGetContext
+      }
+    })
   })
 
   // ── Nodes take priority over edges ───────────────────────────────────

@@ -235,24 +235,24 @@ function hitTestBezierEdge(
   const ctx = getHitContext()
   if (!path || !ctx) return null
 
+  // Hit position is the pointer position for every bezier edge, regardless
+  // of which chart produced it. The earlier code reached into
+  // `edge.datum.source/target/y0/y1` (d3-sankey edge shape) to position
+  // the tooltip at the ribbon midpoint — fine for SankeyDiagram, but
+  // `customNetworkLayout` consumers (ProcessSankey) emit a different datum
+  // and y0/y1 came back `undefined`, so the returned `y` was NaN. The
+  // FlippingTooltip drops non-finite positions, silently swallowing the
+  // tooltip on the band/ribbon interior — only the stroke fallback (which
+  // already used `px, py`) fired, producing the "tooltip works on border
+  // but not on body" symptom. Aligning bezier with line/ribbon/curved
+  // keeps the hit-test contract uniform across scene-edge types.
   try {
     if (ctx.isPointInPath(path, px, py)) {
-      // Return midpoint of the band as hover position
-      const sourceNode = typeof edge.datum?.source === "object" ? edge.datum.source : null
-      const targetNode = typeof edge.datum?.target === "object" ? edge.datum.target : null
-
-      const midX = sourceNode && targetNode
-        ? (sourceNode.x1 + targetNode.x0) / 2
-        : px
-      const midY = edge.datum
-        ? (edge.datum.y0 + edge.datum.y1) / 2
-        : py
-
       return {
         type: "edge",
         datum: edge.datum,
-        x: midX,
-        y: midY,
+        x: px,
+        y: py,
         distance: 0
       }
     }

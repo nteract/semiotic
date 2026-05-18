@@ -79,8 +79,13 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     minHeight: "100vh",
-    background: "var(--bg-primary, #0a0a0f)",
-    color: "var(--text-primary, #e5e7eb)",
+    // `--bg-primary` isn't defined in docs/index.css — only `--surface-0`
+    // through `--surface-3` and the `--text-*` family. The old name fell
+    // through to its hardcoded dark fallback in every theme, so the blog
+    // shell ignored `[data-theme="light"]` entirely. Use the existing
+    // body-background token instead.
+    background: "var(--surface-0)",
+    color: "var(--text-primary)",
     letterSpacing: "-0.005em",
   },
   topBar: {

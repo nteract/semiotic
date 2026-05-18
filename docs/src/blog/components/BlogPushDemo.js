@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 
 /**
  * Small reusable streaming-demo controller for chart-explainer
@@ -17,6 +17,14 @@ import React, { useEffect, useRef, useState } from "react"
  * Auto-play interval defaults to 600 ms to match the
  * MinardsMarchStreaming cadence; bump it lower for faster
  * datasets and higher for ones where each step has more to read.
+ *
+ * Implementation note: `advance` must NOT call `pushAt` from inside
+ * a `setStep((prev) => …)` updater. Updater functions are supposed
+ * to be pure, and `pushAt` triggers the chart's internal `setState`
+ * — React 18 flags that as "setState during render" of a foreign
+ * component. We keep the live step in `stepRef` so the body of
+ * `advance` runs once per click/tick, does the push side-effect,
+ * then mirrors the new value into React state for the UI.
  */
 export default function BlogPushDemo({
   chartRef,
@@ -28,6 +36,7 @@ export default function BlogPushDemo({
 }) {
   const [step, setStep] = useState(0)
   const [playing, setPlaying] = useState(false)
+  const stepRef = useRef(0)
   const timerRef = useRef(null)
 
   // Prime the chart on mount: call `resetAt` so the chart starts
@@ -39,18 +48,18 @@ export default function BlogPushDemo({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const advance = () => {
-    setStep((prev) => {
-      if (prev >= frames.length) {
-        setPlaying(false)
-        return prev
-      }
-      pushAt?.(chartRef.current, frames[prev], prev)
-      const next = prev + 1
-      if (next >= frames.length) setPlaying(false)
-      return next
-    })
-  }
+  const advance = useCallback(() => {
+    const current = stepRef.current
+    if (current >= frames.length) {
+      setPlaying(false)
+      return
+    }
+    pushAt?.(chartRef.current, frames[current], current)
+    const next = current + 1
+    stepRef.current = next
+    setStep(next)
+    if (next >= frames.length) setPlaying(false)
+  }, [frames, pushAt, chartRef])
 
   useEffect(() => {
     if (!playing) {
@@ -59,11 +68,11 @@ export default function BlogPushDemo({
     }
     timerRef.current = setInterval(advance, intervalMs)
     return () => clearInterval(timerRef.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, intervalMs])
+  }, [playing, intervalMs, advance])
 
   const reset = () => {
     setPlaying(false)
+    stepRef.current = 0
     setStep(0)
     resetAt?.(chartRef.current)
   }

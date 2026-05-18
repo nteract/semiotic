@@ -24,16 +24,16 @@ import { SankeyDiagram, ProcessSankey, ThemeProvider } from "semiotic"
 // gives a quick mental grouping but isn't used by the diagrams
 // directly — it's for the legend/tooltip stories.
 const waterNodes = [
-  { id: "Ocean",          phase: "ocean" },
-  { id: "Atmosphere",     phase: "air" },
-  { id: "Clouds",         phase: "air" },
-  { id: "Land Rain",      phase: "precip" },
-  { id: "Snowpack",       phase: "precip" },
-  { id: "Glaciers",       phase: "precip" },
-  { id: "Soil Moisture",  phase: "land" },
-  { id: "Vegetation",     phase: "land" },
-  { id: "Surface Water",  phase: "land" },
-  { id: "Groundwater",    phase: "land" },
+  { id: "Ocean", phase: "ocean" },
+  { id: "Atmosphere", phase: "air" },
+  { id: "Clouds", phase: "air" },
+  { id: "Land Rain", phase: "precip" },
+  { id: "Snowpack", phase: "precip" },
+  { id: "Glaciers", phase: "precip" },
+  { id: "Soil Moisture", phase: "land" },
+  { id: "Vegetation", phase: "land" },
+  { id: "Surface Water", phase: "land" },
+  { id: "Groundwater", phase: "land" },
 ]
 
 // Each edge carries `startMonth` / `endMonth` (1–12) plus the
@@ -45,28 +45,28 @@ const waterNodes = [
 // places them at their actual months on the time axis.
 const waterEdges = [
   // ── Evaporation: year-round, peaks summer; ocean is the biggest source ──
-  { source: "Ocean",         target: "Atmosphere",    value: 425, startMonth: 1,  endMonth: 12 },
-  { source: "Surface Water", target: "Atmosphere",    value: 10,  startMonth: 5,  endMonth: 9  },
-  { source: "Vegetation",    target: "Atmosphere",    value: 70,  startMonth: 4,  endMonth: 10 }, // transpiration
+  { source: "Ocean", target: "Atmosphere", value: 425, startMonth: 1, endMonth: 12 },
+  { source: "Surface Water", target: "Atmosphere", value: 10, startMonth: 5, endMonth: 9 },
+  { source: "Vegetation", target: "Atmosphere", value: 70, startMonth: 4, endMonth: 10 }, // transpiration
   // ── Condensation: atmosphere → clouds, continuous ──
-  { source: "Atmosphere",    target: "Clouds",        value: 505, startMonth: 1,  endMonth: 12 },
+  { source: "Atmosphere", target: "Clouds", value: 505, startMonth: 1, endMonth: 12 },
   // ── Precipitation: clouds split between ocean and land; mostly winter/spring on land ──
-  { source: "Clouds",        target: "Ocean",         value: 385, startMonth: 1,  endMonth: 12 },
-  { source: "Clouds",        target: "Land Rain",     value: 90,  startMonth: 3,  endMonth: 11 },
-  { source: "Clouds",        target: "Snowpack",      value: 25,  startMonth: 11, endMonth: 3  },
-  { source: "Clouds",        target: "Glaciers",      value: 5,   startMonth: 12, endMonth: 2  },
+  { source: "Clouds", target: "Ocean", value: 385, startMonth: 1, endMonth: 12 },
+  { source: "Clouds", target: "Land Rain", value: 90, startMonth: 3, endMonth: 11 },
+  { source: "Clouds", target: "Snowpack", value: 25, startMonth: 11, endMonth: 3 },
+  { source: "Clouds", target: "Glaciers", value: 5, startMonth: 12, endMonth: 2 },
   // ── Land precipitation routes onto / into the surface ──
-  { source: "Land Rain",     target: "Soil Moisture", value: 50,  startMonth: 3,  endMonth: 11 },
-  { source: "Land Rain",     target: "Surface Water", value: 40,  startMonth: 3,  endMonth: 11 },
+  { source: "Land Rain", target: "Soil Moisture", value: 50, startMonth: 3, endMonth: 11 },
+  { source: "Land Rain", target: "Surface Water", value: 40, startMonth: 3, endMonth: 11 },
   // ── Snow + glacier melt: cycle's most visible temporal signal ──
-  { source: "Snowpack",      target: "Surface Water", value: 25,  startMonth: 3,  endMonth: 6  },
-  { source: "Glaciers",      target: "Surface Water", value: 5,   startMonth: 6,  endMonth: 9  },
+  { source: "Snowpack", target: "Surface Water", value: 25, startMonth: 3, endMonth: 6 },
+  { source: "Glaciers", target: "Surface Water", value: 5, startMonth: 6, endMonth: 9 },
   // ── Soil moisture → vegetation (uptake) and groundwater (slow) ──
-  { source: "Soil Moisture", target: "Vegetation",    value: 30,  startMonth: 4,  endMonth: 10 },
-  { source: "Soil Moisture", target: "Groundwater",   value: 15,  startMonth: 1,  endMonth: 12 },
+  { source: "Soil Moisture", target: "Vegetation", value: 30, startMonth: 4, endMonth: 10 },
+  { source: "Soil Moisture", target: "Groundwater", value: 15, startMonth: 1, endMonth: 12 },
   // ── Return to ocean: rivers (fast) + groundwater (slow); these are the cyclic edges ──
-  { source: "Surface Water", target: "Ocean",         value: 60,  startMonth: 1,  endMonth: 12 },
-  { source: "Groundwater",   target: "Ocean",         value: 5,   startMonth: 1,  endMonth: 12 },
+  { source: "Surface Water", target: "Ocean", value: 60, startMonth: 1, endMonth: 12 },
+  { source: "Groundwater", target: "Ocean", value: 5, startMonth: 1, endMonth: 12 },
 ]
 
 // ── Carbon categorical palette (IBM Carbon extended set) ─────────────
@@ -92,11 +92,17 @@ const carbonScheme = [
 // Month-label tick set for ProcessSankey's x-axis. The chart accepts
 // arbitrary `{ date, label }` ticks; using calendar months keeps the
 // reading mental-model intuitive.
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-const monthTicks = Array.from({ length: 12 }, (_, i) => ({
-  date: i + 1,
-  label: MONTHS[i],
-}))
+//
+// A 13th tick anchors the chart's right edge — the wrap-split edges
+// (Snowpack Nov→Mar, Glaciers Dec→Feb) end at the month-13 sentinel,
+// so without a tick there the axis line extends past Dec into
+// unlabeled space. Labeling the sentinel "Dec end" reads as the wrap
+// boundary back to January.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const monthTicks = [
+  ...Array.from({ length: 12 }, (_, i) => ({ date: i + 1, label: MONTHS[i] })),
+  { date: 13, label: "Dec end" },
+]
 
 // Tooltip time formatter — match the axis labels so the tooltip's
 // start/end fields read as month names too. Default formatter assumes
@@ -125,40 +131,75 @@ const monthLabel = (m) => {
 // half's share of the original duration.
 const expandedEdges = waterEdges.flatMap((e) => {
   if (e.endMonth >= e.startMonth) return [e]
-  const span = (13 - e.startMonth) + e.endMonth
+  const span = 13 - e.startMonth + e.endMonth
   return [
-    { ...e, endMonth: 13, value: e.value * (13 - e.startMonth) / span },
-    { ...e, startMonth: 1, value: e.value * e.endMonth / span },
+    { ...e, endMonth: 13, value: (e.value * (13 - e.startMonth)) / span },
+    { ...e, startMonth: 1, value: (e.value * e.endMonth) / span },
   ]
 })
 
 // ── Component ────────────────────────────────────────────────────────
 
 const Caption = ({ children }) => (
-  <div style={{
-    fontSize: 12, color: "var(--semiotic-text-secondary, #525252)",
-    marginTop: 8, marginBottom: 4, lineHeight: 1.4,
-  }}>{children}</div>
+  <div
+    style={{
+      fontSize: 12,
+      color: "var(--semiotic-text-secondary, #525252)",
+      marginTop: 8,
+      marginBottom: 4,
+      lineHeight: 1.4,
+    }}
+  >
+    {children}
+  </div>
 )
 
 const PanelHeading = ({ children, subtitle }) => (
   <div style={{ marginBottom: 8 }}>
-    <div style={{ fontWeight: 600, fontSize: 14, color: "var(--semiotic-text, #161616)" }}>{children}</div>
-    {subtitle && <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #525252)", marginTop: 2 }}>{subtitle}</div>}
+    <div style={{ fontWeight: 600, fontSize: 14, color: "var(--semiotic-text, #161616)" }}>
+      {children}
+    </div>
+    {subtitle && (
+      <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #525252)", marginTop: 2 }}>
+        {subtitle}
+      </div>
+    )}
   </div>
 )
 
 export default function WaterCycleFlow() {
   return (
     <ThemeProvider theme="carbon">
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
-
+      {/* Carbon island. `ThemeProvider` sets `--semiotic-text` to #161616
+          inside this subtree (carbon light). Without a matching background
+          the labels rendered as dark text on whatever the surrounding docs
+          theme painted — invisible in dark mode. Paint `--semiotic-bg` on
+          the wrapper so the whole recipe lives on carbon's light surface,
+          independent of the docs theme. */}
+      <div
+        style={{
+          background: "var(--semiotic-bg)",
+          color: "var(--semiotic-text)",
+          padding: 20,
+          borderRadius: 8,
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: 24,
+        }}
+      >
         {/* ── Classic Sankey ─────────────────────────────────────────── */}
         <div>
-          <PanelHeading subtitle="d3-sankey lays out reservoirs as ranked columns. Return-to-Ocean edges become curved back-arrows because the layout can't represent the cycle in its column ordering. Edge times are ignored entirely — the diagram answers 'what fraction of total flow moves between these nodes annually?'">
+          <PanelHeading subtitle="The classic Sankey layout treats reservoirs as ranked columns. Return-to-Ocean edges become curved back to represent the cycle in its column ordering. The diagram answers 'what fraction of total flow moves between these nodes annually?'">
             SankeyDiagram — system-readable, time-blind
           </PanelHeading>
-          <div style={{ background: "var(--surface-1, #f4f4f4)", border: "1px solid var(--surface-3, #e0e0e0)", borderRadius: 4, padding: 12 }}>
+          <div
+            style={{
+              background: "var(--semiotic-surface, #f4f4f4)",
+              border: "1px solid var(--semiotic-border, #e0e0e0)",
+              borderRadius: 4,
+              padding: 8,
+            }}
+          >
             <SankeyDiagram
               nodes={waterNodes}
               edges={waterEdges}
@@ -178,43 +219,8 @@ export default function WaterCycleFlow() {
             />
           </div>
           <Caption>
-            <strong>What it shows well:</strong> the relative magnitudes — the ocean→atmosphere ribbon dominates because that's where most of the global flux is.{" "}
-            <strong>What it loses:</strong> the entire seasonal signal (snowmelt in spring, transpiration in summer), and the cycle itself becomes a tangle of return-curves rather than a closed loop.
-          </Caption>
-        </div>
-
-        {/* ── Process Sankey ─────────────────────────────────────────── */}
-        <div>
-          <PanelHeading subtitle="ProcessSankey reads the same edges' startMonth/endMonth as the x-axis. Cycles unroll temporally — Ocean appears once, water leaves it, travels through the atmosphere and land, and returns to it later in the year. Lanes pack vertically by lifetime so the diagram stays compact.">
-            ProcessSankey — temporal, cycle-natural
-          </PanelHeading>
-          <div style={{ background: "var(--surface-1, #f4f4f4)", border: "1px solid var(--surface-3, #e0e0e0)", borderRadius: 4, padding: 12 }}>
-            <ProcessSankey
-              nodes={waterNodes}
-              edges={expandedEdges}
-              sourceAccessor="source"
-              targetAccessor="target"
-              valueAccessor="value"
-              nodeIdAccessor="id"
-              startTimeAccessor="startMonth"
-              endTimeAccessor="endMonth"
-              domain={[1, 13]}
-              axisTicks={monthTicks}
-              timeFormat={monthLabel}
-              colorBy="id"
-              colorScheme={carbonScheme}
-              showLegend
-              legendPosition="right"
-              packing="reuse"
-              laneOrder="crossing-min"
-              ribbonLane="both"
-              width={780}
-              height={420}
-            />
-          </div>
-          <Caption>
-            <strong>What it shows well:</strong> the seasonal phase shift — precipitation lights up Nov–Mar (snowpack accumulation), then a sharp Mar–Jun snowmelt pulse feeds Surface Water before transpiration takes over in summer.{" "}
-            <strong>What it loses:</strong> the immediate read of "how big is this flow?" — value magnitudes are encoded in ribbon thickness but the eye is drawn first to the temporal layout, not the relative size.
+            <strong>What it shows well:</strong> relative magnitudes such as ocean to atmosphere
+            exchange dominates because that's where most of the global flux is.
           </Caption>
         </div>
       </div>
