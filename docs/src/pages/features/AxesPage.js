@@ -429,6 +429,101 @@ export default function AxesPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Tick Anchor */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="tick-anchor">Edge-Aligned Tick Labels</h2>
+
+      <p>
+        Default tick labels center on their tick mark, which is fine for
+        middles but lets the first and last labels overflow past the plot's
+        left and right edges. Pass{" "}
+        <code>frameProps.axes[i].tickAnchor: "edges"</code> to flip the first
+        label to <code>text-anchor: start</code> and the last to{" "}
+        <code>text-anchor: end</code>. On vertical axes the equivalent
+        is <code>dominant-baseline: hanging</code> for the top tick and
+        <code> dominant-baseline: auto</code> for the bottom tick — the
+        labels nudge inward so they can't bleed past the chart bounds.
+      </p>
+
+      <p>
+        Pairs naturally with <code>axisExtent="exact"</code>. Exact mode
+        pins the ticks to the literal data min and max; edges mode keeps
+        those edge labels readable.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: axisExtentTemporalData,
+          xAccessor: "date",
+          yAccessor: "revenue",
+          curve: "monotoneX",
+          xLabel: "Date",
+          yLabel: "Revenue",
+          axisExtent: "exact",
+          frameProps: {
+            axes: [
+              { orient: "bottom", tickAnchor: "edges" },
+              { orient: "left", tickAnchor: "edges" },
+            ],
+          },
+          margin: { left: 60, right: 20, top: 30, bottom: 40 },
+        }}
+        type={LineChart}
+        overrideProps={{
+          frameProps: `{
+  axes: [
+    { orient: "bottom", tickAnchor: "edges" },
+    { orient: "left",   tickAnchor: "edges" },
+  ],
+}`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Per-axis styling */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="per-axis-styling">Per-Axis CSS Targeting</h2>
+
+      <p>
+        Every axis renders as its own{" "}
+        <code>{`<g class="semiotic-axis semiotic-axis-{bottom|left|right|top}" data-orient="…">`}</code>{" "}
+        inside the <code>.stream-axes</code> wrapper. Tick text carries
+        <code> class="semiotic-axis-tick"</code>; axis labels carry{" "}
+        <code>class="semiotic-axis-label"</code>; chart titles carry{" "}
+        <code>class="semiotic-chart-title"</code>. Combine these for
+        per-axis CSS without <code>!important</code>:
+      </p>
+
+      <CodeBlock
+        code={`/* Make the y-axis labels larger than the x-axis */
+.my-chart [data-orient="left"] .semiotic-axis-tick {
+  font-size: 14px;
+}
+.my-chart [data-orient="bottom"] .semiotic-axis-tick {
+  font-size: 11px;
+}
+
+/* Or override the font-size CSS variable on a wrapper —
+   both axes will pick it up via the cascade. */
+.dashboard-card {
+  --semiotic-tick-font-size: 14px;
+  --semiotic-axis-label-font-size: 16px;
+}`}
+        language="css"
+      />
+
+      <p>
+        The default font sizes come from theme typography (
+        <code>tickSize</code>, <code>labelSize</code>) and are emitted as
+        <code> --semiotic-tick-font-size</code> and{" "}
+        <code>--semiotic-axis-label-font-size</code>. SVG axes consume the
+        vars via inline <code>style={"{ fontSize: \"var(--…)\" }"}</code>,
+        so a CSS-var override on any DOM ancestor flows through the
+        cascade without consumer code needing <code>!important</code>.
+      </p>
+
+      {/* ----------------------------------------------------------------- */}
       {/* With Frames */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>

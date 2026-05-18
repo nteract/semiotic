@@ -189,6 +189,46 @@ describe("LineChart", () => {
       expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
     })
 
+    it("forwards a single band config to the frame", () => {
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={[
+              { x: 1, y: 10, lo: 5, hi: 15 },
+              { x: 2, y: 20, lo: 12, hi: 28 },
+            ]}
+            band={{ y0Accessor: "lo", y1Accessor: "hi" }}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.band).toEqual({ y0Accessor: "lo", y1Accessor: "hi" })
+    })
+
+    it("forwards an array of bands to the frame", () => {
+      const bands = [
+        { y0Accessor: "p10", y1Accessor: "p90" },
+        { y0Accessor: "p25", y1Accessor: "p75" },
+      ]
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={[{ x: 1, y: 10, p10: 5, p25: 7, p75: 13, p90: 15 }]}
+            band={bands}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.band).toBe(bands)
+    })
+
+    it("omits band when not provided (does not set the prop)", () => {
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.band).toBeUndefined()
+    })
+
     it("forwards forecast config by setting groupAccessor to segment field", () => {
       const tsData = Array.from({ length: 10 }, (_, i) => ({ x: i, y: Math.random() * 100 }))
       render(

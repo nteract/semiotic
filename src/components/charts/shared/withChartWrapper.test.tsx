@@ -278,4 +278,42 @@ describe("renderLoadingState", () => {
     // height=80, barCount = floor(80/40) = 2
     expect(bars.length).toBe(2)
   })
+
+  it("renders custom loadingContent in place of the skeleton when provided", () => {
+    const result = renderLoadingState(
+      true,
+      600,
+      400,
+      <div data-testid="custom-loading">Fetching analytics…</div>,
+    )
+    expect(result).not.toBeNull()
+    const { container } = render(result!)
+    expect(container.querySelector("[data-testid='custom-loading']")).toBeTruthy()
+    // Default skeleton bars must be absent — custom content replaces them.
+    expect(container.querySelectorAll(".semiotic-loading-bar").length).toBe(0)
+  })
+
+  it("falls back to the default skeleton when loadingContent is undefined", () => {
+    const result = renderLoadingState(true, 600, 400, undefined)
+    expect(result).not.toBeNull()
+    const { container } = render(result!)
+    expect(container.querySelectorAll(".semiotic-loading-bar").length).toBeGreaterThan(0)
+  })
+
+  it("returns null when loadingContent is false (caller wants no loading UI)", () => {
+    expect(renderLoadingState(true, 600, 400, false)).toBeNull()
+  })
+
+  it("wraps custom loadingContent in a sized container so the chart slot stays reserved", () => {
+    const result = renderLoadingState(
+      true,
+      640,
+      320,
+      <span>Loading…</span>,
+    )
+    const { container } = render(result!)
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.width).toBe("640px")
+    expect(wrapper.style.height).toBe("320px")
+  })
 })

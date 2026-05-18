@@ -13,11 +13,25 @@ import { buildLineNode, buildAreaNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { emitPointNodes } from "./emitPointNodes"
 import { resolveAreaGradient } from "./areaGradient"
+import { buildAggregateRibbons, buildPerSeriesRibbons, partitionRibbons } from "./ribbonScene"
 
 export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
   const nodes: SceneNode[] = []
   const areaGroups = ctx.config.areaGroups || new Set<string>()
+
+  // Ribbons (bounds + band) paint first so they sit behind both line and area marks.
+  if (ctx.ribbons && ctx.ribbons.length > 0) {
+    const { perSeries, aggregate } = partitionRibbons(ctx.ribbons)
+    if (aggregate.length > 0) {
+      nodes.push(...buildAggregateRibbons(ctx, data, aggregate))
+    }
+    if (perSeries.length > 0) {
+      for (const g of groups) {
+        nodes.push(...buildPerSeriesRibbons(ctx, g.data, g.key, perSeries))
+      }
+    }
+  }
 
   const yDomain = ctx.scales.y.domain() as [number, number]
   const baseline = yDomain[0]

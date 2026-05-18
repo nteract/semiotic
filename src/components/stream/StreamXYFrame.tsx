@@ -402,6 +402,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       boundsAccessor,
       boundsStyle,
       y0Accessor,
+      band,
       gradientFill,
       lineGradient,
       areaGroups,
@@ -640,6 +641,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       boundsAccessor,
       boundsStyle,
       y0Accessor,
+      band,
       gradientFill: gradientFill === true
         ? { topOpacity: 0.8, bottomOpacity: 0.05 }
         : gradientFill === false
@@ -686,7 +688,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       xScaleType, yScaleType,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder,
-      boundsAccessor, boundsStyle, y0Accessor, gradientFill, lineGradient, areaGroups,
+      boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, lineGradient, areaGroups,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, barStyle, colorScheme, barColors, annotations,
       decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
@@ -911,6 +913,29 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const posY = isMulti || !hit ? chartY : hit.y
 
       let hover: HoverData = buildHoverData(hit?.datum ?? {}, posX, posY)
+
+      // Band enrichment: when band(s) are configured, evaluate accessors
+      // on the hovered datum and attach the synthesized values so user
+      // tooltip functions can read `datum.band` / `datum.bands` without
+      // re-running the accessors themselves. Shallow-merge so we don't
+      // mutate the original data row. Skips when there is no real hit.
+      // Bounds-sourced ribbons are decorative and excluded from the
+      // tooltip contract — only ribbons with `kind === "band"` enrich.
+      if (hit?.datum && store.resolvedRibbons && store.resolvedRibbons.length > 0) {
+        const evaluated: Array<{ y0: number; y1: number }> = []
+        for (const r of store.resolvedRibbons) {
+          if (r.kind !== "band") continue
+          const y1 = r.getTop(hit.datum)
+          const y0 = r.getBottom(hit.datum)
+          if (Number.isFinite(y0) && Number.isFinite(y1)) {
+            evaluated.push({ y0, y1 })
+          }
+        }
+        if (evaluated.length > 0) {
+          const enriched: Datum = { ...hit.datum, band: evaluated[0], bands: evaluated }
+          hover = buildHoverData(enriched, posX, posY)
+        }
+      }
 
       // Multi-tooltip mode: attach all series values at this X to the hover data.
       // Keep the interpolation generous for sparse paths, but range-bounded in

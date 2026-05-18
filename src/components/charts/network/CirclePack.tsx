@@ -111,6 +111,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     selection,
     linkedHover,
     loading,
+    loadingContent,
     legendInteraction,
     stroke,
     strokeWidth,
@@ -145,6 +146,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     userMargin,
     width, height,
     loading,
+    loadingContent,
   })
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 

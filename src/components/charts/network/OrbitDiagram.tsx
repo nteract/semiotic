@@ -178,6 +178,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     selection,
     linkedHover,
     loading,
+    loadingContent,
     stroke,
     strokeWidth,
     opacity,
@@ -212,6 +213,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     userMargin,
     width, height,
     loading,
+    loadingContent,
   })
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 

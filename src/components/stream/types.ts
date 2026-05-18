@@ -432,6 +432,44 @@ export type CurveType =
   | "catmullRom"
   | "natural"
 
+// ── Band (asymmetric envelope) ─────────────────────────────────────────
+
+/**
+ * Asymmetric min/max envelope drawn under lines/areas. Data-driven cousin
+ * of `boundsAccessor` (which takes a single symmetric ±offset). Use for
+ * throughput min/max ribbons, percentile bands (p5–p95), SLO ranges, and
+ * fan charts (pass an array of bands).
+ *
+ * Painted with the parent series color at 0.2 fillOpacity by default.
+ * Override with `style`. Non-interactive by default; participates in
+ * y-extent auto-derivation so it can't clip.
+ */
+export interface BandConfig<T = Datum> {
+  /** Bottom of the band — field name or accessor function. */
+  y0Accessor: string | ((d: T) => number)
+  /** Top of the band — field name or accessor function. */
+  y1Accessor: string | ((d: T) => number)
+  /**
+   * Style override. Defaults to the parent line/area color at 0.2
+   * fillOpacity, matching the `boundsStyle` cascade.
+   */
+  style?: Style | ((d: T, group?: string) => Style)
+  /**
+   * When the parent chart groups by `lineBy` / `colorBy`:
+   * - `true` (default): one band per group, colored to match the line
+   * - `false`: a single band drawn across the whole dataset (e.g. an
+   *   aggregate min/max across all series)
+   */
+  perSeries?: boolean
+  /**
+   * Whether the band area participates in hit testing. Defaults to
+   * `false` — the band is decorative; hover/click pass through to the
+   * line on top. Independent of the `datum.band` enrichment, which
+   * happens whenever a band is configured.
+   */
+  interactive?: boolean
+}
+
 // ── StreamXYFrame props ────────────────────────────────────────────────
 
 export interface StreamXYFrameProps<T = Datum> {
@@ -513,6 +551,20 @@ export interface StreamXYFrameProps<T = Datum> {
    * If omitted, defaults to the line color at 0.2 opacity.
    */
   boundsStyle?: Style | ((d: T, group?: string) => Style)
+
+  /**
+   * Asymmetric min/max band(s) drawn under the line/area. Differs from
+   * `boundsAccessor` (which is a symmetric ±offset) and from `y0Accessor`
+   * (which replaces the area baseline). A band is a decorative envelope
+   * — painted under the lines, above the grid, non-interactive by default
+   * — driven by per-point `y0`/`y1` accessors.
+   *
+   * Pass an array for multi-band fan charts (e.g. p25/p75 inside p10/p90).
+   * Outer bands first; inner bands stack on top.
+   *
+   * Participates in y-extent auto-derivation when `yExtent` is not pinned.
+   */
+  band?: BandConfig<T> | Array<BandConfig<T>>
 
   // ── Candlestick specifics ───────────────────────
   openAccessor?: string | ((d: T) => number)

@@ -80,6 +80,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       areaOpacity: { type: "number" },
       forecast: { type: "object" },
       anomaly: { type: "object" },
+      band: { type: ["object", "array"] },
     },
   },
 
@@ -101,6 +102,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       lineWidth: { type: "number" },
       forecast: { type: "object" },
       anomaly: { type: "object" },
+      band: { type: ["object", "array"] },
     },
   },
 

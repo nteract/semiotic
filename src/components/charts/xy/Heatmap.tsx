@@ -279,6 +279,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     hoverHighlight,
     chartId,
     loading,
+    loadingContent,
     emptyContent,
     showLegend: showLegendProp,
     legendPosition: legendPositionProp,
@@ -295,7 +296,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
   const { width, height, enableHover, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = useMemo(() => filterSparseArray(data), [data])

@@ -248,6 +248,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     hoverHighlight,
     chartId,
     loading,
+    loadingContent,
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -282,7 +283,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   }
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   // ── Resolve colors from theme ─────────────────────────────────────────
@@ -409,6 +410,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       ? { ...resolved.marginDefaults, left: 70, right: 70 }
       : resolved.marginDefaults,
     loading,
+    loadingContent,
     emptyContent,
     width,
     height,

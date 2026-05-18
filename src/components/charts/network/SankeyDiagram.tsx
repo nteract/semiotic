@@ -158,6 +158,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     selection,
     linkedHover,
     loading,
+    loadingContent,
     emptyContent,
     showLegend,
     legendPosition,
@@ -194,6 +195,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     userMargin,
     width, height,
     loading,
+    loadingContent,
     emptyContent,
   })
 

@@ -41,7 +41,8 @@ import type {
   StalenessConfig,
   CurveType,
   BarStyle,
-  ThemeSemanticColors
+  ThemeSemanticColors,
+  BandConfig
 } from "./types"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent, type CoercibleNumber } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
@@ -58,6 +59,7 @@ import {
   type TransitionContext
 } from "./pipelineTransitions"
 import type { XYSceneContext } from "./xySceneBuilders/types"
+import type { ResolvedRibbon } from "./xySceneBuilders/ribbonScene"
 import { buildLineScene } from "./xySceneBuilders/lineScene"
 import { buildAreaScene, buildStackedAreaScene } from "./xySceneBuilders/areaScene"
 import { buildMixedScene } from "./xySceneBuilders/mixedScene"
@@ -74,6 +76,100 @@ import type { MarginType } from "../types/marginType"
 
 function getTimeAxis(arrowOfTime: ArrowOfTime): "x" | "y" {
   return arrowOfTime === "up" || arrowOfTime === "down" ? "y" : "x"
+}
+
+// ── Ribbon resolution (bounds + band → ResolvedRibbon[]) ──────────────
+
+/**
+ * Read a value off a datum preserving null/undefined as NaN so ribbon
+ * gap semantics work. `resolveAccessor` coerces null→0 via unary `+`,
+ * which would silently produce a "valid" 0 baseline for missing data —
+ * fine for primary y values, wrong for envelope edges.
+ */
+function resolveRibbonValueAccessor(
+  accessor: string | ((d: Datum) => number) | undefined,
+  fallback: string
+): (d: Datum) => number {
+  const get: (d: Datum) => unknown = typeof accessor === "function"
+    ? accessor as (d: Datum) => unknown
+    : (d) => (d as Record<string, unknown>)[accessor || fallback]
+  return (d: Datum) => {
+    const raw = get(d)
+    if (raw == null) return Number.NaN
+    return +(raw as number)
+  }
+}
+
+/**
+ * Compose the full ribbon list from both public envelope APIs:
+ * `boundsAccessor` (symmetric ±offset) and `band` (asymmetric pairs).
+ * Bounds is prepended so it paints furthest back when both are set on
+ * the same chart. Both surfaces share scene-builder, y-extent, and
+ * style-cascade machinery — only the resolution differs.
+ *
+ * Both APIs use null-preserving accessors (NaN for null/undefined) so
+ * the unified `buildRibbonForGroup` can rely on a single
+ * `Number.isFinite` check to skip gap datums. Without this, `null + 5`
+ * coerces to `5` and would silently render a bounds ribbon around the
+ * implicit-zero "value" of a missing row.
+ */
+function resolveRibbons(config: PipelineConfig): ResolvedRibbon[] {
+  const ribbons: ResolvedRibbon[] = []
+  const useStreamingDefaults =
+    ["bar", "swarm", "waterfall"].includes(config.chartType) || config.runtimeMode === "streaming"
+  const rawY = resolveRibbonValueAccessor(
+    (useStreamingDefaults ? (config.valueAccessor || config.yAccessor) : config.yAccessor) as
+      string | ((d: Datum) => number) | undefined,
+    useStreamingDefaults ? "value" : "y"
+  )
+
+  // boundsAccessor → one ribbon. Legacy behavior: when the offset is
+  // not a finite non-zero number, the top and bottom collapse to `y`
+  // (degenerate zero-width ribbon — preserved via the conditional).
+  if (config.boundsAccessor) {
+    const offsetGet = resolveAccessor(config.boundsAccessor, "bounds")
+    ribbons.push({
+      kind: "bounds",
+      getTop: (d) => {
+        const y = rawY(d)
+        if (!Number.isFinite(y)) return Number.NaN
+        const o = offsetGet(d)
+        return Number.isFinite(o) && o !== 0 ? y + o : y
+      },
+      getBottom: (d) => {
+        const y = rawY(d)
+        if (!Number.isFinite(y)) return Number.NaN
+        const o = offsetGet(d)
+        return Number.isFinite(o) && o !== 0 ? y - o : y
+      },
+      style: config.boundsStyle as Style | ((d: Datum, group?: string) => Style) | undefined,
+      perSeries: true,
+      interactive: false,
+    })
+  }
+
+  // band → one ribbon per BandConfig (array form drives fan charts).
+  if (config.band) {
+    const list = Array.isArray(config.band) ? config.band : [config.band]
+    for (const b of list) {
+      ribbons.push({
+        kind: "band",
+        getTop: resolveRibbonValueAccessor(
+          b.y1Accessor as string | ((d: Datum) => number) | undefined,
+          "y1"
+        ),
+        getBottom: resolveRibbonValueAccessor(
+          b.y0Accessor as string | ((d: Datum) => number) | undefined,
+          "y0"
+        ),
+        style: b.style as Style | ((d: Datum, group?: string) => Style) | undefined,
+        perSeries: b.perSeries !== false,
+        interactive: b.interactive === true,
+      })
+    }
+  }
+
+  return ribbons
 }
 
 // ── PipelineStore config ───────────────────────────────────────────────
@@ -137,6 +233,11 @@ export interface PipelineConfig {
 
   // Per-point area baseline (for band/ribbon charts like percentile bands)
   y0Accessor?: string | ((d: Datum) => CoercibleNumber)
+
+  // Asymmetric min/max band(s) drawn under the lines/areas. Single
+  // BandConfig or array (fan chart). Normalized to ResolvedBand[] at
+  // store construction.
+  band?: BandConfig | BandConfig[]
 
   // Area gradient fill (opacity or multi-color)
   gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
@@ -231,8 +332,12 @@ export class PipelineStore {
   private getCategory: ((d: Datum) => string) | undefined
   private getSize: ((d: Datum) => number) | undefined
   private getColor: ((d: Datum) => string) | undefined
-  private getBounds: ((d: Datum) => number) | undefined
   private getY0: ((d: Datum) => number) | undefined
+  /** Unified ribbon list — `boundsAccessor` + `band` both compose into
+   *  this single array (see `resolveRibbons`). Read by the scene
+   *  builders, y-extent expansion, and tooltip enrichment (which
+   *  filters on `kind === "band"`). Empty when neither prop is set. */
+  resolvedRibbons: ResolvedRibbon[] = []
   private getOpen: ((d: Datum) => number) | undefined
   private getHigh: ((d: Datum) => number) | undefined
   private getLow: ((d: Datum) => number) | undefined
@@ -330,12 +435,11 @@ export class PipelineStore {
       ? resolveAccessor(config.sizeAccessor, "size")
       : undefined
     this.getColor = resolveStringAccessor(config.colorAccessor)
-    this.getBounds = config.boundsAccessor
-      ? resolveAccessor(config.boundsAccessor, "bounds")
-      : undefined
     this.getY0 = config.y0Accessor
       ? resolveAccessor(config.y0Accessor, "y0")
       : undefined
+
+    this.resolvedRibbons = resolveRibbons(config)
 
     this.getPointId = resolveStringAccessor(config.pointIdAccessor)
 
@@ -365,6 +469,12 @@ export class PipelineStore {
     }
     this.yExtent.push(this.getY(d))
     if (this.getY0) this.yExtent.push(this.getY0(d))
+    for (const r of this.resolvedRibbons) {
+      const top = r.getTop(d)
+      const bottom = r.getBottom(d)
+      if (Number.isFinite(top)) this.yExtent.push(top)
+      if (Number.isFinite(bottom)) this.yExtent.push(bottom)
+    }
   }
 
   private rebuildYExtent(): void {
@@ -485,6 +595,11 @@ export class PipelineStore {
         } else {
           this.yExtent.push(this.getY(d))
           if (this.getY0) this.yExtent.push(this.getY0(d))
+          for (const r of this.resolvedRibbons) {
+            const top = r.getTop(d); const bottom = r.getBottom(d)
+            if (Number.isFinite(top)) this.yExtent.push(top)
+            if (Number.isFinite(bottom)) this.yExtent.push(bottom)
+          }
         }
       }
     } else {
@@ -508,6 +623,11 @@ export class PipelineStore {
         } else {
           this.yExtent.push(this.getY(d))
           if (this.getY0) this.yExtent.push(this.getY0(d))
+          for (const r of this.resolvedRibbons) {
+            const top = r.getTop(d); const bottom = r.getBottom(d)
+            if (Number.isFinite(top)) this.yExtent.push(top)
+            if (Number.isFinite(bottom)) this.yExtent.push(bottom)
+          }
         }
 
         if (evicted != null) {
@@ -518,6 +638,11 @@ export class PipelineStore {
           } else {
             this.yExtent.evict(this.getY(evicted))
             if (this.getY0) this.yExtent.evict(this.getY0(evicted))
+            for (const r of this.resolvedRibbons) {
+              const top = r.getTop(evicted); const bottom = r.getBottom(evicted)
+              if (Number.isFinite(top)) this.yExtent.evict(top)
+              if (Number.isFinite(bottom)) this.yExtent.evict(bottom)
+            }
           }
         }
       }
@@ -715,14 +840,24 @@ export class PipelineStore {
         Math.max(0, maxCum + Math.abs(pad))
       ]
     } else if (!yFullySpecified && yDomain[0] !== Infinity) {
-      // Expand extent to include bounds/uncertainty offsets
-      if (this.getBounds) {
+      // Expand extent to include every ribbon's top/bottom value. Both
+      // `boundsAccessor` (symmetric ±offset) and `band` (asymmetric
+      // pairs) normalize into the same `resolvedRibbons` list at
+      // construction time, so this one loop covers both APIs.
+      if (this.resolvedRibbons.length > 0) {
         for (const d of bufferArray) {
-          const y = this.getY(d)
-          const offset = this.getBounds(d)
-          if (y == null || Number.isNaN(y) || !offset) continue
-          if (y + offset > yDomain[1]) yDomain[1] = y + offset
-          if (y - offset < yDomain[0]) yDomain[0] = y - offset
+          for (const r of this.resolvedRibbons) {
+            const top = r.getTop(d)
+            const bottom = r.getBottom(d)
+            if (Number.isFinite(top)) {
+              if (top < yDomain[0]) yDomain[0] = top
+              if (top > yDomain[1]) yDomain[1] = top
+            }
+            if (Number.isFinite(bottom)) {
+              if (bottom < yDomain[0]) yDomain[0] = bottom
+              if (bottom > yDomain[1]) yDomain[1] = bottom
+            }
+          }
         }
       }
       const range = yDomain[1] - yDomain[0]
@@ -1077,7 +1212,7 @@ export class PipelineStore {
       getGroup: this.getGroup,
       getCategory: this.getCategory,
       getPointId: this.getPointId,
-      getBounds: this.getBounds,
+      ribbons: this.resolvedRibbons,
       getOpen: this.getOpen,
       getHigh: this.getHigh,
       getLow: this.getLow,
@@ -1648,7 +1783,7 @@ export class PipelineStore {
     if ("normalize" in config || "extentPadding" in config
       || "xAccessor" in config || "yAccessor" in config
       || "timeAccessor" in config || "valueAccessor" in config
-      || "boundsAccessor" in config || "y0Accessor" in config
+      || "boundsAccessor" in config || "band" in config || "y0Accessor" in config
       || "openAccessor" in config || "highAccessor" in config
       || "lowAccessor" in config || "closeAccessor" in config
       || "groupAccessor" in config || "categoryAccessor" in config
@@ -1688,6 +1823,12 @@ export class PipelineStore {
           this.getX = resolveAccessor(this.config.xAccessor, "x")
           this.getY = resolveAccessor(this.config.yAccessor, "y")
         }
+        // The bounds ribbon (when present) captures `getY` in its closure
+        // because `y ± offset` reads through this.getY. A yAccessor swap
+        // would otherwise leave the ribbon referencing the previous accessor.
+        if (yChanged && this.resolvedRibbons.some(r => r.kind === "bounds")) {
+          this.resolvedRibbons = resolveRibbons(this.config)
+        }
         accessorChanged = true
         extentAccessorChanged = true
       }
@@ -1717,10 +1858,12 @@ export class PipelineStore {
       accessorChanged = true
       extentAccessorChanged = true
     }
-    if ("boundsAccessor" in config && !accessorsEquivalent(config.boundsAccessor, prev.boundsAccessor)) {
-      this.getBounds = this.config.boundsAccessor
-        ? resolveAccessor(this.config.boundsAccessor, "bounds")
-        : undefined
+    if (
+      ("boundsAccessor" in config && !accessorsEquivalent(config.boundsAccessor, prev.boundsAccessor)) ||
+      ("band" in config && config.band !== prev.band) ||
+      ("boundsStyle" in config && config.boundsStyle !== prev.boundsStyle)
+    ) {
+      this.resolvedRibbons = resolveRibbons(this.config)
       accessorChanged = true
       extentAccessorChanged = true
     }

@@ -78,6 +78,8 @@ export interface ChartSetupInput {
   hoverHighlight?: boolean
   /** Loading state */
   loading: boolean | undefined
+  /** Custom content rendered in place of the default skeleton while `loading` is true. */
+  loadingContent?: ReactNode | false
   /** Empty content override */
   emptyContent?: ReactNode
   /** Resolved width from useChartMode */
@@ -170,6 +172,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     onClick,
     hoverHighlight,
     loading,
+    loadingContent,
     emptyContent,
     width,
     height,
@@ -326,7 +329,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // that fails to render anything; filter `rawData` itself for the
   // emptiness check so the user's array is the source of truth.
   const emptyStateInput = Array.isArray(rawData) ? filterSparseArray(rawData) : rawData
-  const loadingEl = renderLoadingState(loading, width, height)
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
   const emptyEl = loadingEl ? null : renderEmptyState(emptyStateInput, width, height, emptyContent)
   const earlyReturn = loadingEl || emptyEl || null
 

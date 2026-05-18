@@ -224,6 +224,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     selection,
     linkedHover,
     loading,
+    loadingContent,
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -265,6 +266,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     userMargin,
     width, height,
     loading,
+    loadingContent,
     emptyContent,
     emptyDataKey: "nodes",
   })

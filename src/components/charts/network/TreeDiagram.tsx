@@ -115,6 +115,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     selection,
     linkedHover,
     loading,
+    loadingContent,
     legendInteraction,
     stroke,
     strokeWidth,
@@ -149,6 +150,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     userMargin,
     width, height,
     loading,
+    loadingContent,
   })
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 

@@ -230,6 +230,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     onClick,
     chartId,
     loading,
+    loadingContent,
     emptyContent,
     frameProps = {},
     stroke,
@@ -329,7 +330,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   }), [userMargin])
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height)
+  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height, loadingContent)
     || (!resolvedAreas ? renderLoadingState(true, resolved.width, resolved.height) : null)
   const emptyEl = !loadingEl ? renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent) : null
 

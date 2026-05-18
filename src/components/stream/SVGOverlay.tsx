@@ -41,6 +41,43 @@ export interface AxisConfig {
   /** Highlight ticks at time boundaries (new month, year, etc.) with semibold text.
    * `true` auto-detects Date boundaries. A function receives (value, index) and returns true for landmark ticks. */
   landmarkTicks?: boolean | ((value: any, index: number) => boolean)
+  /** Tick label anchoring strategy:
+   *  - `"middle"` (default): all tick labels centered on the tick mark
+   *  - `"edges"`: first tick label anchors to start, last to end, middles stay centered.
+   *    Pairs naturally with `axisExtent: "exact"` — pins the domain to the
+   *    data min/max AND keeps the extreme labels from overflowing the plot. */
+  tickAnchor?: "middle" | "edges"
+}
+
+/** Resolve the SVG text-anchor for a horizontal-axis tick index given the
+ *  axis's `tickAnchor` config. Centers everything in `"middle"` mode;
+ *  flips first→start / last→end in `"edges"` mode. */
+function resolveHorizontalTickAnchor(
+  mode: "middle" | "edges" | undefined,
+  i: number,
+  total: number
+): "start" | "middle" | "end" {
+  if (mode === "edges") {
+    if (i === 0) return "start"
+    if (i === total - 1) return "end"
+  }
+  return "middle"
+}
+
+/** Resolve the SVG dominant-baseline for a vertical-axis tick index.
+ *  In `"edges"` mode the first (topmost) tick uses `hanging` so its
+ *  label sits below the tick line, the last (bottommost) uses `auto`
+ *  so it sits above — same overflow-prevention as the horizontal case. */
+function resolveVerticalTickBaseline(
+  mode: "middle" | "edges" | undefined,
+  i: number,
+  total: number
+): "hanging" | "middle" | "auto" {
+  if (mode === "edges") {
+    if (i === 0) return "hanging"
+    if (i === total - 1) return "auto"
+  }
+  return "middle"
 }
 
 function resolveGridDash(style: "dashed" | "dotted" | string | undefined): string | undefined {
@@ -676,8 +713,18 @@ export function SVGOverlay(props: SVGOverlayProps) {
             return avgSpacing < maxLabelW + 8
           })()
 
+          // Per-axis font-size resolution. Inline `style` references the
+          // CSS var with the literal default as the fallback — consumers
+          // override the var on any DOM ancestor and the cascade carries
+          // through. Landmark ticks get a +1px bump via calc().
+          const tickFontStyle = { fontSize: "var(--semiotic-tick-font-size, 10px)" }
+          const tickFontStyleLandmark = { fontSize: "calc(var(--semiotic-tick-font-size, 10px) + 1px)" }
+          const axisLabelFontStyle = { fontSize: "var(--semiotic-axis-label-font-size, 12px)" }
+          const bottomTickAnchorMode = bottomAxis?.tickAnchor
+          const leftTickAnchorMode = leftAxis?.tickAnchor
           return (
           <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
+            <g className="semiotic-axis semiotic-axis-bottom" data-orient="bottom">
             {/* X axis baseline. Same three-state gate as the grid block
                 above: render unless the underlay is already showing
                 through a transparent canvas. */}
@@ -699,18 +746,18 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 {typeof tick.label === "string" || typeof tick.label === "number" ? (
                   <text
                     y={shouldRotateBottom ? 10 : 18}
-                    textAnchor={shouldRotateBottom ? "end" : "middle"}
-                    fontSize={isLandmark ? 11 : 10}
+                    textAnchor={shouldRotateBottom ? "end" : resolveHorizontalTickAnchor(bottomTickAnchorMode, i, xTicks.length)}
                     fontWeight={isLandmark ? 600 : 400}
                     fill={tickColor}
-                    style={{ userSelect: "none" }}
+                    className="semiotic-axis-tick"
+                    style={{ userSelect: "none", ...(isLandmark ? tickFontStyleLandmark : tickFontStyle) }}
                     transform={shouldRotateBottom ? "rotate(-45)" : undefined}
                   >
                     {tick.label}
                   </text>
                 ) : (
                   <foreignObject x={-30} y={6} width={60} height={24} style={{ overflow: "visible" }}>
-                    <div style={{ textAlign: "center", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                    <div style={{ textAlign: "center", userSelect: "none", ...tickFontStyle }}>{tick.label}</div>
                   </foreignObject>
                 )}
               </g>
@@ -721,14 +768,16 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 x={width / 2}
                 y={height + 40}
                 textAnchor="middle"
-                fontSize={12}
                 fill={labelColor}
-                style={{ userSelect: "none" }}
+                className="semiotic-axis-label"
+                style={{ userSelect: "none", ...axisLabelFontStyle }}
               >
                 {xLabel}
               </text>
             )}
+            </g>
 
+            <g className="semiotic-axis semiotic-axis-left" data-orient="left">
             {/* Y axis baseline. Same gate as the X baseline above. */}
             {(!underlayRendered || canvasObscuresUnderlay) && showLeftBaseline && !leftJagged && (
               <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1}  />
@@ -749,17 +798,17 @@ export function SVGOverlay(props: SVGOverlayProps) {
                   <text
                     x={-8}
                     textAnchor="end"
-                    dominantBaseline="middle"
-                    fontSize={isLandmark ? 11 : 10}
+                    dominantBaseline={resolveVerticalTickBaseline(leftTickAnchorMode, i, yTicks.length)}
                     fontWeight={isLandmark ? 600 : 400}
                     fill={tickColor}
-                    style={{ userSelect: "none" }}
+                    className="semiotic-axis-tick"
+                    style={{ userSelect: "none", ...(isLandmark ? tickFontStyleLandmark : tickFontStyle) }}
                   >
                     {tick.label}
                   </text>
                 ) : (
                   <foreignObject x={-68} y={-12} width={60} height={24} style={{ overflow: "visible" }}>
-                    <div style={{ textAlign: "right", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                    <div style={{ textAlign: "right", userSelect: "none", ...tickFontStyle }}>{tick.label}</div>
                   </foreignObject>
                 )}
               </g>
@@ -772,15 +821,16 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 x={-margin.left + 15}
                 y={height / 2}
                 textAnchor="middle"
-                fontSize={12}
                 fill={labelColor}
                 transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
-                style={{ userSelect: "none" }}
+                className="semiotic-axis-label"
+                style={{ userSelect: "none", ...axisLabelFontStyle }}
               >
                 {leftLabel}
               </text>
               ) : null
             })()}
+            </g>
 
             {/* Right Y axis */}
             {(() => {
@@ -789,8 +839,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
               const showRightBaseline = rightAxis.baseline !== false
               const rightLandmark = rightAxis.landmarkTicks
               const rightLabel = rightAxis.label || yLabelRight
+              const rightTickAnchorMode = rightAxis.tickAnchor
               return (
-                <>
+                <g className="semiotic-axis semiotic-axis-right" data-orient="right">
                   {showRightBaseline && (
                     <line x1={width} y1={0} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
                   )}
@@ -807,17 +858,17 @@ export function SVGOverlay(props: SVGOverlayProps) {
                         <text
                           x={8}
                           textAnchor="start"
-                          dominantBaseline="middle"
-                          fontSize={isLandmark ? 11 : 10}
+                          dominantBaseline={resolveVerticalTickBaseline(rightTickAnchorMode, i, yTicksRight.length)}
                           fontWeight={isLandmark ? 600 : 400}
                           fill={tickColor}
-                          style={{ userSelect: "none" }}
+                          className="semiotic-axis-tick"
+                          style={{ userSelect: "none", ...(isLandmark ? tickFontStyleLandmark : tickFontStyle) }}
                         >
                           {tick.label}
                         </text>
                       ) : (
                         <foreignObject x={8} y={-12} width={60} height={24} style={{ overflow: "visible" }}>
-                          <div style={{ textAlign: "left", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                          <div style={{ textAlign: "left", userSelect: "none", ...tickFontStyle }}>{tick.label}</div>
                         </foreignObject>
                       )}
                     </g>
@@ -828,15 +879,15 @@ export function SVGOverlay(props: SVGOverlayProps) {
                       x={width + margin.right - 15}
                       y={height / 2}
                       textAnchor="middle"
-                      fontSize={12}
                       fill={labelColor}
                       transform={`rotate(90, ${width + margin.right - 15}, ${height / 2})`}
-                      style={{ userSelect: "none" }}
+                      className="semiotic-axis-label"
+                      style={{ userSelect: "none", ...axisLabelFontStyle }}
                     >
                       {rightLabel}
                     </text>
                   )}
-                </>
+                </g>
               )
             })()}
           </g>
@@ -928,10 +979,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
           x={totalWidth / 2}
           y={20}
           textAnchor="middle"
-          fontSize={14}
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"
-          style={{ userSelect: "none" }}
+          className="semiotic-chart-title"
+          style={{ userSelect: "none", fontSize: "var(--semiotic-title-font-size, 14px)" }}
         >
           {typeof title === "string" ? title : null}
         </text>

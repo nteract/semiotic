@@ -677,6 +677,12 @@ export function themeToCSS(theme: SemioticTheme, selector = ":root"): string {
   if (theme.typography.tickFontFamily != null) {
     vars.push(`  --semiotic-tick-font-family: ${theme.typography.tickFontFamily};`)
   }
+  if (theme.typography.tickSize != null) {
+    vars.push(`  --semiotic-tick-font-size: ${theme.typography.tickSize}px;`)
+  }
+  if (theme.typography.labelSize != null) {
+    vars.push(`  --semiotic-axis-label-font-size: ${theme.typography.labelSize}px;`)
+  }
 
   // ── Semantic role CSS variables ──────────────────────────────────────
   // `secondary` and `surface` have documented fallback semantics (→ primary
@@ -767,6 +773,12 @@ export function themeToTokens(theme: SemioticTheme): Datum {
       } : {}),
       ...(theme.typography.tickFontFamily != null ? {
         "tick-font-family": { $value: theme.typography.tickFontFamily, $type: "fontFamily" },
+      } : {}),
+      ...(theme.typography.tickSize != null ? {
+        "tick-font-size": { $value: `${theme.typography.tickSize}px`, $type: "dimension" },
+      } : {}),
+      ...(theme.typography.labelSize != null ? {
+        "axis-label-font-size": { $value: `${theme.typography.labelSize}px`, $type: "dimension" },
       } : {}),
       // secondary/surface mirror the documented-fallback semantics in
       // themeToCSS + ThemeProvider — always emitted so DTCG token consumers

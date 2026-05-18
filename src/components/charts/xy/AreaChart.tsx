@@ -5,7 +5,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, BandConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
@@ -209,6 +209,17 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
   anomaly?: AnomalyConfig
 
   /**
+   * Asymmetric min/max band(s) drawn under the area fill. Distinct from
+   * `y0Accessor` (which replaces the area's baseline) — `band` is a
+   * decorative envelope painted beneath the area, driven by independent
+   * `y0Accessor` / `y1Accessor` per band. Pass an array for fan charts.
+   *
+   * The hovered datum gets `band: { y0, y1 }` and `bands: [...]` for
+   * tooltip access. See the LineChart docs for full ergonomics.
+   */
+  band?: BandConfig<TDatum> | Array<BandConfig<TDatum>>
+
+  /**
    * Fixed x domain `[min, max]`. Either bound may be `undefined` to leave
    * that side data-derived. Useful for pinning a time axis to a known
    * window (e.g. last 24 hours) so streamed updates don't shift the
@@ -325,6 +336,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     annotations,
     forecast,
     anomaly,
+    band,
     xExtent,
     yExtent,
     frameProps = {},
@@ -335,6 +347,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     hoverHighlight,
     chartId,
     loading,
+    loadingContent,
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -373,6 +386,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     userMargin,
     marginDefaults: resolved.marginDefaults,
     loading,
+    loadingContent,
     emptyContent,
     width,
     height,
@@ -424,6 +438,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     yAccessor,
     groupAccessor: areaBy || undefined,
     ...(y0Accessor && { y0Accessor }),
+    ...(band && { band: band as StreamXYFrameProps["band"] }),
     ...(gradientFill && { gradientFill }),
     ...(lineGradient && { lineGradient }),
     curve,

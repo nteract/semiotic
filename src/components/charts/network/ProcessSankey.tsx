@@ -292,6 +292,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     responsiveWidth,
     responsiveHeight,
     loading,
+    loadingContent,
     emptyContent,
     edgeOpacity = 0.35,
     timeFormat,
@@ -611,6 +612,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     userMargin,
     width, height,
     loading,
+    loadingContent,
     emptyContent,
   })
 

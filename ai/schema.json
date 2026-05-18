@@ -188,6 +188,13 @@
             "anomaly": {
               "type": "object",
               "description": "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig."
+            },
+            "band": {
+              "type": [
+                "object",
+                "array"
+              ],
+              "description": "Asymmetric min/max envelope drawn under the line. `{ y0Accessor, y1Accessor, style?, perSeries?, interactive? }` or an array of those for percentile fans. Distinct from `forecast`/`anomaly` (computed) — band is pure data passthrough. Hovered datum is enriched with `band: { y0, y1 }` and `bands: [...]`."
             }
           },
           "required": [
@@ -368,6 +375,13 @@
             "anomaly": {
               "type": "object",
               "description": "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig."
+            },
+            "band": {
+              "type": [
+                "object",
+                "array"
+              ],
+              "description": "Asymmetric min/max envelope drawn under the area. See LineChart.band — same shape, same enrichment."
             }
           },
           "required": [

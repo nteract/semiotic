@@ -132,6 +132,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     selection,
     linkedHover,
     loading,
+    loadingContent,
     emptyContent,
     legendInteraction,
     stroke,
@@ -167,6 +168,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     userMargin,
     width, height,
     loading,
+    loadingContent,
     emptyContent,
   })
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])

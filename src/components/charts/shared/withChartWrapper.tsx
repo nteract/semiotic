@@ -86,16 +86,46 @@ export function renderEmptyState(
 }
 
 /**
- * Renders a shimmer/skeleton loading placeholder.
- * Returns null when loading is false.
+ * Renders a loading placeholder while `loading` is true.
+ *
+ * When `loadingContent` is provided, it replaces the default shimmer
+ * skeleton — wrapped in the same sized container so the chart still
+ * occupies the slot it would when rendered. Pass `false` to suppress
+ * the skeleton entirely (the early-return becomes null and the chart's
+ * own loading UI takes over).
+ *
+ * Returns null when `loading` is falsy.
  */
 export function renderLoadingState(
   loading: boolean | undefined,
   width: number,
-  height: number
+  height: number,
+  loadingContent?: React.ReactNode | false
 ): React.ReactElement | null {
   if (!loading) return null
-  // Simple skeleton: a few horizontal bars at varying widths
+  if (loadingContent === false) return null
+
+  // Custom loading content — wrap in the same sized container so the
+  // chart still occupies the slot. Inline styles mirror the skeleton
+  // container so consumers don't have to re-implement sizing.
+  if (loadingContent != null) {
+    return (
+      <div
+        style={{
+          width,
+          height,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxSizing: "border-box",
+        }}
+      >
+        {loadingContent}
+      </div>
+    )
+  }
+
+  // Default skeleton: a few horizontal bars at varying widths
   const barCount = Math.min(5, Math.floor(height / 40))
   const barHeight = Math.max(8, Math.floor(height / (barCount * 3)))
   const gap = Math.max(6, Math.floor(height / (barCount * 2.5)))
