@@ -75,7 +75,7 @@ function Body() {
       <h2 id="upgrade-notes">Upgrade notes</h2>
       <p>
         This release is additive for most users. If you use ProcessSankey and pass custom margins
-        with a legend, legend reservation now respects explicitly-set margin sides. If you consume
+        with a legend, legend reservation now respects explicitly-set margin sides. If you consume{" "}
         <code>ai/capabilities.json</code>, the total chart count is now 45 and QuadrantChart correctly
         reports SSR support.
       </p>

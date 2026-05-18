@@ -142,7 +142,6 @@ let _renderChartTried = false
 async function getRenderChart() {
   if (_renderChartTried) return _renderChart
   _renderChartTried = true
-  if (_renderChart) return _renderChart
   try {
     const mod = requireFromScript(resolve(ROOT, "dist/server.min.js"))
     _renderChart = mod.renderChart
