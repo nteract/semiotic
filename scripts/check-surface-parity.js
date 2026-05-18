@@ -29,7 +29,6 @@ const SERVER_ONLY = new Set(["Sparkline"])
 
 const SERVER_CONFIG_EXCLUDED = new Map([
   ["MultiAxisLineChart", "composite dual-axis HOC; renderable through the HOC SSR path, not serverChartConfigs"],
-  ["QuadrantChart", "composite scatterplot HOC; renderable through the HOC SSR path, not serverChartConfigs"],
   ["ScatterplotMatrix", "SVG composite with internal brush overlay; renderable through the HOC SSR path"],
   ["MinimapChart", "interactive composite with overview/detail brush; renderable through the HOC SSR path"],
   ["OrbitDiagram", "animated hierarchy HOC; MCP HOC render path is the supported static snapshot"],
