@@ -60,7 +60,7 @@ const BLURBS = {
   "./recipes":  "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
   "./themes":   "Theme presets only (tufte, carbon, etc.)",
   "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
-  "./ai":       "All 40 HOCs + validation — optimized for LLM code generation",
+  "./ai":       "All 41 HOCs + validation — optimized for LLM code generation",
 }
 
 // Display order — independent of `package.json` key order so the

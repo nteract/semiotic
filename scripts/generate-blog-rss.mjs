@@ -21,7 +21,7 @@
  *   $ node scripts/generate-blog-rss.mjs
  */
 
-import { existsSync, mkdirSync, writeFileSync } from "fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { resolve, dirname } from "path"
 import { fileURLToPath } from "url"
 
@@ -29,6 +29,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, "..")
 const OUT_DIR = resolve(ROOT, "docs/public/blog")
 const OUT_FILE = resolve(OUT_DIR, "feed.xml")
+const META_FILE = resolve(ROOT, "docs/src/blog/entries-meta.js")
 
 // Canonical site origin used for feed-level `<id>` URIs and per-entry
 // links. Matches the canonical URL set in `docs/public/index.html`.
@@ -110,9 +111,17 @@ function buildAtom(entries) {
   ].join("\n")
 }
 
+async function importEntriesMeta() {
+  // Import through a data URL so Node treats this typeless `.js` file
+  // as an explicit ES module without forcing `"type": "module"` on
+  // the whole package.
+  const source = readFileSync(META_FILE, "utf8")
+  return import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
+}
+
 async function main() {
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true })
-  const mod = await import("file://" + resolve(ROOT, "docs/src/blog/entries-meta.js"))
+  const mod = await importEntriesMeta()
   const entries = mod.blogEntriesMeta
   const xml = buildAtom(entries)
   writeFileSync(OUT_FILE, xml)

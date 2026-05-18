@@ -197,12 +197,12 @@ export default {
   slug: "minards-march",
   title: "Minard's March, rebuilt in Semiotic",
   subtitle:
-    "A faithful recreation of the 1869 flow map of Napoleon's Russian campaign using FlowMap with tile basemap and particles, cross-linked with a ConnectedScatterplot temperature strip.",
+    "A faithful recreation of the 1869 flow map of Napoleon's Russian campaign — FlowMap with tile basemap and particles, cross-linked with a ConnectedScatterplot temperature strip.",
   author: "Elijah Meeks",
   date: "2026-04-22",
   tags: ["case-study", "geo", "tutorial"],
   excerpt:
-    "Tufte called Minard's chart \"the best statistical graphic ever drawn.\" Rebuilding it is the cleanest way to learn Semiotic's composition primitives using FlowMap with tiles, particles, a linked ConnectedScatterplot, and shared categorical colors all in one page.",
+    "Tufte called Minard's chart \"the best statistical graphic ever drawn.\" Rebuilding it is the cleanest way to learn Semiotic's composition primitives — FlowMap with tiles, particles, a linked ConnectedScatterplot, and shared categorical colors all in one page.",
   component: Body,
   ogChart: {
     component: "MinardsMarch",

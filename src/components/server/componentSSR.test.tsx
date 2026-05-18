@@ -594,6 +594,52 @@ describe("Component SSR — Network Charts", () => {
     expect(countOccurrences(html, "path")).toBeGreaterThanOrEqual(4)
   })
 
+  it("renderChart('ProcessSankey', …) renders lifecycle timing stubs in SSR", () => {
+    const svg = renderChart("ProcessSankey", {
+      nodes: [
+        { id: "Queue" },
+        { id: "Review" },
+        { id: "Done" },
+      ],
+      edges: [
+        {
+          source: "Queue",
+          target: "Review",
+          value: 12,
+          enteredSystem: 0,
+          startTime: 1,
+          endTime: 3,
+          exitedSystem: 5,
+        },
+        {
+          source: "Review",
+          target: "Done",
+          value: 8,
+          enteredSystem: 1,
+          startTime: 3,
+          endTime: 5,
+          exitedSystem: 6,
+        },
+      ],
+      sourceAccessor: "source",
+      targetAccessor: "target",
+      valueAccessor: "value",
+      startTimeAccessor: "startTime",
+      endTimeAccessor: "endTime",
+      systemInTimeAccessor: "enteredSystem",
+      systemOutTimeAccessor: "exitedSystem",
+      domain: [0, 6],
+      width: 520,
+      height: 320,
+      showLegend: false,
+    })
+
+    expect(svg).toContain("<svg")
+    expect(svg).toContain("<path")
+    expect(svg).toContain("opacity=\"0.35\"")
+    expect(svg).toContain("fill-opacity=\"0.86\"")
+  })
+
   it("TreeDiagram renders nodes and edges", () => {
     const html = renderComponent(
       <TreeDiagram

@@ -683,6 +683,8 @@ const processSankey: ChartConfig = {
     const nodeIdAccessor = rest.nodeIdAccessor || "id"
     const startTimeAccessor = rest.startTimeAccessor || "startTime"
     const endTimeAccessor = rest.endTimeAccessor || "endTime"
+    const systemInTimeAccessor = rest.systemInTimeAccessor
+    const systemOutTimeAccessor = rest.systemOutTimeAccessor
     const xExtentAccessor = rest.xExtentAccessor || "xExtent"
     const edgeIdAccessor = rest.edgeIdAccessor || "id"
 
@@ -721,7 +723,17 @@ const processSankey: ChartConfig = {
     const es = rawEdges.map((e, i) => {
       const fromAcc = accVal(edgeIdAccessor, e) as string | undefined
       const id = fromAcc != null ? String(fromAcc) : `${accVal(sourceAccessor, e)}-${accVal(targetAccessor, e)}-${i}`
-      return {
+      const out: {
+        id: string
+        source: string
+        target: string
+        value: number
+        startTime: number
+        endTime: number
+        systemInTime?: number
+        systemOutTime?: number
+        __raw: Datum
+      } = {
         id,
         source: String(accVal(sourceAccessor, e)),
         target: String(accVal(targetAccessor, e)),
@@ -730,6 +742,15 @@ const processSankey: ChartConfig = {
         endTime: toTime(accVal(endTimeAccessor, e)),
         __raw: e,
       }
+      if (systemInTimeAccessor) {
+        const t = toTime(accVal(systemInTimeAccessor, e))
+        if (Number.isFinite(t)) out.systemInTime = t
+      }
+      if (systemOutTimeAccessor) {
+        const t = toTime(accVal(systemOutTimeAccessor, e))
+        if (Number.isFinite(t)) out.systemOutTime = t
+      }
+      return out
     })
 
     // Resolve the same dimensions `renderNetworkFrame` will use so the

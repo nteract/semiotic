@@ -44,6 +44,12 @@ jobs:
       - name: Check chart spec registry round-trip
         run: npm run check:chart-specs
 
+      - name: Check capability matrix freshness
+        run: npm run check:capabilities
+
+      - name: Check blog metadata registry freshness
+        run: npm run check:blog-entries
+
       - name: Check CLAUDE.md component coverage
         run: npm run check:claude-md-coverage
 
