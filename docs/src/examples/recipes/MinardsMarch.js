@@ -1,6 +1,7 @@
 import React from "react"
-import { LinkedCharts, CategoryColorProvider, ConnectedScatterplot } from "semiotic"
+import { LinkedCharts, CategoryColorProvider, ConnectedScatterplot, ThemeProvider } from "semiotic"
 import { FlowMap } from "semiotic/geo"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Minard's March Data ───────────────────────────────────────────────
 // Simplified version of Minard's 1869 chart of Napoleon's Russian campaign.
@@ -138,14 +139,18 @@ function ViridisLegend({ width }) {
           ))}
         </linearGradient>
       </defs>
-      <text x={0} y={0} fontSize={10} fill="#666" fontWeight={600}>
+      {/* `currentColor` flows from the surrounding text-color cascade
+          (the chart's SVG inherits the ThemeProvider's `--semiotic-text`
+          via `currentColor` on text fills), so the legend labels stay
+          legible in both light and dark mode without theme detection. */}
+      <text x={0} y={0} fontSize={10} fill="currentColor" opacity={0.7} fontWeight={600}>
         Retreat stage
       </text>
       <rect x={0} y={4} width={legendWidth} height={8} rx={2} fill="url(#viridis-legend-grad)" />
-      <text x={0} y={22} fontSize={9} fill="#888">
+      <text x={0} y={22} fontSize={9} fill="currentColor" opacity={0.55}>
         Moscow
       </text>
-      <text x={legendWidth} y={22} fontSize={9} fill="#888" textAnchor="end">
+      <text x={legendWidth} y={22} fontSize={9} fill="currentColor" opacity={0.55} textAnchor="end">
         Kowno
       </text>
     </g>
@@ -157,8 +162,13 @@ function ViridisLegend({ width }) {
 export default function MinardsMarch({ width = 800 }) {
   const mapHeight = Math.round(width * 0.5)
   const chartHeight = Math.round(width * 0.22)
+  // Follow the docs theme so dark-mode readers don't see a light chart
+  // panel + dark text-on-dark background.
+  const [docsTheme] = useDocsTheme()
+  const themeName = docsTheme === "dark" ? "dark" : "light"
 
   return (
+    <ThemeProvider theme={themeName}>
     <CategoryColorProvider
       categories={["advance", "retreat"]}
       colors={{ advance: "#deb887", retreat: "#333" }}
@@ -228,8 +238,11 @@ export default function MinardsMarch({ width = 800 }) {
           <div
             style={{
               marginTop: 4,
-              background: "#fafafa",
-              border: "1px solid #e0e0e0",
+              // Use the docs's surface tokens so the panel follows the
+              // active theme (light → near-white, dark → near-black).
+              // The earlier hardcoded `#fafafa` painted white in dark mode.
+              background: "var(--surface-1)",
+              border: "1px solid var(--surface-3)",
               borderRadius: 4,
             }}
           >
@@ -275,5 +288,6 @@ export default function MinardsMarch({ width = 800 }) {
         </div>
       </LinkedCharts>
     </CategoryColorProvider>
+    </ThemeProvider>
   )
 }

@@ -26,6 +26,7 @@
  */
 import React from "react"
 import { SankeyDiagram, ProcessSankey, ThemeProvider } from "semiotic"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Five wards in the patient's path. Surgery and ICU live in the
 //    middle of the typical journey; General is the recovery stop;
@@ -524,14 +525,14 @@ const Caption = ({ children }) => (
 )
 
 export default function PatientJourneys() {
+  // Follow the ambient docs theme so dark-mode readers don't see a
+  // light-Carbon island. `useDocsTheme` mirrors `<html data-theme>`.
+  const [docsTheme] = useDocsTheme()
+  const themeName = docsTheme === "dark" ? "carbon-dark" : "carbon"
   return (
-    <ThemeProvider theme="carbon">
-      {/* Carbon island. `ThemeProvider` sets `--semiotic-text` to #161616
-          inside this subtree (carbon light). Without a matching background
-          the labels rendered as dark text on whatever the surrounding docs
-          theme painted — invisible in dark mode. Paint `--semiotic-bg` on
-          the wrapper so the whole recipe lives on carbon's light surface,
-          independent of the docs theme. */}
+    <ThemeProvider theme={themeName}>
+      {/* Wrapper paints `--semiotic-bg` so the whole recipe lives on the
+          chosen Carbon variant's surface. */}
       <div
         style={{
           background: "var(--semiotic-bg)",
@@ -570,7 +571,13 @@ export default function PatientJourneys() {
               nodePaddingRatio={0.3}
               nodeWidth={10}
               showLabels
-              width={700}
+              // Match the ProcessSankey below — bottom legend so the
+              // horizontal lane fills the panel instead of reserving
+              // 110 px on the right for an unread legend. Width pinned
+              // to 780 to mirror the ProcessSankey, otherwise the
+              // Sankey reads as a smaller-framed sibling.
+              legendPosition="bottom"
+              width={780}
               height={360}
             />
           </div>

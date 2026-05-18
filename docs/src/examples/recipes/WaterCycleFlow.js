@@ -9,6 +9,7 @@
  */
 import React from "react"
 import { SankeyDiagram, ThemeProvider } from "semiotic"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Shared dataset ────────────────────────────────────────────────────
 //
@@ -109,14 +110,16 @@ const PanelHeading = ({ children, subtitle }) => (
 )
 
 export default function WaterCycleFlow() {
+  // Switch between Carbon light + Carbon dark so the recipe follows the
+  // ambient docs theme instead of locking to a single brightness.
+  // `useDocsTheme` mirrors `data-theme` on the document.
+  const [docsTheme] = useDocsTheme()
+  const themeName = docsTheme === "dark" ? "carbon-dark" : "carbon"
   return (
-    <ThemeProvider theme="carbon">
-      {/* Carbon island. `ThemeProvider` sets `--semiotic-text` to #161616
-          inside this subtree (carbon light). Without a matching background
-          the labels rendered as dark text on whatever the surrounding docs
-          theme painted — invisible in dark mode. Paint `--semiotic-bg` on
-          the wrapper so the whole recipe lives on carbon's light surface,
-          independent of the docs theme. */}
+    <ThemeProvider theme={themeName}>
+      {/* Wrapper paints `--semiotic-bg` so the whole recipe lives on the
+          chosen Carbon variant's surface regardless of whether the
+          surrounding docs theme is dark or light. */}
       <div
         style={{
           background: "var(--semiotic-bg)",
@@ -155,8 +158,14 @@ export default function WaterCycleFlow() {
               nodePaddingRatio={0.4}
               nodeWidth={10}
               showLabels
-              width={700}
+              // Bottom legend so horizontal space isn't reserved for a
+              // right-side swatch column. Width matches the ProcessSankey
+              // siblings in the other process-vs-classic recipes so the
+              // panel doesn't read as "small chart in big frame."
+              legendPosition="bottom"
+              width={780}
               height={420}
+              margin={{ top: 10, bottom: 100, left: 10, right: 10 }}
             />
           </div>
           <Caption>

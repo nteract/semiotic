@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Chart-specific prop mapping for renderChart().
@@ -243,6 +244,79 @@ const scatterplot: ChartConfig = {
     colorScheme,
     ...common,
   }),
+}
+
+const quadrantChart: ChartConfig = {
+  frameType: "xy",
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    // Build the four quadrant rects + centerlines + corner labels as
+    // an svgPreRenderer closure so it gets painted UNDER the scatter
+    // marks, matching the client HOC's z-order. The closure receives
+    // the scene, scales, and layout at render time, so it can
+    // translate data-space xCenter/yCenter into pixel coordinates the
+    // same way the client does.
+    const xCenter = rest.xCenter
+    const yCenter = rest.yCenter
+    const quadrants = rest.quadrants
+    const centerlineStyle = rest.centerlineStyle || {}
+    const showLabels = rest.showQuadrantLabels !== false
+    const labelSize = rest.quadrantLabelSize ?? 12
+
+    const stroke = centerlineStyle.stroke || "#999"
+    const strokeWidth = centerlineStyle.strokeWidth ?? 1
+    const dashArray = Array.isArray(centerlineStyle.strokeDasharray)
+      ? centerlineStyle.strokeDasharray.join(",")
+      : centerlineStyle.strokeDasharray
+    const padding = 8
+
+    const h_ = React.createElement
+    const svgPreRenderers = quadrants ? [
+      (_nodes: unknown, scales: { x: (v: number) => number; y: (v: number) => number } | null, layout: { width: number; height: number }) => {
+        if (!scales?.x || !scales?.y) return null
+        const w = layout.width, h = layout.height
+        const rawCx = xCenter != null ? scales.x(xCenter) : w / 2
+        const rawCy = yCenter != null ? scales.y(yCenter) : h / 2
+        if (xCenter != null && !Number.isFinite(rawCx)) return null
+        if (yCenter != null && !Number.isFinite(rawCy)) return null
+        const cx = Math.max(0, Math.min(w, rawCx))
+        const cy = Math.max(0, Math.min(h, rawCy))
+        const quads = [
+          { c: quadrants.topLeft,     x: 0,  y: 0,  w: cx,     h: cy     },
+          { c: quadrants.topRight,    x: cx, y: 0,  w: w - cx, h: cy     },
+          { c: quadrants.bottomLeft,  x: 0,  y: cy, w: cx,     h: h - cy },
+          { c: quadrants.bottomRight, x: cx, y: cy, w: w - cx, h: h - cy },
+        ]
+        const labelEls = showLabels ? [
+          h_("text", { key: "ltl", x: padding,     y: padding + labelSize, fill: quadrants.topLeft.color,     fontWeight: 600, fontSize: labelSize, opacity: 0.5 }, quadrants.topLeft.label),
+          h_("text", { key: "ltr", x: w - padding, y: padding + labelSize, fill: quadrants.topRight.color,    fontWeight: 600, fontSize: labelSize, opacity: 0.5, textAnchor: "end" }, quadrants.topRight.label),
+          h_("text", { key: "lbl", x: padding,     y: h - padding,         fill: quadrants.bottomLeft.color,  fontWeight: 600, fontSize: labelSize, opacity: 0.5 }, quadrants.bottomLeft.label),
+          h_("text", { key: "lbr", x: w - padding, y: h - padding,         fill: quadrants.bottomRight.color, fontWeight: 600, fontSize: labelSize, opacity: 0.5, textAnchor: "end" }, quadrants.bottomRight.label),
+        ] : []
+        return h_(React.Fragment, null,
+          ...quads.map((q, i) => (q.w > 0 && q.h > 0)
+            ? h_("rect", { key: `qf-${i}`, x: q.x, y: q.y, width: q.w, height: q.h, fill: q.c.color, opacity: q.c.opacity ?? 0.08 })
+            : null),
+          h_("line", { key: "vc", x1: cx, y1: 0,  x2: cx, y2: h,  stroke, strokeWidth, strokeDasharray: dashArray }),
+          h_("line", { key: "hc", x1: 0,  y1: cy, x2: w,  y2: cy, stroke, strokeWidth, strokeDasharray: dashArray }),
+          ...labelEls,
+        )
+      }
+    ] : undefined
+
+    return {
+      chartType: "scatter",
+      data,
+      xAccessor: rest.xAccessor || "x",
+      yAccessor: rest.yAccessor || "y",
+      colorAccessor: colorBy,
+      sizeAccessor: rest.sizeBy,
+      sizeRange: rest.sizeRange,
+      colorScheme,
+      pointStyle: rest.pointStyle,
+      ...common,
+      ...(svgPreRenderers && { svgPreRenderers }),
+    }
+  },
 }
 
 const connectedScatterplot: ChartConfig = {
@@ -1072,6 +1146,7 @@ export const CHART_CONFIGS = {
     }),
   },
   ConnectedScatterplot: connectedScatterplot,
+  QuadrantChart: quadrantChart,
   Heatmap: heatmap,
   BarChart: barChart,
   StackedBarChart: stackedBarChart,

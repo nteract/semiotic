@@ -116,6 +116,8 @@ import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
 import RoslingBubbleChartPage from "./pages/recipes/RoslingBubbleChartPage"
 import StreamingMigrationMapPage from "./pages/recipes/StreamingMigrationMapPage"
 import BlogIndexPage from "./blog/BlogIndexPage"
+import { useDocsTheme } from "./hooks/useDocsTheme"
+import ThemeToggle from "./components/ThemeToggle"
 import BlogEntryPage from "./blog/BlogEntryPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
 import SSRGalleryPage from "./pages/SSRGalleryPage"
@@ -166,28 +168,6 @@ function NotFoundPage() {
 
 import { useScrollRestoration } from "./useScrollRestoration"
 
-// Theme toggle component
-function ThemeToggle({ theme, onToggle }) {
-  return (
-    <button
-      onClick={onToggle}
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      style={{
-        background: "none",
-        border: "1px solid var(--surface-3)",
-        borderRadius: "8px",
-        padding: "6px 10px",
-        cursor: "pointer",
-        fontSize: "16px",
-        lineHeight: 1,
-        color: "var(--text-primary)",
-      }}
-    >
-      {theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19"}
-    </button>
-  )
-}
-
 // Inject JSON-LD structured data dynamically (avoids Parcel transformer)
 function useJsonLd() {
   useEffect(() => {
@@ -217,21 +197,7 @@ export default function DocsApp() {
   useScrollRestoration()
   useJsonLd()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("semiotic-theme") || "dark"
-    }
-    return "dark"
-  })
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme)
-    localStorage.setItem("semiotic-theme", theme)
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"))
-  }
+  const [theme, toggleTheme] = useDocsTheme()
 
   // Blog routes opt out of the docs chrome. The blog has its own
   // typographic identity (full-bleed article, no sidebar, minimal

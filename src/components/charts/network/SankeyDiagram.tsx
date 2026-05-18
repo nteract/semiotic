@@ -12,7 +12,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { createEdgeStyleFn } from "../shared/networkUtils"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
@@ -39,6 +39,10 @@ export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends D
   nodeLabel?: ChartAccessor<TNode, string>
   showLabels?: boolean
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   edgeOpacity?: number
   edgeSort?: (a: any, b: any) => number
@@ -155,6 +159,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     linkedHover,
     loading,
     emptyContent,
+    showLegend,
+    legendPosition,
     legendInteraction,
     stroke,
     strokeWidth,
@@ -175,7 +181,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     targetAccessor,
     colorBy,
     colorScheme,
-    showLegend: undefined,        // SankeyDiagram doesn't expose a top-level showLegend; auto from colorBy
+    showLegend,                   // undefined → auto-on when colorBy is set
+    legendPosition,
     legendInteraction,
     selection,
     linkedHover,
@@ -287,6 +294,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
       customHoverBehavior={(linkedHover || onObservation || onClick) ? setup.customHoverBehavior : undefined}
       customClickBehavior={(onObservation || onClick) ? setup.customClickBehavior : undefined}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

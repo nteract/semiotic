@@ -112,7 +112,7 @@ function installFakes() {
       lineCap: "butt", lineJoin: "miter",
       shadowBlur: 0, shadowColor: "rgba(0,0,0,0)", shadowOffsetX: 0, shadowOffsetY: 0,
       isPointInPath(path: FakePath2D, x: number, y: number) { return pointInPolygon(path._pts, x, y) },
-      isPointInStroke(path: FakePath2D, x: number, y: number) { return pointNearStroke(path._pts, x, y, this.lineWidth) },
+      isPointInStroke(this: { lineWidth: number }, path: FakePath2D, x: number, y: number) { return pointNearStroke(path._pts, x, y, this.lineWidth) },
       setTransform: noop, translate: noop, scale: noop, transform: noop, resetTransform: noop,
       clearRect: noop, fillRect: noop, strokeRect: noop, fill: noop, stroke: noop,
       beginPath: noop, closePath: noop, moveTo: noop, lineTo: noop, arc: noop, arcTo: noop,
@@ -144,9 +144,13 @@ vi.mock("./processSankey/streamingLayout", async (importOriginal) => {
   const mod: typeof import("./processSankey/streamingLayout") = await importOriginal()
   return {
     ...mod,
-    emitProcessSankeyScenes: (ctx: NetworkLayoutContext) => {
+    // Cast widens `NetworkLayoutContext` to the generic Record-config
+    // form NetworkPipelineStore passes in at runtime; the real
+    // implementation re-narrows via the `ProcessSankeyLayoutConfig`
+    // destructure inside `emitProcessSankeyScenes`.
+    emitProcessSankeyScenes: (ctx: NetworkLayoutContext<Record<string, unknown>>) => {
       capturedConfig = ctx.config as unknown as ProcessSankeyLayoutConfig
-      const result = mod.emitProcessSankeyScenes(ctx)
+      const result = (mod.emitProcessSankeyScenes as unknown as (c: NetworkLayoutContext<Record<string, unknown>>) => ReturnType<typeof mod.emitProcessSankeyScenes>)(ctx)
       capturedEdges = result.sceneEdges ?? []
       capturedNodes = result.sceneNodes ?? []
       return result

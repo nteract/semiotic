@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { CategoryColorProvider, ConnectedScatterplot } from "semiotic"
+import { CategoryColorProvider, ConnectedScatterplot, ThemeProvider } from "semiotic"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
 import { StreamGeoFrame } from "semiotic/geo"
 import { scaleLinear } from "d3-scale"
 
@@ -290,8 +291,12 @@ export default function MinardsMarchStreaming({ width = 800 }) {
 
   const isComplete = step >= flowSequence.length
   const retreatStarted = visibleFlows.some((f) => f.direction === "retreat")
+  // Follow the docs theme so the recipe doesn't lock to light Carbon.
+  const [docsTheme] = useDocsTheme()
+  const themeName = docsTheme === "dark" ? "dark" : "light"
 
   return (
+    <ThemeProvider theme={themeName}>
     <CategoryColorProvider
       categories={["advance", "retreat"]}
       colors={{ advance: "#deb887", retreat: "#333" }}
@@ -362,8 +367,10 @@ export default function MinardsMarchStreaming({ width = 800 }) {
           <div
             style={{
               marginTop: 4,
-              background: "#fafafa",
-              border: "1px solid #e0e0e0",
+              // Theme-aware surface tokens so the panel follows the docs
+              // theme instead of always painting white.
+              background: "var(--surface-1)",
+              border: "1px solid var(--surface-3)",
               borderRadius: 4,
             }}
           >
@@ -399,5 +406,7 @@ export default function MinardsMarchStreaming({ width = 800 }) {
         )}
       </div>
     </CategoryColorProvider>
+    </ThemeProvider>
   )
 }
+

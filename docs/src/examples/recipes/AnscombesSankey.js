@@ -15,6 +15,7 @@
  */
 import React, { useState, useMemo } from "react"
 import { SankeyDiagram, ProcessSankey, ThemeProvider } from "semiotic"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Shared ward set + carbon palette ─────────────────────────────────
 const wardNodes = [
@@ -295,15 +296,14 @@ export default function AnscombesSankey() {
   // its layout when its own data actually changes (i.e., never).
   const scenarioEdges = useMemo(() => scenarios.map((s) => buildEdges(s.times)), [])
   const [hoveredScenario, setHoveredScenario] = useState(null)
+  const [docsTheme] = useDocsTheme()
 
+  const themeName = docsTheme === "dark" ? "carbon-dark" : "carbon"
   return (
-    <ThemeProvider theme="carbon">
-      {/* Carbon island. `ThemeProvider` sets `--semiotic-text` to #161616
-          inside this subtree (carbon light). Without a matching background
-          the labels rendered as dark text on whatever the surrounding docs
-          theme painted — invisible in dark mode. Paint `--semiotic-bg` on
-          the wrapper so the whole recipe lives on carbon's light surface,
-          independent of the docs theme. */}
+    <ThemeProvider theme={themeName}>
+      {/* Follow the ambient docs theme so a dark-mode reader doesn't get
+          a light-Carbon island. Wrapper paints `--semiotic-bg` so the
+          recipe lives on the chosen Carbon variant's surface. */}
       <div
         style={{
           background: "var(--semiotic-bg)",
@@ -359,7 +359,13 @@ export default function AnscombesSankey() {
               nodePaddingRatio={0.3}
               nodeWidth={10}
               showLabels
-              width={700}
+              // Bottom legend so the lane fills the panel — same
+              // alignment the per-scenario ProcessSankeys below use.
+              // Width 780 mirrors the 2-column ProcessSankey grid
+              // (two 350-px panels + gap) so the aggregate Sankey
+              // visually anchors the grid below it.
+              legendPosition="bottom"
+              width={780}
               height={320}
             />
           </div>

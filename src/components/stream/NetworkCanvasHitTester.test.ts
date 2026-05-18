@@ -322,9 +322,9 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       const stubCtx = {
         lineWidth: 1,
         isPointInPath(path: { _pts: Cmd[] }, x: number, y: number) { return pointInPolygon(path._pts, x, y) },
-        isPointInStroke(path: { _pts: Cmd[] }, x: number, y: number) { return pointNearStroke(path._pts, x, y, this.lineWidth) },
+        isPointInStroke(this: { lineWidth: number }, path: { _pts: Cmd[] }, x: number, y: number) { return pointNearStroke(path._pts, x, y, this.lineWidth) },
       } as unknown as CanvasRenderingContext2D
-      HTMLCanvasElement.prototype.getContext = function () { return stubCtx } as HTMLCanvasElement["getContext"]
+      HTMLCanvasElement.prototype.getContext = function () { return stubCtx } as unknown as HTMLCanvasElement["getContext"]
       return () => {
         g.Path2D = origPath2D
         HTMLCanvasElement.prototype.getContext = origGetContext
@@ -444,7 +444,7 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       } as unknown as CanvasRenderingContext2D
       HTMLCanvasElement.prototype.getContext = function () {
         return stubCtx
-      } as HTMLCanvasElement["getContext"]
+      } as unknown as HTMLCanvasElement["getContext"]
       // Reimport with stubs in place so module-level `_hitCanvas`/`_hitCtx`
       // capture the stubbed factories.
       vi.resetModules()

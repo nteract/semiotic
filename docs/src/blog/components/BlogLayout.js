@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { Link } from "react-router-dom"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
+import ThemeToggle from "../../components/ThemeToggle"
 
 const semioticLogo = new URL("../../../public/assets/img/semiotic.png", import.meta.url).href
 const semioticLogoDark = new URL("../../../public/assets/img/semiotic-darkmode.png", import.meta.url).href
@@ -7,34 +9,16 @@ const semioticLogoDark = new URL("../../../public/assets/img/semiotic-darkmode.p
 /**
  * BlogLayout — chrome for /blog/ and /blog/:slug/.
  *
- * Two clickable anchors in the top strip:
- *   - Semiotic logo → "/" (back to the docs landing)
- *   - "Blog" → "/blog/" (anchor for readers who jumped into an
- *     individual entry from a social link and want to see the
- *     full index)
+ * Top strip layout:
+ *   - Left:  Semiotic logo (→ "/") + "Blog" link (→ "/blog/")
+ *   - Right: theme toggle + GitHub link, mirroring the docs header
  *
- * The logo image follows the same dark/light theme attribute the
- * docs app reads, so a user landing directly on a blog URL still
- * gets the right brand mark for their preference.
+ * Theme state is shared with the docs app via `useDocsTheme` so
+ * toggling here updates `<html data-theme="…">` + localStorage and
+ * the change is reflected when the user navigates back into the docs.
  */
 export default function BlogLayout({ children }) {
-  // Track the document's data-theme attribute. DocsApp owns the
-  // theme toggle / localStorage write; blog routes opt out of the
-  // docs chrome but still inherit the same data-theme on <html>.
-  // Watching it via MutationObserver keeps the logo in step even
-  // when a user navigates blog → docs → flips theme → back to blog.
-  const [theme, setTheme] = useState(() => {
-    if (typeof document === "undefined") return "dark"
-    return document.documentElement.getAttribute("data-theme") || "dark"
-  })
-  useEffect(() => {
-    if (typeof document === "undefined") return
-    const obs = new MutationObserver(() => {
-      setTheme(document.documentElement.getAttribute("data-theme") || "dark")
-    })
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] })
-    return () => obs.disconnect()
-  }, [])
+  const [theme, toggleTheme] = useDocsTheme()
 
   return (
     <div style={styles.shell}>
@@ -47,6 +31,25 @@ export default function BlogLayout({ children }) {
           />
         </Link>
         <Link to="/blog" style={styles.blogLink}>Blog</Link>
+        <div style={styles.topBarRight}>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          <a
+            href="/blog/feed.xml"
+            style={styles.githubLink}
+            aria-label="Subscribe to the Semiotic Blog feed"
+            title="Atom feed"
+          >
+            RSS
+          </a>
+          <a
+            href="https://github.com/nteract/semiotic"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={styles.githubLink}
+          >
+            GitHub
+          </a>
+        </div>
       </div>
 
       <main style={styles.main}>{children}</main>
@@ -57,6 +60,8 @@ export default function BlogLayout({ children }) {
             <Link to="/" style={styles.footerLink}>← Semiotic home</Link>
             <span style={styles.footerSep}>·</span>
             <Link to="/getting-started" style={styles.footerLink}>Documentation</Link>
+            <span style={styles.footerSep}>·</span>
+            <a href="/blog/feed.xml" style={styles.footerLink}>RSS</a>
             <span style={styles.footerSep}>·</span>
             <a
               href="https://github.com/nteract/semiotic"
@@ -112,6 +117,17 @@ const styles = {
     fontWeight: 500,
     fontStyle: "italic",
     color: "var(--text-secondary, #94a3b8)",
+    textDecoration: "none",
+  },
+  topBarRight: {
+    marginLeft: "auto",
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+  },
+  githubLink: {
+    fontSize: 14,
+    color: "var(--text-primary)",
     textDecoration: "none",
   },
   main: {
