@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-05-11 · 44 charts indexed.
+Last regen: 2026-05-18 · 45 charts indexed.
 
 **Column key**
 
@@ -24,11 +24,12 @@ Last regen: 2026-05-11 · 44 charts indexed.
 | **BubbleChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `size-encoding` `streaming-domain` `regression-overlay` |
 | **CandlestickChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `ohlc` |
 | **ConnectedScatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` |
+| **DifferenceChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `crossover-segmentation` |
 | **Heatmap** | ✓ | ✓ | ✓ | ✓ | ✓ | sequential | plugin | — |
 | **LineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `series-features` `gap-handling` `direct-labels` `endpoint-labels` |
 | **MinimapChart** | ✓ | — | — | — | — | categorical | plugin | `brush` `overview-detail` `composite-delegates-interaction` `hoc-ssr-only` |
 | **MultiAxisLineChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `dual-axis` `hoc-ssr-only` |
-| **QuadrantChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `quadrants` `hoc-ssr-only` |
+| **QuadrantChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `quadrants` |
 | **Scatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` |
 | **ScatterplotMatrix** | ✓ | — | — | — | — | categorical | plugin | `matrix` `brush` `composite-delegates-interaction` `hoc-ssr-only` |
 | **StackedAreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` `streamgraph` |
@@ -89,8 +90,8 @@ Last regen: 2026-05-11 · 44 charts indexed.
 
 ## Aggregate counts
 
-- 38/44 charts render a top-level legend.
-- 36/44 charts expose a push API.
-- 33/44 charts SSR via the `renderChart()` registry.
-- 1/44 charts use the customLayout escape hatch.
-- 1/44 charts use synthetic (no-layout) construction.
+- 39/45 charts render a top-level legend.
+- 37/45 charts expose a push API.
+- 35/45 charts SSR via the `renderChart()` registry.
+- 1/45 charts use the customLayout escape hatch.
+- 1/45 charts use synthetic (no-layout) construction.

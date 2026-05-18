@@ -269,12 +269,12 @@ export default {
   slug: "orbit-diagram",
   title: "OrbitDiagram, explained",
   subtitle:
-    "A hierarchy rendered as concentric rotating orbits. When the goal is to make structure feel like something worth looking at.",
+    "A hierarchy rendered as concentric rotating orbits — more landing-page than analytics. When the goal is to make structure feel like something worth looking at.",
   author: "Elijah Meeks",
   date: "2026-02-18",
   tags: ["chart-explainer", "network", "hierarchy"],
   excerpt:
-    "OrbitDiagram is the chart for when the audience needs to feel oriented, not make a decision. Concentric rings, slow rotation, depth-as-radius.",
+    "OrbitDiagram is the chart for when the audience needs to feel oriented, not make a decision. Concentric rings, slow rotation, depth-as-radius. The animation isn't gratuitous — it tells the eye that ring membership is the encoding and angular position is decorative.",
   component: Body,
   ogChart: {
     component: "OrbitDiagram",

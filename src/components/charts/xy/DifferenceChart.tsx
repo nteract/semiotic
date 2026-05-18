@@ -678,7 +678,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     //      interpolated x rarely matches a raw data row by `===`.
     const hd = hover.data as Datum | undefined
     const allSeries = hover.allSeries as Array<{ group?: string; value?: number }> | undefined
-    let xVal: number | undefined = (hover.xValue as number | undefined) ?? (hd?.__x as number | undefined)
+    const xVal: number | undefined = (hover.xValue as number | undefined) ?? (hd?.__x as number | undefined)
     let aVal: number | undefined = hd?.__valA as number | undefined
     let bVal: number | undefined = hd?.__valB as number | undefined
     if (allSeries && allSeries.length > 0) {

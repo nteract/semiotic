@@ -1,4 +1,5 @@
 import React from "react"
+import { formatBlogDate } from "../dateUtils.js"
 
 /**
  * Single-entry rendering. Layout:
@@ -17,9 +18,7 @@ import React from "react"
  */
 export default function BlogEntryView({ entry }) {
   const Body = entry.component
-  const dateLabel = new Date(entry.date).toLocaleDateString("en-US", {
-    year: "numeric", month: "long", day: "numeric",
-  })
+  const dateLabel = formatBlogDate(entry.date)
   return (
     <article style={styles.article}>
       {/* `div` instead of semantic `<header>` because the docs'

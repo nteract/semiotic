@@ -2,19 +2,19 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nteract/semiotic",
   "title": "Semiotic",
-  "description": "Render React data visualizations from JSON. 44 chart types; validate, diagnose, suggest tools.",
+  "description": "Render React data visualizations from JSON. 45 chart types; validate, diagnose, suggest tools.",
   "websiteUrl": "https://semiotic.nteract.io",
   "repository": {
     "url": "https://github.com/nteract/semiotic",
     "source": "github"
   },
-  "version": "3.5.2",
+  "version": "3.5.3",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "semiotic",
-      "version": "3.5.2",
+      "version": "3.5.3",
       "transport": {
         "type": "stdio"
       }

@@ -263,7 +263,7 @@ export default function CapabilitiesPage() {
           __source: capabilitiesData.__source,
           charts: {
             BarChart: charts.BarChart,
-            "...": "(44 charts indexed total)",
+            "...": `(${totalAll} charts indexed total)`,
           },
         }, null, 2)}
       />

@@ -280,7 +280,7 @@ export default {
   slug: "process-sankey-vs-classic-sankey",
   title: "Process Sankey vs Classic Sankey",
   subtitle:
-    "Two flow datasets—one already aggregated, one event-stamped—and the diagram that fits each. With four-panel Anscombe's-quartet demo.",
+    "Two flow datasets — one already aggregated, one event-stamped — and the diagram that fits each. With four-panel Anscombe's-quartet demo.",
   author: "Elijah Meeks",
   date: "2026-05-16",
   tags: ["case-study", "chart-explainer", "network"],

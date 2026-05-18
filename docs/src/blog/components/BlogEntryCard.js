@@ -1,14 +1,13 @@
 import React from "react"
 import { Link } from "react-router-dom"
+import { formatBlogDate } from "../dateUtils.js"
 
 /**
  * Preview card used in the index. Compact, click-target = whole
  * card. Tags rendered as pill chips matching the entry-view style.
  */
 export default function BlogEntryCard({ entry }) {
-  const dateLabel = new Date(entry.date).toLocaleDateString("en-US", {
-    year: "numeric", month: "long", day: "numeric",
-  })
+  const dateLabel = formatBlogDate(entry.date)
   return (
     <Link to={`/blog/${entry.slug}`} style={styles.card}>
       <article>

@@ -299,7 +299,7 @@ export default {
   date: "2026-03-08",
   tags: ["chart-explainer", "ordinal"],
   excerpt:
-    "A FunnelChart is a bar chart with the geometry tweaked so stage-to-stage drop-off is the visual headline. Sales funnels, signup conversion, recruiting pipelines, manufacturing yield. Anywhere monotonically-shrinking ordered stages need a chart that shows where the lake drains.",
+    "A FunnelChart is a bar chart with the geometry tweaked so stage-to-stage drop-off is the visual headline. Sales funnels, signup conversion, recruiting pipelines, manufacturing yield — anywhere monotonically-shrinking ordered stages need a chart that shows where the lake drains.",
   component: Body,
   ogChart: {
     component: "FunnelChart",

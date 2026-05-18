@@ -311,7 +311,7 @@ export default {
   date: "2026-04-03",
   tags: ["chart-explainer", "xy"],
   excerpt:
-    "Most strategic frameworks are 2×2 grids with  quick wins vs strategic bets vs fill-in vs money pits. QuadrantChart bakes the threshold lines and quadrant labels into a scatterplot so 'which quadrant is this in?' answers itself.",
+    "Most strategic frameworks are 2×2 grids — quick wins vs strategic bets vs fill-in vs money pits. QuadrantChart bakes the threshold lines and quadrant labels into a scatterplot so 'which quadrant is this in?' answers itself.",
   component: Body,
   ogChart: {
     component: "QuadrantChart",

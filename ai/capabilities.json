@@ -61,6 +61,19 @@
         "series-features"
       ]
     },
+    "DifferenceChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "crossover-segmentation"
+      ]
+    },
     "Heatmap": {
       "category": "xy",
       "supportsLegend": true,
@@ -126,12 +139,11 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
-        "quadrants",
-        "hoc-ssr-only"
+        "quadrants"
       ]
     },
     "Scatterplot": {

@@ -20,14 +20,17 @@
  *   $ node scripts/generate-blog-og-cards.mjs
  */
 
-import { existsSync, mkdirSync, writeFileSync } from "fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { resolve, dirname } from "path"
 import { fileURLToPath } from "url"
+import { createRequire } from "module"
 import sharp from "sharp"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const requireFromScript = createRequire(import.meta.url)
 const ROOT = resolve(__dirname, "..")
 const OUT_DIR = resolve(ROOT, "docs/public/blog/og")
+const META_FILE = resolve(ROOT, "docs/src/blog/entries-meta.js")
 
 // 1200 × 630 is the canonical OG / Twitter summary_large_image size.
 // 2:1.05 aspect; renders down to roughly the right pixel weight on
@@ -122,10 +125,10 @@ let _renderChart = null
 async function getRenderChart() {
   if (_renderChart) return _renderChart
   try {
-    const mod = await import(resolve(ROOT, "dist/server.module.min.js"))
+    const mod = requireFromScript(resolve(ROOT, "dist/server.min.js"))
     _renderChart = mod.renderChart
   } catch {
-    console.warn("[og-cards] dist/server.module.min.js not built; chart previews will be the decorative fallback.")
+    console.warn("[og-cards] dist/server.min.js not built; chart previews will be the decorative fallback.")
     _renderChart = null
   }
   return _renderChart
@@ -307,11 +310,12 @@ function buildCardSVG({ entry, chartSVG }) {
 // configure here). The blog-post skill enforces keeping the two in
 // sync; `scripts/check-blog-entry-sync.mjs` is the CI guard.
 async function loadEntries() {
-  const mod = await import(pathOf("docs/src/blog/entries-meta.js"))
+  // Import through a data URL so Node treats this typeless `.js` file
+  // as an explicit ES module without forcing `"type": "module"` on
+  // the whole package.
+  const source = readFileSync(META_FILE, "utf8")
+  const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
   return mod.blogEntriesMeta
-}
-function pathOf(...segs) {
-  return "file://" + resolve(ROOT, ...segs)
 }
 
 // ── Main ───────────────────────────────────────────────────────────────

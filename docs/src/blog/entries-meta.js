@@ -17,6 +17,17 @@
 
 export const blogEntriesMeta = [
   {
+    slug: "release-3-5-3",
+    title: "Semiotic 3.5.3",
+    subtitle:
+      "DifferenceChart, exact axis ticks, Swimlane rounded ends, ProcessSankey lifecycle timing, the new blog pipeline, and refreshed 45-chart AI capabilities.",
+    author: "Elijah Meeks",
+    date: "2026-05-18",
+    tags: ["release"],
+    excerpt:
+      "3.5.3 adds DifferenceChart, exact axis ticks, Swimlane rounded ends, and ProcessSankey lifecycle timing; it also launches the docs blog, refreshes AI capabilities to 45 chart schemas, and wires new release gates for capability and blog metadata drift.",
+  },
+  {
     slug: "process-sankey-vs-classic-sankey",
     title: "Process Sankey vs Classic Sankey",
     subtitle:

@@ -911,8 +911,9 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       if (dataMinX === null || sx < dataMinX) dataMinX = sx
       if (dataMaxX === null || ex > dataMaxX) dataMaxX = ex
     }
-    const axisLeft = Math.max(0, dataMinX ?? 0)
-    const axisRight = Math.min(plotW, dataMaxX ?? plotW)
+    const clampPlotX = (x: number): number => Math.max(0, Math.min(plotW, x))
+    const axisLeft = clampPlotX(dataMinX ?? 0)
+    const axisRight = Math.max(axisLeft, clampPlotX(dataMaxX ?? plotW))
     return (
       <g>
         {showQualityReadout && (crossingsAfter ?? null) !== null && (

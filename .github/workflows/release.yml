@@ -43,6 +43,15 @@ jobs:
       - name: Run test type check
         run: npm run typescript:tests
 
+      - name: Check chart spec registry round-trip
+        run: npm run check:chart-specs
+
+      - name: Check capability matrix freshness
+        run: npm run check:capabilities
+
+      - name: Check blog metadata registry freshness
+        run: npm run check:blog-entries
+
       - name: Verify TypeScript declarations
         run: |
           for f in dist/semiotic.d.ts dist/semiotic-xy.d.ts dist/semiotic-ordinal.d.ts dist/semiotic-network.d.ts dist/semiotic-geo.d.ts dist/semiotic-realtime.d.ts dist/semiotic-ai.d.ts dist/semiotic-data.d.ts dist/semiotic-server.d.ts dist/semiotic-themes.d.ts; do

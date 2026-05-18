@@ -991,9 +991,9 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
-      supportsPush: true, supportsSSR: false,
+      supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["quadrants", "hoc-ssr-only"],
+      specialFeatures: ["quadrants"],
     },
   },
 

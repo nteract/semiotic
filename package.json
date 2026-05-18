@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "3.5.2",
+  "version": "3.5.3",
   "mcpName": "io.github.nteract/semiotic",
   "description": "React data visualization library with built-in MCP server for AI-assisted chart generation",
   "main": "dist/semiotic.min.js",
@@ -134,7 +134,7 @@
     "generate:demo-gifs": "node -e \"try{require.resolve('sharp');require.resolve('gifenc')}catch{console.log('Skipping GIF generation (sharp/gifenc not installed)');process.exit(0)}\" && npx tsx scripts/generate-demo-gifs.ts",
     "generate:blog-og-cards": "node scripts/generate-blog-og-cards.mjs",
     "generate:blog-rss": "node scripts/generate-blog-rss.mjs",
-    "website:build": "npm run dist:prod && npm run docs:api:json && npm run generate:ssr-gallery && npm run generate:demo-gifs && npm run generate:blog-og-cards && npm run generate:blog-rss && parcel build --target website && node scripts/prerender.mjs && npm run check:docs-routes",
+    "website:build": "npm run dist:prod && npm run docs:api:json && npm run generate:ssr-gallery && npm run generate:demo-gifs && npm run check:blog-entries && npm run generate:blog-og-cards && npm run generate:blog-rss && parcel build --target website && node scripts/prerender.mjs && npm run check:docs-routes",
     "build:mcp": "esbuild ai/mcp-server.ts --bundle --platform=node --target=node18 --format=cjs --outfile=ai/dist/mcp-server.js --external:react --external:react-dom --external:semiotic --external:semiotic/ai --external:semiotic/geo --banner:js='#!/usr/bin/env node'",
     "docs:api": "typedoc",
     "docs:api:json": "typedoc --json docs/public/api/api.json && node scripts/generate-component-descriptions.mjs",
@@ -162,10 +162,11 @@
     "check:jsdoc-coverage": "node scripts/check-jsdoc-coverage.mjs",
     "check:ai-examples-coverage": "node scripts/check-ai-examples-coverage.mjs",
     "check:docs-routes": "node scripts/check-docs-routes.mjs",
+    "check:blog-entries": "node scripts/check-blog-entry-sync.mjs",
     "check:bundle-sizes": "node scripts/sync-bundle-sizes.mjs --check",
     "docs:bundle-sizes": "node scripts/sync-bundle-sizes.mjs",
-    "release:check": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:bundle-sizes && npm run size"
+    "release:check": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:bundle-sizes && npm run size"
   },
   "targets": {
     "website": {
@@ -308,6 +309,7 @@
     "seedrandom": "^3.0.5",
     "size-limit": "^12.0.0",
     "stream-browserify": "^3.0.0",
+    "tsx": "^4.22.2",
     "typedoc": "^0.28.19",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.59.0",
