@@ -34,9 +34,6 @@ import type {
   ProcessSankeyBandSpec,
   ProcessSankeyLayoutConfig,
 } from "./processSankey/streamingLayout"
-import {
-  emitProcessSankeyScenes as realEmit,
-} from "./processSankey/streamingLayout"
 import type { NetworkLayoutContext } from "../../stream/networkCustomLayout"
 import type { NetworkSceneEdge, NetworkSceneNode } from "../../stream/networkTypes"
 

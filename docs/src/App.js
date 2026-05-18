@@ -363,9 +363,8 @@ export default function DocsApp() {
               <Route path="process-vs-classic-sankey" element={<Navigate to="/blog/process-sankey-vs-classic-sankey" replace />} />
             </Route>
 
-            {/* Blog routes — magazine-style chrome (no docs sidebar). */}
-            <Route path="blog" element={<BlogIndexPage />} />
-            <Route path="blog/:slug" element={<BlogEntryPage />} />
+            {/* Blog routes are registered in the early-return branch above
+                (`isBlogRoute`) so the docs chrome is stripped. */}
 
             {/* Playground routes */}
             <Route path="playground" element={<Outlet />}>

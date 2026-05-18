@@ -66,25 +66,35 @@ function wrapText(text, maxChars, maxLines) {
   const words = String(text).split(/\s+/)
   const lines = []
   let current = ""
-  for (const w of words) {
+  // Track exactly how many words have been consumed into `current` or
+  // `lines` so the overflow path can slice `words` by index instead of
+  // recovering it via `indexOf` (which breaks on repeated words like
+  // "the … the").
+  let consumed = 0
+  let broke = false
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i]
     if (!current) {
       current = w
+      consumed = i + 1
       continue
     }
     if ((current + " " + w).length <= maxChars) {
       current += " " + w
+      consumed = i + 1
     } else {
       lines.push(current)
       current = w
-      if (lines.length === maxLines - 1) break
+      consumed = i + 1
+      if (lines.length === maxLines - 1) { broke = true; break }
     }
   }
   if (current && lines.length < maxLines) lines.push(current)
-  if (lines.length === maxLines) {
+  if (lines.length === maxLines && broke) {
     // Try to keep ALL remaining words inside the last line; if it
     // overflows, truncate with an ellipsis. Avoids "..." appearing
     // when there's actually more room on the line.
-    const rest = words.slice(words.indexOf(current.split(" ").pop()) + 1)
+    const rest = words.slice(consumed)
     if (rest.length) {
       const combined = (lines[lines.length - 1] + " " + rest.join(" ")).trim()
       lines[lines.length - 1] = combined.length > maxChars

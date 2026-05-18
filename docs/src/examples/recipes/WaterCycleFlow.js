@@ -1,22 +1,14 @@
 /**
- * Water-cycle flow comparison.
+ * Water-cycle SankeyDiagram recipe.
  *
- * Same nodes + edges feed both `SankeyDiagram` and `ProcessSankey`,
- * but the dataset carries `startTime` / `endTime` per edge. The
- * classic Sankey ignores those fields (and draws return edges as
- * curved loops); the Process Sankey reads them as the X-axis and
- * unrolls the cycle in time. The side-by-side highlights what each
- * approach makes legible.
- *
- * Nodes are real water reservoirs from the global hydrological
- * cycle (Ocean, Atmosphere, etc.); edge values are in 1000 km³/yr
- * (loosely cribbed from USGS estimates so totals balance ±5%); edge
- * times use month-of-year so the timeline fits in a single seasonal
- * loop. The numbers are illustrative — the visual contrast is the
- * point.
+ * Ten reservoirs from the global hydrological cycle (Ocean, Atmosphere,
+ * etc.) and 16 flows; edge values are in 1000 km³/yr (loosely cribbed
+ * from USGS estimates so totals balance ±5%). The dataset is a single
+ * yearly loop — return-to-Ocean edges close the cycle, which Sankey
+ * draws as curved back-arrows.
  */
 import React from "react"
-import { SankeyDiagram, ProcessSankey, ThemeProvider } from "semiotic"
+import { SankeyDiagram, ThemeProvider } from "semiotic"
 
 // ── Shared dataset ────────────────────────────────────────────────────
 //
@@ -36,37 +28,35 @@ const waterNodes = [
   { id: "Groundwater", phase: "land" },
 ]
 
-// Each edge carries `startMonth` / `endMonth` (1–12) plus the
-// classic Sankey fields (`source`, `target`, `value`). Volumes are
-// thousands of cubic kilometres per year. The cycle: Ocean →
-// Atmosphere → Clouds → (Land Rain | Ocean directly) → reservoirs →
-// Surface Water → Ocean. Return-to-Ocean edges close the loop —
-// SankeyDiagram draws those as curved back-arrows, ProcessSankey
-// places them at their actual months on the time axis.
+// Each edge carries the classic Sankey fields (`source`, `target`,
+// `value`). Volumes are thousands of cubic kilometres per year. The
+// cycle: Ocean → Atmosphere → Clouds → (Land Rain | Ocean directly) →
+// reservoirs → Surface Water → Ocean. Return-to-Ocean edges close the
+// loop — SankeyDiagram draws those as curved back-arrows.
 const waterEdges = [
-  // ── Evaporation: year-round, peaks summer; ocean is the biggest source ──
-  { source: "Ocean", target: "Atmosphere", value: 425, startMonth: 1, endMonth: 12 },
-  { source: "Surface Water", target: "Atmosphere", value: 10, startMonth: 5, endMonth: 9 },
-  { source: "Vegetation", target: "Atmosphere", value: 70, startMonth: 4, endMonth: 10 }, // transpiration
-  // ── Condensation: atmosphere → clouds, continuous ──
-  { source: "Atmosphere", target: "Clouds", value: 505, startMonth: 1, endMonth: 12 },
-  // ── Precipitation: clouds split between ocean and land; mostly winter/spring on land ──
-  { source: "Clouds", target: "Ocean", value: 385, startMonth: 1, endMonth: 12 },
-  { source: "Clouds", target: "Land Rain", value: 90, startMonth: 3, endMonth: 11 },
-  { source: "Clouds", target: "Snowpack", value: 25, startMonth: 11, endMonth: 3 },
-  { source: "Clouds", target: "Glaciers", value: 5, startMonth: 12, endMonth: 2 },
+  // ── Evaporation: ocean is the biggest source ──
+  { source: "Ocean", target: "Atmosphere", value: 425 },
+  { source: "Surface Water", target: "Atmosphere", value: 10 },
+  { source: "Vegetation", target: "Atmosphere", value: 70 }, // transpiration
+  // ── Condensation: atmosphere → clouds ──
+  { source: "Atmosphere", target: "Clouds", value: 505 },
+  // ── Precipitation: clouds split between ocean and land ──
+  { source: "Clouds", target: "Ocean", value: 385 },
+  { source: "Clouds", target: "Land Rain", value: 90 },
+  { source: "Clouds", target: "Snowpack", value: 25 },
+  { source: "Clouds", target: "Glaciers", value: 5 },
   // ── Land precipitation routes onto / into the surface ──
-  { source: "Land Rain", target: "Soil Moisture", value: 50, startMonth: 3, endMonth: 11 },
-  { source: "Land Rain", target: "Surface Water", value: 40, startMonth: 3, endMonth: 11 },
-  // ── Snow + glacier melt: cycle's most visible temporal signal ──
-  { source: "Snowpack", target: "Surface Water", value: 25, startMonth: 3, endMonth: 6 },
-  { source: "Glaciers", target: "Surface Water", value: 5, startMonth: 6, endMonth: 9 },
+  { source: "Land Rain", target: "Soil Moisture", value: 50 },
+  { source: "Land Rain", target: "Surface Water", value: 40 },
+  // ── Snow + glacier melt ──
+  { source: "Snowpack", target: "Surface Water", value: 25 },
+  { source: "Glaciers", target: "Surface Water", value: 5 },
   // ── Soil moisture → vegetation (uptake) and groundwater (slow) ──
-  { source: "Soil Moisture", target: "Vegetation", value: 30, startMonth: 4, endMonth: 10 },
-  { source: "Soil Moisture", target: "Groundwater", value: 15, startMonth: 1, endMonth: 12 },
+  { source: "Soil Moisture", target: "Vegetation", value: 30 },
+  { source: "Soil Moisture", target: "Groundwater", value: 15 },
   // ── Return to ocean: rivers (fast) + groundwater (slow); these are the cyclic edges ──
-  { source: "Surface Water", target: "Ocean", value: 60, startMonth: 1, endMonth: 12 },
-  { source: "Groundwater", target: "Ocean", value: 5, startMonth: 1, endMonth: 12 },
+  { source: "Surface Water", target: "Ocean", value: 60 },
+  { source: "Groundwater", target: "Ocean", value: 5 },
 ]
 
 // ── Carbon categorical palette (IBM Carbon extended set) ─────────────
@@ -88,55 +78,6 @@ const carbonScheme = [
   "#005d5d", // teal-70 — Surface Water
   "#b28600", // yellow-50 — Groundwater
 ]
-
-// Month-label tick set for ProcessSankey's x-axis. The chart accepts
-// arbitrary `{ date, label }` ticks; using calendar months keeps the
-// reading mental-model intuitive.
-//
-// A 13th tick anchors the chart's right edge — the wrap-split edges
-// (Snowpack Nov→Mar, Glaciers Dec→Feb) end at the month-13 sentinel,
-// so without a tick there the axis line extends past Dec into
-// unlabeled space. Labeling the sentinel "Dec end" reads as the wrap
-// boundary back to January.
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-const monthTicks = [
-  ...Array.from({ length: 12 }, (_, i) => ({ date: i + 1, label: MONTHS[i] })),
-  { date: 13, label: "Dec end" },
-]
-
-// Tooltip time formatter — match the axis labels so the tooltip's
-// start/end fields read as month names too. Default formatter assumes
-// ms-since-epoch, which renders our 1..13 month indices as 1970-01-01.
-const monthLabel = (m) => {
-  const n = Number(m)
-  if (!Number.isFinite(n)) return ""
-  const idx = Math.floor(n) - 1
-  if (idx >= 0 && idx < 12) return MONTHS[idx]
-  return n === 13 ? "Dec end" : String(n)
-}
-
-// ProcessSankey passes `startMonth` / `endMonth` through verbatim, so
-// `domain` is just `[1, 13]` (the 13 is "end-of-year" — a sentinel
-// just past December the wrap-split uses as a clean stopping point).
-// Edges whose `endMonth < startMonth` (Snowpack: Nov→Mar; Glaciers:
-// Dec→Feb) are interpreted as wrapping across the year boundary —
-// we pre-expand those into two half-edges so the chart sees a
-// monotone time axis.
-//
-// The first half goes from `startMonth` to 13 (NOT 12 — using 12
-// would produce a zero-duration edge for any edge whose
-// `startMonth` is already 12, which ProcessSankey's validator
-// rejects as "ends before it starts"). The second half goes from
-// 1 to `endMonth`. Values are prorated proportionally to each
-// half's share of the original duration.
-const expandedEdges = waterEdges.flatMap((e) => {
-  if (e.endMonth >= e.startMonth) return [e]
-  const span = 13 - e.startMonth + e.endMonth
-  return [
-    { ...e, endMonth: 13, value: (e.value * (13 - e.startMonth)) / span },
-    { ...e, startMonth: 1, value: (e.value * e.endMonth) / span },
-  ]
-})
 
 // ── Component ────────────────────────────────────────────────────────
 

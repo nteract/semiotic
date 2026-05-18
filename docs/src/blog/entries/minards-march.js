@@ -23,7 +23,7 @@ function Body() {
         line on the page is doing structural work.
       </p>
       <p>
-        This entry is a faithful recreation in Semiotic using the{""}
+        This entry is a faithful recreation in Semiotic using the{" "}
         <Link to="/charts/flow-map">FlowMap</Link> component with a tile basemap and animated
         particles, cross-linked with a{" "}
         <Link to="/charts/connected-scatterplot">ConnectedScatterplot</Link> of temperature vs.

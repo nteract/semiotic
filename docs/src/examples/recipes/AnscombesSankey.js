@@ -391,7 +391,6 @@ export default function AnscombesSankey() {
             {scenarios.map((sc, idx) => {
               const isHovered = hoveredScenario === sc.id
               const edges = scenarioEdges[idx]
-              console.log("idx", idx, "edges", edges)
               return (
                 <div
                   key={sc.id}
