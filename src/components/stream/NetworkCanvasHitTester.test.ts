@@ -261,6 +261,147 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
     // which depends on jsdom/canvas support. These tests verify the function
     // handles missing Path2D gracefully.
 
+    // ── ProcessSankey body-hover regression ──────────────────────────────
+    //
+    // jsdom has no real canvas, and the "stub isPointInPath to return true"
+    // approach only proves the wrapper code returns the right shape — it
+    // says nothing about whether real geometry would hit. These tests swap
+    // in a Path2D + ctx fake that DOES real ray-casting against the
+    // emitted SVG path string, so the test exercises the same control
+    // flow as a production browser. Used to repro the "tooltip only on
+    // border, never on body" symptom in ProcessSankey bands/ribbons.
+    function installGeometryFakes() {
+      type Cmd = { kind: "M" | "L"; x: number; y: number }
+      function parsePolygon(d: string): Cmd[] {
+        const cmds: Cmd[] = []
+        // Match `M x,y` or `L x,y` (the only commands buildBandPath emits).
+        // Whitespace or comma separators. Z is ignored — ray-casting
+        // treats the polygon as closed regardless.
+        const re = /([ML])\s*(-?\d+(?:\.\d+)?)[\s,]+(-?\d+(?:\.\d+)?)/g
+        let m: RegExpExecArray | null
+        while ((m = re.exec(d)) !== null) {
+          cmds.push({ kind: m[1] as "M" | "L", x: parseFloat(m[2]), y: parseFloat(m[3]) })
+        }
+        return cmds
+      }
+      function pointInPolygon(pts: Cmd[], x: number, y: number): boolean {
+        // Standard even-odd ray cast.
+        let inside = false
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+          const xi = pts[i].x, yi = pts[i].y
+          const xj = pts[j].x, yj = pts[j].y
+          const intersect = ((yi > y) !== (yj > y)) &&
+            (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-12) + xi)
+          if (intersect) inside = !inside
+        }
+        return inside
+      }
+      function pointToSegmentDist(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
+        const dx = bx - ax, dy = by - ay
+        const l2 = dx * dx + dy * dy
+        if (l2 === 0) return Math.hypot(px - ax, py - ay)
+        let t = ((px - ax) * dx + (py - ay) * dy) / l2
+        t = Math.max(0, Math.min(1, t))
+        return Math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+      }
+      function pointNearStroke(pts: Cmd[], x: number, y: number, lineWidth: number): boolean {
+        const half = lineWidth / 2
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+          if (pointToSegmentDist(x, y, pts[j].x, pts[j].y, pts[i].x, pts[i].y) <= half) return true
+        }
+        return false
+      }
+      class FakePath2D {
+        _pts: Cmd[]
+        constructor(d: string) { this._pts = parsePolygon(d) }
+      }
+      const g = globalThis as unknown as { Path2D?: typeof Path2D }
+      const origPath2D = g.Path2D
+      const origGetContext = HTMLCanvasElement.prototype.getContext
+      g.Path2D = FakePath2D as unknown as typeof Path2D
+      const stubCtx = {
+        lineWidth: 1,
+        isPointInPath(path: { _pts: Cmd[] }, x: number, y: number) { return pointInPolygon(path._pts, x, y) },
+        isPointInStroke(path: { _pts: Cmd[] }, x: number, y: number) { return pointNearStroke(path._pts, x, y, this.lineWidth) },
+      } as unknown as CanvasRenderingContext2D
+      HTMLCanvasElement.prototype.getContext = function () { return stubCtx } as HTMLCanvasElement["getContext"]
+      return () => {
+        g.Path2D = origPath2D
+        HTMLCanvasElement.prototype.getContext = origGetContext
+      }
+    }
+
+    // A ProcessSankey-shaped band: closed polygon traced top→bottom→close.
+    // Dimensions match what `buildBandPath` would emit for a 5-sample
+    // band centered on y=100, spanning x∈[50,250], top/bot offsets ~20px.
+    const PROCESS_SANKEY_BAND_PATH =
+      "M50,80 L100,82 L150,75 L200,78 L250,80 " +
+      "L250,120 L200,118 L150,125 L100,122 L50,120 Z"
+
+    it("hits inside the body of a ProcessSankey band (regression)", async () => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        const band: NetworkBezierEdge = {
+          type: "bezier",
+          pathD: PROCESS_SANKEY_BAND_PATH,
+          style: { fill: "#abc", fillOpacity: 0.86, stroke: "#abc", strokeWidth: 0.5 },
+          datum: { __kind: "band", data: { id: "A" }, id: "A" } as unknown as Record<string, unknown>,
+        }
+        // (150, 100) is in the centre of the band, far from any edge — the
+        // user's "body of the node" case. Must register as a body hit
+        // (distance 0), not the stroke fallback (distance 4).
+        const hit = hitTest([], [band], 150, 100)
+        expect(hit).not.toBeNull()
+        expect(hit!.type).toBe("edge")
+        expect(hit!.distance).toBe(0)
+        expect(hit!.x).toBe(150)
+        expect(hit!.y).toBe(100)
+      } finally {
+        restore()
+      }
+    })
+
+    it("hits the perimeter of a ProcessSankey band (border tolerance)", async () => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        const band: NetworkBezierEdge = {
+          type: "bezier",
+          pathD: PROCESS_SANKEY_BAND_PATH,
+          style: { fill: "#abc", stroke: "#abc", strokeWidth: 0.5 },
+          datum: { __kind: "band", data: { id: "A" }, id: "A" } as unknown as Record<string, unknown>,
+        }
+        // 3px above the top edge — outside the polygon, within stroke
+        // tolerance (lineWidth 10 → 5px on each side).
+        const hit = hitTest([], [band], 150, 72)
+        expect(hit).not.toBeNull()
+        expect(hit!.type).toBe("edge")
+      } finally {
+        restore()
+      }
+    })
+
+    it("misses well outside the ProcessSankey band", async () => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        const band: NetworkBezierEdge = {
+          type: "bezier",
+          pathD: PROCESS_SANKEY_BAND_PATH,
+          style: { fill: "#abc", stroke: "#abc", strokeWidth: 0.5 },
+          datum: { __kind: "band", data: { id: "A" }, id: "A" } as unknown as Record<string, unknown>,
+        }
+        const hit = hitTest([], [band], 150, 200)
+        expect(hit).toBeNull()
+      } finally {
+        restore()
+      }
+    })
+
     it("returns null for bezier edge without pathD", () => {
       const bezier: NetworkBezierEdge = {
         type: "bezier",
