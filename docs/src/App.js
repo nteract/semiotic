@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Routes, Route, Outlet, Link, Navigate } from "react-router-dom"
+import { Routes, Route, Outlet, Link, Navigate, useLocation } from "react-router-dom"
 
 // New components
 import Sidebar, { SidebarToggle } from "./components/Sidebar"
@@ -113,10 +113,12 @@ import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
 import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
-import MinardsMarchPage from "./pages/recipes/MinardsMarchPage"
 import RoslingBubbleChartPage from "./pages/recipes/RoslingBubbleChartPage"
-import ProcessSankeyVsSankeyPage from "./pages/recipes/ProcessSankeyVsSankeyPage"
 import StreamingMigrationMapPage from "./pages/recipes/StreamingMigrationMapPage"
+import BlogIndexPage from "./blog/BlogIndexPage"
+import { useDocsTheme } from "./hooks/useDocsTheme"
+import ThemeToggle from "./components/ThemeToggle"
+import BlogEntryPage from "./blog/BlogEntryPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
 import SSRGalleryPage from "./pages/SSRGalleryPage"
 import RenderStudioPage from "./pages/server/RenderStudioPage"
@@ -166,28 +168,6 @@ function NotFoundPage() {
 
 import { useScrollRestoration } from "./useScrollRestoration"
 
-// Theme toggle component
-function ThemeToggle({ theme, onToggle }) {
-  return (
-    <button
-      onClick={onToggle}
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      style={{
-        background: "none",
-        border: "1px solid var(--surface-3)",
-        borderRadius: "8px",
-        padding: "6px 10px",
-        cursor: "pointer",
-        fontSize: "16px",
-        lineHeight: 1,
-        color: "var(--text-primary)",
-      }}
-    >
-      {theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19"}
-    </button>
-  )
-}
-
 // Inject JSON-LD structured data dynamically (avoids Parcel transformer)
 function useJsonLd() {
   useEffect(() => {
@@ -217,20 +197,26 @@ export default function DocsApp() {
   useScrollRestoration()
   useJsonLd()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("semiotic-theme") || "dark"
-    }
-    return "dark"
-  })
+  const [theme, toggleTheme] = useDocsTheme()
 
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme)
-    localStorage.setItem("semiotic-theme", theme)
-  }, [theme])
+  // Blog routes opt out of the docs chrome. The blog has its own
+  // typographic identity (full-bleed article, no sidebar, minimal
+  // top strip) so the docs header + sidebar would just compete with
+  // the article. Pathname inspection is sufficient — react-router's
+  // route-level layouts would require a deeper restructure we don't
+  // need.
+  const location = useLocation()
+  const isBlogRoute = location.pathname === "/blog" || location.pathname.startsWith("/blog/")
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"))
+  if (isBlogRoute) {
+    return (
+      <div className="App App--blog">
+        <Routes>
+          <Route path="blog" element={<BlogIndexPage />} />
+          <Route path="blog/:slug" element={<BlogEntryPage />} />
+        </Routes>
+      </div>
+    )
   }
 
   return (
@@ -336,11 +322,15 @@ export default function DocsApp() {
               <Route path="time-series-brush" element={<TimeSeriesBrushPage />} />
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
               <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
-              <Route path="minards-map" element={<MinardsMarchPage />} />
               <Route path="streaming-migration-map" element={<StreamingMigrationMapPage />} />
               <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />
-              <Route path="process-vs-classic-sankey" element={<ProcessSankeyVsSankeyPage />} />
+              {/* `minards-map` and `process-vs-classic-sankey` graduated to /blog/. */}
+              <Route path="minards-map" element={<Navigate to="/blog/minards-march" replace />} />
+              <Route path="process-vs-classic-sankey" element={<Navigate to="/blog/process-sankey-vs-classic-sankey" replace />} />
             </Route>
+
+            {/* Blog routes are registered in the early-return branch above
+                (`isBlogRoute`) so the docs chrome is stripped. */}
 
             {/* Playground routes */}
             <Route path="playground" element={<Outlet />}>

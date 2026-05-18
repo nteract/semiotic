@@ -666,18 +666,32 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
 
   // ── Tooltip ─────────────────────────────────────────────────────────
   const defaultTooltipContent = useCallback((hover: HoverData) => {
-    // The hovered datum carries either a SegmentRow (area hover) or a
-    // LineRow (line hover). For LineRow, `__sourceDatum` is absent;
-    // look up the source row by x to recover both A and B values.
+    // Three hover shapes feed this tooltip:
+    //   1. Area hover — `hover.data` is a SegmentRow with `__valA` /
+    //      `__valB` baked in.
+    //   2. Line hover — `hover.data` is a LineRow (no `__valA`/`__valB`);
+    //      we look up the source row by x to recover both values.
+    //   3. Multi-tooltip hover (tooltip="multi") — the cursor sits on
+    //      an interpolated x, so `hover.allSeries` carries the
+    //      interpolated `line-A` / `line-B` values and `hover.xValue`
+    //      carries the data-space x. Prefer those when present; the
+    //      interpolated x rarely matches a raw data row by `===`.
     const hd = hover.data as Datum | undefined
-    const xVal: number | undefined = hd?.__x as number | undefined
+    const allSeries = hover.allSeries as Array<{ group?: string; value?: number }> | undefined
+    let xVal: number | undefined = (hover.xValue as number | undefined) ?? (hd?.__x as number | undefined)
     let aVal: number | undefined = hd?.__valA as number | undefined
     let bVal: number | undefined = hd?.__valB as number | undefined
+    if (allSeries && allSeries.length > 0) {
+      const aSeries = allSeries.find(s => s.group === "line-A")
+      const bSeries = allSeries.find(s => s.group === "line-B")
+      if (aSeries?.value != null && Number.isFinite(aSeries.value)) aVal = aSeries.value
+      if (bSeries?.value != null && Number.isFinite(bSeries.value)) bVal = bSeries.value
+    }
     if (xVal != null && (aVal == null || bVal == null)) {
       const source = safeData.find(d => getX(d) === xVal)
       if (source) {
-        aVal = getA(source)
-        bVal = getB(source)
+        if (aVal == null) aVal = getA(source)
+        if (bVal == null) bVal = getB(source)
       }
     }
     const fmt = (v: number | undefined) =>
@@ -709,11 +723,18 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     )
   }, [safeData, getX, getA, getB, xFormat, seriesAColor, seriesBColor, seriesALabel, seriesBLabel])
 
+  // `tooltip="multi"` opts into hover-anywhere along the x-axis with
+  // interpolated series values — same shape LineChart/AreaChart use.
+  // The default tooltip handles both single-point and multi shapes
+  // (it reads `hover.allSeries` when present), so we don't swap the
+  // content function; we just enable the frame's multi tooltipMode.
+  const multiTooltip = tooltip === "multi"
   const tooltipContent = useMemo(() => {
     if (tooltip === false) return () => null
+    if (multiTooltip) return defaultTooltipContent
     const normalized = normalizeTooltip(tooltip)
     return (normalized as ((d: HoverData) => React.ReactNode) | false) || defaultTooltipContent
-  }, [tooltip, defaultTooltipContent])
+  }, [tooltip, multiTooltip, defaultTooltipContent])
 
   // ── StreamXYFrame props ─────────────────────────────────────────────
   // Use `mixed` chartType: segment-group keys appear in `areaGroups`
@@ -747,6 +768,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     ...(customLegend && { legend: customLegend, legendPosition: setup.legendPosition }),
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
     tooltipContent,
+    ...(multiTooltip && { tooltipMode: "multi" as const }),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,
       customHoverBehavior: setup.customHoverBehavior,

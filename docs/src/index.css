@@ -8,23 +8,23 @@
 
 :root {
   /* Surfaces */
-  --surface-0: #0a0a0f;
-  --surface-1: #12121a;
-  --surface-2: #1a1a25;
-  --surface-3: #252530;
+  --surface-0: #020913;
+  --surface-1: #090e1a;
+  --surface-2: #0c1424;
+  --surface-3: #14253e;
   /* Semiotic chart tokens — synced with docs theme */
-  --semiotic-bg: #0a0a0f;
-  --semiotic-text: #e0e0e0;
-  --semiotic-text-secondary: #aaa;
-  --semiotic-border: #555;
-  --semiotic-grid: #333;
+  --semiotic-bg: #0f172a;
+  --semiotic-text: #cbd5e1;
+  --semiotic-text-secondary: #94a3b8;
+  --semiotic-border: #334155;
+  --semiotic-grid: #1e293b;
 
   /* Text */
-  --text-primary: #f0f0f5;
-  --text-secondary: #8888a0;
+  --text-primary: #cbd5e1;
+  --text-secondary: #94a3b8;
 
   /* Accent */
-  --accent: #6366f1;
+  --accent: #38bdf8;
 
   /* Tier colors */
   --tier-charts: #22c55e;
@@ -44,14 +44,14 @@
   --viz-10: #3b82f6;
 
   /* Typography */
-  --font-heading: 'Inter', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-code: 'JetBrains Mono', monospace;
+  --font-heading: "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-code: "JetBrains Mono", monospace;
 
   /* Layout */
   --sidebar-width: 220px;
   --toc-width: 160px;
-  --content-max-width: 960px;
+  --content-max-width: 1060px;
 
   /* Legacy aliases (mapped to new tokens) */
   --bg-color: var(--surface-2);
@@ -117,7 +117,12 @@ body {
    4. Typography
    -------------------------------------------------------------------------- */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   color: var(--text-primary);
   line-height: 1.3;
@@ -364,7 +369,9 @@ button {
   font-size: 14px;
   cursor: pointer;
   outline: none;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
   position: relative;
   display: inline-block;
   text-align: center;
@@ -892,7 +899,10 @@ div.page-image img {
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
   position: relative;
 }
 
@@ -973,7 +983,9 @@ div.page-image img {
   color: var(--text-secondary);
   cursor: pointer;
   font-family: var(--font-code);
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .playground-reset-button:hover {

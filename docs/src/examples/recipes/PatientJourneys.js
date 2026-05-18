@@ -26,16 +26,26 @@
  */
 import React from "react"
 import { SankeyDiagram, ProcessSankey, ThemeProvider } from "semiotic"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Five wards in the patient's path. Surgery and ICU live in the
 //    middle of the typical journey; General is the recovery stop;
 //    Discharge is the sink. ER is the source. ───────────────────────
+//
+// Discharge carries an explicit `xExtent` ending at Day 7 so the lane
+// keeps drawing past the last discharge edge (Day 6.9, P12-3) out to
+// the domain's right edge. Two reasons: (1) `axisRight` follows the
+// widest lane lifetime, so without the extension the Day-7 axis tick
+// gets hidden and the axis line stops a few pixels short of the plot
+// edge; (2) the band gains a bit more breathing room which makes the
+// rightmost discharge slots easier to read in the small height the
+// blog reserves for this chart.
 const wardNodes = [
   { id: "ER" },
   { id: "Surgery" },
   { id: "ICU" },
   { id: "General" },
-  { id: "Discharge" },
+  { id: "Discharge", xExtent: [2.5, 7] },
 ]
 
 // ── 12 patients × 41 transition events over 7 days. Three temporal
@@ -515,20 +525,36 @@ const Caption = ({ children }) => (
 )
 
 export default function PatientJourneys() {
+  // Follow the ambient docs theme so dark-mode readers don't see a
+  // light-Carbon island. `useDocsTheme` mirrors `<html data-theme>`.
+  const [docsTheme] = useDocsTheme()
+  const themeName = docsTheme === "dark" ? "carbon-dark" : "carbon"
   return (
-    <ThemeProvider theme="carbon">
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
+    <ThemeProvider theme={themeName}>
+      {/* Wrapper paints `--semiotic-bg` so the whole recipe lives on the
+          chosen Carbon variant's surface. */}
+      <div
+        style={{
+          background: "var(--semiotic-bg)",
+          color: "var(--semiotic-text)",
+          padding: 20,
+          borderRadius: 8,
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: 24,
+        }}
+      >
         {/* ── Classic Sankey — aggregated patient flow ───────────────── */}
         <div>
-          <PanelHeading subtitle="SankeyDiagram collapses every patient's transitions into the underlying source→target counts. You see the funnel — most patients hit ICU before General — and ribbon thickness is the total patient count along each route. The same 12 patients could have arrived uniformly across the week or in a single 4-hour burst; this chart looks identical either way.">
+          <PanelHeading subtitle="Classical sankey diagrams collapse every patient's transitions into the underlying source to target counts. You see the funnel clearly: most patients hit ICU before General, and ribbon thickness is the total patient count along each route. The same 12 patients could have arrived uniformly across the week or in a single 4-hour burst; this chart looks identical either way.">
             SankeyDiagram — aggregated ward flow
           </PanelHeading>
           <div
             style={{
-              background: "var(--surface-1, #f4f4f4)",
-              border: "1px solid var(--surface-3, #e0e0e0)",
+              background: "var(--semiotic-surface, #f4f4f4)",
+              border: "1px solid var(--semiotic-border, #e0e0e0)",
               borderRadius: 4,
-              padding: 12,
+              padding: 8,
             }}
           >
             <SankeyDiagram
@@ -545,30 +571,29 @@ export default function PatientJourneys() {
               nodePaddingRatio={0.3}
               nodeWidth={10}
               showLabels
-              width={700}
+              // Match the ProcessSankey below — bottom legend so the
+              // horizontal lane fills the panel instead of reserving
+              // 110 px on the right for an unread legend. Width pinned
+              // to 780 to mirror the ProcessSankey, otherwise the
+              // Sankey reads as a smaller-framed sibling.
+              legendPosition="bottom"
+              width={780}
               height={360}
             />
           </div>
-          <Caption>
-            <strong>What you can answer:</strong> roughly what fraction of patients route through
-            ICU vs. fast-track through General — useful for monthly utilization stats.{" "}
-            <strong>What you can't:</strong> that six of these twelve patients arrived in one 4-hour
-            Saturday-evening window, saturating the surgery rooms and ICU. The mass-casualty event
-            that defined the week is completely invisible — same ribbons, no signal.
-          </Caption>
         </div>
 
         {/* ── Process Sankey — every event at its actual time ───────── */}
         <div>
-          <PanelHeading subtitle="Same data on a time axis. The vertical wall around Day 2 is the surge — six trauma patients hitting ER, Surgery, then ICU inside a 4-hour window. The pre- and post-surge admit rates are visibly thinner. Independent cycles (P2 ICU readmission on Day 2.2; P8 surgical re-op on Day 2.4; P11 cardiac re-event on Day 5.0) unroll as forward-moving events in time.">
+          <PanelHeading subtitle="Same data on a time axis with a process sankey. The vertical wall around Day 2 is the surge as six trauma patients hit ER, Surgery, then ICU inside a 4-hour window. The pre- and post-surge admit rates are visibly thinner. Independent cycles (P2 ICU readmission on Day 2.2; P8 surgical re-op on Day 2.4; P11 cardiac re-event on Day 5.0) unroll as forward-moving events in time.">
             ProcessSankey — per-patient timeline
           </PanelHeading>
           <div
             style={{
-              background: "var(--surface-1, #f4f4f4)",
-              border: "1px solid var(--surface-3, #e0e0e0)",
+              background: "var(--semiotic-surface, #f4f4f4)",
+              border: "1px solid var(--semiotic-border, #e0e0e0)",
               borderRadius: 4,
-              padding: 12,
+              padding: 8,
             }}
           >
             <ProcessSankey
@@ -588,22 +613,14 @@ export default function PatientJourneys() {
               colorBy="id"
               colorScheme={carbonScheme}
               showLegend
-              legendPosition="right"
+              legendPosition="bottom"
               packing="reuse"
               laneOrder="crossing-min"
               ribbonLane="both"
               width={780}
-              height={420}
+              height={440}
             />
           </div>
-          <Caption>
-            <strong>What you can answer:</strong> the surge happened Saturday evening (Day
-            1.85–2.1). Surgery saturated for ~10 hours after. ICU concurrent census peaked Day
-            2.2–2.8 with five active patients. Three surge-cohort patients (P5, P8, P9) are still
-            admitted at week's end — important capacity-planning context for Monday's admit
-            decisions. <strong>What you can't:</strong> the aggregated funnel at a glance — for a
-            monthly utilization stat, the classic Sankey above is the cleaner readout.
-          </Caption>
         </div>
       </div>
     </ThemeProvider>

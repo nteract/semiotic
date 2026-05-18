@@ -15,6 +15,7 @@
  */
 import React, { useState, useMemo } from "react"
 import { SankeyDiagram, ProcessSankey, ThemeProvider } from "semiotic"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 // ── Shared ward set + carbon palette ─────────────────────────────────
 const wardNodes = [
@@ -51,29 +52,29 @@ const T = (ward, durationDays) => ({ ward, durationDays })
 
 const patientTemplates = {
   // Stroke: ER → ICU (0.15d) → General (0.95d) → Discharge (2.05d)
-  P1:  [T("ICU", 0.15), T("General", 0.95), T("Discharge", 2.05)],
+  P1: [T("ICU", 0.15), T("General", 0.95), T("Discharge", 2.05)],
   // Cardiac w/ readmission cycle
-  P2:  [T("ICU", 0.10), T("General", 1.35), T("ICU", 0.30), T("General", 2.10), T("Discharge", 1.90)],
+  P2: [T("ICU", 0.1), T("General", 1.35), T("ICU", 0.3), T("General", 2.1), T("Discharge", 1.9)],
   // Minor case
-  P3:  [T("General", 0.20), T("Discharge", 1.10)],
+  P3: [T("General", 0.2), T("Discharge", 1.1)],
   // Trauma — surgery → ICU → general
-  P4:  [T("Surgery", 0.10), T("ICU", 0.20), T("General", 1.85), T("Discharge", 1.80)],
+  P4: [T("Surgery", 0.1), T("ICU", 0.2), T("General", 1.85), T("Discharge", 1.8)],
   // Critical trauma — long ICU; ends week still in General (no Discharge step)
-  P5:  [T("Surgery", 0.15), T("ICU", 0.20), T("General", 3.15)],
+  P5: [T("Surgery", 0.15), T("ICU", 0.2), T("General", 3.15)],
   // Moderate trauma — no ICU
-  P6:  [T("Surgery", 0.15), T("General", 1.60), T("Discharge", 1.40)],
+  P6: [T("Surgery", 0.15), T("General", 1.6), T("Discharge", 1.4)],
   // Internal bleeding — ICU → Surgery (delayed) → ICU
-  P7:  [T("ICU", 0.10), T("Surgery", 0.20), T("ICU", 0.20), T("General", 2.30), T("Discharge", 2.00)],
+  P7: [T("ICU", 0.1), T("Surgery", 0.2), T("ICU", 0.2), T("General", 2.3), T("Discharge", 2.0)],
   // Severe injuries with re-op cycle; ends week still in General
-  P8:  [T("Surgery", 0.15), T("ICU", 0.20), T("Surgery", 0.20), T("ICU", 0.20), T("General", 2.20)],
+  P8: [T("Surgery", 0.15), T("ICU", 0.2), T("Surgery", 0.2), T("ICU", 0.2), T("General", 2.2)],
   // Most critical — single-edge ICU stay spanning entire window
-  P9:  [T("ICU", 0.10)],
+  P9: [T("ICU", 0.1)],
   // Fast-track minor
   P10: [T("General", 0.15), T("Discharge", 0.85)],
   // Cardiac w/ in-General re-event cycle; ends week still in General
-  P11: [T("ICU", 0.15), T("General", 0.75), T("ICU", 0.40), T("General", 1.00)],
+  P11: [T("ICU", 0.15), T("General", 0.75), T("ICU", 0.4), T("General", 1.0)],
   // Planned surgery
-  P12: [T("Surgery", 0.15), T("General", 0.85), T("Discharge", 0.50)],
+  P12: [T("Surgery", 0.15), T("General", 0.85), T("Discharge", 0.5)],
 }
 
 /**
@@ -139,25 +140,53 @@ function buildEdges(admitTimes) {
 // patients arrive in a 4-hour window (Day 1.85–2.1). Three pre-
 // surge admits, three post-surge.
 const SURGE_TIMES = {
-  P1:  0.40,  P2:  0.75,  P3:  1.20,                              // pre-surge trickle
-  P4:  1.85,  P5:  1.90,  P6:  1.95,  P7:  2.00,  P8:  2.05, P9: 2.10,  // SURGE
-  P10: 3.50,  P11: 4.10,  P12: 5.40,                              // post-surge normalization
+  P1: 0.4,
+  P2: 0.75,
+  P3: 1.2, // pre-surge trickle
+  P4: 1.85,
+  P5: 1.9,
+  P6: 1.95,
+  P7: 2.0,
+  P8: 2.05,
+  P9: 2.1, // SURGE
+  P10: 3.5,
+  P11: 4.1,
+  P12: 5.4, // post-surge normalization
 }
 
 // Scenario B: Normal operations. Twelve admits evenly distributed
 // across the week (~one every 14 hours).
 const NORMAL_TIMES = {
-  P1:  0.35,  P2:  0.95,  P3:  1.50,  P4:  2.10,  P5:  2.70,  P6:  3.25,
-  P7:  3.80,  P8:  4.35,  P9:  4.90,  P10: 5.40,  P11: 5.90,  P12: 6.40,
+  P1: 0.35,
+  P2: 0.95,
+  P3: 1.5,
+  P4: 2.1,
+  P5: 2.7,
+  P6: 3.25,
+  P7: 3.8,
+  P8: 4.35,
+  P9: 4.9,
+  P10: 5.4,
+  P11: 5.9,
+  P12: 6.4,
 }
 
 // Scenario C: Delayed outbreak (foodborne / flu / respiratory).
 // Two scattered pre-onset admits, then ten admits cluster Days 3.7–5.2
 // as the outbreak peaks. Several patients still in the system at week's end.
 const OUTBREAK_TIMES = {
-  P1:  0.50,  P2:  1.30,                                          // baseline
-  P3:  3.70,  P4:  3.85,  P5:  3.95,  P6:  4.10,  P7:  4.25,      // outbreak ramp
-  P8:  4.40,  P9:  4.55,  P10: 4.70,  P11: 4.90,  P12: 5.10,
+  P1: 0.5,
+  P2: 1.3, // baseline
+  P3: 3.7,
+  P4: 3.85,
+  P5: 3.95,
+  P6: 4.1,
+  P7: 4.25, // outbreak ramp
+  P8: 4.4,
+  P9: 4.55,
+  P10: 4.7,
+  P11: 4.9,
+  P12: 5.1,
 }
 
 // Scenario D: Shift-change rhythm. Admits cluster at predictable
@@ -166,12 +195,18 @@ const OUTBREAK_TIMES = {
 // scheduling team would aim for; the periodicity is unmistakable
 // in the temporal view, invisible in the aggregate.
 const RHYTHM_TIMES = {
-  P1:  0.40,  P2:  0.85,
-  P3:  1.40,  P4:  1.85,
-  P5:  2.40,  P6:  2.85,
-  P7:  3.40,  P8:  3.85,
-  P9:  4.40,  P10: 4.85,
-  P11: 5.40,  P12: 5.85,
+  P1: 0.1,
+  P2: 0.2,
+  P3: 1.1,
+  P4: 1.2,
+  P5: 2.1,
+  P6: 2.2,
+  P7: 3.0,
+  P8: 3.1,
+  P9: 4.1,
+  P10: 4.2,
+  P11: 5.1,
+  P12: 5.2,
 }
 
 const scenarios = [
@@ -208,16 +243,27 @@ const scenarios = [
 // ── UI ──────────────────────────────────────────────────────────────
 
 const Caption = ({ children }) => (
-  <div style={{
-    fontSize: 12, color: "var(--semiotic-text-secondary, #525252)",
-    marginTop: 8, marginBottom: 4, lineHeight: 1.4,
-  }}>{children}</div>
+  <div
+    style={{
+      fontSize: 12,
+      color: "var(--semiotic-text-secondary, #525252)",
+      marginTop: 8,
+      marginBottom: 4,
+      lineHeight: 1.4,
+    }}
+  >
+    {children}
+  </div>
 )
 
 const ScenarioLabel = ({ title, headline }) => (
   <div style={{ marginBottom: 6 }}>
-    <div style={{ fontWeight: 600, fontSize: 13, color: "var(--semiotic-text, #161616)" }}>{title}</div>
-    <div style={{ fontSize: 11, color: "var(--semiotic-text-secondary, #525252)", marginTop: 1 }}>{headline}</div>
+    <div style={{ fontWeight: 600, fontSize: 13, color: "var(--semiotic-text, #161616)" }}>
+      {title}
+    </div>
+    <div style={{ fontSize: 11, color: "var(--semiotic-text-secondary, #525252)", marginTop: 1 }}>
+      {headline}
+    </div>
   </div>
 )
 
@@ -233,34 +279,72 @@ export default function AnscombesSankey() {
   // above doesn't show day labels either, so this is consistent.
   const dayTicksNoLabel = useMemo(
     () => Array.from({ length: 8 }, (_, i) => ({ date: i, label: "" })),
-    []
+    [],
   )
   // Match the day-axis labels in tooltips. ProcessSankey ships a Date
   // formatter as default; without an explicit `timeFormat`, our small
   // day-index values would render as 1970-01-01.
-  const dayLabel = useMemo(() => (d) => {
-    const day = Number(d)
-    if (!Number.isFinite(day)) return ""
-    return Number.isInteger(day) ? `Day ${day}` : `Day ${day.toFixed(2)}`
-  }, [])
+  const dayLabel = useMemo(
+    () => (d) => {
+      const day = Number(d)
+      if (!Number.isFinite(day)) return ""
+      return Number.isInteger(day) ? `Day ${day}` : `Day ${day.toFixed(2)}`
+    },
+    [],
+  )
   // Memoize per-scenario edges too so each ProcessSankey only re-runs
   // its layout when its own data actually changes (i.e., never).
   const scenarioEdges = useMemo(() => scenarios.map((s) => buildEdges(s.times)), [])
   const [hoveredScenario, setHoveredScenario] = useState(null)
+  const [docsTheme] = useDocsTheme()
 
+  const themeName = docsTheme === "dark" ? "carbon-dark" : "carbon"
   return (
-    <ThemeProvider theme="carbon">
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
-
+    <ThemeProvider theme={themeName}>
+      {/* Follow the ambient docs theme so a dark-mode reader doesn't get
+          a light-Carbon island. Wrapper paints `--semiotic-bg` so the
+          recipe lives on the chosen Carbon variant's surface. */}
+      <div
+        style={{
+          background: "var(--semiotic-bg)",
+          color: "var(--semiotic-text)",
+          padding: 20,
+          borderRadius: 8,
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: 24,
+        }}
+      >
         {/* ── Single aggregate ────────────────────────────────────── */}
         <div>
-          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6, color: "var(--semiotic-text, #161616)" }}>
+          <div
+            style={{
+              fontWeight: 600,
+              fontSize: 14,
+              marginBottom: 6,
+              color: "var(--semiotic-text, #161616)",
+            }}
+          >
             One aggregate Sankey — true for all four scenarios below
           </div>
-          <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #525252)", marginBottom: 8 }}>
-            Same 12 patients, same routes, same ribbon thicknesses. The aggregate cannot tell these four weeks apart.
+          <div
+            style={{
+              fontSize: 12,
+              color: "var(--semiotic-text-secondary, #525252)",
+              marginBottom: 8,
+            }}
+          >
+            Same 12 patients, same routes, same ribbon thicknesses. The aggregate cannot tell these
+            four weeks apart.
           </div>
-          <div style={{ background: "var(--surface-1, #f4f4f4)", border: "1px solid var(--surface-3, #e0e0e0)", borderRadius: 4, padding: 12 }}>
+          <div
+            style={{
+              background: "var(--semiotic-surface, #f4f4f4)",
+              border: "1px solid var(--semiotic-border, #e0e0e0)",
+              borderRadius: 4,
+              padding: 12,
+            }}
+          >
             <SankeyDiagram
               nodes={wardNodes}
               edges={aggregateEdges}
@@ -275,7 +359,13 @@ export default function AnscombesSankey() {
               nodePaddingRatio={0.3}
               nodeWidth={10}
               showLabels
-              width={700}
+              // Bottom legend so the lane fills the panel — same
+              // alignment the per-scenario ProcessSankeys below use.
+              // Width 780 mirrors the 2-column ProcessSankey grid
+              // (two 350-px panels + gap) so the aggregate Sankey
+              // visually anchors the grid below it.
+              legendPosition="bottom"
+              width={780}
               height={320}
             />
           </div>
@@ -283,23 +373,38 @@ export default function AnscombesSankey() {
 
         {/* ── 2×2 grid of ProcessSankeys ──────────────────────────── */}
         <div>
-          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6, color: "var(--semiotic-text, #161616)" }}>
+          <div
+            style={{
+              fontWeight: 600,
+              fontSize: 14,
+              marginBottom: 6,
+              color: "var(--semiotic-text, #161616)",
+            }}
+          >
             Four ProcessSankeys — the four weeks the aggregate just hid
           </div>
-          <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #525252)", marginBottom: 12 }}>
-            Identical aggregate above, but the temporal layout reveals four operationally distinct realities.
+          <div
+            style={{
+              fontSize: 12,
+              color: "var(--semiotic-text-secondary, #525252)",
+              marginBottom: 12,
+            }}
+          >
+            Identical aggregate above, but the temporal layout reveals four operationally distinct
+            realities.
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             {scenarios.map((sc, idx) => {
               const isHovered = hoveredScenario === sc.id
+              const edges = scenarioEdges[idx]
               return (
                 <div
                   key={sc.id}
                   onMouseEnter={() => setHoveredScenario(sc.id)}
                   onMouseLeave={() => setHoveredScenario(null)}
                   style={{
-                    background: "var(--surface-1, #f4f4f4)",
-                    border: `1px solid ${isHovered ? "var(--semiotic-primary, #0f62fe)" : "var(--surface-3, #e0e0e0)"}`,
+                    background: "var(--semiotic-surface, #f4f4f4)",
+                    border: `1px solid ${isHovered ? "var(--semiotic-primary, #0f62fe)" : "var(--semiotic-border, #e0e0e0)"}`,
                     borderRadius: 4,
                     padding: 12,
                     transition: "border-color 0.15s ease",
@@ -308,7 +413,7 @@ export default function AnscombesSankey() {
                   <ScenarioLabel title={sc.title} headline={sc.headline} />
                   <ProcessSankey
                     nodes={wardNodes}
-                    edges={scenarioEdges[idx]}
+                    edges={edges}
                     sourceAccessor="source"
                     targetAccessor="target"
                     valueAccessor="value"
@@ -326,8 +431,9 @@ export default function AnscombesSankey() {
                     packing="reuse"
                     laneOrder="crossing-min"
                     ribbonLane="both"
-                    width={380}
+                    width={350}
                     height={240}
+                    margin={{ left: 20, right: 20, top: 20, bottom: 30 }}
                   />
                   <Caption>{sc.tell}</Caption>
                 </div>

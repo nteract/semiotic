@@ -448,17 +448,44 @@ export function computeNode(
   // commit lands. Skipping the zero-mass case avoids painting a
   // 1-pixel "backbone" line where the lane rail would be more
   // appropriate (the lane is open but holds nothing yet/anymore).
+  //
+  // Same shape applies to systemInTime / systemOutTime: when those
+  // are set the band shape stays rectangular through the wider
+  // lifetime so the per-edge gradient stubs have a surface to render
+  // onto. Mass profile is unchanged in the interior — only the band's
+  // outline gets stretched outward, identical in spirit to the xExtent
+  // logic above.
   const xEnd: number | null = Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[1])
     ? node.xExtent[1]
     : null
+  let earliestSystemIn: number | null = null
+  for (const e of outgoing) {
+    if (e.systemInTime != null && Number.isFinite(e.systemInTime) && e.systemInTime < e.startTime) {
+      if (earliestSystemIn === null || e.systemInTime < earliestSystemIn) earliestSystemIn = e.systemInTime
+    }
+  }
+  let latestSystemOut: number | null = null
+  for (const e of incoming) {
+    if (e.systemOutTime != null && Number.isFinite(e.systemOutTime) && e.systemOutTime > e.endTime) {
+      if (latestSystemOut === null || e.systemOutTime > latestSystemOut) latestSystemOut = e.systemOutTime
+    }
+  }
   if (collapsed.length > 0) {
     const last = collapsed[collapsed.length - 1]
-    if (xEnd != null && xEnd > last.t && last.topMass + last.botMass > 0) {
-      collapsed.push({ t: xEnd, topMass: last.topMass, botMass: last.botMass })
+    const rightEnd = Math.max(
+      xEnd != null ? xEnd : -Infinity,
+      latestSystemOut != null ? latestSystemOut : -Infinity,
+    )
+    if (Number.isFinite(rightEnd) && rightEnd > last.t && last.topMass + last.botMass > 0) {
+      collapsed.push({ t: rightEnd, topMass: last.topMass, botMass: last.botMass })
     }
     const first = collapsed[0]
-    if (xStart != null && xStart < first.t && first.topMass + first.botMass > 0) {
-      collapsed.unshift({ t: xStart, topMass: first.topMass, botMass: first.botMass })
+    const leftStart = Math.min(
+      xStart != null ? xStart : Infinity,
+      earliestSystemIn != null ? earliestSystemIn : Infinity,
+    )
+    if (Number.isFinite(leftStart) && leftStart < first.t && first.topMass + first.botMass > 0) {
+      collapsed.unshift({ t: leftStart, topMass: first.topMass, botMass: first.botMass })
     }
   }
 
@@ -550,6 +577,15 @@ export interface BandGradientStub {
  * gradient that fades the band color in (or out) over 20 screen
  * pixels and saturates through the rest of the rect.
  *
+ * The rect is clipped to the band's outline bounds (so cutouts don't
+ * spill outside the node shape), but the gradient extent stays at
+ * its natural `[xSysIn - FADE_PX, xSysIn]` / `[xSysOut, xSysOut + FADE_PX]`
+ * range. The canvas renderer uses pad-mode clamping for color stops
+ * outside the rect, so a stub whose fade region falls past the band's
+ * edge still paints solid band-color where it's visible — instead of
+ * collapsing to a degenerate gradient that the renderer would clamp
+ * to transparent.
+ *
  * Pure rendering hint — layout/mass-profile unchanged. Returns an
  * empty array when the node has no qualifying edges.
  */
@@ -581,16 +617,22 @@ export function buildBandCutoutsForNode(
       if (att && att.kind === "out" && e.systemInTime < e.startTime) {
         const xSysIn = clampX(e.systemInTime)
         const xStart = clampX(e.startTime)
-        const xFade = Math.max(xLeft, xSysIn - FADE_PX)
-        // Stub spans the fade-in PLUS the patient's tenure in the
-        // source (systemInTime → startTime). Gradient stops saturate
-        // at the fade-in's right edge so beyond `xSysIn` the rect
-        // renders as solid band-color.
-        if (xStart > xFade) {
+        // Gradient extent: transparent at `xSysIn - FADE_PX`,
+        // band-color at `xSysIn`. Fixed regardless of band bounds.
+        const xGradStart = xSysIn - FADE_PX
+        // Rect extent: clipped to band's left edge so the cutout
+        // doesn't spill outside the node shape. When the band starts
+        // at or past `xSysIn` (e.g. the leftmost edge of the leftmost
+        // node), the rect is from `xLeft` to `xStart` — the gradient's
+        // transparent stop falls outside the rect and pad-mode clamps
+        // the visible pixels to band-color, so the cutout still
+        // renders as a solid slot.
+        const xRectStart = Math.max(xLeft, xGradStart)
+        if (xStart > xRectStart) {
           const [yT, yB] = attachmentYRange(att, cl, S)
           stubs.push({
-            pathD: rect(xFade, yT, xStart, yB),
-            x0: xFade,
+            pathD: rect(xRectStart, yT, xStart, yB),
+            x0: xGradStart,
             x1: xSysIn,
             from: 0,
             to: 1,
@@ -603,13 +645,17 @@ export function buildBandCutoutsForNode(
       if (att && att.kind === "in" && e.systemOutTime > e.endTime) {
         const xSysOut = clampX(e.systemOutTime)
         const xEnd = clampX(e.endTime)
-        const xFade = Math.min(xRight, xSysOut + FADE_PX)
-        if (xFade > xEnd) {
+        // Mirror of systemIn: gradient saturated at `xSysOut`,
+        // transparent at `xSysOut + FADE_PX`. Rect clipped to the
+        // band's right edge.
+        const xGradEnd = xSysOut + FADE_PX
+        const xRectEnd = Math.min(xRight, xGradEnd)
+        if (xRectEnd > xEnd) {
           const [yT, yB] = attachmentYRange(att, cl, S)
           stubs.push({
-            pathD: rect(xEnd, yT, xFade, yB),
+            pathD: rect(xEnd, yT, xRectEnd, yB),
             x0: xSysOut,
-            x1: xFade,
+            x1: xGradEnd,
             from: 1,
             to: 0,
           })
@@ -971,6 +1017,14 @@ export function computeLaneLayout(
     let tEnd: number   = explicitEnd   != null && Number.isFinite(explicitEnd)   ? explicitEnd   : -Infinity
     for (const e of edgeIndex.outgoing[n.id]) {
       if (e.startTime < tStart) tStart = e.startTime
+      // systemInTime (when set) pre-dates startTime — the source node
+      // holds the unit of mass from systemInTime through startTime, so
+      // its lane lifetime has to include the earlier time or the band
+      // gets clipped at startTime and the systemInTime gradient stub
+      // has no surface to paint on.
+      if (e.systemInTime != null && Number.isFinite(e.systemInTime) && e.systemInTime < tStart) {
+        tStart = e.systemInTime
+      }
       const endForSource = half ? (e.startTime + e.endTime) / 2 : e.endTime
       if (endForSource > tEnd) tEnd = endForSource
     }
@@ -978,6 +1032,13 @@ export function computeLaneLayout(
       const startForTarget = half ? (e.startTime + e.endTime) / 2 : e.startTime
       if (startForTarget < tStart) tStart = startForTarget
       if (e.endTime > tEnd) tEnd = e.endTime
+      // systemOutTime mirror: target holds the unit of mass through
+      // endTime → systemOutTime, so the lane has to extend right or
+      // the band gets cut off at endTime and the systemOutTime fade-
+      // out has nowhere to render.
+      if (e.systemOutTime != null && Number.isFinite(e.systemOutTime) && e.systemOutTime > tEnd) {
+        tEnd = e.systemOutTime
+      }
     }
     laneLifetime[n.id] = {
       start: Number.isFinite(tStart) ? tStart : null,

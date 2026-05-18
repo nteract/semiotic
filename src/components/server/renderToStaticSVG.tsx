@@ -368,6 +368,26 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     normalize: props.normalize,
     boundsAccessor: props.boundsAccessor,
     boundsStyle: props.boundsStyle,
+    // Mixed-frame props (DifferenceChart, LineChart fillArea[]).
+    // Without these the mixed scene builder treats every group as a
+    // line and the difference fills never paint — the regression that
+    // shipped the empty OG card for the DifferenceChart blog entry.
+    // `areaGroups` arrives from the HOC's `buildProps` as a string[];
+    // PipelineConfig stores a Set so membership checks are O(1).
+    y0Accessor: props.y0Accessor,
+    areaGroups: props.areaGroups
+      ? (props.areaGroups instanceof Set ? props.areaGroups : new Set(props.areaGroups as Iterable<string>))
+      : undefined,
+    curve: props.curve,
+    // `gradientFill === true` is the HOC's shorthand for the default
+    // top/bottom opacity stops; PipelineConfig only accepts the object
+    // form so we normalize it the same way the client frame does.
+    gradientFill: props.gradientFill === true
+      ? { topOpacity: 0.8, bottomOpacity: 0.05 }
+      : props.gradientFill === false
+        ? undefined
+        : props.gradientFill,
+    lineGradient: props.lineGradient,
     openAccessor: props.openAccessor,
     highAccessor: props.highAccessor,
     lowAccessor: props.lowAccessor,
@@ -424,6 +444,22 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     idPrefix: idPfx,
   }) : null
 
+  // svgPreRenderers run after scene compute so they can position via the
+  // resolved scales (used by QuadrantChart for the four quadrant fills +
+  // centerlines and by anything else that paints background chrome under
+  // the data layer).
+  const svgPreRendererNodes = (props.svgPreRenderers && store.scales)
+    ? props.svgPreRenderers
+        .map((fn, i) => {
+          try {
+            return <React.Fragment key={`pre-${i}`}>{fn(store.scene, store.scales!, { width, height })}</React.Fragment>
+          } catch {
+            return null
+          }
+        })
+        .filter(Boolean)
+    : null
+
   // Legend — auto-build from colorAccessor/groupAccessor + showLegend, OR
   // honor a caller-supplied pre-rendered ReactNode. Config-object form
   // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; the
@@ -450,6 +486,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   const content = (
     <>
       {props.backgroundGraphics}
+      {svgPreRendererNodes}
       {grid}
       {dataMarks}
       {axes}

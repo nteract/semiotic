@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Semiotic Blog</title>
+  <subtitle>Chart explainers, case studies, and release notes from the Semiotic data-visualization library.</subtitle>
+  <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
+  <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
+  <id>https://semiotic3.nteract.io/blog/</id>
+  <updated>2026-05-16T00:00:00Z</updated>
+  <author><name>Semiotic</name></author>
+  <entry>
+    <title>Process Sankey vs Classic Sankey</title>
+    <id>https://semiotic3.nteract.io/blog/process-sankey-vs-classic-sankey</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/process-sankey-vs-classic-sankey"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/process-sankey-vs-classic-sankey.png"/>
+    <published>2026-05-16T00:00:00Z</published>
+    <updated>2026-05-16T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="chart-explainer"/>
+    <category term="network"/>
+    <summary type="text">Same flow data, two layouts, two stories. The classic Sankey is unbeatable for part-to-whole at aggregate scale; the Process Sankey paints discrete events at their actual times and makes surges, cycles, and lingering patients visible. With an Anscombe&apos;s-quartet section: four scenarios that produce a byte-identical aggregate Sankey and four operationally distinct ProcessSankey timelines.</summary>
+  </entry>
+  <entry>
+    <title>DifferenceChart, explained</title>
+    <id>https://semiotic3.nteract.io/blog/difference-chart</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/difference-chart"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/difference-chart.png"/>
+    <published>2026-05-14T00:00:00Z</published>
+    <updated>2026-05-14T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="chart-explainer"/>
+    <category term="xy"/>
+    <summary type="text">A two-line chart leaves the difference implicit; DifferenceChart fills it in. Plot A and B as overlay lines, color the area between with one color where A leads and the other where B leads, and let the chart interpolate the crossovers so the fills kiss at zero. Forecast vs actual, YoY, temperature anomaly — the classic uses.</summary>
+  </entry>
+  <entry>
+    <title>Semiotic 3.5.2</title>
+    <id>https://semiotic3.nteract.io/blog/release-3-5-2</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-5-2"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-5-2.png"/>
+    <published>2026-05-10T00:00:00Z</published>
+    <updated>2026-05-10T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="release"/>
+    <summary type="text">3.5.2 is mostly a factor-and-extend release: useSeriesFeatures / useEncodingDomain / useStreamStatus / useXYLineStyle hooks land, ProcessSankey inherits SankeyDiagram&apos;s canvas particle pipeline, regression-line sugar extends to five more charts, FlowMap joins the push family, and ai/capabilities.json indexes all 44 charts.</summary>
+  </entry>
+  <entry>
+    <title>Minard&apos;s March, rebuilt in Semiotic</title>
+    <id>https://semiotic3.nteract.io/blog/minards-march</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/minards-march"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/minards-march.png"/>
+    <published>2026-04-22T00:00:00Z</published>
+    <updated>2026-04-22T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="geo"/>
+    <category term="tutorial"/>
+    <summary type="text">Tufte called Minard&apos;s chart &quot;the best statistical graphic ever drawn.&quot; Rebuilding it is the cleanest way to learn Semiotic&apos;s composition primitives — FlowMap with tiles, particles, a linked ConnectedScatterplot, and shared categorical colors all in one page.</summary>
+  </entry>
+  <entry>
+    <title>QuadrantChart, explained</title>
+    <id>https://semiotic3.nteract.io/blog/quadrant-chart</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/quadrant-chart"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/quadrant-chart.png"/>
+    <published>2026-04-03T00:00:00Z</published>
+    <updated>2026-04-03T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="chart-explainer"/>
+    <category term="xy"/>
+    <summary type="text">Most strategic frameworks are 2×2 grids — quick wins vs strategic bets vs fill-in vs money pits. QuadrantChart bakes the threshold lines and quadrant labels into a scatterplot so &apos;which quadrant is this in?&apos; answers itself.</summary>
+  </entry>
+  <entry>
+    <title>FunnelChart, explained</title>
+    <id>https://semiotic3.nteract.io/blog/funnel-chart</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/funnel-chart"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/funnel-chart.png"/>
+    <published>2026-03-08T00:00:00Z</published>
+    <updated>2026-03-08T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="chart-explainer"/>
+    <category term="ordinal"/>
+    <summary type="text">A FunnelChart is a bar chart with the geometry tweaked so stage-to-stage drop-off is the visual headline. Sales funnels, signup conversion, recruiting pipelines, manufacturing yield — anywhere monotonically-shrinking ordered stages need a chart that shows where the lake drains.</summary>
+  </entry>
+  <entry>
+    <title>OrbitDiagram, explained</title>
+    <id>https://semiotic3.nteract.io/blog/orbit-diagram</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/orbit-diagram"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/orbit-diagram.png"/>
+    <published>2026-02-18T00:00:00Z</published>
+    <updated>2026-02-18T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="chart-explainer"/>
+    <category term="network"/>
+    <category term="hierarchy"/>
+    <summary type="text">OrbitDiagram is the chart for when the audience needs to feel oriented, not make a decision. Concentric rings, slow rotation, depth-as-radius. The animation isn&apos;t gratuitous — it tells the eye that ring membership is the encoding and angular position is decorative.</summary>
+  </entry>
+</feed>

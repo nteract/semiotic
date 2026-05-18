@@ -237,10 +237,12 @@ describe("computeProcessSankeyLayout", () => {
     expect(typeof layout.lengthAfter === "number" || layout.lengthAfter === null).toBe(true)
   })
 
-  it("preserves layout/mass profile regardless of edge.systemInTime / systemOutTime", () => {
-    // Sanity check: systemInTime/systemOutTime are rendering hints
-    // only — the algorithm output (mass profile, peak, samples)
-    // must be byte-identical to the same edge without those fields.
+  it("extends lane lifetime + target band when systemOutTime > endTime", () => {
+    // systemOutTime > endTime: the target node's lane (and band's
+    // right edge) extends out to the latest systemOutTime so the
+    // per-edge fade-out cutouts have surface to render onto. The
+    // mass profile WITHIN [endTime] stays byte-identical to the
+    // un-hinted case — only the trailing mass is replayed forward.
     const nodes: ProcessSankeyNode[] = [{ id: "A" }, { id: "B" }]
     const edgesPlain: ProcessSankeyEdge[] = [
       { id: "e1", source: "A", target: "B", value: 1, startTime: 2, endTime: 3 },
@@ -254,7 +256,17 @@ describe("computeProcessSankeyLayout", () => {
     const hinted = computeProcessSankeyLayout(nodes, edgesWithHints, opts)
     expect(hinted.nodeData.A.peak).toBe(plain.nodeData.A.peak)
     expect(hinted.nodeData.B.peak).toBe(plain.nodeData.B.peak)
-    expect(hinted.nodeData.A.samples).toEqual(plain.nodeData.A.samples)
-    expect(hinted.nodeData.B.samples).toEqual(plain.nodeData.B.samples)
+    expect(hinted.nodeData.A.topPeak).toBe(plain.nodeData.A.topPeak)
+    expect(hinted.nodeData.B.topPeak).toBe(plain.nodeData.B.topPeak)
+    // Lane lifetime extends to include systemIn (source) / systemOut (target).
+    expect(hinted.laneLifetime.A.start).toBeLessThanOrEqual(0.5)
+    expect(hinted.laneLifetime.B.end).toBeGreaterThanOrEqual(7)
+    // Target samples reach the latest systemOutTime so the rightmost
+    // fade-out cutout has a rect to paint onto.
+    expect(Math.max(...hinted.nodeData.B.samples.map((s) => s.t))).toBeGreaterThanOrEqual(7)
+    // Mass profile within the natural range is unchanged.
+    const bPlainInside = plain.nodeData.B.samples.filter((s) => s.t >= 3 && s.t <= 5)
+    const bHintedInside = hinted.nodeData.B.samples.filter((s) => s.t >= 3 && s.t <= 5)
+    expect(bHintedInside).toEqual(bPlainInside)
   })
 })

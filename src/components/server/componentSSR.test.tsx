@@ -14,6 +14,7 @@ import * as ReactDOMServer from "react-dom/server"
 // HOC components
 import { LineChart } from "../charts/xy/LineChart"
 import { AreaChart } from "../charts/xy/AreaChart"
+import { DifferenceChart } from "../charts/xy/DifferenceChart"
 import { StackedAreaChart } from "../charts/xy/StackedAreaChart"
 import { Scatterplot } from "../charts/xy/Scatterplot"
 import { Heatmap } from "../charts/xy/Heatmap"
@@ -32,7 +33,7 @@ import { Treemap } from "../charts/network/Treemap"
 import { CirclePack } from "../charts/network/CirclePack"
 
 // Standalone SSR for equivalence tests
-import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG, renderGeoToStaticSVG } from "./renderToStaticSVG"
+import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG, renderGeoToStaticSVG, renderChart } from "./renderToStaticSVG"
 
 // ── Test data ───────────────────────────────────────────────────────────
 
@@ -83,6 +84,23 @@ function renderComponent(element: React.ReactElement): string {
   return ReactDOMServer.renderToStaticMarkup(element)
 }
 
+// Two-series fixture with a clean A>B → B>A crossover in the middle of
+// the X range. Shared between the React-component SSR test and the
+// `renderChart` server-path test so both check the same visual contract.
+function differenceFixture() {
+  return [
+    { x: 0, a: 5, b: 10 },
+    { x: 1, a: 7, b: 9 },
+    { x: 2, a: 9, b: 8 },
+    { x: 3, a: 12, b: 7 },
+    { x: 4, a: 14, b: 6 },
+    { x: 5, a: 13, b: 8 },
+    { x: 6, a: 10, b: 11 },
+    { x: 7, a: 7, b: 13 },
+    { x: 8, a: 5, b: 15 },
+  ]
+}
+
 function countPattern(html: string, pattern: RegExp): number {
   return (html.match(pattern) || []).length
 }
@@ -123,6 +141,89 @@ describe("Component SSR — XY Charts", () => {
     expect(html).toContain("<path")
     // Area paths have fill (not just stroke)
     expect(html).toMatch(/fill="[^n]/) // fill is not "none"
+  })
+
+  it("DifferenceChart React SSR renders filled crossover segments, not just two lines", () => {
+    // Two-series fixture with a clean A>B → B>A crossover. The signature
+    // DifferenceChart visual is the two-color filled region between the
+    // curves; this guards the React-component SSR path (HOC → frame's
+    // internal isServerEnvironment branch → PipelineStore with full
+    // config).
+    const data = differenceFixture()
+    const html = renderComponent(
+      <DifferenceChart
+        data={data}
+        xAccessor="x"
+        seriesAAccessor="a"
+        seriesBAccessor="b"
+        width={400}
+        height={300}
+      />,
+    )
+
+    expect(html).not.toContain("<canvas")
+    expect(html).toContain("<path")
+    // At least one filled segment per side (A-winning + B-winning).
+    const filledPaths = html.match(/<path[^>]*fill="(?!none)[^"]+"/g) || []
+    expect(filledPaths.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it("renderChart('QuadrantChart', …) emits four filled quadrant rects + centerlines", () => {
+    // The OG-card generator wants a QuadrantChart preview but the
+    // chart wasn't in `CHART_CONFIGS`, so it fell through to the
+    // decorative-placeholder branch. Now wired with an svgPreRenderer
+    // that paints quadrants + centerlines + corner labels.
+    const svg = renderChart("QuadrantChart", {
+      data: [
+        { x: 2, y: 9 }, { x: 9, y: 8 }, { x: 3, y: 5 }, { x: 7, y: 4 },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      xCenter: 5,
+      yCenter: 5,
+      quadrants: {
+        topLeft:     { label: "QW", color: "#22c55e" },
+        topRight:    { label: "SB", color: "#3b82f6" },
+        bottomLeft:  { label: "FI", color: "#94a3b8" },
+        bottomRight: { label: "MP", color: "#ef4444" },
+      },
+      width: 400,
+      height: 400,
+    })
+
+    // Four filled <rect> quadrant backgrounds.
+    const filledRects = svg.match(/<rect[^>]*fill="(#22c55e|#3b82f6|#94a3b8|#ef4444)"/g) || []
+    expect(filledRects.length).toBe(4)
+    // Two centerlines + their labels (text elements).
+    expect(svg).toMatch(/<line[^>]*x1="\d/)
+    expect(svg).toContain(">QW<")
+    expect(svg).toContain(">SB<")
+  })
+
+  it("renderChart('DifferenceChart', …) emits filled crossover segments — regression for OG-card path", () => {
+    // The standalone `renderChart` server path (used by
+    // `scripts/generate-blog-og-cards.mjs` and any MCP/AI snapshot
+    // workflow) goes through `serverChartConfigs.differenceChart` →
+    // `renderStreamXYFrame`. That was dropping `areaGroups`,
+    // `y0Accessor`, and `curve` on the way into the PipelineConfig,
+    // so the mixed-scene builder defaulted to "everything is a line"
+    // and the difference fill never painted. Visible regression:
+    // `docs/public/blog/og/difference-chart.png` showed two bare lines.
+    const data = differenceFixture()
+    const svg = renderChart("DifferenceChart", {
+      data,
+      xAccessor: "x",
+      seriesAAccessor: "a",
+      seriesBAccessor: "b",
+      width: 380,
+      height: 380,
+      theme: "carbon-dark",
+      showLegend: false,
+    })
+
+    expect(svg).toContain("<path")
+    const filledPaths = svg.match(/<path[^>]*fill="(?!none)[^"]+"/g) || []
+    expect(filledPaths.length).toBeGreaterThanOrEqual(2)
   })
 
   it("StackedAreaChart renders multiple area paths", () => {

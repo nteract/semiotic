@@ -206,10 +206,16 @@ const FANOUT_FIXTURE = {
 // before triage, and the target band shows the active work time
 // before close — both as soft 20-px gradient fades at the lifecycle
 // boundary, with the band's outline tracing the full lifetime.
+//
+// Timing is spaced so the leftmost systemInTime (1.5h) sits well
+// inside the chart's left margin and the rightmost systemOutTime
+// (15h) sits well inside the right margin — gives each per-edge
+// gradient cutout room to render its fade without abutting either
+// chart boundary.
 const HELPDESK_FIXTURE = {
   label: "Helpdesk tickets",
-  domain: [0, 12],
-  axisTicks: [0, 2, 4, 6, 8, 10, 12].map((d) => ({ date: d, label: `Hr ${d}` })),
+  domain: [0, 16],
+  axisTicks: [0, 2, 4, 6, 8, 10, 12, 14, 16].map((d) => ({ date: d, label: `Hr ${d}` })),
   nodes: [
     { id: "Queue", category: "queue" },
     { id: "Closed", category: "closed" },
@@ -217,17 +223,17 @@ const HELPDESK_FIXTURE = {
   edges: [
     // Each ticket: opens at systemInTime, triaged at start, closed at systemOutTime.
     { id: "t1", source: "Queue", target: "Closed", value: 1,
-      systemInTime: 0.6,  startTime: 1.6, endTime: 1.8,  systemOutTime: 3.0  },
+      systemInTime: 1.5,  startTime: 2.5, endTime: 2.7,  systemOutTime: 4.5  },
     { id: "t2", source: "Queue", target: "Closed", value: 1,
-      systemInTime: 1.4,  startTime: 2.5, endTime: 2.7,  systemOutTime: 5.4  },
+      systemInTime: 2.4,  startTime: 3.5, endTime: 3.7,  systemOutTime: 7.0  },
     { id: "t3", source: "Queue", target: "Closed", value: 1,
-      systemInTime: 2.2,  startTime: 3.4, endTime: 3.6,  systemOutTime: 6.8  },
+      systemInTime: 3.3,  startTime: 4.5, endTime: 4.7,  systemOutTime: 8.5  },
     { id: "t4", source: "Queue", target: "Closed", value: 1,
-      systemInTime: 3.5,  startTime: 4.6, endTime: 4.8,  systemOutTime: 7.2  },
+      systemInTime: 4.7,  startTime: 5.8, endTime: 6.0,  systemOutTime: 9.5  },
     { id: "t5", source: "Queue", target: "Closed", value: 1,
-      systemInTime: 5.0,  startTime: 6.1, endTime: 6.3,  systemOutTime: 9.0  },
+      systemInTime: 6.2,  startTime: 7.3, endTime: 7.5,  systemOutTime: 11.5 },
     { id: "t6", source: "Queue", target: "Closed", value: 1,
-      systemInTime: 6.4,  startTime: 7.5, endTime: 7.7,  systemOutTime: 10.5 },
+      systemInTime: 7.6,  startTime: 8.7, endTime: 8.9,  systemOutTime: 13.5 },
   ],
 }
 
@@ -488,6 +494,7 @@ export default function ProcessSankeyPage() {
   const [ribbonLane, setRibbonLane] = useState("both")
   const [lifetimeMode, setLifetimeMode] = useState("half")
   const [showLaneRails, setShowLaneRails] = useState(false)
+  const [showLabels, setShowLabels] = useState(true)
   const [showParticles, setShowParticles] = useState(false)
   const [showLegend, setShowLegend] = useState(true)
   const [colorBy, setColorBy] = useState("category")
@@ -666,6 +673,15 @@ export default function ProcessSankeyPage() {
             ]}
           />
           <Segmented
+            label="Labels"
+            value={showLabels ? "on" : "off"}
+            onChange={(v) => setShowLabels(v === "on")}
+            options={[
+              { value: "off", label: "Off" },
+              { value: "on", label: "On" },
+            ]}
+          />
+          <Segmented
             label="Particles"
             value={showParticles ? "on" : "off"}
             onChange={(v) => setShowParticles(v === "on")}
@@ -707,6 +723,7 @@ export default function ProcessSankeyPage() {
           ribbonLane={ribbonLane}
           lifetimeMode={lifetimeMode}
           showLaneRails={showLaneRails}
+          showLabels={showLabels}
           showParticles={showParticles}
           showQualityReadout
           timeFormat={SANDBOX_TIME_FORMAT}
@@ -895,6 +912,8 @@ export default function ProcessSankeyPage() {
           showLegend
           packing="reuse"
           ribbonLane="both"
+          width={900}
+          height={420}
         />
       </div>
 
@@ -989,6 +1008,12 @@ export default function ProcessSankeyPage() {
         </li>
         <li>
           <code>showLaneRails</code> (default <code>false</code>) — toggle dashed lifetime rails behind each band.
+        </li>
+        <li>
+          <code>showLabels</code> (default <code>true</code>) — render
+          the node-id label at each band&rsquo;s left edge. Turn off
+          for dense layouts where labels would overlap, or when the
+          legend already names every band.
         </li>
         <li>
           <code>showQualityReadout</code> — render the small
