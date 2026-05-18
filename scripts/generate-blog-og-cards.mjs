@@ -17,7 +17,14 @@
  * runs us inside `npm run website:build`, after `dist:prod` and
  * before `parcel build`.
  *
+ * Default behavior is append-only: existing PNGs are preserved so
+ * hand-repaired social cards do not get clobbered by a normal docs
+ * build. Delete a specific output file to regenerate just that card,
+ * or pass `--force` to intentionally regenerate matching cards.
+ *
  *   $ node scripts/generate-blog-og-cards.mjs
+ *   $ node scripts/generate-blog-og-cards.mjs --slug=release-3-5-4
+ *   $ node scripts/generate-blog-og-cards.mjs --force
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
@@ -31,6 +38,15 @@ const requireFromScript = createRequire(import.meta.url)
 const ROOT = resolve(__dirname, "..")
 const OUT_DIR = resolve(ROOT, "docs/public/blog/og")
 const META_FILE = resolve(ROOT, "docs/src/blog/entries-meta.js")
+const RELEASE_IMAGE_FILE = resolve(ROOT, "docs/public/assets/img/semiotic-social.png")
+const args = process.argv.slice(2)
+const force = args.includes("--force")
+const slugFilter = new Set(
+  args
+    .filter((arg) => arg.startsWith("--slug="))
+    .map((arg) => arg.slice("--slug=".length))
+    .filter(Boolean)
+)
 
 // 1200 × 630 is the canonical OG / Twitter summary_large_image size.
 // 2:1.05 aspect; renders down to roughly the right pixel weight on
@@ -122,7 +138,10 @@ function formatDate(iso) {
 // Pulls in semiotic/server lazily so we don't pay its import cost when
 // no entry asks for a chart preview. Returns an SVG string or null.
 let _renderChart = null
+let _renderChartTried = false
 async function getRenderChart() {
+  if (_renderChartTried) return _renderChart
+  _renderChartTried = true
   if (_renderChart) return _renderChart
   try {
     const mod = requireFromScript(resolve(ROOT, "dist/server.min.js"))
@@ -132,6 +151,21 @@ async function getRenderChart() {
     _renderChart = null
   }
   return _renderChart
+}
+
+let _releaseImageHref = null
+let _releaseImageTried = false
+function getReleaseImageHref() {
+  if (_releaseImageTried) return _releaseImageHref
+  _releaseImageTried = true
+  try {
+    const raw = readFileSync(RELEASE_IMAGE_FILE)
+    _releaseImageHref = `data:image/png;base64,${raw.toString("base64")}`
+  } catch {
+    console.warn("[og-cards] release-card image missing; release posts will use the text fallback.")
+    _releaseImageHref = null
+  }
+  return _releaseImageHref
 }
 
 // Each entry's `ogChart` spec is intentionally loose — `component`
@@ -214,6 +248,18 @@ async function renderChartSVG(entry, chartW, chartH) {
     console.warn(`[og-cards] chart render failed for ${entry.slug}: ${err.message}`)
     return null
   }
+}
+
+function renderReleaseImageSVG(entry, chartW, chartH) {
+  const isRelease = (entry.tags || []).includes("release") || /^release-/.test(entry.slug || "")
+  if (!isRelease || entry.ogChart) return null
+  const href = getReleaseImageHref()
+  if (!href) return null
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${chartW}" height="${chartH}" viewBox="0 0 ${chartW} ${chartH}">
+    <rect width="${chartW}" height="${chartH}" fill="${BG}" />
+    <image href="${href}" x="0" y="0" width="${chartW}" height="${chartH}"
+      preserveAspectRatio="xMidYMid meet" />
+  </svg>`
 }
 
 // ── Composite SVG ──────────────────────────────────────────────────────
@@ -323,21 +369,34 @@ async function loadEntries() {
 async function main() {
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true })
   const entries = await loadEntries()
-  console.log(`[og-cards] generating ${entries.length} cards → ${OUT_DIR}`)
-  let ok = 0, failed = 0
-  for (const entry of entries) {
+  const selectedEntries = slugFilter.size > 0
+    ? entries.filter((entry) => slugFilter.has(entry.slug))
+    : entries
+  const missingSlugs = [...slugFilter].filter((slug) => !entries.some((entry) => entry.slug === slug))
+  if (missingSlugs.length > 0) {
+    throw new Error(`unknown blog slug(s): ${missingSlugs.join(", ")}`)
+  }
+
+  console.log(`[og-cards] ensuring ${selectedEntries.length} cards → ${OUT_DIR}${force ? " (force)" : ""}`)
+  let ok = 0, skipped = 0, failed = 0
+  for (const entry of selectedEntries) {
+    const outFile = resolve(OUT_DIR, `${entry.slug}.png`)
+    if (!force && existsSync(outFile)) {
+      skipped++
+      continue
+    }
     try {
-      const chartSVG = await renderChartSVG(entry, 380, 380)
+      const chartSVG = await renderChartSVG(entry, 380, 380) || renderReleaseImageSVG(entry, 380, 380)
       const svg = buildCardSVG({ entry, chartSVG })
       const png = await sharp(Buffer.from(svg)).png().toBuffer()
-      writeFileSync(resolve(OUT_DIR, `${entry.slug}.png`), png)
+      writeFileSync(outFile, png)
       ok++
     } catch (err) {
       failed++
       console.error(`[og-cards] ${entry.slug} failed:`, err.message)
     }
   }
-  console.log(`[og-cards] ${ok} written, ${failed} failed`)
+  console.log(`[og-cards] ${ok} written, ${skipped} skipped, ${failed} failed`)
   if (failed > 0) process.exit(1)
 }
 
