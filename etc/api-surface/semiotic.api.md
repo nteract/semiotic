@@ -100,6 +100,7 @@ function useTheme
 interface AnnotationContext
 interface AreaChartProps
 interface AxisConfig
+interface BandConfig
 interface BarChartProps
 interface BarStyle
 interface BaseChartProps
@@ -197,6 +198,7 @@ interface VegaLiteEncoding
 interface VegaLiteSpec
 interface ViolinPlotProps
 interface WaterfallStyle
+interface XYFrameAxisConfig
 type Accessor
 type AnnotationAnchorMode
 type ArrowOfTime

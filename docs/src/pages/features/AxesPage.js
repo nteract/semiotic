@@ -440,8 +440,8 @@ export default function AxesPage() {
         <code>frameProps.axes[i].tickAnchor: "edges"</code> to flip the first
         label to <code>text-anchor: start</code> and the last to{" "}
         <code>text-anchor: end</code>. On vertical axes the equivalent
-        is <code>dominant-baseline: hanging</code> for the top tick and
-        <code> dominant-baseline: auto</code> for the bottom tick — the
+        is <code>dominant-baseline: hanging</code> for the top tick and{" "}
+        <code>dominant-baseline: auto</code> for the bottom tick — the
         labels nudge inward so they can't bleed past the chart bounds.
       </p>
 
