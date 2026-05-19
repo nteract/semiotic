@@ -20,13 +20,13 @@ Last regen: 2026-05-18 · 45 charts indexed.
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **AreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `series-features` |
+| **AreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `band` `series-features` |
 | **BubbleChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `size-encoding` `streaming-domain` `regression-overlay` |
 | **CandlestickChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `ohlc` |
 | **ConnectedScatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` |
 | **DifferenceChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `crossover-segmentation` |
 | **Heatmap** | ✓ | ✓ | ✓ | ✓ | ✓ | sequential | plugin | — |
-| **LineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `series-features` `gap-handling` `direct-labels` `endpoint-labels` |
+| **LineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `band` `series-features` `gap-handling` `direct-labels` `endpoint-labels` |
 | **MinimapChart** | ✓ | — | — | — | — | categorical | plugin | `brush` `overview-detail` `composite-delegates-interaction` `hoc-ssr-only` |
 | **MultiAxisLineChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `dual-axis` `hoc-ssr-only` |
 | **QuadrantChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `quadrants` |

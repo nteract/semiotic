@@ -754,6 +754,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       areaOpacity: { type: "number", default: 0.3, description: "Opacity of the filled area (0-1)" },
       forecast: { type: "object", description: "Forecast overlay config — tagged training/observed/forecast region with optional envelope. See ForecastConfig." },
       anomaly: { type: "object", description: "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig." },
+      band: { type: ["object", "array"], description: "Asymmetric min/max envelope drawn under the line. `{ y0Accessor, y1Accessor, style?, perSeries?, interactive? }` or an array of those for percentile fans. Distinct from `forecast`/`anomaly` (computed) — band is pure data passthrough. Hovered datum is enriched with `band: { y0, y1 }` and `bands: [...]`." },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -763,7 +764,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       // `series-features` umbrella tag = uses the shared
       // `useSeriesFeatures` hook; the specific `forecast` / `anomaly`
       // tags describe individual capabilities for AI discovery.
-      specialFeatures: ["forecast", "anomaly", "series-features", "gap-handling", "direct-labels", "endpoint-labels"],
+      specialFeatures: ["forecast", "anomaly", "band", "series-features", "gap-handling", "direct-labels", "endpoint-labels"],
     },
   },
 
@@ -787,13 +788,14 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       lineWidth: { type: "number", default: 2 },
       forecast: { type: "object", description: "Forecast overlay config — tagged training/observed/forecast region with optional envelope. See ForecastConfig." },
       anomaly: { type: "object", description: "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig." },
+      band: { type: ["object", "array"], description: "Asymmetric min/max envelope drawn under the area. See LineChart.band — same shape, same enrichment." },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["forecast", "anomaly", "series-features"],
+      specialFeatures: ["forecast", "anomaly", "band", "series-features"],
     },
   },
 

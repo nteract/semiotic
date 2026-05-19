@@ -206,7 +206,9 @@ export type {
   StreamScales,
   StreamLayout,
   CurveType,
-  CanvasRendererFn
+  CanvasRendererFn,
+  XYFrameAxisConfig,
+  BandConfig
 } from "./stream/types"
 
 export type { StreamRendererFn } from "./stream/renderers/types"

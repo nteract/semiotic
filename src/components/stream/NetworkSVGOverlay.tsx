@@ -143,9 +143,10 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
           x={totalWidth / 2}
           y={16}
           textAnchor="middle"
-          fontSize={14}
           fontWeight={600}
           fill="currentColor"
+          className="semiotic-chart-title"
+          style={{ fontSize: "var(--semiotic-title-font-size, 14px)" }}
         >
           {title}
         </text>

@@ -100,6 +100,8 @@ export interface RealtimeLineChartProps<TDatum extends Datum = Datum> {
   selection?: SelectionConfig
   /** Show a loading skeleton placeholder */
   loading?: boolean
+  /** Custom content rendered in place of the default skeleton while `loading` is true. */
+  loadingContent?: React.ReactNode | false
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: ReactNode | false
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
@@ -196,6 +198,7 @@ export const RealtimeLineChart = forwardRef(
       onObservation,
       chartId,
       loading,
+      loadingContent,
       emptyContent,
       emphasis,
       legendPosition: legendPositionProp,
@@ -239,7 +242,7 @@ export const RealtimeLineChart = forwardRef(
     }), [])
 
     // ── Loading / empty states (computed early, returned after all hooks) ───
-    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1])
+    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1], loadingContent)
     const emptyEl = !loadingEl ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent) : null
 
     const lineStyle: LineStyle = { stroke, strokeWidth, strokeDasharray }

@@ -172,6 +172,15 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
     ...(theme.typography.legendSize != null ? { "--semiotic-legend-font-size": `${theme.typography.legendSize}px` } : {}),
     ...(theme.typography.titleFontSize != null ? { "--semiotic-title-font-size": `${theme.typography.titleFontSize}px` } : {}),
     ...(theme.typography.tickFontFamily != null ? { "--semiotic-tick-font-family": theme.typography.tickFontFamily } : {}),
+    // Axis tick + label font sizes — emitted from the canonical
+    // typography fields (`tickSize`, `labelSize`) so consumers can
+    // override either via theme OR via a CSS-var override on any DOM
+    // ancestor (`<div style={{ "--semiotic-tick-font-size": "14px" }}>`).
+    // SVGOverlay reads these vars via inline `style={{ fontSize: var(...) }}`
+    // with the literal default as the fallback — overriding the var
+    // wins without needing `!important`.
+    ...(theme.typography.tickSize != null ? { "--semiotic-tick-font-size": `${theme.typography.tickSize}px` } : {}),
+    ...(theme.typography.labelSize != null ? { "--semiotic-axis-label-font-size": `${theme.typography.labelSize}px` } : {}),
     // ── Semantic role CSS variables ────────────────────────────────────
     // `secondary` and `surface` are documented on SemioticTheme as falling
     // back to `primary` / `background` when unset — always emitted so

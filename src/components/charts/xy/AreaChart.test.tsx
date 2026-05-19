@@ -230,6 +230,31 @@ describe("AreaChart", () => {
       )
       expect(lastXYFrameProps.tooltipMode).toBeUndefined()
     })
+
+    it("default tooltip surfaces band values when band is configured", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart
+            data={[{ x: 1, y: 10, lo: 5, hi: 15 }]}
+            band={{ y0Accessor: "lo", y1Accessor: "hi" }}
+          />
+        </TooltipProvider>
+      )
+      const tooltipFn = lastXYFrameProps.tooltipContent
+      const node = tooltipFn({
+        data: {
+          x: 1, y: 10, lo: 5, hi: 15,
+          band: { y0: 5, y1: 15 },
+          bands: [{ y0: 5, y1: 15 }],
+        },
+        x: 0, y: 0,
+      })
+      const { container } = render(<TooltipProvider>{node}</TooltipProvider>)
+      expect(container.textContent).toContain("lo:")
+      expect(container.textContent).toContain("hi:")
+      expect(container.textContent).toContain("5")
+      expect(container.textContent).toContain("15")
+    })
   })
 
   // ── seriesFeatures (forecast / anomaly) ────────────────────────────────

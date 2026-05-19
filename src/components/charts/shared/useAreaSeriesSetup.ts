@@ -40,7 +40,7 @@ import { wrapStyleWithSelection } from "./selectionUtils"
 import { mergeShapeStyle } from "./mergeShapeStyle"
 import { getColor } from "./colorUtils"
 import { DEFAULT_COLOR } from "./hooks"
-import { buildDefaultTooltip, accessorName } from "./tooltipUtils"
+import { buildDefaultTooltip, accessorName, bandTooltipFields } from "./tooltipUtils"
 import type { HoverData } from "../../stream/types"
 
 export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
@@ -93,6 +93,9 @@ export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
   /** Field used to label the series row in the default tooltip.
    *  Typically `areaBy ?? colorBy`. */
   groupField?: Accessor<string> | ChartAccessor<TDatum, string>
+  /** Optional band prop — when set, the default tooltip surfaces a
+   *  pair of rows per band (low + high). Threaded through verbatim. */
+  band?: unknown
 }
 
 export interface AreaSeriesSetupResult<TDatum extends Datum = Datum> {
@@ -244,7 +247,8 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
     { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
     { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat])
+    ...bandTooltipFields(options.band, yFormat),
+  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat, options.band])
 
   return { flattenedData, lineStyle, pointStyle, defaultTooltipContent }
 }

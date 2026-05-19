@@ -86,6 +86,23 @@ describe("ThemeProvider", () => {
     expect(wrapper.style.getPropertyValue("--semiotic-text")).toBe(DARK_THEME.colors.text)
   })
 
+  it("emits --semiotic-tick-font-size and --semiotic-axis-label-font-size from typography", () => {
+    const { container } = render(
+      <ThemeProvider theme="dark">
+        <div>chart</div>
+      </ThemeProvider>
+    )
+    const wrapper = container.firstElementChild as HTMLElement
+    // Default theme typography ships tickSize and labelSize. Both should
+    // surface as CSS vars consumable by SVGOverlay's inline-style refs.
+    expect(wrapper.style.getPropertyValue("--semiotic-tick-font-size")).toBe(
+      `${DARK_THEME.typography.tickSize}px`
+    )
+    expect(wrapper.style.getPropertyValue("--semiotic-axis-label-font-size")).toBe(
+      `${DARK_THEME.typography.labelSize}px`
+    )
+  })
+
   it("initializes partial object themes against their mode base", () => {
     const seen: SemioticTheme[] = []
 

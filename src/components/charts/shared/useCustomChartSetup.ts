@@ -120,6 +120,7 @@ interface DataSetupOptions extends ScaffoldOptions {
   onClick?: (datum: any, ev: { x: number; y: number }) => void
   chartId?: string
   loading?: boolean
+  loadingContent?: ReactNode | false
   emptyContent?: ReactNode
 }
 
@@ -168,6 +169,7 @@ export function useCustomChartSetup<TFrameHandle>(
     userMargin: normalizedMargin,
     marginDefaults: resolved.marginDefaults,
     loading: options.loading,
+    loadingContent: options.loadingContent,
     emptyContent: options.emptyContent,
     width: resolved.width,
     height: resolved.height,

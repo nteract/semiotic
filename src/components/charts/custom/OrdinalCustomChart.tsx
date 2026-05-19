@@ -105,6 +105,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     linkedHover,
     chartId,
     loading,
+    loadingContent,
     emptyContent,
     frameProps = {},
   } = props
@@ -129,6 +130,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     onClick,
     chartId,
     loading,
+    loadingContent,
     emptyContent,
     margin: userMargin,
     width: props.width,

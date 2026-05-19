@@ -129,12 +129,13 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     onClick,
     chartId,
     loading,
+    loadingContent,
     emptyContent,
   } = props
 
   const { width, height, enableHover, showGrid, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
-  const loadingEl = renderLoadingState(loading, width, height)
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = useMemo(() => filterSparseArray(data), [data])

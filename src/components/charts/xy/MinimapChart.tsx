@@ -316,11 +316,12 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     yExtent,
     frameProps = {},
     loading,
+    loadingContent,
     emptyContent,
   } = props
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height)
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
   const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
 
   const safeData = useMemo(() => filterSparseArray(data), [data])

@@ -139,14 +139,20 @@ describe("buildLineScene", () => {
     expect(lineNode?.colorThresholds).toBeUndefined()
   })
 
-  it("bounds areas render behind lines when getBounds is set", () => {
+  it("ribbon areas render behind lines (bounds + band both flow through ribbons)", () => {
     const data = [
       { x: 1, y: 10, bounds: 5 },
       { x: 2, y: 20, bounds: 3 },
       { x: 3, y: 30, bounds: 7 },
     ]
     const ctx = makeCtx({
-      getBounds: (d) => d.bounds,
+      ribbons: [{
+        kind: "bounds" as const,
+        getTop: (d: any) => d.y + d.bounds,
+        getBottom: (d: any) => d.y - d.bounds,
+        perSeries: true,
+        interactive: false,
+      }],
     })
     const nodes = buildLineScene(ctx, data)
 

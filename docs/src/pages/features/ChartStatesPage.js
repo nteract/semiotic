@@ -161,6 +161,38 @@ export default function ChartStatesPage() {
         language="jsx"
       />
 
+      <h3 id="loading-content">Custom Loading UI (loadingContent)</h3>
+
+      <p>
+        The default skeleton is a stack of pulsing bars. For branded
+        loading states, progress text, or a spinner, pass a{" "}
+        <code>loadingContent</code> ReactNode — it renders in place of the
+        skeleton, wrapped in the same sized container so the chart slot
+        stays reserved. Pass <code>loadingContent=&#123;false&#125;</code>{" "}
+        to suppress the loading UI entirely (an outer wrapper's loading
+        state takes over).
+      </p>
+
+      <CodeBlock
+        code={`// Branded loading text
+<LineChart
+  data={null}
+  loading={isLoading}
+  loadingContent={<div>Fetching analytics…</div>}
+/>
+
+// Spinner instead of the skeleton
+<BarChart
+  data={null}
+  loading={isLoading}
+  loadingContent={<MySpinner />}
+/>
+
+// Let the parent component handle loading entirely
+<LineChart loading={isLoading} loadingContent={false} />`}
+        language="jsx"
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Error State */}
       {/* ----------------------------------------------------------------- */}

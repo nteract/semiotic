@@ -115,6 +115,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     onClick,
     chartId,
     loading,
+    loadingContent,
     legendInteraction,
     stroke,
     strokeWidth,
@@ -154,6 +155,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     userMargin,
     width, height,
     loading,
+    loadingContent,
     // No emptyContent gate — `data` is a hierarchy root validated
     // separately by validateObjectData, not the array-empty path.
   })

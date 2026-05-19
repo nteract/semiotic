@@ -2,16 +2,17 @@ import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Line scene builder — produces LineSceneNode[] from grouped data.
  *
- * Handles: color thresholds from annotations, bounds/envelope areas,
- * and curve type attachment for canvas interpolation.
+ * Handles: color thresholds from annotations, ribbon envelopes
+ * (boundsAccessor + band), and curve type attachment for canvas
+ * interpolation.
  *
- * Dependencies: SceneGraph (buildLineNode), boundsScene (buildBoundsForGroup)
+ * Dependencies: SceneGraph (buildLineNode), ribbonScene (buildRibbon*)
  * Consumed by: PipelineStore.buildSceneNodes (chartType "line")
  */
 import type { SceneNode } from "../types"
 import { buildLineNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
-import { buildBoundsForGroup } from "./boundsScene"
+import { buildAggregateRibbons, buildPerSeriesRibbons, partitionRibbons } from "./ribbonScene"
 import { emitPointNodes } from "./emitPointNodes"
 
 export function buildLineScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
@@ -27,11 +28,19 @@ export function buildLineScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
       thresholdType: (a.thresholdType || "greater") as "greater" | "lesser"
     }))
 
-  // Build bounds areas first so they render behind lines
-  if (ctx.getBounds) {
-    for (const g of groups) {
-      const boundsNode = buildBoundsForGroup(ctx, g.data, g.key)
-      if (boundsNode) nodes.push(boundsNode)
+  // Ribbons (bounds + band) paint first so they sit underneath the lines.
+  // The PipelineStore composes both public envelope APIs into a single
+  // resolvedRibbons array; scene-level dispatch only needs to know
+  // whether each ribbon is per-series or aggregate.
+  if (ctx.ribbons && ctx.ribbons.length > 0) {
+    const { perSeries, aggregate } = partitionRibbons(ctx.ribbons)
+    if (aggregate.length > 0) {
+      nodes.push(...buildAggregateRibbons(ctx, data, aggregate))
+    }
+    if (perSeries.length > 0) {
+      for (const g of groups) {
+        nodes.push(...buildPerSeriesRibbons(ctx, g.data, g.key, perSeries))
+      }
     }
   }
 

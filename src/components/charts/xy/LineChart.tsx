@@ -4,14 +4,14 @@ import * as React from "react"
 import { useMemo, useCallback, useState, useEffect, forwardRef, useRef } from "react"
 import { filterSparseArray } from "../shared/sparseArray"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, BandConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
+import { buildDefaultTooltip, accessorName, bandTooltipFields } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -221,6 +221,31 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
   forecast?: ForecastConfig
 
   /**
+   * Asymmetric min/max band(s) drawn under the line. Differs from
+   * `forecast`/`anomaly` (computed envelopes around a series) by being
+   * pure data passthrough — provide `y0Accessor` / `y1Accessor` and the
+   * band is drawn between them at each x.
+   *
+   * Pass an array for percentile fans (e.g. p25/p75 on top of p10/p90).
+   * Each band participates in y-extent auto-derivation, so a tall band
+   * can never get clipped. The hovered datum is enriched with
+   * `band: { y0, y1 }` (first band) and `bands: [...]` (all bands) so
+   * tooltip functions can read the envelope without re-running the
+   * accessors.
+   *
+   * @example
+   * ```tsx
+   * <LineChart
+   *   data={[{ time, average, min, max }, ...]}
+   *   xAccessor="time"
+   *   yAccessor="average"
+   *   band={{ y0Accessor: "min", y1Accessor: "max" }}
+   * />
+   * ```
+   */
+  band?: BandConfig<TDatum> | Array<BandConfig<TDatum>>
+
+  /**
    * Fixed x domain `[min, max]`. Either bound may be `undefined` to leave
    * that side data-derived.
    */
@@ -363,6 +388,7 @@ export const LineChart = forwardRef(
     gapStrategy = "break",
     anomaly,
     forecast,
+    band,
     xExtent,
     yExtent,
     frameProps = {},
@@ -374,6 +400,7 @@ export const LineChart = forwardRef(
     hoverRadius,
     chartId,
     loading,
+    loadingContent,
     emptyContent,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -692,6 +719,7 @@ export const LineChart = forwardRef(
     userMargin,
     marginDefaults: directLabelMarginDefaults,
     loading,
+    loadingContent,
     emptyContent,
     width,
     height,
@@ -849,7 +877,14 @@ export const LineChart = forwardRef(
     { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
     { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat])
+    // Band rows — surfaced automatically when `band` is configured so a
+    // consumer that hasn't supplied a custom tooltip still sees the
+    // envelope values. The hovered datum carries `band` (first config)
+    // and `bands: [...]` from StreamXYFrame's enrichment path; we read
+    // them via function accessors here. Multi-band shows one row pair
+    // per configured band, labeled with the accessor name when string.
+    ...bandTooltipFields(band, yFormat),
+  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat, band])
 
   // Validate data (computed here, guard deferred to after all hooks)
   // When data is in line objects format, validate against the coordinates
@@ -906,6 +941,7 @@ export const LineChart = forwardRef(
       ? { yExtent }
       : envelopeYExtent ? { yExtent: envelopeYExtent } : {}),
     groupAccessor: gapStrategy === "break" && hasGaps ? "_gapSegment" : effectiveGroupAccessor || undefined,
+    ...(band && { band: band as StreamXYFrameProps["band"] }),
     curve,
     lineStyle,
     ...(showPoints && { pointStyle }),

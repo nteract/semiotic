@@ -14,6 +14,7 @@
       "specialFeatures": [
         "forecast",
         "anomaly",
+        "band",
         "series-features"
       ]
     },
@@ -97,6 +98,7 @@
       "specialFeatures": [
         "forecast",
         "anomaly",
+        "band",
         "series-features",
         "gap-handling",
         "direct-labels",

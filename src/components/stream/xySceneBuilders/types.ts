@@ -8,6 +8,7 @@ import type { AreaGradientConfig } from "./areaGradient"
  * accessing PipelineStore instance fields directly.
  */
 import type { StreamScales, Style, CurveType, BarStyle, ThemeSemanticColors } from "../types"
+import type { ResolvedRibbon } from "./ribbonScene"
 
 export interface XYSceneContext {
   scales: StreamScales
@@ -20,7 +21,10 @@ export interface XYSceneContext {
   getGroup?: (d: Datum) => string
   getCategory?: (d: Datum) => string
   getPointId?: (d: Datum) => string
-  getBounds?: (d: Datum) => number | null
+  /** Resolved ribbons — unified list from `boundsAccessor` + `band`. The
+   *  scene builders iterate this once instead of carrying two parallel
+   *  code paths. Empty when neither prop is set. */
+  ribbons?: ResolvedRibbon[]
   getOpen?: (d: Datum) => number
   getHigh?: (d: Datum) => number
   getLow?: (d: Datum) => number

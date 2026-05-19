@@ -351,11 +351,18 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
         )}
 
         {/* Axes */}
-        {showAxes && scales && !isRadial && (
+        {showAxes && scales && !isRadial && (() => {
+          // Per-axis font-size resolution — see SVGOverlay for the
+          // rationale. CSS var with literal fallback so consumers
+          // override via the var rather than fighting inline specificity.
+          const tickFontStyle = { fontSize: "var(--semiotic-tick-font-size, 10px)" }
+          const axisLabelFontStyle = { fontSize: "var(--semiotic-axis-label-font-size, 12px)" }
+          return (
           <g className="ordinal-axes">
             {isHorizontal ? (
               <>
                 {/* Horizontal: categories on left, values on bottom */}
+                <g className="semiotic-axis semiotic-axis-left" data-orient="left">
                 {/* Category axis baseline (left) — skipped when underlayRendered */}
                 {!underlayRendered && <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
                 {categoryTicks.map((tick, i) => (
@@ -366,15 +373,15 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                         x={-8}
                         textAnchor="end"
                         dominantBaseline="middle"
-                        fontSize={10}
                         fill="var(--semiotic-text-secondary, #666)"
-                        style={{ userSelect: "none" }}
+                        className="semiotic-axis-tick"
+                        style={{ userSelect: "none", ...tickFontStyle }}
                       >
                         {tick.label}
                       </text>
                     ) : (
                       <foreignObject x={-68} y={-12} width={60} height={24} style={{ overflow: "visible" }}>
-                        <div style={{ textAlign: "right", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                        <div style={{ textAlign: "right", userSelect: "none", ...tickFontStyle }}>{tick.label}</div>
                       </foreignObject>
                     )}
                   </g>
@@ -384,15 +391,17 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     x={-margin.left + 15}
                     y={height / 2}
                     textAnchor="middle"
-                    fontSize={12}
                     fill="var(--semiotic-text, #333)"
                     transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
-                    style={{ userSelect: "none" }}
+                    className="semiotic-axis-label"
+                    style={{ userSelect: "none", ...axisLabelFontStyle }}
                   >
                     {oLabel}
                   </text>
                 )}
+                </g>
 
+                <g className="semiotic-axis semiotic-axis-bottom" data-orient="bottom">
                 {/* Value axis baseline (bottom) — skipped when underlayRendered */}
                 {/* Value axis baseline (bottom) + zero line if different */}
                 {!underlayRendered && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
@@ -413,9 +422,9 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                       <text
                         y={18}
                         textAnchor={anchor}
-                        fontSize={10}
                         fill="var(--semiotic-text-secondary, #666)"
-                        style={{ userSelect: "none" }}
+                        className="semiotic-axis-tick"
+                        style={{ userSelect: "none", ...tickFontStyle }}
                       >
                         {tick.label}
                       </text>
@@ -427,17 +436,19 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     x={width / 2}
                     y={height + 40}
                     textAnchor="middle"
-                    fontSize={12}
                     fill="var(--semiotic-text, #333)"
-                    style={{ userSelect: "none" }}
+                    className="semiotic-axis-label"
+                    style={{ userSelect: "none", ...axisLabelFontStyle }}
                   >
                     {rLabel}
                   </text>
                 )}
+                </g>
               </>
             ) : (
               <>
                 {/* Vertical: categories on bottom, values on left */}
+                <g className="semiotic-axis semiotic-axis-bottom" data-orient="bottom">
                 {/* Category axis baseline — drawn at rScale(0) to align with bar baseline, falls back to chart bottom */}
                 {!underlayRendered && (() => {
                   const zeroY = scales?.r ? scales.r(0) : height
@@ -451,15 +462,15 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                       <text
                         y={18}
                         textAnchor="middle"
-                        fontSize={10}
                         fill="var(--semiotic-text-secondary, #666)"
-                        style={{ userSelect: "none" }}
+                        className="semiotic-axis-tick"
+                        style={{ userSelect: "none", ...tickFontStyle }}
                       >
                         {tick.label}
                       </text>
                     ) : (
                       <foreignObject x={-30} y={6} width={60} height={24} style={{ overflow: "visible" }}>
-                        <div style={{ textAlign: "center", fontSize: 10, userSelect: "none" }}>{tick.label}</div>
+                        <div style={{ textAlign: "center", userSelect: "none", ...tickFontStyle }}>{tick.label}</div>
                       </foreignObject>
                     )}
                   </g>
@@ -469,14 +480,16 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     x={width / 2}
                     y={height + 40}
                     textAnchor="middle"
-                    fontSize={12}
                     fill="var(--semiotic-text, #333)"
-                    style={{ userSelect: "none" }}
+                    className="semiotic-axis-label"
+                    style={{ userSelect: "none", ...axisLabelFontStyle }}
                   >
                     {oLabel}
                   </text>
                 )}
+                </g>
 
+                <g className="semiotic-axis semiotic-axis-left" data-orient="left">
                 {/* Value axis baseline (left) — skipped when underlayRendered */}
                 {!underlayRendered && <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
                 {valueTicks.map((tick, i) => (
@@ -486,9 +499,9 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                       x={-8}
                       textAnchor="end"
                       dominantBaseline="middle"
-                      fontSize={10}
                       fill="var(--semiotic-text-secondary, #666)"
-                      style={{ userSelect: "none" }}
+                      className="semiotic-axis-tick"
+                      style={{ userSelect: "none", ...tickFontStyle }}
                     >
                       {tick.label}
                     </text>
@@ -499,18 +512,20 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     x={-margin.left + 15}
                     y={height / 2}
                     textAnchor="middle"
-                    fontSize={12}
                     fill="var(--semiotic-text, #333)"
                     transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
-                    style={{ userSelect: "none" }}
+                    className="semiotic-axis-label"
+                    style={{ userSelect: "none", ...axisLabelFontStyle }}
                   >
                     {rLabel}
                   </text>
                 )}
+                </g>
               </>
             )}
           </g>
-        )}
+          )
+        })()}
 
         {/* Annotations */}
         {renderedAnnotations}
@@ -527,10 +542,10 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
           x={totalWidth / 2}
           y={20}
           textAnchor="middle"
-          fontSize={14}
           fontWeight="bold"
           fill="var(--semiotic-text, #333)"
-          style={{ userSelect: "none" }}
+          className="semiotic-chart-title"
+          style={{ userSelect: "none", fontSize: "var(--semiotic-title-font-size, 14px)" }}
         >
           {typeof title === "string" ? title : null}
         </text>

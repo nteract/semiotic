@@ -91,6 +91,8 @@ export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge exten
 
   // ── Loading / empty states ───────────────────────────────────────
   loading?: boolean
+  /** Custom content rendered in place of the default skeleton while `loading` is true. */
+  loadingContent?: ReactNode | false
   emptyContent?: ReactNode | false
   /**
    * Which array drives the empty-state check. `"edges"` (default)
@@ -226,6 +228,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     width,
     height,
     loading,
+    loadingContent,
     emptyContent,
     emptyDataKey = "edges",
   } = input
@@ -238,7 +241,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
 
   // ── Loading / empty states ──────────────────────────────────────
   // Computed up front so the caller can early-return AFTER all hooks.
-  const loadingEl = renderLoadingState(loading, width, height)
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
   // Empty state defaults to keying off edges (Sankey/Chord/PSankey
   // shape) but switches to nodes for charts where node presence is
   // the user-data signal (ForceDirectedGraph). The undefined-vs-empty

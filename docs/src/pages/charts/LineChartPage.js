@@ -112,6 +112,50 @@ function AnimateLineDemo() {
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
+// Throughput series with an asymmetric min/max envelope per sample —
+// the average rides through the middle, the band shows the spread.
+const bandData = [
+  { hour: 0,  avg:  82, min:  64, max: 102 },
+  { hour: 1,  avg:  74, min:  55, max:  98 },
+  { hour: 2,  avg:  66, min:  48, max:  85 },
+  { hour: 3,  avg:  60, min:  42, max:  78 },
+  { hour: 4,  avg:  64, min:  49, max:  80 },
+  { hour: 5,  avg:  78, min:  60, max:  96 },
+  { hour: 6,  avg:  98, min:  78, max: 122 },
+  { hour: 7,  avg: 132, min: 110, max: 161 },
+  { hour: 8,  avg: 168, min: 142, max: 197 },
+  { hour: 9,  avg: 184, min: 158, max: 220 },
+  { hour: 10, avg: 176, min: 150, max: 211 },
+  { hour: 11, avg: 162, min: 138, max: 195 },
+  { hour: 12, avg: 158, min: 134, max: 188 },
+  { hour: 13, avg: 166, min: 142, max: 197 },
+  { hour: 14, avg: 170, min: 146, max: 205 },
+  { hour: 15, avg: 174, min: 148, max: 210 },
+  { hour: 16, avg: 168, min: 142, max: 199 },
+  { hour: 17, avg: 152, min: 128, max: 182 },
+  { hour: 18, avg: 138, min: 116, max: 165 },
+  { hour: 19, avg: 124, min: 102, max: 149 },
+  { hour: 20, avg: 112, min:  90, max: 137 },
+  { hour: 21, avg: 100, min:  80, max: 124 },
+  { hour: 22, avg:  92, min:  72, max: 115 },
+  { hour: 23, avg:  86, min:  68, max: 108 },
+]
+
+// Percentile fan — two nested bands (p10-p90 outer, p25-p75 inner)
+// produce the classic forecasting / SLO ribbon visualization.
+const percentileFanData = [
+  { day: 0, value: 100, p10:  80, p25:  90, p75: 110, p90: 122 },
+  { day: 1, value: 105, p10:  82, p25:  93, p75: 117, p90: 130 },
+  { day: 2, value: 110, p10:  84, p25:  96, p75: 124, p90: 138 },
+  { day: 3, value: 115, p10:  85, p25:  99, p75: 131, p90: 147 },
+  { day: 4, value: 120, p10:  86, p25: 102, p75: 138, p90: 155 },
+  { day: 5, value: 125, p10:  86, p25: 104, p75: 146, p90: 164 },
+  { day: 6, value: 130, p10:  87, p25: 107, p75: 153, p90: 172 },
+  { day: 7, value: 135, p10:  88, p25: 110, p75: 160, p90: 180 },
+  { day: 8, value: 140, p10:  88, p25: 112, p75: 168, p90: 188 },
+  { day: 9, value: 145, p10:  89, p25: 115, p75: 175, p90: 197 },
+]
+
 const gapData = [
   { month: 1, revenue: 12000, product: "Widget" },
   { month: 2, revenue: 18000, product: "Widget" },
@@ -146,6 +190,7 @@ const lineChartProps = [
   { name: "showLegend", type: "boolean", required: false, default: "true (multi-line)", description: "Show a legend. Defaults to true when multiple lines are present." },
   { name: "tooltip", type: '"multi" | object | function', required: false, default: null, description: 'Tooltip configuration or render function. Pass "multi" to show every series value at the hovered x position.' },
   { name: "gapStrategy", type: '"break" | "interpolate" | "zero"', required: false, default: '"break"', description: 'How to handle null/undefined/NaN values in data. "break" splits the line at gaps, "interpolate" connects across gaps, "zero" drops to zero.' },
+  { name: "band", type: "BandConfig | BandConfig[]", required: false, default: null, description: 'Asymmetric min/max envelope drawn under the line. `{ y0Accessor, y1Accessor, style?, perSeries?, interactive? }` or an array for percentile fans. Participates in y-extent auto-derivation. Hovered datum gets `band: {y0,y1}` and `bands: [...]` for tooltip access. Distinct from `boundsAccessor` (symmetric ±offset).' },
   { name: "directLabel", type: "boolean", required: false, default: "false", description: "Place category labels at line endpoints instead of using a separate legend. Auto-hides the legend when enabled." },
   { name: "legendInteraction", type: '"highlight" | "isolate" | "none"', required: false, default: '"none"', description: 'Legend interaction mode. "highlight" dims non-hovered categories to 30% opacity. "isolate" toggles category visibility on click.' },
   { name: "loading", type: "boolean", required: false, default: "false", description: "Show a skeleton loading placeholder instead of the chart." },
@@ -449,6 +494,129 @@ export default function LineChartPage() {
         the full range is covered. This is useful for forecasts, measurement
         uncertainty, or any scenario where you want to show a range around a
         trend.
+      </p>
+
+      <h3 id="band">Asymmetric Min/Max Bands (band)</h3>
+      <p>
+        When the upper and lower bounds are <em>not</em> symmetric around
+        the line value — throughput min/max ribbons, percentile spreads,
+        SLO ranges — use the <code>band</code> prop instead of{" "}
+        <code>boundsAccessor</code>. Pass <code>y0Accessor</code> and{" "}
+        <code>y1Accessor</code> for the bottom and top of the envelope.
+        The ribbon paints under the line, participates in the y-extent
+        auto-derivation so it can't clip, and is non-interactive by
+        default (hovers pass through to the line on top).
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: bandData,
+          xAccessor: "hour",
+          yAccessor: "avg",
+          curve: "monotoneX",
+          xLabel: "Hour",
+          yLabel: "Requests/sec",
+          band: {
+            y0Accessor: "min",
+            y1Accessor: "max",
+          },
+          tooltip: d => (
+            <div style={{ padding: 6 }}>
+              <div><strong>{d.hour}:00</strong></div>
+              <div>avg: {d.avg}</div>
+              <div>min: {d.band?.y0} / max: {d.band?.y1}</div>
+            </div>
+          ),
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `[
+  { hour: 0, avg: 82, min: 64, max: 102 },
+  // ...one row per hour with min/avg/max throughput
+]`,
+          band: `{
+  y0Accessor: "min",
+  y1Accessor: "max",
+}`,
+          tooltip: `d => (
+  <div>
+    <strong>{d.hour}:00</strong>
+    avg: {d.avg}
+    min: {d.band?.y0} / max: {d.band?.y1}
+  </div>
+)`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        The hovered datum is enriched with <code>band: {"{ y0, y1 }"}</code>
+        {" "}(first band) and <code>bands: [...]</code> (all bands), so
+        custom tooltip functions can render the envelope values without
+        re-running the accessors. The same enrichment flows through the
+        pointer hover path, multi-mode <code>allSeries</code> entries
+        (each series carries its own band values), and keyboard
+        navigation, so every interaction surface sees the same shape.
+      </p>
+
+      <p>
+        The <strong>default tooltip surfaces band values automatically</strong>{" "}
+        — pass a <code>band</code> prop without a custom <code>tooltip</code>{" "}
+        function and the rendered tooltip gains one row pair per band
+        (low + high). String accessors become the row labels; function
+        accessors fall back to <code>low</code> / <code>high</code>. The
+        default ribbon style is the parent line color at{" "}
+        <code>0.2</code> <code>fillOpacity</code>; override with{" "}
+        <code>band.style</code> for full control.
+      </p>
+
+      <p>
+        <strong>Percentile fan.</strong> Pass an array of bands to draw a
+        forecasting fan — outer band first, inner band second. Each layer
+        stacks visually so overlapping fills darken in the middle, which
+        is the standard percentile-ribbon aesthetic.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: percentileFanData,
+          xAccessor: "day",
+          yAccessor: "value",
+          curve: "monotoneX",
+          xLabel: "Day",
+          yLabel: "Projected value",
+          band: [
+            { y0Accessor: "p10", y1Accessor: "p90", style: { fill: "#6366f1", fillOpacity: 0.15, stroke: "none" } },
+            { y0Accessor: "p25", y1Accessor: "p75", style: { fill: "#6366f1", fillOpacity: 0.30, stroke: "none" } },
+          ],
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `[
+  { day: 0, value: 100, p10: 80, p25: 90, p75: 110, p90: 122 },
+  // ...one row per day with percentile columns
+]`,
+          band: `[
+  // Outer p10-p90 envelope drawn first (lighter)
+  { y0Accessor: "p10", y1Accessor: "p90",
+    style: { fill: "#6366f1", fillOpacity: 0.15, stroke: "none" } },
+  // Inner p25-p75 envelope on top (darker)
+  { y0Accessor: "p25", y1Accessor: "p75",
+    style: { fill: "#6366f1", fillOpacity: 0.30, stroke: "none" } },
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        When paired with <code>lineBy</code> /{" "}
+        <code>colorBy</code>, each band defaults to{" "}
+        <code>perSeries: true</code> — one ribbon per group, colored to
+        match its line. Set <code>perSeries: false</code> for a single
+        aggregate envelope (e.g. an aggregate min/max across all series).
+        Band y0/y1 values feed <code>yExtent</code> auto-derivation, so
+        a tall envelope can never get clipped; explicit{" "}
+        <code>yExtent</code> still wins.
       </p>
 
       {/* ----------------------------------------------------------------- */}

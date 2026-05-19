@@ -116,6 +116,8 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   transition?: TransitionConfig
   /** Show a loading skeleton placeholder */
   loading?: boolean
+  /** Custom content rendered in place of the default skeleton while `loading` is true. */
+  loadingContent?: React.ReactNode | false
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: ReactNode | false
   /** Brush configuration. `true` defaults to `{ dimension: "x", snap: "bin" }`. */
@@ -230,6 +232,7 @@ export const RealtimeHistogram = forwardRef(
       onObservation,
       chartId,
       loading,
+      loadingContent,
       emptyContent,
       emphasis,
       legendPosition: legendPositionProp,
@@ -344,7 +347,7 @@ export const RealtimeHistogram = forwardRef(
     }), [])
 
     // ── Loading / empty states (computed early, returned after all hooks) ───
-    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1])
+    const loadingEl = renderLoadingState(loading, resolvedSize[0], resolvedSize[1], loadingContent)
     const emptyEl = !loadingEl ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent) : null
 
     const barStyle: BarStyle = {}
