@@ -171,6 +171,13 @@ export function generatePage(shellHtml, routePath, blogMeta = null) {
 
   // JSON-LD injected here (not in source HTML) to avoid Parcel's jsonld transformer
   const llmsAlternate = '<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable documentation index" />'
+  // Atom feed alternate — injected here (not in source HTML) so Parcel's
+  // HTML packager doesn't try to resolve the absolute `/blog/feed.xml`
+  // path during build. Same pattern as the llms.txt alternate above.
+  // Absolute path matters so prerendered nested routes (e.g.
+  // `/charts/line-chart/`) don't end up pointing at
+  // `/charts/line-chart/blog/feed.xml`.
+  const blogFeedAlternate = '<link rel="alternate" type="application/atom+xml" title="Semiotic Blog" href="/blog/feed.xml" />'
   const jsonLd = '<script type="application/ld+json" data-jsonld="semiotic">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic3.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
   const canonicalUrl = routePath ? `${SITE_URL}/${routePath}` : SITE_URL
   let normalizedShell = shellHtml
@@ -179,11 +186,12 @@ export function generatePage(shellHtml, routePath, blogMeta = null) {
     previousShell = normalizedShell
     normalizedShell = normalizedShell
       .replace(/<link\s+rel=["']?alternate["']?[^>]*href=["']?\/llms\.txt[^>]*>/g, "")
+      .replace(/<link\s+rel=["']?alternate["']?[^>]*href=["']?\/blog\/feed\.xml[^>]*>/g, "")
       .replace(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])(?=[^>]*\bdata-jsonld=["']semiotic["'])[^>]*>[\s\S]*?<\/script>/g, "")
   } while (normalizedShell !== previousShell)
 
   let html = normalizedShell
-    .replace(/<title>[^<]*<\/title>/, `${llmsAlternate}<title>${fullTitle}</title>${jsonLd}`)
+    .replace(/<title>[^<]*<\/title>/, `${llmsAlternate}${blogFeedAlternate}<title>${fullTitle}</title>${jsonLd}`)
     .replace(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>${navHtml}</noscript>`)
     .replace(/<meta\b(?=[^>]*\bproperty=["']?og:url["']?)[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`)
     .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`)
