@@ -27,6 +27,7 @@ import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { composeOverlays } from "./composeOverlays"
 import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
+import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
@@ -912,30 +913,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const posX = isMulti || !hit ? chartX : hit.x
       const posY = isMulti || !hit ? chartY : hit.y
 
-      let hover: HoverData = buildHoverData(hit?.datum ?? {}, posX, posY)
-
       // Band enrichment: when band(s) are configured, evaluate accessors
-      // on the hovered datum and attach the synthesized values so user
-      // tooltip functions can read `datum.band` / `datum.bands` without
-      // re-running the accessors themselves. Shallow-merge so we don't
-      // mutate the original data row. Skips when there is no real hit.
-      // Bounds-sourced ribbons are decorative and excluded from the
-      // tooltip contract — only ribbons with `kind === "band"` enrich.
-      if (hit?.datum && store.resolvedRibbons && store.resolvedRibbons.length > 0) {
-        const evaluated: Array<{ y0: number; y1: number }> = []
-        for (const r of store.resolvedRibbons) {
-          if (r.kind !== "band") continue
-          const y1 = r.getTop(hit.datum)
-          const y0 = r.getBottom(hit.datum)
-          if (Number.isFinite(y0) && Number.isFinite(y1)) {
-            evaluated.push({ y0, y1 })
-          }
-        }
-        if (evaluated.length > 0) {
-          const enriched: Datum = { ...hit.datum, band: evaluated[0], bands: evaluated }
-          hover = buildHoverData(enriched, posX, posY)
-        }
-      }
+      // on the hovered datum and attach `datum.band` / `datum.bands` so
+      // user tooltip functions and the default-tooltip band rows can
+      // read the envelope values directly. Shallow-merge so we don't
+      // mutate the original data row.
+      const hitDatum = hit?.datum
+        ? enrichDatumWithBand(hit.datum, store.resolvedRibbons)
+        : {}
+      let hover: HoverData = buildHoverData(hitDatum, posX, posY)
 
       // Multi-tooltip mode: attach all series values at this X to the hover data.
       // Keep the interpolation generous for sparse paths, but range-bounded in
@@ -974,7 +960,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               value,
               valuePx: h.y,
               color: h.color || fallbackColor,
-              datum: h.datum,
+              // Each per-series datum gets its own band enrichment so
+              // multi-mode tooltips can read `s.datum.band` per series.
+              datum: enrichDatumWithBand(h.datum, store.resolvedRibbons),
             }
           })
         }
@@ -1069,7 +1057,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         kbFocusIndexRef.current = 0
         const point = graph.flat[0]
         focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-        const hover = navPointToHover(point)
+        // Band enrichment mirrors the pointer-hover path so keyboard
+        // users see the same `datum.band` / `datum.bands` enrichment.
+        const enrichedPoint = { ...point, datum: enrichDatumWithBand(point.datum, store.resolvedRibbons) }
+        const hover = navPointToHover(enrichedPoint)
         hoverRef.current = hover
         setHoverPoint(hover)
         if (customHoverBehavior) customHoverBehavior(hover)
@@ -1098,7 +1089,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       kbFocusIndexRef.current = next
       const point = graph.flat[next]
       focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      const hover = navPointToHover(point)
+      const enrichedPoint = { ...point, datum: enrichDatumWithBand(point.datum, store.resolvedRibbons) }
+      const hover = navPointToHover(enrichedPoint)
       hoverRef.current = hover
       setHoverPoint(hover)
       if (customHoverBehavior) customHoverBehavior(hover)

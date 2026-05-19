@@ -11,7 +11,7 @@ import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
+import { buildDefaultTooltip, accessorName, bandTooltipFields } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
@@ -877,7 +877,14 @@ export const LineChart = forwardRef(
     { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
     { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat])
+    // Band rows — surfaced automatically when `band` is configured so a
+    // consumer that hasn't supplied a custom tooltip still sees the
+    // envelope values. The hovered datum carries `band` (first config)
+    // and `bands: [...]` from StreamXYFrame's enrichment path; we read
+    // them via function accessors here. Multi-band shows one row pair
+    // per configured band, labeled with the accessor name when string.
+    ...bandTooltipFields(band, yFormat),
+  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat, band])
 
   // Validate data (computed here, guard deferred to after all hooks)
   // When data is in line objects format, validate against the coordinates

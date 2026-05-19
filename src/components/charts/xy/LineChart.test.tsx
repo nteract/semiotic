@@ -189,6 +189,65 @@ describe("LineChart", () => {
       expect(typeof lastXYFrameProps.tooltipContent).toBe("function")
     })
 
+    it("default tooltip surfaces band values when band is configured", () => {
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={[
+              { x: 1, y: 10, lo: 5, hi: 15 },
+              { x: 2, y: 20, lo: 12, hi: 28 },
+            ]}
+            band={{ y0Accessor: "lo", y1Accessor: "hi" }}
+          />
+        </TooltipProvider>
+      )
+      const tooltipFn = lastXYFrameProps.tooltipContent
+      // StreamXYFrame enriches the hovered datum with band/bands; render
+      // the default tooltip against that enriched shape.
+      const node = tooltipFn({
+        data: {
+          x: 1, y: 10, lo: 5, hi: 15,
+          band: { y0: 5, y1: 15 },
+          bands: [{ y0: 5, y1: 15 }],
+        },
+        x: 0, y: 0,
+      })
+      const { container } = render(<TooltipProvider>{node}</TooltipProvider>)
+      expect(container.textContent).toContain("lo:")
+      expect(container.textContent).toContain("5")
+      expect(container.textContent).toContain("hi:")
+      expect(container.textContent).toContain("15")
+    })
+
+    it("default tooltip surfaces all bands in a multi-band fan", () => {
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={[{ x: 1, y: 50, p10: 30, p25: 40, p75: 60, p90: 70 }]}
+            band={[
+              { y0Accessor: "p10", y1Accessor: "p90" },
+              { y0Accessor: "p25", y1Accessor: "p75" },
+            ]}
+          />
+        </TooltipProvider>
+      )
+      const tooltipFn = lastXYFrameProps.tooltipContent
+      const node = tooltipFn({
+        data: {
+          x: 1, y: 50,
+          band: { y0: 30, y1: 70 },
+          bands: [{ y0: 30, y1: 70 }, { y0: 40, y1: 60 }],
+        },
+        x: 0, y: 0,
+      })
+      const { container } = render(<TooltipProvider>{node}</TooltipProvider>)
+      // Each band emits one row pair labeled by its accessor names.
+      expect(container.textContent).toContain("p10")
+      expect(container.textContent).toContain("p90")
+      expect(container.textContent).toContain("p25")
+      expect(container.textContent).toContain("p75")
+    })
+
     it("forwards a single band config to the frame", () => {
       render(
         <TooltipProvider>

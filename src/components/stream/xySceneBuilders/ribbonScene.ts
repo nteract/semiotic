@@ -172,3 +172,37 @@ export function buildPerSeriesRibbons(
   }
   return nodes
 }
+
+/**
+ * Enrich a hovered datum with band values so user tooltips can read
+ * `datum.band = { y0, y1 }` (first band) and `datum.bands = [...]`
+ * (all bands). Returns a shallow copy so the original data row is
+ * never mutated.
+ *
+ * Bounds-sourced ribbons (`kind: "bounds"`) are intentionally excluded
+ * — they're decorative, and the tooltip enrichment contract is
+ * band-only. Returns the input datum unchanged when no band-kind
+ * ribbons are configured or none produce finite values at this datum.
+ *
+ * Consumed by every code path that produces a `HoverData` in
+ * StreamXYFrame: pointer hover, multi-mode per-series datum, and
+ * keyboard navigation.
+ */
+export function enrichDatumWithBand(
+  datum: Datum | null | undefined,
+  ribbons: ResolvedRibbon[] | undefined
+): Datum {
+  if (!datum) return (datum ?? {}) as Datum
+  if (!ribbons || ribbons.length === 0) return datum
+  const evaluated: Array<{ y0: number; y1: number }> = []
+  for (const r of ribbons) {
+    if (r.kind !== "band") continue
+    const y1 = r.getTop(datum)
+    const y0 = r.getBottom(datum)
+    if (Number.isFinite(y0) && Number.isFinite(y1)) {
+      evaluated.push({ y0, y1 })
+    }
+  }
+  if (evaluated.length === 0) return datum
+  return { ...datum, band: evaluated[0], bands: evaluated }
+}

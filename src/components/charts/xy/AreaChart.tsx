@@ -418,6 +418,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     areaOpacity, showLine, lineWidth, showPoints, pointRadius,
     xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat,
     groupField: areaBy || colorBy,
+    band,
   })
 
   // Validate data (after all hooks)

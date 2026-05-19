@@ -553,9 +553,21 @@ export default function LineChartPage() {
         The hovered datum is enriched with <code>band: {"{ y0, y1 }"}</code>
         {" "}(first band) and <code>bands: [...]</code> (all bands), so
         custom tooltip functions can render the envelope values without
-        re-running the accessors. The default ribbon style is the parent
-        line color at <code>0.2</code> <code>fillOpacity</code>; override
-        with <code>band.style</code> for full control.
+        re-running the accessors. The same enrichment flows through the
+        pointer hover path, multi-mode <code>allSeries</code> entries
+        (each series carries its own band values), and keyboard
+        navigation, so every interaction surface sees the same shape.
+      </p>
+
+      <p>
+        The <strong>default tooltip surfaces band values automatically</strong>{" "}
+        — pass a <code>band</code> prop without a custom <code>tooltip</code>{" "}
+        function and the rendered tooltip gains one row pair per band
+        (low + high). String accessors become the row labels; function
+        accessors fall back to <code>low</code> / <code>high</code>. The
+        default ribbon style is the parent line color at{" "}
+        <code>0.2</code> <code>fillOpacity</code>; override with{" "}
+        <code>band.style</code> for full control.
       </p>
 
       <p>

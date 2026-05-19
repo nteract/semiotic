@@ -7,6 +7,7 @@ import {
   resolveValue,
   buildDefaultTooltip,
   buildOrdinalTooltip,
+  bandTooltipFields,
 } from "./tooltipUtils"
 import type { Datum } from "./datumTypes"
 
@@ -149,6 +150,102 @@ describe("buildDefaultTooltip", () => {
     const node = fn(hover({ x: 1 }))
     const { container } = render(<>{node}</>)
     expect(container.querySelector(".semiotic-tooltip")).not.toBeNull()
+  })
+})
+
+// ── bandTooltipFields ────────────────────────────────────────────────────
+
+describe("bandTooltipFields", () => {
+  it("returns an empty list when band is not configured", () => {
+    expect(bandTooltipFields(undefined)).toEqual([])
+    expect(bandTooltipFields(null)).toEqual([])
+  })
+
+  it("emits one row pair per band — string accessors become labels", () => {
+    const fields = bandTooltipFields({ y0Accessor: "min", y1Accessor: "max" })
+    expect(fields).toHaveLength(2)
+    expect(fields[0].label).toBe("min")
+    expect(fields[1].label).toBe("max")
+  })
+
+  it("falls back to 'low'/'high' for function accessors", () => {
+    const fields = bandTooltipFields({
+      y0Accessor: (d: any) => d.lo,
+      y1Accessor: (d: any) => d.hi,
+    })
+    expect(fields[0].label).toBe("low")
+    expect(fields[1].label).toBe("high")
+  })
+
+  it("emits one row pair per BandConfig in an array", () => {
+    const fields = bandTooltipFields([
+      { y0Accessor: "p10", y1Accessor: "p90" },
+      { y0Accessor: "p25", y1Accessor: "p75" },
+    ])
+    expect(fields).toHaveLength(4)
+    expect(fields.map(f => f.label)).toEqual(["p10", "p90", "p25", "p75"])
+  })
+
+  it("reads from datum.bands[i] when rendered through the default tooltip", () => {
+    const fields = bandTooltipFields({ y0Accessor: "min", y1Accessor: "max" })
+    const fn = buildDefaultTooltip(fields)
+    const enrichedDatum = {
+      band: { y0: 5, y1: 15 },
+      bands: [{ y0: 5, y1: 15 }],
+    }
+    const node = fn(hover(enrichedDatum))
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("min:")
+    expect(container.textContent).toContain("5")
+    expect(container.textContent).toContain("max:")
+    expect(container.textContent).toContain("15")
+  })
+
+  it("multi-band tooltips render values from each band entry", () => {
+    const fields = bandTooltipFields([
+      { y0Accessor: "p10", y1Accessor: "p90" },
+      { y0Accessor: "p25", y1Accessor: "p75" },
+    ])
+    const fn = buildDefaultTooltip(fields)
+    const enrichedDatum = {
+      band: { y0: 10, y1: 90 },
+      bands: [
+        { y0: 10, y1: 90 },
+        { y0: 25, y1: 75 },
+      ],
+    }
+    const node = fn(hover(enrichedDatum))
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("p10")
+    expect(container.textContent).toContain("10")
+    expect(container.textContent).toContain("p25")
+    expect(container.textContent).toContain("25")
+    expect(container.textContent).toContain("p90")
+    expect(container.textContent).toContain("90")
+    expect(container.textContent).toContain("p75")
+    expect(container.textContent).toContain("75")
+  })
+
+  it("applies the provided value format to band rows", () => {
+    const fields = bandTooltipFields(
+      { y0Accessor: "min", y1Accessor: "max" },
+      (v: any) => `$${v}`
+    )
+    const fn = buildDefaultTooltip(fields)
+    const node = fn(hover({ bands: [{ y0: 100, y1: 200 }] }))
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("$100")
+    expect(container.textContent).toContain("$200")
+  })
+
+  it("first-band rows fall back to datum.band when bands[0] is missing", () => {
+    const fields = bandTooltipFields({ y0Accessor: "min", y1Accessor: "max" })
+    const fn = buildDefaultTooltip(fields)
+    // Older enrichment path or a tooltip that only saw `band`
+    const node = fn(hover({ band: { y0: 5, y1: 15 } }))
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("5")
+    expect(container.textContent).toContain("15")
   })
 })
 

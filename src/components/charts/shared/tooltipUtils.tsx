@@ -61,6 +61,45 @@ export function resolveValue(d: Datum, acc: string | ((d: Datum) => any)): unkno
 }
 
 /**
+ * Build TooltipFieldConfig rows for a `band` prop config so the default
+ * tooltip surfaces envelope values automatically. Reads from the
+ * `bands` array the hover handler synthesizes onto the datum — one
+ * row pair per configured band (low + high). String accessors are
+ * used verbatim as labels; function accessors fall back to "low"/"high".
+ *
+ * Returns an empty array when band is not configured, so the spread at
+ * the call site is a no-op for the common case.
+ */
+export function bandTooltipFields(
+  band: unknown,
+  valueFormat?: (v: any, ...rest: any[]) => React.ReactNode
+): TooltipFieldConfig[] {
+  if (!band) return []
+  // Public API accepts BandConfig | BandConfig[]; normalize to array.
+  const list = Array.isArray(band) ? band : [band]
+  const fields: TooltipFieldConfig[] = []
+  list.forEach((b: any, i: number) => {
+    const y0Label = typeof b?.y0Accessor === "string" ? b.y0Accessor : "low"
+    const y1Label = typeof b?.y1Accessor === "string" ? b.y1Accessor : "high"
+    // Read from the enriched `bands[i]` array (StreamXYFrame attaches
+    // it to every hover datum). Falls back to `band` (single-band
+    // shorthand) for index 0 so the row still renders if only the
+    // single-band field made it through.
+    fields.push({
+      label: y0Label,
+      accessor: (d: any) => d?.bands?.[i]?.y0 ?? (i === 0 ? d?.band?.y0 : undefined),
+      format: valueFormat,
+    })
+    fields.push({
+      label: y1Label,
+      accessor: (d: any) => d?.bands?.[i]?.y1 ?? (i === 0 ? d?.band?.y1 : undefined),
+      format: valueFormat,
+    })
+  })
+  return fields
+}
+
+/**
  * Build a default tooltipContent function for StreamXYFrame HOCs.
  * Receives HoverData ({ data, time, value, x, y }) and renders
  * labeled fields derived from the HOC's props.
