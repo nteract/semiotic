@@ -78,7 +78,12 @@ describe("tickAnchor: edges", () => {
     }
   })
 
-  it("'edges' mode pins first label to hanging and last to auto on left axis", () => {
+  it("'edges' mode pins topmost label to hanging and bottommost to auto on left axis", () => {
+    // y scale stub: range = [200, 0], so the LOWEST value tick (i=0)
+    // sits at the BOTTOM of the plot and should get `auto`, while the
+    // HIGHEST value tick (i=last) sits at the TOP and should get
+    // `hanging`. Pinning the pixel-based logic — index-based logic
+    // would point the labels the wrong way.
     const { container } = render(
       <SVGOverlay
         {...baseProps}
@@ -91,11 +96,76 @@ describe("tickAnchor: edges", () => {
       container.querySelectorAll("[data-orient='left'] text.semiotic-axis-tick"),
     )
     expect(tickTexts.length).toBeGreaterThanOrEqual(3)
-    expect(tickTexts[0].getAttribute("dominant-baseline")).toBe("hanging")
-    expect(tickTexts[tickTexts.length - 1].getAttribute("dominant-baseline")).toBe("auto")
+    // Bottommost (first by ascending value, last by descending pixel)
+    expect(tickTexts[0].getAttribute("dominant-baseline")).toBe("auto")
+    // Topmost (last by ascending value, first by descending pixel)
+    expect(tickTexts[tickTexts.length - 1].getAttribute("dominant-baseline")).toBe("hanging")
     for (const t of tickTexts.slice(1, -1)) {
       expect(t.getAttribute("dominant-baseline")).toBe("middle")
     }
+  })
+
+  it("'edges' mode on left axis honors an inverted y scale (regression)", () => {
+    // Forward y scale: range = [0, 200] — first tick is now AT THE TOP.
+    // Confirms the helper uses pixel position, not array index.
+    const identity = (v: number) => v
+    const forwardYScale = Object.assign(identity, {
+      ticks: () => [0, 25, 50, 75, 100],
+      domain: () => [0, 100],
+      range: () => [0, 200],
+    })
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={{ x: makeStubScales().x, y: forwardYScale } as any}
+        showAxes={true}
+        axes={[{ orient: "left", tickAnchor: "edges" }, { orient: "bottom" }]}
+      />,
+    )
+    const tickTexts = Array.from(
+      container.querySelectorAll("[data-orient='left'] text.semiotic-axis-tick"),
+    )
+    // First tick (value=0, pixel=0) is now topmost — should hang.
+    expect(tickTexts[0].getAttribute("dominant-baseline")).toBe("hanging")
+    expect(tickTexts[tickTexts.length - 1].getAttribute("dominant-baseline")).toBe("auto")
+  })
+
+  it("'edges' mode on bottom axis honors a reversed x scale (regression)", () => {
+    // Reversed x scale: range = [300, 0] mimics a streaming chart with
+    // `arrowOfTime: "left"` — first tick by value is at the RIGHT edge
+    // of the plot, so it should anchor `end`, not `start`.
+    const reverseX = Object.assign((v: number) => 300 - v * 3, {
+      ticks: () => [0, 25, 50, 75, 100],
+      domain: () => [0, 100],
+      range: () => [300, 0],
+    })
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={{ x: reverseX, y: makeStubScales().y } as any}
+        showAxes={true}
+        axes={[{ orient: "bottom", tickAnchor: "edges" }]}
+      />,
+    )
+    const tickTexts = Array.from(
+      container.querySelectorAll("[data-orient='bottom'] text.semiotic-axis-tick"),
+    )
+    // tick[0] (value=0, pixel=300) is rightmost → `end`
+    // tick[last] (value=100, pixel=0) is leftmost → `start`
+    expect(tickTexts[0].getAttribute("text-anchor")).toBe("end")
+    expect(tickTexts[tickTexts.length - 1].getAttribute("text-anchor")).toBe("start")
+  })
+
+  it("StreamXYFrameProps.axes accepts tickAnchor at the type level (compile-time regression)", () => {
+    // Pinning compile-time accessibility: this test would fail typecheck
+    // if `tickAnchor` (or `landmarkTicks`, `autoRotate`, etc.) were missing
+    // from the public `frameProps.axes` shape. The runtime expectation is
+    // already covered by the per-axis tests above.
+    const axes: import("./types").StreamXYFrameProps["axes"] = [
+      { orient: "bottom", tickAnchor: "edges", landmarkTicks: true, autoRotate: true },
+      { orient: "left", tickAnchor: "middle", gridStyle: "dashed", includeMax: true },
+    ]
+    expect(axes).toHaveLength(2)
   })
 
   it("tickAnchor is independent per axis", () => {

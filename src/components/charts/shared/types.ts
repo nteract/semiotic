@@ -82,8 +82,10 @@ export interface BaseChartProps {
   loading?: boolean
   /** Custom content to render in place of the default skeleton when `loading` is `true`.
    *  Sibling to `emptyContent` — use for branded loading states or progress UI.
-   *  When omitted, the built-in shimmer-bar skeleton renders. */
-  loadingContent?: React.ReactNode
+   *  When omitted, the built-in shimmer-bar skeleton renders.
+   *  Pass `false` to suppress the loading UI entirely (an outer wrapper's
+   *  loading state takes over). */
+  loadingContent?: React.ReactNode | false
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: React.ReactNode | false
 

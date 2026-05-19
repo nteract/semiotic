@@ -2,7 +2,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef, useEffect } from "react"
-import type { StreamScales, MarginalGraphicsConfig } from "./types"
+import type { StreamScales, MarginalGraphicsConfig, XYFrameAxisConfig } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
@@ -14,70 +14,68 @@ import { isTimeLandmark } from "./hitTestUtils"
 import { ticksForMode } from "../charts/shared/axisExtent"
 
 // ── Axis config ───────────────────────────────────────────────────────────
-export interface AxisConfig {
-  orient: "left" | "right" | "top" | "bottom"
-  label?: string
-  ticks?: number
-  tickFormat?: (d: any, index?: number, allTicks?: number[]) => string | ReactNode
-  baseline?: boolean | "under"
-  jaggedBase?: boolean
-  /** Explicit tick values. When provided, bypasses both d3's "nice"
-   *  generator and `axisExtent: "exact"` — the caller has hand-picked
-   *  the positions. Pixel-distance filtering downstream still drops
-   *  overlapping labels. Accepts `number | Date`: values pass through
-   *  to the scale (d3-scale's `scaleTime` reads Dates natively;
-   *  `scaleLinear` accepts numbers — feeding a Date into a linear
-   *  scale via `valueOf()` works at runtime but `tickFormat` receives
-   *  the Date as-is, so user formatters should match the axis's
-   *  underlying scale type). Mirrors the ordinal frame's
-   *  `rTickValues` contract. */
-  tickValues?: Array<number | Date>
-  /** Grid line stroke style: "dashed" (6,4), "dotted" (2,4), or a custom strokeDasharray string. Applied to grid lines extending from ticks across the chart area. */
-  gridStyle?: "dashed" | "dotted" | string
-  /** Always include the domain max as a tick, even if d3 omits it. */
-  includeMax?: boolean
-  /** Auto-rotate labels 45° when horizontal spacing is too tight. */
-  autoRotate?: boolean
-  /** Highlight ticks at time boundaries (new month, year, etc.) with semibold text.
-   * `true` auto-detects Date boundaries. A function receives (value, index) and returns true for landmark ticks. */
-  landmarkTicks?: boolean | ((value: any, index: number) => boolean)
-  /** Tick label anchoring strategy:
-   *  - `"middle"` (default): all tick labels centered on the tick mark
-   *  - `"edges"`: first tick label anchors to start, last to end, middles stay centered.
-   *    Pairs naturally with `axisExtent: "exact"` — pins the domain to the
-   *    data min/max AND keeps the extreme labels from overflowing the plot. */
-  tickAnchor?: "middle" | "edges"
-}
+//
+// Canonical type lives in `stream/types.ts` as `XYFrameAxisConfig` so
+// `StreamXYFrameProps.axes[i]` can reference the full shape (including
+// the newer `tickAnchor`, `landmarkTicks`, `autoRotate`, `gridStyle`,
+// `includeMax` fields) without the type drifting between the frame
+// surface and the SVG overlay. Re-exported here under the original
+// name `AxisConfig` for backwards-compatibility with any internal
+// callers that import it from `SVGOverlay`.
+export type AxisConfig = XYFrameAxisConfig
 
-/** Resolve the SVG text-anchor for a horizontal-axis tick index given the
- *  axis's `tickAnchor` config. Centers everything in `"middle"` mode;
- *  flips first→start / last→end in `"edges"` mode. */
+/** Resolve the SVG text-anchor for a horizontal-axis tick based on its
+ *  pixel position. Centers everything in `"middle"` mode; in `"edges"`
+ *  mode the leftmost label anchors `start` and the rightmost anchors
+ *  `end`. Caller passes pre-computed `isLeftmost`/`isRightmost` flags
+ *  derived from the actual tick pixel values — works regardless of
+ *  array order or scale direction (a streaming `arrowOfTime: "left"`
+ *  inverts the x range, so index-based logic would point the wrong way).
+ */
 function resolveHorizontalTickAnchor(
   mode: "middle" | "edges" | undefined,
-  i: number,
-  total: number
+  isLeftmost: boolean,
+  isRightmost: boolean
 ): "start" | "middle" | "end" {
   if (mode === "edges") {
-    if (i === 0) return "start"
-    if (i === total - 1) return "end"
+    if (isLeftmost) return "start"
+    if (isRightmost) return "end"
   }
   return "middle"
 }
 
-/** Resolve the SVG dominant-baseline for a vertical-axis tick index.
- *  In `"edges"` mode the first (topmost) tick uses `hanging` so its
- *  label sits below the tick line, the last (bottommost) uses `auto`
- *  so it sits above — same overflow-prevention as the horizontal case. */
+/** Resolve the SVG dominant-baseline for a vertical-axis tick based on
+ *  its pixel position. In `"edges"` mode the topmost tick (lowest y
+ *  pixel) uses `hanging` so its label drops down from the tick line,
+ *  and the bottommost (highest y pixel) uses `auto` so its label rises
+ *  up — keeping both edge labels inside the plot. Pixel-based because
+ *  y scales render with an inverted range (`[height, 0]`), so the
+ *  array's first tick by value is the bottom-most tick by pixel. */
 function resolveVerticalTickBaseline(
   mode: "middle" | "edges" | undefined,
-  i: number,
-  total: number
+  isTopmost: boolean,
+  isBottommost: boolean
 ): "hanging" | "middle" | "auto" {
   if (mode === "edges") {
-    if (i === 0) return "hanging"
-    if (i === total - 1) return "auto"
+    if (isTopmost) return "hanging"
+    if (isBottommost) return "auto"
   }
   return "middle"
+}
+
+/** Compute the minimum and maximum pixel value across a tick array.
+ *  Returns `null` for both bounds when the array is empty. Used by the
+ *  axis renderer to identify the first/last tick by pixel position
+ *  (not array index) when `tickAnchor: "edges"` is active. */
+function tickPixelExtent(ticks: Array<{ pixel: number }>): { min: number | null; max: number | null } {
+  if (ticks.length === 0) return { min: null, max: null }
+  let min = Infinity
+  let max = -Infinity
+  for (const t of ticks) {
+    if (t.pixel < min) min = t.pixel
+    if (t.pixel > max) max = t.pixel
+  }
+  return { min, max }
 }
 
 function resolveGridDash(style: "dashed" | "dotted" | string | undefined): string | undefined {
@@ -722,6 +720,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const axisLabelFontStyle = { fontSize: "var(--semiotic-axis-label-font-size, 12px)" }
           const bottomTickAnchorMode = bottomAxis?.tickAnchor
           const leftTickAnchorMode = leftAxis?.tickAnchor
+          // Pre-compute the edge pixels for each axis so the tick-render
+          // loop can identify the leftmost/rightmost or topmost/bottommost
+          // entry without depending on array index — y ticks are in
+          // ascending value order but pixel order is inverted, and
+          // streaming x scales can also be reversed by `arrowOfTime`.
+          const xPixelExtent = tickPixelExtent(xTicks)
+          const yPixelExtent = tickPixelExtent(yTicks)
           return (
           <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
             <g className="semiotic-axis semiotic-axis-bottom" data-orient="bottom">
@@ -746,7 +751,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 {typeof tick.label === "string" || typeof tick.label === "number" ? (
                   <text
                     y={shouldRotateBottom ? 10 : 18}
-                    textAnchor={shouldRotateBottom ? "end" : resolveHorizontalTickAnchor(bottomTickAnchorMode, i, xTicks.length)}
+                    textAnchor={shouldRotateBottom ? "end" : resolveHorizontalTickAnchor(
+                      bottomTickAnchorMode,
+                      tick.pixel === xPixelExtent.min,
+                      tick.pixel === xPixelExtent.max,
+                    )}
                     fontWeight={isLandmark ? 600 : 400}
                     fill={tickColor}
                     className="semiotic-axis-tick"
@@ -798,7 +807,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
                   <text
                     x={-8}
                     textAnchor="end"
-                    dominantBaseline={resolveVerticalTickBaseline(leftTickAnchorMode, i, yTicks.length)}
+                    dominantBaseline={resolveVerticalTickBaseline(
+                      leftTickAnchorMode,
+                      tick.pixel === yPixelExtent.min,
+                      tick.pixel === yPixelExtent.max,
+                    )}
                     fontWeight={isLandmark ? 600 : 400}
                     fill={tickColor}
                     className="semiotic-axis-tick"
@@ -840,6 +853,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
               const rightLandmark = rightAxis.landmarkTicks
               const rightLabel = rightAxis.label || yLabelRight
               const rightTickAnchorMode = rightAxis.tickAnchor
+              const yRightPixelExtent = tickPixelExtent(yTicksRight)
               return (
                 <g className="semiotic-axis semiotic-axis-right" data-orient="right">
                   {showRightBaseline && (
@@ -858,7 +872,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
                         <text
                           x={8}
                           textAnchor="start"
-                          dominantBaseline={resolveVerticalTickBaseline(rightTickAnchorMode, i, yTicksRight.length)}
+                          dominantBaseline={resolveVerticalTickBaseline(
+                            rightTickAnchorMode,
+                            tick.pixel === yRightPixelExtent.min,
+                            tick.pixel === yRightPixelExtent.max,
+                          )}
                           fontWeight={isLandmark ? 600 : 400}
                           fill={tickColor}
                           className="semiotic-axis-tick"

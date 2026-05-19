@@ -98,13 +98,23 @@ export function buildRibbonForGroup(
   const bottomPath: [number, number][] = []
   for (const d of data) {
     const x = ctx.getX(d)
-    if (x == null || Number.isNaN(x)) continue
+    // `Number.isFinite` catches null, undefined, NaN, and ±Infinity in
+    // one check — the previous `Number.isNaN` test let Infinity through
+    // and downstream scale calls could then emit non-finite pixels.
+    if (!Number.isFinite(x)) continue
     const top = ribbon.getTop(d)
     const bottom = ribbon.getBottom(d)
     if (!Number.isFinite(top) || !Number.isFinite(bottom)) continue
     const px = ctx.scales.x(x)
-    topPath.push([px, ctx.scales.y(top)])
-    bottomPath.push([px, ctx.scales.y(bottom)])
+    const pyTop = ctx.scales.y(top)
+    const pyBottom = ctx.scales.y(bottom)
+    // Belt-and-suspenders: even with finite input values, a degenerate
+    // scale (e.g. log domain collapsing to a single value) can emit
+    // non-finite pixels. Drop those datums so the canvas/SVG renderers
+    // never see NaN coordinates.
+    if (!Number.isFinite(px) || !Number.isFinite(pyTop) || !Number.isFinite(pyBottom)) continue
+    topPath.push([px, pyTop])
+    bottomPath.push([px, pyBottom])
   }
   if (topPath.length < 2) return null
   return {
@@ -192,7 +202,7 @@ export function enrichDatumWithBand(
   datum: Datum | null | undefined,
   ribbons: ResolvedRibbon[] | undefined
 ): Datum {
-  if (!datum) return (datum ?? {}) as Datum
+  if (!datum) return {} as Datum
   if (!ribbons || ribbons.length === 0) return datum
   const evaluated: Array<{ y0: number; y1: number }> = []
   for (const r of ribbons) {

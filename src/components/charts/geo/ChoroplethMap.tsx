@@ -330,8 +330,12 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   }), [userMargin])
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
+  // The secondary fallback fires while `areas` is still resolving (e.g.
+  // a "world-110m" reference geography being fetched). Thread
+  // `loadingContent` through both calls so a `false` suppression OR
+  // a custom node applies during the geo-resolution wait too.
   const loadingEl = renderLoadingState(loading, resolved.width, resolved.height, loadingContent)
-    || (!resolvedAreas ? renderLoadingState(true, resolved.width, resolved.height) : null)
+    || (!resolvedAreas ? renderLoadingState(true, resolved.width, resolved.height, loadingContent) : null)
   const emptyEl = !loadingEl ? renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent) : null
 
   // Validate areas is a valid GeoJSON feature array.

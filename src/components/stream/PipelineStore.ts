@@ -235,8 +235,9 @@ export interface PipelineConfig {
   y0Accessor?: string | ((d: Datum) => CoercibleNumber)
 
   // Asymmetric min/max band(s) drawn under the lines/areas. Single
-  // BandConfig or array (fan chart). Normalized to ResolvedBand[] at
-  // store construction.
+  // BandConfig or array (fan chart). Normalized into the unified
+  // `resolvedRibbons: ResolvedRibbon[]` at store construction alongside
+  // any `boundsAccessor` ribbon.
   band?: BandConfig | BandConfig[]
 
   // Area gradient fill (opacity or multi-color)
