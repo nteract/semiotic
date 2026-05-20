@@ -723,9 +723,6 @@ export default function LineChartPage() {
           curve: "monotoneX",
           xLabel: "Hour",
           yLabel: "Requests/sec",
-          showLegend: true,
-          colorBy: "Requests",
-          legendPosition: "top",
           band: {
             y0Accessor: "min",
             y1Accessor: "max",

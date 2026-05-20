@@ -74,6 +74,8 @@ function createCanvasContextStub(canvas: HTMLCanvasElement): Partial<CanvasRende
           : method === "createLinearGradient" ||
               method === "createRadialGradient"
             ? () => ({ addColorStop: () => {} })
+            : method === "createPattern"
+              ? () => null
             : method === "getLineDash"
               ? () => []
               : method === "isPointInPath"
