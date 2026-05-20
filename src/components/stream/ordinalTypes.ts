@@ -16,7 +16,7 @@ import type {
   ThemeSemanticColors
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
-import type { LegendGroup } from "../types/legendTypes"
+import type { GradientLegendConfig, LegendGroup, LegendLayout } from "../types/legendTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Chart types ────────────────────────────────────────────────────────
@@ -469,12 +469,13 @@ export interface StreamOrdinalFrameProps<T = Datum> {
 
   // Visual extras
   showGrid?: boolean
-  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: import("../types/legendTypes").GradientLegendConfig }
+  legend?: ReactNode | { legendGroups: LegendGroup[] } | { gradient: GradientLegendConfig }
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   legendPosition?: "right" | "left" | "top" | "bottom"
+  legendLayout?: LegendLayout
   /** Accessor used to report the current legend category domain in push mode. */
   legendCategoryAccessor?: string | ((d: T) => string)
   /** Fires when the current legend category domain changes after scene rebuilds. */

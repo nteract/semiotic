@@ -142,6 +142,8 @@ export {
 
 // ── Chart HOC prop types ───────────────────────────────────────────────
 
+export type { LegendLayout } from "./types/legendTypes"
+
 export {
   ScatterplotProps,
   ConnectedScatterplotProps,

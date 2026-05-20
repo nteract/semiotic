@@ -47,6 +47,21 @@ export function isGradientLegendConfig(value: unknown): value is { gradient: Gra
   )
 }
 
+export interface LegendLayout {
+  /** Horizontal alignment for top/bottom legends within the plot width */
+  align?: "start" | "center" | "end" | "left" | "right"
+  /** Width/height of categorical swatches in pixels */
+  swatchSize?: number
+  /** Gap between a swatch and its label in pixels */
+  labelGap?: number
+  /** Gap between horizontal legend items in pixels */
+  itemGap?: number
+  /** Vertical row height for stacked legend items in pixels */
+  rowHeight?: number
+  /** Override the alignment width used for top/bottom legends */
+  maxWidth?: number
+}
+
 export interface LegendProps {
   legendGroups?: LegendGroup[]
   customClickBehavior?: (item: LegendItem) => void
@@ -62,4 +77,5 @@ export interface LegendProps {
   height?: number
   orientation?: string
   position?: "left" | "right"
+  legendLayout?: LegendLayout
 }

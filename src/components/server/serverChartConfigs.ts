@@ -400,6 +400,7 @@ const stackedBarChart: ChartConfig = {
     projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
     normalize: rest.normalize,
     oSort: rest.sort ?? false,
+    barPadding: rest.barPadding,
     ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
     ...common,
   }),
@@ -581,6 +582,9 @@ const funnelChart: ChartConfig = {
       projection: isVertical ? "vertical" : "horizontal",
       connectorAccessor: rest.connectorAccessor,
       connectorStyle: rest.connectorStyle,
+      barPadding: isVertical ? 40 : 0,
+      showAxes: isVertical,
+      showGrid: isVertical,
       colorScheme,
       ...common,
     }

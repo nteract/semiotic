@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { ScaleLinear } from "d3-scale"
 import type { AnimateProp } from "./pipelineTransitionUtils"
-import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
+import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -735,6 +735,7 @@ export interface StreamXYFrameProps<T = Datum> {
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   legendPosition?: "right" | "left" | "top" | "bottom"
+  legendLayout?: LegendLayout
   /** Accessor used to report the current legend category domain in push mode. */
   legendCategoryAccessor?: string | ((d: T) => string)
   /** Fires when the current legend category domain changes after scene rebuilds. */

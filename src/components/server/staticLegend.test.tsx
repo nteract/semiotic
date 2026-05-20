@@ -56,9 +56,12 @@ describe("renderStaticLegend", () => {
   })
 
   it("positions legend on the right by default", () => {
-    const svg = renderLegendString(baseConfig)
-    // Right position: totalWidth - margin.right + 10 = 590
-    expect(svg).toContain("translate(590,")
+    const svg = renderLegendString({
+      ...baseConfig,
+      margin: { ...baseConfig.margin, right: 100 },
+    })
+    // Right position aligns just after chart content: totalWidth - margin.right + 10 = 510
+    expect(svg).toContain("translate(510,")
   })
 
   it("positions legend at top", () => {
@@ -69,13 +72,17 @@ describe("renderStaticLegend", () => {
 
   it("positions legend at bottom within SVG bounds", () => {
     const svg = renderLegendString({ ...baseConfig, position: "bottom" })
-    // Bottom: min(400 - 30 + 38, 400 - 16) = 384 (clamped within SVG)
-    expect(svg).toContain("translate(40,384)")
+    // Bottom clamps by rendered legend height, not only swatch height.
+    expect(svg).toContain("translate(40,378)")
   })
 
   it("positions legend at left", () => {
-    const svg = renderLegendString({ ...baseConfig, position: "left" })
-    expect(svg).toContain("translate(4,")
+    const svg = renderLegendString({
+      ...baseConfig,
+      position: "left",
+      margin: { ...baseConfig.margin, left: 100 },
+    })
+    expect(svg).toContain("translate(64,")
   })
 
   it("renders horizontal layout for top/bottom positions", () => {

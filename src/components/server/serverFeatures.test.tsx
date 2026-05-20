@@ -407,6 +407,68 @@ describe("Legend rendering", () => {
     // No color accessor = no categories = no legend
     expect(svg).not.toContain("semiotic-legend")
   })
+
+  it("supports static horizontal legend alignment and swatch sizing", () => {
+    const start = renderXYToStaticSVG({
+      chartType: "line",
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "y",
+      groupAccessor: "series",
+      colorAccessor: "series",
+      size: [500, 300],
+      showLegend: true,
+      legendPosition: "top",
+      legendLayout: { align: "start", swatchSize: 8 },
+    } as StaticXYProps)
+    const end = renderXYToStaticSVG({
+      chartType: "line",
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "y",
+      groupAccessor: "series",
+      colorAccessor: "series",
+      size: [500, 300],
+      showLegend: true,
+      legendPosition: "top",
+      legendLayout: { align: "end", swatchSize: 8 },
+    } as StaticXYProps)
+
+    const firstItemX = (svg: string) =>
+      Number(svg.match(/class="semiotic-legend" transform="translate\([^)]*\)"><g transform="translate\(([\d.]+),/)?.[1])
+
+    expect(start).toContain('width="8" height="8"')
+    expect(firstItemX(end)).toBeGreaterThan(firstItemX(start))
+  })
+
+  it("wraps top legends within chart content and reserves margin for wrapped rows", () => {
+    const wrappedData = [
+      "Customer Acquisition",
+      "Expansion Revenue",
+      "Retention Risk",
+      "Support Load",
+      "Platform Health",
+    ].flatMap((series, i) => [
+      { x: 0, y: 10 + i, series },
+      { x: 1, y: 12 + i, series },
+    ])
+    const svg = renderXYToStaticSVG({
+      chartType: "line",
+      data: wrappedData,
+      xAccessor: "x",
+      yAccessor: "y",
+      groupAccessor: "series",
+      colorAccessor: "series",
+      size: [360, 260],
+      showLegend: true,
+      legendPosition: "top",
+      legendLayout: { maxWidth: 180, align: "start" },
+    } as StaticXYProps)
+
+    const dataAreaTop = Number(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1])
+    expect(svg).toContain('transform="translate(0,20)"')
+    expect(dataAreaTop).toBeGreaterThan(40)
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -475,6 +537,22 @@ describe("renderChart", () => {
     expect(svg).toContain("<svg")
     expect(svg).toContain('role="img"')
     expect(svg).toContain("<path") // line path
+  })
+
+  it("forwards top-level frame props through renderChart", () => {
+    const svg = renderChart("LineChart", {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "y",
+      xLabel: "Time",
+      yLabel: "Revenue",
+      xFormat: () => "tick",
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain(">Time<")
+    expect(svg).toContain(">Revenue<")
+    expect(svg).toContain(">tick<")
   })
 
   it("renders Scatterplot", () => {
@@ -555,6 +633,28 @@ describe("renderChart", () => {
     expect(svg).toContain("<rect")
   })
 
+  it("forwards StackedBarChart barPadding", () => {
+    const tight = renderChart("StackedBarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      stackBy: "group",
+      barPadding: 0,
+      width: 400,
+      height: 300,
+    })
+    const loose = renderChart("StackedBarChart", {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      stackBy: "group",
+      barPadding: 40,
+      width: 400,
+      height: 300,
+    })
+    expect(loose).not.toEqual(tight)
+  })
+
   it("renders GroupedBarChart", () => {
     const svg = renderChart("GroupedBarChart", {
       data: barData,
@@ -588,6 +688,32 @@ describe("renderChart", () => {
       height: 400,
     })
     expect(svg).toContain("<path")
+  })
+
+  it("matches FunnelChart axis defaults by orientation", () => {
+    const funnelData = [
+      { step: "Visited", value: 100 },
+      { step: "Signed up", value: 45 },
+      { step: "Paid", value: 20 },
+    ]
+    const horizontal = renderChart("FunnelChart", {
+      data: funnelData,
+      stepAccessor: "step",
+      valueAccessor: "value",
+      orientation: "horizontal",
+      width: 400,
+      height: 300,
+    })
+    const vertical = renderChart("FunnelChart", {
+      data: funnelData,
+      stepAccessor: "step",
+      valueAccessor: "value",
+      orientation: "vertical",
+      width: 400,
+      height: 300,
+    })
+    expect(horizontal).not.toContain('id="axes"')
+    expect(vertical).toContain('id="axes"')
   })
 
   it("renders Histogram", () => {
@@ -982,10 +1108,10 @@ describe("Edge cases", () => {
       data: barData,
       categoryAccessor: "category",
       valueAccessor: "value",
-      frameProps: { showAxes: false },
+      showAxes: false,
     })
-    // renderChart maps to frame level — showAxes is on the frame
     expect(svg).toContain("<svg")
+    expect(svg).not.toContain('id="axes"')
   })
 
   it("renders with custom background", () => {
