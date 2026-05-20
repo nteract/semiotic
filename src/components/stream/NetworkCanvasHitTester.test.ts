@@ -427,7 +427,6 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       // a fake Path2D class that records its source and a stub context
       // whose isPointInPath returns true for our test path. Reset the
       // hit tester module's cached canvas/ctx by reimporting.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const g = globalThis as unknown as {
         Path2D?: typeof Path2D
         HTMLCanvasElement: typeof HTMLCanvasElement

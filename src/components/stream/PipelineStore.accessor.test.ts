@@ -12,6 +12,10 @@ function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   }
 }
 
+function rebuildFlag(store: PipelineStore): { needsFullRebuild: boolean } {
+  return store as unknown as { needsFullRebuild: boolean }
+}
+
 describe("PipelineStore — Accessor Stability", () => {
   it("does not set needsFullRebuild when string accessors are unchanged", () => {
     const store = new PipelineStore(makeConfig({
@@ -20,11 +24,11 @@ describe("PipelineStore — Accessor Stability", () => {
     }))
     store.ingest({ inserts: [{ time: 1, value: 2 }], bounded: false })
     store.computeScene({ width: 100, height: 100 })
-    store.needsFullRebuild = false
+    rebuildFlag(store).needsFullRebuild = false
 
     // Re-pass the same string accessors
     store.updateConfig({ xAccessor: "time", yAccessor: "value" })
-    expect(store.needsFullRebuild).toBe(false)
+    expect(rebuildFlag(store).needsFullRebuild).toBe(false)
   })
 
   it("sets needsFullRebuild when string accessors change", () => {
@@ -32,10 +36,10 @@ describe("PipelineStore — Accessor Stability", () => {
       xAccessor: "time",
       yAccessor: "value"
     }))
-    store.needsFullRebuild = false
+    rebuildFlag(store).needsFullRebuild = false
 
     store.updateConfig({ yAccessor: "price" })
-    expect(store.needsFullRebuild).toBe(true)
+    expect(rebuildFlag(store).needsFullRebuild).toBe(true)
   })
 
   it("rebuilds tracked extents when positional accessors change", () => {
@@ -66,14 +70,14 @@ describe("PipelineStore — Accessor Stability", () => {
     }))
     store.ingest({ inserts: [{ time: 1, value: 2 }], bounded: false })
     store.computeScene({ width: 100, height: 100 })
-    store.needsFullRebuild = false
+    rebuildFlag(store).needsFullRebuild = false
 
     // Simulate a React re-render: new function objects with identical source
     store.updateConfig({
       xAccessor: (d: Datum) => d.time,
       yAccessor: (d: Datum) => d.value
     })
-    expect(store.needsFullRebuild).toBe(false)
+    expect(rebuildFlag(store).needsFullRebuild).toBe(false)
   })
 
   it("sets needsFullRebuild when function accessor source changes", () => {
@@ -81,30 +85,30 @@ describe("PipelineStore — Accessor Stability", () => {
       xAccessor: (d: Datum) => d.time,
       yAccessor: (d: Datum) => d.value
     }))
-    store.needsFullRebuild = false
+    rebuildFlag(store).needsFullRebuild = false
 
     store.updateConfig({ yAccessor: (d: Datum) => d.price })
-    expect(store.needsFullRebuild).toBe(true)
+    expect(rebuildFlag(store).needsFullRebuild).toBe(true)
   })
 
   it("does not set needsFullRebuild for equivalent groupAccessor", () => {
     const store = new PipelineStore(makeConfig({
       groupAccessor: "region"
     }))
-    store.needsFullRebuild = false
+    rebuildFlag(store).needsFullRebuild = false
 
     store.updateConfig({ groupAccessor: "region" })
-    expect(store.needsFullRebuild).toBe(false)
+    expect(rebuildFlag(store).needsFullRebuild).toBe(false)
   })
 
   it("does not set needsFullRebuild for equivalent colorAccessor", () => {
     const store = new PipelineStore(makeConfig({
       colorAccessor: (d: Datum) => d.category
     }))
-    store.needsFullRebuild = false
+    rebuildFlag(store).needsFullRebuild = false
 
     store.updateConfig({ colorAccessor: (d: Datum) => d.category })
-    expect(store.needsFullRebuild).toBe(false)
+    expect(rebuildFlag(store).needsFullRebuild).toBe(false)
   })
 
   it("sets needsFullRebuild when non-accessor config changes alongside equivalent accessors", () => {
@@ -112,11 +116,11 @@ describe("PipelineStore — Accessor Stability", () => {
       xAccessor: "time",
       yAccessor: "value"
     }))
-    store.needsFullRebuild = false
+    rebuildFlag(store).needsFullRebuild = false
 
     // Accessors equivalent, but chartType changed
     store.updateConfig({ xAccessor: "time", chartType: "line" })
-    expect(store.needsFullRebuild).toBe(true)
+    expect(rebuildFlag(store).needsFullRebuild).toBe(true)
   })
 
   it("does not set needsFullRebuild when full config is re-passed with same values", () => {
@@ -128,11 +132,11 @@ describe("PipelineStore — Accessor Stability", () => {
     const store = new PipelineStore(config)
     store.ingest({ inserts: [{ time: 1, value: 2, region: "A" }], bounded: false })
     store.computeScene({ width: 100, height: 100 })
-    store.needsFullRebuild = false
+    rebuildFlag(store).needsFullRebuild = false
 
     // Simulate React re-render passing the full config (as StreamXYFrame does)
     store.updateConfig({ ...config })
-    expect(store.needsFullRebuild).toBe(false)
+    expect(rebuildFlag(store).needsFullRebuild).toBe(false)
   })
 
   it("resolved accessor functions still work after skipping re-resolution", () => {

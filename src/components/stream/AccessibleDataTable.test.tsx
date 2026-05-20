@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest"
+import { fireEvent, render, screen } from "@testing-library/react"
 import {
+  AccessibleDataTable,
+  NetworkAccessibleDataTable,
   computeCanvasAriaLabel,
   computeNetworkAriaLabel,
 } from "./AccessibleDataTable"
@@ -106,6 +109,50 @@ describe("computeNetworkAriaLabel", () => {
     // Shouldn't happen, but shouldn't crash
     const result = computeNetworkAriaLabel(-1, -1, "network")
     expect(typeof result).toBe("string")
+  })
+})
+
+// ── public styling hooks ───────────────────────────────────────────────
+
+describe("AccessibleDataTable styling hooks", () => {
+  it("renders stable classes and CSS variable hooks on the visible panel", () => {
+    render(
+      <AccessibleDataTable
+        tableId="semiotic-table-test"
+        chartType="line chart"
+        scene={[{ type: "point", x: 1, y: 2 }]}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+
+    const region = screen.getByRole("region", { name: /data summary for line chart/i })
+    expect(region).toHaveClass("semiotic-accessible-data-table")
+    expect(region).toHaveClass("semiotic-accessible-data-table-visible")
+    expect(region.getAttribute("style")).toContain("--semiotic-data-table-bg")
+    expect(region.getAttribute("style")).toContain("--semiotic-data-table-z-index")
+    expect(screen.getByRole("button", { name: /close data summary/i })).toHaveClass(
+      "semiotic-accessible-data-table-close"
+    )
+    expect(screen.getByRole("table")).toHaveClass("semiotic-accessible-data-table-table")
+  })
+
+  it("renders the same public hook plus network marker for network tables", () => {
+    render(
+      <NetworkAccessibleDataTable
+        tableId="semiotic-table-network"
+        chartType="Network chart"
+        nodes={[{ id: "a" }, { id: "b" }]}
+        edges={[{ source: "a", target: "b" }]}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+
+    const region = screen.getByRole("region", { name: /data summary for network chart/i })
+    expect(region).toHaveClass("semiotic-accessible-data-table")
+    expect(region).toHaveClass("semiotic-accessible-data-table-visible")
+    expect(region).toHaveClass("semiotic-accessible-data-table-network")
   })
 })
 

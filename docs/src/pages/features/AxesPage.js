@@ -39,10 +39,12 @@ const timeSeriesData = (() => {
   return data
 })()
 
-const timeSeriesFrameData = [{
-  label: "Metric",
-  coordinates: timeSeriesData.map(d => ({ date: d.date.getTime(), value: d.value })),
-}]
+const timeSeriesFrameData = [
+  {
+    label: "Metric",
+    coordinates: timeSeriesData.map((d) => ({ date: d.date.getTime(), value: d.value })),
+  },
+]
 
 const barData = [
   { category: "Q1", revenue: 24000 },
@@ -101,37 +103,37 @@ const axisExtentScatterData = [
 const axisExtentSwarmData = [
   // Engagement (gi=0): base 20, span 40 → roughly [20, 60], plus the
   // pinned floor 4.2 for the data minimum.
-  { group: "Engagement",  score: 4.2 },
-  { group: "Engagement",  score: 23.1 },
-  { group: "Engagement",  score: 31.5 },
-  { group: "Engagement",  score: 27.8 },
-  { group: "Engagement",  score: 42.4 },
-  { group: "Engagement",  score: 38.9 },
-  { group: "Engagement",  score: 50.2 },
-  { group: "Engagement",  score: 46.7 },
-  { group: "Engagement",  score: 55.6 },
-  { group: "Engagement",  score: 59.3 },
+  { group: "Engagement", score: 4.2 },
+  { group: "Engagement", score: 23.1 },
+  { group: "Engagement", score: 31.5 },
+  { group: "Engagement", score: 27.8 },
+  { group: "Engagement", score: 42.4 },
+  { group: "Engagement", score: 38.9 },
+  { group: "Engagement", score: 50.2 },
+  { group: "Engagement", score: 46.7 },
+  { group: "Engagement", score: 55.6 },
+  { group: "Engagement", score: 59.3 },
   // Retention (gi=1): base 35, span 50 → roughly [35, 85].
-  { group: "Retention",   score: 37.4 },
-  { group: "Retention",   score: 41.8 },
-  { group: "Retention",   score: 48.6 },
-  { group: "Retention",   score: 54.2 },
-  { group: "Retention",   score: 60.5 },
-  { group: "Retention",   score: 65.9 },
-  { group: "Retention",   score: 71.3 },
-  { group: "Retention",   score: 76.4 },
-  { group: "Retention",   score: 80.1 },
-  { group: "Retention",   score: 83.7 },
+  { group: "Retention", score: 37.4 },
+  { group: "Retention", score: 41.8 },
+  { group: "Retention", score: 48.6 },
+  { group: "Retention", score: 54.2 },
+  { group: "Retention", score: 60.5 },
+  { group: "Retention", score: 65.9 },
+  { group: "Retention", score: 71.3 },
+  { group: "Retention", score: 76.4 },
+  { group: "Retention", score: 80.1 },
+  { group: "Retention", score: 83.7 },
   // Activation (gi=2): base 50, span 60 → roughly [50, 110], plus the
   // pinned ceiling 98.7 for the data maximum.
-  { group: "Activation",  score: 53.2 },
-  { group: "Activation",  score: 61.5 },
-  { group: "Activation",  score: 68.9 },
-  { group: "Activation",  score: 74.4 },
-  { group: "Activation",  score: 81.7 },
-  { group: "Activation",  score: 87.3 },
-  { group: "Activation",  score: 92.1 },
-  { group: "Activation",  score: 98.7 },
+  { group: "Activation", score: 53.2 },
+  { group: "Activation", score: 61.5 },
+  { group: "Activation", score: 68.9 },
+  { group: "Activation", score: 74.4 },
+  { group: "Activation", score: 81.7 },
+  { group: "Activation", score: 87.3 },
+  { group: "Activation", score: 92.1 },
+  { group: "Activation", score: 98.7 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -139,19 +141,105 @@ const axisExtentSwarmData = [
 // ---------------------------------------------------------------------------
 
 const axisProps = [
-  { name: "orient", type: "string", required: true, default: null, description: 'Position of the axis: "left", "right", "top", or "bottom".' },
-  { name: "label", type: "string | object", required: false, default: null, description: "Axis label text. Can be a string or an object with { name, locationDistance, position } for precise placement." },
-  { name: "ticks", type: "number", required: false, default: null, description: "Suggested number of ticks to display. The actual count may vary based on D3 tick algorithm." },
-  { name: "tickValues", type: "array", required: false, default: null, description: "Explicit array of tick values to use instead of auto-generated ticks." },
-  { name: "tickFormat", type: "function", required: false, default: null, description: "Function to format tick labels. Receives the tick value and returns a string." },
-  { name: "tickLineGenerator", type: "function", required: false, default: null, description: "Custom function to render tick lines. Receives { xy } with { x1, x2, y1, y2 } coordinates." },
-  { name: "baseline", type: "boolean | string", required: false, default: "true", description: 'Show the baseline. Set to false to hide, or "under" to draw beneath the visualization layer.' },
-  { name: "jaggedBase", type: "boolean", required: false, default: "false", description: 'Renders the tick at the minimum data point with a "torn" appearance for non-zero baselines.' },
-  { name: "showOutboundTickLines", type: "boolean", required: false, default: "false", description: "Display tick lines outside the chart area to accompany tick labels." },
-  { name: "axisAnnotationFunction", type: "function", required: false, default: null, description: "Enables hover interaction on the axis. Called with { className, type, value } on click." },
-  { name: "glyphFunction", type: "function", required: false, default: null, description: "Custom hover glyph on axis. Receives { lineWidth, lineHeight, value } and returns JSX." },
-  { name: "marginalSummaryGraphics", type: "object", required: false, default: null, description: "Add an ordinal summary (histogram, violin, etc.) to the axis margin." },
-  { name: "landmarkTicks", type: "boolean | function", required: false, default: "false", description: "Highlight ticks at time boundaries with semibold styling. Set to true for auto-detection (Date boundaries), or pass a function (d, i) => boolean for custom landmark logic." },
+  {
+    name: "orient",
+    type: "string",
+    required: true,
+    default: null,
+    description: 'Position of the axis: "left", "right", "top", or "bottom".',
+  },
+  {
+    name: "label",
+    type: "string | object",
+    required: false,
+    default: null,
+    description:
+      "Axis label text. Can be a string or an object with { name, locationDistance, position } for precise placement.",
+  },
+  {
+    name: "ticks",
+    type: "number",
+    required: false,
+    default: null,
+    description:
+      "Suggested number of ticks to display. The actual count may vary based on D3 tick algorithm.",
+  },
+  {
+    name: "tickValues",
+    type: "array",
+    required: false,
+    default: null,
+    description: "Explicit array of tick values to use instead of auto-generated ticks.",
+  },
+  {
+    name: "tickFormat",
+    type: "function",
+    required: false,
+    default: null,
+    description: "Function to format tick labels. Receives the tick value and returns a string.",
+  },
+  {
+    name: "tickLineGenerator",
+    type: "function",
+    required: false,
+    default: null,
+    description:
+      "Custom function to render tick lines. Receives { xy } with { x1, x2, y1, y2 } coordinates.",
+  },
+  {
+    name: "baseline",
+    type: "boolean | string",
+    required: false,
+    default: "true",
+    description:
+      'Show the baseline. Set to false to hide, or "under" to draw beneath the visualization layer.',
+  },
+  {
+    name: "jaggedBase",
+    type: "boolean",
+    required: false,
+    default: "false",
+    description:
+      'Renders the tick at the minimum data point with a "torn" appearance for non-zero baselines.',
+  },
+  {
+    name: "showOutboundTickLines",
+    type: "boolean",
+    required: false,
+    default: "false",
+    description: "Display tick lines outside the chart area to accompany tick labels.",
+  },
+  {
+    name: "axisAnnotationFunction",
+    type: "function",
+    required: false,
+    default: null,
+    description:
+      "Enables hover interaction on the axis. Called with { className, type, value } on click.",
+  },
+  {
+    name: "glyphFunction",
+    type: "function",
+    required: false,
+    default: null,
+    description:
+      "Custom hover glyph on axis. Receives { lineWidth, lineHeight, value } and returns JSX.",
+  },
+  {
+    name: "marginalSummaryGraphics",
+    type: "object",
+    required: false,
+    default: null,
+    description: "Add an ordinal summary (histogram, violin, etc.) to the axis margin.",
+  },
+  {
+    name: "landmarkTicks",
+    type: "boolean | function",
+    required: false,
+    default: "false",
+    description:
+      "Highlight ticks at time boundaries with semibold styling. Set to true for auto-detection (Date boundaries), or pass a function (d, i) => boolean for custom landmark logic.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -163,27 +251,47 @@ function ResizableAutoRotateDemo() {
   const cleanupRef = useRef(null)
 
   // Ensure drag listeners are cleaned up on unmount
-  useEffect(() => () => { if (cleanupRef.current) cleanupRef.current() }, [])
+  useEffect(
+    () => () => {
+      if (cleanupRef.current) cleanupRef.current()
+    },
+    [],
+  )
 
-  const onMouseDown = useCallback((e) => {
-    e.preventDefault()
-    const startX = e.clientX
-    const startWidth = chartWidth
-    const onMove = (ev) => setChartWidth(Math.max(200, Math.min(800, startWidth + ev.clientX - startX)))
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove)
-      document.removeEventListener("mouseup", onUp)
-      cleanupRef.current = null
-    }
-    document.addEventListener("mousemove", onMove)
-    document.addEventListener("mouseup", onUp)
-    cleanupRef.current = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp) }
-  }, [chartWidth])
+  const onMouseDown = useCallback(
+    (e) => {
+      e.preventDefault()
+      const startX = e.clientX
+      const startWidth = chartWidth
+      const onMove = (ev) =>
+        setChartWidth(Math.max(200, Math.min(800, startWidth + ev.clientX - startX)))
+      const onUp = () => {
+        document.removeEventListener("mousemove", onMove)
+        document.removeEventListener("mouseup", onUp)
+        cleanupRef.current = null
+      }
+      document.addEventListener("mousemove", onMove)
+      document.addEventListener("mouseup", onUp)
+      cleanupRef.current = () => {
+        document.removeEventListener("mousemove", onMove)
+        document.removeEventListener("mouseup", onUp)
+      }
+    },
+    [chartWidth],
+  )
 
   return (
     <div>
       <div style={{ display: "flex", alignItems: "stretch" }}>
-        <div style={{ width: chartWidth, border: "1px solid var(--semiotic-border, #e0e0e0)", borderRadius: 4, padding: 4, flexShrink: 0 }}>
+        <div
+          style={{
+            width: chartWidth,
+            border: "1px solid var(--semiotic-border, #e0e0e0)",
+            borderRadius: 4,
+            padding: 4,
+            flexShrink: 0,
+          }}
+        >
           <StreamXYFrame
             data={timeSeriesFrameData}
             chartType="line"
@@ -195,10 +303,20 @@ function ResizableAutoRotateDemo() {
             showAxes={true}
             axes={[
               { orient: "left" },
-              { orient: "bottom", autoRotate: true, ticks: 8, tickFormat: (d) => {
-                const date = new Date(d)
-                return date.toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" })
-              }},
+              {
+                orient: "bottom",
+                autoRotate: true,
+                ticks: 8,
+                tickFormat: (d) => {
+                  const date = new Date(d)
+                  return date.toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                },
+              },
             ]}
             size={[chartWidth - 10, 220]}
             margin={{ top: 10, bottom: 100, left: 50, right: 10 }}
@@ -206,7 +324,14 @@ function ResizableAutoRotateDemo() {
         </div>
         <div
           onMouseDown={onMouseDown}
-          style={{ width: 8, cursor: "col-resize", background: "var(--semiotic-border, #ccc)", borderRadius: 4, marginLeft: 2, flexShrink: 0 }}
+          style={{
+            width: 8,
+            cursor: "col-resize",
+            background: "var(--semiotic-border, #ccc)",
+            borderRadius: 4,
+            marginLeft: 2,
+            flexShrink: 0,
+          }}
         />
       </div>
       <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #666)", marginTop: 4 }}>
@@ -227,12 +352,10 @@ export default function AxesPage() {
       nextPage={{ title: "Annotations", path: "/features/annotations" }}
     >
       <p>
-        Axes provide scale context for your visualizations. Semiotic supports
-        axes on all four sides of XY and Ordinal visualizations, with full
-        control over labels, tick formatting, tick count, grid lines, and
-        interactive axis behaviors. Both the simplified Chart components and
-        the lower-level Frame components share the same axis configuration
-        system.
+        Axes provide scale context for your visualizations. Semiotic supports axes on all four sides
+        of XY and Ordinal visualizations, with full control over labels, tick formatting, tick
+        count, grid lines, and interactive axis behaviors. Both the simplified Chart components and
+        the lower-level Frame components share the same axis configuration system.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -241,10 +364,9 @@ export default function AxesPage() {
       <h2 id="with-charts">With Charts</h2>
 
       <p>
-        Chart components like <code>LineChart</code> and <code>BarChart</code>{" "}
-        generate axes automatically based on the <code>xLabel</code> and{" "}
-        <code>yLabel</code> props. This is the simplest way to add labeled
-        axes to your visualization.
+        Chart components like <code>LineChart</code> and <code>BarChart</code> generate axes
+        automatically based on the <code>xLabel</code> and <code>yLabel</code> props. This is the
+        simplest way to add labeled axes to your visualization.
       </p>
 
       <LiveExample
@@ -269,9 +391,8 @@ export default function AxesPage() {
       />
 
       <p>
-        For more control over axis behavior in Chart components, use the{" "}
-        <code>frameProps</code> escape hatch to pass axis configuration
-        directly:
+        For more control over axis behavior in Chart components, use the <code>frameProps</code>{" "}
+        escape hatch to pass axis configuration directly:
       </p>
 
       <CodeBlock
@@ -295,58 +416,56 @@ export default function AxesPage() {
       <h2 id="axis-extent">Exact vs. Nice Tick Endpoints</h2>
 
       <p>
-        By default every Semiotic chart uses d3-scale's <em>nice</em> tick
-        algorithm: tick values are rounded to readable numbers, but as a side
-        effect the first and last tick may sit inside the data domain rather
-        than at the actual min and max. For dashboards where the endpoints
-        are the message — KPI dials, fixed score bands, regulatory-cutoff
-        readouts — pass <code>axisExtent="exact"</code>. The first and last
-        tick pin to the literal data min and max, with equidistant
-        intermediate ticks in between.
+        By default every Semiotic chart uses d3-scale's <em>nice</em> tick algorithm: tick values
+        are rounded to readable numbers, but as a side effect the first and last tick may sit inside
+        the data domain rather than at the actual min and max. For dashboards where the endpoints
+        are the message — KPI dials, fixed score bands, regulatory-cutoff readouts — pass{" "}
+        <code>axisExtent="exact"</code>. The first and last tick pin to the literal data min and
+        max, with equidistant intermediate ticks in between.
       </p>
 
-      <p>
-        The prop is available on every XY and ordinal HOC and applies to:
-      </p>
+      <p>The prop is available on every XY and ordinal HOC and applies to:</p>
       <ul>
-        <li><strong>XY charts</strong> — both x and y axes (linear, time, log)</li>
-        <li><strong>Ordinal charts</strong> — the value axis (the categorical axis is a band scale and has no numeric ticks)</li>
-        <li><strong>Network / geo / hierarchy</strong> — no-op (no continuous axis)</li>
+        <li>
+          <strong>XY charts</strong> — both x and y axes (linear, time, log)
+        </li>
+        <li>
+          <strong>Ordinal charts</strong> — the value axis (the categorical axis is a band scale and
+          has no numeric ticks)
+        </li>
+        <li>
+          <strong>Network / geo / hierarchy</strong> — no-op (no continuous axis)
+        </li>
       </ul>
 
       <p>
         Explicit <code>tickValues</code> still win over both modes. Use
-        <code> "exact"</code> when you want the algorithm to do the work
-        but the endpoints must read as the actual boundaries; reach for{" "}
-        <code>tickValues</code> when you have hand-picked tick locations.
+        <code> "exact"</code> when you want the algorithm to do the work but the endpoints must read
+        as the actual boundaries; reach for <code>tickValues</code> when you have hand-picked tick
+        locations.
       </p>
 
       <p>
-        <strong>Trade-off:</strong> exact mode also pins the scale domain
-        to the data extent — the usual 5% extent padding (which keeps
-        symbols clear of the plot edge) is skipped. Data marks at the
-        extremes will sit at the plot boundary. If you need both exact
-        labels and visual breathing room, pass a hand-picked{" "}
-        <code>tickValues</code> array via <code>frameProps.axes</code> and
-        leave the default <code>"nice"</code> mode in place.
+        <strong>Trade-off:</strong> exact mode also pins the scale domain to the data extent — the
+        usual 5% extent padding (which keeps symbols clear of the plot edge) is skipped. Data marks
+        at the extremes will sit at the plot boundary. If you need both exact labels and visual
+        breathing room, pass a hand-picked <code>tickValues</code> array via{" "}
+        <code>frameProps.axes</code> and leave the default <code>"nice"</code> mode in place.
       </p>
 
       <p>
-        <strong>Log-scale caveat:</strong> log scales always clamp both
-        domain bounds to <code>≥ 1e-6</code> (log of zero is undefined),
-        so a dataset whose values include <code>0</code> or negatives
-        will render with that clamp in place even under exact mode —
-        the first tick reads as <code>max(dataMin, 1e-6)</code>, not the
-        literal data minimum.
+        <strong>Log-scale caveat:</strong> log scales always clamp both domain bounds to{" "}
+        <code>≥ 1e-6</code> (log of zero is undefined), so a dataset whose values include{" "}
+        <code>0</code> or negatives will render with that clamp in place even under exact mode — the
+        first tick reads as <code>max(dataMin, 1e-6)</code>, not the literal data minimum.
       </p>
 
       <h3 id="axis-extent-time">Time-series LineChart with exact endpoints</h3>
       <p>
-        The default-nice version snaps to month boundaries — January 1st,
-        February 1st, and so on. With <code>axisExtent="exact"</code>, the
-        first and last ticks read as the actual data dates (mid-January
-        through end-of-August), and the y-axis pins to the actual revenue
-        min and max rather than rounding to 4,000 / 12,000.
+        The default-nice version snaps to month boundaries — January 1st, February 1st, and so on.
+        With <code>axisExtent="exact"</code>, the first and last ticks read as the actual data dates
+        (mid-January through end-of-August), and the y-axis pins to the actual revenue min and max
+        rather than rounding to 4,000 / 12,000.
       </p>
 
       <LiveExample
@@ -361,7 +480,11 @@ export default function AxesPage() {
           frameProps: {
             axes: [
               { orient: "left", tickFormat: (d) => `$${(d / 1000).toFixed(1)}k` },
-              { orient: "bottom", tickFormat: (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) },
+              {
+                orient: "bottom",
+                tickFormat: (d) =>
+                  new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+              },
             ],
           },
           size: [600, 320],
@@ -381,9 +504,8 @@ export default function AxesPage() {
 
       <h3 id="axis-extent-scatter">Scatterplot pinning both axes</h3>
       <p>
-        With <code>axisExtent="exact"</code> the x-axis pins to 1.7 / 9.3
-        and the y-axis pins to 12 / 87 — the actual data ranges, not 0–10
-        and 0–100 like the nice algorithm would produce.
+        With <code>axisExtent="exact"</code> the x-axis pins to 1.7 / 9.3 and the y-axis pins to 12
+        / 87 — the actual data ranges, not 0–10 and 0–100 like the nice algorithm would produce.
       </p>
 
       <LiveExample
@@ -406,10 +528,9 @@ export default function AxesPage() {
 
       <h3 id="axis-extent-swarm">SwarmPlot ordinal value axis</h3>
       <p>
-        For ordinal charts the prop affects the <em>r</em> (value) axis
-        only; the band-scaled categorical axis is unaffected. Here the
-        value axis endpoints sit at the actual swarm min (4.2) and max
-        (98.7) rather than rounding to 0 and 100.
+        For ordinal charts the prop affects the <em>r</em> (value) axis only; the band-scaled
+        categorical axis is unaffected. Here the value axis endpoints sit at the actual swarm min
+        (4.2) and max (98.7) rather than rounding to 0 and 100.
       </p>
 
       <LiveExample
@@ -434,29 +555,27 @@ export default function AxesPage() {
       <h2 id="tick-anchor">Edge-Aligned Tick Labels</h2>
 
       <p>
-        Default tick labels center on their tick mark, which is fine for
-        middles but lets the first and last labels overflow past the plot's
-        left and right edges. Pass{" "}
-        <code>frameProps.axes[i].tickAnchor: "edges"</code> to flip the first
-        label to <code>text-anchor: start</code> and the last to{" "}
-        <code>text-anchor: end</code>. On vertical axes the equivalent
-        is <code>dominant-baseline: hanging</code> for the top tick and{" "}
-        <code>dominant-baseline: auto</code> for the bottom tick — the
-        labels nudge inward so they can't bleed past the chart bounds.
+        Default tick labels center on their tick mark, which is fine for middles but lets the first
+        and last labels overflow past the plot's left and right edges. Pass{" "}
+        <code>frameProps.axes[i].tickAnchor: "edges"</code> to flip the first label to{" "}
+        <code>text-anchor: start</code> and the last to <code>text-anchor: end</code>. On vertical
+        axes the equivalent is <code>dominant-baseline: hanging</code> for the top tick and{" "}
+        <code>dominant-baseline: auto</code> for the bottom tick — the labels nudge inward so they
+        can't bleed past the chart bounds.
       </p>
 
       <p>
-        Pairs naturally with <code>axisExtent="exact"</code>. Exact mode
-        pins the ticks to the literal data min and max; edges mode keeps
-        those edge labels readable.
+        Pairs naturally with <code>axisExtent="exact"</code>. Exact mode pins the ticks to the
+        literal data min and max; edges mode keeps those edge labels readable.
       </p>
 
       <LiveExample
         frameProps={{
           data: axisExtentTemporalData,
           xAccessor: "date",
-          yAccessor: "revenue",
+          yAccessor: "value",
           curve: "monotoneX",
+          xScaleType: "time",
           xLabel: "Date",
           yLabel: "Revenue",
           axisExtent: "exact",
@@ -491,8 +610,8 @@ export default function AxesPage() {
         inside the <code>.stream-axes</code> wrapper. Tick text carries
         <code> class="semiotic-axis-tick"</code>; axis labels carry{" "}
         <code>class="semiotic-axis-label"</code>; chart titles carry{" "}
-        <code>class="semiotic-chart-title"</code>. Combine these for
-        per-axis CSS without <code>!important</code>:
+        <code>class="semiotic-chart-title"</code>. Combine these for per-axis CSS without{" "}
+        <code>!important</code>:
       </p>
 
       <CodeBlock
@@ -514,14 +633,55 @@ export default function AxesPage() {
       />
 
       <p>
-        The default font sizes come from theme typography (
-        <code>tickSize</code>, <code>labelSize</code>) and are emitted as
-        <code> --semiotic-tick-font-size</code> and{" "}
-        <code>--semiotic-axis-label-font-size</code>. SVG axes consume the
-        vars via inline <code>style={"{ fontSize: \"var(--…)\" }"}</code>,
-        so a CSS-var override on any DOM ancestor flows through the
-        cascade without consumer code needing <code>!important</code>.
+        The default font sizes come from theme typography (<code>tickSize</code>,{" "}
+        <code>labelSize</code>) and are emitted as
+        <code> --semiotic-tick-font-size</code> and <code>--semiotic-axis-label-font-size</code>.
+        SVG axes consume the vars via inline <code>style={'{ fontSize: "var(--…)" }'}</code>, so a
+        CSS-var override on any DOM ancestor flows through the cascade without consumer code needing{" "}
+        <code>!important</code>.
       </p>
+
+      <p>
+        For chart HOCs such as <code>LineChart</code>, set those variables on a wrapper element. The
+        axis labels below use <code>--semiotic-axis-label-font-size: 20px</code>; the tick labels
+        use <code>--semiotic-tick-font-size: 14px</code>.
+      </p>
+
+      <div
+        className="axis-font-size-example"
+        style={{
+          "--semiotic-tick-font-size": "14px",
+          "--semiotic-axis-label-font-size": "20px",
+        }}
+      >
+        <LineChart
+          data={lineData}
+          xAccessor="month"
+          yAccessor="sales"
+          xLabel="Month"
+          yLabel="Sales ($)"
+          width={560}
+          height={320}
+        />
+      </div>
+
+      <CodeBlock
+        code={`<div
+  style={{
+    "--semiotic-tick-font-size": "14px",
+    "--semiotic-axis-label-font-size": "20px",
+  }}
+>
+  <LineChart
+    data={lineData}
+    xAccessor="month"
+    yAccessor="sales"
+    xLabel="Month"
+    yLabel="Sales ($)"
+  />
+</div>`}
+        language="jsx"
+      />
 
       {/* ----------------------------------------------------------------- */}
       {/* With Frames */}
@@ -529,9 +689,8 @@ export default function AxesPage() {
       <h2 id="with-frames">With Frames</h2>
 
       <p>
-        Frame components accept an <code>axes</code> prop — an array of axis
-        configuration objects. Each object must include an <code>orient</code>{" "}
-        property to specify where the axis appears.
+        Frame components accept an <code>axes</code> prop — an array of axis configuration objects.
+        Each object must include an <code>orient</code> property to specify where the axis appears.
       </p>
 
       <h3 id="basic-axes">Basic Left and Bottom Axes</h3>
@@ -566,8 +725,8 @@ export default function AxesPage() {
 
       <h3 id="tick-formatting">Custom Tick Formatting</h3>
       <p>
-        Use <code>tickFormat</code> to control how tick labels render. This is
-        especially useful for currencies, percentages, and dates.
+        Use <code>tickFormat</code> to control how tick labels render. This is especially useful for
+        currencies, percentages, and dates.
       </p>
 
       <LiveExample
@@ -593,7 +752,20 @@ export default function AxesPage() {
               orient: "bottom",
               label: "Month",
               tickFormat: (d) =>
-                ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d - 1] || d,
+                [
+                  "Jan",
+                  "Feb",
+                  "Mar",
+                  "Apr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Aug",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dec",
+                ][d - 1] || d,
             },
           ],
         }}
@@ -618,8 +790,8 @@ export default function AxesPage() {
 
       <h3 id="multi-axis">Multiple Axes</h3>
       <p>
-        You can place axes on all four sides. This is useful for dual-axis
-        charts or adding reference scales.
+        You can place axes on all four sides. This is useful for dual-axis charts or adding
+        reference scales.
       </p>
 
       <LiveExample
@@ -653,10 +825,9 @@ export default function AxesPage() {
 
       <h3 id="jagged-base">Jagged Base for Non-Zero Baselines</h3>
       <p>
-        When your data does not start at zero, set <code>jaggedBase</code> to{" "}
-        <code>true</code> to render a torn-edge tick at the minimum data
-        point. This is a classic data visualization technique to signal that
-        the axis has been truncated.
+        When your data does not start at zero, set <code>jaggedBase</code> to <code>true</code> to
+        render a torn-edge tick at the minimum data point. This is a classic data visualization
+        technique to signal that the axis has been truncated.
       </p>
 
       <LiveExample
@@ -670,10 +841,7 @@ export default function AxesPage() {
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           margin: { top: 20, bottom: 60, left: 70, right: 20 },
           showAxes: true,
-          axes: [
-            { orient: "left", baseline: false, jaggedBase: true },
-            { orient: "bottom" },
-          ],
+          axes: [{ orient: "left", baseline: false, jaggedBase: true }, { orient: "bottom" }],
         }}
         type={StreamXYFrame}
         overrideProps={{
@@ -689,8 +857,8 @@ export default function AxesPage() {
 
       <h3 id="custom-tick-lines">Custom Tick Lines</h3>
       <p>
-        The <code>tickLineGenerator</code> prop lets you render custom tick
-        line elements. This example draws dashed rectangular tick bands:
+        The <code>tickLineGenerator</code> prop lets you render custom tick line elements. This
+        example draws dashed rectangular tick bands:
       </p>
 
       <CodeBlock
@@ -717,11 +885,10 @@ export default function AxesPage() {
 
       <h3 id="landmark-ticks">Landmark Ticks for Time Series</h3>
       <p>
-        When displaying time series data, <code>landmarkTicks</code> applies
-        semibold styling to tick labels at higher-level time boundaries (e.g.,
-        when the month or year changes). This provides hierarchical context
-        that dramatically improves readability of long time axes. Notice how
-        "Feb" and "Mar" are rendered bolder than regular day ticks:
+        When displaying time series data, <code>landmarkTicks</code> applies semibold styling to
+        tick labels at higher-level time boundaries (e.g., when the month or year changes). This
+        provides hierarchical context that dramatically improves readability of long time axes.
+        Notice how "Feb" and "Mar" are rendered bolder than regular day ticks:
       </p>
 
       <StreamXYFrame
@@ -772,10 +939,9 @@ export default function AxesPage() {
       />
 
       <p>
-        Landmark ticks render at <code>fontSize: 11</code> with{" "}
-        <code>fontWeight: 600</code> (semibold), while regular ticks remain at{" "}
-        <code>fontSize: 10</code> with normal weight. You can also pass a custom
-        function:
+        Landmark ticks render at <code>fontSize: 11</code> with <code>fontWeight: 600</code>{" "}
+        (semibold), while regular ticks remain at <code>fontSize: 10</code> with normal weight. You
+        can also pass a custom function:
       </p>
 
       <CodeBlock
@@ -789,8 +955,7 @@ axes={[{
 
       <h3 id="explicit-tick-values">Explicit Tick Values</h3>
       <p>
-        Use <code>tickValues</code> when you need exact control over which
-        ticks appear:
+        Use <code>tickValues</code> when you need exact control over which ticks appear:
       </p>
 
       <LiveExample
@@ -803,7 +968,11 @@ axes={[{
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           showAxes: true,
           axes: [
-            { orient: "left", tickValues: [3000, 5000, 7000, 9000], tickFormat: (d) => `$${d.toLocaleString()}` },
+            {
+              orient: "left",
+              tickValues: [3000, 5000, 7000, 9000],
+              tickFormat: (d) => `$${d.toLocaleString()}`,
+            },
             { orient: "bottom", tickValues: [1, 4, 7, 10], tickFormat: (d) => `Step ${d}` },
           ],
           size: [500, 300],
@@ -821,8 +990,8 @@ axes={[{
 
       <h3 id="include-max">Include Max Tick</h3>
       <p>
-        Set <code>includeMax: true</code> to ensure the domain maximum always
-        appears as a labeled tick, even if d3's default tick generation skips it.
+        Set <code>includeMax: true</code> to ensure the domain maximum always appears as a labeled
+        tick, even if d3's default tick generation skips it.
       </p>
 
       <LiveExample
@@ -853,9 +1022,9 @@ axes={[{
 
       <h3 id="auto-rotate">Auto-Rotate Labels</h3>
       <p>
-        Set <code>autoRotate: true</code> to automatically rotate bottom-axis
-        labels 45° when horizontal spacing is too tight to fit them. Drag the
-        handle to resize the chart and see labels switch between rotated and horizontal:
+        Set <code>autoRotate: true</code> to automatically rotate bottom-axis labels 45° when
+        horizontal spacing is too tight to fit them. Drag the handle to resize the chart and see
+        labels switch between rotated and horizontal:
       </p>
 
       <ResizableAutoRotateDemo />
@@ -875,10 +1044,9 @@ axes={[{
 
       <h3 id="grid-style">Dashed & Dotted Grid Lines</h3>
       <p>
-        Use <code>gridStyle</code> to change grid lines to dashed or
-        dotted. Accepts <code>"dashed"</code>, <code>"dotted"</code>,
-        or a custom <code>strokeDasharray</code> string. Requires{" "}
-        <code>showGrid</code> to be enabled.
+        Use <code>gridStyle</code> to change grid lines to dashed or dotted. Accepts{" "}
+        <code>"dashed"</code>, <code>"dotted"</code>, or a custom <code>strokeDasharray</code>{" "}
+        string. Requires <code>showGrid</code> to be enabled.
       </p>
 
       <LiveExample
@@ -915,18 +1083,16 @@ axes={[{
       <h2 id="configuration">Configuration</h2>
 
       <p>
-        Each axis object in the <code>axes</code> array accepts the following
-        properties:
+        Each axis object in the <code>axes</code> array accepts the following properties:
       </p>
 
       <PropTable componentName="Axis" props={axisProps} />
 
       <h3 id="baseline-options">Baseline Options</h3>
       <p>
-        The <code>baseline</code> prop controls the perpendicular line drawn
-        at the axis edge. By default it renders above the visualization layer.
-        Set it to <code>"under"</code> to draw it beneath, or{" "}
-        <code>false</code> to hide it entirely.
+        The <code>baseline</code> prop controls the perpendicular line drawn at the axis edge. By
+        default it renders above the visualization layer. Set it to <code>"under"</code> to draw it
+        beneath, or <code>false</code> to hide it entirely.
       </p>
 
       <CodeBlock
@@ -943,9 +1109,8 @@ axes={[{
 
       <h3 id="outbound-ticks">Outbound Tick Lines</h3>
       <p>
-        Set <code>showOutboundTickLines</code> to <code>true</code> to draw
-        additional tick lines extending outside the chart area alongside the
-        tick labels.
+        Set <code>showOutboundTickLines</code> to <code>true</code> to draw additional tick lines
+        extending outside the chart area alongside the tick labels.
       </p>
 
       <CodeBlock
@@ -959,10 +1124,9 @@ axes={[{
 
       <h3 id="axis-interactivity">Axis Interactivity</h3>
       <p>
-        The <code>axisAnnotationFunction</code> prop enables hover and click
-        interaction on the axis. When set, hovering over the axis displays a
-        guideline, and clicking fires the callback with the axis value. Use{" "}
-        <code>glyphFunction</code> to customize the hover display.
+        The <code>axisAnnotationFunction</code> prop enables hover and click interaction on the
+        axis. When set, hovering over the axis displays a guideline, and clicking fires the callback
+        with the axis value. Use <code>glyphFunction</code> to customize the hover display.
       </p>
 
       <CodeBlock
@@ -988,24 +1152,23 @@ axes={[{
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame
-          for line, area, and point visualizations
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame for line, area,
+          and point visualizations
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the
-          underlying Frame for bar, swarm, and categorical visualizations
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying Frame for bar,
+          swarm, and categorical visualizations
         </li>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — adding
-          callouts, highlights, and threshold lines
+          <Link to="/features/annotations">Annotations</Link> — adding callouts, highlights, and
+          threshold lines
         </li>
         <li>
-          <Link to="/features/tooltips">Tooltips</Link> — hover-triggered
-          data display
+          <Link to="/features/tooltips">Tooltips</Link> — hover-triggered data display
         </li>
         <li>
-          <Link to="/features/responsive">Responsive</Link> — making frames
-          resize with their container
+          <Link to="/features/responsive">Responsive</Link> — making frames resize with their
+          container
         </li>
       </ul>
     </PageLayout>

@@ -1,5 +1,3 @@
- 
-
 import "@testing-library/jest-dom/vitest"
 
 // jsdom doesn't implement ResizeObserver. Components that measure their
@@ -55,44 +53,52 @@ const canvasMethods = [
   "resetTransform",
 ] as const
 
-type CanvasStubMethod = (typeof canvasMethods)[number]
+function createCanvasContextStub(canvas: HTMLCanvasElement): Partial<CanvasRenderingContext2D> {
+  const ctx: Partial<CanvasRenderingContext2D> & Record<string, unknown> = {
+    canvas,
+    fillStyle: "#000",
+    strokeStyle: "#000",
+    globalAlpha: 1,
+    lineWidth: 1,
+    font: "10px sans-serif",
+    textAlign: "start",
+    textBaseline: "alphabetic",
+  }
+  const methodBag = ctx as Record<string, unknown>
+  for (const method of canvasMethods) {
+    methodBag[method] =
+      method === "measureText"
+        ? () => ({ width: 0 })
+        : method === "getImageData"
+          ? () => ({ data: new Uint8ClampedArray(0) })
+          : method === "createLinearGradient" ||
+              method === "createRadialGradient"
+            ? () => ({ addColorStop: () => {} })
+            : method === "getLineDash"
+              ? () => []
+              : method === "isPointInPath"
+                ? () => false
+                : () => {}
+  }
+  return ctx
+}
 
 // Guard: HTMLCanvasElement only exists in jsdom environments, not in Node SSR tests
 if (typeof HTMLCanvasElement !== "undefined") {
+  const patchedGetContext = function (
+    this: HTMLCanvasElement,
+    contextId: string,
+  ) {
+    if (contextId !== "2d") return null
+    return createCanvasContextStub(this) as CanvasRenderingContext2D
+  } as HTMLCanvasElement["getContext"]
 
-const originalGetContext = HTMLCanvasElement.prototype.getContext
+  HTMLCanvasElement.prototype.getContext = patchedGetContext
+}
 
-const patchedGetContext = function (
-  this: HTMLCanvasElement,
-  contextId: string,
-  ...args: unknown[]
-) {
-  const ctx = originalGetContext.call(
-    this,
-    contextId as never,
-    ...(args as never[])
-  ) as CanvasRenderingContext2D | null
-  if (ctx) {
-    const methodBag = ctx as unknown as Record<CanvasStubMethod, unknown>
-    for (const method of canvasMethods) {
-      if (typeof methodBag[method] !== "function") {
-        methodBag[method] =
-          method === "measureText"
-            ? () => ({ width: 0 })
-            : method === "getImageData"
-              ? () => ({ data: new Uint8ClampedArray(0) })
-              : method === "createLinearGradient" ||
-                  method === "createRadialGradient"
-                ? () => ({ addColorStop: () => {} })
-                : method === "getLineDash"
-                  ? () => []
-                  : () => {}
-      }
-    }
-  }
-  return ctx
-} as HTMLCanvasElement["getContext"]
-
-HTMLCanvasElement.prototype.getContext = patchedGetContext
-
-} // end HTMLCanvasElement guard
+if (typeof globalThis.Path2D === "undefined") {
+  globalThis.Path2D = class MockPath2D {
+    constructor(_path?: string | Path2D) {}
+    addPath(_path: Path2D, _transform?: DOMMatrix2DInit) {}
+  } as typeof Path2D
+}

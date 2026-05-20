@@ -23,7 +23,6 @@
     "src/components/stream/OrdinalCanvasHitTester.test.ts": 1,
     "src/components/stream/OrdinalPipelineStore.swimlane.test.ts": 1,
     "src/components/stream/ordinalSceneBuilders/ordinalSceneBuilders.test.ts": 45,
-    "src/components/stream/PipelineStore.accessor.test.ts": 16,
     "src/components/stream/PipelineStore.heatmap.test.ts": 10,
     "src/components/stream/PipelineStore.transition.test.ts": 1,
     "src/components/stream/StreamXYFrame.hydration.test.tsx": 2,
