@@ -25,7 +25,7 @@
  * sync with the catalog, so the script throws if a subpath has no
  * blurb to print.
  *
- * Usage:
+ * Usage after `npm run dist:prod`:
  *   node scripts/sync-bundle-sizes.mjs            # write (regen mode)
  *   node scripts/sync-bundle-sizes.mjs --check    # CI gate; non-zero exit on drift
  *   node scripts/sync-bundle-sizes.mjs --print    # print to stdout only
@@ -98,6 +98,13 @@ function gzipSize(absolutePath) {
   return gz.length
 }
 
+function assertProductionBundle(absolutePath, bundleRel, errors) {
+  const text = readFileSync(absolutePath, "utf8")
+  if (text.includes("sourceMappingURL=")) {
+    errors.push(`${bundleRel} contains a sourceMappingURL comment, so it was built without production minification. Run \`npm run dist:prod\`.`)
+  }
+}
+
 function kbRound(bytes) {
   return Math.round(bytes / 1024)
 }
@@ -124,10 +131,11 @@ function measure() {
     }
     const bundleAbs = resolve(repoRoot, bundleRel)
     if (!existsSync(bundleAbs)) {
-      errors.push(`Bundle file missing: ${bundleRel} (run \`npm run dist\`)`)
+      errors.push(`Bundle file missing: ${bundleRel} (run \`npm run dist:prod\`)`)
       continue
     }
     statSync(bundleAbs) // throws if unreadable
+    assertProductionBundle(bundleAbs, bundleRel, errors)
     rows.push({
       subpath,
       importPath: subpathToImportPath(subpath),
@@ -304,7 +312,7 @@ function main() {
     console.error(`\n✗ bundle-size docs drifted beyond ±${KB_TOLERANCE} KB tolerance from current \`dist/\` output:`)
     for (const path of stale) console.error(`  - ${path}`)
     console.error("\nRebuild + regenerate with:")
-    console.error("  npm run dist && npm run docs:bundle-sizes")
+    console.error("  npm run dist:prod && npm run docs:bundle-sizes")
     process.exit(1)
   }
 
