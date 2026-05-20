@@ -344,7 +344,7 @@ describe("GaugeChart", () => {
       expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(true)
     })
 
-    it("user-supplied showScaleLabels wins over mode default", () => {
+  it("user-supplied showScaleLabels wins over mode default", () => {
       render(
         <TooltipProvider>
           <GaugeChart value={50} thresholds={[
@@ -355,6 +355,80 @@ describe("GaugeChart", () => {
       )
       const anns = lastOrdinalFrameProps.annotations || []
       expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(true)
+    })
+
+    it("expands gradientFill into multiple arc slices", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart
+            value={50}
+            fillZones={false}
+            gradientFill={{
+              colorStops: [
+                { offset: 0, color: "#ef4444" },
+                { offset: 0.5, color: "#f59e0b" },
+                { offset: 1, color: "#3b82f6" },
+              ],
+            }}
+          />
+        </TooltipProvider>
+      )
+      const data = lastOrdinalFrameProps.data || []
+      const fills = new Set<string>()
+      for (const d of data) {
+        const style = lastOrdinalFrameProps.pieceStyle(d, d.category)
+        if (style?.fill) fills.add(style.fill)
+      }
+      expect(data.length).toBeGreaterThan(1)
+      expect(fills.size).toBeGreaterThan(3)
+    })
+
+    it("does not turn unparseable gradient stop colors gray", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart
+            value={100}
+            fillZones={false}
+            gradientFill={{
+              colorStops: [
+                { offset: 0, color: "var(--semiotic-low)" },
+                { offset: 1, color: "#3b82f6" },
+              ],
+            }}
+          />
+        </TooltipProvider>
+      )
+      const fills = new Set<string>()
+      for (const d of lastOrdinalFrameProps.data || []) {
+        const style = lastOrdinalFrameProps.pieceStyle(d, d.category)
+        if (style?.fill) fills.add(style.fill)
+      }
+      expect(fills.has("#808080")).toBe(false)
+      expect(fills.has("var(--semiotic-low)")).toBe(true)
+      expect(fills.has("#3b82f6")).toBe(true)
+    })
+
+    it("keeps gradient slice count within the default budget across many zones", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart
+            value={100}
+            fillZones={false}
+            thresholds={Array.from({ length: 20 }, (_, i) => ({
+              value: (i + 1) * 5,
+              color: "#999999",
+            }))}
+            gradientFill={{
+              colorStops: [
+                { offset: 0, color: "#ef4444" },
+                { offset: 1, color: "#3b82f6" },
+              ],
+            }}
+          />
+        </TooltipProvider>
+      )
+      const fillSlices = (lastOrdinalFrameProps.data || []).filter((d: Datum) => d._isFill)
+      expect(fillSlices.length).toBeLessThanOrEqual(48)
     })
   })
 })

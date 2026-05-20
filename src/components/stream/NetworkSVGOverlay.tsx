@@ -3,7 +3,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
-import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
+import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 
 type AnnotationAnchorNode = {
@@ -38,6 +38,7 @@ export interface NetworkSVGOverlayProps {
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   legendPosition?: "right" | "left" | "top" | "bottom"
+  legendLayout?: LegendLayout
 
   /** User-provided SVG elements on top */
   foregroundGraphics?: ReactNode
@@ -76,6 +77,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     legendHighlightedCategory,
     legendIsolatedCategories,
     legendPosition = "right",
+    legendLayout,
     foregroundGraphics,
     sceneNodes,
     annotations,
@@ -159,6 +161,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       {/* Legend */}
       {renderLegendFromConfig({
         legend, totalWidth, totalHeight, margin, legendPosition, title,
+        legendLayout,
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>

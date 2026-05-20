@@ -5,7 +5,7 @@ import { useMemo, useRef, useEffect } from "react"
 import type { StreamScales, MarginalGraphicsConfig, XYFrameAxisConfig } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
-import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
+import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
@@ -167,6 +167,7 @@ interface SVGOverlayProps {
   legendIsolatedCategories?: Set<string>
   /** Legend position relative to chart area */
   legendPosition?: "right" | "left" | "top" | "bottom"
+  legendLayout?: LegendLayout
 
   // Foreground graphics (rendered on top in SVG overlay)
   foregroundGraphics?: ReactNode
@@ -432,6 +433,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     legendHighlightedCategory,
     legendIsolatedCategories,
     legendPosition = "right",
+    legendLayout,
     foregroundGraphics,
     marginalGraphics,
     xValues,
@@ -1009,6 +1011,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
       {/* Legend */}
       {renderLegendFromConfig({
         legend, totalWidth, totalHeight, margin, legendPosition, title,
+        legendLayout,
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>

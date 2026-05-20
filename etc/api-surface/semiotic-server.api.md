@@ -20,6 +20,7 @@ function themeStyles
 interface AnimatedGifOptions
 interface DashboardChart
 interface DashboardLayout
+interface LegendLayout
 interface RenderDashboardOptions
 interface RenderToImageOptions
 type ThemeInput

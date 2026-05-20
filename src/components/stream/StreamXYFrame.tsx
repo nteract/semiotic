@@ -438,6 +438,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       legendHighlightedCategory,
       legendIsolatedCategories,
       legendPosition,
+      legendLayout,
       legendCategoryAccessor,
       onCategoriesChange,
       backgroundGraphics,
@@ -1502,6 +1503,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
+            legendLayout={legendLayout}
             foregroundGraphics={
             composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
           }
@@ -1628,6 +1630,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
+          legendLayout={legendLayout}
           foregroundGraphics={
             composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
           }

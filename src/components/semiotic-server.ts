@@ -15,6 +15,7 @@ export type {
   DashboardLayout,
   RenderDashboardOptions,
 } from "./server/renderToStaticSVG"
+export type { LegendLayout } from "./types/legendTypes"
 
 export { renderToAnimatedGif, generateFrameSVGs, generateFrameSequence } from "./server/animatedGif"
 export type { AnimatedGifOptions } from "./server/animatedGif"

@@ -1,19 +1,49 @@
 import * as React from "react"
 
-import { LegendGroup, LegendItem, ItemType, LegendProps, GradientLegendConfig } from "./types/legendTypes"
+import { LegendGroup, LegendItem, ItemType, LegendProps, GradientLegendConfig, LegendLayout } from "./types/legendTypes"
 
 const SWATCH = 16
+const LABEL_GAP = 6
+const ITEM_GAP = 10
+const ROW_HEIGHT = 22
 
-const typeHash: Record<"fill" | "line", (style: React.CSSProperties) => React.ReactElement> = {
-  fill: (style) => <rect style={style} width={SWATCH} height={SWATCH} />,
-  line: (style) => <line style={style} x1={0} y1={0} x2={SWATCH} y2={SWATCH} />
+interface LegendMetrics {
+  swatchSize: number
+  labelGap: number
+  itemGap: number
+  rowHeight: number
+  align: "start" | "center" | "end"
+  maxWidth?: number
+}
+
+function resolveLegendMetrics(layout?: LegendLayout): LegendMetrics {
+  const swatchSize = Math.max(1, layout?.swatchSize ?? SWATCH)
+  const rowHeight = Math.max(swatchSize, layout?.rowHeight ?? ROW_HEIGHT)
+  return {
+    swatchSize,
+    labelGap: Math.max(0, layout?.labelGap ?? LABEL_GAP),
+    itemGap: Math.max(0, layout?.itemGap ?? ITEM_GAP),
+    rowHeight,
+    align: layout?.align === "left"
+      ? "start"
+      : layout?.align === "right"
+        ? "end"
+        : layout?.align ?? "start",
+    maxWidth: layout?.maxWidth,
+  }
+}
+
+const typeHash: Record<"fill" | "line", (style: React.CSSProperties, swatchSize: number) => React.ReactElement> = {
+  fill: (style, swatchSize) => <rect style={style} width={swatchSize} height={swatchSize} />,
+  line: (style, swatchSize) => <line style={style} x1={0} y1={0} x2={swatchSize} y2={swatchSize} />
 }
 
 function renderType(
   item: LegendItem,
   i: number,
   type: ItemType,
-  styleFn: (item: LegendItem, index: number) => React.CSSProperties
+  styleFn: (item: LegendItem, index: number) => React.CSSProperties,
+  swatchSize: number
 ) {
   let renderedType
   if (typeof type === "function") {
@@ -21,16 +51,16 @@ function renderType(
   } else {
     const Type = typeHash[type]
     const style = styleFn(item, i)
-    renderedType = Type(style)
+    renderedType = Type(style, swatchSize)
   }
   return renderedType
 }
 
 /** Checkmark SVG for isolated items — centered on the swatch */
-function CheckMark() {
+function CheckMark({ swatchSize }: { swatchSize: number }) {
   return (
     <path
-      d={`M${SWATCH * 0.25},${SWATCH * 0.55} L${SWATCH * 0.45},${SWATCH * 0.75} L${SWATCH * 0.8},${SWATCH * 0.3}`}
+      d={`M${swatchSize * 0.25},${swatchSize * 0.55} L${swatchSize * 0.45},${swatchSize * 0.75} L${swatchSize * 0.8},${swatchSize * 0.3}`}
       fill="none"
       stroke="white"
       strokeWidth={2}
@@ -67,16 +97,17 @@ const renderLegendGroupVertical = (
   focusedItemIndex: number,
   groupIndex: number,
   onFocusedIndexChange: (groupIndex: number, itemIndex: number) => void,
-  legendInteraction?: string
+  legendInteraction: string | undefined,
+  metrics: LegendMetrics
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
   const renderedItems: React.ReactElement[] = []
   let itemOffset = 0
   const interactive = !!(customClickBehavior || customHoverBehavior)
   const useIsolateAria = legendInteraction === "isolate" || (legendInteraction === undefined && isolatedCategories != null)
-  const ROW_HEIGHT = 22
+  const { swatchSize, labelGap, rowHeight } = metrics
   items.forEach((item, i) => {
-    const renderedType = renderType(item, i, type, styleFn)
+    const renderedType = renderType(item, i, type, styleFn, swatchSize)
     const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
     const isIsolated = isolatedCategories && isolatedCategories.size > 0 && isolatedCategories.has(item.label)
     const isHighlighted = highlightedCategory != null && item.label === highlightedCategory
@@ -136,8 +167,8 @@ const renderLegendGroupVertical = (
         {interactive && <rect
           className="semiotic-legend-focus-ring"
           x={-2} y={-2}
-          width={SWATCH + 8 + item.label.length * 7}
-          height={SWATCH + 4}
+          width={swatchSize + labelGap + 2 + item.label.length * 7}
+          height={swatchSize + 4}
           fill="none"
           stroke="var(--semiotic-focus, #005fcc)"
           strokeWidth={2}
@@ -145,18 +176,16 @@ const renderLegendGroupVertical = (
           visibility="hidden"
         />}
         {renderedType}
-        {isIsolated && <CheckMark />}
-        <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
+        {isIsolated && <CheckMark swatchSize={swatchSize} />}
+        <text y={swatchSize / 2} x={swatchSize + labelGap} dominantBaseline="central" style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
           {item.label}
         </text>
       </g>
     )
-    itemOffset += ROW_HEIGHT
+    itemOffset += rowHeight
   })
   return renderedItems
 }
-
-const ROW_HEIGHT_H = 22
 
 const renderLegendGroupHorizontal = (
   legendGroup: LegendGroup,
@@ -168,29 +197,47 @@ const renderLegendGroupHorizontal = (
   focusedItemIndex: number,
   groupIndex: number,
   onFocusedIndexChange: (groupIndex: number, itemIndex: number) => void,
-  legendInteraction?: string,
+  legendInteraction: string | undefined,
+  metrics: LegendMetrics,
   maxWidth?: number
 ) => {
   const { type = "fill", styleFn, items } = legendGroup
   const renderedItems: React.ReactElement[] = []
-  let itemOffset = 0
-  let rowIndex = 0
+  const { swatchSize, labelGap, itemGap, rowHeight, align } = metrics
   const interactive = !!(customClickBehavior || customHoverBehavior)
   const useIsolateAria = legendInteraction === "isolate" || (legendInteraction === undefined && isolatedCategories != null)
-  items.forEach((item, i) => {
-    const renderedType = renderType(item, i, type, styleFn)
+  const itemWidths = items.map((item) => swatchSize + labelGap + item.label.length * 7)
+  const rows: Array<{ start: number; end: number; width: number }> = []
+  let rowStart = 0
+  let rowWidth = 0
+  itemWidths.forEach((width, i) => {
+    const nextWidth = rowWidth === 0 ? width : rowWidth + itemGap + width
+    if (maxWidth && maxWidth > 0 && rowWidth > 0 && nextWidth > maxWidth) {
+      rows.push({ start: rowStart, end: i, width: rowWidth })
+      rowStart = i
+      rowWidth = width
+    } else {
+      rowWidth = nextWidth
+    }
+  })
+  if (items.length > 0) rows.push({ start: rowStart, end: items.length, width: rowWidth })
+
+  rows.forEach((row, rowIndex) => {
+    const rowOffset =
+      align === "center"
+        ? Math.max(0, ((maxWidth ?? row.width) - row.width) / 2)
+        : align === "end"
+          ? Math.max(0, (maxWidth ?? row.width) - row.width)
+          : 0
+    let itemOffset = rowOffset
+    for (let i = row.start; i < row.end; i++) {
+    const item = items[i]
+    const renderedType = renderType(item, i, type, styleFn, swatchSize)
     const opacity = itemOpacity(item, highlightedCategory, isolatedCategories)
     const isIsolated = isolatedCategories && isolatedCategories.size > 0 && isolatedCategories.has(item.label)
     const isHighlighted = highlightedCategory != null && item.label === highlightedCategory
-    const itemWidth = SWATCH + 10 + item.label.length * 7
 
-    // Wrap to next row if this item would exceed maxWidth
-    if (maxWidth && maxWidth > 0 && itemOffset > 0 && itemOffset + itemWidth > maxWidth) {
-      rowIndex++
-      itemOffset = 0
-    }
-
-    const yOffset = rowIndex * ROW_HEIGHT_H
+    const yOffset = rowIndex * rowHeight
 
     renderedItems.push(
       <g
@@ -248,8 +295,8 @@ const renderLegendGroupHorizontal = (
         {interactive && <rect
           className="semiotic-legend-focus-ring"
           x={-2} y={-2}
-          width={SWATCH + 8 + item.label.length * 7}
-          height={SWATCH + 4}
+          width={swatchSize + labelGap + 2 + item.label.length * 7}
+          height={swatchSize + 4}
           fill="none"
           stroke="var(--semiotic-focus, #005fcc)"
           strokeWidth={2}
@@ -257,31 +304,19 @@ const renderLegendGroupHorizontal = (
           visibility="hidden"
         />}
         {renderedType}
-        {isIsolated && <CheckMark />}
-        <text y={SWATCH / 2} x={SWATCH + 6} dominantBaseline="central" style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
+        {isIsolated && <CheckMark swatchSize={swatchSize} />}
+        <text y={swatchSize / 2} x={swatchSize + labelGap} dominantBaseline="central" style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }} fill="var(--semiotic-text, #333)">
           {item.label}
         </text>
       </g>
     )
-    itemOffset += itemWidth
+    itemOffset += itemWidths[i] + itemGap
+    }
   })
 
-  // Compute total width (max row width) for centering
-  let totalWidth = 0
-  let currentRowWidth = 0
-  for (const item of items) {
-    const w = SWATCH + 10 + item.label.length * 7
-    if (maxWidth && maxWidth > 0 && currentRowWidth > 0 && currentRowWidth + w > maxWidth) {
-      totalWidth = Math.max(totalWidth, currentRowWidth)
-      currentRowWidth = w
-    } else {
-      currentRowWidth += w
-    }
-  }
-  totalWidth = Math.max(totalWidth, currentRowWidth)
-
-  const totalRows = rowIndex + 1
-  const totalHeight = totalRows * ROW_HEIGHT_H
+  const totalWidth = Math.max(0, ...rows.map((row) => row.width))
+  const totalRows = rows.length
+  const totalHeight = totalRows * rowHeight
   return { items: renderedItems, offset: totalWidth, totalRows, totalHeight }
 }
 
@@ -295,7 +330,8 @@ const renderVerticalGroup = ({
   focusedGroupIndex,
   focusedItemIndex,
   onFocusedIndexChange,
-  legendInteraction
+  legendInteraction,
+  metrics
 }: {
   legendGroups: LegendGroup[]
   width: number
@@ -307,6 +343,7 @@ const renderVerticalGroup = ({
   focusedItemIndex: number
   onFocusedIndexChange: (groupIndex: number, itemIndex: number) => void
   legendInteraction?: string
+  metrics: LegendMetrics
 }) => {
   let offset = 24
 
@@ -346,11 +383,11 @@ const renderVerticalGroup = ({
         key={`legend-group-${i}`}
         className="legend-item"
         transform={`translate(0,${offset})`}
-      >
-        {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedGroupIndex, focusedItemIndex, i, onFocusedIndexChange, legendInteraction)}
+    >
+        {renderLegendGroupVertical(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedGroupIndex, focusedItemIndex, i, onFocusedIndexChange, legendInteraction, metrics)}
       </g>
     )
-    offset += l.items.length * 22 + 8
+    offset += l.items.length * metrics.rowHeight + 8
   })
 
   return renderedGroups
@@ -368,7 +405,8 @@ const renderHorizontalGroup = ({
   focusedGroupIndex,
   focusedItemIndex,
   onFocusedIndexChange,
-  legendInteraction
+  legendInteraction,
+  metrics
 }: {
   legendGroups: LegendGroup[]
   title: string | boolean
@@ -382,6 +420,7 @@ const renderHorizontalGroup = ({
   focusedItemIndex: number
   onFocusedIndexChange: (groupIndex: number, itemIndex: number) => void
   legendInteraction?: string
+  metrics: LegendMetrics
 }) => {
   // First pass: compute total width of all items
   let totalItemsWidth = 0
@@ -390,14 +429,21 @@ const renderHorizontalGroup = ({
   legendGroups.forEach((l, i) => {
     let groupWidth = 0
     if (l.label) groupWidth += 16
-    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedGroupIndex, focusedItemIndex, i, onFocusedIndexChange, legendInteraction, width)
+    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior, customHoverBehavior, highlightedCategory, isolatedCategories, focusedGroupIndex, focusedItemIndex, i, onFocusedIndexChange, legendInteraction, metrics, metrics.maxWidth ?? width)
     groupWidth += renderedItems.offset + 5
     groupResults.push({ label: l.label, ...renderedItems, offset: groupWidth, totalRows: renderedItems.totalRows, totalHeight: renderedItems.totalHeight })
     totalItemsWidth += groupWidth + 12
   })
 
-  // Center horizontally — use actual width if items fit, otherwise start at 0
-  const startOffset = totalItemsWidth <= width ? Math.max(0, (width - totalItemsWidth) / 2) : 0
+  const availableWidth = metrics.maxWidth ?? width
+  const startOffset =
+    totalItemsWidth > availableWidth
+      ? 0
+      : metrics.align === "center"
+        ? Math.max(0, (availableWidth - totalItemsWidth) / 2)
+        : metrics.align === "end"
+          ? Math.max(0, availableWidth - totalItemsWidth)
+          : 0
   let offset = startOffset
 
   const renderedGroups: React.ReactElement[] = []
@@ -555,8 +601,10 @@ export default function Legend(props: LegendProps) {
     title = "Legend",
     width = 100,
     height = 20,
-    orientation = "vertical"
+    orientation = "vertical",
+    legendLayout
   } = props
+  const metrics = resolveLegendMetrics(legendLayout)
 
   const [focusedGroupIndex, setFocusedGroupIndex] = React.useState(0)
   const [focusedItemIndex, setFocusedItemIndex] = React.useState(0)
@@ -578,7 +626,8 @@ export default function Legend(props: LegendProps) {
           focusedGroupIndex,
           focusedItemIndex,
           onFocusedIndexChange: handleFocusedIndexChange,
-          legendInteraction
+          legendInteraction,
+          metrics
         })
       : renderHorizontalGroup({
           legendGroups: legendGroups || [],
@@ -592,7 +641,8 @@ export default function Legend(props: LegendProps) {
           focusedGroupIndex,
           focusedItemIndex,
           onFocusedIndexChange: handleFocusedIndexChange,
-          legendInteraction
+          legendInteraction,
+          metrics
         })
 
   const isInteractive = Boolean(customClickBehavior || customHoverBehavior)

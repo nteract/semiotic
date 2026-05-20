@@ -4,7 +4,14 @@ Object.assign(global, { TextEncoder, TextDecoder })
 
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
-import { renderStaticLegend, extractCategories } from "./staticLegend"
+import {
+  renderStaticLegend,
+  renderStaticLegendGroups,
+  renderStaticGradientLegend,
+  measureStaticLegend,
+  measureStaticLegendGroups,
+  extractCategories,
+} from "./staticLegend"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
 
 function renderLegendString(config: Parameters<typeof renderStaticLegend>[0]): string {
@@ -56,9 +63,12 @@ describe("renderStaticLegend", () => {
   })
 
   it("positions legend on the right by default", () => {
-    const svg = renderLegendString(baseConfig)
-    // Right position: totalWidth - margin.right + 10 = 590
-    expect(svg).toContain("translate(590,")
+    const svg = renderLegendString({
+      ...baseConfig,
+      margin: { ...baseConfig.margin, right: 100 },
+    })
+    // Right position aligns just after chart content: totalWidth - margin.right + 10 = 510
+    expect(svg).toContain("translate(510,")
   })
 
   it("positions legend at top", () => {
@@ -69,13 +79,43 @@ describe("renderStaticLegend", () => {
 
   it("positions legend at bottom within SVG bounds", () => {
     const svg = renderLegendString({ ...baseConfig, position: "bottom" })
-    // Bottom: min(400 - 30 + 38, 400 - 16) = 384 (clamped within SVG)
-    expect(svg).toContain("translate(40,384)")
+    // Bottom clamps by rendered legend height, not only swatch height.
+    expect(svg).toContain("translate(40,378)")
   })
 
   it("positions legend at left", () => {
-    const svg = renderLegendString({ ...baseConfig, position: "left" })
-    expect(svg).toContain("translate(4,")
+    const svg = renderLegendString({
+      ...baseConfig,
+      position: "left",
+      margin: { ...baseConfig.margin, left: 100 },
+    })
+    expect(svg).toContain("translate(63,")
+  })
+
+  it("uses legendSize when estimating label width", () => {
+    const compact = renderLegendString({
+      ...baseConfig,
+      theme: {
+        ...LIGHT_THEME,
+        typography: {
+          ...LIGHT_THEME.typography,
+          tickSize: 10,
+          legendSize: 20,
+        },
+      },
+    })
+    expect(compact).toContain("font-size=\"20\"")
+  })
+
+  it("reports actual horizontal width when a single item exceeds maxWidth", () => {
+    const metrics = measureStaticLegend({
+      ...baseConfig,
+      position: "top",
+      categories: ["A very long category name"],
+      legendLayout: { maxWidth: 24 },
+    })
+
+    expect(metrics.width).toBeGreaterThan(24)
   })
 
   it("renders horizontal layout for top/bottom positions", () => {
@@ -89,6 +129,89 @@ describe("renderStaticLegend", () => {
       const unique = new Set(xValues)
       expect(unique.size).toBeGreaterThan(1)
     }
+  })
+})
+
+describe("renderStaticLegendGroups", () => {
+  const baseConfig = {
+    theme: LIGHT_THEME,
+    totalWidth: 600,
+    totalHeight: 400,
+    margin: { top: 20, right: 20, bottom: 30, left: 80 },
+    legendGroups: [{
+      label: "Group A",
+      type: "line" as const,
+      styleFn: () => ({ stroke: "#e41a1c" }),
+      items: [
+        { label: "Alpha" },
+        { label: "Beta" },
+      ],
+    }],
+  }
+
+  it("includes group labels in measurement and output", () => {
+    const grouped = measureStaticLegendGroups(baseConfig)
+    const flat = measureStaticLegend({
+      ...baseConfig,
+      categories: ["Alpha", "Beta"],
+    })
+    const svg = ReactDOMServer.renderToStaticMarkup(<svg>{renderStaticLegendGroups(baseConfig)}</svg>)
+
+    expect(grouped.height).toBeGreaterThan(flat.height)
+    expect(svg).toContain(">Group A<")
+  })
+
+  it("accounts for rotated group label length in horizontal measurement", () => {
+    const grouped = measureStaticLegendGroups({
+      ...baseConfig,
+      position: "top",
+      legendGroups: [{
+        ...baseConfig.legendGroups[0],
+        label: "Long Rotated Group Label",
+      }],
+    })
+
+    expect(grouped.height).toBeGreaterThan(60)
+  })
+
+  it("matches the client diagonal line glyph", () => {
+    const node = renderStaticLegendGroups(baseConfig)
+    const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
+    expect(svg).toContain('x1="0" y1="0" x2="14" y2="14"')
+  })
+
+  it("uses theme color for group separators", () => {
+    const node = renderStaticLegendGroups({
+      ...baseConfig,
+      theme: DARK_THEME,
+      legendGroups: [
+        baseConfig.legendGroups[0],
+        { ...baseConfig.legendGroups[0], label: "Group B" },
+      ],
+    })
+    const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
+    expect(svg).toContain(`stroke="${DARK_THEME.colors.grid}"`)
+    expect(svg).not.toContain('stroke="gray"')
+  })
+})
+
+describe("renderStaticGradientLegend", () => {
+  it("namespaces generated gradient ids", () => {
+    const node = renderStaticGradientLegend({
+      theme: LIGHT_THEME,
+      position: "right",
+      totalWidth: 600,
+      totalHeight: 400,
+      margin: { top: 20, right: 100, bottom: 30, left: 40 },
+      idPrefix: "chart-2",
+      gradient: {
+        domain: [0, 1],
+        colorFn: (value) => value > 0.5 ? "#08519c" : "#deebf7",
+      },
+    })
+    const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
+    expect(svg).toContain('id="chart-2-semiotic-static-gradient-legend"')
+    expect(svg).toContain('fill="url(#chart-2-semiotic-static-gradient-legend)"')
   })
 })
 

@@ -12,6 +12,7 @@ import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { sweepToAngles, computeArcBoundingBox } from "../shared/radialGeometry"
 import { useChartMode } from "../shared/hooks"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import { buildGaugeArcModel, type GaugeGradientFill } from "../shared/gaugeGradient"
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -33,6 +34,15 @@ export interface GaugeChartProps extends BaseChartProps {
   max?: number
   /** Threshold zones — ordered list of { value, color, label? }. Last threshold's value should equal max. */
   thresholds?: GaugeThreshold[]
+  /**
+   * Arc-length gradient for the gauge band.
+   *
+   * The gradient is sampled along the visible filled arc from sweep start
+   * toward the current value. If `fillZones` is false, the entire arc uses
+   * the gradient. If `fillZones` is true, the unfilled remainder stays on
+   * `backgroundColor`.
+   */
+  gradientFill?: GaugeGradientFill
   /** Color of the value arc when no thresholds defined (default: theme primary) */
   color?: string
   /** Background arc color (default: var(--semiotic-grid, #e0e0e0)) */
@@ -159,6 +169,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     min = 0,
     max = 100,
     thresholds,
+    gradientFill,
     color: fillColor,
     backgroundColor = "var(--semiotic-grid, #e0e0e0)",
     arcWidth = 0.3,
@@ -180,6 +191,8 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   } = props
 
   const { width, height, title, description, summary, accessibleTable } = resolved
+  const resolvedGradientFill =
+    gradientFill && typeof gradientFill === "object" ? gradientFill : undefined
 
   // Clamp value to [min, max]
   const clampedValue = Math.max(min, Math.min(max, value))
@@ -190,75 +203,17 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   // Each threshold zone becomes a category with its proportional arc size.
   // The "remaining" (unfilled) portion of each zone is a separate category.
 
-  const { gaugeData, pieceStyle, gaugeAnnotations } = useMemo(() => {
-    const data: Array<{ category: string; value: number; _zone?: string; _isFill: boolean }> = []
-    const styles = new Map<string, { fill: string; opacity?: number }>()
-    const scaleAnnotations: Datum[] = []
-
-    // Normalize thresholds: sort by value, clamp to [min, max], ensure last zone reaches max
-    let zones = thresholds && thresholds.length > 0
-      ? [...thresholds].sort((a, b) => a.value - b.value)
-      : [{ value: max, color: fillColor || "var(--semiotic-primary, #007bff)" }]
-    // Clamp zone values to [min, max]
-    zones = zones.map(z => ({ ...z, value: Math.max(min, Math.min(max, z.value)) }))
-    // Ensure the last zone reaches max
-    if (zones[zones.length - 1].value < max) {
-      zones.push({ value: max, color: zones[zones.length - 1].color })
-    }
-
-    // Data values sum to 1.0. pieScene uses sweepAngle to limit the arc.
-    let prevBound = min
-    for (let i = 0; i < zones.length; i++) {
-      const zone = zones[i]
-      const zonePct = (zone.value - prevBound) / range
-
-      if (!fillZones) {
-        // No fill tracking — all zones render at full color, only needle moves
-        const key = `zone-${i}`
-        data.push({ category: key, value: zonePct, _zone: zone.label || `Zone ${i + 1}`, _isFill: true })
-        styles.set(key, { fill: zone.color })
-      } else {
-        const zoneStart = (prevBound - min) / range
-        const zoneEnd = (zone.value - min) / range
-        const fillEnd = Math.min(pct, zoneEnd)
-        const fillPct = Math.max(0, fillEnd - zoneStart)
-        const bgPct = zonePct - fillPct
-
-        if (fillPct > 0) {
-          const fillKey = `fill-${i}`
-          data.push({ category: fillKey, value: fillPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: true })
-          styles.set(fillKey, { fill: zone.color })
-        }
-        if (bgPct > 0) {
-          const bgKey = `bg-${i}`
-          data.push({ category: bgKey, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false })
-          styles.set(bgKey, { fill: backgroundColor, opacity: 0.4 })
-        }
-      }
-
-      prevBound = zone.value
-    }
-
-    // Scale label annotations at threshold boundaries
-    if (showScaleLabels && thresholds && thresholds.length > 0) {
-      for (const t of thresholds) {
-        if (t.value > min && t.value < max) {
-          scaleAnnotations.push({
-            type: "gauge-label",
-            value: t.value,
-            label: t.label || String(t.value),
-          })
-        }
-      }
-    }
-
-    const styleFn = (d: Datum, category?: string) => {
-      const key = category || d.category
-      return styles.get(key) || { fill: backgroundColor }
-    }
-
-    return { gaugeData: data, pieceStyle: styleFn, gaugeAnnotations: scaleAnnotations }
-  }, [value, min, max, thresholds, fillColor, backgroundColor, pct, range, showScaleLabels, fillZones])
+  const { gaugeData, pieceStyle, gaugeAnnotations } = useMemo(() => buildGaugeArcModel({
+    min,
+    max,
+    value,
+    thresholds,
+    fillColor,
+    backgroundColor,
+    fillZones,
+    showScaleLabels,
+    gradientFill: resolvedGradientFill,
+  }), [value, min, max, thresholds, fillColor, backgroundColor, showScaleLabels, fillZones, resolvedGradientFill])
 
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) so each
   // zone arc respects them without the user needing a per-zone pieceStyle.

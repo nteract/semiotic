@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import type { HoverData, AnnotationContext } from "../realtime/types"
-import type { LegendGroup } from "../types/legendTypes"
+import type { LegendGroup, LegendLayout } from "../types/legendTypes"
 import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -665,6 +665,7 @@ export interface StreamNetworkFrameProps<T = Datum> {
   // ── Legend / title ───────────────────────────────
   legend?: ReactNode | { legendGroups: LegendGroup[] }
   legendPosition?: "right" | "left" | "top" | "bottom"
+  legendLayout?: LegendLayout
   legendHoverBehavior?: (item: { label: string } | null) => void
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null

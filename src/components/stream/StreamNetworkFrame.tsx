@@ -248,6 +248,7 @@ const StreamNetworkFrame = forwardRef<
     svgAnnotationRules,
     legend,
     legendPosition,
+    legendLayout,
     legendHoverBehavior,
     legendClickBehavior,
     legendHighlightedCategory,
@@ -1459,6 +1460,7 @@ const StreamNetworkFrame = forwardRef<
           title={title}
           legend={legend}
           legendPosition={legendPosition}
+          legendLayout={legendLayout}
           legendHoverBehavior={legendHoverBehavior}
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
@@ -1545,6 +1547,7 @@ const StreamNetworkFrame = forwardRef<
         title={title}
         legend={legend}
         legendPosition={legendPosition}
+        legendLayout={legendLayout}
         legendHoverBehavior={legendHoverBehavior}
         legendClickBehavior={legendClickBehavior}
         legendHighlightedCategory={legendHighlightedCategory}

@@ -303,6 +303,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       legendHighlightedCategory,
       legendIsolatedCategories,
       legendPosition,
+      legendLayout,
       legendCategoryAccessor,
       onCategoriesChange,
       backgroundGraphics,
@@ -1061,6 +1062,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
             legendPosition={legendPosition}
+            legendLayout={legendLayout}
             foregroundGraphics={
               composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
             }
@@ -1185,6 +1187,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
           legendPosition={legendPosition}
+          legendLayout={legendLayout}
           foregroundGraphics={
             composeOverlays(resolvedForeground, customOverlays)
           }

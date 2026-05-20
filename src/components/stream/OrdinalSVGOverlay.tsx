@@ -5,7 +5,7 @@ import { useMemo, useRef } from "react"
 import type { OrdinalScales } from "./ordinalTypes"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
-import type { LegendGroup, GradientLegendConfig } from "../types/legendTypes"
+import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
@@ -49,6 +49,7 @@ interface OrdinalSVGOverlayProps {
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
   legendPosition?: "right" | "left" | "top" | "bottom"
+  legendLayout?: LegendLayout
 
   // Foreground graphics
   foregroundGraphics?: ReactNode
@@ -210,6 +211,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     legendHighlightedCategory,
     legendIsolatedCategories,
     legendPosition = "right",
+    legendLayout,
     foregroundGraphics,
     annotations,
     svgAnnotationRules,
@@ -554,6 +556,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       {/* Legend */}
       {renderLegendFromConfig({
         legend, totalWidth, totalHeight, margin, legendPosition, title,
+        legendLayout,
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>

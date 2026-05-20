@@ -237,6 +237,14 @@ describe("SSR feature parity: legend", () => {
     expect(svg).toContain("semiotic-legend")
   })
 
+  it("network does not auto-construct a legend when colorBy is absent", () => {
+    const svg = FRAME_RENDERERS.network({
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      showLegend: true,
+    })
+    expect(svg).not.toContain("semiotic-legend")
+  })
+
   it("geo auto-constructs legend from colorBy on points (proportional symbol map)", () => {
     const svg = renderGeoToStaticSVG({
       chartType: "geo",

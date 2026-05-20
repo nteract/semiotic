@@ -15,22 +15,127 @@ import { Link } from "react-router-dom"
 // ---------------------------------------------------------------------------
 
 const gaugeProps = [
-  { name: "value", type: "number", required: true, default: null, description: "Current gauge value." },
-  { name: "min", type: "number", required: false, default: "0", description: "Minimum scale value." },
-  { name: "max", type: "number", required: false, default: "100", description: "Maximum scale value." },
-  { name: "thresholds", type: "Array<{value, color, label?}>", required: false, default: null, description: "Threshold zones. Each zone's value is the upper bound. Last value should equal max." },
-  { name: "color", type: "string", required: false, default: "theme primary", description: "Fill color when no thresholds defined." },
-  { name: "backgroundColor", type: "string", required: false, default: "#e0e0e0", description: "Background arc color." },
-  { name: "arcWidth", type: "number", required: false, default: "0.3", description: "Arc thickness as fraction of radius (0–1)." },
-  { name: "sweep", type: "number", required: false, default: "240", description: "Arc sweep angle in degrees." },
-  { name: "showNeedle", type: "boolean", required: false, default: "true", description: "Show a needle indicator at the current value." },
-  { name: "needleColor", type: "string", required: false, default: "theme text", description: "Needle stroke color." },
-  { name: "centerContent", type: "ReactNode | (value, min, max) => ReactNode", required: false, default: "value label", description: "Custom content rendered at the gauge center." },
-  { name: "valueFormat", type: "(value) => string", required: false, default: "Math.round", description: "Format function for the default center value label." },
-  { name: "showScaleLabels", type: "boolean", required: false, default: "true", description: "Show scale labels at threshold boundaries." },
-  { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover interaction on arc segments." },
-  { name: "tooltip", type: "TooltipProp", required: false, default: "default", description: "Tooltip on arc hover." },
-  { name: "annotations", type: "Array<object>", required: false, default: null, description: "Annotation objects — supports gauge-label, gauge-needle, and standard types." },
+  {
+    name: "value",
+    type: "number",
+    required: true,
+    default: null,
+    description: "Current gauge value.",
+  },
+  {
+    name: "min",
+    type: "number",
+    required: false,
+    default: "0",
+    description: "Minimum scale value.",
+  },
+  {
+    name: "max",
+    type: "number",
+    required: false,
+    default: "100",
+    description: "Maximum scale value.",
+  },
+  {
+    name: "thresholds",
+    type: "Array<{value, color, label?}>",
+    required: false,
+    default: null,
+    description:
+      "Threshold zones. Each zone's value is the upper bound. Last value should equal max.",
+  },
+  {
+    name: "gradientFill",
+    type: "object",
+    required: false,
+    default: null,
+    description:
+      "Arc-length gradient for the gauge band. The gradient is sampled along the visible filled portion of the arc from the sweep start toward the current value. If fillZones is false, the entire arc uses the gradient.",
+  },
+  {
+    name: "color",
+    type: "string",
+    required: false,
+    default: "theme primary",
+    description: "Fill color when no thresholds defined.",
+  },
+  {
+    name: "backgroundColor",
+    type: "string",
+    required: false,
+    default: "#e0e0e0",
+    description: "Background arc color.",
+  },
+  {
+    name: "arcWidth",
+    type: "number",
+    required: false,
+    default: "0.3",
+    description: "Arc thickness as fraction of radius (0–1).",
+  },
+  {
+    name: "sweep",
+    type: "number",
+    required: false,
+    default: "240",
+    description: "Arc sweep angle in degrees.",
+  },
+  {
+    name: "showNeedle",
+    type: "boolean",
+    required: false,
+    default: "true",
+    description: "Show a needle indicator at the current value.",
+  },
+  {
+    name: "needleColor",
+    type: "string",
+    required: false,
+    default: "theme text",
+    description: "Needle stroke color.",
+  },
+  {
+    name: "centerContent",
+    type: "ReactNode | (value, min, max) => ReactNode",
+    required: false,
+    default: "value label",
+    description: "Custom content rendered at the gauge center.",
+  },
+  {
+    name: "valueFormat",
+    type: "(value) => string",
+    required: false,
+    default: "Math.round",
+    description: "Format function for the default center value label.",
+  },
+  {
+    name: "showScaleLabels",
+    type: "boolean",
+    required: false,
+    default: "true",
+    description: "Show scale labels at threshold boundaries.",
+  },
+  {
+    name: "enableHover",
+    type: "boolean",
+    required: false,
+    default: "true",
+    description: "Enable hover interaction on arc segments.",
+  },
+  {
+    name: "tooltip",
+    type: "TooltipProp",
+    required: false,
+    default: "default",
+    description: "Tooltip on arc hover.",
+  },
+  {
+    name: "annotations",
+    type: "Array<object>",
+    required: false,
+    default: null,
+    description: "Annotation objects — supports gauge-label, gauge-needle, and standard types.",
+  },
 ]
 
 function StreamingGaugeDemo() {
@@ -38,7 +143,7 @@ function StreamingGaugeDemo() {
   const [value, setValue] = useState(50)
   useEffect(() => {
     const id = setInterval(() => {
-      setValue(v => {
+      setValue((v) => {
         const drift = (Math.random() - 0.48) * 3
         const revert = (52 - v) * 0.02
         return Math.max(40, Math.min(60, v + drift + revert))
@@ -53,8 +158,24 @@ function StreamingGaugeDemo() {
   const leaderColor = absLead < 2 ? "#888" : lead > 0 ? "#4575b4" : "#d73027"
 
   return (
-    <div style={{ textAlign: "center", marginBottom: 16, display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "var(--semiotic-text-secondary, #888)", marginBottom: 4 }}>
+    <div
+      style={{
+        textAlign: "center",
+        marginBottom: 16,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          textTransform: "uppercase",
+          letterSpacing: 1,
+          color: "var(--semiotic-text-secondary, #888)",
+          marginBottom: 4,
+        }}
+      >
         Estimated chance of winning
       </div>
       <GaugeChart
@@ -85,7 +206,16 @@ function StreamingGaugeDemo() {
         width={360}
         height={200}
       />
-      <div style={{ display: "flex", justifyContent: "space-between", width: 360, fontSize: 11, color: "var(--semiotic-text-secondary, #888)", padding: "4px 40px 0" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          width: 360,
+          fontSize: 11,
+          color: "var(--semiotic-text-secondary, #888)",
+          padding: "4px 40px 0",
+        }}
+      >
         <span style={{ color: "#d73027", fontWeight: 600 }}>← Candidate A</span>
         <span style={{ color: "#4575b4", fontWeight: 600 }}>Candidate B →</span>
       </div>
@@ -110,9 +240,9 @@ export default function GaugeChartPage() {
 
       <h2 id="quick-start">Quick Start</h2>
       <p>
-        A gauge displays a single numeric value against a scale with optional
-        threshold zones. Built on top of the ordinal frame's radial projection — the
-        same rendering pipeline as pie and donut charts.
+        A gauge displays a single numeric value against a scale with optional threshold zones. Built
+        on top of the ordinal frame's radial projection — the same rendering pipeline as pie and
+        donut charts.
       </p>
 
       <StreamingToggle
@@ -168,9 +298,7 @@ export default function GaugeChartPage() {
       <h2 id="examples">Examples</h2>
 
       <h3 id="simple-gauge">Simple Gauge</h3>
-      <p>
-        A minimal gauge with no threshold zones — just a value against a scale.
-      </p>
+      <p>A minimal gauge with no threshold zones — just a value against a scale.</p>
 
       <LiveExample
         frameProps={{
@@ -186,9 +314,8 @@ export default function GaugeChartPage() {
 
       <h3 id="threshold-zones">Threshold Zones</h3>
       <p>
-        Define color-coded zones with the <code>thresholds</code> prop. Each
-        threshold specifies the upper bound of a zone. The gauge fills through
-        zones as the value increases.
+        Define color-coded zones with the <code>thresholds</code> prop. Each threshold specifies the
+        upper bound of a zone. The gauge fills through zones as the value increases.
       </p>
 
       <LiveExample
@@ -219,8 +346,8 @@ export default function GaugeChartPage() {
 
       <h3 id="custom-range">Custom Range</h3>
       <p>
-        Gauges don't have to be 0–100. Set <code>min</code> and <code>max</code>{" "}
-        to any range, and use <code>valueFormat</code> for custom labels.
+        Gauges don't have to be 0–100. Set <code>min</code> and <code>max</code> to any range, and
+        use <code>valueFormat</code> for custom labels.
       </p>
 
       <LiveExample
@@ -272,11 +399,10 @@ export default function GaugeChartPage() {
 
       <h3 id="rounded-ends">Rounded Ends</h3>
       <p>
-        Pass <code>cornerRadius</code> (pixels) to round the gauge's
-        outer endpoints — the start of the first zone and the end of
-        the last zone. Internal zone boundaries stay square so threshold
-        seams remain visually distinct (mirrors the swimlane convention
-        for radial sectors).
+        Pass <code>cornerRadius</code> (pixels) to round the gauge's outer endpoints — the start of
+        the first zone and the end of the last zone. Internal zone boundaries stay square so
+        threshold seams remain visually distinct (mirrors the swimlane convention for radial
+        sectors).
       </p>
 
       <LiveExample
@@ -305,10 +431,56 @@ export default function GaugeChartPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="arc-gradient">Arc Gradient</h3>
+      <p>
+        Use <code>gradientFill</code> to sample colors along the gauge arc. The gradient is applied
+        to the filled portion only, so this example hides the needle and shows the first 70% of the
+        arc as a gradient while the remaining 30% stays grey.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          value: 50,
+          min: 0,
+          max: 100,
+          fillZones: true,
+          showNeedle: false,
+          thresholds: [{ value: 70, color: "#d1d5db", label: "Remaining" }],
+          gradientFill: {
+            colorStops: [
+              { offset: 0, color: "#d73027" },
+              { offset: 0.35, color: "#f46d43" },
+              { offset: 0.7, color: "#fdae61" },
+              { offset: 1, color: "#66bd63" },
+            ],
+          },
+          width: 280,
+          height: 220,
+          cornerRadius: 100,
+        }}
+        type={GaugeChart}
+        overrideProps={{
+          showNeedle: "false",
+          value: "70",
+          fillZones: "true",
+          thresholds: `[
+  { value: 70, color: "#d1d5db", label: "Remaining" }
+]`,
+          gradientFill: `{
+  colorStops: [
+    { offset: 0, color: "#d73027" },
+    { offset: 0.35, color: "#f46d43" },
+    { offset: 0.7, color: "#fdae61" },
+    { offset: 1, color: "#66bd63" },
+  ]
+}`,
+        }}
+        hiddenProps={{}}
+      />
+
       <h3 id="thick-arc">Thick Arc</h3>
       <p>
-        Increase <code>arcWidth</code> for a chunkier ring. Decrease for a thin
-        progress ring.
+        Increase <code>arcWidth</code> for a chunkier ring. Decrease for a thin progress ring.
       </p>
 
       <LiveExample
@@ -329,8 +501,7 @@ export default function GaugeChartPage() {
 
       <h3 id="custom-center">Custom Center Content</h3>
       <p>
-        Replace the default value label with any React content via{" "}
-        <code>centerContent</code>.
+        Replace the default value label with any React content via <code>centerContent</code>.
       </p>
 
       <CodeBlock
@@ -353,11 +524,10 @@ export default function GaugeChartPage() {
 
       <h3 id="streaming">Streaming — Election Needle</h3>
       <p>
-        The gauge below simulates a live election forecast in the style of the
-        NYT needle. The value drifts around 50% with a slight lean,
-        updating every 400ms. The diverging color scheme runs from red
-        (Candidate A) through a grey toss-up zone to blue (Candidate B).
-        Only the needle moves — the threshold zones stay fixed.
+        The gauge below simulates a live election forecast in the style of the NYT needle. The value
+        drifts around 50% with a slight lean, updating every 400ms. The diverging color scheme runs
+        from red (Candidate A) through a grey toss-up zone to blue (Candidate B). Only the needle
+        moves — the threshold zones stay fixed.
       </p>
 
       <StreamingGaugeDemo />
@@ -409,16 +579,15 @@ export default function GaugeChartPage() {
 
       <ul>
         <li>
-          <Link to="/charts/donut-chart">DonutChart</Link> — multi-category
-          ring chart (GaugeChart is built on the same rendering pipeline)
+          <Link to="/charts/donut-chart">DonutChart</Link> — multi-category ring chart (GaugeChart
+          is built on the same rendering pipeline)
         </li>
         <li>
-          <Link to="/charts/pie-chart">PieChart</Link> — part-to-whole
-          without the inner radius
+          <Link to="/charts/pie-chart">PieChart</Link> — part-to-whole without the inner radius
         </li>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — adding callouts,
-          highlights, and notes to any visualization
+          <Link to="/features/annotations">Annotations</Link> — adding callouts, highlights, and
+          notes to any visualization
         </li>
       </ul>
     </PageLayout>

@@ -134,6 +134,7 @@ interface HeatmapProps
 interface HistogramProps
 interface HoverAnnotationConfig
 interface HoverData
+interface LegendLayout
 interface LikertChartProps
 interface LineChartProps
 interface LineStyle

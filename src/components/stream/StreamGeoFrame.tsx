@@ -231,6 +231,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       // Legend (passed from HOCs)
       legend,
       legendPosition,
+      legendLayout,
       legendHoverBehavior,
       legendClickBehavior,
       legendHighlightedCategory,
@@ -1282,6 +1283,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             title={title}
             legend={legend}
             legendPosition={legendPosition}
+            legendLayout={legendLayout}
             legendHoverBehavior={legendHoverBehavior}
             legendClickBehavior={legendClickBehavior}
             legendHighlightedCategory={legendHighlightedCategory}
@@ -1369,6 +1371,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           title={title}
           legend={legend}
           legendPosition={legendPosition}
+          legendLayout={legendLayout}
           legendHoverBehavior={legendHoverBehavior}
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}

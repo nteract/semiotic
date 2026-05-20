@@ -69,6 +69,24 @@ describe("Legend — categorical items", () => {
     const titleEl = container.querySelector(".legend-title")
     expect(titleEl).toBeNull()
   })
+
+  it("defaults horizontal legends to start alignment", () => {
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[makeLegendGroup({ label: "" })]}
+        orientation="horizontal"
+        width={300}
+      />
+    )
+    expect(container.querySelector(".legend-item")?.getAttribute("transform")).toBe("translate(0,0)")
+  })
+
+  it("keeps vertical row spacing at least as large as custom swatches", () => {
+    const { container } = renderInSvg(
+      <Legend legendGroups={[makeLegendGroup()]} legendLayout={{ swatchSize: 30 }} />
+    )
+    expect(container.innerHTML).toContain("translate(0,30)")
+  })
 })
 
 // ── Accessibility: roles and aria ────────────────────────────────────────
@@ -305,6 +323,25 @@ describe("Legend — orientation", () => {
       const transform = items[1].getAttribute("transform")
       expect(transform).toMatch(/translate\(\d+.*,0\)/)
     }
+  })
+
+  it("applies legendLayout sizing and end alignment in horizontal mode", () => {
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        orientation="horizontal"
+        width={220}
+        legendLayout={{ align: "end", swatchSize: 8, labelGap: 4, itemGap: 4 }}
+      />
+    )
+    const swatches = Array.from(container.querySelectorAll("rect")).filter(
+      (r) => r.getAttribute("width") === "8" && r.getAttribute("height") === "8"
+    )
+    expect(swatches.length).toBe(3)
+    const legendItemGroup = container.querySelector(".legend-item")
+    const firstItem = legendItemGroup?.querySelector("g")
+    const firstX = Number(firstItem?.getAttribute("transform")?.match(/translate\(([\d.]+),/)?.[1])
+    expect(firstX).toBeGreaterThan(0)
   })
 })
 
