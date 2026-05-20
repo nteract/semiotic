@@ -211,6 +211,7 @@ function renderLegendConfig(
     margin: { top: number; right: number; bottom: number; left: number }
     hasTitle?: boolean
     legendLayout?: LegendLayout
+    idPrefix?: string
   }
 ): React.ReactNode {
   const base = {
@@ -221,6 +222,7 @@ function renderLegendConfig(
     margin: options.margin,
     hasTitle: options.hasTitle,
     legendLayout: options.legendLayout,
+    idPrefix: options.idPrefix,
   }
   if (isLegendConfig(legend)) {
     return renderStaticLegendGroups({ ...base, legendGroups: legend.legendGroups })
@@ -600,9 +602,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
     : null
 
   // Legend — auto-build from colorAccessor/groupAccessor + showLegend, OR
-  // honor a caller-supplied pre-rendered ReactNode. Config-object form
-  // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; the
-  // categorical auto-build covers that case.
+  // honor a caller-supplied pre-rendered ReactNode/config object.
   const xyAutoLegend = props.showLegend ? (() => {
     const categories = xyLegendCategories
     if (categories.length === 0) return null
@@ -627,6 +627,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
         margin,
         hasTitle: !!props.title,
         legendLayout: props.legendLayout,
+        idPrefix: props._idPrefix,
       }) || xyAutoLegend
 
   const content = (
@@ -992,10 +993,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   })() : null
 
   // If the caller supplied a pre-rendered legend element, prefer it over
-  // the auto-build. The frame's `legend` prop also accepts a config-object
-  // form ({legendGroups} or {gradient}) — those are SVGOverlay-side concerns
-  // and aren't yet wired through SSR; auto-build covers the categorical case
-  // either way.
+  // the auto-build. Config-object legends ({legendGroups} or {gradient})
+  // are rendered statically for SSR.
   const networkLegendOut = React.isValidElement(props.legend)
     ? props.legend
     : renderLegendConfig(props.legend, {
@@ -1005,6 +1004,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
         margin,
         hasTitle: !!props.title,
         legendLayout: props.legendLayout,
+        idPrefix: props._idPrefix,
       }) || networkLegend
 
   const content = (
@@ -1330,6 +1330,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
         margin,
         hasTitle: !!props.title,
         legendLayout: props.legendLayout,
+        idPrefix: props._idPrefix,
       }) || ordinalAutoLegend
 
   const translateX = isRadial ? margin.left + width / 2 : margin.left
@@ -1520,9 +1521,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
     })
   })() : null
 
-  // Honor caller-supplied pre-rendered legend element. Config-object form
-  // (`{legendGroups}` / `{gradient}`) isn't yet wired through SSR; auto-build
-  // covers the categorical case.
+  // Honor caller-supplied pre-rendered legend element or static config object.
   const geoLegend = React.isValidElement(props.legend)
     ? (props.legend as React.ReactNode)
     : renderLegendConfig(props.legend, {
@@ -1532,6 +1531,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
         margin,
         hasTitle: !!props.title,
         legendLayout: props.legendLayout,
+        idPrefix: props._idPrefix,
       }) || geoAutoLegend
 
   const content = (

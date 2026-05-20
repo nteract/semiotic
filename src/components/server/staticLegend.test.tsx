@@ -4,7 +4,14 @@ Object.assign(global, { TextEncoder, TextDecoder })
 
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
-import { renderStaticLegend, measureStaticLegend, extractCategories } from "./staticLegend"
+import {
+  renderStaticLegend,
+  renderStaticLegendGroups,
+  renderStaticGradientLegend,
+  measureStaticLegend,
+  measureStaticLegendGroups,
+  extractCategories,
+} from "./staticLegend"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
 
 function renderLegendString(config: Parameters<typeof renderStaticLegend>[0]): string {
@@ -122,6 +129,62 @@ describe("renderStaticLegend", () => {
       const unique = new Set(xValues)
       expect(unique.size).toBeGreaterThan(1)
     }
+  })
+})
+
+describe("renderStaticLegendGroups", () => {
+  const baseConfig = {
+    theme: LIGHT_THEME,
+    totalWidth: 600,
+    totalHeight: 400,
+    margin: { top: 20, right: 20, bottom: 30, left: 80 },
+    legendGroups: [{
+      label: "Group A",
+      type: "line" as const,
+      styleFn: () => ({ stroke: "#e41a1c" }),
+      items: [
+        { label: "Alpha" },
+        { label: "Beta" },
+      ],
+    }],
+  }
+
+  it("includes group labels in measurement and output", () => {
+    const grouped = measureStaticLegendGroups(baseConfig)
+    const flat = measureStaticLegend({
+      ...baseConfig,
+      categories: ["Alpha", "Beta"],
+    })
+    const svg = ReactDOMServer.renderToStaticMarkup(<svg>{renderStaticLegendGroups(baseConfig)}</svg>)
+
+    expect(grouped.height).toBeGreaterThan(flat.height)
+    expect(svg).toContain(">Group A<")
+  })
+
+  it("matches the client diagonal line glyph", () => {
+    const node = renderStaticLegendGroups(baseConfig)
+    const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
+    expect(svg).toContain('x1="0" y1="0" x2="14" y2="14"')
+  })
+})
+
+describe("renderStaticGradientLegend", () => {
+  it("namespaces generated gradient ids", () => {
+    const node = renderStaticGradientLegend({
+      theme: LIGHT_THEME,
+      position: "right",
+      totalWidth: 600,
+      totalHeight: 400,
+      margin: { top: 20, right: 100, bottom: 30, left: 40 },
+      idPrefix: "chart-2",
+      gradient: {
+        domain: [0, 1],
+        colorFn: (value) => value > 0.5 ? "#08519c" : "#deebf7",
+      },
+    })
+    const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
+    expect(svg).toContain('id="chart-2-semiotic-static-gradient-legend"')
+    expect(svg).toContain('fill="url(#chart-2-semiotic-static-gradient-legend)"')
   })
 })
 

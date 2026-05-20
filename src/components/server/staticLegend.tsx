@@ -33,6 +33,21 @@ interface StaticLegendMetrics {
   swatchRadius: number
 }
 
+interface StaticLegendGroupLayout {
+  group: LegendGroup
+  x: number
+  y: number
+  itemOffsetX: number
+  itemOffsetY: number
+  width: number
+  height: number
+  items: LegendItemLayout[]
+}
+
+interface StaticLegendGroupMetrics extends Omit<StaticLegendMetrics, "items"> {
+  groups: StaticLegendGroupLayout[]
+}
+
 export interface StaticLegendConfig {
   /** Category labels to show in legend */
   categories: string[]
@@ -51,6 +66,8 @@ export interface StaticLegendConfig {
   hasTitle?: boolean
   /** SSR legend layout controls */
   legendLayout?: LegendLayout
+  /** Optional id namespace used for generated SVG ids */
+  idPrefix?: string
 }
 
 export interface StaticLegendGroupsConfig extends Omit<StaticLegendConfig, "categories" | "colorScheme"> {
@@ -181,6 +198,124 @@ export function measureStaticLegend(config: StaticLegendConfig): Omit<StaticLege
   return { width, height, swatchSize }
 }
 
+function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): StaticLegendGroupMetrics {
+  const { legendGroups, theme, position = "right", totalWidth, totalHeight, margin, legendLayout } = config
+  const swatchSize = Math.max(1, legendLayout?.swatchSize ?? SWATCH)
+  const labelGap = Math.max(0, legendLayout?.labelGap ?? LABEL_GAP)
+  const itemGap = Math.max(0, legendLayout?.itemGap ?? ITEM_GAP)
+  const rowHeight = Math.max(swatchSize, legendLayout?.rowHeight ?? ROW_HEIGHT)
+  const labelOffset = swatchSize + labelGap
+  const swatchRadius = Math.min(2, swatchSize / 2)
+  const groupLabelSize = Math.max(12, legendFontSize(theme))
+  const labelPadding = 8
+  const separatorGap = 12
+  const isHorizontal = position === "top" || position === "bottom"
+  const plotWidth = Math.max(swatchSize, totalWidth - margin.left - margin.right)
+  const plotHeight = Math.max(rowHeight, totalHeight - margin.top - margin.bottom)
+
+  if (isHorizontal) {
+    const maxWidth = Math.max(swatchSize, legendLayout?.maxWidth ?? plotWidth)
+    const align = normalizedAlign(legendLayout?.align)
+    let x = 0
+    let height = 0
+    const groups: StaticLegendGroupLayout[] = []
+
+    for (const group of legendGroups) {
+      const groupLabels = group.items.map((item) => item.label)
+      const itemMetrics = computeStaticLegendLayout({
+        ...config,
+        categories: groupLabels,
+        legendLayout: { ...legendLayout, maxWidth: Math.max(swatchSize, maxWidth - groupLabelSize - labelPadding), align: "start" },
+      })
+      const labelWidth = group.label ? groupLabelSize : 0
+      const itemOffsetX = labelWidth > 0 ? labelWidth + labelPadding : 0
+      const groupWidth = itemOffsetX + itemMetrics.width
+      const groupHeight = Math.max(itemMetrics.height, labelWidth > 0 ? groupLabelSize : 0)
+      groups.push({
+        group,
+        x,
+        y: 0,
+        itemOffsetX,
+        itemOffsetY: 0,
+        width: groupWidth,
+        height: groupHeight,
+        items: itemMetrics.items,
+      })
+      x += groupWidth + separatorGap
+      height = Math.max(height, groupHeight)
+    }
+
+    const totalGroupWidth = groups.length > 0 ? x - separatorGap : 0
+    const startOffset =
+      totalGroupWidth > maxWidth
+        ? 0
+        : align === "center"
+          ? Math.max(0, (maxWidth - totalGroupWidth) / 2)
+          : align === "end"
+            ? Math.max(0, maxWidth - totalGroupWidth)
+            : 0
+
+    return {
+      groups: groups.map((group) => ({ ...group, x: group.x + startOffset })),
+      width: totalGroupWidth,
+      height,
+      swatchSize,
+      labelOffset,
+      swatchRadius,
+    }
+  }
+
+  let y = 0
+  let width = 0
+  const groups: StaticLegendGroupLayout[] = []
+
+  for (const group of legendGroups) {
+    const groupLabels = group.items.map((item) => item.label)
+    const itemWidths = groupLabels.map((label) => itemWidth(label, swatchSize, labelGap, theme))
+    const columnWidth = Math.max(0, ...itemWidths)
+    const availableRows = Math.max(1, Math.floor(Math.max(rowHeight, plotHeight - y) / rowHeight))
+    const rowsPerColumn = Math.max(1, Math.min(group.items.length || 1, availableRows))
+    const columns = Math.max(1, Math.ceil(group.items.length / rowsPerColumn))
+    const items = group.items.map((item, i) => {
+      const column = Math.floor(i / rowsPerColumn)
+      const row = i % rowsPerColumn
+      return {
+        category: item.label,
+        width: itemWidths[i],
+        x: column * (columnWidth + itemGap),
+        y: row * rowHeight,
+      }
+    })
+    const itemBlockWidth = columns * columnWidth + Math.max(0, columns - 1) * itemGap
+    const itemBlockHeight = Math.min(group.items.length, rowsPerColumn) * rowHeight
+    const groupLabelWidth = group.label ? itemWidth(group.label, 0, 0, theme) : 0
+    const itemOffsetY = group.label ? groupLabelSize + labelPadding : 0
+    const groupHeight = itemOffsetY + itemBlockHeight + separatorGap
+    const groupWidth = Math.max(itemBlockWidth, groupLabelWidth)
+    groups.push({
+      group,
+      x: 0,
+      y,
+      itemOffsetX: 0,
+      itemOffsetY,
+      width: groupWidth,
+      height: groupHeight,
+      items,
+    })
+    width = Math.max(width, groupWidth)
+    y += groupHeight
+  }
+
+  return {
+    groups,
+    width,
+    height: Math.max(0, y),
+    swatchSize,
+    labelOffset,
+    swatchRadius,
+  }
+}
+
 function flattenLegendGroups(legendGroups: LegendGroup[]): Array<{
   group: LegendGroup
   item: LegendItem
@@ -198,10 +333,8 @@ function flattenLegendGroups(legendGroups: LegendGroup[]): Array<{
 }
 
 export function measureStaticLegendGroups(config: StaticLegendGroupsConfig): Omit<StaticLegendMetrics, "items" | "labelOffset" | "swatchRadius"> {
-  return measureStaticLegend({
-    ...config,
-    categories: flattenLegendGroups(config.legendGroups).map((item) => item.label),
-  })
+  const { width, height, swatchSize } = computeStaticLegendGroupsLayout(config)
+  return { width, height, swatchSize }
 }
 
 export function measureStaticGradientLegend(config: StaticGradientLegendConfig): { width: number; height: number; swatchSize: number } {
@@ -298,13 +431,9 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
 }
 
 export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): React.ReactNode {
-  const flattened = flattenLegendGroups(config.legendGroups)
-  if (flattened.length === 0) return null
+  if (flattenLegendGroups(config.legendGroups).length === 0) return null
 
-  const metrics = computeStaticLegendLayout({
-    ...config,
-    categories: flattened.map((item) => item.label),
-  })
+  const metrics = computeStaticLegendGroupsLayout(config)
   const isHorizontal = config.position === "top" || config.position === "bottom"
   let tx: number, ty: number
   if (config.position === "left") {
@@ -317,32 +446,94 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
     tx = Math.min(config.totalWidth - metrics.width - 4, config.totalWidth - config.margin.right + 10); ty = config.margin.top
   }
 
-  const items = metrics.items.map((layout, i) => {
-    const entry = flattened[i]
-    const { group, item, itemIndex } = entry
+  const items = metrics.groups.flatMap((groupLayout, groupIndex) => {
+    const { group } = groupLayout
     const type = group.type ?? "fill"
-    const style = group.styleFn(item, itemIndex)
-    const glyph = typeof type === "function"
-      ? type(item)
-      : type === "line"
-        ? <line x1={0} y1={metrics.swatchSize / 2} x2={metrics.swatchSize} y2={metrics.swatchSize / 2} style={style} />
-        : <rect width={metrics.swatchSize} height={metrics.swatchSize} rx={metrics.swatchRadius} style={style} />
+    const groupNodes: React.ReactNode[] = []
 
-    return (
-      <g key={`legend-${i}`} transform={`translate(${layout.x},${layout.y})`}>
-        {glyph}
-        <text
-          x={metrics.labelOffset}
-          y={metrics.swatchSize / 2}
-          dominantBaseline="central"
-          fontSize={legendFontSize(config.theme)}
-          fill={config.theme.colors.text}
-          fontFamily={config.theme.typography.fontFamily}
+    if (group.label) {
+      groupNodes.push(isHorizontal
+        ? (
+          <text
+            key={`legend-group-label-${groupIndex}`}
+            transform={`translate(${groupLayout.x},${groupLayout.y}) rotate(90)`}
+            textAnchor="start"
+            fontSize={legendFontSize(config.theme)}
+            fill={config.theme.colors.text}
+            fontFamily={config.theme.typography.fontFamily}
+          >
+            {group.label}
+          </text>
+        )
+        : (
+          <text
+            key={`legend-group-label-${groupIndex}`}
+            x={groupLayout.x}
+            y={groupLayout.y + legendFontSize(config.theme)}
+            fontSize={legendFontSize(config.theme)}
+            fill={config.theme.colors.text}
+            fontFamily={config.theme.typography.fontFamily}
+          >
+            {group.label}
+          </text>
+        ))
+    }
+
+    groupNodes.push(...groupLayout.items.map((layout, itemIndex) => {
+      const item = group.items[itemIndex]
+      const style = group.styleFn(item, itemIndex)
+      const glyph = typeof type === "function"
+        ? type(item)
+        : type === "line"
+          ? <line x1={0} y1={0} x2={metrics.swatchSize} y2={metrics.swatchSize} style={style} />
+          : <rect width={metrics.swatchSize} height={metrics.swatchSize} rx={metrics.swatchRadius} style={style} />
+
+      return (
+        <g
+          key={`legend-${groupIndex}-${itemIndex}`}
+          transform={`translate(${groupLayout.x + groupLayout.itemOffsetX + layout.x},${groupLayout.y + groupLayout.itemOffsetY + layout.y})`}
         >
-          {layout.category}
-        </text>
-      </g>
-    )
+          {glyph}
+          <text
+            x={metrics.labelOffset}
+            y={metrics.swatchSize / 2}
+            dominantBaseline="central"
+            fontSize={legendFontSize(config.theme)}
+            fill={config.theme.colors.text}
+            fontFamily={config.theme.typography.fontFamily}
+          >
+            {layout.category}
+          </text>
+        </g>
+      )
+    }))
+
+    if (!isHorizontal && groupIndex < metrics.groups.length - 1) {
+      groupNodes.push(
+        <line
+          key={`legend-group-separator-${groupIndex}`}
+          x1={0}
+          y1={groupLayout.y + groupLayout.height - 6}
+          x2={metrics.width}
+          y2={groupLayout.y + groupLayout.height - 6}
+          stroke="gray"
+        />
+      )
+    } else if (isHorizontal && groupIndex < metrics.groups.length - 1) {
+      const x = groupLayout.x + groupLayout.width + 6
+      groupNodes.push(
+        <line
+          key={`legend-group-separator-${groupIndex}`}
+          x1={x}
+          y1={0}
+          x2={x}
+          y2={metrics.height}
+          stroke="gray"
+        />
+      )
+    }
+
+    return groupNodes
   })
 
   return <g className="semiotic-legend" transform={`translate(${tx},${ty})`} data-orientation={isHorizontal ? "horizontal" : "vertical"}>{items}</g>
@@ -351,7 +542,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
 export function renderStaticGradientLegend(config: StaticGradientLegendConfig): React.ReactNode {
   const metrics = measureStaticGradientLegend(config)
   const isHorizontal = config.position === "top" || config.position === "bottom"
-  const id = "semiotic-static-gradient-legend"
+  const id = `${config.idPrefix ? `${config.idPrefix}-` : ""}semiotic-static-gradient-legend`
   const fmt = config.gradient.format || ((v: number) => String(Math.round(v * 100) / 100))
   let tx: number, ty: number
   if (config.position === "left") {
