@@ -4,7 +4,7 @@ Object.assign(global, { TextEncoder, TextDecoder })
 
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
-import { renderStaticLegend, extractCategories } from "./staticLegend"
+import { renderStaticLegend, measureStaticLegend, extractCategories } from "./staticLegend"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
 
 function renderLegendString(config: Parameters<typeof renderStaticLegend>[0]): string {
@@ -98,6 +98,17 @@ describe("renderStaticLegend", () => {
       },
     })
     expect(compact).toContain("font-size=\"20\"")
+  })
+
+  it("reports actual horizontal width when a single item exceeds maxWidth", () => {
+    const metrics = measureStaticLegend({
+      ...baseConfig,
+      position: "top",
+      categories: ["A very long category name"],
+      legendLayout: { maxWidth: 24 },
+    })
+
+    expect(metrics.width).toBeGreaterThan(24)
   })
 
   it("renders horizontal layout for top/bottom positions", () => {

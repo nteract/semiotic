@@ -382,5 +382,30 @@ describe("GaugeChart", () => {
       expect(data.length).toBeGreaterThan(1)
       expect(fills.size).toBeGreaterThan(3)
     })
+
+    it("does not turn unparseable gradient stop colors gray", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart
+            value={100}
+            fillZones={false}
+            gradientFill={{
+              colorStops: [
+                { offset: 0, color: "var(--semiotic-low)" },
+                { offset: 1, color: "#3b82f6" },
+              ],
+            }}
+          />
+        </TooltipProvider>
+      )
+      const fills = new Set<string>()
+      for (const d of lastOrdinalFrameProps.data || []) {
+        const style = lastOrdinalFrameProps.pieceStyle(d, d.category)
+        if (style?.fill) fills.add(style.fill)
+      }
+      expect(fills.has("#808080")).toBe(false)
+      expect(fills.has("var(--semiotic-low)")).toBe(true)
+      expect(fills.has("#3b82f6")).toBe(true)
+    })
   })
 })

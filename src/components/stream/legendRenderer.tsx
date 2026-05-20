@@ -45,7 +45,7 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
   const isHorizontal = legendPosition === "top" || legendPosition === "bottom"
   const hasTitle = Boolean(title)
   const plotWidth = Math.max(0, totalWidth - margin.left - margin.right)
-  const legendWidth = Math.max(1, legendLayout?.maxWidth ?? (isHorizontal ? plotWidth : 100))
+  const legendWidth = Math.max(1, isHorizontal ? legendLayout?.maxWidth ?? plotWidth : 100)
   let tx: number, ty: number
   if (legendPosition === "left") {
     tx = Math.max(4, margin.left - legendWidth - 10); ty = margin.top

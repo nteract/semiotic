@@ -17,11 +17,13 @@ interface LegendMetrics {
 }
 
 function resolveLegendMetrics(layout?: LegendLayout): LegendMetrics {
+  const swatchSize = Math.max(1, layout?.swatchSize ?? SWATCH)
+  const rowHeight = Math.max(swatchSize, layout?.rowHeight ?? ROW_HEIGHT)
   return {
-    swatchSize: Math.max(1, layout?.swatchSize ?? SWATCH),
+    swatchSize,
     labelGap: Math.max(0, layout?.labelGap ?? LABEL_GAP),
     itemGap: Math.max(0, layout?.itemGap ?? ITEM_GAP),
-    rowHeight: Math.max(1, layout?.rowHeight ?? ROW_HEIGHT),
+    rowHeight,
     align: layout?.align === "left"
       ? "start"
       : layout?.align === "right"

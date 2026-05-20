@@ -69,6 +69,13 @@ describe("Legend — categorical items", () => {
     const titleEl = container.querySelector(".legend-title")
     expect(titleEl).toBeNull()
   })
+
+  it("keeps vertical row spacing at least as large as custom swatches", () => {
+    const { container } = renderInSvg(
+      <Legend legendGroups={[makeLegendGroup()]} legendLayout={{ swatchSize: 30 }} />
+    )
+    expect(container.innerHTML).toContain("translate(0,30)")
+  })
 })
 
 // ── Accessibility: roles and aria ────────────────────────────────────────

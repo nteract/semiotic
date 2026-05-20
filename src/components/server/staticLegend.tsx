@@ -144,7 +144,7 @@ function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetr
 
     return {
       items,
-      width: Math.min(maxWidth, Math.max(0, ...rows.map((row) => row.width))),
+      width: Math.max(0, ...rows.map((row) => row.width)),
       height: rows.length * rowHeight,
       swatchSize,
       labelOffset,

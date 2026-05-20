@@ -45,14 +45,14 @@ function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
 }
 
-function parseRgb(color: string): [number, number, number] {
+function parseRgb(color: string): [number, number, number] | null {
   const hex = color.trim()
   if (hex.startsWith("#")) {
     let body = hex.slice(1)
     if (body.length === 3) {
       body = body.split("").map((c) => c + c).join("")
     }
-    if (body.length === 6) {
+    if (body.length === 6 && /^[0-9a-f]{6}$/i.test(body)) {
       return [
         parseInt(body.slice(0, 2), 16),
         parseInt(body.slice(2, 4), 16),
@@ -63,10 +63,11 @@ function parseRgb(color: string): [number, number, number] {
 
   const rgba = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i)
   if (rgba) {
-    return [Number(rgba[1]), Number(rgba[2]), Number(rgba[3])]
+    const rgb: [number, number, number] = [Number(rgba[1]), Number(rgba[2]), Number(rgba[3])]
+    if (rgb.every(Number.isFinite)) return rgb
   }
 
-  return [128, 128, 128]
+  return null
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
@@ -93,8 +94,11 @@ function interpolateColorStops(stops: GaugeGradientStop[], t: number): string {
     if (clamped < left.offset || clamped > right.offset) continue
     const span = right.offset - left.offset
     const localT = span <= 0 ? 0 : (clamped - left.offset) / span
-    const [r0, g0, b0] = parseRgb(left.color)
-    const [r1, g1, b1] = parseRgb(right.color)
+    const leftRgb = parseRgb(left.color)
+    const rightRgb = parseRgb(right.color)
+    if (!leftRgb || !rightRgb) return localT < 0.5 ? left.color : right.color
+    const [r0, g0, b0] = leftRgb
+    const [r1, g1, b1] = rightRgb
     return rgbToHex(
       r0 + (r1 - r0) * localT,
       g0 + (g1 - g0) * localT,
