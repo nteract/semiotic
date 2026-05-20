@@ -344,7 +344,7 @@ describe("GaugeChart", () => {
       expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(true)
     })
 
-    it("user-supplied showScaleLabels wins over mode default", () => {
+  it("user-supplied showScaleLabels wins over mode default", () => {
       render(
         <TooltipProvider>
           <GaugeChart value={50} thresholds={[
@@ -355,6 +355,32 @@ describe("GaugeChart", () => {
       )
       const anns = lastOrdinalFrameProps.annotations || []
       expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(true)
+    })
+
+    it("expands gradientFill into multiple arc slices", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart
+            value={50}
+            fillZones={false}
+            gradientFill={{
+              colorStops: [
+                { offset: 0, color: "#ef4444" },
+                { offset: 0.5, color: "#f59e0b" },
+                { offset: 1, color: "#3b82f6" },
+              ],
+            }}
+          />
+        </TooltipProvider>
+      )
+      const data = lastOrdinalFrameProps.data || []
+      const fills = new Set<string>()
+      for (const d of data) {
+        const style = lastOrdinalFrameProps.pieceStyle(d, d.category)
+        if (style?.fill) fills.add(style.fill)
+      }
+      expect(data.length).toBeGreaterThan(1)
+      expect(fills.size).toBeGreaterThan(3)
     })
   })
 })

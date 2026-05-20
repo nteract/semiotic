@@ -609,11 +609,14 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       min: { type: "number", default: 0 },
       max: { type: "number", default: 100 },
       thresholds: { type: "array", description: "Array of { value, color, label? } defining threshold zones. Last value should equal max." },
+      gradientFill: { type: "object", description: "Arc-length gradient for the gauge band. Color stops are sampled along the sweep from start to end." },
       arcWidth: { type: "number", default: 0.3, description: "Arc thickness as fraction of radius (0-1)" },
       cornerRadius: { type: "number", description: "Pixel radius for rounded segment ends. Same semantics as DonutChart's cornerRadius. Omit for sharp corners." },
       sweep: { type: "number", default: 240, description: "Arc sweep angle in degrees (gap centered at bottom)" },
+      fillZones: { type: "boolean", default: true, description: "When true, the arc fills up to the current value; when false, the full arc is shown." },
       showNeedle: { type: "boolean", default: true },
       needleColor: { type: "string" },
+      color: { type: "string", description: "Fallback fill color used when no thresholds are defined" },
       // GaugeChart only uses the `common` bag (no ordinalAxis), so
       // `valueFormat` is an explicit ownProp. Both canonical schema and
       // validationMap expose it. `centerContent` accepts ReactNode which

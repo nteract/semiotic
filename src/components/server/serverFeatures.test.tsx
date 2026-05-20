@@ -441,6 +441,56 @@ describe("Legend rendering", () => {
     expect(firstItemX(end)).toBeGreaterThan(firstItemX(start))
   })
 
+  it("renders caller-supplied legendGroups in SSR without showLegend", () => {
+    const svg = renderChart("LineChart", {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 420,
+      height: 280,
+      legendPosition: "top",
+      legendLayout: { swatchSize: 8, align: "end" },
+      legend: {
+        legendGroups: [{
+          label: "Series",
+          type: "fill",
+          styleFn: (item: { color?: string }) => ({ fill: item.color || "#999" }),
+          items: [
+            { label: "Kafka", color: "#e41a1c" },
+            { label: "Flink", color: "#377eb8" },
+          ],
+        }],
+      },
+    })
+
+    expect(svg).toContain(">Kafka<")
+    expect(svg).toContain(">Flink<")
+    expect(svg).toContain('width="8" height="8"')
+    expect(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1]).not.toBe("20")
+  })
+
+  it("renders caller-supplied gradient legends in SSR", () => {
+    const svg = renderChart("LineChart", {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 420,
+      height: 280,
+      legendPosition: "right",
+      legend: {
+        gradient: {
+          label: "Revenue",
+          domain: [0, 100],
+          colorFn: (value: number) => value > 50 ? "#08519c" : "#deebf7",
+        },
+      },
+    })
+
+    expect(svg).toContain(">Revenue<")
+    expect(svg).toContain("<linearGradient")
+    expect(svg).toContain(">100<")
+  })
+
   it("wraps top legends within chart content and reserves margin for wrapped rows", () => {
     const wrappedData = [
       "Customer Acquisition",
@@ -688,6 +738,27 @@ describe("renderChart", () => {
       height: 400,
     })
     expect(svg).toContain("<path")
+  })
+
+  it("renders GaugeChart arc-length gradients across multiple slices", () => {
+    const svg = renderChart("GaugeChart", {
+      value: 50,
+      min: 0,
+      max: 100,
+      fillZones: false,
+      gradientFill: {
+        colorStops: [
+          { offset: 0, color: "#ef4444" },
+          { offset: 0.5, color: "#f59e0b" },
+          { offset: 1, color: "#3b82f6" },
+        ],
+      },
+    })
+    const fills = new Set<string>()
+    for (const match of svg.matchAll(/<path\b[^>]*fill="([^"]+)"/g)) {
+      fills.add(match[1])
+    }
+    expect(fills.size).toBeGreaterThan(3)
   })
 
   it("matches FunnelChart axis defaults by orientation", () => {

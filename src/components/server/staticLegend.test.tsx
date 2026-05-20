@@ -82,7 +82,22 @@ describe("renderStaticLegend", () => {
       position: "left",
       margin: { ...baseConfig.margin, left: 100 },
     })
-    expect(svg).toContain("translate(64,")
+    expect(svg).toContain("translate(63,")
+  })
+
+  it("uses legendSize when estimating label width", () => {
+    const compact = renderLegendString({
+      ...baseConfig,
+      theme: {
+        ...LIGHT_THEME,
+        typography: {
+          ...LIGHT_THEME.typography,
+          tickSize: 10,
+          legendSize: 20,
+        },
+      },
+    })
+    expect(compact).toContain("font-size=\"20\"")
   })
 
   it("renders horizontal layout for top/bottom positions", () => {

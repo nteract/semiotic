@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { LegendLayout } from "../types/legendTypes"
+import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 /**
  * Server-side rendering of Semiotic charts to standalone SVG strings.
  *
@@ -62,7 +63,15 @@ import {
 
 // Server-specific modules
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
-import { renderStaticLegend, extractCategories, measureStaticLegend } from "./staticLegend"
+import {
+  renderStaticLegend,
+  renderStaticLegendGroups,
+  renderStaticGradientLegend,
+  extractCategories,
+  measureStaticLegend,
+  measureStaticLegendGroups,
+  measureStaticGradientLegend,
+} from "./staticLegend"
 import { renderStaticAnnotations } from "./staticAnnotations"
 import { createSVGHatchPattern } from "./svgHatchPattern"
 import { CHART_CONFIGS } from "./serverChartConfigs"
@@ -152,6 +161,74 @@ function reserveStaticLegendMargin(
   } else {
     margin.bottom = Math.max(margin.bottom, 38 + metrics.height + 4)
   }
+}
+
+function reserveLegendConfigMargin(
+  margin: { top: number; right: number; bottom: number; left: number },
+  options: {
+    legend: unknown
+    theme: ReturnType<typeof resolveTheme>
+    position?: "right" | "left" | "top" | "bottom"
+    size: [number, number]
+    hasTitle?: boolean
+    legendLayout?: LegendLayout
+  }
+): void {
+  const position = options.position || "right"
+  const base = {
+    theme: options.theme,
+    position,
+    totalWidth: options.size[0],
+    totalHeight: options.size[1],
+    margin,
+    hasTitle: options.hasTitle,
+    legendLayout: options.legendLayout,
+  }
+  const metrics = isLegendConfig(options.legend)
+    ? measureStaticLegendGroups({ ...base, legendGroups: options.legend.legendGroups })
+    : isGradientLegendConfig(options.legend)
+      ? measureStaticGradientLegend({ ...base, gradient: options.legend.gradient })
+      : null
+  if (!metrics) return
+
+  if (position === "right") {
+    margin.right = Math.max(margin.right, metrics.width + 14)
+  } else if (position === "left") {
+    margin.left = Math.max(margin.left, metrics.width + 14)
+  } else if (position === "top") {
+    margin.top = Math.max(margin.top, (options.hasTitle ? 32 : 8) + metrics.height + 4)
+  } else {
+    margin.bottom = Math.max(margin.bottom, 38 + metrics.height + 4)
+  }
+}
+
+function renderLegendConfig(
+  legend: unknown,
+  options: {
+    theme: ReturnType<typeof resolveTheme>
+    position?: "right" | "left" | "top" | "bottom"
+    size: [number, number]
+    margin: { top: number; right: number; bottom: number; left: number }
+    hasTitle?: boolean
+    legendLayout?: LegendLayout
+  }
+): React.ReactNode {
+  const base = {
+    theme: options.theme,
+    position: options.position || "right",
+    totalWidth: options.size[0],
+    totalHeight: options.size[1],
+    margin: options.margin,
+    hasTitle: options.hasTitle,
+    legendLayout: options.legendLayout,
+  }
+  if (isLegendConfig(legend)) {
+    return renderStaticLegendGroups({ ...base, legendGroups: legend.legendGroups })
+  }
+  if (isGradientLegendConfig(legend)) {
+    return renderStaticGradientLegend({ ...base, gradient: legend.gradient })
+  }
+  return null
 }
 
 function defaultTickFormat(v: number): string {
@@ -372,7 +449,16 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
 
   // Expand margin for legend BEFORE calculating inner dimensions
   const legendPos = props.legendPosition
-  if (props.showLegend && xyLegendCategories.length > 0) {
+  if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
+    reserveLegendConfigMargin(margin, {
+      legend: props.legend,
+      theme,
+      position: legendPos || "right",
+      size,
+      hasTitle: !!props.title,
+      legendLayout: props.legendLayout,
+    })
+  } else if (props.showLegend && xyLegendCategories.length > 0) {
     reserveStaticLegendMargin(margin, {
       categories: xyLegendCategories,
       colorScheme: props.colorScheme,
@@ -534,7 +620,14 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   })() : null
   const legend = React.isValidElement(props.legend)
     ? (props.legend as React.ReactNode)
-    : xyAutoLegend
+    : renderLegendConfig(props.legend, {
+        theme,
+        position: props.legendPosition || "right",
+        size,
+        margin,
+        hasTitle: !!props.title,
+        legendLayout: props.legendLayout,
+      }) || xyAutoLegend
 
   const content = (
     <>
@@ -616,9 +709,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   const networkLegendCategories = props.showLegend ? (() => {
     const isAccessor = (a: unknown): a is CategoricalAccessor =>
       typeof a === "string" || typeof a === "function"
-    const colorAccessor = isAccessor(props.colorBy)
-      ? props.colorBy
-      : isAccessor(props.nodeIDAccessor) ? props.nodeIDAccessor : undefined
+    const colorAccessor = isAccessor(props.colorBy) ? props.colorBy : undefined
+    if (!colorAccessor) return []
     const propsNodes = filterSparseArray(props.nodes || [])
     if (propsNodes.length > 0) return extractCategories(propsNodes, colorAccessor)
     const propsEdges = Array.isArray(props.edges) ? filterSparseArray(props.edges) : []
@@ -635,7 +727,16 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   // Match the XY frame: reserve legend space BEFORE computing inner dims so
   // the layout doesn't draw under the legend.
   const legendPos = props.legendPosition
-  if (props.showLegend && networkLegendCategories.length > 0) {
+  if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
+    reserveLegendConfigMargin(margin, {
+      legend: props.legend,
+      theme,
+      position: legendPos || "right",
+      size,
+      hasTitle: !!props.title,
+      legendLayout: props.legendLayout,
+    })
+  } else if (props.showLegend && networkLegendCategories.length > 0) {
     reserveStaticLegendMargin(margin, {
       categories: networkLegendCategories,
       colorScheme: props.colorScheme,
@@ -864,9 +965,8 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   const networkLegend = props.showLegend ? (() => {
     const isAccessor = (a: unknown): a is CategoricalAccessor =>
       typeof a === "string" || typeof a === "function"
-    const colorAccessor = isAccessor(props.colorBy)
-      ? props.colorBy
-      : isAccessor(props.nodeIDAccessor) ? props.nodeIDAccessor : undefined
+    const colorAccessor = isAccessor(props.colorBy) ? props.colorBy : undefined
+    if (!colorAccessor) return []
     const legendSource = nodes.length > 0
       ? nodes.map((node) => node.data || { id: node.id })
       : Array.from(new Set(
@@ -898,7 +998,14 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   // either way.
   const networkLegendOut = React.isValidElement(props.legend)
     ? props.legend
-    : networkLegend
+    : renderLegendConfig(props.legend, {
+        theme,
+        position: props.legendPosition || "right",
+        size,
+        margin,
+        hasTitle: !!props.title,
+        legendLayout: props.legendLayout,
+      }) || networkLegend
 
   const content = (
     <>
@@ -1047,7 +1154,16 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
 
   // Expand margin for legend BEFORE calculating inner dimensions
   const legendPos = props.legendPosition
-  if (props.showLegend && ordinalLegendCategories.length > 0) {
+  if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
+    reserveLegendConfigMargin(margin, {
+      legend: props.legend,
+      theme,
+      position: legendPos || "right",
+      size,
+      hasTitle: !!props.title,
+      legendLayout: props.legendLayout,
+    })
+  } else if (props.showLegend && ordinalLegendCategories.length > 0) {
     reserveStaticLegendMargin(margin, {
       categories: ordinalLegendCategories,
       colorScheme: props.colorScheme,
@@ -1207,7 +1323,14 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   })() : null
   const legend = React.isValidElement(props.legend)
     ? (props.legend as React.ReactNode)
-    : ordinalAutoLegend
+    : renderLegendConfig(props.legend, {
+        theme,
+        position: props.legendPosition || "right",
+        size,
+        margin,
+        hasTitle: !!props.title,
+        legendLayout: props.legendLayout,
+      }) || ordinalAutoLegend
 
   const translateX = isRadial ? margin.left + width / 2 : margin.left
   const translateY = isRadial ? margin.top + height / 2 : margin.top
@@ -1266,7 +1389,16 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   // Reserve legend space BEFORE computing inner dims so the geo projection
   // fits inside the post-legend area. Same shape as XY/Network.
   const legendPos = props.legendPosition
-  if (props.showLegend && geoLegendCategories.length > 0) {
+  if (isLegendConfig(props.legend) || isGradientLegendConfig(props.legend)) {
+    reserveLegendConfigMargin(margin, {
+      legend: props.legend,
+      theme,
+      position: legendPos || "right",
+      size,
+      hasTitle: !!props.title,
+      legendLayout: props.legendLayout,
+    })
+  } else if (props.showLegend && geoLegendCategories.length > 0) {
     reserveStaticLegendMargin(margin, {
       categories: geoLegendCategories,
       colorScheme: props.colorScheme,
@@ -1393,7 +1525,14 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   // covers the categorical case.
   const geoLegend = React.isValidElement(props.legend)
     ? (props.legend as React.ReactNode)
-    : geoAutoLegend
+    : renderLegendConfig(props.legend, {
+        theme,
+        position: props.legendPosition || "right",
+        size,
+        margin,
+        hasTitle: !!props.title,
+        legendLayout: props.legendLayout,
+      }) || geoAutoLegend
 
   const content = (
     <>

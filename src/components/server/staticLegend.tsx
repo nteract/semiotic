@@ -10,7 +10,7 @@ import { scaleOrdinal } from "d3-scale"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import type { SemioticTheme } from "../store/ThemeStore"
 import type { Datum } from "../charts/shared/datumTypes"
-import type { LegendLayout } from "../types/legendTypes"
+import type { GradientLegendConfig, LegendGroup, LegendItem, LegendLayout } from "../types/legendTypes"
 
 const SWATCH = 14
 const ROW_HEIGHT = 20
@@ -53,6 +53,14 @@ export interface StaticLegendConfig {
   legendLayout?: LegendLayout
 }
 
+export interface StaticLegendGroupsConfig extends Omit<StaticLegendConfig, "categories" | "colorScheme"> {
+  legendGroups: LegendGroup[]
+}
+
+export interface StaticGradientLegendConfig extends Omit<StaticLegendConfig, "categories" | "colorScheme"> {
+  gradient: GradientLegendConfig
+}
+
 /**
  * Build a categorical color scale from categories and colorScheme.
  */
@@ -71,9 +79,13 @@ function normalizedAlign(align: LegendLayout["align"]): "start" | "center" | "en
   return align ?? "start"
 }
 
+function legendFontSize(theme: SemioticTheme): number {
+  return Number(theme.typography.legendSize ?? theme.typography.labelSize ?? theme.typography.tickSize) || 11
+}
+
 function itemWidth(category: string, swatchSize: number, labelGap: number, theme: SemioticTheme): number {
-  const tickSize = Number(theme.typography.tickSize) || 11
-  return swatchSize + labelGap + Math.ceil(category.length * tickSize * 0.58)
+  const size = legendFontSize(theme)
+  return swatchSize + labelGap + Math.ceil(category.length * size * 0.58)
 }
 
 function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetrics {
@@ -169,6 +181,46 @@ export function measureStaticLegend(config: StaticLegendConfig): Omit<StaticLege
   return { width, height, swatchSize }
 }
 
+function flattenLegendGroups(legendGroups: LegendGroup[]): Array<{
+  group: LegendGroup
+  item: LegendItem
+  itemIndex: number
+  label: string
+}> {
+  return legendGroups.flatMap((group) =>
+    group.items.map((item, itemIndex) => ({
+      group,
+      item,
+      itemIndex,
+      label: item.label,
+    }))
+  )
+}
+
+export function measureStaticLegendGroups(config: StaticLegendGroupsConfig): Omit<StaticLegendMetrics, "items" | "labelOffset" | "swatchRadius"> {
+  return measureStaticLegend({
+    ...config,
+    categories: flattenLegendGroups(config.legendGroups).map((item) => item.label),
+  })
+}
+
+export function measureStaticGradientLegend(config: StaticGradientLegendConfig): { width: number; height: number; swatchSize: number } {
+  const isHorizontal = config.position === "top" || config.position === "bottom"
+  const plotWidth = Math.max(1, config.totalWidth - config.margin.left - config.margin.right)
+  if (isHorizontal) {
+    return {
+      width: Math.min(config.legendLayout?.maxWidth ?? plotWidth, 200),
+      height: config.gradient.label ? 34 : 26,
+      swatchSize: 12,
+    }
+  }
+  return {
+    width: config.gradient.label ? 86 : 72,
+    height: config.gradient.label ? 124 : 108,
+    swatchSize: 14,
+  }
+}
+
 /**
  * Render a static legend as SVG elements.
  * Returns null if no categories to show.
@@ -214,7 +266,7 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
           x={metrics.labelOffset}
           y={metrics.swatchSize / 2}
           dominantBaseline="central"
-          fontSize={theme.typography.tickSize}
+          fontSize={legendFontSize(theme)}
           fill={theme.colors.text}
           fontFamily={theme.typography.fontFamily}
         >
@@ -233,7 +285,7 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
         x={metrics.labelOffset}
         y={metrics.swatchSize / 2}
         dominantBaseline="central"
-        fontSize={theme.typography.tickSize}
+        fontSize={legendFontSize(theme)}
         fill={theme.colors.text}
         fontFamily={theme.typography.fontFamily}
       >
@@ -243,6 +295,110 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
   ))
 
   return <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>{items}</g>
+}
+
+export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): React.ReactNode {
+  const flattened = flattenLegendGroups(config.legendGroups)
+  if (flattened.length === 0) return null
+
+  const metrics = computeStaticLegendLayout({
+    ...config,
+    categories: flattened.map((item) => item.label),
+  })
+  const isHorizontal = config.position === "top" || config.position === "bottom"
+  let tx: number, ty: number
+  if (config.position === "left") {
+    tx = Math.max(4, config.margin.left - metrics.width - 10); ty = config.margin.top
+  } else if (config.position === "top") {
+    tx = config.margin.left; ty = config.hasTitle ? 32 : 8
+  } else if (config.position === "bottom") {
+    tx = config.margin.left; ty = Math.min(config.totalHeight - config.margin.bottom + 38, config.totalHeight - metrics.height - 2)
+  } else {
+    tx = Math.min(config.totalWidth - metrics.width - 4, config.totalWidth - config.margin.right + 10); ty = config.margin.top
+  }
+
+  const items = metrics.items.map((layout, i) => {
+    const entry = flattened[i]
+    const { group, item, itemIndex } = entry
+    const type = group.type ?? "fill"
+    const style = group.styleFn(item, itemIndex)
+    const glyph = typeof type === "function"
+      ? type(item)
+      : type === "line"
+        ? <line x1={0} y1={metrics.swatchSize / 2} x2={metrics.swatchSize} y2={metrics.swatchSize / 2} style={style} />
+        : <rect width={metrics.swatchSize} height={metrics.swatchSize} rx={metrics.swatchRadius} style={style} />
+
+    return (
+      <g key={`legend-${i}`} transform={`translate(${layout.x},${layout.y})`}>
+        {glyph}
+        <text
+          x={metrics.labelOffset}
+          y={metrics.swatchSize / 2}
+          dominantBaseline="central"
+          fontSize={legendFontSize(config.theme)}
+          fill={config.theme.colors.text}
+          fontFamily={config.theme.typography.fontFamily}
+        >
+          {layout.category}
+        </text>
+      </g>
+    )
+  })
+
+  return <g className="semiotic-legend" transform={`translate(${tx},${ty})`} data-orientation={isHorizontal ? "horizontal" : "vertical"}>{items}</g>
+}
+
+export function renderStaticGradientLegend(config: StaticGradientLegendConfig): React.ReactNode {
+  const metrics = measureStaticGradientLegend(config)
+  const isHorizontal = config.position === "top" || config.position === "bottom"
+  const id = "semiotic-static-gradient-legend"
+  const fmt = config.gradient.format || ((v: number) => String(Math.round(v * 100) / 100))
+  let tx: number, ty: number
+  if (config.position === "left") {
+    tx = Math.max(4, config.margin.left - metrics.width - 10); ty = config.margin.top
+  } else if (config.position === "top") {
+    tx = config.margin.left; ty = config.hasTitle ? 32 : 8
+  } else if (config.position === "bottom") {
+    tx = config.margin.left; ty = Math.min(config.totalHeight - config.margin.bottom + 38, config.totalHeight - metrics.height - 2)
+  } else {
+    tx = Math.min(config.totalWidth - metrics.width - 4, config.totalWidth - config.margin.right + 10); ty = config.margin.top
+  }
+
+  const stops = Array.from({ length: 17 }, (_, i) => {
+    const t = i / 16
+    const value = isHorizontal
+      ? config.gradient.domain[0] + t * (config.gradient.domain[1] - config.gradient.domain[0])
+      : config.gradient.domain[1] - t * (config.gradient.domain[1] - config.gradient.domain[0])
+    return <stop key={i} offset={`${t * 100}%`} stopColor={config.gradient.colorFn(value)} />
+  })
+
+  if (isHorizontal) {
+    const barHeight = 12
+    const labelY = config.gradient.label ? 0 : undefined
+    const barY = config.gradient.label ? 8 : 0
+    return (
+      <g className="semiotic-legend" transform={`translate(${tx},${ty})`}>
+        <defs><linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="0%">{stops}</linearGradient></defs>
+        {config.gradient.label && <text x={metrics.width / 2} y={labelY} textAnchor="middle" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={config.theme.typography.fontFamily}>{config.gradient.label}</text>}
+        <rect x={0} y={barY} width={metrics.width} height={barHeight} fill={`url(#${id})`} rx={2} />
+        <text x={0} y={barY + barHeight + 12} textAnchor="start" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[0])}</text>
+        <text x={metrics.width} y={barY + barHeight + 12} textAnchor="end" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[1])}</text>
+      </g>
+    )
+  }
+
+  const barWidth = 14
+  const barHeight = 100
+  const labelY = config.gradient.label ? -6 : undefined
+  return (
+    <g className="semiotic-legend" transform={`translate(${tx},${ty + (config.gradient.label ? 12 : 0)})`}>
+      <defs><linearGradient id={id} x1="0%" y1="0%" x2="0%" y2="100%">{stops}</linearGradient></defs>
+      {config.gradient.label && <text x={barWidth / 2} y={labelY} textAnchor="middle" fontSize={config.theme.typography.tickSize} fill={config.theme.colors.text} fontFamily={config.theme.typography.fontFamily}>{config.gradient.label}</text>}
+      <rect x={0} y={0} width={barWidth} height={barHeight} fill={`url(#${id})`} rx={2} />
+      <text x={barWidth + 5} y={10} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[1])}</text>
+      <text x={barWidth + 5} y={barHeight} fontSize={config.theme.typography.tickSize} fill={config.theme.colors.textSecondary} fontFamily={config.theme.typography.fontFamily}>{fmt(config.gradient.domain[0])}</text>
+    </g>
+  )
 }
 
 /**

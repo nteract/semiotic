@@ -12,6 +12,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 
 import { createColorScale, getColor } from "../charts/shared/colorUtils"
 import { interpolateViridis } from "../charts/shared/colorPalettes"
+import { buildGaugeArcModel } from "../charts/shared/gaugeGradient"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
@@ -599,17 +600,26 @@ const gaugeChart: ChartConfig = {
     const gMax = rest.max ?? 100
     const sweep = rest.sweep ?? 240
     const arcWidth = rest.arcWidth ?? 0.3
+    const fillZones = rest.fillZones !== false
     const gapDeg = 360 - sweep
     const startAngleDeg = 180 + gapDeg / 2
 
-    const thresholds = rest.thresholds || [{ value: gMax, color: "#4e79a7" }]
-    const zoneData = thresholds.map((t: any, i: number) => ({
-      category: t.label || `zone-${i}`,
-      value: t.value - (i > 0 ? thresholds[i - 1].value : gMin),
-    }))
-    const zoneColors: Record<string, string> = {}
-    thresholds.forEach((t: any, i: number) => {
-      zoneColors[t.label || `zone-${i}`] = t.color || "#4e79a7"
+    const thresholds = rest.thresholds || [{ value: gMax, color: rest.color || "#4e79a7" }]
+    const gradientFillValue = common.gradientFill as unknown
+    const gradientFill =
+      gradientFillValue && typeof gradientFillValue === "object" && "colorStops" in gradientFillValue
+        ? gradientFillValue as { colorStops: Array<{ offset: number; color: string }> }
+        : undefined
+    const gaugeModel = buildGaugeArcModel({
+      min: gMin,
+      max: gMax,
+      value: rest.value,
+      thresholds,
+      fillColor: rest.color,
+      backgroundColor: rest.backgroundColor || "#e0e0e0",
+      fillZones,
+      showScaleLabels: rest.showScaleLabels !== false,
+      gradientFill,
     })
 
     // Compute innerRadius from arcWidth fraction, matching renderOrdinalFrame's layout
@@ -622,7 +632,7 @@ const gaugeChart: ChartConfig = {
 
     return {
       chartType: "donut",
-      data: zoneData,
+      data: gaugeModel.gaugeData,
       oAccessor: "category",
       rAccessor: "value",
       projection: "radial",
@@ -630,10 +640,11 @@ const gaugeChart: ChartConfig = {
       sweepAngle: sweep,
       startAngle: startAngleDeg,
       oSort: false,
-      pieceStyle: (d: any, cat?: string) => ({ fill: zoneColors[cat || ""] || "#4e79a7" }),
+      pieceStyle: gaugeModel.pieceStyle,
       ...common,
       showAxes: false,
       // Pass gauge-specific fields through for needle rendering
+      annotations: [...(Array.isArray(common.annotations) ? common.annotations : []), ...gaugeModel.gaugeAnnotations],
       __gauge: { gMin, gMax, sweep, arcWidth, value: rest.value, startAngleDeg, thresholds },
     }
   },

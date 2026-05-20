@@ -306,6 +306,25 @@ describe("Legend — orientation", () => {
       expect(transform).toMatch(/translate\(\d+.*,0\)/)
     }
   })
+
+  it("applies legendLayout sizing and end alignment in horizontal mode", () => {
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        orientation="horizontal"
+        width={220}
+        legendLayout={{ align: "end", swatchSize: 8, labelGap: 4, itemGap: 4 }}
+      />
+    )
+    const swatches = Array.from(container.querySelectorAll("rect")).filter(
+      (r) => r.getAttribute("width") === "8" && r.getAttribute("height") === "8"
+    )
+    expect(swatches.length).toBe(3)
+    const legendItemGroup = container.querySelector(".legend-item")
+    const firstItem = legendItemGroup?.querySelector("g")
+    const firstX = Number(firstItem?.getAttribute("transform")?.match(/translate\(([\d.]+),/)?.[1])
+    expect(firstX).toBeGreaterThan(0)
+  })
 })
 
 // ── Non-interactive mode ─────────────────────────────────────────────────
