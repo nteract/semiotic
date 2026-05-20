@@ -161,10 +161,37 @@ describe("renderStaticLegendGroups", () => {
     expect(svg).toContain(">Group A<")
   })
 
+  it("accounts for rotated group label length in horizontal measurement", () => {
+    const grouped = measureStaticLegendGroups({
+      ...baseConfig,
+      position: "top",
+      legendGroups: [{
+        ...baseConfig.legendGroups[0],
+        label: "Long Rotated Group Label",
+      }],
+    })
+
+    expect(grouped.height).toBeGreaterThan(60)
+  })
+
   it("matches the client diagonal line glyph", () => {
     const node = renderStaticLegendGroups(baseConfig)
     const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
     expect(svg).toContain('x1="0" y1="0" x2="14" y2="14"')
+  })
+
+  it("uses theme color for group separators", () => {
+    const node = renderStaticLegendGroups({
+      ...baseConfig,
+      theme: DARK_THEME,
+      legendGroups: [
+        baseConfig.legendGroups[0],
+        { ...baseConfig.legendGroups[0], label: "Group B" },
+      ],
+    })
+    const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
+    expect(svg).toContain(`stroke="${DARK_THEME.colors.grid}"`)
+    expect(svg).not.toContain('stroke="gray"')
   })
 })
 

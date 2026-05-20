@@ -228,9 +228,10 @@ function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): Stat
         legendLayout: { ...legendLayout, maxWidth: Math.max(swatchSize, maxWidth - groupLabelSize - labelPadding), align: "start" },
       })
       const labelWidth = group.label ? groupLabelSize : 0
+      const rotatedLabelHeight = group.label ? itemWidth(group.label, 0, 0, theme) : 0
       const itemOffsetX = labelWidth > 0 ? labelWidth + labelPadding : 0
       const groupWidth = itemOffsetX + itemMetrics.width
-      const groupHeight = Math.max(itemMetrics.height, labelWidth > 0 ? groupLabelSize : 0)
+      const groupHeight = Math.max(itemMetrics.height, rotatedLabelHeight)
       groups.push({
         group,
         x,
@@ -435,6 +436,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
 
   const metrics = computeStaticLegendGroupsLayout(config)
   const isHorizontal = config.position === "top" || config.position === "bottom"
+  const separatorStroke = config.theme.colors.grid || config.theme.colors.textSecondary
   let tx: number, ty: number
   if (config.position === "left") {
     tx = Math.max(4, config.margin.left - metrics.width - 10); ty = config.margin.top
@@ -516,7 +518,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
           y1={groupLayout.y + groupLayout.height - 6}
           x2={metrics.width}
           y2={groupLayout.y + groupLayout.height - 6}
-          stroke="gray"
+          stroke={separatorStroke}
         />
       )
     } else if (isHorizontal && groupIndex < metrics.groups.length - 1) {
@@ -528,7 +530,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
           y1={0}
           x2={x}
           y2={metrics.height}
-          stroke="gray"
+          stroke={separatorStroke}
         />
       )
     }
