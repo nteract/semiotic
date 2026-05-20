@@ -411,7 +411,6 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       push(item: Datum) {
         if (looksLikeEdge(item)) {
           if (isControlled) {
-            // eslint-disable-next-line no-console
             console.warn("ProcessSankey.push: edge ignored — `edges` prop is controlled.")
             return
           }
@@ -436,7 +435,6 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
         }
         if (newEdges.length > 0) {
           if (isControlled) {
-            // eslint-disable-next-line no-console
             console.warn("ProcessSankey.pushMany: edges ignored — `edges` prop is controlled.")
           } else {
             writePushedEdges([...pushedEdgesRef.current, ...newEdges])

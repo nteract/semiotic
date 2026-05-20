@@ -268,27 +268,31 @@ interface AccessibleDataTableProps {
 }
 
 const SAMPLE_SIZE = 5
+const DATA_TABLE_CLASS = "semiotic-accessible-data-table"
+const DATA_TABLE_HIDDEN_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-hidden`
+const DATA_TABLE_VISIBLE_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-visible`
+const DATA_TABLE_NETWORK_CLASS = `${DATA_TABLE_VISIBLE_CLASS} semiotic-accessible-data-table-network`
 
 const VISIBLE_PANEL_STYLE: React.CSSProperties = {
   position: "absolute",
   top: 0,
   left: 0,
   right: 0,
-  zIndex: 5,
+  zIndex: "var(--semiotic-data-table-z-index, var(--semiotic-overlay-z-index, 20))",
   padding: "14px 16px 12px",
-  borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
+  borderBottom: "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
   fontFamily: "var(--semiotic-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)",
   fontSize: 13,
   lineHeight: 1.5,
-  color: "var(--semiotic-text, #333)",
-  background: "var(--semiotic-bg, #fff)",
+  color: "var(--semiotic-data-table-text, var(--semiotic-text, #333))",
+  background: "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
   borderRadius: "var(--semiotic-border-radius, 0px) var(--semiotic-border-radius, 0px) 0 0",
 }
 
 const SUMMARY_NOTE_STYLE: React.CSSProperties = {
   marginBottom: 8,
   paddingRight: 28,
-  color: "var(--semiotic-text-secondary, #666)",
+  color: "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
   fontSize: 12,
   letterSpacing: "0.01em",
 }
@@ -302,10 +306,10 @@ const CLOSE_BUTTON_STYLE: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  border: "1px solid var(--semiotic-border, #e0e0e0)",
-  background: "var(--semiotic-bg, #fff)",
+  border: "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
+  background: "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
   cursor: "pointer",
-  color: "var(--semiotic-text-secondary, #666)",
+  color: "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
   fontSize: 13,
   lineHeight: 1,
   padding: 0,
@@ -323,23 +327,23 @@ const VISIBLE_TABLE_STYLE: React.CSSProperties = {
 const VISIBLE_TH_STYLE: React.CSSProperties = {
   textAlign: "left",
   padding: "5px 10px",
-  borderBottom: "2px solid var(--semiotic-border, #e0e0e0)",
+  borderBottom: "2px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
   fontWeight: 600,
   fontSize: 11,
   textTransform: "uppercase" as const,
   letterSpacing: "0.04em",
-  color: "var(--semiotic-text-secondary, #666)",
+  color: "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
 }
 
 const VISIBLE_TD_STYLE: React.CSSProperties = {
   padding: "4px 10px",
-  borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
+  borderBottom: "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
 }
 
 const CAPTION_STYLE: React.CSSProperties = {
   textAlign: "left",
   fontSize: 11,
-  color: "var(--semiotic-text-secondary, #999)",
+  color: "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #999))",
   marginBottom: 4,
   fontStyle: "italic",
 }
@@ -389,7 +393,7 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
 
   if (!isExpanded) {
     return (
-      <div id={tableId} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={regionLabel}>
+      <div id={tableId} className={DATA_TABLE_HIDDEN_CLASS} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={regionLabel}>
         <button type="button" onClick={() => setSrExpanded(true)}>
           View data summary ({totalCount} elements)
         </button>
@@ -415,11 +419,11 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
   }
 
   return (
-    <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
-      <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
-      <div role="note" style={SUMMARY_NOTE_STYLE}>{summary}</div>
-      <table role="table" aria-label={`Sample data for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
-        <caption style={CAPTION_STYLE}>
+    <div ref={containerRef} id={tableId} className={DATA_TABLE_VISIBLE_CLASS} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
+      <button type="button" className="semiotic-accessible-data-table-close" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
+      <div className="semiotic-accessible-data-table-summary" role="note" style={SUMMARY_NOTE_STYLE}>{summary}</div>
+      <table className="semiotic-accessible-data-table-table" role="table" aria-label={`Sample data for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
+        <caption className="semiotic-accessible-data-table-caption" style={CAPTION_STYLE}>
           First {sampleRows.length} of {allRows.length} data points
         </caption>
         <thead>
@@ -482,7 +486,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
 
   if (!isExpanded) {
     return (
-      <div id={tableId} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={regionLabel}>
+      <div id={tableId} className={DATA_TABLE_HIDDEN_CLASS} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={regionLabel}>
         <button type="button" onClick={() => setSrExpanded(true)}>
           View data summary ({nodes.length} nodes, {edges.length} edges)
         </button>
@@ -566,11 +570,11 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
   }
 
   return (
-    <div ref={containerRef} id={tableId} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
-      <button type="button" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
-      <div role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
-      <table role="table" aria-label={`Node degree summary for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
-        <caption style={CAPTION_STYLE}>
+    <div ref={containerRef} id={tableId} className={DATA_TABLE_NETWORK_CLASS} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
+      <button type="button" className="semiotic-accessible-data-table-close" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
+      <div className="semiotic-accessible-data-table-summary" role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
+      <table className="semiotic-accessible-data-table-table" role="table" aria-label={`Node degree summary for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
+        <caption className="semiotic-accessible-data-table-caption" style={CAPTION_STYLE}>
           Top {sampleNodes.length} of {nodeRows.length} nodes by degree
         </caption>
         <thead>
