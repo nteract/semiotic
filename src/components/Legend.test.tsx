@@ -70,6 +70,17 @@ describe("Legend — categorical items", () => {
     expect(titleEl).toBeNull()
   })
 
+  it("defaults horizontal legends to start alignment", () => {
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[makeLegendGroup({ label: "" })]}
+        orientation="horizontal"
+        width={300}
+      />
+    )
+    expect(container.querySelector(".legend-item")?.getAttribute("transform")).toBe("translate(0,0)")
+  })
+
   it("keeps vertical row spacing at least as large as custom swatches", () => {
     const { container } = renderInSvg(
       <Legend legendGroups={[makeLegendGroup()]} legendLayout={{ swatchSize: 30 }} />

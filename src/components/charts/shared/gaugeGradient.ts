@@ -156,46 +156,66 @@ export function buildGaugeArcModel(options: BuildGaugeArcModelOptions): GaugeArc
   const styles = new Map<string, { fill: string; opacity?: number }>()
   const scaleAnnotations: Datum[] = []
 
-  let prevBound = min
-  for (let i = 0; i < zones.length; i++) {
-    const zone = zones[i]
-    const zonePct = (zone.value - prevBound) / range
-    const zoneStart = (prevBound - min) / range
-    const zoneEnd = (zone.value - min) / range
-    const fillEnd = fillZones ? Math.min(pct, zoneEnd) : zoneEnd
-    const fillPct = Math.max(0, fillEnd - zoneStart)
-    const bgPct = fillZones ? Math.max(0, zonePct - fillPct) : 0
+  if (hasGradient) {
+    const fillEnd = fillZones ? pct : 1
+    if (fillEnd > 0) {
+      const sliceBudget = Math.max(1, Math.floor(gradientSteps))
+      const slices = Math.max(1, Math.min(sliceBudget, Math.round(fillEnd * sliceBudget)))
+      for (let s = 0; s < slices; s++) {
+        const sliceStart = (fillEnd * s) / slices
+        const sliceEnd = (fillEnd * (s + 1)) / slices
+        const t = (sliceStart + sliceEnd) / 2
+        const key = makeZoneKey("fill", 0, s)
+        data.push({
+          category: key,
+          value: sliceEnd - sliceStart,
+          _zone: "Gradient",
+          _isFill: true,
+        })
+        styles.set(key, { fill: interpolateColorStops(gradientFill!.colorStops, t) })
+      }
+    }
 
-    if (fillPct > 0) {
-      if (hasGradient) {
-        const slices = Math.max(1, Math.min(gradientSteps, Math.round(fillPct * gradientSteps)))
-        for (let s = 0; s < slices; s++) {
-          const sliceStart = zoneStart + (fillPct * s) / slices
-          const sliceEnd = zoneStart + (fillPct * (s + 1)) / slices
-          const t = (sliceStart + sliceEnd) / 2
-          const key = makeZoneKey("fill", i, s)
-          data.push({
-            category: key,
-            value: sliceEnd - sliceStart,
-            _zone: zone.label || `Zone ${i + 1}`,
-            _isFill: true,
-          })
-          styles.set(key, { fill: interpolateColorStops(gradientFill!.colorStops, t) })
+    if (fillZones) {
+      let prevBound = min
+      for (let i = 0; i < zones.length; i++) {
+        const zone = zones[i]
+        const zoneStart = (prevBound - min) / range
+        const zoneEnd = (zone.value - min) / range
+        const bgPct = Math.max(0, zoneEnd - Math.max(fillEnd, zoneStart))
+        if (bgPct > 0) {
+          const key = makeZoneKey("bg", i)
+          data.push({ category: key, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false })
+          styles.set(key, { fill: backgroundColor, opacity: 0.4 })
         }
-      } else {
+        prevBound = zone.value
+      }
+    }
+  } else {
+    let prevBound = min
+    for (let i = 0; i < zones.length; i++) {
+      const zone = zones[i]
+      const zonePct = (zone.value - prevBound) / range
+      const zoneStart = (prevBound - min) / range
+      const zoneEnd = (zone.value - min) / range
+      const fillEnd = fillZones ? Math.min(pct, zoneEnd) : zoneEnd
+      const fillPct = Math.max(0, fillEnd - zoneStart)
+      const bgPct = fillZones ? Math.max(0, zonePct - fillPct) : 0
+
+      if (fillPct > 0) {
         const key = makeZoneKey("fill", i)
         data.push({ category: key, value: fillPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: true })
         styles.set(key, { fill: zone.color })
       }
-    }
 
-    if (bgPct > 0) {
-      const key = makeZoneKey("bg", i)
-      data.push({ category: key, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false })
-      styles.set(key, { fill: backgroundColor, opacity: 0.4 })
-    }
+      if (bgPct > 0) {
+        const key = makeZoneKey("bg", i)
+        data.push({ category: key, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false })
+        styles.set(key, { fill: backgroundColor, opacity: 0.4 })
+      }
 
-    prevBound = zone.value
+      prevBound = zone.value
+    }
   }
 
   if (showScaleLabels && thresholds && thresholds.length > 0) {

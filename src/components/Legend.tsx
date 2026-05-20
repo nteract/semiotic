@@ -28,7 +28,7 @@ function resolveLegendMetrics(layout?: LegendLayout): LegendMetrics {
       ? "start"
       : layout?.align === "right"
         ? "end"
-        : layout?.align ?? "center",
+        : layout?.align ?? "start",
     maxWidth: layout?.maxWidth,
   }
 }

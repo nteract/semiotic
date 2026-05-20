@@ -407,5 +407,28 @@ describe("GaugeChart", () => {
       expect(fills.has("var(--semiotic-low)")).toBe(true)
       expect(fills.has("#3b82f6")).toBe(true)
     })
+
+    it("keeps gradient slice count within the default budget across many zones", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart
+            value={100}
+            fillZones={false}
+            thresholds={Array.from({ length: 20 }, (_, i) => ({
+              value: (i + 1) * 5,
+              color: "#999999",
+            }))}
+            gradientFill={{
+              colorStops: [
+                { offset: 0, color: "#ef4444" },
+                { offset: 1, color: "#3b82f6" },
+              ],
+            }}
+          />
+        </TooltipProvider>
+      )
+      const fillSlices = (lastOrdinalFrameProps.data || []).filter((d: Datum) => d._isFill)
+      expect(fillSlices.length).toBeLessThanOrEqual(48)
+    })
   })
 })
