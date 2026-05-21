@@ -34,9 +34,12 @@ function readNumericValue<TDatum extends Datum>(
   accessor: ChartAccessor<TDatum, number> | undefined,
   fallback: string,
 ): number | null {
-  const raw = typeof accessor === "function"
+  const raw: unknown = typeof accessor === "function"
     ? accessor(datum)
     : datum[(accessor ?? fallback) as keyof TDatum]
+  if (raw == null) return null
+  if (raw instanceof Date) return raw.getTime()
+  if (typeof raw === "string" && raw.trim() === "") return null
   const value = Number(raw)
   return Number.isFinite(value) ? value : null
 }

@@ -81,6 +81,8 @@ describe("RealtimeHistogram", () => {
           binSize={1000}
           direction="down"
           data={[
+            { time: " ", value: 50, type: "a" },
+            { time: 100, value: null, type: "a" },
             { time: 100, value: 5, type: "a" },
             { time: 900, value: 7, type: "b" },
             { time: 2100, value: 4, type: "a" },
