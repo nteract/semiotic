@@ -199,16 +199,23 @@ describe("wedgeCanvasRenderer", () => {
     expect(ctx.stroke).not.toHaveBeenCalled()
   })
 
-  it("skips a gradient band whose colors array is empty (no clip, no fills)", () => {
+  it("falls back to the normal wedge fill when _gradientBand has an empty colors array", () => {
+    // Empty-colors is a defensive case (gaugeGradient never emits one),
+    // but if a node ever arrives with `_gradientBand: { colors: [] }` we
+    // want it to still paint via the standard fill path rather than
+    // disappear silently. The renderer should NOT call ctx.clip (the
+    // gradient branch is skipped) but SHOULD still fill the wedge.
     const ctx = createMockCtx()
+    const ops = recordCanvasOps(ctx)
     const node = makeWedge({
       cornerRadius: 14,
       roundedEnds: { start: true, end: true },
       _gradientBand: { colors: [] },
+      style: { fill: "#deadbe" },
     })
     wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
     expect(ctx.clip).not.toHaveBeenCalled()
-    expect(ctx.fill).not.toHaveBeenCalled()
+    expect(ops.fillStyles).toContain("#deadbe")
   })
 })

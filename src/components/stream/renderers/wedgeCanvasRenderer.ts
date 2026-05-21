@@ -10,6 +10,8 @@ import { annularSectorPath, buildGaugeGradientGeometry } from "./wedgePathBuilde
  * geometry with the SVG renderer via `buildGaugeGradientGeometry`.
  */
 function renderGradientBand(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
+  // Callers gate on `colors.length > 0`; defensive guard here keeps the
+  // function callable on its own without producing a degenerate clip.
   const colors = node._gradientBand!.colors
   if (colors.length === 0) return
 
@@ -101,7 +103,7 @@ export const wedgeCanvasRenderer = (
     const transitionOpacity = node.style.opacity ?? 1
     ctx.globalAlpha = fillOpacity * transitionOpacity
 
-    if (node._gradientBand) {
+    if (node._gradientBand && node._gradientBand.colors.length > 0) {
       // Gradient band: outer shape is the wedge's rounded annular sector,
       // interior is N equal-angle unrounded slice sectors painted under
       // that shape as a clip mask. The mask owns the rounding so no
@@ -111,9 +113,18 @@ export const wedgeCanvasRenderer = (
       // never produces a gap between adjacent colors — each slice is
       // overpainted by the next except the last one.
       renderGradientBand(ctx, node)
+      // Pulse overlay still needs to run for gradient bands — even if
+      // gauges don't currently use pulses, the wedge contract supports
+      // them and shouldn't silently drop a node's `_pulseIntensity`.
+      if (node._pulseIntensity && node._pulseIntensity > 0) {
+        drawWedgeManual(ctx, node)
+        renderPathPulse(ctx, node)
+      }
       ctx.globalAlpha = 1
       continue
     }
+    // _gradientBand with an empty colors array falls through to the normal
+    // fill path so the wedge still paints something rather than disappearing.
 
     ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
 

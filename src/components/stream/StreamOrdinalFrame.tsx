@@ -1035,7 +1035,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
               )}
-              {scene.map((node, i) => ordinalSceneNodeToSVG(node, i)).filter(Boolean)}
+              {scene.map((node, i) => ordinalSceneNodeToSVG(node, i, tableId)).filter(Boolean)}
             </g>
           </svg>
           <OrdinalSVGOverlay

@@ -433,7 +433,9 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     startAngle: startAngleDegFinal,
     sweepAngle: sweep,
     // Flow through to the pie scene builder + renderers. Gradient gauges
-    // add explicit cap wedges so rounded ends sit over the full track.
+    // render the band as one wedge carrying `_gradientBand.colors`; the
+    // wedge renderer uses its rounded outline (from this cornerRadius +
+    // roundedEnds) as a clip mask and paints unrounded slices inside.
     ...(cornerRadius != null && { cornerRadius }),
     centerContent: centerEl,
     size: [width, height],
