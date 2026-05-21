@@ -6,10 +6,10 @@ function Body() {
     <>
       <p>
         3.5.3 is a release-confidence pass with a few user-facing additions.{" "}
-        <Link to="/charts/difference-chart">DifferenceChart</Link> graduates into the chart
-        family, exact axis ticks are available across XY and ordinal HOCs, SwimlaneChart can round
-        lane ends, ProcessSankey gets lifecycle timing hints, and the new blog / feed / OG-card
-        pipeline gives longer-form docs a home. Full release notes are on{" "}
+        <Link to="/charts/difference-chart">DifferenceChart</Link> graduates into the chart family,
+        exact axis ticks are available across XY and ordinal HOCs, SwimlaneChart can round lane
+        ends, ProcessSankey gets lifecycle timing hints, and the new blog / feed / OG-card pipeline
+        gives longer-form docs a home. Full release notes are on{" "}
         <a
           href="https://github.com/nteract/semiotic/blob/main/CHANGELOG.md#353---2026-05-18"
           target="_blank"
@@ -54,8 +54,8 @@ function Body() {
         <code>systemOutTimeAccessor</code>. Use them when the moment something enters a source node
         or leaves a target node is different from the edge&apos;s own start/end time — queueing,
         active work, discharge, delayed settlement, and similar process timelines. The band outline
-        extends to the lifecycle bounds and paints per-edge gradient stubs so those waits are visible
-        without changing the underlying edge flow.
+        extends to the lifecycle bounds and paints per-edge gradient stubs so those waits are
+        visible without changing the underlying edge flow.
       </p>
       <p>
         The same pass fixed body hover on ProcessSankey bands, stopped decorative stubs from
@@ -76,8 +76,8 @@ function Body() {
       <p>
         This release is additive for most users. If you use ProcessSankey and pass custom margins
         with a legend, legend reservation now respects explicitly-set margin sides. If you consume{" "}
-        <code>ai/capabilities.json</code>, the total chart count is now 45 and QuadrantChart correctly
-        reports SSR support.
+        <code>ai/capabilities.json</code>, the total chart count is now 45 and QuadrantChart
+        correctly reports SSR support.
       </p>
     </>
   )
@@ -88,7 +88,7 @@ export default {
   title: "Semiotic 3.5.3",
   subtitle:
     "DifferenceChart, exact axis ticks, Swimlane rounded ends, ProcessSankey lifecycle timing, the new blog pipeline, and refreshed 45-chart AI capabilities.",
-  author: "Elijah Meeks",
+  author: "AI-Generated",
   date: "2026-05-18",
   tags: ["release"],
   excerpt:
