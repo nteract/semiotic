@@ -206,15 +206,17 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     }
   }, [colorBy, colorByDepth, setup.colorScale, setup.themeCategorical, colorScheme, categoryIndexMap])
 
-  // Compose user nodeStyle overlays with the HOC's built-in style so
-  // callers can hide the root or customize borders without losing
-  // colorBy/colorByDepth/default fill resolution.
+  // Compose frame and user nodeStyle overlays with the HOC's built-in style
+  // so callers can hide the root or customize borders without losing
+  // colorBy/colorByDepth/default fill resolution. Public top-level
+  // `nodeStyle` wins over `frameProps.nodeStyle` on overlapping keys, matching
+  // the primitive-style precedence used elsewhere in the codebase.
   const nodeStyleFnWithUser = useMemo(() => {
     if (!userNodeStyle && !frameNodeStyle) return nodeStyleFn
     return (d: Datum) => ({
       ...nodeStyleFn(d),
-      ...(userNodeStyle ? userNodeStyle(d) : {}),
-      ...(frameNodeStyle ? frameNodeStyle(d) : {}),
+      ...(frameNodeStyle ? frameNodeStyle(d) ?? {} : {}),
+      ...(userNodeStyle ? userNodeStyle(d) ?? {} : {}),
     })
   }, [nodeStyleFn, userNodeStyle, frameNodeStyle])
 

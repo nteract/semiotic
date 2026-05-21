@@ -157,7 +157,17 @@ describe("Treemap", () => {
   })
 
   it("composes frameProps.nodeStyle on top of treemap color encoding", () => {
-    const data = {
+    // Leaf descendants carry a `group` field that drives colorBy. The
+    // root only declares name/children, so colorBy="group" is typed
+    // against the inferred TNode via an explicit cast to the union
+    // of root + leaf keys.
+    type GroupedNode = {
+      name: string
+      group?: string
+      value?: number
+      children?: GroupedNode[]
+    }
+    const data: GroupedNode = {
       name: "root",
       children: [
         { name: "A", group: "alpha", value: 100 },
@@ -167,7 +177,7 @@ describe("Treemap", () => {
 
     render(
       <TooltipProvider>
-        <Treemap
+        <Treemap<GroupedNode>
           data={data}
           colorBy="group"
           colorScheme={["#111111", "#222222"]}

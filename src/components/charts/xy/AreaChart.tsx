@@ -56,8 +56,8 @@ function withOpacity(color: string, opacity: number | undefined): string {
 }
 
 function semanticGradientToColorStops(stops: SemanticGradientStop[]): Array<{ offset: number; color: string }> {
-  return [...stops]
-    .sort((a, b) => b.at - a.at)
+  return stops
+    .filter((stop) => Number.isFinite(stop.at))
     .map((stop) => ({
       offset: 1 - Math.max(0, Math.min(100, stop.at)) / 100,
       color: withOpacity(stop.color, stop.opacity),
