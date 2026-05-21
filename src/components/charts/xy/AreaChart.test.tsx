@@ -92,6 +92,27 @@ describe("AreaChart", () => {
       expect(lastXYFrameProps.gradientFill).toEqual(gradient)
     })
 
+    it("converts semanticGradient percentages to renderer colorStops", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart
+            data={sampleData}
+            gradientFill={{ topOpacity: 0.9, bottomOpacity: 0.1 }}
+            semanticGradient={[
+              { at: 0, color: "#336699", opacity: 0.1 },
+              { at: 100, color: "#336699", opacity: 0.8 },
+            ]}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.gradientFill).toEqual({
+        colorStops: [
+          { offset: 0, color: "rgba(51, 102, 153, 0.8)" },
+          { offset: 1, color: "rgba(51, 102, 153, 0.1)" },
+        ],
+      })
+    })
+
     it("does not include gradientFill when not set", () => {
       render(
         <TooltipProvider>

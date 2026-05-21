@@ -9,7 +9,7 @@ import { useSelection, useLinkedHover } from "../../store/useSelection"
 import { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlockCrosshair } from "../../store/LinkedCrosshairStore"
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
-import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
+import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode, HoverHighlightMode } from "./types"
 import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
@@ -227,7 +227,7 @@ export function useChartSelection({
   chartType?: string
   chartId?: string
   onClick?: (datum: any, event: { x: number; y: number }) => void
-  hoverHighlight?: boolean
+  hoverHighlight?: HoverHighlightMode
   colorByField?: string
 }): {
   activeSelectionHook: SelectionHookResult | null

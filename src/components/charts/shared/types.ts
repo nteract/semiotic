@@ -45,6 +45,14 @@ export type LinkedBrushProp =
 export type ChartMode = "primary" | "context" | "sparkline"
 
 /**
+ * Hover highlighting mode.
+ * `true` and `"series"` both dim non-hovered series/categories; the string
+ * form is accepted for compatibility with wrapper libraries that expose a
+ * more explicit per-series mode.
+ */
+export type HoverHighlightMode = boolean | "series"
+
+/**
  * Base props shared across all chart components
  */
 export interface BaseChartProps {
@@ -127,7 +135,7 @@ export interface BaseChartProps {
   onClick?: (datum: any, event: { x: number; y: number }) => void
 
   /** Dim non-hovered series when hovering a data mark. Requires `colorBy`. */
-  hoverHighlight?: boolean
+  hoverHighlight?: HoverHighlightMode
 
   /** Max pixel distance for hover/click hit testing. Default 30. Increase for sparse charts, decrease for dense ones. */
   hoverRadius?: number
@@ -216,4 +224,3 @@ export interface SizeConfig<TDatum = Datum> {
   /** Min and max size range */
   sizeRange?: [number, number]
 }
-

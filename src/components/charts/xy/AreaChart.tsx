@@ -20,6 +20,51 @@ import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
 
+export interface SemanticGradientStop {
+  /** Percent from baseline to line/top. 0 = baseline, 100 = line/top. */
+  at: number
+  color: string
+  /** Optional opacity applied to this stop. */
+  opacity?: number
+}
+
+function withOpacity(color: string, opacity: number | undefined): string {
+  if (opacity == null) return color
+  const trimmed = color.trim()
+  const hex = trimmed.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i)
+  if (hex) {
+    const raw = hex[1]
+    const expanded = raw.length === 3
+      ? raw.split("").map((c) => c + c).join("")
+      : raw
+    const r = parseInt(expanded.slice(0, 2), 16)
+    const g = parseInt(expanded.slice(2, 4), 16)
+    const b = parseInt(expanded.slice(4, 6), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+  if (trimmed.startsWith("rgba(")) {
+    const lastComma = trimmed.lastIndexOf(",")
+    const lastParen = trimmed.lastIndexOf(")")
+    if (lastComma !== -1 && lastParen > lastComma) {
+      return `${trimmed.slice(0, lastComma + 1)} ${opacity})`
+    }
+  }
+  if (trimmed.startsWith("rgb(")) {
+    return trimmed.replace(/^rgb\(/, "rgba(").replace(/\)$/, `, ${opacity})`)
+  }
+  return color
+}
+
+function semanticGradientToColorStops(stops: SemanticGradientStop[]): Array<{ offset: number; color: string }> {
+  return [...stops]
+    .sort((a, b) => b.at - a.at)
+    .map((stop) => ({
+      offset: 1 - Math.max(0, Math.min(100, stop.at)) / 100,
+      color: withOpacity(stop.color, stop.opacity),
+    }))
+    .sort((a, b) => a.offset - b.offset)
+}
+
 /**
  * AreaChart component props
  */
@@ -105,6 +150,15 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
    * @default false
    */
   gradientFill?: boolean | { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
+
+  /**
+   * Semantic area gradient stops expressed in user-facing percentages:
+   * `at: 0` is the baseline and `at: 100` is the line/top of the area.
+   * This is converted to `gradientFill.colorStops`, whose raw offsets use
+   * the renderer coordinate convention (`0` = top, `1` = baseline).
+   * When set, this takes precedence over `gradientFill`.
+   */
+  semanticGradient?: SemanticGradientStop[]
 
   /**
    * Area opacity (flat fill, ignored when gradientFill is set)
@@ -322,6 +376,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     areaBy,
     y0Accessor,
     gradientFill = false,
+    semanticGradient,
     lineDataAccessor = "coordinates",
     colorBy,
     colorScheme,
@@ -360,6 +415,12 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
+  const resolvedGradientFill = useMemo(() => {
+    if (semanticGradient && semanticGradient.length > 0) {
+      return { colorStops: semanticGradientToColorStops(semanticGradient) }
+    }
+    return gradientFill
+  }, [semanticGradient, gradientFill])
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("AreaChart", safeData, "xAccessor", xAccessor)
@@ -440,7 +501,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     groupAccessor: areaBy || undefined,
     ...(y0Accessor && { y0Accessor }),
     ...(band && { band: band as StreamXYFrameProps["band"] }),
-    ...(gradientFill && { gradientFill }),
+    ...(resolvedGradientFill && { gradientFill: resolvedGradientFill }),
     ...(lineGradient && { lineGradient }),
     curve,
     lineStyle,

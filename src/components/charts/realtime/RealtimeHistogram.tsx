@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
+import { useRef, useImperativeHandle, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
@@ -26,6 +26,66 @@ import { normalizeLinkedBrush } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
+
+export type RealtimeHistogramDirection = "up" | "down"
+
+function readNumericValue<TDatum extends Datum>(
+  datum: TDatum,
+  accessor: ChartAccessor<TDatum, number> | undefined,
+  fallback: string,
+): number | null {
+  const raw = typeof accessor === "function"
+    ? accessor(datum)
+    : datum[(accessor ?? fallback) as keyof TDatum]
+  const value = Number(raw)
+  return Number.isFinite(value) ? value : null
+}
+
+function resolveDownwardHistogramExtent<TDatum extends Datum>({
+  data,
+  valueAccessor,
+  timeAccessor,
+  categoryAccessor,
+  binSize,
+  valueExtent,
+  extentPadding,
+}: {
+  data: readonly TDatum[] | undefined
+  valueAccessor: ChartAccessor<TDatum, number> | undefined
+  timeAccessor: ChartAccessor<TDatum, number> | undefined
+  categoryAccessor: ChartAccessor<TDatum, string> | undefined
+  binSize: number
+  valueExtent: [number, number] | undefined
+  extentPadding: number | undefined
+}): [number, number] {
+  if (valueExtent) return [valueExtent[1], valueExtent[0]]
+
+  let maxValue = 0
+  if (data && data.length > 0) {
+    if (categoryAccessor) {
+      const binSums = new Map<number, number>()
+      for (const datum of data) {
+        const time = readNumericValue(datum, timeAccessor, "time")
+        const value = readNumericValue(datum, valueAccessor, "value")
+        if (time == null || value == null) continue
+        const binStart = Math.floor(time / binSize) * binSize
+        binSums.set(binStart, (binSums.get(binStart) ?? 0) + value)
+      }
+      for (const sum of binSums.values()) {
+        if (sum > maxValue) maxValue = sum
+      }
+    } else {
+      for (const datum of data) {
+        const value = readNumericValue(datum, valueAccessor, "value")
+        if (value != null && value > maxValue) maxValue = value
+      }
+    }
+  }
+
+  const padFactor = extentPadding ?? 0.1
+  const upper = maxValue > 0 ? maxValue + maxValue * padFactor : 1
+  return [upper, 0]
+}
 
 export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -60,6 +120,14 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   timeExtent?: [number, number]
   /** Fixed value domain */
   valueExtent?: [number, number]
+  /**
+   * Direction bars grow from the baseline.
+   * "up" uses the normal y-domain. "down" flips the resolved value
+   * domain so bars grow downward from the top, useful for mirrored
+   * histogram layouts. Explicit valueExtent is reversed.
+   * @default "up"
+   */
+  direction?: RealtimeHistogramDirection
   /** Extent padding factor */
   extentPadding?: number
   /**
@@ -205,6 +273,7 @@ export const RealtimeHistogram = forwardRef(
       data,
       timeAccessor,
       valueAccessor,
+      direction = "up",
       timeExtent,
       valueExtent,
       extentPadding,
@@ -362,6 +431,18 @@ export const RealtimeHistogram = forwardRef(
       : className
 
     const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+    const resolvedValueExtent = useMemo(() => {
+      if (direction !== "down") return valueExtent
+      return resolveDownwardHistogramExtent({
+        data: data as TDatum[] | undefined,
+        valueAccessor,
+        timeAccessor,
+        categoryAccessor,
+        binSize,
+        valueExtent,
+        extentPadding,
+      })
+    }, [direction, data, valueAccessor, timeAccessor, categoryAccessor, binSize, valueExtent, extentPadding])
 
     // ── Loading / empty guards (deferred to after all hooks) ───────────────
     if (loadingEl) return loadingEl
@@ -382,7 +463,7 @@ export const RealtimeHistogram = forwardRef(
         timeAccessor={timeAccessor}
         valueAccessor={valueAccessor}
         xExtent={timeExtent}
-        yExtent={valueExtent}
+        yExtent={resolvedValueExtent}
         extentPadding={extentPadding}
         binSize={binSize}
         categoryAccessor={categoryAccessor}

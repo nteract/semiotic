@@ -34,6 +34,14 @@ export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProp
   nodeLabel?: ChartAccessor<TNode, string>
   padding?: number
   paddingTop?: number
+  /**
+   * Per-node style overlay. The returned style is merged on top of
+   * Treemap's built-in colorBy/colorByDepth/default fill, then primitive
+   * props and selection state are applied. Use this for root hiding,
+   * custom borders, or per-depth opacity without re-implementing color
+   * encoding.
+   */
+  nodeStyle?: (d: Datum) => Datum
   enableHover?: boolean
   legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
@@ -107,6 +115,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     nodeLabel,
     padding: paddingProp = 4,
     paddingTop: paddingTopProp,
+    nodeStyle: userNodeStyle,
     tooltip,
     frameProps = {},
     selection,
@@ -121,6 +130,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     strokeWidth,
     opacity,
   } = props
+  const { nodeStyle: frameNodeStyle, ...framePropsRest } = frameProps
 
   const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
 
@@ -192,11 +202,23 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     }
   }, [colorBy, colorByDepth, setup.colorScale, setup.themeCategorical, colorScheme, categoryIndexMap])
 
-  // Overlay top-level primitive props (stroke/strokeWidth/opacity) on nodeStyleFn
-  // before selection wrapping, so they land on every node.
+  // Compose user nodeStyle overlays with the HOC's built-in style so
+  // callers can hide the root or customize borders without losing
+  // colorBy/colorByDepth/default fill resolution.
+  const nodeStyleFnWithUser = useMemo(() => {
+    if (!userNodeStyle && !frameNodeStyle) return nodeStyleFn
+    return (d: Datum) => ({
+      ...nodeStyleFn(d),
+      ...(userNodeStyle ? userNodeStyle(d) : {}),
+      ...(frameNodeStyle ? frameNodeStyle(d) : {}),
+    })
+  }, [nodeStyleFn, userNodeStyle, frameNodeStyle])
+
+  // Overlay top-level primitive props after user nodeStyle, before selection
+  // wrapping, so explicit primitive props land on every node.
   const nodeStyleFnWithPrimitives = useMemo(
-    () => mergeShapeStyle(nodeStyleFn, { stroke, strokeWidth, opacity }),
-    [nodeStyleFn, stroke, strokeWidth, opacity]
+    () => mergeShapeStyle(nodeStyleFnWithUser, { stroke, strokeWidth, opacity }),
+    [nodeStyleFnWithUser, stroke, strokeWidth, opacity]
   )
 
   // Wrap node style with selection — unwrap hierarchy .data for predicate matching
@@ -272,7 +294,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       summary={summary}
       accessibleTable={accessibleTable}
       {...(props.animate != null && { animate: props.animate })}
-      {...frameProps}
+      {...framePropsRest}
     />
   </SafeRender>)
 }

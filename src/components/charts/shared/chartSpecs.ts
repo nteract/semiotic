@@ -786,6 +786,8 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       areaBy: { type: ["string", "function"], description: "Key to group data into separate areas" },
       lineDataAccessor: { type: "string", default: "coordinates", description: "Key for the coordinates array within each area object" },
       curve: { type: "string", enum: CURVE_ENUM, default: "monotoneX" },
+      gradientFill: { type: ["boolean", "object"], description: "Renderer-space area gradient. true uses default opacity; object supports opacity or colorStops." },
+      semanticGradient: { type: "array", description: "User-facing gradient stops: [{ at: 0-100, color, opacity? }], where 0 is baseline and 100 is line/top. Takes precedence over gradientFill." },
       areaOpacity: { type: "number", default: 0.7, description: "Area fill opacity (0-1)" },
       showLine: { type: "boolean", default: true, description: "Show stroke line on top of area" },
       lineWidth: { type: "number", default: 2 },
@@ -1332,6 +1334,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       colorByDepth: { type: "boolean", default: false },
       showLabels: { type: "boolean", default: true },
       nodeLabel: { type: ["string", "function"] },
+      nodeStyle: { type: "function", omitFromSchema: true, description: "Per-node style overlay merged on top of Treemap's built-in color encoding" },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -1550,6 +1553,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
     propBags: ["realtime"],
     ownProps: {
       binSize: { type: "number", description: "Time bin size in milliseconds (required)" },
+      direction: { type: "string", enum: ["up", "down"] as const, default: "up", description: "Bar growth direction. Use \"down\" for mirrored histograms; explicit valueExtent is reversed." },
       categoryAccessor: { type: ["string", "function"], description: "Key for category grouping" },
       colors: { type: "object", description: "Map of category to color string" },
       fill: { type: "string" },

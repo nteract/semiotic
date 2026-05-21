@@ -97,6 +97,8 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       areaBy: { type: ["string", "function"] },
       lineDataAccessor: { type: "string" },
       curve: { type: "string", enum: curveEnum as unknown as string[] },
+      gradientFill: { type: ["boolean", "object"] },
+      semanticGradient: { type: "array" },
       areaOpacity: { type: "number" },
       showLine: { type: "boolean" },
       lineWidth: { type: "number" },
@@ -722,6 +724,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       colorByDepth: { type: "boolean" },
       showLabels: { type: "boolean" },
       nodeLabel: { type: ["string", "function"] },
+      nodeStyle: { type: "function" },
     },
   },
 
@@ -811,6 +814,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     dataAccessors: [],
     props: {
       binSize: { type: "number" },
+      direction: { type: "string", enum: ["up", "down"] },
       size: { type: "array" },
       margin: { type: "object" },
       className: { type: "string" },

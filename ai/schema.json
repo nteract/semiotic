@@ -354,6 +354,17 @@
               ],
               "default": "monotoneX"
             },
+            "gradientFill": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Renderer-space area gradient. true uses default opacity; object supports opacity or colorStops."
+            },
+            "semanticGradient": {
+              "type": "array",
+              "description": "User-facing gradient stops: [{ at: 0-100, color, opacity? }], where 0 is baseline and 100 is line/top. Takes precedence over gradientFill."
+            },
             "areaOpacity": {
               "type": "number",
               "description": "Area fill opacity (0-1)",
@@ -5197,6 +5208,15 @@
             "binSize": {
               "type": "number",
               "description": "Time bin size in milliseconds (required)"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "up",
+                "down"
+              ],
+              "description": "Bar growth direction. Use \"down\" for mirrored histograms; explicit valueExtent is reversed.",
+              "default": "up"
             },
             "categoryAccessor": {
               "type": [

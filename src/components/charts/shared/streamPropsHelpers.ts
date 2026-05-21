@@ -25,7 +25,7 @@ import type { ReactNode } from "react"
 import type { Datum } from "./datumTypes"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import type { HoverData } from "../../realtime/types"
-import type { LinkedHoverProp, SelectionConfig } from "./types"
+import type { HoverHighlightMode, LinkedHoverProp, SelectionConfig } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 
@@ -114,7 +114,7 @@ export function buildCustomBehaviorProps(input: {
   linkedHover?: LinkedHoverProp
   onObservation?: OnObservationCallback
   onClick?: ((datum: Datum, position: { x: number; y: number }) => void) | undefined
-  hoverHighlight?: boolean
+  hoverHighlight?: HoverHighlightMode
   customHoverBehavior: (d: Datum | null) => void
   customClickBehavior: (d: Datum | null) => void
   /**

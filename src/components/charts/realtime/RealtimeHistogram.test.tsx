@@ -1,6 +1,6 @@
 
 import React from "react"
-import { render, act } from "@testing-library/react"
+import { render, act, waitFor } from "@testing-library/react"
 import { RealtimeHistogram } from "./RealtimeHistogram"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
@@ -70,5 +70,34 @@ describe("RealtimeHistogram", () => {
       </TooltipProvider>
     )
     expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+  })
+
+  it("flips the value domain for downward controlled histograms", async () => {
+    const ref = React.createRef<any>()
+    render(
+      <TooltipProvider>
+        <RealtimeHistogram
+          ref={ref}
+          binSize={1000}
+          direction="down"
+          data={[
+            { time: 100, value: 5, type: "a" },
+            { time: 900, value: 7, type: "b" },
+            { time: 2100, value: 4, type: "a" },
+          ]}
+          timeAccessor="time"
+          valueAccessor="value"
+          categoryAccessor="type"
+        />
+      </TooltipProvider>
+    )
+
+    await waitFor(() => {
+      expect(ref.current?.getScales()?.y).toBeTruthy()
+    })
+
+    const domain = ref.current.getScales().y.domain()
+    expect(domain[0]).toBeCloseTo(13.2)
+    expect(domain[1]).toBe(0)
   })
 })

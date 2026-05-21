@@ -359,6 +359,23 @@ describe("useChartSelection", () => {
     expect(onObservation.mock.calls[0][0].datum).toEqual({ x: 1, y: 2, name: "direct" })
   })
 
+  it("accepts hoverHighlight='series' as a series-hover alias", () => {
+    const { result } = renderHook(
+      () => useChartSelection({ hoverHighlight: "series", colorByField: "series" }),
+      { wrapper: createWrapper() }
+    )
+
+    expect(result.current.hoverSelectionHook).toBeNull()
+
+    act(() => {
+      result.current.customHoverBehavior({ x: 1, y: 2, data: { series: "alpha" } })
+    })
+
+    expect(result.current.hoverSelectionHook?.isActive).toBe(true)
+    expect(result.current.hoverSelectionHook?.predicate({ series: "alpha" })).toBe(true)
+    expect(result.current.hoverSelectionHook?.predicate({ series: "beta" })).toBe(false)
+  })
+
 })
 
 // ── useChartLegendAndMargin ──────────────────────────────────────────────
