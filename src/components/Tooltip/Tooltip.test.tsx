@@ -362,4 +362,21 @@ describe("MultiPointTooltip", () => {
     const result = normalizeTooltip("multi")
     expect(typeof result).toBe("function")
   })
+
+  it("normalizes bucket-array HoverData to the first datum for custom tooltips", () => {
+    let received: Datum | undefined
+    const fn = normalizeTooltip((d) => {
+      received = d
+      return "ok"
+    })
+
+    render(<>{typeof fn === "function" ? fn({
+      __semioticHoverData: true,
+      data: [{ category: "A", value: 1 }, { category: "B", value: 2 }],
+      x: 0,
+      y: 0,
+    }) : null}</>)
+
+    expect(received).toEqual({ category: "A", value: 1 })
+  })
 })

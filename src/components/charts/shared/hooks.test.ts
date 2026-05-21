@@ -359,6 +359,23 @@ describe("useChartSelection", () => {
     expect(onObservation.mock.calls[0][0].datum).toEqual({ x: 1, y: 2, name: "direct" })
   })
 
+  it("accepts hoverHighlight='series' as a series-hover alias", () => {
+    const { result } = renderHook(
+      () => useChartSelection({ hoverHighlight: "series", colorByField: "series" }),
+      { wrapper: createWrapper() }
+    )
+
+    expect(result.current.hoverSelectionHook).toBeNull()
+
+    act(() => {
+      result.current.customHoverBehavior({ x: 1, y: 2, data: { series: "alpha" } })
+    })
+
+    expect(result.current.hoverSelectionHook?.isActive).toBe(true)
+    expect(result.current.hoverSelectionHook?.predicate({ series: "alpha" })).toBe(true)
+    expect(result.current.hoverSelectionHook?.predicate({ series: "beta" })).toBe(false)
+  })
+
 })
 
 // ── useChartLegendAndMargin ──────────────────────────────────────────────
@@ -469,6 +486,31 @@ describe("useChartLegendAndMargin", () => {
       })
     )
     expect(result.current.margin.right).toBe(110)
+  })
+
+  it("treats auto and null margin sides as explicit auto-reservation", () => {
+    const colorScale = (_v: string) => "#ccc"
+    const rightAuto = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale,
+        showLegend: true,
+        userMargin: { right: "auto" },
+      })
+    )
+    expect(rightAuto.result.current.margin.right).toBe(110)
+
+    const rightNull = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale,
+        showLegend: true,
+        userMargin: { right: null },
+      })
+    )
+    expect(rightNull.result.current.margin.right).toBe(110)
   })
 
   it("merges user margin with defaults", () => {

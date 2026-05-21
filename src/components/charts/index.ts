@@ -20,7 +20,7 @@ export { LineChart } from "./xy/LineChart"
 export type { LineChartProps } from "./xy/LineChart"
 
 export { AreaChart } from "./xy/AreaChart"
-export type { AreaChartProps } from "./xy/AreaChart"
+export type { AreaChartProps, SemanticGradientStop } from "./xy/AreaChart"
 
 export { DifferenceChart } from "./xy/DifferenceChart"
 export type { DifferenceChartProps } from "./xy/DifferenceChart"
@@ -160,8 +160,8 @@ export type { OrbitDiagramProps, OrbitNode } from "./network/OrbitDiagram"
 export { RealtimeLineChart } from "./realtime/RealtimeLineChart"
 export type { RealtimeLineChartProps } from "./realtime/RealtimeLineChart"
 
-export { RealtimeTemporalHistogram, RealtimeHistogram } from "./realtime/RealtimeHistogram"
-export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps } from "./realtime/RealtimeHistogram"
+export { RealtimeTemporalHistogram, RealtimeHistogram, TemporalHistogram } from "./realtime/RealtimeHistogram"
+export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps, TemporalHistogramProps } from "./realtime/RealtimeHistogram"
 
 export { RealtimeSwarmChart } from "./realtime/RealtimeSwarmChart"
 export type { RealtimeSwarmChartProps } from "./realtime/RealtimeSwarmChart"

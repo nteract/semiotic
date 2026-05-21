@@ -93,9 +93,15 @@ describe('Scene Builders — Scatter/Point', () => {
     buildPointScene(ctx, scatter10k)
   })
 
+  // scatter-50k sits in the 2–3ms range, where a single GC pause or
+  // CI runner context switch (8–15ms) can double the per-iteration time
+  // and pull the mean past the catastrophic-regression gate even on
+  // identical code. Extending the measurement window so vitest collects
+  // ~5x as many samples dilutes those tail spikes and stabilizes the
+  // mean across CI hardware noise.
   bench('scatter-50k', () => {
     buildPointScene(ctx, scatter50k)
-  })
+  }, { time: 3000, warmupTime: 200 })
 })
 
 describe('Scene Builders — Line', () => {

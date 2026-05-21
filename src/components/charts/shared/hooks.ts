@@ -9,7 +9,7 @@ import { useSelection, useLinkedHover } from "../../store/useSelection"
 import { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlockCrosshair } from "../../store/LinkedCrosshairStore"
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
-import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
+import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode, HoverHighlightMode } from "./types"
 import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
@@ -227,7 +227,7 @@ export function useChartSelection({
   chartType?: string
   chartId?: string
   onClick?: (datum: any, event: { x: number; y: number }) => void
-  hoverHighlight?: boolean
+  hoverHighlight?: HoverHighlightMode
   colorByField?: string
 }): {
   activeSelectionHook: SelectionHookResult | null
@@ -487,21 +487,25 @@ export function useChartLegendAndMargin({
   }, [shouldShowLegend, colorBy, data, colorScale, legendCategories])
 
   const margin = useMemo<MarginType>(() => {
-    const userSides: Partial<MarginType> = typeof userMargin === "number"
+    const userSides = typeof userMargin === "number"
       ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin }
       : (userMargin ?? {})
+    const resolveSide = (side: keyof MarginType): number => {
+      const value = userSides[side]
+      return typeof value === "number" ? value : defaults[side]
+    }
     const finalMargin: MarginType = {
-      top: userSides.top ?? defaults.top,
-      right: userSides.right ?? defaults.right,
-      bottom: userSides.bottom ?? defaults.bottom,
-      left: userSides.left ?? defaults.left,
+      top: resolveSide("top"),
+      right: resolveSide("right"),
+      bottom: resolveSide("bottom"),
+      left: resolveSide("left"),
     }
     // Auto-reserve margin for the legend ONLY on sides the user
     // didn't set explicitly. A caller passing `margin={{ right: 30 }}`
     // (e.g. positioning their own external legend) shouldn't get
     // 110 px reserved out from under them. Sides the user left at
     // the default still get the legend's standard reservation.
-    const sideSet = (side: keyof MarginType): boolean => (userSides as Partial<MarginType>)[side] != null
+    const sideSet = (side: keyof MarginType): boolean => typeof userSides[side] === "number"
     if (legend) {
       if (legendPosition === "right" && !sideSet("right") && finalMargin.right < 110) finalMargin.right = 110
       else if (legendPosition === "left" && !sideSet("left") && finalMargin.left < 110) finalMargin.left = 110

@@ -1,6 +1,7 @@
 import * as React from "react"
 import type { Accessor } from "../charts/shared/types"
 import type { Datum } from "../charts/shared/datumTypes"
+import { normalizeHoverDatum } from "../stream/hoverUtils"
 
 /**
  * Configuration for a single tooltip field
@@ -490,7 +491,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
         && typeof hoverData.x === "number"
         && typeof hoverData.y === "number"
         && hasLegacyFrameMarker)
-      const datum = looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData
+      const datum = normalizeHoverDatum(looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData)
       const result = userFn(datum)
       if (result === null || result === undefined) return null
       return (

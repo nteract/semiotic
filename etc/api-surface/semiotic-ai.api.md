@@ -49,6 +49,7 @@ function StackedAreaChart
 function StackedBarChart
 function SwarmPlot
 function SwimlaneChart
+function TemporalHistogram
 function ThemeProvider
 function TooltipProvider
 function TreeDiagram

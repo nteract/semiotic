@@ -467,6 +467,7 @@ export const LineChart = forwardRef(
 
   // Use compoundData instead of effectiveData for downstream processing
   const chartData = needsCompoundGroup ? compoundData : effectiveData
+  const effectiveColorBy = colorBy || lineBy
 
   // ── Envelope-aware y extent ──────────────────────────────────────────
   // When forecast/anomaly has upper/lower bounds, the default y extent only
@@ -658,8 +659,8 @@ export const LineChart = forwardRef(
   const directLabelFontSize = directLabelConfig.fontSize || 11
 
   const directLabelLabelTexts = useMemo(() => {
-    if (!directLabel || !colorBy) return []
-    const colorAcc = typeof colorBy === "function" ? colorBy : (d: Datum) => d[colorBy as string]
+    if (!directLabel || !effectiveColorBy) return []
+    const colorAcc = typeof effectiveColorBy === "function" ? effectiveColorBy : (d: Datum) => d[effectiveColorBy as string]
     const seen = new Set<string>()
     for (const line of gapProcessedLineData) {
       const coords: Datum[] = line[lineDataAccessor] || []
@@ -674,7 +675,7 @@ export const LineChart = forwardRef(
       if (label !== "") seen.add(label)
     }
     return Array.from(seen)
-  }, [directLabel, colorBy, gapProcessedLineData, lineDataAccessor, directLabelPosition])
+  }, [directLabel, effectiveColorBy, gapProcessedLineData, lineDataAccessor, directLabelPosition])
 
   const directLabelMarginDefaults = useMemo(() => {
     if (!directLabel) return resolved.marginDefaults
@@ -702,13 +703,13 @@ export const LineChart = forwardRef(
   const setup = useChartSetup({
     data: effectiveData as Datum[],
     rawData: data,
-    colorBy,
+    colorBy: effectiveColorBy,
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
     unwrapData: false,
     onObservation,
     onClick,
@@ -745,7 +746,7 @@ export const LineChart = forwardRef(
   // primitive > chart-specific" precedence elsewhere.
   const baseLineStyle = useXYLineStyle({
     lineWidth,
-    colorBy: colorBy as ChartAccessor<Datum, string> | undefined,
+    colorBy: effectiveColorBy as ChartAccessor<Datum, string> | undefined,
     colorScale,
     color,
     fillArea,
@@ -790,15 +791,15 @@ export const LineChart = forwardRef(
 
       // Match line color — skip fill when colorScale unavailable (push API)
       // so the frame's own color map can fill in
-      if (colorBy) {
-        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
+      if (effectiveColorBy) {
+        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, effectiveColorBy, colorScale)
       } else {
         baseStyle.fill = color || DEFAULT_COLOR
       }
 
       return baseStyle
     }
-  }, [showPoints, pointRadius, colorBy, colorScale, color])
+  }, [showPoints, pointRadius, effectiveColorBy, colorScale, color])
 
   // Determine chart type for StreamXYFrame
   const chartType = Array.isArray(fillArea) ? "mixed" as const : fillArea ? "area" as const : "line" as const
@@ -808,10 +809,10 @@ export const LineChart = forwardRef(
   // estimate could feed into useChartSetup; this pass adds the colors
   // from the resolved color scale.
   const directLabelAnnotations = useMemo(() => {
-    if (!directLabel || !colorBy) return []
+    if (!directLabel || !effectiveColorBy) return []
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
-    const colorAcc = typeof colorBy === "function" ? colorBy : (d: Datum) => d[colorBy as string]
+    const colorAcc = typeof effectiveColorBy === "function" ? effectiveColorBy : (d: Datum) => d[effectiveColorBy as string]
 
     // Get the endpoint of each line (by group). Mirror the null-aware
     // logic in `directLabelLabelTexts` so a `0`/`false` category value
@@ -859,7 +860,7 @@ export const LineChart = forwardRef(
     }
 
     return labels
-  }, [directLabel, colorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, yAccessor, directLabelPosition, directLabelFontSize])
+  }, [directLabel, effectiveColorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, yAccessor, directLabelPosition, directLabelFontSize])
 
   // `useChartSetup` now synthesizes the push-mode legend (using the
   // same provider → scheme → theme → STREAMING_PALETTE precedence the

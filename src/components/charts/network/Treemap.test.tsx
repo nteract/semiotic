@@ -155,4 +155,61 @@ describe("Treemap", () => {
 
     expect(lastNetworkFrameProps).toBeDefined()
   })
+
+  it("composes frameProps.nodeStyle on top of treemap color encoding", () => {
+    // Leaf descendants carry a `group` field that drives colorBy. The
+    // root only declares name/children, so colorBy="group" is typed
+    // against the inferred TNode via an explicit cast to the union
+    // of root + leaf keys.
+    type GroupedNode = {
+      name: string
+      group?: string
+      value?: number
+      children?: GroupedNode[]
+    }
+    const data: GroupedNode = {
+      name: "root",
+      children: [
+        { name: "A", group: "alpha", value: 100 },
+        { name: "B", group: "beta", value: 50 },
+      ]
+    }
+
+    render(
+      <TooltipProvider>
+        <Treemap<GroupedNode>
+          data={data}
+          colorBy="group"
+          colorScheme={["#111111", "#222222"]}
+          frameProps={{
+            nodeStyle: (d) => d.depth === 0
+              ? { fill: "transparent", pointerEvents: "none" }
+              : { stroke: "#custom" }
+          }}
+        />
+      </TooltipProvider>
+    )
+
+    const leafStyle = lastNetworkFrameProps.nodeStyle({
+      depth: 1,
+      data: { name: "A", group: "alpha", value: 100 }
+    })
+    expect(leafStyle.fill).toBe("#111111")
+    expect(leafStyle.stroke).toBe("#custom")
+
+    const rootStyle = lastNetworkFrameProps.nodeStyle({ depth: 0, data })
+    expect(rootStyle.fill).toBe("transparent")
+    expect(rootStyle.pointerEvents).toBe("none")
+  })
+
+  it("uses the theme cell-border CSS variable as the default tile stroke", () => {
+    render(
+      <TooltipProvider>
+        <Treemap data={sampleData} />
+      </TooltipProvider>
+    )
+
+    const style = lastNetworkFrameProps.nodeStyle({ depth: 1, data: { name: "A", value: 100 } })
+    expect(style.stroke).toBe("var(--semiotic-cell-border, var(--semiotic-border, #fff))")
+  })
 })

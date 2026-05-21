@@ -97,6 +97,26 @@ describe("LineChart", () => {
       expect(lastXYFrameProps.groupAccessor).toBe("series")
     })
 
+    it("uses lineBy as the categorical color accessor when colorBy is omitted", () => {
+      const multiSeriesData = [
+        { x: 1, y: 10, series: "A" },
+        { x: 2, y: 20, series: "A" },
+        { x: 1, y: 15, series: "B" },
+      ]
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={multiSeriesData}
+            lineBy="series"
+            colorScheme={["#111111", "#222222"]}
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.lineStyle({ series: "A" }).stroke).toBe("#111111")
+      expect(lastXYFrameProps.lineStyle({ series: "B" }).stroke).toBe("#222222")
+    })
+
     it("forwards curve prop", () => {
       render(
         <TooltipProvider>

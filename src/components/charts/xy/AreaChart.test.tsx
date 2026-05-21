@@ -92,6 +92,27 @@ describe("AreaChart", () => {
       expect(lastXYFrameProps.gradientFill).toEqual(gradient)
     })
 
+    it("converts semanticGradient percentages to renderer colorStops", () => {
+      render(
+        <TooltipProvider>
+          <AreaChart
+            data={sampleData}
+            gradientFill={{ topOpacity: 0.9, bottomOpacity: 0.1 }}
+            semanticGradient={[
+              { at: 0, color: "#336699", opacity: 0.1 },
+              { at: 100, color: "#336699", opacity: 0.8 },
+            ]}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.gradientFill).toEqual({
+        colorStops: [
+          { offset: 0, color: "rgba(51, 102, 153, 0.8)" },
+          { offset: 1, color: "rgba(51, 102, 153, 0.1)" },
+        ],
+      })
+    })
+
     it("does not include gradientFill when not set", () => {
       render(
         <TooltipProvider>
@@ -163,6 +184,26 @@ describe("AreaChart", () => {
         </TooltipProvider>
       )
       expect(lastXYFrameProps.groupAccessor).toBe("cat")
+    })
+
+    it("uses areaBy as the categorical color accessor when colorBy is omitted", () => {
+      const multiData = [
+        { x: 1, y: 10, cat: "A" },
+        { x: 2, y: 20, cat: "A" },
+        { x: 1, y: 15, cat: "B" },
+      ]
+      render(
+        <TooltipProvider>
+          <AreaChart
+            data={multiData}
+            areaBy="cat"
+            colorScheme={["#111111", "#222222"]}
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.lineStyle({ cat: "A" }).fill).toBe("#111111")
+      expect(lastXYFrameProps.lineStyle({ cat: "B" }).fill).toBe("#222222")
     })
 
     it("forwards width and height as size", () => {

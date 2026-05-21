@@ -38,7 +38,7 @@ export type {
 
 // Chart prop types
 export type { LineChartProps } from "./charts/xy/LineChart"
-export type { AreaChartProps } from "./charts/xy/AreaChart"
+export type { AreaChartProps, SemanticGradientStop } from "./charts/xy/AreaChart"
 export type { DifferenceChartProps } from "./charts/xy/DifferenceChart"
 export type { StackedAreaChartProps } from "./charts/xy/StackedAreaChart"
 export type { ScatterplotProps } from "./charts/xy/Scatterplot"

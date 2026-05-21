@@ -292,6 +292,33 @@ const data = [
 
 Key props: `orderAccessor` sequences points along the path, Viridis gradient from start→end
 
+### TemporalHistogram
+
+```jsx
+import { TemporalHistogram } from "semiotic/ai"
+
+// One row per event; the chart bins events into `binSize` time buckets.
+const events = [
+  { time: 1700000000000, value: 1, category: "errors" },
+  { time: 1700000005000, value: 1, category: "warnings" },
+  { time: 1700000007000, value: 1, category: "errors" },
+  { time: 1700000020000, value: 1, category: "info" },
+  { time: 1700000022000, value: 1, category: "info" },
+  { time: 1700000040000, value: 1, category: "errors" },
+  { time: 1700000045000, value: 1, category: "warnings" }
+]
+
+<TemporalHistogram
+  data={events}
+  binSize={15000}
+  categoryAccessor="category"
+  colors={{ errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }}
+  enableHover
+/>
+```
+
+Static-data sibling of `RealtimeHistogram` — accepts a bounded `data` array instead of a push-mode ref. Same props minus `windowSize` / `windowMode`. Use for backfilled or historical temporal histograms where the time range is fixed; reach for `RealtimeHistogram` when events arrive over time and you want a sliding window.
+
 ---
 
 ## Flat Array — Ordinal Charts

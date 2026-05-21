@@ -23,7 +23,7 @@ import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInt
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import { useCategoryColors } from "../../CategoryColors"
 import { createColorScale, STREAMING_PALETTE } from "./colorUtils"
-import type { Accessor, SelectionConfig, LinkedHoverProp } from "./types"
+import type { Accessor, SelectionConfig, LinkedHoverProp, HoverHighlightMode } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { PartialMargin } from "../../types/marginType"
 import type { SelectionHookResult } from "./selectionUtils"
@@ -75,7 +75,7 @@ export interface ChartSetupInput {
   /** onClick callback */
   onClick?: (datum: any, event: { x: number; y: number }) => void
   /** Dim non-hovered series on data mark hover */
-  hoverHighlight?: boolean
+  hoverHighlight?: HoverHighlightMode
   /** Loading state */
   loading: boolean | undefined
   /** Custom content rendered in place of the default skeleton while `loading` is true. */

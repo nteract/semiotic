@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
+import { useRef, useImperativeHandle, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
@@ -26,6 +26,67 @@ import { normalizeLinkedBrush } from "../shared/selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
+
+export type RealtimeHistogramDirection = "up" | "down"
+
+function readNumericValue<TDatum extends Datum>(
+  datum: TDatum,
+  accessor: ChartAccessor<TDatum, number> | undefined,
+  fallback: string,
+): number | null {
+  const raw: unknown = typeof accessor === "function"
+    ? accessor(datum)
+    : datum[(accessor ?? fallback) as keyof TDatum]
+  if (raw == null) return null
+  if (raw instanceof Date) return raw.getTime()
+  if (typeof raw === "string" && raw.trim() === "") return null
+  const value = Number(raw)
+  return Number.isFinite(value) ? value : null
+}
+
+function resolveDownwardHistogramExtent<TDatum extends Datum>({
+  data,
+  valueAccessor,
+  timeAccessor,
+  binSize,
+  valueExtent,
+  extentPadding,
+}: {
+  data: readonly TDatum[] | undefined
+  valueAccessor: ChartAccessor<TDatum, number> | undefined
+  timeAccessor: ChartAccessor<TDatum, number> | undefined
+  binSize: number
+  valueExtent: [number, number] | undefined
+  extentPadding: number | undefined
+}): [number, number] | undefined {
+  if (valueExtent) return [valueExtent[1], valueExtent[0]]
+
+  // No data available (push-mode ref usage without an initial array) and
+  // no explicit valueExtent — we have no basis to pick a flipped domain.
+  // Returning undefined lets StreamXYFrame auto-scale upward; downward
+  // streaming requires explicit valueExtent until the frame learns a
+  // domain-reversal flag. Tracked separately as a follow-up.
+  if (!data || data.length === 0) return undefined
+
+  // Always bin-sum: stacked or not, multiple points can land in the same
+  // bin and the bar height is the sum, not the max single datum.
+  const binSums = new Map<number, number>()
+  for (const datum of data) {
+    const time = readNumericValue(datum, timeAccessor, "time")
+    const value = readNumericValue(datum, valueAccessor, "value")
+    if (time == null || value == null) continue
+    const binStart = Math.floor(time / binSize) * binSize
+    binSums.set(binStart, (binSums.get(binStart) ?? 0) + value)
+  }
+  let maxValue = 0
+  for (const sum of binSums.values()) {
+    if (sum > maxValue) maxValue = sum
+  }
+
+  const padFactor = extentPadding ?? 0.1
+  const upper = maxValue > 0 ? maxValue + maxValue * padFactor : 1
+  return [upper, 0]
+}
 
 export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -60,6 +121,14 @@ export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   timeExtent?: [number, number]
   /** Fixed value domain */
   valueExtent?: [number, number]
+  /**
+   * Direction bars grow from the baseline.
+   * "up" uses the normal y-domain. "down" flips the resolved value
+   * domain so bars grow downward from the top, useful for mirrored
+   * histogram layouts. Explicit valueExtent is reversed.
+   * @default "up"
+   */
+  direction?: RealtimeHistogramDirection
   /** Extent padding factor */
   extentPadding?: number
   /**
@@ -205,6 +274,7 @@ export const RealtimeHistogram = forwardRef(
       data,
       timeAccessor,
       valueAccessor,
+      direction = "up",
       timeExtent,
       valueExtent,
       extentPadding,
@@ -362,6 +432,17 @@ export const RealtimeHistogram = forwardRef(
       : className
 
     const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+    const resolvedValueExtent = useMemo(() => {
+      if (direction !== "down") return valueExtent
+      return resolveDownwardHistogramExtent({
+        data: data as TDatum[] | undefined,
+        valueAccessor,
+        timeAccessor,
+        binSize,
+        valueExtent,
+        extentPadding,
+      })
+    }, [direction, data, valueAccessor, timeAccessor, binSize, valueExtent, extentPadding])
 
     // ── Loading / empty guards (deferred to after all hooks) ───────────────
     if (loadingEl) return loadingEl
@@ -382,7 +463,7 @@ export const RealtimeHistogram = forwardRef(
         timeAccessor={timeAccessor}
         valueAccessor={valueAccessor}
         xExtent={timeExtent}
-        yExtent={valueExtent}
+        yExtent={resolvedValueExtent}
         extentPadding={extentPadding}
         binSize={binSize}
         categoryAccessor={categoryAccessor}
@@ -413,6 +494,22 @@ export const RealtimeHistogram = forwardRef(
   displayName?: string
 }
 RealtimeHistogram.displayName = "RealtimeHistogram"
+
+export interface TemporalHistogramProps<TDatum extends Datum = Datum>
+  extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowSize" | "windowMode"> {
+  /** Static data array for a bounded temporal histogram. */
+  data: TDatum[]
+}
+
+/**
+ * Static-data sibling for temporal histograms. Use this when the data is a
+ * bounded array rather than a ref-driven stream; the realtime push API is not
+ * part of this public surface.
+ */
+export function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>) {
+  return <RealtimeHistogram {...(props as RealtimeHistogramProps<TDatum>)} windowMode="growing" />
+}
+TemporalHistogram.displayName = "TemporalHistogram"
 
 /** @deprecated Use `RealtimeHistogram` (the canonical public name) instead. The
  *  `RealtimeTemporalHistogram` alias is preserved for back-compat with code

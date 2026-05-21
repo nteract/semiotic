@@ -200,7 +200,7 @@ jobs:
         # first time and skipped on subsequent runs — which left
         # single-test misses (a flaky run, a renamed test) permanently
         # failing CI because no second bootstrap pass would fire.
-        run: npx playwright test --update-snapshots=missing
+        run: npx playwright test --update-snapshots=changed
 
       - name: Upload snapshot baselines
         if: always()

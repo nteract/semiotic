@@ -84,7 +84,7 @@ Helpers: `resolveReferenceGeography("world-110m"|"world-50m")`, `mergeData(featu
 
 Push API: `ref.current.push({ time, value })`. All pushed data **must** include a time field.
 
-**RealtimeLineChart**, **RealtimeHistogram** (+ `brush`, `onBrush`, `linkedBrush`), **RealtimeSwarmChart**, **RealtimeWaterfallChart**, **RealtimeHeatmap**, **Streaming Sankey** (StreamNetworkFrame + `showParticles`)
+**RealtimeLineChart**, **RealtimeHistogram** (+ `brush`, `onBrush`, `linkedBrush`, `direction`), **TemporalHistogram** (static-data sibling of RealtimeHistogram — same props minus `windowSize`/`windowMode`; takes a bounded `data` array), **RealtimeSwarmChart**, **RealtimeWaterfallChart**, **RealtimeHeatmap**, **Streaming Sankey** (StreamNetworkFrame + `showParticles`)
 
 Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely.
 

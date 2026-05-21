@@ -80,6 +80,8 @@ export interface SemioticTheme {
     textSecondary: string
     grid: string
     border: string
+    /** Separator/border color for cell-like marks such as treemap tiles and heatmap cells. Falls back to `border`. */
+    cellBorder?: string
     focus?: string
     /** Linked hover/selection highlight color */
     selection?: string
