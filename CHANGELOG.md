@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.4] - 2026-05-21
+
 ### Added
 
 - **`band` prop on `LineChart` and `AreaChart` (and `StreamXYFrame`)** — asymmetric min/max envelope drawn under the lines/areas, driven by independent `y0Accessor` / `y1Accessor`. Distinct from the existing `boundsAccessor` (symmetric ±offset) and from `AreaChart.y0Accessor` (which replaces the area baseline). Pass a single `BandConfig` or an array of them for percentile fans (e.g. p25/p75 stacked on top of p10/p90). Per-series by default — one ribbon per `lineBy` / `colorBy` group, colored from the parent line at 0.2 fillOpacity. Pass `perSeries: false` for an aggregate min/max envelope across all series. Non-interactive by default (hovers pass through to the line on top); set `interactive: true` if the band should participate in hit testing. Band y0/y1 values feed `yExtent` auto-derivation so a tall envelope can never clip, with explicit `yExtent` still winning.

@@ -17,6 +17,17 @@
 
 export const blogEntriesMeta = [
   {
+    slug: "release-3-5-4",
+    title: "Semiotic 3.5.4",
+    subtitle:
+      "Asymmetric bands and percentile fans on LineChart/AreaChart, edge-anchored ticks, theme-driven CSS font-size variables, per-axis class names, loadingContent on every HOC, and one unified ribbon primitive for bounds and band.",
+    author: "AI-Generated",
+    date: "2026-05-21",
+    tags: ["release"],
+    excerpt:
+      "3.5.4 adds a first-class asymmetric band encoding (with percentile fans) to LineChart and AreaChart, sharpens the axis surface with edge-anchored ticks, CSS-variable font sizes, and per-axis class names, ships loadingContent across every HOC, and collapses bounds + band into a single shared ribbon primitive.",
+  },
+  {
     slug: "release-3-5-3",
     title: "Semiotic 3.5.3",
     subtitle:
