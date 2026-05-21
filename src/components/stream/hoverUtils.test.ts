@@ -29,10 +29,15 @@ describe("buildHoverData", () => {
     expect(hover.data?.id).toBe("n1")
   })
 
-  it("preserves array-shaped datums via the `data` field", () => {
+  it("normalizes array-shaped datums to their first entry for tooltip consumers", () => {
+    // Bucket-style scenes (histogram bins, etc.) hand `buildHoverData`
+    // an array of underlying rows. The tooltip layer expects a single
+    // datum shape, so `data` is normalized to the first entry; the
+    // full array stays reachable through scene-level lookups when a
+    // custom tooltip needs it.
     const arr = [{ x: 1 }, { x: 2 }]
     const hover = buildHoverData(arr, 10, 20)
-    expect(hover.data).toBe(arr)
+    expect(hover.data).toBe(arr[0])
   })
 
   it("handles null datum", () => {
