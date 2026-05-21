@@ -457,6 +457,20 @@ describe("useChartLegendAndMargin", () => {
     expect(result.current.margin.right).toBe(200)
   })
 
+  it("treats undefined margin sides as omitted for legend reservation", () => {
+    const colorScale = (_v: string) => "#ccc"
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale,
+        showLegend: true,
+        userMargin: { right: undefined },
+      })
+    )
+    expect(result.current.margin.right).toBe(110)
+  })
+
   it("merges user margin with defaults", () => {
     const { result } = renderHook(() =>
       useChartLegendAndMargin({
