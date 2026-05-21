@@ -34,6 +34,7 @@
  */
 
 import ProcessSankeyVsClassicSankey from "./entries/process-sankey-vs-classic-sankey.js"
+import Release354 from "./entries/release-3-5-4.js"
 import Release353 from "./entries/release-3-5-3.js"
 import MinardsMarch from "./entries/minards-march.js"
 import Release352 from "./entries/release-3-5-2.js"
@@ -43,6 +44,7 @@ import FunnelChartExplainer from "./entries/funnel-chart.js"
 import OrbitDiagramExplainer from "./entries/orbit-diagram.js"
 
 export const blogEntries = [
+  Release354,
   Release353,
   ProcessSankeyVsClassicSankey,
   MinardsMarch,
