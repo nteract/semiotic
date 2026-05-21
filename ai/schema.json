@@ -21,7 +21,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -220,7 +221,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -418,7 +420,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -591,7 +594,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -760,7 +764,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -931,7 +936,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -1065,7 +1071,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -1229,7 +1236,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -1393,7 +1401,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -1560,7 +1569,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -1730,7 +1740,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -1893,7 +1904,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -2051,7 +2063,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -2216,7 +2229,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -2369,7 +2383,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -2535,7 +2550,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -2688,7 +2704,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -2834,7 +2851,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -2993,7 +3011,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -3134,7 +3153,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -3299,7 +3319,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -3427,7 +3448,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -3567,7 +3589,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -3729,7 +3752,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -3920,7 +3944,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -4116,7 +4141,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -4290,7 +4316,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -4468,7 +4495,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -4612,7 +4640,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -4760,7 +4789,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -5763,7 +5793,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -5935,7 +5966,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -6125,7 +6157,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -6237,7 +6270,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -6345,7 +6379,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -6466,7 +6501,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -6600,7 +6636,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -6723,7 +6760,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -6840,7 +6878,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -7092,7 +7131,8 @@
               "default": 400
             },
             "margin": {
-              "type": "object"
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
             },
             "className": {
               "type": "string"
@@ -7291,6 +7331,178 @@
             }
           },
           "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "TemporalHistogram",
+        "description": "Static-data temporal histogram with binned aggregation. Use when data is a bounded array rather than a push stream.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of temporal observations"
+            },
+            "binSize": {
+              "type": "number",
+              "description": "Time bin size in milliseconds (required)"
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "margin": {
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
+            },
+            "className": {
+              "type": "string"
+            },
+            "timeAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for time/x values"
+            },
+            "valueAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for y values"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "up",
+                "down"
+              ],
+              "description": "Bar growth direction. Use \"down\" for mirrored histograms; explicit valueExtent is reversed.",
+              "default": "up"
+            },
+            "categoryAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for category grouping"
+            },
+            "colors": {
+              "type": "object",
+              "description": "Map of category to color string"
+            },
+            "timeExtent": {
+              "type": "array"
+            },
+            "valueExtent": {
+              "type": "array"
+            },
+            "extentPadding": {
+              "type": "number"
+            },
+            "showAxes": {
+              "type": "boolean"
+            },
+            "background": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": [
+                "boolean",
+                "object"
+              ]
+            },
+            "tooltip": {
+              "type": [
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function or config"
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "fill": {
+              "type": "string"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "gap": {
+              "type": "number"
+            },
+            "linkedHover": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ]
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Cross-chart brush coordination via LinkedCharts. String: selection name. Object: { name, xField, yField }."
+            },
+            "brush": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Enable brush selection. true defaults to { dimension: \"x\", snap: \"bin\" }. String: \"x\". Object: { dimension, snap: \"continuous\"|\"bin\", snapDuring }."
+            }
+          },
+          "required": [
+            "data",
+            "binSize"
+          ]
         }
       }
     }

@@ -16,6 +16,7 @@ import { buildDefaultTooltip, accessorName, type TooltipFieldConfig } from "../s
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
+import { normalizePartialMargin } from "../../types/marginType"
 
 export interface CandlestickChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   data?: TDatum[]
@@ -171,8 +172,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     const base = resolved.marginDefaults
     const d = props.mode === "sparkline" ? { ...base, top: 0, bottom: 0 } : base
     if (userMargin == null) return d
-    if (typeof userMargin === "number") return { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin }
-    return { ...d, ...userMargin }
+    return { ...d, ...normalizePartialMargin(userMargin) }
   }, [userMargin, resolved.marginDefaults, props.mode])
 
   // Tooltip: OHLC when present, range when degraded. `ChartAccessor<TDatum,

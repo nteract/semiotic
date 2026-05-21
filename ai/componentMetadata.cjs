@@ -21,7 +21,7 @@ const COMPONENTS_BY_CATEGORY = {
     "ChoroplethMap", "ProportionalSymbolMap", "FlowMap", "DistanceCartogram",
   ],
   realtime: [
-    "RealtimeLineChart", "RealtimeHistogram", "RealtimeSwarmChart",
+    "RealtimeLineChart", "RealtimeHistogram", "TemporalHistogram", "RealtimeSwarmChart",
     "RealtimeWaterfallChart", "RealtimeHeatmap",
   ],
 }

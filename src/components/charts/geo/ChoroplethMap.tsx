@@ -6,6 +6,7 @@ import { useMemo } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, ProjectionProp } from "../../stream/geoTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import { normalizePartialMargin } from "../../types/marginType"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartSelection, useChartMode, useThemeSequential } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
@@ -326,7 +327,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
 
   const margin = useMemo(() => ({
     top: 10, right: 10, bottom: 10, left: 10,
-    ...(typeof userMargin === "number" ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin } : userMargin)
+    ...normalizePartialMargin(userMargin)
   }), [userMargin])
 
   // ── Loading / empty states (computed early, returned after all hooks) ───

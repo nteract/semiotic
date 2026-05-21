@@ -84,6 +84,7 @@ describe("ThemeProvider", () => {
     const wrapper = container.firstElementChild as HTMLElement
     expect(wrapper.style.getPropertyValue("--semiotic-bg")).toBe(DARK_THEME.colors.background)
     expect(wrapper.style.getPropertyValue("--semiotic-text")).toBe(DARK_THEME.colors.text)
+    expect(wrapper.style.getPropertyValue("--semiotic-cell-border")).toBe(DARK_THEME.colors.border)
   })
 
   it("emits --semiotic-tick-font-size and --semiotic-axis-label-font-size from typography", () => {

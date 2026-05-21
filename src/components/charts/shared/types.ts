@@ -64,7 +64,9 @@ export interface BaseChartProps {
   height?: number
   /** Margin around the chart. Accepts a number (same on all sides) or an object
    *  with any subset of `top`/`bottom`/`left`/`right`. Missing sides fall back
-   *  to the chart-mode defaults. */
+   *  to the chart-mode defaults. Use `"auto"` or `null` for a side to explicitly
+   *  allow chart auto-reservation, e.g. `margin={{ right: "auto" }}` with a
+   *  right-side legend. */
   margin?: PartialMargin
   /** Auto-match width to parent container. Default: false */
   responsiveWidth?: boolean

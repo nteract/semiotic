@@ -488,6 +488,31 @@ describe("useChartLegendAndMargin", () => {
     expect(result.current.margin.right).toBe(110)
   })
 
+  it("treats auto and null margin sides as explicit auto-reservation", () => {
+    const colorScale = (_v: string) => "#ccc"
+    const rightAuto = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale,
+        showLegend: true,
+        userMargin: { right: "auto" },
+      })
+    )
+    expect(rightAuto.result.current.margin.right).toBe(110)
+
+    const rightNull = renderHook(() =>
+      useChartLegendAndMargin({
+        data,
+        colorBy: "cat",
+        colorScale,
+        showLegend: true,
+        userMargin: { right: null },
+      })
+    )
+    expect(rightNull.result.current.margin.right).toBe(110)
+  })
+
   it("merges user margin with defaults", () => {
     const { result } = renderHook(() =>
       useChartLegendAndMargin({

@@ -498,6 +498,22 @@ export const RealtimeHistogram = forwardRef(
 }
 RealtimeHistogram.displayName = "RealtimeHistogram"
 
+export interface TemporalHistogramProps<TDatum extends Datum = Datum>
+  extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowSize" | "windowMode"> {
+  /** Static data array for a bounded temporal histogram. */
+  data: TDatum[]
+}
+
+/**
+ * Static-data sibling for temporal histograms. Use this when the data is a
+ * bounded array rather than a ref-driven stream; the realtime push API is not
+ * part of this public surface.
+ */
+export function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>) {
+  return <RealtimeHistogram {...(props as RealtimeHistogramProps<TDatum>)} windowMode="growing" />
+}
+TemporalHistogram.displayName = "TemporalHistogram"
+
 /** @deprecated Use `RealtimeHistogram` (the canonical public name) instead. The
  *  `RealtimeTemporalHistogram` alias is preserved for back-compat with code
  *  written before the rename and will be removed in a future major version. */

@@ -156,6 +156,7 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
     "--semiotic-text-secondary": theme.colors.textSecondary,
     "--semiotic-grid": theme.colors.grid,
     "--semiotic-border": theme.colors.border,
+    "--semiotic-cell-border": theme.colors.cellBorder || theme.colors.border,
     "--semiotic-primary": theme.colors.primary,
     "--semiotic-font-family": theme.typography.fontFamily,
     ...(theme.colors.focus ? { "--semiotic-focus": theme.colors.focus } : {}),

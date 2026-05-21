@@ -25,7 +25,7 @@ import { useChartMode } from "./hooks"
 import { useChartSetup, type ChartSetupResult } from "./useChartSetup"
 import type { ChartMode, SelectionConfig, LinkedHoverProp } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
-import type { PartialMargin, MarginType } from "../../types/marginType"
+import { normalizePartialMargin, type PartialMargin, type MarginType } from "../../types/marginType"
 import type { Datum } from "./datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
@@ -37,9 +37,7 @@ import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
  * every custom-layout HOC normalizes consistently.
  */
 export function normalizeUserMargin(m: PartialMargin | undefined): Partial<MarginType> | undefined {
-  if (m == null) return undefined
-  if (typeof m === "number") return { top: m, right: m, bottom: m, left: m }
-  return m
+  return normalizePartialMargin(m)
 }
 
 interface ScaffoldOptions {

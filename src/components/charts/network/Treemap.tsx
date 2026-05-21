@@ -190,7 +190,11 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
 
   const nodeStyleFn = useMemo(() => {
     return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = { stroke: "#fff", strokeWidth: 1, strokeOpacity: 0.8 }
+      const baseStyle: Record<string, string | number> = {
+        stroke: "var(--semiotic-cell-border, var(--semiotic-border, #fff))",
+        strokeWidth: 1,
+        strokeOpacity: 0.8
+      }
       if (colorByDepth) {
         baseStyle.fill = DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
       } else if (colorBy) {

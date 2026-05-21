@@ -415,6 +415,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
+  const effectiveColorBy = colorBy || areaBy
   const resolvedGradientFill = useMemo(() => {
     if (semanticGradient && semanticGradient.length > 0) {
       return { colorStops: semanticGradientToColorStops(semanticGradient) }
@@ -430,13 +431,13 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   const setup = useChartSetup({
     data: safeData,
     rawData: data,
-    colorBy,
+    colorBy: effectiveColorBy,
     colorScheme,
     legendInteraction,
     legendPosition: legendPositionProp,
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    fallbackFields: effectiveColorBy ? [typeof effectiveColorBy === "string" ? effectiveColorBy : ""] : [],
     unwrapData: false,
     onObservation,
     onClick,
@@ -472,7 +473,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   const { flattenedData, lineStyle, pointStyle, defaultTooltipContent } = useAreaSeriesSetup({
     safeData: featureEffectiveData as TDatum[], data,
     areaBy, lineDataAccessor,
-    colorBy, colorScale: setup.colorScale,
+    colorBy: effectiveColorBy, colorScale: setup.colorScale,
     color, stroke, strokeWidth, opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,

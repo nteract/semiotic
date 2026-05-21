@@ -186,6 +186,26 @@ describe("AreaChart", () => {
       expect(lastXYFrameProps.groupAccessor).toBe("cat")
     })
 
+    it("uses areaBy as the categorical color accessor when colorBy is omitted", () => {
+      const multiData = [
+        { x: 1, y: 10, cat: "A" },
+        { x: 2, y: 20, cat: "A" },
+        { x: 1, y: 15, cat: "B" },
+      ]
+      render(
+        <TooltipProvider>
+          <AreaChart
+            data={multiData}
+            areaBy="cat"
+            colorScheme={["#111111", "#222222"]}
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.lineStyle({ cat: "A" }).fill).toBe("#111111")
+      expect(lastXYFrameProps.lineStyle({ cat: "B" }).fill).toBe("#222222")
+    })
+
     it("forwards width and height as size", () => {
       render(
         <TooltipProvider>

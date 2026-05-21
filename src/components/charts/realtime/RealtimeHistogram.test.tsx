@@ -1,7 +1,7 @@
 
 import React from "react"
 import { render, act, waitFor } from "@testing-library/react"
-import { RealtimeHistogram } from "./RealtimeHistogram"
+import { RealtimeHistogram, TemporalHistogram } from "./RealtimeHistogram"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
@@ -101,5 +101,23 @@ describe("RealtimeHistogram", () => {
     const domain = ref.current.getScales().y.domain()
     expect(domain[0]).toBeCloseTo(13.2)
     expect(domain[1]).toBe(0)
+  })
+
+  it("renders the static TemporalHistogram sibling with bounded data", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <TemporalHistogram
+          binSize={1000}
+          data={[
+            { time: 100, value: 5 },
+            { time: 900, value: 7 },
+          ]}
+          timeAccessor="time"
+          valueAccessor="value"
+        />
+      </TooltipProvider>
+    )
+
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
 })

@@ -191,4 +191,15 @@ describe("Treemap", () => {
     expect(rootStyle.fill).toBe("transparent")
     expect(rootStyle.pointerEvents).toBe("none")
   })
+
+  it("uses the theme cell-border CSS variable as the default tile stroke", () => {
+    render(
+      <TooltipProvider>
+        <Treemap data={sampleData} />
+      </TooltipProvider>
+    )
+
+    const style = lastNetworkFrameProps.nodeStyle({ depth: 1, data: { name: "A", value: 100 } })
+    expect(style.stroke).toBe("var(--semiotic-cell-border, var(--semiotic-border, #fff))")
+  })
 })

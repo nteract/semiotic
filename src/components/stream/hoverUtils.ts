@@ -21,6 +21,10 @@ export interface HoverPointerCoords {
   clientY: number
 }
 
+export function normalizeHoverDatum(rawDatum: any): any {
+  return Array.isArray(rawDatum) ? rawDatum[0] : rawDatum
+}
+
 /**
  * Build a HoverData object from a raw datum and pixel coordinates.
  * The raw datum is preserved as `hover.data` for tooltip / callback
@@ -35,7 +39,7 @@ export function buildHoverData(
   extra?: Partial<HoverData>
 ): HoverData {
   return {
-    data: rawDatum,
+    data: normalizeHoverDatum(rawDatum),
     x,
     y,
     __semioticHoverData: true,

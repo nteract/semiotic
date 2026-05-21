@@ -44,7 +44,7 @@ import { IncrementalExtent } from "./realtime/IncrementalExtent"
 
 // ── Realtime chart HOCs ────────────────────────────────────────────────
 import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
-import { RealtimeTemporalHistogram, RealtimeHistogram } from "./charts/realtime/RealtimeHistogram"
+import { RealtimeTemporalHistogram, RealtimeHistogram, TemporalHistogram } from "./charts/realtime/RealtimeHistogram"
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
 import { RealtimeHeatmap } from "./charts/realtime/RealtimeHeatmap"
@@ -133,6 +133,7 @@ export {
   RealtimeLineChart,
   RealtimeTemporalHistogram,
   RealtimeHistogram,
+  TemporalHistogram,
   RealtimeSwarmChart,
   RealtimeWaterfallChart,
   RealtimeHeatmap,
@@ -349,7 +350,7 @@ export type {
 // ── Realtime chart HOC types ───────────────────────────────────────────
 
 export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
-export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps } from "./charts/realtime/RealtimeHistogram"
+export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps, TemporalHistogramProps } from "./charts/realtime/RealtimeHistogram"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
 export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"
