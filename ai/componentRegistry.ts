@@ -10,7 +10,8 @@ import {
   BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, DotPlot,
   Histogram, ViolinPlot, RidgelinePlot,
   PieChart, DonutChart, GaugeChart, FunnelChart, LikertChart, SwimlaneChart,
-  ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram
+  ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram,
+  TemporalHistogram
 } from "semiotic/ai"
 
 import {
@@ -36,6 +37,7 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   QuadrantChart: { component: QuadrantChart, category: "xy" },
   MultiAxisLineChart: { component: MultiAxisLineChart, category: "xy" },
   CandlestickChart: { component: CandlestickChart, category: "xy" },
+  TemporalHistogram: { component: TemporalHistogram, category: "xy" },
 
   BarChart: { component: BarChart, category: "ordinal" },
   StackedBarChart: { component: StackedBarChart, category: "ordinal" },

@@ -52,11 +52,18 @@ function importPathForCategory(category) {
 function metadataForComponent(entryOrName) {
   const name = typeof entryOrName === "string" ? entryOrName : entryOrName.name
   const category = categoryForComponent(name)
+  // Realtime push-streaming charts are browser-only by design.
+  // TemporalHistogram is the static-data sibling living in the
+  // "realtime" category for documentation grouping — it accepts a
+  // bounded data array and is renderable through the SSR path like
+  // any other static HOC. Matches the name-prefix exclusion the
+  // check-surface-parity script applies.
+  const isPushOnly = category === "realtime" && name.startsWith("Realtime")
   return {
     name,
     category,
     importPath: importPathForCategory(category),
-    renderable: category !== "realtime",
+    renderable: !isPushOnly,
     description: typeof entryOrName === "string" ? undefined : entryOrName.description,
   }
 }

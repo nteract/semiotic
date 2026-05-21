@@ -33,6 +33,7 @@ const SERVER_CONFIG_EXCLUDED = new Map([
   ["MinimapChart", "interactive composite with overview/detail brush; renderable through the HOC SSR path"],
   ["OrbitDiagram", "animated hierarchy HOC; MCP HOC render path is the supported static snapshot"],
   ["DistanceCartogram", "stateful geo HOC; MCP HOC render path is the supported static snapshot"],
+  ["TemporalHistogram", "static-data sibling of RealtimeHistogram; renderable through the StreamXYFrame SSR path the HOC already uses"],
 ])
 
 function read(file) {

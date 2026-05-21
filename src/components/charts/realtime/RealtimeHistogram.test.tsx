@@ -118,6 +118,11 @@ describe("RealtimeHistogram", () => {
       </TooltipProvider>
     )
 
-    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    // Confirm the static sibling actually paints — frame + canvas, same
+    // signal as the other RealtimeHistogram tests above, so we know
+    // bounded data flows through the streaming-bar pipeline.
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
+    expect(frame?.querySelector("canvas")).toBeTruthy()
   })
 })

@@ -65,6 +65,7 @@ function StreamOrdinalFrame
 function StreamXYFrame
 function SwarmPlot
 function SwimlaneChart
+function TemporalHistogram
 function ThemeProvider
 function Tooltip
 function TreeDiagram
@@ -181,6 +182,7 @@ interface StreamXYFrameProps
 interface SwarmPlotProps
 interface SwarmStyle
 interface SwimlaneChartProps
+interface TemporalHistogramProps
 interface ThresholdAlertConfig
 interface ToConfigOptions
 interface TooltipConfig
