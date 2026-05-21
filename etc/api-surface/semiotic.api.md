@@ -167,6 +167,7 @@ interface ScatterplotProps
 interface Selection
 interface SelectionClause
 interface SelectionConfig
+interface SemanticGradientStop
 interface SemioticTheme
 interface SerializedSelection
 interface StackedAreaChartProps

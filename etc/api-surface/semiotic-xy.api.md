@@ -31,6 +31,7 @@ interface LineChartProps
 interface MultiAxisLineChartProps
 interface QuadrantChartProps
 interface ScatterplotProps
+interface SemanticGradientStop
 interface StackedAreaChartProps
 interface StreamXYFrameHandle
 interface StreamXYFrameProps
