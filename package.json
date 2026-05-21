@@ -111,7 +111,7 @@
     "pretest:dist": "node --max-old-space-size=8192 scripts/build.mjs",
     "test:dist": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
-    "test:visual:bootstrap": "playwright test --update-snapshots=changed",
+    "test:visual:bootstrap": "playwright test --update-snapshots=missing",
     "bench": "vitest bench",
     "bench:ui": "vitest bench --ui",
     "bench:baseline": "node scripts/save-bench-baseline.mjs",
