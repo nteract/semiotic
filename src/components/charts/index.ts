@@ -20,7 +20,7 @@ export { LineChart } from "./xy/LineChart"
 export type { LineChartProps } from "./xy/LineChart"
 
 export { AreaChart } from "./xy/AreaChart"
-export type { AreaChartProps } from "./xy/AreaChart"
+export type { AreaChartProps, SemanticGradientStop } from "./xy/AreaChart"
 
 export { DifferenceChart } from "./xy/DifferenceChart"
 export type { DifferenceChartProps } from "./xy/DifferenceChart"

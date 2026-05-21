@@ -150,6 +150,7 @@ export {
   ConnectedScatterplotProps,
   LineChartProps,
   AreaChartProps,
+  SemanticGradientStop,
   DifferenceChartProps,
   StackedAreaChartProps,
   HeatmapProps,

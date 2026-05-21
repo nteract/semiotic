@@ -48,7 +48,6 @@ function resolveDownwardHistogramExtent<TDatum extends Datum>({
   data,
   valueAccessor,
   timeAccessor,
-  categoryAccessor,
   binSize,
   valueExtent,
   extentPadding,
@@ -56,33 +55,32 @@ function resolveDownwardHistogramExtent<TDatum extends Datum>({
   data: readonly TDatum[] | undefined
   valueAccessor: ChartAccessor<TDatum, number> | undefined
   timeAccessor: ChartAccessor<TDatum, number> | undefined
-  categoryAccessor: ChartAccessor<TDatum, string> | undefined
   binSize: number
   valueExtent: [number, number] | undefined
   extentPadding: number | undefined
-}): [number, number] {
+}): [number, number] | undefined {
   if (valueExtent) return [valueExtent[1], valueExtent[0]]
 
+  // No data available (push-mode ref usage without an initial array) and
+  // no explicit valueExtent — we have no basis to pick a flipped domain.
+  // Returning undefined lets StreamXYFrame auto-scale upward; downward
+  // streaming requires explicit valueExtent until the frame learns a
+  // domain-reversal flag. Tracked separately as a follow-up.
+  if (!data || data.length === 0) return undefined
+
+  // Always bin-sum: stacked or not, multiple points can land in the same
+  // bin and the bar height is the sum, not the max single datum.
+  const binSums = new Map<number, number>()
+  for (const datum of data) {
+    const time = readNumericValue(datum, timeAccessor, "time")
+    const value = readNumericValue(datum, valueAccessor, "value")
+    if (time == null || value == null) continue
+    const binStart = Math.floor(time / binSize) * binSize
+    binSums.set(binStart, (binSums.get(binStart) ?? 0) + value)
+  }
   let maxValue = 0
-  if (data && data.length > 0) {
-    if (categoryAccessor) {
-      const binSums = new Map<number, number>()
-      for (const datum of data) {
-        const time = readNumericValue(datum, timeAccessor, "time")
-        const value = readNumericValue(datum, valueAccessor, "value")
-        if (time == null || value == null) continue
-        const binStart = Math.floor(time / binSize) * binSize
-        binSums.set(binStart, (binSums.get(binStart) ?? 0) + value)
-      }
-      for (const sum of binSums.values()) {
-        if (sum > maxValue) maxValue = sum
-      }
-    } else {
-      for (const datum of data) {
-        const value = readNumericValue(datum, valueAccessor, "value")
-        if (value != null && value > maxValue) maxValue = value
-      }
-    }
+  for (const sum of binSums.values()) {
+    if (sum > maxValue) maxValue = sum
   }
 
   const padFactor = extentPadding ?? 0.1
@@ -440,12 +438,11 @@ export const RealtimeHistogram = forwardRef(
         data: data as TDatum[] | undefined,
         valueAccessor,
         timeAccessor,
-        categoryAccessor,
         binSize,
         valueExtent,
         extentPadding,
       })
-    }, [direction, data, valueAccessor, timeAccessor, categoryAccessor, binSize, valueExtent, extentPadding])
+    }, [direction, data, valueAccessor, timeAccessor, binSize, valueExtent, extentPadding])
 
     // ── Loading / empty guards (deferred to after all hooks) ───────────────
     if (loadingEl) return loadingEl
