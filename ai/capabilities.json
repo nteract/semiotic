@@ -595,6 +595,19 @@
       "specialFeatures": [
         "live-stream"
       ]
+    },
+    "TemporalHistogram": {
+      "category": "realtime",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": false,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "brush"
+      ]
     }
   }
 }
