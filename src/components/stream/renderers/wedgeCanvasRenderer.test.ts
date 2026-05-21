@@ -168,6 +168,37 @@ describe("wedgeCanvasRenderer", () => {
     }
   })
 
+  it("strokes the gradient band's rounded outline when style.stroke is set", () => {
+    // Without this branch the band path was the only wedge variant that
+    // dropped user-set stroke/strokeWidth — every non-gradient branch
+    // strokes its own outline.
+    const ctx = createMockCtx()
+    const ops = recordCanvasOps(ctx)
+    const node = makeWedge({
+      innerRadius: 40,
+      outerRadius: 80,
+      cornerRadius: 14,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: ["#ef4444", "#3b82f6"] },
+      style: { fill: "#ef4444", stroke: "#000", strokeWidth: 2 },
+    })
+    wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+    // `recordCanvasOps` replaces ctx.stroke with a non-spy wrapper, so
+    // assert via the recorded styles list instead of toHaveBeenCalled.
+    expect(ops.strokeStyles).toContain("#000")
+    expect(ops.strokeLineWidths).toContain(2)
+  })
+
+  it("does not stroke a gradient band when style.stroke is unset or 'none'", () => {
+    const ctx = createMockCtx()
+    const node = makeWedge({
+      _gradientBand: { colors: ["#ef4444"] },
+      style: { fill: "#ef4444", stroke: "none" },
+    })
+    wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+    expect(ctx.stroke).not.toHaveBeenCalled()
+  })
+
   it("skips a gradient band whose colors array is empty (no clip, no fills)", () => {
     const ctx = createMockCtx()
     const node = makeWedge({

@@ -213,8 +213,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     fillZones,
     showScaleLabels,
     gradientFill: resolvedGradientFill,
-    cornerRadius,
-  }), [value, min, max, thresholds, fillColor, backgroundColor, showScaleLabels, fillZones, resolvedGradientFill, cornerRadius])
+  }), [value, min, max, thresholds, fillColor, backgroundColor, showScaleLabels, fillZones, resolvedGradientFill])
 
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) so each
   // zone arc respects them without the user needing a per-zone pieceStyle.

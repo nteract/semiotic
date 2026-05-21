@@ -620,7 +620,6 @@ const gaugeChart: ChartConfig = {
       fillZones,
       showScaleLabels: rest.showScaleLabels !== false,
       gradientFill,
-      cornerRadius: rest.cornerRadius,
     })
 
     // Compute innerRadius from arcWidth fraction, matching renderOrdinalFrame's layout

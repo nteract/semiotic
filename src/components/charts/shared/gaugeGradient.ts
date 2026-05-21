@@ -48,7 +48,6 @@ interface BuildGaugeArcModelOptions {
   showScaleLabels: boolean
   gradientFill?: GaugeGradientFill
   gradientSteps?: number
-  cornerRadius?: number
 }
 
 function clamp01(value: number): number {
@@ -142,7 +141,6 @@ export function buildGaugeArcModel(options: BuildGaugeArcModelOptions): GaugeArc
     showScaleLabels,
     gradientFill,
     gradientSteps = 48,
-    cornerRadius,
   } = options
 
   const clampedValue = Math.max(min, Math.min(max, value))

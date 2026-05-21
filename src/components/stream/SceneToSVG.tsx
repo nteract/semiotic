@@ -608,6 +608,18 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
                 <path key={idx} d={slice.d} fill={svgFill(slice.color)} />
               ))}
             </g>
+            {n.style.stroke && n.style.stroke !== "none" && (
+              // Stroke the rounded outline OUTSIDE the clipped group so
+              // the stroke isn't itself clipped (half the stroke width
+              // sits outside the band's filled region). Matches the
+              // non-gradient wedge branches and the canvas renderer.
+              <path
+                d={clipD}
+                fill="none"
+                stroke={n.style.stroke}
+                strokeWidth={n.style.strokeWidth}
+              />
+            )}
           </g>
         )
       }

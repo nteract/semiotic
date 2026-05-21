@@ -241,6 +241,41 @@ describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
     expect(html).toMatch(/clip-path="url\(#gauge-grad-[^"]+\)"/)
   })
 
+  it("strokes the rounded outline when style.stroke is set", () => {
+    const node: any = {
+      type: "wedge",
+      cx: 0, cy: 0,
+      innerRadius: 30, outerRadius: 60,
+      startAngle: 0, endAngle: Math.PI,
+      cornerRadius: 10,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: ["#ef4444", "#3b82f6"] },
+      style: { stroke: "#222", strokeWidth: 2 },
+      datum: null,
+      category: "stroked",
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    expect(html).toContain('stroke="#222"')
+    expect(html).toContain('stroke-width="2"')
+    expect(html).toContain('fill="none"')  // the stroke-only outline path
+  })
+
+  it("omits the outline stroke when style.stroke is unset or 'none'", () => {
+    const node: any = {
+      type: "wedge",
+      cx: 0, cy: 0,
+      innerRadius: 30, outerRadius: 60,
+      startAngle: 0, endAngle: Math.PI,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: ["#ef4444"] },
+      style: { stroke: "none" },
+      datum: null,
+      category: "nostroke",
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    expect(html).not.toContain('fill="none"')
+  })
+
   it("renders the band even when cornerRadius is unset (clip becomes a square sector)", () => {
     const node: any = {
       type: "wedge",

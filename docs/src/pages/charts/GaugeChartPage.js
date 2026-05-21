@@ -466,13 +466,13 @@ export default function GaugeChartPage() {
           backgroundColor: `"#d1d5db"`,
           gradientFill: `{
   colorStops: [
-    { offset: 0, color: "#d73027" },
-    { offset: 0.35, color: "#f46d43" },
-    { offset: 0.7, color: "#fdae61" },
-    { offset: 1, color: "#66bd63" },
+    { offset: 0, color: "#2782d7" },
+    { offset: 0.3, color: "#f4ee43" },
+    { offset: 0.7, color: "#fdd961" },
+    { offset: 1, color: "#ca2020" },
   ]
 }`,
-          cornerRadius: "14",
+          cornerRadius: "50",
         }}
         hiddenProps={{}}
       />

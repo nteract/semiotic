@@ -24,14 +24,28 @@ function renderGradientBand(ctx: CanvasRenderingContext2D, node: WedgeSceneNode)
     colors,
   })
 
+  const outline = new Path2D(clipPath)
   ctx.save()
   ctx.translate(node.cx, node.cy)
-  ctx.clip(new Path2D(clipPath))
+  ctx.clip(outline)
   for (const slice of slices) {
     ctx.fillStyle = resolveCSSColor(ctx, slice.color) || slice.color || "#007bff"
     ctx.fill(new Path2D(slice.d))
   }
   ctx.restore()
+
+  // Stroke the band's rounded outline AFTER restoring the clip so the
+  // stroke isn't itself clipped (half the stroke width sits outside the
+  // clipped region). Same behavior contract as the non-gradient wedge
+  // branches — user-set `stroke`/`strokeWidth` should always paint.
+  if (node.style.stroke && node.style.stroke !== "none") {
+    ctx.save()
+    ctx.translate(node.cx, node.cy)
+    ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
+    ctx.lineWidth = node.style.strokeWidth || 1
+    ctx.stroke(outline)
+    ctx.restore()
+  }
 }
 
 /** Trace the wedge arc path (donut or pie) onto the current context — fast path for no cornerRadius. */
