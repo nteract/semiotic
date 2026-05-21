@@ -141,4 +141,81 @@ describe("wedgeCanvasRenderer", () => {
     expect(ops.fillStyles).toContain("#e41a1c")
     expect(ops.fillStyles).toContain("#377eb8")
   })
+
+  it("paints a gradient band as a clipped group of unrounded slices", () => {
+    // _gradientBand sends the renderer down the band-clip path: build the
+    // rounded outline as a clip, then fill one unrounded slice per color.
+    // Each slice ends at the wedge's endAngle (not just its own boundary)
+    // so the next slice overpaints the trailing edge — eliminates
+    // subpixel AA gaps between adjacent colors without an explicit
+    // overlap epsilon.
+    const ctx = createMockCtx()
+    const ops = recordCanvasOps(ctx)
+    const node = makeWedge({
+      innerRadius: 40,
+      outerRadius: 80,
+      cornerRadius: 14,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: ["#ef4444", "#f59e0b", "#fbbf24", "#3b82f6"] },
+      style: { fill: "#ef4444" },  // fallback for renderers that ignore _gradientBand
+    })
+    wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.clip).toHaveBeenCalledTimes(1)
+    // Each color flowed through fillStyle (4 slices, 4 colors).
+    for (const color of ["#ef4444", "#f59e0b", "#fbbf24", "#3b82f6"]) {
+      expect(ops.fillStyles).toContain(color)
+    }
+  })
+
+  it("strokes the gradient band's rounded outline when style.stroke is set", () => {
+    // Without this branch the band path was the only wedge variant that
+    // dropped user-set stroke/strokeWidth — every non-gradient branch
+    // strokes its own outline.
+    const ctx = createMockCtx()
+    const ops = recordCanvasOps(ctx)
+    const node = makeWedge({
+      innerRadius: 40,
+      outerRadius: 80,
+      cornerRadius: 14,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: ["#ef4444", "#3b82f6"] },
+      style: { fill: "#ef4444", stroke: "#000", strokeWidth: 2 },
+    })
+    wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+    // `recordCanvasOps` replaces ctx.stroke with a non-spy wrapper, so
+    // assert via the recorded styles list instead of toHaveBeenCalled.
+    expect(ops.strokeStyles).toContain("#000")
+    expect(ops.strokeLineWidths).toContain(2)
+  })
+
+  it("does not stroke a gradient band when style.stroke is unset or 'none'", () => {
+    const ctx = createMockCtx()
+    const node = makeWedge({
+      _gradientBand: { colors: ["#ef4444"] },
+      style: { fill: "#ef4444", stroke: "none" },
+    })
+    wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+    expect(ctx.stroke).not.toHaveBeenCalled()
+  })
+
+  it("falls back to the normal wedge fill when _gradientBand has an empty colors array", () => {
+    // Empty-colors is a defensive case (gaugeGradient never emits one),
+    // but if a node ever arrives with `_gradientBand: { colors: [] }` we
+    // want it to still paint via the standard fill path rather than
+    // disappear silently. The renderer should NOT call ctx.clip (the
+    // gradient branch is skipped) but SHOULD still fill the wedge.
+    const ctx = createMockCtx()
+    const ops = recordCanvasOps(ctx)
+    const node = makeWedge({
+      cornerRadius: 14,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: [] },
+      style: { fill: "#deadbe" },
+    })
+    wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.clip).not.toHaveBeenCalled()
+    expect(ops.fillStyles).toContain("#deadbe")
+  })
 })

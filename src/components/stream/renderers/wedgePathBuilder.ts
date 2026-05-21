@@ -99,12 +99,12 @@ export function annularSectorPath(opts: AnnularPathOptions): string {
   const phiOuter = Math.asin(Math.min(1, cr / Math.max(1e-9, outerRadius - cr)))
   const phiInner = isPie ? 0 : Math.asin(Math.min(1, cr / Math.max(1e-9, innerRadius + cr)))
 
-  // If the wedge is too thin angularly to fit two roundings end-to-end,
-  // fall back to no rounding on the side that overruns. Each rounded
-  // side eats phi at outer + phi at inner (use outer as the worst-case
-  // bound since phiOuter ≥ phiInner whenever innerRadius > cr * 2).
+  // If the wedge is too thin angularly to fit the requested rounded
+  // side(s), fall back to no rounding on the side that overruns. One
+  // rounded end only needs one angular setback; two rounded ends need
+  // room for both.
   const angularSweep = endAngle - startAngle
-  const maxPhiPerEnd = angularSweep / 2  // both ends together can't exceed the full sweep
+  const maxPhiPerEnd = opts.roundStart && opts.roundEnd ? angularSweep / 2 : angularSweep
   const roundStart = !!opts.roundStart && phiOuter < maxPhiPerEnd
   const roundEnd = !!opts.roundEnd && phiOuter < maxPhiPerEnd
 
@@ -209,4 +209,66 @@ export function annularSectorPath(opts: AnnularPathOptions): string {
   // corner via Z (the implicit closing line).
   d += ` Z`
   return d
+}
+
+/**
+ * Build the clip outline + slice paths for a gauge gradient band.
+ *
+ * The band is rendered as one rounded annular sector used as a clip
+ * mask, with N unrounded slice sectors painted inside. Each slice
+ * extends from its own start angle out to the band's full end angle,
+ * so adjacent colors overpaint each other's trailing edge — eliminates
+ * subpixel AA gaps between slices without an explicit overlap epsilon
+ * and means the staircase reveals one color per `sliceAngle` of arc.
+ *
+ * Canvas and SVG renderers both consume this: canvas builds Path2D
+ * objects from the strings, SVG drops them straight into `<path d="…"/>`.
+ */
+export interface GaugeGradientGeometryOptions {
+  innerRadius: number
+  outerRadius: number
+  startAngle: number
+  endAngle: number
+  cornerRadius?: number
+  roundStart?: boolean
+  roundEnd?: boolean
+  colors: string[]
+}
+
+export interface GaugeGradientGeometry {
+  clipPath: string
+  slices: { d: string; color: string }[]
+}
+
+export function buildGaugeGradientGeometry(opts: GaugeGradientGeometryOptions): GaugeGradientGeometry {
+  const clipPath = annularSectorPath({
+    innerRadius: opts.innerRadius,
+    outerRadius: opts.outerRadius,
+    startAngle: opts.startAngle,
+    endAngle: opts.endAngle,
+    cornerRadius: opts.cornerRadius,
+    roundStart: opts.roundStart,
+    roundEnd: opts.roundEnd,
+  })
+
+  const slices: { d: string; color: string }[] = []
+  const colors = opts.colors
+  if (colors.length > 0) {
+    const span = opts.endAngle - opts.startAngle
+    const sliceAngle = span / colors.length
+    for (let i = 0; i < colors.length; i++) {
+      const sliceStart = opts.startAngle + i * sliceAngle
+      slices.push({
+        d: annularSectorPath({
+          innerRadius: opts.innerRadius,
+          outerRadius: opts.outerRadius,
+          startAngle: sliceStart,
+          endAngle: opts.endAngle,
+        }),
+        color: colors[i],
+      })
+    }
+  }
+
+  return { clipPath, slices }
 }

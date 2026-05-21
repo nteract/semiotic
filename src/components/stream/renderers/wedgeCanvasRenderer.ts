@@ -2,7 +2,53 @@ import { arc as d3Arc, type DefaultArcObject } from "d3-shape"
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, WedgeSceneNode } from "../ordinalTypes"
 import { renderPathPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { annularSectorPath } from "./wedgePathBuilder"
+import { annularSectorPath, buildGaugeGradientGeometry } from "./wedgePathBuilder"
+
+/**
+ * Paint a `_gradientBand` wedge: rounded outer shape used as a clip mask,
+ * N unrounded slice sectors painted inside in `colors` order. Shared
+ * geometry with the SVG renderer via `buildGaugeGradientGeometry`.
+ */
+function renderGradientBand(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
+  // Callers gate on `colors.length > 0`; defensive guard here keeps the
+  // function callable on its own without producing a degenerate clip.
+  const colors = node._gradientBand!.colors
+  if (colors.length === 0) return
+
+  const { clipPath, slices } = buildGaugeGradientGeometry({
+    innerRadius: node.innerRadius,
+    outerRadius: node.outerRadius,
+    startAngle: node.startAngle,
+    endAngle: node.endAngle,
+    cornerRadius: node.cornerRadius,
+    roundStart: node.roundedEnds?.start ?? true,
+    roundEnd: node.roundedEnds?.end ?? true,
+    colors,
+  })
+
+  const outline = new Path2D(clipPath)
+  ctx.save()
+  ctx.translate(node.cx, node.cy)
+  ctx.clip(outline)
+  for (const slice of slices) {
+    ctx.fillStyle = resolveCSSColor(ctx, slice.color) || slice.color || "#007bff"
+    ctx.fill(new Path2D(slice.d))
+  }
+  ctx.restore()
+
+  // Stroke the band's rounded outline AFTER restoring the clip so the
+  // stroke isn't itself clipped (half the stroke width sits outside the
+  // clipped region). Same behavior contract as the non-gradient wedge
+  // branches — user-set `stroke`/`strokeWidth` should always paint.
+  if (node.style.stroke && node.style.stroke !== "none") {
+    ctx.save()
+    ctx.translate(node.cx, node.cy)
+    ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
+    ctx.lineWidth = node.style.strokeWidth || 1
+    ctx.stroke(outline)
+    ctx.restore()
+  }
+}
 
 /** Trace the wedge arc path (donut or pie) onto the current context — fast path for no cornerRadius. */
 function drawWedgeManual(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
@@ -56,6 +102,30 @@ export const wedgeCanvasRenderer = (
     const fillOpacity = node.style.fillOpacity ?? 1
     const transitionOpacity = node.style.opacity ?? 1
     ctx.globalAlpha = fillOpacity * transitionOpacity
+
+    if (node._gradientBand && node._gradientBand.colors.length > 0) {
+      // Gradient band: outer shape is the wedge's rounded annular sector,
+      // interior is N equal-angle unrounded slice sectors painted under
+      // that shape as a clip mask. The mask owns the rounding so no
+      // individual slice needs to fit a corner radius into its (very
+      // small) angular extent. Slices fully overlap (each ends at
+      // `node.endAngle` not just at its own boundary) so subpixel AA
+      // never produces a gap between adjacent colors — each slice is
+      // overpainted by the next except the last one.
+      renderGradientBand(ctx, node)
+      // Pulse overlay still needs to run for gradient bands — even if
+      // gauges don't currently use pulses, the wedge contract supports
+      // them and shouldn't silently drop a node's `_pulseIntensity`.
+      if (node._pulseIntensity && node._pulseIntensity > 0) {
+        drawWedgeManual(ctx, node)
+        renderPathPulse(ctx, node)
+      }
+      ctx.globalAlpha = 1
+      continue
+    }
+    // _gradientBand with an empty colors array falls through to the normal
+    // fill path so the wedge still paints something rather than disappearing.
+
     ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
 
     if (node.roundedEnds) {

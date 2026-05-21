@@ -432,9 +432,10 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     innerRadius,
     startAngle: startAngleDegFinal,
     sweepAngle: sweep,
-    // Flow through to the pie scene builder + canvas wedge renderer; both
-    // already honor `cornerRadius` the same way DonutChart does, so the
-    // arc segments render with rounded ends without any new infrastructure.
+    // Flow through to the pie scene builder + renderers. Gradient gauges
+    // render the band as one wedge carrying `_gradientBand.colors`; the
+    // wedge renderer uses its rounded outline (from this cornerRadius +
+    // roundedEnds) as a clip mask and paints unrounded slices inside.
     ...(cornerRadius != null && { cornerRadius }),
     centerContent: centerEl,
     size: [width, height],

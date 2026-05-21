@@ -1282,7 +1282,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   }
 
   const dataMarks = store.scene
-    .map((node, i) => ordinalSceneNodeToSVG(node, i))
+    .map((node, i) => ordinalSceneNodeToSVG(node, i, idPfx))
     .filter(Boolean)
 
   const showAxes = props.showAxes !== false

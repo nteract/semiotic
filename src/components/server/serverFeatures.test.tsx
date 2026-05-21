@@ -742,10 +742,13 @@ describe("renderChart", () => {
 
   it("renders GaugeChart arc-length gradients across multiple slices", () => {
     const svg = renderChart("GaugeChart", {
-      value: 50,
+      value: 70,
       min: 0,
       max: 100,
-      fillZones: false,
+      fillZones: true,
+      showNeedle: false,
+      backgroundColor: "#d1d5db",
+      cornerRadius: 14,
       gradientFill: {
         colorStops: [
           { offset: 0, color: "#ef4444" },
@@ -758,6 +761,7 @@ describe("renderChart", () => {
     for (const match of svg.matchAll(/<path\b[^>]*fill="([^"]+)"/g)) {
       fills.add(match[1])
     }
+    expect(svg).toContain("#d1d5db")
     expect(fills.size).toBeGreaterThan(3)
   })
 

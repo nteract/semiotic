@@ -46,7 +46,7 @@ import type {
 } from "./networkTypes"
 
 import { hasAnyCornerRadius, clampCornerRadii } from "./renderers/cornerRadii"
-import { annularSectorPath } from "./renderers/wedgePathBuilder"
+import { annularSectorPath, buildGaugeGradientGeometry } from "./renderers/wedgePathBuilder"
 
 import type {
   OrdinalSceneNode,
@@ -477,10 +477,13 @@ export function networkLabelToSVG(label: NetworkLabel, i: number): React.ReactNo
 
 // ── Ordinal Scene Nodes ──────────────────────────────────────────────────
 
-export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.ReactNode {
+export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefix?: string): React.ReactNode {
   // Build a unique key combining node type, category (or group), and index
   // to avoid duplicate key warnings when multiple nodes share the same index
-  // within stacked/grouped ordinal charts.
+  // within stacked/grouped ordinal charts. `idPrefix` (when provided) is
+  // also threaded into any SVG `id` attributes this node emits — required
+  // for multi-chart pages where two ordinal frames could otherwise pick
+  // the same `clipPath` id and produce cross-chart `url(#…)` references.
   const category = ("category" in node ? node.category : undefined) || ("group" in node ? node.group : undefined) || ""
   const nodeKey = (suffix: string) => `ord-${node.type}-${category}-${i}-${suffix}`
   const baseKey = `ord-${node.type}-${category}-${i}`
@@ -576,6 +579,55 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       // node opts into per-end rounding (gauge endpoints), fall back to
       // d3-arc for uniform all-corner rounding and the unrounded fast
       // path.
+      if (n._gradientBand && n._gradientBand.colors.length > 0) {
+        // Gradient band: rounded outline drives a clipPath, N unrounded
+        // slices inside paint the gradient. Shared geometry with the
+        // canvas renderer via `buildGaugeGradientGeometry`. An empty
+        // colors array falls through to the standard wedge fill below so
+        // the node still renders something rather than disappearing.
+        const clipId = safeSvgId(`${idPrefix ? `${idPrefix}-` : ""}gauge-grad-${n.category || baseKey}-${i}`)
+        const { clipPath: clipD, slices } = buildGaugeGradientGeometry({
+          innerRadius: n.innerRadius,
+          outerRadius: n.outerRadius,
+          startAngle: n.startAngle,
+          endAngle: n.endAngle,
+          cornerRadius: n.cornerRadius,
+          roundStart: n.roundedEnds?.start ?? true,
+          roundEnd: n.roundedEnds?.end ?? true,
+          colors: n._gradientBand.colors,
+        })
+        return (
+          <g
+            key={baseKey}
+            transform={`translate(${n.cx},${n.cy})`}
+            opacity={n.style.opacity}
+            fillOpacity={n.style.fillOpacity}
+          >
+            <defs>
+              <clipPath id={clipId}>
+                <path d={clipD} />
+              </clipPath>
+            </defs>
+            <g clipPath={`url(#${clipId})`}>
+              {slices.map((slice, idx) => (
+                <path key={idx} d={slice.d} fill={svgFill(slice.color)} />
+              ))}
+            </g>
+            {n.style.stroke && n.style.stroke !== "none" && (
+              // Stroke the rounded outline OUTSIDE the clipped group so
+              // the stroke isn't itself clipped (half the stroke width
+              // sits outside the band's filled region). Matches the
+              // non-gradient wedge branches and the canvas renderer.
+              <path
+                d={clipD}
+                fill="none"
+                stroke={n.style.stroke}
+                strokeWidth={n.style.strokeWidth}
+              />
+            )}
+          </g>
+        )
+      }
       let arcPath: string
       if (n.roundedEnds) {
         // Per-end rounding opted in. The `roundedEnds` object — even

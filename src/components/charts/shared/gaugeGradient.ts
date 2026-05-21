@@ -20,6 +20,15 @@ export interface GaugeArcDatum extends Datum {
   value: number
   _zone?: string
   _isFill: boolean
+  _pctStart?: number
+  _pct?: number
+  _roundedEnds?: { start?: boolean; end?: boolean }
+  _nonInteractive?: boolean
+  /** Pre-computed gradient colors for the rendered band. Each entry is
+   *  the color for one equal-angle slice across the band's full angular
+   *  span. The wedge renderer reads this and paints the slices itself
+   *  inside a clip-mask shaped like the wedge's rounded outline. */
+  _gradientBand?: { colors: string[] }
 }
 
 export interface GaugeArcModel {
@@ -158,38 +167,56 @@ export function buildGaugeArcModel(options: BuildGaugeArcModelOptions): GaugeArc
 
   if (hasGradient) {
     const fillEnd = fillZones ? pct : 1
-    if (fillEnd > 0) {
-      const sliceBudget = Math.max(1, Math.floor(gradientSteps))
-      const slices = Math.max(1, Math.min(sliceBudget, Math.round(fillEnd * sliceBudget)))
-      for (let s = 0; s < slices; s++) {
-        const sliceStart = (fillEnd * s) / slices
-        const sliceEnd = (fillEnd * (s + 1)) / slices
-        const t = (sliceStart + sliceEnd) / 2
-        const key = makeZoneKey("fill", 0, s)
-        data.push({
-          category: key,
-          value: sliceEnd - sliceStart,
-          _zone: "Gradient",
-          _isFill: true,
-        })
-        styles.set(key, { fill: interpolateColorStops(gradientFill!.colorStops, t) })
-      }
-    }
+    const trackKey = makeZoneKey("bg", 0)
+    data.push({
+      category: trackKey,
+      value: 1,
+      _zone: "Track",
+      _isFill: false,
+      _pctStart: 0,
+      _pct: 1,
+      _roundedEnds: { start: true, end: true },
+      _nonInteractive: true,
+    })
+    styles.set(trackKey, { fill: backgroundColor, opacity: 0.4 })
 
-    if (fillZones) {
-      let prevBound = min
-      for (let i = 0; i < zones.length; i++) {
-        const zone = zones[i]
-        const zoneStart = (prevBound - min) / range
-        const zoneEnd = (zone.value - min) / range
-        const bgPct = Math.max(0, zoneEnd - Math.max(fillEnd, zoneStart))
-        if (bgPct > 0) {
-          const key = makeZoneKey("bg", i)
-          data.push({ category: key, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false })
-          styles.set(key, { fill: backgroundColor, opacity: 0.4 })
-        }
-        prevBound = zone.value
+    if (fillEnd > 0) {
+      // One wedge spans the entire visible band. Its `_gradientBand.colors`
+      // array tells the renderer how many slices to paint and what color
+      // each one is. The renderer uses the wedge's own rounded shape
+      // (cornerRadius + roundedEnds) as a clip-mask, so the rounded
+      // outline lives only on the band's OUTER perimeter — interior
+      // slice seams stay square and there's no per-slice corner to fail
+      // to fit. This sidesteps the entire "thin slice can't host the
+      // corner radius" geometry problem the cap-wedge approach kept
+      // hitting.
+      const sliceBudget = Math.max(1, Math.floor(gradientSteps))
+      const sliceCount = Math.max(1, Math.min(sliceBudget, Math.round(fillEnd * sliceBudget)))
+      const colors: string[] = []
+      for (let s = 0; s < sliceCount; s++) {
+        // Gradient offsets map directly to arc fraction (offset 0.7 paints at
+        // arc fraction 0.7). Sample at each slice's arc-fraction midpoint
+        // so a stop sitting exactly at fillEnd lands on the band's trailing
+        // edge — same convention the old per-slice path used.
+        const t = (fillEnd * (s + 0.5)) / sliceCount
+        colors.push(interpolateColorStops(gradientFill!.colorStops, t))
       }
+      const bandKey = makeZoneKey("fill", 0)
+      data.push({
+        category: bandKey,
+        value: fillEnd,
+        _zone: "Gradient",
+        _isFill: true,
+        _pctStart: 0,
+        _pct: fillEnd,
+        _roundedEnds: { start: true, end: true },
+        _nonInteractive: true,
+        _gradientBand: { colors },
+      })
+      // Fallback fill for renderers that don't honor `_gradientBand`
+      // (graceful degradation — paints a solid band in the gradient's
+      // first color rather than nothing).
+      styles.set(bandKey, { fill: colors[0] || backgroundColor })
     }
   } else {
     let prevBound = min

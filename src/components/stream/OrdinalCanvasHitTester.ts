@@ -58,6 +58,7 @@ export function findNearestOrdinalNode(
         result = hitTestPoint(node, px, py, maxDistance)
         break
       case "wedge":
+        if (node.datum === null) break
         result = hitTestWedge(node, px, py)
         break
       case "boxplot":

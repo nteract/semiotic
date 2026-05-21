@@ -77,6 +77,17 @@ export interface WedgeSceneNode {
    *  rounds the endAngle side. The gauge scene builder uses this to
    *  paint outer endpoints rounded but internal zone seams square. */
   roundedEnds?: { start?: boolean; end?: boolean }
+  /** Render the wedge's interior as N equal angular slices, each filled
+   *  with the corresponding color from `colors`. The wedge's own shape
+   *  (incl. `cornerRadius` + `roundedEnds`) is used as a clip mask so
+   *  only the slice geometry shows through the rounded outline. Used by
+   *  GaugeChart's gradient-fill mode: the band reads as one continuous
+   *  rounded arc with a gradient sampled along its length, without any
+   *  individual slice (which would be far too narrow to host its own
+   *  rounded corners) needing to round. Slices are an internal
+   *  rendering detail — they do not appear as separate scene nodes,
+   *  participate in hit testing, or transition independently. */
+  _gradientBand?: { colors: string[] }
   style: Style
   datum: SceneDatum
   category?: string

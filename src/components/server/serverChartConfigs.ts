@@ -641,6 +641,7 @@ const gaugeChart: ChartConfig = {
       startAngle: startAngleDeg,
       oSort: false,
       pieceStyle: gaugeModel.pieceStyle,
+      ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
       ...common,
       showAxes: false,
       // Pass gauge-specific fields through for needle rendering

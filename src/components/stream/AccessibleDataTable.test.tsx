@@ -39,6 +39,18 @@ describe("computeCanvasAriaLabel", () => {
     expect(computeCanvasAriaLabel(scene, "XY")).toBe("XY, 2 points")
   })
 
+  it("skips explicitly non-interactive null-datum nodes", () => {
+    const scene = [
+      { type: "wedge", datum: null },
+      { type: "wedge", datum: { category: "A", value: 10 } },
+    ]
+    expect(computeCanvasAriaLabel(scene, "gauge")).toBe("gauge, 1 wedges")
+  })
+
+  it("reports empty when only non-interactive null-datum nodes are present", () => {
+    expect(computeCanvasAriaLabel([{ type: "wedge", datum: null }], "gauge")).toBe("gauge, empty")
+  })
+
   it("counts multiple node types in stable order", () => {
     const scene = [
       { type: "rect", x: 0, y: 0, w: 10, h: 10 },

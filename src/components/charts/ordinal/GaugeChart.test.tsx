@@ -357,7 +357,7 @@ describe("GaugeChart", () => {
       expect(anns.some((a: Datum) => a.type === "gauge-label")).toBe(true)
     })
 
-    it("expands gradientFill into multiple arc slices", () => {
+    it("expands gradientFill into a band wedge with multiple sampled colors", () => {
       render(
         <TooltipProvider>
           <GaugeChart
@@ -374,13 +374,54 @@ describe("GaugeChart", () => {
         </TooltipProvider>
       )
       const data = lastOrdinalFrameProps.data || []
-      const fills = new Set<string>()
-      for (const d of data) {
-        const style = lastOrdinalFrameProps.pieceStyle(d, d.category)
-        if (style?.fill) fills.add(style.fill)
-      }
-      expect(data.length).toBeGreaterThan(1)
-      expect(fills.size).toBeGreaterThan(3)
+      const band = data.find((d: Datum) => d._gradientBand)
+      expect(band).toBeTruthy()
+      const colors: string[] = band?._gradientBand?.colors || []
+      expect(colors.length).toBeGreaterThan(3)
+      expect(new Set(colors).size).toBeGreaterThan(3)
+    })
+
+    it("renders gradient fill as a single rounded band wedge over a non-interactive track", () => {
+      render(
+        <TooltipProvider>
+          <GaugeChart
+            value={70}
+            fillZones
+            showNeedle={false}
+            cornerRadius={12}
+            gradientFill={{
+              colorStops: [
+                { offset: 0, color: "#ef4444" },
+                { offset: 1, color: "#3b82f6" },
+              ],
+            }}
+          />
+        </TooltipProvider>
+      )
+      const data = lastOrdinalFrameProps.data || []
+      const track = data[0]
+      const band = data.find((d: Datum) => d._gradientBand)
+
+      // Track is the grey backdrop, rounded on both ends — sits in the
+      // gauge's gap-bottom convention behind the gradient band.
+      expect(track._isFill).toBe(false)
+      expect(track._nonInteractive).toBe(true)
+      expect(track._pctStart).toBe(0)
+      expect(track._pct).toBe(1)
+      expect(track._roundedEnds).toEqual({ start: true, end: true })
+
+      // The whole gradient is ONE wedge spanning the visible portion,
+      // rounded at both ends. The renderer uses this wedge's rounded
+      // outline as a clip mask and paints the colors array inside as
+      // unrounded slice sectors — no individual slice needs to fit a
+      // corner radius into its (very small) angular extent.
+      expect(band).toBeTruthy()
+      expect(band._isFill).toBe(true)
+      expect(band._nonInteractive).toBe(true)
+      expect(band._pctStart).toBe(0)
+      expect(band._pct).toBeCloseTo(0.7, 2)
+      expect(band._roundedEnds).toEqual({ start: true, end: true })
+      expect(band._gradientBand.colors.length).toBeGreaterThan(3)
     })
 
     it("does not turn unparseable gradient stop colors gray", () => {
@@ -398,14 +439,16 @@ describe("GaugeChart", () => {
           />
         </TooltipProvider>
       )
-      const fills = new Set<string>()
-      for (const d of lastOrdinalFrameProps.data || []) {
-        const style = lastOrdinalFrameProps.pieceStyle(d, d.category)
-        if (style?.fill) fills.add(style.fill)
-      }
-      expect(fills.has("#808080")).toBe(false)
-      expect(fills.has("var(--semiotic-low)")).toBe(true)
-      expect(fills.has("#3b82f6")).toBe(true)
+      // Colors live on the band's `_gradientBand.colors` array — the
+      // renderer reads them directly without going through pieceStyle,
+      // so unparseable values flow through verbatim and CSS-var fills
+      // still resolve in canvas/SVG paint.
+      const band = (lastOrdinalFrameProps.data || []).find((d: Datum) => d._gradientBand)
+      const colors: string[] = band?._gradientBand?.colors || []
+      const colorSet = new Set(colors)
+      expect(colorSet.has("#808080")).toBe(false)
+      expect(colorSet.has("var(--semiotic-low)")).toBe(true)
+      expect(colorSet.has("#3b82f6")).toBe(true)
     })
 
     it("keeps gradient slice count within the default budget across many zones", () => {
@@ -427,8 +470,8 @@ describe("GaugeChart", () => {
           />
         </TooltipProvider>
       )
-      const fillSlices = (lastOrdinalFrameProps.data || []).filter((d: Datum) => d._isFill)
-      expect(fillSlices.length).toBeLessThanOrEqual(48)
+      const band = (lastOrdinalFrameProps.data || []).find((d: Datum) => d._gradientBand)
+      expect(band?._gradientBand?.colors.length).toBeLessThanOrEqual(48)
     })
   })
 })

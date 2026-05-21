@@ -313,6 +313,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
     } else if (node.type === "point") {
       points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
     } else if (node.type === "wedge" && node.cx != null) {
+      if (node.datum === null) continue
       const midAngle = ((node.startAngle || 0) + (node.endAngle || 0)) / 2
       const r = ((node.innerRadius || 0) + (node.outerRadius || 50)) / 2
       points.push({

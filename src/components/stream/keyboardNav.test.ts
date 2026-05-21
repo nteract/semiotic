@@ -189,6 +189,22 @@ describe("extractOrdinalNavPoints", () => {
     expect(result[0].datum).toEqual({ slice: "half" })
   })
 
+  it("skips non-interactive null-datum wedge nodes", () => {
+    const scene = [
+      {
+        type: "wedge",
+        cx: 100,
+        cy: 100,
+        innerRadius: 40,
+        outerRadius: 80,
+        startAngle: 0,
+        endAngle: Math.PI,
+        datum: null
+      }
+    ]
+    expect(extractOrdinalNavPoints(scene)).toHaveLength(0)
+  })
+
   it("handles donut wedge with innerRadius", () => {
     const scene = [
       {
