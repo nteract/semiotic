@@ -213,7 +213,8 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     fillZones,
     showScaleLabels,
     gradientFill: resolvedGradientFill,
-  }), [value, min, max, thresholds, fillColor, backgroundColor, showScaleLabels, fillZones, resolvedGradientFill])
+    cornerRadius,
+  }), [value, min, max, thresholds, fillColor, backgroundColor, showScaleLabels, fillZones, resolvedGradientFill, cornerRadius])
 
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) so each
   // zone arc respects them without the user needing a per-zone pieceStyle.
@@ -432,9 +433,8 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     innerRadius,
     startAngle: startAngleDegFinal,
     sweepAngle: sweep,
-    // Flow through to the pie scene builder + canvas wedge renderer; both
-    // already honor `cornerRadius` the same way DonutChart does, so the
-    // arc segments render with rounded ends without any new infrastructure.
+    // Flow through to the pie scene builder + renderers. Gradient gauges
+    // add explicit cap wedges so rounded ends sit over the full track.
     ...(cornerRadius != null && { cornerRadius }),
     centerContent: centerEl,
     size: [width, height],

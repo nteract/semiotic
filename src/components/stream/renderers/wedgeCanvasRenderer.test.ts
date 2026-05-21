@@ -141,4 +141,43 @@ describe("wedgeCanvasRenderer", () => {
     expect(ops.fillStyles).toContain("#e41a1c")
     expect(ops.fillStyles).toContain("#377eb8")
   })
+
+  it("paints a gradient band as a clipped group of unrounded slices", () => {
+    // _gradientBand sends the renderer down the band-clip path: build the
+    // rounded outline as a clip, then fill one unrounded slice per color.
+    // Each slice ends at the wedge's endAngle (not just its own boundary)
+    // so the next slice overpaints the trailing edge — eliminates
+    // subpixel AA gaps between adjacent colors without an explicit
+    // overlap epsilon.
+    const ctx = createMockCtx()
+    const ops = recordCanvasOps(ctx)
+    const node = makeWedge({
+      innerRadius: 40,
+      outerRadius: 80,
+      cornerRadius: 14,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: ["#ef4444", "#f59e0b", "#fbbf24", "#3b82f6"] },
+      style: { fill: "#ef4444" },  // fallback for renderers that ignore _gradientBand
+    })
+    wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.clip).toHaveBeenCalledTimes(1)
+    // Each color flowed through fillStyle (4 slices, 4 colors).
+    for (const color of ["#ef4444", "#f59e0b", "#fbbf24", "#3b82f6"]) {
+      expect(ops.fillStyles).toContain(color)
+    }
+  })
+
+  it("skips a gradient band whose colors array is empty (no clip, no fills)", () => {
+    const ctx = createMockCtx()
+    const node = makeWedge({
+      cornerRadius: 14,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: [] },
+    })
+    wedgeCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.clip).not.toHaveBeenCalled()
+    expect(ctx.fill).not.toHaveBeenCalled()
+  })
 })

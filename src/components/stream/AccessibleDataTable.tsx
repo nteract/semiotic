@@ -28,9 +28,11 @@ export function computeCanvasAriaLabel(
 
   const typeCounts: Record<string, number> = {}
   for (const node of scene) {
+    if (node?.datum === null) continue
     const type = String(node.type)
     typeCounts[type] = (typeCounts[type] || 0) + 1
   }
+  if (Object.keys(typeCounts).length === 0) return `${chartType}, empty`
 
   const parts: string[] = []
   const typeLabels: Record<string, string> = {
@@ -98,6 +100,7 @@ function extractAllRows(scene: AnySceneNode[]): DataRow[] {
 
   for (const node of scene) {
     if (!node || typeof node !== "object") continue
+    if (node.datum === null) continue
     try {
       switch (node.type) {
         case "point":

@@ -620,6 +620,7 @@ const gaugeChart: ChartConfig = {
       fillZones,
       showScaleLabels: rest.showScaleLabels !== false,
       gradientFill,
+      cornerRadius: rest.cornerRadius,
     })
 
     // Compute innerRadius from arcWidth fraction, matching renderOrdinalFrame's layout
@@ -641,6 +642,7 @@ const gaugeChart: ChartConfig = {
       startAngle: startAngleDeg,
       oSort: false,
       pieceStyle: gaugeModel.pieceStyle,
+      ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
       ...common,
       showAxes: false,
       // Pass gauge-specific fields through for needle rendering

@@ -508,6 +508,81 @@ describe("buildPieScene", () => {
       expect(nodes[0].roundedEnds).toBeUndefined()
       expect(nodes[1].roundedEnds).toBeUndefined()
     })
+
+    it("honors explicit gauge overlay layout metadata", () => {
+      const ctx = makeCtx({
+        config: makeConfig({ chartType: "donut", sweepAngle: 240, cornerRadius: 8 }),
+        columns: {
+          track: makeColumn("track", [{
+            category: "track",
+            value: 1,
+            _pctStart: 0,
+            _pct: 1,
+            _roundedEnds: { start: true, end: true },
+            _nonInteractive: true,
+          }], { pct: 0.5, pctStart: 0.5 }),
+          "fill-0": makeColumn("fill-0", [{
+            category: "fill-0",
+            value: 0.35,
+            _pctStart: 0,
+            _pct: 0.35,
+            _roundedEnds: { start: true, end: false },
+          }], { pct: 0.25, pctStart: 0 }),
+          "fill-1": makeColumn("fill-1", [{
+            category: "fill-1",
+            value: 0.35,
+            _pctStart: 0.35,
+            _pct: 0.35,
+            _roundedEnds: { start: false, end: true },
+          }], { pct: 0.25, pctStart: 0.25 }),
+        }
+      })
+      const nodes = buildPieScene(ctx, layout)
+      const totalArc = (240 * Math.PI) / 180
+
+      expect(nodes[0].datum).toBeNull()
+      expect(nodes[0].roundedEnds).toEqual({ start: true, end: true })
+      expect(nodes[1].roundedEnds).toEqual({ start: true, end: false })
+      expect(nodes[2].roundedEnds).toEqual({ start: false, end: true })
+      expect(nodes[1].startAngle).toBeCloseTo(nodes[0].startAngle)
+      expect(nodes[2].endAngle).toBeCloseTo(nodes[0].startAngle + totalArc * 0.7)
+    })
+
+    it("propagates _gradientBand from datum to wedge for the band-clip renderer", () => {
+      // Gauge gradient mode emits a single wedge with the pre-computed
+      // gradient colors attached. pieScene's job is just to thread that
+      // metadata onto the scene node so the canvas/SVG renderer can
+      // paint slices inside a clip mask shaped like the wedge.
+      const ctx = makeCtx({
+        config: makeConfig({ chartType: "donut", sweepAngle: 240, cornerRadius: 14 }),
+        columns: {
+          track: makeColumn("track", [{
+            category: "track",
+            value: 1,
+            _pctStart: 0,
+            _pct: 1,
+            _roundedEnds: { start: true, end: true },
+            _nonInteractive: true,
+          }], { pct: 0.5, pctStart: 0.5 }),
+          band: makeColumn("band", [{
+            category: "band",
+            value: 0.7,
+            _pctStart: 0,
+            _pct: 0.7,
+            _roundedEnds: { start: true, end: true },
+            _nonInteractive: true,
+            _gradientBand: { colors: ["#ef4444", "#f59e0b", "#3b82f6"] },
+          }], { pct: 0.7, pctStart: 0 }),
+        }
+      })
+      const nodes = buildPieScene(ctx, layout)
+      const totalArc = (240 * Math.PI) / 180
+      expect(nodes[1].roundedEnds).toEqual({ start: true, end: true })
+      expect(nodes[1].startAngle).toBeCloseTo(nodes[0].startAngle)
+      expect(nodes[1].endAngle).toBeCloseTo(nodes[0].startAngle + totalArc * 0.7)
+      expect(nodes[1]._gradientBand?.colors).toEqual(["#ef4444", "#f59e0b", "#3b82f6"])
+    })
+
   })
 })
 

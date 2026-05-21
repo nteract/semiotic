@@ -434,38 +434,36 @@ export default function GaugeChartPage() {
       <h3 id="arc-gradient">Arc Gradient</h3>
       <p>
         Use <code>gradientFill</code> to sample colors along the gauge arc. The gradient is applied
-        to the filled portion only, so this example hides the needle and shows the first 70% of the
-        arc as a gradient while the remaining 30% stays grey.
+        over the gauge track, so this example hides the needle and shows a rounded 70% gradient over
+        the full grey arc.
       </p>
 
       <LiveExample
         frameProps={{
-          value: 50,
+          value: 70,
           min: 0,
           max: 100,
           fillZones: true,
           showNeedle: false,
-          thresholds: [{ value: 70, color: "#d1d5db", label: "Remaining" }],
+          backgroundColor: "#d1d5db",
           gradientFill: {
             colorStops: [
-              { offset: 0, color: "#d73027" },
-              { offset: 0.35, color: "#f46d43" },
-              { offset: 0.7, color: "#fdae61" },
-              { offset: 1, color: "#66bd63" },
+              { offset: 0, color: "#2782d7" },
+              { offset: 0.3, color: "#f4ee43" },
+              { offset: 0.7, color: "#fdd961" },
+              { offset: 1, color: "#ca2020" },
             ],
           },
           width: 280,
           height: 220,
-          cornerRadius: 100,
+          cornerRadius: 50,
         }}
         type={GaugeChart}
         overrideProps={{
           showNeedle: "false",
           value: "70",
           fillZones: "true",
-          thresholds: `[
-  { value: 70, color: "#d1d5db", label: "Remaining" }
-]`,
+          backgroundColor: `"#d1d5db"`,
           gradientFill: `{
   colorStops: [
     { offset: 0, color: "#d73027" },
@@ -474,6 +472,7 @@ export default function GaugeChartPage() {
     { offset: 1, color: "#66bd63" },
   ]
 }`,
+          cornerRadius: "14",
         }}
         hiddenProps={{}}
       />

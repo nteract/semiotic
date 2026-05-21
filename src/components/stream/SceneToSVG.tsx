@@ -46,7 +46,7 @@ import type {
 } from "./networkTypes"
 
 import { hasAnyCornerRadius, clampCornerRadii } from "./renderers/cornerRadii"
-import { annularSectorPath } from "./renderers/wedgePathBuilder"
+import { annularSectorPath, buildGaugeGradientGeometry } from "./renderers/wedgePathBuilder"
 
 import type {
   OrdinalSceneNode,
@@ -576,6 +576,41 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.
       // node opts into per-end rounding (gauge endpoints), fall back to
       // d3-arc for uniform all-corner rounding and the unrounded fast
       // path.
+      if (n._gradientBand) {
+        // Gradient band: rounded outline drives a clipPath, N unrounded
+        // slices inside paint the gradient. Shared geometry with the
+        // canvas renderer via `buildGaugeGradientGeometry`.
+        const clipId = safeSvgId(`gauge-grad-${n.category || baseKey}-${i}`)
+        const { clipPath: clipD, slices } = buildGaugeGradientGeometry({
+          innerRadius: n.innerRadius,
+          outerRadius: n.outerRadius,
+          startAngle: n.startAngle,
+          endAngle: n.endAngle,
+          cornerRadius: n.cornerRadius,
+          roundStart: n.roundedEnds?.start ?? true,
+          roundEnd: n.roundedEnds?.end ?? true,
+          colors: n._gradientBand.colors,
+        })
+        return (
+          <g
+            key={baseKey}
+            transform={`translate(${n.cx},${n.cy})`}
+            opacity={n.style.opacity}
+            fillOpacity={n.style.fillOpacity}
+          >
+            <defs>
+              <clipPath id={clipId}>
+                <path d={clipD} />
+              </clipPath>
+            </defs>
+            <g clipPath={`url(#${clipId})`}>
+              {slices.map((slice, idx) => (
+                <path key={idx} d={slice.d} fill={svgFill(slice.color)} />
+              ))}
+            </g>
+          </g>
+        )
+      }
       let arcPath: string
       if (n.roundedEnds) {
         // Per-end rounding opted in. The `roundedEnds` object — even

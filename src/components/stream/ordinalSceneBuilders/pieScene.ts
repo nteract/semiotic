@@ -26,14 +26,26 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   // to override that on a per-side basis; we only mark the FIRST
   // wedge's start side and the LAST wedge's end side.
   const isGauge = config.sweepAngle != null && config.sweepAngle < 360
-  const wedgeCount = Object.keys(columns).length
-  const isMultiZoneGauge = isGauge && wedgeCount > 1 && (config.cornerRadius ?? 0) > 0
-
   const cols = Object.values(columns)
+  const hasExplicitGaugeLayout = cols.some((col) => {
+    const d = col.pieceData[0] as { _pct?: unknown; _pctStart?: unknown; _roundedEnds?: unknown } | undefined
+    return d && (typeof d._pct === "number" || typeof d._pctStart === "number" || d._roundedEnds != null)
+  })
+  const wedgeCount = cols.length
+  const isMultiZoneGauge = isGauge && !hasExplicitGaugeLayout && wedgeCount > 1 && (config.cornerRadius ?? 0) > 0
   for (let i = 0; i < cols.length; i++) {
     const col = cols[i]
-    const startAngle = startAngleOffset + col.pctStart * totalArc
-    const endAngle = startAngleOffset + (col.pctStart + col.pct) * totalArc
+    const datum = col.pieceData[0] as {
+      _pct?: number
+      _pctStart?: number
+      _roundedEnds?: { start?: boolean; end?: boolean }
+      _nonInteractive?: boolean
+      _gradientBand?: { colors: string[] }
+    } | undefined
+    const pctStart = typeof datum?._pctStart === "number" ? datum._pctStart : col.pctStart
+    const pct = typeof datum?._pct === "number" ? datum._pct : col.pct
+    const startAngle = startAngleOffset + pctStart * totalArc
+    const endAngle = startAngleOffset + (pctStart + pct) * totalArc
     const style = resolvePieceStyle(col.pieceData[0], col.name)
     const isFirst = i === 0
     const isLast = i === cols.length - 1
@@ -47,11 +59,16 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
       endAngle,
       ...(config.cornerRadius && { cornerRadius: config.cornerRadius }),
       style,
-      datum: col.pieceData,
+      datum: datum?._nonInteractive ? null : col.pieceData,
       category: col.name,
     }
-    if (isMultiZoneGauge) {
+    if (datum?._roundedEnds) {
+      node.roundedEnds = datum._roundedEnds
+    } else if (isMultiZoneGauge) {
       node.roundedEnds = { start: isFirst, end: isLast }
+    }
+    if (datum?._gradientBand) {
+      node._gradientBand = datum._gradientBand
     }
     nodes.push(node)
   }

@@ -2,7 +2,37 @@ import { arc as d3Arc, type DefaultArcObject } from "d3-shape"
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, WedgeSceneNode } from "../ordinalTypes"
 import { renderPathPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { annularSectorPath } from "./wedgePathBuilder"
+import { annularSectorPath, buildGaugeGradientGeometry } from "./wedgePathBuilder"
+
+/**
+ * Paint a `_gradientBand` wedge: rounded outer shape used as a clip mask,
+ * N unrounded slice sectors painted inside in `colors` order. Shared
+ * geometry with the SVG renderer via `buildGaugeGradientGeometry`.
+ */
+function renderGradientBand(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
+  const colors = node._gradientBand!.colors
+  if (colors.length === 0) return
+
+  const { clipPath, slices } = buildGaugeGradientGeometry({
+    innerRadius: node.innerRadius,
+    outerRadius: node.outerRadius,
+    startAngle: node.startAngle,
+    endAngle: node.endAngle,
+    cornerRadius: node.cornerRadius,
+    roundStart: node.roundedEnds?.start ?? true,
+    roundEnd: node.roundedEnds?.end ?? true,
+    colors,
+  })
+
+  ctx.save()
+  ctx.translate(node.cx, node.cy)
+  ctx.clip(new Path2D(clipPath))
+  for (const slice of slices) {
+    ctx.fillStyle = resolveCSSColor(ctx, slice.color) || slice.color || "#007bff"
+    ctx.fill(new Path2D(slice.d))
+  }
+  ctx.restore()
+}
 
 /** Trace the wedge arc path (donut or pie) onto the current context — fast path for no cornerRadius. */
 function drawWedgeManual(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
@@ -56,6 +86,21 @@ export const wedgeCanvasRenderer = (
     const fillOpacity = node.style.fillOpacity ?? 1
     const transitionOpacity = node.style.opacity ?? 1
     ctx.globalAlpha = fillOpacity * transitionOpacity
+
+    if (node._gradientBand) {
+      // Gradient band: outer shape is the wedge's rounded annular sector,
+      // interior is N equal-angle unrounded slice sectors painted under
+      // that shape as a clip mask. The mask owns the rounding so no
+      // individual slice needs to fit a corner radius into its (very
+      // small) angular extent. Slices fully overlap (each ends at
+      // `node.endAngle` not just at its own boundary) so subpixel AA
+      // never produces a gap between adjacent colors — each slice is
+      // overpainted by the next except the last one.
+      renderGradientBand(ctx, node)
+      ctx.globalAlpha = 1
+      continue
+    }
+
     ctx.fillStyle = (typeof node.style.fill === "string" ? resolveCSSColor(ctx, node.style.fill) : node.style.fill) || "#007bff"
 
     if (node.roundedEnds) {

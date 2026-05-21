@@ -207,6 +207,63 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
   })
 })
 
+describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
+  it("emits a clipPath of the rounded outline + N unrounded slice paths", () => {
+    // Gauge gradient mode renders the band as ONE rounded wedge whose
+    // outline drives a clipPath, and paints N slices inside as plain
+    // unrounded sectors. The clip mask handles the rounded ends so no
+    // individual slice needs to fit its corner radius into its own
+    // (thin) angular extent.
+    const node: any = {
+      type: "wedge",
+      cx: 100,
+      cy: 100,
+      innerRadius: 40,
+      outerRadius: 80,
+      startAngle: Math.PI * 0.75,
+      endAngle: Math.PI * 1.5,
+      cornerRadius: 14,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: ["#ef4444", "#f59e0b", "#fbbf24", "#3b82f6"] },
+      style: {},
+      datum: null,
+      category: "band",
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    expect(html).toContain("<clipPath")
+    expect(html).toContain('transform="translate(100,100)"')
+    // One <path> per gradient color, each filled with that color.
+    expect(html).toContain('fill="#ef4444"')
+    expect(html).toContain('fill="#f59e0b"')
+    expect(html).toContain('fill="#fbbf24"')
+    expect(html).toContain('fill="#3b82f6"')
+    // The clipPath group references the clipPath id.
+    expect(html).toMatch(/clip-path="url\(#gauge-grad-[^"]+\)"/)
+  })
+
+  it("renders the band even when cornerRadius is unset (clip becomes a square sector)", () => {
+    const node: any = {
+      type: "wedge",
+      cx: 0,
+      cy: 0,
+      innerRadius: 30,
+      outerRadius: 60,
+      startAngle: 0,
+      endAngle: Math.PI,
+      roundedEnds: { start: true, end: true },
+      _gradientBand: { colors: ["#000", "#fff"] },
+      style: {},
+      datum: null,
+      category: "noround",
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    // Still emits clipPath + slice paths — the rounding just degrades.
+    expect(html).toContain("<clipPath")
+    expect(html).toContain('fill="#000"')
+    expect(html).toContain('fill="#fff"')
+  })
+})
+
 describe("xySceneNodeToSVG — area", () => {
   it("renders a closed path from topPath and bottomPath", () => {
     const node: any = {

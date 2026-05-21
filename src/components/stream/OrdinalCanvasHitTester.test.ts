@@ -138,6 +138,11 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
       expect(result).toBeNull()
     })
 
+    it("skips non-interactive null-datum wedges", () => {
+      const result = findNearestOrdinalNode([{ ...wedge, datum: null }], 240, 240)
+      expect(result).toBeNull()
+    })
+
     it("respects inner radius for donut slices", () => {
       const donutWedge: WedgeSceneNode = {
         type: "wedge",

@@ -14,7 +14,7 @@
  * what the renderer actually depends on.
  */
 import { describe, it, expect } from "vitest"
-import { annularSectorPath } from "./wedgePathBuilder"
+import { annularSectorPath, buildGaugeGradientGeometry } from "./wedgePathBuilder"
 
 function countArcCommands(path: string): number {
   return (path.match(/A/g) ?? []).length
@@ -108,6 +108,18 @@ describe("annularSectorPath", () => {
     expect(countArcCommands(d)).toBe(2)
   })
 
+  it("allows a one-sided rounded cap in a wedge too narrow for both ends", () => {
+    const d = annularSectorPath({
+      innerRadius: 60,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 0.12, // ~6.9°, enough for one 10px cap but not two
+      cornerRadius: 10,
+      roundEnd: true,
+    })
+    expect(countArcCommands(d)).toBe(4)
+  })
+
   it("supports pie sectors (innerRadius = 0)", () => {
     const d = annularSectorPath({
       innerRadius: 0,
@@ -123,5 +135,60 @@ describe("annularSectorPath", () => {
   it("path is closed (ends with Z)", () => {
     const d = annularSectorPath({ ...baseAnnular, cornerRadius: 8, roundStart: true })
     expect(d.endsWith("Z")).toBe(true)
+  })
+})
+
+describe("buildGaugeGradientGeometry", () => {
+  const base = {
+    innerRadius: 40,
+    outerRadius: 80,
+    startAngle: 0,
+    endAngle: Math.PI,
+    cornerRadius: 14,
+    roundStart: true,
+    roundEnd: true,
+  }
+
+  it("returns one slice per color", () => {
+    const { slices } = buildGaugeGradientGeometry({
+      ...base,
+      colors: ["#a", "#b", "#c", "#d"],
+    })
+    expect(slices.map((s) => s.color)).toEqual(["#a", "#b", "#c", "#d"])
+  })
+
+  it("each slice starts at its boundary and ends at the band's endAngle", () => {
+    // The overpaint strategy depends on slice i+1 painting over slice i's
+    // trailing portion. If slices stopped at their own boundaries instead
+    // of running to endAngle, subpixel AA could leave gaps between
+    // colors. Encoded into the path string as the outer-arc endpoint
+    // sitting on the band's endAngle radius vector.
+    const colors = ["#1", "#2", "#3"]
+    const { slices } = buildGaugeGradientGeometry({ ...base, colors })
+    // Endpoint at endAngle=π is (-outerRadius, ~0) — JS sin(π) carries
+    // some floating-point fuzz, so match on the X coord and a tiny Y.
+    // Every slice path's outer-arc target sits on this same vector.
+    for (const s of slices) {
+      expect(s.d).toMatch(/A80,80 0 \d \d -80,[\d.eE+-]+/)
+    }
+  })
+
+  it("empty colors array returns no slices but still emits a clip outline", () => {
+    const { clipPath, slices } = buildGaugeGradientGeometry({ ...base, colors: [] })
+    expect(slices).toEqual([])
+    expect(clipPath).toMatch(/^M.*Z$/)
+  })
+
+  it("clip outline honors roundStart/roundEnd flags", () => {
+    // Quarter-sector cornerRadius-rounded path has more arc commands
+    // than an unrounded one. Verify by counting `A` arc commands.
+    const rounded = buildGaugeGradientGeometry({ ...base, colors: ["#a"] }).clipPath
+    const unrounded = buildGaugeGradientGeometry({
+      ...base,
+      roundStart: false,
+      roundEnd: false,
+      colors: ["#a"],
+    }).clipPath
+    expect(countArcCommands(rounded)).toBeGreaterThan(countArcCommands(unrounded))
   })
 })
