@@ -490,7 +490,12 @@ export function useChartLegendAndMargin({
     const userSides: Partial<MarginType> = typeof userMargin === "number"
       ? { top: userMargin, bottom: userMargin, left: userMargin, right: userMargin }
       : (userMargin ?? {})
-    const finalMargin: MarginType = { ...defaults, ...userSides }
+    const finalMargin: MarginType = {
+      top: userSides.top ?? defaults.top,
+      right: userSides.right ?? defaults.right,
+      bottom: userSides.bottom ?? defaults.bottom,
+      left: userSides.left ?? defaults.left,
+    }
     // Auto-reserve margin for the legend ONLY on sides the user
     // didn't set explicitly. A caller passing `margin={{ right: 30 }}`
     // (e.g. positioning their own external legend) shouldn't get
