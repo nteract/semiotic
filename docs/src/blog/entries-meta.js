@@ -21,7 +21,7 @@ export const blogEntriesMeta = [
     title: "Semiotic 3.5.3",
     subtitle:
       "DifferenceChart, exact axis ticks, Swimlane rounded ends, ProcessSankey lifecycle timing, the new blog pipeline, and refreshed 45-chart AI capabilities.",
-    author: "Elijah Meeks",
+    author: "AI-Generated",
     date: "2026-05-18",
     tags: ["release"],
     excerpt:
@@ -56,7 +56,7 @@ export const blogEntriesMeta = [
     title: "Semiotic 3.5.2",
     subtitle:
       "Shared HOC hooks, ProcessSankey + SankeyDiagram particle unification, regression sugar on five more charts, FlowMap push API, and a capability matrix the MCP server can filter against.",
-    author: "Elijah Meeks",
+    author: "AI-Generated",
     date: "2026-05-10",
     tags: ["release"],
     excerpt:
