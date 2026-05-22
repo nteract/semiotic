@@ -140,7 +140,7 @@ export function buildGaugeArcModel(options: BuildGaugeArcModelOptions): GaugeArc
     fillZones,
     showScaleLabels,
     gradientFill,
-    gradientSteps = 48,
+    gradientSteps = 240,
   } = options
 
   const clampedValue = Math.max(min, Math.min(max, value))

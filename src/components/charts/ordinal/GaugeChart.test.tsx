@@ -471,7 +471,7 @@ describe("GaugeChart", () => {
         </TooltipProvider>
       )
       const band = (lastOrdinalFrameProps.data || []).find((d: Datum) => d._gradientBand)
-      expect(band?._gradientBand?.colors.length).toBeLessThanOrEqual(48)
+      expect(band?._gradientBand?.colors.length).toBeLessThanOrEqual(240)
     })
   })
 })
