@@ -348,20 +348,60 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
         const labelPct = (ann.value - min) / range
         const startRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
         const labelAngle = startRad + labelPct * sweepRad
-        const labelR = innerRadius - 14
         const cx = (context.width || width) / 2
         const cy = (context.height || height) / 2
+        // Radial tick mark spanning the arc band — 1px past each edge so it
+        // reads as 2px wider than the arc total.
+        const markInner = innerRadius - 1
+        const markOuter = radius + 1
+        const mx1 = Math.cos(labelAngle) * markInner
+        const my1 = Math.sin(labelAngle) * markInner
+        const mx2 = Math.cos(labelAngle) * markOuter
+        const my2 = Math.sin(labelAngle) * markOuter
+        // Text sits outside the arc. Alignment follows the clock position
+        // of the mark: top sector (11–1) centered above, right sector (1–5)
+        // left-aligned, bottom sector (5–7) centered below, left sector
+        // (7–11) right-aligned.
+        const labelR = radius + 10
         const lx = Math.cos(labelAngle) * labelR
         const ly = Math.sin(labelAngle) * labelR
+        // Clock hour from labelAngle: 12 at top, clockwise.
+        const hour = (((labelAngle + Math.PI / 2) / (2 * Math.PI)) * 12 + 12) % 12
+        let textAnchor: "start" | "middle" | "end" = "middle"
+        let dominantBaseline: "auto" | "middle" | "hanging" = "middle"
+        if (hour >= 11 || hour < 1) {
+          textAnchor = "middle"
+          dominantBaseline = "auto" // text sits above the mark
+        } else if (hour >= 1 && hour < 5) {
+          textAnchor = "start"
+          dominantBaseline = "middle"
+        } else if (hour >= 5 && hour < 7) {
+          textAnchor = "middle"
+          dominantBaseline = "hanging" // text sits below the mark
+        } else {
+          textAnchor = "end"
+          dominantBaseline = "middle"
+        }
         return (
-          <text key={`gauge-label-${index}`}
-            x={cx + lx} y={cy + ly}
-            textAnchor="middle" dominantBaseline="middle"
-            fontSize={9} fill="var(--semiotic-text-secondary, #666)"
-            style={{ userSelect: "none" }}
-          >
-            {ann.label}
-          </text>
+          <g key={`gauge-label-${index}`} transform={`translate(${cx},${cy})`}>
+            <line
+              x1={mx1} y1={my1} x2={mx2} y2={my2}
+              stroke="var(--semiotic-border)"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+            <text
+              x={lx} y={ly}
+              textAnchor={textAnchor} dominantBaseline={dominantBaseline}
+              fill="var(--semiotic-text-secondary, #666)"
+              style={{
+                userSelect: "none",
+                fontSize: "var(--semiotic-gauge-label-font-size, 10px)",
+              }}
+            >
+              {ann.label}
+            </text>
+          </g>
         )
       }
       if (ann.type === "gauge-value") {
