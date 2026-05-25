@@ -26,10 +26,26 @@ export const ProcessSankeyCapability: ChartCapability = {
     "change-detection": 3,
   },
 
-  buildProps: (profile) => ({
-    nodes: profile.network?.nodes ?? [],
-    edges: profile.network?.edges ?? [],
-    pairing: "temporal",
-    laneOrder: "crossing-min",
-  }),
+  buildProps: (profile) => {
+    const props: Record<string, unknown> = {
+      nodes: profile.network?.nodes ?? [],
+      edges: profile.network?.edges ?? [],
+      pairing: "temporal",
+      laneOrder: "crossing-min",
+    }
+    // ProcessSankey defaults to `startTime` / `endTime` field names. If the
+    // input data uses `start` / `end` instead (the alternative form fits()
+    // accepts), emit the matching accessor props so the suggestion is
+    // runnable without further patching.
+    const first = profile.network?.edges[0]
+    if (first) {
+      if (first.startTime === undefined && first.start !== undefined) {
+        props.startTimeAccessor = "start"
+      }
+      if (first.endTime === undefined && first.end !== undefined) {
+        props.endTimeAccessor = "end"
+      }
+    }
+    return props
+  },
 }

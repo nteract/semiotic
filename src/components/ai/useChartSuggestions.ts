@@ -27,7 +27,11 @@ export function useChartSuggestions(
   data: ReadonlyArray<Datum> | null | undefined,
   options: UseChartSuggestionsOptions = {}
 ): UseChartSuggestionsResult {
-  const { intent, allow, deny, maxResults, includeVariants, minScore, rawInput, seriesField, capabilities, profile: providedProfile } = options
+  const {
+    intent, allow, deny, maxResults, includeVariants, minScore,
+    rawInput, seriesField, capabilities, audience,
+    profile: providedProfile,
+  } = options
 
   const profile = useMemo(
     () => providedProfile ?? profileData(data ?? [], { rawInput, seriesField }),
@@ -44,9 +48,10 @@ export function useChartSuggestions(
         includeVariants,
         minScore,
         capabilities,
+        audience,
         profile,
       }),
-    [data, intent, allow, deny, maxResults, includeVariants, minScore, capabilities, profile]
+    [data, intent, allow, deny, maxResults, includeVariants, minScore, capabilities, audience, profile]
   )
 
   return { suggestions, profile }

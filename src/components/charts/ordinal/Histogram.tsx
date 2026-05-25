@@ -176,7 +176,12 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
     // `category` field exists). Reads the row's `category` field when present
     // and falls back to a single "All" bucket otherwise — so both pre-binned
     // data with categories and raw observations render without configuration.
-    categoryAccessor = ((d: Datum) => (d?.category as string | undefined) ?? "All") as ChartAccessor<TDatum, string>,
+    // Coerces non-string category values (numbers, booleans from pre-binned
+    // data) so the accessor's `string` return contract always holds.
+    categoryAccessor = ((d: Datum) => {
+      const c = d?.category
+      return c == null ? "All" : String(c)
+    }) as ChartAccessor<TDatum, string>,
     valueAccessor = "value",
     bins = 25, relative = false,
     valueFormat,
