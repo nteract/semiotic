@@ -250,7 +250,7 @@ export default function PushApiPage() {
         { label: "Push API", path: "/features/push-api" },
       ]}
       prevPage={{ title: "Performance", path: "/features/performance" }}
-      nextPage={{ title: "Styling", path: "/theming/styling" }}
+      nextPage={{ title: "Observation Hooks", path: "/intelligence/observation-hooks" }}
     >
       <p>
         The push API lets you imperatively add, remove, and update data on a chart

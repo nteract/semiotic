@@ -32,7 +32,16 @@ import * as path from "path"
 import * as http from "http"
 import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
-import { diagnoseConfig } from "semiotic/ai"
+import {
+  diagnoseConfig,
+  summarizeData,
+  suggestCharts as suggestChartsFromCapabilities,
+  repairChartConfig as repairChartConfigFromCapabilities,
+  suggestDashboard as suggestDashboardFromCapabilities,
+  suggestStreamCharts as suggestStreamChartsFromCapabilities,
+  suggestStretchCharts as suggestStretchChartsFromCapabilities,
+} from "semiotic/ai"
+import type { IntentId, StreamSchema, AudienceProfile } from "semiotic/ai"
 
 const {
   componentIndexFromSchema,
@@ -432,6 +441,218 @@ async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
   }
 }
 
+async function suggestChartsHandler(args: {
+  data: unknown[]
+  intent?: string | string[]
+  maxResults?: number
+  allow?: string[]
+  deny?: string[]
+  audience?: AudienceProfile
+}): Promise<ToolResult> {
+  const { data, intent, maxResults, allow, deny, audience } = args
+  const intentArg = (Array.isArray(intent) ? intent : intent ? [intent] : undefined) as
+    | IntentId[]
+    | undefined
+
+  const suggestions = suggestChartsFromCapabilities(data as Record<string, unknown>[], {
+    intent: intentArg,
+    allow,
+    deny,
+    maxResults: maxResults ?? 8,
+    audience,
+  })
+
+  const lines: string[] = [
+    `${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"} for ${(data as unknown[]).length} rows${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}:`,
+    "",
+    ...suggestions.map((s, i) => {
+      const variantTag = s.variant ? ` / ${s.variant.label}` : ""
+      const reasons = s.reasons.length ? ` — ${s.reasons.join("; ")}` : ""
+      const caveats = s.caveats.length ? `\n   caveats: ${s.caveats.join("; ")}` : ""
+      return `${i + 1}. ${s.component}${variantTag} (score ${s.score.toFixed(1)}/5, familiarity ${s.rubric.familiarity}, accuracy ${s.rubric.accuracy})${reasons}${caveats}`
+    }),
+  ]
+
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: { suggestions },
+  }
+}
+
+async function suggestStreamChartsHandler(args: {
+  schema: StreamSchema
+  intent?: string | string[]
+  maxResults?: number
+}): Promise<ToolResult> {
+  const { schema, intent, maxResults } = args
+  const intentArg = (Array.isArray(intent) ? intent : intent ? [intent] : undefined) as
+    | IntentId[]
+    | undefined
+
+  const suggestions = suggestStreamChartsFromCapabilities(schema, {
+    intent: intentArg,
+    maxResults: maxResults ?? 8,
+  })
+
+  const lines: string[] = [
+    `${suggestions.length} stream chart suggestion${suggestions.length === 1 ? "" : "s"}${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}`,
+    ...(schema.throughput ? [`throughput: ${schema.throughput}`] : []),
+    ...(schema.retention ? [`retention: ${schema.retention}`] : []),
+    "",
+    ...suggestions.map((s, i) => {
+      const reasons = s.reasons.length ? ` — ${s.reasons.join("; ")}` : ""
+      const caveats = s.caveats.length ? `\n   caveats: ${s.caveats.join("; ")}` : ""
+      return `${i + 1}. ${s.component} (score ${s.score.toFixed(1)}/5)${reasons}${caveats}`
+    }),
+  ]
+
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: { suggestions, schema },
+  }
+}
+
+async function suggestDashboardHandler(args: {
+  data: unknown[]
+  intents?: string[]
+  maxPanels?: number
+  diversifyByFamily?: boolean
+  audience?: AudienceProfile
+}): Promise<ToolResult> {
+  const { data, intents, maxPanels, diversifyByFamily, audience } = args
+  const dashboard = suggestDashboardFromCapabilities(data as Record<string, unknown>[], {
+    intents: intents as IntentId[] | undefined,
+    maxPanels: maxPanels ?? 6,
+    diversifyByFamily: diversifyByFamily !== false,
+    audience,
+  })
+
+  const lines: string[] = []
+  lines.push(`Dashboard: ${dashboard.panels.length} panels covering ${dashboard.intentsCovered.join(", ") || "—"}`)
+  if (dashboard.intentsMissing.length) {
+    lines.push(`Intents this data couldn't fill: ${dashboard.intentsMissing.join(", ")}`)
+  }
+  lines.push("")
+  for (let i = 0; i < dashboard.panels.length; i++) {
+    const { intent, suggestion } = dashboard.panels[i]
+    const variantTag = suggestion.variant ? ` / ${suggestion.variant.label}` : ""
+    lines.push(`${i + 1}. [${intent}] ${suggestion.component}${variantTag} (score ${suggestion.score.toFixed(1)}/5)`)
+    if (suggestion.reasons.length) lines.push(`   ${suggestion.reasons.join("; ")}`)
+  }
+  if (dashboard.stretchPanels.length > 0) {
+    lines.push("")
+    lines.push(`Stretch picks (audience-unfamiliar but fitting):`)
+    for (const stretch of dashboard.stretchPanels) {
+      const variantTag = stretch.suggestion.variant ? ` / ${stretch.suggestion.variant.label}` : ""
+      lines.push(`  ${stretch.suggestion.component}${variantTag} (familiarity ${stretch.familiarity}) — ${stretch.rationale}`)
+    }
+  }
+
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: dashboard,
+  }
+}
+
+async function suggestStretchChartsHandler(args: {
+  data: unknown[]
+  audience: AudienceProfile
+  intent?: string | string[]
+  maxResults?: number
+}): Promise<ToolResult> {
+  const { data, audience, intent, maxResults } = args
+  const intentArg = (Array.isArray(intent) ? intent : intent ? [intent] : undefined) as
+    | IntentId[]
+    | undefined
+
+  const stretches = suggestStretchChartsFromCapabilities(data as Record<string, unknown>[], {
+    audience,
+    intent: intentArg,
+    maxResults: maxResults ?? 5,
+  })
+
+  const lines: string[] = [
+    `${stretches.length} stretch pick${stretches.length === 1 ? "" : "s"} for "${audience.name ?? "audience"}":`,
+    "",
+    ...stretches.map((s, i) => {
+      const variantTag = s.suggestion.variant ? ` / ${s.suggestion.variant.label}` : ""
+      const replacing = s.replacing ? ` (could replace ${s.replacing})` : ""
+      return `${i + 1}. ${s.suggestion.component}${variantTag} (familiarity ${s.familiarity}/5)${replacing}\n   ${s.rationale}`
+    }),
+  ]
+
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: { stretches, audience: audience.name ?? null },
+  }
+}
+
+async function repairChartConfigHandler(args: {
+  component: string
+  data: unknown[]
+  intent?: string | string[]
+  maxAlternatives?: number
+}): Promise<ToolResult> {
+  const { component, data, intent, maxAlternatives } = args
+  const intentArg = (Array.isArray(intent) ? intent : intent ? [intent] : undefined) as
+    | IntentId[]
+    | undefined
+
+  const result = repairChartConfigFromCapabilities(component, data as Record<string, unknown>[], {
+    intent: intentArg,
+    maxAlternatives: maxAlternatives ?? 3,
+  })
+
+  const lines: string[] = []
+  if (result.status === "ok") {
+    lines.push(`✅ ${component} fits this dataset — no repair needed.`)
+  } else if (result.status === "alternative") {
+    lines.push(`⚠ ${component} doesn't fit: ${result.reason}`)
+    lines.push("")
+    lines.push(`Alternatives that fit${intentArg ? ` (ranked by intent: ${intentArg.join(", ")})` : ""}:`)
+    for (let i = 0; i < result.alternatives.length; i++) {
+      const s = result.alternatives[i]
+      const variantTag = s.variant ? ` / ${s.variant.label}` : ""
+      const reasons = s.reasons.length ? ` — ${s.reasons.join("; ")}` : ""
+      lines.push(`${i + 1}. ${s.component}${variantTag} (score ${s.score.toFixed(1)}/5)${reasons}`)
+    }
+  } else {
+    lines.push(`❓ No capability registered for "${component}". Closest matches:`)
+    for (let i = 0; i < result.alternatives.length; i++) {
+      const s = result.alternatives[i]
+      lines.push(`${i + 1}. ${s.component} (${s.family}, score ${s.score.toFixed(1)}/5)`)
+    }
+  }
+
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: result,
+  }
+}
+
+async function interrogateChartHandler(args: {
+  component: string
+  props: Record<string, unknown>
+  query?: string
+}): Promise<ToolResult> {
+  const { component, props, query } = args
+  const data = (props.data as unknown[]) || (props.nodes as unknown[]) || []
+  const summary = summarizeData(data as Record<string, unknown>[])
+
+  const content: Array<{ type: "text"; text: string }> = [
+    { type: "text", text: `Statistical summary for ${component}:\n${JSON.stringify(summary, null, 2)}` },
+  ]
+
+  if (query) {
+    content.push({
+      type: "text",
+      text: `User Question: "${query}"\n\nContextual instructions:\n1. Analyze the statistical summary to answer the question.\n2. Return a natural language response.\n3. Optionally suggest a JSON array of Semiotic annotations to visually highlight the answer on the chart (e.g. { type: "callout", x: "Mar", y: 1500, label: "Peak month" }).\n4. Use the accessor names from the provided props (e.g. xAccessor, yAccessor).`,
+    })
+  }
+
+  return { content, structuredContent: { summary, component, props } }
+}
+
 // ── Server factory ───────────────────────────────────────────────────────
 // Creates a fresh McpServer with all tools registered.
 // HTTP mode needs one instance per session (McpServer can only connect to one transport).
@@ -633,6 +854,114 @@ function createServer(): McpServer {
       name: z.string().optional().describe("Theme preset name, e.g. 'tufte', 'pastels-dark', 'bi-tool'. Omit to list all available themes."),
     },
     applyThemeHandler
+  )
+
+  srv.tool(
+    "interrogateChart",
+    "Conversational interrogation of a Semiotic chart. Extract a statistical summary and answer natural language questions about the data, trends, and outliers. Returns a summary and guidance for an AI to generate a textual answer and visual annotations.",
+    {
+      component: z.string().describe("Chart component name, e.g. 'LineChart'"),
+      props: z.record(z.string(), z.unknown()).describe("The full chart props including data"),
+      query: z.string().optional().describe("A natural language question about the chart data"),
+    },
+    interrogateChartHandler
+  )
+
+  srv.tool(
+    "suggestStreamCharts",
+    "Recommend realtime/streaming Semiotic charts for a schema (not row data). Pass a schema describing field types plus optional throughput ('low'|'medium'|'high') and retention ('windowed'|'cumulative') hints; the engine ranks realtime charts (RealtimeLineChart, RealtimeHistogram, RealtimeHeatmap, RealtimeWaterfallChart, RealtimeSwarmChart, TemporalHistogram) by their fit. Use when the user is wiring up a live dashboard or monitoring view rather than visualizing a bounded dataset.",
+    {
+      schema: z
+        .object({
+          fields: z.array(
+            z.object({
+              name: z.string(),
+              kind: z.enum(["numeric", "categorical", "date", "boolean"]),
+              role: z.enum(["x", "y", "value", "category", "series", "size"]).optional(),
+            }),
+          ),
+          throughput: z.enum(["low", "medium", "high"]).optional(),
+          retention: z.enum(["windowed", "cumulative"]).optional(),
+        })
+        .describe("Stream schema — fields plus throughput/retention hints. No row data."),
+      intent: z
+        .union([z.string(), z.array(z.string())])
+        .optional()
+        .describe("Ranking intent."),
+      maxResults: z.number().int().min(1).max(20).optional(),
+    },
+    suggestStreamChartsHandler
+  )
+
+  srv.tool(
+    "suggestDashboard",
+    "Generate a dashboard of complementary chart panels for a dataset — each panel answers a distinct analytical intent (trend, rank, distribution, correlation, etc.) and the engine diversifies by chart family by default. Heuristic only; no LLM call. Use when the user asks 'show me this data' or 'build me a dashboard' rather than picking one chart.",
+    {
+      data: z.array(z.record(z.string(), z.unknown())).describe("Row data — array of objects."),
+      intents: z.array(z.string()).optional().describe("Intents to cover. Omit to let the engine pick based on the data shape."),
+      maxPanels: z.number().int().min(1).max(12).optional().describe("Maximum panels (default 6)."),
+      diversifyByFamily: z.boolean().optional().describe("Prefer not to repeat chart families across panels (default true)."),
+    },
+    suggestDashboardHandler
+  )
+
+  srv.tool(
+    "suggestStretchCharts",
+    "Recommend literacy-growth chart picks for a dataset given an AudienceProfile. Returns charts the data supports but the audience is unfamiliar with (familiarity ≤ 3, or ≤ 4 at exposureLevel 2), each paired with the familiar chart it could substitute for and a rationale. Use when the consumer wants to gently expose users to less familiar but more analytically appropriate visualizations.",
+    {
+      data: z.array(z.record(z.string(), z.unknown())).describe("Row data."),
+      audience: z
+        .object({
+          name: z.string().optional(),
+          familiarity: z.record(z.string(), z.number()).optional(),
+          targets: z
+            .record(
+              z.string(),
+              z.object({
+                direction: z.enum(["increase", "decrease"]),
+                weight: z.number().int().min(1).max(3).optional(),
+                reason: z.string().optional(),
+              }),
+            )
+            .optional(),
+          exposureLevel: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
+        })
+        .describe("Audience profile — familiarity, targets, exposure level."),
+      intent: z.union([z.string(), z.array(z.string())]).optional(),
+      maxResults: z.number().int().min(1).max(20).optional(),
+    },
+    suggestStretchChartsHandler
+  )
+
+  srv.tool(
+    "repairChartConfig",
+    "Validate that a chart component is a sensible choice for a dataset, and if not, propose alternatives that fit. Use when a user asks for a specific chart and you want to confirm it's appropriate, or when you've drafted a config and want to verify it. Returns either ok (no change needed), alternative (chart doesn't fit; here are ranked replacements with rationale), or unknown (no capability registered).",
+    {
+      component: z.string().describe("Chart component name to validate, e.g. 'PieChart'"),
+      data: z.array(z.record(z.string(), z.unknown())).describe("Row data — array of objects."),
+      intent: z
+        .union([z.string(), z.array(z.string())])
+        .optional()
+        .describe("User intent — informs ranking of alternatives when the chart doesn't fit."),
+      maxAlternatives: z.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3)."),
+    },
+    repairChartConfigHandler
+  )
+
+  srv.tool(
+    "suggestCharts",
+    "Recommend Semiotic charts for a dataset using heuristic capability descriptors. Each chart declares which data shapes it serves and which intents (trend, compare-categories, distribution, correlation, part-to-whole, etc.) it answers — the engine returns a ranked list with scores, reasons, caveats, and ready-to-use props. Heuristic only; no LLM call. Use the result as structured context when answering 'what chart should I use?' or generating chart code.",
+    {
+      data: z.array(z.record(z.string(), z.unknown())).describe("Row data — array of objects."),
+      intent: z
+        .union([z.string(), z.array(z.string())])
+        .optional()
+        .describe("Ranking intent. One of: trend, compare-series, compare-categories, rank, part-to-whole, distribution, correlation, flow, hierarchy, geo, outlier-detection, composition-over-time, change-detection. Custom intents accepted."),
+      maxResults: z.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
+      allow: z.array(z.string()).optional().describe("Restrict to these component names."),
+      deny: z.array(z.string()).optional().describe("Exclude these component names."),
+    },
+    suggestChartsHandler
   )
 
   return srv

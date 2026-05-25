@@ -115,14 +115,22 @@ const navData = [
       { title: "Chart Container", path: "/features/chart-container" },
       { title: "Chart States", path: "/features/chart-states" },
       { title: "Chart Modes", path: "/features/chart-modes" },
-      { title: "AI Observation Hooks", path: "/features/observation-hooks" },
-      { title: "Serialization", path: "/features/serialization" },
-      { title: "Vega-Lite Translator", path: "/features/vega-lite" },
       { title: "Streaming System Model", path: "/features/streaming-system-model" },
       { title: "Performance", path: "/features/performance" },
       { title: "Push API", path: "/features/push-api" },
-      { title: "Custom Charts", path: "/features/custom-charts" },
-      { title: "Capability Matrix", path: "/features/capabilities" }
+      { title: "Custom Charts", path: "/features/custom-charts" }
+    ]
+  },
+  {
+    title: "Intelligence",
+    path: "/intelligence",
+    children: [
+      { title: "Observation Hooks", path: "/intelligence/observation-hooks" },
+      { title: "Capability Matrix", path: "/intelligence/capabilities" },
+      { title: "Chart Suggestions", path: "/intelligence/suggestions" },
+      { title: "Interrogation", path: "/intelligence/interrogation" },
+      { title: "Serialization", path: "/intelligence/serialization" },
+      { title: "Vega-Lite Translator", path: "/intelligence/vega-lite" }
     ]
   },
   {

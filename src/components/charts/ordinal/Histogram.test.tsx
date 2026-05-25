@@ -44,6 +44,23 @@ describe("Histogram", () => {
     expect(lastOrdinalFrameProps.data).toBe(sampleData)
   })
 
+  it("renders raw-observation data with no category field (single bucket)", () => {
+    // Regression: prior default categoryAccessor="category" failed validation
+    // on rows like { value: 12 } because "category" wasn't in the data.
+    // The default now synthesizes an "All" bucket for these cases so
+    // suggestCharts can route raw-observation data to Histogram cleanly.
+    const observations = Array.from({ length: 30 }, (_, i) => ({ value: i * 2 + Math.random() * 5 }))
+    const { container } = render(
+      <TooltipProvider>
+        <Histogram data={observations} valueAccessor="value" />
+      </TooltipProvider>
+    )
+    const frame = container.querySelector(".stream-ordinal-frame")
+    expect(frame).toBeTruthy()
+    // No ChartError rendered — the validator path passed.
+    expect(container.querySelector(".semiotic-chart-error")).toBeNull()
+  })
+
   it("handles empty data gracefully (no frame rendered)", () => {
     const { container } = render(
       <TooltipProvider>

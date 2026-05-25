@@ -37,8 +37,10 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
   data?: TDatum[]
   /**
    * Field name or function returning the bin label (used when data is
-   * already binned). Ignored when binning raw values.
-   * @default "category"
+   * already binned). For raw-observation data with no category dimension,
+   * the default treats all rows as a single "All" bucket — no need to set
+   * this explicitly.
+   * @default (d) => d.category ?? "All"
    */
   categoryAccessor?: ChartAccessor<TDatum, string>
   /**
@@ -169,7 +171,13 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
 
   const {
     data, margin: userMargin, className,
-    categoryAccessor = "category", valueAccessor = "value",
+    // Default is a function rather than the string "category" so raw-observation
+    // mode works on data like [{ value: 12 }, { value: 18 }] (where no
+    // `category` field exists). Reads the row's `category` field when present
+    // and falls back to a single "All" bucket otherwise — so both pre-binned
+    // data with categories and raw observations render without configuration.
+    categoryAccessor = ((d: Datum) => (d?.category as string | undefined) ?? "All") as ChartAccessor<TDatum, string>,
+    valueAccessor = "value",
     bins = 25, relative = false,
     valueFormat,
     colorBy, colorScheme, categoryPadding = 20,

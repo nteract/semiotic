@@ -106,6 +106,175 @@ export type { SerializedSelections, SerializedSelection, SerializedFieldSelectio
 export { fromVegaLite } from "./data/fromVegaLite"
 export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"
 
+// AI interrogation — headless hook + data summary
+export { useChartInterrogation } from "./store/useChartInterrogation"
+export type {
+  UseChartInterrogationOptions,
+  UseChartInterrogationResult,
+  InterrogationContext,
+  InterrogationFocus,
+  InterrogationResult,
+  InterrogationQuery,
+  InterrogationMessage,
+} from "./store/useChartInterrogation"
+export { useChartFocus } from "./store/useChartFocus"
+export type { UseChartFocusOptions } from "./store/useChartFocus"
+export { summarizeData } from "./data/DataSummarizer"
+export type {
+  DataSummary,
+  FieldSummary,
+  FieldType,
+  NumericFieldSummary,
+  DateFieldSummary,
+  CategoricalFieldSummary,
+  UnknownFieldSummary,
+  SummarizeOptions,
+} from "./data/DataSummarizer"
+
+// Chart capability layer — heuristic recommendations + intent taxonomy
+export { profileData } from "./ai/profileData"
+export type { ProfileDataOptions } from "./ai/profileData"
+export { suggestCharts, scoreChart, explainCapabilityFit } from "./ai/suggestCharts"
+export type {
+  SuggestChartsOptions,
+  RejectedCapability,
+  ExplainCapabilityFitResult,
+} from "./ai/suggestCharts"
+export { inferIntent } from "./ai/inferIntent"
+export type { InferIntentResult } from "./ai/inferIntent"
+export { suggestDashboard } from "./ai/suggestDashboard"
+export type {
+  DashboardPanel,
+  DashboardSuggestion,
+  SuggestDashboardOptions,
+} from "./ai/suggestDashboard"
+
+// Audience-aware suggestion + literacy-growth surface
+export {
+  applyAudienceBias,
+  effectiveFamiliarity,
+  stretchFamiliarityCeiling,
+} from "./ai/audienceProfile"
+export type {
+  AudienceProfile,
+  AudienceTarget,
+  AudienceBiasResult,
+} from "./ai/audienceProfile"
+export {
+  executivePersona,
+  analystPersona,
+  dataScientistPersona,
+  BUILT_IN_AUDIENCES,
+} from "./ai/audiences"
+export { suggestStretchCharts } from "./ai/suggestStretchCharts"
+export type {
+  StretchSuggestion,
+  SuggestStretchChartsOptions,
+} from "./ai/suggestStretchCharts"
+
+// Streaming intent — parallel API for live charts (schema-based, not row-based)
+export {
+  suggestStreamCharts,
+  registerStreamChartCapability,
+  unregisterStreamChartCapability,
+  getStreamCapabilities,
+} from "./ai/suggestStreamCharts"
+export type { SuggestStreamChartsOptions } from "./ai/suggestStreamCharts"
+export type {
+  StreamSchema,
+  StreamFieldSchema,
+  StreamFieldKind,
+  StreamChartCapability,
+  StreamIntentScorer,
+  StreamSuggestion,
+} from "./ai/streamingTypes"
+export { diffProfile } from "./ai/diffProfile"
+export type { ProfileDiff, FieldTypeChange, PrimaryRoleChange, PrimaryRole } from "./ai/diffProfile"
+export { repairChartConfig } from "./ai/repairChartConfig"
+export type {
+  RepairResult,
+  RepairOkResult,
+  RepairAlternativeResult,
+  RepairUnknownResult,
+  RepairOptions,
+} from "./ai/repairChartConfig"
+export { runQualityScorecard } from "./ai/qualityScorecard"
+export type {
+  ScorecardFixture,
+  ScorecardReport,
+  PerCapabilityScore,
+  PerFixtureScore,
+} from "./ai/qualityScorecard"
+export { CANONICAL_FIXTURES } from "./ai/qualityFixtures"
+export { useChartSuggestions } from "./ai/useChartSuggestions"
+export type { UseChartSuggestionsOptions, UseChartSuggestionsResult } from "./ai/useChartSuggestions"
+export {
+  getCapabilities,
+  getCapability,
+  registerChartCapability,
+  unregisterChartCapability,
+  // XY
+  LineChartCapability,
+  AreaChartCapability,
+  StackedAreaChartCapability,
+  ScatterplotCapability,
+  ConnectedScatterplotCapability,
+  BubbleChartCapability,
+  QuadrantChartCapability,
+  MultiAxisLineChartCapability,
+  MinimapChartCapability,
+  DifferenceChartCapability,
+  CandlestickChartCapability,
+  HeatmapCapability,
+  // Ordinal
+  BarChartCapability,
+  GroupedBarChartCapability,
+  StackedBarChartCapability,
+  DotPlotCapability,
+  PieChartCapability,
+  DonutChartCapability,
+  FunnelChartCapability,
+  GaugeChartCapability,
+  LikertChartCapability,
+  SwimlaneChartCapability,
+  // Distribution
+  HistogramCapability,
+  BoxPlotCapability,
+  SwarmPlotCapability,
+  ViolinPlotCapability,
+  RidgelinePlotCapability,
+  // Network
+  ForceDirectedGraphCapability,
+  SankeyDiagramCapability,
+  ChordDiagramCapability,
+  ProcessSankeyCapability,
+  // Hierarchy
+  TreeDiagramCapability,
+  TreemapCapability,
+  CirclePackCapability,
+  OrbitDiagramCapability,
+  // Geo
+  ChoroplethMapCapability,
+  ProportionalSymbolMapCapability,
+  FlowMapCapability,
+  DistanceCartogramCapability,
+} from "./ai/chartCapabilities"
+export type {
+  ChartCapability,
+  ChartDataProfile,
+  ChartFamily,
+  ChartImportPath,
+  ChartRubric,
+  ChartVariant,
+  FieldCandidate,
+  FieldKind,
+  FitResult,
+  IntentScorer,
+  Suggestion,
+} from "./ai/chartCapabilityTypes"
+export { listIntents, getIntent, registerIntent, BUILT_IN_INTENT_IDS } from "./ai/intents"
+export type { BuiltInIntentId, IntentId, IntentDescriptor } from "./ai/intents"
+
 // AI Observation hooks
 export { useChartObserver } from "./store/useObservation"
 export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"
