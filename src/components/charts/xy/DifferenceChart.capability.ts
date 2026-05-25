@@ -50,9 +50,21 @@ export const DifferenceChartCapability: ChartCapability = {
     const yKey = profile.primary.y as string
     const seriesKey = profile.primary.series as string
 
+    // Treat nullish / empty-string series values as "not a real series" —
+    // matches profileData's distinct-count semantics, which ignore them.
+    // Without this guard `String(undefined)` would seed a literal "undefined"
+    // bucket that could plausibly land in the top two.
+    const isValidSeries = (raw: unknown): raw is string | number | boolean => {
+      if (raw == null) return false
+      const s = String(raw)
+      return s.length > 0
+    }
+
     const totals = new Map<string, number>()
     for (const row of profile.data) {
-      const name = String(row[seriesKey])
+      const raw = row[seriesKey]
+      if (!isValidSeries(raw)) continue
+      const name = String(raw)
       const v = Number(row[yKey])
       totals.set(name, (totals.get(name) ?? 0) + (Number.isFinite(v) ? v : 0))
     }
@@ -69,7 +81,9 @@ export const DifferenceChartCapability: ChartCapability = {
 
     const byX = new Map<unknown, Record<string, unknown>>()
     for (const row of profile.data) {
-      const series = String(row[seriesKey])
+      const raw = row[seriesKey]
+      if (!isValidSeries(raw)) continue
+      const series = String(raw)
       if (series !== aName && series !== bName) continue
       const x = row[xKey]
       const y = row[yKey]

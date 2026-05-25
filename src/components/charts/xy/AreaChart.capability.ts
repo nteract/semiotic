@@ -83,6 +83,10 @@ export const AreaChartCapability: ChartCapability = {
       const totals = new Map<unknown, number>()
       for (const row of profile.data) {
         const k = row[seriesKey]
+        // Skip nullish/empty-string series values — `profileData` ignores them
+        // when counting categories, and bucketing them as their own group
+        // would let "undefined" or "" become the leading series.
+        if (k == null || k === "") continue
         const v = Number(row[yKey])
         totals.set(k, (totals.get(k) ?? 0) + (Number.isFinite(v) ? v : 0))
       }
@@ -94,7 +98,9 @@ export const AreaChartCapability: ChartCapability = {
           leading = k
         }
       }
-      if (leading != null) {
+      // Only subselect when we actually found a valid leading series; otherwise
+      // leave the data alone and let the single-series renderer handle it.
+      if (leading != null && totals.size > 0) {
         data = profile.data.filter((row) => row[seriesKey] === leading)
       }
     }
