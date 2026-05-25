@@ -550,7 +550,7 @@ async function suggestDashboardHandler(args: {
 
   return {
     content: [{ type: "text", text: lines.join("\n") }],
-    structuredContent: dashboard,
+    structuredContent: dashboard as unknown as Record<string, unknown>,
   }
 }
 
@@ -626,7 +626,7 @@ async function repairChartConfigHandler(args: {
 
   return {
     content: [{ type: "text", text: lines.join("\n") }],
-    structuredContent: result,
+    structuredContent: result as unknown as Record<string, unknown>,
   }
 }
 
