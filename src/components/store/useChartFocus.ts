@@ -19,7 +19,8 @@ export interface UseChartFocusOptions {
  * Default observation types this hook subscribes to. The "-end" variants
  * are included so a hover-out / click-elsewhere / brush-clear event can
  * *clear* an existing focus rather than leaving it stuck on the previous
- * datum — matches the `brush-end` branch in the reducer below.
+ * datum — matches the `*-end` branch in the `useMemo` below that maps
+ * those observation types back to `null`.
  */
 const DEFAULT_FOCUS_TYPES: ChartObservation["type"][] = [
   "hover",

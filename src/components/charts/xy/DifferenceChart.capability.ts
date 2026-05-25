@@ -60,16 +60,24 @@ export const DifferenceChartCapability: ChartCapability = {
     const aName = ranked[0]?.[0]
     const bName = ranked[1]?.[0]
 
+    // Normalize the pivot key so non-primitive x values (notably `Date`
+    // instances — Map uses reference equality on objects) collapse to the
+    // same bucket. Two rows with the same timestamp but different Date
+    // object identities would otherwise miss each other and the pivot
+    // would silently drop points that should pair up.
+    const keyOf = (v: unknown): unknown => (v instanceof Date ? v.getTime() : v)
+
     const byX = new Map<unknown, Record<string, unknown>>()
     for (const row of profile.data) {
       const series = String(row[seriesKey])
       if (series !== aName && series !== bName) continue
       const x = row[xKey]
       const y = row[yKey]
-      let entry = byX.get(x)
+      const k = keyOf(x)
+      let entry = byX.get(k)
       if (!entry) {
         entry = { [xKey]: x }
-        byX.set(x, entry)
+        byX.set(k, entry)
       }
       if (series === aName) entry.a = y
       else if (series === bName) entry.b = y
