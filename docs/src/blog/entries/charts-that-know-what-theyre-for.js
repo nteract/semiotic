@@ -5,16 +5,19 @@ import {
   AreaChart,
   BarChart,
   BoxPlot,
+  ConnectedScatterplot,
   DonutChart,
   DotPlot,
   Histogram,
   LineChart,
+  MultiAxisLineChart,
   PieChart,
   Scatterplot,
   StackedAreaChart,
   StackedBarChart,
   SwarmPlot,
   ViolinPlot,
+  DifferenceChart,
 } from "semiotic"
 import {
   executivePersona,
@@ -138,9 +141,11 @@ const SAMPLE_DATASETS = {
   "Quarterly revenue by region": Array.from({ length: 24 }, (_, i) => {
     const region = ["EU", "NA", "APAC"][i % 3]
     const quarter = Math.floor(i / 3) + 1
+    const revenue = 800 + i * 60 + Math.sin(i / 2) * 90
     return {
       quarter,
-      revenue: 800 + i * 60 + Math.sin(i / 2) * 90,
+      revenue,
+      profit: revenue - Math.random() * revenue * 0.9,
       region,
     }
   }),
@@ -152,19 +157,34 @@ const SAMPLE_DATASETS = {
     { product: "Doohickey", units: 410 },
   ],
   "Survey ratings by cohort": Array.from({ length: 150 }, (_, i) => ({
-    respondent: i + 1,
-    satisfaction: Math.max(1, Math.min(10, 6 + Math.sin(i / 7) * 2 + Math.random() * 3 - 1)),
+    respondent: Math.max(1, Math.min(10, 6 + Math.sin((i % 5) / 7) * 2 + Math.random() * 3 - 1)),
+    satisfaction: ((i % 3) + 1) * Math.random(),
     cohort: ["Beta", "GA", "Enterprise"][i % 3],
   })),
 }
 
+// Aggregated single-series time series for the fixed example: one row per
+// quarter, two correlated numerics (revenue, profit). Picked specifically
+// so the engine produces a canonical ConnectedScatterplot revenue on x,
+// profit on y, quarter as the order axis when given correlation intent.
+const QUARTERLY_KPIS = Array.from({ length: 8 }, (_, i) => {
+  const quarter = i + 1
+  const revenue = 2400 + i * 220 + Math.sin(i / 2) * 180
+  return {
+    quarter,
+    revenue,
+    profit: revenue * (0.16 + i * 0.015) + Math.cos(i / 2) * 60,
+  }
+})
+
 // Map Suggestion.component → renderable React component. Limited to the
-// HOCs this post's sample datasets can produce — keeps the bundle tight.
+// HOCs this post's sample datasets can produce keeps the bundle tight.
 const COMPONENT_MAP = {
   LineChart,
   AreaChart,
   StackedAreaChart,
   Scatterplot,
+  ConnectedScatterplot,
   BarChart,
   StackedBarChart,
   DotPlot,
@@ -174,6 +194,8 @@ const COMPONENT_MAP = {
   BoxPlot,
   ViolinPlot,
   SwarmPlot,
+  MultiAxisLineChart,
+  DifferenceChart,
 }
 
 const AUDIENCES = {
@@ -182,12 +204,18 @@ const AUDIENCES = {
   "Data scientist": dataScientistPersona,
 }
 
-function renderSuggestion(suggestion, width = 240, height = 140) {
+// Primary-mode chart defaults assume a 600×400 canvas, so their built-in
+// margin (~70/60/50/40) eats most of a small preview tile. Override top/left/
+// right with compact values; leave bottom unset so the chart's legend-aware
+// auto-reserve (80px for bottom legend) still kicks in.
+const PREVIEW_MARGIN = { top: 16, left: 40, right: 16 }
+
+function renderSuggestion(suggestion, width = 280, height = 220) {
   const Component = COMPONENT_MAP[suggestion.component]
   if (!Component) {
     return (
       <div style={{ fontSize: 11, color: "var(--text-secondary)", padding: 12 }}>
-        {suggestion.component} — preview not embedded
+        {suggestion.component} - preview not embedded
       </div>
     )
   }
@@ -196,10 +224,92 @@ function renderSuggestion(suggestion, width = 240, height = 140) {
       {...suggestion.props}
       width={width}
       height={height}
+      margin={PREVIEW_MARGIN}
+      legendPosition="bottom"
       responsiveWidth={true}
       animate={false}
       accessibleTable={false}
     />
+  )
+}
+
+// ─── Fixed before-playground example ───
+// One dataset, two intents, two ranked answers each with the verbatim
+// reasons string the engine emits. This is the "audit trail" claim made
+// concrete before the freeform playground.
+const FIXED_INTENTS = [
+  {
+    intent: "trend",
+    question: '"how is revenue moving over time?"',
+  },
+  {
+    intent: "correlation",
+    question: '"how do revenue and profit move together?"',
+  },
+]
+
+function SameDataDifferentIntent() {
+  const data = QUARTERLY_KPIS
+  const picks = useMemo(
+    () =>
+      FIXED_INTENTS.map(({ intent, question }) => ({
+        intent,
+        question,
+        suggestion: suggestCharts(data, { intent, maxResults: 1, includeVariants: false })[0],
+      })),
+    [data],
+  )
+
+  return (
+    <div style={chartFrame}>
+      <div
+        style={{
+          fontSize: 12,
+          color: "var(--text-secondary)",
+          marginBottom: 12,
+          lineHeight: 1.5,
+        }}
+      >
+        Same dataset (eight quarters of revenue and profit), two different questions, two different
+        chart picks. The <code>reasons</code> string below each chart is what the engine emitted
+        same string the LLM, the logs, and a snapshot test would see.
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: 12,
+        }}
+      >
+        {picks.map(({ intent, question, suggestion }) =>
+          suggestion ? (
+            <div key={intent} style={suggestionCard}>
+              <div style={cardHeader}>
+                <span style={intentBadge}>intent: {intent}</span>
+                <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>
+                  → {suggestion.component}
+                </span>
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "var(--text-secondary)",
+                  fontStyle: "italic",
+                }}
+              >
+                {question}
+              </div>
+              <div style={{ minHeight: 220 }}>{renderSuggestion(suggestion)}</div>
+              {suggestion.reasons.length > 0 && (
+                <div style={{ fontSize: 11, color: "var(--text)", lineHeight: 1.4 }}>
+                  <strong>reasons:</strong> {suggestion.reasons.slice(0, 2).join("; ")}
+                </div>
+              )}
+            </div>
+          ) : null,
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -289,7 +399,7 @@ function Playground() {
         ) : (
           <em>
             Type a phrase like "trend over time", "which is biggest", "show the distribution", or
-            "is there a correlation&quot; — <code>inferIntent</code> will classify it.
+            "is there a correlation&quot; and <code>inferIntent</code> will classify it.
           </em>
         )}
       </div>
@@ -331,7 +441,7 @@ function Playground() {
                 {s.score.toFixed(1)}/5 · fam {s.rubric.familiarity}
               </span>
             </div>
-            <div style={{ minHeight: 140 }}>{renderSuggestion(s)}</div>
+            <div style={{ minHeight: 220 }}>{renderSuggestion(s)}</div>
             {s.reasons.length > 0 && (
               <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.4 }}>
                 {s.reasons.slice(0, 2).join("; ")}
@@ -371,7 +481,7 @@ function Playground() {
                     {s.replacing ? ` · vs ${s.replacing}` : ""}
                   </span>
                 </div>
-                <div style={{ minHeight: 140 }}>{renderSuggestion(s.suggestion)}</div>
+                <div style={{ minHeight: 220 }}>{renderSuggestion(s.suggestion)}</div>
                 <div
                   style={{
                     fontSize: 11,
@@ -395,15 +505,15 @@ function Body() {
   return (
     <>
       <p>
-        Chart libraries have historically been told <em>how</em> to render — props in, pixels out.
-        Picking <em>which</em> chart to render has been someone else's problem: a designer's, a BI
-        tool's, an LLM's, the user's. Semiotic 3.6.0 ships a different bet: every chart now carries
-        a small descriptor that declares <strong>what data shapes it serves</strong>,{" "}
+        Chart libraries have historically been told <em>how</em> to render: props in, pixels out.
+        Picking <em>which</em> chart to render is someone else's problem: a designer, a BI tool, the
+        user, now very often an LLM. Semiotic 3.6.0 shipped a different approach: every chart now
+        knows <strong>what data shapes it serves</strong>,{" "}
         <strong>which questions it answers well</strong>, and{" "}
-        <strong>how settings shift those answers</strong>. Pair the descriptor with a profile of
-        your data and you get a ranked list of charts, each with a runnable prop config and an
-        auditable reason. Pair it with a <em>profile of your audience</em> and the ranking
-        calibrates to who's actually reading.
+        <strong>how settings change those answers</strong>. Apply a profile of your data and you get
+        a ranked list of charts, each with a config and an auditable reason for that chart. Pair it
+        with a <em>profile of your audience</em> and the ranking calibrates to the needs of who is
+        actually reading.
       </p>
 
       <h2 id="why-care">Why a recommendation engine, and why now</h2>
@@ -416,7 +526,8 @@ function Body() {
           <strong>Statistical heuristics</strong> (Voyager, Lux, Vega-Lite's auto-encodings). Picks
           "interesting" axes through statistical tests. Doesn't model human comprehension and
           doesn't recognize that the <em>same chart with different settings</em> answers different
-          questions.
+          questions. They are also so tightly wed to libraries with just a handful of charts that
+          they completely ignore the value of increasing data literacy through exposure.
         </li>
         <li>
           <strong>Let the LLM decide</strong>. Plausible-looking recommendations, occasionally
@@ -440,12 +551,24 @@ function Body() {
         an LLM itself; an LLM can sit on top of the engine but can't replace it.
       </p>
 
+      <h2 id="same-data-different-question">Same data, different question, different chart</h2>
+      <p>
+        Concretely, here's what "auditable reason" buys you. One quarterly-revenue-by-region
+        dataset, fed through <code>suggestCharts</code> twice with different intents. The component
+        the engine picks changes, the props it emits change, and the <code>reasons</code> string
+        explains why. This is the same output string an LLM or a snapshot test or a log line would
+        consume. This is a key point: The things we build for human users like aggregations and
+        hints and suggestions are useful for AI and vice versa but also are useful for traditional
+        observability and analytics.
+      </p>
+      <SameDataDifferentIntent />
+
       <h2 id="playground">A playground for the impatient</h2>
       <p>
-        Three knobs: pick a dataset, pick an audience, and type a natural-language question. Each
-        change re-ranks the suggestions live. The "stretch your literacy" row only appears when
-        you've selected an audience that has growth targets — it shows charts the audience is
-        unfamiliar with but the data actually supports.
+        That fixed example only scratches the surface. Pick a dataset, pick an audience, type a
+        natural-language question. Each change re-ranks the suggestions live. The "stretch your
+        literacy" row shows charts the audience is unfamiliar with but the data actually supports
+        and only appears when you've selected an audience that has growth targets.
       </p>
       <Playground />
       <p>
@@ -453,8 +576,8 @@ function Body() {
         drop out of the top picks even when the data favors them, because the descriptor's{" "}
         <code>rubric.familiarity</code> for those charts has been replaced by the executive
         profile's familiarity number ("not familiar"). The same charts then surface in the stretch
-        row alongside the rationale "growing distribution literacy" — labeled as opt-in, not pushed
-        as defaults. Under <em>Data scientist</em>, the same charts move <em>up</em>
+        row alongside the rationale "growing distribution literacy" and labeled as opt-in, not
+        pushed as defaults. Under <em>Data scientist</em>, the same charts move <em>up</em>
         the main ranking, and PieChart drops because the persona ships a decrease target.
       </p>
 
@@ -464,7 +587,7 @@ function Body() {
         contract (rows in, structured suggestions out) so consumers can pick which surface fits
         their UI.
       </p>
-      <h3 id="suggest-charts">suggestCharts — ranked single recommendations</h3>
+      <h3 id="suggest-charts">suggestCharts - ranked single recommendations</h3>
       <p>Given a dataset and an optional intent, returns the top-ranked charts that fit.</p>
       <pre style={chartFrame}>
         {`import { suggestCharts } from "semiotic/ai"
@@ -482,13 +605,13 @@ const suggestions = suggestCharts(data, { intent: "trend" })
 // ]`}
       </pre>
       <p>
-        Every suggestion has a runnable <code>props</code> object — drop it into the matching chart
+        Every suggestion has a runnable <code>props</code> object. Drop it into the matching chart
         and it renders. No second pass to derive accessors from the profile.
       </p>
 
-      <h3 id="suggest-dashboard">suggestDashboard — composite, multi-intent views</h3>
+      <h3 id="suggest-dashboard">suggestDashboard - composite, multi-intent views</h3>
       <p>
-        Given a dataset, returns a set of complementary panels each covering a distinct analytical
+        Given a dataset, return a set of complementary panels each covering a distinct analytical
         intent, diversified by chart family by default. The "show me a dashboard" function call.
       </p>
       <pre style={chartFrame}>
@@ -511,7 +634,7 @@ const { panels, intentsCovered, intentsMissing, stretchPanels } =
         to ship a misleading map.
       </p>
 
-      <h3 id="interrogation">useChartInterrogation — the chat surface</h3>
+      <h3 id="interrogation">useChartInterrogation - the chat surface</h3>
       <p>
         A headless React hook that lets users ask natural-language questions about a chart and get
         back annotations the chart can render. Bring your own LLM via the <code>onQuery</code>{" "}
@@ -545,14 +668,14 @@ return (
 )`}
       </pre>
 
-      <h2 id="audience-layer">The audience layer — where this gets interesting</h2>
+      <h2 id="audience-layer">The audience layer - where this gets interesting</h2>
       <p>
-        Every chart's descriptor carries a <code>rubric.familiarity</code> number (1–5). That number
-        has always been a guess at "what a generic data-literate reader recognizes." In practice
-        it's nonsense — a quant fund and a marketing org have completely different familiarity
-        baselines. So 3.6.0 adds an <strong>AudienceProfile</strong>: a serializable artifact your
-        organization produces (through surveys, telemetry, training records, manager judgment) and
-        the library consumes:
+        Every chart's descriptor carries a <code>rubric.familiarity</code> number (1 - 5). That
+        number has always been a guess at "what a generic data-literate reader recognizes." In
+        practice it's nonsense. A quant fund and a marketing org have completely different
+        familiarity baselines. So 3.6.0 adds <strong>AudienceProfile</strong>: a serializable
+        artifact your organization produces (through surveys, telemetry, training records, manager
+        judgment) and the library consumes:
       </p>
       <pre style={chartFrame}>
         {`const acmeFinanceTeam = {
@@ -583,8 +706,8 @@ suggestStretchCharts(data, { audience: acmeFinanceTeam })`}
       </pre>
       <p>
         The library does not <em>measure</em> familiarity. That's not its job and it would tempt
-        feature creep that's hostile to embedded use. Your organization owns the measurement —
-        whatever survey, telemetry, or judgment tool produced the numbers — and the library consumes
+        feature creep that's hostile to embedded use. Your organization owns the measurement using
+        whatever survey, telemetry, or judgment tool produced the numbers and the library consumes
         the result as data.
       </p>
       <p>
@@ -596,10 +719,12 @@ suggestStretchCharts(data, { audience: acmeFinanceTeam })`}
         <em>"Acme Finance: we want the team reading distributions, not just means."</em>
       </p>
 
-      <h3 id="stretch-picks">Stretch picks — give them what they want, AND</h3>
+      <h3 id="stretch-picks">Stretch picks - the "yes, and" of data visualization</h3>
       <p>
-        The literacy-growth mechanic the audience layer enables.{" "}
-        <code>suggestStretchCharts(data, &#123; audience &#125;)</code> returns charts where:
+        You should always give your stakeholders what they want but you can build literacy by giving
+        them more complex charts alongside it. This is the literacy-growth mechanic the audience
+        layer enables. <code>suggestStretchCharts(data, &#123; audience &#125;)</code> returns
+        charts where:
       </p>
       <ol>
         <li>
@@ -613,15 +738,16 @@ suggestStretchCharts(data, { audience: acmeFinanceTeam })`}
       </ol>
       <p>
         Each stretch carries a <code>replacing</code> field (which familiar chart it could
-        substitute for) and a <code>rationale</code> string. Render them in their own labeled
-        surface, not inline with the default recommendations — the user gets to see "here's what
+        substitute for) and a <code>rationale</code> string. If you render them in their own labeled
+        surface, not inline with the default recommendations, then the user gets to see "here's what
         you'd normally pick" alongside "here's a vocabulary expansion opportunity." The playground
         above splits them into two rows for exactly this reason.
       </p>
       <p>
         We deliberately did not collapse stretches into the main ranking. A stretch pick is{" "}
-        <em>intentionally not</em> the best familiar choice — surfacing it as "the recommendation"
-        would mislead. Two labeled surfaces, the reader chooses.
+        <em>intentionally not</em> the best familiar choice so surfacing it as "the recommendation"
+        would mislead. But it is a viable option that a team or organization might find useful to
+        deploy for other reasons in place of the higher-ranked chart.
       </p>
 
       <h2 id="when-to-reach">When to reach for this, and when not</h2>
@@ -630,9 +756,9 @@ suggestStretchCharts(data, { audience: acmeFinanceTeam })`}
       </p>
       <ul>
         <li>
-          You're building any UI that needs to answer "what chart should I use?" — including
+          You're building any UI that needs to answer "what chart should I use?" (including
           chart-picker dropdowns, dashboard generators, AI assistant plumbing, or any internal-tools
-          surface where the user knows their data shape but not the canonical rendering.
+          surface where the user knows their data shape but not the canonical rendering).
         </li>
         <li>
           You want recommendations that work without an LLM <em>and</em> get richer with one. The
@@ -640,13 +766,16 @@ suggestStretchCharts(data, { audience: acmeFinanceTeam })`}
         </li>
         <li>
           You're shipping the library to a specific audience whose chart literacy is meaningfully
-          different from "generic data-literate user" — the executive view of an enterprise
-          dashboard, a scientific notebook environment, a teaching tool for students.
+          different from "generic data-literate user" such as the executive view of an enterprise
+          dashboard, a scientific notebook environment, or a teaching tool for students.
         </li>
         <li>
           You want to nudge audience adoption toward more analytically appropriate charts over time.
           The stretch surface gives you a place to surface charts you'd like to see used more,
-          without forcing them into defaults.
+          without forcing them into defaults. This is key. Your organization might only be
+          comfortable with a few charts but you are failing them if you do not help them to grow
+          their data visualization literacy further by exposing them to the new patterns (and
+          therefore new opportunities) that other charts afford.
         </li>
       </ul>
       <p>
@@ -668,7 +797,7 @@ suggestStretchCharts(data, { audience: acmeFinanceTeam })`}
         </li>
       </ul>
 
-      <h2 id="wiring">Wiring it up — the minimal cases</h2>
+      <h2 id="wiring">Wiring it up</h2>
       <h3 id="wiring-single">Single recommendation</h3>
       <pre style={chartFrame}>
         {`import { suggestCharts, LineChart, BarChart, /* ... */ } from "semiotic/ai"
@@ -728,7 +857,7 @@ function AskTheData({ data, question }) {
 }`}
       </pre>
       <p>
-        <code>inferIntent</code> is a zero-dependency regex-pattern heuristic — it never calls out.
+        <code>inferIntent</code> is a zero-dependency regex-pattern heuristic. It never calls out.
         Wraps cleanly with an LLM-backed alternative if your audience uses jargon the defaults don't
         cover.
       </p>
@@ -758,15 +887,15 @@ function AskTheData({ data, question }) {
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/intelligence/suggestions">Chart Suggestions</Link> — full reference for{" "}
+          <Link to="/intelligence/suggestions">Chart Suggestions</Link> - full reference for{" "}
           <code>suggestCharts</code>, intents, capability descriptors.
         </li>
         <li>
-          <Link to="/intelligence/interrogation">Interrogation</Link> —{" "}
+          <Link to="/intelligence/interrogation">Interrogation</Link> -{" "}
           <code>useChartInterrogation</code> with annotation-returning <code>onQuery</code>.
         </li>
         <li>
-          <Link to="/intelligence/capabilities">Capability Matrix</Link> — the AI-readable inventory
+          <Link to="/intelligence/capabilities">Capability Matrix</Link> - the AI-readable inventory
           of which charts support which features (SSR, push, linked hover, etc.).
         </li>
         <li>

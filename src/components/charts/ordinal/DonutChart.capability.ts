@@ -17,13 +17,13 @@ export const DonutChartCapability: ChartCapability = {
 
   intentScores: {
     "part-to-whole": 4,
-    "compare-categories": 2,
+    "compare-categories": 2
   },
 
   buildProps: (profile) => ({
     data: profile.data,
     categoryAccessor: profile.primary.category,
     valueAccessor: profile.primary.y,
-    innerRadius: 60,
-  }),
+    innerRadius: 40
+  })
 }

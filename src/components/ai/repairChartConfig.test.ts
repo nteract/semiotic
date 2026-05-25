@@ -55,8 +55,11 @@ describe("repairChartConfig", () => {
     expect(result.status).toBe("unknown")
     if (result.status === "unknown") {
       expect(result.alternatives.length).toBeGreaterThan(0)
-      // Top alt for trend on temporal should be LineChart
-      expect(result.alternatives[0].component).toBe("LineChart")
+      // Top alt for trend on single-series temporal is AreaChart (gradient
+      // fill outranks LineChart's plain line for trend); LineChart is still
+      // in the alternatives list, just not first.
+      expect(result.alternatives[0].component).toBe("AreaChart")
+      expect(result.alternatives.map((a) => a.component)).toContain("LineChart")
     }
   })
 

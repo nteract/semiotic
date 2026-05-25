@@ -51,6 +51,7 @@ import ChartsThatKnow from "./entries/charts-that-know-what-theyre-for.js"
 import MultimodalResponse from "./entries/multimodal-response.js"
 import AnchoredConversations from "./entries/anchored-conversations.js"
 import LiveDashboard from "./entries/live-conversational-dashboard.js"
+import Release360 from "./entries/release-3-6-0.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -58,6 +59,7 @@ import LiveDashboard from "./entries/live-conversational-dashboard.js"
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  Release360,
   LiveDashboard,
   AnchoredConversations,
   MultimodalResponse,

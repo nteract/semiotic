@@ -33,7 +33,12 @@ export const LineChartCapability: ChartCapability = {
       // an x-named numeric. Scatter-fallback x (just "the other numeric"
       // when there are two) doesn't qualify as a trend axis.
       if (p.xProvenance === "scatter" && !p.monotonicX) return 1
-      return p.uniqueXCount && p.uniqueXCount >= 4 ? 5 : 3
+      if (!p.uniqueXCount || p.uniqueXCount < 4) return 3
+      // Yield to AreaChart on clean single-series trend — its gradient fill
+      // is more visually arresting. LineChart still wins on multi-series
+      // because AreaChart subselects to one series in that case.
+      const singleSeries = !p.seriesCount || p.seriesCount < 2
+      return singleSeries ? 4 : 5
     },
     "compare-series": (p) => {
       if (p.xProvenance === "scatter" && !p.monotonicX) return 1

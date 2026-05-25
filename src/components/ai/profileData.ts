@@ -2,7 +2,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { summarizeData, type DataSummary, type FieldSummary } from "../data/DataSummarizer"
 import type { ChartDataProfile, FieldCandidate, FieldKind } from "./chartCapabilityTypes"
 
-const X_FIELD_HINT = /^(x|index|rank|order|step|sequence|year|month|day|date|time|timestamp)$/i
+const X_FIELD_HINT = /^(x|index|rank|order|step|sequence|year|quarter|qtr|fiscal|month|week|day|date|time|timestamp)$/i
 const Y_FIELD_HINT = /^(y|value|amount|total|count|revenue|sales|price|score|rate|population|measure)$/i
 const SIZE_FIELD_HINT = /(size|magnitude|volume|weight|count|amount)/i
 const CATEGORY_FIELD_HINT = /^(category|label|name|type|group|region|segment|kind|class)$/i

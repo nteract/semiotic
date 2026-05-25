@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { LineChart } from "semiotic"
@@ -80,15 +81,15 @@ const focusBadge = {
 
 // ─── Demo data ────────────────────────────────────────────────────────────
 const SALES_DATA = [
-  { month: 1,  revenue: 1100, label: "Jan" },
-  { month: 2,  revenue: 1180, label: "Feb" },
-  { month: 3,  revenue: 1320, label: "Mar" },
-  { month: 4,  revenue: 1450, label: "Apr" },
-  { month: 5,  revenue: 2200, label: "May" },
-  { month: 6,  revenue: 1610, label: "Jun" },
-  { month: 7,  revenue: 1720, label: "Jul" },
-  { month: 8,  revenue: 1830, label: "Aug" },
-  { month: 9,  revenue: 1950, label: "Sep" },
+  { month: 1, revenue: 1100, label: "Jan" },
+  { month: 2, revenue: 1180, label: "Feb" },
+  { month: 3, revenue: 1320, label: "Mar" },
+  { month: 4, revenue: 1450, label: "Apr" },
+  { month: 5, revenue: 2200, label: "May" },
+  { month: 6, revenue: 1610, label: "Jun" },
+  { month: 7, revenue: 1720, label: "Jul" },
+  { month: 8, revenue: 1830, label: "Aug" },
+  { month: 9, revenue: 1950, label: "Sep" },
   { month: 10, revenue: 1380, label: "Oct" },
   { month: 11, revenue: 2080, label: "Nov" },
   { month: 12, revenue: 2240, label: "Dec" },
@@ -102,7 +103,7 @@ function cannedAnchoredResponder(question, focus) {
   // No focus: encourage the user to point at something
   if (!focus) {
     return {
-      text: "Hover or click a point on the chart first — I'll answer about that specific point.",
+      text: "Hover or click a point on the chart first and I'll answer about that specific point.",
       annotation: null,
     }
   }
@@ -111,7 +112,7 @@ function cannedAnchoredResponder(question, focus) {
   if (q.includes("why") || q.includes("explain")) {
     if (month === 5) {
       return {
-        text: `May's $2,200 was driven by a spring promotion — it's well above the smooth trend the rest of the year follows. Removing it, the trajectory is almost monotonic.`,
+        text: `May's $2,200 was driven by a spring promotion. It's well above the smooth trend the rest of the year follows. Removing it, the trajectory is almost monotonic.`,
         annotation: {
           type: "callout",
           month,
@@ -125,13 +126,13 @@ function cannedAnchoredResponder(question, focus) {
     }
     if (month === 10) {
       return {
-        text: `October's $1,380 is the year's dip — a four-day outage at the start of the month is the likely cause. The Nov/Dec recovery suggests no lasting impact.`,
+        text: `October's $1,380 is the year's dip is a four-day outage at the start of the month is the likely cause. The Nov/Dec recovery suggests no lasting impact.`,
         annotation: {
           type: "callout",
           month,
           revenue,
           label: "Outage week",
-          note: "Oct 2–5 platform outage. Recovered by mid-month; Nov/Dec returned to trend.",
+          note: "Oct 2 - 5 platform outage. Recovered by mid-month; Nov/Dec returned to trend.",
           dx: -30,
           dy: 30,
         },
@@ -156,7 +157,11 @@ function cannedAnchoredResponder(question, focus) {
         month,
         revenue,
         label: `${label}`,
-        note: `Rank: ${SALES_DATA.slice().sort((a, b) => b.revenue - a.revenue).findIndex((d) => d.month === month) + 1} of ${SALES_DATA.length}.`,
+        note: `Rank: ${
+          SALES_DATA.slice()
+            .sort((a, b) => b.revenue - a.revenue)
+            .findIndex((d) => d.month === month) + 1
+        } of ${SALES_DATA.length}.`,
       },
     }
   }
@@ -177,7 +182,7 @@ function cannedAnchoredResponder(question, focus) {
 // Renders interactive markers on top of the chart for AI-anchored comments.
 // Reads annotation entries that carry a `note` field (the AI's narrative
 // rationale) and renders a hoverable dot positioned at the same x/y as the
-// callout. This is the reusable pattern the post documents — copy it into
+// callout. This is the reusable pattern the post documents copy it into
 // your own consumer code.
 function CommentOverlay({ annotations, scales }) {
   const [openId, setOpenId] = useState(null)
@@ -223,7 +228,12 @@ function CommentOverlay({ annotations, scales }) {
                 left: x + 14,
                 top: y - 20,
                 width: 240,
-                background: "var(--background)",
+                // Tooltip-style dark surface so the popup reads cleanly when
+                // floating over the chart in either theme. `var(--background)`
+                // (the previous value) isn't defined in the docs CSS, so it
+                // was falling back to transparent.
+                background: "#1a1a25",
+                color: "#f0f0f5",
                 border: "1px solid var(--accent)",
                 borderRadius: 8,
                 padding: 10,
@@ -233,17 +243,19 @@ function CommentOverlay({ annotations, scales }) {
                 zIndex: 3,
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>
+              <div
+                style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}
+              >
                 AI note · {c.label || `month ${c.month}`}
               </div>
-              <div style={{ color: "var(--text)" }}>{c.note}</div>
+              <div>{c.note}</div>
               <button
                 onClick={() => setOpenId(null)}
                 style={{
                   marginTop: 6,
                   border: "none",
-                  background: "var(--surface-3)",
-                  color: "var(--text)",
+                  background: "rgba(255,255,255,0.12)",
+                  color: "#f0f0f5",
                   padding: "3px 8px",
                   borderRadius: 4,
                   cursor: "pointer",
@@ -265,10 +277,13 @@ function AnchoredDemo() {
   const [annotations, setAnnotations] = useState([])
   const [input, setInput] = useState("Why is this point so different?")
 
-  const focus = focusIndex == null ? null : {
-    datum: SALES_DATA[focusIndex],
-    source: "click",
-  }
+  const focus =
+    focusIndex == null
+      ? null
+      : {
+          datum: SALES_DATA[focusIndex],
+          source: "click",
+        }
 
   // The chart's internal linear scales mapped to the rendered pixel
   // dimensions. In production code this comes from the chart's ref
@@ -314,29 +329,30 @@ function AnchoredDemo() {
   }
 
   // Highlight ring on the currently focused point
-  const focusRing = focusIndex == null
-    ? null
-    : (() => {
-        const datum = SALES_DATA[focusIndex]
-        const x = scales.x(datum.month)
-        const y = scales.y(datum.revenue)
-        return (
-          <div
-            style={{
-              position: "absolute",
-              left: x - 14,
-              top: y - 14,
-              width: 28,
-              height: 28,
-              borderRadius: 999,
-              border: "2px dashed var(--accent)",
-              pointerEvents: "none",
-              zIndex: 1,
-              animation: "pulse 1.6s ease-in-out infinite",
-            }}
-          />
-        )
-      })()
+  const focusRing =
+    focusIndex == null
+      ? null
+      : (() => {
+          const datum = SALES_DATA[focusIndex]
+          const x = scales.x(datum.month)
+          const y = scales.y(datum.revenue)
+          return (
+            <div
+              style={{
+                position: "absolute",
+                left: x - 14,
+                top: y - 14,
+                width: 28,
+                height: 28,
+                borderRadius: 999,
+                border: "2px dashed var(--accent)",
+                pointerEvents: "none",
+                zIndex: 1,
+                animation: "pulse 1.6s ease-in-out infinite",
+              }}
+            />
+          )
+        })()
 
   return (
     <div style={chartFrame}>
@@ -352,6 +368,15 @@ function AnchoredDemo() {
           height={PLOT.height}
           responsiveWidth={false}
           margin={{ top: PLOT.top, right: PLOT.right, bottom: PLOT.bottom, left: PLOT.left }}
+          // Pin the chart's domain to match the overlay's hardcoded scales.
+          // Without this LineChart applies "nice" rounding to the data's actual
+          // extent (revenue 1100..2240 → ~1000..2300), which puts the overlay
+          // markers a few pixels off the rendered points — drift grows away
+          // from the center. In production code the overlay would read the
+          // chart's real scales via `ref.current.getScales()` and never need
+          // to know the domain at all.
+          xExtent={[1, 12]}
+          yExtent={[800, 2400]}
           onClick={handleClick}
           annotations={annotations}
         />
@@ -360,8 +385,22 @@ function AnchoredDemo() {
       </div>
 
       <div style={chatPanel}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-          <strong style={{ fontSize: 12, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 6,
+          }}
+        >
+          <strong
+            style={{
+              fontSize: 12,
+              color: "var(--text-secondary)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}
+          >
             Anchored conversation
           </strong>
           {focus ? (
@@ -369,21 +408,30 @@ function AnchoredDemo() {
               focused: {focus.datum.label} (${focus.datum.revenue})
             </span>
           ) : (
-            <span style={{ ...focusBadge, background: "var(--surface-3)", color: "var(--text-secondary)" }}>
-              no focus — click a point
+            <span
+              style={{
+                ...focusBadge,
+                background: "var(--surface-3)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              This is no focus, please click a point
             </span>
           )}
         </div>
         {transcript.length === 0 && (
           <div style={{ color: "var(--text-secondary)", fontStyle: "italic", fontSize: 12 }}>
-            Click a chart point to focus on it, then ask a question. The answer comes back
-            both as text here AND as a clickable AI note anchored to that point.
+            Click a chart point to focus on it, then ask a question. The answer comes back both as
+            text here AND as a clickable AI note anchored to that point.
           </div>
         )}
         {transcript.map((m, i) => (
           <div
             key={i}
-            style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}
+            style={{
+              display: "flex",
+              justifyContent: m.role === "user" ? "flex-end" : "flex-start",
+            }}
           >
             <div style={m.role === "user" ? userBubble : aiBubble}>{m.text}</div>
           </div>
@@ -424,69 +472,70 @@ function Body() {
   return (
     <>
       <p>
-        The most common AI-on-a-chart pattern today is "ask the chart" — type a question, get a
-        paragraph back. It works, but it's lossy in both directions: the user has to verbalize
-        which point they care about, and the AI has to verbalize where the answer applies. Both
-        steps lose the spatial information that's already on screen. There's a better shape:
-        let the user <em>point</em> at a data point, and let the AI <em>annotate</em> the
-        answer back onto it. A two-way anchored conversation.
+        The most common AI-on-a-chart pattern today is "ask the chart". Type a question, get a
+        paragraph back. It works, but it's lossy in both directions: the user has to verbalize which
+        point they care about, and the AI has to verbalize where the answer applies. Both steps lose
+        the spatial information that's already on screen. There's a better shape: let the user{" "}
+        <em>point</em> at a data point, and let the AI <em>annotate</em> the answer back onto it. In
+        other words: a two-way anchored conversation.
       </p>
 
       <h2 id="the-loop">The loop in three frames</h2>
       <ol>
         <li>
-          <strong>User hovers or clicks a data point.</strong> The chart fires an observation
-          event; we capture which datum the user is looking at and pass it into the chat as the
-          "focus."
+          <strong>User hovers or clicks a data point.</strong> The chart fires an observation event;
+          we capture which datum the user is looking at and pass it into the chat as the "focus."
         </li>
         <li>
-          <strong>User asks a question.</strong> The LLM receives both the question AND the
-          focused datum. The prompt is "answer this question about <em>this specific row</em>"
-          — not "about the chart in general."
+          <strong>User asks a question.</strong> The LLM receives both the question AND the focused
+          datum. The prompt is "answer this question about <em>this specific row</em>" and not
+          "about the chart in general."
         </li>
         <li>
-          <strong>AI responds in two channels.</strong> Text in the transcript, anchored note
-          back on the chart at the same point. Future hover over that point shows the AI's
-          rationale; future questions in the same conversation can reference earlier comments.
+          <strong>AI responds in two channels.</strong> Text in the transcript, anchored note back
+          on the chart at the same point. Future hover over that point shows the AI's rationale;
+          future questions in the same conversation can reference earlier comments.
         </li>
       </ol>
 
       <h2 id="demo">Try it</h2>
       <p>
-        Click any month's data point to focus on it. The dashed ring marks the focus; the chat
-        shows what's currently selected. Ask a question — the AI's answer arrives as a text
-        bubble AND a small turquoise dot on the chart. Click the dot to see the AI's anchored
-        note. Stack questions to build up a multi-point conversation.
+        Click any month's data point to focus on it. The dashed ring marks the focus; the chat shows
+        what's currently selected. Ask a question and the AI's answer arrives as a text bubble AND a
+        small turquoise dot on the chart. Click the dot to see the AI's anchored note. Stack
+        questions to build up a multi-point conversation.
       </p>
       <AnchoredDemo />
       <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-        The interesting moves: click <em>May</em> and ask <em>"why is this so high?"</em> — the
-        AI cites the spring promotion. Click <em>October</em> and ask <em>"why is this so low?"</em>
-        — it cites the outage. Both rationales then live on the chart as clickable notes that
-        survive the rest of the conversation. The chart accumulates institutional knowledge
-        about itself.
+        The interesting moves: click <em>May</em> and ask <em>"why is this so high?"</em> and the AI
+        cites the spring promotion. Click <em>October</em> and ask <em>"why is this so low?"</em>{" "}
+        and it cites the outage. Both rationales then live on the chart as clickable notes that
+        survive the rest of the conversation. The chart accumulates institutional knowledge about
+        itself. These are canned responses, of course. In the wild you'd need to wire this up to an
+        LLM but in this case there's more than enough context that you would not need a frontier
+        model.
       </p>
 
       <h2 id="why-this-matters">Why anchoring matters</h2>
-      <p>
-        Three things change once the conversation has a spatial anchor:
-      </p>
+      <p>Three things change once the conversation has a spatial anchor:</p>
       <ul>
         <li>
-          <strong>Pronouns work.</strong> "Why is <em>this</em> one higher?" becomes a
-          well-formed question instead of a guessing game. The LLM doesn't have to triangulate
-          from prose what point you meant.
+          <strong>Pronouns work.</strong> "Why is <em>this</em> one higher?" becomes a well-formed
+          question instead of a guessing game. The LLM doesn't have to triangulate from prose what
+          point you meant.
         </li>
         <li>
           <strong>Comparisons get cheap.</strong> Click two points in succession and ask "what
-          changed between these?" — the AI compares them directly because both are explicit in
-          the context.
+          changed between these?" The AI compares them directly because both are explicit in the
+          context.
         </li>
         <li>
-          <strong>Answers persist where they're useful.</strong> The AI's rationale lives next
-          to the point it explains. When someone else looks at this chart next week, they
-          hover over October's dip and the explanation is right there — no re-asking, no
-          re-discovering. Charts become accumulating notebooks of why-the-data-looks-this-way.
+          <strong>Answers persist where they're useful.</strong> The AI's rationale lives next to
+          the point it explains. When someone else looks at this chart next week, they hover over
+          October's dip and the explanation is right there. No re-asking, no re-discovering which
+          means no rework. None of us like rework. Charts become accumulating notebooks of
+          why-the-data-looks-this-way and that's a layer that can itself be mined for insights
+          later.
         </li>
       </ul>
 
@@ -497,7 +546,7 @@ function Body() {
         together is one component:
       </p>
       <pre style={chartFrame}>
-{`import { LineChart, ObservationProvider } from "semiotic"
+        {`import { LineChart, ObservationProvider } from "semiotic"
 import { useChartFocus, useChartInterrogation } from "semiotic/ai"
 
 function AnchoredChart({ data }) {
@@ -518,7 +567,7 @@ function AnchoredChart({ data }) {
       })
       return {
         answer: response.text,
-        // Return annotations with a \`note\` field — your overlay renders
+        // Return annotations with a \`note\` field your overlay renders
         // them as clickable AI-anchored comments on the chart.
         annotations: response.highlights,
       }
@@ -541,21 +590,21 @@ function AnchoredChart({ data }) {
 }`}
       </pre>
       <p>
-        The <code>useChartFocus</code> hook is opinionated about what counts as focus —
-        hover, click, and selection by default; <code>hover-end</code> and <code>click-end</code>{" "}
-        clear it. For a sticky-focus UI where hover doesn't count, pass{" "}
-        <code>{`{ types: ["click", "click-end"] }`}</code> and only clicks update the AI's
-        reference point.
+        The <code>useChartFocus</code> hook is opinionated about what counts as focus: hover, click,
+        and selection by default; <code>hover-end</code> and <code>click-end</code> clear it. For a
+        sticky-focus UI where hover doesn't count, pass{" "}
+        <code>{`{ types: ["click", "click-end"] }`}</code> and only clicks update the AI's reference
+        point.
       </p>
 
       <h2 id="anchored-comments">The other direction: AI comments anchored back</h2>
       <p>
         The interrogation hook already returns annotations to the chart's standard{" "}
-        <code>annotations</code> prop. The new piece is what those annotations can carry — not
-        just a label, but a <em>note</em>. An annotation like:
+        <code>annotations</code> prop. The new piece is what those annotations can carry which is
+        not just a label, but a <em>note</em>. An annotation like:
       </p>
       <pre style={chartFrame}>
-{`{
+        {`{
   type: "callout",
   month: 5,
   revenue: 2200,
@@ -564,88 +613,86 @@ function AnchoredChart({ data }) {
 }`}
       </pre>
       <p>
-        The chart renders the callout natively. A small overlay (~30 lines, copyable from this
-        page) finds annotations with a <code>note</code> field and renders a clickable marker
-        that reveals the note on demand. The rationale lives on the chart; the rationale
-        doesn't crowd the chart unless someone asks for it.
+        The chart renders the callout natively. A small overlay (~30 lines, copyable from this page)
+        finds annotations with a <code>note</code> field and renders a clickable marker that reveals
+        the note on demand. The rationale lives on the chart; the rationale doesn't crowd the chart
+        unless someone asks for it.
       </p>
       <p>
         This is exactly the pattern{" "}
-        <Link to="/features/advanced-annotations">Advanced Annotations</Link> demonstrates with
-        the human-authored comment threads — the same UI shape, but populated by an LLM
-        instead of typed by a teammate. The chart doesn't care where the comments came from.
+        <Link to="/features/advanced-annotations">Advanced Annotations</Link> demonstrates with the
+        human-authored comment threads with the same UI shape, but populated by an LLM instead of
+        typed by a teammate. The chart doesn't care where the comments came from.
       </p>
 
       <h2 id="where-to-use-it">Where to use this</h2>
       <ul>
         <li>
-          <strong>Operations dashboards.</strong> An on-call engineer hovers over an anomaly
-          spike, asks "what happened here?" — the AI consults a runbook + incident history +
-          deploy log and leaves an anchored note. Next time someone sees the spike, the note
-          is already there.
+          <strong>Operations dashboards.</strong> An on-call engineer hovers over an anomaly spike,
+          asks "what happened here?" and the AI consults a runbook + incident history + deploy log
+          and leaves an anchored note. Next time someone sees the spike, the note is already there.
         </li>
         <li>
           <strong>Financial models.</strong> An analyst clicks a forecast point that looks
-          surprising, asks "why does the model show this?" — the AI walks through which inputs
+          surprising, asks "why does the model show this?" and the AI walks through which inputs
           drove this value most, leaves a note explaining the dominant terms.
         </li>
         <li>
-          <strong>Scientific exploration.</strong> A researcher clicks an outlier observation,
-          asks "is this an artifact?" — the AI references the run log, the calibration
-          history, similar past observations, and leaves a note classifying it.
+          <strong>Scientific exploration.</strong> A researcher clicks an outlier observation, asks
+          "is this an artifact?" and the AI references the run log, the calibration history, similar
+          past observations, and leaves a note classifying it.
         </li>
         <li>
           <strong>Customer support / sales review.</strong> A rep hovers over a usage dip for a
-          specific account, asks "what's going on with this customer?" — the AI consults the
-          CRM history and leaves an anchored explanation that the next rep also sees.
+          specific account, asks "what's going on with this customer?" and the AI consults the CRM
+          history and leaves an anchored explanation that the next rep also sees.
         </li>
       </ul>
       <p>
-        The pattern across all four: <em>the chart is the primary surface, the AI is a
-        teammate annotating it.</em> Not a chat window that happens to talk about charts; a
-        chart that accumulates explanations.
+        The pattern across all four:{" "}
+        <em>the chart is the primary surface, the AI is a teammate annotating it.</em> Not a chat
+        window that happens to talk about charts; a chart that accumulates explanations.
       </p>
 
       <h2 id="failure-modes">Failure modes worth thinking about</h2>
       <ul>
         <li>
           <strong>Stale notes.</strong> Yesterday's AI explanation may be wrong today. Treat
-          annotated notes as ephemeral by default — easy to dismiss, optionally
-          time-stamped. A note that hasn't been refreshed in 30 days probably shouldn't be
-          surfaced with full confidence.
+          annotated notes as ephemeral by default and easy to dismiss. A note that hasn't been
+          refreshed in 30 days probably shouldn't be surfaced with full confidence.
         </li>
         <li>
-          <strong>Anchoring drift.</strong> If the dataset gets re-aggregated (weekly to
-          monthly), the annotation's coordinates may no longer match anything meaningful. Tie
-          notes to a stable identity (datum.id, a deterministic hash of the row), not pixel
-          coordinates — the chart re-positions them on data shape changes.
+          <strong>Anchoring drift.</strong> If the dataset gets re-aggregated (weekly to monthly),
+          the annotation's coordinates may no longer match anything meaningful. Tie notes to a
+          stable identity (datum.id, a deterministic hash of the row), not pixel coordinates. That
+          way the chart re-positions them on data shape changes.
         </li>
         <li>
           <strong>Authority confusion.</strong> Human comments and AI comments need visual
-          differentiation. The convention this post uses — turquoise for AI, default for
-          human — is one option; an <code>author</code> field on each annotation is the more
-          rigorous one. The audience needs to know which voice they're reading.
+          differentiation. The convention this post uses--turquoise for AI, default for human--is
+          one option; an <code>author</code> field on each annotation is the more rigorous one. The
+          audience needs to know which voice they're reading.
         </li>
       </ul>
 
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/intelligence/interrogation">Interrogation</Link> — the{" "}
+          <Link to="/intelligence/interrogation">Interrogation</Link> - the{" "}
           <code>useChartInterrogation</code> hook and its <code>focus</code> option.
         </li>
         <li>
-          <Link to="/intelligence/observation-hooks">Observation Hooks</Link> —{" "}
-          <code>useChartObserver</code> and <code>useChartFocus</code>, the source of the
-          focus signal.
+          <Link to="/intelligence/observation-hooks">Observation Hooks</Link> -{" "}
+          <code>useChartObserver</code> and <code>useChartFocus</code>, the source of the focus
+          signal.
         </li>
         <li>
-          <Link to="/features/advanced-annotations">Advanced Annotations</Link> — the
-          original comment-thread-on-a-data-point pattern this post extends to AI.
+          <Link to="/features/advanced-annotations">Advanced Annotations</Link> - the original
+          comment-thread-on-a-data-point pattern this post extends to AI.
         </li>
         <li>
-          <Link to="/blog/multimodal-response">Multimodal response: chart as output channel</Link>{" "}
-          — the broader frame this fits into. Anchored conversation is one specific multimodal
+          <Link to="/blog/multimodal-response">Multimodal response: chart as output channel</Link> -
+          the broader frame this fits into. Anchored conversation is one specific multimodal
           pattern.
         </li>
       </ul>
@@ -659,10 +706,10 @@ export default {
   subtitle:
     "Two-way point-anchored AI conversation: the user clicks, the AI answers about that specific point, and the answer lives on the chart as a clickable note.",
   author: "Elijah Meeks",
-  date: "2026-05-24",
+  date: "2026-05-31",
   tags: ["case-study"],
   excerpt:
-    "Chat-with-chart works, but the user has to verbalize which point they care about and the AI has to verbalize where the answer applies — both steps lose the spatial information that's already on screen. Draft post on bidirectional point-anchored AI conversation, with useChartFocus + useChartInterrogation as the building blocks.",
+    "Chat-with-chart works, but the user has to verbalize which point they care about and the AI has to verbalize where the answer applies. Both steps lose the spatial information that's already on screen. Bidirectional point-anchored AI conversation, with useChartFocus + useChartInterrogation as the building blocks.",
   draft: true,
   component: Body,
 }
