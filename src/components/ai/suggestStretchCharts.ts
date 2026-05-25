@@ -100,16 +100,14 @@ export function suggestStretchCharts(
     deny: options.deny,
   })
 
-  // Bucket baseline by intent so we can find a familiar counterpart per stretch.
-  // For multi-intent or no-intent cases, just take the top-scoring familiar pick.
+  // Top-scoring familiar pick — used as the "you'd already pick this" anchor
+  // each stretch is paired against. Multi-intent / no-intent cases just take
+  // the global top; per-intent buckets aren't needed because `suggestCharts`
+  // has already ranked by the requested intent (or by overall fit).
   const familiarPicks = baseline.filter(
     (s) => (familiarityByComponent.get(s.component) ?? s.rubric.familiarity) >= 4,
   )
   const topFamiliar = familiarPicks[0]
-  const topFamiliarByComponent = new Map<string, Suggestion>()
-  for (const s of familiarPicks) {
-    if (!topFamiliarByComponent.has(s.component)) topFamiliarByComponent.set(s.component, s)
-  }
 
   // Identify stretches: charts that fit, with audience familiarity ≤ ceiling.
   const stretchCandidates: PairCandidate[] = []

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import {
@@ -13,7 +14,6 @@ import {
   StackedAreaChart,
   StackedBarChart,
   SwarmPlot,
-  ThemeProvider,
   ViolinPlot,
 } from "semiotic"
 import {
@@ -289,7 +289,7 @@ function Playground() {
         ) : (
           <em>
             Type a phrase like "trend over time", "which is biggest", "show the distribution", or
-            "is there a correlation" — <code>inferIntent</code> will classify it.
+            "is there a correlation&quot; — <code>inferIntent</code> will classify it.
           </em>
         )}
       </div>
@@ -766,8 +766,8 @@ function AskTheData({ data, question }) {
           <code>useChartInterrogation</code> with annotation-returning <code>onQuery</code>.
         </li>
         <li>
-          <Link to="/intelligence/capabilities">Capability Matrix</Link> — the AI-readable
-          inventory of which charts support which features (SSR, push, linked hover, etc.).
+          <Link to="/intelligence/capabilities">Capability Matrix</Link> — the AI-readable inventory
+          of which charts support which features (SSR, push, linked hover, etc.).
         </li>
         <li>
           Strategy memos in <code>docs/strategy/</code>: <code>chart-capability-layer.md</code>{" "}

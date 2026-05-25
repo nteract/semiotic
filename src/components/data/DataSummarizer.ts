@@ -47,12 +47,17 @@ export interface SummarizeOptions {
 }
 
 const DATE_LIKE = /^\d{4}[-/]\d{2}/
+const NUMERIC_STRING = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/
 
 function inferType(val: unknown): FieldType {
   if (typeof val === "number") return Number.isFinite(val) ? "numeric" : "unknown"
   if (val instanceof Date) return "date"
   if (typeof val === "string") {
     if (DATE_LIKE.test(val) && !Number.isNaN(Date.parse(val))) return "date"
+    // CSV/JSON often carries numerics as strings ("42", "3.14e6"). The numeric
+    // branch later coerces via Number(), so classify those as numeric up-front
+    // rather than dropping them into categorical and losing min/max/mean.
+    if (NUMERIC_STRING.test(val) && Number.isFinite(Number(val))) return "numeric"
     return "categorical"
   }
   if (typeof val === "boolean") return "categorical"

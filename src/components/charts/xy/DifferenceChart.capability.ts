@@ -25,14 +25,44 @@ export const DifferenceChartCapability: ChartCapability = {
   },
 
   buildProps: (profile) => {
-    // DifferenceChart expects two-axis-per-row, so this is a "show A vs B" pre-aggregated form.
-    // We approximate by passing the raw data plus the accessor; consumers who want true A/B
-    // shape will pre-pivot. The capability stays generic.
+    // DifferenceChart wants wide-form `{x, a, b}` rows. The fits() guard above
+    // ensures we're looking at long-form `{x, series, y}` with exactly two
+    // series — pivot it into the expected shape so the returned props are
+    // immediately runnable instead of a misleading "A=B" zero-difference.
+    const xKey = profile.primary.x as string
+    const yKey = profile.primary.y as string
+    const seriesKey = profile.primary.series as string
+
+    const seriesNames: string[] = []
+    for (const row of profile.data) {
+      const name = String(row[seriesKey])
+      if (!seriesNames.includes(name)) seriesNames.push(name)
+      if (seriesNames.length === 2) break
+    }
+    const [aName, bName] = seriesNames
+
+    const byX = new Map<unknown, Record<string, unknown>>()
+    for (const row of profile.data) {
+      const x = row[xKey]
+      const series = String(row[seriesKey])
+      const y = row[yKey]
+      let entry = byX.get(x)
+      if (!entry) {
+        entry = { [xKey]: x }
+        byX.set(x, entry)
+      }
+      if (series === aName) entry.a = y
+      else if (series === bName) entry.b = y
+    }
+    const wide = Array.from(byX.values()).filter((r) => r.a != null && r.b != null)
+
     return {
-      data: profile.data,
-      xAccessor: profile.primary.x,
-      seriesAAccessor: profile.primary.y,
-      seriesBAccessor: profile.primary.y,
+      data: wide,
+      xAccessor: xKey,
+      seriesAAccessor: "a",
+      seriesBAccessor: "b",
+      seriesALabel: aName,
+      seriesBLabel: bName,
     }
   },
 }

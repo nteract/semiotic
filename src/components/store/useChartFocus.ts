@@ -65,13 +65,25 @@ export function useChartFocus(options: UseChartFocusOptions = {}): Interrogation
 
   return useMemo(() => {
     if (!latest) return null
-    // Hover-end / selection-end observations carry no datum and should not
-    // create a focus — they mean "user moved away," not "user focused on
-    // something new." Treat them as cleared focus.
-    if (latest.type === "hover-end" || latest.type === "selection-end" || latest.type === "brush-end") {
+    // *-end observations signal "user moved away" — clear focus.
+    if (
+      latest.type === "hover-end" ||
+      latest.type === "selection-end" ||
+      latest.type === "brush-end" ||
+      latest.type === "click-end"
+    ) {
       return null
     }
-    const datum = (latest as { datum?: unknown }).datum
+    // Hover/click carry the datum directly; selection carries it under
+    // selection.fields. Normalize so the focus shape is consistent.
+    let datum: unknown
+    if (latest.type === "selection") {
+      datum = latest.selection.fields
+    } else if (latest.type === "hover" || latest.type === "click") {
+      datum = latest.datum
+    } else {
+      return null
+    }
     if (!datum || typeof datum !== "object") return null
     return {
       datum: datum as Record<string, unknown>,

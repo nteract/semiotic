@@ -31,10 +31,17 @@ const inventory = JSON.parse(fs.readFileSync(capabilitiesPath, "utf8"))
 const allCharts = Object.keys(inventory.charts ?? {}).sort()
 
 // 2. Read the capability registry source and extract the components it imports.
-const registryPath = path.join(repoRoot, "src", "components", "ai", "chartCapabilities.ts")
+const registryPath = path.join(
+  repoRoot,
+  "src",
+  "components",
+  "ai",
+  "chartCapabilities.ts"
+)
 const registrySrc = fs.readFileSync(registryPath, "utf8")
 const importedCapabilities = new Set()
-const importRe = /import\s+\{\s*(\w+Capability)\s*\}\s+from\s+"[^"]+\/(\w+)\.capability"/g
+const importRe =
+  /import\s+\{\s*(\w+Capability)\s*\}\s+from\s+"[^"]+\/(\w+)\.capability"/g
 let match
 while ((match = importRe.exec(registrySrc)) !== null) {
   const componentName = match[2]
@@ -46,13 +53,16 @@ while ((match = importRe.exec(registrySrc)) !== null) {
 //    (XY/Ordinal/NetworkCustomChart) and LinkedCharts aren't in capabilities.json
 //    because they don't fit the standard chart-spec model.
 const DELIBERATELY_EXCLUDED = new Map([
-  ["RealtimeLineChart", "realtime — streaming source, static suggestion engine doesn't apply"],
+  [
+    "RealtimeLineChart",
+    "realtime — streaming source, static suggestion engine doesn't apply"
+  ],
   ["RealtimeHistogram", "realtime — streaming source"],
   ["TemporalHistogram", "realtime sibling — streaming source"],
   ["RealtimeSwarmChart", "realtime"],
   ["RealtimeWaterfallChart", "realtime"],
   ["RealtimeHeatmap", "realtime"],
-  ["ScatterplotMatrix", "multi-chart composition — data shape is a tuple"],
+  ["ScatterplotMatrix", "multi-chart composition — data shape is a tuple"]
 ])
 
 // 4. Cross-check
@@ -92,16 +102,24 @@ for (const dir of chartDirs) {
 const orphanFiles = colocatedFiles.filter((c) => !importedCapabilities.has(c))
 
 if (missing.length) {
-  note(`Charts in ai/capabilities.json without a registered capability descriptor:\n  ${missing.join(", ")}\n  Either add a *.capability.ts file and register it in src/components/ai/chartCapabilities.ts, or add an entry to DELIBERATELY_EXCLUDED in this script with a reason.`)
+  note(
+    `Charts in ai/capabilities.json without a registered capability descriptor:\n  ${missing.join(", ")}\n  Either add a *.capability.ts file and register it in src/components/ai/chartCapabilities.ts, or add an entry to DELIBERATELY_EXCLUDED in this script with a reason.`
+  )
 }
 if (unexpectedExclusion.length) {
-  note(`Charts that have a registered capability AND appear in DELIBERATELY_EXCLUDED:\n  ${unexpectedExclusion.join(", ")}\n  Remove them from one or the other.`)
+  note(
+    `Charts that have a registered capability AND appear in DELIBERATELY_EXCLUDED:\n  ${unexpectedExclusion.join(", ")}\n  Remove them from one or the other.`
+  )
 }
 if (phantomExclusions.length) {
-  note(`DELIBERATELY_EXCLUDED entries that don't match any chart in ai/capabilities.json (typo?):\n  ${phantomExclusions.join(", ")}`)
+  note(
+    `DELIBERATELY_EXCLUDED entries that don't match any chart in ai/capabilities.json (typo?):\n  ${phantomExclusions.join(", ")}`
+  )
 }
 if (orphanFiles.length) {
-  note(`Capability descriptor files on disk but not imported by the registry:\n  ${orphanFiles.join(", ")}`)
+  note(
+    `Capability descriptor files on disk but not imported by the registry:\n  ${orphanFiles.join(", ")}`
+  )
 }
 
 if (errors.length) {
@@ -111,4 +129,6 @@ if (errors.length) {
 }
 
 const coveredCount = allCharts.length - DELIBERATELY_EXCLUDED.size
-console.log(`✅ Capability coverage: ${importedCapabilities.size} descriptors registered, ${DELIBERATELY_EXCLUDED.size} deliberate exclusions, ${allCharts.length} charts total.`)
+console.log(
+  `✅ Capability coverage: ${importedCapabilities.size} descriptors registered, ${coveredCount} covered charts, ${DELIBERATELY_EXCLUDED.size} deliberate exclusions, ${allCharts.length} charts total.`
+)

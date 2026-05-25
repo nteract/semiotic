@@ -1,7 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 
-const OHLC = ["open", "high", "low", "close"]
-
 export const CandlestickChartCapability: ChartCapability = {
   component: "CandlestickChart",
   family: "time-series",

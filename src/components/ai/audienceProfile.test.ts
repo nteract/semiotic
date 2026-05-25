@@ -1,8 +1,12 @@
 import { describe, it, expect } from "vitest"
-import { applyAudienceBias, effectiveFamiliarity, stretchFamiliarityCeiling } from "./audienceProfile"
+import {
+  applyAudienceBias,
+  effectiveFamiliarity,
+  stretchFamiliarityCeiling
+} from "./audienceProfile"
 import type { AudienceProfile } from "./audienceProfile"
 import { suggestCharts } from "./suggestCharts"
-import { executivePersona, dataScientistPersona, analystPersona } from "./audiences"
+import { dataScientistPersona, analystPersona } from "./audiences"
 
 const baseRubric = { familiarity: 3, accuracy: 4, precision: 4 }
 
@@ -24,7 +28,7 @@ describe("applyAudienceBias", () => {
 
   it("applies increase target as positive score delta", () => {
     const audience: AudienceProfile = {
-      targets: { BoxPlot: { direction: "increase", weight: 2 } },
+      targets: { BoxPlot: { direction: "increase", weight: 2 } }
     }
     const r = applyAudienceBias(3.0, baseRubric, "BoxPlot", audience)
     // No familiarity override; target +1.0 * 2 = +2.0
@@ -33,7 +37,7 @@ describe("applyAudienceBias", () => {
 
   it("applies decrease target as negative score delta", () => {
     const audience: AudienceProfile = {
-      targets: { PieChart: { direction: "decrease", weight: 3 } },
+      targets: { PieChart: { direction: "decrease", weight: 3 } }
     }
     const r = applyAudienceBias(4.5, baseRubric, "PieChart", audience)
     // Target -1.0 * 3 = -3.0
@@ -43,7 +47,7 @@ describe("applyAudienceBias", () => {
   it("combines familiarity + target", () => {
     const audience: AudienceProfile = {
       familiarity: { BoxPlot: 2 },
-      targets: { BoxPlot: { direction: "increase", weight: 2 } },
+      targets: { BoxPlot: { direction: "increase", weight: 2 } }
     }
     const r = applyAudienceBias(3.0, baseRubric, "BoxPlot", audience)
     // Familiarity (2-3)*0.5 = -0.5; target +2.0 → +1.5 total
@@ -53,7 +57,7 @@ describe("applyAudienceBias", () => {
 
   it("clamps target weight to 1..3", () => {
     const audience: AudienceProfile = {
-      targets: { X: { direction: "increase", weight: 10 } },
+      targets: { X: { direction: "increase", weight: 10 } }
     }
     const r = applyAudienceBias(0, baseRubric, "X", audience)
     expect(r.score).toBe(3) // 1.0 * 3 (clamped)
@@ -62,7 +66,9 @@ describe("applyAudienceBias", () => {
   it("includes appliedReason when target fires", () => {
     const audience: AudienceProfile = {
       name: "Acme",
-      targets: { BoxPlot: { direction: "increase", reason: "we want distributions" } },
+      targets: {
+        BoxPlot: { direction: "increase", reason: "we want distributions" }
+      }
     }
     const r = applyAudienceBias(3.0, baseRubric, "BoxPlot", audience)
     expect(r.appliedReason).toContain("Acme")
@@ -100,17 +106,20 @@ describe("suggestCharts × audience", () => {
     { product: "A", units: 30 },
     { product: "B", units: 50 },
     { product: "C", units: 20 },
-    { product: "D", units: 45 },
+    { product: "D", units: 45 }
   ]
 
   it("data scientist persona meaningfully decreases PieChart for rank intent", () => {
-    const withoutAudience = suggestCharts(categorical, { intent: "rank", includeVariants: false })
+    const withoutAudience = suggestCharts(categorical, {
+      intent: "rank",
+      includeVariants: false
+    })
     const withAudience = suggestCharts(categorical, {
       intent: "rank",
       audience: dataScientistPersona,
       includeVariants: false,
       // Lower minScore so we can see the biased score even if it goes negative
-      minScore: -10,
+      minScore: -10
     })
     const pieBase = withoutAudience.find((s) => s.component === "PieChart")
     const pieAud = withAudience.find((s) => s.component === "PieChart")
@@ -128,7 +137,7 @@ describe("suggestCharts × audience", () => {
     const suggestions = suggestCharts(categorical, {
       intent: "rank",
       audience: dataScientistPersona,
-      includeVariants: false,
+      includeVariants: false
     })
     expect(suggestions.find((s) => s.component === "PieChart")).toBeUndefined()
   })
@@ -136,17 +145,30 @@ describe("suggestCharts × audience", () => {
   it("appends audience rationale to suggestion.reasons when a target fires", () => {
     const suggestions = suggestCharts(categorical, {
       audience: dataScientistPersona,
-      includeVariants: false,
+      includeVariants: false
     })
     const pie = suggestions.find((s) => s.component === "PieChart")
     if (pie) {
-      expect(pie.reasons.some((r) => r.toLowerCase().includes("length") || r.toLowerCase().includes("decrease"))).toBe(true)
+      expect(
+        pie.reasons.some(
+          (r) =>
+            r.toLowerCase().includes("length") ||
+            r.toLowerCase().includes("decrease")
+        )
+      ).toBe(true)
     }
   })
 
   it("returns the same ranking as no-audience when audience is empty", () => {
-    const a = suggestCharts(categorical, { intent: "rank", includeVariants: false })
-    const b = suggestCharts(categorical, { intent: "rank", includeVariants: false, audience: {} })
+    const a = suggestCharts(categorical, {
+      intent: "rank",
+      includeVariants: false
+    })
+    const b = suggestCharts(categorical, {
+      intent: "rank",
+      includeVariants: false,
+      audience: {}
+    })
     expect(a.map((s) => s.component)).toEqual(b.map((s) => s.component))
   })
 
@@ -156,7 +178,7 @@ describe("suggestCharts × audience", () => {
     const suggestions = suggestCharts(categorical, {
       intent: "rank",
       audience: analystPersona,
-      includeVariants: false,
+      includeVariants: false
     })
     expect(suggestions[0].component).toBe("BarChart")
   })
