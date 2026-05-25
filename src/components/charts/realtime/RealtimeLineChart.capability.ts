@@ -21,7 +21,8 @@ export const RealtimeLineChartCapability: StreamChartCapability = {
   intentScores: {
     "trend": 5,
     "change-detection": 4,
-    "compare-series": 3,
+    // RealtimeLineChart doesn't split into multiple series — one
+    // (time, value) line per chart instance — so compare-series is a poor fit.
     "outlier-detection": 2,
   },
 
@@ -34,13 +35,11 @@ export const RealtimeLineChartCapability: StreamChartCapability = {
   },
 
   buildProps: (schema) => {
-    const xField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
-    const yField = schema.fields.find((f) => f.role === "y" || f.role === "value" || f.kind === "numeric")?.name
-    const seriesField = schema.fields.find((f) => f.role === "series" || (f.kind === "categorical" && f.role !== "category"))?.name
+    const timeField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
+    const valueField = schema.fields.find((f) => f.role === "y" || f.role === "value" || f.kind === "numeric")?.name
     return {
-      xAccessor: xField,
-      yAccessor: yField,
-      ...(seriesField ? { lineBy: seriesField, colorBy: seriesField } : {}),
+      timeAccessor: timeField,
+      valueAccessor: valueField,
     }
   },
 }

@@ -24,8 +24,11 @@ export const RealtimeWaterfallChartCapability: StreamChartCapability = {
   },
 
   buildProps: (schema) => {
-    const xField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
+    const timeField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
     const valueField = schema.fields.find((f) => f.role === "value" || f.kind === "numeric")?.name
-    return { xAccessor: xField, yAccessor: valueField }
+    return {
+      timeAccessor: timeField,
+      valueAccessor: valueField,
+    }
   },
 }

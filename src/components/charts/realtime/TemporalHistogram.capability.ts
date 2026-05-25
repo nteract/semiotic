@@ -31,7 +31,11 @@ export const TemporalHistogramCapability: StreamChartCapability = {
 
   buildProps: (schema) => {
     const valueField = schema.fields.find((f) => f.role === "value" || f.kind === "numeric")?.name
-    const xField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
-    return { valueAccessor: valueField, xAccessor: xField }
+    const timeField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
+    // Wraps RealtimeHistogram — same accessor surface (timeAccessor + valueAccessor).
+    return {
+      timeAccessor: timeField,
+      valueAccessor: valueField,
+    }
   },
 }

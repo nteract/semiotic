@@ -23,6 +23,7 @@ const highVolumeStream: StreamSchema = {
 
 const pureValueStream: StreamSchema = {
   fields: [
+    { name: "ts", kind: "date" },
     { name: "value", kind: "numeric" },
     { name: "cohort", kind: "categorical" },
   ],
@@ -56,9 +57,11 @@ describe("suggestStreamCharts", () => {
   })
 
   it("includes ready-to-use props", () => {
+    // Realtime charts use timeAccessor / valueAccessor (not xAccessor / yAccessor).
+    // The recommender's output must be spreadable directly into the chart.
     const suggestions = suggestStreamCharts(latencyStream, { intent: "trend" })
-    expect(suggestions[0].props.xAccessor).toBe("ts")
-    expect(suggestions[0].props.yAccessor).toBe("latency_ms")
+    expect(suggestions[0].props.timeAccessor).toBe("ts")
+    expect(suggestions[0].props.valueAccessor).toBe("latency_ms")
   })
 
   it("surfaces cumulative-retention caveat for line chart", () => {

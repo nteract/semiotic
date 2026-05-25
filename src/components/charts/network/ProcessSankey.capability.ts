@@ -8,10 +8,14 @@ export const ProcessSankeyCapability: ChartCapability = {
 
   fits: (profile) => {
     if (!profile.hasNetwork || !profile.network) return "needs a {nodes, edges} network"
-    // Edges need startTime/endTime fields for a process sankey to make sense.
+    // Edges need BOTH startTime and endTime (or start/end) — a process sankey
+    // lays each edge along a time axis that runs from one to the other.
     const first = profile.network.edges[0]
-    if (!first || (first.startTime === undefined && first.start === undefined)) {
-      return "edges need startTime/endTime for a temporal sankey"
+    if (!first) return "needs at least one edge with start/end times"
+    const hasStart = first.startTime !== undefined || first.start !== undefined
+    const hasEnd = first.endTime !== undefined || first.end !== undefined
+    if (!hasStart || !hasEnd) {
+      return "edges need both startTime and endTime (or start/end) for a temporal sankey"
     }
     return null
   },

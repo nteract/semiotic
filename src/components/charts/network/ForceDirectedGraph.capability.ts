@@ -26,7 +26,10 @@ export const ForceDirectedGraphCapability: ChartCapability = {
   buildProps: (profile) => ({
     nodes: profile.network?.nodes ?? [],
     edges: profile.network?.edges ?? [],
-    nodeIDAccessor: "id",
+    // Canonical camelCase form. The chart still accepts `nodeIDAccessor` as a
+    // deprecated alias, but the recommender should emit the supported name so
+    // generated props don't carry a deprecation footgun forward.
+    nodeIdAccessor: "id",
     sourceAccessor: "source",
     targetAccessor: "target",
   }),

@@ -28,8 +28,15 @@ export const RealtimeHeatmapCapability: StreamChartCapability = {
   },
 
   buildProps: (schema) => {
-    const xField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
-    const yField = schema.fields.find((f) => f.role === "y" || f.role === "value" || f.kind === "numeric")?.name
-    return { xAccessor: xField, yAccessor: yField }
+    const timeField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
+    const valueField = schema.fields.find((f) => f.role === "y" || f.role === "value" || f.kind === "numeric")?.name
+    const categoryField = schema.fields.find(
+      (f) => f.role === "category" || (f.kind === "categorical" && f.role !== "series"),
+    )?.name
+    return {
+      timeAccessor: timeField,
+      valueAccessor: valueField,
+      ...(categoryField ? { categoryAccessor: categoryField } : {}),
+    }
   },
 }
