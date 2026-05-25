@@ -138,6 +138,7 @@ function unregisterChartCapability
 function unregisterStreamChartCapability
 function useBrushSelection
 function useCategoryColors
+function useChartFocus
 function useChartInterrogation
 function useChartObserver
 function useChartSuggestions
@@ -181,6 +182,7 @@ interface HoverObservation
 interface InferIntentResult
 interface IntentDescriptor
 interface InterrogationContext
+interface InterrogationFocus
 interface InterrogationMessage
 interface InterrogationResult
 interface NumericFieldSummary
@@ -212,6 +214,7 @@ interface Suggestion
 interface SummarizeOptions
 interface ToConfigOptions
 interface UnknownFieldSummary
+interface UseChartFocusOptions
 interface UseChartInterrogationOptions
 interface UseChartInterrogationResult
 interface UseChartObserverOptions
