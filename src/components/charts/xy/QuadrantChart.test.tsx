@@ -80,8 +80,8 @@ describe("QuadrantChart", () => {
       />
     )
 
-    expect(container.querySelector("canvas")).toBeTruthy()
     expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
+    expect(container.textContent).toContain("2 elements")
   })
 
   it("accepts partial quadrant overrides", () => {
@@ -100,8 +100,8 @@ describe("QuadrantChart", () => {
       />
     )
 
-    expect(container.querySelector("canvas")).toBeTruthy()
     expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
+    expect(container.textContent).toContain("2 elements")
   })
 
   it("renders without data (push API mode)", () => {
