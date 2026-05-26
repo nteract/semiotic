@@ -32,6 +32,8 @@
  *     schema.json (and MCP responses) but are dropped from validationMap
  *     (which only reads `type` and `enum`).
  */
+import { DEFAULT_LIKERT_LEVELS } from "../ordinal/LikertChart.defaults"
+import { DEFAULT_QUADRANTS } from "../xy/QuadrantChart.defaults"
 
 export type PropType = "string" | "number" | "boolean" | "array" | "object" | "function"
 export type DataShape = "array" | "object" | "network" | "realtime" | "none"
@@ -704,13 +706,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
     name: "LikertChart",
     category: "ordinal",
     description: "Visualize Likert scale survey responses. Horizontal (default): diverging bar chart centered at 0% — negative levels extend left, positive right, neutral (if odd count) split 50/50 across centerline. Vertical: stacked 100% bar chart. Supports raw integer scores (1-based, aggregated automatically) or pre-aggregated (question, level, count) data. The levels array defines polarity: first half = negative, second half = positive, center = neutral (if odd). Works with any scale size (3-point to 7-point+). Supports push API for streaming — accumulates raw data and re-aggregates on each push.",
-    required: ["levels"],
+    required: [],
     dataShape: "array",
     dataAccessors: ["categoryAccessor", "valueAccessor", "levelAccessor", "countAccessor"],
     propBags: ["common", "ordinalAxis"],
     ownProps: {
       data: { type: "array", description: "Array of raw response or pre-aggregated data objects" },
-      levels: { type: "array", description: "Ordered response labels, most negative to most positive (required). Odd count = center is neutral." },
+      levels: { type: "array", default: DEFAULT_LIKERT_LEVELS, description: "Ordered response labels, most negative to most positive. Defaults to a 5-point Very Low to Very High scale. Odd count = center is neutral." },
       categoryAccessor: { type: ["string", "function"], default: "question", description: "Question/item field (ordinal axis)" },
       valueAccessor: { type: ["string", "function"], default: "score", description: "Integer score field for raw response mode (1-based: score 1 → levels[0])" },
       levelAccessor: { type: ["string", "function"], description: "Level name field for pre-aggregated mode. Each value must match an entry in levels." },
@@ -974,7 +976,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
     name: "QuadrantChart",
     category: "xy",
     description: "Scatterplot divided into four labeled, colored quadrants by center lines. Use for BCG matrices, priority matrices, and any 2x2 strategic framework.",
-    required: ["quadrants"],
+    required: [],
     dataShape: "array",
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
@@ -984,7 +986,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       yAccessor: { type: ["string", "function"], default: "y" },
       xCenter: { type: "number", description: "X-coordinate of the vertical center line. Defaults to midpoint of x domain." },
       yCenter: { type: "number", description: "Y-coordinate of the horizontal center line. Defaults to midpoint of y domain." },
-      quadrants: { type: "object", description: "Configuration for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }, each with { label, color, opacity? }" },
+      quadrants: { type: "object", default: DEFAULT_QUADRANTS, description: "Optional configuration overrides for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }, each with partial { label, color, opacity }. Omitted quadrants and fields use built-in defaults." },
       // `centerlineStyle` is a runtime-only style escape hatch (similar
       // shape to `frameProps`).
       centerlineStyle: { type: "object", omitFromSchema: true },

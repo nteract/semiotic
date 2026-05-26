@@ -41,7 +41,7 @@ export { MinimapChart } from "./xy/MinimapChart"
 export type { MinimapChartProps, MinimapConfig } from "./xy/MinimapChart"
 
 export { QuadrantChart } from "./xy/QuadrantChart"
-export type { QuadrantChartProps, QuadrantsConfig, QuadrantConfig, CenterlineStyle } from "./xy/QuadrantChart"
+export type { QuadrantChartProps, QuadrantsConfig, QuadrantsConfigOverride, QuadrantConfig, CenterlineStyle } from "./xy/QuadrantChart"
 
 export { MultiAxisLineChart } from "./xy/MultiAxisLineChart"
 export type { MultiAxisLineChartProps, MultiAxisSeriesConfig } from "./xy/MultiAxisLineChart"

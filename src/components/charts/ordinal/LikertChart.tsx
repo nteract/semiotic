@@ -21,6 +21,7 @@ import {
   NEUTRAL_NEG,
   NEUTRAL_POS,
 } from "../shared/useLikertAggregation"
+import { DEFAULT_LIKERT_LEVELS } from "./LikertChart.defaults"
 
 // Stable empty map for `useOrdinalPieceStyle.categoryIndexMap`.
 // LikertChart drives fill from `baseStyleExtras` (level-keyed
@@ -93,7 +94,7 @@ export interface LikertChartProps<TDatum extends Datum = Datum> extends BaseChar
    *
    * Odd count → center level is neutral. Even count → clean negative/positive split.
    */
-  levels: string[]
+  levels?: string[]
 
   /**
    * "horizontal" (default): diverging bar chart centered at 0%.
@@ -204,7 +205,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
   const {
     data, margin: userMargin, className,
     categoryAccessor = "question", valueAccessor, levelAccessor, countAccessor = "count",
-    levels = ["Very Low", "Low", "Neutral", "High", "Very High"], orientation = "horizontal",
+    levels = DEFAULT_LIKERT_LEVELS, orientation = "horizontal",
     colorScheme: colorSchemeProp, barPadding = 20,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId, valueFormat,

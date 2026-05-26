@@ -221,7 +221,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
   },
 
   QuadrantChart: {
-    required: ["quadrants"],
+    required: [],
     dataShape: "array",
     dataAccessors: ["xAccessor", "yAccessor"],
     props: {
@@ -339,7 +339,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
   },
 
   LikertChart: {
-    required: ["levels"],
+    required: [],
     dataShape: "array",
     dataAccessors: ["categoryAccessor", "valueAccessor", "levelAccessor", "countAccessor"],
     props: {

@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { DEFAULT_LIKERT_LEVELS } from "./LikertChart.defaults"
 
 const RATING_HINT = /(rating|score|likert|satisfaction|nps|agree|sentiment|level)/i
 
@@ -29,7 +30,7 @@ export const LikertChartCapability: ChartCapability = {
       categoryAccessor: profile.primary.category,
       valueAccessor: profile.primary.y,
       levelAccessor: ratingField,
-      levels: ["Very Low", "Low", "Neutral", "High", "Very High"],
+      levels: [...DEFAULT_LIKERT_LEVELS],
     }
   },
 }

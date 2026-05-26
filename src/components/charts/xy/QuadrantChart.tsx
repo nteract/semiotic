@@ -18,6 +18,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 
 /**
  * Quadrant label and color configuration
@@ -46,6 +47,18 @@ export interface QuadrantsConfig {
   bottomLeft: QuadrantConfig
 }
 
+export type QuadrantsConfigOverride = {
+  [TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>
+}
+
+function mergeQuadrantConfig(defaultConfig: QuadrantConfig, override?: Partial<QuadrantConfig>): QuadrantConfig {
+  return {
+    label: override?.label ?? defaultConfig.label,
+    color: override?.color ?? defaultConfig.color,
+    opacity: override?.opacity ?? defaultConfig.opacity,
+  }
+}
+
 /**
  * Centerline style configuration
  */
@@ -72,8 +85,8 @@ export interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseCh
   xCenter?: number
   /** Y-coordinate of the horizontal center line. Defaults to midpoint of y domain. */
   yCenter?: number
-  /** Quadrant configuration: labels and colors for each of the four quadrants */
-  quadrants: QuadrantsConfig
+  /** Optional quadrant overrides. Omitted quadrants and quadrant fields fall back to built-in defaults. */
+  quadrants?: QuadrantsConfigOverride
   /** Style for the center lines */
   centerlineStyle?: CenterlineStyle
   /** Show quadrant labels @default true */
@@ -213,18 +226,12 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
-  const defaultQuadrants = {
-    topLeft: { label: "Low / High", color: "#E9C46A", opacity: 0.08 },
-    topRight: { label: "High / High", color: "#2A9D8F", opacity: 0.08 },
-    bottomLeft: { label: "Low / Low", color: "#E76F51", opacity: 0.08 },
-    bottomRight: { label: "High / Low", color: "#86BBD8", opacity: 0.08 },
-  }
-  const quadrants = useMemo(() => {
+  const quadrants = useMemo<QuadrantsConfig>(() => {
     return {
-      topLeft: { ...defaultQuadrants.topLeft, ...quadrantsProp?.topLeft },
-      topRight: { ...defaultQuadrants.topRight, ...quadrantsProp?.topRight },
-      bottomLeft: { ...defaultQuadrants.bottomLeft, ...quadrantsProp?.bottomLeft },
-      bottomRight: { ...defaultQuadrants.bottomRight, ...quadrantsProp?.bottomRight },
+      topLeft: mergeQuadrantConfig(DEFAULT_QUADRANTS.topLeft, quadrantsProp?.topLeft),
+      topRight: mergeQuadrantConfig(DEFAULT_QUADRANTS.topRight, quadrantsProp?.topRight),
+      bottomLeft: mergeQuadrantConfig(DEFAULT_QUADRANTS.bottomLeft, quadrantsProp?.bottomLeft),
+      bottomRight: mergeQuadrantConfig(DEFAULT_QUADRANTS.bottomRight, quadrantsProp?.bottomRight),
     }
   }, [quadrantsProp])
 

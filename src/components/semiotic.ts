@@ -189,6 +189,7 @@ export {
   MultiAxisSeriesConfig,
   CandlestickChartProps,
   QuadrantsConfig,
+  QuadrantsConfigOverride,
   QuadrantConfig,
   CenterlineStyle,
   BaseChartProps,

@@ -65,6 +65,45 @@ describe("QuadrantChart", () => {
     expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
   })
 
+  it("renders with default quadrants when quadrants is omitted", () => {
+    const data = [
+      { x: 0.2, y: 0.8 },
+      { x: 0.8, y: 0.3 },
+    ]
+    const { container } = render(
+      <QuadrantChart
+        data={data}
+        xCenter={0.5}
+        yCenter={0.5}
+        width={600}
+        height={400}
+      />
+    )
+
+    expect(container.querySelector("canvas")).toBeTruthy()
+    expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
+  })
+
+  it("accepts partial quadrant overrides", () => {
+    const data = [
+      { x: 0.2, y: 0.8 },
+      { x: 0.8, y: 0.3 },
+    ]
+    const { container } = render(
+      <QuadrantChart
+        data={data}
+        xCenter={0.5}
+        yCenter={0.5}
+        quadrants={{ topRight: { label: "Stars" }, bottomLeft: { color: "#ccc" } }}
+        width={600}
+        height={400}
+      />
+    )
+
+    expect(container.querySelector("canvas")).toBeTruthy()
+    expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
+  })
+
   it("renders without data (push API mode)", () => {
     const { container } = render(
       <QuadrantChart
