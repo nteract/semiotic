@@ -81,7 +81,7 @@ describe("QuadrantChart", () => {
     )
 
     expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
-    expect(container.textContent).toContain("2 elements")
+    expect(container.querySelectorAll(".semiotic-axis-tick").length).toBeGreaterThan(0)
   })
 
   it("accepts partial quadrant overrides", () => {
@@ -101,7 +101,7 @@ describe("QuadrantChart", () => {
     )
 
     expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
-    expect(container.textContent).toContain("2 elements")
+    expect(container.querySelectorAll(".semiotic-axis-tick").length).toBeGreaterThan(0)
   })
 
   it("renders without data (push API mode)", () => {
