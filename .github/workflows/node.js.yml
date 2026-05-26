@@ -186,7 +186,7 @@ jobs:
         run: npm run dist
 
       - name: Run E2E tests
-        # `--update-snapshots=missing` (playwright 1.42+) writes a baseline
+        # `--update-snapshots=changed` (playwright 1.42+) writes a baseline
         # only when the spec×browser×OS combination has none. Existing
         # baselines stay locked in — diff failures still fail the build,
         # so the regression gate is intact for everything that's been
@@ -200,7 +200,7 @@ jobs:
         # first time and skipped on subsequent runs — which left
         # single-test misses (a flaky run, a renamed test) permanently
         # failing CI because no second bootstrap pass would fire.
-        run: npx playwright test --update-snapshots=missing
+        run: npx playwright test --update-snapshots=changed
 
       - name: Upload snapshot baselines
         if: always()
