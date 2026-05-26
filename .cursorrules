@@ -30,7 +30,7 @@
 **Scatterplot** — `data`, `xAccessor`, `yAccessor`, `colorBy`, `sizeBy`, `sizeRange`, `pointRadius` (5), `pointOpacity` (0.8), `marginalGraphics`, `regression` (boolean | "linear" | "polynomial" | "loess" | RegressionConfig — sugar for a trend-annotation overlay; sits underneath user annotations)
 **BubbleChart** — Scatterplot + `sizeBy` (required), `sizeRange` ([5,40]), `regression`
 **ConnectedScatterplot** — + `orderAccessor`, `regression`
-**QuadrantChart** — Scatterplot + `quadrants` (required), `xCenter`, `yCenter`
+**QuadrantChart** — Scatterplot + optional `quadrants` overrides, `xCenter`, `yCenter`
 **MultiAxisLineChart** — Dual Y-axis. `series` (required: `[{ yAccessor, label?, color?, format?, extent? }]`). Falls back to multi-line if not 2 series.
 **Heatmap** — `data`, `xAccessor`, `yAccessor`, `valueAccessor`, `colorScheme`, `showValues`, `cellBorderColor`
 **ScatterplotMatrix** — `data`, `fields` (array of numeric field names for grid)
@@ -52,7 +52,7 @@
 **DonutChart** — PieChart + `innerRadius` (60), `centerContent`
 **FunnelChart** — `stepAccessor`, `valueAccessor`, `categoryAccessor` (optional), `connectorOpacity`, `orientation`
 **SwimlaneChart** — `categoryAccessor`, `subcategoryAccessor` (required), `valueAccessor`, `colorBy` (defaults to subcategoryAccessor), `orientation`, `roundedTop` (pixel radius applied to both outer ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square so adjacent pieces butt against each other; single-segment lanes round all four corners.)
-**LikertChart** — `categoryAccessor`, `valueAccessor`|`levelAccessor`+`countAccessor`, `levels` (required), `orientation`, `colorScheme`
+**LikertChart** — `categoryAccessor`, `valueAccessor`|`levelAccessor`+`countAccessor`, optional `levels`, `orientation`, `colorScheme`
 **GaugeChart** — `value` (required), `min`, `max`, `thresholds`, `arcWidth`, `cornerRadius` (pixel radius for rounded segment ends — same semantics as DonutChart), `sweep`, `fillZones`, `showNeedle`, `centerContent`
 
 All ordinal: `colorBy`, `colorScheme`, `categoryFormat` (string|ReactNode), `showCategoryTicks` (true).
