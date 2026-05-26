@@ -1,13 +1,19 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes six tools, four resources, and two prompts:
- *   1. renderChart — renders any HOC chart to static SVG
- *   2. diagnoseConfig — anti-pattern detector for chart configurations
- *   3. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
- *   4. getSchema — returns the prop schema for a specific component
- *   5. suggestChart — recommends chart types for a given data shape
- *   6. applyTheme — returns usage guidance for theme presets
+ * Exposes twelve tools, five resources, and two prompts:
+ *   1. getSchema — returns the prop schema for a specific component
+ *   2. suggestChart — legacy sample-row chart recommender
+ *   3. suggestCharts — capability-based static chart recommender
+ *   4. suggestStreamCharts — realtime chart recommender from a stream schema
+ *   5. suggestDashboard — multi-panel dashboard recommender
+ *   6. suggestStretchCharts — audience-literacy stretch recommender
+ *   7. repairChartConfig — checks a chart choice and proposes alternatives
+ *   8. renderChart — renders static HOC charts to SVG/PNG
+ *   9. interrogateChart — summarizes chart data for conversational answers
+ *   10. diagnoseConfig — anti-pattern detector for chart configurations
+ *   11. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
+ *   12. applyTheme — returns usage guidance for theme presets
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -743,7 +749,7 @@ function createServer(): McpServer {
       "Use this MCP workflow:",
       "1. Read semiotic://system-prompt for compact API rules and pitfalls.",
       "2. Read semiotic://behavior-contracts for semantic rules that schema shape alone cannot express.",
-      "3. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
+      "3. If no component is specified, call suggestCharts with representative rows and the intent.",
       "4. Call getSchema for the selected component before writing JSX or renderChart props.",
       "5. Call diagnoseConfig with usageMode=\"static\" for renderChart/static data, or usageMode=\"push\" for ref-based React code that intentionally omits data.",
       "6. Fix all diagnoseConfig errors before presenting code.",
@@ -1029,7 +1035,7 @@ async function main() {
 
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
-      console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue, applyTheme")
+      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, diagnoseConfig, reportIssue, applyTheme")
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples")
     })
   } else {

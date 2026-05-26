@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { summarizeData, type DataSummary, type FieldSummary } from "../data/DataSummarizer"
+import { summarizeData, type FieldSummary } from "../data/DataSummarizer"
 import type { ChartDataProfile, FieldCandidate, FieldKind } from "./chartCapabilityTypes"
 
 const X_FIELD_HINT = /^(x|index|rank|order|step|sequence|year|quarter|qtr|fiscal|month|week|day|date|time|timestamp)$/i
@@ -298,7 +298,7 @@ export function profileData(
   }
 
   // y: best numeric that isn't already x
-  let y: string | undefined = yCandidates.find((c) => c.field !== x)?.field
+  const y: string | undefined = yCandidates.find((c) => c.field !== x)?.field
 
   // Scatter pattern: two+ numerics, no time-or-named x.
   if (!x && y) {

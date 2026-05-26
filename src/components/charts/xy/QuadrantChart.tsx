@@ -180,7 +180,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     yAccessor = "y",
     xCenter,
     yCenter,
-    quadrants,
+    quadrants: quadrantsProp,
     centerlineStyle = {},
     showQuadrantLabels = true,
     quadrantLabelSize = 12,
@@ -212,6 +212,21 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
   } = props
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
+
+  const defaultQuadrants = {
+    topLeft: { label: "Low / High", color: "#E9C46A", opacity: 0.08 },
+    topRight: { label: "High / High", color: "#2A9D8F", opacity: 0.08 },
+    bottomLeft: { label: "Low / Low", color: "#E76F51", opacity: 0.08 },
+    bottomRight: { label: "High / Low", color: "#86BBD8", opacity: 0.08 },
+  }
+  const quadrants = useMemo(() => {
+    return {
+      topLeft: { ...defaultQuadrants.topLeft, ...quadrantsProp?.topLeft },
+      topRight: { ...defaultQuadrants.topRight, ...quadrantsProp?.topRight },
+      bottomLeft: { ...defaultQuadrants.bottomLeft, ...quadrantsProp?.bottomLeft },
+      bottomRight: { ...defaultQuadrants.bottomRight, ...quadrantsProp?.bottomRight },
+    }
+  }, [quadrantsProp])
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
 

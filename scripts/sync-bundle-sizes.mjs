@@ -54,13 +54,13 @@ const BLURBS = {
   "./ordinal":  "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts",
   "./network":  "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more",
   "./geo":      "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap",
-  "./realtime": "RealtimeLineChart, RealtimeHistogram, + 3 streaming charts",
+  "./realtime": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts",
   "./server":   "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
   "./utils":    "ThemeProvider, validators, serialization — no chart components",
   "./recipes":  "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
   "./themes":   "Theme presets only (tufte, carbon, etc.)",
   "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
-  "./ai":       "All 41 HOCs + validation — optimized for LLM code generation",
+  "./ai":       "All 42 HOCs + validation — optimized for LLM code generation",
 }
 
 // Display order — independent of `package.json` key order so the

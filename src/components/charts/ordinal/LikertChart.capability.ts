@@ -29,6 +29,7 @@ export const LikertChartCapability: ChartCapability = {
       categoryAccessor: profile.primary.category,
       valueAccessor: profile.primary.y,
       levelAccessor: ratingField,
+      levels: ["Very Low", "Low", "Neutral", "High", "Very High"],
     }
   },
 }

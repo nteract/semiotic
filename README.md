@@ -35,7 +35,7 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with 41 HOC charts (XY, ordinal, network, realtime), optimized for LLM code generation. Geo charts are in `semiotic/geo` to keep d3-geo out of non-geo bundles.
+- **`semiotic/ai`** — a single import with 42 HOC charts (XY, ordinal, network, realtime), optimized for LLM code generation. Geo charts are in `semiotic/geo` to keep d3-geo out of non-geo bundles.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
@@ -291,13 +291,13 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/ordinal` | **70 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
 | `semiotic/network` | **64 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **52 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **91 KB** | RealtimeLineChart, RealtimeHistogram, + 3 streaming charts |
+| `semiotic/realtime` | **91 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
 | `semiotic/server` | **122 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/utils` | **22 KB** | ThemeProvider, validators, serialization — no chart components |
 | `semiotic/recipes` | **5 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **4 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
-| `semiotic/ai` | **211 KB** | All 41 HOCs + validation — optimized for LLM code generation |
+| `semiotic/ai` | **211 KB** | All 42 HOCs + validation — optimized for LLM code generation |
 | `semiotic` | **190 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
@@ -389,8 +389,14 @@ No API keys or authentication required. The server runs locally via stdio. HTTP 
 | Tool | Description |
 |------|-------------|
 | **`renderChart`** | Render a Semiotic chart to static SVG. Supports the components returned by `getSchema` that are marked `[renderable]`. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string or validation errors with fix suggestions. |
-| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 45 chart schemas. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
-| **`suggestChart`** | Recommend chart types for a data sample. Pass `{ data: [{...}, ...] }` with 1–5 sample objects. Optionally include `intent` (`"comparison"`, `"trend"`, `"distribution"`, `"relationship"`, `"composition"`, `"geographic"`, `"network"`, `"hierarchy"`). Returns ranked suggestions with example props. |
+| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 46 chart schemas. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
+| **`suggestChart`** | Legacy sample-row recommender. Pass `{ data: [{...}, ...] }` with 1–5 sample objects plus optional broad intent/capability filters. |
+| **`suggestCharts`** | Capability-based recommender for bounded row data. Returns ranked chart suggestions with scores, reasons, caveats, import paths, and ready-to-use props. |
+| **`suggestStreamCharts`** | Recommend realtime charts from a stream schema, throughput, and retention hints. |
+| **`suggestDashboard`** | Build a multi-panel dashboard suggestion that covers distinct analytical intents. |
+| **`suggestStretchCharts`** | Recommend audience-literacy stretch picks from an `AudienceProfile`. |
+| **`repairChartConfig`** | Check whether a requested chart fits a dataset and return ranked alternatives when it does not. |
+| **`interrogateChart`** | Return a statistical summary and chart-aware context for answering natural-language questions with optional annotations. |
 | **`diagnoseConfig`** | Check a chart configuration for common problems — empty data, bad dimensions, missing accessors, wrong data shape, and more. Returns a human-readable diagnostic report with actionable fixes. |
 | **`reportIssue`** | Generate a pre-filled GitHub issue URL for bug reports or feature requests. Pass `{ title: "...", body: "...", labels: ["bug"] }`. Returns a URL the user can open to submit. |
 | **`applyTheme`** | List named theme presets or return ThemeProvider/CSS/token usage for a preset such as `{ name: "tufte" }`. |
@@ -401,6 +407,7 @@ No API keys or authentication required. The server runs locally via stdio. HTTP 
 |----------|-------------|
 | **`semiotic://schema`** | Full machine-readable component schema JSON. |
 | **`semiotic://components`** | Component index showing renderable/browser-only status and MCP categories. |
+| **`semiotic://behavior-contracts`** | Agent-visible semantic rules for color precedence, required prop combinations, push refs, and renderability. |
 | **`semiotic://system-prompt`** | Compact AI instructions with import rules, chart props, SSR guidance, and pitfalls. |
 | **`semiotic://examples`** | Copy-paste chart examples by data shape. |
 
@@ -502,7 +509,7 @@ Semiotic is indexed by AI-coding-agent documentation tools so your assistant (Cl
 
 Agent-facing API surface:
 
-- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface (45 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
+- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface (46 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
 - [**`semiotic.nteract.io/llms.txt`**](https://semiotic.nteract.io/llms.txt) + [**`/llms-full.txt`**](https://semiotic.nteract.io/llms-full.txt) — deployed at the docs site per the [llms.txt standard](https://llmstxt.org). Agents fetch the navigation map (`llms.txt`) or the full inlined docs (`llms-full.txt`) over HTTP; they're not part of the npm package itself.
 
 ## Documentation

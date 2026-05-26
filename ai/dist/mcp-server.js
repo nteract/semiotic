@@ -32982,7 +32982,7 @@ function createServer2() {
       "Use this MCP workflow:",
       "1. Read semiotic://system-prompt for compact API rules and pitfalls.",
       "2. Read semiotic://behavior-contracts for semantic rules that schema shape alone cannot express.",
-      "3. If no component is specified, call suggestChart with 1-5 representative sample rows and the intent.",
+      "3. If no component is specified, call suggestCharts with representative rows and the intent.",
       "4. Call getSchema for the selected component before writing JSX or renderChart props.",
       '5. Call diagnoseConfig with usageMode="static" for renderChart/static data, or usageMode="push" for ref-based React code that intentionally omits data.',
       "6. Fix all diagnoseConfig errors before presenting code.",
@@ -33220,7 +33220,7 @@ async function main() {
     });
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
-      console.error("Tools: getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue, applyTheme");
+      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, diagnoseConfig, reportIssue, applyTheme");
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples");
     });
   } else {

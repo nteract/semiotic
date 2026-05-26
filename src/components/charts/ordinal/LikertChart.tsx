@@ -204,7 +204,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
   const {
     data, margin: userMargin, className,
     categoryAccessor = "question", valueAccessor, levelAccessor, countAccessor = "count",
-    levels, orientation = "horizontal",
+    levels = ["Very Low", "Low", "Neutral", "High", "Very High"], orientation = "horizontal",
     colorScheme: colorSchemeProp, barPadding = 20,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId, valueFormat,

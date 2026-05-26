@@ -482,6 +482,8 @@ const examples = [
       yAccessor: "value",
       lineBy: "series",
       yExtent: [0, 50],
+      showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -495,6 +497,8 @@ const examples = [
       lineBy: "series",
       // Anchor min to 0; max stays data-derived (~20).
       yExtent: [0, undefined],
+      showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -507,6 +511,8 @@ const examples = [
       yAccessor: "value",
       lineBy: "series",
       yExtent: [undefined, 50],
+      showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -519,6 +525,8 @@ const examples = [
       yAccessor: "value",
       lineBy: "series",
       xExtent: [-2, 8],
+      showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -531,6 +539,8 @@ const examples = [
       yAccessor: "value",
       lineBy: "series",
       xExtent: [-2, undefined],
+      showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -543,6 +553,8 @@ const examples = [
       yAccessor: "value",
       lineBy: "series",
       xExtent: [undefined, 8],
+      showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
