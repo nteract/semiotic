@@ -22,6 +22,7 @@ function XYCustomChart
 interface AreaChartProps
 interface BubbleChartProps
 interface CandlestickChartProps
+interface CenterlineStyle
 interface ConnectedScatterplotProps
 interface DifferenceChartProps
 interface HeatmapProps
@@ -30,6 +31,8 @@ interface LayoutResult
 interface LineChartProps
 interface MultiAxisLineChartProps
 interface QuadrantChartProps
+interface QuadrantConfig
+interface QuadrantsConfig
 interface ScatterplotProps
 interface SemanticGradientStop
 interface StackedAreaChartProps
@@ -37,4 +40,5 @@ interface StreamXYFrameHandle
 interface StreamXYFrameProps
 interface XYCustomChartProps
 type CustomLayout
+type QuadrantsConfigOverride
 ```
