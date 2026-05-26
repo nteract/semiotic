@@ -309,7 +309,7 @@ describe("MCP protocol round-trip", () => {
     }
   })
 
-  it("tools/list returns all 6 tools", async () => {
+  it("tools/list returns all registered tools", async () => {
     const result = await sendRequest(proc, "tools/list", {}, "list-1")
 
     expect(result.result).toBeDefined()
@@ -318,9 +318,15 @@ describe("MCP protocol round-trip", () => {
       "applyTheme",
       "diagnoseConfig",
       "getSchema",
+      "interrogateChart",
       "renderChart",
+      "repairChartConfig",
       "reportIssue",
       "suggestChart",
+      "suggestCharts",
+      "suggestDashboard",
+      "suggestStreamCharts",
+      "suggestStretchCharts",
     ])
   })
 

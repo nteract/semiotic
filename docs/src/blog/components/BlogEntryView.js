@@ -26,6 +26,15 @@ export default function BlogEntryView({ entry }) {
           (it owns the docs top bar). That collapsed the entry's
           title onto a 235-px column inside the flex header. */}
       <div style={styles.header}>
+        {entry.draft && (
+          <div style={styles.draftBanner}>
+            <span style={styles.draftBadge}>DRAFT</span>
+            <span style={styles.draftNote}>
+              Unlisted — not in the blog index, RSS, or search engines. Flip{" "}
+              <code>draft: true</code> off in the entry's registry to publish.
+            </span>
+          </div>
+        )}
         <h1 style={styles.title}>{entry.title}</h1>
         <p style={styles.subtitle}>{entry.subtitle}</p>
         <div style={styles.metaRow}>
@@ -125,5 +134,30 @@ const styles = {
     lineHeight: 1.7,
     color: "var(--text-primary, #e5e7eb)",
     maxWidth: 860,
+  },
+  draftBanner: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    background: "rgba(251, 191, 36, 0.12)",
+    border: "1px solid rgba(251, 191, 36, 0.35)",
+    borderRadius: 8,
+    padding: "10px 14px",
+    marginBottom: 24,
+    fontSize: 13,
+    color: "var(--text-secondary, #94a3b8)",
+  },
+  draftBadge: {
+    background: "rgb(217, 119, 6)",
+    color: "white",
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: "0.08em",
+    padding: "3px 8px",
+    borderRadius: 4,
+    flexShrink: 0,
+  },
+  draftNote: {
+    lineHeight: 1.5,
   },
 }

@@ -5,8 +5,30 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-05-18T00:00:00Z</updated>
+  <updated>2026-05-24T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Charts that know what they&apos;re for</title>
+    <id>https://semiotic3.nteract.io/blog/charts-that-know-what-theyre-for</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/charts-that-know-what-theyre-for"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/charts-that-know-what-theyre-for.png"/>
+    <published>2026-05-24T00:00:00Z</published>
+    <updated>2026-05-24T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <summary type="text">Semiotic 3.6.0 ships a chart recommendation engine that&apos;s heuristic-first, LLM-optional, and audience-aware. Charts now carry descriptors that declare what data shapes they serve and which questions they answer; an AudienceProfile layers per-org familiarity and adoption targets on top; a separate &apos;stretch&apos; surface grows literacy without forcing it.</summary>
+  </entry>
+  <entry>
+    <title>Semiotic 3.5.4</title>
+    <id>https://semiotic3.nteract.io/blog/release-3-5-4</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-5-4"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-5-4.png"/>
+    <published>2026-05-21T00:00:00Z</published>
+    <updated>2026-05-21T00:00:00Z</updated>
+    <author><name>AI-Generated</name></author>
+    <category term="release"/>
+    <summary type="text">3.5.4 adds a first-class asymmetric band encoding (with percentile fans) to LineChart and AreaChart, sharpens the axis surface with edge-anchored ticks, CSS-variable font sizes, and per-axis class names, ships loadingContent across every HOC, and collapses bounds + band into a single shared ribbon primitive.</summary>
+  </entry>
   <entry>
     <title>Semiotic 3.5.3</title>
     <id>https://semiotic3.nteract.io/blog/release-3-5-3</id>
@@ -14,7 +36,7 @@
     <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-5-3.png"/>
     <published>2026-05-18T00:00:00Z</published>
     <updated>2026-05-18T00:00:00Z</updated>
-    <author><name>Elijah Meeks</name></author>
+    <author><name>AI-Generated</name></author>
     <category term="release"/>
     <summary type="text">3.5.3 adds DifferenceChart, exact axis ticks, Swimlane rounded ends, and ProcessSankey lifecycle timing; it also launches the docs blog, refreshes AI capabilities to 45 chart schemas, and wires new release gates for capability and blog metadata drift.</summary>
   </entry>
@@ -50,7 +72,7 @@
     <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-5-2.png"/>
     <published>2026-05-10T00:00:00Z</published>
     <updated>2026-05-10T00:00:00Z</updated>
-    <author><name>Elijah Meeks</name></author>
+    <author><name>AI-Generated</name></author>
     <category term="release"/>
     <summary type="text">3.5.2 is mostly a factor-and-extend release: useSeriesFeatures / useEncodingDomain / useStreamStatus / useXYLineStyle hooks land, ProcessSankey inherits SankeyDiagram&apos;s canvas particle pipeline, regression-line sugar extends to five more charts, FlowMap joins the push family, and ai/capabilities.json indexes all 44 charts.</summary>
   </entry>

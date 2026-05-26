@@ -32743,6 +32743,166 @@ Dark-mode presets: ${THEME_PRESET_NAMES.filter((n) => n.includes("dark")).join("
     content: [{ type: "text", text: usage.join("\n") }]
   };
 }
+async function suggestChartsHandler(args) {
+  const { data, intent, maxResults, allow, deny, audience } = args;
+  const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
+  const suggestions = (0, import_ai3.suggestCharts)(data, {
+    intent: intentArg,
+    allow,
+    deny,
+    maxResults: maxResults ?? 8,
+    audience
+  });
+  const lines = [
+    `${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"} for ${data.length} rows${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}:`,
+    "",
+    ...suggestions.map((s, i) => {
+      const variantTag = s.variant ? ` / ${s.variant.label}` : "";
+      const reasons = s.reasons.length ? ` \u2014 ${s.reasons.join("; ")}` : "";
+      const caveats = s.caveats.length ? `
+   caveats: ${s.caveats.join("; ")}` : "";
+      return `${i + 1}. ${s.component}${variantTag} (score ${s.score.toFixed(1)}/5, familiarity ${s.rubric.familiarity}, accuracy ${s.rubric.accuracy})${reasons}${caveats}`;
+    })
+  ];
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: { suggestions }
+  };
+}
+async function suggestStreamChartsHandler(args) {
+  const { schema: schema2, intent, maxResults } = args;
+  const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
+  const suggestions = (0, import_ai3.suggestStreamCharts)(schema2, {
+    intent: intentArg,
+    maxResults: maxResults ?? 8
+  });
+  const lines = [
+    `${suggestions.length} stream chart suggestion${suggestions.length === 1 ? "" : "s"}${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}`,
+    ...schema2.throughput ? [`throughput: ${schema2.throughput}`] : [],
+    ...schema2.retention ? [`retention: ${schema2.retention}`] : [],
+    "",
+    ...suggestions.map((s, i) => {
+      const reasons = s.reasons.length ? ` \u2014 ${s.reasons.join("; ")}` : "";
+      const caveats = s.caveats.length ? `
+   caveats: ${s.caveats.join("; ")}` : "";
+      return `${i + 1}. ${s.component} (score ${s.score.toFixed(1)}/5)${reasons}${caveats}`;
+    })
+  ];
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: { suggestions, schema: schema2 }
+  };
+}
+async function suggestDashboardHandler(args) {
+  const { data, intents, maxPanels, diversifyByFamily, audience } = args;
+  const dashboard = (0, import_ai3.suggestDashboard)(data, {
+    intents,
+    maxPanels: maxPanels ?? 6,
+    diversifyByFamily: diversifyByFamily !== false,
+    audience
+  });
+  const lines = [];
+  lines.push(`Dashboard: ${dashboard.panels.length} panels covering ${dashboard.intentsCovered.join(", ") || "\u2014"}`);
+  if (dashboard.intentsMissing.length) {
+    lines.push(`Intents this data couldn't fill: ${dashboard.intentsMissing.join(", ")}`);
+  }
+  lines.push("");
+  for (let i = 0; i < dashboard.panels.length; i++) {
+    const { intent, suggestion } = dashboard.panels[i];
+    const variantTag = suggestion.variant ? ` / ${suggestion.variant.label}` : "";
+    lines.push(`${i + 1}. [${intent}] ${suggestion.component}${variantTag} (score ${suggestion.score.toFixed(1)}/5)`);
+    if (suggestion.reasons.length) lines.push(`   ${suggestion.reasons.join("; ")}`);
+  }
+  if (dashboard.stretchPanels.length > 0) {
+    lines.push("");
+    lines.push(`Stretch picks (audience-unfamiliar but fitting):`);
+    for (const stretch of dashboard.stretchPanels) {
+      const variantTag = stretch.suggestion.variant ? ` / ${stretch.suggestion.variant.label}` : "";
+      lines.push(`  ${stretch.suggestion.component}${variantTag} (familiarity ${stretch.familiarity}) \u2014 ${stretch.rationale}`);
+    }
+  }
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: dashboard
+  };
+}
+async function suggestStretchChartsHandler(args) {
+  const { data, audience, intent, maxResults } = args;
+  const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
+  const stretches = (0, import_ai3.suggestStretchCharts)(data, {
+    audience,
+    intent: intentArg,
+    maxResults: maxResults ?? 5
+  });
+  const lines = [
+    `${stretches.length} stretch pick${stretches.length === 1 ? "" : "s"} for "${audience.name ?? "audience"}":`,
+    "",
+    ...stretches.map((s, i) => {
+      const variantTag = s.suggestion.variant ? ` / ${s.suggestion.variant.label}` : "";
+      const replacing = s.replacing ? ` (could replace ${s.replacing})` : "";
+      return `${i + 1}. ${s.suggestion.component}${variantTag} (familiarity ${s.familiarity}/5)${replacing}
+   ${s.rationale}`;
+    })
+  ];
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: { stretches, audience: audience.name ?? null }
+  };
+}
+async function repairChartConfigHandler(args) {
+  const { component, data, intent, maxAlternatives } = args;
+  const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
+  const result = (0, import_ai3.repairChartConfig)(component, data, {
+    intent: intentArg,
+    maxAlternatives: maxAlternatives ?? 3
+  });
+  const lines = [];
+  if (result.status === "ok") {
+    lines.push(`\u2705 ${component} fits this dataset \u2014 no repair needed.`);
+  } else if (result.status === "alternative") {
+    lines.push(`\u26A0 ${component} doesn't fit: ${result.reason}`);
+    lines.push("");
+    lines.push(`Alternatives that fit${intentArg ? ` (ranked by intent: ${intentArg.join(", ")})` : ""}:`);
+    for (let i = 0; i < result.alternatives.length; i++) {
+      const s = result.alternatives[i];
+      const variantTag = s.variant ? ` / ${s.variant.label}` : "";
+      const reasons = s.reasons.length ? ` \u2014 ${s.reasons.join("; ")}` : "";
+      lines.push(`${i + 1}. ${s.component}${variantTag} (score ${s.score.toFixed(1)}/5)${reasons}`);
+    }
+  } else {
+    lines.push(`\u2753 No capability registered for "${component}". Closest matches:`);
+    for (let i = 0; i < result.alternatives.length; i++) {
+      const s = result.alternatives[i];
+      lines.push(`${i + 1}. ${s.component} (${s.family}, score ${s.score.toFixed(1)}/5)`);
+    }
+  }
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: result
+  };
+}
+async function interrogateChartHandler(args) {
+  const { component, props, query } = args;
+  const data = props.data || props.nodes || [];
+  const summary = (0, import_ai3.summarizeData)(data);
+  const content = [
+    { type: "text", text: `Statistical summary for ${component}:
+${JSON.stringify(summary, null, 2)}` }
+  ];
+  if (query) {
+    content.push({
+      type: "text",
+      text: `User Question: "${query}"
+
+Contextual instructions:
+1. Analyze the statistical summary to answer the question.
+2. Return a natural language response.
+3. Optionally suggest a JSON array of Semiotic annotations to visually highlight the answer on the chart (e.g. { type: "callout", x: "Mar", y: 1500, label: "Peak month" }).
+4. Use the accessor names from the provided props (e.g. xAccessor, yAccessor).`
+    });
+  }
+  return { content, structuredContent: { summary, component, props } };
+}
 function createServer2() {
   const srv = new McpServer({
     name: "semiotic",
@@ -32926,6 +33086,93 @@ function createServer2() {
       name: external_exports3.string().optional().describe("Theme preset name, e.g. 'tufte', 'pastels-dark', 'bi-tool'. Omit to list all available themes.")
     },
     applyThemeHandler
+  );
+  srv.tool(
+    "interrogateChart",
+    "Conversational interrogation of a Semiotic chart. Extract a statistical summary and answer natural language questions about the data, trends, and outliers. Returns a summary and guidance for an AI to generate a textual answer and visual annotations.",
+    {
+      component: external_exports3.string().describe("Chart component name, e.g. 'LineChart'"),
+      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).describe("The full chart props including data"),
+      query: external_exports3.string().optional().describe("A natural language question about the chart data")
+    },
+    interrogateChartHandler
+  );
+  srv.tool(
+    "suggestStreamCharts",
+    "Recommend realtime/streaming Semiotic charts for a schema (not row data). Pass a schema describing field types plus optional throughput ('low'|'medium'|'high') and retention ('windowed'|'cumulative') hints; the engine ranks realtime charts (RealtimeLineChart, RealtimeHistogram, RealtimeHeatmap, RealtimeWaterfallChart, RealtimeSwarmChart, TemporalHistogram) by their fit. Use when the user is wiring up a live dashboard or monitoring view rather than visualizing a bounded dataset.",
+    {
+      schema: external_exports3.object({
+        fields: external_exports3.array(
+          external_exports3.object({
+            name: external_exports3.string(),
+            kind: external_exports3.enum(["numeric", "categorical", "date", "boolean"]),
+            role: external_exports3.enum(["x", "y", "value", "category", "series", "size"]).optional()
+          })
+        ),
+        throughput: external_exports3.enum(["low", "medium", "high"]).optional(),
+        retention: external_exports3.enum(["windowed", "cumulative"]).optional()
+      }).describe("Stream schema \u2014 fields plus throughput/retention hints. No row data."),
+      intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("Ranking intent."),
+      maxResults: external_exports3.number().int().min(1).max(20).optional()
+    },
+    suggestStreamChartsHandler
+  );
+  srv.tool(
+    "suggestDashboard",
+    "Generate a dashboard of complementary chart panels for a dataset \u2014 each panel answers a distinct analytical intent (trend, rank, distribution, correlation, etc.) and the engine diversifies by chart family by default. Heuristic only; no LLM call. Use when the user asks 'show me this data' or 'build me a dashboard' rather than picking one chart.",
+    {
+      data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
+      intents: external_exports3.array(external_exports3.string()).optional().describe("Intents to cover. Omit to let the engine pick based on the data shape."),
+      maxPanels: external_exports3.number().int().min(1).max(12).optional().describe("Maximum panels (default 6)."),
+      diversifyByFamily: external_exports3.boolean().optional().describe("Prefer not to repeat chart families across panels (default true).")
+    },
+    suggestDashboardHandler
+  );
+  srv.tool(
+    "suggestStretchCharts",
+    "Recommend literacy-growth chart picks for a dataset given an AudienceProfile. Returns charts the data supports but the audience is unfamiliar with (familiarity \u2264 3, or \u2264 4 at exposureLevel 2), each paired with the familiar chart it could substitute for and a rationale. Use when the consumer wants to gently expose users to less familiar but more analytically appropriate visualizations.",
+    {
+      data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data."),
+      audience: external_exports3.object({
+        name: external_exports3.string().optional(),
+        familiarity: external_exports3.record(external_exports3.string(), external_exports3.number()).optional(),
+        targets: external_exports3.record(
+          external_exports3.string(),
+          external_exports3.object({
+            direction: external_exports3.enum(["increase", "decrease"]),
+            weight: external_exports3.number().int().min(1).max(3).optional(),
+            reason: external_exports3.string().optional()
+          })
+        ).optional(),
+        exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional()
+      }).describe("Audience profile \u2014 familiarity, targets, exposure level."),
+      intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional(),
+      maxResults: external_exports3.number().int().min(1).max(20).optional()
+    },
+    suggestStretchChartsHandler
+  );
+  srv.tool(
+    "repairChartConfig",
+    "Validate that a chart component is a sensible choice for a dataset, and if not, propose alternatives that fit. Use when a user asks for a specific chart and you want to confirm it's appropriate, or when you've drafted a config and want to verify it. Returns either ok (no change needed), alternative (chart doesn't fit; here are ranked replacements with rationale), or unknown (no capability registered).",
+    {
+      component: external_exports3.string().describe("Chart component name to validate, e.g. 'PieChart'"),
+      data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
+      intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("User intent \u2014 informs ranking of alternatives when the chart doesn't fit."),
+      maxAlternatives: external_exports3.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3).")
+    },
+    repairChartConfigHandler
+  );
+  srv.tool(
+    "suggestCharts",
+    "Recommend Semiotic charts for a dataset using heuristic capability descriptors. Each chart declares which data shapes it serves and which intents (trend, compare-categories, distribution, correlation, part-to-whole, etc.) it answers \u2014 the engine returns a ranked list with scores, reasons, caveats, and ready-to-use props. Heuristic only; no LLM call. Use the result as structured context when answering 'what chart should I use?' or generating chart code.",
+    {
+      data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
+      intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("Ranking intent. One of: trend, compare-series, compare-categories, rank, part-to-whole, distribution, correlation, flow, hierarchy, geo, outlier-detection, composition-over-time, change-detection. Custom intents accepted."),
+      maxResults: external_exports3.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
+      allow: external_exports3.array(external_exports3.string()).optional().describe("Restrict to these component names."),
+      deny: external_exports3.array(external_exports3.string()).optional().describe("Exclude these component names.")
+    },
+    suggestChartsHandler
   );
   return srv;
 }

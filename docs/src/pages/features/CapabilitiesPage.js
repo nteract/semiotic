@@ -123,11 +123,11 @@ export default function CapabilitiesPage() {
     <PageLayout
       title="Capability Matrix"
       breadcrumbs={[
-        { label: "Features", path: "/features" },
-        { label: "Capability Matrix", path: "/features/capabilities" },
+        { label: "Intelligence", path: "/intelligence" },
+        { label: "Capability Matrix", path: "/intelligence/capabilities" },
       ]}
-      prevPage={{ title: "Custom Charts", path: "/features/custom-charts" }}
-      nextPage={null}
+      prevPage={{ title: "Observation Hooks", path: "/intelligence/observation-hooks" }}
+      nextPage={{ title: "Chart Suggestions", path: "/intelligence/suggestions" }}
     >
       <p>
         Every Semiotic chart declares a fixed set of capabilities — does it

@@ -308,11 +308,11 @@ export default function SerializationPage() {
     <PageLayout
       title="Chart State Serialization"
       breadcrumbs={[
-        { label: "Features", path: "/features" },
-        { label: "Serialization", path: "/features/serialization" },
+        { label: "Intelligence", path: "/intelligence" },
+        { label: "Serialization", path: "/intelligence/serialization" },
       ]}
-      prevPage={{ title: "AI Observation Hooks", path: "/features/observation-hooks" }}
-      nextPage={{ title: "Homerun Map", path: "/cookbook/homerun-map" }}
+      prevPage={{ title: "Interrogation", path: "/intelligence/interrogation" }}
+      nextPage={{ title: "Vega-Lite Translator", path: "/intelligence/vega-lite" }}
     >
       <p>
         Serialize any chart's configuration to JSON, encode it as a URL for

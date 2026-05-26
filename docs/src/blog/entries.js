@@ -23,6 +23,11 @@
  *     // SSR-renderable spec via `ogChart` if you want a different
  *     // chart than the first one shown in the entry.
  *     ogChart?: { component: string, props: Record<string, unknown> }
+ *
+ *     // Set `draft: true` to keep an entry out of the index list, the
+ *     // RSS feed, and SEO prerender meta. The route still resolves at
+ *     // /blog/<slug>/ so authors can preview before publishing.
+ *     draft?: boolean
  *   }
  *
  * Tags vocabulary (additive — don't be precious):
@@ -42,8 +47,23 @@ import DifferenceChartExplainer from "./entries/difference-chart.js"
 import QuadrantChartExplainer from "./entries/quadrant-chart.js"
 import FunnelChartExplainer from "./entries/funnel-chart.js"
 import OrbitDiagramExplainer from "./entries/orbit-diagram.js"
+import ChartsThatKnow from "./entries/charts-that-know-what-theyre-for.js"
+import MultimodalResponse from "./entries/multimodal-response.js"
+import AnchoredConversations from "./entries/anchored-conversations.js"
+import LiveDashboard from "./entries/live-conversational-dashboard.js"
+import Release360 from "./entries/release-3-6-0.js"
 
-export const blogEntries = [
+/**
+ * Every entry, drafts included. Consumers that need the full list (direct
+ * URL access, sync check) read this. Consumers that should NEVER surface
+ * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
+ */
+export const allBlogEntries = [
+  Release360,
+  LiveDashboard,
+  AnchoredConversations,
+  MultimodalResponse,
+  ChartsThatKnow,
   Release354,
   Release353,
   ProcessSankeyVsClassicSankey,
@@ -55,8 +75,19 @@ export const blogEntries = [
   OrbitDiagramExplainer,
 ]
 
+/**
+ * Published entries — the canonical reader-facing list. Filters out anything
+ * marked `draft: true`. Used by the blog index, RSS feed, and prerender.
+ */
+export const blogEntries = allBlogEntries.filter((entry) => !entry.draft)
+
+/**
+ * Slug lookup intentionally returns drafts too. Drafts must be routable so
+ * authors can preview them before publishing — the listings and feeds are
+ * the surfaces that filter, not the URL space.
+ */
 export function getEntry(slug) {
-  return blogEntries.find((e) => e.slug === slug)
+  return allBlogEntries.find((e) => e.slug === slug)
 }
 
 export function entriesByDateDesc() {

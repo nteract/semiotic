@@ -20,6 +20,22 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 
 /**
+ * Default categoryAccessor — hoisted to module scope so it stays
+ * referentially stable across renders. A new function on every render
+ * would invalidate any downstream memo keyed on accessor identity (frame
+ * binning, layout, validation), and would silently re-bin the data even
+ * when nothing about the accessor's behavior actually changed.
+ *
+ * Reads `d.category` when present, falls back to a single "All" bucket
+ * for raw-observation data like `[{ value: 12 }, { value: 18 }]`.
+ * Coerces non-string values so the `string`-return contract always holds.
+ */
+const defaultCategoryAccessor = ((d: Datum) => {
+  const c = d?.category
+  return c == null ? "All" : String(c)
+}) as ChartAccessor<Datum, string>
+
+/**
  * Histogram component props
  */
 export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
@@ -37,8 +53,10 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
   data?: TDatum[]
   /**
    * Field name or function returning the bin label (used when data is
-   * already binned). Ignored when binning raw values.
-   * @default "category"
+   * already binned). For raw-observation data with no category dimension,
+   * the default treats all rows as a single "All" bucket — no need to set
+   * this explicitly.
+   * @default (d) => d.category ?? "All"
    */
   categoryAccessor?: ChartAccessor<TDatum, string>
   /**
@@ -169,7 +187,12 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
 
   const {
     data, margin: userMargin, className,
-    categoryAccessor = "category", valueAccessor = "value",
+    // Function default (not the string "category") so raw-observation
+    // mode works on data like [{ value: 12 }, { value: 18 }] with no
+    // `category` field. See `defaultCategoryAccessor` at module scope —
+    // hoisted there so the default stays referentially stable across renders.
+    categoryAccessor = defaultCategoryAccessor as ChartAccessor<TDatum, string>,
+    valueAccessor = "value",
     bins = 25, relative = false,
     valueFormat,
     colorBy, colorScheme, categoryPadding = 20,

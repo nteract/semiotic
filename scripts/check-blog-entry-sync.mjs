@@ -44,6 +44,13 @@ function readOgChart(source) {
   return match ? { component: parseJsonString(match[1]) } : undefined
 }
 
+function readDraftFlag(source) {
+  // Match `draft: true` (and `draft: false` for completeness). Absent → undefined.
+  const match = source.match(/draft:\s*(true|false)/m)
+  if (!match) return undefined
+  return match[1] === "true"
+}
+
 function parseEntryFile(path) {
   const source = readFileSync(path, "utf8")
   return {
@@ -55,6 +62,7 @@ function parseEntryFile(path) {
     tags: readTags(source),
     excerpt: readStringField(source, "excerpt"),
     ogChart: readOgChart(source),
+    draft: readDraftFlag(source),
   }
 }
 
@@ -64,8 +72,11 @@ function parseEntriesRegistry() {
   for (const match of source.matchAll(/import\s+([A-Za-z_$][\w$]*)\s+from\s+"\.\/entries\/([^"]+)"/g)) {
     imports.set(match[1], resolve(ROOT, "docs/src/blog/entries", match[2]))
   }
-  const arrayMatch = source.match(/export const blogEntries\s*=\s*\[([\s\S]*?)\]/m)
-  if (!arrayMatch) throw new Error("Could not find `export const blogEntries = [...]`")
+  // Match `allBlogEntries` (full list including drafts). `blogEntries` is
+  // derived via filter and so isn't a literal array — we always read the
+  // source-of-truth literal.
+  const arrayMatch = source.match(/export const allBlogEntries\s*=\s*\[([\s\S]*?)\]/m)
+  if (!arrayMatch) throw new Error("Could not find `export const allBlogEntries = [...]`")
   const names = [...arrayMatch[1].matchAll(/\b([A-Za-z_$][\w$]*)\b/g)].map((m) => m[1])
   return names.map((name) => {
     const entryPath = imports.get(name)
@@ -110,7 +121,9 @@ function objectBlocksFromArray(source, marker) {
 
 function parseMetaRegistry() {
   const source = readFileSync(META_JS, "utf8")
-  return objectBlocksFromArray(source, "blogEntriesMeta").map((block) => ({
+  // Read `allBlogEntriesMeta` literal — `blogEntriesMeta` is the filtered
+  // alias and isn't an array literal at parse time.
+  return objectBlocksFromArray(source, "allBlogEntriesMeta").map((block) => ({
     slug: readStringField(block, "slug"),
     title: readStringField(block, "title"),
     subtitle: readStringField(block, "subtitle"),
@@ -119,6 +132,7 @@ function parseMetaRegistry() {
     tags: readTags(block),
     excerpt: readStringField(block, "excerpt"),
     ogChart: readOgChart(block),
+    draft: readDraftFlag(block),
   }))
 }
 
@@ -166,6 +180,13 @@ for (let i = 0; i < max; i++) {
   const mirrorOg = mirror.ogChart?.component
   if (fullOg !== mirrorOg) {
     fail(errors, `${full.name}.ogChart.component drift: entries.js=${JSON.stringify(fullOg)}, entries-meta.js=${JSON.stringify(mirrorOg)}`)
+  }
+  // Treat absent and false as the same — `draft: false` and no `draft` field
+  // are equivalent (entry is published).
+  const fullDraft = full.draft === true
+  const mirrorDraft = mirror.draft === true
+  if (fullDraft !== mirrorDraft) {
+    fail(errors, `${full.name}.draft drift: entries.js=${fullDraft}, entries-meta.js=${mirrorDraft}`)
   }
 }
 

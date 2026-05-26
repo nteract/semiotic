@@ -219,13 +219,13 @@ function LinkedObserverDemo() {
 export default function ObservationHooksPage() {
   return (
     <PageLayout
-      title="AI Observation Hooks"
+      title="Observation Hooks"
       breadcrumbs={[
-        { label: "Features", path: "/features" },
-        { label: "AI Observation Hooks", path: "/features/observation-hooks" },
+        { label: "Intelligence", path: "/intelligence" },
+        { label: "Observation Hooks", path: "/intelligence/observation-hooks" },
       ]}
-      prevPage={{ title: "Chart Modes", path: "/features/chart-modes" }}
-      nextPage={{ title: "Serialization", path: "/features/serialization" }}
+      prevPage={{ title: "Custom Charts", path: "/features/custom-charts" }}
+      nextPage={{ title: "Capability Matrix", path: "/intelligence/capabilities" }}
     >
       <p>
         Every Semiotic chart accepts an <code>onObservation</code> callback that

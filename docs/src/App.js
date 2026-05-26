@@ -94,6 +94,8 @@ import PerformancePage from "./pages/features/PerformancePage"
 import PushApiPage from "./pages/features/PushApiPage"
 import CustomChartsPage from "./pages/features/CustomChartsPage"
 import CapabilitiesPage from "./pages/features/CapabilitiesPage"
+import InterrogationPage from "./pages/features/InterrogationPage"
+import SuggestionsPage from "./pages/features/SuggestionsPage"
 
 // New cookbook pages
 import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
@@ -383,15 +385,31 @@ export default function DocsApp() {
               <Route path="chart-container" element={<ChartContainersPage />} />
               <Route path="chart-states" element={<ChartStatesPage />} />
               <Route path="chart-modes" element={<ChartModesPage />} />
-              <Route path="observation-hooks" element={<ObservationHooksPage />} />
-              <Route path="serialization" element={<SerializationPage />} />
-              <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
               <Route path="streaming-system-model" element={<StreamingSystemModelPage />} />
               <Route path="performance" element={<PerformancePage />} />
               <Route path="push-api" element={<PushApiPage />} />
               <Route path="custom-charts" element={<CustomChartsPage />} />
-              <Route path="capabilities" element={<CapabilitiesPage />} />
             </Route>
+
+            {/* Intelligence — AI/recommendation surface, separated from generic Features
+                in 3.5.x. Old /features/<slug> paths redirect to /intelligence/<slug>
+                via dedicated routes below. */}
+            <Route path="intelligence" element={<Outlet />}>
+              <Route path="observation-hooks" element={<ObservationHooksPage />} />
+              <Route path="capabilities" element={<CapabilitiesPage />} />
+              <Route path="suggestions" element={<SuggestionsPage />} />
+              <Route path="interrogation" element={<InterrogationPage />} />
+              <Route path="serialization" element={<SerializationPage />} />
+              <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
+            </Route>
+
+            {/* Redirects from old /features/<slug> paths for the Intelligence pages */}
+            <Route path="features/observation-hooks" element={<Navigate to="/intelligence/observation-hooks" replace />} />
+            <Route path="features/capabilities" element={<Navigate to="/intelligence/capabilities" replace />} />
+            <Route path="features/suggestions" element={<Navigate to="/intelligence/suggestions" replace />} />
+            <Route path="features/interrogation" element={<Navigate to="/intelligence/interrogation" replace />} />
+            <Route path="features/serialization" element={<Navigate to="/intelligence/serialization" replace />} />
+            <Route path="features/vega-lite" element={<Navigate to="/intelligence/vega-lite" replace />} />
 
             {/* Using Server-Side Rendering */}
             <Route path="using-ssr" element={<UsingSSRPage />} />
