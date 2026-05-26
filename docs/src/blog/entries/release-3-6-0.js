@@ -51,52 +51,48 @@ function Body() {
         Every chart in the library now ships a capability descriptor: what data shapes it serves,
         what intents (`trend`, `correlation`, `distribution`, `part-to-whole`, eleven more) it
         answers well, what settings change those answers, and what `buildProps` would look like
-        against a given profile. <code>suggestCharts(data, options?)</code> returns a ranked list
-        of suggestions with runnable props, an audit trail of reasons, and caveats. Pair it with an{" "}
-        <code>AudienceProfile</code> — a serializable per-organization config of familiarity
-        numbers and adoption targets — and the ranking calibrates to who is actually reading.
+        against a given profile. <code>suggestCharts(data, options?)</code> returns a ranked list of
+        suggestions with runnable props, an audit trail of reasons, and caveats. Pair it with an{" "}
+        <code>AudienceProfile</code> — a serializable per-organization config of familiarity numbers
+        and adoption targets — and the ranking calibrates to who is actually reading.
       </p>
       <p>
         The deeper architectural move is that <em>the same descriptors</em> feed{" "}
         <code>suggestDashboard</code> (composite multi-intent views with honest{" "}
-        <code>intentsMissing</code> reporting),{" "}
-        <code>suggestStretchCharts</code> (a literacy-growth surface that shows charts the audience
-        is unfamiliar with but the data actually supports), <code>scoreChart</code> (single-chart
-        introspection), <code>useChartSuggestions</code> (the React hook), and the MCP server's{" "}
-        <code>suggestCharts</code> tool. One catalog, many surfaces. The post on{" "}
-        <Link to="/blog/charts-that-know-what-theyre-for">
-          Charts that know what they're for
-        </Link>{" "}
+        <code>intentsMissing</code> reporting), <code>suggestStretchCharts</code> (a literacy-growth
+        surface that shows charts the audience is unfamiliar with but the data actually supports),{" "}
+        <code>scoreChart</code> (single-chart introspection), <code>useChartSuggestions</code> (the
+        React hook), and the MCP server's <code>suggestCharts</code> tool. One catalog, many
+        surfaces. The post on{" "}
+        <Link to="/blog/charts-that-know-what-theyre-for">Charts that know what they're for</Link>{" "}
         walks through the design, the audience layer, and the stretch surface in detail.
       </p>
 
       <h2 id="interrogation">Anchored conversation — focus + interrogation + annotation</h2>
       <p>
         The other half of "AI on a chart" is what happens when the user wants to ask about{" "}
-        <em>this</em> point. Two new hooks compose into that pattern:{" "}
-        <code>useChartFocus</code> subscribes to the chart's observation store and returns the
-        latest hover/click as <code>{`{ datum, x, y, source }`}</code>;{" "}
-        <code>useChartInterrogation</code> gives consumers a{" "}
-        <code>{`{ ask, history, summary, annotations, loading, error, reset }`}</code> surface
+        <em>this</em> point. Two new hooks compose into that pattern: <code>useChartFocus</code>{" "}
+        subscribes to the chart's observation store and returns the latest hover/click as{" "}
+        <code>{`{ datum, x, y, source }`}</code>; <code>useChartInterrogation</code> gives consumers
+        a <code>{`{ ask, history, summary, annotations, loading, error, reset }`}</code> surface
         where the consumer brings their own LLM via <code>onQuery</code>. The hook supplies the
         model with the profiled data summary, the suggestion list, and the current focus datum as
         structured context; the model returns annotations the chart natively renders.
       </p>
       <p>
-        The detail post —{" "}
-        <Link to="/blog/anchored-conversations">Anchored conversations</Link> — works through the
-        bidirectional loop: the user points at a data point, the AI answers about that specific
-        point, and the answer lives on the chart as a clickable note. Pronouns work. Comparisons
-        get cheap. Answers persist where they're useful. The chart accumulates institutional
-        knowledge about itself.
+        The detail post — <Link to="/blog/anchored-conversations">Anchored conversations</Link> —
+        works through the bidirectional loop: the user points at a data point, the AI answers about
+        that specific point, and the answer lives on the chart as a clickable note. Pronouns work.
+        Comparisons get cheap. Answers persist where they're useful. The chart accumulates
+        institutional knowledge about itself.
       </p>
       <p>
         Compose that with the realtime runtime and the chat surface flips from passive observer to
         active narrator:{" "}
         <Link to="/blog/live-conversational-dashboard">Live conversational dashboards</Link>{" "}
         sketches the product shape — streaming data + an AI watching alongside you + anchored
-        annotations + a conversational follow-up surface — and walks through the pieces that
-        compose it.
+        annotations + a conversational follow-up surface — and walks through the pieces that compose
+        it.
       </p>
 
       <h2 id="capability-refinements">Capability descriptor refinements</h2>
@@ -129,11 +125,11 @@ function Body() {
             <code>Scatterplot</code> and <code>ConnectedScatterplot</code> prefer the canonical
             2-numeric form when a sequence axis is present.
           </strong>{" "}
-          On <code>{`{quarter, revenue, profit}`}</code> data both charts now plot revenue ×
-          profit (the canonical correlation form) instead of recapitulating a line chart on
-          quarter. ConnectedScatterplot threads the sequence as <code>orderAccessor</code> so the
-          path encodes temporal progression — Hans Rosling's "income vs life expectancy over
-          years" shape, served automatically when the data supports it.
+          On <code>{`{quarter, revenue, profit}`}</code> data both charts now plot revenue × profit
+          (the canonical correlation form) instead of recapitulating a line chart on quarter.
+          ConnectedScatterplot threads the sequence as <code>orderAccessor</code> so the path
+          encodes temporal progression — Hans Rosling's "income vs life expectancy over years"
+          shape, served automatically when the data supports it.
         </li>
         <li>
           <strong>
@@ -141,9 +137,9 @@ function Body() {
           </strong>{" "}
           The profiler's x-axis name regex now matches <code>quarter</code>, <code>qtr</code>,{" "}
           <code>fiscal</code>, and <code>week</code>. Without this,{" "}
-          <code>{`{quarter, revenue, region}`}</code> data fell into scatter-fallback provenance
-          and series detection never fired — <code>lineBy</code> / <code>areaBy</code> were
-          silently dropped and multi-series time-series charts zigzagged across regions.
+          <code>{`{quarter, revenue, region}`}</code> data fell into scatter-fallback provenance and
+          series detection never fired — <code>lineBy</code> / <code>areaBy</code> were silently
+          dropped and multi-series time-series charts zigzagged across regions.
         </li>
       </ul>
 
@@ -161,25 +157,24 @@ function Body() {
 
       <h2 id="upgrade-notes">Upgrade notes</h2>
       <p>
-        Most of 3.6.0 is additive. The capability-descriptor refinements above are the one
-        behavior change worth flagging:
+        Most of 3.6.0 is additive. The capability-descriptor refinements above are the one behavior
+        change worth flagging:
       </p>
       <ul>
         <li>
-          <strong>AreaChart on multi-series data.</strong> If you were passing
-          multi-series data to <code>AreaChart</code> directly (not via <code>suggestCharts</code>)
-          and relying on the chart to render overlapping multi-area output, that path still works
-          at the chart level — the capability change affects what the recommender suggests, not the
-          chart's prop surface. The chart's <code>areaBy</code> prop is untouched. The change is
-          about{" "}
+          <strong>AreaChart on multi-series data.</strong> If you were passing multi-series data to{" "}
+          <code>AreaChart</code> directly (not via <code>suggestCharts</code>) and relying on the
+          chart to render overlapping multi-area output, that path still works at the chart level —
+          the capability change affects what the recommender suggests, not the chart's prop surface.
+          The chart's <code>areaBy</code> prop is untouched. The change is about{" "}
           <code>suggestCharts</code> output: AreaChart suggestions now subselect their data.
         </li>
         <li>
           <strong>Scatterplot's x/y on sequence-shaped data.</strong> Same caveat — the chart still
           plots whatever you pass it; the recommender's <code>buildProps</code> output changes. Any
           code reading <code>suggestion.props.xAccessor</code> / <code>yAccessor</code> for charts
-          with <code>{`{sequence, num1, num2}`}</code> shape will now see the two numerics in
-          place of the sequence.
+          with <code>{`{sequence, num1, num2}`}</code> shape will now see the two numerics in place
+          of the sequence.
         </li>
         <li>
           <strong>
@@ -200,7 +195,7 @@ export default {
   subtitle:
     "The AI release. A heuristic chart recommender, audience-aware ranking, focus + interrogation hooks for two-way anchored conversation, an MCP server, and a per-chart capability layer that makes the library itself a structured catalog.",
   author: "AI-Generated",
-  date: "2026-05-31",
+  date: "2026-05-26",
   tags: ["release"],
   excerpt:
     "3.6.0 turns Semiotic's observation hooks, native annotations, and streaming runtime into an explicit AI-facing surface. Charts declare what they're for; datasets get profiled and ranked; audiences get calibrated; conversations anchor back to the chart instead of stopping at a chat bubble. Three case-study posts published alongside the release walk through what the new shape makes possible.",

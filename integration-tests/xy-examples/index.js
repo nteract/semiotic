@@ -483,6 +483,7 @@ const examples = [
       lineBy: "series",
       yExtent: [0, 50],
       showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -497,6 +498,7 @@ const examples = [
       // Anchor min to 0; max stays data-derived (~20).
       yExtent: [0, undefined],
       showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -510,6 +512,7 @@ const examples = [
       lineBy: "series",
       yExtent: [undefined, 50],
       showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -523,6 +526,7 @@ const examples = [
       lineBy: "series",
       xExtent: [-2, 8],
       showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -536,6 +540,7 @@ const examples = [
       lineBy: "series",
       xExtent: [-2, undefined],
       showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
@@ -549,6 +554,7 @@ const examples = [
       lineBy: "series",
       xExtent: [undefined, 8],
       showLegend: false,
+      stroke: "#007bff",
       width: 400, height: 280, colorScheme: colors,
     })
   }),
