@@ -360,7 +360,7 @@ const chartCategories = [
         importStatement: 'import { LikertChart } from "semiotic"',
         description: "Likert scale survey responses as diverging bars (horizontal) or stacked 100% bars (vertical).",
         keyProps: [
-          { name: "levels", type: "string[]", description: "Ordered labels, negative → positive (required)" },
+          { name: "levels", type: "string[]", description: "Ordered labels, negative → positive (default: 5-point scale)" },
           { name: "categoryAccessor", type: "string", description: 'Question/item field (default: "question")' },
           { name: "valueAccessor", type: "string", description: 'Integer score field for raw mode (default: "score")' },
           { name: "levelAccessor", type: "string", description: "Level name field for pre-aggregated mode" },

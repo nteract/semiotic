@@ -49,16 +49,22 @@ describe("Histogram", () => {
     // on rows like { value: 12 } because "category" wasn't in the data.
     // The default now synthesizes an "All" bucket for these cases so
     // suggestCharts can route raw-observation data to Histogram cleanly.
-    const observations = Array.from({ length: 30 }, (_, i) => ({ value: i * 2 + Math.random() * 5 }))
+    const observations = Array.from({ length: 30 }, (_, i) => ({ value: i * 2 + (i % 5) }))
     const { container } = render(
       <TooltipProvider>
         <Histogram data={observations} valueAccessor="value" />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-ordinal-frame")
-    expect(frame).toBeTruthy()
     // No ChartError rendered — the validator path passed.
     expect(container.querySelector(".semiotic-chart-error")).toBeNull()
+    expect(lastOrdinalFrameProps).toMatchObject({
+      chartType: "histogram",
+      data: observations,
+      rAccessor: "value",
+      rExtent: [0, 62],
+    })
+    expect(typeof lastOrdinalFrameProps.oAccessor).toBe("function")
+    expect(lastOrdinalFrameProps.oAccessor(observations[0])).toBe("All")
   })
 
   it("handles empty data gracefully (no frame rendered)", () => {

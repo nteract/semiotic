@@ -914,7 +914,7 @@ export default {
   subtitle:
     "A heuristic-first chart recommendation engine with per-audience calibration, a literacy-growth surface, and ready-to-render props.",
   author: "Elijah Meeks",
-  date: "2026-05-24",
+  date: "2026-05-25",
   tags: ["case-study"],
   excerpt:
     "Semiotic 3.6.0 ships a chart recommendation engine that's heuristic-first, LLM-optional, and audience-aware. Charts now carry descriptors that declare what data shapes they serve and which questions they answer; an AudienceProfile layers per-org familiarity and adoption targets on top; a separate 'stretch' surface grows literacy without forcing it.",

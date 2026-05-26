@@ -84,7 +84,7 @@ const quadrantChartProps = [
   { name: "data", type: "array", required: false, default: null, description: "Array of data points. Omit when using push API." },
   { name: "xAccessor", type: "string | function", required: false, default: '"x"', description: "Field name or function to access x values." },
   { name: "yAccessor", type: "string | function", required: false, default: '"y"', description: "Field name or function to access y values." },
-  { name: "quadrants", type: "QuadrantsConfig", required: true, default: null, description: "Configuration for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }. Each quadrant has label, color, and optional opacity." },
+  { name: "quadrants", type: "QuadrantsConfigOverride", required: false, default: "built-in quadrant labels and colors", description: "Optional overrides for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }. Each provided quadrant can include label, color, and opacity." },
   { name: "xCenter", type: "number", required: false, default: "midpoint of x domain", description: "X-coordinate of the vertical center line in data units." },
   { name: "yCenter", type: "number", required: false, default: "midpoint of y domain", description: "Y-coordinate of the horizontal center line in data units." },
   { name: "centerlineStyle", type: "object", required: false, default: '{ stroke: "#999", strokeWidth: 1 }', description: "Style for center lines: { stroke, strokeWidth, strokeDasharray }." },

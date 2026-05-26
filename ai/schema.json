@@ -880,7 +880,29 @@
             },
             "quadrants": {
               "type": "object",
-              "description": "Configuration for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }, each with { label, color, opacity? }"
+              "description": "Optional configuration overrides for the four quadrants: { topRight, topLeft, bottomRight, bottomLeft }, each with partial { label, color, opacity }. Omitted quadrants and fields use built-in defaults.",
+              "default": {
+                "topLeft": {
+                  "label": "Low / High",
+                  "color": "#E9C46A",
+                  "opacity": 0.08
+                },
+                "topRight": {
+                  "label": "High / High",
+                  "color": "#2A9D8F",
+                  "opacity": 0.08
+                },
+                "bottomLeft": {
+                  "label": "Low / Low",
+                  "color": "#E76F51",
+                  "opacity": 0.08
+                },
+                "bottomRight": {
+                  "label": "High / Low",
+                  "color": "#86BBD8",
+                  "opacity": 0.08
+                }
+              }
             },
             "showQuadrantLabels": {
               "type": "boolean",
@@ -913,9 +935,7 @@
               "default": 0.8
             }
           },
-          "required": [
-            "quadrants"
-          ]
+          "required": []
         }
       }
     },
@@ -2160,7 +2180,14 @@
             },
             "levels": {
               "type": "array",
-              "description": "Ordered response labels, most negative to most positive (required). Odd count = center is neutral."
+              "description": "Ordered response labels, most negative to most positive. Defaults to a 5-point Very Low to Very High scale. Odd count = center is neutral.",
+              "default": [
+                "Very Low",
+                "Low",
+                "Neutral",
+                "High",
+                "Very High"
+              ]
             },
             "categoryAccessor": {
               "type": [
@@ -2206,9 +2233,7 @@
               "default": 20
             }
           },
-          "required": [
-            "levels"
-          ]
+          "required": []
         }
       }
     },

@@ -2,6 +2,7 @@ import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { LikertChart } from "./LikertChart"
+import { DEFAULT_LIKERT_LEVELS } from "./LikertChart.defaults"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { defaultDivergingScheme, NEUTRAL_NEG, NEUTRAL_POS } from "../shared/useLikertAggregation"
 
@@ -58,6 +59,17 @@ describe("LikertChart", () => {
     expect(lastOrdinalFrameProps.chartType).toBe("bar")
   })
 
+  it("uses default levels when levels is omitted", () => {
+    render(
+      <TooltipProvider>
+        <LikertChart data={rawData} valueAccessor="score" />
+      </TooltipProvider>
+    )
+
+    const legendGroups = lastOrdinalFrameProps.legend.legendGroups
+    expect(legendGroups[0].items.map((i: any) => i.label)).toEqual(DEFAULT_LIKERT_LEVELS)
+  })
+
   // ── Test 2: empty data renders nothing ────────────────────────────
 
   it("renders nothing for empty data", () => {
@@ -71,9 +83,9 @@ describe("LikertChart", () => {
     expect(frame).toBeFalsy()
   })
 
-  // ── Test 3: missing levels prop → validation error ────────────────
+  // ── Test 3: empty levels prop → validation error ──────────────────
 
-  it("renders ChartError when levels is missing or empty", () => {
+  it("renders ChartError when levels is empty", () => {
     const { container } = render(
       <TooltipProvider>
         <LikertChart data={rawData} valueAccessor="score" levels={[]} />

@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 
 export const QuadrantChartCapability: ChartCapability = {
   component: "QuadrantChart",
@@ -37,6 +38,12 @@ export const QuadrantChartCapability: ChartCapability = {
       ...(xCenter !== undefined ? { xCenter } : {}),
       ...(yCenter !== undefined ? { yCenter } : {}),
       ...(profile.primary.series && (profile.seriesCount ?? 0) <= 6 ? { colorBy: profile.primary.series } : {}),
+      quadrants: {
+        topLeft: { ...DEFAULT_QUADRANTS.topLeft },
+        topRight: { ...DEFAULT_QUADRANTS.topRight },
+        bottomLeft: { ...DEFAULT_QUADRANTS.bottomLeft },
+        bottomRight: { ...DEFAULT_QUADRANTS.bottomRight },
+      }
     }
   },
 }

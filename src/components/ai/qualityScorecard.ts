@@ -117,7 +117,7 @@ export function runQualityScorecard(
         capabilities,
         maxResults: 40,
       })
-    } catch (err) {
+    } catch {
       // A descriptor crashed on this fixture — flag it.
       perFixture.push({
         fixture: fixture.name,

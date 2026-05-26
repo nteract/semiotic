@@ -25,7 +25,7 @@ export const allBlogEntriesMeta = [
     subtitle:
       "The AI release. A heuristic chart recommender, audience-aware ranking, focus + interrogation hooks for two-way anchored conversation, an MCP server, and a per-chart capability layer that makes the library itself a structured catalog.",
     author: "AI-Generated",
-    date: "2026-05-31",
+    date: "2026-05-26",
     tags: ["release"],
     excerpt:
       "3.6.0 turns Semiotic's observation hooks, native annotations, and streaming runtime into an explicit AI-facing surface. Charts declare what they're for; datasets get profiled and ranked; audiences get calibrated; conversations anchor back to the chart instead of stopping at a chat bubble. Three case-study posts published alongside the release walk through what the new shape makes possible.",
@@ -72,7 +72,7 @@ export const allBlogEntriesMeta = [
     subtitle:
       "A heuristic-first chart recommendation engine with per-audience calibration, a literacy-growth surface, and ready-to-render props.",
     author: "Elijah Meeks",
-    date: "2026-05-24",
+    date: "2026-05-25",
     tags: ["case-study"],
     excerpt:
       "Semiotic 3.6.0 ships a chart recommendation engine that's heuristic-first, LLM-optional, and audience-aware. Charts now carry descriptors that declare what data shapes they serve and which questions they answer; an AudienceProfile layers per-org familiarity and adoption targets on top; a separate 'stretch' surface grows literacy without forcing it.",

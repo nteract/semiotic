@@ -199,7 +199,7 @@ const likertProps = [
   { name: "valueAccessor", type: "string | function", required: false, default: '"score"', description: "Integer score field (raw response mode). Scores are 1-based: 1 → levels[0], 2 → levels[1], etc." },
   { name: "levelAccessor", type: "string | function", required: false, default: null, description: "Level name field (pre-aggregated mode). Each value must match an entry in levels." },
   { name: "countAccessor", type: "string | function", required: false, default: '"count"', description: "Count/frequency field (pre-aggregated mode)." },
-  { name: "levels", type: "string[]", required: true, default: null, description: "Ordered response labels, most negative to most positive. Odd count → center is neutral. Even → clean negative/positive split." },
+  { name: "levels", type: "string[]", required: false, default: '["Very Low", "Low", "Neutral", "High", "Very High"]', description: "Ordered response labels, most negative to most positive. Odd count → center is neutral. Even → clean negative/positive split." },
   { name: "orientation", type: '"horizontal" | "vertical"', required: false, default: '"horizontal"', description: "Horizontal: diverging bar chart centered at 0%. Vertical: stacked 100% bar chart." },
   { name: "colorScheme", type: "string[]", required: false, default: "auto diverging", description: "One color per level. Should match levels.length. Defaults to a Carbon-inspired red → gray → blue diverging palette." },
   { name: "barPadding", type: "number", required: false, default: "20", description: "Padding between category bars in pixels." },

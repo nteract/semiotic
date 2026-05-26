@@ -221,6 +221,7 @@ type NetworkSceneNode
 type OnObservationCallback
 type OrdinalChartType
 type OrdinalSceneNode
+type QuadrantsConfigOverride
 type RealtimeTemporalHistogramProps
 type ResolutionMode
 type RuntimeMode
