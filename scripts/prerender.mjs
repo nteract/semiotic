@@ -21,7 +21,117 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const BUILD_DIR = resolve(__dirname, "../docs/build")
 const APP_SRC = resolve(__dirname, "../docs/src/App.js")
 const PUBLIC_API_DIR = resolve(__dirname, "../docs/public/api")
+const PUBLIC_BLOG_OG_DIR = resolve(__dirname, "../docs/public/blog/og")
 const SITE_URL = "https://semiotic3.nteract.io"
+const DEFAULT_OG_IMAGE = `${SITE_URL}/assets/img/semiotic-social.png`
+
+// Per-route SEO metadata. Keys are route paths exactly as extracted from
+// App.js (no leading slash, "" for the landing page). Routes not listed
+// here inherit the shell's generic description/og tags. Listing top-level
+// sections meaningfully helps indexing — every chart page should not ship
+// the same description as the landing page.
+const ROUTE_META = {
+  "": {
+    title: "Semiotic — Data Visualization for React",
+    description:
+      "Semiotic is a React data visualization framework. Build interactive charts, network diagrams, geo maps, and streaming visualizations from simple, composable components.",
+  },
+  "getting-started": {
+    title: "Getting Started — Semiotic",
+    description:
+      "Install Semiotic and ship your first chart. Sub-path imports, the HOC chart catalog, and the streaming Frame escape hatch.",
+  },
+  charts: {
+    title: "Charts — Semiotic",
+    description:
+      "The Semiotic chart catalog: 45+ HOC charts spanning XY, ordinal, network, geo, hierarchy, and realtime families. Browse by family with live demos and copy-paste examples.",
+  },
+  features: {
+    title: "Features — Semiotic",
+    description:
+      "Semiotic features: streaming push API, animated transitions, accessibility, annotations, coordinated views, themed CSS variables, SSR, and AI-facing tooling.",
+  },
+  theming: {
+    title: "Theming — Semiotic",
+    description:
+      "Theme Semiotic with named presets (tufte, dark, bi-tool, journalist, …), CSS custom properties, and a scoped cascade override that flows through every chart.",
+  },
+  "theming/styling": {
+    title: "Styling Primitives — Semiotic Theming",
+    description:
+      "Top-level color, stroke, strokeWidth, opacity, and gradient props on every Semiotic HOC. Precedence cascade, CSS variable overrides, and per-datum style functions.",
+  },
+  "theming/theme-provider": {
+    title: "ThemeProvider — Semiotic Theming",
+    description:
+      "Wrap charts in ThemeProvider to apply a named preset or custom theme object. Categorical palettes, semantic status roles, fonts, and CSS-variable emission.",
+  },
+  "theming/semantic-colors": {
+    title: "Semantic Colors — Semiotic Theming",
+    description:
+      "Use --semiotic-success, --semiotic-danger, --semiotic-warning, --semiotic-info and other semantic role tokens to drive status-aware visualizations.",
+  },
+  "theming/theme-explorer": {
+    title: "Theme Explorer — Semiotic",
+    description:
+      "Preview every Semiotic theme preset across the chart catalog. Swap themes live, compare palettes, export tokens.",
+  },
+  playground: {
+    title: "Playground — Semiotic",
+    description:
+      "Edit Semiotic chart props live in the browser. Round-trip JSON config, deep-link via URL, and copy generated JSX for any chart in the catalog.",
+  },
+  blog: {
+    title: "Blog — Semiotic",
+    description:
+      "Release notes, chart explainers, and case studies from the Semiotic data visualization library.",
+  },
+  api: {
+    title: "API Reference — Semiotic",
+    description:
+      "Generated TypeDoc API surface for Semiotic: every component, hook, frame, and helper exported from the library and its sub-path entry points.",
+  },
+  "api/charts": {
+    title: "Chart Components API — Semiotic",
+    description:
+      "API reference for every Semiotic HOC chart: props, accessors, frameProps, and streaming ref methods.",
+  },
+  "api/typedoc": {
+    title: "TypeDoc — Semiotic API Reference",
+    description:
+      "Full TypeDoc index for Semiotic — modules, classes, interfaces, types, and re-exports.",
+  },
+  cookbook: {
+    title: "Cookbook — Semiotic",
+    description:
+      "Recipes for non-catalog charts: marginal graphics, slope graphs, marimekko, ridgelines, swarm plots, isotype charts, custom timelines, and more.",
+  },
+  recipes: {
+    title: "Recipes — Semiotic",
+    description:
+      "Composed Semiotic patterns — KPI cards with sparklines, network explorers, streaming migration maps, benchmark dashboards, and other reusable dashboard primitives.",
+  },
+  migration: {
+    title: "Migration Guide — Semiotic",
+    description:
+      "Upgrade to Semiotic 3.x. Removed APIs, replacement HOC charts, sub-path imports, and the new streaming-first runtime.",
+  },
+  "frames/xy-frame": {
+    title: "XYFrame — Semiotic",
+    description:
+      "XYFrame is the low-level Cartesian rendering frame underlying every XY HOC chart. Use it when you need control the HOC abstractions don't expose.",
+  },
+  "frames/ordinal-frame": {
+    title: "OrdinalFrame — Semiotic",
+    description:
+      "OrdinalFrame is the low-level rendering frame for category-by-value charts. Underlies BarChart, PieChart, BoxPlot, Histogram, and the rest of the ordinal family.",
+  },
+  "frames/network-frame": {
+    title: "NetworkFrame — Semiotic",
+    description:
+      "NetworkFrame is the low-level rendering frame for graph, hierarchy, and sankey-style visualizations. Underlies ForceDirectedGraph, SankeyDiagram, Treemap, and others.",
+  },
+}
 
 // ── Extract routes from App.js ──────────────────────────────────────────
 
@@ -126,6 +236,26 @@ export function copyDocsApiAssets(publicApiDir = PUBLIC_API_DIR, buildDir = BUIL
   return copied
 }
 
+// Copy the rendered blog OG cards (docs/public/blog/og/*.png) into the
+// static build. Parcel only bundles files referenced by the HTML/JS at
+// build time, so these per-entry images otherwise never make it into
+// dist — and the og:image meta tags would 404.
+export function copyBlogOgCards(publicOgDir = PUBLIC_BLOG_OG_DIR, buildDir = BUILD_DIR) {
+  if (!existsSync(publicOgDir)) return []
+
+  const outDir = resolve(buildDir, "blog", "og")
+  mkdirSync(outDir, { recursive: true })
+
+  const copied = []
+  for (const fileName of readdirSync(publicOgDir).sort()) {
+    if (!fileName.endsWith(".png")) continue
+    copyFileSync(resolve(publicOgDir, fileName), resolve(outDir, fileName))
+    copied.push(`blog/og/${fileName}`)
+  }
+
+  return copied
+}
+
 // ── Blog metadata loader ───────────────────────────────────────────────
 //
 // Reads docs/src/blog/entries-meta.js for the slug list + per-entry
@@ -147,18 +277,29 @@ async function loadBlogEntries() {
 
 // ── Generate pre-rendered HTML for a route ──────────────────────────────
 
+const escHtml = (s) =>
+  String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
 export function generatePage(shellHtml, routePath, blogMeta = null) {
-  const title = routePath
+  const slugTitle = routePath
     .split("/")
     .filter(Boolean)
     .map(s => s.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" "))
     .join(" \u2014 ")
 
-  // For blog entry routes, prefer the entry's own title + subtitle
-  // over the slug-derived heuristic.
+  // Three sources of page meta (in priority order):
+  //   1. blogMeta \u2014 passed by main() for blog/:slug routes
+  //   2. ROUTE_META[routePath] \u2014 hand-curated per-section copy
+  //   3. slug-cased fallback title, shell-inherited description
+  const routeMeta = !blogMeta && Object.prototype.hasOwnProperty.call(ROUTE_META, routePath)
+    ? ROUTE_META[routePath]
+    : null
+
   const fullTitle = blogMeta?.title
     ? `${blogMeta.title} \u2014 Semiotic Blog`
-    : (title ? `${title} \u2014 Semiotic` : "Semiotic \u2014 Data Visualization for React")
+    : routeMeta?.title
+      ? routeMeta.title
+      : (slugTitle ? `${slugTitle} \u2014 Semiotic` : "Semiotic \u2014 Data Visualization for React")
 
   const navHtml = `
     <nav style="max-width:800px;margin:0 auto;padding:20px;font-family:system-ui,sans-serif;">
@@ -196,50 +337,73 @@ export function generatePage(shellHtml, routePath, blogMeta = null) {
     .replace(/<meta\b(?=[^>]*\bproperty=["']?og:url["']?)[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`)
     .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`)
 
-  // Blog-entry enrichment: per-entry OG description / image / type and
-  // Twitter summary_large_image markup. Inserted into <head> just
-  // before </head>. The Parcel-built shell carries placeholder og:*
-  // meta tags pointing at the docs landing — for blog entries we
-  // override with the entry's subtitle and the rendered card PNG.
-  if (blogMeta) {
-    const ogImage = `${SITE_URL}/blog/og/${blogMeta.slug}.png`
-    const description = blogMeta.subtitle || blogMeta.excerpt || ""
-    const blogJsonLd = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      headline: blogMeta.title,
-      description,
-      datePublished: blogMeta.date,
-      author: { "@type": "Person", name: blogMeta.author },
-      keywords: (blogMeta.tags || []).join(", "),
-      image: ogImage,
-      url: canonicalUrl,
-    }).replace(/<\//g, "<\\/")
-    const escDescription = description
-      .replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    const blogMetaTags = [
-      `<meta name="description" content="${escDescription}" />`,
-      `<meta property="og:type" content="article" />`,
-      `<meta property="og:title" content="${blogMeta.title.replace(/"/g, "&quot;")}" />`,
-      `<meta property="og:description" content="${escDescription}" />`,
-      `<meta property="og:image" content="${ogImage}" />`,
-      `<meta property="article:published_time" content="${blogMeta.date}" />`,
-      `<meta property="article:author" content="${blogMeta.author}" />`,
-      ...(blogMeta.tags || []).map((t) => `<meta property="article:tag" content="${t}" />`),
-      `<meta name="twitter:card" content="summary_large_image" />`,
-      `<meta name="twitter:title" content="${blogMeta.title.replace(/"/g, "&quot;")}" />`,
-      `<meta name="twitter:description" content="${escDescription}" />`,
-      `<meta name="twitter:image" content="${ogImage}" />`,
-      `<script type="application/ld+json" data-jsonld="blog-entry">${blogJsonLd}</script>`,
-    ].join("\n    ")
-    // Drop any existing description/og:type/og:image/og:title/twitter:* tags
-    // first so the entry-specific ones aren't fighting them.
+  // Per-entry / per-section meta enrichment. Both blog entries and
+  // ROUTE_META-mapped section pages need the same shape: drop the
+  // generic shell tags, then inject page-specific description / og /
+  // twitter / JSON-LD markup.
+  //
+  // Anchor the injection at `<body` (case-insensitive) rather than
+  // `</head>` — Parcel's HTML minifier strips the implicit `</head>`
+  // closing tag, so a `</head>`-anchored regex silently no-ops on the
+  // built shell. `<body>` is always emitted.
+  if (blogMeta || routeMeta) {
+    let metaTags
+    if (blogMeta) {
+      const ogImage = `${SITE_URL}/blog/og/${blogMeta.slug}.png`
+      const description = blogMeta.subtitle || blogMeta.excerpt || ""
+      const blogJsonLd = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: blogMeta.title,
+        description,
+        datePublished: blogMeta.date,
+        author: { "@type": "Person", name: blogMeta.author },
+        keywords: (blogMeta.tags || []).join(", "),
+        image: ogImage,
+        url: canonicalUrl,
+      }).replace(/<\//g, "<\\/")
+      const escDescription = escHtml(description)
+      const escTitle = escHtml(blogMeta.title)
+      metaTags = [
+        `<meta name="description" content="${escDescription}" />`,
+        `<meta property="og:type" content="article" />`,
+        `<meta property="og:title" content="${escTitle}" />`,
+        `<meta property="og:description" content="${escDescription}" />`,
+        `<meta property="og:image" content="${ogImage}" />`,
+        `<meta property="article:published_time" content="${blogMeta.date}" />`,
+        `<meta property="article:author" content="${escHtml(blogMeta.author)}" />`,
+        ...(blogMeta.tags || []).map((t) => `<meta property="article:tag" content="${escHtml(t)}" />`),
+        `<meta name="twitter:card" content="summary_large_image" />`,
+        `<meta name="twitter:title" content="${escTitle}" />`,
+        `<meta name="twitter:description" content="${escDescription}" />`,
+        `<meta name="twitter:image" content="${ogImage}" />`,
+        `<script type="application/ld+json" data-jsonld="blog-entry">${blogJsonLd}</script>`,
+      ].join("")
+    } else {
+      const description = routeMeta.description || ""
+      const escDescription = escHtml(description)
+      const escTitle = escHtml(routeMeta.title)
+      const ogImage = routeMeta.ogImage || DEFAULT_OG_IMAGE
+      metaTags = [
+        `<meta name="description" content="${escDescription}" />`,
+        `<meta property="og:type" content="website" />`,
+        `<meta property="og:title" content="${escTitle}" />`,
+        `<meta property="og:description" content="${escDescription}" />`,
+        `<meta property="og:image" content="${ogImage}" />`,
+        `<meta name="twitter:card" content="summary_large_image" />`,
+        `<meta name="twitter:title" content="${escTitle}" />`,
+        `<meta name="twitter:description" content="${escDescription}" />`,
+        `<meta name="twitter:image" content="${ogImage}" />`,
+      ].join("")
+    }
+
     html = html
       .replace(/<meta\s+name=["']?description["']?[^>]*>\s*/gi, "")
       .replace(/<meta\b[^>]*\bproperty=["']?og:(?:type|title|description|image)["']?[^>]*>\s*/gi, "")
+      .replace(/<meta\b[^>]*\bproperty=["']?article:[a-z_]+["']?[^>]*>\s*/gi, "")
       .replace(/<meta\b[^>]*\bname=["']?twitter:[^"' >]+["']?[^>]*>\s*/gi, "")
       .replace(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])(?=[^>]*\bdata-jsonld=["']blog-entry["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
-      .replace(/<\/head>/, `    ${blogMetaTags}\n  </head>`)
+      .replace(/<body\b/i, `${metaTags}<body`)
   }
 
   return html
@@ -287,12 +451,52 @@ export async function prerender() {
   const blogUrls = blogEntries.map((e) => `${SITE_URL}/blog/${e.slug}`)
   const sitemapPaths = [...routeUrls, ...blogUrls].join("\n")
   writeFileSync(resolve(BUILD_DIR, "sitemap.txt"), `${SITE_URL}/\n${sitemapPaths}\n`)
+
+  // XML sitemap with per-URL lastmod. Crawlers prefer XML over text
+  // because lastmod lets them prioritize crawling fresh content \u2014
+  // especially useful for the blog where entries.date drives staleness.
+  const today = new Date().toISOString().slice(0, 10)
+  const xmlEntries = [
+    { loc: `${SITE_URL}/`, lastmod: today },
+    ...routeUrls.map((url) => ({ loc: url, lastmod: today })),
+    ...blogEntries.map((e) => ({
+      loc: `${SITE_URL}/blog/${e.slug}`,
+      lastmod: e.date || today,
+    })),
+  ]
+  const sitemapXml = [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+    ...xmlEntries.map(
+      ({ loc, lastmod }) => `  <url><loc>${loc}</loc><lastmod>${lastmod}</lastmod></url>`
+    ),
+    `</urlset>`,
+    "",
+  ].join("\n")
+  writeFileSync(resolve(BUILD_DIR, "sitemap.xml"), sitemapXml)
+
+  // robots.txt \u2014 explicit allow + sitemap pointer. Crawlers default to
+  // allow-all when no robots.txt exists, but an explicit Sitemap line
+  // helps discovery (Google, Bing, and others read it directly).
+  const robotsTxt = [
+    `User-agent: *`,
+    `Allow: /`,
+    ``,
+    `Sitemap: ${SITE_URL}/sitemap.xml`,
+    ``,
+  ].join("\n")
+  writeFileSync(resolve(BUILD_DIR, "robots.txt"), robotsTxt)
+
   const copiedApiAssets = copyDocsApiAssets()
+  const copiedOgCards = copyBlogOgCards()
 
   console.log(`\u2705 ${created} pages pre-rendered`)
-  console.log(`\u2705 sitemap.txt written`)
+  console.log(`\u2705 sitemap.txt + sitemap.xml + robots.txt written`)
   if (copiedApiAssets.length > 0) {
     console.log(`\u2705 copied API assets: ${copiedApiAssets.join(", ")}`)
+  }
+  if (copiedOgCards.length > 0) {
+    console.log(`\u2705 copied ${copiedOgCards.length} blog OG cards`)
   }
 }
 

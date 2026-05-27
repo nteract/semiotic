@@ -118,6 +118,67 @@ describe("docs prerender helpers", () => {
     expect(html.match(/"@type":"SoftwareApplication"/g)).toHaveLength(2)
   })
 
+  // Regression: Parcel's HTML minifier strips the implicit </head>
+  // closing tag, so the prerender's meta injection has to anchor on
+  // <body (which Parcel preserves) instead. Build a minified-style
+  // shell that omits </head> and assert the page-specific tags still
+  // land in the output.
+  it("injects blog-entry meta tags into a minified shell with no </head>", () => {
+    const shell = '<html lang=en><head><meta name=description content="generic"><meta property=og:title content="generic"><meta property=og:description content="generic"><meta property=og:image content="generic.png"><meta property=og:url content=https://example.com><meta name=twitter:card content=summary><meta name=twitter:title content="generic"><link rel=canonical href=https://example.com><title>Shell</title></head><body><noscript>old</noscript></body></html>'
+
+    const html = generatePage(shell, "blog/my-post", {
+      slug: "my-post",
+      title: "My Post",
+      subtitle: "A subtitle with <special> & \"chars\"",
+      author: "Jane",
+      date: "2026-01-15",
+      tags: ["release", "case-study"],
+    })
+
+    expect(html).toContain('<title>My Post — Semiotic Blog</title>')
+    expect(html).toContain('property="og:type" content="article"')
+    expect(html).toContain('property="og:title" content="My Post"')
+    expect(html).toContain('property="og:image" content="https://semiotic3.nteract.io/blog/og/my-post.png"')
+    expect(html).toContain('property="article:published_time" content="2026-01-15"')
+    expect(html).toContain('property="article:author" content="Jane"')
+    expect(html).toContain('property="article:tag" content="release"')
+    expect(html).toContain('property="article:tag" content="case-study"')
+    expect(html).toContain('name="twitter:card" content="summary_large_image"')
+    expect(html).toContain('data-jsonld="blog-entry"')
+    expect(html).toContain('"@type":"BlogPosting"')
+    // Subtitle is HTML-escaped in description meta to defang special chars.
+    expect(html).toContain('name="description" content="A subtitle with &lt;special&gt; &amp; &quot;chars&quot;"')
+    // The shell's generic description/og/twitter tags get stripped so they
+    // don't fight the per-entry ones.
+    expect(html).not.toContain('content="generic"')
+    // Body is preserved — we anchor injection at <body>, not </head>.
+    expect(html).toContain('<body')
+  })
+
+  it("applies per-route ROUTE_META overrides for non-blog pages", () => {
+    const shell = '<html><head><meta name=description content="generic landing description"><meta property=og:title content="Generic"><meta property=og:description content="Generic"><meta property=og:image content="https://semiotic3.nteract.io/assets/img/semiotic-social.png"><meta name=twitter:card content=summary><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com><title>Shell</title></head><body><noscript>old</noscript></body></html>'
+
+    const html = generatePage(shell, "charts")
+
+    expect(html).toContain('<title>Charts — Semiotic</title>')
+    // Section description comes from the ROUTE_META map.
+    expect(html).toContain('name="description" content="The Semiotic chart catalog')
+    expect(html).toContain('property="og:title" content="Charts — Semiotic"')
+    expect(html).toContain('property="og:type" content="website"')
+    // Generic shell description is gone.
+    expect(html).not.toContain('generic landing description')
+  })
+
+  it("falls back to slug-cased title and shell meta for routes with no ROUTE_META", () => {
+    const shell = '<html><head><meta name=description content="generic shell description"><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com><title>Shell</title></head><body><noscript>old</noscript></body></html>'
+
+    const html = generatePage(shell, "cookbook/homerun-map")
+
+    expect(html).toContain('<title>Cookbook — Homerun Map — Semiotic</title>')
+    // No ROUTE_META entry → shell description is inherited unchanged.
+    expect(html).toContain('name=description content="generic shell description"')
+  })
+
   it("copies generated API JSON assets into the static build", () => {
     const tmpRoot = mkdtempSync(join(tmpdir(), "semiotic-docs-prerender-"))
     try {

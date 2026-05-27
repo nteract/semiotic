@@ -356,3 +356,16 @@ export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps, TemporalHi
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
 export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"
+
+// ── Annotation provenance + lifecycle (talk-readiness M1) ──────────────
+// Type surface re-exported from the main entry per the talk-readiness
+// roadmap. The `withProvenance` builder and future freshness/anchor
+// utilities live under `semiotic/ai`.
+export type {
+  AnnotationProvenance,
+  AnnotationSource,
+  AnnotationLifecycle,
+  AnnotationFreshness,
+  AnnotationAnchor,
+  Annotated,
+} from "./ai/annotationProvenance"
