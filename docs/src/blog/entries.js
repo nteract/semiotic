@@ -52,6 +52,7 @@ import MultimodalResponse from "./entries/multimodal-response.js"
 import AnchoredConversations from "./entries/anchored-conversations.js"
 import LiveDashboard from "./entries/live-conversational-dashboard.js"
 import Release360 from "./entries/release-3-6-0.js"
+import TalkTrackIntelligence from "./entries/talk-track-intelligence.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -60,6 +61,7 @@ import Release360 from "./entries/release-3-6-0.js"
  */
 export const allBlogEntries = [
   Release360,
+  TalkTrackIntelligence,
   LiveDashboard,
   AnchoredConversations,
   MultimodalResponse,

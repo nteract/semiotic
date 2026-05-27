@@ -51,13 +51,13 @@ describe("variantDiscovery — M1 stubs", () => {
   it("evaluateVariantProposal returns a neutral baseline score", () => {
     const proposal: VariantProposal = {
       id: "LineChart:streamgraph",
-      base_component: "StackedAreaChart",
+      baseComponent: "StackedAreaChart",
       source: "manual",
     }
 
     const score = evaluateVariantProposal(proposal, stubProfile)
 
-    expect(score.proposal_id).toBe("LineChart:streamgraph")
+    expect(score.proposalId).toBe("LineChart:streamgraph")
     expect(score.fit).toBe(0)
     expect(score.novelty).toBe(0)
     expect(score.risk).toBe(0)
@@ -104,9 +104,9 @@ describe("variantDiscovery — registration plug point", () => {
 describe("variantDiscovery — proposal shape", () => {
   it("accepts manual, heuristic, and model sources", () => {
     const proposals: VariantProposal[] = [
-      { id: "a", base_component: "BarChart", source: "manual" },
-      { id: "b", base_component: "BarChart", source: "heuristic" },
-      { id: "c", base_component: "BarChart", source: "model" },
+      { id: "a", baseComponent: "BarChart", source: "manual" },
+      { id: "b", baseComponent: "BarChart", source: "heuristic" },
+      { id: "c", baseComponent: "BarChart", source: "model" },
     ]
     expect(proposals.map((p) => p.source)).toEqual(["manual", "heuristic", "model"])
   })
@@ -114,16 +114,16 @@ describe("variantDiscovery — proposal shape", () => {
   it("carries optional deltas and a buildProps closure", () => {
     const proposal: VariantProposal = {
       id: "RidgelinePlot:bimodal",
-      base_component: "RidgelinePlot",
-      intent_deltas: { distribution: 1, "outlier-detection": -1 },
-      rubric_deltas: { familiarity: -1 },
+      baseComponent: "RidgelinePlot",
+      intentDeltas: { distribution: 1, "outlier-detection": -1 },
+      rubricDeltas: { familiarity: -1 },
       buildProps: () => ({ bins: 40 }),
       rationale: "Distributions are bimodal — Ridgeline reveals the second mode.",
       source: "model",
       tags: ["distribution", "exploratory"],
     }
 
-    expect(proposal.intent_deltas?.distribution).toBe(1)
+    expect(proposal.intentDeltas?.distribution).toBe(1)
     expect(proposal.buildProps?.(stubProfile)).toEqual({ bins: 40 })
   })
 })

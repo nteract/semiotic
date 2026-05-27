@@ -96,6 +96,7 @@ import CustomChartsPage from "./pages/features/CustomChartsPage"
 import CapabilitiesPage from "./pages/features/CapabilitiesPage"
 import InterrogationPage from "./pages/features/InterrogationPage"
 import SuggestionsPage from "./pages/features/SuggestionsPage"
+import ConversationArcPage from "./pages/features/ConversationArcPage"
 
 // New cookbook pages
 import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
@@ -399,6 +400,7 @@ export default function DocsApp() {
               <Route path="capabilities" element={<CapabilitiesPage />} />
               <Route path="suggestions" element={<SuggestionsPage />} />
               <Route path="interrogation" element={<InterrogationPage />} />
+              <Route path="conversation-arc" element={<ConversationArcPage />} />
               <Route path="serialization" element={<SerializationPage />} />
               <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
             </Route>

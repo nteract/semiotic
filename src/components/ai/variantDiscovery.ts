@@ -46,15 +46,15 @@ export interface VariantProposal {
   /** Stable identifier — `<component>:<key>` is the conventional shape. */
   id: string
   /** Component this proposal would render. */
-  base_component: string
+  baseComponent: string
   /**
    * Per-intent score deltas applied on top of the base capability's
    * `intentScores`. Use sparingly — over-large deltas are a sign the
    * proposal should be a separate chart, not a variant.
    */
-  intent_deltas?: Partial<Record<IntentId, number>>
+  intentDeltas?: Partial<Record<IntentId, number>>
   /** Rubric deltas applied on top of the base capability's rubric. */
-  rubric_deltas?: Partial<ChartRubric>
+  rubricDeltas?: Partial<ChartRubric>
   /**
    * Build the props this proposal would pass to the component. When
    * omitted, the engine falls back to the capability's own
@@ -70,7 +70,7 @@ export interface VariantProposal {
   /** Where the proposal originated. */
   source: VariantProposalSource
   /** Optional reference to a registered variant key when the proposal mirrors one. */
-  variant_key?: string
+  variantKey?: string
   /** Optional tags consumers can filter on (mirrors `ChartVariant.tags`). */
   tags?: ReadonlyArray<string>
 }
@@ -91,7 +91,7 @@ export type VariantRejectionReason = string
  */
 export interface VariantScore {
   /** Echoes `VariantProposal.id`. */
-  proposal_id: string
+  proposalId: string
   /**
    * How well this proposal matches the profile + audience, 0..5.
    * Drawn from the same 0..5 scale `suggestCharts` uses so consumers
@@ -186,7 +186,7 @@ export const proposeVariant: ProposeVariantFn = (_component, _capability, _conte
  */
 export const evaluateVariantProposal: EvaluateVariantProposalFn = (proposal, _profile, _audience) => {
   return {
-    proposal_id: proposal.id,
+    proposalId: proposal.id,
     fit: 0,
     novelty: 0,
     risk: 0,

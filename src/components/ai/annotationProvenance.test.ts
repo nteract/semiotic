@@ -13,16 +13,16 @@ describe("annotationProvenance — withProvenance()", () => {
   it("attaches provenance + lifecycle without mutating the input", () => {
     const original = { type: "y-threshold", value: 100, label: "SLA breach" }
     const annotated = withProvenance(original, {
-      provenance: { author: "alice", source: "user", created_at: "2026-05-20T14:00:00Z" },
-      lifecycle: { ttl_hint: "P30D", anchor: "semantic" },
+      provenance: { author: "alice", source: "user", createdAt: "2026-05-20T14:00:00Z" },
+      lifecycle: { ttlHint: "P30D", anchor: "semantic" },
     })
 
     expect(annotated).toEqual({
       type: "y-threshold",
       value: 100,
       label: "SLA breach",
-      provenance: { author: "alice", source: "user", created_at: "2026-05-20T14:00:00Z" },
-      lifecycle: { ttl_hint: "P30D", anchor: "semantic" },
+      provenance: { author: "alice", source: "user", createdAt: "2026-05-20T14:00:00Z" },
+      lifecycle: { ttlHint: "P30D", anchor: "semantic" },
     })
     // Mutation guard: the original is untouched.
     expect(original).toEqual({ type: "y-threshold", value: 100, label: "SLA breach" })
@@ -70,8 +70,8 @@ describe("annotationProvenance — type surface", () => {
       author: "alice",
       source: "user",
       confidence: 0.95,
-      created_at: "2026-05-20T14:00:00Z",
-      stable_id: "annot-abc-123",
+      createdAt: "2026-05-20T14:00:00Z",
+      stableId: "annot-abc-123",
     }
     expect(p.confidence).toBe(0.95)
   })
@@ -94,13 +94,13 @@ describe("annotationProvenance — type surface", () => {
     const freshness: AnnotationFreshness[] = ["fresh", "aging", "stale", "expired"]
     const l: AnnotationLifecycle = {
       freshness: "fresh",
-      ttl_hint: "P30D",
+      ttlHint: "P30D",
       anchor: "semantic",
     }
-    const lMs: AnnotationLifecycle = { ttl_hint: 86_400_000 }
+    const lMs: AnnotationLifecycle = { ttlHint: 86_400_000 }
     expect(anchors).toHaveLength(4)
     expect(freshness).toHaveLength(4)
     expect(l.anchor).toBe("semantic")
-    expect(lMs.ttl_hint).toBe(86_400_000)
+    expect(lMs.ttlHint).toBe(86_400_000)
   })
 })

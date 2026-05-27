@@ -129,6 +129,7 @@ const navData = [
       { title: "Capability Matrix", path: "/intelligence/capabilities" },
       { title: "Chart Suggestions", path: "/intelligence/suggestions" },
       { title: "Interrogation", path: "/intelligence/interrogation" },
+      { title: "Conversation Arc", path: "/intelligence/conversation-arc" },
       { title: "Serialization", path: "/intelligence/serialization" },
       { title: "Vega-Lite Translator", path: "/intelligence/vega-lite" }
     ]

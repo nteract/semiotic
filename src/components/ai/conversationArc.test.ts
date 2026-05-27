@@ -184,6 +184,16 @@ describe("conversationArc — lifecycle", () => {
     expect(store.enabled).toBe(false)
   })
 
+  it("exposes sessionId after disable so buffered events stay correlatable", () => {
+    enableConversationArc({ sessionId: "preserved" })
+    const store = getConversationArcStore()
+    expect(store.sessionId).toBe("preserved")
+
+    disableConversationArc()
+    expect(store.enabled).toBe(false)
+    expect(store.sessionId).toBe("preserved")
+  })
+
   it("re-enable resumes recording with the same sessionId", () => {
     enableConversationArc({ sessionId: "fixed" })
     disableConversationArc()

@@ -120,11 +120,11 @@ describe("docs prerender helpers", () => {
 
   // Regression: Parcel's HTML minifier strips the implicit </head>
   // closing tag, so the prerender's meta injection has to anchor on
-  // <body (which Parcel preserves) instead. Build a minified-style
-  // shell that omits </head> and assert the page-specific tags still
-  // land in the output.
+  // <body (which Parcel preserves) instead. The fixture below
+  // deliberately omits </head> to mirror that minified shape and
+  // assert the page-specific tags still land in the output.
   it("injects blog-entry meta tags into a minified shell with no </head>", () => {
-    const shell = '<html lang=en><head><meta name=description content="generic"><meta property=og:title content="generic"><meta property=og:description content="generic"><meta property=og:image content="generic.png"><meta property=og:url content=https://example.com><meta name=twitter:card content=summary><meta name=twitter:title content="generic"><link rel=canonical href=https://example.com><title>Shell</title></head><body><noscript>old</noscript></body></html>'
+    const shell = '<html lang=en><head><meta name=description content="generic"><meta property=og:title content="generic"><meta property=og:description content="generic"><meta property=og:image content="generic.png"><meta property=og:url content=https://example.com><meta name=twitter:card content=summary><meta name=twitter:title content="generic"><link rel=canonical href=https://example.com><title>Shell</title><body><noscript>old</noscript></body></html>'
 
     const html = generatePage(shell, "blog/my-post", {
       slug: "my-post",

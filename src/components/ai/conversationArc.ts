@@ -228,7 +228,11 @@ const facade: ConversationArcStore = {
     return store?.enabled ?? false
   },
   get sessionId() {
-    return store?.enabled ? store.sessionId : null
+    // Expose the session ID whenever a session exists — even after
+    // `disableConversationArc()`. Buffered events still belong to that
+    // session and the same ID is reused on re-enable. `null` is reserved
+    // for the never-enabled / `reset()` state.
+    return store?.sessionId ?? null
   },
   get capacity() {
     return store?.capacity ?? 0

@@ -31,13 +31,13 @@ export interface AnnotationProvenance {
    */
   confidence?: number
   /** ISO 8601 timestamp marking when the annotation was created. */
-  created_at?: string
+  createdAt?: string
   /**
    * Stable, opaque identifier that survives data refresh and chart
    * recreation. Used by the M3 anchor-resolution algorithm to
    * re-locate "the Q3 spike" after new data arrives.
    */
-  stable_id?: string
+  stableId?: string
 }
 
 /**
@@ -82,7 +82,7 @@ export type AnnotationAnchor = "fixed" | "latest" | "sticky" | "semantic"
 export interface AnnotationLifecycle {
   /**
    * Current freshness band. When omitted, `computeAnnotationFreshness`
-   * (M2) derives it from `ttl_hint` and the data's current temporal
+   * (M2) derives it from `ttlHint` and the data's current temporal
    * extent.
    */
   freshness?: AnnotationFreshness
@@ -91,9 +91,9 @@ export interface AnnotationLifecycle {
    * ISO 8601 duration string (`"PT24H"`, `"P7D"`) or a number of
    * milliseconds. The freshness computation walks `fresh → aging
    * → stale → expired` as the chart's "now" advances past
-   * `created_at + ttl_hint`.
+   * `createdAt + ttlHint`.
    */
-  ttl_hint?: string | number
+  ttlHint?: string | number
   /** Anchor resolution strategy. Defaults to `"fixed"` when omitted. */
   anchor?: AnnotationAnchor
 }
@@ -119,8 +119,8 @@ export type Annotated<T> = T & {
  * withProvenance(
  *   { type: "y-threshold", value: 100, label: "SLA breach" },
  *   {
- *     provenance: { author: "alice", source: "user", created_at: "2026-05-20T14:00:00Z" },
- *     lifecycle: { ttl_hint: "P30D", anchor: "semantic" },
+ *     provenance: { author: "alice", source: "user", createdAt: "2026-05-20T14:00:00Z" },
+ *     lifecycle: { ttlHint: "P30D", anchor: "semantic" },
  *   }
  * )
  * ```
