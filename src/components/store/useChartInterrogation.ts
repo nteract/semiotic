@@ -1,5 +1,6 @@
 "use client"
 import { useCallback, useMemo, useRef, useState } from "react"
+import { getConversationArcStore } from "../ai/conversationArc"
 import type { Datum } from "../charts/shared/datumTypes"
 import { summarizeData, type DataSummary } from "../data/DataSummarizer"
 import { profileData } from "../ai/profileData"
@@ -214,6 +215,17 @@ export function useChartInterrogation(
     setLoading(true)
     setError(null)
     setHistory((prev) => [...prev, { role: "user", text: trimmed }])
+    // Conversation-arc instrumentation. The store is opt-in (default
+    // no-op) so this is zero-overhead until `enableConversationArc()`
+    // is called by the consumer. Latency is computed from
+    // `performance.now()` so it tracks elapsed wall-clock between ask
+    // and answer regardless of any tab-throttling on Date.now.
+    const askedAt = typeof performance !== "undefined" ? performance.now() : Date.now()
+    getConversationArcStore().record({
+      type: "interrogation-asked",
+      component: componentNameRef.current,
+      query: trimmed,
+    })
     try {
       const result = await onQueryRef.current(trimmed, {
         data: (dataRef.current ?? []) as ReadonlyArray<Datum>,
@@ -226,6 +238,14 @@ export function useChartInterrogation(
       })
       setHistory((prev) => [...prev, { role: "assistant", text: result.answer }])
       if (result.annotations) setAiAnnotations(result.annotations)
+      const answeredAt = typeof performance !== "undefined" ? performance.now() : Date.now()
+      getConversationArcStore().record({
+        type: "interrogation-answered",
+        component: componentNameRef.current,
+        answer: result.answer,
+        annotationCount: result.annotations?.length,
+        latencyMs: Math.round(answeredAt - askedAt),
+      })
     } catch (err) {
       const e = err instanceof Error ? err : new Error(String(err))
       setError(e)
@@ -233,6 +253,13 @@ export function useChartInterrogation(
         ...prev,
         { role: "assistant", text: "Sorry, I couldn't process that query." },
       ])
+      const answeredAt = typeof performance !== "undefined" ? performance.now() : Date.now()
+      getConversationArcStore().record({
+        type: "interrogation-answered",
+        component: componentNameRef.current,
+        error: true,
+        latencyMs: Math.round(answeredAt - askedAt),
+      })
     } finally {
       setLoading(false)
     }

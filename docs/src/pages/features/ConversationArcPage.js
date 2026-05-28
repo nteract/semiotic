@@ -1,10 +1,16 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
+  analystPersona,
   applyAnnotationLifecycle,
   annotationFreshnessFor,
+  dataScientistPersona,
   disableConversationArc,
   enableConversationArc,
+  executivePersona,
   getConversationArcStore,
+  recordAudienceChange,
+  useChartSuggestions,
+  useConversationArc,
   withProvenance,
 } from "semiotic/ai"
 import { CategoryColorProvider, DotPlot, LineChart } from "semiotic"
@@ -125,40 +131,106 @@ const timeFormat = (ms) => {
   return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" })
 }
 
+// ── Live summary panel — same hook, same buffer ──────────────────────
+
+function ArcSummaryPanel({ summary, enabled }) {
+  // Per-type counts in the same color the buttons + dotplot use, so
+  // it's obvious which counters correspond to which actions.
+  const orderedTypes = EVENT_PRESETS.map((p) => p.type)
+  return (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "1fr auto",
+      gap: 12,
+      padding: 10,
+      borderRadius: 8,
+      background: "var(--surface-2)",
+      fontSize: 12,
+    }}>
+      <div>
+        <div style={{ color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em", fontSize: 10 }}>
+          Live summary · <code>summarizeArc(history)</code>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {orderedTypes.map((type) => {
+            const count = summary.byType[type] ?? 0
+            return (
+              <span
+                key={type}
+                style={{
+                  background: count > 0 ? TYPE_COLORS[type] : "transparent",
+                  color: count > 0 ? "white" : "var(--text-secondary)",
+                  border: count > 0 ? "none" : "1px solid var(--surface-3)",
+                  padding: "3px 9px",
+                  borderRadius: 999,
+                  opacity: enabled || count > 0 ? 1 : 0.4,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {type} · <strong>{count}</strong>
+              </span>
+            )
+          })}
+        </div>
+        {summary.componentsSeen.length > 0 && (
+          <div style={{ marginTop: 8, color: "var(--text-secondary)" }}>
+            components seen: {summary.componentsSeen.map((c) => <code key={c} style={{ marginRight: 6 }}>{c}</code>)}
+          </div>
+        )}
+      </div>
+      <div style={{ textAlign: "right", color: "var(--text-secondary)" }}>
+        <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)" }}>{summary.total}</div>
+        <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>events</div>
+        {summary.durationMs > 0 && (
+          <div style={{ marginTop: 4 }}>
+            {(summary.durationMs / 1000).toFixed(1)}s span
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ArcDemo() {
-  const store = useMemo(() => getConversationArcStore(), [])
+  // The hook owns subscription, re-render coordination, and snapshot
+  // stability via useSyncExternalStore. `enableOnMount: false` lets the
+  // button drive enable/disable; if we let the hook auto-enable, the
+  // button would always be in the "currently recording" state when the
+  // page loads.
+  const { history: events, summary, enabled, sessionId, record, clear: clearArc } =
+    useConversationArc({ enableOnMount: false })
   const chartRef = useRef(null)
   const dotIdRef = useRef(0)
-  const [enabled, setEnabled] = useState(store.enabled)
-  const [events, setEvents] = useState(() => store.getEvents())
-  const [sessionId, setSessionId] = useState(store.sessionId)
 
+  // Mirror each new event onto the DotPlot via its push API. The
+  // `events` array reference changes on every record, so a length
+  // diff is the right gate.
+  const prevLengthRef = useRef(0)
   useEffect(() => {
-    const unsubscribe = store.subscribe((event) => {
-      setEvents(store.getEvents())
-      setSessionId(store.sessionId)
-      // Mirror the same event into the DotPlot via its push API.
-      // Stable ID per dot so the chart can update/remove individuals
-      // later if we ever want to.
-      chartRef.current?.push({
-        id: ++dotIdRef.current,
-        type: event.type,
-        time: event.timestamp,
-      })
-    })
-    return unsubscribe
-  }, [store])
+    if (events.length < prevLengthRef.current) {
+      // Cleared — reset the chart too.
+      chartRef.current?.clear()
+      dotIdRef.current = 0
+    } else {
+      for (let i = prevLengthRef.current; i < events.length; i++) {
+        const e = events[i]
+        chartRef.current?.push({
+          id: ++dotIdRef.current,
+          type: e.type,
+          time: e.timestamp,
+        })
+      }
+    }
+    prevLengthRef.current = events.length
+  }, [events])
 
-  // Clean up on unmount so navigating away doesn't leave recording on
-  // for other consumers. Intentionally not `reset()` — that would wipe
-  // listeners other parts of the app sharing the same store may have
-  // attached.
+  // Don't reset() on unmount — that would wipe listeners other parts
+  // of the app may have attached. Just stop recording.
   useEffect(
     () => () => {
       disableConversationArc()
-      store.clear()
     },
-    [store],
+    [],
   )
 
   const toggle = () => {
@@ -167,19 +239,14 @@ function ArcDemo() {
     } else {
       enableConversationArc({ capacity: 50, sessionId: "docs-demo" })
     }
-    setEnabled(getConversationArcStore().enabled)
-    setSessionId(getConversationArcStore().sessionId)
   }
 
   const fire = (preset) => {
-    store.record(preset.payload())
+    record(preset.payload())
   }
 
   const clear = () => {
-    store.clear()
-    chartRef.current?.clear()
-    dotIdRef.current = 0
-    setEvents([])
+    clearArc()
   }
 
   return (
@@ -295,6 +362,8 @@ function ArcDemo() {
         />
       </CategoryColorProvider>
 
+      <ArcSummaryPanel summary={summary} enabled={enabled} />
+
       <div
         style={{
           maxHeight: 220,
@@ -349,6 +418,205 @@ function ArcDemo() {
               </span>
             </div>
           ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Auto-instrumentation demo ────────────────────────────────────────
+
+// Dataset with mixed types — time-series via `quarter`, categorical
+// via `region`, numeric via `revenue` — so the suggester returns
+// different rankings for different intents and audiences.
+const QUARTERLY_REVENUE = [
+  { region: "North", quarter: "Q1 2025", revenue: 1200 },
+  { region: "North", quarter: "Q2 2025", revenue: 1450 },
+  { region: "North", quarter: "Q3 2025", revenue: 1820 },
+  { region: "North", quarter: "Q4 2025", revenue: 2010 },
+  { region: "South", quarter: "Q1 2025", revenue: 980 },
+  { region: "South", quarter: "Q2 2025", revenue: 1100 },
+  { region: "South", quarter: "Q3 2025", revenue: 1330 },
+  { region: "South", quarter: "Q4 2025", revenue: 1520 },
+  { region: "East", quarter: "Q1 2025", revenue: 720 },
+  { region: "East", quarter: "Q2 2025", revenue: 880 },
+  { region: "East", quarter: "Q3 2025", revenue: 1050 },
+  { region: "East", quarter: "Q4 2025", revenue: 1240 },
+]
+
+const INTENT_OPTIONS = [
+  { id: "trend", label: "Trend over time" },
+  { id: "compare-categories", label: "Compare categories" },
+  { id: "distribution", label: "Distribution" },
+  { id: "rank", label: "Rank" },
+]
+
+const AUDIENCE_OPTIONS = [
+  { id: "none", label: "No audience", profile: undefined },
+  { id: "executive", label: "Executive", profile: executivePersona },
+  { id: "analyst", label: "Analyst", profile: analystPersona },
+  { id: "data-scientist", label: "Data scientist", profile: dataScientistPersona },
+]
+
+function AutoInstrumentDemo() {
+  const [intentId, setIntentId] = useState("trend")
+  const [audienceId, setAudienceId] = useState("none")
+  const audience = AUDIENCE_OPTIONS.find((a) => a.id === audienceId)?.profile
+
+  // The hook reactively re-runs the suggester whenever intent or
+  // audience changes. Each new ranked list emits `suggestion-shown`
+  // into the arc store automatically — no record() call in this
+  // component.
+  const { suggestions } = useChartSuggestions(QUARTERLY_REVENUE, {
+    intent: intentId,
+    audience,
+    maxResults: 4,
+  })
+
+  // Auto-enable a session so the demo "just works" out of the box.
+  // The same store backs the ArcDemo above — toggling Disable up
+  // there will pause this demo's events too.
+  const { history } = useConversationArc({ sessionId: "auto-instrument" })
+
+  // Show only the most recent events (any of them — this demo only
+  // generates suggestion-shown and audience-set, but other demos
+  // sharing the store may add their own).
+  const recent = history.slice(-6).reverse()
+
+  const setAudience = (next) => {
+    if (next === audienceId) return
+    const nextProfile = AUDIENCE_OPTIONS.find((a) => a.id === next)
+    const prevProfile = AUDIENCE_OPTIONS.find((a) => a.id === audienceId)
+    recordAudienceChange(
+      nextProfile?.label ?? next,
+      prevProfile?.label === "No audience" ? null : prevProfile?.label ?? null
+    )
+    setAudienceId(next)
+  }
+
+  return (
+    <div style={{
+      border: "1px solid var(--surface-3)",
+      borderRadius: 12,
+      padding: 20,
+      background: "var(--surface-1)",
+      display: "grid",
+      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+      gap: 20,
+    }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: 6 }}>
+            Intent
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {INTENT_OPTIONS.map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => setIntentId(id)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 12,
+                  border: `1px solid ${id === intentId ? "var(--accent)" : "var(--surface-3)"}`,
+                  background: id === intentId ? "var(--accent)" : "transparent",
+                  color: id === intentId ? "white" : "var(--text)",
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >{label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: 6 }}>
+            Audience picker (recordAudienceChange)
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {AUDIENCE_OPTIONS.map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => setAudience(id)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 12,
+                  border: `1px solid ${id === audienceId ? "#d49a00" : "var(--surface-3)"}`,
+                  background: id === audienceId ? "#d49a00" : "transparent",
+                  color: id === audienceId ? "white" : "var(--text)",
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >{label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          padding: 10,
+          background: "var(--surface-2)",
+          borderRadius: 8,
+          fontSize: 13,
+        }}>
+          <div style={{ color: "var(--text-secondary)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+            Top suggestion
+          </div>
+          {suggestions[0] ? (
+            <>
+              <code style={{ fontSize: 14, fontWeight: 600 }}>{suggestions[0].component}</code>
+              <span style={{ marginLeft: 8, color: "var(--text-secondary)" }}>
+                score {suggestions[0].score.toFixed(1)}
+              </span>
+              {suggestions.length > 1 && (
+                <div style={{ color: "var(--text-secondary)", marginTop: 4, fontSize: 12 }}>
+                  also: {suggestions.slice(1, 4).map((s) => s.component).join(", ")}
+                </div>
+              )}
+            </>
+          ) : (
+            <em style={{ color: "var(--text-secondary)" }}>No fits for this intent.</em>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: 6 }}>
+          Latest arc events (auto-fired)
+        </div>
+        <div style={{
+          background: "var(--surface-2)",
+          padding: 10,
+          borderRadius: 8,
+          fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
+          fontSize: 11,
+          minHeight: 200,
+          maxHeight: 280,
+          overflowY: "auto",
+        }}>
+          {recent.length === 0 ? (
+            <em style={{ color: "var(--text-secondary)" }}>
+              Events will appear here as you change intent or audience.
+            </em>
+          ) : (
+            recent.map((event, i) => (
+              <div key={`${event.timestamp}-${i}`} style={{
+                padding: "3px 0",
+                borderBottom: "1px dotted var(--surface-3)",
+              }}>
+                <div style={{ color: TYPE_COLORS[event.type], fontWeight: 600 }}>
+                  {event.type}
+                </div>
+                <div style={{ color: "var(--text-secondary)", paddingLeft: 8 }}>
+                  {JSON.stringify(
+                    Object.fromEntries(
+                      Object.entries(event).filter(
+                        ([k]) => !["type", "timestamp", "sessionId"].includes(k)
+                      )
+                    )
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
@@ -635,11 +903,43 @@ export default function ConversationArcPage() {
       </p>
       <ArcDemo />
 
-      <h3>Wiring</h3>
+      <h3>Wiring — React</h3>
+      <p>
+        The <code>useConversationArc</code> hook is the React entry
+        point. It auto-enables the module-scoped store on mount,
+        subscribes via <code>useSyncExternalStore</code> for tear-free
+        re-renders, and returns a stable <code>record</code> callback
+        plus a live <code>summary</code> reduction:
+      </p>
+      <CodeBlock language="jsx">
+        {`import { useConversationArc } from "semiotic/ai"
+
+function ArcInspector() {
+  const { history, summary, enabled, sessionId, record, clear } = useConversationArc()
+
+  return (
+    <>
+      <header>
+        Session {sessionId} · {summary.total} events · {summary.byType["chart-exported"] ?? 0} exports
+      </header>
+      <button onClick={() =>
+        record({ type: "chart-exported", component: "LineChart", format: "jsx" })
+      }>Mark export</button>
+      <EventList events={history} />
+    </>
+  )
+}`}
+      </CodeBlock>
+
+      <h3>Wiring — non-React sinks</h3>
+      <p>
+        For analytics sinks, replay fixtures, or anything outside the React
+        tree, use the module-scoped store directly. The hook is just sugar
+        over the same store.
+      </p>
       <CodeBlock language="jsx">
         {`import {
   enableConversationArc,
-  disableConversationArc,
   getConversationArcStore,
 } from "semiotic/ai"
 
@@ -651,28 +951,50 @@ const unsubscribe = store.subscribe((event) => {
   console.log(event.type, event)
 })
 
-store.record({
-  type: "suggestion-shown",
-  components: ["LineChart", "AreaChart"],
-  intent: "trend",
-})
-store.record({
-  type: "suggestion-chosen",
-  component: "LineChart",
-  rank: 1,
-  source: "user",
-})
-
 // Talk-time: flush the buffer to a recorded fixture for replay.
 const allEvents = store.flush()`}
       </CodeBlock>
 
+      <h3>Auto-instrumentation</h3>
+      <p>
+        Two surfaces wire themselves to the arc store automatically:
+      </p>
+      <ul>
+        <li>
+          <code>useChartSuggestions</code> emits{" "}
+          <code>suggestion-shown</code> whenever the suggestion list
+          changes (deduplicated by component-list signature).
+        </li>
+        <li>
+          <code>useChartInterrogation</code> emits{" "}
+          <code>interrogation-asked</code> on <code>ask()</code> and{" "}
+          <code>interrogation-answered</code> when the response (or
+          error) returns — with measured <code>latencyMs</code>.
+        </li>
+      </ul>
+      <p>
+        Both are zero-overhead when the arc store is disabled
+        (the default). For audience-picker UIs, call{" "}
+        <code>recordAudienceChange(next, previous)</code> in the
+        picker's <code>onChange</code> handler.
+      </p>
+
+      <p>
+        Try it: change the intent or audience below. No{" "}
+        <code>record()</code> calls in the demo's own component code —
+        only <code>useChartSuggestions</code> running and{" "}
+        <code>recordAudienceChange</code> on the picker. Watch the
+        event log fill in.
+      </p>
+      <AutoInstrumentDemo />
+
       <h3>Event vocabulary</h3>
       <p>
-        Eight variants in a discriminated union: <code>suggestion-shown</code>,{" "}
+        Ten variants in a discriminated union: <code>suggestion-shown</code>,{" "}
         <code>suggestion-chosen</code>, <code>audience-set</code>, <code>chart-rendered</code>,{" "}
         <code>chart-edited</code>, <code>chart-replaced</code>, <code>chart-exported</code>,{" "}
-        <code>chart-abandoned</code>. Each carries the fields a downstream analytics or replay
+        <code>chart-abandoned</code>, <code>interrogation-asked</code>,{" "}
+        <code>interrogation-answered</code>. Each carries the fields a downstream analytics or replay
         system would actually consume (component name, rank, format, reason). The <code>arcId</code>{" "}
         field threads multiple events into a single named arc when you need it.
       </p>
