@@ -70,7 +70,7 @@ export type AnnotationFreshness = "fresh" | "aging" | "stale" | "expired"
  * - `latest` — re-pins to the most recent data point on each refresh.
  * - `sticky` — keeps its position until explicitly removed (same
  *   semantics as `RealtimeLineChart`'s `sticky` annotation anchor).
- * - `semantic` — re-resolves via `provenance.stable_id`, falling
+ * - `semantic` — re-resolves via `provenance.stableId`, falling
  *   back to the recorded coordinate when the anchor can no longer
  *   be located. Implementation lands in M3.
  */

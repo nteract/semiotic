@@ -19,7 +19,7 @@ afterEach(() => {
 // implementations.
 const stubCapability: ChartCapability = {
   component: "LineChart",
-  family: "xy",
+  family: "time-series",
   importPath: "semiotic/xy",
   rubric: { familiarity: 5, accuracy: 4, precision: 4 },
   fits: () => null,
@@ -30,6 +30,7 @@ const stubCapability: ChartCapability = {
 const stubProfile: ChartDataProfile = {
   rowCount: 0,
   fields: {},
+  sample: [],
   data: [],
   candidates: {
     x: [],
@@ -40,6 +41,13 @@ const stubProfile: ChartDataProfile = {
     time: [],
   },
   primary: {},
+  hasRepeatedX: false,
+  monotonicX: false,
+  hasTimeAxis: false,
+  xProvenance: "none",
+  hasHierarchy: false,
+  hasNetwork: false,
+  hasGeo: false,
 }
 
 describe("variantDiscovery — M1 stubs", () => {

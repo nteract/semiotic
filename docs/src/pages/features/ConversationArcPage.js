@@ -5,7 +5,7 @@ import {
   getConversationArcStore,
   withProvenance,
 } from "semiotic/ai"
-import { LineChart } from "semiotic"
+import { CategoryColorProvider, DotPlot, LineChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 
@@ -101,23 +101,60 @@ const TYPE_COLORS = {
   "chart-abandoned": "var(--semiotic-danger, #c43d3d)",
 }
 
+// Same palette as the button borders, but using the hex fallbacks
+// directly so the CategoryColorProvider hands canvas-renderable strings
+// to the DotPlot instead of unresolved `var(...)` references.
+const TYPE_COLORS_HEX = {
+  "suggestion-shown": "#3a8eff",
+  "suggestion-chosen": "#3a8eff",
+  "audience-set": "#d49a00",
+  "chart-rendered": "#2d8a4a",
+  "chart-edited": "#2d8a4a",
+  "chart-replaced": "#d49a00",
+  "chart-exported": "#6a52d9",
+  "chart-abandoned": "#c43d3d",
+}
+
+// Categories on the y-axis appear in the order the first event of
+// each type arrives. That's `sort: "auto"`'s streaming behavior on
+// DotPlot — honest with the "watch the arc unfold" framing.
+const timeFormat = (ms) => {
+  const d = new Date(ms)
+  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+}
+
 function ArcDemo() {
   const store = useMemo(() => getConversationArcStore(), [])
+  const chartRef = useRef(null)
+  const dotIdRef = useRef(0)
   const [enabled, setEnabled] = useState(store.enabled)
   const [events, setEvents] = useState(() => store.getEvents())
   const [sessionId, setSessionId] = useState(store.sessionId)
 
   useEffect(() => {
-    const unsubscribe = store.subscribe(() => {
+    const unsubscribe = store.subscribe((event) => {
       setEvents(store.getEvents())
       setSessionId(store.sessionId)
+      // Mirror the same event into the DotPlot via its push API.
+      // Stable ID per dot so the chart can update/remove individuals
+      // later if we ever want to.
+      chartRef.current?.push({
+        id: ++dotIdRef.current,
+        type: event.type,
+        time: event.timestamp,
+      })
     })
     return unsubscribe
   }, [store])
 
-  // Clean up on unmount so other docs pages aren't recording into our
-  // demo session.
-  useEffect(() => () => store.reset(), [store])
+  // Clean up on unmount so navigating away doesn't leave recording on
+  // for other consumers. Intentionally not `reset()` — that would wipe
+  // listeners other parts of the app sharing the same store may have
+  // attached.
+  useEffect(() => () => {
+    disableConversationArc()
+    store.clear()
+  }, [store])
 
   const toggle = () => {
     if (enabled) {
@@ -135,6 +172,8 @@ function ArcDemo() {
 
   const clear = () => {
     store.clear()
+    chartRef.current?.clear()
+    dotIdRef.current = 0
     setEvents([])
   }
 
@@ -215,8 +254,33 @@ function ArcDemo() {
         ))}
       </div>
 
+      <CategoryColorProvider colors={TYPE_COLORS_HEX}>
+        <DotPlot
+          ref={chartRef}
+          categoryAccessor="type"
+          valueAccessor="time"
+          dataIdAccessor="id"
+          colorBy="type"
+          orientation="horizontal"
+          dotRadius={6}
+          valueFormat={timeFormat}
+          height={260}
+          margin={{ left: 130, right: 24, top: 12, bottom: 36 }}
+          showLegend={false}
+          title="Events over time"
+          summary="Horizontal dot plot. Each dot is a recorded conversation-arc event placed at its timestamp on the x-axis and its event type on the y-axis. Colors match the event-type buttons above."
+          emptyContent={
+            <div style={{ color: "var(--text-secondary)", fontSize: 13, padding: "40px 0", textAlign: "center" }}>
+              {enabled
+                ? "Click an event button above — dots will arrive via the DotPlot push API."
+                : "Enable recording, then click an event button to drop dots onto the chart."}
+            </div>
+          }
+        />
+      </CategoryColorProvider>
+
       <div style={{
-        maxHeight: 280,
+        maxHeight: 220,
         overflowY: "auto",
         background: "var(--surface-2)",
         padding: 10,

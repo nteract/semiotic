@@ -20,4 +20,4 @@ export function generatePage(
   blogMeta?: BlogEntryMeta | null
 ): string
 
-export function prerender(): void
+export function prerender(): Promise<void>

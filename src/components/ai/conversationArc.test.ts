@@ -32,6 +32,37 @@ describe("conversationArc — default (disabled) surface", () => {
     expect(typeof unsub).toBe("function")
     expect(() => unsub()).not.toThrow()
   })
+
+  // Regression: a listener registered before enable used to silently
+  // drop because the per-session listener Set didn't exist yet. The
+  // docs demo subscribed at mount and saw no events until the user
+  // toggled enable, but no events arrived after that either.
+  it("delivers events to listeners that subscribed before enable", () => {
+    const seen: string[] = []
+    const unsub = getConversationArcStore().subscribe((e) => seen.push(e.type))
+
+    enableConversationArc()
+    getConversationArcStore().record({ type: "chart-rendered", component: "LineChart" })
+
+    expect(seen).toEqual(["chart-rendered"])
+    unsub()
+  })
+
+  it("keeps subscribers attached across disable / re-enable transitions", () => {
+    enableConversationArc()
+    const seen: string[] = []
+    const unsub = getConversationArcStore().subscribe((e) => seen.push(e.type))
+
+    getConversationArcStore().record({ type: "chart-rendered", component: "A" })
+    disableConversationArc()
+    // While disabled, record() returns null and listeners aren't notified.
+    getConversationArcStore().record({ type: "chart-rendered", component: "B" })
+    enableConversationArc()
+    getConversationArcStore().record({ type: "chart-rendered", component: "C" })
+
+    expect(seen).toEqual(["chart-rendered", "chart-rendered"])
+    unsub()
+  })
 })
 
 describe("conversationArc — enable / record / subscribe", () => {

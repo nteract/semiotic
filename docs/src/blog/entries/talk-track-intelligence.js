@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
-import { LineChart } from "semiotic"
+import { CategoryColorProvider, DotPlot, LineChart } from "semiotic"
 import {
   disableConversationArc,
   enableConversationArc,
@@ -75,13 +75,35 @@ const TYPE_COLOR = {
   "chart-abandoned": "#c43d3d",
 }
 
+const timeFormat = (ms) => {
+  const d = new Date(ms)
+  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+}
+
 function ConversationArcLiveDemo() {
   const store = useMemo(() => getConversationArcStore(), [])
+  const chartRef = useRef(null)
+  const dotIdRef = useRef(0)
   const [enabled, setEnabled] = useState(store.enabled)
   const [events, setEvents] = useState(() => store.getEvents())
 
-  useEffect(() => store.subscribe(() => setEvents(store.getEvents())), [store])
-  useEffect(() => () => store.reset(), [store])
+  useEffect(() => {
+    return store.subscribe((event) => {
+      setEvents(store.getEvents())
+      chartRef.current?.push({
+        id: ++dotIdRef.current,
+        type: event.type,
+        time: event.timestamp,
+      })
+    })
+  }, [store])
+
+  useEffect(() => () => {
+    // Don't `reset()` — that would wipe listeners other parts of the
+    // app might have set up. Just stop recording and drop the buffer.
+    disableConversationArc()
+    store.clear()
+  }, [store])
 
   const toggle = () => {
     if (enabled) {
@@ -136,14 +158,38 @@ function ConversationArcLiveDemo() {
         ))}
       </div>
 
+      <CategoryColorProvider colors={TYPE_COLOR}>
+        <DotPlot
+          ref={chartRef}
+          categoryAccessor="type"
+          valueAccessor="time"
+          dataIdAccessor="id"
+          colorBy="type"
+          orientation="horizontal"
+          dotRadius={6}
+          valueFormat={timeFormat}
+          height={240}
+          margin={{ left: 130, right: 24, top: 8, bottom: 32 }}
+          showLegend={false}
+          title="Events arriving via the DotPlot push API"
+          summary="Horizontal dot plot. Each dot is one recorded arc event; x is the timestamp, y is the event type, color matches the button above."
+          emptyContent={
+            <div style={{ color: "var(--text-secondary)", fontSize: 13, padding: "30px 0", textAlign: "center" }}>
+              {enabled ? "Click an event button — dots arrive via push API." : "Enable recording, then click buttons."}
+            </div>
+          }
+        />
+      </CategoryColorProvider>
+
       <div style={{
         background: "var(--surface-2)",
         borderRadius: 6,
         padding: 8,
         fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
         fontSize: 12,
-        maxHeight: 200,
+        maxHeight: 180,
         overflowY: "auto",
+        marginTop: 12,
       }}>
         {events.length === 0 ? (
           <em style={{ color: "var(--text-secondary)" }}>

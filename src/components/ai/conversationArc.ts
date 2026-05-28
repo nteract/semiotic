@@ -114,10 +114,18 @@ export type ConversationArcEvent =
  * Input shape accepted by `record()`: the event variant without the
  * stamped fields (`timestamp` and `sessionId`). Callers may still
  * provide them to backfill historical events.
+ *
+ * Implemented as a distributive conditional so each member of the
+ * discriminated union keeps its variant-specific payload (e.g.
+ * `SuggestionShownEvent.components`). A non-distributive
+ * `Omit<ConversationArcEvent, ...>` collapses to the union's common
+ * fields and rejects every variant-specific key.
  */
-export type ConversationArcEventInput =
-  & Omit<ConversationArcEvent, "timestamp" | "sessionId">
-  & Partial<Pick<ConversationArcEvent, "timestamp" | "sessionId">>
+export type ConversationArcEventInput = ConversationArcEvent extends infer E
+  ? E extends ConversationArcEvent
+    ? Omit<E, "timestamp" | "sessionId"> & Partial<Pick<E, "timestamp" | "sessionId">>
+    : never
+  : never
 
 export type ConversationArcListener = (event: ConversationArcEvent) => void
 
@@ -137,7 +145,13 @@ export interface ConversationArcStore {
   flush(): ConversationArcEvent[]
   /** Returns a snapshot of the current buffer without clearing. */
   getEvents(): ConversationArcEvent[]
-  /** Subscribe to new events. Returns an unsubscribe function. */
+  /**
+   * Subscribe to new events. Returns an unsubscribe function.
+   *
+   * Subscriptions persist across enable/disable transitions — a
+   * subscriber registered before `enableConversationArc()` still
+   * receives events once recording starts. Cleared by `reset()`.
+   */
   subscribe(listener: ConversationArcListener): () => void
   /** Empties the buffer without disabling the store. */
   clear(): void
@@ -154,12 +168,19 @@ export interface EnableConversationArcOptions {
 
 let store: ConversationArcStoreInternal | null = null
 
+// Subscriptions live at module scope, outside the per-session store,
+// so a subscriber registered before `enableConversationArc()` (e.g. a
+// React effect that runs at mount before the user clicks "enable") is
+// still attached once recording starts. Cleared by `reset()`; never
+// touched by `disable()` since buffered events stay correlatable and
+// re-enable should resume notifying.
+const listeners = new Set<ConversationArcListener>()
+
 interface ConversationArcStoreInternal {
   enabled: boolean
   sessionId: string
   capacity: number
   buffer: ConversationArcEvent[]
-  listeners: Set<ConversationArcListener>
 }
 
 function newSessionId(): string {
@@ -195,7 +216,6 @@ export function enableConversationArc(
       sessionId: options.sessionId ?? newSessionId(),
       capacity,
       buffer: [],
-      listeners: new Set(),
     }
   } else {
     store.enabled = true
@@ -247,7 +267,7 @@ const facade: ConversationArcStore = {
     } as ConversationArcEvent
     s.buffer.push(event)
     while (s.buffer.length > s.capacity) s.buffer.shift()
-    for (const listener of s.listeners) {
+    for (const listener of listeners) {
       try {
         listener(event)
       } catch (err) {
@@ -272,11 +292,11 @@ const facade: ConversationArcStore = {
     return s ? s.buffer.slice() : []
   },
   subscribe(listener) {
-    const s = ensureStore()
-    if (!s) return () => {}
-    s.listeners.add(listener)
+    // Subscriptions persist across enable/disable transitions — see
+    // the module-scope `listeners` Set above for the rationale.
+    listeners.add(listener)
     return () => {
-      s.listeners.delete(listener)
+      listeners.delete(listener)
     }
   },
   clear() {
@@ -284,8 +304,8 @@ const facade: ConversationArcStore = {
     if (s) s.buffer = []
   },
   reset() {
+    listeners.clear()
     if (!store) return
-    store.listeners.clear()
     store.buffer = []
     store.enabled = false
     store = null
