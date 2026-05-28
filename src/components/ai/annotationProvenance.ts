@@ -401,7 +401,12 @@ export function applyAnnotationLifecycle<T>(
     const dashArray = pick(options.strokeDasharray, DEFAULT_DASHARRAY, freshness)
     const suffix = options.labelSuffix?.[freshness]
 
-    const next: Annotated<T> & { opacity?: number; strokeDasharray?: string; label?: string } = {
+    const next: Annotated<T> & {
+      opacity?: number
+      strokeDasharray?: string
+      label?: string
+      anchor?: AnnotationAnchor
+    } = {
       ...annotation,
       lifecycle: { ...annotation.lifecycle, freshness },
     }
@@ -416,6 +421,15 @@ export function applyAnnotationLifecycle<T>(
     }
     if (suffix && typeof (next as { label?: string }).label === "string") {
       next.label = (next as { label: string }).label + suffix
+    }
+
+    // Mirror `lifecycle.anchor` onto the top-level `anchor` field so
+    // the streaming annotation resolver (which reads `ann.anchor`,
+    // not `ann.lifecycle.anchor`) picks up the requested mode. The
+    // top-level field still wins if a caller set it explicitly.
+    const lifecycleAnchor = annotation.lifecycle?.anchor
+    if (lifecycleAnchor && (next as { anchor?: AnnotationAnchor }).anchor == null) {
+      next.anchor = lifecycleAnchor
     }
 
     out.push(next)

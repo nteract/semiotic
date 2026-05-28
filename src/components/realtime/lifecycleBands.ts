@@ -55,10 +55,17 @@ export const DEFAULT_LIFECYCLE_THRESHOLDS: Required<LifecycleBandThresholds> = {
 /**
  * Classify an age into a named band given a TTL.
  *
- * Pure function. Negative `ageMs` (future-dated items) classifies as
- * `fresh`. Non-finite or non-positive `ttlMs` returns `fresh` rather
- * than diving by zero — callers that need stricter handling should
- * gate `ttlMs` before calling.
+ * Pure function. Edge cases:
+ *
+ * - **Negative age** (future-dated items): classifies as `fresh`.
+ * - **`NaN` age** (parse failure or `now - undefined`): classifies as
+ *   `fresh` — the safer default, since `expired` is filtered by the
+ *   visual treatment.
+ * - **`+Infinity` age**: classifies as `expired`. Monotonic in age —
+ *   "older than any finite TTL multiple" should be the oldest band.
+ * - **Non-finite / non-positive TTL**: classifies as `fresh`, since
+ *   there's no meaningful interval to age against. Callers that need
+ *   stricter handling should gate `ttlMs` before calling.
  */
 export function bandFromAge(
   ageMs: number,
@@ -66,7 +73,11 @@ export function bandFromAge(
   thresholds: LifecycleBandThresholds = {}
 ): LifecycleBand {
   if (!Number.isFinite(ttlMs) || ttlMs <= 0) return "fresh"
-  if (!Number.isFinite(ageMs) || ageMs < 0) return "fresh"
+  // `NaN` is the parse-failure sentinel — be lenient. `+Infinity` is a
+  // real "older than possible" signal — be strict.
+  if (Number.isNaN(ageMs)) return "fresh"
+  if (ageMs === Infinity) return "expired"
+  if (ageMs < 0) return "fresh"
 
   const fresh = thresholds.fresh ?? DEFAULT_LIFECYCLE_THRESHOLDS.fresh
   const aging = thresholds.aging ?? DEFAULT_LIFECYCLE_THRESHOLDS.aging

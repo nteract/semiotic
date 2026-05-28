@@ -278,6 +278,34 @@ describe("annotationProvenance — applyAnnotationLifecycle", () => {
     const styled = out[0] as unknown as { opacity?: number }
     expect(styled.opacity).toBeUndefined()
   })
+
+  it("mirrors lifecycle.anchor onto top-level anchor so the resolver picks it up", () => {
+    // The streaming annotation resolver reads `ann.anchor`, not
+    // `ann.lifecycle.anchor`. Without this bridge, setting
+    // `lifecycle.anchor: "latest"` would silently fall through to
+    // fixed behavior at runtime.
+    const a = withProvenance(
+      { type: "callout", label: "x", id: "anchored" },
+      {
+        provenance: { author: "alice", createdAt: day(1) },
+        lifecycle: { ttlHint: "P30D", anchor: "latest" },
+      }
+    )
+    const out = applyAnnotationLifecycle([a], { now: day(5) })
+    expect((out[0] as unknown as { anchor?: string }).anchor).toBe("latest")
+  })
+
+  it("preserves an explicit top-level anchor over lifecycle.anchor", () => {
+    const a = withProvenance(
+      { type: "callout", label: "x", id: "anchored", anchor: "sticky" },
+      {
+        provenance: { author: "alice", createdAt: day(1) },
+        lifecycle: { ttlHint: "P30D", anchor: "latest" },
+      }
+    )
+    const out = applyAnnotationLifecycle([a], { now: day(5) })
+    expect((out[0] as unknown as { anchor?: string }).anchor).toBe("sticky")
+  })
 })
 
 describe("annotationProvenance — currentTimestamp / withCurrentProvenance", () => {

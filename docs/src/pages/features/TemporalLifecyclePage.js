@@ -1,10 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { LineChart } from "semiotic"
 import {
   applyAnnotationLifecycle,
   bandFromAge,
-  currentTimestamp,
   withCurrentProvenance,
 } from "semiotic/ai"
 import PageLayout from "../../components/PageLayout"
@@ -109,20 +108,21 @@ function BandScrubber() {
 
 const STREAM_TICK = 1500 // ms between data points
 const STREAM_WINDOW = 12
+const ANNOTATION_TTL_MS = 3000 // 3s TTL keeps the demo fast: aging at 3s, stale at 4.5s, expired at 9s
 
 function StreamingAgingDemo() {
-  const [data, setData] = useState(() => [{ t: 0, value: 50, annotated: false }])
+  const startTimeRef = useRef(Date.now())
+  const [data, setData] = useState(() => [{ t: Date.now(), value: 50 }])
   const [annotation, setAnnotation] = useState(null)
-  const tickRef = useRef(0)
   const playingRef = useRef(true)
   const [playing, setPlaying] = useState(true)
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (!playingRef.current) return
-      tickRef.current++
-      const t = tickRef.current
-      const value = 50 + Math.sin(t * 0.4) * 18 + (Math.random() - 0.5) * 10
+      const t = Date.now()
+      const tickIndex = (t - startTimeRef.current) / STREAM_TICK
+      const value = 50 + Math.sin(tickIndex * 0.4) * 18 + (Math.random() - 0.5) * 10
       setData((prev) => {
         const next = [...prev, { t, value }]
         return next.length > STREAM_WINDOW ? next.slice(-STREAM_WINDOW) : next
@@ -139,6 +139,9 @@ function StreamingAgingDemo() {
   const markLatest = () => {
     const latest = data[data.length - 1]
     if (!latest) return
+    // `withCurrentProvenance` stamps `provenance.createdAt = currentTimestamp()`.
+    // Combined with the short ttlHint below, the annotation will age as
+    // the chart's data extent advances past it.
     setAnnotation(
       withCurrentProvenance(
         {
@@ -146,26 +149,27 @@ function StreamingAgingDemo() {
           t: latest.t,
           value: latest.value,
           label: "Marked here",
-          dx: -40,
+          dx: -50,
           dy: -45,
+          lifecycle: { ttlHint: ANNOTATION_TTL_MS },
         },
         { author: "you", source: "user" }
       )
     )
   }
 
-  // The chart's data extent IS the chart's clock. applyAnnotationLifecycle
-  // picks the latest data point as "now" — annotations created against
-  // earlier data points age automatically as the stream advances.
-  const dataExtent = data.length
-    ? [Date.parse(data[0].timestamp ?? new Date().toISOString()), Date.now()]
-    : [Date.now(), Date.now()]
+  // The chart's data extent IS its clock. Passing dataExtent makes
+  // the latest data point the "now" reference for the lifecycle pass,
+  // so annotations age against chart-time. If the stream pauses, the
+  // annotation stops aging — which is what you want for a live
+  // dashboard where pause means "frozen in time."
   const annotated = annotation
     ? applyAnnotationLifecycle([annotation], {
-        // Tiny TTL so the demo can show aging in real time.
-        thresholds: { fresh: 1, aging: 1.5, stale: 3 },
+        dataExtent: [data[0].t, data[data.length - 1].t],
       })
     : []
+
+  const xFormat = (t) => `${((t - startTimeRef.current) / 1000).toFixed(1)}s`
 
   return (
     <div style={{
@@ -185,6 +189,7 @@ function StreamingAgingDemo() {
         height={260}
         showPoints
         annotations={annotated}
+        xFormat={xFormat}
         margin={{ top: 24, right: 24, bottom: 36, left: 48 }}
       />
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -233,9 +238,10 @@ function StreamingAgingDemo() {
       </div>
       <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
         Stamp the latest point, then let the stream run. The annotation
-        was created with <code>withCurrentProvenance</code> — once it
-        falls outside the chart's data window plus a few seconds, the
-        lifecycle treatment dims it, then dashes it, then drops it.
+        has a 3-second TTL — at 3s past the latest data point it goes{" "}
+        <strong>aging</strong>, at 4.5s <strong>stale</strong> (dashed),
+        at 9s it's filtered out. Pause the stream and the annotation
+        stops aging too: chart-time is the data, not the wall.
       </p>
     </div>
   )
@@ -363,13 +369,22 @@ bandFromAge(20_000, 8000, { fresh: 2, aging: 3, stale: 6 }) // "fresh"`}
   withCurrentProvenance,
 } from "semiotic/ai"
 
-// Stamp the annotation at the moment of creation.
+// Stamp createdAt at the moment of creation; attach a ttlHint so the
+// lifecycle pass has something to age against.
 const ann = withCurrentProvenance(
-  { type: "callout", t: latestTimestamp, value: latestValue, label: "Spike" },
+  {
+    type: "callout",
+    t: latestTimestamp,
+    value: latestValue,
+    label: "Spike",
+    lifecycle: { ttlHint: 3000 }, // 3 seconds
+  },
   { author: "you", source: "user" }
 )
 
-// Pass the chart's data extent so aging tracks chart-time.
+// Pass the chart's data extent so "now" tracks chart-time. When the
+// stream pauses, the latest data timestamp stops advancing, and the
+// annotation stops aging too.
 <LineChart
   data={streamingData}
   xAccessor="t"

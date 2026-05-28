@@ -27,13 +27,15 @@ describe("bandFromAge", () => {
     expect(bandFromAge(20 * DAY, ttl, { aging: 3, stale: 5 })).toBe("aging")
   })
 
-  it("treats negative or non-finite ages as fresh (safest default — expired can be hidden)", () => {
+  it("treats negative and NaN ages as fresh (parse-failure sentinel)", () => {
     expect(bandFromAge(-100, 1000)).toBe("fresh")
     expect(bandFromAge(NaN, 1000)).toBe("fresh")
-    // Infinity is treated as a parse-failure sentinel rather than
-    // "infinitely old," since callers commonly forward through
-    // upstream `?? Infinity` defaults.
-    expect(bandFromAge(Infinity, 1000)).toBe("fresh")
+  })
+
+  it("classifies +Infinity age as expired (monotonic-in-age contract)", () => {
+    // Real "older than any finite TTL multiple" signal — must land in
+    // the oldest band, not silently be re-classified as fresh.
+    expect(bandFromAge(Infinity, 1000)).toBe("expired")
   })
 
   it("treats non-positive or non-finite TTLs as fresh (no divide-by-zero)", () => {
