@@ -311,7 +311,7 @@ export default function SerializationPage() {
         { label: "Intelligence", path: "/intelligence" },
         { label: "Serialization", path: "/intelligence/serialization" },
       ]}
-      prevPage={{ title: "Conversation Arc", path: "/intelligence/conversation-arc" }}
+      prevPage={{ title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" }}
       nextPage={{ title: "Vega-Lite Translator", path: "/intelligence/vega-lite" }}
     >
       <p>

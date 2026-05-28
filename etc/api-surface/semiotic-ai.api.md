@@ -16,6 +16,7 @@ const ChordDiagramCapability
 const ChoroplethMapCapability
 const CirclePackCapability
 const ConnectedScatterplotCapability
+const DEFAULT_LIFECYCLE_THRESHOLDS
 const DifferenceChartCapability
 const DistanceCartogramCapability
 const DonutChartCapability
@@ -100,10 +101,15 @@ function TooltipProvider
 function TreeDiagram
 function Treemap
 function ViolinPlot
+function annotationFreshnessFor
+function applyAnnotationLifecycle
 function applyAudienceBias
+function bandFromAge
 function clearVariantDiscovery
+function computeAnnotationFreshness
 function configToJSX
 function copyConfig
+function currentTimestamp
 function deserializeSelections
 function diagnoseConfig
 function diffProfile
@@ -155,8 +161,10 @@ function useLinkedHover
 function useSelection
 function useTheme
 function validateProps
+function withCurrentProvenance
 function withProvenance
 interface AnnotationLifecycle
+interface AnnotationLifecycleTreatment
 interface AnnotationProvenance
 interface AnomalyConfig
 interface AudienceBiasResult
@@ -182,6 +190,7 @@ interface ChartRubric
 interface ChartVariant
 interface ClickEndObservation
 interface ClickObservation
+interface ComputeAnnotationFreshnessOptions
 interface ContextLayoutProps
 interface ConversationArcStore
 interface DashboardPanel
@@ -204,6 +213,7 @@ interface InterrogationContext
 interface InterrogationFocus
 interface InterrogationMessage
 interface InterrogationResult
+interface LifecycleBandThresholds
 interface NumericFieldSummary
 interface PerCapabilityScore
 interface PerFixtureScore
@@ -252,6 +262,7 @@ type Annotated
 type AnnotationAnchor
 type AnnotationFreshness
 type AnnotationSource
+type ApplyAnnotationLifecycleOptions
 type BuiltInIntentId
 type CategoryColorMap
 type ChartFamily
@@ -270,6 +281,7 @@ type FitResult
 type IntentId
 type IntentScorer
 type InterrogationQuery
+type LifecycleBand
 type OnObservationCallback
 type PrimaryRole
 type ProposeVariantFn

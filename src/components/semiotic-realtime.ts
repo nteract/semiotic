@@ -72,3 +72,9 @@ export type {
   StreamStatusOptions,
   StreamStatusResult,
 } from "./charts/shared/useStreamStatus"
+
+// Shared lifecycle classifier — used by the annotation freshness
+// surface today, available to future banded-decay / banded-staleness
+// opt-ins without each system re-implementing the schedule.
+export { bandFromAge, DEFAULT_LIFECYCLE_THRESHOLDS } from "./realtime/lifecycleBands"
+export type { LifecycleBand, LifecycleBandThresholds } from "./realtime/lifecycleBands"

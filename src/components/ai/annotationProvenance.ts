@@ -61,20 +61,29 @@ export type AnnotationSource =
  * draws a dashed border, `expired` is hidden unless
  * `showExpiredAnnotations` is on.
  */
-export type AnnotationFreshness = "fresh" | "aging" | "stale" | "expired"
+// Alias of `LifecycleBand` (which lives next to `bandFromAge` in the
+// realtime runtime). Keeping the public name `AnnotationFreshness`
+// for the AI surface but pointing it at the shared union prevents
+// drift if future bands are added.
+export type AnnotationFreshness = LifecycleBand
 
-/**
- * How the annotation's anchor is resolved when data updates.
- *
- * - `fixed` — keeps the recorded coordinate verbatim.
- * - `latest` — re-pins to the most recent data point on each refresh.
- * - `sticky` — keeps its position until explicitly removed (same
- *   semantics as `RealtimeLineChart`'s `sticky` annotation anchor).
- * - `semantic` — re-resolves via `provenance.stableId`, falling
- *   back to the recorded coordinate when the anchor can no longer
- *   be located. Implementation lands in M3.
- */
-export type AnnotationAnchor = "fixed" | "latest" | "sticky" | "semantic"
+// Re-export the canonical anchor type from the streaming runtime,
+// which owns the resolution implementation. Same union of modes
+// either way — defining once means the AI lifecycle vocabulary and
+// the streaming runtime can't drift. Imported locally because
+// `AnnotationLifecycle` below references it.
+import type { AnnotationAnchor } from "../realtime/types"
+export type { AnnotationAnchor } from "../realtime/types"
+
+// `bandFromAge` is the shared lifecycle-classification primitive.
+// Same algorithm whether we're tagging annotations (today),
+// classifying datums in a streaming buffer (banded decay, future),
+// or surfacing staleness bands instead of binary live/stale (future).
+// Imported locally because `annotationFreshnessFor` wraps it.
+import { bandFromAge } from "../realtime/lifecycleBands"
+import type { LifecycleBand, LifecycleBandThresholds } from "../realtime/lifecycleBands"
+export { bandFromAge, DEFAULT_LIFECYCLE_THRESHOLDS } from "../realtime/lifecycleBands"
+export type { LifecycleBand, LifecycleBandThresholds } from "../realtime/lifecycleBands"
 
 /**
  * Lifecycle state for an annotation. Lives on `annotation.lifecycle`.
@@ -136,4 +145,294 @@ export function withProvenance<T extends object>(
   if (blocks.provenance) next.provenance = blocks.provenance
   if (blocks.lifecycle) next.lifecycle = blocks.lifecycle
   return next
+}
+
+/**
+ * Returns an ISO 8601 wall-clock timestamp suitable for stamping
+ * `provenance.createdAt`. Sugar over `new Date().toISOString()`, but
+ * named to make intent obvious in streaming consumers: "mark this
+ * annotation as created now, so the lifecycle helpers can age it."
+ *
+ * Pair with `applyAnnotationLifecycle({ dataExtent })` on time-series
+ * charts to have annotations age against chart-time rather than
+ * wall-clock — the chart's latest data point becomes the "now"
+ * reference, and recently-stamped annotations stay fresh for as long
+ * as new data is flowing.
+ */
+export function currentTimestamp(): string {
+  return new Date().toISOString()
+}
+
+/**
+ * Stamp an annotation with `provenance.createdAt = currentTimestamp()`
+ * (unless it already has a `createdAt`) and optional additional
+ * provenance fields. Intended for the streaming "I'm marking the
+ * latest data point" pattern, where the annotation's age should be
+ * measured from when the consumer added it.
+ *
+ * Equivalent to:
+ *   ```ts
+ *   withProvenance(ann, {
+ *     provenance: { createdAt: currentTimestamp(), ...rest },
+ *     lifecycle: ann.lifecycle,
+ *   })
+ *   ```
+ * — but reads cleaner at call sites and preserves any existing
+ * `createdAt`.
+ */
+export function withCurrentProvenance<T extends object>(
+  annotation: T,
+  rest: Omit<AnnotationProvenance, "createdAt"> & { createdAt?: string } = {}
+): Annotated<T> {
+  const existing = (annotation as Annotated<T>).provenance
+  return {
+    ...annotation,
+    provenance: {
+      ...existing,
+      ...rest,
+      createdAt: rest.createdAt ?? existing?.createdAt ?? currentTimestamp(),
+    },
+  } as Annotated<T>
+}
+
+// ── Freshness computation (M2) ────────────────────────────────────────
+
+/**
+ * Options accepted by `computeAnnotationFreshness` and
+ * `applyAnnotationLifecycle`.
+ */
+export interface ComputeAnnotationFreshnessOptions {
+  /**
+   * "Now" reference for age calculations. Number is epoch ms; string is
+   * any value `Date.parse` accepts. When omitted, defaults to the max
+   * of `dataExtent`, falling back to `Date.now()`.
+   */
+  now?: number | Date | string
+  /**
+   * The chart's current temporal extent — typically `[oldest, newest]`
+   * x values. Used to derive a sensible "now" for streaming charts
+   * (where wall-clock time and the data's notion of "now" can drift).
+   */
+  dataExtent?:
+    | ReadonlyArray<number | Date | string>
+    | { min: number | Date | string; max: number | Date | string }
+  /**
+   * Override the default age thresholds. Each value is a multiplier of
+   * `ttlHint`. Defaults: aging at 1×, stale at 1.5×, expired at 3×.
+   * Same shape as `LifecycleBandThresholds` from the shared primitive.
+   */
+  thresholds?: LifecycleBandThresholds
+}
+
+function toMs(value: number | Date | string | undefined): number | null {
+  if (value == null) return null
+  if (typeof value === "number") return value
+  if (value instanceof Date) return value.getTime()
+  const parsed = Date.parse(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function resolveNow(options?: ComputeAnnotationFreshnessOptions): number {
+  const explicit = toMs(options?.now)
+  if (explicit != null) return explicit
+  const extent = options?.dataExtent
+  if (extent) {
+    // `Array.isArray` does narrow ReadonlyArray vs. object in modern TS,
+    // but the union including `{ min, max }` confuses it; fall back to
+    // `"max" in extent` for the object branch.
+    if (Array.isArray(extent)) {
+      const last = extent[extent.length - 1]
+      const ms = toMs(last)
+      if (ms != null) return ms
+    } else if ("max" in extent) {
+      const ms = toMs(extent.max)
+      if (ms != null) return ms
+    }
+  }
+  return Date.now()
+}
+
+function parseIsoDuration(s: string): number {
+  const m = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(s)
+  if (!m) return 0
+  const days = parseInt(m[1] || "0", 10)
+  const hours = parseInt(m[2] || "0", 10)
+  const minutes = parseInt(m[3] || "0", 10)
+  const seconds = parseInt(m[4] || "0", 10)
+  return ((days * 24 + hours) * 3600 + minutes * 60 + seconds) * 1000
+}
+
+function ttlToMs(ttl: string | number | undefined): number | null {
+  if (ttl == null) return null
+  if (typeof ttl === "number") return ttl
+  const parsed = parseIsoDuration(ttl)
+  return parsed > 0 ? parsed : null
+}
+
+/**
+ * Classify an annotation into a freshness band. Exported for tests and
+ * for consumers that want the per-annotation band without rebuilding
+ * the entire array.
+ *
+ * Returns the annotation's existing `lifecycle.freshness` verbatim if
+ * the annotation lacks the `createdAt` or `ttlHint` needed to compute
+ * a band — i.e. an explicit assignment always wins over inference.
+ */
+export function annotationFreshnessFor<T>(
+  annotation: Annotated<T>,
+  nowMs: number,
+  thresholds: LifecycleBandThresholds = {}
+): AnnotationFreshness {
+  const existing = annotation?.lifecycle?.freshness
+  const createdMs = toMs(annotation?.provenance?.createdAt)
+  const ttlMs = ttlToMs(annotation?.lifecycle?.ttlHint)
+  if (createdMs == null || ttlMs == null) {
+    return existing ?? "fresh"
+  }
+  // Defer to the shared lifecycle classifier — same algorithm any
+  // future banded-decay / banded-staleness opt-in will use.
+  return bandFromAge(nowMs - createdMs, ttlMs, thresholds)
+}
+
+/**
+ * Walk an annotations array and populate `lifecycle.freshness` on each
+ * entry from its `provenance.createdAt` and `lifecycle.ttlHint`.
+ *
+ * Pure function — returns a new array; does not mutate input. Safe
+ * to call in SSR. Annotations missing the inputs needed to compute a
+ * band keep whatever `lifecycle.freshness` they already had (so an
+ * explicit assignment always wins).
+ *
+ * For non-temporal charts, pass `now` explicitly. For streaming /
+ * time-series charts, pass `dataExtent` — the helper picks the latest
+ * value as "now" so freshness tracks chart-time, not wall-clock.
+ */
+export function computeAnnotationFreshness<T>(
+  annotations: ReadonlyArray<Annotated<T>>,
+  options: ComputeAnnotationFreshnessOptions = {}
+): Annotated<T>[] {
+  const nowMs = resolveNow(options)
+  return annotations.map((a) => {
+    const freshness = annotationFreshnessFor(a, nowMs, options.thresholds)
+    return {
+      ...a,
+      lifecycle: { ...a.lifecycle, freshness },
+    }
+  })
+}
+
+// ── Default visual treatment (M2) ─────────────────────────────────────
+
+/**
+ * Style overrides per freshness band. Each map is partial — bands not
+ * present fall back to the defaults below. `null` for a value removes
+ * the default rather than applying it (e.g. `{ opacity: { aging: null } }`
+ * disables dimming aging annotations).
+ */
+export interface AnnotationLifecycleTreatment {
+  opacity?: Partial<Record<AnnotationFreshness, number | null>>
+  strokeDasharray?: Partial<Record<AnnotationFreshness, string | null>>
+  /** Suffix appended to `label` for that band. Default suffixes are off. */
+  labelSuffix?: Partial<Record<AnnotationFreshness, string>>
+  /**
+   * When true, expired annotations stay in the returned array (with
+   * the expired treatment applied). When false (default), expired
+   * annotations are filtered out — matching the "hidden by default"
+   * contract from the talk-readiness roadmap.
+   */
+  showExpiredAnnotations?: boolean
+}
+
+export type ApplyAnnotationLifecycleOptions =
+  ComputeAnnotationFreshnessOptions & AnnotationLifecycleTreatment
+
+const DEFAULT_OPACITY: Record<AnnotationFreshness, number | null> = {
+  fresh: null,
+  aging: 0.55,
+  stale: 0.35,
+  expired: 0.2,
+}
+
+const DEFAULT_DASHARRAY: Record<AnnotationFreshness, string | null> = {
+  fresh: null,
+  aging: null,
+  stale: "4 4",
+  expired: "2 4",
+}
+
+function pick<V>(
+  overrides: Partial<Record<AnnotationFreshness, V | null>> | undefined,
+  defaults: Record<AnnotationFreshness, V | null>,
+  band: AnnotationFreshness
+): V | null {
+  if (overrides && band in overrides) return overrides[band] as V | null
+  return defaults[band]
+}
+
+/**
+ * Compute freshness and apply the default visual treatment in one pass.
+ *
+ * Behavior per band (overridable via options):
+ * - **fresh** — no change
+ * - **aging** — `opacity` 0.55
+ * - **stale** — `opacity` 0.35, `strokeDasharray` `"4 4"` (cascades
+ *   through the annotation's stroked children)
+ * - **expired** — filtered out by default; pass
+ *   `showExpiredAnnotations: true` to keep them with `opacity` 0.2 and
+ *   `strokeDasharray` `"2 4"`
+ *
+ * Treatment composes cleanly with annotations that already carry their
+ * own `color` / `opacity` — explicit fields on the annotation win,
+ * the treatment only fills in what isn't already set.
+ */
+export function applyAnnotationLifecycle<T>(
+  annotations: ReadonlyArray<Annotated<T>>,
+  options: ApplyAnnotationLifecycleOptions = {}
+): Annotated<T>[] {
+  const nowMs = resolveNow(options)
+  const showExpired = options.showExpiredAnnotations === true
+
+  const out: Annotated<T>[] = []
+  for (const annotation of annotations) {
+    const freshness = annotationFreshnessFor(annotation, nowMs, options.thresholds)
+    if (freshness === "expired" && !showExpired) continue
+
+    const opacity = pick(options.opacity, DEFAULT_OPACITY, freshness)
+    const dashArray = pick(options.strokeDasharray, DEFAULT_DASHARRAY, freshness)
+    const suffix = options.labelSuffix?.[freshness]
+
+    const next: Annotated<T> & {
+      opacity?: number
+      strokeDasharray?: string
+      label?: string
+      anchor?: AnnotationAnchor
+    } = {
+      ...annotation,
+      lifecycle: { ...annotation.lifecycle, freshness },
+    }
+
+    // Only fill the prop when the caller hasn't already set it on the
+    // annotation itself — explicit annotation fields win.
+    if (opacity != null && (next as { opacity?: number }).opacity == null) {
+      next.opacity = opacity
+    }
+    if (dashArray != null && (next as { strokeDasharray?: string }).strokeDasharray == null) {
+      next.strokeDasharray = dashArray
+    }
+    if (suffix && typeof (next as { label?: string }).label === "string") {
+      next.label = (next as { label: string }).label + suffix
+    }
+
+    // Mirror `lifecycle.anchor` onto the top-level `anchor` field so
+    // the streaming annotation resolver (which reads `ann.anchor`,
+    // not `ann.lifecycle.anchor`) picks up the requested mode. The
+    // top-level field still wins if a caller set it explicitly.
+    const lifecycleAnchor = annotation.lifecycle?.anchor
+    if (lifecycleAnchor && (next as { anchor?: AnnotationAnchor }).anchor == null) {
+      next.anchor = lifecycleAnchor
+    }
+
+    out.push(next)
+  }
+  return out
 }

@@ -239,7 +239,7 @@ All HOCs accept `annotations` (array). Coordinates use data field names.
 **Ordinal**: `category-highlight`
 **Enclosures**: `enclose`, `rect-enclose`, `highlight`
 **Statistical**: `trend`, `envelope`, `anomaly-band`, `forecast`
-**Streaming anchors**: `"fixed"` | `"latest"` | `"sticky"`
+**Streaming anchors**: `"fixed"` | `"latest"` | `"sticky"` | `"semantic"` — also exposed as `lifecycle.anchor` on the `semiotic/ai` annotation lifecycle. Same `AnnotationAnchor` type either way; `"semantic"` re-resolves via `provenance.stableId` (runtime support landing incrementally).
 
 ## Theming
 
@@ -342,24 +342,62 @@ store.record({ type: "suggestion-shown", components: ["LineChart"], intent: "tre
 ```
 
 ### Annotation provenance + lifecycle (`semiotic/ai`, types also re-exported from `semiotic`)
-Type surface for "where did this annotation come from?" and "is it stale?" Optional blocks attached to any annotation — existing arrays keep working unchanged.
+Tracks "where did this annotation come from?" and "is it stale?" Two optional blocks attach to any annotation — existing arrays keep working unchanged.
 - **`provenance`**: `{ author?, source?, confidence?, createdAt?, stableId? }`. `source` is an open string union (`"user" | "ai" | "agent" | "import" | "computed" | "system" | (string & {})`).
 - **`lifecycle`**: `{ freshness?, ttlHint?, anchor? }`. `freshness` is `"fresh" | "aging" | "stale" | "expired"`. `anchor` is `"fixed" | "latest" | "sticky" | "semantic"`. `ttlHint` accepts an ISO 8601 duration string (`"P30D"`) or milliseconds.
 - **`withProvenance(annotation, { provenance?, lifecycle? })`** → returns a new annotation with the blocks attached. Pure, SSR-safe.
 - **`Annotated<T>`** type alias: `T & { provenance?, lifecycle? }`. Use for explicit typing.
-- Type surface only at this stage. Freshness computation, default visual treatment, and stable-id anchor resolution land later.
+- **`computeAnnotationFreshness(annotations, { now?, dataExtent?, thresholds? })`** → returns annotations with `lifecycle.freshness` populated based on `createdAt` + `ttlHint`. `now` defaults to `dataExtent`'s max, then `Date.now()`. Custom thresholds override the default 1× / 1.5× / 3× TTL breakpoints.
+- **`annotationFreshnessFor(annotation, nowMs, thresholds?)`** → classifies a single annotation. Honors any pre-existing `lifecycle.freshness` (explicit assignment wins).
+- **`applyAnnotationLifecycle(annotations, { now?, dataExtent?, opacity?, strokeDasharray?, labelSuffix?, showExpiredAnnotations?, thresholds? })`** → composes the freshness pass with a default visual treatment: aging dims (opacity 0.55), stale dims more + dashes (strokeDasharray `"4 4"`), expired is filtered out (set `showExpiredAnnotations: true` to keep). Per-band overrides via the options; pass `null` for a band to disable that default. Annotation `opacity` / `strokeDasharray` set explicitly on the annotation win over the treatment. Annotation renderer cascades both as SVG presentation attributes to every stroked / filled child.
+- Still owed (M3): stable-id anchor resolution after data refresh.
 
 ```ts
-import { withProvenance } from "semiotic/ai"
+import { withProvenance, applyAnnotationLifecycle } from "semiotic/ai"
 
 const ann = withProvenance(
-  { type: "y-threshold", value: 100, label: "SLA breach" },
+  { type: "y-threshold", value: 100, label: "SLA breach", color: "#3a8eff" },
   {
     provenance: { author: "alice", source: "user", createdAt: "2026-05-20T14:00:00Z" },
     lifecycle: { ttlHint: "P30D", anchor: "semantic" },
   },
 )
+
+// Pass through the lifecycle treatment before handing to a chart.
+<LineChart annotations={applyAnnotationLifecycle([ann], { dataExtent: [t0, tNow] })} />
 ```
+
+### Temporal lifecycle (shared between `semiotic/realtime` + `semiotic/ai`)
+Three Semiotic systems answer "how does this thing look as it ages?" with three different policies on three different time axes. They are *not* interchangeable — pick the one that matches the question.
+
+| Policy | Lives in | Time axis | Output | Scope |
+|---|---|---|---|---|
+| `DecayConfig` | `semiotic/realtime` | buffer position | continuous opacity ramp | per-datum |
+| `StalenessConfig` | `semiotic/realtime` | wall-clock idle | binary live/stale (+ optional badge) | chart-wide |
+| Annotation freshness | `semiotic/ai` | `createdAt` + `ttlHint` | 4 named bands (opacity + dashing + expired filter) | per-annotation |
+
+Shared primitive that bridges them: **`bandFromAge(ageMs, ttlMs, thresholds?)`** → `"fresh" | "aging" | "stale" | "expired"`. Pure function exported from both `semiotic/realtime` and `semiotic/ai`. `DEFAULT_LIFECYCLE_THRESHOLDS = { fresh: 1.0, aging: 1.5, stale: 3.0 }` (multipliers of TTL). Annotation freshness uses this primitive today; future banded-decay or banded-staleness opt-ins can plug into the same classifier.
+
+**Anchor mode** (`"fixed" | "latest" | "sticky" | "semantic"`) is also shared — `AnnotationAnchor` from `semiotic/realtime` is the canonical type, re-exported from `semiotic/ai` as `lifecycle.anchor`. `"semantic"` re-resolves via `provenance.stableId` (runtime support landing incrementally).
+
+**Streaming chart-time aging**: pass the chart's `dataExtent` to `applyAnnotationLifecycle` and the latest data point becomes the "now" reference. Annotations age against chart-time, not wall-clock — useful when streams pause or run slow. Pair with `withCurrentProvenance(annotation, { author?, source? })` or `currentTimestamp()` to auto-stamp `createdAt` at the moment of creation.
+
+```ts
+import { bandFromAge, withCurrentProvenance, applyAnnotationLifecycle } from "semiotic/ai"
+
+bandFromAge(20_000, 8000) // "stale" — age is 2.5× TTL
+
+const ann = withCurrentProvenance(
+  { type: "callout", t: latest.t, value: latest.value, label: "Spike" },
+  { author: "alice", source: "user" },
+)
+
+<LineChart
+  annotations={applyAnnotationLifecycle([ann], { dataExtent: [data[0].t, data.at(-1).t] })}
+/>
+```
+
+Full survey at `/intelligence/temporal-lifecycle`.
 
 ### Variant discovery (`semiotic/ai`)
 Interface for proposing and scoring chart variants beyond the hand-curated `capability.variants`. Heuristic and model-based proposers plug in through `registerVariantDiscovery`. M1 ships the type surface + stub implementations; behavior arrives in subsequent milestones.
