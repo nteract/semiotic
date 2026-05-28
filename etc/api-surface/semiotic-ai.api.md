@@ -132,6 +132,7 @@ function inferIntent
 function listIntents
 function profileData
 function proposeVariant
+function recordAudienceChange
 function registerChartCapability
 function registerIntent
 function registerStreamChartCapability
@@ -141,10 +142,12 @@ function runQualityScorecard
 function scoreChart
 function serializeSelections
 function stretchFamiliarityCeiling
+function subscribeToConversationArcChange
 function suggestCharts
 function suggestDashboard
 function suggestStreamCharts
 function suggestStretchCharts
+function summarizeArc
 function summarizeData
 function toConfig
 function toURL
@@ -156,6 +159,7 @@ function useChartFocus
 function useChartInterrogation
 function useChartObserver
 function useChartSuggestions
+function useConversationArc
 function useFilteredData
 function useLinkedHover
 function useSelection
@@ -193,6 +197,7 @@ interface ClickObservation
 interface ComputeAnnotationFreshnessOptions
 interface ContextLayoutProps
 interface ConversationArcStore
+interface ConversationArcSummary
 interface DashboardPanel
 interface DashboardSuggestion
 interface DataSummary
@@ -209,6 +214,8 @@ interface HoverEndObservation
 interface HoverObservation
 interface InferIntentResult
 interface IntentDescriptor
+interface InterrogationAnsweredEvent
+interface InterrogationAskedEvent
 interface InterrogationContext
 interface InterrogationFocus
 interface InterrogationMessage
@@ -252,6 +259,8 @@ interface UseChartObserverOptions
 interface UseChartObserverResult
 interface UseChartSuggestionsOptions
 interface UseChartSuggestionsResult
+interface UseConversationArcOptions
+interface UseConversationArcResult
 interface ValidationResult
 interface VariantDiscoveryContext
 interface VariantProposal

@@ -164,7 +164,9 @@ function NotFoundPage() {
         The page you're looking for doesn't exist.
       </p>
       <p style={{ marginTop: "24px" }}>
-        <Link to="/" style={{ color: "var(--accent)" }}>Back to home</Link>
+        <Link to="/" style={{ color: "var(--accent)" }}>
+          Back to home
+        </Link>
       </p>
     </div>
   )
@@ -184,7 +186,8 @@ function useJsonLd() {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       name: "Semiotic",
-      description: "A data visualization framework for React combining D3 and React for interactive charts, network diagrams, and more.",
+      description:
+        "A data visualization framework for React combining D3 and React for interactive charts, network diagrams, and more.",
       applicationCategory: "DeveloperApplication",
       operatingSystem: "Any",
       programmingLanguage: "JavaScript",
@@ -233,7 +236,7 @@ export default function DocsApp() {
           </Link>
         </div>
         <div className="flex space-between">
-        {/* We don't need to repeat the name because the logo is the name */}
+          {/* We don't need to repeat the name because the logo is the name */}
           <div />
           <div className="flex" style={{ alignItems: "center", gap: "12px" }}>
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
@@ -252,10 +255,7 @@ export default function DocsApp() {
         </div>
       </header>
       <div className="flex body">
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="container">
           <Routes>
             {/* New landing page */}
@@ -286,12 +286,21 @@ export default function DocsApp() {
 
             {/* Redirects for old feature paths */}
             <Route path="features/styling" element={<Navigate to="/theming/styling" replace />} />
-            <Route path="features/theming" element={<Navigate to="/theming/theme-provider" replace />} />
+            <Route
+              path="features/theming"
+              element={<Navigate to="/theming/theme-provider" replace />}
+            />
 
             {/* Redirects for legacy v1/v2 API routes (SEO: prevent stale search results) */}
             <Route path="api/xyframe" element={<Navigate to="/frames/xy-frame" replace />} />
-            <Route path="api/ordinalframe" element={<Navigate to="/frames/ordinal-frame" replace />} />
-            <Route path="api/networkframe" element={<Navigate to="/frames/network-frame" replace />} />
+            <Route
+              path="api/ordinalframe"
+              element={<Navigate to="/frames/ordinal-frame" replace />}
+            />
+            <Route
+              path="api/networkframe"
+              element={<Navigate to="/frames/network-frame" replace />}
+            />
             <Route path="api/mark" element={<Navigate to="/api/charts" replace />} />
 
             {/* Cookbook routes */}
@@ -321,7 +330,15 @@ export default function DocsApp() {
 
             {/* Recipes routes */}
             <Route path="recipes" element={<Outlet />}>
-              <Route path="" element={<><h1>Recipes</h1><RecipesIndex /></>} />
+              <Route
+                path=""
+                element={
+                  <>
+                    <h1>Recipes</h1>
+                    <RecipesIndex />
+                  </>
+                }
+              />
               <Route path="kpi-card-sparkline" element={<KpiCardSparklinePage />} />
               <Route path="time-series-brush" element={<TimeSeriesBrushPage />} />
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
@@ -330,7 +347,10 @@ export default function DocsApp() {
               <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />
               {/* `minards-map` and `process-vs-classic-sankey` graduated to /blog/. */}
               <Route path="minards-map" element={<Navigate to="/blog/minards-march" replace />} />
-              <Route path="process-vs-classic-sankey" element={<Navigate to="/blog/process-sankey-vs-classic-sankey" replace />} />
+              <Route
+                path="process-vs-classic-sankey"
+                element={<Navigate to="/blog/process-sankey-vs-classic-sankey" replace />}
+              />
             </Route>
 
             {/* Blog routes are registered in the early-return branch above
@@ -338,7 +358,15 @@ export default function DocsApp() {
 
             {/* Playground routes */}
             <Route path="playground" element={<Outlet />}>
-              <Route path="" element={<><h1>Playground</h1><PlaygroundIndex /></>} />
+              <Route
+                path=""
+                element={
+                  <>
+                    <h1>Playground</h1>
+                    <PlaygroundIndex />
+                  </>
+                }
+              />
               <Route path="line-chart" element={<LineChartPlayground />} />
               <Route path="bar-chart" element={<BarChartPlayground />} />
               <Route path="scatterplot" element={<ScatterplotPlayground />} />
@@ -354,7 +382,10 @@ export default function DocsApp() {
               <Route path="treemap" element={<TreemapPlayground />} />
               <Route path="circle-pack" element={<CirclePackPlayground />} />
               <Route path="orbit-diagram" element={<OrbitDiagramPlayground />} />
-              <Route path="statistical-annotations" element={<StatisticalAnnotationsPlayground />} />
+              <Route
+                path="statistical-annotations"
+                element={<StatisticalAnnotationsPlayground />}
+              />
               <Route path="forecast" element={<ForecastPlayground />} />
               <Route path="choropleth-map" element={<ChoroplethMapPlayground />} />
               <Route path="distance-cartogram" element={<DistanceCartogramPlayground />} />
@@ -394,7 +425,7 @@ export default function DocsApp() {
             </Route>
 
             {/* Intelligence — AI/recommendation surface, separated from generic Features
-                in 3.5.x. Old /features/<slug> paths redirect to /intelligence/<slug>
+                Old /features/<slug> paths redirect to /intelligence/<slug>
                 via dedicated routes below. */}
             <Route path="intelligence" element={<Outlet />}>
               <Route path="observation-hooks" element={<ObservationHooksPage />} />
@@ -408,12 +439,30 @@ export default function DocsApp() {
             </Route>
 
             {/* Redirects from old /features/<slug> paths for the Intelligence pages */}
-            <Route path="features/observation-hooks" element={<Navigate to="/intelligence/observation-hooks" replace />} />
-            <Route path="features/capabilities" element={<Navigate to="/intelligence/capabilities" replace />} />
-            <Route path="features/suggestions" element={<Navigate to="/intelligence/suggestions" replace />} />
-            <Route path="features/interrogation" element={<Navigate to="/intelligence/interrogation" replace />} />
-            <Route path="features/serialization" element={<Navigate to="/intelligence/serialization" replace />} />
-            <Route path="features/vega-lite" element={<Navigate to="/intelligence/vega-lite" replace />} />
+            <Route
+              path="features/observation-hooks"
+              element={<Navigate to="/intelligence/observation-hooks" replace />}
+            />
+            <Route
+              path="features/capabilities"
+              element={<Navigate to="/intelligence/capabilities" replace />}
+            />
+            <Route
+              path="features/suggestions"
+              element={<Navigate to="/intelligence/suggestions" replace />}
+            />
+            <Route
+              path="features/interrogation"
+              element={<Navigate to="/intelligence/interrogation" replace />}
+            />
+            <Route
+              path="features/serialization"
+              element={<Navigate to="/intelligence/serialization" replace />}
+            />
+            <Route
+              path="features/vega-lite"
+              element={<Navigate to="/intelligence/vega-lite" replace />}
+            />
 
             {/* Using Server-Side Rendering */}
             <Route path="using-ssr" element={<UsingSSRPage />} />

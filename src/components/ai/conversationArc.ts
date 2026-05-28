@@ -24,6 +24,8 @@ export type ConversationArcEventType =
   | "chart-replaced"
   | "chart-exported"
   | "chart-abandoned"
+  | "interrogation-asked"
+  | "interrogation-answered"
 
 interface ConversationArcEventBase {
   /** Discriminator for the event variant. */
@@ -40,8 +42,11 @@ interface ConversationArcEventBase {
 
 export interface SuggestionShownEvent extends ConversationArcEventBase {
   type: "suggestion-shown"
-  /** Intent label fed into `suggestCharts` (e.g. "trend", "distribution"). */
-  intent?: string
+  /**
+   * Intent label fed into `suggestCharts` (e.g. "trend", "distribution").
+   * Accepts a single intent or an array — mirrors `SuggestChartsOptions.intent`.
+   */
+  intent?: string | ReadonlyArray<string>
   /** Ranked component names in the order the suggester returned them. */
   components: string[]
   /** Top suggestion's composite score, if known. */
@@ -100,6 +105,45 @@ export interface ChartAbandonedEvent extends ConversationArcEventBase {
   reason?: string
 }
 
+export interface InterrogationAskedEvent extends ConversationArcEventBase {
+  type: "interrogation-asked"
+  /** Chart the question was directed at, if known. */
+  component?: string
+  /**
+   * Question text. The `useChartInterrogation` instrumentation
+   * truncates to ~500 chars before recording so the ring buffer
+   * stays bounded; callers stamping their own events should do the
+   * same.
+   */
+  query: string
+  /** Optional payload size hint (e.g. summary token count) for diagnostics. */
+  contextSize?: number
+}
+
+export interface InterrogationAnsweredEvent extends ConversationArcEventBase {
+  type: "interrogation-answered"
+  /** Chart the answer was directed at, if known. */
+  component?: string
+  /**
+   * Answer text. The `useChartInterrogation` instrumentation
+   * truncates to ~2000 chars before recording so multi-kilobyte LLM
+   * responses don't bloat the ring buffer. Callers stamping their
+   * own events should follow the same convention.
+   */
+  answer?: string
+  /** Number of annotations the response attached, if known. */
+  annotationCount?: number
+  /**
+   * Round-trip latency in ms from ask to answer, clamped to ≥ 0.
+   * The instrumentation measures via `performance.now()` when
+   * available; the `Date.now()` fallback can produce negative
+   * deltas under clock changes, hence the clamp.
+   */
+  latencyMs?: number
+  /** Set when the response was an error rather than a successful answer. */
+  error?: boolean
+}
+
 export type ConversationArcEvent =
   | SuggestionShownEvent
   | SuggestionChosenEvent
@@ -109,6 +153,8 @@ export type ConversationArcEvent =
   | ChartReplacedEvent
   | ChartExportedEvent
   | ChartAbandonedEvent
+  | InterrogationAskedEvent
+  | InterrogationAnsweredEvent
 
 /**
  * Input shape accepted by `record()`: the event variant without the
@@ -143,8 +189,13 @@ export interface ConversationArcStore {
   record(input: ConversationArcEventInput): ConversationArcEvent | null
   /** Returns the current buffer (newest last) and clears it. */
   flush(): ConversationArcEvent[]
-  /** Returns a snapshot of the current buffer without clearing. */
-  getEvents(): ConversationArcEvent[]
+  /**
+   * Returns a frozen, referentially-stable snapshot of the current
+   * buffer. Stable across consecutive calls until the next mutation,
+   * so it can drive `useSyncExternalStore`. Read-only — callers that
+   * need a mutable copy should `.slice()` the result.
+   */
+  getEvents(): ReadonlyArray<ConversationArcEvent>
   /**
    * Subscribe to new events. Returns an unsubscribe function.
    *
@@ -175,6 +226,106 @@ let store: ConversationArcStoreInternal | null = null
 // touched by `disable()` since buffered events stay correlatable and
 // re-enable should resume notifying.
 const listeners = new Set<ConversationArcListener>()
+
+// `useSyncExternalStore` requires `getSnapshot()` to return a stable
+// reference until something actually changes. The in-memory buffer is
+// mutated in place on `record()`, so we cache a frozen snapshot next
+// to the buffer and invalidate it on every push / clear / reset.
+//
+// The snapshot is FROZEN (Object.freeze) because it's shared across
+// every consumer: mutating it would corrupt subsequent snapshots and
+// break `useSyncExternalStore`'s referential-stability contract.
+// Callers that need a mutable copy can `.slice()` the result.
+const EMPTY_FROZEN_SNAPSHOT: ReadonlyArray<ConversationArcEvent> = Object.freeze(
+  []
+) as ReadonlyArray<ConversationArcEvent>
+let cachedSnapshot: ReadonlyArray<ConversationArcEvent> = EMPTY_FROZEN_SNAPSHOT
+let snapshotDirty = false
+
+function refreshSnapshotIfNeeded(): ReadonlyArray<ConversationArcEvent> {
+  if (!snapshotDirty) return cachedSnapshot
+  cachedSnapshot = store
+    ? (Object.freeze(store.buffer.slice()) as ReadonlyArray<ConversationArcEvent>)
+    : EMPTY_FROZEN_SNAPSHOT
+  snapshotDirty = false
+  return cachedSnapshot
+}
+
+function invalidateSnapshot(): void {
+  snapshotDirty = true
+}
+
+// Change-notification subscribers — distinct from event listeners so
+// the `(event: ConversationArcEvent) => void` contract stays clean
+// for sinks. React's `useSyncExternalStore` needs notification for
+// every state mutation (including `clear`, `flush`, `reset`, and
+// `enable`), not just newly-recorded events.
+const changeSubscribers = new Set<() => void>()
+
+function notifyChange(): void {
+  for (const fn of changeSubscribers) {
+    try {
+      fn()
+    } catch (err) {
+      if (typeof console !== "undefined") {
+        console.warn("[conversationArc] change subscriber threw:", err)
+      }
+    }
+  }
+}
+
+/**
+ * Subscribe to *any* state mutation in the conversation-arc store —
+ * including `clear`, `flush`, `reset`, and `enable`, in addition to
+ * recorded events. Intended for React hooks that need to re-render
+ * on snapshot changes; event sinks should use `subscribe()` instead.
+ *
+ * Returns an unsubscribe callback.
+ */
+export function subscribeToConversationArcChange(listener: () => void): () => void {
+  changeSubscribers.add(listener)
+  return () => {
+    changeSubscribers.delete(listener)
+  }
+}
+
+/**
+ * Record an audience-set event. Convenience wrapper around `record`
+ * for the common pattern: "the user picked a new audience profile
+ * and I want to put that in the arc."
+ *
+ * `previous` is optional but recommended — it lets downstream
+ * analytics see the transition rather than just the new state. Pass
+ * `null` when there was no prior audience.
+ *
+ * Returns the stamped event, or `null` if recording is disabled.
+ *
+ * ```ts
+ * import { recordAudienceChange } from "semiotic/ai"
+ *
+ * function AudiencePicker({ value, onChange }) {
+ *   return (
+ *     <select value={value} onChange={(e) => {
+ *       const next = e.target.value
+ *       recordAudienceChange(next, value)
+ *       onChange(next)
+ *     }} />
+ *   )
+ * }
+ * ```
+ */
+export function recordAudienceChange(
+  audience: string,
+  previous?: string | null,
+  extra?: { arcId?: string; meta?: Record<string, unknown> }
+): ConversationArcEvent | null {
+  return facade.record({
+    type: "audience-set",
+    audience,
+    previous: previous ?? undefined,
+    ...extra,
+  })
+}
 
 interface ConversationArcStoreInternal {
   enabled: boolean
@@ -217,6 +368,7 @@ export function enableConversationArc(
       capacity,
       buffer: [],
     }
+    invalidateSnapshot()
   } else {
     store.enabled = true
     if (options.sessionId) store.sessionId = options.sessionId
@@ -224,14 +376,19 @@ export function enableConversationArc(
       store.capacity = capacity
       // Honor a capacity shrink: drop the oldest events.
       while (store.buffer.length > store.capacity) store.buffer.shift()
+      invalidateSnapshot()
     }
   }
+  notifyChange()
   return facade
 }
 
 /** Turn the store off without dropping the buffered events. */
 export function disableConversationArc(): void {
-  if (store) store.enabled = false
+  if (store) {
+    store.enabled = false
+    notifyChange()
+  }
 }
 
 /**
@@ -267,6 +424,8 @@ const facade: ConversationArcStore = {
     } as ConversationArcEvent
     s.buffer.push(event)
     while (s.buffer.length > s.capacity) s.buffer.shift()
+    invalidateSnapshot()
+    notifyChange()
     for (const listener of listeners) {
       try {
         listener(event)
@@ -285,11 +444,16 @@ const facade: ConversationArcStore = {
     if (!s) return []
     const out = s.buffer
     s.buffer = []
+    invalidateSnapshot()
+    notifyChange()
     return out
   },
   getEvents() {
-    const s = ensureStore()
-    return s ? s.buffer.slice() : []
+    // Return the cached snapshot so consecutive calls between events
+    // return a referentially stable array — required by
+    // `useSyncExternalStore` (in `useConversationArc`) and useful for
+    // any memoization layer above.
+    return refreshSnapshotIfNeeded()
   },
   subscribe(listener) {
     // Subscriptions persist across enable/disable transitions — see
@@ -301,13 +465,27 @@ const facade: ConversationArcStore = {
   },
   clear() {
     const s = ensureStore()
-    if (s) s.buffer = []
+    if (s) {
+      s.buffer = []
+      invalidateSnapshot()
+      notifyChange()
+    }
   },
   reset() {
     listeners.clear()
-    if (!store) return
+    cachedSnapshot = EMPTY_FROZEN_SNAPSHOT
+    snapshotDirty = false
+    if (!store) {
+      // Still fire the change notification so a hook subscribed
+      // before enable sees the empty state.
+      notifyChange()
+      changeSubscribers.clear()
+      return
+    }
     store.buffer = []
     store.enabled = false
     store = null
+    notifyChange()
+    changeSubscribers.clear()
   },
 }

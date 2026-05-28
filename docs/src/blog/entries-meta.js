@@ -31,15 +31,27 @@ export const allBlogEntriesMeta = [
       "3.6.0 turns Semiotic's observation hooks, native annotations, and streaming runtime into an explicit AI-facing surface. Charts declare what they're for; datasets get profiled and ranked; audiences get calibrated; conversations anchor back to the chart instead of stopping at a chat bubble. Three case-study posts published alongside the release walk through what the new shape makes possible.",
   },
   {
+    slug: "from-spec-to-runtime",
+    title: "From spec to runtime",
+    subtitle:
+      "What landed after the M1 trio: annotations that actually age, a conversation-arc hook with auto-instrumentation, and a shared classifier that ties the three age-as-encoding systems together.",
+    author: "Elijah Meeks",
+    date: "2026-05-28",
+    tags: ["case-study", "ai", "roadmap"],
+    excerpt:
+      "The previous post introduced three AI-facing surfaces as types and stubs. This one is what shipped to make them real — applyAnnotationLifecycle as a one-line opacity-and-dashing pass, useConversationArc as the React entry point, auto-instrumentation on the existing AI hooks so an arc captures itself, and the shared bandFromAge primitive that lets decay, staleness, and freshness compose instead of competing.",
+    draft: true,
+  },
+  {
     slug: "talk-track-intelligence",
     title: "The arc, the annotation, and the variant",
     subtitle:
-      "Three composable AI surfaces shipping together in 3.5.x: conversation-arc telemetry, annotation provenance + lifecycle, and a variant discovery plug point. Two are runnable inline.",
+      "Three composable AI surfaces: conversation-arc telemetry, annotation provenance + lifecycle, and a variant discovery plug point. Two are runnable inline.",
     author: "Elijah Meeks",
     date: "2026-05-27",
     tags: ["case-study", "ai", "roadmap"],
     excerpt:
-      "AI-assisted chart authoring is a session, not a single call. Semiotic 3.5.x lands the spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers. Interactive demos for the first two.",
+      "AI-assisted chart authoring is a session, not a single call. The spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers.",
     draft: true,
   },
   {

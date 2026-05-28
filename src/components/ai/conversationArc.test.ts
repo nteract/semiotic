@@ -3,6 +3,7 @@ import {
   disableConversationArc,
   enableConversationArc,
   getConversationArcStore,
+  recordAudienceChange,
   type ConversationArcEvent,
 } from "./conversationArc"
 
@@ -247,5 +248,35 @@ describe("conversationArc — lifecycle", () => {
     expect(store.enabled).toBe(false)
     expect(store.sessionId).toBeNull()
     expect(store.getEvents()).toEqual([])
+  })
+})
+
+describe("conversationArc — recordAudienceChange convenience", () => {
+  it("stamps a typed audience-set event onto the buffer", () => {
+    enableConversationArc({ sessionId: "audience-test" })
+    const event = recordAudienceChange("executive", "analyst")
+    expect(event?.type).toBe("audience-set")
+    expect(event && "audience" in event && event.audience).toBe("executive")
+    expect(event && "previous" in event && event.previous).toBe("analyst")
+  })
+
+  it("omits `previous` when null is passed", () => {
+    enableConversationArc()
+    const event = recordAudienceChange("executive", null)
+    expect(event && "previous" in event && event.previous).toBeUndefined()
+  })
+
+  it("forwards arcId / meta for correlation", () => {
+    enableConversationArc()
+    const event = recordAudienceChange("executive", "analyst", {
+      arcId: "session-42",
+      meta: { trigger: "picker" },
+    })
+    expect(event?.arcId).toBe("session-42")
+    expect(event?.meta).toEqual({ trigger: "picker" })
+  })
+
+  it("returns null when the store is disabled", () => {
+    expect(recordAudienceChange("executive")).toBeNull()
   })
 })

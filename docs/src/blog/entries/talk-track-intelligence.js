@@ -20,12 +20,12 @@ const META = {
   slug: "talk-track-intelligence",
   title: "The arc, the annotation, and the variant",
   subtitle:
-    "Three composable AI surfaces shipping together in 3.5.x: conversation-arc telemetry, annotation provenance + lifecycle, and a variant discovery plug point. Two are runnable inline.",
+    "Three composable AI surfaces: conversation-arc telemetry, annotation provenance + lifecycle, and a variant discovery plug point. Two are runnable inline.",
   author: "Elijah Meeks",
   date: "2026-05-27",
   tags: ["case-study", "ai", "roadmap"],
   excerpt:
-    "AI-assisted chart authoring is a session, not a single call. Semiotic 3.5.x lands the spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers. Interactive demos for the first two.",
+    "AI-assisted chart authoring is a session, not a single call. The spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers.",
 }
 
 // ─── Shared layout chrome (mirrors other blog entries) ────────────────────
@@ -56,13 +56,34 @@ const tag = (color) => ({
 // ─── Conversation-arc live demo (driven by the actual store) ──────────────
 
 const PRESET_EVENTS = [
-  { label: "Show suggestions", payload: { type: "suggestion-shown", components: ["LineChart", "AreaChart"], intent: "trend" } },
-  { label: "Pick LineChart", payload: { type: "suggestion-chosen", component: "LineChart", rank: 1, source: "user" } },
-  { label: "Switch audience", payload: { type: "audience-set", audience: "executive", previous: "analyst" } },
-  { label: "Render", payload: { type: "chart-rendered", component: "LineChart", chartId: "arc-demo" } },
-  { label: "Edit props", payload: { type: "chart-edited", component: "LineChart", changedProps: ["lineWidth"] } },
-  { label: "Replace via repair", payload: { type: "chart-replaced", from: "LineChart", to: "AreaChart", reason: "repair" } },
-  { label: "Export JSX", payload: { type: "chart-exported", component: "AreaChart", format: "jsx" } },
+  {
+    label: "Show suggestions",
+    payload: { type: "suggestion-shown", components: ["LineChart", "AreaChart"], intent: "trend" },
+  },
+  {
+    label: "Pick LineChart",
+    payload: { type: "suggestion-chosen", component: "LineChart", rank: 1, source: "user" },
+  },
+  {
+    label: "Switch audience",
+    payload: { type: "audience-set", audience: "executive", previous: "analyst" },
+  },
+  {
+    label: "Render",
+    payload: { type: "chart-rendered", component: "LineChart", chartId: "arc-demo" },
+  },
+  {
+    label: "Edit props",
+    payload: { type: "chart-edited", component: "LineChart", changedProps: ["lineWidth"] },
+  },
+  {
+    label: "Replace via repair",
+    payload: { type: "chart-replaced", from: "LineChart", to: "AreaChart", reason: "repair" },
+  },
+  {
+    label: "Export JSX",
+    payload: { type: "chart-exported", component: "AreaChart", format: "jsx" },
+  },
   { label: "Abandon", payload: { type: "chart-abandoned", reason: "user-walked-away" } },
 ]
 
@@ -100,12 +121,15 @@ function ConversationArcLiveDemo() {
     })
   }, [store])
 
-  useEffect(() => () => {
-    // Don't `reset()` — that would wipe listeners other parts of the
-    // app might have set up. Just stop recording and drop the buffer.
-    disableConversationArc()
-    store.clear()
-  }, [store])
+  useEffect(
+    () => () => {
+      // Don't `reset()` — that would wipe listeners other parts of the
+      // app might have set up. Just stop recording and drop the buffer.
+      disableConversationArc()
+      store.clear()
+    },
+    [store],
+  )
 
   const toggle = () => {
     if (enabled) {
@@ -118,7 +142,15 @@ function ConversationArcLiveDemo() {
 
   return (
     <div style={card}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+          marginBottom: 10,
+          flexWrap: "wrap",
+        }}
+      >
         <button
           onClick={toggle}
           style={{
@@ -176,36 +208,61 @@ function ConversationArcLiveDemo() {
           title="Events arriving via the DotPlot push API"
           summary="Horizontal dot plot. Each dot is one recorded arc event; x is the timestamp, y is the event type, color matches the button above."
           emptyContent={
-            <div style={{ color: "var(--text-secondary)", fontSize: 13, padding: "30px 0", textAlign: "center" }}>
-              {enabled ? "Click an event button — dots arrive via push API." : "Enable recording, then click buttons."}
+            <div
+              style={{
+                color: "var(--text-secondary)",
+                fontSize: 13,
+                padding: "30px 0",
+                textAlign: "center",
+              }}
+            >
+              {enabled
+                ? "Click an event button — dots arrive via push API."
+                : "Enable recording, then click buttons."}
             </div>
           }
         />
       </CategoryColorProvider>
 
-      <div style={{
-        background: "var(--surface-2)",
-        borderRadius: 6,
-        padding: 8,
-        fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
-        fontSize: 12,
-        maxHeight: 180,
-        overflowY: "auto",
-        marginTop: 12,
-      }}>
+      <div
+        style={{
+          background: "var(--surface-2)",
+          borderRadius: 6,
+          padding: 8,
+          fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
+          fontSize: 12,
+          maxHeight: 180,
+          overflowY: "auto",
+          marginTop: 12,
+        }}
+      >
         {events.length === 0 ? (
           <em style={{ color: "var(--text-secondary)" }}>
             {enabled ? "Click an event button above." : "Recording is off."}
           </em>
         ) : (
-          events.slice().reverse().map((e, i) => (
-            <div key={i} style={{ padding: "2px 0", borderBottom: "1px dotted var(--surface-3)" }}>
-              <span style={{ color: TYPE_COLOR[e.type], fontWeight: 600, marginRight: 8 }}>{e.type}</span>
-              <span style={{ color: "var(--text-secondary)" }}>
-                {JSON.stringify(Object.fromEntries(Object.entries(e).filter(([k]) => !["type", "timestamp", "sessionId"].includes(k))))}
-              </span>
-            </div>
-          ))
+          events
+            .slice()
+            .reverse()
+            .map((e, i) => (
+              <div
+                key={i}
+                style={{ padding: "2px 0", borderBottom: "1px dotted var(--surface-3)" }}
+              >
+                <span style={{ color: TYPE_COLOR[e.type], fontWeight: 600, marginRight: 8 }}>
+                  {e.type}
+                </span>
+                <span style={{ color: "var(--text-secondary)" }}>
+                  {JSON.stringify(
+                    Object.fromEntries(
+                      Object.entries(e).filter(
+                        ([k]) => !["type", "timestamp", "sessionId"].includes(k),
+                      ),
+                    ),
+                  )}
+                </span>
+              </div>
+            ))
         )}
       </div>
     </div>
@@ -219,11 +276,11 @@ function ConversationArcLiveDemo() {
 const STALE_DEMO_DATA = [
   { month: 1, value: 280 },
   { month: 2, value: 310 },
-  { month: 3, value: 420 },  // alice's spike
+  { month: 3, value: 420 }, // alice's spike
   { month: 4, value: 350 },
   { month: 5, value: 360 },
   { month: 6, value: 370 },
-  { month: 7, value: 510 },  // AI's anomaly
+  { month: 7, value: 510 }, // AI's anomaly
   { month: 8, value: 390 },
   { month: 9, value: 400 },
   { month: 10, value: 420 },
@@ -248,7 +305,7 @@ const RAW_ANNOTATIONS = [
     {
       provenance: { author: "alice", source: "user", createdAt: "2026-02-15T12:00:00Z" },
       lifecycle: { ttlHint: "P30D", anchor: "semantic" },
-    }
+    },
   ),
   withProvenance(
     {
@@ -262,9 +319,14 @@ const RAW_ANNOTATIONS = [
       dy: -45,
     },
     {
-      provenance: { author: "model-v3", source: "ai", confidence: 0.62, createdAt: "2026-03-10T09:00:00Z" },
+      provenance: {
+        author: "model-v3",
+        source: "ai",
+        confidence: 0.62,
+        createdAt: "2026-03-10T09:00:00Z",
+      },
       lifecycle: { ttlHint: "P14D", anchor: "fixed" },
-    }
+    },
   ),
 ]
 
@@ -325,7 +387,7 @@ function FreshnessLiveDemo() {
           {states.map(({ raw, freshness }) => {
             const ageDays = Math.max(
               0,
-              Math.floor((nowMs - Date.parse(raw.provenance.createdAt)) / (24 * 60 * 60 * 1000))
+              Math.floor((nowMs - Date.parse(raw.provenance.createdAt)) / (24 * 60 * 60 * 1000)),
             )
             return (
               <div
@@ -338,20 +400,32 @@ function FreshnessLiveDemo() {
                   opacity: freshness === "expired" ? 0.55 : 1,
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 2 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    marginBottom: 2,
+                  }}
+                >
                   <strong>{raw.label}</strong>
-                  <span style={{
-                    background: FRESHNESS_BADGE[freshness],
-                    color: "white",
-                    padding: "1px 7px",
-                    borderRadius: 999,
-                    fontSize: 11,
-                    fontWeight: 600,
-                  }}>{freshness}</span>
+                  <span
+                    style={{
+                      background: FRESHNESS_BADGE[freshness],
+                      color: "white",
+                      padding: "1px 7px",
+                      borderRadius: 999,
+                      fontSize: 11,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {freshness}
+                  </span>
                 </div>
                 <div style={{ color: "var(--text-secondary)" }}>
                   by <code>{raw.provenance.author}</code>
-                  {" · "}{ageDays} day{ageDays === 1 ? "" : "s"} old
+                  {" · "}
+                  {ageDays} day{ageDays === 1 ? "" : "s"} old
                   {" · "}TTL <code>{raw.lifecycle.ttlHint}</code>
                 </div>
               </div>
@@ -370,34 +444,38 @@ function Body() {
     <article style={{ lineHeight: 1.65 }}>
       <p>
         <span style={tag("#6a52d9")}>draft</span>
-        <span style={tag("#2d8a4a")}>3.5.x</span>
       </p>
 
       <p>
-        AI-assisted chart authoring is a session. A user sees a ranked
-        list, picks one, adjusts the audience, renders, edits, replaces,
-        exports — or abandons. None of those moves are first-class in any
-        visualization library we know of. They live in chat transcripts
-        and analytics events, separated from the chart that occasioned
-        them.
+        AI-assisted chart authoring is a session. A user sees a ranked list, picks one, adjusts the
+        audience, renders, edits, replaces, exports — or abandons. None of those moves are
+        first-class in any visualization library we know of. They live in chat transcripts and
+        analytics events, separated from the chart that occasioned them.
       </p>
 
       <p>
-        Semiotic 3.5.x lands the spine for treating that session as a
-        thing the library knows about. Three composable surfaces, each
-        shipping as a type contract today, with runtime helpers
-        sequenced through the rest of the year. This post walks through
-        what each one is, with two of them runnable inline below.
+        The spine for treating that session as a thing the library knows about. Three composable
+        surfaces, each shipping as a type contract today, with runtime helpers sequenced through the
+        rest of the year. This post walks through what each one is, with two of them runnable inline
+        below.
       </p>
 
       <h2>The arc itself</h2>
 
       <p>
-        The first surface is a module-scoped event store with eight
-        variants in a discriminated union:
+        The first surface is a module-scoped event store with eight variants in a discriminated
+        union:
       </p>
 
-      <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>{`type ConversationArcEvent =
+      <pre
+        style={{
+          background: "var(--surface-2)",
+          padding: 12,
+          borderRadius: 6,
+          fontSize: 13,
+          overflowX: "auto",
+        }}
+      >{`type ConversationArcEvent =
   | { type: "suggestion-shown", components, intent?, topScore?, audience? }
   | { type: "suggestion-chosen", component, rank?, source? }
   | { type: "audience-set", audience, previous? }
@@ -408,61 +486,56 @@ function Body() {
   | { type: "chart-abandoned", component?, reason? }`}</pre>
 
       <p>
-        Default surface is a no-op. <code style={inlineCode}>enableConversationArc()</code>{" "}
-        flips the store on and starts buffering. The default capacity is
-        1000; new events evict oldest. Subscribers see every event as it
-        lands. There are no network sinks yet — those plug in through{" "}
-        <code style={inlineCode}>subscribe()</code> for now, with first-party{" "}
+        Default surface is a no-op. <code style={inlineCode}>enableConversationArc()</code> flips
+        the store on and starts buffering. The default capacity is 1000; new events evict oldest.
+        Subscribers see every event as it lands. There are no network sinks yet — those plug in
+        through <code style={inlineCode}>subscribe()</code> for now, with first-party{" "}
         <code style={inlineCode}>LocalStorageSink</code>,{" "}
         <code style={inlineCode}>IndexedDBSink</code>, and{" "}
         <code style={inlineCode}>WebhookSink</code> in the next milestone.
       </p>
 
       <p>
-        Enable it below and click the event buttons. The log is wired to
-        a real subscriber on the real store:
+        Enable it below and click the event buttons. The log is wired to a real subscriber on the
+        real store:
       </p>
 
       <ConversationArcLiveDemo />
 
       <p>
-        Why bother? Because the data nobody else is collecting is the arc
-        itself: <em>I saw five charts, picked the second, swapped the
-        audience to "executive," edited two props, exported as JSX, and
-        came back the next day to edit it again.</em> That's a sequence,
-        not a single event. Capturing it is what makes a serious
-        recommender feedback loop possible — not just "did the user click
-        on the suggestion" but "did they keep it after using it."
+        Why bother? Because the data nobody else is collecting is the arc itself:{" "}
+        <em>
+          I saw five charts, picked the second, swapped the audience to "executive," edited two
+          props, exported as JSX, and came back the next day to edit it again.
+        </em>{" "}
+        That's a sequence, not a single event. Capturing it is what makes a serious recommender
+        feedback loop possible — not just "did the user click on the suggestion" but "did they keep
+        it after using it."
       </p>
 
       <h2>Anchored notes that know how old they are</h2>
 
       <p>
         The second surface is two optional blocks on any annotation:{" "}
-        <code style={inlineCode}>provenance</code> (author, source,
-        confidence, createdAt, stableId) and{" "}
-        <code style={inlineCode}>lifecycle</code> (freshness, ttlHint,
-        anchor). Both are additive — existing{" "}
-        <code style={inlineCode}>annotations</code> arrays keep working.
+        <code style={inlineCode}>provenance</code> (author, source, confidence, createdAt, stableId)
+        and <code style={inlineCode}>lifecycle</code> (freshness, ttlHint, anchor). Both are
+        additive — existing <code style={inlineCode}>annotations</code> arrays keep working.
       </p>
 
       <p>
-        The lifecycle answer is the Q&A backstop: when the data refreshes
-        and the annotation's reference point shifts, what happens? The
-        anchor modes spell out the four reasonable answers:{" "}
-        <code style={inlineCode}>fixed</code> keeps the recorded
-        coordinate, <code style={inlineCode}>latest</code> tracks the
-        most recent point, <code style={inlineCode}>sticky</code> rides
-        along until removed, and <code style={inlineCode}>semantic</code>{" "}
-        re-resolves through <code style={inlineCode}>stableId</code> when
-        new data arrives.
+        The lifecycle answer is the Q&A backstop: when the data refreshes and the annotation's
+        reference point shifts, what happens? The anchor modes spell out the four reasonable
+        answers: <code style={inlineCode}>fixed</code> keeps the recorded coordinate,{" "}
+        <code style={inlineCode}>latest</code> tracks the most recent point,{" "}
+        <code style={inlineCode}>sticky</code> rides along until removed, and{" "}
+        <code style={inlineCode}>semantic</code> re-resolves through{" "}
+        <code style={inlineCode}>stableId</code> when new data arrives.
       </p>
 
       <p>
-        Freshness handles the orthogonal problem: a stale note shouldn't
-        look as authoritative as a fresh one. The chart below has two
-        annotations with different TTLs. Drag "now" forward and watch
-        them fade through <code style={inlineCode}>fresh → aging → stale → expired</code>:
+        Freshness handles the orthogonal problem: a stale note shouldn't look as authoritative as a
+        fresh one. The chart below has two annotations with different TTLs. Drag "now" forward and
+        watch them fade through <code style={inlineCode}>fresh → aging → stale → expired</code>:
       </p>
 
       <FreshnessLiveDemo />
@@ -470,24 +543,29 @@ function Body() {
       <p>
         The styling above is the shipped default: a single call to{" "}
         <code style={inlineCode}>applyAnnotationLifecycle(annotations, {"{ now }"})</code>{" "}
-        classifies each annotation, dims aging, dashes stale, and drops
-        expired from the array. The author's brand color survives the
-        treatment — provenance stays visible while age signals layer on
-        top.
+        classifies each annotation, dims aging, dashes stale, and drops expired from the array. The
+        author's brand color survives the treatment — provenance stays visible while age signals
+        layer on top.
       </p>
 
       <h2>Variants the library didn't think of</h2>
 
       <p>
-        The third surface is a registration plug point for variant
-        proposers. Today, every chart variant in Semiotic was hand-curated
-        in a <code style={inlineCode}>Foo.capability.ts</code> file. That
-        scales to a few dozen variants. It doesn't scale to "given this
-        specific data shape and this specific audience, propose a
-        configuration nobody wrote down."
+        The third surface is a registration plug point for variant proposers. Today, every chart
+        variant in Semiotic was hand-curated in a <code style={inlineCode}>Foo.capability.ts</code>{" "}
+        file. That scales to a few dozen variants. It doesn't scale to "given this specific data
+        shape and this specific audience, propose a configuration nobody wrote down."
       </p>
 
-      <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>{`import { registerVariantDiscovery } from "semiotic/ai"
+      <pre
+        style={{
+          background: "var(--surface-2)",
+          padding: 12,
+          borderRadius: 6,
+          fontSize: 13,
+          overflowX: "auto",
+        }}
+      >{`import { registerVariantDiscovery } from "semiotic/ai"
 
 registerVariantDiscovery((component, capability, context) => {
   if (component !== "BoxPlot") return []
@@ -505,32 +583,27 @@ registerVariantDiscovery((component, capability, context) => {
 })`}</pre>
 
       <p>
-        A proposal mixes into the same ranked list{" "}
-        <code style={inlineCode}>suggestCharts</code> produces, scored
-        against the same rubric. The discovery model can be a heuristic,
-        an LLM call, a future research artifact — the API doesn't care.
-        The scoring side (<code style={inlineCode}>fit</code>,{" "}
-        <code style={inlineCode}>novelty</code>,{" "}
+        A proposal mixes into the same ranked list <code style={inlineCode}>suggestCharts</code>{" "}
+        produces, scored against the same rubric. The discovery model can be a heuristic, an LLM
+        call, a future research artifact — the API doesn't care. The scoring side (
+        <code style={inlineCode}>fit</code>, <code style={inlineCode}>novelty</code>,{" "}
         <code style={inlineCode}>risk</code>) lands in M3.
       </p>
 
       <h2>Why these three together</h2>
 
       <p>
-        The arc records what happened. The annotations preserve what the
-        user said about it. Variant discovery keeps the system honest
-        about what it doesn't yet know — and where the learning slots
-        in. Together they make a complete AI-assisted authoring session
-        something the library has a vocabulary for, not just something
-        the chat transcript happens to mention.
+        The arc records what happened. The annotations preserve what the user said about it. Variant
+        discovery keeps the system honest about what it doesn't yet know — and where the learning
+        slots in. Together they make a complete AI-assisted authoring session something the library
+        has a vocabulary for, not just something the chat transcript happens to mention.
       </p>
 
       <p>
         For the full type contract, see{" "}
-        <Link to="/intelligence/conversation-arc">/intelligence/conversation-arc</Link>{" "}
-        in the docs. For the milestone sequencing through October, the
-        roadmap and the variant-discovery design doc track each
-        surface's M1 → M4 path.
+        <Link to="/intelligence/conversation-arc">/intelligence/conversation-arc</Link> in the docs.
+        For the milestone sequencing through October, the roadmap and the variant-discovery design
+        doc track each surface's M1 → M4 path.
       </p>
     </article>
   )

@@ -297,7 +297,7 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/recipes` | **5 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **4 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
-| `semiotic/ai` | **211 KB** | All 42 HOCs + validation — optimized for LLM code generation |
+| `semiotic/ai` | **215 KB** | All 42 HOCs + validation — optimized for LLM code generation |
 | `semiotic` | **190 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->

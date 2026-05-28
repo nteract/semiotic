@@ -326,6 +326,17 @@ export type {
   LifecycleBandThresholds,
 } from "./ai/annotationProvenance"
 
+// Conversation-arc — M2 React hook + summarize helper.
+// Hook handles subscription teardown and snapshot stability for
+// `useSyncExternalStore` consumers. `summarizeArc` is the pure
+// reducer (server-safe, replay-safe).
+export { useConversationArc, summarizeArc } from "./ai/useConversationArc"
+export type {
+  UseConversationArcOptions,
+  UseConversationArcResult,
+  ConversationArcSummary,
+} from "./ai/useConversationArc"
+
 // Conversation-arc telemetry — opt-in event vocabulary + ring-buffer store.
 // Default surface is a no-op; call `enableConversationArc()` to start
 // recording. Eight event types track the AI-assisted authoring arc
@@ -334,6 +345,8 @@ export {
   enableConversationArc,
   disableConversationArc,
   getConversationArcStore,
+  subscribeToConversationArcChange,
+  recordAudienceChange,
 } from "./ai/conversationArc"
 export type {
   ConversationArcEvent,
@@ -350,6 +363,8 @@ export type {
   ChartReplacedEvent,
   ChartExportedEvent,
   ChartAbandonedEvent,
+  InterrogationAskedEvent,
+  InterrogationAnsweredEvent,
 } from "./ai/conversationArc"
 
 // AI Observation hooks
