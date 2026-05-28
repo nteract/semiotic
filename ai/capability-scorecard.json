@@ -3,29 +3,18 @@
     {
       "component": "QuadrantChart",
       "family": "relationship",
-      "fitsOn": 13,
+      "fitsOn": 14,
       "rejectedOn": 10,
       "inTopThreeOn": 1,
       "expertAgreementCount": 0,
-      "averageScore": 1.0769230769230769,
-      "caveatCoverage": 0,
-      "variantUtilization": 0
-    },
-    {
-      "component": "MinimapChart",
-      "family": "time-series",
-      "fitsOn": 5,
-      "rejectedOn": 18,
-      "inTopThreeOn": 0,
-      "expertAgreementCount": 0,
-      "averageScore": 1.6,
+      "averageScore": 1,
       "caveatCoverage": 0,
       "variantUtilization": 0
     },
     {
       "component": "Heatmap",
       "family": "relationship",
-      "fitsOn": 4,
+      "fitsOn": 6,
       "rejectedOn": 21,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
@@ -34,10 +23,21 @@
       "variantUtilization": 1
     },
     {
+      "component": "MinimapChart",
+      "family": "time-series",
+      "fitsOn": 5,
+      "rejectedOn": 19,
+      "inTopThreeOn": 0,
+      "expertAgreementCount": 0,
+      "averageScore": 1.6,
+      "caveatCoverage": 0,
+      "variantUtilization": 0
+    },
+    {
       "component": "SwarmPlot",
       "family": "distribution",
       "fitsOn": 4,
-      "rejectedOn": 19,
+      "rejectedOn": 20,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
       "averageScore": 1.75,
@@ -45,24 +45,24 @@
       "variantUtilization": 0
     },
     {
-      "component": "LikertChart",
+      "component": "SwimlaneChart",
       "family": "categorical",
-      "fitsOn": 2,
+      "fitsOn": 3,
       "rejectedOn": 21,
       "inTopThreeOn": 1,
       "expertAgreementCount": 0,
-      "averageScore": 3.5,
+      "averageScore": 1,
       "caveatCoverage": 0,
       "variantUtilization": 0
     },
     {
-      "component": "SwimlaneChart",
+      "component": "LikertChart",
       "family": "categorical",
       "fitsOn": 2,
-      "rejectedOn": 21,
+      "rejectedOn": 22,
       "inTopThreeOn": 1,
       "expertAgreementCount": 0,
-      "averageScore": 1.5,
+      "averageScore": 3.5,
       "caveatCoverage": 0,
       "variantUtilization": 0
     },
@@ -70,7 +70,7 @@
       "component": "RidgelinePlot",
       "family": "distribution",
       "fitsOn": 2,
-      "rejectedOn": 21,
+      "rejectedOn": 22,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
       "averageScore": 3.5,
@@ -78,20 +78,9 @@
       "variantUtilization": 0
     },
     {
-      "component": "CandlestickChart",
-      "family": "time-series",
-      "fitsOn": 1,
-      "rejectedOn": 22,
-      "inTopThreeOn": 0,
-      "expertAgreementCount": 0,
-      "averageScore": 4,
-      "caveatCoverage": 0,
-      "variantUtilization": 0
-    },
-    {
       "component": "ForceDirectedGraph",
       "family": "network",
-      "fitsOn": 1,
+      "fitsOn": 2,
       "rejectedOn": 22,
       "inTopThreeOn": 1,
       "expertAgreementCount": 0,
@@ -100,10 +89,21 @@
       "variantUtilization": 0
     },
     {
+      "component": "CandlestickChart",
+      "family": "time-series",
+      "fitsOn": 1,
+      "rejectedOn": 23,
+      "inTopThreeOn": 0,
+      "expertAgreementCount": 0,
+      "averageScore": 4,
+      "caveatCoverage": 0,
+      "variantUtilization": 0
+    },
+    {
       "component": "CirclePack",
       "family": "hierarchy",
       "fitsOn": 1,
-      "rejectedOn": 22,
+      "rejectedOn": 23,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
       "averageScore": 4,
@@ -114,7 +114,7 @@
       "component": "OrbitDiagram",
       "family": "hierarchy",
       "fitsOn": 1,
-      "rejectedOn": 22,
+      "rejectedOn": 23,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
       "averageScore": 3,
@@ -125,7 +125,7 @@
       "component": "GaugeChart",
       "family": "categorical",
       "fitsOn": 0,
-      "rejectedOn": 23,
+      "rejectedOn": 24,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
       "averageScore": 0,
@@ -136,7 +136,7 @@
       "component": "ProcessSankey",
       "family": "flow",
       "fitsOn": 0,
-      "rejectedOn": 23,
+      "rejectedOn": 24,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
       "averageScore": 0,
@@ -147,7 +147,7 @@
       "component": "FlowMap",
       "family": "geo",
       "fitsOn": 0,
-      "rejectedOn": 23,
+      "rejectedOn": 24,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
       "averageScore": 0,
@@ -158,7 +158,7 @@
       "component": "DistanceCartogram",
       "family": "geo",
       "fitsOn": 0,
-      "rejectedOn": 23,
+      "rejectedOn": 24,
       "inTopThreeOn": 0,
       "expertAgreementCount": 0,
       "averageScore": 0,
@@ -168,30 +168,41 @@
     {
       "component": "DonutChart",
       "family": "categorical",
-      "fitsOn": 8,
+      "fitsOn": 9,
       "rejectedOn": 15,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
-      "averageScore": 1.25,
+      "averageScore": 1.1111111111111112,
       "caveatCoverage": 0,
       "variantUtilization": 0
     },
     {
       "component": "ConnectedScatterplot",
       "family": "relationship",
-      "fitsOn": 4,
+      "fitsOn": 5,
       "rejectedOn": 19,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
-      "averageScore": 2.5,
+      "averageScore": 2.2,
       "caveatCoverage": 1,
+      "variantUtilization": 0
+    },
+    {
+      "component": "DifferenceChart",
+      "family": "time-series",
+      "fitsOn": 5,
+      "rejectedOn": 19,
+      "inTopThreeOn": 2,
+      "expertAgreementCount": 1,
+      "averageScore": 2.6,
+      "caveatCoverage": 0.8,
       "variantUtilization": 0
     },
     {
       "component": "BubbleChart",
       "family": "relationship",
       "fitsOn": 4,
-      "rejectedOn": 19,
+      "rejectedOn": 20,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
       "averageScore": 2,
@@ -202,7 +213,7 @@
       "component": "ViolinPlot",
       "family": "distribution",
       "fitsOn": 4,
-      "rejectedOn": 21,
+      "rejectedOn": 22,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
       "averageScore": 4.5,
@@ -213,7 +224,7 @@
       "component": "MultiAxisLineChart",
       "family": "time-series",
       "fitsOn": 3,
-      "rejectedOn": 20,
+      "rejectedOn": 21,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
       "averageScore": 2.3333333333333335,
@@ -223,53 +234,20 @@
     {
       "component": "GroupedBarChart",
       "family": "categorical",
-      "fitsOn": 2,
+      "fitsOn": 3,
       "rejectedOn": 21,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
-      "averageScore": 2,
-      "caveatCoverage": 0,
-      "variantUtilization": 0
-    },
-    {
-      "component": "DifferenceChart",
-      "family": "time-series",
-      "fitsOn": 1,
-      "rejectedOn": 22,
-      "inTopThreeOn": 1,
-      "expertAgreementCount": 1,
-      "averageScore": 5,
+      "averageScore": 1.3333333333333333,
       "caveatCoverage": 0,
       "variantUtilization": 0
     },
     {
       "component": "FunnelChart",
       "family": "flow",
-      "fitsOn": 1,
+      "fitsOn": 2,
       "rejectedOn": 22,
-      "inTopThreeOn": 1,
-      "expertAgreementCount": 1,
-      "averageScore": 4,
-      "caveatCoverage": 1,
-      "variantUtilization": 0
-    },
-    {
-      "component": "SankeyDiagram",
-      "family": "flow",
-      "fitsOn": 1,
-      "rejectedOn": 22,
-      "inTopThreeOn": 1,
-      "expertAgreementCount": 1,
-      "averageScore": 5,
-      "caveatCoverage": 0,
-      "variantUtilization": 0
-    },
-    {
-      "component": "ChordDiagram",
-      "family": "flow",
-      "fitsOn": 1,
-      "rejectedOn": 22,
-      "inTopThreeOn": 1,
+      "inTopThreeOn": 2,
       "expertAgreementCount": 1,
       "averageScore": 4,
       "caveatCoverage": 1,
@@ -279,7 +257,7 @@
       "component": "Treemap",
       "family": "hierarchy",
       "fitsOn": 1,
-      "rejectedOn": 22,
+      "rejectedOn": 23,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
       "averageScore": 4,
@@ -290,7 +268,7 @@
       "component": "ChoroplethMap",
       "family": "geo",
       "fitsOn": 1,
-      "rejectedOn": 22,
+      "rejectedOn": 23,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
       "averageScore": 5,
@@ -301,7 +279,7 @@
       "component": "ProportionalSymbolMap",
       "family": "geo",
       "fitsOn": 1,
-      "rejectedOn": 22,
+      "rejectedOn": 23,
       "inTopThreeOn": 1,
       "expertAgreementCount": 1,
       "averageScore": 4,
@@ -311,22 +289,22 @@
     {
       "component": "AreaChart",
       "family": "time-series",
-      "fitsOn": 24,
+      "fitsOn": 27,
       "rejectedOn": 15,
-      "inTopThreeOn": 4,
+      "inTopThreeOn": 2,
       "expertAgreementCount": 2,
-      "averageScore": 2.625,
-      "caveatCoverage": 0,
+      "averageScore": 1.2592592592592593,
+      "caveatCoverage": 0.5555555555555556,
       "variantUtilization": 1
     },
     {
       "component": "DotPlot",
       "family": "categorical",
-      "fitsOn": 9,
+      "fitsOn": 10,
       "rejectedOn": 14,
       "inTopThreeOn": 2,
       "expertAgreementCount": 2,
-      "averageScore": 1.4444444444444444,
+      "averageScore": 1.3,
       "caveatCoverage": 0,
       "variantUtilization": 0
     },
@@ -334,7 +312,7 @@
       "component": "BoxPlot",
       "family": "distribution",
       "fitsOn": 4,
-      "rejectedOn": 19,
+      "rejectedOn": 20,
       "inTopThreeOn": 2,
       "expertAgreementCount": 2,
       "averageScore": 2.25,
@@ -342,10 +320,32 @@
       "variantUtilization": 0
     },
     {
+      "component": "SankeyDiagram",
+      "family": "flow",
+      "fitsOn": 2,
+      "rejectedOn": 22,
+      "inTopThreeOn": 2,
+      "expertAgreementCount": 2,
+      "averageScore": 5,
+      "caveatCoverage": 0,
+      "variantUtilization": 0
+    },
+    {
+      "component": "ChordDiagram",
+      "family": "flow",
+      "fitsOn": 2,
+      "rejectedOn": 22,
+      "inTopThreeOn": 2,
+      "expertAgreementCount": 2,
+      "averageScore": 4,
+      "caveatCoverage": 1,
+      "variantUtilization": 0
+    },
+    {
       "component": "TreeDiagram",
       "family": "hierarchy",
       "fitsOn": 2,
-      "rejectedOn": 22,
+      "rejectedOn": 23,
       "inTopThreeOn": 2,
       "expertAgreementCount": 2,
       "averageScore": 5,
@@ -355,77 +355,77 @@
     {
       "component": "PieChart",
       "family": "categorical",
-      "fitsOn": 16,
+      "fitsOn": 18,
       "rejectedOn": 15,
       "inTopThreeOn": 3,
       "expertAgreementCount": 3,
-      "averageScore": 1.5,
+      "averageScore": 1.3333333333333333,
       "caveatCoverage": 1,
       "variantUtilization": 1
     },
     {
       "component": "StackedAreaChart",
       "family": "time-series",
-      "fitsOn": 12,
+      "fitsOn": 15,
       "rejectedOn": 19,
       "inTopThreeOn": 3,
       "expertAgreementCount": 3,
-      "averageScore": 3.0833333333333335,
+      "averageScore": 2.466666666666667,
       "caveatCoverage": 1,
       "variantUtilization": 1
     },
     {
       "component": "StackedBarChart",
       "family": "categorical",
-      "fitsOn": 4,
+      "fitsOn": 6,
       "rejectedOn": 21,
       "inTopThreeOn": 3,
       "expertAgreementCount": 3,
-      "averageScore": 3.25,
+      "averageScore": 2.1666666666666665,
       "caveatCoverage": 1,
       "variantUtilization": 1
     },
     {
       "component": "Histogram",
       "family": "distribution",
-      "fitsOn": 32,
+      "fitsOn": 34,
       "rejectedOn": 7,
       "inTopThreeOn": 5,
       "expertAgreementCount": 4,
-      "averageScore": 0.75,
+      "averageScore": 0.7058823529411765,
       "caveatCoverage": 0,
       "variantUtilization": 1
     },
     {
       "component": "BarChart",
       "family": "categorical",
-      "fitsOn": 27,
+      "fitsOn": 30,
       "rejectedOn": 14,
       "inTopThreeOn": 6,
       "expertAgreementCount": 4,
-      "averageScore": 2.074074074074074,
+      "averageScore": 1.8666666666666667,
       "caveatCoverage": 0,
       "variantUtilization": 1
     },
     {
       "component": "Scatterplot",
       "family": "relationship",
-      "fitsOn": 26,
+      "fitsOn": 28,
       "rejectedOn": 10,
-      "inTopThreeOn": 8,
+      "inTopThreeOn": 10,
       "expertAgreementCount": 8,
-      "averageScore": 2.3846153846153846,
+      "averageScore": 2.142857142857143,
       "caveatCoverage": 0,
       "variantUtilization": 1
     },
     {
       "component": "LineChart",
       "family": "time-series",
-      "fitsOn": 24,
+      "fitsOn": 27,
       "rejectedOn": 15,
-      "inTopThreeOn": 12,
-      "expertAgreementCount": 12,
-      "averageScore": 3.0833333333333335,
+      "inTopThreeOn": 11,
+      "expertAgreementCount": 11,
+      "averageScore": 2.6666666666666665,
       "caveatCoverage": 0.3333333333333333,
       "variantUtilization": 1
     }
@@ -457,13 +457,13 @@
           "score": 5
         },
         {
-          "component": "AreaChart",
-          "variantKey": "smooth-gradient",
-          "score": 5
+          "component": "LineChart",
+          "variantKey": "stepped-with-points",
+          "score": 4
         }
       ],
-      "fittingCount": 15,
-      "rejectedCount": 32,
+      "fittingCount": 16,
+      "rejectedCount": 31,
       "expertAgreement": true,
       "noFitHonored": null
     },
@@ -476,11 +476,14 @@
         "GroupedBarChart"
       ],
       "topPick": {
-        "component": "LineChart",
-        "variantKey": "linear",
-        "score": 4
+        "component": "DifferenceChart",
+        "score": 5
       },
       "topThree": [
+        {
+          "component": "DifferenceChart",
+          "score": 5
+        },
         {
           "component": "LineChart",
           "variantKey": "linear",
@@ -490,15 +493,10 @@
           "component": "LineChart",
           "variantKey": "smooth",
           "score": 4
-        },
-        {
-          "component": "LineChart",
-          "variantKey": "stepped-with-points",
-          "score": 4
         }
       ],
-      "fittingCount": 15,
-      "rejectedCount": 32,
+      "fittingCount": 16,
+      "rejectedCount": 31,
       "expertAgreement": true,
       "noFitHonored": null
     },
@@ -532,8 +530,8 @@
           "score": 5
         }
       ],
-      "fittingCount": 15,
-      "rejectedCount": 32,
+      "fittingCount": 16,
+      "rejectedCount": 31,
       "expertAgreement": true,
       "noFitHonored": null
     },
@@ -547,15 +545,10 @@
       ],
       "topPick": {
         "component": "LineChart",
-        "variantKey": "linear",
+        "variantKey": "smooth",
         "score": 5
       },
       "topThree": [
-        {
-          "component": "LineChart",
-          "variantKey": "linear",
-          "score": 5
-        },
         {
           "component": "LineChart",
           "variantKey": "smooth",
@@ -563,7 +556,12 @@
         },
         {
           "component": "AreaChart",
-          "variantKey": "smooth-gradient",
+          "variantKey": "smooth",
+          "score": 5
+        },
+        {
+          "component": "AreaChart",
+          "variantKey": "linear",
           "score": 5
         }
       ],
@@ -953,14 +951,14 @@
           "score": 4
         },
         {
-          "component": "AreaChart",
-          "variantKey": "smooth-gradient",
-          "score": 2
+          "component": "Scatterplot",
+          "variantKey": "points",
+          "score": 1
         },
         {
-          "component": "AreaChart",
-          "variantKey": "linear",
-          "score": 2
+          "component": "Scatterplot",
+          "variantKey": "with-trend",
+          "score": 1
         }
       ],
       "fittingCount": 14,
@@ -1113,28 +1111,59 @@
         "Scatterplot"
       ],
       "topPick": {
-        "component": "Scatterplot",
-        "variantKey": "points",
+        "component": "ConnectedScatterplot",
         "score": 5
       },
       "topThree": [
         {
+          "component": "ConnectedScatterplot",
+          "score": 5
+        },
+        {
           "component": "Scatterplot",
           "variantKey": "points",
-          "score": 5
+          "score": 4
         },
         {
           "component": "Scatterplot",
           "variantKey": "with-trend",
-          "score": 5
-        },
-        {
-          "component": "ConnectedScatterplot",
           "score": 4
         }
       ],
       "fittingCount": 14,
       "rejectedCount": 31,
+      "expertAgreement": true,
+      "noFitHonored": null
+    },
+    {
+      "fixture": "transition events, intent=flow",
+      "shape": "11 stage transitions across 3 deals with startTime + value",
+      "intent": "flow",
+      "expected": [
+        "SankeyDiagram",
+        "ProcessSankey",
+        "ChordDiagram"
+      ],
+      "topPick": {
+        "component": "SankeyDiagram",
+        "score": 5
+      },
+      "topThree": [
+        {
+          "component": "SankeyDiagram",
+          "score": 5
+        },
+        {
+          "component": "FunnelChart",
+          "score": 4
+        },
+        {
+          "component": "ChordDiagram",
+          "score": 4
+        }
+      ],
+      "fittingCount": 33,
+      "rejectedCount": 19,
       "expertAgreement": true,
       "noFitHonored": null
     },
@@ -1202,10 +1231,10 @@
     }
   ],
   "summary": {
-    "fixtureCount": 23,
+    "fixtureCount": 24,
     "capabilityCount": 39,
     "expertAgreementRate": 1,
-    "overallCaveatCoverage": 0.24596774193548387,
-    "overallVariantUtilization": 0.7056451612903226
+    "overallCaveatCoverage": 0.323943661971831,
+    "overallVariantUtilization": 0.6936619718309859
   }
 }

@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { scaleHints } from "../../ai/dataScaleProfile"
 
 export const DotPlotCapability: ChartCapability = {
   component: "DotPlot",
@@ -30,5 +31,14 @@ export const DotPlotCapability: ChartCapability = {
     data: profile.data,
     categoryAccessor: profile.primary.category,
     valueAccessor: profile.primary.y,
+  }),
+
+  // DotPlot's edge over BarChart is when the category count is in the awkward
+  // "more than fits comfortably as bars" range (15–30) — dots compress denser
+  // along the value axis. Below 15 categories BarChart is the more familiar
+  // choice and DotPlot's accuracy advantage isn't decisive.
+  scaleFit: scaleHints({
+    cardinality: { sweetSpot: [10, 30], caveatAbove: 40 },
+    rows: { sweetSpot: [5, 300] },
   }),
 }

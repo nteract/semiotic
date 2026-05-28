@@ -163,7 +163,7 @@ export default function InterrogationPage() {
         { label: "Intelligence", path: "/intelligence" },
         { label: "Interrogation", path: "/intelligence/interrogation" },
       ]}
-      prevPage={{ title: "Chart Suggestions", path: "/intelligence/suggestions" }}
+      prevPage={{ title: "Scale-Aware Suggestions", path: "/intelligence/scale" }}
       nextPage={{ title: "Conversation Arc", path: "/intelligence/conversation-arc" }}
     >
       <p>

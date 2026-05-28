@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { scaleHints } from "../../ai/dataScaleProfile"
 
 export const PieChartCapability: ChartCapability = {
   component: "PieChart",
@@ -46,5 +47,12 @@ export const PieChartCapability: ChartCapability = {
     categoryAccessor: profile.primary.category,
     valueAccessor: profile.primary.y,
     ...(variant?.props ?? {}),
+  }),
+
+  // Pie comparison via angle is perceptually weak above ~7 slices (Cleveland-McGill
+  // rank position vs angle); the descriptor `fits()` caps at 8 already, but in
+  // the 5–8 range we still bias against to nudge toward bar-style alternatives.
+  scaleFit: scaleHints({
+    cardinality: { sweetSpot: [2, 5], caveatAbove: 6 },
   }),
 }

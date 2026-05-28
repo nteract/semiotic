@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { scaleHints } from "../../ai/dataScaleProfile"
 
 export const ScatterplotCapability: ChartCapability = {
   component: "Scatterplot",
@@ -20,13 +21,18 @@ export const ScatterplotCapability: ChartCapability = {
   },
 
   intentScores: {
-    // When a sequence axis is available and 2+ other numerics exist,
-    // ConnectedScatterplot is the strictly more informative correlation chart
-    // (same x/y plus temporal progression). Step back so it wins the tiebreak.
+    // Yield to richer correlation charts when the data supports them:
+    //   • ConnectedScatterplot when a sequence axis + 2+ other numerics exist
+    //     (same x/y plus temporal progression — strictly more informative).
+    //   • BubbleChart when a size dimension is available (genuinely 3-D data
+    //     — bubble is the honest representation, scatter drops one dimension).
+    // Otherwise position-only scatter is the right answer.
     "correlation": (p) => {
       const seq = p.xProvenance === "time" || p.xProvenance === "named" ? p.primary.x : p.primary.time
       const others = seq ? p.candidates.y.filter((c) => c.field !== seq).map((c) => c.field) : []
-      return seq && others.length >= 2 ? 4 : 5
+      if (seq && others.length >= 2) return 4
+      if (p.primary.size) return 4
+      return 5
     },
     "outlier-detection": 5,
     "distribution": 3,
@@ -80,4 +86,11 @@ export const ScatterplotCapability: ChartCapability = {
     }
     return { ...base, ...(variant?.props ?? {}) }
   },
+
+  // Scatter benefits from many points (visual density reveals clusters), but
+  // overdraw past ~10k points hides structure unless paired with alpha or
+  // hexbin treatment. Below 20 points patterns are anecdotes, not signal.
+  scaleFit: scaleHints({
+    rows: { sweetSpot: [50, 5000], caveatBelow: 20, caveatAbove: 10000 },
+  }),
 }

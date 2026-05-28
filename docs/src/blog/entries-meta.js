@@ -20,6 +20,18 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "scale-aware-suggestions",
+    title: "Your sample lies about your data",
+    subtitle:
+      "Scale-aware chart suggestions: declare what the production dataset actually looks like, and get back recommendations that work at that scale instead of at the size of the sample you happened to pass.",
+    author: "Elijah Meeks",
+    date: "2026-05-29",
+    tags: ["case-study", "ai"],
+    excerpt:
+      "Hand `suggestCharts()` a hundred rows and it'll pick the right chart for the hundred. The production dataset is a million rows and the choice is wrong. Scale-aware suggestions close the gap by accepting a declared `DataScaleProfile` — what scale the data actually has, not what the sample looked like. With the design decisions behind it: split scale from quality, breakpoints per-chart not global, and the single-value gap the work surfaced.",
+    draft: true,
+  },
+  {
     slug: "release-3-6-0",
     title: "Semiotic 3.6.0",
     subtitle:

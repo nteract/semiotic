@@ -1,6 +1,13 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { DataSummary } from "../data/DataSummarizer"
 import type { IntentId } from "./intents"
+import type {
+  ScaleFitFn,
+  QualityFitFn,
+  ScaleBand,
+  CardinalityBand,
+  EffectiveScale,
+} from "./dataScaleProfile"
 
 /**
  * Chart family — high-level taxonomy used for filtering and intent matching.
@@ -193,6 +200,39 @@ export interface ChartCapability {
    * a runnable config (accessor names, etc.) so consumers can `<Component {...props}>`.
    */
   buildProps: (profile: ChartDataProfile, variant?: ChartVariant) => Record<string, unknown>
+  /**
+   * Optional declaration of this chart's sweet spot under scale. Receives the
+   * effective scale (declared `DataScaleProfile` merged with measured profile)
+   * and returns a score delta plus optional caveats. Use `scaleHints(...)` from
+   * `dataScaleProfile.ts` for the common declarative shape.
+   *
+   * When omitted, the engine assumes the chart is scale-agnostic and applies
+   * no scale bias beyond what `intentScores` already encodes in `profile`.
+   */
+  scaleFit?: ScaleFitFn
+  /**
+   * Optional declaration of this chart's response to data quality (missingness,
+   * outliers, type heterogeneity). Returns a score delta plus caveats. When
+   * omitted, the engine applies a default heuristic that adds caveats for
+   * low completeness on the primary y field.
+   */
+  qualityFit?: QualityFitFn
+}
+
+/**
+ * Effective scale range tag on a suggestion. Lets callers group suggestions
+ * by their scale sweet spot, detect threshold crossings as data grows, and
+ * narrate why a recommendation changed.
+ */
+export interface SuggestionScaleRange {
+  /** Band classification of the row count this suggestion was evaluated against. */
+  band: ScaleBand
+  /** Cardinality band, if known. */
+  cardinalityBand?: CardinalityBand
+  /** Effective row count the engine reasoned over (declared or measured). */
+  rows: number
+  /** Whether the row count came from a user-declared profile or the measured data. */
+  rowsSource: "declared" | "measured"
 }
 
 /**
@@ -216,4 +256,30 @@ export interface Suggestion {
   caveats: ReadonlyArray<string>
   /** Ready-to-spread props. */
   props: Record<string, unknown>
+  /**
+   * Scale tag — present when scale/quality information is available, either
+   * through declared `DataScaleProfile` or through the measured profile.
+   * Surfaces what band this chart was scored at so consumers can group by
+   * scale, detect threshold crossings, or narrate "the chart for now → at 10×."
+   */
+  scaleRange?: SuggestionScaleRange
+}
+
+/**
+ * Multi-tier grouping of suggestions by scale band. Returned by
+ * `suggestCharts` when `groupByScale: true` is passed.
+ *
+ * Each tier is a ranked list of suggestions whose `scaleRange.band` falls in
+ * that tier. A single chart can appear in multiple tiers when its sweet-spot
+ * range spans them — that's the "graduation of views" surface: the same data
+ * gets a different chart depending on which scale you're optimizing for.
+ */
+export interface ScaledSuggestionGroups {
+  tiny: Suggestion[]
+  small: Suggestion[]
+  medium: Suggestion[]
+  large: Suggestion[]
+  huge: Suggestion[]
+  /** The effective scale view the engine reasoned over. */
+  effective: EffectiveScale
 }

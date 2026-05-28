@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { scaleHints } from "../../ai/dataScaleProfile"
 
 export const BarChartCapability: ChartCapability = {
   component: "BarChart",
@@ -59,5 +60,13 @@ export const BarChartCapability: ChartCapability = {
     categoryAccessor: profile.primary.category,
     valueAccessor: profile.primary.y,
     ...(variant?.props ?? {}),
+  }),
+
+  // Bars are about category totals, not row density. The decisive scale axis
+  // is cardinality of the category field (Miller 1956: ~7 is the comfort zone;
+  // ~25 is the legibility ceiling). Below 3 categories a bar chart feels thin.
+  scaleFit: scaleHints({
+    cardinality: { sweetSpot: [3, 15], caveatAbove: 25 },
+    rows: { sweetSpot: [3, 200] },
   }),
 }

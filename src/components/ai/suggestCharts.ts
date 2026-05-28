@@ -6,11 +6,20 @@ import type {
   ChartRubric,
   ChartVariant,
   IntentScorer,
+  ScaledSuggestionGroups,
   Suggestion,
+  SuggestionScaleRange,
 } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
 import { getCapabilities } from "./chartCapabilities"
 import { applyAudienceBias, type AudienceProfile } from "./audienceProfile"
+import {
+  applyScaleBias,
+  computeEffectiveScale,
+  type DataQualityProfile,
+  type DataScaleProfile,
+  type EffectiveScale,
+} from "./dataScaleProfile"
 
 function score(scorer: IntentScorer | undefined, profile: ChartDataProfile): number {
   if (scorer === undefined) return 0
@@ -108,6 +117,19 @@ export interface SuggestChartsOptions extends ProfileDataOptions {
    * bias to the ranking. See `audienceProfile.ts`.
    */
   audience?: AudienceProfile
+  /**
+   * Forward-looking declaration of the dataset's scale (row count, cardinality,
+   * field count, growth mode). When provided, the engine biases recommendations
+   * toward charts that work at the declared scale rather than the sample size.
+   * See `dataScaleProfile.ts`.
+   */
+  scale?: DataScaleProfile
+  /**
+   * Declaration of the dataset's quality (completeness, outliers, type
+   * heterogeneity). Affects caveats and biases score modestly. See
+   * `dataScaleProfile.ts`.
+   */
+  quality?: DataQualityProfile
 }
 
 /**
@@ -132,22 +154,40 @@ export function suggestCharts(
   const allow = options.allow ? new Set(options.allow) : null
   const deny = options.deny ? new Set(options.deny) : null
 
+  // Effective scale: merges declared DataScaleProfile with the measured profile.
+  // Computed once per suggestCharts call. When no scale is declared, falls
+  // back to whatever the profile measured — so the scaleRange tag always
+  // attaches honestly.
+  const effectiveScale = computeEffectiveScale(profile, options.scale)
+
+  // Scaled profile: when the user declares a row count different from the
+  // measured sample, fits() and intent scorers reason against the *declared*
+  // row count. Structural facts (which fields exist, types, monotonicity) stay
+  // measured because declared scale is about magnitude, not shape. This is
+  // what lets GaugeChart fit when the user declares rows: "tiny" on a 5-row
+  // sample, and what lets BarChart's "obsPerCategory > 10 → distribution
+  // chart wins" rule fire at declared production scale rather than sample size.
+  const scaledProfile =
+    options.scale !== undefined && effectiveScale.rows !== profile.rowCount
+      ? { ...profile, rowCount: effectiveScale.rows }
+      : profile
+
   const out: Suggestion[] = []
 
   for (const capability of capabilities) {
     if (allow && !allow.has(capability.component)) continue
     if (deny && deny.has(capability.component)) continue
 
-    const fitReason = capability.fits(profile)
+    const fitReason = capability.fits(scaledProfile)
     if (fitReason !== null) continue
 
     // Base intent scores from the capability
     const baseScores: Partial<Record<IntentId, number>> = {}
     for (const [intent, scorer] of Object.entries(capability.intentScores) as Array<[IntentId, IntentScorer]>) {
-      baseScores[intent] = score(scorer, profile)
+      baseScores[intent] = score(scorer, scaledProfile)
     }
 
-    const baseCaveats = capability.caveats ? Array.from(capability.caveats(profile)) : []
+    const baseCaveats = capability.caveats ? Array.from(capability.caveats(scaledProfile)) : []
     const variants: ReadonlyArray<ChartVariant | undefined> =
       includeVariants && capability.variants && capability.variants.length > 0
         ? capability.variants
@@ -167,24 +207,50 @@ export function suggestCharts(
         capability.component,
         options.audience,
       )
-      if (biased.score < minScore) continue
 
-      const reasons = buildReasons(capability, profile, intentScores, rankingIntents)
+      // Scale + quality bias: composes additively on top of the audience-biased
+      // score. A per-chart org preference can also *exclude* the chart entirely
+      // when the effective row band falls outside the declared minBand/maxBand.
+      const scaleBias = applyScaleBias(
+        capability,
+        scaledProfile,
+        effectiveScale,
+        options.scale,
+        options.quality,
+      )
+      if (scaleBias.excluded) continue
+      const finalScore = biased.score + scaleBias.delta
+      if (finalScore < minScore) continue
+
+      const reasons = buildReasons(capability, scaledProfile, intentScores, rankingIntents)
       if (biased.appliedReason) reasons.push(biased.appliedReason)
-      const caveats = [...baseCaveats, ...(variant?.caveats ?? [])]
+      for (const r of scaleBias.reasons) reasons.push(r)
+      const caveats = [
+        ...baseCaveats,
+        ...(variant?.caveats ?? []),
+        ...scaleBias.caveats,
+      ]
       const props = capability.buildProps(profile, variant)
+
+      const scaleRange: SuggestionScaleRange = {
+        band: effectiveScale.rowBand,
+        cardinalityBand: effectiveScale.cardinalityBand,
+        rows: effectiveScale.rows,
+        rowsSource: effectiveScale.rowsSource,
+      }
 
       out.push({
         component: capability.component,
         family: capability.family,
         importPath: capability.importPath,
         variant,
-        score: biased.score,
+        score: finalScore,
         intentScores,
         rubric: biased.rubric,
         reasons,
         caveats,
         props,
+        scaleRange,
       })
     }
   }
@@ -240,11 +306,21 @@ export function explainCapabilityFit(
   const allow = options.allow ? new Set(options.allow) : null
   const deny = options.deny ? new Set(options.deny) : null
 
+  // Mirror the scaled-profile path in suggestCharts so rejection reasons
+  // reflect the declared scale's view of rowCount. Otherwise charts that fit
+  // at declared scale would still appear in the rejected list with reasons
+  // that reference the sample size, which contradicts the suggestion list.
+  const effectiveScale = computeEffectiveScale(profile, options.scale)
+  const scaledProfile =
+    options.scale !== undefined && effectiveScale.rows !== profile.rowCount
+      ? { ...profile, rowCount: effectiveScale.rows }
+      : profile
+
   const rejected: RejectedCapability[] = []
   for (const capability of capabilities) {
     if (allow && !allow.has(capability.component)) continue
     if (deny && deny.has(capability.component)) continue
-    const fitReason = capability.fits(profile)
+    const fitReason = capability.fits(scaledProfile)
     if (fitReason !== null) {
       rejected.push({
         component: capability.component,
@@ -308,5 +384,59 @@ export function scoreChart(
     reasons,
     caveats,
     props: capability.buildProps(profile, variant),
+  }
+}
+
+/**
+ * Return suggestions grouped by scale band. The "graduation of views" surface:
+ * the same data + intent can produce different chart recommendations depending
+ * on the row band you optimize for. Useful for narratives like
+ * "now → at 10× → at 100×" or for picking the right chart for a sample vs the
+ * production dataset.
+ *
+ * Behavior: runs `suggestCharts` five times (once per band — tiny/small/medium/
+ * large/huge), pinning the row band on each pass while keeping all other
+ * options stable. Each band returns its own ranked list. The same chart can
+ * appear in multiple bands when its sweet spot spans them.
+ *
+ * The single `effective` value on the return is computed from the *original*
+ * options (declared scale or measured profile), so callers can detect which
+ * band the user's actual data lives in and highlight that tier.
+ */
+export function suggestChartsGrouped(
+  data: ReadonlyArray<Datum> | null | undefined,
+  options: SuggestChartsOptions & { maxPerBand?: number } = {}
+): ScaledSuggestionGroups {
+  const profile = options.profile ?? profileData(data ?? [], {
+    rawInput: options.rawInput,
+    seriesField: options.seriesField,
+  })
+
+  const effective = computeEffectiveScale(profile, options.scale)
+  const maxPerBand = options.maxPerBand ?? options.maxResults ?? 5
+
+  const bandList = ["tiny", "small", "medium", "large", "huge"] as const
+  const groups: Partial<Record<typeof bandList[number], Suggestion[]>> = {}
+
+  for (const band of bandList) {
+    const scaleForBand: DataScaleProfile = {
+      ...(options.scale ?? {}),
+      rows: band,
+    }
+    groups[band] = suggestCharts(data, {
+      ...options,
+      profile,
+      scale: scaleForBand,
+      maxResults: maxPerBand,
+    })
+  }
+
+  return {
+    tiny: groups.tiny ?? [],
+    small: groups.small ?? [],
+    medium: groups.medium ?? [],
+    large: groups.large ?? [],
+    huge: groups.huge ?? [],
+    effective,
   }
 }

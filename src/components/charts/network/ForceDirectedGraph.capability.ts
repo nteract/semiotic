@@ -33,4 +33,23 @@ export const ForceDirectedGraphCapability: ChartCapability = {
     sourceAccessor: "source",
     targetAccessor: "target",
   }),
+
+  // Network density is about node count, not row count. Sweet spot is the
+  // band where individual nodes are reachable by eye and edges aren't a
+  // hairball. Beyond ~300 nodes a force layout becomes the "blue smudge of
+  // nothing in particular" — the chart suggestion should drop accordingly.
+  scaleFit: (profile) => {
+    const n = profile.network?.nodes.length ?? 0
+    if (n < 5) {
+      return { delta: -0.4, caveats: [`only ${n} nodes — force layout is overkill for this size`] }
+    }
+    if (n <= 100) {
+      return { delta: 0.5, reason: `${n} nodes is in the readable range for force layout` }
+    }
+    if (n <= 300) return { delta: 0 }
+    return {
+      delta: -0.8,
+      caveats: [`${n} nodes — expect a hairball; filter or aggregate before rendering`],
+    }
+  },
 }

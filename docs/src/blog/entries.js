@@ -54,6 +54,7 @@ import LiveDashboard from "./entries/live-conversational-dashboard.js"
 import Release360 from "./entries/release-3-6-0.js"
 import TalkTrackIntelligence from "./entries/talk-track-intelligence.js"
 import FromSpecToRuntime from "./entries/from-spec-to-runtime.js"
+import ScaleAwareSuggestions from "./entries/scale-aware-suggestions.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -61,6 +62,7 @@ import FromSpecToRuntime from "./entries/from-spec-to-runtime.js"
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  ScaleAwareSuggestions,
   Release360,
   FromSpecToRuntime,
   TalkTrackIntelligence,
