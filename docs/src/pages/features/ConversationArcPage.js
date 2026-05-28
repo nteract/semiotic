@@ -333,17 +333,22 @@ function ArcDemo() {
   )
 }
 
-// ── Annotation provenance demo: simple freshness scrubber ────────────
+// ── Annotation provenance demo: freshness scrubber ───────────────────
 
-const ANNOTATIONS = [
+// Two callouts pointing at real data spikes. Annotation fields use the
+// chart's accessor names (`month`, `value`) — that's how the annotation
+// system resolves screen coordinates from data.
+const ANNOTATIONS_RAW = [
   withProvenance(
     {
       type: "callout",
-      x: 3,
-      y: 280,
-      dx: 30,
-      dy: -40,
-      note: { label: "Spike from launch", title: "Q3" },
+      id: "alice-spike",
+      month: 3,
+      value: 420,
+      label: "Hand-placed spike",
+      note: "Marked when the product launched.",
+      dx: 50,
+      dy: -45,
     },
     {
       provenance: {
@@ -357,11 +362,13 @@ const ANNOTATIONS = [
   withProvenance(
     {
       type: "callout",
-      x: 7,
-      y: 410,
-      dx: -30,
-      dy: -50,
-      note: { label: "AI tag (low conf.)", title: "Anomaly" },
+      id: "ai-anomaly",
+      month: 7,
+      value: 510,
+      label: "AI anomaly tag",
+      note: "Flagged by model-v3 (confidence 0.62).",
+      dx: -55,
+      dy: -45,
     },
     {
       provenance: {
@@ -398,29 +405,76 @@ function parseIsoDuration(s) {
   return ((days * 24 + hours) * 60 * 60 * 1000)
 }
 
-const STYLE_BY_FRESHNESS = {
-  fresh: { opacity: 1, strokeDasharray: undefined },
-  aging: { opacity: 0.6, strokeDasharray: undefined },
-  stale: { opacity: 0.45, strokeDasharray: "4 4" },
-  expired: { opacity: 0.2, strokeDasharray: "2 4" },
+// Per-source brand color. Freshness shifts THIS color toward gray.
+// The annotation renderer reads `color` for both text fill + connector
+// stroke, so this single field drives the whole visual treatment.
+const SOURCE_BASE_COLOR = {
+  user: "#3a8eff",
+  ai: "#d49a00",
 }
 
-const SAMPLE_DATA = Array.from({ length: 12 }, (_, i) => ({
-  month: i + 1,
-  value: 250 + Math.sin(i * 0.7) * 80 + i * 12,
-}))
+const COLOR_BY_FRESHNESS = {
+  fresh: (base) => base,
+  aging: () => "#8a96a3",
+  stale: () => "#b0b0b0",
+}
+
+const LABEL_SUFFIX = {
+  fresh: "",
+  aging: " · aging",
+  stale: " · stale",
+}
+
+const FRESHNESS_BADGE_COLOR = {
+  fresh: "#2d8a4a",
+  aging: "#d49a00",
+  stale: "#a0a0a0",
+  expired: "#c43d3d",
+}
+
+// Hand-tuned data so the spikes the annotations point at are clearly
+// visible peaks rather than getting lost in a noisy sine wave.
+const SAMPLE_DATA = [
+  { month: 1, value: 280 },
+  { month: 2, value: 310 },
+  { month: 3, value: 420 },  // alice's spike
+  { month: 4, value: 350 },
+  { month: 5, value: 360 },
+  { month: 6, value: 370 },
+  { month: 7, value: 510 },  // AI's anomaly
+  { month: 8, value: 390 },
+  { month: 9, value: 400 },
+  { month: 10, value: 420 },
+  { month: 11, value: 450 },
+  { month: 12, value: 470 },
+]
+
+const SLIDER_MIN = Date.parse("2026-02-15T00:00:00Z")
+const SLIDER_MAX = Date.parse("2026-08-15T00:00:00Z")
 
 function FreshnessDemo() {
-  const [nowIso, setNowIso] = useState("2026-04-01T00:00:00Z")
+  const [nowIso, setNowIso] = useState("2026-03-10T00:00:00Z")
   const nowMs = Date.parse(nowIso)
-  const annotated = ANNOTATIONS.map((a) => {
-    const freshness = computeFreshnessPreview(a, nowMs)
-    return {
-      ...a,
-      lifecycle: { ...a.lifecycle, freshness },
-      ...STYLE_BY_FRESHNESS[freshness],
-    }
-  })
+
+  // Compute freshness state for each raw annotation. Expired ones drop
+  // out of the chart-bound array entirely — mirrors M2's default of
+  // hiding expired notes unless `showExpiredAnnotations` is on.
+  const states = ANNOTATIONS_RAW.map((a) => ({
+    raw: a,
+    freshness: computeFreshnessPreview(a, nowMs),
+  }))
+
+  const visibleAnnotations = states
+    .filter((s) => s.freshness !== "expired")
+    .map(({ raw, freshness }) => {
+      const base = SOURCE_BASE_COLOR[raw.provenance.source] ?? "#5a5a5a"
+      return {
+        ...raw,
+        label: raw.label + LABEL_SUFFIX[freshness],
+        color: COLOR_BY_FRESHNESS[freshness](base),
+        lifecycle: { ...raw.lifecycle, freshness },
+      }
+    })
 
   return (
     <div style={{
@@ -437,35 +491,77 @@ function FreshnessDemo() {
         xAccessor="month"
         yAccessor="value"
         title="Annotations as their lifecycle scrubs"
-        height={260}
+        height={340}
+        margin={{ top: 32, right: 36, bottom: 40, left: 56 }}
         showPoints
-        annotations={annotated}
+        annotations={visibleAnnotations}
       />
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <label style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-          Pretend "now" is: <code>{nowIso.slice(0, 10)}</code>
+
+      <div>
+        <label style={{ display: "block", fontSize: 13, color: "var(--text-secondary)", marginBottom: 4 }}>
+          Pretend "now" is <code style={{ fontSize: 13 }}>{nowIso.slice(0, 10)}</code>
         </label>
         <input
           type="range"
-          min={Date.parse("2026-02-15T00:00:00Z")}
-          max={Date.parse("2026-07-01T00:00:00Z")}
+          min={SLIDER_MIN}
+          max={SLIDER_MAX}
           step={86_400_000}
           value={nowMs}
           onChange={(e) => setNowIso(new Date(parseInt(e.target.value, 10)).toISOString())}
+          style={{ width: "100%" }}
         />
-        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-          {annotated.map((a) => (
-            <span key={a.note.title} style={{ marginRight: 14 }}>
-              <strong>{a.note.title}</strong>: {a.lifecycle.freshness}
-            </span>
-          ))}
-        </div>
       </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {states.map(({ raw, freshness }) => {
+          const created = Date.parse(raw.provenance.createdAt)
+          const ageDays = Math.max(0, Math.floor((nowMs - created) / (24 * 60 * 60 * 1000)))
+          return (
+            <div
+              key={raw.id}
+              style={{
+                border: "1px solid var(--surface-3)",
+                background: "var(--surface-2)",
+                borderRadius: 8,
+                padding: "10px 12px",
+                fontSize: 12,
+                opacity: freshness === "expired" ? 0.55 : 1,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, gap: 8 }}>
+                <strong style={{ fontSize: 13 }}>{raw.label}</strong>
+                <span style={{
+                  background: FRESHNESS_BADGE_COLOR[freshness],
+                  color: "white",
+                  padding: "1px 8px",
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 600,
+                }}>{freshness}</span>
+              </div>
+              <div style={{ color: "var(--text-secondary)" }}>
+                by <code>{raw.provenance.author}</code>
+                {" · "}{ageDays} day{ageDays === 1 ? "" : "s"} old
+                {" · "}TTL <code>{raw.lifecycle.ttlHint}</code>
+              </div>
+              {freshness === "expired" && (
+                <div style={{ marginTop: 4, color: "var(--semiotic-danger, #c43d3d)" }}>
+                  hidden from chart — past 3× TTL
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
       <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
-        The freshness calculation in this demo is a stand-in. The shipping
-        helper, <code>computeAnnotationFreshness</code>, lands in M2. The
-        annotation data itself uses the M1 provenance + lifecycle blocks
-        verbatim.
+        Drag the slider forward in time. The annotations' colors and
+        labels shift through <code>fresh → aging → stale</code>, then
+        disappear once they hit <code>expired</code>. The freshness
+        calculation here is a page-local stand-in — the shipping
+        <code>computeAnnotationFreshness</code> helper and default
+        visual treatment land in M2. The annotation data itself uses
+        the M1 provenance + lifecycle blocks verbatim.
       </p>
     </div>
   )

@@ -212,21 +212,53 @@ function ConversationArcLiveDemo() {
 
 // ─── Annotation provenance freshness scrubber ─────────────────────────────
 
-const STALE_DEMO_DATA = Array.from({ length: 12 }, (_, i) => ({
-  month: i + 1,
-  value: 250 + Math.sin(i * 0.7) * 80 + i * 12,
-}))
+// Hand-tuned spikes so annotations sit on visible peaks rather than
+// getting lost in noise.
+const STALE_DEMO_DATA = [
+  { month: 1, value: 280 },
+  { month: 2, value: 310 },
+  { month: 3, value: 420 },  // alice's spike
+  { month: 4, value: 350 },
+  { month: 5, value: 360 },
+  { month: 6, value: 370 },
+  { month: 7, value: 510 },  // AI's anomaly
+  { month: 8, value: 390 },
+  { month: 9, value: 400 },
+  { month: 10, value: 420 },
+  { month: 11, value: 450 },
+  { month: 12, value: 470 },
+]
 
+// Field names match the chart's accessors (`month`/`value`). That's how
+// the annotation layer resolves data → screen coordinates.
 const RAW_ANNOTATIONS = [
   withProvenance(
-    { type: "callout", x: 3, y: 280, dx: 30, dy: -40, note: { label: "Hand-placed", title: "Spike" } },
+    {
+      type: "callout",
+      id: "alice-spike",
+      month: 3,
+      value: 420,
+      label: "Hand-placed spike",
+      note: "Marked when the product launched.",
+      dx: 50,
+      dy: -45,
+    },
     {
       provenance: { author: "alice", source: "user", createdAt: "2026-02-15T12:00:00Z" },
       lifecycle: { ttlHint: "P30D", anchor: "semantic" },
     }
   ),
   withProvenance(
-    { type: "callout", x: 7, y: 410, dx: -30, dy: -50, note: { label: "AI tag (low conf.)", title: "Anomaly" } },
+    {
+      type: "callout",
+      id: "ai-anomaly",
+      month: 7,
+      value: 510,
+      label: "AI anomaly tag",
+      note: "Flagged by model-v3 (confidence 0.62).",
+      dx: -55,
+      dy: -45,
+    },
     {
       provenance: { author: "model-v3", source: "ai", confidence: 0.62, createdAt: "2026-03-10T09:00:00Z" },
       lifecycle: { ttlHint: "P14D", anchor: "fixed" },
@@ -234,11 +266,18 @@ const RAW_ANNOTATIONS = [
   ),
 ]
 
-const FRESHNESS_STYLE = {
-  fresh: { opacity: 1 },
-  aging: { opacity: 0.55 },
-  stale: { opacity: 0.35, strokeDasharray: "4 4" },
-  expired: { opacity: 0.18, strokeDasharray: "2 4" },
+const FRESHNESS_BASE_COLOR = { user: "#3a8eff", ai: "#d49a00" }
+const FRESHNESS_COLOR = {
+  fresh: (base) => base,
+  aging: () => "#8a96a3",
+  stale: () => "#b0b0b0",
+}
+const FRESHNESS_SUFFIX = { fresh: "", aging: " · aging", stale: " · stale" }
+const FRESHNESS_BADGE = {
+  fresh: "#2d8a4a",
+  aging: "#d49a00",
+  stale: "#a0a0a0",
+  expired: "#c43d3d",
 }
 
 function parseIsoDuration(s) {
@@ -260,16 +299,27 @@ function previewFreshness(ann, nowMs) {
 }
 
 function FreshnessLiveDemo() {
-  const [nowIso, setNowIso] = useState("2026-04-01T00:00:00Z")
+  const [nowIso, setNowIso] = useState("2026-03-10T00:00:00Z")
   const nowMs = Date.parse(nowIso)
-  const annotated = RAW_ANNOTATIONS.map((a) => {
-    const freshness = previewFreshness(a, nowMs)
-    return {
-      ...a,
-      lifecycle: { ...a.lifecycle, freshness },
-      ...FRESHNESS_STYLE[freshness],
-    }
-  })
+
+  const states = RAW_ANNOTATIONS.map((a) => ({
+    raw: a,
+    freshness: previewFreshness(a, nowMs),
+  }))
+
+  // Expired annotations drop out of the array — mirrors M2's default
+  // of hiding them unless `showExpiredAnnotations` is on.
+  const visible = states
+    .filter((s) => s.freshness !== "expired")
+    .map(({ raw, freshness }) => {
+      const base = FRESHNESS_BASE_COLOR[raw.provenance.source] ?? "#5a5a5a"
+      return {
+        ...raw,
+        label: raw.label + FRESHNESS_SUFFIX[freshness],
+        color: FRESHNESS_COLOR[freshness](base),
+        lifecycle: { ...raw.lifecycle, freshness },
+      }
+    })
 
   return (
     <div style={card}>
@@ -278,9 +328,10 @@ function FreshnessLiveDemo() {
         xAccessor="month"
         yAccessor="value"
         showPoints
-        height={240}
+        height={300}
+        margin={{ top: 28, right: 28, bottom: 36, left: 52 }}
         title='"Now" scrubber: watch annotations age'
-        annotations={annotated}
+        annotations={visible}
       />
       <div style={{ marginTop: 10 }}>
         <label style={{ display: "block", fontSize: 12, color: "var(--text-secondary)" }}>
@@ -289,18 +340,48 @@ function FreshnessLiveDemo() {
         <input
           type="range"
           min={Date.parse("2026-02-15T00:00:00Z")}
-          max={Date.parse("2026-07-01T00:00:00Z")}
+          max={Date.parse("2026-08-15T00:00:00Z")}
           step={86_400_000}
           value={nowMs}
           onChange={(e) => setNowIso(new Date(parseInt(e.target.value, 10)).toISOString())}
           style={{ width: "100%" }}
         />
-        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 4 }}>
-          {annotated.map((a) => (
-            <span key={a.note.title} style={{ marginRight: 14 }}>
-              <strong>{a.note.title}</strong>: {a.lifecycle.freshness}
-            </span>
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 10 }}>
+          {states.map(({ raw, freshness }) => {
+            const ageDays = Math.max(
+              0,
+              Math.floor((nowMs - Date.parse(raw.provenance.createdAt)) / (24 * 60 * 60 * 1000))
+            )
+            return (
+              <div
+                key={raw.id}
+                style={{
+                  background: "var(--surface-3)",
+                  borderRadius: 6,
+                  padding: "8px 10px",
+                  fontSize: 12,
+                  opacity: freshness === "expired" ? 0.55 : 1,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 2 }}>
+                  <strong>{raw.label}</strong>
+                  <span style={{
+                    background: FRESHNESS_BADGE[freshness],
+                    color: "white",
+                    padding: "1px 7px",
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}>{freshness}</span>
+                </div>
+                <div style={{ color: "var(--text-secondary)" }}>
+                  by <code>{raw.provenance.author}</code>
+                  {" · "}{ageDays} day{ageDays === 1 ? "" : "s"} old
+                  {" · "}TTL <code>{raw.lifecycle.ttlHint}</code>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
