@@ -192,10 +192,13 @@ function ArcSummaryPanel({ summary, enabled }) {
 
 function ArcDemo() {
   // The hook owns subscription, re-render coordination, and snapshot
-  // stability via useSyncExternalStore. `enableOnMount: false` lets the
-  // button drive enable/disable; if we let the hook auto-enable, the
-  // button would always be in the "currently recording" state when the
-  // page loads.
+  // stability via useSyncExternalStore. `enableOnMount: false` means
+  // this demo's toggle button is what flips THIS hook's intent to
+  // record. The underlying store is module-scoped, so AutoInstrumentDemo
+  // below also touches it; readers may see `enabled` true on first
+  // render if that demo mounted first and called `enableConversationArc()`.
+  // That's intentional — the demos share one buffer to demonstrate the
+  // module-scope contract.
   const { history: events, summary, enabled, sessionId, record, clear: clearArc } =
     useConversationArc({ enableOnMount: false })
   const chartRef = useRef(null)
