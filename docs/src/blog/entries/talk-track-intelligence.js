@@ -25,7 +25,7 @@ const META = {
   date: "2026-05-27",
   tags: ["case-study", "ai", "roadmap"],
   excerpt:
-    "AI-assisted chart authoring is a session, not a single The spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers. Interactive demos for the first two.",
+    "AI-assisted chart authoring is a session, not a single call. The spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers.",
 }
 
 // ─── Shared layout chrome (mirrors other blog entries) ────────────────────
