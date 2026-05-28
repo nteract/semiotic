@@ -125,18 +125,20 @@ function AutoInstrumentDemo() {
     const prevProfile = AUDIENCES.find((a) => a.id === audienceId)
     recordAudienceChange(
       nextProfile?.label ?? next,
-      prevProfile?.id === "none" ? null : prevProfile?.label ?? null
+      prevProfile?.id === "none" ? null : (prevProfile?.label ?? null),
     )
     setAudienceId(next)
   }
 
   return (
     <div style={card}>
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)",
-        gap: 20,
-      }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)",
+          gap: 20,
+        }}
+      >
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <ButtonRow
             label="Intent"
@@ -152,13 +154,23 @@ function AutoInstrumentDemo() {
             onChange={setAudience}
             accent="#d49a00"
           />
-          <div style={{
-            padding: 10,
-            borderRadius: 8,
-            background: "var(--surface-2)",
-            fontSize: 13,
-          }}>
-            <div style={{ color: "var(--text-secondary)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+          <div
+            style={{
+              padding: 10,
+              borderRadius: 8,
+              background: "var(--surface-2)",
+              fontSize: 13,
+            }}
+          >
+            <div
+              style={{
+                color: "var(--text-secondary)",
+                fontSize: 10,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                marginBottom: 4,
+              }}
+            >
               Top suggestion
             </div>
             {suggestions[0] ? (
@@ -169,7 +181,11 @@ function AutoInstrumentDemo() {
                 </span>
                 {suggestions.length > 1 && (
                   <div style={{ color: "var(--text-secondary)", marginTop: 4, fontSize: 12 }}>
-                    also: {suggestions.slice(1, 4).map((s) => s.component).join(", ")}
+                    also:{" "}
+                    {suggestions
+                      .slice(1, 4)
+                      .map((s) => s.component)
+                      .join(", ")}
                   </div>
                 )}
               </>
@@ -177,49 +193,65 @@ function AutoInstrumentDemo() {
               <em style={{ color: "var(--text-secondary)" }}>No fits for this intent.</em>
             )}
           </div>
-          <div style={{
-            color: "var(--text-secondary)",
-            fontSize: 11,
-            background: "var(--surface-3)",
-            padding: "6px 10px",
-            borderRadius: 6,
-          }}>
-            {summary.total} events buffered · {summary.byType["suggestion-shown"] ?? 0} suggestions · {summary.byType["audience-set"] ?? 0} audience changes
+          <div
+            style={{
+              color: "var(--text-secondary)",
+              fontSize: 11,
+              background: "var(--surface-3)",
+              padding: "6px 10px",
+              borderRadius: 6,
+            }}
+          >
+            {summary.total} events buffered · {summary.byType["suggestion-shown"] ?? 0} suggestions
+            · {summary.byType["audience-set"] ?? 0} audience changes
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: 6 }}>
+          <div
+            style={{
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "var(--text-secondary)",
+              marginBottom: 6,
+            }}
+          >
             Latest arc events (no record() calls in this component)
           </div>
-          <div style={{
-            background: "var(--surface-2)",
-            padding: 10,
-            borderRadius: 8,
-            fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
-            fontSize: 11,
-            minHeight: 220,
-            maxHeight: 320,
-            overflowY: "auto",
-          }}>
+          <div
+            style={{
+              background: "var(--surface-2)",
+              padding: 10,
+              borderRadius: 8,
+              fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
+              fontSize: 11,
+              minHeight: 220,
+              maxHeight: 320,
+              overflowY: "auto",
+            }}
+          >
             {recent.length === 0 ? (
-              <em style={{ color: "var(--text-secondary)" }}>Change intent or audience to fire events.</em>
+              <em style={{ color: "var(--text-secondary)" }}>
+                Change intent or audience to fire events.
+              </em>
             ) : (
               recent.map((event, i) => (
-                <div key={`${event.timestamp}-${i}`} style={{
-                  padding: "3px 0",
-                  borderBottom: "1px dotted var(--surface-3)",
-                }}>
-                  <div style={{ color: TYPE_COLOR[event.type], fontWeight: 600 }}>
-                    {event.type}
-                  </div>
+                <div
+                  key={`${event.timestamp}-${i}`}
+                  style={{
+                    padding: "3px 0",
+                    borderBottom: "1px dotted var(--surface-3)",
+                  }}
+                >
+                  <div style={{ color: TYPE_COLOR[event.type], fontWeight: 600 }}>{event.type}</div>
                   <div style={{ color: "var(--text-secondary)", paddingLeft: 8 }}>
                     {JSON.stringify(
                       Object.fromEntries(
                         Object.entries(event).filter(
-                          ([k]) => !["type", "timestamp", "sessionId"].includes(k)
-                        )
-                      )
+                          ([k]) => !["type", "timestamp", "sessionId"].includes(k),
+                        ),
+                      ),
                     )}
                   </div>
                 </div>
@@ -235,7 +267,15 @@ function AutoInstrumentDemo() {
 function ButtonRow({ label, options, valueId, onChange, accent }) {
   return (
     <div>
-      <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: 6 }}>
+      <div
+        style={{
+          fontSize: 10,
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+          color: "var(--text-secondary)",
+          marginBottom: 6,
+        }}
+      >
         {label}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -252,7 +292,9 @@ function ButtonRow({ label, options, valueId, onChange, accent }) {
               fontSize: 12,
               cursor: "pointer",
             }}
-          >{label}</button>
+          >
+            {label}
+          </button>
         ))}
       </div>
     </div>
@@ -266,38 +308,40 @@ function Body() {
     <article style={{ lineHeight: 1.65 }}>
       <p>
         <span style={tag("#6a52d9")}>draft</span>
-        <span style={tag("#2d8a4a")}>3.5.x</span>
       </p>
 
       <p>
-        <Link to="/blog/talk-track-intelligence">The previous post</Link>{" "}
-        introduced three AI-facing surfaces — conversation-arc
-        telemetry, annotation provenance + lifecycle, variant
-        discovery — as M1 deliverables. M1 was the spec: types,
-        contracts, stub implementations you could wire end-to-end but
-        whose behavior was still mostly text.
+        <Link to="/blog/talk-track-intelligence">The previous post</Link> introduced three AI-facing
+        surfaces — conversation-arc telemetry, annotation provenance + lifecycle, variant discovery
+        — as M1 deliverables. M1 was the spec: types, contracts, stub implementations you could wire
+        end-to-end but whose behavior was still mostly text.
       </p>
 
       <p>
-        This post is what shipped between then and now to make them
-        real. The headline change isn't one feature; it's that the
-        three surfaces now feel like one system instead of three
+        This post is what shipped between then and now to make them real. The headline change isn't
+        one feature; it's that the three surfaces now feel like one system instead of three
         scaffolds that happen to live in the same subpath.
       </p>
 
       <h2>The annotations age</h2>
 
       <p>
-        The lifecycle surface ships{" "}
-        <code style={inlineCode}>computeAnnotationFreshness</code> and{" "}
-        <code style={inlineCode}>applyAnnotationLifecycle</code> as
-        runnable code. Pass an array of annotations plus a "now"
-        reference (or a chart's data extent, for streaming) and the
-        helper classifies each into a band, applies a default visual
-        treatment, and filters expired entries:
+        The lifecycle surface ships <code style={inlineCode}>computeAnnotationFreshness</code> and{" "}
+        <code style={inlineCode}>applyAnnotationLifecycle</code> as runnable code. Pass an array of
+        annotations plus a "now" reference (or a chart's data extent, for streaming) and the helper
+        classifies each into a band, applies a default visual treatment, and filters expired
+        entries:
       </p>
 
-      <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>{`import { applyAnnotationLifecycle, withCurrentProvenance } from "semiotic/ai"
+      <pre
+        style={{
+          background: "var(--surface-2)",
+          padding: 12,
+          borderRadius: 6,
+          fontSize: 13,
+          overflowX: "auto",
+        }}
+      >{`import { applyAnnotationLifecycle, withCurrentProvenance } from "semiotic/ai"
 
 const ann = withCurrentProvenance(
   { type: "callout", t: latest.t, value: latest.value, label: "Spike", lifecycle: { ttlHint: 3000 } },
@@ -314,46 +358,46 @@ const ann = withCurrentProvenance(
 />`}</pre>
 
       <p>
-        The default treatment is opinionated: <code style={inlineCode}>aging</code>{" "}
-        dims to 0.55 opacity, <code style={inlineCode}>stale</code> drops
-        to 0.35 and adds a dashed border via{" "}
-        <code style={inlineCode}>strokeDasharray="4 4"</code> (the
-        renderer now honors the attribute and cascades it through the
-        annotation's stroked children), and{" "}
-        <code style={inlineCode}>expired</code> is filtered from the
-        array unless <code style={inlineCode}>showExpiredAnnotations: true</code>.
-        Each band's treatment is overridable via the options object,
-        with explicit fields on the annotation winning over the
+        The default treatment is opinionated: <code style={inlineCode}>aging</code> dims to 0.55
+        opacity, <code style={inlineCode}>stale</code> drops to 0.35 and adds a dashed border via{" "}
+        <code style={inlineCode}>strokeDasharray="4 4"</code> (the renderer now honors the attribute
+        and cascades it through the annotation's stroked children), and{" "}
+        <code style={inlineCode}>expired</code> is filtered from the array unless{" "}
+        <code style={inlineCode}>showExpiredAnnotations: true</code>. Each band's treatment is
+        overridable via the options object, with explicit fields on the annotation winning over the
         treatment.
       </p>
 
       <p>
         See it in action on the{" "}
-        <Link to="/intelligence/conversation-arc">/intelligence/conversation-arc</Link>{" "}
-        lifecycle scrubber, or the streaming variant on{" "}
-        <Link to="/intelligence/temporal-lifecycle">/intelligence/temporal-lifecycle</Link>{" "}
-        — the second one shows a streaming chart where the annotation
-        ages against chart-time (the latest data point's timestamp),
-        not wall-clock. Pause the stream and the annotation stops
-        aging.
+        <Link to="/intelligence/conversation-arc">/intelligence/conversation-arc</Link> lifecycle
+        scrubber, or the streaming variant on{" "}
+        <Link to="/intelligence/temporal-lifecycle">/intelligence/temporal-lifecycle</Link> — the
+        second one shows a streaming chart where the annotation ages against chart-time (the latest
+        data point's timestamp), not wall-clock. Pause the stream and the annotation stops aging.
       </p>
 
       <h2>The arc reacts</h2>
 
       <p>
-        The conversation-arc store kept its module-scope shape — same
-        record/subscribe/flush API — but grew a React hook,{" "}
-        <code style={inlineCode}>useConversationArc</code>, that owns
-        subscription, snapshot stability, and re-render coordination.
-        The hook returns a live <code style={inlineCode}>history</code>{" "}
-        array, a reduced <code style={inlineCode}>summary</code>{" "}
-        object (per-type counts, components seen, audiences seen,
-        duration), and a stable <code style={inlineCode}>record</code>{" "}
-        callback. Two hook instances on the same page see the same
-        buffer.
+        The conversation-arc store kept its module-scope shape — same record/subscribe/flush API —
+        but grew a React hook, <code style={inlineCode}>useConversationArc</code>, that owns
+        subscription, snapshot stability, and re-render coordination. The hook returns a live{" "}
+        <code style={inlineCode}>history</code> array, a reduced{" "}
+        <code style={inlineCode}>summary</code> object (per-type counts, components seen, audiences
+        seen, duration), and a stable <code style={inlineCode}>record</code> callback. Two hook
+        instances on the same page see the same buffer.
       </p>
 
-      <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: 6, fontSize: 13, overflowX: "auto" }}>{`function ArcInspector() {
+      <pre
+        style={{
+          background: "var(--surface-2)",
+          padding: 12,
+          borderRadius: 6,
+          fontSize: 13,
+          overflowX: "auto",
+        }}
+      >{`function ArcInspector() {
   const { history, summary, record } = useConversationArc()
 
   return (
@@ -368,152 +412,130 @@ const ann = withCurrentProvenance(
 }`}</pre>
 
       <p>
-        The more interesting move is one layer up: two of the existing
-        AI hooks now auto-emit arc events.{" "}
-        <code style={inlineCode}>useChartSuggestions</code> emits{" "}
-        <code style={inlineCode}>suggestion-shown</code> whenever the
-        ranked list changes (deduplicated by component-list signature
-        so React's strict-mode double-render doesn't double-stamp).{" "}
-        <code style={inlineCode}>useChartInterrogation</code> emits{" "}
-        <code style={inlineCode}>interrogation-asked</code> on{" "}
-        <code style={inlineCode}>ask()</code> and{" "}
-        <code style={inlineCode}>interrogation-answered</code> on
-        response — with measured <code style={inlineCode}>latencyMs</code>{" "}
-        from <code style={inlineCode}>performance.now()</code>.
+        The more interesting move is one layer up: two of the existing AI hooks now auto-emit arc
+        events. <code style={inlineCode}>useChartSuggestions</code> emits{" "}
+        <code style={inlineCode}>suggestion-shown</code> whenever the ranked list changes
+        (deduplicated by component-list signature so React's strict-mode double-render doesn't
+        double-stamp). <code style={inlineCode}>useChartInterrogation</code> emits{" "}
+        <code style={inlineCode}>interrogation-asked</code> on <code style={inlineCode}>ask()</code>{" "}
+        and <code style={inlineCode}>interrogation-answered</code> on response — with measured{" "}
+        <code style={inlineCode}>latencyMs</code> from{" "}
+        <code style={inlineCode}>performance.now()</code>.
       </p>
 
       <p>
-        Try it. The demo below renders intent buttons and an audience
-        picker. The component code makes <em>no</em>{" "}
-        <code style={inlineCode}>record()</code> calls of its own — only{" "}
+        Try it. The demo below renders intent buttons and an audience picker. The component code
+        makes <em>no</em> <code style={inlineCode}>record()</code> calls of its own — only{" "}
         <code style={inlineCode}>useChartSuggestions</code> running and{" "}
-        <code style={inlineCode}>recordAudienceChange</code> on the
-        picker. Every event in the panel on the right came from
-        framework-level instrumentation:
+        <code style={inlineCode}>recordAudienceChange</code> on the picker. Every event in the panel
+        on the right came from framework-level instrumentation:
       </p>
 
       <AutoInstrumentDemo />
 
       <p>
-        The point isn't that auto-instrumentation is novel. The point
-        is that the arc captures itself. A consumer who never reads
-        the conversation-arc docs at all still produces a recoverable
-        session as soon as they call{" "}
-        <code style={inlineCode}>enableConversationArc()</code> — even
-        if their app is just <code style={inlineCode}>useChartSuggestions</code>{" "}
-        and a chart. That's the talk's claim about "data nobody else is
-        collecting" becoming actually true rather than aspirational.
+        The point isn't that auto-instrumentation is novel. The point is that the arc captures
+        itself. A consumer who never reads the conversation-arc docs at all still produces a
+        recoverable session as soon as they call{" "}
+        <code style={inlineCode}>enableConversationArc()</code> — even if their app is just{" "}
+        <code style={inlineCode}>useChartSuggestions</code> and a chart. That's the talk's claim
+        about "data nobody else is collecting" becoming actually true rather than aspirational.
       </p>
 
       <h2>Three policies, one classifier</h2>
 
       <p>
-        Semiotic had three "how does this thing look as it ages?"
-        systems already:{" "}
-        <code style={inlineCode}>DecayConfig</code> (continuous opacity
-        ramp by buffer position),{" "}
-        <code style={inlineCode}>StalenessConfig</code> (binary
-        live/stale by wall-clock idle), and now annotation freshness
-        (four named bands by TTL). Three policies on three different
-        time axes, all answering the same shape of question.
+        Semiotic had three "how does this thing look as it ages?" systems already:{" "}
+        <code style={inlineCode}>DecayConfig</code> (continuous opacity ramp by buffer position),{" "}
+        <code style={inlineCode}>StalenessConfig</code> (binary live/stale by wall-clock idle), and
+        now annotation freshness (four named bands by TTL). Three policies on three different time
+        axes, all answering the same shape of question.
       </p>
 
       <p>
         They now share one classifier:{" "}
-        <code style={inlineCode}>bandFromAge(ageMs, ttlMs, thresholds?)</code> —
-        a pure function exported from both{" "}
-        <code style={inlineCode}>semiotic/realtime</code> and{" "}
-        <code style={inlineCode}>semiotic/ai</code>. Annotation freshness
-        uses it today; the other two systems can opt in when a binary
-        or continuous policy doesn't fit. The shipped default
+        <code style={inlineCode}>bandFromAge(ageMs, ttlMs, thresholds?)</code> — a pure function
+        exported from both <code style={inlineCode}>semiotic/realtime</code> and{" "}
+        <code style={inlineCode}>semiotic/ai</code>. Annotation freshness uses it today; the other
+        two systems can opt in when a binary or continuous policy doesn't fit. The shipped default
         thresholds (1× / 1.5× / 3× TTL) live next to the function as{" "}
-        <code style={inlineCode}>DEFAULT_LIFECYCLE_THRESHOLDS</code>, so
-        downstream code that needs to introspect or override them has
-        one place to read.
+        <code style={inlineCode}>DEFAULT_LIFECYCLE_THRESHOLDS</code>, so downstream code that needs
+        to introspect or override them has one place to read.
       </p>
 
       <p>
-        The same unification round also de-duped{" "}
-        <code style={inlineCode}>AnnotationAnchor</code>. It used to be
-        defined twice — once in <code style={inlineCode}>realtime/types.ts</code>{" "}
-        as <code style={inlineCode}>AnnotationAnchorMode</code>, once
-        in <code style={inlineCode}>ai/annotationProvenance.ts</code>{" "}
-        as <code style={inlineCode}>AnnotationAnchor</code>. Same three
-        modes (fixed / latest / sticky); the AI side had added a
-        fourth (<code style={inlineCode}>semantic</code>) on top. The
-        canonical type now lives in the realtime runtime (next to its{" "}
-        <code style={inlineCode}>stickyPositionCache</code>{" "}
-        implementation) with the AI surface re-exporting and the new{" "}
-        <code style={inlineCode}>semantic</code> mode folded in.{" "}
+        The same unification round also de-duped <code style={inlineCode}>AnnotationAnchor</code>.
+        It used to be defined twice — once in <code style={inlineCode}>realtime/types.ts</code> as{" "}
+        <code style={inlineCode}>AnnotationAnchorMode</code>, once in{" "}
+        <code style={inlineCode}>ai/annotationProvenance.ts</code> as{" "}
+        <code style={inlineCode}>AnnotationAnchor</code>. Same three modes (fixed / latest /
+        sticky); the AI side had added a fourth (<code style={inlineCode}>semantic</code>) on top.
+        The canonical type now lives in the realtime runtime (next to its{" "}
+        <code style={inlineCode}>stickyPositionCache</code> implementation) with the AI surface
+        re-exporting and the new <code style={inlineCode}>semantic</code> mode folded in.{" "}
         <code style={inlineCode}>AnnotationAnchorMode</code> is a{" "}
-        <code style={inlineCode}>@deprecated</code> alias for the
-        old name.
+        <code style={inlineCode}>@deprecated</code> alias for the old name.
       </p>
 
       <p>
         Full survey at{" "}
-        <Link to="/intelligence/temporal-lifecycle">/intelligence/temporal-lifecycle</Link>{" "}
-        — that page also has the interactive band-from-age scrubber
-        and a streaming chart whose annotation ages live.
+        <Link to="/intelligence/temporal-lifecycle">/intelligence/temporal-lifecycle</Link> — that
+        page also has the interactive band-from-age scrubber and a streaming chart whose annotation
+        ages live.
       </p>
 
       <h2>What's still in the queue</h2>
 
       <p>
-        Variant discovery's M1 ships the type contract and a working
-        registration plug point —{" "}
-        <code style={inlineCode}>proposeVariant</code> now dispatches
-        through every registered proposer and deduplicates by
-        proposal id. The heuristic reference proposer that walks
-        existing variants and flips orientation / toggles{" "}
-        <code style={inlineCode}>normalize</code> is still M2 work.
-        Same goes for the variant scorer and the MCP{" "}
+        Variant discovery's M1 ships the type contract and a working registration plug point —{" "}
+        <code style={inlineCode}>proposeVariant</code> now dispatches through every registered
+        proposer and deduplicates by proposal id. The heuristic reference proposer that walks
+        existing variants and flips orientation / toggles <code style={inlineCode}>normalize</code>{" "}
+        is still M2 work. Same goes for the variant scorer and the MCP{" "}
         <code style={inlineCode}>proposeChartVariants</code> tool.
       </p>
 
       <p>
-        On the conversation-arc side, the sink shape is intentionally
-        still <code style={inlineCode}>subscribe()</code>. M3 adds
-        first-party <code style={inlineCode}>LocalStorageSink</code>,{" "}
+        On the conversation-arc side, the sink shape is intentionally still{" "}
+        <code style={inlineCode}>subscribe()</code>. M3 adds first-party{" "}
+        <code style={inlineCode}>LocalStorageSink</code>,{" "}
         <code style={inlineCode}>IndexedDBSink</code>, and a{" "}
-        <code style={inlineCode}>WebhookSink</code> stub alongside the
-        existing primitive. Then M4 records a real session as a
-        replay fixture for the talk's screenshot path.
+        <code style={inlineCode}>WebhookSink</code> stub alongside the existing primitive. Then M4
+        records a real session as a replay fixture for the talk's screenshot path.
       </p>
 
       <p>
-        The annotation side still owes the{" "}
-        <code style={inlineCode}>semantic</code> anchor's actual
-        resolution algorithm — finding "the Q3 spike" by{" "}
-        <code style={inlineCode}>stableId</code> after the data
-        refreshes. That's the M3 hook into the existing{" "}
-        <code style={inlineCode}>annotationResolvers.ts</code>{" "}
-        sticky-cache pathway, which is why anchor mode dedup mattered
-        for unblocking it.
+        The annotation side still owes the <code style={inlineCode}>semantic</code> anchor's actual
+        resolution algorithm — finding "the Q3 spike" by <code style={inlineCode}>stableId</code>{" "}
+        after the data refreshes. That's the M3 hook into the existing{" "}
+        <code style={inlineCode}>annotationResolvers.ts</code> sticky-cache pathway, which is why
+        anchor mode dedup mattered for unblocking it.
       </p>
 
       <h2>What this looks like from the outside</h2>
 
       <p>
         A consumer that adopts a single line —{" "}
-        <code style={inlineCode}>enableConversationArc()</code> at app
-        startup — now gets, for free:
+        <code style={inlineCode}>enableConversationArc()</code> at app startup — now gets, for free:
       </p>
 
       <ul>
         <li>Every chart-suggestion ranking that the library showed.</li>
         <li>Every interrogation round-trip the user did, with measured latency.</li>
-        <li>Every audience change, if they call{" "}
-          <code style={inlineCode}>recordAudienceChange</code> in their picker.</li>
+        <li>
+          Every audience change, if they call <code style={inlineCode}>recordAudienceChange</code>{" "}
+          in their picker.
+        </li>
         <li>A flushable buffer they can send anywhere.</li>
-        <li>Annotations on their charts that visibly age over time, with a
-          treatment they didn't have to design.</li>
+        <li>
+          Annotations on their charts that visibly age over time, with a treatment they didn't have
+          to design.
+        </li>
       </ul>
 
       <p>
-        That's the surface that wasn't there a month ago. The talk's
-        claim about "library-collected session data" stops being a
-        promise and starts being a thing pointed at on the screen.
+        That's the surface that wasn't there a month ago. The talk's claim about "library-collected
+        session data" stops being a promise and starts being a thing pointed at on the screen.
       </p>
     </article>
   )

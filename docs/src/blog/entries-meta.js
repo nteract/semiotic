@@ -46,12 +46,12 @@ export const allBlogEntriesMeta = [
     slug: "talk-track-intelligence",
     title: "The arc, the annotation, and the variant",
     subtitle:
-      "Three composable AI surfaces shipping together in 3.5.x: conversation-arc telemetry, annotation provenance + lifecycle, and a variant discovery plug point. Two are runnable inline.",
+      "Three composable AI surfaces: conversation-arc telemetry, annotation provenance + lifecycle, and a variant discovery plug point. Two are runnable inline.",
     author: "Elijah Meeks",
     date: "2026-05-27",
     tags: ["case-study", "ai", "roadmap"],
     excerpt:
-      "AI-assisted chart authoring is a session, not a single call. Semiotic 3.5.x lands the spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers. Interactive demos for the first two.",
+      "AI-assisted chart authoring is a session, not a single call. The spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers. Interactive demos for the first two.",
     draft: true,
   },
   {

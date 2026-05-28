@@ -137,17 +137,27 @@ function ArcSummaryPanel({ summary, enabled }) {
   // it's obvious which counters correspond to which actions.
   const orderedTypes = EVENT_PRESETS.map((p) => p.type)
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "1fr auto",
-      gap: 12,
-      padding: 10,
-      borderRadius: 8,
-      background: "var(--surface-2)",
-      fontSize: 12,
-    }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr auto",
+        gap: 12,
+        padding: 10,
+        borderRadius: 8,
+        background: "var(--surface-2)",
+        fontSize: 12,
+      }}
+    >
       <div>
-        <div style={{ color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em", fontSize: 10 }}>
+        <div
+          style={{
+            color: "var(--text-secondary)",
+            marginBottom: 6,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            fontSize: 10,
+          }}
+        >
           Live summary · <code>summarizeArc(history)</code>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -173,17 +183,22 @@ function ArcSummaryPanel({ summary, enabled }) {
         </div>
         {summary.componentsSeen.length > 0 && (
           <div style={{ marginTop: 8, color: "var(--text-secondary)" }}>
-            components seen: {summary.componentsSeen.map((c) => <code key={c} style={{ marginRight: 6 }}>{c}</code>)}
+            components seen:{" "}
+            {summary.componentsSeen.map((c) => (
+              <code key={c} style={{ marginRight: 6 }}>
+                {c}
+              </code>
+            ))}
           </div>
         )}
       </div>
       <div style={{ textAlign: "right", color: "var(--text-secondary)" }}>
         <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)" }}>{summary.total}</div>
-        <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>events</div>
+        <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          events
+        </div>
         {summary.durationMs > 0 && (
-          <div style={{ marginTop: 4 }}>
-            {(summary.durationMs / 1000).toFixed(1)}s span
-          </div>
+          <div style={{ marginTop: 4 }}>{(summary.durationMs / 1000).toFixed(1)}s span</div>
         )}
       </div>
     </div>
@@ -199,8 +214,14 @@ function ArcDemo() {
   // render if that demo mounted first and called `enableConversationArc()`.
   // That's intentional — the demos share one buffer to demonstrate the
   // module-scope contract.
-  const { history: events, summary, enabled, sessionId, record, clear: clearArc } =
-    useConversationArc({ enableOnMount: false })
+  const {
+    history: events,
+    summary,
+    enabled,
+    sessionId,
+    record,
+    clear: clearArc,
+  } = useConversationArc({ enableOnMount: false })
   const chartRef = useRef(null)
   const dotIdRef = useRef(0)
 
@@ -490,24 +511,34 @@ function AutoInstrumentDemo() {
     const prevProfile = AUDIENCE_OPTIONS.find((a) => a.id === audienceId)
     recordAudienceChange(
       nextProfile?.label ?? next,
-      prevProfile?.label === "No audience" ? null : prevProfile?.label ?? null
+      prevProfile?.label === "No audience" ? null : (prevProfile?.label ?? null),
     )
     setAudienceId(next)
   }
 
   return (
-    <div style={{
-      border: "1px solid var(--surface-3)",
-      borderRadius: 12,
-      padding: 20,
-      background: "var(--surface-1)",
-      display: "grid",
-      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-      gap: 20,
-    }}>
+    <div
+      style={{
+        border: "1px solid var(--surface-3)",
+        borderRadius: 12,
+        padding: 20,
+        background: "var(--surface-1)",
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+        gap: 20,
+      }}
+    >
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: 6 }}>
+          <div
+            style={{
+              fontSize: 11,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "var(--text-secondary)",
+              marginBottom: 6,
+            }}
+          >
             Intent
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -524,13 +555,23 @@ function AutoInstrumentDemo() {
                   fontSize: 12,
                   cursor: "pointer",
                 }}
-              >{label}</button>
+              >
+                {label}
+              </button>
             ))}
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: 6 }}>
+          <div
+            style={{
+              fontSize: 11,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "var(--text-secondary)",
+              marginBottom: 6,
+            }}
+          >
             Audience picker (recordAudienceChange)
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -547,18 +588,30 @@ function AutoInstrumentDemo() {
                   fontSize: 12,
                   cursor: "pointer",
                 }}
-              >{label}</button>
+              >
+                {label}
+              </button>
             ))}
           </div>
         </div>
 
-        <div style={{
-          padding: 10,
-          background: "var(--surface-2)",
-          borderRadius: 8,
-          fontSize: 13,
-        }}>
-          <div style={{ color: "var(--text-secondary)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+        <div
+          style={{
+            padding: 10,
+            background: "var(--surface-2)",
+            borderRadius: 8,
+            fontSize: 13,
+          }}
+        >
+          <div
+            style={{
+              color: "var(--text-secondary)",
+              fontSize: 11,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              marginBottom: 4,
+            }}
+          >
             Top suggestion
           </div>
           {suggestions[0] ? (
@@ -569,7 +622,11 @@ function AutoInstrumentDemo() {
               </span>
               {suggestions.length > 1 && (
                 <div style={{ color: "var(--text-secondary)", marginTop: 4, fontSize: 12 }}>
-                  also: {suggestions.slice(1, 4).map((s) => s.component).join(", ")}
+                  also:{" "}
+                  {suggestions
+                    .slice(1, 4)
+                    .map((s) => s.component)
+                    .join(", ")}
                 </div>
               )}
             </>
@@ -580,39 +637,50 @@ function AutoInstrumentDemo() {
       </div>
 
       <div>
-        <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: 6 }}>
+        <div
+          style={{
+            fontSize: 11,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            color: "var(--text-secondary)",
+            marginBottom: 6,
+          }}
+        >
           Latest arc events (auto-fired)
         </div>
-        <div style={{
-          background: "var(--surface-2)",
-          padding: 10,
-          borderRadius: 8,
-          fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
-          fontSize: 11,
-          minHeight: 200,
-          maxHeight: 280,
-          overflowY: "auto",
-        }}>
+        <div
+          style={{
+            background: "var(--surface-2)",
+            padding: 10,
+            borderRadius: 8,
+            fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
+            fontSize: 11,
+            minHeight: 200,
+            maxHeight: 280,
+            overflowY: "auto",
+          }}
+        >
           {recent.length === 0 ? (
             <em style={{ color: "var(--text-secondary)" }}>
               Events will appear here as you change intent or audience.
             </em>
           ) : (
             recent.map((event, i) => (
-              <div key={`${event.timestamp}-${i}`} style={{
-                padding: "3px 0",
-                borderBottom: "1px dotted var(--surface-3)",
-              }}>
-                <div style={{ color: TYPE_COLORS[event.type], fontWeight: 600 }}>
-                  {event.type}
-                </div>
+              <div
+                key={`${event.timestamp}-${i}`}
+                style={{
+                  padding: "3px 0",
+                  borderBottom: "1px dotted var(--surface-3)",
+                }}
+              >
+                <div style={{ color: TYPE_COLORS[event.type], fontWeight: 600 }}>{event.type}</div>
                 <div style={{ color: "var(--text-secondary)", paddingLeft: 8 }}>
                   {JSON.stringify(
                     Object.fromEntries(
                       Object.entries(event).filter(
-                        ([k]) => !["type", "timestamp", "sessionId"].includes(k)
-                      )
-                    )
+                        ([k]) => !["type", "timestamp", "sessionId"].includes(k),
+                      ),
+                    ),
                   )}
                 </div>
               </div>
@@ -834,15 +902,12 @@ function FreshnessDemo() {
       </div>
 
       <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
-        Drag the slider forward in time. Annotations dim through{" "}
-        <code>fresh → aging → stale</code>, take on a dashed border at{" "}
-        <code>stale</code>, then disappear once they hit{" "}
+        Drag the slider forward in time. Annotations dim through <code>fresh → aging → stale</code>,
+        take on a dashed border at <code>stale</code>, then disappear once they hit{" "}
         <code>expired</code>. The chart is calling{" "}
-        <code>applyAnnotationLifecycle(annotations, {"{ now }"})</code>{" "}
-        directly — the shipping helper handles freshness, opacity,
-        dashing, and the expired filter; pass{" "}
-        <code>showExpiredAnnotations: true</code> to keep expired
-        annotations visible.
+        <code>applyAnnotationLifecycle(annotations, {"{ now }"})</code> directly — the shipping
+        helper handles freshness, opacity, dashing, and the expired filter; pass{" "}
+        <code>showExpiredAnnotations: true</code> to keep expired annotations visible.
       </p>
     </div>
   )
@@ -881,13 +946,11 @@ export default function ConversationArcPage() {
         </li>
       </ul>
       <p>
-        These ship together in 3.5.x. Annotation freshness and the
-        default visual treatment are live (the demo below uses them
-        directly). The conversation-arc store is functional; full
+        These ship together. Annotation freshness and the default visual treatment are live (the
+        demo below uses them directly). The conversation-arc store is functional; full
         sink/persistence helpers and the <code>useConversationArc</code>
-        hook arrive incrementally. Variant discovery's plug point is
-        callable today; the built-in heuristic proposer and scorer
-        arrive in subsequent passes.
+        hook arrive incrementally. Variant discovery's plug point is callable today; the built-in
+        heuristic proposer and scorer arrive in subsequent passes.
       </p>
 
       <h2>Conversation-arc telemetry</h2>
@@ -907,11 +970,10 @@ export default function ConversationArcPage() {
 
       <h3>Wiring — React</h3>
       <p>
-        The <code>useConversationArc</code> hook is the React entry
-        point. It auto-enables the module-scoped store on mount,
-        subscribes via <code>useSyncExternalStore</code> for tear-free
-        re-renders, and returns a stable <code>record</code> callback
-        plus a live <code>summary</code> reduction:
+        The <code>useConversationArc</code> hook is the React entry point. It auto-enables the
+        module-scoped store on mount, subscribes via <code>useSyncExternalStore</code> for tear-free
+        re-renders, and returns a stable <code>record</code> callback plus a live{" "}
+        <code>summary</code> reduction:
       </p>
       <CodeBlock language="jsx">
         {`import { useConversationArc } from "semiotic/ai"
@@ -935,9 +997,8 @@ function ArcInspector() {
 
       <h3>Wiring — non-React sinks</h3>
       <p>
-        For analytics sinks, replay fixtures, or anything outside the React
-        tree, use the module-scoped store directly. The hook is just sugar
-        over the same store.
+        For analytics sinks, replay fixtures, or anything outside the React tree, use the
+        module-scoped store directly. The hook is just sugar over the same store.
       </p>
       <CodeBlock language="jsx">
         {`import {
@@ -958,35 +1019,28 @@ const allEvents = store.flush()`}
       </CodeBlock>
 
       <h3>Auto-instrumentation</h3>
-      <p>
-        Two surfaces wire themselves to the arc store automatically:
-      </p>
+      <p>Two surfaces wire themselves to the arc store automatically:</p>
       <ul>
         <li>
-          <code>useChartSuggestions</code> emits{" "}
-          <code>suggestion-shown</code> whenever the suggestion list
-          changes (deduplicated by component-list signature).
+          <code>useChartSuggestions</code> emits <code>suggestion-shown</code> whenever the
+          suggestion list changes (deduplicated by component-list signature).
         </li>
         <li>
-          <code>useChartInterrogation</code> emits{" "}
-          <code>interrogation-asked</code> on <code>ask()</code> and{" "}
-          <code>interrogation-answered</code> when the response (or
-          error) returns — with measured <code>latencyMs</code>.
+          <code>useChartInterrogation</code> emits <code>interrogation-asked</code> on{" "}
+          <code>ask()</code> and <code>interrogation-answered</code> when the response (or error)
+          returns — with measured <code>latencyMs</code>.
         </li>
       </ul>
       <p>
-        Both are zero-overhead when the arc store is disabled
-        (the default). For audience-picker UIs, call{" "}
-        <code>recordAudienceChange(next, previous)</code> in the
-        picker's <code>onChange</code> handler.
+        Both are zero-overhead when the arc store is disabled (the default). For audience-picker
+        UIs, call <code>recordAudienceChange(next, previous)</code> in the picker's{" "}
+        <code>onChange</code> handler.
       </p>
 
       <p>
-        Try it: change the intent or audience below. No{" "}
-        <code>record()</code> calls in the demo's own component code —
-        only <code>useChartSuggestions</code> running and{" "}
-        <code>recordAudienceChange</code> on the picker. Watch the
-        event log fill in.
+        Try it: change the intent or audience below. No <code>record()</code> calls in the demo's
+        own component code — only <code>useChartSuggestions</code> running and{" "}
+        <code>recordAudienceChange</code> on the picker. Watch the event log fill in.
       </p>
       <AutoInstrumentDemo />
 
@@ -996,18 +1050,18 @@ const allEvents = store.flush()`}
         <code>suggestion-chosen</code>, <code>audience-set</code>, <code>chart-rendered</code>,{" "}
         <code>chart-edited</code>, <code>chart-replaced</code>, <code>chart-exported</code>,{" "}
         <code>chart-abandoned</code>, <code>interrogation-asked</code>,{" "}
-        <code>interrogation-answered</code>. Each carries the fields a downstream analytics or replay
-        system would actually consume (component name, rank, format, reason). The <code>arcId</code>{" "}
-        field threads multiple events into a single named arc when you need it.
+        <code>interrogation-answered</code>. Each carries the fields a downstream analytics or
+        replay system would actually consume (component name, rank, format, reason). The{" "}
+        <code>arcId</code> field threads multiple events into a single named arc when you need it.
       </p>
 
       <h2>Annotation provenance + lifecycle</h2>
       <p>
         Anchored conversations stay defensible when every annotation knows where it came from and
         when it should be considered stale. Two optional blocks attach to any annotation:{" "}
-        <code>provenance</code> ( <code>author</code>, <code>source</code>,{" "}
-        <code>confidence</code>, <code>createdAt</code>, <code>stableId</code>) and{" "}
-        <code>lifecycle</code> (<code>freshness</code>, <code>ttlHint</code>, <code>anchor</code>).
+        <code>provenance</code> ( <code>author</code>, <code>source</code>, <code>confidence</code>,{" "}
+        <code>createdAt</code>, <code>stableId</code>) and <code>lifecycle</code> (
+        <code>freshness</code>, <code>ttlHint</code>, <code>anchor</code>).
         <code>computeAnnotationFreshness</code> classifies each annotation into a band;{" "}
         <code>applyAnnotationLifecycle</code> additionally applies a default visual treatment
         (opacity for aging, dashing for stale, hiding for expired).
