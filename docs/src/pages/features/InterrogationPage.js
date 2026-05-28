@@ -164,7 +164,7 @@ export default function InterrogationPage() {
         { label: "Interrogation", path: "/intelligence/interrogation" },
       ]}
       prevPage={{ title: "Chart Suggestions", path: "/intelligence/suggestions" }}
-      nextPage={{ title: "Serialization", path: "/intelligence/serialization" }}
+      nextPage={{ title: "Conversation Arc", path: "/intelligence/conversation-arc" }}
     >
       <p>
         Semiotic ships a headless hook, <code>useChartInterrogation</code>, that lets users

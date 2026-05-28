@@ -275,6 +275,67 @@ export type {
 export { listIntents, getIntent, registerIntent, BUILT_IN_INTENT_IDS } from "./ai/intents"
 export type { BuiltInIntentId, IntentId, IntentDescriptor } from "./ai/intents"
 
+// Variant discovery — interface design (M1).
+// Heuristic implementation lands in M2; MCP `proposeChartVariants`
+// wraps this surface in M3; the external-model plug point is M4.
+// `proposeVariant` already dispatches through any functions registered
+// via `registerVariantDiscovery`, so consumers can wire end-to-end now.
+export {
+  proposeVariant,
+  evaluateVariantProposal,
+  registerVariantDiscovery,
+  getRegisteredVariantDiscovery,
+  clearVariantDiscovery,
+} from "./ai/variantDiscovery"
+export type {
+  VariantProposal,
+  VariantProposalSource,
+  VariantScore,
+  VariantRejectionReason,
+  VariantDiscoveryContext,
+  ProposeVariantFn,
+  EvaluateVariantProposalFn,
+} from "./ai/variantDiscovery"
+
+// Annotation provenance + lifecycle — type surface only (M1).
+// Behavior (`computeAnnotationFreshness`, default visual treatment,
+// stable-id anchor resolution) lands in subsequent milestones.
+export { withProvenance } from "./ai/annotationProvenance"
+export type {
+  AnnotationProvenance,
+  AnnotationSource,
+  AnnotationLifecycle,
+  AnnotationFreshness,
+  AnnotationAnchor,
+  Annotated,
+} from "./ai/annotationProvenance"
+
+// Conversation-arc telemetry — opt-in event vocabulary + ring-buffer store.
+// Default surface is a no-op; call `enableConversationArc()` to start
+// recording. Eight event types track the AI-assisted authoring arc
+// from suggestion through transformation to outcome.
+export {
+  enableConversationArc,
+  disableConversationArc,
+  getConversationArcStore,
+} from "./ai/conversationArc"
+export type {
+  ConversationArcEvent,
+  ConversationArcEventType,
+  ConversationArcEventInput,
+  ConversationArcStore,
+  ConversationArcListener,
+  EnableConversationArcOptions,
+  SuggestionShownEvent,
+  SuggestionChosenEvent,
+  AudienceSetEvent,
+  ChartRenderedEvent,
+  ChartEditedEvent,
+  ChartReplacedEvent,
+  ChartExportedEvent,
+  ChartAbandonedEvent,
+} from "./ai/conversationArc"
+
 // AI Observation hooks
 export { useChartObserver } from "./store/useObservation"
 export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"

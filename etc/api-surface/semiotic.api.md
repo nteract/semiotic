@@ -99,6 +99,8 @@ function useLinkedHover
 function useSelection
 function useTheme
 interface AnnotationContext
+interface AnnotationLifecycle
+interface AnnotationProvenance
 interface AreaChartProps
 interface AxisConfig
 interface BandConfig
@@ -204,7 +206,11 @@ interface ViolinPlotProps
 interface WaterfallStyle
 interface XYFrameAxisConfig
 type Accessor
+type Annotated
+type AnnotationAnchor
 type AnnotationAnchorMode
+type AnnotationFreshness
+type AnnotationSource
 type ArrowOfTime
 type CanvasRendererFn
 type CategoryColorMap

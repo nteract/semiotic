@@ -23,17 +23,20 @@ export const REQUIRED_DOCS_ROUTES = [
   },
   {
     routePath: "api",
-    title: "Api \u2014 Semiotic",
+    // ROUTE_META in scripts/prerender.mjs supplies curated section
+    // titles for top-level routes; expected strings here track those
+    // values rather than the slug-case fallback.
+    title: "API Reference \u2014 Semiotic",
     canonicalUrl: `${SITE_URL}/api`,
   },
   {
     routePath: "api/charts",
-    title: "Api \u2014 Charts \u2014 Semiotic",
+    title: "Chart Components API \u2014 Semiotic",
     canonicalUrl: `${SITE_URL}/api/charts`,
   },
   {
     routePath: "api/typedoc",
-    title: "Api \u2014 Typedoc \u2014 Semiotic",
+    title: "TypeDoc \u2014 Semiotic API Reference",
     canonicalUrl: `${SITE_URL}/api/typedoc`,
   },
 ]
