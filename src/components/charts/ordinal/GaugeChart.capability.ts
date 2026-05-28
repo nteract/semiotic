@@ -15,6 +15,12 @@ export const GaugeChartCapability: ChartCapability = {
   intentScores: {
     "compare-categories": 1,
     "rank": 1,
+    // Single-value summaries are a natural part-to-whole encoding when the
+    // value sits against a known target ("at 78% of plan"). The other
+    // categorical part-to-whole charts (StackedBar, Pie) technically fit at
+    // rowCount = 1 too, but at single-value scale Gauge is the honest answer.
+    // Gated on rowCount === 1 so this only fires at the tiny end.
+    "part-to-whole": (p) => (p.rowCount === 1 ? 5 : 1),
   },
 
   caveats: () => ["gauges only show a single value; consider a stat card or bar instead for comparison"],
@@ -30,5 +36,16 @@ export const GaugeChartCapability: ChartCapability = {
       min: 0,
       max,
     }
+  },
+
+  // GaugeChart is the catalog's current answer to "tiny scale" — the only
+  // single-value chart. Boost it on tiny data so it shows up where the engine
+  // would otherwise have no fit. The `fits()` gate already restricts row count
+  // to exactly 1, so this only fires at the tiny end.
+  scaleFit: (_profile, effective) => {
+    if (effective.rowBand === "tiny") {
+      return { delta: 0.6, reason: "designed for single-value displays" }
+    }
+    return null
   },
 }

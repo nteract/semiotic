@@ -134,12 +134,47 @@ export type {
 // Chart capability layer — heuristic recommendations + intent taxonomy
 export { profileData } from "./ai/profileData"
 export type { ProfileDataOptions } from "./ai/profileData"
-export { suggestCharts, scoreChart, explainCapabilityFit } from "./ai/suggestCharts"
+export {
+  suggestCharts,
+  suggestChartsGrouped,
+  scoreChart,
+  explainCapabilityFit,
+} from "./ai/suggestCharts"
 export type {
   SuggestChartsOptions,
   RejectedCapability,
   ExplainCapabilityFitResult,
 } from "./ai/suggestCharts"
+
+// Scale-aware suggestion overlay — declarative dataset-scale and quality
+// schemas that bias recommendations and emit per-band groupings.
+export {
+  DEFAULT_SCALE_THRESHOLDS,
+  applyScaleBias,
+  classifyRowBand,
+  classifyCardinalityBand,
+  classifyFieldBand,
+  compareBands,
+  computeEffectiveScale,
+  resolveRowsToNumber,
+  resolveCardinalityToNumber,
+  scaleHints,
+} from "./ai/dataScaleProfile"
+export type {
+  DataScaleProfile,
+  DataQualityProfile,
+  ScaleBand,
+  CardinalityBand,
+  FieldBand,
+  ScaleThresholds,
+  ChartScalePreference,
+  EffectiveScale,
+  ScaleBiasResult,
+  ScaleFitFn,
+  ScaleFitResult,
+  QualityFitFn,
+  ScaleHintInput,
+} from "./ai/dataScaleProfile"
 export { inferIntent } from "./ai/inferIntent"
 export type { InferIntentResult } from "./ai/inferIntent"
 export { suggestDashboard } from "./ai/suggestDashboard"
@@ -270,7 +305,9 @@ export type {
   FieldKind,
   FitResult,
   IntentScorer,
+  ScaledSuggestionGroups,
   Suggestion,
+  SuggestionScaleRange,
 } from "./ai/chartCapabilityTypes"
 export { listIntents, getIntent, registerIntent, BUILT_IN_INTENT_IDS } from "./ai/intents"
 export type { BuiltInIntentId, IntentId, IntentDescriptor } from "./ai/intents"

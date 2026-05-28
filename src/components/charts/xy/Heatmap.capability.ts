@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { scaleHints } from "../../ai/dataScaleProfile"
 
 /**
  * Heatmap is a matrix: categorical × categorical (or temporal × categorical),
@@ -83,4 +84,13 @@ export const HeatmapCapability: ChartCapability = {
       ...(variant?.props ?? {}),
     }
   },
+
+  // Heatmap wants density — sparse cells dominate noise. Below ~50 rows the
+  // matrix feels under-baked; above ~50k the cells become 1 pixel each and
+  // sequential color stops conveying useful difference. Sweet spot is the
+  // wide band where individual cell color is legible AND there are enough
+  // cells to read a pattern (Munzner ch. 10: sequential colormap density).
+  scaleFit: scaleHints({
+    rows: { sweetSpot: [100, 10000], caveatBelow: 25, caveatAbove: 50000 },
+  }),
 }

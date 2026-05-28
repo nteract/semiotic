@@ -260,7 +260,7 @@ export default function SuggestionsPage() {
         { label: "Chart Suggestions", path: "/intelligence/suggestions" },
       ]}
       prevPage={{ title: "Capability Matrix", path: "/intelligence/capabilities" }}
-      nextPage={{ title: "Interrogation", path: "/intelligence/interrogation" }}
+      nextPage={{ title: "Scale-Aware Suggestions", path: "/intelligence/scale" }}
     >
       <p>
         Semiotic charts ship <strong>capability descriptors</strong> alongside their components.

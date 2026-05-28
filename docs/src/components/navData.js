@@ -128,6 +128,7 @@ const navData = [
       { title: "Observation Hooks", path: "/intelligence/observation-hooks" },
       { title: "Capability Matrix", path: "/intelligence/capabilities" },
       { title: "Chart Suggestions", path: "/intelligence/suggestions" },
+      { title: "Scale-Aware Suggestions", path: "/intelligence/scale" },
       { title: "Interrogation", path: "/intelligence/interrogation" },
       { title: "Conversation Arc", path: "/intelligence/conversation-arc" },
       { title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" },

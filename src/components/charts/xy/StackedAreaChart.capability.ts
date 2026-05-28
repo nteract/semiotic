@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { scaleHints } from "../../ai/dataScaleProfile"
 
 export const StackedAreaChartCapability: ChartCapability = {
   component: "StackedAreaChart",
@@ -66,4 +67,12 @@ export const StackedAreaChartCapability: ChartCapability = {
     }
     return { ...base, ...(variant?.props ?? {}) }
   },
+
+  // Stacked areas read well at medium density with a small-to-mid series count.
+  // High series counts produce a striped band where individual layers blur —
+  // the `streamgraph` variant is the workaround at the upper end. Few series
+  // and few rows produce too little signal to stack.
+  scaleFit: scaleHints({
+    rows: { sweetSpot: [30, 1500], caveatBelow: 12, caveatAbove: 10000 },
+  }),
 }

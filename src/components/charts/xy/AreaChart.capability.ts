@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { scaleHints } from "../../ai/dataScaleProfile"
 
 /**
  * AreaChart is treated as a strictly single-series chart. Multi-series areas
@@ -119,4 +120,12 @@ export const AreaChartCapability: ChartCapability = {
     }
     return { ...base, ...(variant?.props ?? {}) }
   },
+
+  // AreaChart is the visually-arresting "small-to-medium single-series trend"
+  // pick. At very small scale (3–12 rows) the gradient fill is the chart's
+  // edge over a thin LineChart; past ~2k rows the fill becomes a colored slab
+  // and a denser representation reads better. Below 3 rows fits() rejects.
+  scaleFit: scaleHints({
+    rows: { sweetSpot: [6, 200], caveatAbove: 2000 },
+  }),
 }
