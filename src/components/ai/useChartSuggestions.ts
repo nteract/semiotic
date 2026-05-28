@@ -1,10 +1,22 @@
 "use client"
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import { profileData, type ProfileDataOptions } from "./profileData"
 import { suggestCharts, type SuggestChartsOptions } from "./suggestCharts"
 import type { ChartDataProfile, Suggestion } from "./chartCapabilityTypes"
-import { getConversationArcStore } from "./conversationArc"
+import {
+  getConversationArcStore,
+  subscribeToConversationArcChange,
+} from "./conversationArc"
+
+// Snapshot fn for the change subscription — `useSyncExternalStore`
+// compares with `Object.is`, so same-value mutations (every record()
+// while enabled, etc.) don't re-render the consumer. Only actual
+// enable/disable flips do. Lives outside the hook so the function
+// reference stays stable.
+const subscribeArc = (onChange: () => void) => subscribeToConversationArcChange(onChange)
+const getArcEnabled = () => getConversationArcStore().enabled
+const getArcEnabledOnServer = () => false
 
 export interface UseChartSuggestionsOptions extends SuggestChartsOptions, ProfileDataOptions {}
 
@@ -60,27 +72,64 @@ export function useChartSuggestions(
   // until a consumer calls `enableConversationArc()` — at which point
   // every recomputation of `useChartSuggestions` lands in the buffer.
   //
-  // Dedup by the (component-list, intent, audience-target) signature
-  // so React's strict-mode double-invocation doesn't double-stamp,
-  // and a stable suggestions list across renders doesn't either.
+  // Dedup happens in two layers:
+  //   1. A per-instance signature ref catches stable-suggestions
+  //      re-renders within one mounted hook.
+  //   2. A peek at the store's most recent `suggestion-shown` event
+  //      catches React StrictMode's mount → unmount → remount cycle
+  //      (where the per-instance ref resets) plus cross-instance
+  //      duplicates from a parent re-mounting children.
+  // The signature also resets when recording is disabled, so a
+  // mid-session enable correctly emits the current suggestions —
+  // tracked via `useSyncExternalStore` so the effect re-runs when
+  // the enabled flag flips.
+  const arcEnabled = useSyncExternalStore(subscribeArc, getArcEnabled, getArcEnabledOnServer)
   const lastSignatureRef = useRef<string | null>(null)
   useEffect(() => {
     if (suggestions.length === 0) {
       lastSignatureRef.current = null
       return
     }
+    if (!arcEnabled) {
+      // Drop the signature so the next enable cycle re-emits the
+      // current ranking. Otherwise a consumer that enables after
+      // the suggester has already run sees no `suggestion-shown` at
+      // all.
+      lastSignatureRef.current = null
+      return
+    }
+    const store = getConversationArcStore()
+
     const audienceTarget = audience?.name ?? (audience ? "custom" : undefined)
     const signature = `${intent ?? ""}|${audienceTarget ?? ""}|${suggestions.map((s) => s.component).join(",")}`
     if (signature === lastSignatureRef.current) return
+
+    // Cross-instance dedup: if the most recent buffered
+    // suggestion-shown event matches this signature, skip. Catches
+    // StrictMode remounts and parent re-mounts that would otherwise
+    // double-stamp the same ranking.
+    const recent = store.getEvents()
+    for (let i = recent.length - 1; i >= 0; i--) {
+      const e = recent[i]
+      if (e.type !== "suggestion-shown") continue
+      const recentIntent = Array.isArray(e.intent) ? e.intent.join(",") : (e.intent ?? "")
+      const recentSignature = `${recentIntent}|${e.audience ?? ""}|${e.components.join(",")}`
+      if (recentSignature === signature) {
+        lastSignatureRef.current = signature
+        return
+      }
+      break // only check the most recent one
+    }
+
     lastSignatureRef.current = signature
-    getConversationArcStore().record({
+    store.record({
       type: "suggestion-shown",
       intent,
       components: suggestions.map((s) => s.component),
       topScore: suggestions[0]?.score,
       audience: audienceTarget,
     })
-  }, [suggestions, intent, audience])
+  }, [suggestions, intent, audience, arcEnabled])
 
   return { suggestions, profile }
 }

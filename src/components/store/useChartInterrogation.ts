@@ -1,6 +1,20 @@
 "use client"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { getConversationArcStore } from "../ai/conversationArc"
+
+// Truncate long strings before they land in the arc ring buffer.
+// LLM responses can be kilobytes; multiply by 1000 events of capacity
+// and the buffer grows fast. Clamping the recorded payload keeps the
+// buffer reasonable while still leaving enough context for replay
+// fixtures and analytics readouts. Slightly under the visible cap so
+// the ellipsis doesn't replace meaningful tail content.
+const MAX_ARC_QUERY_LENGTH = 500
+const MAX_ARC_ANSWER_LENGTH = 2000
+function truncateForArc(text: string | undefined, max: number): string | undefined {
+  if (text == null) return text
+  if (text.length <= max) return text
+  return text.slice(0, max - 1) + "…"
+}
 import type { Datum } from "../charts/shared/datumTypes"
 import { summarizeData, type DataSummary } from "../data/DataSummarizer"
 import { profileData } from "../ai/profileData"
@@ -224,7 +238,7 @@ export function useChartInterrogation(
     getConversationArcStore().record({
       type: "interrogation-asked",
       component: componentNameRef.current,
-      query: trimmed,
+      query: truncateForArc(trimmed, MAX_ARC_QUERY_LENGTH)!,
     })
     try {
       const result = await onQueryRef.current(trimmed, {
@@ -242,9 +256,11 @@ export function useChartInterrogation(
       getConversationArcStore().record({
         type: "interrogation-answered",
         component: componentNameRef.current,
-        answer: result.answer,
+        answer: truncateForArc(result.answer, MAX_ARC_ANSWER_LENGTH),
         annotationCount: result.annotations?.length,
-        latencyMs: Math.round(answeredAt - askedAt),
+        // Clamp to ≥0 in case the Date.now() fallback was used and
+        // the system clock moved backwards between ask and answer.
+        latencyMs: Math.max(0, Math.round(answeredAt - askedAt)),
       })
     } catch (err) {
       const e = err instanceof Error ? err : new Error(String(err))
@@ -258,7 +274,7 @@ export function useChartInterrogation(
         type: "interrogation-answered",
         component: componentNameRef.current,
         error: true,
-        latencyMs: Math.round(answeredAt - askedAt),
+        latencyMs: Math.max(0, Math.round(answeredAt - askedAt)),
       })
     } finally {
       setLoading(false)

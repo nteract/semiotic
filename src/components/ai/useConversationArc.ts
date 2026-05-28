@@ -141,7 +141,8 @@ export interface UseConversationArcOptions extends EnableConversationArcOptions 
  */
 export interface UseConversationArcResult {
   /** Live event buffer, refreshed on every recorded event. */
-  history: ConversationArcEvent[]
+  /** Frozen snapshot of the live event buffer. Read-only; `.slice()` for a mutable copy. */
+  history: ReadonlyArray<ConversationArcEvent>
   /** Reduced summary of the current buffer. Recomputed on each event. */
   summary: ConversationArcSummary
   /** `true` while the store is actively recording. */

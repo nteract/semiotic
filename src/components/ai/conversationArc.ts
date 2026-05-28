@@ -109,7 +109,12 @@ export interface InterrogationAskedEvent extends ConversationArcEventBase {
   type: "interrogation-asked"
   /** Chart the question was directed at, if known. */
   component?: string
-  /** Free-form question text, truncated to a reasonable length by the caller. */
+  /**
+   * Question text. The `useChartInterrogation` instrumentation
+   * truncates to ~500 chars before recording so the ring buffer
+   * stays bounded; callers stamping their own events should do the
+   * same.
+   */
   query: string
   /** Optional payload size hint (e.g. summary token count) for diagnostics. */
   contextSize?: number
@@ -119,11 +124,21 @@ export interface InterrogationAnsweredEvent extends ConversationArcEventBase {
   type: "interrogation-answered"
   /** Chart the answer was directed at, if known. */
   component?: string
-  /** Free-form answer text, truncated by the caller. */
+  /**
+   * Answer text. The `useChartInterrogation` instrumentation
+   * truncates to ~2000 chars before recording so multi-kilobyte LLM
+   * responses don't bloat the ring buffer. Callers stamping their
+   * own events should follow the same convention.
+   */
   answer?: string
   /** Number of annotations the response attached, if known. */
   annotationCount?: number
-  /** Round-trip latency in ms from ask to answer, when the caller knows it. */
+  /**
+   * Round-trip latency in ms from ask to answer, clamped to ≥ 0.
+   * The instrumentation measures via `performance.now()` when
+   * available; the `Date.now()` fallback can produce negative
+   * deltas under clock changes, hence the clamp.
+   */
   latencyMs?: number
   /** Set when the response was an error rather than a successful answer. */
   error?: boolean
@@ -174,8 +189,13 @@ export interface ConversationArcStore {
   record(input: ConversationArcEventInput): ConversationArcEvent | null
   /** Returns the current buffer (newest last) and clears it. */
   flush(): ConversationArcEvent[]
-  /** Returns a snapshot of the current buffer without clearing. */
-  getEvents(): ConversationArcEvent[]
+  /**
+   * Returns a frozen, referentially-stable snapshot of the current
+   * buffer. Stable across consecutive calls until the next mutation,
+   * so it can drive `useSyncExternalStore`. Read-only — callers that
+   * need a mutable copy should `.slice()` the result.
+   */
+  getEvents(): ReadonlyArray<ConversationArcEvent>
   /**
    * Subscribe to new events. Returns an unsubscribe function.
    *
@@ -209,16 +229,24 @@ const listeners = new Set<ConversationArcListener>()
 
 // `useSyncExternalStore` requires `getSnapshot()` to return a stable
 // reference until something actually changes. The in-memory buffer is
-// mutated in place on `record()`, so we cache an immutable snapshot
-// next to the buffer and invalidate it on every push / clear / reset.
-// Returning a `slice()` from the public `getEvents()` API still gives
-// callers an array they can mutate without disturbing the buffer.
-let cachedSnapshot: ConversationArcEvent[] = []
+// mutated in place on `record()`, so we cache a frozen snapshot next
+// to the buffer and invalidate it on every push / clear / reset.
+//
+// The snapshot is FROZEN (Object.freeze) because it's shared across
+// every consumer: mutating it would corrupt subsequent snapshots and
+// break `useSyncExternalStore`'s referential-stability contract.
+// Callers that need a mutable copy can `.slice()` the result.
+const EMPTY_FROZEN_SNAPSHOT: ReadonlyArray<ConversationArcEvent> = Object.freeze(
+  []
+) as ReadonlyArray<ConversationArcEvent>
+let cachedSnapshot: ReadonlyArray<ConversationArcEvent> = EMPTY_FROZEN_SNAPSHOT
 let snapshotDirty = false
 
-function refreshSnapshotIfNeeded(): ConversationArcEvent[] {
+function refreshSnapshotIfNeeded(): ReadonlyArray<ConversationArcEvent> {
   if (!snapshotDirty) return cachedSnapshot
-  cachedSnapshot = store ? store.buffer.slice() : []
+  cachedSnapshot = store
+    ? (Object.freeze(store.buffer.slice()) as ReadonlyArray<ConversationArcEvent>)
+    : EMPTY_FROZEN_SNAPSHOT
   snapshotDirty = false
   return cachedSnapshot
 }
@@ -445,7 +473,7 @@ const facade: ConversationArcStore = {
   },
   reset() {
     listeners.clear()
-    cachedSnapshot = []
+    cachedSnapshot = EMPTY_FROZEN_SNAPSHOT
     snapshotDirty = false
     if (!store) {
       // Still fire the change notification so a hook subscribed

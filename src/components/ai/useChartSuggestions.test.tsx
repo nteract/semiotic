@@ -79,4 +79,40 @@ describe("useChartSuggestions — conversation-arc instrumentation", () => {
     expect((events[0] as { intent?: string }).intent).toBe("trend")
     expect((events[1] as { intent?: string }).intent).toBe("compare-categories")
   })
+
+  it("deduplicates against the store's most recent event across mount cycles", () => {
+    // Simulates the StrictMode mount → unmount → remount pattern: a
+    // per-instance ref resets across the cycle, so cross-instance
+    // dedup is what catches the duplicate.
+    enableConversationArc()
+    const seen: Array<{ type: string }> = []
+    getConversationArcStore().subscribe((e) => seen.push(e))
+
+    const { unmount } = renderHook(() =>
+      useChartSuggestions(TREND_DATA, { intent: "trend" })
+    )
+    unmount()
+    renderHook(() => useChartSuggestions(TREND_DATA, { intent: "trend" }))
+
+    const events = seen.filter((e) => e.type === "suggestion-shown")
+    expect(events).toHaveLength(1)
+  })
+
+  it("re-emits after disable → enable when suggestions are unchanged", () => {
+    // A consumer that enables the arc store mid-session should still
+    // see the current ranking. The disable path drops the signature
+    // so the first re-enable emits.
+    const seen: Array<{ type: string }> = []
+    getConversationArcStore().subscribe((e) => seen.push(e))
+
+    const { rerender } = renderHook(() =>
+      useChartSuggestions(TREND_DATA, { intent: "trend" })
+    )
+    // Hook ran while store was disabled — nothing recorded.
+    expect(seen.filter((e) => e.type === "suggestion-shown")).toHaveLength(0)
+
+    enableConversationArc()
+    rerender()
+    expect(seen.filter((e) => e.type === "suggestion-shown")).toHaveLength(1)
+  })
 })
