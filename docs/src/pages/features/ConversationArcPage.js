@@ -763,10 +763,6 @@ const scores = proposals.map((p) => evaluateVariantProposal(p, profile))`}
         user said about it. Variant discovery keeps the system honest about
         what it doesn't yet know — and where the learning slots in.
       </p>
-      <p>
-        See <code>docs/strategy/roadmap.md</code> (Talk Readiness Track)
-        for the full M1→M4 sequencing.
-      </p>
     </PageLayout>
   )
 }

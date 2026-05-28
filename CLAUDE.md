@@ -367,8 +367,7 @@ Interface for proposing and scoring chart variants beyond the hand-curated `capa
 - **`VariantScore`**: `{ proposalId, fit (0–5), novelty (0–1), risk (0–1), reasons }`. `fit` mixes with `suggestCharts` composite scores in unified rankings.
 - **`proposeVariant(component, capability, context)`** → `VariantProposal[]`. M1 stub returns `[]`.
 - **`evaluateVariantProposal(proposal, profile, audience?)`** → `VariantScore`. M1 stub returns a neutral baseline with a reason pointing back at the design doc.
-- **`registerVariantDiscovery(fn)`** → registers an external proposer, returns an unregister callback. Pair with `getRegisteredVariantDiscovery()` / `clearVariantDiscovery()` for inspection and teardown.
-- Full design + sequencing in `docs/strategy/variant-discovery.md`.
+- **`registerVariantDiscovery(fn)`** → registers an external proposer. `proposeVariant` dispatches through every registered function and deduplicates by `proposal.id`. Returns an unregister callback. Pair with `getRegisteredVariantDiscovery()` / `clearVariantDiscovery()` for inspection and teardown.
 
 ## AI Behavior Contracts
 

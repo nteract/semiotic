@@ -278,7 +278,8 @@ export type { BuiltInIntentId, IntentId, IntentDescriptor } from "./ai/intents"
 // Variant discovery — interface design (M1).
 // Heuristic implementation lands in M2; MCP `proposeChartVariants`
 // wraps this surface in M3; the external-model plug point is M4.
-// See docs/strategy/variant-discovery.md.
+// `proposeVariant` already dispatches through any functions registered
+// via `registerVariantDiscovery`, so consumers can wire end-to-end now.
 export {
   proposeVariant,
   evaluateVariantProposal,
@@ -311,7 +312,8 @@ export type {
 
 // Conversation-arc telemetry — opt-in event vocabulary + ring-buffer store.
 // Default surface is a no-op; call `enableConversationArc()` to start
-// recording. See `docs/strategy/roadmap.md` (Talk Readiness Track).
+// recording. Eight event types track the AI-assisted authoring arc
+// from suggestion through transformation to outcome.
 export {
   enableConversationArc,
   disableConversationArc,

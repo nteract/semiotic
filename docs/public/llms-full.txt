@@ -325,6 +325,49 @@ function SuggestedChart({ data, intent }) {
 }
 ```
 
+### Conversation-arc telemetry (`semiotic/ai`)
+Opt-in event store that records the arc of an AI-assisted session: `suggestion-shown → suggestion-chosen → audience-set → chart-rendered → chart-edited → chart-replaced → chart-exported | chart-abandoned`. Module-scoped, no React provider needed. Default surface is a no-op — call `enableConversationArc()` to start recording.
+- **`enableConversationArc({ capacity?, sessionId? })`** → enables recording. Bounded ring buffer (default 1000 events). Safe to call multiple times; reuses the existing session unless `sessionId` is overridden.
+- **`disableConversationArc()`** → stops recording without dropping buffered events.
+- **`getConversationArcStore()`** → returns `{ enabled, sessionId, capacity, record(input), flush(), getEvents(), subscribe(listener), clear(), reset() }`. Methods are safe to call when disabled (no-op).
+- **Events**: `ConversationArcEvent` discriminated union with `type`, `timestamp`, `sessionId`, optional `arcId` + `meta`. Each variant carries its own payload (e.g. `SuggestionShownEvent` has `components`, `intent`, `topScore`, `audience`).
+
+```ts
+import { enableConversationArc, getConversationArcStore } from "semiotic/ai"
+
+enableConversationArc()
+const store = getConversationArcStore()
+const unsub = store.subscribe((event) => console.log(event.type, event))
+store.record({ type: "suggestion-shown", components: ["LineChart"], intent: "trend" })
+```
+
+### Annotation provenance + lifecycle (`semiotic/ai`, types also re-exported from `semiotic`)
+Type surface for "where did this annotation come from?" and "is it stale?" Optional blocks attached to any annotation — existing arrays keep working unchanged.
+- **`provenance`**: `{ author?, source?, confidence?, createdAt?, stableId? }`. `source` is an open string union (`"user" | "ai" | "agent" | "import" | "computed" | "system" | (string & {})`).
+- **`lifecycle`**: `{ freshness?, ttlHint?, anchor? }`. `freshness` is `"fresh" | "aging" | "stale" | "expired"`. `anchor` is `"fixed" | "latest" | "sticky" | "semantic"`. `ttlHint` accepts an ISO 8601 duration string (`"P30D"`) or milliseconds.
+- **`withProvenance(annotation, { provenance?, lifecycle? })`** → returns a new annotation with the blocks attached. Pure, SSR-safe.
+- **`Annotated<T>`** type alias: `T & { provenance?, lifecycle? }`. Use for explicit typing.
+- Type surface only at this stage. Freshness computation, default visual treatment, and stable-id anchor resolution land later.
+
+```ts
+import { withProvenance } from "semiotic/ai"
+
+const ann = withProvenance(
+  { type: "y-threshold", value: 100, label: "SLA breach" },
+  {
+    provenance: { author: "alice", source: "user", createdAt: "2026-05-20T14:00:00Z" },
+    lifecycle: { ttlHint: "P30D", anchor: "semantic" },
+  },
+)
+```
+
+### Variant discovery (`semiotic/ai`)
+Interface for proposing and scoring chart variants beyond the hand-curated `capability.variants`. Heuristic and model-based proposers plug in through `registerVariantDiscovery`. M1 ships the type surface + stub implementations; behavior arrives in subsequent milestones.
+- **`VariantProposal`**: `{ id, baseComponent, intentDeltas?, rubricDeltas?, buildProps?, rationale?, source: "manual" | "heuristic" | "model", variantKey?, tags? }`.
+- **`VariantScore`**: `{ proposalId, fit (0–5), novelty (0–1), risk (0–1), reasons }`. `fit` mixes with `suggestCharts` composite scores in unified rankings.
+- **`proposeVariant(component, capability, context)`** → `VariantProposal[]`. M1 stub returns `[]`.
+- **`evaluateVariantProposal(proposal, profile, audience?)`** → `VariantScore`. M1 stub returns a neutral baseline with a reason pointing back at the design doc.
+- **`registerVariantDiscovery(fn)`** → registers an external proposer. `proposeVariant` dispatches through every registered function and deduplicates by `proposal.id`. Returns an unregister callback. Pair with `getRegisteredVariantDiscovery()` / `clearVariantDiscovery()` for inspection and teardown.
 
 ## AI Behavior Contracts
 

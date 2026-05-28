@@ -1,17 +1,15 @@
 // Variant discovery — M1 (interface design).
 //
-// "Where's the learning?" is the second-most-likely Q&A landing zone
-// for the talk. The defensible answer is a documented API surface for
-// proposing and evaluating chart variants, with the actual discovery
-// model deferred to future milestones.
+// API surface for proposing and evaluating chart variants beyond the
+// hand-curated `capability.variants` registry. Heuristic, LLM-based,
+// and model-driven proposers all plug in through one shape.
 //
-// This module ships the type contract plus stub implementations that
-// callers can wire end-to-end today. The heuristic implementation
-// lands in M2 (`proposeVariant` walks the existing variant registry
-// + simple transformations). The MCP tool wrapping lands in M3.
-// The `registerVariantDiscovery` plug point for external models
-// lands in M4. See `docs/strategy/variant-discovery.md` for the
-// full sequencing.
+// M1 ships the type contract plus an exercisable plug point:
+// `proposeVariant` dispatches through any functions registered via
+// `registerVariantDiscovery`, deduplicating by proposal id. M2 adds
+// a built-in heuristic source alongside the registered ones. M3
+// implements the scorer (`evaluateVariantProposal` is a neutral
+// baseline at M1).
 
 import type {
   ChartCapability,
@@ -162,23 +160,50 @@ export type EvaluateVariantProposalFn = (
   audience?: AudienceProfile
 ) => VariantScore
 
-// ── Stubs ─────────────────────────────────────────────────────────────
+// ── Plug point for external discovery models ─────────────────────────
+
+const discoveryFns = new Set<ProposeVariantFn>()
+
+// ── proposeVariant: dispatches through registered discovery fns ──────
 
 /**
- * M1 stub. Returns an empty proposal array — callers wiring through
- * the interface get the shape right today and pick up real proposals
- * once the heuristic implementation lands in M2.
+ * Aggregates proposals from every registered discovery function.
  *
- * Wrapping callers should treat an empty return as "nothing to
- * surface" rather than an error.
+ * Each registered function is invoked with the same `(component,
+ * capability, context)` tuple; their results are concatenated and
+ * deduplicated by `VariantProposal.id` (first proposer wins). A
+ * proposer that throws is isolated — the error surfaces through
+ * `console.warn` and the remaining proposers still run.
+ *
+ * At M1 the built-in heuristic isn't here yet, so with no registered
+ * discovery functions the return is `[]`. Once M2 lands the built-in
+ * heuristic, this function will compose registered proposers with the
+ * heuristic source.
  */
-export const proposeVariant: ProposeVariantFn = (_component, _capability, _context) => {
-  return []
+export const proposeVariant: ProposeVariantFn = (component, capability, context) => {
+  if (discoveryFns.size === 0) return []
+  const seen = new Map<string, VariantProposal>()
+  for (const fn of discoveryFns) {
+    let proposals: ReadonlyArray<VariantProposal> = []
+    try {
+      proposals = fn(component, capability, context) ?? []
+    } catch (err) {
+      if (typeof console !== "undefined") {
+        console.warn("[variantDiscovery] proposer threw:", err)
+      }
+      continue
+    }
+    for (const p of proposals) {
+      if (!seen.has(p.id)) seen.set(p.id, p)
+    }
+  }
+  return Array.from(seen.values())
 }
 
 /**
  * M1 stub. Returns a neutral baseline score so consumers can wire
- * the evaluation pipeline before the real scorer arrives in M3.
+ * the evaluation pipeline before the real scorer arrives in a later
+ * milestone.
  *
  * The shape is real; the numbers are placeholders. Code that mixes
  * baseline scores into ranked output should treat `fit = 0` as "no
@@ -191,24 +216,20 @@ export const evaluateVariantProposal: EvaluateVariantProposalFn = (proposal, _pr
     novelty: 0,
     risk: 0,
     reasons: [
-      "Variant discovery M1: scoring not implemented. See docs/strategy/variant-discovery.md.",
+      "Variant discovery M1: scoring not implemented yet; this is a neutral placeholder baseline.",
     ],
   }
 }
 
-// ── Plug point for external discovery models (M4) ─────────────────────
-
-const discoveryFns = new Set<ProposeVariantFn>()
-
 /**
  * Register a discovery function. Returns an unregister callback.
  *
- * The engine (lands in M3) invokes every registered function and
- * deduplicates by `VariantProposal.id`. External ML-driven proposers
- * plug in here without API change.
+ * `proposeVariant` invokes every registered function and deduplicates
+ * by `VariantProposal.id`. External ML-driven proposers plug in here
+ * without API change.
  *
- * Built-in heuristic discovery (M2) is *not* registered through this
- * surface — it lives in `proposeVariant` directly. This registry is
+ * Built-in heuristic discovery (M2) won't be registered through this
+ * surface — it'll live in `proposeVariant` directly. This registry is
  * the extension surface for consumers and future model integrations.
  */
 export function registerVariantDiscovery(fn: ProposeVariantFn): () => void {

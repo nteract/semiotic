@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   clearVariantDiscovery,
   evaluateVariantProposal,
@@ -50,13 +50,96 @@ const stubProfile: ChartDataProfile = {
   hasGeo: false,
 }
 
-describe("variantDiscovery — M1 stubs", () => {
-  it("proposeVariant returns an empty array at M1", () => {
+describe("variantDiscovery — proposeVariant", () => {
+  it("returns an empty array when no discovery functions are registered", () => {
     const result = proposeVariant("LineChart", stubCapability, { profile: stubProfile })
     expect(result).toEqual([])
   })
 
-  it("evaluateVariantProposal returns a neutral baseline score", () => {
+  it("dispatches through every registered discovery function", () => {
+    registerVariantDiscovery(() => [
+      { id: "A:variant-a", baseComponent: "A", source: "heuristic" },
+    ])
+    registerVariantDiscovery(() => [
+      { id: "B:variant-b", baseComponent: "B", source: "model" },
+    ])
+
+    const result = proposeVariant("LineChart", stubCapability, { profile: stubProfile })
+
+    expect(result.map((p) => p.id)).toEqual(["A:variant-a", "B:variant-b"])
+  })
+
+  it("forwards (component, capability, context) to each proposer", () => {
+    const calls: Array<{ component: string; intent?: string }> = []
+    registerVariantDiscovery((component, _capability, context) => {
+      calls.push({ component, intent: context.intent })
+      return []
+    })
+
+    proposeVariant("LineChart", stubCapability, { profile: stubProfile, intent: "trend" })
+
+    expect(calls).toEqual([{ component: "LineChart", intent: "trend" }])
+  })
+
+  it("deduplicates proposals by id — first proposer wins", () => {
+    registerVariantDiscovery(() => [
+      {
+        id: "RidgelinePlot:bimodal",
+        baseComponent: "RidgelinePlot",
+        source: "heuristic",
+        rationale: "from proposer 1",
+      },
+    ])
+    registerVariantDiscovery(() => [
+      {
+        id: "RidgelinePlot:bimodal",
+        baseComponent: "RidgelinePlot",
+        source: "model",
+        rationale: "from proposer 2",
+      },
+      { id: "RidgelinePlot:peak", baseComponent: "RidgelinePlot", source: "model" },
+    ])
+
+    const result = proposeVariant("LineChart", stubCapability, { profile: stubProfile })
+
+    expect(result).toHaveLength(2)
+    expect(result.find((p) => p.id === "RidgelinePlot:bimodal")?.rationale).toBe("from proposer 1")
+    expect(result.map((p) => p.id)).toContain("RidgelinePlot:peak")
+  })
+
+  it("isolates a throwing proposer — siblings still produce proposals", () => {
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    registerVariantDiscovery(() => {
+      throw new Error("proposer failure")
+    })
+    registerVariantDiscovery(() => [
+      { id: "ok:variant", baseComponent: "ok", source: "manual" },
+    ])
+
+    const result = proposeVariant("LineChart", stubCapability, { profile: stubProfile })
+
+    expect(result.map((p) => p.id)).toEqual(["ok:variant"])
+    expect(consoleWarn).toHaveBeenCalled()
+    consoleWarn.mockRestore()
+  })
+
+  it("tolerates a misbehaving proposer that returns nullish (defensive runtime check)", () => {
+    // `ProposeVariantFn` is typed to return ReadonlyArray<VariantProposal>,
+    // but external/runtime proposers can violate that. Cast through unknown
+    // to exercise the `?? []` defensive branch.
+    registerVariantDiscovery(((() => undefined) as unknown) as ProposeVariantFn)
+    registerVariantDiscovery(() => [
+      { id: "ok:variant", baseComponent: "ok", source: "manual" },
+    ])
+
+    const result = proposeVariant("LineChart", stubCapability, { profile: stubProfile })
+
+    expect(result.map((p) => p.id)).toEqual(["ok:variant"])
+  })
+})
+
+describe("variantDiscovery — evaluateVariantProposal", () => {
+  it("returns a neutral baseline score (M1 placeholder)", () => {
     const proposal: VariantProposal = {
       id: "LineChart:streamgraph",
       baseComponent: "StackedAreaChart",
