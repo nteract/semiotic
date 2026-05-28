@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
+  applyAnnotationLifecycle,
+  annotationFreshnessFor,
   disableConversationArc,
   enableConversationArc,
   getConversationArcStore,
@@ -151,10 +153,13 @@ function ArcDemo() {
   // for other consumers. Intentionally not `reset()` — that would wipe
   // listeners other parts of the app sharing the same store may have
   // attached.
-  useEffect(() => () => {
-    disableConversationArc()
-    store.clear()
-  }, [store])
+  useEffect(
+    () => () => {
+      disableConversationArc()
+      store.clear()
+    },
+    [store],
+  )
 
   const toggle = () => {
     if (enabled) {
@@ -178,15 +183,17 @@ function ArcDemo() {
   }
 
   return (
-    <div style={{
-      border: "1px solid var(--surface-3)",
-      borderRadius: 12,
-      padding: 20,
-      background: "var(--surface-1)",
-      display: "flex",
-      flexDirection: "column",
-      gap: 16,
-    }}>
+    <div
+      style={{
+        border: "1px solid var(--surface-3)",
+        borderRadius: 12,
+        padding: 20,
+        background: "var(--surface-1)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <button
           onClick={toggle}
@@ -226,13 +233,15 @@ function ArcDemo() {
         </button>
       </div>
 
-      <div style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 6,
-        paddingBottom: 8,
-        borderBottom: "1px dashed var(--surface-3)",
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 6,
+          paddingBottom: 8,
+          borderBottom: "1px dashed var(--surface-3)",
+        }}
+      >
         {EVENT_PRESETS.map((preset) => (
           <button
             key={preset.type}
@@ -270,7 +279,14 @@ function ArcDemo() {
           title="Events over time"
           summary="Horizontal dot plot. Each dot is a recorded conversation-arc event placed at its timestamp on the x-axis and its event type on the y-axis. Colors match the event-type buttons above."
           emptyContent={
-            <div style={{ color: "var(--text-secondary)", fontSize: 13, padding: "40px 0", textAlign: "center" }}>
+            <div
+              style={{
+                color: "var(--text-secondary)",
+                fontSize: 13,
+                padding: "40px 0",
+                textAlign: "center",
+              }}
+            >
               {enabled
                 ? "Click an event button above — dots will arrive via the DotPlot push API."
                 : "Enable recording, then click an event button to drop dots onto the chart."}
@@ -279,15 +295,17 @@ function ArcDemo() {
         />
       </CategoryColorProvider>
 
-      <div style={{
-        maxHeight: 220,
-        overflowY: "auto",
-        background: "var(--surface-2)",
-        padding: 10,
-        borderRadius: 8,
-        fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
-        fontSize: 12,
-      }}>
+      <div
+        style={{
+          maxHeight: 220,
+          overflowY: "auto",
+          background: "var(--surface-2)",
+          padding: 10,
+          borderRadius: 8,
+          fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
+          fontSize: 12,
+        }}
+      >
         {events.length === 0 && (
           <div style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>
             {enabled
@@ -295,39 +313,42 @@ function ArcDemo() {
               : "Recording is off. Click ‘Enable recording’ to start a session."}
           </div>
         )}
-        {events.slice().reverse().map((event, i) => (
-          <div
-            key={`${event.timestamp}-${i}`}
-            style={{
-              display: "flex",
-              gap: 8,
-              padding: "4px 0",
-              borderBottom: "1px dotted var(--surface-3)",
-            }}
-          >
-            <span style={{ color: "var(--text-secondary)" }}>
-              {new Date(event.timestamp).toLocaleTimeString()}
-            </span>
-            <span
+        {events
+          .slice()
+          .reverse()
+          .map((event, i) => (
+            <div
+              key={`${event.timestamp}-${i}`}
               style={{
-                color: TYPE_COLORS[event.type],
-                fontWeight: 600,
-                minWidth: 150,
+                display: "flex",
+                gap: 8,
+                padding: "4px 0",
+                borderBottom: "1px dotted var(--surface-3)",
               }}
             >
-              {event.type}
-            </span>
-            <span style={{ color: "var(--text)" }}>
-              {JSON.stringify(
-                Object.fromEntries(
-                  Object.entries(event).filter(
-                    ([k]) => k !== "type" && k !== "timestamp" && k !== "sessionId"
-                  )
-                )
-              )}
-            </span>
-          </div>
-        ))}
+              <span style={{ color: "var(--text-secondary)" }}>
+                {new Date(event.timestamp).toLocaleTimeString()}
+              </span>
+              <span
+                style={{
+                  color: TYPE_COLORS[event.type],
+                  fontWeight: 600,
+                  minWidth: 150,
+                }}
+              >
+                {event.type}
+              </span>
+              <span style={{ color: "var(--text)" }}>
+                {JSON.stringify(
+                  Object.fromEntries(
+                    Object.entries(event).filter(
+                      ([k]) => k !== "type" && k !== "timestamp" && k !== "sessionId",
+                    ),
+                  ),
+                )}
+              </span>
+            </div>
+          ))}
       </div>
     </div>
   )
@@ -357,7 +378,7 @@ const ANNOTATIONS_RAW = [
         createdAt: "2026-02-15T12:00:00Z",
       },
       lifecycle: { ttlHint: "P30D", anchor: "semantic" },
-    }
+    },
   ),
   withProvenance(
     {
@@ -378,51 +399,17 @@ const ANNOTATIONS_RAW = [
         createdAt: "2026-03-10T09:00:00Z",
       },
       lifecycle: { ttlHint: "P14D", anchor: "fixed" },
-    }
+    },
   ),
 ]
 
-// Stand-in for the M2 `computeAnnotationFreshness` helper. The page-level
-// scrubber re-runs this on each "now" change so readers see annotations
-// drift through fresh → aging → stale → expired.
-function computeFreshnessPreview(ann, nowMs) {
-  const created = ann?.provenance?.createdAt ? Date.parse(ann.provenance.createdAt) : null
-  const ttl = ann?.lifecycle?.ttlHint
-  if (created == null || ttl == null) return "fresh"
-  const ms = typeof ttl === "number" ? ttl : parseIsoDuration(ttl)
-  const age = nowMs - created
-  if (age < ms) return "fresh"
-  if (age < ms * 1.5) return "aging"
-  if (age < ms * 3) return "stale"
-  return "expired"
-}
-
-function parseIsoDuration(s) {
-  const m = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?)?$/.exec(s)
-  if (!m) return 0
-  const days = parseInt(m[1] || "0", 10)
-  const hours = parseInt(m[2] || "0", 10)
-  return ((days * 24 + hours) * 60 * 60 * 1000)
-}
-
-// Per-source brand color. Freshness shifts THIS color toward gray.
-// The annotation renderer reads `color` for both text fill + connector
-// stroke, so this single field drives the whole visual treatment.
+// Per-source brand color flows through `color` on each annotation.
+// applyAnnotationLifecycle handles the opacity + dashing per band, so
+// freshness fades the annotations toward the page background while
+// the author's brand color stays as the identity cue.
 const SOURCE_BASE_COLOR = {
   user: "#3a8eff",
   ai: "#d49a00",
-}
-
-const COLOR_BY_FRESHNESS = {
-  fresh: (base) => base,
-  aging: () => "#8a96a3",
-  stale: () => "#b0b0b0",
-}
-
-const LABEL_SUFFIX = {
-  fresh: "",
-  aging: " · aging",
-  stale: " · stale",
 }
 
 const FRESHNESS_BADGE_COLOR = {
@@ -437,11 +424,11 @@ const FRESHNESS_BADGE_COLOR = {
 const SAMPLE_DATA = [
   { month: 1, value: 280 },
   { month: 2, value: 310 },
-  { month: 3, value: 420 },  // alice's spike
+  { month: 3, value: 420 }, // alice's spike
   { month: 4, value: 350 },
   { month: 5, value: 360 },
   { month: 6, value: 370 },
-  { month: 7, value: 510 },  // AI's anomaly
+  { month: 7, value: 510 }, // AI's anomaly
   { month: 8, value: 390 },
   { month: 9, value: 400 },
   { month: 10, value: 420 },
@@ -456,36 +443,38 @@ function FreshnessDemo() {
   const [nowIso, setNowIso] = useState("2026-03-10T00:00:00Z")
   const nowMs = Date.parse(nowIso)
 
-  // Compute freshness state for each raw annotation. Expired ones drop
-  // out of the chart-bound array entirely — mirrors M2's default of
-  // hiding expired notes unless `showExpiredAnnotations` is on.
-  const states = ANNOTATIONS_RAW.map((a) => ({
-    raw: a,
-    freshness: computeFreshnessPreview(a, nowMs),
+  // Each annotation keeps its author's brand color via `color`. The
+  // freshness treatment fills in opacity + strokeDasharray per band
+  // and drops expired ones — same algorithm the library ships.
+  const annotationsWithColor = ANNOTATIONS_RAW.map((a) => ({
+    ...a,
+    color: SOURCE_BASE_COLOR[a.provenance.source] ?? "#5a5a5a",
   }))
 
-  const visibleAnnotations = states
-    .filter((s) => s.freshness !== "expired")
-    .map(({ raw, freshness }) => {
-      const base = SOURCE_BASE_COLOR[raw.provenance.source] ?? "#5a5a5a"
-      return {
-        ...raw,
-        label: raw.label + LABEL_SUFFIX[freshness],
-        color: COLOR_BY_FRESHNESS[freshness](base),
-        lifecycle: { ...raw.lifecycle, freshness },
-      }
-    })
+  const visibleAnnotations = applyAnnotationLifecycle(annotationsWithColor, {
+    now: nowMs,
+    labelSuffix: { aging: " · aging", stale: " · stale" },
+  })
+
+  // Per-annotation status for the panel below the chart — uses the
+  // same classifier the chart is using.
+  const states = ANNOTATIONS_RAW.map((raw) => ({
+    raw,
+    freshness: annotationFreshnessFor(raw, nowMs),
+  }))
 
   return (
-    <div style={{
-      border: "1px solid var(--surface-3)",
-      borderRadius: 12,
-      padding: 20,
-      background: "var(--surface-1)",
-      display: "flex",
-      flexDirection: "column",
-      gap: 16,
-    }}>
+    <div
+      style={{
+        border: "1px solid var(--surface-3)",
+        borderRadius: 12,
+        padding: 20,
+        background: "var(--surface-1)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
+    >
       <LineChart
         data={SAMPLE_DATA}
         xAccessor="month"
@@ -498,7 +487,14 @@ function FreshnessDemo() {
       />
 
       <div>
-        <label style={{ display: "block", fontSize: 13, color: "var(--text-secondary)", marginBottom: 4 }}>
+        <label
+          style={{
+            display: "block",
+            fontSize: 13,
+            color: "var(--text-secondary)",
+            marginBottom: 4,
+          }}
+        >
           Pretend "now" is <code style={{ fontSize: 13 }}>{nowIso.slice(0, 10)}</code>
         </label>
         <input
@@ -528,20 +524,33 @@ function FreshnessDemo() {
                 opacity: freshness === "expired" ? 0.55 : 1,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, gap: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 4,
+                  gap: 8,
+                }}
+              >
                 <strong style={{ fontSize: 13 }}>{raw.label}</strong>
-                <span style={{
-                  background: FRESHNESS_BADGE_COLOR[freshness],
-                  color: "white",
-                  padding: "1px 8px",
-                  borderRadius: 999,
-                  fontSize: 11,
-                  fontWeight: 600,
-                }}>{freshness}</span>
+                <span
+                  style={{
+                    background: FRESHNESS_BADGE_COLOR[freshness],
+                    color: "white",
+                    padding: "1px 8px",
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {freshness}
+                </span>
               </div>
               <div style={{ color: "var(--text-secondary)" }}>
                 by <code>{raw.provenance.author}</code>
-                {" · "}{ageDays} day{ageDays === 1 ? "" : "s"} old
+                {" · "}
+                {ageDays} day{ageDays === 1 ? "" : "s"} old
                 {" · "}TTL <code>{raw.lifecycle.ttlHint}</code>
               </div>
               {freshness === "expired" && (
@@ -555,13 +564,15 @@ function FreshnessDemo() {
       </div>
 
       <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
-        Drag the slider forward in time. The annotations' colors and
-        labels shift through <code>fresh → aging → stale</code>, then
-        disappear once they hit <code>expired</code>. The freshness
-        calculation here is a page-local stand-in — the shipping
-        <code>computeAnnotationFreshness</code> helper and default
-        visual treatment land in M2. The annotation data itself uses
-        the M1 provenance + lifecycle blocks verbatim.
+        Drag the slider forward in time. Annotations dim through{" "}
+        <code>fresh → aging → stale</code>, take on a dashed border at{" "}
+        <code>stale</code>, then disappear once they hit{" "}
+        <code>expired</code>. The chart is calling{" "}
+        <code>applyAnnotationLifecycle(annotations, {"{ now }"})</code>{" "}
+        directly — the shipping helper handles freshness, opacity,
+        dashing, and the expired filter; pass{" "}
+        <code>showExpiredAnnotations: true</code> to keep expired
+        annotations visible.
       </p>
     </div>
   )
@@ -578,44 +589,55 @@ export default function ConversationArcPage() {
         { label: "Conversation Arc", path: "/intelligence/conversation-arc" },
       ]}
       prevPage={{ title: "Interrogation", path: "/intelligence/interrogation" }}
-      nextPage={{ title: "Serialization", path: "/intelligence/serialization" }}
+      nextPage={{ title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" }}
     >
       <p>
-        AI-assisted chart authoring is a session, not a one-shot call. Users
-        see suggestions, pick one, refine the audience, render, edit, replace,
-        export — or abandon. Semiotic gives that arc structure with three
-        composable surfaces that ship together in 3.5.x:
+        AI-assisted chart authoring is a session, not a one-shot call. Users see suggestions, pick
+        one, refine the audience, render, edit, replace, export — or abandon. Semiotic gives that
+        arc structure with three composable surfaces:
       </p>
       <ul>
-        <li><strong>Conversation-arc telemetry</strong> — an opt-in event store recording the arc itself.</li>
-        <li><strong>Annotation provenance + lifecycle</strong> — every annotation can carry origin, confidence, and freshness.</li>
-        <li><strong>Variant discovery</strong> — an interface for proposing chart variants outside the hand-curated capability registry.</li>
+        <li>
+          <strong>Conversation-arc telemetry</strong> — an opt-in event store recording the arc
+          itself.
+        </li>
+        <li>
+          <strong>Annotation provenance + lifecycle</strong> — every annotation can carry origin,
+          confidence, and freshness.
+        </li>
+        <li>
+          <strong>Variant discovery</strong> — an interface for proposing chart variants outside the
+          hand-curated capability registry.
+        </li>
       </ul>
       <p>
-        These are the talk-readiness M1 deliverables in the roadmap. M2–M4
-        will fill in heuristic implementations and runtime helpers. The
-        type surface lands today.
+        These ship together in 3.5.x. Annotation freshness and the
+        default visual treatment are live (the demo below uses them
+        directly). The conversation-arc store is functional; full
+        sink/persistence helpers and the <code>useConversationArc</code>
+        hook arrive incrementally. Variant discovery's plug point is
+        callable today; the built-in heuristic proposer and scorer
+        arrive in subsequent passes.
       </p>
 
       <h2>Conversation-arc telemetry</h2>
       <p>
-        <code>enableConversationArc()</code> turns on a module-scoped ring
-        buffer that records the arc of an AI-assisted session. Default
-        surface is a no-op so the import is zero-cost when telemetry is off.
+        <code>enableConversationArc()</code> turns on a module-scoped ring buffer that records the
+        arc of an AI-assisted session. Default surface is a no-op so the import is zero-cost when
+        telemetry is off.
       </p>
 
       <h3>Interactive demo</h3>
       <p>
-        Enable recording, fire some events, and watch the live store. Each
-        click below calls <code>store.record(...)</code>. The event log is
-        driven by a real subscriber on the real store — not a re-render of
-        local state.
+        Enable recording, fire some events, and watch the live store. Each click below calls{" "}
+        <code>store.record(...)</code>. The event log is driven by a real subscriber on the real
+        store — not a re-render of local state.
       </p>
       <ArcDemo />
 
       <h3>Wiring</h3>
       <CodeBlock language="jsx">
-{`import {
+        {`import {
   enableConversationArc,
   disableConversationArc,
   getConversationArcStore,
@@ -648,39 +670,36 @@ const allEvents = store.flush()`}
       <h3>Event vocabulary</h3>
       <p>
         Eight variants in a discriminated union: <code>suggestion-shown</code>,{" "}
-        <code>suggestion-chosen</code>, <code>audience-set</code>,{" "}
-        <code>chart-rendered</code>, <code>chart-edited</code>,{" "}
-        <code>chart-replaced</code>, <code>chart-exported</code>,{" "}
-        <code>chart-abandoned</code>. Each carries the fields a downstream
-        analytics or replay system would actually consume (component name,
-        rank, format, reason). The <code>arcId</code> field threads multiple
-        events into a single named arc when you need it.
+        <code>suggestion-chosen</code>, <code>audience-set</code>, <code>chart-rendered</code>,{" "}
+        <code>chart-edited</code>, <code>chart-replaced</code>, <code>chart-exported</code>,{" "}
+        <code>chart-abandoned</code>. Each carries the fields a downstream analytics or replay
+        system would actually consume (component name, rank, format, reason). The <code>arcId</code>{" "}
+        field threads multiple events into a single named arc when you need it.
       </p>
 
       <h2>Annotation provenance + lifecycle</h2>
       <p>
-        Anchored conversations stay defensible when every annotation knows
-        where it came from and when it should be considered stale. The
-        M1 surface attaches two optional blocks to any annotation:{" "}
-        <code>provenance</code> ({" "}
-        <code>author</code>, <code>source</code>, <code>confidence</code>,{" "}
-        <code>createdAt</code>, <code>stableId</code>) and{" "}
-        <code>lifecycle</code> (<code>freshness</code>, <code>ttlHint</code>,{" "}
-        <code>anchor</code>).
+        Anchored conversations stay defensible when every annotation knows where it came from and
+        when it should be considered stale. Two optional blocks attach to any annotation:{" "}
+        <code>provenance</code> ( <code>author</code>, <code>source</code>,{" "}
+        <code>confidence</code>, <code>createdAt</code>, <code>stableId</code>) and{" "}
+        <code>lifecycle</code> (<code>freshness</code>, <code>ttlHint</code>, <code>anchor</code>).
+        <code>computeAnnotationFreshness</code> classifies each annotation into a band;{" "}
+        <code>applyAnnotationLifecycle</code> additionally applies a default visual treatment
+        (opacity for aging, dashing for stale, hiding for expired).
       </p>
 
       <h3>Lifecycle scrubber</h3>
       <p>
-        The chart below carries two annotations — one from a user with a
-        30-day TTL, one from an AI with a 14-day TTL and lower confidence.
-        Drag the slider to advance "now" and watch them drift through{" "}
-        <code>fresh → aging → stale → expired</code>:
+        The chart below carries two annotations — one from a user with a 30-day TTL, one from an AI
+        with a 14-day TTL and lower confidence. Drag the slider to advance "now" and watch them
+        drift through <code>fresh → aging → stale → expired</code>:
       </p>
       <FreshnessDemo />
 
       <h3>Attaching provenance</h3>
       <CodeBlock language="ts">
-{`import { withProvenance } from "semiotic/ai"
+        {`import { withProvenance } from "semiotic/ai"
 
 const ann = withProvenance(
   { type: "y-threshold", value: 100, label: "SLA breach" },
@@ -697,25 +716,23 @@ const ann = withProvenance(
       </CodeBlock>
 
       <p>
-        The anchor mode matters when data refreshes. <code>"fixed"</code>{" "}
-        keeps the recorded coordinate verbatim; <code>"latest"</code>{" "}
-        re-pins to the most recent data point; <code>"sticky"</code>{" "}
-        rides forward until removed (the existing streaming behavior);{" "}
-        <code>"semantic"</code> re-resolves via <code>stableId</code> when
-        new data arrives — that's the M3 anchor-resolution algorithm.
+        The anchor mode matters when data refreshes. <code>"fixed"</code> keeps the recorded
+        coordinate verbatim; <code>"latest"</code> re-pins to the most recent data point;{" "}
+        <code>"sticky"</code> rides forward until removed (the existing streaming behavior);{" "}
+        <code>"semantic"</code> re-resolves via <code>stableId</code> when new data arrives — that's
+        the M3 anchor-resolution algorithm.
       </p>
 
       <h2>Variant discovery</h2>
       <p>
-        Hand-curated <code>capability.variants</code> are bounded by what
-        humans wrote. Variant discovery is the API surface for proposing
-        configurations the registry doesn't include — from heuristic
-        walkers, LLM agents, or future ML models — and scoring them with
-        the same rubric the built-in suggester uses.
+        Hand-curated <code>capability.variants</code> are bounded by what humans wrote. Variant
+        discovery is the API surface for proposing configurations the registry doesn't include —
+        from heuristic walkers, LLM agents, or future ML models — and scoring them with the same
+        rubric the built-in suggester uses.
       </p>
 
       <CodeBlock language="ts">
-{`import {
+        {`import {
   proposeVariant,
   evaluateVariantProposal,
   registerVariantDiscovery,
@@ -748,20 +765,18 @@ const scores = proposals.map((p) => evaluateVariantProposal(p, profile))`}
       </CodeBlock>
 
       <p>
-        At M1, <code>proposeVariant</code> and{" "}
-        <code>evaluateVariantProposal</code> are stubs — they return empty
-        proposals and a neutral baseline score. The point is the contract:{" "}
-        <code>VariantProposal</code> and <code>VariantScore</code> are
-        stable shapes consumers can wire end-to-end today. Heuristic
-        proposal lands in M2; scoring + the MCP{" "}
+        At M1, <code>proposeVariant</code> and <code>evaluateVariantProposal</code> are stubs — they
+        return empty proposals and a neutral baseline score. The point is the contract:{" "}
+        <code>VariantProposal</code> and <code>VariantScore</code> are stable shapes consumers can
+        wire end-to-end today. Heuristic proposal lands in M2; scoring + the MCP{" "}
         <code>proposeChartVariants</code> tool land in M3.
       </p>
 
       <h2>Why these three together</h2>
       <p>
-        The arc records what happened. The annotations preserve what the
-        user said about it. Variant discovery keeps the system honest about
-        what it doesn't yet know — and where the learning slots in.
+        The arc records what happened. The annotations preserve what the user said about it. Variant
+        discovery keeps the system honest about what it doesn't yet know — and where the learning
+        slots in.
       </p>
     </PageLayout>
   )

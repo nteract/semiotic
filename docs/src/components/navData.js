@@ -130,6 +130,7 @@ const navData = [
       { title: "Chart Suggestions", path: "/intelligence/suggestions" },
       { title: "Interrogation", path: "/intelligence/interrogation" },
       { title: "Conversation Arc", path: "/intelligence/conversation-arc" },
+      { title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" },
       { title: "Serialization", path: "/intelligence/serialization" },
       { title: "Vega-Lite Translator", path: "/intelligence/vega-lite" }
     ]

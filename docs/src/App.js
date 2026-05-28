@@ -97,6 +97,7 @@ import CapabilitiesPage from "./pages/features/CapabilitiesPage"
 import InterrogationPage from "./pages/features/InterrogationPage"
 import SuggestionsPage from "./pages/features/SuggestionsPage"
 import ConversationArcPage from "./pages/features/ConversationArcPage"
+import TemporalLifecyclePage from "./pages/features/TemporalLifecyclePage"
 
 // New cookbook pages
 import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
@@ -401,6 +402,7 @@ export default function DocsApp() {
               <Route path="suggestions" element={<SuggestionsPage />} />
               <Route path="interrogation" element={<InterrogationPage />} />
               <Route path="conversation-arc" element={<ConversationArcPage />} />
+              <Route path="temporal-lifecycle" element={<TemporalLifecyclePage />} />
               <Route path="serialization" element={<SerializationPage />} />
               <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
             </Route>

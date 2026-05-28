@@ -297,10 +297,21 @@ export type {
   EvaluateVariantProposalFn,
 } from "./ai/variantDiscovery"
 
-// Annotation provenance + lifecycle — type surface only (M1).
-// Behavior (`computeAnnotationFreshness`, default visual treatment,
-// stable-id anchor resolution) lands in subsequent milestones.
-export { withProvenance } from "./ai/annotationProvenance"
+// Annotation provenance + lifecycle.
+// M1: type surface + withProvenance builder.
+// M2: computeAnnotationFreshness + applyAnnotationLifecycle (default
+// visual treatment, overridable per band; expired hidden by default).
+// M3 still owed: stable-id anchor resolution after data refresh.
+export {
+  withProvenance,
+  withCurrentProvenance,
+  currentTimestamp,
+  computeAnnotationFreshness,
+  applyAnnotationLifecycle,
+  annotationFreshnessFor,
+  bandFromAge,
+  DEFAULT_LIFECYCLE_THRESHOLDS,
+} from "./ai/annotationProvenance"
 export type {
   AnnotationProvenance,
   AnnotationSource,
@@ -308,6 +319,11 @@ export type {
   AnnotationFreshness,
   AnnotationAnchor,
   Annotated,
+  ComputeAnnotationFreshnessOptions,
+  AnnotationLifecycleTreatment,
+  ApplyAnnotationLifecycleOptions,
+  LifecycleBand,
+  LifecycleBandThresholds,
 } from "./ai/annotationProvenance"
 
 // Conversation-arc telemetry — opt-in event vocabulary + ring-buffer store.

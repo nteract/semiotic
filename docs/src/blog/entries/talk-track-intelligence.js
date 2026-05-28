@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { CategoryColorProvider, DotPlot, LineChart } from "semiotic"
 import {
+  annotationFreshnessFor,
+  applyAnnotationLifecycle,
   disableConversationArc,
   enableConversationArc,
   getConversationArcStore,
@@ -267,12 +269,6 @@ const RAW_ANNOTATIONS = [
 ]
 
 const FRESHNESS_BASE_COLOR = { user: "#3a8eff", ai: "#d49a00" }
-const FRESHNESS_COLOR = {
-  fresh: (base) => base,
-  aging: () => "#8a96a3",
-  stale: () => "#b0b0b0",
-}
-const FRESHNESS_SUFFIX = { fresh: "", aging: " · aging", stale: " · stale" }
 const FRESHNESS_BADGE = {
   fresh: "#2d8a4a",
   aging: "#d49a00",
@@ -280,46 +276,25 @@ const FRESHNESS_BADGE = {
   expired: "#c43d3d",
 }
 
-function parseIsoDuration(s) {
-  const m = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?)?$/.exec(s)
-  if (!m) return 0
-  return (parseInt(m[1] || "0", 10) * 24 + parseInt(m[2] || "0", 10)) * 60 * 60 * 1000
-}
-
-function previewFreshness(ann, nowMs) {
-  const created = ann?.provenance?.createdAt ? Date.parse(ann.provenance.createdAt) : null
-  const ttl = ann?.lifecycle?.ttlHint
-  if (created == null || ttl == null) return "fresh"
-  const ms = typeof ttl === "number" ? ttl : parseIsoDuration(ttl)
-  const age = nowMs - created
-  if (age < ms) return "fresh"
-  if (age < ms * 1.5) return "aging"
-  if (age < ms * 3) return "stale"
-  return "expired"
-}
-
 function FreshnessLiveDemo() {
   const [nowIso, setNowIso] = useState("2026-03-10T00:00:00Z")
   const nowMs = Date.parse(nowIso)
 
-  const states = RAW_ANNOTATIONS.map((a) => ({
-    raw: a,
-    freshness: previewFreshness(a, nowMs),
+  // Each annotation keeps its author's brand color via `color`. The
+  // shipped applyAnnotationLifecycle treatment fills in opacity +
+  // strokeDasharray per band and drops expired ones.
+  const annotationsWithColor = RAW_ANNOTATIONS.map((a) => ({
+    ...a,
+    color: FRESHNESS_BASE_COLOR[a.provenance.source] ?? "#5a5a5a",
   }))
-
-  // Expired annotations drop out of the array — mirrors M2's default
-  // of hiding them unless `showExpiredAnnotations` is on.
-  const visible = states
-    .filter((s) => s.freshness !== "expired")
-    .map(({ raw, freshness }) => {
-      const base = FRESHNESS_BASE_COLOR[raw.provenance.source] ?? "#5a5a5a"
-      return {
-        ...raw,
-        label: raw.label + FRESHNESS_SUFFIX[freshness],
-        color: FRESHNESS_COLOR[freshness](base),
-        lifecycle: { ...raw.lifecycle, freshness },
-      }
-    })
+  const visible = applyAnnotationLifecycle(annotationsWithColor, {
+    now: nowMs,
+    labelSuffix: { aging: " · aging", stale: " · stale" },
+  })
+  const states = RAW_ANNOTATIONS.map((raw) => ({
+    raw,
+    freshness: annotationFreshnessFor(raw, nowMs),
+  }))
 
   return (
     <div style={card}>
@@ -493,9 +468,12 @@ function Body() {
       <FreshnessLiveDemo />
 
       <p>
-        The styling above is page-local — the M1 surface is type-only,
-        and the shipping <code style={inlineCode}>computeAnnotationFreshness</code>{" "}
-        helper plus the default visual treatment land next.
+        The styling above is the shipped default: a single call to{" "}
+        <code style={inlineCode}>applyAnnotationLifecycle(annotations, {"{ now }"})</code>{" "}
+        classifies each annotation, dims aging, dashes stale, and drops
+        expired from the array. The author's brand color survives the
+        treatment — provenance stays visible while age signals layer on
+        top.
       </p>
 
       <h2>Variants the library didn't think of</h2>

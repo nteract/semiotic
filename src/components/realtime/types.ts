@@ -14,15 +14,31 @@ export interface LineStyle {
 }
 
 /**
- * Anchoring mode for streaming annotations.
- * - `"fixed"` (default): anchored to specific datum coordinates; disappears when out of view.
- * - `"latest"`: annotation attaches to the most recent datum in the buffer.
- *   On each frame, the annotation's position is re-resolved to the latest data point.
- *   Useful for "current value" labels.
- * - `"sticky"`: annotation stays at its last known pixel position after the target datum
- *   is evicted from the window. It freezes in place rather than disappearing.
+ * How an annotation's anchor is resolved across renders. Shared between
+ * the streaming runtime (which implements the resolution) and the
+ * `semiotic/ai` annotation lifecycle surface (which exposes the choice
+ * to authors via `lifecycle.anchor`).
+ *
+ * - `"fixed"` (default): anchored to specific datum coordinates;
+ *   disappears when out of view.
+ * - `"latest"`: annotation re-pins to the most recent datum each frame.
+ * - `"sticky"`: annotation stays at its last known pixel position
+ *   after the target datum scrolls off; uses `stickyPositionCache`
+ *   on `AnnotationContext`.
+ * - `"semantic"`: re-resolves via `provenance.stableId` when new data
+ *   arrives, falling back to the recorded coordinate if the anchor
+ *   can no longer be located. Runtime implementation lands incrementally
+ *   alongside the AI annotation lifecycle work; today it behaves like
+ *   `"fixed"`.
  */
-export type AnnotationAnchorMode = "fixed" | "latest" | "sticky"
+export type AnnotationAnchor = "fixed" | "latest" | "sticky" | "semantic"
+
+/**
+ * @deprecated Use {@link AnnotationAnchor}. Kept as a back-compat alias
+ * because earlier 3.x releases shipped this name from the streaming
+ * surface; the `Mode` suffix added nothing semantically.
+ */
+export type AnnotationAnchorMode = AnnotationAnchor
 
 export interface AnnotationContext {
   scales?: {

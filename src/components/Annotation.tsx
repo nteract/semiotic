@@ -29,6 +29,10 @@ export interface AnnotationProps {
     color?: string
     className?: string
     disable?: string[]
+    /** SVG opacity cascaded to every stroked/filled child of the annotation. */
+    opacity?: number
+    /** SVG stroke-dasharray cascaded to every stroked child of the annotation. */
+    strokeDasharray?: string
     [key: string]: unknown
   }
 }
@@ -516,6 +520,8 @@ function AnnotationRenderer(props: any) {
     color,
     className,
     disable,
+    opacity,
+    strokeDasharray,
     events = {},
     "data-testid": dataTestId
   } = props
@@ -543,11 +549,18 @@ function AnnotationRenderer(props: any) {
     }
   }
 
+  // `opacity` and `strokeDasharray` cascade as SVG presentation
+  // attributes from the wrapping <g> to every stroked/filled child,
+  // which is exactly what the freshness lifecycle treatment needs:
+  // dim aging, dash stale, etc., without touching every subject/
+  // connector/note renderer.
   return (
     <g
       className={`annotation ${className || ""}`.trim()}
       transform={`translate(${x},${y})`}
       data-testid={dataTestId}
+      {...(opacity != null && { opacity })}
+      {...(strokeDasharray && { strokeDasharray })}
       {...events}
     >
       {!disableSet.has("connector") && renderConnector(dx, dy, connector, color, resolvedType, subject)}
