@@ -10,15 +10,6 @@ import {
 
 // ─── Shared styling ────────────────────────────────────────────────────────
 
-const chartFrame = {
-  background: "var(--surface-1)",
-  borderRadius: 8,
-  padding: 16,
-  border: "1px solid var(--surface-3)",
-  overflow: "hidden",
-  margin: "20px 0",
-}
-
 const sideBySide = {
   display: "grid",
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",

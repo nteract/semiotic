@@ -37,6 +37,7 @@ function makeProfile(overrides: Partial<ChartDataProfile> = {}): ChartDataProfil
   return {
     rowCount: 50,
     fields: { x: { type: "numeric", min: 0, max: 100, distinctCount: 50 } as never },
+    sample: [],
     data: [],
     candidates: { x: [], y: [], size: [], category: [], series: [], time: [] },
     primary: { x: "x", y: "y" },

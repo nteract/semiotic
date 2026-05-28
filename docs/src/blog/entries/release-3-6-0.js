@@ -8,13 +8,12 @@ function Body() {
       <p>
         3.6.0 is the AI release. The library has carried{" "}
         <Link to="/intelligence/observation-hooks">observation hooks</Link>,{" "}
-        <Link to="/charts/annotations">native annotations</Link>, and a{" "}
-        <Link to="/features/server-side-rendering">streaming-first runtime</Link> for a while; this
-        version turns those pieces into an explicit AI-facing surface. Charts now declare what
-        they're for, datasets get profiled and ranked, audiences get calibrated, and conversations
-        anchor back onto the chart instead of stopping at a chat bubble. Three case-study posts
-        published alongside this release walk through what that makes possible. Full release notes
-        are on{" "}
+        <Link to="/features/annotations">native annotations</Link>, and a{" "}
+        <Link to="/features/push-api">streaming-first runtime</Link> for a while; this version turns
+        those pieces into an explicit AI-facing surface. Charts now declare what they're for,
+        datasets get profiled and ranked, audiences get calibrated, and conversations anchor back
+        onto the chart instead of stopping at a chat bubble. Three case-study posts published
+        alongside this release walk through what that makes possible. Full release notes are on{" "}
         <a
           href="https://github.com/nteract/semiotic/blob/main/CHANGELOG.md#360---2026-05-31"
           target="_blank"

@@ -54,9 +54,17 @@ const BANDS = ["tiny", "medium", "huge"]
 
 const BAND_LABEL = {
   tiny: "Tiny (≤3)",
+  small: "Small (~15)",
   medium: "Medium (~140)",
+  large: "Large (~1k)",
   huge: "Huge (>5k)",
 }
+
+// effectiveBand can be any of the five ScaleBand values, but only three tiers
+// are displayed. Map the in-between bands to the nearest displayed tier so the
+// highlight still resolves.
+const toDisplayedBand = (band) =>
+  band === "small" ? "tiny" : band === "large" ? "huge" : band
 
 const DATASETS = {
   layered: {
@@ -305,7 +313,7 @@ function ScaleAwareDemo() {
             key={band}
             band={band}
             suggestion={grouped[band][0]}
-            highlighted={effectiveBand === band}
+            highlighted={toDisplayedBand(effectiveBand) === band}
           />
         ))}
       </div>

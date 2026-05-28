@@ -15,8 +15,9 @@
  *             + qualityBias(quality, capability, profile)
  *             + audienceBias(audience, capability)
  *
- * Each layer can be omitted independently. None of them gate the suggestion;
- * `fits()` is still the only hard reject.
+ * Each layer can be omitted independently. Most adjust ranking only, but
+ * per-chart scale preferences can also hard-filter via `minBand`/`maxBand`
+ * exclusions in addition to `fits()`.
  */
 
 import type { ChartCapability, ChartDataProfile } from "./chartCapabilityTypes"

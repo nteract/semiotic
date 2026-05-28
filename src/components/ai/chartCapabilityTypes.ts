@@ -267,7 +267,7 @@ export interface Suggestion {
 
 /**
  * Multi-tier grouping of suggestions by scale band. Returned by
- * `suggestCharts` when `groupByScale: true` is passed.
+ * `suggestChartsGrouped()`.
  *
  * Each tier is a ranked list of suggestions whose `scaleRange.band` falls in
  * that tier. A single chart can appear in multiple tiers when its sweet-spot
