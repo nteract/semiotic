@@ -238,7 +238,7 @@ export default function BigNumberPage() {
         <code>BigNumber</code> is the catalog&apos;s answer to{" "}
         <em>&ldquo;I have one number — show me the number.&rdquo;</em> It ships under{" "}
         <code>semiotic/value</code> as a plain React component (no Stream Frame) so it renders
-        cleanly in SSR, embeds in prose, and stays under 5 KB gz.
+        cleanly in SSR, embeds in prose, and comes in at about 6 KB gz.
       </p>
       <p>
         The component is intentionally feature-rich — it&apos;s the forward-looking POC for a future{" "}

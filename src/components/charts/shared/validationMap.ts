@@ -1085,7 +1085,9 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
   BigNumber: {
-    required: ["value"],
+    // `value` is intentionally not "required" — null / undefined route
+    // the card into its empty state by design.
+    required: [],
     dataShape: "none",
     dataAccessors: [],
     // BigNumber doesn't consume the chart-frame prop bag — only
@@ -1115,7 +1117,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       direction: { type: "string", enum: ["higher-is-better", "lower-is-better", "neutral"] as unknown as string[] },
       sentiment: { type: "string", enum: ["auto", "positive", "negative", "neutral"] as unknown as string[] },
       thresholds: { type: "array" },
-      chartSlot: { type: ["object", "function"] },
+      chartSlot: { type: ["string", "number", "array", "object", "function"] },
       chartSize: { type: "number" },
       windowSize: { type: "number" },
       mode: { type: "string", enum: ["tile", "presentation", "inline", "thumbnail"] as unknown as string[] },
@@ -1129,11 +1131,15 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       animate: { type: ["boolean", "object"] },
       stalenessThreshold: { type: "number" },
       staleLabel: { type: "string" },
-      headerSlot: { type: ["object", "function"] },
-      valueSlot: { type: ["object", "function"] },
-      deltaSlot: { type: ["object", "function"] },
-      trendSlot: { type: ["object", "function"] },
-      footerSlot: { type: ["object", "function"] },
+      // Slot props are `ReactNode | (ctx) => ReactNode` — that includes
+      // strings, numbers, arrays, fragments, and elements. Listing the
+      // full set so a plain string / number fragment doesn't fail
+      // validation.
+      headerSlot: { type: ["string", "number", "array", "object", "function"] },
+      valueSlot: { type: ["string", "number", "array", "object", "function"] },
+      deltaSlot: { type: ["string", "number", "array", "object", "function"] },
+      trendSlot: { type: ["string", "number", "array", "object", "function"] },
+      footerSlot: { type: ["string", "number", "array", "object", "function"] },
       // onClick already declared in the top-of-block common-props subset
       onObservation: { type: "function" },
     },

@@ -119,10 +119,11 @@ const mcpRegistry = parseComponentRegistry()
 const serverConfigs = parseServerConfigs()
 const geoCharts = discoverChartFiles("geo")
 // Value-family HOCs (BigNumber today) ship under `semiotic/value` and
-// don't route through the frame-driven `renderChart` server config path
-// — analogous to how geo charts ship under `semiotic/geo` and are not
-// re-exported from `semiotic/ai`. Mirrors the `hoc-ssr-only` capability
-// special-feature documented in chartSpecs.ts.
+// don't route through the frame-driven `renderChart` server config path.
+// `semiotic/ai` does re-export BigNumber for the intelligence demo
+// pages, but the chart still skips the MCP-renderable parity check
+// because it isn't a `renderChart`-compatible HOC. Mirrors the
+// `hoc-ssr-only` capability special-feature documented in chartSpecs.ts.
 const valueCharts = discoverChartFiles("value")
 const realtimeCharts = new Set([...validation].filter(name => name.startsWith("Realtime")))
 const { componentIndexFromSchema } = require(files.componentMetadata)

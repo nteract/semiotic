@@ -53,6 +53,7 @@ const dataScientistPersona
 const executivePersona
 function AreaChart
 function BarChart
+function BigNumber
 function BoxPlot
 function BubbleChart
 function CandlestickChart

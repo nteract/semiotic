@@ -7745,9 +7745,7 @@
               "default": "stale"
             }
           },
-          "required": [
-            "value"
-          ]
+          "required": []
         }
       }
     }

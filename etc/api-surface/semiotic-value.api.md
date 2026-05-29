@@ -7,6 +7,7 @@ _Edit dist/semiotic-value.d.ts's sources, then re-run `npm run docs:api-surface`
 function BigNumber
 function BigNumberDefault
 function buildFormatter
+function buildSparklinePath
 function colorForLevel
 function formatDeltaPercent
 function formatDuration

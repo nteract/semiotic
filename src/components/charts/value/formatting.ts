@@ -103,9 +103,9 @@ export function formatDuration(ms: number): string {
 }
 
 function trimZero(n: number): string {
-  // 1.0 → "1", 1.25 → "1.25"
-  const r = Math.round(n * 100) / 100
-  return Number.isInteger(r) ? String(r) : String(r)
+  // Round to 2dp; JS's `String(n)` already trims trailing zeros
+  // (`String(1.0) === "1"`, `String(1.25) === "1.25"`).
+  return String(Math.round(n * 100) / 100)
 }
 
 /**

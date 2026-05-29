@@ -408,42 +408,70 @@ const BigNumberInner = (
     windowSizeRef.current = windowSize
   }, [windowSize])
 
-  const ingest = useCallback((input: number | BigNumberPushInput) => {
-    const obj: BigNumberPushInput =
-      typeof input === "number"
-        ? { value: input, time: Date.now() }
-        : { time: Date.now(), ...input }
-    const win = windowSizeRef.current
-    const prev = pushBufferRef.current
-    const next =
-      prev.length >= win ? prev.slice(prev.length - win + 1) : prev.slice()
-    next.push(obj)
-    pushBufferRef.current = next
-    pushedValueRef.current = obj.value
-    setPushBuffer(next)
-    setPushedValue(obj.value)
-    if (obj.comparison != null) setPushedComparison(obj.comparison)
-    // Normalize the `time` field: callers can pass a number (ms) or a
-    // Date — both should produce identical staleness behavior. Without
-    // this, a Date input silently fell back to Date.now() and the
-    // staleness window started over from wall-clock now instead of the
-    // pushed timestamp.
-    const timestampMs =
-      typeof obj.time === "number"
-        ? obj.time
-        : obj.time instanceof Date
-          ? obj.time.getTime()
-          : Date.now()
-    setLastUpdate(timestampMs)
-  }, [])
+  // Normalize a single push input into a BigNumberPushInput with a
+  // numeric timestamp. Pulled out so `ingestBatch` can avoid a per-item
+  // setState fan-out on `pushMany([...])`.
+  const normalisePushInput = useCallback(
+    (input: number | BigNumberPushInput): BigNumberPushInput => {
+      const raw: BigNumberPushInput =
+        typeof input === "number"
+          ? { value: input, time: Date.now() }
+          : { time: Date.now(), ...input }
+      // Normalize `time`: number (ms) or Date — both must produce
+      // identical staleness behavior. Without this, a Date silently
+      // fell back to wall-clock `Date.now()`.
+      const t =
+        typeof raw.time === "number"
+          ? raw.time
+          : raw.time instanceof Date
+            ? raw.time.getTime()
+            : Date.now()
+      return { ...raw, time: t }
+    },
+    []
+  )
+
+  /** Append one or many inputs through a single state-update pass. */
+  const ingestBatch = useCallback(
+    (inputs: ReadonlyArray<number | BigNumberPushInput>) => {
+      if (inputs.length === 0) return
+      const win = windowSizeRef.current
+      const normalised = inputs.map(normalisePushInput)
+      const prev = pushBufferRef.current
+      // Concat + drop from the head until we're within window. Skipping
+      // intermediate slices means a pushMany of N keeps O(N) work, not
+      // O(N²).
+      let next = prev.concat(normalised)
+      if (next.length > win) next = next.slice(next.length - win)
+      pushBufferRef.current = next
+      const last = normalised[normalised.length - 1]
+      pushedValueRef.current = last.value
+      setPushBuffer(next)
+      setPushedValue(last.value)
+      // Latest comparison wins.
+      for (let i = normalised.length - 1; i >= 0; i--) {
+        const c = normalised[i].comparison
+        if (c != null) {
+          setPushedComparison(c)
+          break
+        }
+      }
+      setLastUpdate(last.time as number)
+    },
+    [normalisePushInput]
+  )
+
+  const ingest = useCallback(
+    (input: number | BigNumberPushInput) => ingestBatch([input]),
+    [ingestBatch]
+  )
 
   useImperativeHandle(
     ref,
     () => ({
       push: (input) => ingest(input),
-      pushMany: (inputs) => {
-        for (const input of inputs) ingest(input)
-      },
+      // Single state-update pass for the whole batch.
+      pushMany: (inputs) => ingestBatch(inputs),
       clear: () => {
         pushBufferRef.current = []
         pushedValueRef.current = null
@@ -457,16 +485,23 @@ const BigNumberInner = (
         (Number.isFinite(propValueRef.current)
           ? (propValueRef.current as number)
           : null),
-      getData: () => pushBufferRef.current
+      // Defensive copy — consumers receive a frozen snapshot of the
+      // ring buffer, not the live ref, so they can't mutate component
+      // state by writing back into the array.
+      getData: () => pushBufferRef.current.slice()
     }),
-    [ingest]
+    [ingest, ingestBatch]
   )
 
   // Effective value — pushed value wins once any push has landed.
   const effectiveValue = pushedValue ?? propValue
+  // Treat anything non-finite as empty so Infinity / -Infinity / NaN
+  // don't silently render as `0` via the downstream displayedValue
+  // fallback.
   const isEmpty =
     effectiveValue == null ||
-    (typeof effectiveValue === "number" && Number.isNaN(effectiveValue))
+    typeof effectiveValue !== "number" ||
+    !Number.isFinite(effectiveValue)
 
   // ── Formatting context ───────────────────────────────────────────
   const formatter = useMemo(
