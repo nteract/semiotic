@@ -448,4 +448,89 @@ describe("scale-aware suggestCharts integration", () => {
     const withProfile = suggestCharts(tenRowData, { profile, scale: { rows: 1000 } })
     expect(direct.length).toBe(withProfile.length)
   })
+
+  // ── BigNumber wiring ────────────────────────────────────────────────
+  //
+  // BigNumber is the catalog's answer to "I have one number — show me
+  // the number." The roadmap entry that motivated the chart explicitly
+  // calls out that it should out-rank GaugeChart for single-value data
+  // unless the user has declared a bounded scale that justifies the
+  // gauge. These tests lock that wiring.
+
+  describe("BigNumber wiring", () => {
+    const oneRow = [{ revenue: 1_284_900 }]
+    const monthlyTrend = [
+      { month: "Jan", revenue: 800_000 },
+      { month: "Feb", revenue: 920_000 },
+      { month: "Mar", revenue: 1_010_000 },
+      { month: "Apr", revenue: 1_284_900 },
+    ]
+
+    it("appears in suggestCharts output for a single-row numeric dataset", () => {
+      const results = suggestCharts(oneRow, { maxResults: 10 })
+      expect(results.find((r) => r.component === "BigNumber")).toBeDefined()
+    })
+
+    it("ranks ahead of GaugeChart for an unbounded single value", () => {
+      const results = suggestCharts(oneRow, { maxResults: 10 })
+      const big = results.findIndex((r) => r.component === "BigNumber")
+      const gauge = results.findIndex((r) => r.component === "GaugeChart")
+      expect(big).toBeGreaterThanOrEqual(0)
+      expect(big).toBeLessThan(gauge === -1 ? Infinity : gauge)
+    })
+
+    it("appears in the tiny band of suggestChartsGrouped with the scaleFit boost applied", () => {
+      const grouped = suggestChartsGrouped(oneRow, { maxPerBand: 5 })
+      const big = grouped.tiny.find((s) => s.component === "BigNumber")
+      expect(big).toBeDefined()
+      expect(big?.scaleRange?.band).toBe("tiny")
+    })
+
+    it("scoreDelta from the scaleFit reason mentions the single-value display", () => {
+      const grouped = suggestChartsGrouped(oneRow, { maxPerBand: 5 })
+      const big = grouped.tiny.find((s) => s.component === "BigNumber")
+      const reasons = (big?.reasons ?? []).join(" ").toLowerCase()
+      expect(reasons).toContain("single-value")
+    })
+
+    it("buildProps returns runnable props (value + label + optional comparison) — no removed slot props", () => {
+      const results = suggestCharts(monthlyTrend, { maxResults: 10 })
+      const big = results.find((r) => r.component === "BigNumber")
+      expect(big).toBeDefined()
+      expect(big?.props).toMatchObject({
+        value: 1_284_900,
+        label: "revenue",
+        comparison: { value: 1_010_000 },
+      })
+      // The legacy `trend` prop was removed when BigNumber moved to a
+      // pure slot-driven API; the engine must not emit it any more.
+      expect((big?.props as Record<string, unknown>).trend).toBeUndefined()
+      expect((big?.props as Record<string, unknown>).trendSlot).toBeUndefined()
+      expect((big?.props as Record<string, unknown>).chartSlot).toBeUndefined()
+    })
+
+    it("scores 0 for the trend intent on data without a temporal / monotonic axis", () => {
+      // Categorical product rows — no time field, no monotonic numeric
+      // x. The trend intent gate on BigNumber's capability returns 0
+      // here so the dashboard suggester doesn't fall back to a value
+      // tile for a genuine time-series question. (A non-zero composite
+      // score is still allowed — scaleFit and rubric stand on their
+      // own — but the specific *trend* coverage signal must be off.)
+      const productCatalog = [
+        { product: "Widget", units: 480, region: "EU" },
+        { product: "Gadget", units: 620, region: "NA" },
+        { product: "Sprocket", units: 290, region: "EU" },
+      ]
+      const results = suggestCharts(productCatalog, {
+        intent: "trend",
+        maxResults: 10,
+      })
+      const big = results.find((r) => r.component === "BigNumber")
+      // Either the engine doesn't surface BigNumber at all for trend,
+      // or its trend intent score is 0.
+      if (big) {
+        expect(big.intentScores.trend ?? 0).toBe(0)
+      }
+    })
+  })
 })

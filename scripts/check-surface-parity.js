@@ -118,6 +118,12 @@ const semioticAI = parseSemioticAIChartExports()
 const mcpRegistry = parseComponentRegistry()
 const serverConfigs = parseServerConfigs()
 const geoCharts = discoverChartFiles("geo")
+// Value-family HOCs (BigNumber today) ship under `semiotic/value` and
+// don't route through the frame-driven `renderChart` server config path
+// — analogous to how geo charts ship under `semiotic/geo` and are not
+// re-exported from `semiotic/ai`. Mirrors the `hoc-ssr-only` capability
+// special-feature documented in chartSpecs.ts.
+const valueCharts = discoverChartFiles("value")
 const realtimeCharts = new Set([...validation].filter(name => name.startsWith("Realtime")))
 const { componentIndexFromSchema } = require(files.componentMetadata)
 const componentMetadata = componentIndexFromSchema(loadSchemaDocument())
@@ -128,8 +134,12 @@ const metadataRenderable = new Set(
     .map(component => component.name)
 )
 
-const expectedAIExports = new Set([...validation].filter(name => !geoCharts.has(name)))
-const expectedMCPRegistry = new Set([...validation].filter(name => !realtimeCharts.has(name)))
+const expectedAIExports = new Set(
+  [...validation].filter(name => !geoCharts.has(name) && !valueCharts.has(name))
+)
+const expectedMCPRegistry = new Set(
+  [...validation].filter(name => !realtimeCharts.has(name) && !valueCharts.has(name))
+)
 const expectedServerConfigs = new Set(
   [...expectedMCPRegistry].filter(name => !SERVER_CONFIG_EXCLUDED.has(name))
 )
@@ -187,7 +197,7 @@ if (errors.length) {
 
 console.log("AI/MCP surface parity check passed")
 console.log(`  ${validation.size} validation/schema components`)
-console.log(`  ${semioticAI.size} semiotic/ai chart exports (${geoCharts.size} geo charts intentionally excluded)`)
-console.log(`  ${mcpRegistry.size} MCP-renderable components (${realtimeCharts.size} realtime charts intentionally excluded)`)
+console.log(`  ${semioticAI.size} semiotic/ai chart exports (${geoCharts.size} geo + ${valueCharts.size} value chart(s) intentionally excluded)`)
+console.log(`  ${mcpRegistry.size} MCP-renderable components (${realtimeCharts.size} realtime + ${valueCharts.size} value chart(s) intentionally excluded)`)
 console.log(`  ${metadataComponents.size} shared AI metadata components`)
 console.log(`  ${serverConfigs.size} server render configs (+ ${SERVER_CONFIG_EXCLUDED.size} documented HOC-SSR exclusions)`)

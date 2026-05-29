@@ -898,11 +898,6 @@ function AskTheData({ data, question }) {
           <Link to="/intelligence/capabilities">Capability Matrix</Link> - the AI-readable inventory
           of which charts support which features (SSR, push, linked hover, etc.).
         </li>
-        <li>
-          Strategy memos in <code>docs/strategy/</code>: <code>chart-capability-layer.md</code>{" "}
-          (design rationale), <code>authoring-capabilities.md</code> (writing your own descriptor),
-          and <code>audience-profiles.md</code> (the calibration layer).
-        </li>
       </ul>
     </>
   )

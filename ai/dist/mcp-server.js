@@ -6890,7 +6890,7 @@ var require_dist = __commonJS({
 var require_componentMetadata = __commonJS({
   "ai/componentMetadata.cjs"(exports2, module2) {
     "use strict";
-    var CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime"];
+    var CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "value"];
     var COMPONENTS_BY_CATEGORY = {
       xy: [
         "LineChart",
@@ -6947,6 +6947,9 @@ var require_componentMetadata = __commonJS({
         "RealtimeSwarmChart",
         "RealtimeWaterfallChart",
         "RealtimeHeatmap"
+      ],
+      value: [
+        "BigNumber"
       ]
     };
     var COMPONENT_TO_CATEGORY = /* @__PURE__ */ new Map();
@@ -6972,11 +6975,12 @@ var require_componentMetadata = __commonJS({
       const name = typeof entryOrName === "string" ? entryOrName : entryOrName.name;
       const category = categoryForComponent(name);
       const isPushOnly = category === "realtime" && name.startsWith("Realtime");
+      const isValueCategory = category === "value";
       return {
         name,
         category,
         importPath: importPathForCategory(category),
-        renderable: !isPushOnly,
+        renderable: !isPushOnly && !isValueCategory,
         description: typeof entryOrName === "string" ? void 0 : entryOrName.description
       };
     }

@@ -7530,6 +7530,297 @@
           ]
         }
       }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "BigNumber",
+        "description": "Focal-value display: one number, optionally with comparison / target / threshold zones (mapped to semantic theme roles) / four layout modes (tile / presentation / inline / thumbnail). Ships with NO chart-family dependency — embed your own Semiotic chart via two slots: `trendSlot` for wide / rectangular charts (LineChart, AreaChart) under the value, and `chartSlot` for square charts (DonutChart, PieChart, Scatterplot, Treemap) beside the value. The slot context exposes the resolved threshold colour + sentiment + push buffer so embedded charts can theme-link. Forward-looking POC for a future SingleValueFrame.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ]
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ]
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
+            "value": {
+              "type": "number",
+              "description": "The focal number this card exists to display"
+            },
+            "label": {
+              "type": "string",
+              "description": "Top-line descriptor rendered above the value"
+            },
+            "caption": {
+              "type": "string",
+              "description": "Secondary descriptor, smaller, below the label"
+            },
+            "format": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "enum": [
+                "number",
+                "currency",
+                "percent",
+                "compact",
+                "duration"
+              ],
+              "description": "Number-format shortcut or custom (value) => string",
+              "default": "number"
+            },
+            "locale": {
+              "type": "string",
+              "description": "BCP-47 locale for Intl.NumberFormat",
+              "default": "en-US"
+            },
+            "currency": {
+              "type": "string",
+              "description": "ISO 4217 code for format: \"currency\"",
+              "default": "USD"
+            },
+            "precision": {
+              "type": "number",
+              "description": "maximumFractionDigits passed to Intl.NumberFormat"
+            },
+            "prefix": {
+              "type": "string",
+              "description": "Prepend to formatted value"
+            },
+            "suffix": {
+              "type": "string",
+              "description": "Append to formatted value"
+            },
+            "unit": {
+              "type": "string",
+              "description": "Unit label rendered after the value as small text (e.g. \"USD\", \"req/s\")"
+            },
+            "comparison": {
+              "type": "object",
+              "description": "Comparison value: { value, label?, format?, direction? }. Drives the delta when explicit delta is not set."
+            },
+            "target": {
+              "type": "object",
+              "description": "Target value: { value, label?, format?, direction? }. Renders \"X% of target\" next to the comparison row."
+            },
+            "delta": {
+              "type": "number",
+              "description": "Explicit delta override; bypasses comparison-derived subtraction"
+            },
+            "deltaFormat": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "enum": [
+                "number",
+                "currency",
+                "percent",
+                "compact",
+                "duration"
+              ],
+              "description": "Format the delta; defaults to format"
+            },
+            "showDeltaPercent": {
+              "type": "boolean",
+              "description": "Render percent change next to absolute delta when a comparison is present",
+              "default": true
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "higher-is-better",
+                "lower-is-better",
+                "neutral"
+              ],
+              "description": "Default direction used to infer sentiment from the sign of the delta",
+              "default": "higher-is-better"
+            },
+            "sentiment": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "positive",
+                "negative",
+                "neutral"
+              ],
+              "description": "Force sentiment; \"auto\" infers from direction + delta sign",
+              "default": "auto"
+            },
+            "thresholds": {
+              "type": "array",
+              "description": "Threshold zones: [{ at, level, color?, label? }] ordered ascending by `at`. Resolved by highest `at` ≤ value. `level` maps to a semantic CSS variable (--semiotic-{success|warning|danger|info})."
+            },
+            "chartSize": {
+              "type": "number",
+              "description": "Pixel size reserved for chartSlot (rendered as a square). Defaults to the card's inner height."
+            },
+            "windowSize": {
+              "type": "number",
+              "description": "Cap on the trend buffer when fed via push API",
+              "default": 60
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "tile",
+                "presentation",
+                "inline",
+                "thumbnail"
+              ],
+              "description": "Layout mode — chrome envelope around the value",
+              "default": "tile"
+            },
+            "align": {
+              "type": "string",
+              "enum": [
+                "start",
+                "center",
+                "end"
+              ],
+              "description": "Horizontal alignment within the card"
+            },
+            "padding": {
+              "type": [
+                "number",
+                "object"
+              ],
+              "description": "Inner padding: number for uniform, or { top, right, bottom, left }"
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ],
+              "description": "Visual emphasis hint; \"primary\" spans two ChartGrid columns"
+            },
+            "color": {
+              "type": "string",
+              "description": "Override the value text colour. CSS variables work."
+            },
+            "background": {
+              "type": "string",
+              "description": "Card background. CSS variables work."
+            },
+            "borderColor": {
+              "type": "string"
+            },
+            "borderRadius": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Tween between value changes. true = 300ms ease-out + intro. Object: { duration?, easing?: \"linear\"|\"ease-out\", intro? }"
+            },
+            "stalenessThreshold": {
+              "type": "number",
+              "description": "Mark stale (dimmed) when no push occurs for this many ms"
+            },
+            "staleLabel": {
+              "type": "string",
+              "default": "stale"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      }
     }
   ]
 }

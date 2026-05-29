@@ -246,7 +246,8 @@ function buildDeclarations() {
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
     "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
-    "semiotic-geo", "semiotic-themes", "semiotic-utils", "semiotic-recipes"
+    "semiotic-geo", "semiotic-themes", "semiotic-utils", "semiotic-recipes",
+    "semiotic-value"
   ]
   for (const name of entryPoints) {
     const src = `dist/components/${name}.d.ts`
@@ -350,7 +351,11 @@ async function build() {
     // gate either way.
     { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
     { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify },
-    { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify }
+    { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify },
+    // `semiotic-value` is a plain-React HOC bundle — single component
+    // (BigNumber) plus pure formatting/threshold helpers. Client-only
+    // because BigNumber uses useState/useEffect/useImperativeHandle.
+    { input: "src/components/semiotic-value.ts", name: "semiotic-value", analyze: false, minify, clientOnly: true }
   ]
 
   await Promise.all([

@@ -9,9 +9,6 @@
  *       (with a reason — realtime, custom-layout, multi-chart).
  *
  * Drift in either direction is a CI error.
- *
- * Rationale lives in `docs/strategy/chart-capability-layer.md` §
- * "Phase 2.6 — Capability coverage CI".
  */
 
 import fs from "node:fs"
