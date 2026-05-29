@@ -375,7 +375,11 @@ const BigNumberInner = (
     emptyContent
   } = props
 
-  const defaults = MODE_DEFAULTS[mode]
+  // Fall back to "tile" defaults when `mode` is anything other than one of
+  // BigNumber's four known modes — e.g. when a generic `ChartMode`
+  // ("primary"/"context"/"sparkline") bleeds in from BaseChartProps via a
+  // suggestion engine that spreads runnable props.
+  const defaults = MODE_DEFAULTS[mode] ?? MODE_DEFAULTS.tile
   const align = alignProp ?? defaults.align
   const width = widthProp ?? defaults.width
   const height = heightProp ?? defaults.height
@@ -395,7 +399,7 @@ const BigNumberInner = (
 
   const pushBufferRef = useRef<BigNumberPushInput[]>([])
   const pushedValueRef = useRef<number | null>(null)
-  const propValueRef = useRef<number>(propValue)
+  const propValueRef = useRef<number | null | undefined>(propValue)
   useEffect(() => {
     propValueRef.current = propValue
   }, [propValue])
@@ -419,7 +423,18 @@ const BigNumberInner = (
     setPushBuffer(next)
     setPushedValue(obj.value)
     if (obj.comparison != null) setPushedComparison(obj.comparison)
-    setLastUpdate(typeof obj.time === "number" ? obj.time : Date.now())
+    // Normalize the `time` field: callers can pass a number (ms) or a
+    // Date — both should produce identical staleness behavior. Without
+    // this, a Date input silently fell back to Date.now() and the
+    // staleness window started over from wall-clock now instead of the
+    // pushed timestamp.
+    const timestampMs =
+      typeof obj.time === "number"
+        ? obj.time
+        : obj.time instanceof Date
+          ? obj.time.getTime()
+          : Date.now()
+    setLastUpdate(timestampMs)
   }, [])
 
   useImperativeHandle(
@@ -439,7 +454,9 @@ const BigNumberInner = (
       },
       getValue: () =>
         pushedValueRef.current ??
-        (Number.isFinite(propValueRef.current) ? propValueRef.current : null),
+        (Number.isFinite(propValueRef.current)
+          ? (propValueRef.current as number)
+          : null),
       getData: () => pushBufferRef.current
     }),
     [ingest]
@@ -479,7 +496,7 @@ const BigNumberInner = (
       ? false
       : Boolean(animateOpt)
   const initialValueRef = useRef<number>(
-    introEnabled ? 0 : Number.isFinite(propValue) ? propValue : 0
+    introEnabled ? 0 : Number.isFinite(propValue) ? (propValue as number) : 0
   )
   const tweened = useTweenedValue(
     Number.isFinite(effectiveValue)

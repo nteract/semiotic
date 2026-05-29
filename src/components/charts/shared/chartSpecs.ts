@@ -1711,8 +1711,16 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
     required: ["value"],
     dataShape: "none",
     dataAccessors: [],
-    propBags: ["common"],
+    // BigNumber is a plain React component and doesn't consume the
+    // chart-frame prop bag (margin, title, showLegend/Grid, colorBy,
+    // tooltip, annotations, axisExtent, frameProps). Listing the few
+    // common-bag props it DOES use (width / height / className / onClick)
+    // explicitly here keeps the AI schema honest.
+    propBags: [],
     ownProps: {
+      width: { type: ["number", "string"], default: 280, description: "Reserved width in pixels (or any CSS length). Mode-keyed defaults: 280 (tile) / 540 (presentation) / unset (inline / thumbnail)." },
+      height: { type: ["number", "string"], default: 184, description: "Reserved height in pixels (or any CSS length). Mode-keyed defaults: 184 (tile) / 320 (presentation) / unset (inline / thumbnail)." },
+      className: { type: "string", description: "Composed with the BEM root class on the outer container." },
       value: { type: "number", description: "The focal number this card exists to display" },
       label: { type: "string", description: "Top-line descriptor rendered above the value" },
       caption: { type: "string", description: "Secondary descriptor, smaller, below the label" },
@@ -1732,7 +1740,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       sentiment: { type: "string", enum: ["auto", "positive", "negative", "neutral"] as const, default: "auto", description: "Force sentiment; \"auto\" infers from direction + delta sign" },
       thresholds: { type: "array", description: "Threshold zones: [{ at, level, color?, label? }] ordered ascending by `at`. Resolved by highest `at` ≤ value. `level` maps to a semantic CSS variable (--semiotic-{success|warning|danger|info})." },
       chartSlot: { type: ["object", "function"], omitFromSchema: true, description: "Square chart to render beside the value — e.g. a DonutChart / PieChart / Scatterplot / Treemap. ReactNode or (ctx) => ReactNode; the function form receives the resolved level / color / sentiment / pushBuffer." },
-      chartSize: { type: "number", description: "Pixel size reserved for chartSlot (rendered as a square). Defaults to the card's inner height." },
+      chartSize: { type: "number", description: "Pixel size reserved for chartSlot (rendered as a square). Mode-keyed defaults: 44 (tile) / 80 (presentation) — sparkline scale; pass a larger value for a hero anchor." },
       windowSize: { type: "number", default: 60, description: "Cap on the trend buffer when fed via push API" },
       mode: { type: "string", enum: ["tile", "presentation", "inline", "thumbnail"] as const, default: "tile", description: "Layout mode — chrome envelope around the value" },
       align: { type: "string", enum: ["start", "center", "end"] as const, description: "Horizontal alignment within the card" },

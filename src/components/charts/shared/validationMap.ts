@@ -1088,8 +1088,15 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     required: ["value"],
     dataShape: "none",
     dataAccessors: [],
+    // BigNumber doesn't consume the chart-frame prop bag — only
+    // width / height / className / onClick from common are accepted.
+    // Listing them explicitly (instead of spreading `...commonProps`)
+    // keeps validation honest with the runtime.
     props: {
-      ...commonProps,
+      width: { type: ["number", "string"] },
+      height: { type: ["number", "string"] },
+      className: { type: "string" },
+      onClick: { type: "function" },
       value: { type: "number" },
       label: { type: "string" },
       caption: { type: "string" },
@@ -1127,7 +1134,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       deltaSlot: { type: ["object", "function"] },
       trendSlot: { type: ["object", "function"] },
       footerSlot: { type: ["object", "function"] },
-      onClick: { type: "function" },
+      // onClick already declared in the top-of-block common-props subset
       onObservation: { type: "function" },
     },
   },

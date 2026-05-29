@@ -23,7 +23,7 @@
     "*.spec.ts"
   ],
   "rules": [
-    "Import from sub-paths (`semiotic/xy`, `/ordinal`, `/network`, `/geo`, `/realtime`, `/server`, `/utils`, `/themes`, `/data`, `/ai`, `/recipes`), never bare `semiotic` — bare pulls the full 158KB-gz bundle.",
+    "Import from sub-paths (`semiotic/xy`, `/ordinal`, `/network`, `/geo`, `/realtime`, `/server`, `/utils`, `/themes`, `/data`, `/ai`, `/recipes`, `/value`), never bare `semiotic` — bare pulls the full 158KB-gz bundle.",
     "Default to HOC charts (LineChart, BarChart, Scatterplot, ForceDirectedGraph) over Stream Frames unless the HOC doesn't expose what you need. Stream Frames pass `RealtimeNode`/`RealtimeEdge` wrappers in callbacks, not raw data.",
     "Push-mode charts: omit the `data` prop entirely. Never pass `data={[]}` — that is static empty data and clears the frame on every render. Use a ref and call `ref.current.push(datum)` / `pushMany(rows)` / `clear()`.",
     "`remove(id)` and `update(id, updater)` require an ID accessor: `pointIdAccessor` on XY/realtime charts, `dataIdAccessor` on ordinal charts, `nodeIDAccessor`/`edgeIdAccessor` for network operations.",

@@ -81,5 +81,6 @@ export {
 
 export {
   resolveThreshold,
-  colorForLevel
+  colorForLevel,
+  buildSparklinePath
 } from "./charts/value/thresholdSparkline"

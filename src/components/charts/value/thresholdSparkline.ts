@@ -96,8 +96,10 @@ export function buildSparklinePath(
     if (!Number.isFinite(v)) continue
     const x = padding + i * stepX
     const y = padding + innerH - ((v - yMin) / yRange) * innerH
+    // Use the emitted-point counter to decide M vs L so a leading NaN
+    // doesn't start the path with an L (which is invalid SVG).
+    line += `${points.length === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`
     points.push({ x, y })
-    line += `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`
   }
   if (points.length === 0) return { line: "", area: "", points: [] }
   const first = points[0]

@@ -141,7 +141,9 @@ export interface BigNumberHandle {
   pushMany(inputs: ReadonlyArray<number | BigNumberPushInput>): void
   /** Reset trend buffer and focal value. */
   clear(): void
-  /** Current focal value, or `null` before any push. */
+  /** Current focal value. Returns the most-recently-pushed value when the
+   *  push API has been used; otherwise falls back to the `value` prop. Returns
+   *  `null` only when no push has landed AND the prop value is not finite. */
   getValue(): number | null
   /** Trend buffer snapshot (most-recent-last). */
   getData(): ReadonlyArray<BigNumberPushInput>
@@ -195,8 +197,11 @@ export type BigNumberSlot =
  */
 export interface BigNumberProps<TDatum extends Datum = Datum> {
   // ── Focal value ─────────────────────────────────────────────────
-  /** The number this card exists to display. */
-  value: number
+  /** The number this card exists to display. `null` / `undefined` / `NaN`
+   *  routes the card into its empty state (see `emptyContent`); this lets
+   *  consumers pass `data?.revenue` style optional values without a
+   *  conditional. */
+  value: number | null | undefined
   /** Top-line descriptor — e.g. `"Q3 Revenue"`. Rendered above the value. */
   label?: string
   /** Secondary descriptor, smaller, below the label. */
@@ -307,8 +312,10 @@ export interface BigNumberProps<TDatum extends Datum = Datum> {
    *  (the square chart). Compose with `trendSlot` to get both
    *  (square chart on the right, wide trend along the bottom). */
   chartSlot?: BigNumberSlot
-  /** Reserved width for `chartSlot`. Defaults to a square sized off the
-   *  card height — set explicitly when you need a tighter fit. */
+  /** Reserved pixel size (square) for `chartSlot`. Defaults are
+   *  mode-keyed for sparkline scale — 44 px for `tile`, 80 px for
+   *  `presentation` — so the embedded chart reads as a corner
+   *  decoration. Pass a larger value for a hero-style anchor. */
   chartSize?: number
   /** Free-form footer below the trend. */
   footerSlot?: BigNumberSlot

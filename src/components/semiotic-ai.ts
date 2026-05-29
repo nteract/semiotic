@@ -20,7 +20,12 @@ export { CandlestickChart } from "./charts/xy/CandlestickChart"
 
 // Coordinated Views
 export { LinkedCharts } from "./LinkedCharts"
-export { useSelection, useLinkedHover, useBrushSelection, useFilteredData } from "./LinkedCharts"
+export {
+  useSelection,
+  useLinkedHover,
+  useBrushSelection,
+  useFilteredData
+} from "./LinkedCharts"
 
 // Ordinal Charts
 export { BarChart } from "./charts/ordinal/BarChart"
@@ -51,10 +56,17 @@ export { OrbitDiagram } from "./charts/network/OrbitDiagram"
 
 // Realtime Charts
 export { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
-export { RealtimeHistogram, TemporalHistogram } from "./charts/realtime/RealtimeHistogram"
+export {
+  RealtimeHistogram,
+  TemporalHistogram
+} from "./charts/realtime/RealtimeHistogram"
 export { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 export { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
 export { RealtimeHeatmap } from "./charts/realtime/RealtimeHeatmap"
+
+// Value Charts
+export { BigNumber } from "./charts/value/BigNumber"
+
 // Essential utilities
 export { TooltipProvider } from "./store/TooltipStore"
 export { MultiLineTooltip } from "./Tooltip/Tooltip"
@@ -67,7 +79,10 @@ export { exportChart } from "./export/exportChart"
 
 // Chart container
 export { ChartContainer } from "./ChartContainer"
-export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
+export type {
+  ChartContainerProps,
+  ChartContainerHandle
+} from "./ChartContainer"
 
 // Layout
 export { ChartGrid } from "./ChartGrid"
@@ -79,7 +94,10 @@ export type { ContextLayoutProps } from "./ContextLayout"
 
 // Shared categorical styles
 export { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
-export type { CategoryColorMap, CategoryColorProviderProps } from "./CategoryColors"
+export type {
+  CategoryColorMap,
+  CategoryColorProviderProps
+} from "./CategoryColors"
 
 // Details panel
 export { DetailsPanel } from "./DetailsPanel"
@@ -94,13 +112,34 @@ export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
 export type { Diagnosis, DiagnosisResult } from "./charts/shared/diagnoseConfig"
 
 // Statistical overlay types
-export type { AnomalyConfig, ForecastConfig } from "./charts/shared/statisticalOverlays"
+export type {
+  AnomalyConfig,
+  ForecastConfig
+} from "./charts/shared/statisticalOverlays"
 
 // Chart state serialization
-export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
-export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
-export { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
-export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
+export {
+  toConfig,
+  fromConfig,
+  toURL,
+  fromURL,
+  copyConfig,
+  configToJSX
+} from "./export/chartConfig"
+export type {
+  ChartConfig,
+  ToConfigOptions,
+  CopyFormat
+} from "./export/chartConfig"
+export {
+  serializeSelections,
+  deserializeSelections
+} from "./export/selectionSerializer"
+export type {
+  SerializedSelections,
+  SerializedSelection,
+  SerializedFieldSelection
+} from "./export/selectionSerializer"
 
 // Vega-Lite translator
 export { fromVegaLite } from "./data/fromVegaLite"
@@ -115,7 +154,7 @@ export type {
   InterrogationFocus,
   InterrogationResult,
   InterrogationQuery,
-  InterrogationMessage,
+  InterrogationMessage
 } from "./store/useChartInterrogation"
 export { useChartFocus } from "./store/useChartFocus"
 export type { UseChartFocusOptions } from "./store/useChartFocus"
@@ -128,7 +167,7 @@ export type {
   DateFieldSummary,
   CategoricalFieldSummary,
   UnknownFieldSummary,
-  SummarizeOptions,
+  SummarizeOptions
 } from "./data/DataSummarizer"
 
 // Chart capability layer — heuristic recommendations + intent taxonomy
@@ -138,12 +177,12 @@ export {
   suggestCharts,
   suggestChartsGrouped,
   scoreChart,
-  explainCapabilityFit,
+  explainCapabilityFit
 } from "./ai/suggestCharts"
 export type {
   SuggestChartsOptions,
   RejectedCapability,
-  ExplainCapabilityFitResult,
+  ExplainCapabilityFitResult
 } from "./ai/suggestCharts"
 
 // Scale-aware suggestion overlay — declarative dataset-scale and quality
@@ -158,7 +197,7 @@ export {
   computeEffectiveScale,
   resolveRowsToNumber,
   resolveCardinalityToNumber,
-  scaleHints,
+  scaleHints
 } from "./ai/dataScaleProfile"
 export type {
   DataScaleProfile,
@@ -173,7 +212,7 @@ export type {
   ScaleFitFn,
   ScaleFitResult,
   QualityFitFn,
-  ScaleHintInput,
+  ScaleHintInput
 } from "./ai/dataScaleProfile"
 export { inferIntent } from "./ai/inferIntent"
 export type { InferIntentResult } from "./ai/inferIntent"
@@ -181,30 +220,30 @@ export { suggestDashboard } from "./ai/suggestDashboard"
 export type {
   DashboardPanel,
   DashboardSuggestion,
-  SuggestDashboardOptions,
+  SuggestDashboardOptions
 } from "./ai/suggestDashboard"
 
 // Audience-aware suggestion + literacy-growth surface
 export {
   applyAudienceBias,
   effectiveFamiliarity,
-  stretchFamiliarityCeiling,
+  stretchFamiliarityCeiling
 } from "./ai/audienceProfile"
 export type {
   AudienceProfile,
   AudienceTarget,
-  AudienceBiasResult,
+  AudienceBiasResult
 } from "./ai/audienceProfile"
 export {
   executivePersona,
   analystPersona,
   dataScientistPersona,
-  BUILT_IN_AUDIENCES,
+  BUILT_IN_AUDIENCES
 } from "./ai/audiences"
 export { suggestStretchCharts } from "./ai/suggestStretchCharts"
 export type {
   StretchSuggestion,
-  SuggestStretchChartsOptions,
+  SuggestStretchChartsOptions
 } from "./ai/suggestStretchCharts"
 
 // Streaming intent — parallel API for live charts (schema-based, not row-based)
@@ -212,7 +251,7 @@ export {
   suggestStreamCharts,
   registerStreamChartCapability,
   unregisterStreamChartCapability,
-  getStreamCapabilities,
+  getStreamCapabilities
 } from "./ai/suggestStreamCharts"
 export type { SuggestStreamChartsOptions } from "./ai/suggestStreamCharts"
 export type {
@@ -221,28 +260,36 @@ export type {
   StreamFieldKind,
   StreamChartCapability,
   StreamIntentScorer,
-  StreamSuggestion,
+  StreamSuggestion
 } from "./ai/streamingTypes"
 export { diffProfile } from "./ai/diffProfile"
-export type { ProfileDiff, FieldTypeChange, PrimaryRoleChange, PrimaryRole } from "./ai/diffProfile"
+export type {
+  ProfileDiff,
+  FieldTypeChange,
+  PrimaryRoleChange,
+  PrimaryRole
+} from "./ai/diffProfile"
 export { repairChartConfig } from "./ai/repairChartConfig"
 export type {
   RepairResult,
   RepairOkResult,
   RepairAlternativeResult,
   RepairUnknownResult,
-  RepairOptions,
+  RepairOptions
 } from "./ai/repairChartConfig"
 export { runQualityScorecard } from "./ai/qualityScorecard"
 export type {
   ScorecardFixture,
   ScorecardReport,
   PerCapabilityScore,
-  PerFixtureScore,
+  PerFixtureScore
 } from "./ai/qualityScorecard"
 export { CANONICAL_FIXTURES } from "./ai/qualityFixtures"
 export { useChartSuggestions } from "./ai/useChartSuggestions"
-export type { UseChartSuggestionsOptions, UseChartSuggestionsResult } from "./ai/useChartSuggestions"
+export type {
+  UseChartSuggestionsOptions,
+  UseChartSuggestionsResult
+} from "./ai/useChartSuggestions"
 export {
   getCapabilities,
   getCapability,
@@ -292,7 +339,7 @@ export {
   ChoroplethMapCapability,
   ProportionalSymbolMapCapability,
   FlowMapCapability,
-  DistanceCartogramCapability,
+  DistanceCartogramCapability
 } from "./ai/chartCapabilities"
 export type {
   ChartCapability,
@@ -307,9 +354,14 @@ export type {
   IntentScorer,
   ScaledSuggestionGroups,
   Suggestion,
-  SuggestionScaleRange,
+  SuggestionScaleRange
 } from "./ai/chartCapabilityTypes"
-export { listIntents, getIntent, registerIntent, BUILT_IN_INTENT_IDS } from "./ai/intents"
+export {
+  listIntents,
+  getIntent,
+  registerIntent,
+  BUILT_IN_INTENT_IDS
+} from "./ai/intents"
 export type { BuiltInIntentId, IntentId, IntentDescriptor } from "./ai/intents"
 
 // Variant discovery — interface design (M1).
@@ -322,7 +374,7 @@ export {
   evaluateVariantProposal,
   registerVariantDiscovery,
   getRegisteredVariantDiscovery,
-  clearVariantDiscovery,
+  clearVariantDiscovery
 } from "./ai/variantDiscovery"
 export type {
   VariantProposal,
@@ -331,7 +383,7 @@ export type {
   VariantRejectionReason,
   VariantDiscoveryContext,
   ProposeVariantFn,
-  EvaluateVariantProposalFn,
+  EvaluateVariantProposalFn
 } from "./ai/variantDiscovery"
 
 // Annotation provenance + lifecycle.
@@ -347,7 +399,7 @@ export {
   applyAnnotationLifecycle,
   annotationFreshnessFor,
   bandFromAge,
-  DEFAULT_LIFECYCLE_THRESHOLDS,
+  DEFAULT_LIFECYCLE_THRESHOLDS
 } from "./ai/annotationProvenance"
 export type {
   AnnotationProvenance,
@@ -360,7 +412,7 @@ export type {
   AnnotationLifecycleTreatment,
   ApplyAnnotationLifecycleOptions,
   LifecycleBand,
-  LifecycleBandThresholds,
+  LifecycleBandThresholds
 } from "./ai/annotationProvenance"
 
 // Conversation-arc — M2 React hook + summarize helper.
@@ -371,7 +423,7 @@ export { useConversationArc, summarizeArc } from "./ai/useConversationArc"
 export type {
   UseConversationArcOptions,
   UseConversationArcResult,
-  ConversationArcSummary,
+  ConversationArcSummary
 } from "./ai/useConversationArc"
 
 // Conversation-arc telemetry — opt-in event vocabulary + ring-buffer store.
@@ -383,7 +435,7 @@ export {
   disableConversationArc,
   getConversationArcStore,
   subscribeToConversationArcChange,
-  recordAudienceChange,
+  recordAudienceChange
 } from "./ai/conversationArc"
 export type {
   ConversationArcEvent,
@@ -401,12 +453,15 @@ export type {
   ChartExportedEvent,
   ChartAbandonedEvent,
   InterrogationAskedEvent,
-  InterrogationAnsweredEvent,
+  InterrogationAnsweredEvent
 } from "./ai/conversationArc"
 
 // AI Observation hooks
 export { useChartObserver } from "./store/useObservation"
-export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"
+export type {
+  UseChartObserverOptions,
+  UseChartObserverResult
+} from "./store/useObservation"
 export type {
   ChartObservation,
   OnObservationCallback,

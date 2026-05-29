@@ -379,6 +379,22 @@ describe("BigNumber — layout modes", () => {
     expect(screen.queryByText("hidden")).toBeNull()
   })
 
+  it("falls back to tile defaults for an unknown mode (e.g. a generic ChartMode bleed-through)", () => {
+    // A suggestion engine that spreads runnable props from a different
+    // chart family can land BaseChartProps' "primary" / "context" /
+    // "sparkline" mode strings on BigNumber. The component should not
+    // crash with `Cannot read properties of undefined (reading 'align')`.
+    const { container } = render(
+      // @ts-expect-error — exercising the runtime fallback explicitly
+      <BigNumber value={42} mode="primary" />
+    )
+    const root = container.querySelector("[data-chart='BigNumber']") as HTMLElement
+    expect(root).not.toBeNull()
+    // No crash; data-mode reflects what was passed (we don't rewrite the
+    // attribute, only resolve defaults defensively).
+    expect(root.getAttribute("data-mode")).toBe("primary")
+  })
+
   it("uses inline-flex layout in inline mode", () => {
     const { container } = render(
       <BigNumber value={5} mode="inline" comparison={{ value: 4 }} />

@@ -7540,95 +7540,24 @@
           "type": "object",
           "properties": {
             "width": {
-              "type": "number",
-              "default": 600
+              "type": [
+                "number",
+                "string"
+              ],
+              "description": "Reserved width in pixels (or any CSS length). Mode-keyed defaults: 280 (tile) / 540 (presentation) / unset (inline / thumbnail).",
+              "default": 280
             },
             "height": {
-              "type": "number",
-              "default": 400
-            },
-            "margin": {
-              "type": "object",
-              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
+              "type": [
+                "number",
+                "string"
+              ],
+              "description": "Reserved height in pixels (or any CSS length). Mode-keyed defaults: 184 (tile) / 320 (presentation) / unset (inline / thumbnail).",
+              "default": 184
             },
             "className": {
-              "type": "string"
-            },
-            "title": {
-              "type": "string"
-            },
-            "enableHover": {
-              "type": "boolean",
-              "default": true
-            },
-            "showLegend": {
-              "type": "boolean"
-            },
-            "showGrid": {
-              "type": "boolean",
-              "default": false
-            },
-            "colorBy": {
-              "type": [
-                "string",
-                "function"
-              ]
-            },
-            "colorScheme": {
-              "type": [
-                "string",
-                "array"
-              ],
-              "default": "category10"
-            },
-            "tooltip": {
-              "type": [
-                "boolean",
-                "function",
-                "object"
-              ]
-            },
-            "annotations": {
-              "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "widget",
-                      "label",
-                      "callout",
-                      "text",
-                      "bracket",
-                      "y-threshold",
-                      "x-threshold",
-                      "band",
-                      "enclose",
-                      "rect-enclose",
-                      "highlight",
-                      "trend",
-                      "envelope",
-                      "anomaly-band",
-                      "forecast"
-                    ],
-                    "description": "Annotation type"
-                  }
-                },
-                "required": [
-                  "type"
-                ]
-              }
-            },
-            "axisExtent": {
               "type": "string",
-              "enum": [
-                "nice",
-                "exact"
-              ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
-              "default": "nice"
+              "description": "Composed with the BEM root class on the outer container."
             },
             "value": {
               "type": "number",
@@ -7741,7 +7670,7 @@
             },
             "chartSize": {
               "type": "number",
-              "description": "Pixel size reserved for chartSlot (rendered as a square). Defaults to the card's inner height."
+              "description": "Pixel size reserved for chartSlot (rendered as a square). Mode-keyed defaults: 44 (tile) / 80 (presentation) — sparkline scale; pass a larger value for a hero anchor."
             },
             "windowSize": {
               "type": "number",
