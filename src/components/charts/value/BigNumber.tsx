@@ -286,9 +286,9 @@ function buildAriaSentence(args: {
   formattedValue: string
   unit?: string
   comparisonLabel?: string
+  delta?: number | null
   deltaFormatted?: string | null
   deltaPercent?: string | null
-  sentiment: "positive" | "negative" | "neutral"
   targetLabel?: string
   targetPercent?: string | null
   stale: boolean
@@ -300,12 +300,19 @@ function buildAriaSentence(args: {
     args.unit ? `${args.formattedValue} ${args.unit}` : args.formattedValue
   )
   if (args.deltaFormatted) {
+    // Direction word follows the SIGN of the delta, not the sentiment.
+    // Sentiment is a styling concern ("good" / "bad" colour) that flips
+    // when `direction: "lower-is-better"` — but for a screen reader the
+    // factual phrasing must remain "up" for +5 and "down" for −5
+    // regardless. Avoids the previous "up −5" reading on lower-is-better
+    // metrics.
+    const d = args.delta
     const dirWord =
-      args.sentiment === "positive"
-        ? "up"
-        : args.sentiment === "negative"
-          ? "down"
-          : "change"
+      d != null && Number.isFinite(d) && d !== 0
+        ? d > 0
+          ? "up"
+          : "down"
+        : "change"
     const pct = args.deltaPercent ? ` (${args.deltaPercent})` : ""
     const comp = args.comparisonLabel ? ` from ${args.comparisonLabel}` : ""
     parts.push(`${dirWord} ${args.deltaFormatted}${pct}${comp}`)
@@ -652,9 +659,9 @@ const BigNumberInner = (
         : "",
       unit,
       comparisonLabel: comparison?.label,
+      delta: computedDelta,
       deltaFormatted,
       deltaPercent,
-      sentiment,
       targetLabel: target?.label,
       targetPercent,
       stale,

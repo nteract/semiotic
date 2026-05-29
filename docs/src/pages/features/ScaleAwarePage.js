@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import {
   suggestCharts,
   suggestChartsGrouped,
@@ -588,12 +589,26 @@ export const ForceDirectedGraphCapability: ChartCapability = {
         should — bend to your shop's conventions.
       </p>
 
-      <h2>The single-value gap</h2>
+      <h2>The single-value gap (now filled)</h2>
       <p>
-        At <strong>tiny</strong> scale, the engine's catalog currently has one chart:
-        <code>GaugeChart</code>. Single-value displays (BigNumber, KPI cards, scorecards) aren't
-        shipped yet — the suggestion engine is honest about wanting them. The roadmap entry for{" "}
-        <code>SingleValueFrame</code> sketches that gap and the design tradeoffs around filling it.
+        At <strong>tiny</strong> scale, the engine used to only have{" "}
+        <code>GaugeChart</code>, and a gauge is misleading without an explicit
+        min / max. <code>BigNumber</code> (under <code>semiotic/value</code>)
+        ships as the honest answer for unbounded single-value data — and the
+        capability layer wires it into <code>suggestCharts</code> /{" "}
+        <code>suggestChartsGrouped</code> with a <code>scaleFit</code> boost
+        that puts it ahead of <code>GaugeChart</code> at the{" "}
+        <strong>tiny</strong> band. See{" "}
+        <Link to="/charts/big-number">/charts/big-number</Link> for the full
+        component, and the roadmap entry for <code>SingleValueFrame</code> for
+        what a future frame-backed version would inherit.
+      </p>
+      <p>
+        Next iteration: <strong>composition suggestions</strong> — sets of N
+        charts where a <code>BigNumber</code> can host the others via its{" "}
+        <code>trendSlot</code> / <code>chartSlot</code> rather than the
+        dashboard rendering them as peer cards. Documented in the roadmap;
+        not part of this PR.
       </p>
     </PageLayout>
   )

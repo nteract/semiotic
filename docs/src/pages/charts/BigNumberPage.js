@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
 import { BigNumber } from "semiotic/value"
-import { ThemeProvider } from "semiotic"
+import { ThemeProvider } from "semiotic/utils"
 import { THEME_PRESETS } from "semiotic/themes"
 // These chart families are imported *only here in the docs* to demo
 // dropping a real Semiotic chart into BigNumber's `trendSlot` (wide /

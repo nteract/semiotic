@@ -359,6 +359,30 @@ describe("BigNumber — accessibility", () => {
     expect(aria).toContain("of weekly goal")
   })
 
+  it("ARIA direction word follows the delta sign, not sentiment (lower-is-better)", () => {
+    // Latency went DOWN (good under lower-is-better) — sentiment is
+    // positive but the screen reader sentence should still report
+    // "down 60 ms" (factual direction), not "up 60 ms".
+    const { container } = render(
+      <BigNumber
+        value={340}
+        label="P99 latency"
+        suffix=" ms"
+        comparison={{ value: 400, label: "vs last week", direction: "lower-is-better" }}
+      />
+    )
+    const aria = container
+      .querySelector("[data-chart='BigNumber']")
+      ?.getAttribute("aria-label") ?? ""
+    expect(aria).toContain("down")
+    expect(aria).not.toContain("up")
+    // Sentiment-positive (good) coloring still applies — direction word
+    // and visual sentiment are independent concerns.
+    expect(
+      container.querySelector("[data-sentiment='positive']")
+    ).not.toBeNull()
+  })
+
   it("uses description prop as the ARIA override when provided", () => {
     const { container } = render(
       <BigNumber value={1} description="custom description for this card" />
