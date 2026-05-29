@@ -84,6 +84,12 @@
       "require": "./dist/semiotic-recipes.min.js",
       "default": "./dist/semiotic-recipes.module.min.js"
     },
+    "./value": {
+      "types": "./dist/semiotic-value.d.ts",
+      "import": "./dist/semiotic-value.module.min.js",
+      "require": "./dist/semiotic-value.min.js",
+      "default": "./dist/semiotic-value.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -192,6 +198,7 @@
     "semiotic/recipes": "./src/components/semiotic-recipes.ts",
     "semiotic/themes": "./src/components/semiotic-themes.ts",
     "semiotic/utils": "./src/components/semiotic-utils.ts",
+    "semiotic/value": "./src/components/semiotic-value.ts",
     "semiotic/xy": "./src/components/semiotic-xy.ts",
     "react-router-dom": "react-router"
   },

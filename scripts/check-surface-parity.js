@@ -70,7 +70,7 @@ function parseSchemaComponents() {
 function parseSemioticAIChartExports() {
   const source = read(files.semioticAI)
   const names = new Set()
-  const exportRegex = /export\s+\{([^}]+)\}\s+from\s+"\.\/charts\/(?:xy|ordinal|network|realtime)\//g
+  const exportRegex = /export\s+\{([^}]+)\}\s+from\s+"\.\/charts\/(?:xy|ordinal|network|realtime|value)\//g
   for (const match of source.matchAll(exportRegex)) {
     for (const raw of match[1].split(",")) {
       const name = raw.trim().split(/\s+as\s+/)[0].trim()
@@ -118,6 +118,13 @@ const semioticAI = parseSemioticAIChartExports()
 const mcpRegistry = parseComponentRegistry()
 const serverConfigs = parseServerConfigs()
 const geoCharts = discoverChartFiles("geo")
+// Value-family HOCs (BigNumber today) ship under `semiotic/value` and
+// don't route through the frame-driven `renderChart` server config path.
+// `semiotic/ai` does re-export BigNumber for the intelligence demo
+// pages, but the chart still skips the MCP-renderable parity check
+// because it isn't a `renderChart`-compatible HOC. Mirrors the
+// `hoc-ssr-only` capability special-feature documented in chartSpecs.ts.
+const valueCharts = discoverChartFiles("value")
 const realtimeCharts = new Set([...validation].filter(name => name.startsWith("Realtime")))
 const { componentIndexFromSchema } = require(files.componentMetadata)
 const componentMetadata = componentIndexFromSchema(loadSchemaDocument())
@@ -128,8 +135,16 @@ const metadataRenderable = new Set(
     .map(component => component.name)
 )
 
-const expectedAIExports = new Set([...validation].filter(name => !geoCharts.has(name)))
-const expectedMCPRegistry = new Set([...validation].filter(name => !realtimeCharts.has(name)))
+// Value charts now DO get re-exported from `semiotic/ai` (BigNumber is
+// surfaced for the intelligence demo pages), so they're expected in the
+// AI exports set. Geo charts stay excluded because they ship under a
+// separate subpath and aren't re-exported from `semiotic/ai`.
+const expectedAIExports = new Set(
+  [...validation].filter(name => !geoCharts.has(name))
+)
+const expectedMCPRegistry = new Set(
+  [...validation].filter(name => !realtimeCharts.has(name) && !valueCharts.has(name))
+)
 const expectedServerConfigs = new Set(
   [...expectedMCPRegistry].filter(name => !SERVER_CONFIG_EXCLUDED.has(name))
 )
@@ -187,7 +202,7 @@ if (errors.length) {
 
 console.log("AI/MCP surface parity check passed")
 console.log(`  ${validation.size} validation/schema components`)
-console.log(`  ${semioticAI.size} semiotic/ai chart exports (${geoCharts.size} geo charts intentionally excluded)`)
-console.log(`  ${mcpRegistry.size} MCP-renderable components (${realtimeCharts.size} realtime charts intentionally excluded)`)
+console.log(`  ${semioticAI.size} semiotic/ai chart exports (${geoCharts.size} geo chart(s) intentionally excluded)`)
+console.log(`  ${mcpRegistry.size} MCP-renderable components (${realtimeCharts.size} realtime + ${valueCharts.size} value chart(s) intentionally excluded)`)
 console.log(`  ${metadataComponents.size} shared AI metadata components`)
 console.log(`  ${serverConfigs.size} server render configs (+ ${SERVER_CONFIG_EXCLUDED.size} documented HOC-SSR exclusions)`)

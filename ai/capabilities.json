@@ -2,6 +2,27 @@
   "__generated": true,
   "__source": "src/components/charts/shared/chartSpecs.ts",
   "charts": {
+    "BigNumber": {
+      "category": "value",
+      "supportsLegend": false,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "threshold",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "threshold-zones",
+        "value-only",
+        "comparison",
+        "target",
+        "staleness",
+        "intl-format",
+        "chart-slot",
+        "trend-slot",
+        "hoc-ssr-only"
+      ]
+    },
     "AreaChart": {
       "category": "xy",
       "supportsLegend": true,

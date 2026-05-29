@@ -1,6 +1,6 @@
 "use strict"
 
-const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime"]
+const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "value"]
 
 const COMPONENTS_BY_CATEGORY = {
   xy: [
@@ -23,6 +23,9 @@ const COMPONENTS_BY_CATEGORY = {
   realtime: [
     "RealtimeLineChart", "RealtimeHistogram", "TemporalHistogram", "RealtimeSwarmChart",
     "RealtimeWaterfallChart", "RealtimeHeatmap",
+  ],
+  value: [
+    "BigNumber",
   ],
 }
 
@@ -59,11 +62,17 @@ function metadataForComponent(entryOrName) {
   // any other static HOC. Matches the name-prefix exclusion the
   // check-surface-parity script applies.
   const isPushOnly = category === "realtime" && name.startsWith("Realtime")
+  // Value-family charts (BigNumber, future SingleValueFrame HOCs)
+  // render via react-dom/server in a normal React tree, but they do
+  // not route through the frame-driven `renderChart` path in
+  // serverChartConfigs.ts — so they are not MCP-renderable. Mirrors
+  // the `hoc-ssr-only` special feature documented in chartSpecs.ts.
+  const isValueCategory = category === "value"
   return {
     name,
     category,
     importPath: importPathForCategory(category),
-    renderable: !isPushOnly,
+    renderable: !isPushOnly && !isValueCategory,
     description: typeof entryOrName === "string" ? undefined : entryOrName.description,
   }
 }

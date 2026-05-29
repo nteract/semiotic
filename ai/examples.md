@@ -1181,3 +1181,101 @@ import { BarChart } from "semiotic/ai"
 ```
 
 Key props: `y-threshold` works on vertical ordinal charts. `category-highlight` highlights a category column. `labelPosition` controls label placement.
+
+---
+
+## Value Charts — One Number Is The Visualization
+
+### BigNumber (KPI tile — comparison + target + threshold zones)
+
+```jsx
+import { BigNumber } from "semiotic/value"
+
+<BigNumber
+  value={1284900}
+  label="Q3 Revenue"
+  caption="Year-to-date bookings"
+  format="currency"
+  precision={0}
+  comparison={{ value: 980000, label: "vs Q2" }}
+  target={{ value: 1500000, label: "Q3 plan" }}
+  thresholds={[
+    { at: -Infinity, level: "danger"  },
+    { at: 1000000,   level: "warning" },
+    { at: 1300000,   level: "success" },
+  ]}
+/>
+```
+
+Key props: `value` (the one number), `format` ("number"|"currency"|"percent"|"compact"|"duration"|fn), `comparison` derives a delta with auto-sentiment, `target` renders "X% of goal", `thresholds` map value to a semantic theme role (`--semiotic-{success|warning|danger|info}`). Suppress chrome via `mode="thumbnail"` for dense grids or `mode="inline"` for prose. Stream via `ref.current.push({ value, time })` — pair with `stalenessThreshold` to dim the card when updates stop.
+
+### BigNumber with a Semiotic chart embedded via `trendSlot` (wide / rectangular)
+
+```jsx
+import { BigNumber } from "semiotic/value"
+import { LineChart } from "semiotic/xy"
+
+<BigNumber
+  value={1284900}
+  label="Q3 Revenue"
+  format="currency"
+  comparison={{ value: 980000, label: "vs Q2" }}
+  trendSlot={(ctx) => (
+    <LineChart
+      data={[820000, 870000, 920000, 1010000, 1120000, 1284900].map((y, x) => ({ x, y }))}
+      xAccessor="x"
+      yAccessor="y"
+      mode="sparkline"
+      width={260}
+      height={32}
+      color={ctx.color}
+    />
+  )}
+/>
+```
+
+Key props: BigNumber ships NO built-in chart renderer. `trendSlot` accepts any ReactNode (or `(ctx) => ReactNode`); pass a `LineChart`/`AreaChart` in `mode="sparkline"` for wide / rectangular charts. The slot context exposes `ctx.color` (resolved threshold colour) so the embedded chart picks up the BigNumber's level for cohesive theming.
+
+### BigNumber with a square Semiotic chart via `chartSlot`
+
+```jsx
+import { BigNumber } from "semiotic/value"
+import { DonutChart } from "semiotic/ordinal"
+
+<BigNumber
+  value={1284900}
+  label="Q3 Revenue by region"
+  format="currency"
+  chartSlot={
+    <DonutChart
+      data={[
+        { region: "NA",   revenue: 540000 },
+        { region: "EU",   revenue: 420000 },
+        { region: "APAC", revenue: 324900 },
+      ]}
+      categoryAccessor="region"
+      valueAccessor="revenue"
+      width={120}
+      height={120}
+      innerRadius={32}
+    />
+  }
+/>
+```
+
+Key props: `chartSlot` is the square-aspect counterpart to `trendSlot`. The card splits horizontally — text content on the left, square chart on the right (DonutChart / PieChart / Scatterplot / Treemap / CirclePack). Pass both `trendSlot` and `chartSlot` to get the square chart on the right and the wide sparkline at the bottom.
+
+### BigNumber (inverted direction — lower is better)
+
+```jsx
+import { BigNumber } from "semiotic/value"
+
+<BigNumber
+  value={486}
+  label="P99 latency"
+  suffix=" ms"
+  comparison={{ value: 410, label: "vs last week", direction: "lower-is-better" }}
+/>
+```
+
+Key props: `direction: "lower-is-better"` flips sentiment colouring — a value that went UP now reads as negative (danger). Same pattern for error rate, churn, complaint count, etc.

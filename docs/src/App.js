@@ -47,6 +47,7 @@ import RealtimeHeatmapPage from "./pages/charts/RealtimeHeatmapPage"
 import PieChartPage from "./pages/charts/PieChartPage"
 import DonutChartPage from "./pages/charts/DonutChartPage"
 import GaugeChartPage from "./pages/charts/GaugeChartPage"
+import BigNumberPage from "./pages/charts/BigNumberPage"
 import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
 import FunnelChartPage from "./pages/charts/FunnelChartPage"
 import SwimlaneChartPage from "./pages/charts/SwimlaneChartPage"
@@ -532,6 +533,8 @@ export default function DocsApp() {
               <Route path="flow-map" element={<FlowMapPage />} />
               <Route path="distance-cartogram" element={<DistanceCartogramPage />} />
               <Route path="tile-map" element={<TileMapPage />} />
+              {/* Value Charts */}
+              <Route path="big-number" element={<BigNumberPage />} />
             </Route>
           </Routes>
         </div>

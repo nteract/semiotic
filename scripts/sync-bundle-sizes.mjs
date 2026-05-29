@@ -60,6 +60,7 @@ const BLURBS = {
   "./recipes":  "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
   "./themes":   "Theme presets only (tufte, carbon, etc.)",
   "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
+  "./value":    "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)",
   "./ai":       "All 42 HOCs + validation — optimized for LLM code generation",
 }
 
@@ -69,7 +70,7 @@ const BLURBS = {
 // smallest sub-path that fits your charts" message lands clearly.
 const ORDER = [
   "./xy", "./ordinal", "./network", "./geo", "./realtime", "./server",
-  "./utils", "./recipes", "./themes", "./data",
+  "./utils", "./recipes", "./themes", "./data", "./value",
   "./ai", ".",
 ]
 

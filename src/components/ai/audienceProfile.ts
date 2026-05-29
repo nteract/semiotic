@@ -9,8 +9,6 @@ import type { ChartRubric } from "./chartCapabilityTypes"
  * telemetry, manager judgment, training records) and pass it to the
  * suggestion APIs. The library applies the bias and returns rankings that
  * reflect the audience instead of a generic data-literate baseline.
- *
- * Strategy memo: docs/strategy/audience-profiles.md
  */
 export interface AudienceProfile {
   /**
@@ -87,7 +85,7 @@ export function applyAudienceBias(
   baseScore: number,
   baseRubric: ChartRubric,
   component: string,
-  audience: AudienceProfile | undefined,
+  audience: AudienceProfile | undefined
 ): AudienceBiasResult {
   if (!audience) return { score: baseScore, rubric: baseRubric }
 
@@ -114,7 +112,7 @@ export function applyAudienceBias(
   return {
     score: baseScore + delta,
     rubric: { ...baseRubric, familiarity },
-    appliedReason,
+    appliedReason
   }
 }
 
@@ -125,7 +123,7 @@ export function applyAudienceBias(
 export function effectiveFamiliarity(
   component: string,
   defaultFamiliarity: number,
-  audience: AudienceProfile | undefined,
+  audience: AudienceProfile | undefined
 ): number {
   if (!audience) return defaultFamiliarity
   return audience.familiarity?.[component] ?? defaultFamiliarity
@@ -136,7 +134,9 @@ export function effectiveFamiliarity(
  * Tighter for exposureLevel 1, wider for 2. Returns the highest familiarity a
  * chart can have and still appear in the stretch surface.
  */
-export function stretchFamiliarityCeiling(audience: AudienceProfile | undefined): number {
+export function stretchFamiliarityCeiling(
+  audience: AudienceProfile | undefined
+): number {
   if (!audience) return 3
   if (audience.exposureLevel === 2) return 4
   return 3

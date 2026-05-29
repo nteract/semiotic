@@ -83,6 +83,13 @@ const navData = [
           { title: "Distance Cartogram", path: "/charts/distance-cartogram" },
           { title: "Tile Maps", path: "/charts/tile-map" }
         ]
+      },
+      {
+        title: "Value",
+        category: "value",
+        children: [
+          { title: "Big Number", path: "/charts/big-number" }
+        ]
       }
     ]
   },

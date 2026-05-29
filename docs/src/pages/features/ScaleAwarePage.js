@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import {
   suggestCharts,
   suggestChartsGrouped,
@@ -21,6 +22,7 @@ import {
   GaugeChart,
   Treemap,
   CirclePack,
+  BigNumber,
 } from "semiotic/ai"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
@@ -45,6 +47,7 @@ const COMPONENT_MAP = {
   GaugeChart,
   Treemap,
   CirclePack,
+  BigNumber,
 }
 
 // Three tiers — the most distinct points across the scale spectrum. The middle
@@ -63,8 +66,7 @@ const BAND_LABEL = {
 // effectiveBand can be any of the five ScaleBand values, but only three tiers
 // are displayed. Map the in-between bands to the nearest displayed tier so the
 // highlight still resolves.
-const toDisplayedBand = (band) =>
-  band === "small" ? "tiny" : band === "large" ? "huge" : band
+const toDisplayedBand = (band) => (band === "small" ? "tiny" : band === "large" ? "huge" : band)
 
 const DATASETS = {
   layered: {
@@ -83,18 +85,27 @@ const DATASETS = {
     rawInput: {
       name: "Revenue",
       children: [
-        { name: "EU", children: [
-          { name: "Widget", value: 1200 },
-          { name: "Gadget", value: 850 },
-        ]},
-        { name: "NA", children: [
-          { name: "Widget", value: 1700 },
-          { name: "Gadget", value: 1100 },
-        ]},
-        { name: "APAC", children: [
-          { name: "Widget", value: 950 },
-          { name: "Gadget", value: 600 },
-        ]},
+        {
+          name: "EU",
+          children: [
+            { name: "Widget", value: 1200 },
+            { name: "Gadget", value: 850 },
+          ],
+        },
+        {
+          name: "NA",
+          children: [
+            { name: "Widget", value: 1700 },
+            { name: "Gadget", value: 1100 },
+          ],
+        },
+        {
+          name: "APAC",
+          children: [
+            { name: "Widget", value: 950 },
+            { name: "Gadget", value: 600 },
+          ],
+        },
       ],
     },
   },
@@ -157,7 +168,9 @@ function TierCard({ band, suggestion, highlighted }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <strong style={{ fontSize: 13 }}>{BAND_LABEL[band]}</strong>
         {highlighted && (
-          <span style={{ fontSize: 11, color: "var(--semiotic-primary)", fontWeight: 600 }}>your data</span>
+          <span style={{ fontSize: 11, color: "var(--semiotic-primary)", fontWeight: 600 }}>
+            your data
+          </span>
         )}
       </div>
       {suggestion ? (
@@ -185,9 +198,7 @@ function TierCard({ band, suggestion, highlighted }) {
             </div>
           )}
           {suggestion.caveats[0] && (
-            <div style={{ fontSize: 11, color: "#a86f00" }}>
-              {suggestion.caveats[0]}
-            </div>
+            <div style={{ fontSize: 11, color: "#a86f00" }}>{suggestion.caveats[0]}</div>
           )}
         </>
       ) : (
@@ -256,7 +267,9 @@ function ScaleAwareDemo() {
             style={{ padding: "6px 10px", borderRadius: 8 }}
           >
             {Object.entries(DATASETS).map(([k, d]) => (
-              <option key={k} value={k}>{d.label}</option>
+              <option key={k} value={k}>
+                {d.label}
+              </option>
             ))}
           </select>
         </label>
@@ -268,7 +281,9 @@ function ScaleAwareDemo() {
             style={{ padding: "6px 10px", borderRadius: 8 }}
           >
             {INTENTS.map((i) => (
-              <option key={i.id || "any"} value={i.id}>{i.label}</option>
+              <option key={i.id || "any"} value={i.id}>
+                {i.label}
+              </option>
             ))}
           </select>
         </label>
@@ -281,7 +296,9 @@ function ScaleAwareDemo() {
           >
             <option value="">(use measured: {dataset.data.length})</option>
             {BANDS.map((b) => (
-              <option key={b} value={b}>{BAND_LABEL[b]}</option>
+              <option key={b} value={b}>
+                {BAND_LABEL[b]}
+              </option>
             ))}
           </select>
         </label>
@@ -300,12 +317,14 @@ function ScaleAwareDemo() {
         </label>
       </div>
 
-      <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0 }}>{dataset.description}</p>
+      <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0 }}>
+        {dataset.description}
+      </p>
 
       <h3 style={{ margin: "8px 0 0", fontSize: 14 }}>Graduation across scales</h3>
       <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0 }}>
-        Same data, same intent, evaluated at each row band. The card outlined in primary is the
-        band your declared (or measured) data falls into.
+        Same data, same intent, evaluated at each row band. The card outlined in primary is the band
+        your declared (or measured) data falls into.
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
         {BANDS.map((band) => (
@@ -335,17 +354,23 @@ function ScaleAwareDemo() {
               background: i === 0 ? "var(--surface-2)" : "transparent",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <div
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}
+            >
               <strong>
                 {s.component}
                 {s.variant ? ` · ${s.variant.label}` : ""}
               </strong>
-              <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>{s.score.toFixed(2)}/5</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>
+                {s.score.toFixed(2)}/5
+              </span>
             </div>
             {s.scaleRange && (
               <div style={{ color: "var(--text-secondary)", fontSize: 11, marginTop: 2 }}>
                 scale band: {s.scaleRange.band} ({s.scaleRange.rowsSource})
-                {s.scaleRange.cardinalityBand ? ` · cardinality: ${s.scaleRange.cardinalityBand}` : ""}
+                {s.scaleRange.cardinalityBand
+                  ? ` · cardinality: ${s.scaleRange.cardinalityBand}`
+                  : ""}
               </div>
             )}
             {s.reasons.length > 0 && (
@@ -402,17 +427,16 @@ export default function ScaleAwarePage() {
       </p>
       <ul>
         <li>
-          <strong>Samples lie.</strong> A 100-row sample of a million-row table picks a bar chart;
-          a million rows wants a heatmap.
+          <strong>Samples lie.</strong> A 100-row sample of a million-row table picks a bar chart; a
+          million rows wants a heatmap.
         </li>
         <li>
-          <strong>Forward-looking.</strong> "We're shipping a dashboard that will run on a
-          windowed view of the last 30 days, ~50k rows" — that's what to plan for, not the seed
-          fixture.
+          <strong>Forward-looking.</strong> "We're shipping a dashboard that will run on a windowed
+          view of the last 30 days, ~50k rows" — that's what to plan for, not the seed fixture.
         </li>
         <li>
-          <strong>Org-level standardization.</strong> Your shop's definition of "small" might be
-          10k rows. The thresholds are overridable per profile.
+          <strong>Org-level standardization.</strong> Your shop's definition of "small" might be 10k
+          rows. The thresholds are overridable per profile.
         </li>
       </ul>
 
@@ -427,7 +451,7 @@ export default function ScaleAwarePage() {
 
       <h2>The schema</h2>
       <CodeBlock language="ts">
-{`import type { DataScaleProfile, DataQualityProfile } from "semiotic/ai"
+        {`import type { DataScaleProfile, DataQualityProfile } from "semiotic/ai"
 
 const scale: DataScaleProfile = {
   // Production row count — declared, not measured. Accepts a band string
@@ -460,11 +484,11 @@ const quality: DataQualityProfile = {
       <h2>The graduation surface</h2>
       <p>
         <code>suggestChartsGrouped(data, options)</code> returns suggestions tiered by row band. It
-        runs the engine once per band, pinning the row count to that band's representative
-        midpoint, then returns the per-band ranked lists plus the effective scale view.
+        runs the engine once per band, pinning the row count to that band's representative midpoint,
+        then returns the per-band ranked lists plus the effective scale view.
       </p>
       <CodeBlock language="ts">
-{`import { suggestChartsGrouped } from "semiotic/ai"
+        {`import { suggestChartsGrouped } from "semiotic/ai"
 
 const grouped = suggestChartsGrouped(data, {
   intent: "trend",
@@ -478,16 +502,32 @@ const tomorrowTier = grouped.huge[0]`}
 
       <h2>How the bias composes</h2>
       <ol>
-        <li><code>profileData(data)</code> measures the sample (row count, distinct counts, field types).</li>
-        <li><code>computeEffectiveScale(profile, scale)</code> merges declared scale with measured fallbacks.</li>
-        <li>For each capability: <code>fits()</code> still hard-gates first.</li>
-        <li><code>intentScores</code> evaluate against the profile.</li>
-        <li><code>applyAudienceBias()</code> shifts score by familiarity and adoption targets.</li>
         <li>
-          <code>applyScaleBias()</code> calls <code>capability.scaleFit(profile, effectiveScale, scale)</code>,
-          applies per-chart preferences, and adds caveats from <code>qualityFit()</code>.
+          <code>profileData(data)</code> measures the sample (row count, distinct counts, field
+          types).
         </li>
-        <li>Suggestions sort by the final composite. Each suggestion carries a <code>scaleRange</code> tag.</li>
+        <li>
+          <code>computeEffectiveScale(profile, scale)</code> merges declared scale with measured
+          fallbacks.
+        </li>
+        <li>
+          For each capability: <code>fits()</code> still hard-gates first.
+        </li>
+        <li>
+          <code>intentScores</code> evaluate against the profile.
+        </li>
+        <li>
+          <code>applyAudienceBias()</code> shifts score by familiarity and adoption targets.
+        </li>
+        <li>
+          <code>applyScaleBias()</code> calls{" "}
+          <code>capability.scaleFit(profile, effectiveScale, scale)</code>, applies per-chart
+          preferences, and adds caveats from <code>qualityFit()</code>.
+        </li>
+        <li>
+          Suggestions sort by the final composite. Each suggestion carries a <code>scaleRange</code>{" "}
+          tag.
+        </li>
       </ol>
 
       <h2>Declaring a chart's scale fit</h2>
@@ -497,7 +537,7 @@ const tomorrowTier = grouped.huge[0]`}
         logic, write the function yourself.
       </p>
       <CodeBlock language="ts">
-{`import { scaleHints } from "semiotic/ai"
+        {`import { scaleHints } from "semiotic/ai"
 
 export const BarChartCapability: ChartCapability = {
   // ...
@@ -522,28 +562,53 @@ export const ForceDirectedGraphCapability: ChartCapability = {
 
       <h2>Thresholds and where they came from</h2>
       <p>
-        The default row breakpoints sit at 3 / 25 / 250 / 5,000. They're starting points
-        grounded in the visualization-perception literature:
+        The default row breakpoints sit at 3 / 25 / 250 / 5,000. They're starting points grounded in
+        the visualization-perception literature:
       </p>
       <ul>
-        <li><strong>tiny ≤ 3</strong> — single-value territory; recommendation often "a value, not a chart."</li>
-        <li><strong>small ≤ 25</strong> — Miller's 7±2 plus a comfortable buffer; bar/pie/dot legible.</li>
-        <li><strong>medium ≤ 250</strong> — Cleveland-McGill sweet spot for position-encoded marks.</li>
-        <li><strong>large ≤ 5,000</strong> — Munzner ch. 10 quantitative encoding; dense scatter/heatmap/ridgeline still legible.</li>
-        <li><strong>huge &gt; 5,000</strong> — aggregation, sampling, density reduction required.</li>
+        <li>
+          <strong>tiny ≤ 3</strong> — single-value territory; recommendation often "a value, not a
+          chart."
+        </li>
+        <li>
+          <strong>small ≤ 25</strong> — Miller's 7±2 plus a comfortable buffer; bar/pie/dot legible.
+        </li>
+        <li>
+          <strong>medium ≤ 250</strong> — Cleveland-McGill sweet spot for position-encoded marks.
+        </li>
+        <li>
+          <strong>large ≤ 5,000</strong> — Munzner ch. 10 quantitative encoding; dense
+          scatter/heatmap/ridgeline still legible.
+        </li>
+        <li>
+          <strong>huge &gt; 5,000</strong> — aggregation, sampling, density reduction required.
+        </li>
       </ul>
       <p>
         Override per profile with <code>DataScaleProfile.thresholds</code>. The defaults can — and
         should — bend to your shop's conventions.
       </p>
 
-      <h2>The single-value gap</h2>
+      <h2>The single-value gap (now filled)</h2>
       <p>
-        At <strong>tiny</strong> scale, the engine's catalog currently has one chart:
-        <code>GaugeChart</code>. Single-value displays (BigNumber, KPI cards, scorecards) aren't
-        shipped yet — the suggestion engine is honest about wanting them. The roadmap entry
-        for <code>SingleValueFrame</code> sketches that gap and the design tradeoffs around
-        filling it.
+        At <strong>tiny</strong> scale, the engine used to only have{" "}
+        <code>GaugeChart</code>, and a gauge is misleading without an explicit
+        min / max. <code>BigNumber</code> (under <code>semiotic/value</code>)
+        ships as the honest answer for unbounded single-value data — and the
+        capability layer wires it into <code>suggestCharts</code> /{" "}
+        <code>suggestChartsGrouped</code> with a <code>scaleFit</code> boost
+        that puts it ahead of <code>GaugeChart</code> at the{" "}
+        <strong>tiny</strong> band. See{" "}
+        <Link to="/charts/big-number">/charts/big-number</Link> for the full
+        component, and the roadmap entry for <code>SingleValueFrame</code> for
+        what a future frame-backed version would inherit.
+      </p>
+      <p>
+        Next iteration: <strong>composition suggestions</strong> — sets of N
+        charts where a <code>BigNumber</code> can host the others via its{" "}
+        <code>trendSlot</code> / <code>chartSlot</code> rather than the
+        dashboard rendering them as peer cards. Documented in the roadmap;
+        not part of this PR.
       </p>
     </PageLayout>
   )

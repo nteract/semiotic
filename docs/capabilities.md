@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-05-21 · 46 charts indexed.
+Last regen: 2026-05-28 · 47 charts indexed.
 
 **Column key**
 
@@ -15,6 +15,12 @@ Last regen: 2026-05-21 · 46 charts indexed.
 - **SSR**: registered in `serverChartConfigs.ts` for `renderChart()`.
 - **Color**: `categorical`, `sequential`, `threshold`, `continuous`, or `none`.
 - **Layout**: `plugin` (built-in), `custom` (escape hatch), `synthetic` (no layout).
+
+## value
+
+| Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
+|---|:-:|:-:|:-:|:-:|:-:|---|---|---|
+| **BigNumber** | — | — | — | ✓ | — | threshold | synthetic | `threshold-zones` `value-only` `comparison` `target` `staleness` `intl-format` `chart-slot` `trend-slot` `hoc-ssr-only` |
 
 ## XY
 
@@ -91,8 +97,8 @@ Last regen: 2026-05-21 · 46 charts indexed.
 
 ## Aggregate counts
 
-- 40/46 charts render a top-level legend.
-- 37/46 charts expose a push API.
-- 35/46 charts SSR via the `renderChart()` registry.
-- 1/46 charts use the customLayout escape hatch.
-- 1/46 charts use synthetic (no-layout) construction.
+- 40/47 charts render a top-level legend.
+- 38/47 charts expose a push API.
+- 35/47 charts SSR via the `renderChart()` registry.
+- 1/47 charts use the customLayout escape hatch.
+- 2/47 charts use synthetic (no-layout) construction.

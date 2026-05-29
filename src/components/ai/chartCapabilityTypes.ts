@@ -22,6 +22,7 @@ export type ChartFamily =
   | "hierarchy"
   | "geo"
   | "realtime"
+  | "value"
   | "custom"
 
 /**
@@ -33,6 +34,7 @@ export type ChartImportPath =
   | "semiotic/network"
   | "semiotic/geo"
   | "semiotic/realtime"
+  | "semiotic/value"
   | "semiotic/ai"
   | "semiotic"
 

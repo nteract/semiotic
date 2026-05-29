@@ -1084,4 +1084,64 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       costAccessor: { type: ["string", "function"] },
     },
   },
+  BigNumber: {
+    // `value` is intentionally not "required" — null / undefined route
+    // the card into its empty state by design.
+    required: [],
+    dataShape: "none",
+    dataAccessors: [],
+    // BigNumber doesn't consume the chart-frame prop bag — only
+    // width / height / className / onClick from common are accepted.
+    // Listing them explicitly (instead of spreading `...commonProps`)
+    // keeps validation honest with the runtime.
+    props: {
+      width: { type: ["number", "string"] },
+      height: { type: ["number", "string"] },
+      className: { type: "string" },
+      onClick: { type: "function" },
+      value: { type: "number" },
+      label: { type: "string" },
+      caption: { type: "string" },
+      format: { type: ["string", "function"], enum: ["number", "currency", "percent", "compact", "duration"] },
+      locale: { type: "string" },
+      currency: { type: "string" },
+      precision: { type: "number" },
+      prefix: { type: "string" },
+      suffix: { type: "string" },
+      unit: { type: "string" },
+      comparison: { type: "object" },
+      target: { type: "object" },
+      delta: { type: "number" },
+      deltaFormat: { type: ["string", "function"], enum: ["number", "currency", "percent", "compact", "duration"] },
+      showDeltaPercent: { type: "boolean" },
+      direction: { type: "string", enum: ["higher-is-better", "lower-is-better", "neutral"] as unknown as string[] },
+      sentiment: { type: "string", enum: ["auto", "positive", "negative", "neutral"] as unknown as string[] },
+      thresholds: { type: "array" },
+      chartSlot: { type: ["string", "number", "array", "object", "function"] },
+      chartSize: { type: "number" },
+      windowSize: { type: "number" },
+      mode: { type: "string", enum: ["tile", "presentation", "inline", "thumbnail"] as unknown as string[] },
+      align: { type: "string", enum: ["start", "center", "end"] as unknown as string[] },
+      padding: { type: ["number", "object"] },
+      emphasis: { type: "string", enum: ["primary", "secondary"] as unknown as string[] },
+      color: { type: "string" },
+      background: { type: "string" },
+      borderColor: { type: "string" },
+      borderRadius: { type: ["number", "string"] },
+      animate: { type: ["boolean", "object"] },
+      stalenessThreshold: { type: "number" },
+      staleLabel: { type: "string" },
+      // Slot props are `ReactNode | (ctx) => ReactNode` — that includes
+      // strings, numbers, arrays, fragments, and elements. Listing the
+      // full set so a plain string / number fragment doesn't fail
+      // validation.
+      headerSlot: { type: ["string", "number", "array", "object", "function"] },
+      valueSlot: { type: ["string", "number", "array", "object", "function"] },
+      deltaSlot: { type: ["string", "number", "array", "object", "function"] },
+      trendSlot: { type: ["string", "number", "array", "object", "function"] },
+      footerSlot: { type: ["string", "number", "array", "object", "function"] },
+      // onClick already declared in the top-of-block common-props subset
+      onObservation: { type: "function" },
+    },
+  },
 }

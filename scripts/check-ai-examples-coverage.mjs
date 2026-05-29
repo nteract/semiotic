@@ -150,7 +150,7 @@ if (stale.length) {
 // narrative-only — the burn-down direction is one-way.
 const COVERAGE_BASELINE = new Set([
   "SwarmPlot", "BoxPlot", "RidgelinePlot", "DotPlot",
-  "PieChart", "DonutChart", "GaugeChart", "FunnelChart",
+  "PieChart", "GaugeChart", "FunnelChart",
   "SwimlaneChart", "LikertChart",
   "BubbleChart", "QuadrantChart", "MultiAxisLineChart",
   "CandlestickChart", "ScatterplotMatrix", "MinimapChart",

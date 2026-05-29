@@ -47,6 +47,9 @@ import { ProportionalSymbolMapCapability } from "../charts/geo/ProportionalSymbo
 import { FlowMapCapability } from "../charts/geo/FlowMap.capability"
 import { DistanceCartogramCapability } from "../charts/geo/DistanceCartogram.capability"
 
+// Value family
+import { BigNumberCapability } from "../charts/value/BigNumber.capability"
+
 /**
  * Built-in capability descriptors. Each chart owns its own descriptor in
  * `Foo.capability.ts` next to `Foo.tsx`. To add a new chart, write the descriptor
@@ -108,6 +111,8 @@ const BUILT_IN_CAPABILITIES: ReadonlyArray<ChartCapability> = [
   ProportionalSymbolMapCapability,
   FlowMapCapability,
   DistanceCartogramCapability,
+  // Value
+  BigNumberCapability,
 ]
 
 const userCapabilities = new Map<string, ChartCapability>()
