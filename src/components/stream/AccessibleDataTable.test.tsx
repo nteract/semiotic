@@ -211,6 +211,18 @@ describe("AccessibleDataTable — focus & pagination", () => {
     // No further "Show more" once everything is shown.
     expect(screen.queryByRole("button", { name: /show .* more/i })).toBeNull()
   })
+
+  it("resets paging back to the initial sample after the panel collapses", () => {
+    render(<AccessibleDataTable tableId="t4" chartType="line chart" scene={lineScene(40)} />)
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+    fireEvent.click(screen.getByRole("button", { name: /show .* more rows/i }))
+    expect(screen.getAllByRole("row")).toHaveLength(30 + 1)
+
+    // Collapse, then reopen — must be back to the bounded 5-row sample, not 30.
+    fireEvent.click(screen.getByRole("button", { name: /close data summary/i }))
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+    expect(screen.getAllByRole("row")).toHaveLength(5 + 1)
+  })
 })
 
 // ── extractAllRows logic ────────────────────────────────────────────────

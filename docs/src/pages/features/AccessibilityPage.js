@@ -251,7 +251,7 @@ export default function AccessibilityPage() {
 </ChartContainer>
 
 // The summary shows:
-// "72 data points. month: 1 to 12, mean 6.5. sales: 12000 to 27000, mean 18500."
+// "72 data points. month: 1 to 12, mean 6.5. revenue: 12000 to 27000, mean 18500."
 // + a sample table of the real data values, pageable to all 72 rows
 
 // For screen readers, the summary is always available via a hidden button

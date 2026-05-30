@@ -413,6 +413,13 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
   const containerRef = React.useRef<HTMLDivElement>(null)
   const regionLabel = chartTitle ? `Data summary for ${chartTitle}` : tableId ? `Data summary for ${chartType} ${tableId}` : `Data summary for ${chartType}`
 
+  // Reset paging whenever the panel collapses — via the close button, a blur in
+  // sr-only mode, or ChartContainer toggling visibility off — so reopening never
+  // re-renders the full (potentially huge) row set at once.
+  React.useEffect(() => {
+    if (!isExpanded) setVisibleCount(SAMPLE_SIZE)
+  }, [isExpanded])
+
   // Expand only when focus lands on the region container itself (the skip-link
   // path programmatically focuses it). Focus bubbling up from the inner trigger
   // button must NOT auto-expand — otherwise merely tabbing onto the button
@@ -463,7 +470,7 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
     setSrExpanded(false)
-    setVisibleCount(SAMPLE_SIZE)
+    // visibleCount resets via the collapse effect above.
   }
 
   const showMore = () => setVisibleCount((c) => c + PAGE_SIZE)
@@ -525,6 +532,12 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
   const isExpanded = srExpanded || visible
   const regionLabel = chartTitle ? `Data summary for ${chartTitle}` : tableId ? `Data summary for ${chartType} ${tableId}` : `Data summary for ${chartType}`
   const containerRef = React.useRef<HTMLDivElement>(null)
+
+  // Reset paging on any collapse path (close button, blur, ChartContainer
+  // toggle) so reopening never re-renders the full node set at once.
+  React.useEffect(() => {
+    if (!isExpanded) setVisibleCount(SAMPLE_SIZE)
+  }, [isExpanded])
 
   // Only the skip-link path (which focuses the region container itself) auto-
   // expands; focus bubbling from the inner trigger button must not. See the
@@ -629,7 +642,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
     setSrExpanded(false)
-    setVisibleCount(SAMPLE_SIZE)
+    // visibleCount resets via the collapse effect above.
   }
 
   const showMore = () => setVisibleCount((c) => c + PAGE_SIZE)
