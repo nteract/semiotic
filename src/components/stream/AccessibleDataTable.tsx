@@ -92,39 +92,62 @@ const fmt = (v: number | undefined | null): string => {
 
 interface DataRow { label: string; values: Record<string, string | number> }
 
-/** Extract a flat list of typed rows from scene nodes, preserving raw numeric values.
- *  Defensively handles missing/malformed data — never throws. */
-function extractAllRows(scene: AnySceneNode[]): DataRow[] {
+/** Pull primitive, user-facing fields from a raw datum into a display row.
+ *  Skips synthetic/internal keys (leading underscore) and non-primitive
+ *  values. This surfaces the original data (e.g. `month`, `sales`) rather
+ *  than the pixel coordinates the scene node carries for rendering. */
+function datumToValues(datum: unknown): Record<string, string | number> {
+  const values: Record<string, string | number> = {}
+  if (datum == null || typeof datum !== "object") return values
+  for (const [k, v] of Object.entries(datum as Record<string, unknown>)) {
+    if (k.startsWith("_")) continue // synthetic/internal keys
+    if (v == null || v === "") continue
+    if (typeof v === "number") {
+      if (Number.isFinite(v)) values[k] = v
+    } else if (typeof v === "string") {
+      values[k] = v
+    } else if (typeof v === "boolean") {
+      values[k] = String(v)
+    } else if (v instanceof Date) {
+      values[k] = v.toISOString().slice(0, 10)
+    }
+    // nested objects / functions are not meaningful in a flat table — skip
+  }
+  return values
+}
+
+/** Extract a flat list of typed rows from scene nodes, surfacing the raw datum
+ *  fields (not pixel coordinates). Defensively handles missing/malformed data —
+ *  never throws. Exported for direct testing. */
+export function extractAllRows(scene: AnySceneNode[]): DataRow[] {
   const rows: DataRow[] = []
   if (!Array.isArray(scene)) return rows
+
+  // When a chart draws line/area series, each series node already carries its
+  // full datum array — the standalone point nodes (emitted only when
+  // `showPoints` is on) are decorative duplicates of the same data. Extract
+  // the series rows and skip the redundant points. Scatterplots have points
+  // and no series, so they still flow through the "point" case below.
+  const hasSeriesNodes = scene.some(
+    (n) => n && (n.type === "line" || n.type === "area")
+  )
 
   for (const node of scene) {
     if (!node || typeof node !== "object") continue
     if (node.datum === null) continue
     try {
       switch (node.type) {
-        case "point":
-          rows.push({ label: "Point", values: { x: node.x, y: node.y } })
-          break
-        case "line": {
-          const path = node.path
-          const data = Array.isArray(node.datum) ? node.datum : []
-          if (!Array.isArray(path)) break
-          for (let i = 0; i < path.length && i < data.length; i++) {
-            const pt = path[i]
-            if (!Array.isArray(pt)) continue
-            rows.push({ label: "Line point", values: { x: pt[0], y: pt[1] } })
-          }
+        case "point": {
+          if (hasSeriesNodes) break
+          rows.push({ label: "Point", values: datumToValues(node.datum) })
           break
         }
+        case "line":
         case "area": {
-          const topPath = node.topPath
           const data = Array.isArray(node.datum) ? node.datum : []
-          if (!Array.isArray(topPath)) break
-          for (let i = 0; i < topPath.length && i < data.length; i++) {
-            const pt = topPath[i]
-            if (!Array.isArray(pt)) continue
-            rows.push({ label: "Area point", values: { x: pt[0], y: pt[1] } })
+          const label = node.type === "line" ? "Line point" : "Area point"
+          for (const d of data) {
+            rows.push({ label, values: datumToValues(d) })
           }
           break
         }
@@ -135,9 +158,15 @@ function extractAllRows(scene: AnySceneNode[]): DataRow[] {
           rows.push({ label: "Bar", values: { category, value: rawValue ?? "" } })
           break
         }
-        case "heatcell":
-          rows.push({ label: "Cell", values: { x: node.x, y: node.y, value: node.value } })
+        case "heatcell": {
+          const values = datumToValues(node.datum)
+          // Fall back to the rendered cell value when datum omits it
+          if (values.value == null && typeof node.value === "number" && Number.isFinite(node.value)) {
+            values.value = node.value
+          }
+          rows.push({ label: "Cell", values })
           break
+        }
         case "wedge":
           rows.push({
             label: "Wedge",
@@ -148,22 +177,13 @@ function extractAllRows(scene: AnySceneNode[]): DataRow[] {
           })
           break
         case "circle":
-          rows.push({
-            label: "Node",
-            values: { id: node.datum?.id ?? "", x: node.cx ?? node.x, y: node.cy ?? node.y },
-          })
+          rows.push({ label: "Node", values: datumToValues(node.datum) })
           break
         case "arc":
-          rows.push({
-            label: "Arc",
-            values: { id: node.datum?.id ?? "", x: node.cx ?? node.x, y: node.cy ?? node.y },
-          })
+          rows.push({ label: "Arc", values: datumToValues(node.datum) })
           break
         case "candlestick":
-          rows.push({
-            label: "Candlestick",
-            values: { x: node.x, open: node.open, high: node.high, low: node.low, close: node.close },
-          })
+          rows.push({ label: "Candlestick", values: datumToValues(node.datum) })
           break
         case "geoarea":
           rows.push({
@@ -271,6 +291,10 @@ interface AccessibleDataTableProps {
 }
 
 const SAMPLE_SIZE = 5
+/** Rows revealed per "Show more" click. Bounded paging keeps a 50k-row dataset
+ *  from instantiating a giant table in one go while still letting a determined
+ *  user page all the way through their data. */
+const PAGE_SIZE = 25
 const DATA_TABLE_CLASS = "semiotic-accessible-data-table"
 const DATA_TABLE_HIDDEN_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-hidden`
 const DATA_TABLE_VISIBLE_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-visible`
@@ -351,6 +375,18 @@ const CAPTION_STYLE: React.CSSProperties = {
   fontStyle: "italic",
 }
 
+const SHOW_MORE_BUTTON_STYLE: React.CSSProperties = {
+  marginTop: 8,
+  padding: "4px 10px",
+  fontSize: 12,
+  cursor: "pointer",
+  border: "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
+  borderRadius: "var(--semiotic-border-radius, 4px)",
+  background: "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
+  color: "var(--semiotic-data-table-text, var(--semiotic-text, #333))",
+  fontFamily: "inherit",
+}
+
 function fmtCell(v: unknown): string {
   if (v == null || v === "") return "—"
   if (typeof v === "number") {
@@ -365,18 +401,24 @@ function fmtCell(v: unknown): string {
 /**
  * JIT accessible data summary. Renders a lightweight sr-only button by default.
  * On activation (or when ChartContainer's dataSummary action is toggled),
- * computes a statistical summary (.describe()-style) and shows 5 sample rows.
+ * computes a statistical summary (.describe()-style) and shows a sample of rows
+ * (5 to start), pageable to the full dataset via "Show more".
  */
 export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: AccessibleDataTableProps) {
   const [srExpanded, setSrExpanded] = React.useState(false)
+  const [visibleCount, setVisibleCount] = React.useState(SAMPLE_SIZE)
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
   const containerRef = React.useRef<HTMLDivElement>(null)
   const regionLabel = chartTitle ? `Data summary for ${chartTitle}` : tableId ? `Data summary for ${chartType} ${tableId}` : `Data summary for ${chartType}`
 
-  // When the skip link targets this element, expand visibly.
-  const handleFocus = React.useCallback(() => {
+  // Expand only when focus lands on the region container itself (the skip-link
+  // path programmatically focuses it). Focus bubbling up from the inner trigger
+  // button must NOT auto-expand — otherwise merely tabbing onto the button
+  // forces the screen reader through the entire table without the user opting in.
+  const handleFocus = React.useCallback((e: React.FocusEvent) => {
+    if (e.target !== e.currentTarget) return
     if (!srExpanded && !visible) setSrExpanded(true)
   }, [srExpanded, visible])
 
@@ -408,7 +450,9 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
   const allRows = extractAllRows(scene)
   const fieldStats = computeFieldStats(allRows)
   const summary = formatSummary(allRows.length, fieldStats)
-  const sampleRows = allRows.slice(0, SAMPLE_SIZE)
+  const shownCount = Math.min(visibleCount, allRows.length)
+  const sampleRows = allRows.slice(0, shownCount)
+  const remaining = allRows.length - shownCount
 
   const columnSet = new Set<string>()
   for (const r of sampleRows) {
@@ -419,7 +463,10 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
     setSrExpanded(false)
+    setVisibleCount(SAMPLE_SIZE)
   }
+
+  const showMore = () => setVisibleCount((c) => c + PAGE_SIZE)
 
   return (
     <div ref={containerRef} id={tableId} className={DATA_TABLE_VISIBLE_CLASS} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
@@ -427,7 +474,7 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
       <div className="semiotic-accessible-data-table-summary" role="note" style={SUMMARY_NOTE_STYLE}>{summary}</div>
       <table className="semiotic-accessible-data-table-table" role="table" aria-label={`Sample data for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
         <caption className="semiotic-accessible-data-table-caption" style={CAPTION_STYLE}>
-          First {sampleRows.length} of {allRows.length} data points
+          {remaining > 0 ? `First ${shownCount} of ${allRows.length} data points` : `All ${allRows.length} data points`}
         </caption>
         <thead>
           <tr>
@@ -448,6 +495,11 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
           ))}
         </tbody>
       </table>
+      {remaining > 0 && (
+        <button type="button" className="semiotic-accessible-data-table-show-more" onClick={showMore} style={SHOW_MORE_BUTTON_STYLE}>
+          Show {Math.min(PAGE_SIZE, remaining)} more {remaining === 1 ? "row" : "rows"} ({remaining} remaining)
+        </button>
+      )}
     </div>
   )
 }
@@ -467,13 +519,18 @@ interface NetworkAccessibleDataTableProps {
  */
 export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, chartTitle }: NetworkAccessibleDataTableProps) {
   const [srExpanded, setSrExpanded] = React.useState(false)
+  const [visibleCount, setVisibleCount] = React.useState(SAMPLE_SIZE)
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
   const regionLabel = chartTitle ? `Data summary for ${chartTitle}` : tableId ? `Data summary for ${chartType} ${tableId}` : `Data summary for ${chartType}`
   const containerRef = React.useRef<HTMLDivElement>(null)
 
-  const handleFocus = React.useCallback(() => {
+  // Only the skip-link path (which focuses the region container itself) auto-
+  // expands; focus bubbling from the inner trigger button must not. See the
+  // matching note in AccessibleDataTable.
+  const handleFocus = React.useCallback((e: React.FocusEvent) => {
+    if (e.target !== e.currentTarget) return
     if (!srExpanded && !visible) setSrExpanded(true)
   }, [srExpanded, visible])
 
@@ -565,12 +622,17 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     summaryParts.push(`Mean degree: ${fmt(avgDegree)}, max degree: ${maxDegree}.`)
   }
 
-  const sampleNodes = nodeRows.slice(0, SAMPLE_SIZE)
+  const shownCount = Math.min(visibleCount, nodeRows.length)
+  const sampleNodes = nodeRows.slice(0, shownCount)
+  const remaining = nodeRows.length - shownCount
 
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
     setSrExpanded(false)
+    setVisibleCount(SAMPLE_SIZE)
   }
+
+  const showMore = () => setVisibleCount((c) => c + PAGE_SIZE)
 
   return (
     <div ref={containerRef} id={tableId} className={DATA_TABLE_NETWORK_CLASS} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
@@ -578,7 +640,7 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
       <div className="semiotic-accessible-data-table-summary" role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
       <table className="semiotic-accessible-data-table-table" role="table" aria-label={`Node degree summary for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
         <caption className="semiotic-accessible-data-table-caption" style={CAPTION_STYLE}>
-          Top {sampleNodes.length} of {nodeRows.length} nodes by degree
+          {remaining > 0 ? `Top ${shownCount} of ${nodeRows.length} nodes by degree` : `All ${nodeRows.length} nodes by degree`}
         </caption>
         <thead>
           <tr>
@@ -605,6 +667,11 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
           ))}
         </tbody>
       </table>
+      {remaining > 0 && (
+        <button type="button" className="semiotic-accessible-data-table-show-more" onClick={showMore} style={SHOW_MORE_BUTTON_STYLE}>
+          Show {Math.min(PAGE_SIZE, remaining)} more {remaining === 1 ? "node" : "nodes"} ({remaining} remaining)
+        </button>
+      )}
     </div>
   )
 }

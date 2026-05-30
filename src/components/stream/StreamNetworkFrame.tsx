@@ -1498,6 +1498,9 @@ const StreamNetworkFrame = forwardRef<
       {accessibleTable && <SkipToTableLink tableId={tableId} />}
       {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
       <ScreenReaderSummary summary={summary} />
+      {/* Live region MUST live outside the role="img" wrapper — AT treats the
+          image as atomic and never announces content nested inside it. */}
+      <AriaLiveTooltip hoverPoint={hoverData} />
       <div
         role="img"
         aria-label={description || (typeof title === "string" ? title : "Network chart")}
@@ -1534,7 +1537,6 @@ const StreamNetworkFrame = forwardRef<
           left: 0
         }}
       />
-      <AriaLiveTooltip hoverPoint={hoverData} />
 
       <NetworkSVGOverlay
         width={adjustedWidth}

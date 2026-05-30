@@ -1549,6 +1549,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
         <ScreenReaderSummary summary={summary} />
+        {/* Live region MUST live outside the role="img" wrapper — AT treats the
+            image as atomic and never announces content nested inside it. */}
+        <AriaLiveTooltip hoverPoint={hoverPoint} />
         {/* Inner graphic wrapper — role="img" so AT treats canvas as a single image */}
         <div
           role="img"
@@ -1606,7 +1609,6 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             pointerEvents: "none"
           }}
         />
-        <AriaLiveTooltip hoverPoint={hoverPoint} />
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}

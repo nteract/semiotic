@@ -5,6 +5,7 @@ import {
   NetworkAccessibleDataTable,
   computeCanvasAriaLabel,
   computeNetworkAriaLabel,
+  extractAllRows,
 } from "./AccessibleDataTable"
 import type { Datum } from "../charts/shared/datumTypes"
 
@@ -168,154 +169,164 @@ describe("AccessibleDataTable styling hooks", () => {
   })
 })
 
-// ── extractAllRows logic (tested via internal behavior) ─────────────────
+// ── interaction fixes (issue #971) ──────────────────────────────────────
 
-// Since extractAllRows is not exported, we test it indirectly by exercising
-// the same data shapes that would flow through AccessibleDataTable.
-// We test the extraction patterns inline here.
-
-describe("extractAllRows — data shape resilience", () => {
-  // We recreate the extraction logic to test it in isolation
-  function extractRow(node: any): any | null {
-    switch (node.type) {
-      case "point":
-        return { label: "Point", values: { x: node.x, y: node.y } }
-      case "line": {
-        const path = node.path
-        const data = Array.isArray(node.datum) ? node.datum : []
-        if (!path) return null
-        const rows = []
-        for (let i = 0; i < path.length && i < data.length; i++) {
-          rows.push({ label: "Line point", values: { x: path[i][0], y: path[i][1] } })
-        }
-        return rows
-      }
-      case "rect": {
-        const datum = node.datum ?? {}
-        const category = datum.category ?? node.group ?? ""
-        const rawValue = datum.value ?? datum.__aggregateValue ?? datum.total
-        return { label: "Bar", values: { category, value: rawValue ?? "" } }
-      }
-      case "wedge":
-        return {
-          label: "Wedge",
-          values: {
-            category: node.datum?.category ?? node.datum?.label ?? "",
-            value: node.datum?.value ?? "",
-          },
-        }
-      case "circle":
-        return {
-          label: "Node",
-          values: { id: node.datum?.id || "", x: node.cx ?? node.x, y: node.cy ?? node.y },
-        }
-      default:
-        return null
-    }
-  }
-
-  it("handles point with undefined x/y", () => {
-    const row = extractRow({ type: "point" })
-    expect(row).toEqual({ label: "Point", values: { x: undefined, y: undefined } })
-  })
-
-  it("handles point with NaN values", () => {
-    const row = extractRow({ type: "point", x: NaN, y: NaN })
-    expect(row).toEqual({ label: "Point", values: { x: NaN, y: NaN } })
-  })
-
-  it("handles point with Infinity", () => {
-    const row = extractRow({ type: "point", x: Infinity, y: -Infinity })
-    expect(row!.values.x).toBe(Infinity)
-    expect(row!.values.y).toBe(-Infinity)
-  })
-
-  it("handles point with string coordinates (mistyped data)", () => {
-    const row = extractRow({ type: "point", x: "hello", y: "world" })
-    expect(row!.values.x).toBe("hello")
-    expect(row!.values.y).toBe("world")
-  })
-
-  it("handles line with null path", () => {
-    const row = extractRow({ type: "line", path: null, datum: [] })
-    expect(row).toBeNull()
-  })
-
-  it("handles line with undefined path", () => {
-    const row = extractRow({ type: "line", datum: [] })
-    expect(row).toBeNull()
-  })
-
-  it("handles line with empty path/datum arrays", () => {
-    const rows = extractRow({ type: "line", path: [], datum: [] })
-    expect(rows).toEqual([])
-  })
-
-  it("handles line where datum is not an array", () => {
-    const rows = extractRow({ type: "line", path: [[0, 0], [1, 1]], datum: "not-an-array" })
-    expect(rows).toEqual([]) // data becomes [], so loop never runs
-  })
-
-  it("handles line with mismatched path/datum lengths", () => {
-    const rows = extractRow({
+describe("AccessibleDataTable — focus & pagination", () => {
+  const lineScene = (n: number) => [
+    {
       type: "line",
-      path: [[0, 0], [1, 1], [2, 2], [3, 3]],
-      datum: [{ x: 0 }, { x: 1 }], // only 2 datums for 4 path points
-    })
-    expect(rows).toHaveLength(2) // min(4, 2)
+      path: Array.from({ length: n }, (_, i) => [i, i]),
+      datum: Array.from({ length: n }, (_, i) => ({ month: i + 1, sales: 100 * (i + 1) })),
+    },
+  ]
+
+  it("does NOT auto-expand when focus bubbles up from the trigger button", () => {
+    render(<AccessibleDataTable tableId="t1" chartType="line chart" scene={lineScene(3)} />)
+    // Focusing the inner button (target !== region container) must not expand.
+    fireEvent.focus(screen.getByRole("button", { name: /view data summary/i }))
+    expect(screen.queryByRole("table")).toBeNull()
   })
 
-  it("handles rect with no datum at all", () => {
-    const row = extractRow({ type: "rect" })
-    expect(row).toEqual({ label: "Bar", values: { category: "", value: "" } })
+  it("auto-expands when the region container itself receives focus (skip-link path)", () => {
+    render(<AccessibleDataTable tableId="t2" chartType="line chart" scene={lineScene(3)} />)
+    const region = screen.getByRole("region", { name: /data summary for line chart/i })
+    fireEvent.focus(region) // target === currentTarget
+    expect(screen.getByRole("table")).toBeInTheDocument()
   })
 
-  it("handles rect where datum is a primitive", () => {
-    const row = extractRow({ type: "rect", datum: 42 })
-    // datum ?? {} → 42, then 42.category → undefined, node.group → undefined
-    expect(row!.label).toBe("Bar")
+  it("pages through rows beyond the initial sample via Show more", () => {
+    render(<AccessibleDataTable tableId="t3" chartType="line chart" scene={lineScene(40)} />)
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+
+    // Initial sample is 5 rows (+1 header row).
+    expect(screen.getAllByRole("row")).toHaveLength(5 + 1)
+    expect(screen.getByText(/first 5 of 40 data points/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: /show .* more rows/i }))
+    expect(screen.getAllByRole("row")).toHaveLength(30 + 1) // 5 + 25 page
+
+    fireEvent.click(screen.getByRole("button", { name: /show .* more rows/i }))
+    expect(screen.getAllByRole("row")).toHaveLength(40 + 1) // capped at total
+    expect(screen.getByText(/all 40 data points/i)).toBeInTheDocument()
+    // No further "Show more" once everything is shown.
+    expect(screen.queryByRole("button", { name: /show .* more/i })).toBeNull()
+  })
+})
+
+// ── extractAllRows logic ────────────────────────────────────────────────
+
+describe("extractAllRows — surfaces raw data, not pixels", () => {
+  it("emits a scatter point's raw datum fields, not pixel x/y", () => {
+    // The scene node carries pixel x/y for rendering; the table must show data.
+    const rows = extractAllRows([
+      { type: "point", x: 412, y: 88, datum: { month: 1, sales: 4200 } },
+    ])
+    expect(rows).toEqual([{ label: "Point", values: { month: 1, sales: 4200 } }])
   })
 
-  it("handles rect with __aggregateValue fallback", () => {
-    const row = extractRow({ type: "rect", datum: { __aggregateValue: 99 } })
-    expect(row!.values.value).toBe(99)
+  it("emits each line vertex from the datum array (data, not path pixels)", () => {
+    const rows = extractAllRows([
+      {
+        type: "line",
+        path: [[0, 0], [50, 50]], // pixel path — must be ignored
+        datum: [{ month: 1, sales: 4200 }, { month: 2, sales: 5100 }],
+      },
+    ])
+    expect(rows).toEqual([
+      { label: "Line point", values: { month: 1, sales: 4200 } },
+      { label: "Line point", values: { month: 2, sales: 5100 } },
+    ])
   })
 
-  it("handles rect with total fallback", () => {
-    const row = extractRow({ type: "rect", datum: { total: 50 } })
-    expect(row!.values.value).toBe(50)
+  it("emits area vertices from the datum array", () => {
+    const rows = extractAllRows([
+      { type: "area", topPath: [[0, 0]], datum: [{ x: 1, y: 2 }] },
+    ])
+    expect(rows).toEqual([{ label: "Area point", values: { x: 1, y: 2 } }])
   })
 
-  it("handles wedge with no datum", () => {
-    const row = extractRow({ type: "wedge" })
-    expect(row).toEqual({ label: "Wedge", values: { category: "", value: "" } })
+  it("skips redundant point nodes when a series node carries the same data", () => {
+    // showPoints=true emits both a line node and per-point nodes; the points
+    // are decorative duplicates and must not double-count.
+    const rows = extractAllRows([
+      { type: "line", path: [[0, 0]], datum: [{ month: 1, sales: 4200 }] },
+      { type: "point", x: 412, y: 88, datum: { month: 1, sales: 4200 } },
+    ])
+    expect(rows).toEqual([{ label: "Line point", values: { month: 1, sales: 4200 } }])
   })
 
-  it("handles wedge where datum.category is 0 (falsy but valid)", () => {
-    const row = extractRow({ type: "wedge", datum: { category: 0, value: 100 } })
-    // ?? preserves 0 (unlike ||)
-    expect(row!.values.category).toBe(0)
-    expect(row!.values.value).toBe(100)
+  it("emits a candlestick's raw OHLC datum, not undefined node fields", () => {
+    // The node only carries openY/closeY pixels — node.open etc. don't exist.
+    const rows = extractAllRows([
+      {
+        type: "candlestick",
+        x: 100, openY: 50, closeY: 20, highY: 10, lowY: 60,
+        datum: { date: "2024-01-01", open: 10, high: 15, low: 8, close: 12 },
+      },
+    ])
+    expect(rows[0].values).toEqual({ date: "2024-01-01", open: 10, high: 15, low: 8, close: 12 })
   })
 
-  it("handles circle with cx/cy", () => {
-    const row = extractRow({ type: "circle", cx: 10, cy: 20, datum: { id: "a" } })
-    expect(row!.values).toEqual({ id: "a", x: 10, y: 20 })
+  it("falls back to the rendered cell value when a heatcell datum omits it", () => {
+    const rows = extractAllRows([
+      { type: "heatcell", x: 5, y: 9, value: 42, datum: { row: "A", col: "B" } },
+    ])
+    expect(rows[0].values).toEqual({ row: "A", col: "B", value: 42 })
   })
 
-  it("handles circle with x/y fallback", () => {
-    const row = extractRow({ type: "circle", x: 5, y: 15, datum: { id: "b" } })
-    expect(row!.values).toEqual({ id: "b", x: 5, y: 15 })
+  it("skips synthetic underscore-prefixed keys", () => {
+    const rows = extractAllRows([
+      { type: "point", x: 1, y: 2, datum: { month: 1, _transitionKey: "k", _decayOpacity: 0.5 } },
+    ])
+    expect(rows[0].values).toEqual({ month: 1 })
   })
 
-  it("handles circle with no datum", () => {
-    const row = extractRow({ type: "circle", cx: 0, cy: 0 })
-    expect(row!.values).toEqual({ id: "", x: 0, y: 0 })
+  it("preserves a falsy-but-valid 0 value", () => {
+    const rows = extractAllRows([
+      { type: "point", x: 1, y: 2, datum: { month: 0, sales: 4200 } },
+    ])
+    expect(rows[0].values).toEqual({ month: 0, sales: 4200 })
+  })
+})
+
+describe("extractAllRows — data shape resilience (never throws)", () => {
+  it("returns [] for a non-array scene", () => {
+    expect(extractAllRows(null as any)).toEqual([])
+    expect(extractAllRows("nope" as any)).toEqual([])
   })
 
-  it("handles unknown type gracefully", () => {
-    const row = extractRow({ type: "hologram" })
-    expect(row).toBeNull()
+  it("skips nodes with null datum", () => {
+    expect(extractAllRows([{ type: "point", datum: null }])).toEqual([])
+  })
+
+  it("handles a point with no datum (empty values, no throw)", () => {
+    const rows = extractAllRows([{ type: "point", x: NaN, y: NaN }])
+    expect(rows).toEqual([{ label: "Point", values: {} }])
+  })
+
+  it("handles a line whose datum is not an array", () => {
+    expect(extractAllRows([{ type: "line", path: [[0, 0]], datum: "not-an-array" }])).toEqual([])
+  })
+
+  it("drops non-finite and non-primitive datum fields", () => {
+    const rows = extractAllRows([
+      { type: "point", x: 1, y: 2, datum: { a: Infinity, b: NaN, c: { nested: 1 }, d: 5 } },
+    ])
+    expect(rows[0].values).toEqual({ d: 5 })
+  })
+
+  it("keeps the rect aggregate-value fallbacks", () => {
+    expect(extractAllRows([{ type: "rect", datum: { __aggregateValue: 99 } }])[0].values.value).toBe(99)
+    expect(extractAllRows([{ type: "rect", datum: { total: 50 } }])[0].values.value).toBe(50)
+  })
+
+  it("preserves a wedge category of 0", () => {
+    const rows = extractAllRows([{ type: "wedge", datum: { category: 0, value: 100 } }])
+    expect(rows[0].values).toEqual({ category: 0, value: 100 })
+  })
+
+  it("skips unknown node types", () => {
+    expect(extractAllRows([{ type: "hologram", datum: { a: 1 } }])).toEqual([])
   })
 })
 

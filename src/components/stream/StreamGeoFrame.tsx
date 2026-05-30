@@ -1322,6 +1322,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
         <ScreenReaderSummary summary={summary} />
+        {/* Live region MUST live outside the role="img" wrapper — AT treats the
+            image as atomic and never announces content nested inside it. */}
+        <AriaLiveTooltip hoverPoint={hoverPoint} />
         <div
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
@@ -1359,7 +1362,6 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           ref={interactionCanvasRef}
           style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
         />
-        <AriaLiveTooltip hoverPoint={hoverPoint} />
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}

@@ -218,13 +218,18 @@ export default function AccessibilityPage() {
       <h3 id="data-summary">Data Summary</h3>
 
       <p>
-        Every chart includes a JIT data summary — a statistical overview plus 5
-        sample rows, computed on demand (not on every render). Screen reader users
-        can activate a "View data summary" button inside the chart; sighted users
-        can trigger it from the ChartContainer toolbar. Either way, the summary
-        describes the data shape the way <code>.describe()</code> and{" "}
-        <code>.head()</code> do in pandas: field ranges, means, unique categories,
-        then a small sample table.
+        Every chart includes a JIT data summary — a statistical overview plus a
+        sample of rows (5 to start), computed on demand (not on every render).
+        Screen reader users can activate a "View data summary" button inside the
+        chart; sighted users can trigger it from the ChartContainer toolbar.
+        Either way, the summary describes the data shape the way{" "}
+        <code>.describe()</code> and <code>.head()</code> do in pandas: field
+        ranges, means, unique categories, then a sample table. The table shows
+        the <strong>actual data values</strong> (your accessor fields, e.g.{" "}
+        <code>month</code> / <code>sales</code>), not pixel coordinates, and a{" "}
+        <strong>"Show more rows"</strong> button pages through to the full dataset
+        in bounded chunks — so a 50k-row chart never instantiates a giant table at
+        once, but the data is never hidden either.
       </p>
 
       <p>
@@ -246,8 +251,8 @@ export default function AccessibilityPage() {
 </ChartContainer>
 
 // The summary shows:
-// "72 data points. x: 1 to 12, mean 6.5. y: 12000 to 27000, mean 18500."
-// + a 5-row sample table
+// "72 data points. month: 1 to 12, mean 6.5. sales: 12000 to 27000, mean 18500."
+// + a sample table of the real data values, pageable to all 72 rows
 
 // For screen readers, the summary is always available via a hidden button
 // (accessibleTable={true} by default). The ChartContainer action just
@@ -472,7 +477,7 @@ const result = diagnoseConfig("LineChart", {
             ["title", "string | ReactNode", "-", "Visible heading; fallback aria-label when description is not set"],
             ["description", "string", "-", "Overrides the auto-generated aria-label with a detailed description"],
             ["summary", "string", "-", "Screen-reader-only note (role=\"note\") for trends or key takeaways"],
-            ["accessibleTable", "boolean", "true", "Enable JIT data summary (stats + 5 sample rows) for screen readers"],
+            ["accessibleTable", "boolean", "true", "Enable JIT data summary (stats + pageable sample rows) for screen readers"],
             ["actions.dataSummary", "boolean", "false", "ChartContainer: toolbar button to show data summary visibly"],
           ].map(([prop, type, def, desc], i) => (
             <tr key={i} style={{ borderBottom: "1px solid var(--surface-3)" }}>
