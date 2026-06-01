@@ -48,8 +48,8 @@ Usage:
   npx semiotic-ai --compact    Print ai/system-prompt.md (compact prompt)
   npx semiotic-ai --examples   Print ai/examples.md (copy-paste examples)
   npx semiotic-ai --doctor     Validate { component, props, usageMode? } JSON from stdin
-  npx semiotic-ai --audit-a11y Audit { component, props, inChartContainer?, describe? } JSON
-                                against Chartability (POUR-CAF) accessibility heuristics
+  npx semiotic-ai --audit-a11y Audit { component, props, inChartContainer?, describe?, navigable? }
+                                JSON against Chartability (POUR-CAF) accessibility heuristics
   npx semiotic-ai --help       Show this help message
 `.trim()
 

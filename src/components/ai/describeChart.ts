@@ -222,7 +222,10 @@ export function describeChart(
     } else if (NETWORK.has(component)) {
       const nNodes = Array.isArray(props.nodes) ? props.nodes.length : undefined
       const nEdges = Array.isArray(props.edges) ? props.edges.length : undefined
-      const parts = [nNodes != null ? `${nNodes} nodes` : null, nEdges != null ? `${nEdges} edges` : null].filter(Boolean)
+      const parts = [
+        nNodes != null ? `${nNodes} ${plural(nNodes, "node")}` : null,
+        nEdges != null ? `${nEdges} ${plural(nEdges, "edge")}` : null,
+      ].filter(Boolean)
       levels.l1 = `A ${kind}${parts.length ? ` with ${parts.join(" and ")}` : ""}.`
     } else if (component === "BigNumber") {
       const label = typeof props.label === "string" ? props.label : measureName
@@ -325,4 +328,9 @@ function trendSentence(stats: MeasureStats, measureName: string, fmtNum: (n: num
 
 function capitalize(s: string): string {
   return s.length ? s[0].toUpperCase() + s.slice(1) : s
+}
+
+/** Pluralize a count noun for user-facing text ("1 edge", "2 edges"). */
+function plural(n: number, noun: string): string {
+  return n === 1 ? noun : `${noun}s`
 }

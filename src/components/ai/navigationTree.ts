@@ -144,6 +144,7 @@ export function buildNavigationTree(
   const axisNodes: NavTreeNode[] = []
   if (XY_FAMILY.has(component) || BAR_FAMILY.has(component)) {
     let minM = Infinity, maxM = -Infinity
+    let minD = Infinity, maxD = -Infinity
     const dims: unknown[] = []
     let allNumericDim = true
     for (const d of data) {
@@ -151,7 +152,12 @@ export function buildNavigationTree(
       if (Number.isFinite(m)) { if (m < minM) minM = m; if (m > maxM) maxM = m }
       const dv = getDim(d)
       dims.push(dv)
-      if (typeof dv !== "number" || !Number.isFinite(dv)) allNumericDim = false
+      if (typeof dv === "number" && Number.isFinite(dv)) {
+        if (dv < minD) minD = dv
+        if (dv > maxD) maxD = dv
+      } else {
+        allNumericDim = false
+      }
     }
     // Distinct dimension values in encounter order, so a multi-series chart
     // (where x repeats per series) reads "Jan to Mar", not "Jan to Jan".
@@ -162,7 +168,7 @@ export function buildNavigationTree(
       if (!seen.has(key)) { seen.add(key); distinct.push(dv) }
     }
     const dimDesc = allNumericDim
-      ? `${fmtNum(Math.min(...(dims as number[])))} to ${fmtNum(Math.max(...(dims as number[])))}`
+      ? `${fmtNum(minD)} to ${fmtNum(maxD)}`
       : `${fmtDim(distinct[0], fmtNum)} to ${fmtDim(distinct[distinct.length - 1], fmtNum)} (${BAR_FAMILY.has(component) ? `${distinct.length} categories` : `${data.length} points`})`
     axisNodes.push({ id: nextId("axis"), role: "axis", level: 2, label: `${BAR_FAMILY.has(component) ? "Category axis" : "X axis"}: ${dimName}, ${dimDesc}.` })
     if (maxM >= minM) {

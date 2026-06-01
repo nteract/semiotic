@@ -202,9 +202,14 @@ function checkContrast(props: Datum): A11yFinding {
     critical: true,
   }
   const scheme = props.colorScheme
-  const bg = typeof props.background === "string" && props.background.startsWith("#")
-    ? props.background
-    : "#ffffff"
+  // A non-hex background (theme token, CSS var, dark ThemeProvider) resolves at
+  // render time — checking colorScheme against an assumed white would produce a
+  // false pass/fail, so stay honest and defer to manual.
+  const bgProp = typeof props.background === "string" ? props.background : null
+  if (bgProp && !bgProp.startsWith("#")) {
+    return { ...base, status: "manual", message: `Background "${bgProp}" isn't a hex literal (theme/CSS variable) — contrast can't be verified statically.`, fix: "Pass a hex `background` (e.g. \"#ffffff\"/\"#000000\"), or verify contrast manually once the theme resolves." }
+  }
+  const bg = bgProp ?? "#ffffff"
 
   if (!Array.isArray(scheme)) {
     return { ...base, status: "manual", message: "Mark colors come from the theme/CSS variables — contrast can't be verified statically.", fix: "Confirm geometries/large text have ≥ 3:1 and regular text ≥ 4.5:1 contrast against the background." }

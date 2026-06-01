@@ -102,6 +102,13 @@ describe("auditAccessibility — contrast", () => {
     const r = auditAccessibility("LineChart", { data: LINE_DATA, title: "x", background: "#000000", colorScheme: ["#ffffff"] })
     expect(status(r, "perceivable.low-contrast")).toBe("pass")
   })
+
+  it("defers to manual when the background is a theme token / CSS var (not assumed white)", () => {
+    // A theme-derived background resolves at render time — checking against an
+    // assumed #ffffff would give a false pass/fail, so stay honest.
+    const r = auditAccessibility("LineChart", { data: LINE_DATA, title: "x", background: "var(--semiotic-bg)", colorScheme: ["#eeeeee"] })
+    expect(status(r, "perceivable.low-contrast")).toBe("manual")
+  })
 })
 
 describe("auditAccessibility — color-only encoding", () => {

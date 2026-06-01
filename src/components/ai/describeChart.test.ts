@@ -20,7 +20,7 @@ describe("describeChart — L1 encoding", () => {
 
   it("describes a network by its node and edge counts", () => {
     const r = describeChart("ForceDirectedGraph", { nodes: [{ id: "a" }, { id: "b" }, { id: "c" }], edges: [{ source: "a", target: "b" }] })
-    expect(r.levels.l1).toBe("A network graph with 3 nodes and 1 edges.")
+    expect(r.levels.l1).toBe("A network graph with 3 nodes and 1 edge.")
     expect(r.levels.l2).toBeUndefined() // no measure → no statistics level
     expect(r.levels.l3).toBeUndefined()
   })
