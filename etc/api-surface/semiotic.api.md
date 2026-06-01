@@ -14,6 +14,7 @@ const DARK_THEME
 const HIGH_CONTRAST_THEME
 const LIGHT_THEME
 const THEME_PRESETS
+function AccessibleNavTree
 function AreaChart
 function BarChart
 function BoxPlot
@@ -73,6 +74,7 @@ function Treemap
 function ViolinPlot
 function XYCustomChart
 function adaptiveTimeTicks
+function buildNavigationTree
 function configToJSX
 function copyConfig
 function createHatchPattern
@@ -96,8 +98,10 @@ function useCategoryColors
 function useChartObserver
 function useFilteredData
 function useLinkedHover
+function useNavigationSync
 function useSelection
 function useTheme
+interface AccessibleNavTreeProps
 interface AnnotationContext
 interface AnnotationLifecycle
 interface AnnotationProvenance
@@ -109,6 +113,7 @@ interface BarStyle
 interface BaseChartProps
 interface BoxPlotProps
 interface BubbleChartProps
+interface BuildNavigationTreeOptions
 interface CandlestickChartProps
 interface CategoryColorProviderProps
 interface CenterlineStyle
@@ -147,6 +152,7 @@ interface MinimapConfig
 interface MultiAxisLineChartProps
 interface MultiAxisSeriesConfig
 interface MultiLineTooltipConfig
+interface NavTreeNode
 interface NetworkLabel
 interface OrbitDiagramProps
 interface OrbitNode
@@ -198,6 +204,8 @@ interface UseChartObserverOptions
 interface UseChartObserverResult
 interface UseLinkedHoverOptions
 interface UseLinkedHoverResult
+interface UseNavigationSyncOptions
+interface UseNavigationSyncResult
 interface UseSelectionOptions
 interface UseSelectionResult
 interface VegaLiteEncoding
@@ -221,6 +229,7 @@ type CopyFormat
 type CurveType
 type LinkedBrushProp
 type LinkedHoverProp
+type NavTreeRole
 type NetworkChartType
 type NetworkSceneEdge
 type NetworkSceneNode

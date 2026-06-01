@@ -115,7 +115,6 @@ const navData = [
       { title: "Interaction", path: "/features/interaction" },
       { title: "Responsive", path: "/features/responsive" },
       { title: "Composition", path: "/features/composition" },
-      { title: "Accessibility", path: "/features/accessibility" },
       { title: "Linked Charts", path: "/features/linked-charts" },
       { title: "Legends", path: "/features/legends" },
       { title: "Realtime Encoding", path: "/features/realtime-encoding" },
@@ -126,6 +125,16 @@ const navData = [
       { title: "Performance", path: "/features/performance" },
       { title: "Push API", path: "/features/push-api" },
       { title: "Custom Charts", path: "/features/custom-charts" }
+    ]
+  },
+  {
+    title: "Accessibility",
+    path: "/accessibility",
+    children: [
+      { title: "Overview", path: "/accessibility/overview" },
+      { title: "Chartability Audit", path: "/accessibility/audit" },
+      { title: "Chart Descriptions", path: "/accessibility/descriptions" },
+      { title: "Structured Navigation", path: "/accessibility/navigation" }
     ]
   },
   {

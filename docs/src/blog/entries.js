@@ -55,6 +55,9 @@ import Release360 from "./entries/release-3-6-0.js"
 import TalkTrackIntelligence from "./entries/talk-track-intelligence.js"
 import FromSpecToRuntime from "./entries/from-spec-to-runtime.js"
 import ScaleAwareSuggestions from "./entries/scale-aware-suggestions.js"
+import AuditingWhatYouCantSee from "./entries/auditing-what-you-cant-see.js"
+import WhatAScreenReaderShouldHear from "./entries/what-a-screen-reader-should-hear.js"
+import NavigatingAChartYouCantSee from "./entries/navigating-a-chart-you-cant-see.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -62,6 +65,9 @@ import ScaleAwareSuggestions from "./entries/scale-aware-suggestions.js"
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  NavigatingAChartYouCantSee,
+  WhatAScreenReaderShouldHear,
+  AuditingWhatYouCantSee,
   ScaleAwareSuggestions,
   Release360,
   FromSpecToRuntime,

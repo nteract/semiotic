@@ -298,6 +298,15 @@ export type { ThemePresetName } from "./semiotic-themes"
 
 export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
 
+// ── Accessibility: structured navigation tree ─────────────────────────
+
+export { AccessibleNavTree } from "./AccessibleNavTree"
+export type { AccessibleNavTreeProps } from "./AccessibleNavTree"
+export { buildNavigationTree } from "./ai/navigationTree"
+export type { NavTreeNode, NavTreeRole, BuildNavigationTreeOptions } from "./ai/navigationTree"
+export { useNavigationSync } from "./ai/useNavigationSync"
+export type { UseNavigationSyncOptions, UseNavigationSyncResult } from "./ai/useNavigationSync"
+
 // ── Chart container types ─────────────────────────────────────────────
 
 export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"

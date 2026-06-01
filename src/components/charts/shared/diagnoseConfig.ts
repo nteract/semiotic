@@ -401,8 +401,10 @@ function luminance(hex: string): number | null {
   return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
 }
 
-/** WCAG contrast ratio between two hex colors */
-function contrastRatio(hex1: string, hex2: string): number | null {
+/** WCAG contrast ratio between two hex colors. Exported for reuse by the
+ *  accessibility audit (auditAccessibility.ts) — single source of truth for the
+ *  contrast math. Returns null if either color isn't a parseable hex. */
+export function contrastRatio(hex1: string, hex2: string): number | null {
   const l1 = luminance(hex1)
   const l2 = luminance(hex2)
   if (l1 === null || l2 === null) return null

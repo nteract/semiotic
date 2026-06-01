@@ -51,6 +51,7 @@ const ViolinPlotCapability
 const analystPersona
 const dataScientistPersona
 const executivePersona
+function AccessibleNavTree
 function AreaChart
 function BarChart
 function BigNumber
@@ -107,7 +108,9 @@ function annotationFreshnessFor
 function applyAnnotationLifecycle
 function applyAudienceBias
 function applyScaleBias
+function auditAccessibility
 function bandFromAge
+function buildNavigationTree
 function classifyCardinalityBand
 function classifyFieldBand
 function classifyRowBand
@@ -117,7 +120,9 @@ function computeAnnotationFreshness
 function computeEffectiveScale
 function configToJSX
 function copyConfig
+function countNodes
 function currentTimestamp
+function describeChart
 function deserializeSelections
 function diagnoseConfig
 function diffProfile
@@ -127,6 +132,8 @@ function enableConversationArc
 function evaluateVariantProposal
 function explainCapabilityFit
 function exportChart
+function flattenVisible
+function formatAccessibilityAudit
 function fromConfig
 function fromURL
 function fromVegaLite
@@ -174,11 +181,15 @@ function useChartSuggestions
 function useConversationArc
 function useFilteredData
 function useLinkedHover
+function useNavigationSync
 function useSelection
 function useTheme
 function validateProps
 function withCurrentProvenance
 function withProvenance
+interface A11yFinding
+interface AccessibilityAuditResult
+interface AccessibleNavTreeProps
 interface AnnotationLifecycle
 interface AnnotationLifecycleTreatment
 interface AnnotationProvenance
@@ -187,8 +198,10 @@ interface AudienceBiasResult
 interface AudienceProfile
 interface AudienceSetEvent
 interface AudienceTarget
+interface AuditAccessibilityOptions
 interface BrushEndObservation
 interface BrushObservation
+interface BuildNavigationTreeOptions
 interface CategoricalFieldSummary
 interface CategoryColorProviderProps
 interface ChartAbandonedEvent
@@ -217,6 +230,8 @@ interface DataQualityProfile
 interface DataScaleProfile
 interface DataSummary
 interface DateFieldSummary
+interface DescribeChartOptions
+interface DescribeChartResult
 interface DetailsPanelProps
 interface Diagnosis
 interface DiagnosisResult
@@ -237,6 +252,7 @@ interface InterrogationFocus
 interface InterrogationMessage
 interface InterrogationResult
 interface LifecycleBandThresholds
+interface NavTreeNode
 interface NumericFieldSummary
 interface PerCapabilityScore
 interface PerFixtureScore
@@ -283,12 +299,16 @@ interface UseChartSuggestionsOptions
 interface UseChartSuggestionsResult
 interface UseConversationArcOptions
 interface UseConversationArcResult
+interface UseNavigationSyncOptions
+interface UseNavigationSyncResult
 interface ValidationResult
 interface VariantDiscoveryContext
 interface VariantProposal
 interface VariantScore
 interface VegaLiteEncoding
 interface VegaLiteSpec
+type A11yPrinciple
+type A11yStatus
 type Annotated
 type AnnotationAnchor
 type AnnotationFreshness
@@ -305,6 +325,7 @@ type ConversationArcEventInput
 type ConversationArcEventType
 type ConversationArcListener
 type CopyFormat
+type DescribeLevel
 type EvaluateVariantProposalFn
 type FieldBand
 type FieldKind
@@ -315,6 +336,7 @@ type IntentId
 type IntentScorer
 type InterrogationQuery
 type LifecycleBand
+type NavTreeRole
 type OnObservationCallback
 type PrimaryRole
 type ProposeVariantFn

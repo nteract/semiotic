@@ -40,6 +40,8 @@ import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 import {
   diagnoseConfig,
+  auditAccessibility,
+  formatAccessibilityAudit,
   summarizeData,
   suggestCharts as suggestChartsFromCapabilities,
   repairChartConfig as repairChartConfigFromCapabilities,
@@ -349,6 +351,25 @@ async function diagnoseConfigHandler(args: { component?: string; props?: Record<
       formatDoctorBehaviorContracts(behaviorContractsFor({ component, props })),
     ].filter(Boolean).join("\n\n") }],
     isError: true,
+  }
+}
+
+async function auditAccessibilityHandler(args: { component?: string; props?: Record<string, any>; inChartContainer?: boolean; describe?: boolean; navigable?: boolean }): Promise<ToolResult> {
+  const component = args.component
+  const props: Record<string, any> = args.props ?? {}
+
+  if (!component) {
+    return {
+      content: [{ type: "text" as const, text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... } }." }],
+      isError: true,
+    }
+  }
+
+  const result = auditAccessibility(component, props, { inChartContainer: args.inChartContainer === true, describe: args.describe === true, navigable: args.navigable === true })
+  return {
+    content: [{ type: "text" as const, text: formatAccessibilityAudit(result) }],
+    // Only block on provable critical failures; warnings/manual items are advisory.
+    isError: !result.ok,
   }
 }
 
@@ -843,6 +864,19 @@ function createServer(): McpServer {
   )
 
   srv.tool(
+    "auditAccessibility",
+    "Audit a Semiotic chart configuration against the Chartability (POUR-CAF) accessibility framework — Perceivable, Operable, Understandable, Robust, Compromising, Assistive, Flexible. Statically grades the config (no DOM/AT): credits the built-ins every HOC ships (keyboard nav, focus ring, skip link, screen-reader data table, reduced-motion + forced-colors, shareable state), flags author-actionable gaps (missing title/description/summary, low contrast, small text, color-only encoding, undescribed trends, data density), and routes everything that needs real assistive-technology testing to a 'manual' item. Returns a per-principle report with the 14 critical heuristics marked. Pass inChartContainer=true to credit data-download/share affordances. Pair with manual NVDA/JAWS/VoiceOver testing — Chartability is not a pass/fail certification.",
+    {
+      component: z.string().describe("Chart component name, e.g. 'LineChart'"),
+      props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x', title: '...' }."),
+      inChartContainer: z.boolean().optional().describe("True if the chart is (or will be) wrapped in a ChartContainer exposing data-download/copy-config actions."),
+      describe: z.boolean().optional().describe("True if ChartContainer's describe option (auto-generated L1–L3 description via describeChart) is enabled — passes the 'features described' heuristic."),
+      navigable: z.boolean().optional().describe("True if ChartContainer's navigable option (structured navigation tree via buildNavigationTree) is enabled — passes the 'navigable structure' heuristic."),
+    },
+    auditAccessibilityHandler
+  )
+
+  srv.tool(
     "reportIssue",
     "Generate a GitHub issue URL for Semiotic bug reports or feature requests. Returns a URL the user can open to submit. For rendering bugs, include the component name, props summary, and any diagnoseConfig output in the body.",
     {
@@ -1035,7 +1069,7 @@ async function main() {
 
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
-      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, diagnoseConfig, reportIssue, applyTheme")
+      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme")
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples")
     })
   } else {

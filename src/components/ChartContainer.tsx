@@ -5,6 +5,14 @@ import { copyConfig as copyConfigFn } from "./export/chartConfig"
 import type { ChartConfig, CopyFormat } from "./export/chartConfig"
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
 import { DataSummaryProvider, useDataSummaryToggle } from "./DataSummaryContext"
+import { describeChart, type DescribeLevel } from "./ai/describeChart"
+import { buildNavigationTree } from "./ai/navigationTree"
+import { AccessibleNavTree } from "./AccessibleNavTree"
+
+const SR_ONLY: React.CSSProperties = {
+  position: "absolute", width: 1, height: 1, overflow: "hidden",
+  clip: "rect(0,0,0,0)", whiteSpace: "nowrap", border: 0, padding: 0, margin: -1,
+}
 
 export interface ChartContainerProps {
   /** Chart title */
@@ -30,8 +38,32 @@ export interface ChartContainerProps {
     /** Enable "Data Summary" action button — shows statistical summary + sample rows */
     dataSummary?: boolean
   }
-  /** Chart configuration for serialization. Enables the "Copy Config" toolbar action. */
-  chartConfig?: ChartConfig
+  /**
+   * Chart configuration. Enables the "Copy Config" toolbar action and the
+   * `describe`/`navigable` a11y affordances. Only `component` and `props` are
+   * required — the `version`/`createdAt` serialization metadata is optional
+   * here and synthesized when copying.
+   */
+  chartConfig?: Omit<ChartConfig, "version" | "createdAt"> &
+    Partial<Pick<ChartConfig, "version" | "createdAt">>
+  /**
+   * Auto-generate a layered (L1–L3) natural-language description from
+   * `chartConfig` and expose it at the container level — the opt-in path to a
+   * fuller accessible reading than the bare chart's terse aria-label. Requires
+   * `chartConfig`. `true` renders a screen-reader-only note; pass
+   * `{ visible: true }` to also show it as a visible caption, or `{ levels }`
+   * to choose verbosity. Backed by `describeChart()`.
+   */
+  describe?: boolean | { levels?: DescribeLevel[]; visible?: boolean }
+  /**
+   * Mount a structured, screen-reader-navigable tree of the chart (chart →
+   * axes/series → data points), built from `chartConfig` — the Olli /
+   * Data Navigator model, as an opt-in at the container layer. Requires
+   * `chartConfig`. `true` renders it screen-reader-only; `{ visible: true }`
+   * shows it; `{ maxLeaves }` caps leaves per branch. Backed by
+   * `buildNavigationTree()` + `AccessibleNavTree`.
+   */
+  navigable?: boolean | { visible?: boolean; maxLeaves?: number }
   /** Additional controls rendered in the toolbar after built-in actions */
   controls?: React.ReactNode
 
@@ -168,6 +200,8 @@ export const ChartContainer = React.forwardRef<
     height = 400,
     actions,
     chartConfig,
+    describe,
+    navigable,
     controls,
     loading = false,
     error,
@@ -189,6 +223,32 @@ export const ChartContainer = React.forwardRef<
   const showCopyConfig =
     actions?.copyConfig !== false && actions?.copyConfig !== undefined && chartConfig
   const showDataSummary = actions?.dataSummary === true
+
+  // Opt-in auto-description (ChartContainer is the layer for full-accessibility
+  // chrome — title, caption, description — rather than the bare chart).
+  const describeText = React.useMemo(() => {
+    if (!describe || !chartConfig?.component || !chartConfig?.props) return ""
+    const levels = typeof describe === "object" ? describe.levels : undefined
+    try {
+      return describeChart(chartConfig.component, chartConfig.props, levels ? { levels } : {}).text
+    } catch {
+      return ""
+    }
+  }, [describe, chartConfig])
+  const describeVisible = typeof describe === "object" && describe.visible === true
+
+  // Opt-in structured navigation tree (Olli / Data Navigator model), built from
+  // the same chartConfig and mounted at the container layer.
+  const navTree = React.useMemo(() => {
+    if (!navigable || !chartConfig?.component || !chartConfig?.props) return null
+    const maxLeaves = typeof navigable === "object" ? navigable.maxLeaves : undefined
+    try {
+      return buildNavigationTree(chartConfig.component, chartConfig.props, maxLeaves ? { maxLeaves } : {})
+    } catch {
+      return null
+    }
+  }, [navigable, chartConfig])
+  const navVisible = typeof navigable === "object" && navigable.visible === true
 
   const exportConfig =
     typeof actions?.export === "object" ? actions.export : {}
@@ -218,7 +278,14 @@ export const ChartContainer = React.forwardRef<
 
   const handleCopyConfig = React.useCallback(async (format?: CopyFormat) => {
     if (!chartConfig) return
-    await copyConfigFn(chartConfig, format || copyConfigFormat || "json")
+    await copyConfigFn(
+      {
+        ...chartConfig,
+        version: chartConfig.version ?? "1",
+        createdAt: chartConfig.createdAt ?? new Date().toISOString(),
+      },
+      format || copyConfigFormat || "json"
+    )
   }, [chartConfig, copyConfigFormat])
 
   React.useEffect(() => {
@@ -435,6 +502,40 @@ export const ChartContainer = React.forwardRef<
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {describeText && (
+          <div
+            className="semiotic-chart-description"
+            role="note"
+            style={describeVisible ? {
+              padding: "8px 16px",
+              fontSize: 12,
+              lineHeight: 1.5,
+              color: "var(--semiotic-text-secondary, #666)",
+              borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
+            } : SR_ONLY}
+          >
+            {describeText}
+          </div>
+        )}
+
+        {navTree && (
+          <div
+            className="semiotic-chart-nav"
+            style={navVisible ? {
+              padding: "8px 8px",
+              borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
+              maxHeight: 240,
+              overflow: "auto",
+            } : undefined}
+          >
+            <AccessibleNavTree
+              tree={navTree}
+              label={typeof title === "string" && title ? `${title} — navigable structure` : "Chart navigable structure"}
+              visible={navVisible}
+            />
           </div>
         )}
 

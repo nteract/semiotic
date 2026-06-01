@@ -316,6 +316,7 @@ describe("MCP protocol round-trip", () => {
     const toolNames = result.result.tools.map((t: { name: string }) => t.name).sort()
     expect(toolNames).toEqual([
       "applyTheme",
+      "auditAccessibility",
       "diagnoseConfig",
       "getSchema",
       "interrogateChart",

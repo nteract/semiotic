@@ -75,11 +75,11 @@ export default function AccessibilityPage() {
     <PageLayout
       title="Accessibility"
       breadcrumbs={[
-        { label: "Features", path: "/features" },
-        { label: "Accessibility", path: "/features/accessibility" },
+        { label: "Accessibility", path: "/accessibility/overview" },
+        { label: "Overview", path: "/accessibility/overview" },
       ]}
       prevPage={{ title: "Composition", path: "/features/composition" }}
-      nextPage={{ title: "Linked Charts", path: "/features/small-multiples" }}
+      nextPage={{ title: "Chartability Audit", path: "/accessibility/audit" }}
     >
       <p>
         Accessibility features aren't just for people with disabilities — they
@@ -103,7 +103,15 @@ export default function AccessibilityPage() {
           Chartability
         </a>{" "}
         (Frank Elavsky's audit framework for data visualization accessibility)
-        and aims to address its critical heuristics at the toolkit level.
+        and aims to address its critical heuristics at the toolkit level. You can
+        grade any chart configuration against those heuristics with the{" "}
+        <Link to="/accessibility/audit">Chartability Audit</Link> — available as{" "}
+        <code>auditAccessibility()</code>, the <code>npx semiotic-ai --audit-a11y</code>{" "}
+        CLI, and an MCP tool — auto-generate rich screen-reader descriptions
+        of a chart's statistics and trends with{" "}
+        <Link to="/accessibility/descriptions">Chart Descriptions</Link>, and
+        expose a screen-reader-navigable tree of the chart's structure with{" "}
+        <Link to="/accessibility/navigation">Structured Navigation</Link>.
       </p>
 
       {/* ----------------------------------------------------------------- */}

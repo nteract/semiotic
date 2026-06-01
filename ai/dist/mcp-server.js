@@ -32647,6 +32647,22 @@ ${contracts}` : msg}` }] };
     isError: true
   };
 }
+async function auditAccessibilityHandler(args) {
+  const component = args.component;
+  const props = args.props ?? {};
+  if (!component) {
+    return {
+      content: [{ type: "text", text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... } }." }],
+      isError: true
+    };
+  }
+  const result = (0, import_ai3.auditAccessibility)(component, props, { inChartContainer: args.inChartContainer === true, describe: args.describe === true, navigable: args.navigable === true });
+  return {
+    content: [{ type: "text", text: (0, import_ai3.formatAccessibilityAudit)(result) }],
+    // Only block on provable critical failures; warnings/manual items are advisory.
+    isError: !result.ok
+  };
+}
 async function reportIssueHandler(args) {
   const title = args.title;
   const body = args.body;
@@ -33074,6 +33090,18 @@ function createServer2() {
     diagnoseConfigHandler
   );
   srv.tool(
+    "auditAccessibility",
+    "Audit a Semiotic chart configuration against the Chartability (POUR-CAF) accessibility framework \u2014 Perceivable, Operable, Understandable, Robust, Compromising, Assistive, Flexible. Statically grades the config (no DOM/AT): credits the built-ins every HOC ships (keyboard nav, focus ring, skip link, screen-reader data table, reduced-motion + forced-colors, shareable state), flags author-actionable gaps (missing title/description/summary, low contrast, small text, color-only encoding, undescribed trends, data density), and routes everything that needs real assistive-technology testing to a 'manual' item. Returns a per-principle report with the 14 critical heuristics marked. Pass inChartContainer=true to credit data-download/share affordances. Pair with manual NVDA/JAWS/VoiceOver testing \u2014 Chartability is not a pass/fail certification.",
+    {
+      component: external_exports3.string().describe("Chart component name, e.g. 'LineChart'"),
+      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x', title: '...' }."),
+      inChartContainer: external_exports3.boolean().optional().describe("True if the chart is (or will be) wrapped in a ChartContainer exposing data-download/copy-config actions."),
+      describe: external_exports3.boolean().optional().describe("True if ChartContainer's describe option (auto-generated L1\u2013L3 description via describeChart) is enabled \u2014 passes the 'features described' heuristic."),
+      navigable: external_exports3.boolean().optional().describe("True if ChartContainer's navigable option (structured navigation tree via buildNavigationTree) is enabled \u2014 passes the 'navigable structure' heuristic.")
+    },
+    auditAccessibilityHandler
+  );
+  srv.tool(
     "reportIssue",
     "Generate a GitHub issue URL for Semiotic bug reports or feature requests. Returns a URL the user can open to submit. For rendering bugs, include the component name, props summary, and any diagnoseConfig output in the body.",
     {
@@ -33224,7 +33252,7 @@ async function main() {
     });
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
-      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, diagnoseConfig, reportIssue, applyTheme");
+      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme");
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples");
     });
   } else {

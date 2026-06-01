@@ -111,6 +111,19 @@ export type { ValidationResult } from "./charts/shared/validateProps"
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
 export type { Diagnosis, DiagnosisResult } from "./charts/shared/diagnoseConfig"
 
+// Accessibility audit — Chartability (POUR-CAF) heuristics over a chart config
+export {
+  auditAccessibility,
+  formatAccessibilityAudit
+} from "./charts/shared/auditAccessibility"
+export type {
+  A11yPrinciple,
+  A11yStatus,
+  A11yFinding,
+  AccessibilityAuditResult,
+  AuditAccessibilityOptions
+} from "./charts/shared/auditAccessibility"
+
 // Statistical overlay types
 export type {
   AnomalyConfig,
@@ -159,6 +172,29 @@ export type {
 export { useChartFocus } from "./store/useChartFocus"
 export type { UseChartFocusOptions } from "./store/useChartFocus"
 export { summarizeData } from "./data/DataSummarizer"
+export { describeChart } from "./ai/describeChart"
+export type {
+  DescribeChartResult,
+  DescribeChartOptions,
+  DescribeLevel
+} from "./ai/describeChart"
+export {
+  buildNavigationTree,
+  flattenVisible,
+  countNodes
+} from "./ai/navigationTree"
+export type {
+  NavTreeNode,
+  NavTreeRole,
+  BuildNavigationTreeOptions
+} from "./ai/navigationTree"
+export { AccessibleNavTree } from "./AccessibleNavTree"
+export type { AccessibleNavTreeProps } from "./AccessibleNavTree"
+export { useNavigationSync } from "./ai/useNavigationSync"
+export type {
+  UseNavigationSyncOptions,
+  UseNavigationSyncResult
+} from "./ai/useNavigationSync"
 export type {
   DataSummary,
   FieldSummary,

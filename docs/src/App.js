@@ -76,7 +76,10 @@ import TooltipsPage from "./pages/features/TooltipsPage"
 import InteractionPage from "./pages/features/InteractionPage"
 import ResponsivePage from "./pages/features/ResponsivePage"
 import CompositionPage from "./pages/features/CompositionPage"
-import AccessibilityPage from "./pages/features/AccessibilityPage"
+import AccessibilityPage from "./pages/accessibility/AccessibilityPage"
+import AccessibilityAuditPage from "./pages/accessibility/AccessibilityAuditPage"
+import DescribeChartPage from "./pages/accessibility/DescribeChartPage"
+import NavigationTreePage from "./pages/accessibility/NavigationTreePage"
 import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
 import ThemingPage from "./pages/features/ThemingPage"
@@ -412,7 +415,6 @@ export default function DocsApp() {
               <Route path="interaction" element={<InteractionPage />} />
               <Route path="responsive" element={<ResponsivePage />} />
               <Route path="composition" element={<CompositionPage />} />
-              <Route path="accessibility" element={<AccessibilityPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
               <Route path="linked-charts" element={<SmallMultiplesPage />} />
               <Route path="legends" element={<LegendsPage />} />
@@ -424,6 +426,16 @@ export default function DocsApp() {
               <Route path="performance" element={<PerformancePage />} />
               <Route path="push-api" element={<PushApiPage />} />
               <Route path="custom-charts" element={<CustomChartsPage />} />
+            </Route>
+
+            {/* Accessibility — first-class category (before Intelligence).
+                Old /features/accessibility redirects to /accessibility/overview below. */}
+            <Route path="accessibility" element={<Outlet />}>
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<AccessibilityPage />} />
+              <Route path="audit" element={<AccessibilityAuditPage />} />
+              <Route path="descriptions" element={<DescribeChartPage />} />
+              <Route path="navigation" element={<NavigationTreePage />} />
             </Route>
 
             {/* Intelligence — AI/recommendation surface, separated from generic Features
@@ -441,7 +453,11 @@ export default function DocsApp() {
               <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
             </Route>
 
-            {/* Redirects from old /features/<slug> paths for the Intelligence pages */}
+            {/* Redirects from old /features/<slug> paths */}
+            <Route
+              path="features/accessibility"
+              element={<Navigate to="/accessibility/overview" replace />}
+            />
             <Route
               path="features/observation-hooks"
               element={<Navigate to="/intelligence/observation-hooks" replace />}

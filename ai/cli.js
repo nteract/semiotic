@@ -48,6 +48,8 @@ Usage:
   npx semiotic-ai --compact    Print ai/system-prompt.md (compact prompt)
   npx semiotic-ai --examples   Print ai/examples.md (copy-paste examples)
   npx semiotic-ai --doctor     Validate { component, props, usageMode? } JSON from stdin
+  npx semiotic-ai --audit-a11y Audit { component, props, inChartContainer?, describe?, navigable? }
+                                JSON against Chartability (POUR-CAF) accessibility heuristics
   npx semiotic-ai --help       Show this help message
 `.trim()
 
@@ -339,6 +341,45 @@ if (flag === "--doctor") {
     process.exit(1)
   }
   process.exit(0)
+}
+
+// --audit-a11y: grade component + props against Chartability heuristics
+if (flag === "--audit-a11y") {
+  const input = readJSONInput("Usage: npx semiotic-ai --audit-a11y '{\"component\":\"LineChart\",\"props\":{\"data\":[...],\"xAccessor\":\"x\",\"yAccessor\":\"y\"}}'\n       echo '{\"component\":\"BarChart\",\"props\":{...},\"inChartContainer\":true}' | npx semiotic-ai --audit-a11y")
+
+  try {
+    const { component, props, inChartContainer, describe, navigable } = JSON.parse(input)
+    if (!component || !props) {
+      console.error("Input must be JSON with { component, props } fields.")
+      process.exit(1)
+    }
+
+    // Load the audit from dist (same strategy as --doctor). It lives in the
+    // semiotic/ai bundle; a clean source checkout without a build can't run it.
+    const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
+    let auditAccessibility, formatAccessibilityAudit
+    try {
+      if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
+        const mod = require(distPath)
+        auditAccessibility = mod.auditAccessibility
+        formatAccessibilityAudit = mod.formatAccessibilityAudit
+      }
+    } catch (e) {
+      // Dist unavailable.
+    }
+
+    if (!auditAccessibility || !formatAccessibilityAudit) {
+      console.error("Accessibility audit requires the built library. Run `npm run dist` first, or use the MCP `auditAccessibility` tool.")
+      process.exit(2)
+    }
+
+    const result = auditAccessibility(component, props, { inChartContainer: inChartContainer === true, describe: describe === true, navigable: navigable === true })
+    console.log(formatAccessibilityAudit(result))
+    process.exit(result.ok ? 0 : 1)
+  } catch (err) {
+    console.error(`Failed to parse input: ${errorMessage(err)}`)
+    process.exit(1)
+  }
 }
 
 const filePath = flag ? FILES[flag] : FILES.default

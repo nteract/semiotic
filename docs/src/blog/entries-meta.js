@@ -20,6 +20,44 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "navigating-a-chart-you-cant-see",
+    title: "Navigating a Chart You Can't See",
+    subtitle:
+      "Structured navigation exposes a chart as a screen-reader-traversable tree — chart → series → data point — following the Olli / Data Navigator model, uncoupled from the canvas it's drawn on.",
+    author: "Semiotic Team",
+    date: "2026-06-01",
+    tags: ["case-study", "accessibility"],
+    excerpt:
+      "A flat table of 200 rows is technically accessible and practically unusable. Structured navigation gives a non-visual reader the path a sighted reader takes — overview, then detail — as an ARIA tree built from the chart config and mounted as an opt-in ChartContainer layer, decoupled from how the chart renders.",
+    ogChart: { component: "LineChart" },
+    draft: true,
+  },
+  {
+    slug: "what-a-screen-reader-should-hear",
+    title: "What a Screen Reader Should Hear",
+    subtitle:
+      "describeChart() turns a chart config into a layered natural-language description — encoding, statistics, and trend — the content research says blind and low-vision readers actually want.",
+    author: "Semiotic Team",
+    date: "2026-06-01",
+    tags: ["case-study", "accessibility"],
+    excerpt:
+      "A screen reader announces \"line chart, nine points\" — accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart's config, and ChartContainer makes it an opt-in layer.",
+    ogChart: { component: "LineChart" },
+    draft: true,
+  },
+  {
+    slug: "auditing-what-you-cant-see",
+    title: "Auditing What You Can't See",
+    subtitle:
+      "A static accessibility audit for Semiotic charts, organized by Chartability (POUR-CAF) — and the design decision at its center: being honest about what a static check can't know.",
+    author: "Semiotic Team",
+    date: "2026-06-01",
+    tags: ["case-study", "accessibility"],
+    excerpt:
+      "A canvas chart is an opaque image to a screen reader, and automated checkers can't see it. auditAccessibility() grades a chart config against Chartability's heuristics — crediting the built-ins every chart ships, flagging the author-actionable gaps, and, most importantly, marking what it cannot know as 'manual' instead of manufacturing a false green checkmark.",
+    draft: true,
+  },
+  {
     slug: "scale-aware-suggestions",
     title: "Your sample lies about your data",
     subtitle:
