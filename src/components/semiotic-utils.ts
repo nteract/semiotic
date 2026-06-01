@@ -39,6 +39,33 @@ export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 // ── Validation ───────────────────────────────────────────────────────────
 export { validateProps } from "./charts/shared/validateProps"
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
+export {
+  auditAccessibility,
+  formatAccessibilityAudit
+} from "./charts/shared/auditAccessibility"
+export { describeChart } from "./ai/describeChart"
+export type {
+  DescribeChartResult,
+  DescribeChartOptions,
+  DescribeLevel
+} from "./ai/describeChart"
+export {
+  buildNavigationTree,
+  flattenVisible,
+  countNodes
+} from "./ai/navigationTree"
+export type {
+  NavTreeNode,
+  NavTreeRole,
+  BuildNavigationTreeOptions
+} from "./ai/navigationTree"
+export type {
+  A11yPrinciple,
+  A11yStatus,
+  A11yFinding,
+  AccessibilityAuditResult,
+  AuditAccessibilityOptions
+} from "./charts/shared/auditAccessibility"
 
 // ── Hit testing ─────────────────────────────────────────────────────────
 export { getHitRadius } from "./stream/hitTestUtils"
