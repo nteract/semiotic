@@ -279,7 +279,11 @@ export const ChartContainer = React.forwardRef<
   const handleCopyConfig = React.useCallback(async (format?: CopyFormat) => {
     if (!chartConfig) return
     await copyConfigFn(
-      { version: "1", createdAt: new Date().toISOString(), ...chartConfig },
+      {
+        ...chartConfig,
+        version: chartConfig.version ?? "1",
+        createdAt: chartConfig.createdAt ?? new Date().toISOString(),
+      },
       format || copyConfigFormat || "json"
     )
   }, [chartConfig, copyConfigFormat])

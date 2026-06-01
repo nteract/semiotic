@@ -101,6 +101,40 @@ describe("useNavigationSync — canvas → tree", () => {
     expect(api.sync.activeId).toBe(febLeaf.id)
   })
 
+  it("does not jump when matchFields is empty (would otherwise collapse to the first leaf)", () => {
+    const api: any = {}
+    function Inner() {
+      api.sync = useNavigationSync({ tree, chartId: "c1", matchFields: [], selectionName: "nav-empty" })
+      api.push = useObservationSelector((s: any) => s.pushObservation)
+      return null
+    }
+    render(<SelectionProvider><ObservationProvider><Inner /></ObservationProvider></SelectionProvider>)
+    act(() => api.push({
+      type: "hover", datum: { month: "Feb", sales: 250 }, x: 0, y: 0,
+      timestamp: Date.now(), chartType: "line", chartId: "c1",
+    }))
+    expect(api.sync.activeId).toBe(tree.id) // stayed at root, did not snap to first leaf
+  })
+
+  it("resets the active node to root when the tree is rebuilt", () => {
+    const api: any = {}
+    function Inner({ t }: { t: NavTreeNode }) {
+      api.sync = useNavigationSync({ tree: t, chartId: "c1", matchFields: ["month"], selectionName: "nav-rebuild" })
+      return null
+    }
+    const { rerender } = render(
+      <SelectionProvider><ObservationProvider><Inner t={tree} /></ObservationProvider></SelectionProvider>
+    )
+    act(() => api.sync.onActiveChange(febLeaf))
+    expect(api.sync.activeId).toBe(febLeaf.id)
+
+    const tree2 = buildNavigationTree("LineChart", {
+      data: [{ month: "Apr", sales: 90 }], xAccessor: "month", yAccessor: "sales",
+    })
+    rerender(<SelectionProvider><ObservationProvider><Inner t={tree2} /></ObservationProvider></SelectionProvider>)
+    expect(api.sync.activeId).toBe(tree2.id) // reset to the new tree's root
+  })
+
   it("ignores observations from other charts and stays put on hover-end", () => {
     const { api, Harness } = makeHarness()
     render(<Harness />)

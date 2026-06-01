@@ -102,6 +102,14 @@ export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigat
 
   const [activeId, setActiveId] = useState<string>(tree.id)
 
+  // If the tree is rebuilt (data change regenerates procedural node ids), the
+  // stored activeId may no longer exist — reset to the root so the ARIA tree
+  // always has a selected/focusable row, and clear any stale highlight.
+  useEffect(() => {
+    setActiveId(tree.id)
+    clear()
+  }, [tree, clear])
+
   // tree → canvas: a datum node highlights its mark; a structural node clears it.
   const onActiveChange = useCallback((node: NavTreeNode) => {
     setActiveId(node.id)
@@ -122,7 +130,9 @@ export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigat
     lastObsRef.current = latest
     if (latest.type === "hover-end") return
     const datum = (latest as { datum?: Datum }).datum
-    if (!datum) return
+    // No match fields → matchKey() is "" for every datum and leafByKey collapses
+    // to the first leaf; skip rather than jump to the wrong node.
+    if (!datum || matchFields.length === 0) return
     const id = leafByKey.get(matchKey(datum, matchFields))
     if (id && id !== activeId) setActiveId(id)
   }, [latest, leafByKey, matchFields, activeId])
