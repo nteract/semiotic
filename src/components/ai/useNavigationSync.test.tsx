@@ -66,6 +66,30 @@ describe("useNavigationSync — tree → canvas", () => {
   })
 })
 
+describe("useNavigationSync — default selection name", () => {
+  function nameFor(props: Parameters<typeof useNavigationSync>[0]) {
+    let name = ""
+    function Probe() { name = useNavigationSync(props).selection.name; return null }
+    render(
+      <SelectionProvider><ObservationProvider><Probe /></ObservationProvider></SelectionProvider>
+    )
+    return name
+  }
+
+  it("derives a per-chart selection name from chartId so two charts don't share a bus", () => {
+    expect(nameFor({ tree, chartId: "c1" })).toBe("__semiotic-nav-sync:c1")
+    expect(nameFor({ tree, chartId: "c2" })).toBe("__semiotic-nav-sync:c2")
+  })
+
+  it("falls back to the bare default when no chartId is given", () => {
+    expect(nameFor({ tree })).toBe("__semiotic-nav-sync")
+  })
+
+  it("honors an explicit selectionName override for intentional cross-chart linking", () => {
+    expect(nameFor({ tree, chartId: "c1", selectionName: "shared" })).toBe("shared")
+  })
+})
+
 describe("useNavigationSync — canvas → tree", () => {
   it("moves the active node to the leaf matching a hovered datum", () => {
     const { api, Harness } = makeHarness()

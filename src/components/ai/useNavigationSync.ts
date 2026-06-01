@@ -68,7 +68,12 @@ function matchKey(datum: Datum | null | undefined, fields: string[]): string {
 }
 
 export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigationSyncResult {
-  const { tree, chartId, selectionName = "__semiotic-nav-sync", observe = ["hover", "click"] } = options
+  const { tree, chartId, observe = ["hover", "click"] } = options
+  // Default the selection name per-chart so multiple synced charts on one page
+  // don't share a selection bus (which would cross-highlight). Explicit
+  // `selectionName` still wins for intentional cross-chart linking.
+  const selectionName =
+    options.selectionName ?? `__semiotic-nav-sync${chartId ? `:${chartId}` : ""}`
 
   // Match fields: explicit, or the primitive keys of the first leaf datum.
   const matchFields = useMemo(() => {
