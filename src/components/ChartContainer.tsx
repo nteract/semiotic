@@ -38,8 +38,14 @@ export interface ChartContainerProps {
     /** Enable "Data Summary" action button — shows statistical summary + sample rows */
     dataSummary?: boolean
   }
-  /** Chart configuration for serialization. Enables the "Copy Config" toolbar action. */
-  chartConfig?: ChartConfig
+  /**
+   * Chart configuration. Enables the "Copy Config" toolbar action and the
+   * `describe`/`navigable` a11y affordances. Only `component` and `props` are
+   * required — the `version`/`createdAt` serialization metadata is optional
+   * here and synthesized when copying.
+   */
+  chartConfig?: Omit<ChartConfig, "version" | "createdAt"> &
+    Partial<Pick<ChartConfig, "version" | "createdAt">>
   /**
    * Auto-generate a layered (L1–L3) natural-language description from
    * `chartConfig` and expose it at the container level — the opt-in path to a
@@ -272,7 +278,10 @@ export const ChartContainer = React.forwardRef<
 
   const handleCopyConfig = React.useCallback(async (format?: CopyFormat) => {
     if (!chartConfig) return
-    await copyConfigFn(chartConfig, format || copyConfigFormat || "json")
+    await copyConfigFn(
+      { version: "1", createdAt: new Date().toISOString(), ...chartConfig },
+      format || copyConfigFormat || "json"
+    )
   }, [chartConfig, copyConfigFormat])
 
   React.useEffect(() => {

@@ -47,7 +47,7 @@ export interface UseNavigationSyncResult {
   selection: { name: string }
 }
 
-const KEY_SEP = ""
+const KEY_SEP = "\u0001"
 
 function isPrimitive(v: unknown): boolean {
   return v == null || typeof v === "string" || typeof v === "number" || typeof v === "boolean"

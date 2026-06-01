@@ -431,6 +431,7 @@ export default function DocsApp() {
             {/* Accessibility — first-class category (before Intelligence).
                 Old /features/accessibility redirects to /accessibility/overview below. */}
             <Route path="accessibility" element={<Outlet />}>
+              <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<AccessibilityPage />} />
               <Route path="audit" element={<AccessibilityAuditPage />} />
               <Route path="descriptions" element={<DescribeChartPage />} />
