@@ -12,7 +12,7 @@ const SR_ONLY_STYLE: React.CSSProperties = {
   overflow: "hidden",
   clip: "rect(0,0,0,0)",
   whiteSpace: "nowrap",
-  border: 0,
+  border: 0
 }
 
 // ── Aria-label helpers ──────────────────────────────────────────────────
@@ -45,11 +45,22 @@ export function computeCanvasAriaLabel(
     candlestick: "candlesticks",
     wedge: "wedges",
     arc: "arcs",
-    geoarea: "regions",
+    geoarea: "regions"
   }
 
   // Sort by a fixed type order for stable aria-label output
-  const typeOrder = ["point", "line", "area", "rect", "heatcell", "circle", "candlestick", "wedge", "arc", "geoarea"]
+  const typeOrder = [
+    "point",
+    "line",
+    "area",
+    "rect",
+    "heatcell",
+    "circle",
+    "candlestick",
+    "wedge",
+    "arc",
+    "geoarea"
+  ]
   const sortedTypes = Object.keys(typeCounts).sort((a, b) => {
     const ai = typeOrder.indexOf(a)
     const bi = typeOrder.indexOf(b)
@@ -90,88 +101,121 @@ const fmt = (v: number | undefined | null): string => {
 
 // ── Data extraction from scene nodes ────────────────────────────────────
 
-interface DataRow { label: string; values: Record<string, string | number> }
+interface DataRow {
+  label: string
+  values: Record<string, string | number>
+}
 
-/** Extract a flat list of typed rows from scene nodes, preserving raw numeric values.
- *  Defensively handles missing/malformed data — never throws. */
-function extractAllRows(scene: AnySceneNode[]): DataRow[] {
+/** Pull primitive, user-facing fields from a raw datum into a display row.
+ *  Skips synthetic/internal keys (leading underscore) and non-primitive
+ *  values. This surfaces the original data (e.g. `month`, `sales`) rather
+ *  than the pixel coordinates the scene node carries for rendering. */
+function datumToValues(datum: unknown): Record<string, string | number> {
+  const values: Record<string, string | number> = {}
+  if (datum == null || typeof datum !== "object") return values
+  for (const [k, v] of Object.entries(datum as Record<string, unknown>)) {
+    if (k.startsWith("_")) continue // synthetic/internal keys
+    if (v == null || v === "") continue
+    if (typeof v === "number") {
+      if (Number.isFinite(v)) values[k] = v
+    } else if (typeof v === "string") {
+      values[k] = v
+    } else if (typeof v === "boolean") {
+      values[k] = String(v)
+    } else if (v instanceof Date) {
+      values[k] = v.toISOString().slice(0, 10)
+    }
+    // nested objects / functions are not meaningful in a flat table — skip
+  }
+  return values
+}
+
+/** Extract a flat list of typed rows from scene nodes, surfacing the raw datum
+ *  fields (not pixel coordinates). Defensively handles missing/malformed data —
+ *  never throws. Exported for direct testing. */
+export function extractAllRows(scene: AnySceneNode[]): DataRow[] {
   const rows: DataRow[] = []
   if (!Array.isArray(scene)) return rows
+
+  // When a chart draws line/area series, each series node already carries its
+  // full datum array — the standalone point nodes (emitted only when
+  // `showPoints` is on) are decorative duplicates of the same data. Extract
+  // the series rows and skip the redundant points. Scatterplots have points
+  // and no series, so they still flow through the "point" case below.
+  const hasSeriesNodes = scene.some(
+    (n) => n && (n.type === "line" || n.type === "area")
+  )
 
   for (const node of scene) {
     if (!node || typeof node !== "object") continue
     if (node.datum === null) continue
     try {
       switch (node.type) {
-        case "point":
-          rows.push({ label: "Point", values: { x: node.x, y: node.y } })
-          break
-        case "line": {
-          const path = node.path
-          const data = Array.isArray(node.datum) ? node.datum : []
-          if (!Array.isArray(path)) break
-          for (let i = 0; i < path.length && i < data.length; i++) {
-            const pt = path[i]
-            if (!Array.isArray(pt)) continue
-            rows.push({ label: "Line point", values: { x: pt[0], y: pt[1] } })
-          }
+        case "point": {
+          if (hasSeriesNodes) break
+          rows.push({ label: "Point", values: datumToValues(node.datum) })
           break
         }
+        case "line":
         case "area": {
-          const topPath = node.topPath
           const data = Array.isArray(node.datum) ? node.datum : []
-          if (!Array.isArray(topPath)) break
-          for (let i = 0; i < topPath.length && i < data.length; i++) {
-            const pt = topPath[i]
-            if (!Array.isArray(pt)) continue
-            rows.push({ label: "Area point", values: { x: pt[0], y: pt[1] } })
+          const label = node.type === "line" ? "Line point" : "Area point"
+          for (const d of data) {
+            rows.push({ label, values: datumToValues(d) })
           }
           break
         }
         case "rect": {
-          const datum = (node.datum != null && typeof node.datum === "object") ? node.datum : {}
+          const datum =
+            node.datum != null && typeof node.datum === "object"
+              ? node.datum
+              : {}
           const category = datum.category ?? node.group ?? ""
           const rawValue = datum.value ?? datum.__aggregateValue ?? datum.total
-          rows.push({ label: "Bar", values: { category, value: rawValue ?? "" } })
+          rows.push({
+            label: "Bar",
+            values: { category, value: rawValue ?? "" }
+          })
           break
         }
-        case "heatcell":
-          rows.push({ label: "Cell", values: { x: node.x, y: node.y, value: node.value } })
+        case "heatcell": {
+          const values = datumToValues(node.datum)
+          // Fall back to the rendered cell value when datum omits it
+          if (
+            values.value == null &&
+            typeof node.value === "number" &&
+            Number.isFinite(node.value)
+          ) {
+            values.value = node.value
+          }
+          rows.push({ label: "Cell", values })
           break
+        }
         case "wedge":
           rows.push({
             label: "Wedge",
             values: {
               category: node.datum?.category ?? node.datum?.label ?? "",
-              value: node.datum?.value ?? "",
-            },
+              value: node.datum?.value ?? ""
+            }
           })
           break
         case "circle":
-          rows.push({
-            label: "Node",
-            values: { id: node.datum?.id ?? "", x: node.cx ?? node.x, y: node.cy ?? node.y },
-          })
+          rows.push({ label: "Node", values: datumToValues(node.datum) })
           break
         case "arc":
-          rows.push({
-            label: "Arc",
-            values: { id: node.datum?.id ?? "", x: node.cx ?? node.x, y: node.cy ?? node.y },
-          })
+          rows.push({ label: "Arc", values: datumToValues(node.datum) })
           break
         case "candlestick":
-          rows.push({
-            label: "Candlestick",
-            values: { x: node.x, open: node.open, high: node.high, low: node.low, close: node.close },
-          })
+          rows.push({ label: "Candlestick", values: datumToValues(node.datum) })
           break
         case "geoarea":
           rows.push({
             label: "Region",
             values: {
               name: node.datum?.properties?.name ?? node.datum?.name ?? "",
-              value: node.datum?.value ?? "",
-            },
+              value: node.datum?.value ?? ""
+            }
           })
           break
         // Unknown types are silently skipped
@@ -226,16 +270,30 @@ function computeFieldStats(rows: DataRow[]): FieldStats[] {
     }
 
     if (nums.length > 0) {
-      let min = nums[0], max = nums[0], sum = 0
+      let min = nums[0],
+        max = nums[0],
+        sum = 0
       for (const n of nums) {
         if (n < min) min = n
         if (n > max) max = n
         sum += n
       }
-      stats.push({ name, count: nums.length, numeric: true, min, max, mean: sum / nums.length })
+      stats.push({
+        name,
+        count: nums.length,
+        numeric: true,
+        min,
+        max,
+        mean: sum / nums.length
+      })
     } else if (strs.size > 0) {
       const unique = Array.from(strs)
-      stats.push({ name, count: unique.length, numeric: false, uniqueValues: unique.slice(0, 5) })
+      stats.push({
+        name,
+        count: unique.length,
+        numeric: false,
+        uniqueValues: unique.slice(0, 5)
+      })
     }
   }
 
@@ -248,10 +306,15 @@ function formatSummary(totalRows: number, fieldStats: FieldStats[]): string {
 
   for (const fs of fieldStats) {
     if (fs.numeric) {
-      parts.push(`${fs.name}: ${fmt(fs.min)} to ${fmt(fs.max)}, mean ${fmt(fs.mean)}.`)
+      parts.push(
+        `${fs.name}: ${fmt(fs.min)} to ${fmt(fs.max)}, mean ${fmt(fs.mean)}.`
+      )
     } else {
       const vals = fs.uniqueValues!
-      const label = vals.length <= 3 ? vals.join(", ") : `${vals.slice(0, 3).join(", ")}… (${fs.count} unique)`
+      const label =
+        vals.length <= 3
+          ? vals.join(", ")
+          : `${vals.slice(0, 3).join(", ")}… (${fs.count} unique)`
       parts.push(`${fs.name}: ${label}.`)
     }
   }
@@ -271,6 +334,10 @@ interface AccessibleDataTableProps {
 }
 
 const SAMPLE_SIZE = 5
+/** Rows revealed per "Show more" click. Bounded paging keeps a 50k-row dataset
+ *  from instantiating a giant table in one go while still letting a determined
+ *  user page all the way through their data. */
+const PAGE_SIZE = 25
 const DATA_TABLE_CLASS = "semiotic-accessible-data-table"
 const DATA_TABLE_HIDDEN_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-hidden`
 const DATA_TABLE_VISIBLE_CLASS = `${DATA_TABLE_CLASS} semiotic-accessible-data-table-visible`
@@ -281,23 +348,29 @@ const VISIBLE_PANEL_STYLE: React.CSSProperties = {
   top: 0,
   left: 0,
   right: 0,
-  zIndex: "var(--semiotic-data-table-z-index, var(--semiotic-overlay-z-index, 20))",
+  zIndex:
+    "var(--semiotic-data-table-z-index, var(--semiotic-overlay-z-index, 20))",
   padding: "14px 16px 12px",
-  borderBottom: "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
-  fontFamily: "var(--semiotic-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)",
+  borderBottom:
+    "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
+  fontFamily:
+    "var(--semiotic-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)",
   fontSize: 13,
   lineHeight: 1.5,
   color: "var(--semiotic-data-table-text, var(--semiotic-text, #333))",
-  background: "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
-  borderRadius: "var(--semiotic-border-radius, 0px) var(--semiotic-border-radius, 0px) 0 0",
+  background:
+    "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
+  borderRadius:
+    "var(--semiotic-border-radius, 0px) var(--semiotic-border-radius, 0px) 0 0"
 }
 
 const SUMMARY_NOTE_STYLE: React.CSSProperties = {
   marginBottom: 8,
   paddingRight: 28,
-  color: "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
+  color:
+    "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
   fontSize: 12,
-  letterSpacing: "0.01em",
+  letterSpacing: "0.01em"
 }
 
 const CLOSE_BUTTON_STYLE: React.CSSProperties = {
@@ -309,14 +382,17 @@ const CLOSE_BUTTON_STYLE: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  border: "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
-  background: "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
+  border:
+    "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
+  background:
+    "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
   cursor: "pointer",
-  color: "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
+  color:
+    "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
   fontSize: 13,
   lineHeight: 1,
   padding: 0,
-  borderRadius: "var(--semiotic-border-radius, 4px)",
+  borderRadius: "var(--semiotic-border-radius, 4px)"
 }
 
 const VISIBLE_TABLE_STYLE: React.CSSProperties = {
@@ -324,31 +400,49 @@ const VISIBLE_TABLE_STYLE: React.CSSProperties = {
   borderCollapse: "collapse",
   fontSize: 12,
   marginTop: 4,
-  fontVariantNumeric: "tabular-nums",
+  fontVariantNumeric: "tabular-nums"
 }
 
 const VISIBLE_TH_STYLE: React.CSSProperties = {
   textAlign: "left",
   padding: "5px 10px",
-  borderBottom: "2px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
+  borderBottom:
+    "2px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
   fontWeight: 600,
   fontSize: 11,
   textTransform: "uppercase" as const,
   letterSpacing: "0.04em",
-  color: "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
+  color:
+    "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))"
 }
 
 const VISIBLE_TD_STYLE: React.CSSProperties = {
   padding: "4px 10px",
-  borderBottom: "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
+  borderBottom:
+    "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))"
 }
 
 const CAPTION_STYLE: React.CSSProperties = {
   textAlign: "left",
   fontSize: 11,
-  color: "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #999))",
+  color:
+    "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #999))",
   marginBottom: 4,
-  fontStyle: "italic",
+  fontStyle: "italic"
+}
+
+const SHOW_MORE_BUTTON_STYLE: React.CSSProperties = {
+  marginTop: 8,
+  padding: "4px 10px",
+  fontSize: 12,
+  cursor: "pointer",
+  border:
+    "1px solid var(--semiotic-data-table-border, var(--semiotic-border, #e0e0e0))",
+  borderRadius: "var(--semiotic-border-radius, 4px)",
+  background:
+    "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
+  color: "var(--semiotic-data-table-text, var(--semiotic-text, #333))",
+  fontFamily: "inherit"
 }
 
 function fmtCell(v: unknown): string {
@@ -365,38 +459,76 @@ function fmtCell(v: unknown): string {
 /**
  * JIT accessible data summary. Renders a lightweight sr-only button by default.
  * On activation (or when ChartContainer's dataSummary action is toggled),
- * computes a statistical summary (.describe()-style) and shows 5 sample rows.
+ * computes a statistical summary (.describe()-style) and shows a sample of rows
+ * (5 to start), pageable to the full dataset via "Show more".
  */
-export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: AccessibleDataTableProps) {
+export function AccessibleDataTable({
+  scene,
+  chartType,
+  tableId,
+  chartTitle
+}: AccessibleDataTableProps) {
   const [srExpanded, setSrExpanded] = React.useState(false)
+  const [visibleCount, setVisibleCount] = React.useState(SAMPLE_SIZE)
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
   const containerRef = React.useRef<HTMLDivElement>(null)
-  const regionLabel = chartTitle ? `Data summary for ${chartTitle}` : tableId ? `Data summary for ${chartType} ${tableId}` : `Data summary for ${chartType}`
+  const regionLabel = chartTitle
+    ? `Data summary for ${chartTitle}`
+    : tableId
+      ? `Data summary for ${chartType} ${tableId}`
+      : `Data summary for ${chartType}`
 
-  // When the skip link targets this element, expand visibly.
-  const handleFocus = React.useCallback(() => {
-    if (!srExpanded && !visible) setSrExpanded(true)
-  }, [srExpanded, visible])
+  // Reset paging whenever the panel collapses — via the close button, a blur in
+  // sr-only mode, or ChartContainer toggling visibility off — so reopening never
+  // re-renders the full (potentially huge) row set at once.
+  React.useEffect(() => {
+    if (!isExpanded) setVisibleCount(SAMPLE_SIZE)
+  }, [isExpanded])
+
+  // Expand only when focus lands on the region container itself (the skip-link
+  // path programmatically focuses it). Focus bubbling up from the inner trigger
+  // button must NOT auto-expand — otherwise merely tabbing onto the button
+  // forces the screen reader through the entire table without the user opting in.
+  const handleFocus = React.useCallback(
+    (e: React.FocusEvent) => {
+      if (e.target !== e.currentTarget) return
+      if (!srExpanded && !visible) setSrExpanded(true)
+    },
+    [srExpanded, visible]
+  )
 
   // Collapse when focus leaves the panel entirely (not for context-controlled mode).
-  const handleBlur = React.useCallback((e: React.FocusEvent) => {
-    if (visible) return // ChartContainer controls visibility
-    // Check if focus moved to another element inside this container
-    if (containerRef.current?.contains(e.relatedTarget as Node)) return
-    setSrExpanded(false)
-  }, [visible])
+  const handleBlur = React.useCallback(
+    (e: React.FocusEvent) => {
+      if (visible) return // ChartContainer controls visibility
+      // Check if focus moved to another element inside this container
+      if (containerRef.current?.contains(e.relatedTarget as Node)) return
+      setSrExpanded(false)
+    },
+    [visible]
+  )
 
   if (!scene || scene.length === 0) {
-    return tableId ? <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} /> : null
+    return tableId ? (
+      <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} />
+    ) : null
   }
 
   const totalCount = scene.length
 
   if (!isExpanded) {
     return (
-      <div id={tableId} className={DATA_TABLE_HIDDEN_CLASS} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={regionLabel}>
+      <div
+        id={tableId}
+        className={DATA_TABLE_HIDDEN_CLASS}
+        tabIndex={-1}
+        onFocus={handleFocus}
+        style={SR_ONLY_STYLE}
+        role="region"
+        aria-label={regionLabel}
+      >
         <button type="button" onClick={() => setSrExpanded(true)}>
           View data summary ({totalCount} elements)
         </button>
@@ -408,7 +540,9 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
   const allRows = extractAllRows(scene)
   const fieldStats = computeFieldStats(allRows)
   const summary = formatSummary(allRows.length, fieldStats)
-  const sampleRows = allRows.slice(0, SAMPLE_SIZE)
+  const shownCount = Math.min(visibleCount, allRows.length)
+  const sampleRows = allRows.slice(0, shownCount)
+  const remaining = allRows.length - shownCount
 
   const columnSet = new Set<string>()
   for (const r of sampleRows) {
@@ -419,21 +553,59 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
     setSrExpanded(false)
+    // visibleCount resets via the collapse effect above.
   }
 
+  const showMore = () => setVisibleCount((c) => c + PAGE_SIZE)
+
   return (
-    <div ref={containerRef} id={tableId} className={DATA_TABLE_VISIBLE_CLASS} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
-      <button type="button" className="semiotic-accessible-data-table-close" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
-      <div className="semiotic-accessible-data-table-summary" role="note" style={SUMMARY_NOTE_STYLE}>{summary}</div>
-      <table className="semiotic-accessible-data-table-table" role="table" aria-label={`Sample data for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
-        <caption className="semiotic-accessible-data-table-caption" style={CAPTION_STYLE}>
-          First {sampleRows.length} of {allRows.length} data points
+    <div
+      ref={containerRef}
+      id={tableId}
+      className={DATA_TABLE_VISIBLE_CLASS}
+      tabIndex={-1}
+      onBlur={handleBlur}
+      style={VISIBLE_PANEL_STYLE}
+      role="region"
+      aria-label={regionLabel}
+    >
+      <button
+        type="button"
+        className="semiotic-accessible-data-table-close"
+        onClick={dismiss}
+        aria-label="Close data summary"
+        style={CLOSE_BUTTON_STYLE}
+      >
+        &times;
+      </button>
+      <div
+        className="semiotic-accessible-data-table-summary"
+        role="note"
+        style={SUMMARY_NOTE_STYLE}
+      >
+        {summary}
+      </div>
+      <table
+        className="semiotic-accessible-data-table-table"
+        role="table"
+        aria-label={`Sample data for ${chartType}`}
+        style={VISIBLE_TABLE_STYLE}
+      >
+        <caption
+          className="semiotic-accessible-data-table-caption"
+          style={CAPTION_STYLE}
+        >
+          {remaining > 0
+            ? `First ${shownCount} of ${allRows.length} data points`
+            : `All ${allRows.length} data points`}
         </caption>
         <thead>
           <tr>
             <th style={VISIBLE_TH_STYLE}>type</th>
             {columns.map((c) => (
-              <th key={c} style={VISIBLE_TH_STYLE}>{c}</th>
+              <th key={c} style={VISIBLE_TH_STYLE}>
+                {c}
+              </th>
             ))}
           </tr>
         </thead>
@@ -442,12 +614,25 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
             <tr key={i}>
               <td style={VISIBLE_TD_STYLE}>{r.label}</td>
               {columns.map((c) => (
-                <td key={c} style={VISIBLE_TD_STYLE}>{fmtCell(r.values[c])}</td>
+                <td key={c} style={VISIBLE_TD_STYLE}>
+                  {fmtCell(r.values[c])}
+                </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
+      {remaining > 0 && (
+        <button
+          type="button"
+          className="semiotic-accessible-data-table-show-more"
+          onClick={showMore}
+          style={SHOW_MORE_BUTTON_STYLE}
+        >
+          Show {Math.min(PAGE_SIZE, remaining)} more{" "}
+          {remaining === 1 ? "row" : "rows"} ({remaining} remaining)
+        </button>
+      )}
     </div>
   )
 }
@@ -455,7 +640,14 @@ export function AccessibleDataTable({ scene, chartType, tableId, chartTitle }: A
 // ── NetworkAccessibleDataTable ──────────────────────────────────────────
 
 interface NetworkAccessibleDataTableProps {
-  nodes: Array<{ datum?: any; id?: string; cx?: number; cy?: number; x?: number; y?: number }>
+  nodes: Array<{
+    datum?: any
+    id?: string
+    cx?: number
+    cy?: number
+    x?: number
+    y?: number
+  }>
   edges: Array<{ datum?: any; source?: string; target?: string }>
   chartType: string
   tableId?: string
@@ -465,31 +657,68 @@ interface NetworkAccessibleDataTableProps {
 /**
  * JIT accessible data summary for network charts.
  */
-export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, chartTitle }: NetworkAccessibleDataTableProps) {
+export function NetworkAccessibleDataTable({
+  nodes,
+  edges,
+  chartType,
+  tableId,
+  chartTitle
+}: NetworkAccessibleDataTableProps) {
   const [srExpanded, setSrExpanded] = React.useState(false)
+  const [visibleCount, setVisibleCount] = React.useState(SAMPLE_SIZE)
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
-  const regionLabel = chartTitle ? `Data summary for ${chartTitle}` : tableId ? `Data summary for ${chartType} ${tableId}` : `Data summary for ${chartType}`
+  const regionLabel = chartTitle
+    ? `Data summary for ${chartTitle}`
+    : tableId
+      ? `Data summary for ${chartType} ${tableId}`
+      : `Data summary for ${chartType}`
   const containerRef = React.useRef<HTMLDivElement>(null)
 
-  const handleFocus = React.useCallback(() => {
-    if (!srExpanded && !visible) setSrExpanded(true)
-  }, [srExpanded, visible])
+  // Reset paging on any collapse path (close button, blur, ChartContainer
+  // toggle) so reopening never re-renders the full node set at once.
+  React.useEffect(() => {
+    if (!isExpanded) setVisibleCount(SAMPLE_SIZE)
+  }, [isExpanded])
 
-  const handleBlur = React.useCallback((e: React.FocusEvent) => {
-    if (visible) return
-    if (containerRef.current?.contains(e.relatedTarget as Node)) return
-    setSrExpanded(false)
-  }, [visible])
+  // Only the skip-link path (which focuses the region container itself) auto-
+  // expands; focus bubbling from the inner trigger button must not. See the
+  // matching note in AccessibleDataTable.
+  const handleFocus = React.useCallback(
+    (e: React.FocusEvent) => {
+      if (e.target !== e.currentTarget) return
+      if (!srExpanded && !visible) setSrExpanded(true)
+    },
+    [srExpanded, visible]
+  )
+
+  const handleBlur = React.useCallback(
+    (e: React.FocusEvent) => {
+      if (visible) return
+      if (containerRef.current?.contains(e.relatedTarget as Node)) return
+      setSrExpanded(false)
+    },
+    [visible]
+  )
 
   if (!nodes || nodes.length === 0) {
-    return tableId ? <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} /> : null
+    return tableId ? (
+      <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} />
+    ) : null
   }
 
   if (!isExpanded) {
     return (
-      <div id={tableId} className={DATA_TABLE_HIDDEN_CLASS} tabIndex={-1} onFocus={handleFocus} style={SR_ONLY_STYLE} role="region" aria-label={regionLabel}>
+      <div
+        id={tableId}
+        className={DATA_TABLE_HIDDEN_CLASS}
+        tabIndex={-1}
+        onFocus={handleFocus}
+        style={SR_ONLY_STYLE}
+        role="region"
+        aria-label={regionLabel}
+      >
         <button type="button" onClick={() => setSrExpanded(true)}>
           View data summary ({nodes.length} nodes, {edges.length} edges)
         </button>
@@ -526,7 +755,15 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     }
   }
 
-  type NodeDegreeRow = { id: string; degree: number; inDeg: number; outDeg: number; wDegree: number; wInDeg: number; wOutDeg: number }
+  type NodeDegreeRow = {
+    id: string
+    degree: number
+    inDeg: number
+    outDeg: number
+    wDegree: number
+    wInDeg: number
+    wOutDeg: number
+  }
   const nodeRows: NodeDegreeRow[] = []
   for (let ni = 0; ni < safeNodes.length; ni++) {
     const n = safeNodes[ni]
@@ -537,7 +774,15 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
     const outd = outDeg.get(id) ?? 0
     const wind = wInDeg.get(id) ?? 0
     const woutd = wOutDeg.get(id) ?? 0
-    nodeRows.push({ id, degree: ind + outd, inDeg: ind, outDeg: outd, wDegree: wind + woutd, wInDeg: wind, wOutDeg: woutd })
+    nodeRows.push({
+      id,
+      degree: ind + outd,
+      inDeg: ind,
+      outDeg: outd,
+      wDegree: wind + woutd,
+      wInDeg: wind,
+      wOutDeg: woutd
+    })
   }
 
   // Sort by degree descending for most useful summary
@@ -555,30 +800,70 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
   }
 
   // Show weighted columns when any edge carries a numeric value
-  const hasWeights = safeEdges.some(e => {
+  const hasWeights = safeEdges.some((e) => {
     const raw = e?.datum ?? e
     return typeof raw?.value === "number" && Number.isFinite(raw.value)
   })
 
   const summaryParts = [`${nodeRows.length} nodes, ${safeEdges.length} edges.`]
   if (nodeRows.length > 0) {
-    summaryParts.push(`Mean degree: ${fmt(avgDegree)}, max degree: ${maxDegree}.`)
+    summaryParts.push(
+      `Mean degree: ${fmt(avgDegree)}, max degree: ${maxDegree}.`
+    )
   }
 
-  const sampleNodes = nodeRows.slice(0, SAMPLE_SIZE)
+  const shownCount = Math.min(visibleCount, nodeRows.length)
+  const sampleNodes = nodeRows.slice(0, shownCount)
+  const remaining = nodeRows.length - shownCount
 
   const dismiss = () => {
     if (visible && dataSummary) dataSummary.setVisible(false)
     setSrExpanded(false)
+    // visibleCount resets via the collapse effect above.
   }
 
+  const showMore = () => setVisibleCount((c) => c + PAGE_SIZE)
+
   return (
-    <div ref={containerRef} id={tableId} className={DATA_TABLE_NETWORK_CLASS} tabIndex={-1} onBlur={handleBlur} style={VISIBLE_PANEL_STYLE} role="region" aria-label={regionLabel}>
-      <button type="button" className="semiotic-accessible-data-table-close" onClick={dismiss} aria-label="Close data summary" style={CLOSE_BUTTON_STYLE}>&times;</button>
-      <div className="semiotic-accessible-data-table-summary" role="note" style={SUMMARY_NOTE_STYLE}>{summaryParts.join(" ")}</div>
-      <table className="semiotic-accessible-data-table-table" role="table" aria-label={`Node degree summary for ${chartType}`} style={VISIBLE_TABLE_STYLE}>
-        <caption className="semiotic-accessible-data-table-caption" style={CAPTION_STYLE}>
-          Top {sampleNodes.length} of {nodeRows.length} nodes by degree
+    <div
+      ref={containerRef}
+      id={tableId}
+      className={DATA_TABLE_NETWORK_CLASS}
+      tabIndex={-1}
+      onBlur={handleBlur}
+      style={VISIBLE_PANEL_STYLE}
+      role="region"
+      aria-label={regionLabel}
+    >
+      <button
+        type="button"
+        className="semiotic-accessible-data-table-close"
+        onClick={dismiss}
+        aria-label="Close data summary"
+        style={CLOSE_BUTTON_STYLE}
+      >
+        &times;
+      </button>
+      <div
+        className="semiotic-accessible-data-table-summary"
+        role="note"
+        style={SUMMARY_NOTE_STYLE}
+      >
+        {summaryParts.join(" ")}
+      </div>
+      <table
+        className="semiotic-accessible-data-table-table"
+        role="table"
+        aria-label={`Node degree summary for ${chartType}`}
+        style={VISIBLE_TABLE_STYLE}
+      >
+        <caption
+          className="semiotic-accessible-data-table-caption"
+          style={CAPTION_STYLE}
+        >
+          {remaining > 0
+            ? `Top ${shownCount} of ${nodeRows.length} nodes by degree`
+            : `All ${nodeRows.length} nodes by degree`}
         </caption>
         <thead>
           <tr>
@@ -598,13 +883,30 @@ export function NetworkAccessibleDataTable({ nodes, edges, chartType, tableId, c
               <td style={VISIBLE_TD_STYLE}>{row.degree}</td>
               <td style={VISIBLE_TD_STYLE}>{row.inDeg}</td>
               <td style={VISIBLE_TD_STYLE}>{row.outDeg}</td>
-              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wDegree)}</td>}
-              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wInDeg)}</td>}
-              {hasWeights && <td style={VISIBLE_TD_STYLE}>{fmt(row.wOutDeg)}</td>}
+              {hasWeights && (
+                <td style={VISIBLE_TD_STYLE}>{fmt(row.wDegree)}</td>
+              )}
+              {hasWeights && (
+                <td style={VISIBLE_TD_STYLE}>{fmt(row.wInDeg)}</td>
+              )}
+              {hasWeights && (
+                <td style={VISIBLE_TD_STYLE}>{fmt(row.wOutDeg)}</td>
+              )}
             </tr>
           ))}
         </tbody>
       </table>
+      {remaining > 0 && (
+        <button
+          type="button"
+          className="semiotic-accessible-data-table-show-more"
+          onClick={showMore}
+          style={SHOW_MORE_BUTTON_STYLE}
+        >
+          Show {Math.min(PAGE_SIZE, remaining)} more{" "}
+          {remaining === 1 ? "node" : "nodes"} ({remaining} remaining)
+        </button>
+      )}
     </div>
   )
 }
@@ -661,7 +963,7 @@ export function SkipToTableLink({ tableId }: { tableId: string }) {
           zIndex: "10",
           fontSize: "12px",
           top: "4px",
-          left: "4px",
+          left: "4px"
         })
       }}
       onBlur={(e) => {
@@ -688,18 +990,14 @@ export function AriaLiveTooltip({ hoverPoint }: { hoverPoint: any }) {
       const entries = Object.entries(data).filter(
         ([, v]) => typeof v !== "object" && typeof v !== "function"
       )
-      text = `Focused on data point: ${entries.map(([k, v]) => `${k}: ${v}`).join(", ")}`
+      text = `Data point: ${entries.map(([k, v]) => `${k}: ${v}`).join(", ")}`
     } else {
-      text = `Focused on data point: ${String(data)}`
+      text = `Data point: ${String(data)}`
     }
   }
 
   return (
-    <div
-      aria-live="polite"
-      aria-atomic="true"
-      style={SR_ONLY_STYLE}
-    >
+    <div aria-live="polite" aria-atomic="true" style={SR_ONLY_STYLE}>
       {text}
     </div>
   )

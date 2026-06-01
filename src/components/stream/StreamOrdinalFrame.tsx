@@ -1113,6 +1113,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
         <ScreenReaderSummary summary={summary} />
+        {/* Live region MUST live outside the role="img" wrapper — AT treats the
+            image as atomic and never announces content nested inside it. */}
+        <AriaLiveTooltip hoverPoint={hoverPoint} />
         <div
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
@@ -1162,7 +1165,6 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             height: size[1]
           }}
         />
-        <AriaLiveTooltip hoverPoint={hoverPoint} />
 
         <OrdinalSVGOverlay
           width={adjustedWidth}
