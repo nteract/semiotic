@@ -18,10 +18,7 @@ import {
   type AudienceProfile,
   type ReceptionModality,
 } from "./audienceProfile"
-import {
-  auditAccessibility,
-  type AccessibilityAuditResult,
-} from "../charts/shared/auditAccessibility"
+import { auditAccessibility } from "../charts/shared/auditAccessibility"
 import {
   applyScaleBias,
   computeEffectiveScale,
@@ -213,17 +210,17 @@ export function suggestCharts(
       const variantRubric = applyVariantToRubric(capability.rubric, variant)
       const props = capability.buildProps(profile, variant)
 
-      // Receivability audit (non-visual audiences only) — feeds both the bias
-      // and the receivability caveats, so the chart is audited at most once.
-      let audit: AccessibilityAuditResult | undefined
+      // Receivability (non-visual audiences only) — audit the candidate and
+      // derive the signal ONCE here; it feeds both the score bias and the
+      // receivability caveats, so the audit findings are scanned a single time.
       let receivability: ReturnType<typeof receivabilityBias> | undefined
       if (wantReceivability) {
-        audit = auditAccessibility(capability.component, props as Datum)
+        const audit = auditAccessibility(capability.component, props as Datum)
         receivability = receivabilityBias(audit, modality as ReceptionModality)
       }
 
       // Audience bias: overrides familiarity and shifts composite score
-      // by ±familiarity + ±target (+ ±receivability when audit is supplied).
+      // by ±familiarity + ±target (+ ±receivability when the signal is supplied).
       // Strong enough to reorder rankings, not strong enough to override
       // fits-driven correctness.
       const biased = applyAudienceBias(
@@ -231,7 +228,7 @@ export function suggestCharts(
         variantRubric,
         capability.component,
         options.audience,
-        audit,
+        receivability,
       )
 
       // Scale + quality bias: composes additively on top of the audience-biased

@@ -103,16 +103,26 @@ export function buildReaderGrounding(
   const levels = options.levels ?? ["l1", "l2", "l3"]
   const includeStructure = options.includeStructure !== false
 
-  const description = describeChart(component, props, { levels, locale })
+  // Single describeChart pass: when an act resolves, request L4 alongside the
+  // L1–L3 levels so the O(n) stats/formatting runs once, not twice. capability
+  // and audience only influence L4, so the L1–L3 output is unchanged.
+  const act = resolveCommunicativeAct(component, capability)
+  const requested: DescribeLevel[] = act ? [...levels, "l4"] : levels
+  const full = describeChart(component, props, { levels: requested, locale, capability, audience })
+
+  // Split the single result back into the L1–L3 description and the L4 sentence.
+  const { l4: l4Sentence, ...l13Levels } = full.levels
+  const description: DescribeChartResult = {
+    levels: l13Levels,
+    // Re-join just the L1–L3 levels (canonical order; undefined levels drop out),
+    // so `description.text` excludes the L4 sentence carried in `intent`.
+    text: (["l1", "l2", "l3"] as const).map((l) => full.levels[l]).filter(Boolean).join(" "),
+  }
 
   let intent: ChartReaderGroundingIntent | undefined
-  const act = resolveCommunicativeAct(component, capability)
-  if (act) {
-    const l4 = describeChart(component, props, { levels: ["l4"], locale, capability, audience }).levels.l4
-    if (l4) {
-      const meta = contextMeta(capability)
-      intent = { act, sentence: l4, family: meta.family, intentScores: meta.intentScores }
-    }
+  if (act && l4Sentence) {
+    const meta = contextMeta(capability)
+    intent = { act, sentence: l4Sentence, family: meta.family, intentScores: meta.intentScores }
   }
 
   const structure = includeStructure

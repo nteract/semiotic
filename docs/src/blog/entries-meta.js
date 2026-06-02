@@ -126,7 +126,6 @@ export const allBlogEntriesMeta = [
     tags: ["case-study"],
     excerpt:
       "Chat-with-chart works, but the user has to verbalize which point they care about and the AI has to verbalize where the answer applies. Both steps lose the spatial information that's already on screen. Bidirectional point-anchored AI conversation, with useChartFocus + useChartInterrogation as the building blocks.",
-    draft: true,
   },
   {
     slug: "multimodal-response",

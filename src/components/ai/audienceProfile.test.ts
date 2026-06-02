@@ -95,22 +95,22 @@ describe("applyAudienceBias", () => {
     expect(r.appliedReason).toContain("distributions")
   })
 
-  it("folds a receivability penalty when the modality is non-visual and an audit is supplied", () => {
+  it("folds a precomputed receivability signal when the modality is non-visual", () => {
     const audience: AudienceProfile = { receptionModality: "screen-reader" }
-    const audit = auditWith([finding("assistive.data-density", "warn", true)])
-    const r = applyAudienceBias(4, baseRubric, "PieChart", audience, audit)
+    const signal = receivabilityBias(auditWith([finding("assistive.data-density", "warn", true)]), "screen-reader")
+    const r = applyAudienceBias(4, baseRubric, "PieChart", audience, signal)
     expect(r.score).toBeCloseTo(3.6) // 4 − 0.4 (a warn)
     expect(r.receivabilityReason).toContain("screen reader")
   })
 
-  it("applies no receivability penalty for a visual audience even with an audit", () => {
-    const audit = auditWith([finding("assistive.data-density", "warn", true)])
-    const r = applyAudienceBias(4, baseRubric, "PieChart", { receptionModality: "visual" }, audit)
+  it("applies no receivability penalty for a visual audience even when a signal is passed", () => {
+    const signal = receivabilityBias(auditWith([finding("assistive.data-density", "warn", true)]), "screen-reader")
+    const r = applyAudienceBias(4, baseRubric, "PieChart", { receptionModality: "visual" }, signal)
     expect(r.score).toBe(4)
     expect(r.receivabilityReason).toBeUndefined()
   })
 
-  it("applies no receivability penalty when no audit is supplied", () => {
+  it("applies no receivability penalty when no signal is supplied", () => {
     const r = applyAudienceBias(4, baseRubric, "PieChart", { receptionModality: "screen-reader" })
     expect(r.score).toBe(4)
     expect(r.receivabilityReason).toBeUndefined()

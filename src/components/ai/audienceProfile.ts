@@ -181,18 +181,20 @@ export function receivabilityBias(
  * Score is left unclamped so internal sorting reflects the magnitude of bias.
  *
  * A third term — *receivability* — composes in when the audience declares a
- * non-visual `receptionModality` and the caller passes the chart's
- * accessibility `audit`. Familiarity and receivability are different axes: a
- * chart can be familiar yet unreceivable in the target channel, and this folds
- * the audit's verdict into the same score the recommender ranks by. See
- * {@link receivabilityBias}.
+ * non-visual `receptionModality` and the caller passes a precomputed
+ * {@link ReceivabilitySignal} (from {@link receivabilityBias}). Familiarity and
+ * receivability are different axes: a chart can be familiar yet unreceivable in
+ * the target channel, and this folds that signal into the same score the
+ * recommender ranks by. The caller computes the signal once and reuses it for
+ * the suggestion's caveats too, so the audit is scanned a single time per
+ * candidate.
  */
 export function applyAudienceBias(
   baseScore: number,
   baseRubric: ChartRubric,
   component: string,
   audience: AudienceProfile | undefined,
-  audit?: AccessibilityAuditResult,
+  receivability?: ReceivabilitySignal,
 ): AudienceBiasResult {
   if (!audience) return { score: baseScore, rubric: baseRubric }
 
@@ -216,13 +218,14 @@ export function applyAudienceBias(
     }
   }
 
-  // Receivability: factor the audit's findings for the audience's channel.
+  // Receivability: fold the precomputed signal for the audience's channel.
+  // The `modality` guard keeps a visual audience penalty-free even if a caller
+  // passes a non-zero signal.
   let receivabilityReason: string | undefined
   const modality = audience.receptionModality
-  if (audit && modality && modality !== "visual") {
-    const rb = receivabilityBias(audit, modality)
-    delta += rb.delta
-    receivabilityReason = rb.reason
+  if (receivability && modality && modality !== "visual") {
+    delta += receivability.delta
+    receivabilityReason = receivability.reason
   }
 
   return {
