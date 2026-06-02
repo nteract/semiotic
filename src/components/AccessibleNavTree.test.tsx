@@ -78,6 +78,15 @@ describe("AccessibleNavTree — keyboard", () => {
     expect(onActiveChange.mock.calls[0][0].role).toBe("axis")
   })
 
+  it("does not fire onActiveChange when re-selecting the already-active node", () => {
+    const onActiveChange = vi.fn()
+    render(<AccessibleNavTree tree={singleSeries} onActiveChange={onActiveChange} />)
+    // Root is active on mount; ArrowUp at the first row clamps back to root —
+    // no actual change, so the callback must not fire.
+    fireEvent.keyDown(screen.getAllByRole("treeitem")[0], { key: "ArrowUp" })
+    expect(onActiveChange).not.toHaveBeenCalled()
+  })
+
   it("controlled activeId selects the node and auto-expands the path to it", () => {
     // A leaf inside a collapsed series — supplying its id should reveal it.
     const west = multiSeries.children!.find((c) => c.role === "series")!
@@ -138,5 +147,13 @@ describe("AccessibleNavTree — reception telemetry", () => {
     // The controlled activeId + auto-expand drive the tree — not the reader.
     render(<AccessibleNavTree tree={multiSeries} activeId={deepLeaf.id} chartId="sales" />)
     expect(getConversationArcStore().getEvents()).toHaveLength(0)
+  })
+
+  it("does not record a focus event when the active node does not change", () => {
+    enableConversationArc()
+    render(<AccessibleNavTree tree={singleSeries} chartId="sales" />)
+    // ArrowUp at the root clamps to the root — no change, so no focus event.
+    fireEvent.keyDown(screen.getAllByRole("treeitem")[0], { key: "ArrowUp" })
+    expect(getConversationArcStore().getEvents().filter((e) => e.type === "nav-node-focused")).toHaveLength(0)
   })
 })

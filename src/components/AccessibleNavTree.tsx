@@ -121,10 +121,15 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
   )
 
   const setActive = React.useCallback((node: NavTreeNode) => {
+    // No-op when the node is already active (ArrowDown on the last item,
+    // re-clicking the active row, etc.). `onActiveChange` fires only "when the
+    // active node changes", and skipping it here also avoids redundant
+    // selection writes and double-counted reception telemetry.
+    if (node.id === activeId) return
     if (!isControlled) setInternalActiveId(node.id)
     onActiveChange?.(node)
     recordNav(node, "focus")
-  }, [onActiveChange, isControlled, recordNav])
+  }, [onActiveChange, isControlled, recordNav, activeId])
 
   const expand = (node: NavTreeNode) => { setExpanded((s) => new Set(s).add(node.id)); recordNav(node, "toggle", true) }
   const collapse = (node: NavTreeNode) => { setExpanded((s) => { const n = new Set(s); n.delete(node.id); return n }); recordNav(node, "toggle", false) }

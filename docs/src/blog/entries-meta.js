@@ -41,7 +41,7 @@ export const allBlogEntriesMeta = [
     date: "2026-06-01",
     tags: ["case-study", "accessibility"],
     excerpt:
-      'A screen reader announces "line chart, nine points" — accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart\'s config, and ChartContainer makes it an opt-in layer.',
+      "A screen reader announces \"line chart, nine points\" — accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart's config, and ChartContainer makes it an opt-in layer.",
     ogChart: { component: "LineChart" },
     draft: true,
   },
