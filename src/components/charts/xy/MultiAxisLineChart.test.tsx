@@ -194,18 +194,24 @@ describe("MultiAxisLineChart", () => {
     // arrives must not call a different number of hooks between renders —
     // otherwise React throws "Rendered more hooks than during the previous
     // render". Regression guard for the misplaced `setup.earlyReturn` return.
-    const series = [
-      { yAccessor: "temperature", label: "Temperature" },
-      { yAccessor: "humidity", label: "Humidity" },
-    ]
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     try {
+      // Inline the series literal (so `yAccessor` is contextually typed as a
+      // key of the data, not widened to `string`) and keep `data` on both
+      // renders so TDatum is inferred consistently. `loading` still drives the
+      // loading→data transition regardless of data presence.
       const { container, rerender } = render(
-        <MultiAxisLineChart xAccessor="time" series={series} loading width={600} height={400} />
+        <MultiAxisLineChart data={sampleData} xAccessor="time" series={[
+          { yAccessor: "temperature", label: "Temperature" },
+          { yAccessor: "humidity", label: "Humidity" },
+        ]} loading width={600} height={400} />
       )
       expect(() =>
         rerender(
-          <MultiAxisLineChart data={sampleData} xAccessor="time" series={series} width={600} height={400} />
+          <MultiAxisLineChart data={sampleData} xAccessor="time" series={[
+            { yAccessor: "temperature", label: "Temperature" },
+            { yAccessor: "humidity", label: "Humidity" },
+          ]} width={600} height={400} />
         )
       ).not.toThrow()
       // The frame must actually render once data arrives — if a hooks-count

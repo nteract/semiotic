@@ -417,8 +417,12 @@ export function describeChart(
   const series = seriesField(props)
 
   const { measure, measureFallback, dimension, dimensionFallback } = roles(component, props)
-  const measureName = measure || measureFallback
-  const dimensionName = dimension || dimensionFallback
+  // Only string accessors are human-readable labels. Function accessors (common
+  // in Semiotic) are truthy but would interpolate their source into the prose —
+  // fall back to the generic label instead. (The raw accessor still flows to
+  // `resolveAccessor` below for value extraction.)
+  const measureName = typeof measure === "string" && measure ? measure : measureFallback
+  const dimensionName = typeof dimension === "string" && dimension ? dimension : dimensionFallback
 
   const levels: { l1?: string; l2?: string; l3?: string; l4?: string } = {}
 

@@ -122,6 +122,20 @@ describe("describeChart — composition", () => {
     expect(() => describeChart("LineChart", { data: "nope" as unknown as [] })).not.toThrow()
     expect(() => describeChart("Mystery", {})).not.toThrow()
   })
+
+  it("falls back to a readable label when an accessor is a function (no source leak)", () => {
+    const r = describeChart("LineChart", {
+      data: [{ m: 1, v: 10 }, { m: 2, v: 30 }],
+      xAccessor: (d: { m: number }) => d.m,
+      yAccessor: (d: { v: number }) => d.v,
+    })
+    // Function accessors are truthy but must not be interpolated into prose.
+    expect(r.levels.l1).toBe("A line chart of y by x.")
+    expect(r.text).not.toContain("=>")
+    // …while value extraction still works through the function accessors.
+    expect(r.levels.l2).toContain("ranges from 10")
+    expect(r.levels.l2).toContain("to 30")
+  })
 })
 
 describe("describeChart — L4 intent / communicative act", () => {
