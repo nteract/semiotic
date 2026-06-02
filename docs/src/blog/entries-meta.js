@@ -24,8 +24,8 @@ export const allBlogEntriesMeta = [
     title: "Navigating a Chart You Can't See",
     subtitle:
       "Structured navigation exposes a chart as a screen-reader-traversable tree — chart → series → data point — following the Olli / Data Navigator model, uncoupled from the canvas it's drawn on.",
-    author: "Semiotic Team",
-    date: "2026-06-01",
+    author: "Elijah Meeks",
+    date: "2026-06-15",
     tags: ["case-study", "accessibility"],
     excerpt:
       "A flat table of 200 rows is technically accessible and practically unusable. Structured navigation gives a non-visual reader the path a sighted reader takes — overview, then detail — as an ARIA tree built from the chart config and mounted as an opt-in ChartContainer layer, decoupled from how the chart renders.",
@@ -36,12 +36,12 @@ export const allBlogEntriesMeta = [
     slug: "what-a-screen-reader-should-hear",
     title: "What a Screen Reader Should Hear",
     subtitle:
-      "describeChart() turns a chart config into a layered natural-language description — encoding, statistics, and trend — the content research says blind and low-vision readers actually want.",
-    author: "Semiotic Team",
-    date: "2026-06-01",
+      "describeChart() turns a chart config into a layered natural-language description: encoding, statistics, and trend which research says blind and low-vision readers actually want.",
+    author: "Elijah Meeks",
+    date: "2026-06-15",
     tags: ["case-study", "accessibility"],
     excerpt:
-      "A screen reader announces \"line chart, nine points\" — accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart's config, and ChartContainer makes it an opt-in layer.",
+      "A screen reader announces 'line chart, nine points' which is both accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart\'s config, and ChartContainer makes it an opt-in layer.",
     ogChart: { component: "LineChart" },
     draft: true,
   },
