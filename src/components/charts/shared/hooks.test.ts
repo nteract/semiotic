@@ -12,6 +12,7 @@ import {
   getCrosshairProps,
   } from "./hooks"
 import { SelectionProvider } from "../../store/SelectionStore"
+import { useSelection } from "../../store/useSelection"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
 import { setCrosshairPosition, clearCrosshairPosition, useCrosshairPosition, unlockCrosshair } from "../../store/LinkedCrosshairStore"
@@ -1095,5 +1096,64 @@ describe("useChartSelection click-to-lock crosshair", () => {
     })
     // No crosshair should be set in field-based mode
     expect(result.current.crosshair).toBeNull()
+  })
+})
+
+// ── useChartSelection: series-identity mode ────────────────────────────
+
+describe("useChartSelection series mode", () => {
+  it("broadcasts on the auto-resolved series field so a sibling dims by series", () => {
+    const { result } = renderHook(
+      () => {
+        const producer = useChartSelection({
+          linkedHover: { name: "seriesSync", mode: "series" },
+          colorByField: "region", // resolved series-identity field
+          chartType: "LineChart",
+        })
+        const consumer = useSelection({ name: "seriesSync", fields: ["region"] })
+        return { producer, consumer }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    // Nothing hovered yet.
+    expect(result.current.consumer.isActive).toBe(false)
+
+    // Hovering a datum that carries the series field broadcasts {region: value}.
+    act(() => {
+      result.current.producer.customHoverBehavior({ x: 1, y: 2, data: { region: "EU", value: 10 } })
+    })
+    expect(result.current.consumer.isActive).toBe(true)
+    expect(result.current.consumer.predicate({ region: "EU" })).toBe(true)
+    expect(result.current.consumer.predicate({ region: "NA" })).toBe(false)
+
+    // Hover-end clears the selection.
+    act(() => {
+      result.current.producer.customHoverBehavior(null)
+    })
+    expect(result.current.consumer.isActive).toBe(false)
+  })
+
+  it("honors an explicit seriesField override (ignoring colorByField)", () => {
+    const { result } = renderHook(
+      () => {
+        const producer = useChartSelection({
+          linkedHover: { name: "ovr", mode: "series", seriesField: "team" },
+          colorByField: "region", // overridden by the explicit seriesField
+          chartType: "BarChart",
+        })
+        const consumer = useSelection({ name: "ovr", fields: ["team"] })
+        return { producer, consumer }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.producer.customHoverBehavior({ x: 1, y: 2, data: { region: "EU", team: "Blue" } })
+    })
+    // Keyed on team, not region.
+    expect(result.current.consumer.predicate({ team: "Blue" })).toBe(true)
+    expect(result.current.consumer.predicate({ team: "Red" })).toBe(false)
+    expect(result.current.consumer.predicate({ team: "Blue", region: "NA" })).toBe(true)
   })
 })

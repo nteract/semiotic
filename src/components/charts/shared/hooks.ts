@@ -240,18 +240,24 @@ export function useChartSelection({
   const crosshairSourceId = useId()
   const hoverConfig = normalizeLinkedHover(linkedHover, fallbackFields)
 
-  // Selection fields: use the same fields as the hover config so that
-  // the predicate checks the right datum fields for cross-filtering
-  const selectionFields = hoverConfig?.fields || fallbackFields || []
+  // Linked fields drive both the cross-filter selection predicate and the
+  // hover emitter. `mode: "series"` keys off the chart's series-identity field
+  // (the colorBy/lineBy/… the HOC surfaces as colorByField/fallbackFields[0]),
+  // so authors get bar↔series highlighting without hand-wiring `fields`; an
+  // explicit `seriesField` overrides. Other modes keep the configured/fallback
+  // fields. Using one `linkFields` for both keeps emit and consume symmetric.
+  const linkFields = hoverConfig?.mode === "series"
+    ? [hoverConfig.seriesField || colorByField || fallbackFields[0]].filter((f): f is string => !!f)
+    : (hoverConfig?.fields || fallbackFields || [])
 
   const selectionHook = useSelection({
     name: selection?.name || "__unused__",
-    fields: selectionFields
+    fields: linkFields
   })
 
   const linkedHoverHook = useLinkedHover({
     name: hoverConfig?.name || "hover",
-    fields: hoverConfig?.fields || fallbackFields || []
+    fields: linkFields
   })
 
   const pushObservation = useObservationSelector(

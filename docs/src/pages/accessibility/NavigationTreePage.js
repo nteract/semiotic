@@ -216,6 +216,30 @@ function SyncedChart({ data }) {
         leaf and auto-expands the path to it.
       </p>
 
+      <h2 id="annotation-anchors">Reaching an annotation's anchor</h2>
+      <p>
+        An <Link to="/intelligence/conversation-arc">anchored annotation</Link> —
+        an AI note pinned to a specific data point, say — is only "multiplayer"
+        for sighted readers unless a non-visual reader can <em>get to</em> the
+        anchored point. Pass the chart's <code>annotations</code> to{" "}
+        <code>useNavigationSync</code> and each one that anchors to a datum (it
+        carries that datum's <code>matchFields</code>) resolves to a nav-tree leaf:
+      </p>
+      <CodeBlock
+        code={`const sync = useNavigationSync({ tree, chartId: "sales", matchFields: ["month"], annotations })
+
+sync.annotatedIds          // Set<nodeId> — leaves that carry a note; mark them in the tree
+sync.focusAnnotation(0)    // jump the tree + canvas to the 1st annotation's anchor
+sync.focusAnnotation(note) // …or pass the annotation object; returns false if it doesn't anchor`}
+        language="jsx"
+      />
+      <p>
+        <code>focusAnnotation</code> moves the controlled <code>activeId</code> to
+        the anchored leaf <em>and</em> highlights the mark on the canvas, so a
+        screen-reader user lands exactly where the note lives. Threshold/band
+        annotations that aren't pinned to one datum simply don't resolve.
+      </p>
+
       <h2 id="coverage">Coverage</h2>
       <p>
         Full trees for XY, bar, part-to-whole, and distribution families. For

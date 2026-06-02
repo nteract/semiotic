@@ -13,8 +13,10 @@ import type { Datum } from "./datumTypes"
 export interface NormalizedLinkedHover {
   name: string
   fields: string[]
-  mode?: "field" | "x-position"
+  mode?: "field" | "x-position" | "series"
   xField?: string
+  /** Explicit series-identity field for `mode: "series"`; overrides the auto-resolved one. */
+  seriesField?: string
 }
 
 export interface NormalizedLinkedBrush {
@@ -33,7 +35,7 @@ export interface NormalizedLinkedBrush {
  * - `{ name: "hl", fields: ["category"] }` → as-is
  */
 export function normalizeLinkedHover(
-  prop: boolean | string | { name?: string; fields?: string[]; mode?: "field" | "x-position"; xField?: string } | undefined,
+  prop: boolean | string | { name?: string; fields?: string[]; mode?: "field" | "x-position" | "series"; xField?: string; seriesField?: string } | undefined,
   fallbackFields?: string[]
 ): NormalizedLinkedHover | null {
   if (!prop) return null
@@ -48,6 +50,7 @@ export function normalizeLinkedHover(
     fields: prop.fields || fallbackFields || [],
     mode: prop.mode,
     xField: prop.xField,
+    seriesField: prop.seriesField,
   }
 }
 
