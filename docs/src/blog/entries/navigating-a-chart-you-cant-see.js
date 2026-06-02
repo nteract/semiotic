@@ -7,20 +7,34 @@ const DEMO = {
   component: "LineChart",
   props: {
     data: [
-      { month: "Jan", sales: 4200, region: "West" }, { month: "Feb", sales: 5100, region: "West" },
-      { month: "Mar", sales: 6800, region: "West" }, { month: "Jan", sales: 2200, region: "East" },
-      { month: "Feb", sales: 3100, region: "East" }, { month: "Mar", sales: 2600, region: "East" },
+      { month: "Jan", sales: 4200, region: "West" },
+      { month: "Feb", sales: 5100, region: "West" },
+      { month: "Mar", sales: 6800, region: "West" },
+      { month: "Jan", sales: 2200, region: "East" },
+      { month: "Feb", sales: 3100, region: "East" },
+      { month: "Mar", sales: 2600, region: "East" },
     ],
-    xAccessor: "month", yAccessor: "sales", lineBy: "region",
+    xAccessor: "month",
+    yAccessor: "sales",
+    lineBy: "region",
   },
 }
 
 function NavDemo() {
   const tree = React.useMemo(() => buildNavigationTree(DEMO.component, DEMO.props), [])
   return (
-    <div style={{ border: "1px solid var(--surface-3)", borderRadius: 8, padding: 10, margin: "20px 0", background: "var(--surface-1)" }}>
+    <div
+      style={{
+        border: "1px solid var(--surface-3)",
+        borderRadius: 8,
+        padding: 10,
+        margin: "20px 0",
+        background: "var(--surface-1)",
+      }}
+    >
       <p style={{ fontSize: 12, color: "var(--text-2)", margin: "2px 6px 8px" }}>
-        Click in, then ↑/↓ to move, → to expand, ← to collapse. (Visible here; screen-reader-only by default.)
+        Click in, then ↑/↓ to move, → to expand, ← to collapse. (Visible here; screen-reader-only by
+        default.)
       </p>
       <AccessibleNavTree tree={tree} label="Sales by region — navigable structure" visible />
     </div>
@@ -31,80 +45,92 @@ function Body() {
   return (
     <>
       <p>
-        Hand a screen-reader user a chart's data as a flat table of two hundred
-        rows and you've technically made it "accessible" and practically made it
-        unusable. A sighted reader doesn't consume a chart row by row — they see
-        the structure (two series, this one higher), then look closer where it
-        matters. Structured navigation gives a non-visual reader that same path:
-        a tree they walk from the whole chart, down through its series, to
-        individual points — hearing where they are at every step.
+        Hand a screen-reader user a chart's data as a flat table of two hundred rows and you've
+        technically made it "accessible" and practically made it unusable. A sighted reader doesn't
+        consume a chart row by row — they see the structure (two series, this one higher), then look
+        closer where it matters. Structured navigation gives a non-visual reader that same path: a
+        tree they walk from the whole chart, down through its series, to individual points — hearing
+        where they are at every step.
       </p>
 
       <h2 id="why-care">Why this matters</h2>
       <p>
         This is the idea behind{" "}
-        <a href="https://mitvis.github.io/olli/" target="_blank" rel="noopener noreferrer">Olli</a>{" "}
+        <a href="https://mitvis.github.io/olli/" target="_blank" rel="noopener noreferrer">
+          Olli
+        </a>{" "}
         and{" "}
-        <a href="https://www.frank.computer/data-navigator/" target="_blank" rel="noopener noreferrer">Data Navigator</a>{" "}
-        (Frank Elavsky et al., IEEE VIS 2023), and its key move is architectural:
-        the navigation structure lives in the <em>accessibility tree</em>,
-        completely decoupled from how the chart is drawn. That decoupling is what
-        makes it work for canvas. A <code>&lt;canvas&gt;</code> exposes nothing to
-        assistive technology — there are no elements to tab through. So you don't
-        try to make the pixels accessible; you build a parallel, real-DOM
-        structure that mirrors the data and let the screen reader walk <em>that</em>.
-        The chart can render however it likes.
+        <a
+          href="https://www.frank.computer/data-navigator/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Data Navigator
+        </a>{" "}
+        (Frank Elavsky et al., IEEE VIS 2023), and its key move is architectural: the navigation
+        structure lives in the <em>accessibility tree</em>, completely decoupled from how the chart
+        is drawn. That decoupling is what makes it work for canvas. A <code>&lt;canvas&gt;</code>{" "}
+        exposes nothing to assistive technology — there are no elements to tab through. So you don't
+        try to make the pixels accessible; you build a parallel, real-DOM structure that mirrors the
+        data and let the screen reader walk <em>that</em>. The chart can render however it likes.
       </p>
       <p>
-        It also answers a specific Chartability failure — "navigation is tedious."
-        A flat list is the tedious case by construction. A tree is the fix:
-        overview first, detail on demand.
+        It also answers a specific Chartability failure — "navigation is tedious." A flat list is
+        the tedious case by construction. A tree is the fix: overview first, detail on demand.
       </p>
 
       <h2 id="the-thing">Walk the tree</h2>
       <p>
-        Here's a two-series line chart rendered <em>only</em> as its navigation
-        tree (normally this is screen-reader-only; it's shown visibly so you can
-        see the structure):
+        Here's a two-series line chart rendered <em>only</em> as its navigation tree (normally this
+        is screen-reader-only; it's shown visibly so you can see the structure):
       </p>
 
       <NavDemo />
 
       <p>
-        Notice the shape of it. The root announces the whole chart. Below it,
-        axis-context rows orient you ("Value axis: sales, 2,200 to 6,800"). Then
-        one branch per series — collapsed, each carrying a generated statistical
-        summary, so you can decide whether to go in before you commit to hearing
-        six data points. Expand "Series West" and its points appear, each a real{" "}
-        <code>treeitem</code> with <code>aria-level</code>,{" "}
-        <code>aria-posinset</code>/<code>aria-setsize</code> ("2 of 3"), and{" "}
-        <code>aria-expanded</code>. It's the WAI-ARIA tree pattern, keyboard and
-        all: ↑/↓ to move, → to descend, ← to ascend, Home/End to jump.
+        Notice the shape of it. The root announces the whole chart. Below it, axis-context rows
+        orient you ("Value axis: sales, 2,200 to 6,800"). Then one branch per series — collapsed,
+        each carrying a generated statistical summary, so you can decide whether to go in before you
+        commit to hearing six data points. Expand "Series West" and its points appear, each a real{" "}
+        <code>treeitem</code> with <code>aria-level</code>, <code>aria-posinset</code>/
+        <code>aria-setsize</code> ("2 of 3"), and <code>aria-expanded</code>. It's the WAI-ARIA tree
+        pattern, keyboard and all: ↑/↓ to move, → to descend, ← to ascend, Home/End to jump.
       </p>
 
       <h2 id="labels">The labels come from describeChart</h2>
       <p>
         The series-level summaries aren't bespoke — they're generated by{" "}
-        <Link to="/accessibility/descriptions"><code>describeChart()</code></Link>,
-        the same engine that writes the chart's prose description. So the tree and
-        the description speak the same language: "Series West: sales ranges from
-        4,200 to 6,800… overall rises." The structure carries the navigation; the
-        descriptions carry the meaning; they compose.
+        <Link to="/accessibility/descriptions">
+          <code>describeChart()</code>
+        </Link>
+        , the same engine that writes the chart's prose description. So the tree and the description
+        speak the same language: "Series West: sales ranges from 4,200 to 6,800… overall rises." The
+        structure carries the navigation; the descriptions carry the meaning; they compose.
       </p>
 
       <h2 id="opt-in">Opt-in at the container</h2>
       <p>
         Like descriptions, structured navigation is an opt-in at the{" "}
-        <Link to="/features/chart-container">ChartContainer</Link> layer — give it
-        a <code>chartConfig</code> and set <code>navigable</code> — rather than
-        something every bare chart carries. The bare chart's baseline is keyboard
-        point-navigation, a focus ring, a live region, and a data table; the
-        container is where the richer, opt-in accessible surfaces live. Turning it
-        on flips the <Link to="/accessibility/audit">audit's</Link>{" "}
-        <code>navigable-structure</code> finding to a pass — including for
-        treemaps and trees, whose built-in keyboard nav is otherwise flat.
+        <Link to="/features/chart-container">ChartContainer</Link> layer — give it a{" "}
+        <code>chartConfig</code> and set <code>navigable</code> — rather than something every bare
+        chart carries. The bare chart's baseline is keyboard point-navigation, a focus ring, a live
+        region, and a data table; the container is where the richer, opt-in accessible surfaces
+        live. Turning it on flips the <Link to="/accessibility/audit">audit's</Link>{" "}
+        <code>navigable-structure</code> finding to a pass — including for treemaps and trees, whose
+        built-in keyboard nav is otherwise flat.
       </p>
-      <pre style={{ background: "var(--surface-1)", border: "1px solid var(--surface-3)", borderRadius: 8, padding: 16, margin: "20px 0", fontFamily: "var(--font-mono)", fontSize: 13, whiteSpace: "pre-wrap" }}>{`<ChartContainer chartConfig={{ component: "LineChart", props }} navigable>
+      <pre
+        style={{
+          background: "var(--surface-1)",
+          border: "1px solid var(--surface-3)",
+          borderRadius: 8,
+          padding: 16,
+          margin: "20px 0",
+          fontFamily: "var(--font-mono)",
+          fontSize: 13,
+          whiteSpace: "pre-wrap",
+        }}
+      >{`<ChartContainer chartConfig={{ component: "LineChart", props }} navigable>
   <LineChart {...props} />
 </ChartContainer>
 
@@ -114,31 +140,54 @@ function Body() {
       <h2 id="bidirectional">Closing the loop: bidirectional sync</h2>
       <p>
         The tree isn't just a reading structure — it's wired both ways.{" "}
-        <code>useNavigationSync</code> ties the tree to the chart: walk the tree
-        and the matching mark highlights; hover or click the chart and the tree's
-        cursor follows, auto-expanding to reveal the node. A screen-reader user
-        and a sighted collaborator stay on the same data point. It rides
-        Semiotic's existing selection and observation stores, so it needs no
-        provider — the chart takes a <code>chartId</code> and a{" "}
-        <code>selection</code>, the tree takes <code>activeId</code> and{" "}
-        <code>onActiveChange</code>, and <code>useNavigationSync</code> keeps them
-        in lockstep. See it live on the{" "}
+        <code>useNavigationSync</code> ties the tree to the chart: walk the tree and the matching
+        mark highlights; hover or click the chart and the tree's cursor follows, auto-expanding to
+        reveal the node. A screen-reader user and a sighted collaborator stay on the same data
+        point. It rides Semiotic's existing selection and observation stores, so it needs no
+        provider — the chart takes a <code>chartId</code> and a <code>selection</code>, the tree
+        takes <code>activeId</code> and <code>onActiveChange</code>, and{" "}
+        <code>useNavigationSync</code> keeps them in lockstep. See it live on the{" "}
         <Link to="/accessibility/navigation">reference page</Link>.
       </p>
 
       <h2 id="other-domains">Where this pattern shows up</h2>
       <ul>
-        <li><strong>Any canvas/WebGL visualization.</strong> Maps, network graphs, game telemetry — the "build a parallel accessible structure" move applies anywhere the render target is opaque to AT.</li>
-        <li><strong>Dashboards.</strong> A tree per chart, or one tree spanning a dashboard, beats tabbing through dozens of flat tables.</li>
-        <li><strong>Multimodal interfaces.</strong> The same tree structure feeds keyboard, screen reader, and — via Data Navigator — speech and gesture input.</li>
-        <li><strong>Document outlines, file trees, org charts.</strong> The overview-then-detail tree is the same affordance that makes any large hierarchy navigable.</li>
+        <li>
+          <strong>Any canvas/WebGL visualization.</strong> Maps, network graphs, game telemetry —
+          the "build a parallel accessible structure" move applies anywhere the render target is
+          opaque to AT.
+        </li>
+        <li>
+          <strong>Dashboards.</strong> A tree per chart, or one tree spanning a dashboard, beats
+          tabbing through dozens of flat tables.
+        </li>
+        <li>
+          <strong>Multimodal interfaces.</strong> The same tree structure feeds keyboard, screen
+          reader, and — via Data Navigator — speech and gesture input.
+        </li>
+        <li>
+          <strong>Document outlines, file trees, org charts.</strong> The overview-then-detail tree
+          is the same affordance that makes any large hierarchy navigable.
+        </li>
       </ul>
 
       <h2 id="related">Related</h2>
       <ul>
-        <li><Link to="/accessibility/navigation">Structured Navigation — reference</Link></li>
-        <li><Link to="/accessibility/descriptions">Chart Descriptions</Link></li>
-        <li><a href="https://www.frank.computer/data-navigator/" target="_blank" rel="noopener noreferrer">Data Navigator (Elavsky et al., IEEE VIS 2023)</a></li>
+        <li>
+          <Link to="/accessibility/navigation">Structured Navigation — reference</Link>
+        </li>
+        <li>
+          <Link to="/accessibility/descriptions">Chart Descriptions</Link>
+        </li>
+        <li>
+          <a
+            href="https://www.frank.computer/data-navigator/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Data Navigator (Elavsky et al., IEEE VIS 2023)
+          </a>
+        </li>
       </ul>
     </>
   )
@@ -149,8 +198,8 @@ export default {
   title: "Navigating a Chart You Can't See",
   subtitle:
     "Structured navigation exposes a chart as a screen-reader-traversable tree — chart → series → data point — following the Olli / Data Navigator model, uncoupled from the canvas it's drawn on.",
-  author: "Semiotic Team",
-  date: "2026-06-01",
+  author: "Elijah Meeks",
+  date: "2026-06-15",
   tags: ["case-study", "accessibility"],
   excerpt:
     "A flat table of 200 rows is technically accessible and practically unusable. Structured navigation gives a non-visual reader the path a sighted reader takes — overview, then detail — as an ARIA tree built from the chart config and mounted as an opt-in ChartContainer layer, decoupled from how the chart renders.",
