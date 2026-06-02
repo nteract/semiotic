@@ -290,8 +290,6 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     setup,
   })
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("BarChart", safeData, "categoryAccessor", categoryAccessor)
   warnMissingField("BarChart", safeData, "valueAccessor", valueAccessor)
@@ -326,6 +324,13 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     }),
     [categoryAccessor, valueAccessor, colorBy, valueFormat]
   )
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 bars) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   // Validate data (after all hooks)
   const error = validateArrayData({

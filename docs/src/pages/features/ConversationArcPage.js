@@ -15,6 +15,7 @@ import {
 import { CategoryColorProvider, DotPlot, LineChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import { Link } from "react-router-dom"
 
 // ── Live event log driven by the actual ConversationArcStore ─────────
 
@@ -923,7 +924,7 @@ export default function ConversationArcPage() {
         { label: "Intelligence", path: "/intelligence" },
         { label: "Conversation Arc", path: "/intelligence/conversation-arc" },
       ]}
-      prevPage={{ title: "Interrogation", path: "/intelligence/interrogation" }}
+      prevPage={{ title: "Agent-Reader Grounding", path: "/intelligence/reader-grounding" }}
       nextPage={{ title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" }}
     >
       <p>
@@ -1030,6 +1031,12 @@ const allEvents = store.flush()`}
           <code>ask()</code> and <code>interrogation-answered</code> when the response (or error)
           returns — with measured <code>latencyMs</code>.
         </li>
+        <li>
+          <code>AccessibleNavTree</code> emits <code>nav-node-focused</code> and{" "}
+          <code>nav-branch-expanded</code> as a reader traverses the{" "}
+          <Link to="/accessibility/navigation">navigation tree</Link> — the arc's first{" "}
+          <em>reception</em>-side signal, correlated by the tree's <code>chartId</code>.
+        </li>
       </ul>
       <p>
         Both are zero-overhead when the arc store is disabled (the default). For audience-picker
@@ -1046,13 +1053,15 @@ const allEvents = store.flush()`}
 
       <h3>Event vocabulary</h3>
       <p>
-        Ten variants in a discriminated union: <code>suggestion-shown</code>,{" "}
+        Twelve variants in a discriminated union: <code>suggestion-shown</code>,{" "}
         <code>suggestion-chosen</code>, <code>audience-set</code>, <code>chart-rendered</code>,{" "}
         <code>chart-edited</code>, <code>chart-replaced</code>, <code>chart-exported</code>,{" "}
         <code>chart-abandoned</code>, <code>interrogation-asked</code>,{" "}
-        <code>interrogation-answered</code>. Each carries the fields a downstream analytics or
-        replay system would actually consume (component name, rank, format, reason). The{" "}
-        <code>arcId</code> field threads multiple events into a single named arc when you need it.
+        <code>interrogation-answered</code>, and the reception pair{" "}
+        <code>nav-node-focused</code> / <code>nav-branch-expanded</code>. Each carries the fields a
+        downstream analytics or replay system would actually consume (component name, rank, format,
+        reason; node id, role, and level for the nav events). The <code>arcId</code> field threads
+        multiple events into a single named arc when you need it.
       </p>
 
       <h2>Annotation provenance + lifecycle</h2>

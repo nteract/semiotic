@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { describeChart } from "./describeChart"
+import { describeChart, resolveCommunicativeAct, communicativeActForIntent } from "./describeChart"
+import { LineChartCapability } from "../charts/xy/LineChart.capability"
+import { PieChartCapability } from "../charts/ordinal/PieChart.capability"
 
 describe("describeChart — L1 encoding", () => {
   it("names the chart type and what's mapped to each channel (XY)", () => {
@@ -119,5 +121,103 @@ describe("describeChart — composition", () => {
   it("never throws on a malformed config", () => {
     expect(() => describeChart("LineChart", { data: "nope" as unknown as [] })).not.toThrow()
     expect(() => describeChart("Mystery", {})).not.toThrow()
+  })
+
+  it("falls back to a readable label when an accessor is a function (no source leak)", () => {
+    const r = describeChart("LineChart", {
+      data: [{ m: 1, v: 10 }, { m: 2, v: 30 }],
+      xAccessor: (d: { m: number }) => d.m,
+      yAccessor: (d: { v: number }) => d.v,
+    })
+    // Function accessors are truthy but must not be interpolated into prose.
+    expect(r.levels.l1).toBe("A line chart of y by x.")
+    expect(r.text).not.toContain("=>")
+    // …while value extraction still works through the function accessors.
+    expect(r.levels.l2).toContain("ranges from 10")
+    expect(r.levels.l2).toContain("to 30")
+  })
+})
+
+describe("describeChart — L4 intent / communicative act", () => {
+  const rising = [
+    { month: "Jan", sales: 4200 }, { month: "Feb", sales: 5100 },
+    { month: "Mar", sales: 6800 }, { month: "Apr", sales: 9100 },
+  ]
+
+  it("is omitted by default (no capability context)", () => {
+    const r = describeChart("LineChart", { data: rising, xAccessor: "month", yAccessor: "sales" })
+    expect(r.levels.l4).toBeUndefined()
+    expect(r.text).not.toContain("This is")
+  })
+
+  it("auto-appends L4 when a capability context is supplied and levels are default", () => {
+    const r = describeChart("LineChart", { data: rising, xAccessor: "month", yAccessor: "sales" }, {
+      capability: { family: "time-series", intentScores: { trend: 5 } },
+    })
+    expect(r.levels.l4).toBe("This is a trend chart; read it for the trajectory of sales, which rises from 4,200 (Jan) to 9,100 (Apr).")
+    expect(r.text.endsWith(r.levels.l4!)).toBe(true)
+  })
+
+  it("frames an alerting chart around the salient feature (interior peak)", () => {
+    const spike = [
+      { m: 1, v: 100 }, { m: 2, v: 120 }, { m: 3, v: 900 }, { m: 4, v: 130 },
+    ]
+    const r = describeChart("LineChart", { data: spike, xAccessor: "m", yAccessor: "v" }, {
+      levels: ["l4"],
+      capability: { act: "alerting" },
+    })
+    expect(r.levels.l4).toBe("This is an alerting chart; the peak of 900 at 3 is the point to investigate.")
+  })
+
+  it("derives the act from a resolved dominant intent (change-detection → alerting)", () => {
+    const r = describeChart("LineChart", { data: rising, xAccessor: "month", yAccessor: "sales" }, {
+      levels: ["l4"],
+      capability: { family: "time-series", intentScores: { "change-detection": 5, trend: 3 } },
+    })
+    expect(r.levels.l4?.startsWith("This is an alerting chart;")).toBe(true)
+  })
+
+  it("frames a part-to-whole chart as composition with a share", () => {
+    const r = describeChart("PieChart", {
+      data: [{ vendor: "A", share: 50 }, { vendor: "B", share: 30 }, { vendor: "C", share: 20 }],
+      categoryAccessor: "vendor", valueAccessor: "share",
+    }, { capability: PieChartCapability })
+    expect(r.levels.l4).toBe("This is a composition chart; read each vendor's share of the 100 total; A is the largest at 50 (50%).")
+  })
+
+  it("falls back to the family when a full capability's primary intents are function scorers", () => {
+    // LineChart's strong intents (trend) are function scorers describeChart
+    // can't evaluate; only weak static scorers remain, so the family wins.
+    const r = describeChart("LineChart", { data: rising, xAccessor: "month", yAccessor: "sales" }, {
+      levels: ["l4"],
+      capability: LineChartCapability,
+    })
+    expect(r.levels.l4?.startsWith("This is a trend chart;")).toBe(true)
+  })
+
+  it("appends a reception nudge for an audience unfamiliar with the chart", () => {
+    const r = describeChart("LineChart", { data: rising, xAccessor: "month", yAccessor: "sales" }, {
+      levels: ["l4"],
+      capability: { family: "time-series", intentScores: { trend: 5 } },
+      audience: { name: "Executive", familiarity: { LineChart: 1 } },
+    })
+    expect(r.levels.l4).toContain("This is a trend chart;")
+    expect(r.levels.l4).toContain("may be unfamiliar to executive readers — lean on this description.")
+  })
+
+  it("handles push mode (no data) with a generic directive", () => {
+    const r = describeChart("BarChart", { categoryAccessor: "c", valueAccessor: "v" }, {
+      levels: ["l4"],
+      capability: { family: "categorical", intentScores: { "compare-categories": 5 } },
+    })
+    expect(r.levels.l4).toBe("This is a comparison chart; compare v across c.")
+  })
+
+  it("exposes the act-resolution helpers", () => {
+    expect(communicativeActForIntent("outlier-detection")).toBe("alerting")
+    expect(communicativeActForIntent("part-to-whole")).toBe("apportioning")
+    expect(resolveCommunicativeAct("LineChart", { family: "time-series", intentScores: { trend: 5 } })).toBe("tracking")
+    expect(resolveCommunicativeAct("ForceDirectedGraph", { family: "network" })).toBe("tracing")
+    expect(resolveCommunicativeAct("Mystery", undefined)).toBeUndefined()
   })
 })

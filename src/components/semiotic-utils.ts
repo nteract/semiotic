@@ -41,13 +41,20 @@ export { validateProps } from "./charts/shared/validateProps"
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
 export {
   auditAccessibility,
-  formatAccessibilityAudit
+  formatAccessibilityAudit,
+  accessibilityCaveats
 } from "./charts/shared/auditAccessibility"
-export { describeChart } from "./ai/describeChart"
+export {
+  describeChart,
+  resolveCommunicativeAct,
+  communicativeActForIntent
+} from "./ai/describeChart"
 export type {
   DescribeChartResult,
   DescribeChartOptions,
-  DescribeLevel
+  DescribeLevel,
+  CommunicativeAct,
+  DescribeCapabilityContext
 } from "./ai/describeChart"
 export {
   buildNavigationTree,
@@ -59,6 +66,16 @@ export type {
   NavTreeRole,
   BuildNavigationTreeOptions
 } from "./ai/navigationTree"
+// Agent-reader grounding payload — describeChart (L1–L3) + capability intent
+// (L4) + nav-tree structure, the documented thing an LLM reads to interpret a
+// chart. Composes the describeChart + buildNavigationTree exports above; pulls
+// in no recommender code.
+export { buildReaderGrounding } from "./ai/readerGrounding"
+export type {
+  ChartReaderGrounding,
+  ChartReaderGroundingOptions,
+  ChartReaderGroundingIntent
+} from "./ai/readerGrounding"
 export type {
   A11yPrinciple,
   A11yStatus,

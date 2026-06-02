@@ -32923,6 +32923,34 @@ Contextual instructions:
   }
   return { content, structuredContent: { summary, component, props } };
 }
+async function groundChartHandler(args) {
+  const component = args.component;
+  const props = args.props ?? {};
+  if (!component) {
+    return {
+      content: [{ type: "text", text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... } }." }],
+      isError: true
+    };
+  }
+  const capability = (0, import_ai3.getCapability)(component);
+  const grounding = (0, import_ai3.buildReaderGrounding)(component, props, { capability });
+  const nodeCount = grounding.structure ? (0, import_ai3.countNodes)(grounding.structure) : 0;
+  const lines = [
+    `Reader grounding for ${component} \u2014 the payload an agent reads to interpret this chart without seeing it:`,
+    "",
+    `L1\u2013L3 (description): ${grounding.description.text}`,
+    grounding.intent ? `L4 (intent \xB7 ${grounding.intent.act}): ${grounding.intent.sentence}` : "L4 (intent): not resolved (no capability for this component).",
+    "",
+    `Structure: ${nodeCount} navigable node(s) (chart \u2192 axes/series \u2192 datum) in structuredContent.structure.`,
+    "",
+    "Combined text:",
+    grounding.text
+  ];
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: grounding
+  };
+}
 function createServer2() {
   const srv = new McpServer({
     name: "semiotic",
@@ -33130,6 +33158,15 @@ function createServer2() {
     interrogateChartHandler
   );
   srv.tool(
+    "groundChart",
+    "Build the agent-reader grounding payload for a Semiotic chart: the layered L1\u2013L3 natural-language description, the L4 communicative-act sentence (what the chart is asking the reader to do \u2014 'this is an alerting chart; the spike warrants a closer look'), and a structured navigation tree (chart \u2192 axes/series \u2192 datum). This is the documented thing an LLM reads to interpret a chart faithfully without seeing the pixels \u2014 the reader-side complement to a capability descriptor. The L4 act is resolved from the chart's registered capability. Returns prose plus the full structured payload (description/intent/structure/text).",
+    {
+      component: external_exports3.string().describe("Chart component name, e.g. 'LineChart'"),
+      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).describe("The full chart props including data")
+    },
+    groundChartHandler
+  );
+  srv.tool(
     "suggestStreamCharts",
     "Recommend realtime/streaming Semiotic charts for a schema (not row data). Pass a schema describing field types plus optional throughput ('low'|'medium'|'high') and retention ('windowed'|'cumulative') hints; the engine ranks realtime charts (RealtimeLineChart, RealtimeHistogram, RealtimeHeatmap, RealtimeWaterfallChart, RealtimeSwarmChart, TemporalHistogram) by their fit. Use when the user is wiring up a live dashboard or monitoring view rather than visualizing a bounded dataset.",
     {
@@ -33176,8 +33213,9 @@ function createServer2() {
             reason: external_exports3.string().optional()
           })
         ).optional(),
-        exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional()
-      }).describe("Audience profile \u2014 familiarity, targets, exposure level."),
+        exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional(),
+        receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel \u2014 see suggestCharts.")
+      }).describe("Audience profile \u2014 familiarity, targets, exposure level, reception modality."),
       intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional(),
       maxResults: external_exports3.number().int().min(1).max(20).optional()
     },
@@ -33202,7 +33240,21 @@ function createServer2() {
       intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("Ranking intent. One of: trend, compare-series, compare-categories, rank, part-to-whole, distribution, correlation, flow, hierarchy, geo, outlier-detection, composition-over-time, change-detection. Custom intents accepted."),
       maxResults: external_exports3.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
       allow: external_exports3.array(external_exports3.string()).optional().describe("Restrict to these component names."),
-      deny: external_exports3.array(external_exports3.string()).optional().describe("Exclude these component names.")
+      deny: external_exports3.array(external_exports3.string()).optional().describe("Exclude these component names."),
+      audience: external_exports3.object({
+        name: external_exports3.string().optional(),
+        familiarity: external_exports3.record(external_exports3.string(), external_exports3.number()).optional(),
+        targets: external_exports3.record(
+          external_exports3.string(),
+          external_exports3.object({
+            direction: external_exports3.enum(["increase", "decrease"]),
+            weight: external_exports3.number().int().min(1).max(3).optional(),
+            reason: external_exports3.string().optional()
+          })
+        ).optional(),
+        exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional(),
+        receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel. A non-visual value down-ranks charts the audience can't receive in that channel (e.g. a many-slice pie for a screen reader) and adds receivability caveats.")
+      }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality.")
     },
     suggestChartsHandler
   );
@@ -33252,7 +33304,7 @@ async function main() {
     });
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
-      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme");
+      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme");
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples");
     });
   } else {

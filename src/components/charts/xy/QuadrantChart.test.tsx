@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import { render } from "@testing-library/react"
 import { QuadrantChart } from "./QuadrantChart"
 
@@ -24,6 +25,32 @@ const unitQuadrants = {
 }
 
 describe("QuadrantChart", () => {
+  it("survives the loading→data transition without a hooks-count error", () => {
+    // Mounting empty (loading skeleton) then re-rendering as data arrives must
+    // not call a different number of hooks between renders — otherwise React
+    // throws "Rendered more hooks than during the previous render". Regression
+    // guard for the misplaced `setup.earlyReturn` return (QuadrantChart has
+    // several trailing pre-renderer hooks after the guard's old position).
+    const sample = [{ x: 1, y: 10 }, { x: 5, y: 3 }]
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { rerender, container } = render(<QuadrantChart loading />)
+      expect(() =>
+        rerender(<QuadrantChart data={sample} xAccessor="x" yAccessor="y" />)
+      ).not.toThrow()
+      // A hooks-count error would be swallowed by the error boundary — assert
+      // the chart rendered cleanly with no error placeholder.
+      expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
+      const hookErr = errSpy.mock.calls.some((c) =>
+        String(c[0]).includes("Rendered more hooks") ||
+        String(c[0]).includes("change in the order of Hooks")
+      )
+      expect(hookErr).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
+  })
+
   it("renders with non-default accessors and asymmetric center", () => {
     const { container } = render(
       <QuadrantChart

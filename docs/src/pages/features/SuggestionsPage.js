@@ -31,6 +31,7 @@ import {
 } from "semiotic/ai"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import { Link } from "react-router-dom"
 
 // Comprehensive map of HOC chart names → React components. Realtime,
 // network, and geo families are intentionally omitted — the SuggestionsPage
@@ -323,6 +324,42 @@ function SuggestedChart({ data, intent }) {
         Set <code>includeSuggestions: true</code> on <code>useChartInterrogation</code> and the same
         ranked list lands in the LLM's <code>context.suggestions</code>. Use it to answer
         questions like <em>"would another chart show this better?"</em> without re-deriving rules.
+      </p>
+
+      <h2>Receivability — can the audience receive this chart?</h2>
+      <p>
+        Familiarity asks whether an audience <em>knows</em> a chart. Receivability
+        asks whether they can <em>perceive</em> it in their channel — a different
+        axis. An 8-slice pie is familiar to everyone and illegible to a screen
+        reader. Declare the channel with <code>receptionModality</code> and the
+        recommender audits each candidate, folding the{" "}
+        <Link to="/accessibility/audit">accessibility audit</Link>'s verdict into
+        the score:
+      </p>
+      <CodeBlock language="ts">
+{`import { suggestCharts } from "semiotic/ai"
+
+const ranked = suggestCharts(data, {
+  intent: "part-to-whole",
+  audience: { receptionModality: "screen-reader" }, // visual | screen-reader | sonified | agent
+})
+
+// A many-slice pie drops below a bar chart for this audience. The reason and
+// the receivability caveats ride the same fields as everything else:
+ranked.find(s => s.component === "PieChart")
+//   .reasons → ["…", "Harder to receive via a screen reader: data density is inappropriate"]
+//   .caveats → ["…", "8 slices in a part-to-whole chart. Chartability suggests ≤ 5 categories…"]`}
+      </CodeBlock>
+      <p>
+        The visual path is unchanged and pays no audit cost — receivability only
+        engages for a non-visual channel. Under the hood, <code>applyAudienceBias</code>{" "}
+        folds a <code>receivabilityBias</code> penalty derived from the audit, and the
+        receivability findings are distilled by <code>accessibilityCaveats</code> into
+        the suggestion's <code>caveats[]</code> — so an agent reads perceptual and
+        reception caveats from one array, not two. See the{" "}
+        <Link to="/accessibility/descriptions">description layer</Link> and the{" "}
+        <Link to="/intelligence/reader-grounding">reader-grounding payload</Link> for
+        the rest of the reception surface.
       </p>
 
       <h2>Adding a custom capability</h2>

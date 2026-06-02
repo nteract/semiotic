@@ -1,4 +1,4 @@
-
+import { vi } from "vitest"
 import { render, fireEvent } from "@testing-library/react"
 import { BubbleChart, type BubbleChartProps } from "./BubbleChart"
 import { TooltipProvider } from "../../store/TooltipStore"
@@ -28,6 +28,38 @@ describe("BubbleChart", () => {
 
     const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
+  })
+
+  it("survives the loading→data transition without a hooks-count error", () => {
+    // Mounting empty (loading skeleton) then re-rendering as data arrives must
+    // not call a different number of hooks between renders — otherwise React
+    // throws "Rendered more hooks than during the previous render". Regression
+    // guard for the misplaced `setup.earlyReturn` return.
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { rerender, container } = render(
+        <TooltipProvider>
+          <BubbleChart sizeBy="size" loading />
+        </TooltipProvider>
+      )
+      expect(() =>
+        rerender(
+          <TooltipProvider>
+            <BubbleChart data={sampleData} sizeBy="size" xAccessor="x" yAccessor="y" />
+          </TooltipProvider>
+        )
+      ).not.toThrow()
+      // The frame must actually render with the data — a hooks-count error
+      // would route through the error boundary and the frame would not mount.
+      expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+      const hookErr = errSpy.mock.calls.some((c) =>
+        String(c[0]).includes("Rendered more hooks") ||
+        String(c[0]).includes("change in the order of Hooks")
+      )
+      expect(hookErr).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
   })
 
   it("renders points correctly", () => {

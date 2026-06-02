@@ -198,8 +198,6 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     height,
   })
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   warnMissingField("FunnelChart", safeData, "stepAccessor", stepAccessor)
   warnMissingField("FunnelChart", safeData, "valueAccessor", valueAccessor)
 
@@ -256,6 +254,13 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
       )
     }
   }, [])
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 bars) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   const error = validateArrayData({
     componentName: "FunnelChart",

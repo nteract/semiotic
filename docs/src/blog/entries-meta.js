@@ -122,11 +122,10 @@ export const allBlogEntriesMeta = [
     subtitle:
       "Two-way point-anchored AI conversation: the user clicks, the AI answers about that specific point, and the answer lives on the chart as a clickable note.",
     author: "Elijah Meeks",
-    date: "2026-05-31",
+    date: "2026-06-01",
     tags: ["case-study"],
     excerpt:
       "Chat-with-chart works, but the user has to verbalize which point they care about and the AI has to verbalize where the answer applies. Both steps lose the spatial information that's already on screen. Bidirectional point-anchored AI conversation, with useChartFocus + useChartInterrogation as the building blocks.",
-    draft: true,
   },
   {
     slug: "multimodal-response",

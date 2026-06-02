@@ -111,8 +111,10 @@ export function buildNavigationTree(
   const { measure, measureFallback, dimension, dimensionFallback } = roles(component, props)
   const getMeasure = resolveAccessor(measure, measureFallback)
   const getDim = resolveRawAccessor(dimension, dimensionFallback)
-  const measureName = measure || measureFallback
-  const dimName = dimension || dimensionFallback
+  // Only string accessors are human-readable labels; a function accessor is
+  // truthy but would leak its source into node labels — fall back instead.
+  const measureName = typeof measure === "string" && measure ? measure : measureFallback
+  const dimName = typeof dimension === "string" && dimension ? dimension : dimensionFallback
   const series = seriesField(props)
 
   let counter = 0

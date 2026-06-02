@@ -551,6 +551,13 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     return null
   }, [valueAccessor, nodeIdAccessor])
 
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, no flows) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
+
   const streamProps: StreamGeoFrameProps = {
     projection,
     // Push-mode entry: when `flows` is undefined the user is driving
@@ -597,9 +604,6 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps
   }
-
-  // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (setup.earlyReturn) return setup.earlyReturn
 
   return (
     <SafeRender componentName="FlowMap" width={resolved.width} height={resolved.height}>

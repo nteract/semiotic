@@ -288,6 +288,13 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     )
   }, [sizeBy, colorBy])
 
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, no points) and then streaming in data must not change
+  // the number of hooks between renders, or React throws "Rendered more hooks
+  // than during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
+
   warnMissingField("ProportionalSymbolMap", safeData, "xAccessor", xAccessor)
   warnMissingField("ProportionalSymbolMap", safeData, "yAccessor", yAccessor)
 
@@ -326,9 +333,6 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps
   }
-
-  // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (setup.earlyReturn) return setup.earlyReturn
 
   return (
     <SafeRender componentName="ProportionalSymbolMap" width={resolved.width} height={resolved.height}>

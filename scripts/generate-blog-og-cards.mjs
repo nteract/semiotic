@@ -354,13 +354,17 @@ function buildCardSVG({ entry, chartSVG }) {
 // (the React-aware `entries.js` would need a JSX transform we don't
 // configure here). The blog-post skill enforces keeping the two in
 // sync; `scripts/check-blog-entry-sync.mjs` is the CI guard.
+//
+// Uses `allBlogEntriesMeta` (drafts included), not the published-only
+// `blogEntriesMeta`: drafts are routable (`getBlogEntry` returns them so
+// their URLs work), so a shared draft link still needs a social card.
 async function loadEntries() {
   // Import through a data URL so Node treats this typeless `.js` file
   // as an explicit ES module without forcing `"type": "module"` on
   // the whole package.
   const source = readFileSync(META_FILE, "utf8")
   const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
-  return mod.blogEntriesMeta
+  return mod.allBlogEntriesMeta
 }
 
 // ── Main ───────────────────────────────────────────────────────────────

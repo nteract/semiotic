@@ -475,7 +475,8 @@ function Body() {
         The most common AI-on-a-chart pattern today is "ask the chart". Type a question, get a
         paragraph back. It works, but it's lossy in both directions: the user has to verbalize which
         point they care about, and the AI has to verbalize where the answer applies. Both steps lose
-        the spatial information that's already on screen. There's a better shape: let the user{" "}
+        the spatial information that's already on screen and treat all questions as vague in a way
+        no professional analyst would find realistic. There's a better shape: let the user{" "}
         <em>point</em> at a data point, and let the AI <em>annotate</em> the answer back onto it. In
         other words: a two-way anchored conversation.
       </p>
@@ -631,6 +632,9 @@ function AnchoredChart({ data }) {
           <strong>Operations dashboards.</strong> An on-call engineer hovers over an anomaly spike,
           asks "what happened here?" and the AI consults a runbook + incident history + deploy log
           and leaves an anchored note. Next time someone sees the spike, the note is already there.
+          Not only is the insight captured in more than just the mind and slack channel of the
+          operators but it avoids every other person who sees this chart wasting 15 minutes
+          answering the same question.
         </li>
         <li>
           <strong>Financial models.</strong> An analyst clicks a forecast point that looks
@@ -640,7 +644,8 @@ function AnchoredChart({ data }) {
         <li>
           <strong>Scientific exploration.</strong> A researcher clicks an outlier observation, asks
           "is this an artifact?" and the AI references the run log, the calibration history, similar
-          past observations, and leaves a note classifying it.
+          past observations, and leaves a note classifying it. Anomalies graduate to insights or, if
+          false, can be automatically fed back into the model to improve its accuracy.
         </li>
         <li>
           <strong>Customer support / sales review.</strong> A rep hovers over a usage dip for a
@@ -706,10 +711,9 @@ export default {
   subtitle:
     "Two-way point-anchored AI conversation: the user clicks, the AI answers about that specific point, and the answer lives on the chart as a clickable note.",
   author: "Elijah Meeks",
-  date: "2026-05-31",
+  date: "2026-06-01",
   tags: ["case-study"],
   excerpt:
     "Chat-with-chart works, but the user has to verbalize which point they care about and the AI has to verbalize where the answer applies. Both steps lose the spatial information that's already on screen. Bidirectional point-anchored AI conversation, with useChartFocus + useChartInterrogation as the building blocks.",
-  draft: true,
   component: Body,
 }

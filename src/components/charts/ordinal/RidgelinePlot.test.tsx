@@ -190,4 +190,34 @@ describe("RidgelinePlot", () => {
       expect(lastOrdinalFrameProps.oSort).toBe(false)
     })
   })
+
+  it("survives the loading→data transition without a hooks-count error", () => {
+    // Mounting empty (loading skeleton, 0 ridges) then re-rendering as data
+    // arrives must not call a different number of hooks between renders —
+    // otherwise React throws "Rendered more hooks than during the previous
+    // render". Regression guard for the misplaced `setup.earlyReturn` return.
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { rerender } = render(
+        <TooltipProvider>
+          <RidgelinePlot loading />
+        </TooltipProvider>
+      )
+      rerender(
+        <TooltipProvider>
+          <RidgelinePlot data={sampleData} categoryAccessor="category" valueAccessor="value" />
+        </TooltipProvider>
+      )
+      // The frame must actually render with the data — if a hooks-count error
+      // fired, the chart's error boundary would swallow the render.
+      expect(lastOrdinalFrameProps.data).toEqual(sampleData)
+      const hookErr = errSpy.mock.calls.some((c) =>
+        String(c[0]).includes("Rendered more hooks") ||
+        String(c[0]).includes("change in the order of Hooks")
+      )
+      expect(hookErr).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
+  })
 })

@@ -468,4 +468,32 @@ describe("FunnelChart", () => {
     )
     expect(lastOrdinalFrameProps.showCategoryTicks).toBe(false)
   })
+
+  it("survives the loading→data transition without a hooks-count error", () => {
+    // Mounting empty (loading skeleton, 0 steps) then re-rendering as data
+    // arrives must not call a different number of hooks between renders —
+    // otherwise React throws "Rendered more hooks than during the previous
+    // render". Regression guard for the misplaced `setup.earlyReturn` return.
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { rerender } = render(
+        <TooltipProvider>
+          <FunnelChart loading />
+        </TooltipProvider>
+      )
+      rerender(
+        <TooltipProvider>
+          <FunnelChart data={sampleData} stepAccessor="step" valueAccessor="value" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.data).toEqual(sampleData)
+      const hookErr = errSpy.mock.calls.some((c) =>
+        String(c[0]).includes("Rendered more hooks") ||
+        String(c[0]).includes("change in the order of Hooks")
+      )
+      expect(hookErr).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
+  })
 })

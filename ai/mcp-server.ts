@@ -1,19 +1,20 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes twelve tools, five resources, and two prompts:
+ * Exposes thirteen tools, five resources, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — legacy sample-row chart recommender
- *   3. suggestCharts — capability-based static chart recommender
+ *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
  *   4. suggestStreamCharts — realtime chart recommender from a stream schema
  *   5. suggestDashboard — multi-panel dashboard recommender
  *   6. suggestStretchCharts — audience-literacy stretch recommender
  *   7. repairChartConfig — checks a chart choice and proposes alternatives
  *   8. renderChart — renders static HOC charts to SVG/PNG
  *   9. interrogateChart — summarizes chart data for conversational answers
- *   10. diagnoseConfig — anti-pattern detector for chart configurations
- *   11. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
- *   12. applyTheme — returns usage guidance for theme presets
+ *   10. groundChart — agent-reader grounding payload (description + intent + structure)
+ *   11. diagnoseConfig — anti-pattern detector for chart configurations
+ *   12. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
+ *   13. applyTheme — returns usage guidance for theme presets
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -48,6 +49,9 @@ import {
   suggestDashboard as suggestDashboardFromCapabilities,
   suggestStreamCharts as suggestStreamChartsFromCapabilities,
   suggestStretchCharts as suggestStretchChartsFromCapabilities,
+  buildReaderGrounding,
+  countNodes,
+  getCapability,
 } from "semiotic/ai"
 import type { IntentId, StreamSchema, AudienceProfile } from "semiotic/ai"
 
@@ -680,6 +684,45 @@ async function interrogateChartHandler(args: {
   return { content, structuredContent: { summary, component, props } }
 }
 
+async function groundChartHandler(args: {
+  component?: string
+  props?: Record<string, unknown>
+}): Promise<ToolResult> {
+  const component = args.component
+  const props = args.props ?? {}
+  if (!component) {
+    return {
+      content: [{ type: "text" as const, text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... } }." }],
+      isError: true,
+    }
+  }
+
+  // The registered capability supplies the L4 communicative act; absent one,
+  // buildReaderGrounding falls back to the component's family.
+  const capability = getCapability(component)
+  const grounding = buildReaderGrounding(component, props, { capability })
+  const nodeCount = grounding.structure ? countNodes(grounding.structure) : 0
+
+  const lines: string[] = [
+    `Reader grounding for ${component} — the payload an agent reads to interpret this chart without seeing it:`,
+    "",
+    `L1–L3 (description): ${grounding.description.text}`,
+    grounding.intent
+      ? `L4 (intent · ${grounding.intent.act}): ${grounding.intent.sentence}`
+      : "L4 (intent): not resolved (no capability for this component).",
+    "",
+    `Structure: ${nodeCount} navigable node(s) (chart → axes/series → datum) in structuredContent.structure.`,
+    "",
+    "Combined text:",
+    grounding.text,
+  ]
+
+  return {
+    content: [{ type: "text" as const, text: lines.join("\n") }],
+    structuredContent: grounding as unknown as Record<string, unknown>,
+  }
+}
+
 // ── Server factory ───────────────────────────────────────────────────────
 // Creates a fresh McpServer with all tools registered.
 // HTTP mode needs one instance per session (McpServer can only connect to one transport).
@@ -908,6 +951,16 @@ function createServer(): McpServer {
   )
 
   srv.tool(
+    "groundChart",
+    "Build the agent-reader grounding payload for a Semiotic chart: the layered L1–L3 natural-language description, the L4 communicative-act sentence (what the chart is asking the reader to do — 'this is an alerting chart; the spike warrants a closer look'), and a structured navigation tree (chart → axes/series → datum). This is the documented thing an LLM reads to interpret a chart faithfully without seeing the pixels — the reader-side complement to a capability descriptor. The L4 act is resolved from the chart's registered capability. Returns prose plus the full structured payload (description/intent/structure/text).",
+    {
+      component: z.string().describe("Chart component name, e.g. 'LineChart'"),
+      props: z.record(z.string(), z.unknown()).describe("The full chart props including data"),
+    },
+    groundChartHandler
+  )
+
+  srv.tool(
     "suggestStreamCharts",
     "Recommend realtime/streaming Semiotic charts for a schema (not row data). Pass a schema describing field types plus optional throughput ('low'|'medium'|'high') and retention ('windowed'|'cumulative') hints; the engine ranks realtime charts (RealtimeLineChart, RealtimeHistogram, RealtimeHeatmap, RealtimeWaterfallChart, RealtimeSwarmChart, TemporalHistogram) by their fit. Use when the user is wiring up a live dashboard or monitoring view rather than visualizing a bounded dataset.",
     {
@@ -965,8 +1018,12 @@ function createServer(): McpServer {
             )
             .optional(),
           exposureLevel: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
+          receptionModality: z
+            .enum(["visual", "screen-reader", "sonified", "agent"])
+            .optional()
+            .describe("Reception channel — see suggestCharts."),
         })
-        .describe("Audience profile — familiarity, targets, exposure level."),
+        .describe("Audience profile — familiarity, targets, exposure level, reception modality."),
       intent: z.union([z.string(), z.array(z.string())]).optional(),
       maxResults: z.number().int().min(1).max(20).optional(),
     },
@@ -1000,6 +1057,28 @@ function createServer(): McpServer {
       maxResults: z.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
       allow: z.array(z.string()).optional().describe("Restrict to these component names."),
       deny: z.array(z.string()).optional().describe("Exclude these component names."),
+      audience: z
+        .object({
+          name: z.string().optional(),
+          familiarity: z.record(z.string(), z.number()).optional(),
+          targets: z
+            .record(
+              z.string(),
+              z.object({
+                direction: z.enum(["increase", "decrease"]),
+                weight: z.number().int().min(1).max(3).optional(),
+                reason: z.string().optional(),
+              }),
+            )
+            .optional(),
+          exposureLevel: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
+          receptionModality: z
+            .enum(["visual", "screen-reader", "sonified", "agent"])
+            .optional()
+            .describe("Reception channel. A non-visual value down-ranks charts the audience can't receive in that channel (e.g. a many-slice pie for a screen reader) and adds receivability caveats."),
+        })
+        .optional()
+        .describe("Audience profile — familiarity, adoption targets, exposure level, and reception modality."),
     },
     suggestChartsHandler
   )
@@ -1069,7 +1148,7 @@ async function main() {
 
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
-      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme")
+      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme")
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples")
     })
   } else {

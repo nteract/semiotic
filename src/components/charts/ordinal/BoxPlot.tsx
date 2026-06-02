@@ -147,8 +147,6 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
     height,
   })
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
 
@@ -168,6 +166,13 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
   })
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 bars) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   const error = validateArrayData({
     componentName: "BoxPlot", data: data,

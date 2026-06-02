@@ -244,8 +244,6 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   // Compute global value extent across all categories so bins are shared
   const rExtent = useMemo(() => {
     if (safeData.length === 0) return undefined
@@ -298,6 +296,13 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
       )
     }
   }, [])
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 bars) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   const error = validateArrayData({
     componentName: "Histogram", data: data,

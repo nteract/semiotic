@@ -715,6 +715,34 @@ export function auditAccessibility(
   return { component, ok, summary, findings: f, reference: REFERENCE }
 }
 
+/**
+ * Distil an audit result into terse caveat strings — the author-actionable
+ * `fail` and `warn` findings, one line each. Lets the recommender (and an AI
+ * agent) read *receivability* caveats ("8 slices is too many," "color-only
+ * encoding") from the same channel as the perceptual caveats a capability
+ * descriptor already declares, instead of two disconnected surfaces.
+ *
+ * Pure. Pair with {@link auditAccessibility}:
+ * ```ts
+ * const caveats = accessibilityCaveats(auditAccessibility("PieChart", props))
+ * ```
+ *
+ * @param onlyCritical When true, restrict to critical heuristics (the 14 that
+ *   Chartability flags). Default false — include all fail/warn findings.
+ */
+export function accessibilityCaveats(
+  result: AccessibilityAuditResult,
+  { onlyCritical = false }: { onlyCritical?: boolean } = {}
+): string[] {
+  const out: string[] = []
+  for (const f of result.findings) {
+    if (f.status !== "fail" && f.status !== "warn") continue
+    if (onlyCritical && !f.critical) continue
+    out.push(f.message)
+  }
+  return out
+}
+
 // ---------------------------------------------------------------------------
 // Formatting (shared by CLI + MCP so their output stays identical)
 // ---------------------------------------------------------------------------

@@ -737,6 +737,13 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     return (normalized as ((d: HoverData) => React.ReactNode) | false) || defaultTooltipContent
   }, [tooltip, multiTooltip, defaultTooltipContent])
 
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton) and then streaming in data must not change the number of
+  // hooks between renders, or React throws "Rendered more hooks than during the
+  // previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
+
   // ── StreamXYFrame props ─────────────────────────────────────────────
   // Use `mixed` chartType: segment-group keys appear in `areaGroups`
   // (each renders as an area polygon with y0Accessor as the lower
@@ -781,9 +788,6 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     ...setup.crosshairProps,
     ...frameProps,
   }
-
-  // ── Loading / empty guards ──────────────────────────────────────────
-  if (setup.earlyReturn) return setup.earlyReturn
 
   return (
     <SafeRender componentName="DifferenceChart" width={width} height={height}>

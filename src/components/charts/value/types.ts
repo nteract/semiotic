@@ -195,7 +195,7 @@ export type BigNumberSlot =
  * pointIdAccessor, linkedHover, linkedBrush, hoverHighlight, ...) are
  * irrelevant for a single value. The contract is documented per-prop.
  */
-export interface BigNumberProps<TDatum extends Datum = Datum> {
+export interface BigNumberProps<_TDatum extends Datum = Datum> {
   // ── Focal value ─────────────────────────────────────────────────
   /** The number this card exists to display. `null` / `undefined` / `NaN`
    *  routes the card into its empty state (see `emptyContent`); this lets
