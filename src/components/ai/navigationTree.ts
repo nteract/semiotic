@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
 import { describeChart, chartValueFormatter } from "./describeChart"
+import { XY_FAMILY, BAR_FAMILY, PART_TO_WHOLE, DISTRIBUTION, roles, seriesField, fmtDim } from "./chartRoles"
 /**
  * buildNavigationTree — turn a chart config into a structured, labeled
  * navigation tree (chart → axes/series → data points), following the Olli /
@@ -41,45 +42,8 @@ export interface BuildNavigationTreeOptions {
   locale?: string
 }
 
-// ---------------------------------------------------------------------------
-// Families + role resolution (kept in step with describeChart)
-// ---------------------------------------------------------------------------
-
-const XY_FAMILY = new Set([
-  "LineChart", "AreaChart", "StackedAreaChart", "DifferenceChart", "Scatterplot",
-  "BubbleChart", "ConnectedScatterplot", "QuadrantChart", "MultiAxisLineChart", "MinimapChart",
-])
-const BAR_FAMILY = new Set(["BarChart", "StackedBarChart", "GroupedBarChart", "DotPlot"])
-const PART_TO_WHOLE = new Set(["PieChart", "DonutChart", "FunnelChart"])
-const DISTRIBUTION = new Set(["Histogram", "BoxPlot", "ViolinPlot", "RidgelinePlot", "SwarmPlot"])
-
-function roles(component: string, props: Datum): { measure?: string; measureFallback: string; dimension?: string; dimensionFallback: string } {
-  if (BAR_FAMILY.has(component) || PART_TO_WHOLE.has(component)) {
-    return {
-      measure: props.valueAccessor as string | undefined, measureFallback: "value",
-      dimension: (props.categoryAccessor ?? props.stepAccessor) as string | undefined, dimensionFallback: "category",
-    }
-  }
-  return {
-    measure: (props.yAccessor ?? props.valueAccessor) as string | undefined, measureFallback: "y",
-    dimension: props.xAccessor as string | undefined, dimensionFallback: "x",
-  }
-}
-
-function seriesField(props: Datum): string | undefined {
-  for (const k of ["lineBy", "areaBy", "stackBy", "groupBy", "colorBy"]) {
-    const v = props[k]
-    if (typeof v === "string" && v) return v
-  }
-  return undefined
-}
-
-function fmtDim(v: unknown, fmtNum: (n: number) => string): string {
-  if (v == null) return "—"
-  if (v instanceof Date) return v.toISOString().slice(0, 10)
-  if (typeof v === "number") return fmtNum(v)
-  return String(v)
-}
+// Families + role resolution (XY_FAMILY/BAR_FAMILY/PART_TO_WHOLE/DISTRIBUTION,
+// roles, seriesField, fmtDim) are shared with describeChart via ./chartRoles.
 
 // ---------------------------------------------------------------------------
 // Public API

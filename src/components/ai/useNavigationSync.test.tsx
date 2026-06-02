@@ -153,3 +153,64 @@ describe("useNavigationSync — canvas → tree", () => {
     expect(api.sync.activeId).toBe(marLeaf.id) // sticky: stays on the last datum
   })
 })
+
+describe("useNavigationSync — annotation anchors", () => {
+  // Anchored annotations carry the datum's matchFields (the anchored-conversation
+  // pattern), so they key into the same leaf map as a hovered datum.
+  const annotations = [
+    { type: "callout", month: "Feb", label: "Promo spike", note: "spring launch" },
+    { type: "callout", month: "Mar", label: "Dip" },
+    { type: "y-threshold", value: 170 }, // not anchored to a single datum
+  ]
+  const marLeaf = findLeaf(tree, (n) => n.label === "Mar: 180")!
+
+  function makeAnnotatedHarness() {
+    const api: any = {}
+    function Inner() {
+      api.sync = useNavigationSync({ tree, chartId: "c1", matchFields: ["month"], selectionName: "nav-ann", annotations })
+      api.sel = useSelection({ name: "nav-ann", fields: ["month"] })
+      return null
+    }
+    function Harness() {
+      return <SelectionProvider><ObservationProvider><Inner /></ObservationProvider></SelectionProvider>
+    }
+    return { api, Harness }
+  }
+
+  it("maps each datum-anchored annotation to its nav-tree leaf (annotatedIds)", () => {
+    const { api, Harness } = makeAnnotatedHarness()
+    render(<Harness />)
+    expect(api.sync.annotatedIds.has(febLeaf.id)).toBe(true)
+    expect(api.sync.annotatedIds.has(marLeaf.id)).toBe(true)
+    expect(api.sync.annotatedIds.size).toBe(2) // the threshold doesn't anchor to a datum
+  })
+
+  it("focusAnnotation jumps the tree to the anchor and highlights it on the canvas", () => {
+    const { api, Harness } = makeAnnotatedHarness()
+    render(<Harness />)
+    let ok = false
+    act(() => { ok = api.sync.focusAnnotation(annotations[0]) }) // Feb
+    expect(ok).toBe(true)
+    expect(api.sync.activeId).toBe(febLeaf.id)
+    expect(api.sel.predicate({ month: "Feb", sales: 250 })).toBe(true)
+    expect(api.sel.predicate({ month: "Jan", sales: 100 })).toBe(false)
+  })
+
+  it("focusAnnotation accepts an index into the annotations array", () => {
+    const { api, Harness } = makeAnnotatedHarness()
+    render(<Harness />)
+    let ok = false
+    act(() => { ok = api.sync.focusAnnotation(1) }) // Mar
+    expect(ok).toBe(true)
+    expect(api.sync.activeId).toBe(marLeaf.id)
+  })
+
+  it("focusAnnotation returns false (and stays put) for an annotation not anchored to a datum", () => {
+    const { api, Harness } = makeAnnotatedHarness()
+    render(<Harness />)
+    let ok = true
+    act(() => { ok = api.sync.focusAnnotation(annotations[2]) }) // y-threshold, no month
+    expect(ok).toBe(false)
+    expect(api.sync.activeId).toBe(tree.id) // unchanged
+  })
+})

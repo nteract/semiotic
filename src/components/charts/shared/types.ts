@@ -27,7 +27,12 @@ export interface SelectionConfig {
 export type LinkedHoverProp =
   | boolean
   | string
-  | { name?: string; fields?: string[]; mode?: "field" | "x-position"; xField?: string }
+  // `mode: "series"` keys the linked selection off the chart's series-identity
+  // field (colorBy/lineBy/areaBy/stackBy/groupBy), resolved automatically, so a
+  // bar ↔ line "highlight that series" link needs no hand-wired `fields`. Pass
+  // `seriesField` to override the resolved field (e.g. to align two charts
+  // whose series live under different prop names).
+  | { name?: string; fields?: string[]; mode?: "field" | "x-position" | "series"; xField?: string; seriesField?: string }
 
 /**
  * Linked brush config

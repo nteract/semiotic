@@ -340,6 +340,15 @@ linkedHover={{ name: "hl", fields: ["category"] }}
 linkedHover={true}          // shorthand: name="hover", auto-detect fields
 linkedHover="myHoverName"   // shorthand: custom name, auto-detect fields
 
+// linkedHover modes (mutually exclusive):
+//   "field" (default) — selection keys off the given/auto fields
+//   "x-position"      — temporal crosshair: { mode: "x-position", xField: "time" }
+//   "series"          — series↔bar cross-highlight: auto-resolves the chart's
+//                       series field (colorBy/lineBy/areaBy/stackBy/groupBy) so
+//                       hovering a bar highlights the matching line, no fields wiring
+linkedHover={{ name: "hl", mode: "series" }}
+linkedHover={{ name: "hl", mode: "series", seriesField: "region" }} // override the resolved field
+
 // linkedBrush — produce brush-based selections (Scatterplot, BubbleChart only)
 linkedBrush={{ name: "brush", xField: "x", yField: "y" }}
 linkedBrush="selectionName" // shorthand`}

@@ -7,6 +7,7 @@
 import js from "@eslint/js"
 import tseslint from "typescript-eslint"
 import reactPlugin from "eslint-plugin-react"
+import reactHooks from "eslint-plugin-react-hooks"
 import globals from "globals"
 
 export default [
@@ -31,7 +32,8 @@ export default [
       }
     },
     plugins: {
-      react: reactPlugin
+      react: reactPlugin,
+      "react-hooks": reactHooks
     },
     settings: {
       react: { version: "detect" }
@@ -43,6 +45,14 @@ export default [
       // both exist to enforce `import React from "react"` for the old
       // createElement transform — neither applies to the automatic runtime.
       ...reactPlugin.configs["jsx-runtime"].rules,
+      // rules-of-hooks catches conditional/early-return-before-hook bugs
+      // statically (e.g. the loading→data hook-count crash) — hard error.
+      "react-hooks/rules-of-hooks": "error",
+      // exhaustive-deps is a staged rollout: "warn" keeps it visible and
+      // non-blocking (`eslint src` exits 0 on warnings, like the existing
+      // no-explicit-any warnings) while the ~40 legacy call sites are cleaned
+      // up incrementally. Graduate to "error" once that backlog is clear.
+      "react-hooks/exhaustive-deps": "warn",
       "no-unused-vars": "off",
       "react/prop-types": "off",
       "react/display-name": "off",

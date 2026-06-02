@@ -48,6 +48,11 @@ describe("normalizeLinkedHover", () => {
     const result = normalizeLinkedHover({ fields: ["region"] })
     expect(result).toEqual({ name: "hover", fields: ["region"] })
   })
+
+  it("passes through series mode and an explicit seriesField", () => {
+    const result = normalizeLinkedHover({ name: "s", mode: "series", seriesField: "region" })
+    expect(result).toMatchObject({ name: "s", mode: "series", seriesField: "region" })
+  })
 })
 
 // ── normalizeLinkedBrush ──────────────────────────────────────────────────

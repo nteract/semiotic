@@ -36,6 +36,14 @@ export interface UseNavigationSyncOptions {
   selectionName?: string
   /** Which canvas observations move the tree. Default ["hover", "click"]. */
   observe?: Array<"hover" | "click">
+  /**
+   * The chart's annotations. An annotation anchored to a datum carries that
+   * datum's identifying fields (the same `matchFields` used for hover sync), so
+   * each one resolves to a nav-tree leaf. Lets a non-visual reader *reach* an
+   * anchored point — e.g. an AI's "anchored conversation" note — via
+   * `focusAnnotation`, and lets the tree mark annotated nodes via `annotatedIds`.
+   */
+  annotations?: ReadonlyArray<Datum>
 }
 
 export interface UseNavigationSyncResult {
@@ -45,6 +53,14 @@ export interface UseNavigationSyncResult {
   onActiveChange: (node: NavTreeNode) => void
   /** Pass to the chart as `selection={sync.selection}`. */
   selection: { name: string }
+  /** Nav-tree leaf ids that an annotation anchors to — mark these as "has a note". */
+  annotatedIds: Set<string>
+  /**
+   * Move the tree (and canvas highlight) to an annotation's anchored node.
+   * Accepts an annotation object or its index in `annotations`. Returns `true`
+   * if the anchor resolved to a leaf. The reader lands on the anchored datum.
+   */
+  focusAnnotation: (annotation: Datum | number) => boolean
 }
 
 const KEY_SEP = "\u0001"
@@ -122,6 +138,33 @@ export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigat
     }
   }, [matchFields, selectPoints, clear])
 
+  // Annotation anchors → nav nodes. An anchored annotation carries the datum's
+  // matchFields, so it keys into `leafByKey` exactly like a hovered datum.
+  const annotations = options.annotations
+  const annotatedIds = useMemo(() => {
+    const ids = new Set<string>()
+    if (matchFields.length === 0 || !annotations) return ids
+    for (const a of annotations) {
+      const id = leafByKey.get(matchKey(a, matchFields))
+      if (id) ids.add(id)
+    }
+    return ids
+  }, [annotations, leafByKey, matchFields])
+
+  // Jump the tree (and canvas highlight) to an annotation's anchored leaf — the
+  // reader "reaches" the anchor. Accepts the annotation or its index.
+  const focusAnnotation = useCallback((target: Datum | number): boolean => {
+    const annotation = typeof target === "number" ? annotations?.[target] : target
+    if (!annotation || matchFields.length === 0) return false
+    const id = leafByKey.get(matchKey(annotation, matchFields))
+    if (!id) return false
+    setActiveId(id)
+    const fieldValues: Record<string, unknown[]> = {}
+    for (const f of matchFields) fieldValues[f] = [(annotation as Record<string, unknown>)[f]]
+    selectPoints(fieldValues)
+    return true
+  }, [annotations, leafByKey, matchFields, selectPoints])
+
   // canvas → tree: map the latest hover/click datum back to its leaf and select it.
   // Skip hover-end (sticky — leave the tree where it was rather than snapping to root).
   const lastObsRef = useRef<unknown>(null)
@@ -137,5 +180,5 @@ export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigat
     if (id && id !== activeId) setActiveId(id)
   }, [latest, leafByKey, matchFields, activeId])
 
-  return { activeId, onActiveChange, selection: { name: selectionName } }
+  return { activeId, onActiveChange, selection: { name: selectionName }, annotatedIds, focusAnnotation }
 }

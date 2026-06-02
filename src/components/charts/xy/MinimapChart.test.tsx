@@ -58,6 +58,25 @@ describe("MinimapChart", () => {
     expect(chart).toBeTruthy()
   })
 
+  it("survives the invalid→valid data transition without a hooks-count error", () => {
+    // Empty data fails validation (ChartError early return); valid data does
+    // not. Every hook must run before that return, or the hook count changes
+    // between renders and React throws "Rendered more hooks than during the
+    // previous render."
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { rerender } = render(
+        <TooltipProvider><MinimapChart data={[]} /></TooltipProvider>
+      )
+      expect(() =>
+        rerender(<TooltipProvider><MinimapChart data={sampleData} /></TooltipProvider>)
+      ).not.toThrow()
+      expect(errSpy.mock.calls.some((c) => String(c[0]).includes("Rendered more hooks"))).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
+  })
+
   it("contains two frames (main + overview)", () => {
     const { container } = render(
       <TooltipProvider>

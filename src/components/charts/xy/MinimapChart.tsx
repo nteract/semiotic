@@ -469,6 +469,19 @@ export function MinimapChart<TDatum extends Datum = Datum>(
 
   const brushDirection = minimapConfig.brushDirection || "x"
 
+  // Default tooltip with accessor-aware labels. `tooltip={true}` should
+  // show a useful tooltip even without a chart-specific default — the
+  // built-in StreamXYFrame fallback only knows generic `x/time` /
+  // `y/value` field names, so consumers with custom accessors (e.g.
+  // `xAccessor="date"` / `yAccessor="sales"`) would otherwise see blank
+  // content. Building one here keeps `normalizeTooltip(tooltip) ||
+  // defaultTooltipContent` honest. Computed before the validation early
+  // return below so the hook count stays stable across valid↔invalid data.
+  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
+  ]), [xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat])
+
   // ── Validation ──────────────────────────────────────────────────────
 
   const error = validateArrayData({
@@ -481,18 +494,6 @@ export function MinimapChart<TDatum extends Datum = Datum>(
   // ── Chart type ──────────────────────────────────────────────────────
 
   const chartType = fillArea ? "area" as const : "line" as const
-
-  // Default tooltip with accessor-aware labels. `tooltip={true}` should
-  // show a useful tooltip even without a chart-specific default — the
-  // built-in StreamXYFrame fallback only knows generic `x/time` /
-  // `y/value` field names, so consumers with custom accessors (e.g.
-  // `xAccessor="date"` / `yAccessor="sales"`) would otherwise see blank
-  // content. Building one here keeps `normalizeTooltip(tooltip) ||
-  // defaultTooltipContent` honest.
-  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
-  ]), [xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat])
 
   // ── Build StreamXYFrame props ───────────────────────────────────────
 
