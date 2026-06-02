@@ -146,6 +146,7 @@ const navData = [
       { title: "Chart Suggestions", path: "/intelligence/suggestions" },
       { title: "Scale-Aware Suggestions", path: "/intelligence/scale" },
       { title: "Interrogation", path: "/intelligence/interrogation" },
+      { title: "Agent-Reader Grounding", path: "/intelligence/reader-grounding" },
       { title: "Conversation Arc", path: "/intelligence/conversation-arc" },
       { title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" },
       { title: "Serialization", path: "/intelligence/serialization" },

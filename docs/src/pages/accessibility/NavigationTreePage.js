@@ -226,9 +226,27 @@ function SyncedChart({ data }) {
         richer structure for those families is on the roadmap.
       </p>
 
+      <h2 id="telemetry">Reception telemetry</h2>
+      <p>
+        Traversal is also a <em>signal</em>. When the{" "}
+        <Link to="/intelligence/conversation-arc">conversation-arc</Link> store is
+        enabled, <code>AccessibleNavTree</code> emits a{" "}
+        <code>nav-node-focused</code> event each time a reader moves to a node
+        (keyboard or click) and a <code>nav-branch-expanded</code> event on
+        expand/collapse, correlated to the chart by the tree's{" "}
+        <code>chartId</code> prop. It's the framework's first reception-side
+        behavioral measure — which structural nodes a non-visual (or AI) reader
+        actually visits, rather than only what we render. Recording is
+        zero-overhead while the arc store is disabled, and externally-driven
+        active changes (a canvas hover syncing into the tree) are not counted as
+        the reader's own traversal.
+      </p>
+
       <h2 id="related">Related</h2>
       <ul>
         <li><Link to="/accessibility/descriptions">Chart Descriptions</Link> — generates the node labels</li>
+        <li><Link to="/intelligence/reader-grounding">Agent-Reader Grounding</Link> — bundles this structure with the description for an LLM</li>
+        <li><Link to="/intelligence/conversation-arc">Conversation Arc</Link> — where traversal events land</li>
         <li><Link to="/accessibility/audit">Chartability Audit</Link> — grades navigable structure</li>
         <li><a href="https://www.frank.computer/data-navigator/" target="_blank" rel="noopener noreferrer">Data Navigator (Elavsky et al., IEEE VIS 2023)</a></li>
       </ul>

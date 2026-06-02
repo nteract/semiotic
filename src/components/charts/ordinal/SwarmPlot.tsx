@@ -166,8 +166,6 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   const sizeDomain = useMemo(() => {
     if (!sizeBy) return undefined
     const sizes = safeData.map((d) => typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy])
@@ -203,6 +201,13 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
     }),
     [categoryAccessor, valueAccessor, colorBy, valueFormat]
   )
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 bars) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   const error = validateArrayData({
     componentName: "SwarmPlot", data: data,

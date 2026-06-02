@@ -104,6 +104,7 @@ function TooltipProvider
 function TreeDiagram
 function Treemap
 function ViolinPlot
+function accessibilityCaveats
 function annotationFreshnessFor
 function applyAnnotationLifecycle
 function applyAudienceBias
@@ -111,10 +112,12 @@ function applyScaleBias
 function auditAccessibility
 function bandFromAge
 function buildNavigationTree
+function buildReaderGrounding
 function classifyCardinalityBand
 function classifyFieldBand
 function classifyRowBand
 function clearVariantDiscovery
+function communicativeActForIntent
 function compareBands
 function computeAnnotationFreshness
 function computeEffectiveScale
@@ -147,6 +150,7 @@ function inferIntent
 function listIntents
 function profileData
 function proposeVariant
+function receivabilityBias
 function recordAudienceChange
 function registerChartCapability
 function registerIntent
@@ -154,6 +158,7 @@ function registerStreamChartCapability
 function registerVariantDiscovery
 function repairChartConfig
 function resolveCardinalityToNumber
+function resolveCommunicativeAct
 function resolveRowsToNumber
 function runQualityScorecard
 function scaleHints
@@ -213,6 +218,9 @@ interface ChartDataProfile
 interface ChartEditedEvent
 interface ChartExportedEvent
 interface ChartGridProps
+interface ChartReaderGrounding
+interface ChartReaderGroundingIntent
+interface ChartReaderGroundingOptions
 interface ChartRenderedEvent
 interface ChartReplacedEvent
 interface ChartRubric
@@ -230,6 +238,7 @@ interface DataQualityProfile
 interface DataScaleProfile
 interface DataSummary
 interface DateFieldSummary
+interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
 interface DetailsPanelProps
@@ -252,6 +261,8 @@ interface InterrogationFocus
 interface InterrogationMessage
 interface InterrogationResult
 interface LifecycleBandThresholds
+interface NavBranchExpandedEvent
+interface NavNodeFocusedEvent
 interface NavTreeNode
 interface NumericFieldSummary
 interface PerCapabilityScore
@@ -259,6 +270,7 @@ interface PerFixtureScore
 interface PrimaryRoleChange
 interface ProfileDataOptions
 interface ProfileDiff
+interface ReceivabilitySignal
 interface RejectedCapability
 interface RepairAlternativeResult
 interface RepairOkResult
@@ -320,6 +332,7 @@ type CategoryColorMap
 type ChartFamily
 type ChartImportPath
 type ChartObservation
+type CommunicativeAct
 type ConversationArcEvent
 type ConversationArcEventInput
 type ConversationArcEventType
@@ -341,6 +354,7 @@ type OnObservationCallback
 type PrimaryRole
 type ProposeVariantFn
 type QualityFitFn
+type ReceptionModality
 type RepairResult
 type ScaleBand
 type ScaleFitFn

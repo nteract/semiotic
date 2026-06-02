@@ -185,7 +185,6 @@ export function useConversationArc(
     return () => {
       if (disableOnUnmount) disableConversationArc()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enableOnMount, disableOnUnmount, capacity, sessionId])
 
   // `useSyncExternalStore` requires a stable snapshot reference until

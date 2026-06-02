@@ -114,7 +114,8 @@ export type { Diagnosis, DiagnosisResult } from "./charts/shared/diagnoseConfig"
 // Accessibility audit — Chartability (POUR-CAF) heuristics over a chart config
 export {
   auditAccessibility,
-  formatAccessibilityAudit
+  formatAccessibilityAudit,
+  accessibilityCaveats
 } from "./charts/shared/auditAccessibility"
 export type {
   A11yPrinciple,
@@ -172,12 +173,26 @@ export type {
 export { useChartFocus } from "./store/useChartFocus"
 export type { UseChartFocusOptions } from "./store/useChartFocus"
 export { summarizeData } from "./data/DataSummarizer"
-export { describeChart } from "./ai/describeChart"
+export {
+  describeChart,
+  resolveCommunicativeAct,
+  communicativeActForIntent
+} from "./ai/describeChart"
 export type {
   DescribeChartResult,
   DescribeChartOptions,
-  DescribeLevel
+  DescribeLevel,
+  CommunicativeAct,
+  DescribeCapabilityContext
 } from "./ai/describeChart"
+// Agent-reader grounding payload — describeChart (L1–L3) + capability intent
+// (L4) + nav-tree structure as one payload an LLM reads to interpret a chart.
+export { buildReaderGrounding } from "./ai/readerGrounding"
+export type {
+  ChartReaderGrounding,
+  ChartReaderGroundingOptions,
+  ChartReaderGroundingIntent
+} from "./ai/readerGrounding"
 export {
   buildNavigationTree,
   flattenVisible,
@@ -263,12 +278,15 @@ export type {
 export {
   applyAudienceBias,
   effectiveFamiliarity,
-  stretchFamiliarityCeiling
+  stretchFamiliarityCeiling,
+  receivabilityBias
 } from "./ai/audienceProfile"
 export type {
   AudienceProfile,
   AudienceTarget,
-  AudienceBiasResult
+  AudienceBiasResult,
+  ReceptionModality,
+  ReceivabilitySignal
 } from "./ai/audienceProfile"
 export {
   executivePersona,
@@ -489,7 +507,9 @@ export type {
   ChartExportedEvent,
   ChartAbandonedEvent,
   InterrogationAskedEvent,
-  InterrogationAnsweredEvent
+  InterrogationAnsweredEvent,
+  NavNodeFocusedEvent,
+  NavBranchExpandedEvent
 } from "./ai/conversationArc"
 
 // AI Observation hooks

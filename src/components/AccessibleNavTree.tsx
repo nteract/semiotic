@@ -1,6 +1,7 @@
 "use client"
 import * as React from "react"
 import { flattenVisible, type NavTreeNode } from "./ai/navigationTree"
+import { getConversationArcStore } from "./ai/conversationArc"
 
 /**
  * AccessibleNavTree — renders a `buildNavigationTree()` structure as a WAI-ARIA
@@ -31,6 +32,13 @@ export interface AccessibleNavTreeProps {
    * auto-expands the path to a controlled active node so it stays visible.
    */
   activeId?: string
+  /**
+   * `chartId` of the chart this tree describes. Correlates the reception
+   * telemetry the tree emits (`nav-node-focused` / `nav-branch-expanded`
+   * conversation-arc events) back to the chart. Events are only recorded while
+   * the conversation-arc store is enabled — zero-overhead otherwise.
+   */
+  chartId?: string
 }
 
 function buildParentMap(root: NavTreeNode): Map<string, NavTreeNode> {
@@ -45,7 +53,7 @@ function buildParentMap(root: NavTreeNode): Map<string, NavTreeNode> {
   return parents
 }
 
-export function AccessibleNavTree({ tree, label, visible = false, className, onActiveChange, activeId: controlledActiveId }: AccessibleNavTreeProps) {
+export function AccessibleNavTree({ tree, label, visible = false, className, onActiveChange, activeId: controlledActiveId, chartId }: AccessibleNavTreeProps) {
   // Start with the root expanded so its direct children (axes, series) are
   // visible; deeper branches collapse until the user drills in.
   const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set([tree.id]))
@@ -88,13 +96,38 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
     }
   }, [activeId])
 
+  // Reception telemetry — only genuine tree interaction (keyboard/click) is
+  // recorded; externally-driven active changes (canvas → tree sync) flow
+  // through the `activeId` prop, not `setActive`, so they aren't double-counted
+  // as a reader's own traversal. No-op (and allocation-free) while disabled.
+  const recordNav = React.useCallback(
+    (node: NavTreeNode, kind: "focus" | "toggle", expandedNext?: boolean) => {
+      const store = getConversationArcStore()
+      if (!store.enabled) return
+      if (kind === "focus") {
+        store.record({
+          type: "nav-node-focused",
+          chartId, nodeId: node.id, role: node.role, level: node.level,
+          label: node.label.length > 200 ? node.label.slice(0, 200) : node.label,
+        })
+      } else {
+        store.record({
+          type: "nav-branch-expanded",
+          chartId, nodeId: node.id, role: node.role, level: node.level, expanded: !!expandedNext,
+        })
+      }
+    },
+    [chartId]
+  )
+
   const setActive = React.useCallback((node: NavTreeNode) => {
     if (!isControlled) setInternalActiveId(node.id)
     onActiveChange?.(node)
-  }, [onActiveChange, isControlled])
+    recordNav(node, "focus")
+  }, [onActiveChange, isControlled, recordNav])
 
-  const expand = (id: string) => setExpanded((s) => new Set(s).add(id))
-  const collapse = (id: string) => setExpanded((s) => { const n = new Set(s); n.delete(id); return n })
+  const expand = (node: NavTreeNode) => { setExpanded((s) => new Set(s).add(node.id)); recordNav(node, "toggle", true) }
+  const collapse = (node: NavTreeNode) => { setExpanded((s) => { const n = new Set(s); n.delete(node.id); return n }); recordNav(node, "toggle", false) }
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const idx = order.findIndex((n) => n.id === activeId)
@@ -109,12 +142,12 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
       case "Home": setActive(order[0]); break
       case "End": setActive(order[order.length - 1]); break
       case "ArrowRight":
-        if (hasChildren && !isOpen) expand(node.id)
+        if (hasChildren && !isOpen) expand(node)
         else if (hasChildren && isOpen) setActive(node.children![0])
         else handled = false
         break
       case "ArrowLeft":
-        if (hasChildren && isOpen) collapse(node.id)
+        if (hasChildren && isOpen) collapse(node)
         else {
           const parent = parentMap.get(node.id)
           if (parent) setActive(parent)
@@ -123,7 +156,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
         break
       case "Enter":
       case " ":
-        if (hasChildren) (isOpen ? collapse : expand)(node.id)
+        if (hasChildren) (isOpen ? collapse : expand)(node)
         else handled = false
         break
       default: handled = false
@@ -149,7 +182,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
         onClick={(e) => {
           e.stopPropagation()
           setActive(node)
-          if (hasChildren) (isOpen ? collapse : expand)(node.id)
+          if (hasChildren) (isOpen ? collapse : expand)(node)
         }}
         style={visible ? {
           listStyle: "none",

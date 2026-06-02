@@ -310,6 +310,37 @@ describe("BarChart", () => {
     expect(frameProps().data).not.toBe(initialData)
   })
 
+  it("survives the loading→data transition without a hooks-count error", () => {
+    // Mounting empty (loading skeleton, 0 bars) then re-rendering as data
+    // arrives must not call a different number of hooks between renders —
+    // otherwise React throws "Rendered more hooks than during the previous
+    // render". Regression guard for the misplaced `setup.earlyReturn` return.
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { rerender } = render(
+        <TooltipProvider>
+          <BarChart loading />
+        </TooltipProvider>
+      )
+      rerender(
+        <TooltipProvider>
+          <BarChart data={initialData} />
+        </TooltipProvider>
+      )
+      // The frame must actually render with the data — if a hooks-count
+      // error fired, the chart's error boundary would swallow the render and
+      // the frame would never receive the data.
+      expect(frameProps().data).toEqual(initialData)
+      const hookErr = errSpy.mock.calls.some((c) =>
+        String(c[0]).includes("Rendered more hooks") ||
+        String(c[0]).includes("change in the order of Hooks")
+      )
+      expect(hookErr).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
+  })
+
   it("disables hover when enableHover is false", () => {
     render(
       <TooltipProvider>

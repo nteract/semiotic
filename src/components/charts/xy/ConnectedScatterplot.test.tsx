@@ -41,6 +41,36 @@ describe("ConnectedScatterplot", () => {
     expect(frame).toBeFalsy()
   })
 
+  it("survives the loading→data transition without a hooks-count error", () => {
+    // Mounting empty (loading skeleton) then re-rendering as data arrives must
+    // not call a different number of hooks between renders — otherwise React
+    // throws "Rendered more hooks than during the previous render". Regression
+    // guard for the misplaced `setup.earlyReturn` return (trailing
+    // useSeriesFeatures hook after the guard's old position).
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { rerender } = render(
+        <TooltipProvider>
+          <ConnectedScatterplot loading />
+        </TooltipProvider>
+      )
+      expect(() =>
+        rerender(
+          <TooltipProvider>
+            <ConnectedScatterplot data={sampleData} xAccessor="x" yAccessor="y" />
+          </TooltipProvider>
+        )
+      ).not.toThrow()
+      const hookErr = errSpy.mock.calls.some((c) =>
+        String(c[0]).includes("Rendered more hooks") ||
+        String(c[0]).includes("change in the order of Hooks")
+      )
+      expect(hookErr).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
+  })
+
   // ── Mock-based behavioral assertions ──────────────────────────────────
 
   describe("StreamXYFrame prop forwarding", () => {

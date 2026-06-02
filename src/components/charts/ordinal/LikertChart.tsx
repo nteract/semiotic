@@ -325,8 +325,6 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     height,
   })
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   // ── Neutral color (for split halves) ────────────────────────────────
   const neutralColor = useMemo(() => {
     const n = levels.length
@@ -470,6 +468,13 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     }
     return (v: number | string) => `${Number(v).toFixed(0)}%`
   }, [isDiverging, valueFormat])
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 bars) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   // ── Build frame props ────────────────────────────────────────────────
   const streamProps: StreamOrdinalFrameProps = {

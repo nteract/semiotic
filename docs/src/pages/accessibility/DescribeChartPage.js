@@ -8,6 +8,7 @@ const LEVEL_META = {
   l1: { tag: "L1", name: "Encoding", color: "#0969da" },
   l2: { tag: "L2", name: "Statistics", color: "#1a7f37" },
   l3: { tag: "L3", name: "Trend", color: "#8250df" },
+  l4: { tag: "L4", name: "Intent", color: "#bc4c00" },
 }
 
 const SAMPLES = {
@@ -20,16 +21,18 @@ const SAMPLES = {
       ],
       xAccessor: "month", yAccessor: "sales",
     },
+    capability: { family: "time-series", intentScores: { trend: 5 } },
   },
-  "Revenue (peaks mid-year)": {
+  "Error rate (alerting)": {
     component: "LineChart",
     props: {
       data: [
-        { month: "Jan", revenue: 1200000 }, { month: "Feb", revenue: 2700000 },
-        { month: "Mar", revenue: 4100000 }, { month: "Apr", revenue: 2100000 },
+        { t: "09:00", errors: 12 }, { t: "10:00", errors: 9 },
+        { t: "11:00", errors: 140 }, { t: "12:00", errors: 14 },
       ],
-      xAccessor: "month", yAccessor: "revenue",
+      xAccessor: "t", yAccessor: "errors",
     },
+    capability: { family: "time-series", intentScores: { "change-detection": 5, trend: 2 } },
   },
   "Market share (pie)": {
     component: "PieChart",
@@ -40,6 +43,7 @@ const SAMPLES = {
       ],
       categoryAccessor: "vendor", valueAccessor: "share",
     },
+    capability: { family: "categorical", intentScores: { "part-to-whole": 4 } },
   },
   "Quarterly bars": {
     component: "BarChart",
@@ -50,13 +54,15 @@ const SAMPLES = {
       ],
       categoryAccessor: "quarter", valueAccessor: "revenue",
     },
+    capability: { family: "categorical", intentScores: { "compare-categories": 5, rank: 4 } },
   },
 }
 
 function DescribeDemo() {
   const [which, setWhich] = React.useState("Monthly sales (rises)")
   const cfg = SAMPLES[which]
-  const result = describeChart(cfg.component, cfg.props)
+  // Pass the chart's capability context so the opt-in L4 intent layer is emitted.
+  const result = describeChart(cfg.component, cfg.props, { capability: cfg.capability })
 
   return (
     <div style={{ border: "1px solid var(--surface-3)", borderRadius: 8, overflow: "hidden", margin: "20px 0" }}>
@@ -71,7 +77,7 @@ function DescribeDemo() {
       </div>
 
       <div style={{ padding: 16 }}>
-        {["l1", "l2", "l3"].map((lvl) => {
+        {["l1", "l2", "l3", "l4"].map((lvl) => {
           const text = result.levels[lvl]
           if (!text) return null
           const m = LEVEL_META[lvl]
@@ -121,19 +127,19 @@ export default function DescribeChartPage() {
       <h2 id="four-levels">The four-level model</h2>
       <p>
         Lundgard &amp; Satyanarayan organize description content into four
-        levels. <code>describeChart()</code> produces the first three (the
-        fourth needs domain knowledge the config doesn't carry — that's your{" "}
-        <code>summary</code> or an LLM's job):
+        levels. <code>describeChart()</code> produces the first three from the
+        config alone, and — when you hand it the chart's intent — an opt-in
+        fourth:
       </p>
       <ul>
         <li><strong>L1 — Encoding.</strong> The chart type and what's mapped to which channel ("a line chart of sales by month").</li>
         <li><strong>L2 — Statistics.</strong> Ranges, extrema with their labels, mean ("sales ranges from 100 in January to 350 in March").</li>
         <li><strong>L3 — Trend.</strong> Overall direction and notable shape over an ordered axis ("rises to a peak of 350 in March", or "after peaking at 400 in February").</li>
-        <li><strong>L4 — Domain / context.</strong> <em>Not generated.</em> Why the chart matters is yours to say.</li>
+        <li><strong>L4 — Intent.</strong> The <em>illocutionary</em> sentence — what the chart is asking you to do ("This is an alerting chart; the spike at 11:00 is the point to investigate"). Opt-in: pass the chart's <code>capability</code>. Deeper <em>domain</em> meaning (why <em>this</em> chart, in <em>this</em> report) still belongs to your <code>summary</code> or an LLM.</li>
       </ul>
 
       <h2 id="live">Try it</h2>
-      <p>Each line is one semantic level; the combined text is what a screen reader would announce. Computed live in your browser.</p>
+      <p>Each line is one semantic level; the combined text is what a screen reader would announce. The L4 line shows how the same chart shape reads differently once you declare its intent — note how the alerting example points at the spike. Computed live in your browser.</p>
       <DescribeDemo />
 
       <h2 id="chart-container">Wiring: ChartContainer is the opt-in layer</h2>
@@ -188,6 +194,45 @@ describeChart("BarChart", props, { levels: ["l1", "l2"] })`}
         language="jsx"
       />
 
+      <h2 id="l4-intent">L4 — the communicative act</h2>
+      <p>
+        L1–L3 describe the chart's <em>shape</em>. L4 names its{" "}
+        <strong>communicative act</strong> — the verb behind "what is this chart
+        doing?" — and points the reader at the feature that act asks them to act
+        on. It's the production↔reception join: the intent metadata already lives
+        in each chart's{" "}
+        <Link to="/intelligence/capabilities">capability descriptor</Link>, and
+        feeding it to <code>describeChart</code> turns it into the layer the
+        accessible description was missing.
+      </p>
+      <CodeBlock
+        code={`import { describeChart } from "semiotic/utils"
+import { LineChartCapability } from "semiotic/ai"
+
+// Pass a full capability descriptor, or a resolved { family, intentScores }
+// (a suggestion's scores are the most precise source). L4 auto-appends.
+const { levels } = describeChart("LineChart", props, {
+  capability: { family: "time-series", intentScores: { "change-detection": 5 } },
+  audience: executiveAudience,   // optional: low familiarity → orienting nudge
+})
+
+levels.l4  // "This is an alerting chart; the peak of 9,100 at March is the point to investigate."`}
+        language="jsx"
+      />
+      <p>
+        The dominant intent picks one of eleven acts (alerting, tracking,
+        comparing, ranking, apportioning, characterizing, relating, …); the
+        directive clause is built from the same L2/L3 statistics. Resolve the act
+        on its own with <code>resolveCommunicativeAct(component, capability)</code>.
+        The default output is unchanged — without a <code>capability</code>,{" "}
+        <code>describeChart</code> still stops at L3.
+      </p>
+      <p>
+        Need all three layers <em>plus</em> the navigation structure as one payload
+        for an AI agent? That's{" "}
+        <Link to="/intelligence/reader-grounding">agent-reader grounding</Link>.
+      </p>
+
       <h2 id="coverage">Coverage &amp; honesty</h2>
       <p>
         L2/L3 are richest for the families where a quantitative measure over a
@@ -197,9 +242,10 @@ describeChart("BarChart", props, { levels: ["l1", "l2"] })`}
         single-value charts, <code>describeChart()</code> returns a clean L1
         description (type and structure) and stops, rather than inventing a trend
         that isn't there. It's a strong first draft and a reliable fallback — but
-        it describes <em>shape</em>, not <em>meaning</em>. For the "why," still
-        write a <code>summary</code> (or pipe the generated text plus your data
-        through an LLM for L4).
+        L1–L3 describe <em>shape</em>, and L4 the <em>communicative act</em>, not
+        the <em>domain</em> meaning. For the deeper "why" — why this chart, in this
+        report — still write a <code>summary</code> (or pipe the generated text
+        plus your data through an LLM).
       </p>
 
       <h2 id="related">Related</h2>

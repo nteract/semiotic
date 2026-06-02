@@ -416,8 +416,6 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     height,
   })
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   // ── Line style ────────────────────────────────────────────────────────
   // MultiAxisLineChart hands the shared hook a custom `resolveStroke`
   // that reads from the per-series colorMap. The hook still does the
@@ -484,6 +482,13 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       )
     }
   }, [tooltip, seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor])
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 lines) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   // ── Validation ────────────────────────────────────────────────────────
   const validationError = validateArrayData({

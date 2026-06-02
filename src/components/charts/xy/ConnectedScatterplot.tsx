@@ -395,6 +395,13 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     forecast, anomaly,
   })
 
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 points) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
+
   // Splice the `regression` sugar + statistical overlays into annotations.
   const trendAnn = buildRegressionAnnotation(regression)
   const userAnns = annotations || []
@@ -445,8 +452,6 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     ...frameProps
   }
 
-  // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (setup.earlyReturn) return setup.earlyReturn
   if (error) return <ChartError componentName="ConnectedScatterplot" message={error} width={width} height={height} />
 
   return <SafeRender componentName="ConnectedScatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>

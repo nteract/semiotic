@@ -1,4 +1,19 @@
 import type { ChartRubric } from "./chartCapabilityTypes"
+import type { AccessibilityAuditResult } from "../charts/shared/auditAccessibility"
+
+/**
+ * The channel an audience receives a chart through. Orthogonal to familiarity:
+ * a reader can be highly familiar with a chart type yet unable to *receive* it
+ * in their channel (an 8-slice pie is familiar but illegible to a screen
+ * reader). Defaults to `"visual"` when unset — no receivability bias applied.
+ *
+ *   • `visual`        — sighted reader; the historical default, no bias.
+ *   • `screen-reader` — non-visual; meaning must survive the data table / nav tree.
+ *   • `sonified`      — audio; density and ordering matter more than color.
+ *   • `agent`         — an LLM reading via the grounding payload; same non-visual
+ *                       "is the meaning recoverable without pixels?" question.
+ */
+export type ReceptionModality = "visual" | "screen-reader" | "sonified" | "agent"
 
 /**
  * A serializable description of who's reading the charts and what the
@@ -46,6 +61,15 @@ export interface AudienceProfile {
    *       widening the menu
    */
   exposureLevel?: 0 | 1 | 2
+  /**
+   * The channel this audience receives charts through. When set to a non-visual
+   * modality, `suggestCharts` runs the accessibility audit on each candidate and
+   * `applyAudienceBias` down-ranks charts whose meaning doesn't survive that
+   * channel (and surfaces the receivability findings as caveats). Unset /
+   * `"visual"` keeps the historical behavior — familiarity and targets only.
+   * See {@link receivabilityBias}.
+   */
+  receptionModality?: ReceptionModality
 }
 
 export interface AudienceTarget {
@@ -63,10 +87,85 @@ export interface AudienceBiasResult {
   rubric: ChartRubric
   /** Reason string to append to the suggestion when a target fired. */
   appliedReason?: string
+  /** Reason string to append when a receivability penalty fired (non-visual modality). */
+  receivabilityReason?: string
+}
+
+export interface ReceivabilitySignal {
+  /** Score delta (≤ 0) — the receivability penalty for this channel. */
+  delta: number
+  /** One-line reason, present only when a penalty applied. */
+  reason?: string
+  /**
+   * Caveat messages for the findings that drove the penalty — the receivability
+   * slice of the audit, ready to merge into a suggestion's `caveats[]` alongside
+   * the perceptual ones (so both channels read from the same array).
+   */
+  caveats: string[]
 }
 
 const FAMILIARITY_WEIGHT = 0.5
 const TARGET_WEIGHT = 1.0
+
+// Audit heuristics whose status materially decides whether a chart's meaning
+// survives a non-visual channel. A deliberate subset of the audit: heuristics
+// that fire uniformly (e.g. "features described", fixable at the container
+// layer) are excluded so the bias *differentiates* charts rather than penalizing
+// every candidate equally.
+const RECEIVABILITY_HEURISTICS: ReadonlySet<string> = new Set([
+  "perceivable.content-only-visual",
+  "perceivable.color-alone",
+  "assistive.data-density",
+  "assistive.human-readable-numbers",
+  "assistive.skippable-navigation",
+  "compromising.table",
+  "compromising.navigable-structure",
+])
+
+const MODALITY_LABEL: Record<Exclude<ReceptionModality, "visual">, string> = {
+  "screen-reader": "a screen reader",
+  sonified: "sonification",
+  agent: "an AI reader",
+}
+
+/**
+ * Translate an accessibility audit into a receivability penalty for a non-visual
+ * channel. Pure. `fail` findings on receivability-critical heuristics weigh most;
+ * `warn` findings weigh less; `manual`/`pass`/`not-applicable` never penalize
+ * (we don't punish what we can't prove). Penalty is clamped to a −3 floor so it
+ * reorders rankings without overriding data-shape correctness.
+ *
+ * ```ts
+ * const audit = auditAccessibility("PieChart", props)
+ * const { delta, reason } = receivabilityBias(audit, "screen-reader")
+ * ```
+ */
+export function receivabilityBias(
+  audit: AccessibilityAuditResult,
+  modality: ReceptionModality,
+): ReceivabilitySignal {
+  if (modality === "visual") return { delta: 0, caveats: [] }
+  let delta = 0
+  const flagged: string[] = []
+  const caveats: string[] = []
+  for (const f of audit.findings) {
+    if (!RECEIVABILITY_HEURISTICS.has(f.id)) continue
+    let penalty = 0
+    if (f.status === "fail") penalty = f.critical ? 1.2 : 0.8
+    else if (f.status === "warn") penalty = 0.4
+    if (penalty > 0) {
+      delta -= penalty
+      flagged.push(f.heuristic.charAt(0).toLowerCase() + f.heuristic.slice(1))
+      caveats.push(f.message)
+    }
+  }
+  if (flagged.length === 0) return { delta: 0, caveats: [] }
+  return {
+    delta: Math.max(-3, delta),
+    reason: `Harder to receive via ${MODALITY_LABEL[modality]}: ${flagged.slice(0, 3).join("; ")}`,
+    caveats,
+  }
+}
 
 /**
  * Apply an AudienceProfile's bias to a chart's composite score and rubric.
@@ -80,12 +179,20 @@ const TARGET_WEIGHT = 1.0
  *       not so strong that it overrides chart correctness for the data shape.
  *
  * Score is left unclamped so internal sorting reflects the magnitude of bias.
+ *
+ * A third term — *receivability* — composes in when the audience declares a
+ * non-visual `receptionModality` and the caller passes the chart's
+ * accessibility `audit`. Familiarity and receivability are different axes: a
+ * chart can be familiar yet unreceivable in the target channel, and this folds
+ * the audit's verdict into the same score the recommender ranks by. See
+ * {@link receivabilityBias}.
  */
 export function applyAudienceBias(
   baseScore: number,
   baseRubric: ChartRubric,
   component: string,
-  audience: AudienceProfile | undefined
+  audience: AudienceProfile | undefined,
+  audit?: AccessibilityAuditResult,
 ): AudienceBiasResult {
   if (!audience) return { score: baseScore, rubric: baseRubric }
 
@@ -109,10 +216,20 @@ export function applyAudienceBias(
     }
   }
 
+  // Receivability: factor the audit's findings for the audience's channel.
+  let receivabilityReason: string | undefined
+  const modality = audience.receptionModality
+  if (audit && modality && modality !== "visual") {
+    const rb = receivabilityBias(audit, modality)
+    delta += rb.delta
+    receivabilityReason = rb.reason
+  }
+
   return {
     score: baseScore + delta,
     rubric: { ...baseRubric, familiarity },
-    appliedReason
+    appliedReason,
+    receivabilityReason,
   }
 }
 

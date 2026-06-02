@@ -421,6 +421,13 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
   ]), [xAccessor, yAccessor, xLabel, yLabel, sizeBy, colorBy, xFormat, yFormat])
 
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 bubbles) and then streaming in data must not change
+  // the number of hooks between renders, or React throws "Rendered more hooks
+  // than during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
+
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "BubbleChart",
@@ -479,9 +486,6 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     ...setup.crosshairProps,
     ...frameProps
   }
-
-  // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (setup.earlyReturn) return setup.earlyReturn
 
   return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
 }) as unknown as {

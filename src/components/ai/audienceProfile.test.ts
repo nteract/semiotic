@@ -2,11 +2,31 @@ import { describe, it, expect } from "vitest"
 import {
   applyAudienceBias,
   effectiveFamiliarity,
-  stretchFamiliarityCeiling
+  stretchFamiliarityCeiling,
+  receivabilityBias
 } from "./audienceProfile"
 import type { AudienceProfile } from "./audienceProfile"
 import { suggestCharts } from "./suggestCharts"
 import { dataScientistPersona, analystPersona } from "./audiences"
+import {
+  auditAccessibility,
+  accessibilityCaveats,
+  type A11yFinding,
+  type AccessibilityAuditResult
+} from "../charts/shared/auditAccessibility"
+
+function auditWith(findings: A11yFinding[]): AccessibilityAuditResult {
+  return {
+    component: "X",
+    ok: true,
+    summary: { criticalsPassed: 0, criticalsEvaluated: 0, fails: 0, warnings: 0, manual: 0, passes: 0 },
+    findings,
+    reference: "",
+  }
+}
+const finding = (id: string, status: A11yFinding["status"], critical = false): A11yFinding => ({
+  id, principle: "assistive", heuristic: id.split(".")[1].replace(/-/g, " "), critical, status, message: `msg:${id}`,
+})
 
 const baseRubric = { familiarity: 3, accuracy: 4, precision: 4 }
 
@@ -73,6 +93,64 @@ describe("applyAudienceBias", () => {
     const r = applyAudienceBias(3.0, baseRubric, "BoxPlot", audience)
     expect(r.appliedReason).toContain("Acme")
     expect(r.appliedReason).toContain("distributions")
+  })
+
+  it("folds a receivability penalty when the modality is non-visual and an audit is supplied", () => {
+    const audience: AudienceProfile = { receptionModality: "screen-reader" }
+    const audit = auditWith([finding("assistive.data-density", "warn", true)])
+    const r = applyAudienceBias(4, baseRubric, "PieChart", audience, audit)
+    expect(r.score).toBeCloseTo(3.6) // 4 − 0.4 (a warn)
+    expect(r.receivabilityReason).toContain("screen reader")
+  })
+
+  it("applies no receivability penalty for a visual audience even with an audit", () => {
+    const audit = auditWith([finding("assistive.data-density", "warn", true)])
+    const r = applyAudienceBias(4, baseRubric, "PieChart", { receptionModality: "visual" }, audit)
+    expect(r.score).toBe(4)
+    expect(r.receivabilityReason).toBeUndefined()
+  })
+
+  it("applies no receivability penalty when no audit is supplied", () => {
+    const r = applyAudienceBias(4, baseRubric, "PieChart", { receptionModality: "screen-reader" })
+    expect(r.score).toBe(4)
+    expect(r.receivabilityReason).toBeUndefined()
+  })
+})
+
+describe("receivabilityBias", () => {
+  it("returns no bias for the visual channel", () => {
+    const audit = auditWith([finding("assistive.data-density", "warn", true)])
+    expect(receivabilityBias(audit, "visual")).toEqual({ delta: 0, caveats: [] })
+  })
+
+  it("weighs a critical fail (1.2) above a warn (0.4), clamps to −3, and names the channel", () => {
+    const audit = auditWith([
+      finding("compromising.table", "fail", true),
+      finding("assistive.data-density", "warn", true),
+    ])
+    const r = receivabilityBias(audit, "agent")
+    expect(r.delta).toBeCloseTo(-1.6)
+    expect(r.reason).toContain("an AI reader")
+  })
+
+  it("ignores manual/pass findings and heuristics outside the receivability set", () => {
+    const audit = auditWith([
+      finding("robust.conforms-to-standards", "manual"),
+      finding("operable.focus-indicator", "warn"), // not in the receivability set
+      finding("compromising.table", "pass", true),
+    ])
+    expect(receivabilityBias(audit, "screen-reader").delta).toBe(0)
+  })
+})
+
+describe("accessibilityCaveats", () => {
+  const eightSlices = Array.from({ length: 8 }, (_, i) => ({ vendor: `V${i}`, share: 20 - i }))
+
+  it("distils a real audit's fail/warn findings into caveat strings", () => {
+    const audit = auditAccessibility("PieChart", { data: eightSlices, categoryAccessor: "vendor", valueAccessor: "share" })
+    const caveats = accessibilityCaveats(audit)
+    expect(caveats.some((c) => /slice|density/i.test(c))).toBe(true)
+    expect(accessibilityCaveats(audit, { onlyCritical: true }).length).toBeLessThanOrEqual(caveats.length)
   })
 })
 

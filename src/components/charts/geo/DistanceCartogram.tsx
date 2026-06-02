@@ -417,6 +417,13 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     )
   }, [cartogramLayout, ringValues, showNorth, costLabel, ringStyle, setup.margin, frameProps.foregroundGraphics])
 
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, no points) and then streaming in data must not change
+  // the number of hooks between renders, or React throws "Rendered more hooks
+  // than during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
+
   warnMissingField("DistanceCartogram", safeData, "xAccessor", xAccessor)
   warnMissingField("DistanceCartogram", safeData, "yAccessor", yAccessor)
 
@@ -459,9 +466,6 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     // Override foregroundGraphics with our overlay (which includes user's foregroundGraphics)
     ...(overlayGraphics && { foregroundGraphics: overlayGraphics })
   }
-
-  // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (setup.earlyReturn) return setup.earlyReturn
 
   return (
     <SafeRender componentName="DistanceCartogram" width={resolved.width} height={resolved.height}>

@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import * as React from "react"
 import { AccessibleNavTree } from "./AccessibleNavTree"
 import { buildNavigationTree } from "./ai/navigationTree"
+import { enableConversationArc, getConversationArcStore } from "./ai/conversationArc"
 
 const singleSeries = buildNavigationTree("LineChart", {
   data: [{ month: "Jan", sales: 100 }, { month: "Feb", sales: 250 }, { month: "Mar", sales: 180 }],
@@ -96,5 +97,46 @@ describe("AccessibleNavTree — keyboard", () => {
     expect(after[after.length - 1]).toHaveAttribute("aria-selected", "true")
     fireEvent.keyDown(after[after.length - 1], { key: "Home" })
     expect(screen.getAllByRole("treeitem")[0]).toHaveAttribute("aria-selected", "true")
+  })
+})
+
+describe("AccessibleNavTree — reception telemetry", () => {
+  beforeEach(() => getConversationArcStore().reset())
+  afterEach(() => getConversationArcStore().reset())
+
+  it("records nav-node-focused on keyboard traversal when the arc is enabled", () => {
+    enableConversationArc()
+    render(<AccessibleNavTree tree={singleSeries} chartId="sales" />)
+    fireEvent.keyDown(screen.getAllByRole("treeitem")[0], { key: "ArrowDown" })
+    const focus = getConversationArcStore().getEvents().filter((e) => e.type === "nav-node-focused")
+    expect(focus).toHaveLength(1)
+    expect(focus[0]).toMatchObject({ chartId: "sales", role: "axis", level: 2 })
+  })
+
+  it("records nav-branch-expanded on expand (and the expanded flag on collapse)", () => {
+    enableConversationArc()
+    render(<AccessibleNavTree tree={multiSeries} chartId="sales" />)
+    const west = screen.getByLabelText(/Series West:/)
+    fireEvent.click(west) // focus + expand
+    fireEvent.keyDown(screen.getByLabelText(/Series West:/), { key: "ArrowLeft" }) // collapse
+    const toggles = getConversationArcStore().getEvents().filter((e) => e.type === "nav-branch-expanded")
+    expect(toggles).toHaveLength(2)
+    expect(toggles[0]).toMatchObject({ role: "series", expanded: true })
+    expect(toggles[1]).toMatchObject({ role: "series", expanded: false })
+  })
+
+  it("is a no-op while the arc is disabled", () => {
+    render(<AccessibleNavTree tree={singleSeries} />)
+    fireEvent.keyDown(screen.getAllByRole("treeitem")[0], { key: "ArrowDown" })
+    expect(getConversationArcStore().getEvents()).toHaveLength(0)
+  })
+
+  it("does not count externally-driven (controlled) active changes as reception", () => {
+    enableConversationArc()
+    const west = multiSeries.children!.find((c) => c.role === "series")!
+    const deepLeaf = west.children![1]
+    // The controlled activeId + auto-expand drive the tree — not the reader.
+    render(<AccessibleNavTree tree={multiSeries} activeId={deepLeaf.id} chartId="sales" />)
+    expect(getConversationArcStore().getEvents()).toHaveLength(0)
   })
 })

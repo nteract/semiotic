@@ -26,6 +26,8 @@ export type ConversationArcEventType =
   | "chart-abandoned"
   | "interrogation-asked"
   | "interrogation-answered"
+  | "nav-node-focused"
+  | "nav-branch-expanded"
 
 interface ConversationArcEventBase {
   /** Discriminator for the event variant. */
@@ -144,6 +146,42 @@ export interface InterrogationAnsweredEvent extends ConversationArcEventBase {
   error?: boolean
 }
 
+/**
+ * A reader focused a node in an `AccessibleNavTree` (keyboard or click). The
+ * first *reception*-side behavioral signal in the arc — which structural nodes
+ * a non-visual (or AI) reader actually visits, the dependent measure visualization-
+ * literacy studies usually lack. Emitted only on genuine tree interaction, not
+ * when the active node is driven externally (canvas → tree sync).
+ */
+export interface NavNodeFocusedEvent extends ConversationArcEventBase {
+  type: "nav-node-focused"
+  /** `chartId` of the chart the tree describes, when correlated. */
+  chartId?: string
+  /** Tree node id that gained focus. */
+  nodeId: string
+  /** Node role: `"chart" | "axis" | "series" | "datum"`. */
+  role: string
+  /** 1-based depth (aria-level). */
+  level: number
+  /** The node's announced label (the emitter truncates to ~200 chars). */
+  label?: string
+}
+
+/** A reader expanded or collapsed a branch in an `AccessibleNavTree`. */
+export interface NavBranchExpandedEvent extends ConversationArcEventBase {
+  type: "nav-branch-expanded"
+  /** `chartId` of the chart the tree describes, when correlated. */
+  chartId?: string
+  /** Tree node id that was toggled. */
+  nodeId: string
+  /** Node role of the toggled branch. */
+  role: string
+  /** 1-based depth (aria-level). */
+  level: number
+  /** `true` on expand, `false` on collapse. */
+  expanded: boolean
+}
+
 export type ConversationArcEvent =
   | SuggestionShownEvent
   | SuggestionChosenEvent
@@ -155,6 +193,8 @@ export type ConversationArcEvent =
   | ChartAbandonedEvent
   | InterrogationAskedEvent
   | InterrogationAnsweredEvent
+  | NavNodeFocusedEvent
+  | NavBranchExpandedEvent
 
 /**
  * Input shape accepted by `record()`: the event variant without the

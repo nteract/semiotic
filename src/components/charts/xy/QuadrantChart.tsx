@@ -573,6 +573,13 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     }]
   }, [xCenter, yCenter, quadrants, centerlineStyle, showQuadrantLabels, quadrantLabelSize])
 
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 points) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
+
   const streamProps: StreamXYFrameProps = {
     chartType: "scatter",
     ...(data != null && { data: safeData }),
@@ -620,8 +627,6 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     svgPreRenderers,
   }
 
-  // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (setup.earlyReturn) return setup.earlyReturn
   if (validationError) return <ChartError componentName="QuadrantChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="QuadrantChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>

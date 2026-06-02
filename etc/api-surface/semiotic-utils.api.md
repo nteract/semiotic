@@ -15,9 +15,12 @@ const LIGHT_THEME
 const THEME_PRESETS
 function MultiPointTooltip
 function ThemeProvider
+function accessibilityCaveats
 function adaptiveTimeTicks
 function auditAccessibility
 function buildNavigationTree
+function buildReaderGrounding
+function communicativeActForIntent
 function computeArcBoundingBox
 function configToJSX
 function copyConfig
@@ -36,6 +39,7 @@ function fromVegaLite
 function getHitRadius
 function lightenColor
 function normalizeTooltip
+function resolveCommunicativeAct
 function resolveThemePreset
 function serializeSelections
 function smartTickFormat
@@ -56,6 +60,10 @@ interface ArcBoundingBox
 interface AuditAccessibilityOptions
 interface BuildNavigationTreeOptions
 interface ChartConfig
+interface ChartReaderGrounding
+interface ChartReaderGroundingIntent
+interface ChartReaderGroundingOptions
+interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
 interface HatchPatternOptions
@@ -70,6 +78,7 @@ interface VegaLiteEncoding
 interface VegaLiteSpec
 type A11yPrinciple
 type A11yStatus
+type CommunicativeAct
 type CopyFormat
 type DescribeLevel
 type NavTreeRole

@@ -237,4 +237,32 @@ describe("DonutChart", () => {
       expect(lastOrdinalFrameProps.tooltipContent({ category: "A", value: 10 })).toBeNull()
     })
   })
+
+  it("survives the loading→data transition without a hooks-count error", () => {
+    // Mounting empty (loading skeleton, 0 wedges) then re-rendering as data
+    // arrives must not call a different number of hooks between renders —
+    // otherwise React throws "Rendered more hooks than during the previous
+    // render". Regression guard for the misplaced `setup.earlyReturn` return.
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { rerender } = render(
+        <TooltipProvider>
+          <DonutChart loading />
+        </TooltipProvider>
+      )
+      rerender(
+        <TooltipProvider>
+          <DonutChart data={sampleData} categoryAccessor="category" valueAccessor="value" />
+        </TooltipProvider>
+      )
+      expect(lastOrdinalFrameProps.data).toEqual(sampleData)
+      const hookErr = errSpy.mock.calls.some((c) =>
+        String(c[0]).includes("Rendered more hooks") ||
+        String(c[0]).includes("change in the order of Hooks")
+      )
+      expect(hookErr).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
+  })
 })

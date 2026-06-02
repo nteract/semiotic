@@ -214,8 +214,8 @@ function useTweenedValue(
       rafRef.current = null
     }
     // displayed intentionally excluded — including it would restart the
-    // tween every animation frame.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // tween every animation frame. (No react-hooks/exhaustive-deps rule is
+    // configured in eslint.config.mjs, so no disable directive is needed.)
   }, [target, animate, reducedMotion])
 
   return displayed

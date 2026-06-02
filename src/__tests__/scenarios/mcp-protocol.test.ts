@@ -319,6 +319,7 @@ describe("MCP protocol round-trip", () => {
       "auditAccessibility",
       "diagnoseConfig",
       "getSchema",
+      "groundChart",
       "interrogateChart",
       "renderChart",
       "repairChartConfig",

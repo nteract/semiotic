@@ -12,13 +12,21 @@ import type {
 } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
 import { getCapabilities } from "./chartCapabilities"
-import { applyAudienceBias, type AudienceProfile } from "./audienceProfile"
+import {
+  applyAudienceBias,
+  receivabilityBias,
+  type AudienceProfile,
+  type ReceptionModality,
+} from "./audienceProfile"
+import {
+  auditAccessibility,
+  type AccessibilityAuditResult,
+} from "../charts/shared/auditAccessibility"
 import {
   applyScaleBias,
   computeEffectiveScale,
   type DataQualityProfile,
   type DataScaleProfile,
-  type EffectiveScale,
 } from "./dataScaleProfile"
 
 function score(scorer: IntentScorer | undefined, profile: ChartDataProfile): number {
@@ -154,6 +162,12 @@ export function suggestCharts(
   const allow = options.allow ? new Set(options.allow) : null
   const deny = options.deny ? new Set(options.deny) : null
 
+  // Receivability: only audit candidates when the audience declares a
+  // non-visual channel. Keeps the common (visual) path allocation-free and as
+  // cheap as before — pay only when reception modality matters.
+  const modality = options.audience?.receptionModality
+  const wantReceivability = modality !== undefined && modality !== "visual"
+
   // Effective scale: merges declared DataScaleProfile with the measured profile.
   // Computed once per suggestCharts call. When no scale is declared, falls
   // back to whatever the profile measured — so the scaleRange tag always
@@ -197,15 +211,27 @@ export function suggestCharts(
       const intentScores = applyVariantToScores(baseScores, variant)
       const baseComposite = compositeScore(intentScores, rankingIntents)
       const variantRubric = applyVariantToRubric(capability.rubric, variant)
+      const props = capability.buildProps(profile, variant)
+
+      // Receivability audit (non-visual audiences only) — feeds both the bias
+      // and the receivability caveats, so the chart is audited at most once.
+      let audit: AccessibilityAuditResult | undefined
+      let receivability: ReturnType<typeof receivabilityBias> | undefined
+      if (wantReceivability) {
+        audit = auditAccessibility(capability.component, props as Datum)
+        receivability = receivabilityBias(audit, modality as ReceptionModality)
+      }
 
       // Audience bias: overrides familiarity and shifts composite score
-      // by ±familiarity + ±target. Strong enough to reorder rankings, not
-      // strong enough to override fits-driven correctness.
+      // by ±familiarity + ±target (+ ±receivability when audit is supplied).
+      // Strong enough to reorder rankings, not strong enough to override
+      // fits-driven correctness.
       const biased = applyAudienceBias(
         baseComposite,
         variantRubric,
         capability.component,
         options.audience,
+        audit,
       )
 
       // Scale + quality bias: composes additively on top of the audience-biased
@@ -224,13 +250,17 @@ export function suggestCharts(
 
       const reasons = buildReasons(capability, scaledProfile, intentScores, rankingIntents)
       if (biased.appliedReason) reasons.push(biased.appliedReason)
+      if (biased.receivabilityReason) reasons.push(biased.receivabilityReason)
       for (const r of scaleBias.reasons) reasons.push(r)
       const caveats = [
         ...baseCaveats,
         ...(variant?.caveats ?? []),
         ...scaleBias.caveats,
+        // Item 4: receivability caveats from the same audit that drove the
+        // penalty, in the same array as the perceptual ones — one caveat
+        // channel, not two. Capped so they don't drown the descriptor's.
+        ...(receivability?.caveats.slice(0, 3) ?? []),
       ]
-      const props = capability.buildProps(profile, variant)
 
       const scaleRange: SuggestionScaleRange = {
         band: effectiveScale.rowBand,

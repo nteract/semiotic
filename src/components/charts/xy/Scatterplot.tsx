@@ -329,8 +329,6 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     [] // stable — reads from ref
   )
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("Scatterplot", safeData, "xAccessor", xAccessor)
   warnMissingField("Scatterplot", safeData, "yAccessor", yAccessor)
@@ -405,6 +403,13 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
       ...statisticalAnnotations,
     ]
   }, [regression, annotations, statisticalAnnotations])
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 points) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   // Validate data (after all hooks)
   const error = validateArrayData({

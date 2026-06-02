@@ -143,8 +143,6 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     height,
   })
 
-  if (setup.earlyReturn) return setup.earlyReturn
-
   // Default `innerRadius` scales with the container's min dimension so the
   // donut keeps its ring shape at any size. User-supplied pixel values always
   // win. The ratio `min(w, h) * 0.15` (so primary 400×400 → 60, matching the
@@ -194,6 +192,13 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     ref, frameRef,
     setup,
   })
+
+  // Loading / empty state — returned only after every hook above has run, so
+  // the hook count is identical whether or not data is present. Mounting empty
+  // (loading skeleton, 0 bars) and then streaming in data must not change the
+  // number of hooks between renders, or React throws "Rendered more hooks than
+  // during the previous render."
+  if (setup.earlyReturn) return setup.earlyReturn
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "donut",

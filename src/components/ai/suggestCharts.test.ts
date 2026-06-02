@@ -47,6 +47,33 @@ describe("suggestCharts", () => {
     expect(suggestions[0].component).toBe("Histogram")
   })
 
+  it("down-ranks a many-slice pie for a screen-reader audience and surfaces the receivability caveat", () => {
+    const eightCategories = Array.from({ length: 8 }, (_, i) => ({ vendor: `V${i}`, share: 20 - i }))
+    const visual = suggestCharts(eightCategories, { intent: "part-to-whole", includeVariants: false })
+    const screenReader = suggestCharts(eightCategories, {
+      intent: "part-to-whole",
+      includeVariants: false,
+      audience: { receptionModality: "screen-reader" },
+    })
+    const pieVisual = visual.find((s) => s.component === "PieChart")!
+    const pieSR = screenReader.find((s) => s.component === "PieChart")!
+    expect(pieVisual).toBeDefined()
+    expect(pieSR).toBeDefined()
+    // The non-visual channel pays the data-density penalty; the visual one doesn't.
+    expect(pieSR.score).toBeLessThan(pieVisual.score)
+    expect(pieSR.reasons.some((r) => r.includes("screen reader"))).toBe(true)
+    expect(pieSR.caveats.some((c) => /slice|density/i.test(c))).toBe(true)
+    // Visual audience: no receivability caveat injected.
+    expect(visual.find((s) => s.component === "PieChart")!.reasons.some((r) => r.includes("screen reader"))).toBe(false)
+  })
+
+  it("leaves the visual path unchanged (no audit) when receptionModality is unset", () => {
+    const eightCategories = Array.from({ length: 8 }, (_, i) => ({ vendor: `V${i}`, share: 20 - i }))
+    const a = suggestCharts(eightCategories, { intent: "part-to-whole", includeVariants: false })
+    const b = suggestCharts(eightCategories, { intent: "part-to-whole", includeVariants: false, audience: { name: "X" } })
+    expect(a.map((s) => s.component)).toEqual(b.map((s) => s.component))
+  })
+
   it("filters by allow list", () => {
     const suggestions = suggestCharts(temporalMultiSeries, { allow: ["AreaChart"], includeVariants: false })
     expect(suggestions.every((s) => s.component === "AreaChart")).toBe(true)

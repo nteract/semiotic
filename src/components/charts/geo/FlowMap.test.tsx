@@ -106,6 +106,36 @@ describe("FlowMap", () => {
       )
       expect(container.querySelector(".stream-geo-frame")).toBeTruthy()
     })
+
+    it("survives the loading→data transition without a hooks-count error", () => {
+      // Regression guard for the misplaced `setup.earlyReturn` return: mounting
+      // empty (loading skeleton) then streaming flows in must not change the
+      // hook count between renders, or React throws "Rendered more hooks than
+      // during the previous render".
+      const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      try {
+        const { rerender, container } = render(
+          <Wrapper>
+            <FlowMap nodes={sampleNodes} loading />
+          </Wrapper>
+        )
+        expect(() =>
+          rerender(
+            <Wrapper>
+              <FlowMap nodes={sampleNodes} flows={sampleFlows} valueAccessor="passengers" />
+            </Wrapper>
+          )
+        ).not.toThrow()
+        expect(container.querySelector(".stream-geo-frame")).toBeTruthy()
+        const hookErr = errSpy.mock.calls.some((c) =>
+          String(c[0]).includes("Rendered more hooks") ||
+          String(c[0]).includes("change in the order of Hooks")
+        )
+        expect(hookErr).toBe(false)
+      } finally {
+        errSpy.mockRestore()
+      }
+    })
   })
 
   // ── Basic prop forwarding ─────────────────────────────────────────────

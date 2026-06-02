@@ -535,6 +535,7 @@ export const ChartContainer = React.forwardRef<
               tree={navTree}
               label={typeof title === "string" && title ? `${title} — navigable structure` : "Chart navigable structure"}
               visible={navVisible}
+              chartId={typeof chartConfig?.props?.chartId === "string" ? chartConfig.props.chartId : undefined}
             />
           </div>
         )}

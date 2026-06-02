@@ -188,4 +188,37 @@ describe("MultiAxisLineChart", () => {
     expect(typeof handle.clear).toBe("function")
     expect(typeof handle.getData).toBe("function")
   })
+
+  it("survives the loading→data transition without a hooks-count error", () => {
+    // Mounting empty (loading skeleton, 0 lines) then re-rendering as data
+    // arrives must not call a different number of hooks between renders —
+    // otherwise React throws "Rendered more hooks than during the previous
+    // render". Regression guard for the misplaced `setup.earlyReturn` return.
+    const series = [
+      { yAccessor: "temperature", label: "Temperature" },
+      { yAccessor: "humidity", label: "Humidity" },
+    ]
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { container, rerender } = render(
+        <MultiAxisLineChart xAccessor="time" series={series} loading width={600} height={400} />
+      )
+      expect(() =>
+        rerender(
+          <MultiAxisLineChart data={sampleData} xAccessor="time" series={series} width={600} height={400} />
+        )
+      ).not.toThrow()
+      // The frame must actually render once data arrives — if a hooks-count
+      // error fired, the error boundary would swallow the render and no
+      // canvas would mount.
+      expect(container.querySelector("canvas")).toBeTruthy()
+      const hookErr = errSpy.mock.calls.some((c) =>
+        String(c[0]).includes("Rendered more hooks") ||
+        String(c[0]).includes("change in the order of Hooks")
+      )
+      expect(hookErr).toBe(false)
+    } finally {
+      errSpy.mockRestore()
+    }
+  })
 })
