@@ -7,7 +7,7 @@ import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
-import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
+import { createDefaultAnnotationRules, applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationRules"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 
 interface OrdinalSVGOverlayProps {
@@ -303,16 +303,20 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       stickyPositionCache: stickyPositionCacheRef.current
     }
 
-    return annotations
-      .map((annotation, i) => {
+    const pairs = annotations
+      .map((annotation, i): AnnotationRenderPair | null => {
+        let node: React.ReactNode
         if (svgAnnotationRules) {
           const userResult = svgAnnotationRules(annotation, i, context)
-          if (userResult !== null && userResult !== undefined) return userResult
-          return defaultRules(annotation, i, context)
+          node = userResult !== null && userResult !== undefined ? userResult : defaultRules(annotation, i, context)
+        } else {
+          node = defaultRules(annotation, i, context)
         }
-        return defaultRules(annotation, i, context)
+        return node ? { node, annotation } : null
       })
-      .filter(Boolean)
+      .filter((p): p is AnnotationRenderPair => p !== null)
+    // Apply annotation hierarchy (emphasis) — no-op when none declared.
+    return applyAnnotationEmphasis(pairs)
   }, [annotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData])
 
   const hasContent = showAxes || title || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children

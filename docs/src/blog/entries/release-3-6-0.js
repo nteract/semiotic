@@ -8,7 +8,7 @@ function Body() {
       <p>
         3.6.0 is the AI release. The library has carried{" "}
         <Link to="/intelligence/observation-hooks">observation hooks</Link>,{" "}
-        <Link to="/features/annotations">native annotations</Link>, and a{" "}
+        <Link to="/annotations/overview">native annotations</Link>, and a{" "}
         <Link to="/features/push-api">streaming-first runtime</Link> for a while; this version turns
         those pieces into an explicit AI-facing surface. Charts now declare what they're for,
         datasets get profiled and ranked, audiences get calibrated, and conversations anchor back

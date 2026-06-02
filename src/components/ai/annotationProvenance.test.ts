@@ -7,11 +7,14 @@ import {
   withCurrentProvenance,
   withProvenance,
   type Annotated,
+  type AnnotationActorKind,
   type AnnotationAnchor,
+  type AnnotationBasis,
   type AnnotationFreshness,
   type AnnotationLifecycle,
   type AnnotationProvenance,
   type AnnotationSource,
+  type AnnotationStatus,
 } from "./annotationProvenance"
 
 const DAY = 24 * 60 * 60 * 1000
@@ -123,6 +126,75 @@ describe("annotationProvenance — type surface", () => {
     expect(freshness).toHaveLength(4)
     expect(l.anchor).toBe("semantic")
     expect(lMs.ttlHint).toBe(86_400_000)
+  })
+
+  it("carries the IDID §8 provenance fields (basis, authorKind, dataVersion)", () => {
+    // The shipped provenance block is the union of the original fields
+    // and IDID §8's `ChartAnnotationProvenance`. `authorKind` is the
+    // actor, `basis` is the evidence type, `source` the coarse origin —
+    // all three coexist.
+    const p: AnnotationProvenance = {
+      author: "latency-detector",
+      authorKind: "watcher",
+      source: "computed",
+      basis: "statistical-test",
+      confidence: 0.7,
+      createdAt: "2026-05-20T14:00:00Z",
+      dataVersion: "2026-W14",
+      stableId: "annot-abc-123",
+    }
+    expect(p.authorKind).toBe("watcher")
+    expect(p.basis).toBe("statistical-test")
+    expect(p.dataVersion).toBe("2026-W14")
+  })
+
+  it("allows open actor-kind and basis labels alongside the recognized ones", () => {
+    const actors: AnnotationActorKind[] = ["human", "agent", "watcher", "system", "co-pilot"]
+    const bases: AnnotationBasis[] = [
+      "human-note",
+      "statistical-test",
+      "rule",
+      "llm-inference",
+      "external-source",
+      "computed",
+      "forecast",
+    ]
+    expect(actors).toHaveLength(5)
+    expect(bases).toHaveLength(7)
+  })
+
+  it("carries the editorial-lifecycle fields (status, supersedes) on lifecycle", () => {
+    const statuses: AnnotationStatus[] = ["proposed", "accepted", "disputed", "retracted"]
+    const l: AnnotationLifecycle = {
+      freshness: "fresh",
+      status: "disputed",
+      supersedes: "annot-prev-001",
+      ttlHint: "P30D",
+    }
+    // Editorial status is orthogonal to temporal freshness — a note can
+    // be fresh-but-disputed.
+    expect(statuses).toHaveLength(4)
+    expect(l.status).toBe("disputed")
+    expect(l.freshness).toBe("fresh")
+    expect(l.supersedes).toBe("annot-prev-001")
+  })
+
+  it("round-trips the new fields through withProvenance", () => {
+    const annotated = withProvenance(
+      { type: "callout", label: "Deploy-correlated cluster" },
+      {
+        provenance: {
+          authorKind: "watcher",
+          basis: "rule",
+          dataVersion: "2026-W14",
+        },
+        lifecycle: { status: "proposed", supersedes: "annot-001" },
+      }
+    )
+    expect(annotated.provenance?.authorKind).toBe("watcher")
+    expect(annotated.provenance?.basis).toBe("rule")
+    expect(annotated.lifecycle?.status).toBe("proposed")
+    expect(annotated.lifecycle?.supersedes).toBe("annot-001")
   })
 })
 

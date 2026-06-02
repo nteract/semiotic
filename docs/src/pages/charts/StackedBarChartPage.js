@@ -519,7 +519,7 @@ export default function StackedBarChartPage() {
           Frame with full control over every rendering detail
         </li>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — adding callouts,
+          <Link to="/annotations/overview">Annotations</Link> — adding callouts,
           highlights, and notes to any visualization
         </li>
         <li>

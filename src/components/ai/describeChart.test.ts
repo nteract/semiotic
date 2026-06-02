@@ -221,3 +221,75 @@ describe("describeChart — L4 intent / communicative act", () => {
     expect(resolveCommunicativeAct("Mystery", undefined)).toBeUndefined()
   })
 })
+
+describe("describeChart — author annotations", () => {
+  const data = [
+    { month: "Jan", sales: 100 },
+    { month: "Feb", sales: 250 },
+    { month: "Mar", sales: 180 },
+  ]
+
+  it("omits the annotations field and leaves text unchanged when there are none", () => {
+    const r = describeChart("LineChart", { data, xAccessor: "month", yAccessor: "sales" }, { levels: ["l1"] })
+    expect(r.annotations).toBeUndefined()
+    expect(r.text).toBe(r.levels.l1)
+  })
+
+  it("surfaces author-placed annotations as a leading sentence", () => {
+    const r = describeChart(
+      "LineChart",
+      {
+        data,
+        xAccessor: "month",
+        yAccessor: "sales",
+        annotations: [
+          { type: "y-threshold", y: 200, label: "Target" },
+          { type: "callout", x: "Feb", label: "Peak" },
+        ],
+      },
+      { levels: ["l1"] }
+    )
+    expect(r.annotations).toBe(
+      'The author has marked 2 features on this chart: a threshold line labeled "Target" and a callout labeled "Peak".'
+    )
+    // It leads the text, ahead of the L1 encoding sentence.
+    expect(r.text.startsWith(r.annotations)).toBe(true)
+    expect(r.text.endsWith(r.levels.l1)).toBe(true)
+  })
+
+  it("qualifies AI- and watcher-authored notes from their provenance", () => {
+    const r = describeChart(
+      "LineChart",
+      {
+        data,
+        xAccessor: "month",
+        yAccessor: "sales",
+        annotations: [
+          { type: "callout", x: "Feb", label: "Spike", provenance: { authorKind: "watcher", basis: "statistical-test" } },
+          { type: "label", x: "Mar", label: "Check", provenance: { authorKind: "agent" } },
+        ],
+      },
+      { levels: ["l1"] }
+    )
+    expect(r.annotations).toContain('a watcher-flagged callout labeled "Spike"')
+    expect(r.annotations).toContain('an AI-suggested label labeled "Check"')
+  })
+
+  it("singularizes one feature and caps the list with \"and N more\"", () => {
+    const one = describeChart("LineChart", { data, xAccessor: "month", yAccessor: "sales", annotations: [{ type: "band", y0: 100, y1: 200, label: "Range" }] }, { levels: ["l1"] })
+    expect(one.annotations).toContain("one feature")
+
+    const many = describeChart(
+      "LineChart",
+      {
+        data,
+        xAccessor: "month",
+        yAccessor: "sales",
+        annotations: Array.from({ length: 7 }, (_, i) => ({ type: "callout", label: `n${i}` })),
+      },
+      { levels: ["l1"] }
+    )
+    expect(many.annotations).toContain("7 features")
+    expect(many.annotations).toContain("and 2 more")
+  })
+})

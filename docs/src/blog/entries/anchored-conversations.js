@@ -621,7 +621,7 @@ function AnchoredChart({ data }) {
       </p>
       <p>
         This is exactly the pattern{" "}
-        <Link to="/features/advanced-annotations">Advanced Annotations</Link> demonstrates with the
+        <Link to="/annotations/advanced">Advanced Annotations</Link> demonstrates with the
         human-authored comment threads with the same UI shape, but populated by an LLM instead of
         typed by a teammate. The chart doesn't care where the comments came from.
       </p>
@@ -692,7 +692,7 @@ function AnchoredChart({ data }) {
           signal.
         </li>
         <li>
-          <Link to="/features/advanced-annotations">Advanced Annotations</Link> - the original
+          <Link to="/annotations/advanced">Advanced Annotations</Link> - the original
           comment-thread-on-a-data-point pattern this post extends to AI.
         </li>
         <li>

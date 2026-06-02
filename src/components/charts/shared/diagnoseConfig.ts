@@ -564,6 +564,53 @@ function checkFunctionAccessors(
  * Returns actionable diagnoses with severity, code, message, and fix instruction.
  * Runs validateProps internally — validation errors are included as diagnoses.
  */
+// Connector-necessity (Rahman et al.'s "Placement"): a note should sit next to
+// its target, with a connector only when proximity is infeasible. Two cheap
+// static smells — a note placed far from its anchor with no connector at all,
+// and a connector long enough to suggest the note could have been adjacent.
+// Advisory only (warnings). The label/callout default offset (~42px) sits well
+// under both thresholds, so default-placed notes never trip this.
+const NOTE_ANNOTATION_TYPES = new Set(["label", "callout", "callout-circle", "callout-rect", "text"])
+const FAR_PLACEMENT_PX = 120
+const VERY_LONG_CONNECTOR_PX = 250
+
+function checkAnnotationConnectors(
+  _component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  const anns = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
+  if (!anns) return
+  for (const a of anns) {
+    if (!a || typeof a !== "object") continue
+    const type = typeof a.type === "string" ? a.type : ""
+    if (!NOTE_ANNOTATION_TYPES.has(type)) continue
+    const dx = typeof a.dx === "number" ? a.dx : 0
+    const dy = typeof a.dy === "number" ? a.dy : 0
+    const dist = Math.hypot(dx, dy)
+    const label = typeof a.label === "string" ? a.label : typeof a.title === "string" ? a.title : type
+    const connectorDisabled = Array.isArray(a.disable) && (a.disable as unknown[]).includes("connector")
+    // `text` never draws a connector; label/callout draw one unless disabled.
+    const hasConnector = type !== "text" && !connectorDisabled
+
+    if (!hasConnector && dist > FAR_PLACEMENT_PX) {
+      out.push({
+        severity: "warning",
+        code: "ANNOTATION_FAR_NO_CONNECTOR",
+        message: `Annotation "${label}" sits ~${Math.round(dist)}px from its anchor with no connector — a reader can't tell what it refers to.`,
+        fix: `Add a connector (connector: { end: "arrow" }, the label/callout default) or place the note adjacent to its target (smaller dx/dy).`,
+      })
+    } else if (hasConnector && dist > VERY_LONG_CONNECTOR_PX) {
+      out.push({
+        severity: "warning",
+        code: "ANNOTATION_LONG_CONNECTOR",
+        message: `Annotation "${label}" uses a very long connector (~${Math.round(dist)}px); prefer placing the note adjacent to its target when space allows.`,
+        fix: `Reduce dx/dy so the note sits near its target, or keep the long connector only if proximity is genuinely infeasible.`,
+      })
+    }
+  }
+}
+
 export function diagnoseConfig(
   componentName: string,
   props: Datum
@@ -606,6 +653,7 @@ export function diagnoseConfig(
   checkAdjacentCategoryContrast(componentName, props, diagnoses)
   checkMissingDescription(componentName, props, diagnoses)
   checkFunctionAccessors(componentName, props, diagnoses)
+  checkAnnotationConnectors(componentName, props, diagnoses)
 
   return {
     ok: diagnoses.every(d => d.severity === "warning"),

@@ -1,11 +1,23 @@
-// Annotation provenance + lifecycle — M1 (types only).
+// Annotation provenance + lifecycle.
 //
 // Anchored conversations need a defensible answer to "what about stale
 // notes when the data changes?" The answer requires every annotation
-// to carry provenance (who/where/when) and lifecycle (freshness, TTL,
-// anchor strategy). This module defines the type surface only — the
-// behavior (`computeAnnotationFreshness`, default visual treatment,
-// stable-id re-resolution) lands in M2 and M3.
+// to carry provenance (who/where/when/on-what-basis) and lifecycle
+// (temporal freshness + editorial status, TTL, anchor strategy).
+//
+// Freshness computation (`computeAnnotationFreshness`) and the default
+// visual treatment (`applyAnnotationLifecycle`) ship; stable-id anchor
+// re-resolution (the `"semantic"` anchor) is still owed.
+//
+// This type surface is the union of the shipped fields and IDID's §8
+// `ChartAnnotationProvenance` (idid.md). The paper packs everything into
+// one flat block; here the origin/evidence fields live on `provenance`
+// and the editorial-state fields (`status`, `supersedes`) live on
+// `lifecycle`, parallel to the temporal `freshness` band — the two
+// lifecycle axes are orthogonal (a note can be fresh-but-disputed or
+// stale-but-accepted). Status-driven visual treatment is owed alongside
+// the editorial-lifecycle work; the types ship first so authors and
+// agents can stamp the fields now.
 //
 // All fields are optional. Existing annotation arrays keep working
 // unchanged — the new blocks attach to whatever annotation shape the
@@ -18,13 +30,35 @@
  * Lives on `annotation.provenance`.
  */
 export interface AnnotationProvenance {
-  /** Display name for who created the annotation — a user, agent, or system. */
+  /**
+   * Display name (or stable id) for who created the annotation — a
+   * person, agent, or watcher. Together with `authorKind` this expresses
+   * IDID §8's structured `author: { kind, id }`: `authorKind` is the
+   * actor category, `author` is the name/id.
+   */
   author?: string
   /**
+   * Actor category — *who* created the annotation. IDID §8's
+   * `author.kind`. Distinct from `basis` (*how* it was derived) and from
+   * the coarser `source`. Open union; consumers may extend.
+   */
+  authorKind?: AnnotationActorKind
+  /**
    * Origin category. Recognized values are not exhaustive; consumers
-   * may extend with their own source labels.
+   * may extend with their own source labels. Coarser than the
+   * `authorKind` / `basis` pair — kept for back-compat and as a single
+   * convenience label when the finer split isn't needed.
    */
   source?: AnnotationSource
+  /**
+   * Evidence type — *how* the annotation's claim was derived
+   * (a hand note, a statistical test, a rule, an LLM inference, an
+   * external source). IDID §8's `basis`. Distinct from `authorKind`
+   * (the actor) and `source` (the coarse origin): a `"human"` author can
+   * relay a `"statistical-test"` basis. Lets a reader weight a note by
+   * the strength of its evidence, not just who left it.
+   */
+  basis?: AnnotationBasis
   /**
    * Confidence in the assertion, 0–1. `1` is a hand-placed user
    * annotation; LLM-suggested annotations typically land below 0.8.
@@ -33,12 +67,47 @@ export interface AnnotationProvenance {
   /** ISO 8601 timestamp marking when the annotation was created. */
   createdAt?: string
   /**
+   * Identifier of the data snapshot the annotation was made against
+   * (IDID §8's `dataVersion`). Lets a consumer tell "this note was
+   * written about last week's data" from "this note still tracks the
+   * current data," independent of wall-clock freshness.
+   */
+  dataVersion?: string
+  /**
    * Stable, opaque identifier that survives data refresh and chart
-   * recreation. Used by the M3 anchor-resolution algorithm to
-   * re-locate "the Q3 spike" after new data arrives.
+   * recreation. Used by the `"semantic"` anchor-resolution work to
+   * re-locate "the Q3 spike" after new data arrives, and as the target
+   * of another annotation's `lifecycle.supersedes`.
    */
   stableId?: string
 }
+
+/**
+ * Actor category for an annotation — *who* created it. IDID §8 models
+ * this as `author.kind`. Open string union: `"system"` covers
+ * non-watcher automated placement, and consumers may pass any other
+ * label (it is preserved).
+ */
+export type AnnotationActorKind =
+  | "human"
+  | "agent"
+  | "watcher"
+  | "system"
+  | (string & {})
+
+/**
+ * Evidence type for an annotation — *how* its claim was derived. IDID
+ * §8's `basis`. Open string union so consumers can add evidence kinds
+ * (e.g. `"forecast"`, `"manual-review"`) without a type change.
+ */
+export type AnnotationBasis =
+  | "human-note"
+  | "statistical-test"
+  | "rule"
+  | "llm-inference"
+  | "external-source"
+  | "computed"
+  | (string & {})
 
 /**
  * Recognized provenance sources. Open string union — consumers may
@@ -86,15 +155,49 @@ export { bandFromAge, DEFAULT_LIFECYCLE_THRESHOLDS } from "../realtime/lifecycle
 export type { LifecycleBand, LifecycleBandThresholds } from "../realtime/lifecycleBands"
 
 /**
+ * Editorial standing of an annotation in a multiplayer conversation —
+ * is the note still believed? IDID §8's `status`. Orthogonal to the
+ * temporal `freshness` band: a note can be fresh-but-`disputed` or
+ * stale-but-`accepted`. Closed union — these four are the editorial
+ * state machine the editorial-lifecycle work drives:
+ *
+ * - `"proposed"` — placed but unreviewed (e.g. a watcher's auto-note).
+ * - `"accepted"` — confirmed by a human or agent.
+ * - `"disputed"` — contested; under review.
+ * - `"retracted"` — withdrawn; treat like an expired note.
+ */
+export type AnnotationStatus = "proposed" | "accepted" | "disputed" | "retracted"
+
+/**
  * Lifecycle state for an annotation. Lives on `annotation.lifecycle`.
+ *
+ * Two orthogonal axes: the **temporal** band (`freshness`, derived from
+ * `createdAt` + `ttlHint`) and the **editorial** state (`status`,
+ * driven by the multiplayer accept/dispute/retract flow). `supersedes`
+ * links a revision to the note it replaces.
  */
 export interface AnnotationLifecycle {
   /**
    * Current freshness band. When omitted, `computeAnnotationFreshness`
-   * (M2) derives it from `ttlHint` and the data's current temporal
-   * extent.
+   * derives it from `ttlHint` and the data's current temporal extent.
    */
   freshness?: AnnotationFreshness
+  /**
+   * Editorial standing (IDID §8's `status`). Set by the multiplayer
+   * accept/dispute/retract flow; orthogonal to `freshness`. When
+   * omitted, the annotation is treated as unconditionally shown (the
+   * pre-editorial-lifecycle behavior). Status-driven visual treatment
+   * is owed alongside the editorial-lifecycle work — the field ships
+   * first so it can be stamped now.
+   */
+  status?: AnnotationStatus
+  /**
+   * `provenance.stableId` of the annotation this one replaces (IDID
+   * §8's `supersedes`). Forms a revision chain so a reader can trace how
+   * an interpretation changed; the superseded note is typically hidden
+   * once its replacement is `accepted`.
+   */
+  supersedes?: string
   /**
    * How long this annotation should be considered fresh. Either an
    * ISO 8601 duration string (`"PT24H"`, `"P7D"`) or a number of

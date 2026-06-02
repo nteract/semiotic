@@ -458,8 +458,11 @@ export {
 export type {
   AnnotationProvenance,
   AnnotationSource,
+  AnnotationActorKind,
+  AnnotationBasis,
   AnnotationLifecycle,
   AnnotationFreshness,
+  AnnotationStatus,
   AnnotationAnchor,
   Annotated,
   ComputeAnnotationFreshnessOptions,

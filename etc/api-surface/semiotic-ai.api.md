@@ -322,9 +322,12 @@ interface VegaLiteSpec
 type A11yPrinciple
 type A11yStatus
 type Annotated
+type AnnotationActorKind
 type AnnotationAnchor
+type AnnotationBasis
 type AnnotationFreshness
 type AnnotationSource
+type AnnotationStatus
 type ApplyAnnotationLifecycleOptions
 type BuiltInIntentId
 type CardinalityBand

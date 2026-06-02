@@ -112,7 +112,7 @@ invertR: true`}
           before-and-after comparison using connectors
         </li>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — custom
+          <Link to="/annotations/overview">Annotations</Link> — custom
           annotation rules and built-in annotation types
         </li>
       </ul>
