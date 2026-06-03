@@ -7,6 +7,7 @@ import type { Datum } from "./datumTypes"
  */
 
 import { VALIDATION_MAP, validateProps } from "./validateProps"
+import { annotationBudget } from "../../recipes/annotationDensity"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -611,6 +612,39 @@ function checkAnnotationConnectors(
   }
 }
 
+// Amount & density (Rahman et al.'s "Amount of annotation": balance explanatory
+// support against clutter). A soft, advisory smell — count note-like
+// annotations against the same area-derived budget the runtime density pass
+// uses, and suggest emphasis or progressive disclosure when they pile up.
+// Reference lines, bands and overlays don't count toward the budget.
+const DENSITY_NOTE_TYPES = new Set(["label", "callout", "callout-circle", "callout-rect", "text", "widget"])
+
+function checkAnnotationDensity(
+  _component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  const anns = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
+  if (!anns) return
+
+  const noteCount = anns.filter(
+    (a) => a && typeof a === "object" && DENSITY_NOTE_TYPES.has(String(a.type || ""))
+  ).length
+  if (noteCount === 0) return
+
+  const width = typeof props.width === "number" ? props.width : 600
+  const height = typeof props.height === "number" ? props.height : 400
+  const budget = annotationBudget(width, height)
+  if (!Number.isFinite(budget) || noteCount <= budget) return
+
+  out.push({
+    severity: "warning",
+    code: "ANNOTATION_DENSITY",
+    message: `${noteCount} note annotations on a ${width}×${height} chart exceeds the ~${budget} the plot area carries comfortably — the chart may read as cluttered.`,
+    fix: `Mark the essential notes emphasis: "primary" and let density management shed the rest (autoPlaceAnnotations: { density: true }), enable progressive disclosure to reveal secondary notes on hover, or give the chart more room.`,
+  })
+}
+
 export function diagnoseConfig(
   componentName: string,
   props: Datum
@@ -654,6 +688,7 @@ export function diagnoseConfig(
   checkMissingDescription(componentName, props, diagnoses)
   checkFunctionAccessors(componentName, props, diagnoses)
   checkAnnotationConnectors(componentName, props, diagnoses)
+  checkAnnotationDensity(componentName, props, diagnoses)
 
   return {
     ok: diagnoses.every(d => d.severity === "warning"),

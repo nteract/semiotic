@@ -20,6 +20,19 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "annotations-that-lead-and-land",
+    title: "Annotations That Lead and Land",
+    subtitle:
+      "M1 and M2 move annotations from first-class objects toward design assistance: hierarchy gives notes a reading order, and opt-in placement chooses sensible offsets without taking control away from authors.",
+    author: "Elijah Meeks",
+    date: "2026-06-03",
+    tags: ["case-study", "roadmap"],
+    excerpt:
+      "Semiotic already treated annotations as data-bound objects. The M1 and M2 work starts helping authors make design decisions with those objects: primary and secondary notes, inferred reading order from confidence, an accessibility audit hook, and an opt-in annotationLayout recipe that places notes near their targets while avoiding obvious collisions.",
+    ogChart: { component: "Scatterplot" },
+    draft: true,
+  },
+  {
     slug: "what-an-annotation-should-carry",
     title: "What an Annotation Should Carry",
     subtitle:

@@ -19,6 +19,10 @@ type AnnotationAnchorNode = {
   cy?: number
   w?: number
   h?: number
+  /** Circle nodes (NetworkCircleNode, force/tree/orbit marks) carry an explicit radius. */
+  r?: number
+  /** Arc nodes (chord, radial) carry an outer radius. */
+  outerR?: number
 }
 
 type NetworkAnnotationContext = AnnotationContext & { sceneNodes?: AnnotationAnchorNode[] }
@@ -32,7 +36,14 @@ function nodeCenter(node: AnnotationAnchorNode): { x: number; y: number; r: numb
   const x = node.cx ?? (node.x != null && node.w != null ? node.x + node.w / 2 : node.x)
   const y = node.cy ?? (node.y != null && node.h != null ? node.y + node.h / 2 : node.y)
   if (typeof x !== "number" || typeof y !== "number") return null
-  const r = Math.max(1, node.w ?? 0, node.h ?? 0) / 2
+  // Prefer the mark's own radius (circle nodes) or outer radius (arc nodes);
+  // only rect nodes lack both, so fall back to half their largest dimension.
+  const r =
+    typeof node.r === "number"
+      ? Math.max(1, node.r)
+      : typeof node.outerR === "number"
+        ? Math.max(1, node.outerR)
+        : Math.max(1, node.w ?? 0, node.h ?? 0) / 2
   return { x, y, r }
 }
 
@@ -121,13 +132,14 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     }
   }, [height, sceneNodes, width])
 
-  const layoutAnnotations = annotations && autoPlaceAnnotations
-    ? annotationLayout({
-        annotations,
-        context: annotationContext,
-        ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
-      })
-    : annotations
+  const layoutAnnotations = React.useMemo(() => {
+    if (!annotations || !autoPlaceAnnotations) return annotations
+    return annotationLayout({
+      annotations,
+      context: annotationContext,
+      ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
+    })
+  }, [annotations, autoPlaceAnnotations, annotationContext])
 
   const renderedSvgAnnotations = layoutAnnotations
     ? applyAnnotationEmphasis(
@@ -214,8 +226,10 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>
-    {/* Widget annotations — rendered as HTML divs so they can overflow the SVG */}
-    {layoutAnnotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {
+    {/* Widget annotations — rendered as HTML divs so they can overflow the SVG.
+        Density-deferred widgets are shed here (they live outside the SVG, so the
+        SVG-scoped progressive-disclosure reveal can't reach them). */}
+    {layoutAnnotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes && !a._annotationDeferred).map((annotation, i) => {
       const node = sceneNodes!.find(n =>
         n.id === annotation.nodeId ||
         (n.datum?.id === annotation.nodeId) ||

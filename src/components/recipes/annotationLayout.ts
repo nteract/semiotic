@@ -1,6 +1,7 @@
 import type { AnnotationContext } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAnchoredPosition } from "../charts/shared/annotationResolvers"
+import { annotationDensity, type AnnotationDensityConfig } from "./annotationDensity"
 
 export interface AnnotationLayoutConfig {
   /** Distance from the anchor for the first candidate ring. */
@@ -17,6 +18,20 @@ export interface AnnotationLayoutConfig {
   routeLongConnectors?: boolean
   /** Distance threshold for routeLongConnectors. */
   connectorThreshold?: number
+  /**
+   * M3 — amount & density management. When set, after placement the lowest-
+   * priority note-like annotations are shed so the plot is not over-crowded
+   * (`true` uses the area-derived default budget; an object tunes it). Reference
+   * lines, bands and overlays are never shed. Off by default.
+   */
+  density?: boolean | AnnotationDensityConfig
+  /**
+   * M3 — progressive disclosure. When `true`, density-deferred notes are kept
+   * in the output tagged `_annotationDeferred` (hidden by default, revealed on
+   * chart hover/focus) instead of dropped. Requires `density`. The persistent
+   * set is always rendered, so a non-hover reader still sees the core notes.
+   */
+  progressiveDisclosure?: boolean
 }
 
 export type AutoPlaceAnnotationsConfig = AnnotationLayoutConfig
@@ -232,6 +247,8 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     preserveManualOffsets = true,
     routeLongConnectors = true,
     connectorThreshold = DEFAULT_CONNECTOR_THRESHOLD,
+    density,
+    progressiveDisclosure = false,
   } = options
 
   const width = context.width || 0
@@ -296,5 +313,28 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     }
   })
 
-  return changed ? output : annotations.slice()
+  const placed = changed ? output : annotations.slice()
+
+  // M3 — density management runs after placement (it needs to know what landed
+  // before deciding what to shed). Off unless `density` is configured.
+  if (!density) return placed
+
+  const densityConfig = typeof density === "object" ? density : {}
+  const { visible, deferred } = annotationDensity({
+    annotations: placed,
+    width,
+    height,
+    ...densityConfig,
+  })
+
+  if (deferred.length === 0) return placed
+  if (!progressiveDisclosure) return visible
+
+  // Progressive disclosure: keep deferred notes, tagged so the SVG overlay
+  // hides them until the chart is hovered/focused. The persistent (`visible`)
+  // set is always rendered — the floor that a non-hover reader still receives.
+  const deferredSet = new Set<Datum>(deferred)
+  return placed.map((annotation) =>
+    deferredSet.has(annotation) ? { ...annotation, _annotationDeferred: true } : annotation
+  )
 }

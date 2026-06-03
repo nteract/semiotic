@@ -37,6 +37,13 @@ export type {
   AutoPlaceAnnotationsConfig,
 } from "./recipes/annotationLayout"
 
+export { annotationDensity, annotationBudget, DEFAULT_AREA_PER_ANNOTATION } from "./recipes/annotationDensity"
+export type {
+  AnnotationDensityConfig,
+  AnnotationDensityOptions,
+  AnnotationDensityResult,
+} from "./recipes/annotationDensity"
+
 // Re-export the layout types so recipe authors don't need a second import.
 export type {
   CustomLayout,

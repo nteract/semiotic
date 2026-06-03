@@ -360,4 +360,41 @@ describe("diagnoseConfig", () => {
       expect(diag?.severity).toBe("warning")
     })
   })
+
+  describe("annotation density (clutter)", () => {
+    const base = { data: [{ x: 1, y: 2 }, { x: 3, y: 4 }], xAccessor: "x", yAccessor: "y", title: "t" }
+    const notes = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({ type: "label", x: 1, label: `n${i}` }))
+
+    it("does not flag a comfortable number of notes", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base, width: 600, height: 400, annotations: notes(3),
+      })
+      expect(result.diagnoses.map(d => d.code)).not.toContain("ANNOTATION_DENSITY")
+    })
+
+    it("warns when notes exceed the area-derived budget", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base, width: 400, height: 400, annotations: notes(12),
+      })
+      const diag = result.diagnoses.find(d => d.code === "ANNOTATION_DENSITY")
+      expect(diag?.severity).toBe("warning")
+      expect(diag?.message).toContain("cluttered")
+      // Advisory only — warnings don't fail ok.
+      expect(result.ok).toBe(true)
+    })
+
+    it("does not count reference lines toward the budget", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base,
+        width: 400,
+        height: 400,
+        annotations: [
+          ...Array.from({ length: 12 }, (_, i) => ({ type: "y-threshold", value: i })),
+          { type: "label", x: 1, label: "only note" },
+        ],
+      })
+      expect(result.diagnoses.map(d => d.code)).not.toContain("ANNOTATION_DENSITY")
+    })
+  })
 })
