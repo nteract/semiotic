@@ -369,7 +369,7 @@ export function auditAccessibility(
         heuristic: "Color is used alone to communicate meaning",
         critical: false,
         ...(cueless.length === 0
-          ? { status: "pass" as A11yStatus, message: `All ${anns.length} annotation(s) tie to their target with a connector, enclosure, or reference line — not color alone.` }
+          ? { status: "pass" as A11yStatus, message: "No annotation relies on color alone to indicate its target — wherever color is used, a connector, enclosure, or reference-line cue is present too." }
           : { status: "warn" as A11yStatus, message: `${cueless.length} of ${anns.length} annotation(s) carry a color but no connector, enclosure, or reference-line cue, so a color-blind or non-visual reader can't tie them to their target (the correspondence problem).`, fix: "Add a connector (the label/callout default), place the note adjacent to its target, or enclose the target — don't rely on color matching alone." }),
       })
     }

@@ -112,11 +112,16 @@ export function buildReaderGrounding(
 
   // Split the single result back into the L1–L3 description and the L4 sentence.
   const { l4: l4Sentence, ...l13Levels } = full.levels
+  // Re-join just the L1–L3 levels (canonical order; undefined levels drop out),
+  // so `description.text` excludes the L4 sentence carried in `intent`.
+  const l13Text = (["l1", "l2", "l3"] as const).map((l) => full.levels[l]).filter(Boolean).join(" ")
   const description: DescribeChartResult = {
     levels: l13Levels,
-    // Re-join just the L1–L3 levels (canonical order; undefined levels drop out),
-    // so `description.text` excludes the L4 sentence carried in `intent`.
-    text: (["l1", "l2", "l3"] as const).map((l) => full.levels[l]).filter(Boolean).join(" "),
+    // An author-placed annotation is intent in its purest form, so it leads the
+    // grounding prose ahead of L1–L3 — the agent reader must not silently lose
+    // the provenance-aware annotation summary describeChart surfaced.
+    text: full.annotations ? `${full.annotations} ${l13Text}`.trim() : l13Text,
+    ...(full.annotations ? { annotations: full.annotations } : {}),
   }
 
   let intent: ChartReaderGroundingIntent | undefined
