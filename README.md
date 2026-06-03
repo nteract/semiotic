@@ -287,19 +287,19 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **86 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **70 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/xy` | **87 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **71 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
 | `semiotic/network` | **64 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **52 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **91 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/server` | **122 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/utils` | **33 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/realtime` | **92 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/server` | **123 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/utils` | **36 KB** | ThemeProvider, validators, serialization — no chart components |
 | `semiotic/recipes` | **5 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **4 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/ai` | **235 KB** | All 42 HOCs + validation — optimized for LLM code generation |
-| `semiotic` | **195 KB** | Everything below (full bundle) |
+| `semiotic/ai` | **239 KB** | All 42 HOCs + validation — optimized for LLM code generation |
+| `semiotic` | **198 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 
