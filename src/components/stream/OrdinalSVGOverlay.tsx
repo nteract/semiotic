@@ -7,7 +7,7 @@ import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
-import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
+import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 
 interface OrdinalSVGOverlayProps {
@@ -303,16 +303,9 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       stickyPositionCache: stickyPositionCacheRef.current
     }
 
-    return annotations
-      .map((annotation, i) => {
-        if (svgAnnotationRules) {
-          const userResult = svgAnnotationRules(annotation, i, context)
-          if (userResult !== null && userResult !== undefined) return userResult
-          return defaultRules(annotation, i, context)
-        }
-        return defaultRules(annotation, i, context)
-      })
-      .filter(Boolean)
+    // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
+    // XY overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.
+    return renderAnnotationPass(annotations, defaultRules, svgAnnotationRules, context)
   }, [annotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData])
 
   const hasContent = showAxes || title || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children

@@ -24,7 +24,7 @@ export interface AnnotationProps {
     i?: number
     fixedPosition?: boolean
     label?: string
-    connector?: { end?: "arrow" }
+    connector?: { end?: "arrow"; type?: "line" | "curve"; curve?: number }
     subject?: Record<string, unknown>
     color?: string
     className?: string
@@ -471,31 +471,64 @@ function renderConnector(
   )
 
   if (connectorLength > 0.5) {
-    elements.push(
-      <line
-        key="connector-line"
-        x1={startX}
-        y1={startY}
-        x2={dx}
-        y2={dy}
-        stroke={color || "var(--semiotic-text-secondary, currentColor)"}
-      />
-    )
+    const stroke = color || "var(--semiotic-text-secondary, currentColor)"
+    // Swoopy/curved connector — opt-in via `connector.type: "curve"`. Meeks'
+    // essay names the curved connector as a first-class-annotation expectation
+    // (vs. a graphical-primitive library like swoopyDrag.js). A quadratic
+    // bezier bows the connector by `connector.curve` (a fraction of the
+    // connector length, default 0.25) along the perpendicular; flip the sign
+    // to bow the other way. The straight-line branch below is byte-identical
+    // to the previous behavior when `type` isn't `"curve"`.
+    const isCurve = connector?.type === "curve"
+
+    // Arrowhead sits at the subject end; its angle follows the connector's
+    // initial direction — start→control for a curve, start→note for a line.
+    let arrowAngle = Math.atan2(dy - startY, dx - startX)
+
+    if (isCurve) {
+      const midX = (startX + dx) / 2
+      const midY = (startY + dy) / 2
+      const nx = -(dy - startY) / connectorLength
+      const ny = (dx - startX) / connectorLength
+      const bend = (connector?.curve ?? 0.25) * connectorLength
+      const cx = midX + nx * bend
+      const cy = midY + ny * bend
+      elements.push(
+        <path
+          key="connector-line"
+          className="connector-curve"
+          d={`M${startX},${startY}Q${cx},${cy} ${dx},${dy}`}
+          fill="none"
+          stroke={stroke}
+        />
+      )
+      arrowAngle = Math.atan2(cy - startY, cx - startX)
+    } else {
+      elements.push(
+        <line
+          key="connector-line"
+          x1={startX}
+          y1={startY}
+          x2={dx}
+          y2={dy}
+          stroke={stroke}
+        />
+      )
+    }
 
     if (connector?.end === "arrow") {
       const arrowSize = 10
       const angleOffset = 16 / 180 * Math.PI
-      const angle = Math.atan2(dy - startY, dx - startX)
-      const a1x = startX + arrowSize * Math.cos(angle + angleOffset)
-      const a1y = startY + arrowSize * Math.sin(angle + angleOffset)
-      const a2x = startX + arrowSize * Math.cos(angle - angleOffset)
-      const a2y = startY + arrowSize * Math.sin(angle - angleOffset)
+      const a1x = startX + arrowSize * Math.cos(arrowAngle + angleOffset)
+      const a1y = startY + arrowSize * Math.sin(arrowAngle + angleOffset)
+      const a2x = startX + arrowSize * Math.cos(arrowAngle - angleOffset)
+      const a2y = startY + arrowSize * Math.sin(arrowAngle - angleOffset)
 
       elements.push(
         <path
           key="connector-arrow"
           d={`M${startX},${startY}L${a1x},${a1y}L${a2x},${a2y}Z`}
-          fill={color || "var(--semiotic-text-secondary, currentColor)"}
+          fill={stroke}
           stroke="none"
         />
       )

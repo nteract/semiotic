@@ -58,4 +58,24 @@ describe("buildReaderGrounding", () => {
     expect(g.structure?.role).toBe("chart")
     expect(() => buildReaderGrounding("Mystery", {})).not.toThrow()
   })
+
+  it("propagates the author-annotation summary into the grounding payload", () => {
+    const g = buildReaderGrounding("LineChart", {
+      data: sales,
+      xAccessor: "month",
+      yAccessor: "sales",
+      annotations: [{ type: "y-threshold", y: 8000, label: "Target" }],
+    })
+    // The annotation summary must reach the agent/non-visual reader, not be
+    // dropped when the L1–L3 text is reconstructed from levels.
+    expect(g.description.annotations).toContain('a threshold line labeled "Target"')
+    expect(g.description.text.startsWith("The author has marked")).toBe(true)
+    expect(g.text.startsWith("The author has marked")).toBe(true)
+  })
+
+  it("omits the annotation summary when the chart carries none", () => {
+    const g = buildReaderGrounding("LineChart", { data: sales, xAccessor: "month", yAccessor: "sales" })
+    expect(g.description.annotations).toBeUndefined()
+    expect(g.description.text.startsWith("The author has marked")).toBe(false)
+  })
 })

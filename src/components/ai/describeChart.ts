@@ -74,6 +74,14 @@ export interface DescribeChartResult {
   text: string
   /** Each level on its own, so callers can pick verbosity. */
   levels: { l1?: string; l2?: string; l3?: string; l4?: string }
+  /**
+   * The author's marked features, as a sentence — present only when the chart
+   * carries `annotations`. An annotation is author intent in its purest form,
+   * so it leads `text` ahead of the auto-derived L1–L3: a non-visual or agent
+   * reader hears what the author chose to call out first. Provenance-aware —
+   * an AI- or watcher-authored note is qualified as such.
+   */
+  annotations?: string
 }
 
 export interface DescribeChartOptions {
@@ -362,6 +370,80 @@ function computeStats(
  * Best for XY, bar, part-to-whole, and distribution families; degrades to an
  * L1-only description (chart type + structure) for network/hierarchy/geo/value.
  */
+// ---------------------------------------------------------------------------
+// Author annotations — the reception side of author intent
+// ---------------------------------------------------------------------------
+
+// Human phrasing per annotation type, with a leading article so the sentence
+// reads naturally ("a callout", "an enclosure").
+const ANNOTATION_KIND: Record<string, string> = {
+  "y-threshold": "a threshold line",
+  "x-threshold": "a threshold line",
+  band: "a highlighted band",
+  label: "a label",
+  callout: "a callout",
+  "callout-circle": "a callout",
+  "callout-rect": "a callout",
+  text: "a text note",
+  bracket: "a bracket",
+  enclose: "an enclosure",
+  "rect-enclose": "an enclosure",
+  highlight: "a highlight",
+  widget: "a widget",
+  trend: "a trend line",
+  envelope: "an envelope",
+  "anomaly-band": "an anomaly band",
+  forecast: "a forecast",
+  "category-highlight": "a category highlight",
+}
+
+function joinList(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? ""
+  if (items.length === 2) return `${items[0]} and ${items[1]}`
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`
+}
+
+/** Provenance-aware qualifier: an AI- or watcher-authored note reads
+ *  differently from a hand-placed one — surfacing that is the reception side of
+ *  the provenance the annotation carries. Returns a phrase that *replaces* the
+ *  kind's leading article ("a callout" → "an AI-suggested callout"). */
+function annotationQualifier(ann: Datum): string {
+  const prov = ann.provenance && typeof ann.provenance === "object"
+    ? (ann.provenance as { authorKind?: string; source?: string; basis?: string })
+    : null
+  const who = prov?.authorKind ?? prov?.source ?? prov?.basis
+  if (who === "watcher") return "a watcher-flagged "
+  if (who === "agent" || who === "ai" || who === "llm-inference") return "an AI-suggested "
+  return ""
+}
+
+/**
+ * Summarize the author-placed annotations as one sentence. Returns undefined
+ * when the chart carries none. Caps the enumerated list at five and rolls the
+ * remainder into "and N more" so a heavily-annotated chart stays readable.
+ */
+function annotationSentence(props: Datum): string | undefined {
+  const raw = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
+  if (!raw || raw.length === 0) return undefined
+  const items = raw.filter((a): a is Datum => !!a && typeof a === "object")
+  if (items.length === 0) return undefined
+
+  const phrases = items.map((a) => {
+    const type = typeof a.type === "string" ? a.type : "annotation"
+    const baseKind = ANNOTATION_KIND[type] || "an annotation"
+    const qualifier = annotationQualifier(a)
+    const kind = qualifier ? qualifier + baseKind.replace(/^an? /, "") : baseKind
+    const label = typeof a.label === "string" ? a.label : typeof a.title === "string" ? a.title : undefined
+    return label ? `${kind} labeled "${label}"` : kind
+  })
+
+  const shown = phrases.slice(0, 5)
+  const more = phrases.length - shown.length
+  const list = joinList(shown) + (more > 0 ? `, and ${more} more` : "")
+  const n = items.length
+  return `The author has marked ${n === 1 ? "one feature" : `${n} features`} on this chart: ${list}.`
+}
+
 export function describeChart(
   component: string,
   props: Datum,
@@ -454,12 +536,19 @@ export function describeChart(
   }
 
   const order: DescribeLevel[] = ["l1", "l2", "l3", "l4"]
-  const text = order
+  const levelText = order
     .filter((l) => want.has(l) && levels[l])
     .map((l) => levels[l]!)
     .join(" ")
 
-  return { text, levels }
+  // An author-placed annotation is intent in its purest form, so it leads the
+  // description ahead of the auto-derived levels. Only present when the chart
+  // actually carries annotations — every existing (un-annotated) caller is
+  // unaffected.
+  const annotations = annotationSentence(props)
+  const text = annotations ? `${annotations} ${levelText}`.trim() : levelText
+
+  return { text, levels, ...(annotations ? { annotations } : {}) }
 }
 
 /** Total of the measure across segments (part-to-whole) — recompute from stats' mean×count. */

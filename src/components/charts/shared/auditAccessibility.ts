@@ -339,6 +339,42 @@ export function auditAccessibility(
     })
   }
 
+  // Annotation→target association (the "correspondence problem", Rahman et al.):
+  // a note must tie to its target by more than color. Label/callout draw a
+  // connector, enclosures wrap the target, thresholds/bands span the plot — all
+  // non-color cues. A colored `text`/`widget` note, or a callout with its
+  // connector disabled, ties to its target by color + position alone, which a
+  // color-blind or non-visual reader can't follow.
+  {
+    const anns = Array.isArray(props.annotations)
+      ? (props.annotations as Datum[]).filter((a): a is Datum => !!a && typeof a === "object")
+      : []
+    if (anns.length > 0) {
+      const cueless = anns.filter((a) => {
+        if (typeof a.color !== "string") return false // not color-linked → not this problem
+        const type = typeof a.type === "string" ? a.type : ""
+        const connectorDisabled = Array.isArray(a.disable) && (a.disable as unknown[]).includes("connector")
+        const drawsConnector =
+          (type === "label" || type === "callout" || type === "callout-circle" || type === "callout-rect") &&
+          !connectorDisabled
+        const drawsSubject =
+          type === "enclose" || type === "rect-enclose" || type === "bracket" || type === "highlight"
+        const isReferenceLine = type === "y-threshold" || type === "x-threshold" || type === "band"
+        // Any of these is a non-color cue → the association is redundant.
+        return !(drawsConnector || drawsSubject || isReferenceLine)
+      })
+      f.push({
+        id: "perceivable.annotation-association",
+        principle: "perceivable",
+        heuristic: "Color is used alone to communicate meaning",
+        critical: false,
+        ...(cueless.length === 0
+          ? { status: "pass" as A11yStatus, message: "No annotation relies on color alone to indicate its target — wherever color is used, a connector, enclosure, or reference-line cue is present too." }
+          : { status: "warn" as A11yStatus, message: `${cueless.length} of ${anns.length} annotation(s) carry a color but no connector, enclosure, or reference-line cue, so a color-blind or non-visual reader can't tie them to their target (the correspondence problem).`, fix: "Add a connector (the label/callout default), place the note adjacent to its target, or enclose the target — don't rely on color matching alone." }),
+      })
+    }
+  }
+
   // ── OPERABLE ───────────────────────────────────────────────────────────
   // Keyboard parity (critical): does the chart work with a keyboard at all?
   // Every recognized HOC ships arrow/Home/End/PageUp-Down/Enter navigation, so

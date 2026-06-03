@@ -124,6 +124,58 @@ describe("auditAccessibility — color-only encoding", () => {
   })
 })
 
+describe("auditAccessibility — annotation→target association (correspondence problem)", () => {
+  const base = { data: LINE_DATA, title: "x" }
+
+  it("does not raise the check when there are no annotations", () => {
+    const r = auditAccessibility("LineChart", base)
+    expect(find(r, "perceivable.annotation-association")).toBeUndefined()
+  })
+
+  it("passes when annotations tie to their target with a non-color cue", () => {
+    const r = auditAccessibility("LineChart", {
+      ...base,
+      annotations: [
+        { type: "callout", x: 2, label: "Peak", color: "#f00" }, // draws a connector
+        { type: "y-threshold", y: 5000, label: "Target", color: "#0f0" }, // spans the plot
+        { type: "enclose", coordinates: [{ x: 1, y: 1 }], label: "Cluster", color: "#00f" },
+      ],
+    })
+    expect(status(r, "perceivable.annotation-association")).toBe("pass")
+  })
+
+  it("warns when a colored note relies on color + position alone", () => {
+    const r = auditAccessibility("LineChart", {
+      ...base,
+      annotations: [
+        { type: "text", x: 2, y: 5000, label: "Echoes the red line", color: "#f00" }, // no connector/subject
+      ],
+    })
+    const f = find(r, "perceivable.annotation-association")
+    expect(f?.status).toBe("warn")
+    expect(f?.message).toContain("correspondence problem")
+    expect(f?.fix).toContain("connector")
+  })
+
+  it("warns when a callout's connector is disabled", () => {
+    const r = auditAccessibility("LineChart", {
+      ...base,
+      annotations: [
+        { type: "callout", x: 2, label: "Peak", color: "#f00", disable: ["connector"] },
+      ],
+    })
+    expect(status(r, "perceivable.annotation-association")).toBe("warn")
+  })
+
+  it("treats a colorless note as fine (association isn't by color)", () => {
+    const r = auditAccessibility("LineChart", {
+      ...base,
+      annotations: [{ type: "text", x: 2, y: 5000, label: "no color set" }],
+    })
+    expect(status(r, "perceivable.annotation-association")).toBe("pass")
+  })
+})
+
 describe("auditAccessibility — operability", () => {
   it("keeps single-input-modality a pass for a recognized HOC (keyboard nav is built in)", () => {
     const withBrush = auditAccessibility("LineChart", { data: LINE_DATA, title: "x", brush: { dimension: "x" } })

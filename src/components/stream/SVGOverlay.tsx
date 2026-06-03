@@ -8,7 +8,7 @@ import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
-import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
+import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
 import { isTimeLandmark } from "./hitTestUtils"
 import { ticksForMode } from "../charts/shared/axisExtent"
@@ -594,17 +594,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
       stickyPositionCache: stickyPositionCacheRef.current
     }
 
-    return annotations
-      .map((annotation, i) => {
-        if (svgAnnotationRules) {
-          // Try user rules first, fall back to defaults
-          const userResult = svgAnnotationRules(annotation, i, context)
-          if (userResult !== null && userResult !== undefined) return userResult
-          return defaultRules(annotation, i, context)
-        }
-        return defaultRules(annotation, i, context)
-      })
-      .filter(Boolean)
+    // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
+    // ordinal overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.
+    return renderAnnotationPass(annotations, defaultRules, svgAnnotationRules, context)
   }, [annotations, svgAnnotationRules, width, height, annXAccessor, annYAccessor, annotationData, scales, pointNodes, annCurve])
 
   // Linked crosshair from coordinate-based hover sync

@@ -349,7 +349,7 @@ export default function AxesPage() {
         { label: "Features", path: "/features" },
         { label: "Axes", path: "/features/axes" },
       ]}
-      nextPage={{ title: "Annotations", path: "/features/annotations" }}
+      nextPage={{ title: "Tooltips", path: "/features/tooltips" }}
     >
       <p>
         Axes provide scale context for your visualizations. Semiotic supports axes on all four sides
@@ -1160,7 +1160,7 @@ axes={[{
           swarm, and categorical visualizations
         </li>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — adding callouts, highlights, and
+          <Link to="/annotations/overview">Annotations</Link> — adding callouts, highlights, and
           threshold lines
         </li>
         <li>

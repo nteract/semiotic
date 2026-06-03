@@ -76,7 +76,7 @@ export default function TooltipsPage() {
         { label: "Features", path: "/features" },
         { label: "Tooltips", path: "/features/tooltips" },
       ]}
-      prevPage={{ title: "Annotations", path: "/features/annotations" }}
+      prevPage={{ title: "Axes", path: "/features/axes" }}
       nextPage={{ title: "Interaction", path: "/features/interaction" }}
     >
       <p>
@@ -516,7 +516,7 @@ hoverAnnotation={[
 
       <ul>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — the full
+          <Link to="/annotations/overview">Annotations</Link> — the full
           annotation system that powers tooltips
         </li>
         <li>

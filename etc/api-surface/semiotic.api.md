@@ -215,10 +215,13 @@ interface WaterfallStyle
 interface XYFrameAxisConfig
 type Accessor
 type Annotated
+type AnnotationActorKind
 type AnnotationAnchor
 type AnnotationAnchorMode
+type AnnotationBasis
 type AnnotationFreshness
 type AnnotationSource
+type AnnotationStatus
 type ArrowOfTime
 type CanvasRendererFn
 type CategoryColorMap

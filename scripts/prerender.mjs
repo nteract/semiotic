@@ -51,6 +51,11 @@ const ROUTE_META = {
     description:
       "Semiotic features: streaming push API, animated transitions, accessibility, annotations, coordinated views, themed CSS variables, SSR, and AI-facing tooling.",
   },
+  annotations: {
+    title: "Annotations — Semiotic",
+    description:
+      "Semiotic's first-class annotation system: thresholds, labels, callouts, enclosures, trend / forecast / anomaly bands, emphasis hierarchy, curved connectors, and provenance + lifecycle metadata for AI- and watcher-authored notes.",
+  },
   theming: {
     title: "Theming — Semiotic",
     description:

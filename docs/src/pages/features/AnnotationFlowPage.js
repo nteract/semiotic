@@ -114,10 +114,11 @@ export default function AnnotationFlowPage() {
     <PageLayout
       title="Advanced Annotations"
       breadcrumbs={[
-        { label: "Features", path: "/features" },
-        { label: "Advanced Annotations", path: "/features/advanced-annotations" },
+        { label: "Annotations", path: "/annotations" },
+        { label: "Advanced Annotations", path: "/annotations/advanced" },
       ]}
-      prevPage={{ title: "Annotations", path: "/features/annotations" }}
+      prevPage={{ title: "Overview", path: "/annotations/overview" }}
+      nextPage={{ title: "Provenance & Lifecycle", path: "/annotations/provenance-lifecycle" }}
     >
       <p>
         The <code>widget</code> annotation type places arbitrary React content
@@ -386,7 +387,7 @@ annotations={[
 
       <h2 id="related">Related</h2>
       <ul>
-        <li><Link to="/features/annotations">Annotations</Link> — labels, thresholds, bands, enclose</li>
+        <li><Link to="/annotations/overview">Annotations</Link> — labels, thresholds, bands, enclose</li>
         <li><Link to="/features/observation-hooks">Observation Hooks</Link> — structured events for AI agents</li>
         <li><Link to="/charts/orbit-diagram">OrbitDiagram</Link> — animated orbital hierarchy</li>
         <li><Link to="/features/streaming-system-model">Streaming System Model</Link> — DetailsPanel for click-to-inspect</li>

@@ -391,7 +391,7 @@ function Body() {
           surface. The annotation-return contract is exactly what powers the demo above.
         </li>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — the chart-library side of the
+          <Link to="/annotations/overview">Annotations</Link> — the chart-library side of the
           vocabulary: every annotation type the LLM can emit.
         </li>
         <li>

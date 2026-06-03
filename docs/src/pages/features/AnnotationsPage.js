@@ -371,11 +371,11 @@ export default function AnnotationsPage() {
     <PageLayout
       title="Annotations"
       breadcrumbs={[
-        { label: "Features", path: "/features" },
-        { label: "Annotations", path: "/features/annotations" },
+        { label: "Annotations", path: "/annotations" },
+        { label: "Overview", path: "/annotations/overview" },
       ]}
-      prevPage={{ title: "Axes", path: "/features/axes" }}
-      nextPage={{ title: "Tooltips", path: "/features/tooltips" }}
+      prevPage={{ title: "Structured Navigation", path: "/accessibility/navigation" }}
+      nextPage={{ title: "Advanced Annotations", path: "/annotations/advanced" }}
     >
       <p>
         Annotations are first-class citizens in Semiotic. Every chart component
@@ -475,6 +475,108 @@ export default function AnnotationsPage() {
           annotations: `[
   { type: "label", pointId: "D", label: "Outlier", dx: 30, dy: -30 },
   { type: "callout", pointId: "F", label: "Peak", radius: 15, dx: -50, dy: -20 }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Hierarchy & Emphasis */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="emphasis">Hierarchy &amp; Emphasis</h2>
+
+      <p>
+        When a chart carries several annotations, give one a clear lead. Any
+        annotation accepts <code>emphasis: "primary" | "secondary"</code> — the
+        same token charts use for dashboard hierarchy. A <code>secondary</code>{" "}
+        annotation dims and yields z-order; a <code>primary</code> one paints at
+        full weight and on top. Annotations with no <code>emphasis</code> render
+        exactly as before, so it is purely additive. The wrapper carries class
+        hooks <code>annotation-emphasis--primary</code> /{" "}
+        <code>annotation-emphasis--secondary</code> for further styling, and the
+        dim composes with the freshness treatment from{" "}
+        <Link to="/annotations/provenance-lifecycle">Provenance &amp; Lifecycle</Link>{" "}
+        — a stale, secondary note becomes the quietest mark on the chart.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "X Value",
+          yLabel: "Y Value",
+          pointIdAccessor: "label",
+          annotations: [
+            { type: "callout", pointId: "B", label: "Secondary context", emphasis: "secondary", radius: 12, dx: 30, dy: 35 },
+            { type: "callout", pointId: "F", label: "Primary insight", emphasis: "primary", radius: 14, dx: -80, dy: -20 },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { x: 10, y: 20, label: "A" },
+  { x: 25, y: 35, label: "B" },
+  { x: 40, y: 15, label: "C" },
+  { x: 55, y: 45, label: "D" },
+  { x: 70, y: 30, label: "E" },
+  { x: 85, y: 50, label: "F" }
+]`,
+          pointIdAccessor: `"label"`,
+          annotations: `[
+  { type: "callout", pointId: "B", label: "Secondary context", emphasis: "secondary", radius: 12, dx: 30, dy: 35 },
+  { type: "callout", pointId: "F", label: "Primary insight", emphasis: "primary", radius: 14, dx: -80, dy: -20 }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Curved Connectors */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="connectors">Curved Connectors</h2>
+
+      <p>
+        Connectors are straight lines by default. Opt into a swoopy
+        quadratic-bezier connector with{" "}
+        <code>{`connector: { type: "curve" }`}</code>. The{" "}
+        <code>curve</code> value controls how far it bows — a fraction of the
+        connector length, default <code>0.25</code>; negate it to bow the other
+        way — and the arrowhead re-aligns to the curve's tangent. Below, the
+        same callout is drawn with a straight and a curved connector.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "X Value",
+          yLabel: "Y Value",
+          pointIdAccessor: "label",
+          annotations: [
+            { type: "callout", pointId: "C", label: "Straight", radius: 10, dx: 55, dy: 45, connector: { end: "arrow" } },
+            { type: "callout", pointId: "D", label: "Curved", radius: 10, dx: 60, dy: -45, connector: { type: "curve", end: "arrow" } },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { x: 10, y: 20, label: "A" },
+  { x: 25, y: 35, label: "B" },
+  { x: 40, y: 15, label: "C" },
+  { x: 55, y: 45, label: "D" },
+  { x: 70, y: 30, label: "E" },
+  { x: 85, y: 50, label: "F" }
+]`,
+          pointIdAccessor: `"label"`,
+          annotations: `[
+  { type: "callout", pointId: "C", label: "Straight", radius: 10, dx: 55, dy: 45,
+    connector: { end: "arrow" } },
+  { type: "callout", pointId: "D", label: "Curved", radius: 10, dx: 60, dy: -45,
+    connector: { type: "curve", end: "arrow" } }
 ]`,
         }}
         hiddenProps={{}}

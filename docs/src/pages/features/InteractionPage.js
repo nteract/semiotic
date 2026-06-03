@@ -531,7 +531,7 @@ function OrdinalBrushExample() {
 
       <ul>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — the highlight
+          <Link to="/annotations/overview">Annotations</Link> — the highlight
           and desaturation-layer types used for interaction effects
         </li>
         <li>

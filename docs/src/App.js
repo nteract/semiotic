@@ -72,6 +72,7 @@ import StreamGeoFramePage from "./pages/frames/GeoFramePage"
 import AxesPage from "./pages/features/AxesPage"
 import AnnotationsPage from "./pages/features/AnnotationsPage"
 import AnnotationFlowPage from "./pages/features/AnnotationFlowPage"
+import AnnotationProvenancePage from "./pages/features/AnnotationProvenancePage"
 import TooltipsPage from "./pages/features/TooltipsPage"
 import InteractionPage from "./pages/features/InteractionPage"
 import ResponsivePage from "./pages/features/ResponsivePage"
@@ -410,8 +411,6 @@ export default function DocsApp() {
             {/* Features routes */}
             <Route path="features" element={<Outlet />}>
               <Route path="axes" element={<AxesPage />} />
-              <Route path="annotations" element={<AnnotationsPage />} />
-              <Route path="advanced-annotations" element={<AnnotationFlowPage />} />
               <Route path="tooltips" element={<TooltipsPage />} />
               <Route path="interaction" element={<InteractionPage />} />
               <Route path="responsive" element={<ResponsivePage />} />
@@ -437,6 +436,14 @@ export default function DocsApp() {
               <Route path="audit" element={<AccessibilityAuditPage />} />
               <Route path="descriptions" element={<DescribeChartPage />} />
               <Route path="navigation" element={<NavigationTreePage />} />
+            </Route>
+
+            {/* Annotations routes — own section (moved out of Features) */}
+            <Route path="annotations" element={<Outlet />}>
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<AnnotationsPage />} />
+              <Route path="advanced" element={<AnnotationFlowPage />} />
+              <Route path="provenance-lifecycle" element={<AnnotationProvenancePage />} />
             </Route>
 
             {/* Intelligence — AI/recommendation surface, separated from generic Features

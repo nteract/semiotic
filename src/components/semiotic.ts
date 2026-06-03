@@ -373,8 +373,11 @@ export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"
 export type {
   AnnotationProvenance,
   AnnotationSource,
+  AnnotationActorKind,
+  AnnotationBasis,
   AnnotationLifecycle,
   AnnotationFreshness,
+  AnnotationStatus,
   AnnotationAnchor,
   Annotated,
 } from "./ai/annotationProvenance"

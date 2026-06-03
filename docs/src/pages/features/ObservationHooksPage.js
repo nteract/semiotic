@@ -504,7 +504,7 @@ function AIAssistant() {
           that works alongside observation hooks
         </li>
         <li>
-          <Link to="/features/annotations">Annotations</Link> — add AI-generated
+          <Link to="/annotations/overview">Annotations</Link> — add AI-generated
           annotations in response to observations
         </li>
       </ul>

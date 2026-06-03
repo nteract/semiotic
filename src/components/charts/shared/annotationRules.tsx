@@ -22,6 +22,108 @@ const CURVE_FACTORIES: Record<string, CurveFactory> = {
   catmullRom: curveCatmullRom,
 }
 
+// ── Annotation hierarchy / emphasis ───────────────────────────────────
+
+/** A rendered annotation node paired with the source annotation it came
+ *  from, so emphasis treatment can read `annotation.emphasis` after the
+ *  per-type rule has produced the node. */
+export interface AnnotationRenderPair {
+  node: React.ReactNode
+  annotation: Datum
+}
+
+const EMPHASIS_RANK: Record<string, number> = { secondary: 0, primary: 2 }
+const DEFAULT_EMPHASIS_RANK = 1
+/** Opacity applied to a `secondary` annotation so primary notes read as
+ *  the dominant layer (Rahman et al.'s "Hierarchy" consideration). */
+const SECONDARY_EMPHASIS_OPACITY = 0.6
+
+/**
+ * Apply annotation hierarchy — Rahman et al.'s "Hierarchy" consideration,
+ * reusing the same `emphasis` token charts already accept (`"primary"` /
+ * `"secondary"`). A `secondary` annotation dims and yields z-order; a
+ * `primary` one paints at full weight and on top.
+ *
+ * Type-agnostic: it wraps whatever the per-type rule produced, so all
+ * annotation types get hierarchy without each rule knowing about it.
+ * Document order encodes z-order in SVG, so the return is stably sorted
+ * `secondary → unspecified → primary`, with the original index breaking
+ * ties to preserve authored order within a band.
+ *
+ * Zero-overhead and structure-preserving when no annotation declares an
+ * emphasis: the original nodes are returned untouched (same keys, same
+ * order), so existing charts render identically. The dim composes
+ * multiplicatively with any lifecycle opacity already on the node.
+ */
+export function applyAnnotationEmphasis(
+  pairs: ReadonlyArray<AnnotationRenderPair>
+): React.ReactNode[] {
+  const anyEmphasis = pairs.some(
+    (p) => p.annotation?.emphasis === "primary" || p.annotation?.emphasis === "secondary"
+  )
+  if (!anyEmphasis) return pairs.map((p) => p.node)
+
+  return pairs
+    .map((p, i) => ({
+      p,
+      i,
+      rank: EMPHASIS_RANK[p.annotation?.emphasis as string] ?? DEFAULT_EMPHASIS_RANK,
+    }))
+    .sort((a, b) => a.rank - b.rank || a.i - b.i)
+    .map(({ p, i }) => {
+      const emphasis = p.annotation?.emphasis
+      if (emphasis !== "primary" && emphasis !== "secondary") return p.node
+      return (
+        <g
+          key={`annotation-emphasis-${i}`}
+          className={`annotation-emphasis annotation-emphasis--${emphasis}`}
+          {...(emphasis === "secondary" ? { opacity: SECONDARY_EMPHASIS_OPACITY } : {})}
+        >
+          {p.node}
+        </g>
+      )
+    })
+}
+
+type AnnotationRule = (
+  annotation: Datum,
+  index: number,
+  context: AnnotationContext
+) => React.ReactNode | null
+
+/**
+ * Run the SVG-overlay annotation pass: dispatch each annotation through the
+ * user's `svgAnnotationRules` (falling back to the default rules), drop the
+ * ones that render nothing, then apply emphasis hierarchy. Shared verbatim by
+ * the XY and ordinal overlays so the dispatch/filter/hierarchy logic lives in
+ * one place.
+ *
+ * Falsy-node semantics match the pre-emphasis `.filter(Boolean)` exactly: a
+ * rule returning `null`/`undefined` ("skip", e.g. the default rules' out-of-
+ * bounds path) — or any other falsy node (`0`/`""`/`false`) — produces no
+ * annotation and is dropped. A user rule that returns `null`/`undefined` falls
+ * through to the default rule, preserving the existing override contract.
+ */
+export function renderAnnotationPass(
+  annotations: ReadonlyArray<Datum>,
+  defaultRule: AnnotationRule,
+  userRule: AnnotationRule | undefined,
+  context: AnnotationContext
+): React.ReactNode[] {
+  const pairs: AnnotationRenderPair[] = []
+  annotations.forEach((annotation, i) => {
+    let node: React.ReactNode
+    if (userRule) {
+      const userResult = userRule(annotation, i, context)
+      node = userResult !== null && userResult !== undefined ? userResult : defaultRule(annotation, i, context)
+    } else {
+      node = defaultRule(annotation, i, context)
+    }
+    if (node) pairs.push({ node, annotation })
+  })
+  return applyAnnotationEmphasis(pairs)
+}
+
 // ── Default annotation rules factory ──────────────────────────────────
 
 export function createDefaultAnnotationRules(

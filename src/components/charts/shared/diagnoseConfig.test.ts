@@ -314,4 +314,50 @@ describe("diagnoseConfig", () => {
     const diag = result.diagnoses.find(d => d.code === "HEATMAP_STRING_ACCESSOR")!
     expect(diag.severity).toBe("warning")
   })
+
+  describe("annotation connector necessity", () => {
+    const base = { data: [{ x: 1, y: 2 }, { x: 3, y: 4 }], xAccessor: "x", yAccessor: "y", title: "t" }
+
+    it("does not flag default-placed labels/callouts", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base,
+        annotations: [
+          { type: "callout", x: 1, label: "Peak", dx: 30, dy: -30 },
+          { type: "label", x: 3, label: "Note" },
+        ],
+      })
+      const codes = result.diagnoses.map(d => d.code)
+      expect(codes).not.toContain("ANNOTATION_FAR_NO_CONNECTOR")
+      expect(codes).not.toContain("ANNOTATION_LONG_CONNECTOR")
+    })
+
+    it("warns on a far note with no connector (text annotation)", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base,
+        annotations: [{ type: "text", x: 1, y: 2, label: "Floating note", dx: 120, dy: 80 }],
+      })
+      const diag = result.diagnoses.find(d => d.code === "ANNOTATION_FAR_NO_CONNECTOR")
+      expect(diag?.severity).toBe("warning")
+      expect(diag?.message).toContain("Floating note")
+      // Advisory — warnings don't break ok.
+      expect(result.ok).toBe(true)
+    })
+
+    it("warns when a callout's connector is disabled and it's placed far", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base,
+        annotations: [{ type: "callout", x: 1, label: "Detached", dx: 140, dy: 0, disable: ["connector"] }],
+      })
+      expect(result.diagnoses.map(d => d.code)).toContain("ANNOTATION_FAR_NO_CONNECTOR")
+    })
+
+    it("nudges toward adjacency on a very long connector", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base,
+        annotations: [{ type: "callout", x: 1, label: "Way over there", dx: 260, dy: 60 }],
+      })
+      const diag = result.diagnoses.find(d => d.code === "ANNOTATION_LONG_CONNECTOR")
+      expect(diag?.severity).toBe("warning")
+    })
+  })
 })

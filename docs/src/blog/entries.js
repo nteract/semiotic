@@ -58,6 +58,7 @@ import ScaleAwareSuggestions from "./entries/scale-aware-suggestions.js"
 import AuditingWhatYouCantSee from "./entries/auditing-what-you-cant-see.js"
 import WhatAScreenReaderShouldHear from "./entries/what-a-screen-reader-should-hear.js"
 import NavigatingAChartYouCantSee from "./entries/navigating-a-chart-you-cant-see.js"
+import WhatAnAnnotationShouldCarry from "./entries/what-an-annotation-should-carry.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -65,6 +66,7 @@ import NavigatingAChartYouCantSee from "./entries/navigating-a-chart-you-cant-se
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  WhatAnAnnotationShouldCarry,
   NavigatingAChartYouCantSee,
   WhatAScreenReaderShouldHear,
   AuditingWhatYouCantSee,

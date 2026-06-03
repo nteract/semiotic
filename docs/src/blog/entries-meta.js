@@ -20,6 +20,19 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "what-an-annotation-should-carry",
+    title: "What an Annotation Should Carry",
+    subtitle:
+      "Annotations become first-class objects: a hierarchy token, curved connectors, and — the real change — provenance and a two-axis lifecycle so a note records who made it, on what basis, and whether it still holds.",
+    author: "Elijah Meeks",
+    date: "2026-06-02",
+    tags: ["case-study"],
+    excerpt:
+      "Once a chart is a surface that agents, watchers, and humans all write to, the annotation becomes the unit of the conversation. This is the release that gives annotations what that role requires: emphasis hierarchy, swoopy connectors, and provenance + lifecycle metadata aligned with the IDID conversational substrate.",
+    ogChart: { component: "Scatterplot" },
+    draft: true,
+  },
+  {
     slug: "navigating-a-chart-you-cant-see",
     title: "Navigating a Chart You Can't See",
     subtitle:
@@ -41,7 +54,7 @@ export const allBlogEntriesMeta = [
     date: "2026-06-15",
     tags: ["case-study", "accessibility"],
     excerpt:
-      "A screen reader announces 'line chart, nine points' which is both accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart\'s config, and ChartContainer makes it an opt-in layer.",
+      'A screen reader announces "line chart, nine points" which is both accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart\'s config, and ChartContainer makes it an opt-in layer.',
     ogChart: { component: "LineChart" },
     draft: true,
   },
