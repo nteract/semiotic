@@ -187,6 +187,12 @@ function resolveAnchor(a: Datum, index: number, context: AnnotationContext): { x
     return { x: a.px, y: a.py }
   }
 
+  const pointId = a.pointId ?? a.nodeId
+  if (pointId != null && context.pointNodes) {
+    const match = context.pointNodes.find((p) => p.pointId === pointId)
+    if (match) return { x: match.x, y: match.y }
+  }
+
   const coords = a.coordinates
   const geoProjection = (context.scales as ScalesWithGeoProjection | undefined)?.geoProjection
   if (Array.isArray(coords) && coords.length >= 2 && geoProjection) {
@@ -198,6 +204,10 @@ function resolveAnchor(a: Datum, index: number, context: AnnotationContext): { x
         return { x: projected[0], y: projected[1] }
       }
     }
+  }
+
+  if (!context.scales && typeof a.x === "number" && typeof a.y === "number") {
+    return { x: a.x, y: a.y }
   }
 
   return resolveAnchoredPosition(a, index, context)

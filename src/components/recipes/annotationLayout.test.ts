@@ -72,6 +72,22 @@ describe("annotationLayout", () => {
     expect(placed.dx).toBeLessThan(0)
   })
 
+  it("resolves raw pixel and node anchors when scales are absent", () => {
+    const placed = annotationLayout({
+      annotations: [
+        { type: "label", x: 192, y: 60, label: "Pixel" },
+        { type: "label", nodeId: "node-a", label: "Node" },
+      ],
+      context: context({
+        scales: null,
+        pointNodes: [{ pointId: "node-a", x: 192, y: 60, r: 6 }],
+      }),
+    })
+
+    expect(placed[0].dx).toBeLessThan(0)
+    expect(placed[1].dx).toBeDefined()
+  })
+
   it("can route long auto-placed connectors as curves", () => {
     const [placed] = annotationLayout({
       annotations: [{ type: "callout", x: 50, y: 50, label: "Routed" }],
