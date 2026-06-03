@@ -7,8 +7,10 @@ import type { AnnotationContext } from "../../realtime/types"
 // Minimal element-prop accessor so the assertions don't sprinkle `any`.
 type ElProps = {
   "data-id"?: string
+  "data-annotation-reading-order"?: number
   className?: string
   opacity?: number
+  fontSize?: string
   children?: React.ReactNode
 }
 const propsOf = (n: React.ReactNode): ElProps =>
@@ -23,9 +25,13 @@ function innerId(n: React.ReactNode): string | undefined {
   return undefined
 }
 
-const pair = (id: string, emphasis?: string): AnnotationRenderPair => ({
+const pair = (id: string, emphasis?: string, confidence?: number): AnnotationRenderPair => ({
   node: <g key={id} data-id={id} />,
-  annotation: { type: "label", ...(emphasis ? { emphasis } : {}) } as Datum,
+  annotation: {
+    type: "label",
+    ...(emphasis ? { emphasis } : {}),
+    ...(confidence != null ? { provenance: { confidence } } : {}),
+  } as Datum,
 })
 
 describe("applyAnnotationEmphasis", () => {
@@ -54,6 +60,7 @@ describe("applyAnnotationEmphasis", () => {
     const sec = out.find((n) => propsOf(n).className?.includes("secondary"))
     const pri = out.find((n) => propsOf(n).className?.includes("primary"))
     expect(propsOf(sec).opacity).toBe(0.6)
+    expect(propsOf(sec).fontSize).toBe("0.88em")
     expect(propsOf(sec).className).toContain("annotation-emphasis--secondary")
     // Primary paints at full weight — class for styling hooks, but no dim.
     expect(propsOf(pri).opacity).toBeUndefined()
@@ -66,6 +73,39 @@ describe("applyAnnotationEmphasis", () => {
     // The unspecified node passes through as its original element — no wrapper.
     expect(plain).toBeDefined()
     expect(propsOf(plain).className).toBeUndefined()
+  })
+
+  it("infers reading order from provenance confidence, then array order", () => {
+    const out = applyAnnotationEmphasis([
+      pair("low", undefined, 0.2),
+      pair("high", undefined, 0.9),
+      pair("tie-a", undefined, 0.7),
+      pair("tie-b", undefined, 0.7),
+      pair("none"),
+    ])
+
+    // SVG paint order is low priority first, so the highest-confidence
+    // annotation is last/on top while its reading order remains first.
+    expect(out.map(innerId)).toEqual(["none", "low", "tie-b", "tie-a", "high"])
+
+    const byId = new Map(out.map((n) => [innerId(n), propsOf(n)]))
+    expect(byId.get("high")?.["data-annotation-reading-order"]).toBe(0)
+    expect(byId.get("tie-a")?.["data-annotation-reading-order"]).toBe(1)
+    expect(byId.get("tie-b")?.["data-annotation-reading-order"]).toBe(2)
+    expect(byId.get("low")?.["data-annotation-reading-order"]).toBe(3)
+    expect(byId.get("high")?.opacity).toBeGreaterThan(byId.get("low")?.opacity ?? 0)
+    expect(byId.get("none")?.className).toBeUndefined()
+  })
+
+  it("lets explicit emphasis override inferred confidence", () => {
+    const out = applyAnnotationEmphasis([
+      pair("confident-secondary", "secondary", 1),
+      pair("low-primary", "primary", 0.1),
+      pair("inferred", undefined, 0.8),
+    ])
+    expect(out.map(innerId)).toEqual(["confident-secondary", "inferred", "low-primary"])
+    expect(propsOf(out[0]).className).toContain("annotation-emphasis--secondary")
+    expect(propsOf(out[2]).className).toContain("annotation-emphasis--primary")
   })
 })
 
@@ -117,5 +157,15 @@ describe("renderAnnotationPass", () => {
     const out = renderAnnotationPass(anns, (a) => el(String(a.id)), undefined, ctx)
     // secondary → unspecified → primary (innerId reads through the wrapper).
     expect(out.map(innerId)).toEqual(["s", "d", "p"])
+  })
+
+  it("applies inferred hierarchy across the rendered nodes", () => {
+    const anns: Datum[] = [
+      { type: "x", id: "low", provenance: { confidence: 0.3 } },
+      { type: "x", id: "high", provenance: { confidence: 0.9 } },
+    ]
+    const out = renderAnnotationPass(anns, (a) => el(String(a.id)), undefined, ctx)
+    expect(out.map(innerId)).toEqual(["low", "high"])
+    expect(propsOf(out[1])["data-annotation-reading-order"]).toBe(0)
   })
 })

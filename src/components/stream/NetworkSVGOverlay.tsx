@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
+import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationHierarchy"
 
 type AnnotationAnchorNode = {
   type: string
@@ -85,6 +86,24 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     annotationFrame: _annotationFrame
   } = props
 
+  const renderedSvgAnnotations = annotations
+    ? applyAnnotationEmphasis(
+        annotations.reduce<AnnotationRenderPair[]>((acc, annotation, i) => {
+          if (annotation.type === "widget" || !svgAnnotationRules) return acc
+          const element = svgAnnotationRules(annotation, i, {
+            width, height, sceneNodes
+          })
+          if (element) {
+            acc.push({
+              node: <React.Fragment key={`annotation-${i}`}>{element}</React.Fragment>,
+              annotation,
+            })
+          }
+          return acc
+        }, [])
+      )
+    : null
+
   return (
     <>
     <svg
@@ -122,18 +141,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         ))}
 
         {/* Non-widget annotations (rendered in SVG) */}
-        {annotations &&
-          annotations.filter(a => a.type !== "widget").map((annotation, i) => {
-            if (svgAnnotationRules) {
-              const element = svgAnnotationRules(annotation, i, {
-                width, height, sceneNodes
-              })
-              if (element) return (
-                <React.Fragment key={`annotation-${i}`}>{element}</React.Fragment>
-              )
-            }
-            return null
-          })}
+        {renderedSvgAnnotations}
 
         {/* Foreground graphics */}
         {foregroundGraphics}

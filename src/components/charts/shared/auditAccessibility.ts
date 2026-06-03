@@ -159,6 +159,17 @@ function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0
 }
 
+function annotationConfidence(a: Datum): number | null {
+  const c = a?.provenance?.confidence
+  return typeof c === "number" && Number.isFinite(c) ? c : null
+}
+
+function annotationHasHierarchySignal(a: Datum): boolean {
+  return a?.emphasis === "primary" ||
+    a?.emphasis === "secondary" ||
+    annotationConfidence(a) != null
+}
+
 /** Rough Flesch–Kincaid grade level for a blob of description text. */
 function fleschKincaidGrade(text: string): number | null {
   const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean)
@@ -261,6 +272,9 @@ export function auditAccessibility(
   const hasSummary = isNonEmptyString(props.summary)
   const hasAnyText = hasTitle || hasDescription || hasSummary
   const interactive = isInteractive(props)
+  const annotations = Array.isArray(props.annotations)
+    ? (props.annotations as Datum[]).filter((a): a is Datum => !!a && typeof a === "object")
+    : []
 
   // Tracks built-in passes that only hold for recognized Semiotic HOCs.
   const builtIn: A11yStatus = known ? "pass" : "manual"
@@ -346,9 +360,7 @@ export function auditAccessibility(
   // connector disabled, ties to its target by color + position alone, which a
   // color-blind or non-visual reader can't follow.
   {
-    const anns = Array.isArray(props.annotations)
-      ? (props.annotations as Datum[]).filter((a): a is Datum => !!a && typeof a === "object")
-      : []
+    const anns = annotations
     if (anns.length > 0) {
       const cueless = anns.filter((a) => {
         if (typeof a.color !== "string") return false // not color-linked → not this problem
@@ -527,6 +539,18 @@ export function auditAccessibility(
       status: "warn",
       message: "Dual-axis chart: two y-scales are hard to read accurately and notoriously easy to misinterpret (the crossover point is arbitrary).",
       fix: "Confirm the second axis is necessary; consider two aligned charts (small multiples) or indexing both series to a common baseline. Label each axis and its series unambiguously.",
+    })
+  }
+  if (annotations.length > 1) {
+    const hierarchyCount = annotations.filter(annotationHasHierarchySignal).length
+    f.push({
+      id: "understandable.annotation-hierarchy",
+      principle: "understandable",
+      heuristic: "Information complexity is inappropriate",
+      critical: false,
+      ...(hierarchyCount > 0
+        ? { status: "pass" as A11yStatus, message: `${hierarchyCount} of ${annotations.length} annotation(s) declare hierarchy through emphasis or provenance confidence, so the renderer can resolve reading order and visual priority.` }
+        : { status: "warn" as A11yStatus, message: `${annotations.length} annotations are present with no emphasis or provenance confidence; readers may not know which note is primary.`, fix: "Mark the main annotation with emphasis=\"primary\", set supporting notes to emphasis=\"secondary\", or provide provenance.confidence so Semiotic can infer order." }),
     })
   }
   {
