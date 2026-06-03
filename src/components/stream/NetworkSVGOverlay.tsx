@@ -227,9 +227,11 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       })}
     </svg>
     {/* Widget annotations — rendered as HTML divs so they can overflow the SVG.
-        Density-deferred widgets are shed here (they live outside the SVG, so the
-        SVG-scoped progressive-disclosure reveal can't reach them). */}
-    {layoutAnnotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes && !a._annotationDeferred).map((annotation, i) => {
+        Widgets live outside the SVG, so the SVG-scoped progressive-disclosure
+        reveal can't hide/show them. A density-deferred widget therefore stays
+        visible rather than vanishing — keeping the note reachable is safer than
+        silently dropping it (the persistent SVG notes still carry the budget). */}
+    {layoutAnnotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {
       const node = sceneNodes!.find(n =>
         n.id === annotation.nodeId ||
         (n.datum?.id === annotation.nodeId) ||

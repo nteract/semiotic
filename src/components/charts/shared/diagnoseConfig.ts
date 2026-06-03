@@ -640,7 +640,7 @@ function checkAnnotationDensity(
   out.push({
     severity: "warning",
     code: "ANNOTATION_DENSITY",
-    message: `${noteCount} note annotations on a ${width}×${height} chart exceeds the ~${budget} the plot area carries comfortably — the chart may read as cluttered.`,
+    message: `${noteCount} note annotations on a ${width}×${height} chart exceed the ~${budget} notes the plot area carries comfortably — the chart may read as cluttered.`,
     fix: `Mark the essential notes emphasis: "primary" and let density management shed the rest (autoPlaceAnnotations: { density: true }), enable progressive disclosure to reveal secondary notes on hover, or give the chart more room.`,
   })
 }
