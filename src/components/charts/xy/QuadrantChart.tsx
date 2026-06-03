@@ -610,6 +610,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...(props.axisExtent !== undefined && { axisExtent: props.axisExtent }),
+    ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     tooltipContent: tooltip === false
       ? () => null
       : (tooltip === true || tooltip === undefined)

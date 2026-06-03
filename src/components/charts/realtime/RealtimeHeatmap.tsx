@@ -22,6 +22,7 @@ import { buildHeatmapTooltip } from "./defaultRealtimeTooltip"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
+import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 
 export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -76,6 +77,8 @@ export interface RealtimeHeatmapProps<TDatum extends Datum = Datum> {
   onHover?: (d: HoverData | null) => void
   /** Annotation objects */
   annotations?: Datum[]
+  /** Opt into automatic placement for note-like annotations without manual offsets. */
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   /** SVG annotation render function */
   svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
   /** Custom formatter for time axis ticks */
@@ -181,6 +184,7 @@ export const RealtimeHeatmap = forwardRef(
       tooltip,
       onHover,
       annotations,
+      autoPlaceAnnotations,
       svgAnnotationRules,
       tickFormatTime,
       tickFormatValue,
@@ -279,6 +283,7 @@ export const RealtimeHeatmap = forwardRef(
         tooltipContent={resolvedTooltip}
         customHoverBehavior={combinedHoverBehavior}
         annotations={annotations}
+        autoPlaceAnnotations={autoPlaceAnnotations}
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}

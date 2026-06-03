@@ -774,7 +774,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     showGrid,
     ...(gradientFill && { gradientFill: gradientFill === true ? { topOpacity: 0.85, bottomOpacity: 0.15 } : gradientFill }),
     ...(customLegend && { legend: customLegend, legendPosition: setup.legendPosition }),
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     tooltipContent,
     ...(multiTooltip && { tooltipMode: "multi" as const }),
     ...buildCustomBehaviorProps({

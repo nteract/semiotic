@@ -9,6 +9,8 @@ import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import type { SemioticTheme } from "../store/ThemeStore"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationHierarchy"
+import type { AnnotationContext } from "../realtime/types"
+import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
 /** Resolve annotation color: explicit > theme annotation > theme text */
 function resolveAnnotationColor(ann: Datum, theme: SemioticTheme): string {
@@ -37,6 +39,7 @@ interface AnnotationLayout {
 
 export interface StaticAnnotationConfig {
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   scales: AnnotationScales
   layout: AnnotationLayout
   theme: SemioticTheme
@@ -103,11 +106,33 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   const { annotations } = config
   if (!annotations || annotations.length === 0) return null
 
+  const layoutAnnotations = config.autoPlaceAnnotations
+    ? annotationLayout({
+        annotations,
+        context: {
+          scales: {
+            x: config.scales.x,
+            y: config.scales.y,
+            time: config.scales.x,
+            value: config.scales.y,
+            o: config.scales.o,
+          } as unknown as AnnotationContext["scales"],
+          width: config.layout.width,
+          height: config.layout.height,
+          xAccessor: config.xAccessor,
+          yAccessor: config.yAccessor,
+          frameType: config.projection ? "ordinal" : "xy",
+          projection: config.projection === "horizontal" ? "horizontal" : "vertical",
+        },
+        ...(typeof config.autoPlaceAnnotations === "object" ? config.autoPlaceAnnotations : {}),
+      })
+    : annotations
+
   const pairs: AnnotationRenderPair[] = []
 
-  for (let i = 0; i < annotations.length; i++) {
-    const node = renderAnnotation(annotations[i], i, config)
-    if (node) pairs.push({ node, annotation: annotations[i] })
+  for (let i = 0; i < layoutAnnotations.length; i++) {
+    const node = renderAnnotation(layoutAnnotations[i], i, config)
+    if (node) pairs.push({ node, annotation: layoutAnnotations[i] })
   }
 
   const elements = applyAnnotationEmphasis(pairs)
@@ -267,8 +292,8 @@ function renderAnnotation(
       // and network annotations with raw pixel x/y both flow through.
       const { x: px, y: py } = resolveCoords(ann, scales, xAccessor, yAccessor)
       if (px == null || py == null) return null
-      const dx = ann.dx || 0
-      const dy = ann.dy || 0
+      const dx = ann.dx ?? 0
+      const dy = ann.dy ?? 0
       const color = ann.color || theme.colors.text
       return (
         <g key={`ann-label-${index}`}>

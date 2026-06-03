@@ -577,6 +577,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   // Annotations
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
+    autoPlaceAnnotations: props.autoPlaceAnnotations,
     scales: { x: store.scales.x, y: store.scales.y },
     layout: { width, height },
     theme,
@@ -946,6 +947,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   // pixel-passthrough kicks in when no `scales.x`/`scales.y` is supplied.
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
+    autoPlaceAnnotations: props.autoPlaceAnnotations,
     scales: {},
     layout: { width: innerWidth, height: innerHeight },
     theme,
@@ -1293,6 +1295,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   // Annotations
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
+    autoPlaceAnnotations: props.autoPlaceAnnotations,
     scales: {
       r: store.scales.r,
       y: store.scales.projection === "vertical" ? store.scales.r : undefined,
@@ -1456,6 +1459,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
           {props.backgroundGraphics}
           {props.annotations ? renderStaticAnnotations({
             annotations: props.annotations,
+            autoPlaceAnnotations: props.autoPlaceAnnotations,
             scales: {
               geoProjection: store.scales?.projectedPoint
                 ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
@@ -1490,6 +1494,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   // staticAnnotations' pixel passthrough for callers who pre-projected.
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
+    autoPlaceAnnotations: props.autoPlaceAnnotations,
     scales: {
       geoProjection: store.scales?.projectedPoint
         ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))

@@ -18,6 +18,7 @@ import type {
 } from "../realtime/types"
 import type { GeoParticleStyle } from "./GeoParticlePool"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
 // ── Projection prop ──────────────────────────────────────────────────
 
@@ -147,6 +148,7 @@ export interface GeoPipelineConfig {
 
   // Annotations
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   pointIdAccessor?: string | ((d: Datum) => string)
   /** ID accessor on line data — required for `removeLine` by id. */
   lineIdAccessor?: string | ((d: Datum) => string)
@@ -237,6 +239,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   customClickBehavior?: (d: HoverData | null) => void
   customHoverBehavior?: (d: HoverData | null) => void
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
 
   // ── Realtime encoding ──
   decay?: DecayConfig

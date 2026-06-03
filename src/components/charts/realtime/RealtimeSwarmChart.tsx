@@ -20,6 +20,7 @@ import { buildDefaultRealtimeTooltip } from "./defaultRealtimeTooltip"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
+import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 
 export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -80,6 +81,8 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   onHover?: (d: HoverData | null) => void
   /** Annotation objects (including threshold coloring) */
   annotations?: Datum[]
+  /** Opt into automatic placement for note-like annotations without manual offsets. */
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   /** SVG annotation render function */
   svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
   /** Custom formatter for time axis ticks */
@@ -176,6 +179,7 @@ export const RealtimeSwarmChart = forwardRef(
       tooltip,
       onHover,
       annotations,
+      autoPlaceAnnotations,
       svgAnnotationRules,
       tickFormatTime,
       tickFormatValue,
@@ -273,6 +277,7 @@ export const RealtimeSwarmChart = forwardRef(
         tooltipContent={resolvedTooltip}
         customHoverBehavior={combinedHoverBehavior}
         annotations={annotations}
+        autoPlaceAnnotations={autoPlaceAnnotations}
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}

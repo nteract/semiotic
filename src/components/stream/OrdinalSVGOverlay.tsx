@@ -8,6 +8,7 @@ import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
+import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 
 interface OrdinalSVGOverlayProps {
@@ -56,6 +57,7 @@ interface OrdinalSVGOverlayProps {
 
   // Annotations
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
     index: number,
@@ -214,6 +216,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     legendLayout,
     foregroundGraphics,
     annotations,
+    autoPlaceAnnotations,
     svgAnnotationRules,
     annotationFrame: _annotationFrame,
     xAccessor: annXAccessor,
@@ -303,10 +306,18 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       stickyPositionCache: stickyPositionCacheRef.current
     }
 
+    const layoutAnnotations = autoPlaceAnnotations
+      ? annotationLayout({
+          annotations,
+          context,
+          ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
+        })
+      : annotations
+
     // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
     // XY overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.
-    return renderAnnotationPass(annotations, defaultRules, svgAnnotationRules, context)
-  }, [annotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData])
+    return renderAnnotationPass(layoutAnnotations, defaultRules, svgAnnotationRules, context)
+  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData])
 
   const hasContent = showAxes || title || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
   if (!hasContent) return null

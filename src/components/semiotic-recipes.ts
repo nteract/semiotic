@@ -29,6 +29,14 @@ export type { BulletConfig } from "./recipes/bullet"
 export { parallelCoordinatesLayout } from "./recipes/parallelCoordinates"
 export type { ParallelCoordinatesConfig } from "./recipes/parallelCoordinates"
 
+export { annotationLayout } from "./recipes/annotationLayout"
+export type {
+  AnnotationLayoutConfig,
+  AnnotationLayoutOptions,
+  AutoPlaceAnnotations,
+  AutoPlaceAnnotationsConfig,
+} from "./recipes/annotationLayout"
+
 // Re-export the layout types so recipe authors don't need a second import.
 export type {
   CustomLayout,

@@ -28,6 +28,7 @@ import type { HoverData } from "../../realtime/types"
 import type { HoverHighlightMode, LinkedHoverProp, SelectionConfig } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
+import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 
 /**
  * The frames accept `tooltipContent: (d: HoverData) => ReactNode`,
@@ -73,10 +74,11 @@ export interface BaseMetadataProps {
    *  this to the frame. Bundling it here avoids a parallel helper
    *  + 22 separate adoption edits. */
   axisExtent?: import("./axisExtent").AxisExtentMode
+  autoPlaceAnnotations?: AutoPlaceAnnotations
 }
 
 export function buildBaseMetadataProps(input: BaseMetadataProps): BaseMetadataProps {
-  const { title, description, summary, accessibleTable, className, animate, axisExtent } = input
+  const { title, description, summary, accessibleTable, className, animate, axisExtent, autoPlaceAnnotations } = input
   // Returning `BaseMetadataProps` rather than `Record<string, unknown>`
   // preserves per-key types on the spread site, so a typo like
   // `{ titel }` in this helper body would fail the return contract
@@ -90,6 +92,7 @@ export function buildBaseMetadataProps(input: BaseMetadataProps): BaseMetadataPr
   if (className) out.className = className
   if (animate != null) out.animate = animate
   if (axisExtent !== undefined) out.axisExtent = axisExtent
+  if (autoPlaceAnnotations !== undefined) out.autoPlaceAnnotations = autoPlaceAnnotations
   return out
 }
 

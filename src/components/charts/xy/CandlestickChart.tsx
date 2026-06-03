@@ -240,7 +240,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     enableHover,
     showGrid,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       // CandlestickChart has no `hoverHighlight` prop, but the click

@@ -3,6 +3,7 @@ import type { PartialMargin } from "../../types/marginType"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 import type { Datum } from "./datumTypes"
+import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 
 /**
  * Selection consumption config — makes this chart react to a named selection
@@ -154,6 +155,9 @@ export interface BaseChartProps {
 
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
   emphasis?: "primary" | "secondary"
+
+  /** Opt into annotation placement assistance. Preserves authored dx/dy by default. */
+  autoPlaceAnnotations?: AutoPlaceAnnotations
 
   /** Enable declarative bounded animation (enter/exit/update transitions + intro).
    * `true` uses defaults (300ms ease-out, intro enabled). Object form allows customization.

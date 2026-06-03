@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import type { ScaleBand, ScaleLinear } from "d3-scale"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
 export type ArrowOfTime = "up" | "down" | "left" | "right"
 export type WindowMode = "sliding" | "growing"
@@ -162,6 +163,7 @@ export interface RealtimeFrameProps {
   className?: string
   lineStyle?: LineStyle
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (annotation: Datum, index: number, context: AnnotationContext) => ReactNode
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode

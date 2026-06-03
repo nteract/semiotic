@@ -456,6 +456,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
     ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),
     ...(resolved.summary && { summary: resolved.summary }),

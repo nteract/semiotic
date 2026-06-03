@@ -295,6 +295,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       tooltipContent,
       customHoverBehavior,
       annotations,
+      autoPlaceAnnotations,
       svgAnnotationRules,
       showGrid = false,
       legend,
@@ -1067,6 +1068,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
               composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
             }
             annotations={annotations}
+            autoPlaceAnnotations={autoPlaceAnnotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
             xAccessor={annXAccessor}
@@ -1194,6 +1196,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             composeOverlays(resolvedForeground, customOverlays)
           }
           annotations={annotations}
+          autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
           xAccessor={annXAccessor}

@@ -533,6 +533,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...(props.axisExtent !== undefined && { axisExtent: props.axisExtent }),
+    ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     tooltipContent: tooltipFn,
     ...(annotations && { annotations }),
     ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),

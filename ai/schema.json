@@ -94,6 +94,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -294,6 +302,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -493,6 +509,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -667,6 +691,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -836,6 +868,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -1028,6 +1068,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -1163,6 +1211,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -1328,6 +1384,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -1497,6 +1561,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -1661,6 +1733,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -1833,6 +1913,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -1998,6 +2086,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -2155,6 +2251,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -2328,6 +2432,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -2480,6 +2592,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -2648,6 +2768,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -2802,6 +2930,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -2948,6 +3084,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -3109,6 +3253,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -3250,6 +3402,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -3417,6 +3577,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -3545,6 +3713,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -3686,6 +3862,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -3849,6 +4033,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -4041,6 +4233,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -4239,6 +4439,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -4413,6 +4621,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -4593,6 +4809,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -4737,6 +4961,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -4886,6 +5118,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -5099,6 +5339,13 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
+            },
             "decay": {
               "type": "object",
               "description": "Decay config: { type, halfLife, minOpacity }"
@@ -5247,6 +5494,13 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
             },
             "decay": {
               "type": "object",
@@ -5445,6 +5699,13 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
+            },
             "decay": {
               "type": "object",
               "description": "Decay config: { type, halfLife, minOpacity }"
@@ -5609,6 +5870,13 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
+            },
             "decay": {
               "type": "object",
               "description": "Decay config: { type, halfLife, minOpacity }"
@@ -5770,6 +6038,13 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
+            },
             "decay": {
               "type": "object",
               "description": "Decay config: { type, halfLife, minOpacity }"
@@ -5890,6 +6165,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -6063,6 +6346,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -6255,6 +6546,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -6368,6 +6667,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -6475,6 +6782,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -6598,6 +6913,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -6734,6 +7057,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -6858,6 +7189,14 @@
                 ]
               }
             },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -6975,6 +7314,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -7228,6 +7575,14 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
             },
             "axisExtent": {
               "type": "string",
@@ -7488,6 +7843,13 @@
                   "type"
                 ]
               }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
             },
             "fill": {
               "type": "string"

@@ -536,6 +536,58 @@ export default function AnnotationsPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Auto Placement */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="auto-placement">Auto Placement</h2>
+
+      <p>
+        Set <code>autoPlaceAnnotations</code> to let Semiotic choose offsets for
+        note-like annotations that do not already declare <code>dx</code> or{" "}
+        <code>dy</code>. The pass estimates note bounds, tries adjacent
+        candidate positions, avoids existing notes and point marks, and keeps
+        text inside the plot area when possible. Authored offsets stay
+        authoritative by default, and <code>svgAnnotationRules</code> remains
+        the full escape hatch.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "X Value",
+          yLabel: "Y Value",
+          pointIdAccessor: "label",
+          autoPlaceAnnotations: true,
+          annotations: [
+            { type: "callout", pointId: "F", label: "Placed away from the edge", radius: 14 },
+            { type: "label", pointId: "D", label: "Second note chooses another side" },
+            { type: "label", pointId: "B", label: "Manual offset stays fixed", dx: 26, dy: 26 },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { x: 10, y: 20, label: "A" },
+  { x: 25, y: 35, label: "B" },
+  { x: 40, y: 15, label: "C" },
+  { x: 55, y: 45, label: "D" },
+  { x: 70, y: 30, label: "E" },
+  { x: 85, y: 50, label: "F" }
+]`,
+          pointIdAccessor: `"label"`,
+          autoPlaceAnnotations: `true`,
+          annotations: `[
+  { type: "callout", pointId: "F", label: "Placed away from the edge", radius: 14 },
+  { type: "label", pointId: "D", label: "Second note chooses another side" },
+  { type: "label", pointId: "B", label: "Manual offset stays fixed", dx: 26, dy: 26 }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Curved Connectors */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="connectors">Curved Connectors</h2>
