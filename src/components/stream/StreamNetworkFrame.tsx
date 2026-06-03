@@ -245,6 +245,7 @@ const StreamNetworkFrame = forwardRef<
     chartId,
     onTopologyChange,
     annotations,
+    autoPlaceAnnotations,
     svgAnnotationRules,
     legend,
     legendPosition,
@@ -1469,6 +1470,7 @@ const StreamNetworkFrame = forwardRef<
             composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
           }
           annotations={annotations}
+          autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={0}
         />
@@ -1558,6 +1560,7 @@ const StreamNetworkFrame = forwardRef<
           composeOverlays(resolvedForeground, customOverlays)
         }
         annotations={annotations}
+        autoPlaceAnnotations={autoPlaceAnnotations}
         svgAnnotationRules={svgAnnotationRules}
         annotationFrame={annotationFrame}
       />

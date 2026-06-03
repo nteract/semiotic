@@ -6,6 +6,8 @@ import type { NetworkLabel } from "./networkTypes"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationHierarchy"
+import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import type { AnnotationContext } from "../realtime/types"
 
 type AnnotationAnchorNode = {
   type: string
@@ -17,6 +19,21 @@ type AnnotationAnchorNode = {
   cy?: number
   w?: number
   h?: number
+}
+
+type NetworkAnnotationContext = AnnotationContext & { sceneNodes?: AnnotationAnchorNode[] }
+
+function nodeAnchorId(node: AnnotationAnchorNode): string | undefined {
+  const id = node.id ?? node.datum?.id ?? node.datum?.data?.id ?? node.datum?.data?.name
+  return id == null ? undefined : String(id)
+}
+
+function nodeCenter(node: AnnotationAnchorNode): { x: number; y: number; r: number } | null {
+  const x = node.cx ?? (node.x != null && node.w != null ? node.x + node.w / 2 : node.x)
+  const y = node.cy ?? (node.y != null && node.h != null ? node.y + node.h / 2 : node.y)
+  if (typeof x !== "number" || typeof y !== "number") return null
+  const r = Math.max(1, node.w ?? 0, node.h ?? 0) / 2
+  return { x, y, r }
 }
 
 export interface NetworkSVGOverlayProps {
@@ -49,10 +66,11 @@ export interface NetworkSVGOverlayProps {
 
   /** Annotations */
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
     index: number,
-    context: { width: number; height: number; sceneNodes?: AnnotationAnchorNode[] }
+    context: NetworkAnnotationContext
   ) => ReactNode
   annotationFrame?: number
 }
@@ -82,17 +100,40 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     foregroundGraphics,
     sceneNodes,
     annotations,
+    autoPlaceAnnotations,
     svgAnnotationRules,
     annotationFrame: _annotationFrame
   } = props
 
-  const renderedSvgAnnotations = annotations
+  const annotationContext = React.useMemo<NetworkAnnotationContext>(() => {
+    const pointNodes = (sceneNodes || []).flatMap((node) => {
+      const center = nodeCenter(node)
+      const pointId = nodeAnchorId(node)
+      return center ? [{ pointId, ...center }] : []
+    })
+    return {
+      scales: null,
+      width,
+      height,
+      frameType: "network",
+      pointNodes,
+      sceneNodes,
+    }
+  }, [height, sceneNodes, width])
+
+  const layoutAnnotations = annotations && autoPlaceAnnotations
+    ? annotationLayout({
+        annotations,
+        context: annotationContext,
+        ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
+      })
+    : annotations
+
+  const renderedSvgAnnotations = layoutAnnotations
     ? applyAnnotationEmphasis(
-        annotations.reduce<AnnotationRenderPair[]>((acc, annotation, i) => {
+        layoutAnnotations.reduce<AnnotationRenderPair[]>((acc, annotation, i) => {
           if (annotation.type === "widget" || !svgAnnotationRules) return acc
-          const element = svgAnnotationRules(annotation, i, {
-            width, height, sceneNodes
-          })
+          const element = svgAnnotationRules(annotation, i, annotationContext)
           if (element) {
             acc.push({
               node: <React.Fragment key={`annotation-${i}`}>{element}</React.Fragment>,
@@ -174,7 +215,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       })}
     </svg>
     {/* Widget annotations — rendered as HTML divs so they can overflow the SVG */}
-    {annotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {
+    {layoutAnnotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {
       const node = sceneNodes!.find(n =>
         n.id === annotation.nodeId ||
         (n.datum?.id === annotation.nodeId) ||

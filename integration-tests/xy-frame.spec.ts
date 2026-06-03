@@ -126,6 +126,17 @@ test.describe("XY Charts - Scatter and Bubble", () => {
       maxDiffPixels: 100
     })
   })
+
+  test("renders auto-placed annotations without edge collisions", async ({ page }) => {
+    await waitForChartReady(page, "xy-annotation-auto-place")
+    const testCase = page.locator('[data-testid="xy-annotation-auto-place"]')
+
+    await expect(testCase.locator("svg text", { hasText: "Edge" })).toBeVisible({ timeout: 5000 })
+    await expect(testCase.locator("svg text", { hasText: "Center A" })).toBeVisible()
+    await expect(testCase).toHaveScreenshot("xy-annotation-auto-place.png", {
+      maxDiffPixels: 150
+    })
+  })
 })
 
 test.describe("XY Charts - Interactivity", () => {

@@ -25,6 +25,19 @@ const TestCase = ({ title, children, testId, key }) =>
     children
   )
 
+const annotationPlacementData = [
+  { x: 18, y: 78, category: "A" },
+  { x: 24, y: 24, category: "B" },
+  { x: 47, y: 50, category: "A" },
+  { x: 50, y: 50, category: "B" },
+  { x: 53, y: 50, category: "C" },
+  { x: 76, y: 52, category: "A" },
+  { x: 78, y: 48, category: "B" },
+  { x: 80, y: 54, category: "C" },
+  { x: 70, y: 20, category: "A" },
+  { x: 72, y: 82, category: "B" },
+]
+
 const examples = [
   // 1. Basic Line Chart
   TestCase({
@@ -141,6 +154,33 @@ const examples = [
       width: 400,
       height: 300,
       colorScheme: colors
+    })
+  }),
+  // M2 annotation placement fixture: repeated anchors, dense nearby marks,
+  // and a right-edge note. `autoPlaceAnnotations` should choose offsets
+  // instead of letting the default top-right position overlap marks/edges.
+  TestCase({
+    title: "Annotation Auto Placement",
+    testId: "xy-annotation-auto-place",
+    children: React.createElement(Scatterplot, {
+      data: annotationPlacementData,
+      xAccessor: "x",
+      yAccessor: "y",
+      xExtent: [0, 100],
+      yExtent: [0, 100],
+      colorBy: "category",
+      pointRadius: 6,
+      showLegend: false,
+      width: 380,
+      height: 300,
+      colorScheme: colors,
+      autoPlaceAnnotations: { defaultOffset: 40, notePadding: 10, connectorThreshold: 55 },
+      annotations: [
+        { type: "label", x: 24, y: 24, label: "Manual", dx: 28, dy: -24 },
+        { type: "label", x: 50, y: 50, label: "Center A" },
+        { type: "label", x: 50, y: 50, label: "Center B" },
+        { type: "label", x: 78, y: 52, label: "Edge" },
+      ],
     })
   }),
   // Landmark ticks with xScaleType="time"
