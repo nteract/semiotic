@@ -9,6 +9,9 @@ import { loess } from "./loess"
 import regression from "regression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
 import type { Datum } from "./datumTypes"
+import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
+
+export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 
 const CURVE_FACTORIES: Record<string, CurveFactory> = {
   linear: curveLinear,
@@ -20,69 +23,6 @@ const CURVE_FACTORIES: Record<string, CurveFactory> = {
   basis: curveBasis,
   cardinal: curveCardinal,
   catmullRom: curveCatmullRom,
-}
-
-// ── Annotation hierarchy / emphasis ───────────────────────────────────
-
-/** A rendered annotation node paired with the source annotation it came
- *  from, so emphasis treatment can read `annotation.emphasis` after the
- *  per-type rule has produced the node. */
-export interface AnnotationRenderPair {
-  node: React.ReactNode
-  annotation: Datum
-}
-
-const EMPHASIS_RANK: Record<string, number> = { secondary: 0, primary: 2 }
-const DEFAULT_EMPHASIS_RANK = 1
-/** Opacity applied to a `secondary` annotation so primary notes read as
- *  the dominant layer (Rahman et al.'s "Hierarchy" consideration). */
-const SECONDARY_EMPHASIS_OPACITY = 0.6
-
-/**
- * Apply annotation hierarchy — Rahman et al.'s "Hierarchy" consideration,
- * reusing the same `emphasis` token charts already accept (`"primary"` /
- * `"secondary"`). A `secondary` annotation dims and yields z-order; a
- * `primary` one paints at full weight and on top.
- *
- * Type-agnostic: it wraps whatever the per-type rule produced, so all
- * annotation types get hierarchy without each rule knowing about it.
- * Document order encodes z-order in SVG, so the return is stably sorted
- * `secondary → unspecified → primary`, with the original index breaking
- * ties to preserve authored order within a band.
- *
- * Zero-overhead and structure-preserving when no annotation declares an
- * emphasis: the original nodes are returned untouched (same keys, same
- * order), so existing charts render identically. The dim composes
- * multiplicatively with any lifecycle opacity already on the node.
- */
-export function applyAnnotationEmphasis(
-  pairs: ReadonlyArray<AnnotationRenderPair>
-): React.ReactNode[] {
-  const anyEmphasis = pairs.some(
-    (p) => p.annotation?.emphasis === "primary" || p.annotation?.emphasis === "secondary"
-  )
-  if (!anyEmphasis) return pairs.map((p) => p.node)
-
-  return pairs
-    .map((p, i) => ({
-      p,
-      i,
-      rank: EMPHASIS_RANK[p.annotation?.emphasis as string] ?? DEFAULT_EMPHASIS_RANK,
-    }))
-    .sort((a, b) => a.rank - b.rank || a.i - b.i)
-    .map(({ p, i }) => {
-      const emphasis = p.annotation?.emphasis
-      if (emphasis !== "primary" && emphasis !== "secondary") return p.node
-      return (
-        <g
-          key={`annotation-emphasis-${i}`}
-          className={`annotation-emphasis annotation-emphasis--${emphasis}`}
-          {...(emphasis === "secondary" ? { opacity: SECONDARY_EMPHASIS_OPACITY } : {})}
-        >
-          {p.node}
-        </g>
-      )
-    })
 }
 
 type AnnotationRule = (

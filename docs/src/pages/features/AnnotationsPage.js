@@ -490,8 +490,11 @@ export default function AnnotationsPage() {
         annotation accepts <code>emphasis: "primary" | "secondary"</code> — the
         same token charts use for dashboard hierarchy. A <code>secondary</code>{" "}
         annotation dims and yields z-order; a <code>primary</code> one paints at
-        full weight and on top. Annotations with no <code>emphasis</code> render
-        exactly as before, so it is purely additive. The wrapper carries class
+        full weight and on top. If <code>emphasis</code> is omitted but
+        annotations carry <code>provenance.confidence</code>, Semiotic infers a
+        reading order from confidence descending, then authored array order, and
+        applies a subtle opacity gradient. Annotations with neither signal
+        render exactly as before, so it is purely additive. The wrapper carries class
         hooks <code>annotation-emphasis--primary</code> /{" "}
         <code>annotation-emphasis--secondary</code> for further styling, and the
         dim composes with the freshness treatment from{" "}

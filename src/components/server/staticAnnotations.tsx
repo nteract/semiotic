@@ -8,6 +8,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 
 import * as React from "react"
 import type { SemioticTheme } from "../store/ThemeStore"
+import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationHierarchy"
 
 /** Resolve annotation color: explicit > theme annotation > theme text */
 function resolveAnnotationColor(ann: Datum, theme: SemioticTheme): string {
@@ -102,13 +103,14 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   const { annotations } = config
   if (!annotations || annotations.length === 0) return null
 
-  const elements: React.ReactNode[] = []
+  const pairs: AnnotationRenderPair[] = []
 
   for (let i = 0; i < annotations.length; i++) {
     const node = renderAnnotation(annotations[i], i, config)
-    if (node) elements.push(node)
+    if (node) pairs.push({ node, annotation: annotations[i] })
   }
 
+  const elements = applyAnnotationEmphasis(pairs)
   const pfx = config.idPrefix ? `${config.idPrefix}-` : ""
   return elements.length > 0 ? <g id={`${pfx}annotations`} className="semiotic-annotations">{elements}</g> : null
 }

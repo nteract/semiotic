@@ -176,6 +176,43 @@ describe("auditAccessibility — annotation→target association (correspondence
   })
 })
 
+describe("auditAccessibility — annotation hierarchy", () => {
+  const base = { data: LINE_DATA, title: "x" }
+
+  it("warns when multiple annotations have no declared hierarchy", () => {
+    const r = auditAccessibility("LineChart", {
+      ...base,
+      annotations: [
+        { type: "callout", x: 1, y: 4200, label: "First" },
+        { type: "callout", x: 2, y: 5100, label: "Second" },
+      ],
+    })
+    const f = find(r, "understandable.annotation-hierarchy")
+    expect(f?.status).toBe("warn")
+    expect(f?.fix).toContain("emphasis")
+  })
+
+  it("passes when hierarchy is explicit or inferred from provenance confidence", () => {
+    const explicit = auditAccessibility("LineChart", {
+      ...base,
+      annotations: [
+        { type: "callout", x: 1, y: 4200, label: "Context", emphasis: "secondary" },
+        { type: "callout", x: 2, y: 5100, label: "Main", emphasis: "primary" },
+      ],
+    })
+    const inferred = auditAccessibility("LineChart", {
+      ...base,
+      annotations: [
+        { type: "callout", x: 1, y: 4200, label: "Context", provenance: { confidence: 0.6 } },
+        { type: "callout", x: 2, y: 5100, label: "Main", provenance: { confidence: 0.9 } },
+      ],
+    })
+
+    expect(status(explicit, "understandable.annotation-hierarchy")).toBe("pass")
+    expect(status(inferred, "understandable.annotation-hierarchy")).toBe("pass")
+  })
+})
+
 describe("auditAccessibility — operability", () => {
   it("keeps single-input-modality a pass for a recognized HOC (keyboard nav is built in)", () => {
     const withBrush = auditAccessibility("LineChart", { data: LINE_DATA, title: "x", brush: { dimension: "x" } })
