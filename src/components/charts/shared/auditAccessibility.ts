@@ -541,18 +541,32 @@ export function auditAccessibility(
       fix: "Confirm the second axis is necessary; consider two aligned charts (small multiples) or indexing both series to a common baseline. Label each axis and its series unambiguously.",
     })
   }
-  if (annotations.length > 1) {
-    const hierarchyCount = annotations.filter(annotationHasHierarchySignal).length
-    f.push({
-      id: "understandable.annotation-hierarchy",
-      principle: "understandable",
-      heuristic: "Information complexity is inappropriate",
-      critical: false,
-      ...(hierarchyCount > 0
-        ? { status: "pass" as A11yStatus, message: `${hierarchyCount} of ${annotations.length} annotation(s) declare hierarchy through emphasis or provenance confidence, so the renderer can resolve reading order and visual priority.` }
-        : { status: "warn" as A11yStatus, message: `${annotations.length} annotations are present with no emphasis or provenance confidence; readers may not know which note is primary.`, fix: "Mark the main annotation with emphasis=\"primary\", set supporting notes to emphasis=\"secondary\", or provide provenance.confidence so Semiotic can infer order." }),
-    })
-  }
+if (annotations.length > 1) {
+  const hierarchyCount = annotations.filter(annotationHasHierarchySignal).length
+  const missing = annotations.length - hierarchyCount
+  f.push({
+    id: "understandable.annotation-hierarchy",
+    principle: "understandable",
+    heuristic: "Information complexity is inappropriate",
+    critical: false,
+    ...(hierarchyCount === annotations.length
+      ? {
+          status: "pass" as A11yStatus,
+          message: `All ${annotations.length} annotation(s) declare hierarchy through emphasis or provenance confidence, so the renderer can resolve reading order and visual priority.`,
+        }
+      : hierarchyCount === 0
+        ? {
+            status: "warn" as A11yStatus,
+            message: `${annotations.length} annotations are present with no emphasis or provenance confidence; readers may not know which note is primary.`,
+            fix: "Mark the main annotation with emphasis=\"primary\", set supporting notes to emphasis=\"secondary\", or provide provenance.confidence so Semiotic can infer order.",
+          }
+        : {
+            status: "warn" as A11yStatus,
+            message: `${missing} of ${annotations.length} annotation(s) have no emphasis or provenance confidence; readers may not know which note is primary among the unordered notes.`,
+            fix: "Set emphasis on each annotation (primary/secondary), or provide provenance.confidence on all annotations so Semiotic can infer order.",
+          }),
+  })
+}
   {
     const hasUncertainty = props.forecast != null || props.anomaly != null || props.band != null || props.regression != null
     if (hasUncertainty) {
