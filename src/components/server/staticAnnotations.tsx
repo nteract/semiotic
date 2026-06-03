@@ -116,6 +116,7 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
             time: config.scales.x,
             value: config.scales.y,
             o: config.scales.o,
+            geoProjection: config.scales.geoProjection,
           } as unknown as AnnotationContext["scales"],
           width: config.layout.width,
           height: config.layout.height,

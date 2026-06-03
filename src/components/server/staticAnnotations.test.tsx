@@ -152,6 +152,23 @@ describe("renderStaticAnnotations", () => {
       expect(svg).toContain("Point")
     })
 
+    it("auto-places geo coordinate labels with the static projection", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        autoPlaceAnnotations: true,
+        scales: { geoProjection: () => [384, 150] },
+        annotations: [{ type: "label", coordinates: [5, 5], label: "Geo" }],
+      })
+      const x1Match = svg.match(/x1="([^"]+)"/)
+      const x2Match = svg.match(/x2="([^"]+)"/)
+
+      expect(svg).toContain("Geo")
+      expect(x1Match).not.toBeNull()
+      expect(x2Match).not.toBeNull()
+      expect(Number(x1Match![1])).toBe(384)
+      expect(Number(x2Match![1])).toBeLessThan(Number(x1Match![1]))
+    })
+
     it("skips when coordinates cannot be resolved", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,

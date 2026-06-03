@@ -48,6 +48,30 @@ describe("annotationLayout", () => {
     expect(placed.dy).toBe(-18)
   })
 
+  it("models missing manual note offsets with renderer defaults", () => {
+    const annotations: Datum[] = [
+      { type: "label", x: 50, y: 50, label: "Manual", dx: 30 },
+      { type: "label", x: 50, y: 50, label: "Auto" },
+    ]
+    const placed = annotationLayout({ annotations, context: context(), defaultOffset: 30 })
+
+    expect(placed[0]).toBe(annotations[0])
+    expect([placed[1].dx, placed[1].dy]).not.toEqual([30, -30])
+  })
+
+  it("resolves geo coordinates when a projection is provided", () => {
+    const [placed] = annotationLayout({
+      annotations: [{ type: "label", coordinates: [10, 20], label: "Projected" }],
+      context: context({
+        scales: {
+          geoProjection: () => [192, 60],
+        } as unknown as AnnotationContext["scales"],
+      }),
+    })
+
+    expect(placed.dx).toBeLessThan(0)
+  })
+
   it("can route long auto-placed connectors as curves", () => {
     const [placed] = annotationLayout({
       annotations: [{ type: "callout", x: 50, y: 50, label: "Routed" }],

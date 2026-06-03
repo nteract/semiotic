@@ -29,6 +29,8 @@ export interface AnnotationLayoutOptions extends AnnotationLayoutConfig {
 
 type Box = { x: number; y: number; width: number; height: number }
 type Candidate = { dx: number; dy: number }
+type GeoProjection = (coords: [number, number]) => [number, number] | null
+type ScalesWithGeoProjection = AnnotationContext["scales"] & { geoProjection?: GeoProjection }
 
 const NOTE_TYPES = new Set(["label", "callout", "callout-circle", "callout-rect", "text", "widget"])
 const DEFAULT_OFFSET = 32
@@ -36,9 +38,16 @@ const DEFAULT_NOTE_PADDING = 6
 const DEFAULT_MARK_PADDING = 4
 const DEFAULT_EDGE_PADDING = 8
 const DEFAULT_CONNECTOR_THRESHOLD = 72
+const DEFAULT_RENDERER_NOTE_DX = 30
+const DEFAULT_RENDERER_NOTE_DY = -30
 
 function hasManualOffset(a: Datum): boolean {
   return typeof a.dx === "number" || typeof a.dy === "number"
+}
+
+function rendererOffset(a: Datum): Candidate {
+  if (a.type === "text" || a.type === "widget") return { dx: 0, dy: 0 }
+  return { dx: DEFAULT_RENDERER_NOTE_DX, dy: DEFAULT_RENDERER_NOTE_DY }
 }
 
 function isPlaceableAnnotation(a: Datum): boolean {
@@ -177,6 +186,20 @@ function resolveAnchor(a: Datum, index: number, context: AnnotationContext): { x
   if (a.type === "widget" && typeof a.px === "number" && typeof a.py === "number") {
     return { x: a.px, y: a.py }
   }
+
+  const coords = a.coordinates
+  const geoProjection = (context.scales as ScalesWithGeoProjection | undefined)?.geoProjection
+  if (Array.isArray(coords) && coords.length >= 2 && geoProjection) {
+    const lon = coords[0]
+    const lat = coords[1]
+    if (typeof lon === "number" && typeof lat === "number") {
+      const projected = geoProjection([lon, lat])
+      if (projected && typeof projected[0] === "number" && typeof projected[1] === "number") {
+        return { x: projected[0], y: projected[1] }
+      }
+    }
+  }
+
   return resolveAnchoredPosition(a, index, context)
 }
 
@@ -217,8 +240,9 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
 
     const size = estimateNoteSize(annotation)
     if (preserveManualOffsets && hasManualOffset(annotation)) {
-      const dx = typeof annotation.dx === "number" ? annotation.dx : 0
-      const dy = typeof annotation.dy === "number" ? annotation.dy : 0
+      const fallback = rendererOffset(annotation)
+      const dx = typeof annotation.dx === "number" ? annotation.dx : fallback.dx
+      const dy = typeof annotation.dy === "number" ? annotation.dy : fallback.dy
       placedBoxes.push(expandBox(noteBox(anchor.x, anchor.y, dx, dy, size), notePadding))
       return annotation
     }

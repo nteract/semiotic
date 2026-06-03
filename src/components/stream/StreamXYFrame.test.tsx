@@ -754,7 +754,8 @@ describe("StreamXYFrame", () => {
       )
 
       const node = container.querySelector('[data-testid="laid-out-ann"]')
-      expect(Number(node?.getAttribute("data-dx"))).toBeLessThan(0)
+      expect(node).not.toBeNull()
+      expect(Number(node!.getAttribute("data-dx"))).toBeLessThan(0)
     })
 
     it("renders envelope annotation when xAccessor is a function", () => {
