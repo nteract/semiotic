@@ -168,7 +168,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     showAxes,
     showGrid,
     annotations,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     // selection/linkedHover/onObservation/onClick are wired through these
     // synthesized hover/click behavior props — the bare prop names don't
     // exist on StreamOrdinalFrameProps.

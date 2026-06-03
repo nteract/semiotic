@@ -369,6 +369,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
     ...((onObservation || onClick) && { customClickBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
+    ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),
     ...(resolved.summary && { summary: resolved.summary }),

@@ -430,6 +430,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       hoverRadius = 30,
       tooltipMode,
       annotations,
+      autoPlaceAnnotations,
       svgAnnotationRules,
       showGrid,
       legend,
@@ -1511,6 +1512,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             xValues={[]}
             yValues={[]}
             annotations={annotations}
+            autoPlaceAnnotations={autoPlaceAnnotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
             xAccessor={annXAccessor}
@@ -1640,6 +1642,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           xValues={marginalXValues}
           yValues={marginalYValues}
           annotations={annotations}
+          autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
           xAccessor={annXAccessor}

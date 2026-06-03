@@ -520,7 +520,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     showGrid,
     ...setup.legendBehaviorProps,
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...(tooltip === "multi"
       ? { tooltipContent: MultiPointTooltip(), tooltipMode: "multi" as const }
       : buildTooltipProps({ tooltip, defaultTooltipContent })),

@@ -215,6 +215,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       customClickBehavior,
       customHoverBehavior,
       annotations,
+      autoPlaceAnnotations,
 
       // Realtime
       decay,
@@ -1290,6 +1291,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             legendIsolatedCategories={legendIsolatedCategories}
             foregroundGraphics={resolvedForeground}
             annotations={annotations}
+            autoPlaceAnnotations={autoPlaceAnnotations}
             annotationFrame={0}
             xValues={[]}
             yValues={[]}
@@ -1380,6 +1382,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           legendIsolatedCategories={legendIsolatedCategories}
           foregroundGraphics={resolvedForeground}
           annotations={annotations}
+          autoPlaceAnnotations={autoPlaceAnnotations}
           annotationFrame={annotationFrame}
           xValues={[]}
           yValues={[]}

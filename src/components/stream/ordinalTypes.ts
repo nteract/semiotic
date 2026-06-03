@@ -6,6 +6,7 @@ import type {
   HoverData,
   AnnotationContext
 } from "../realtime/types"
+import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type {
   Style,
   SceneDatum,
@@ -472,6 +473,7 @@ export interface StreamOrdinalFrameProps<T = Datum> {
 
   // Annotations
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
     index: number,

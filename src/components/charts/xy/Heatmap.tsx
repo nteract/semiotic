@@ -441,7 +441,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     enableHover,
     ...(props.pointIdAccessor && { pointIdAccessor: props.pointIdAccessor }),
     ...(gradientLegend && { legend: gradientLegend, legendPosition }),
-    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent }),
+    ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
       linkedHover, onObservation, onClick, hoverHighlight,

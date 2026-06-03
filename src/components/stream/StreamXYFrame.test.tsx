@@ -733,6 +733,31 @@ describe("StreamXYFrame", () => {
   // ── Annotation accessor resolution ─────────────────────────────────
 
   describe("function accessor annotation resolution", () => {
+    it("auto-places annotations before custom svgAnnotationRules run", () => {
+      const { container } = render(
+        <StreamXYFrame
+          chartType="scatter"
+          data={[{ x: 0, y: 0 }, { x: 100, y: 100 }]}
+          xAccessor="x"
+          yAccessor="y"
+          size={[240, 160]}
+          autoPlaceAnnotations
+          annotations={[{ type: "label", x: 96, y: 50, label: "Edge label needs room" }]}
+          svgAnnotationRules={(annotation) => (
+            <g
+              data-testid="laid-out-ann"
+              data-dx={String(annotation.dx)}
+              data-dy={String(annotation.dy)}
+            />
+          )}
+        />
+      )
+
+      const node = container.querySelector('[data-testid="laid-out-ann"]')
+      expect(node).not.toBeNull()
+      expect(Number(node!.getAttribute("data-dx"))).toBeLessThan(0)
+    })
+
     it("renders envelope annotation when xAccessor is a function", () => {
       // Regression test: when xAccessor is a function, the SVGOverlay must
       // receive annotationData with __semiotic_resolvedX baked in, and

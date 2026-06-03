@@ -956,6 +956,7 @@ export const LineChart = forwardRef(
     xFormat,
     yFormat,
     ...(axisExtent !== undefined && { axisExtent }),
+    ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     enableHover,
     showGrid,
     // `setup.legendBehaviorProps` carries the legend slot, legend

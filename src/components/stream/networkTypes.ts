@@ -5,6 +5,7 @@ import type { LegendGroup, LegendLayout } from "../types/legendTypes"
 import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -656,6 +657,7 @@ export interface StreamNetworkFrameProps<T = Datum> {
 
   // ── Annotations ──────────────────────────────────
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
     index: number,

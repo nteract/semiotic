@@ -179,6 +179,11 @@ const commonProps: Record<string, ChartPropSpec> = {
   // supply functions choose the boolean/object variant.
   tooltip: { type: ["boolean", "function", "object"] },
   annotations: { type: "array" },
+  autoPlaceAnnotations: {
+    type: ["boolean", "object"],
+    default: false,
+    description: "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+  },
   axisExtent: {
     type: "string",
     enum: ["nice", "exact"] as const,
@@ -238,6 +243,7 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   tooltipContent: { type: "function", omitFromSchema: true },
   onHover: { type: "function", omitFromSchema: true },
   annotations: { type: "array" },
+  autoPlaceAnnotations: { type: ["boolean", "object"], description: "Opt-in annotation placement pass for note-like annotations without manual offsets." },
   svgAnnotationRules: { type: "function", omitFromSchema: true },
   tickFormatTime: { type: "function", omitFromSchema: true },
   tickFormatValue: { type: "function", omitFromSchema: true },
@@ -1607,6 +1613,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       tooltipContent: { type: "function", omitFromSchema: true },
       onHover: { type: "function", omitFromSchema: true },
       annotations: { type: "array" },
+      autoPlaceAnnotations: { type: ["boolean", "object"], description: "Opt-in annotation placement pass for note-like annotations without manual offsets." },
       svgAnnotationRules: { type: "function", omitFromSchema: true },
       tickFormatTime: { type: "function", omitFromSchema: true },
       tickFormatValue: { type: "function", omitFromSchema: true },

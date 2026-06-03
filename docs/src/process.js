@@ -318,6 +318,7 @@ export const processNodes = [
     label: "Annotate",
     keys: [
       "annotations",
+      "autoPlaceAnnotations",
       "annotationSettings",
       "lineIDAccessor",
       "svgAnnotationRules",

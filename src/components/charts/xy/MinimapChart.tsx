@@ -530,6 +530,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     ...(brushExtent && { xExtent: brushExtent }),
     ...(yExtent && { yExtent }),
     ...(props.axisExtent !== undefined && { axisExtent: props.axisExtent }),
+    ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...frameProps
   }
 

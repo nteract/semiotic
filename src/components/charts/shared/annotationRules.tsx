@@ -91,8 +91,8 @@ export function createDefaultAnnotationRules(
             noteData={{
               x: px,
               y: py,
-              dx: ann.dx || 30,
-              dy: ann.dy || -30,
+              dx: ann.dx ?? 30,
+              dy: ann.dy ?? -30,
               note: {
                 label: ann.label,
                 title: ann.title,
@@ -118,8 +118,8 @@ export function createDefaultAnnotationRules(
             noteData={{
               x: px,
               y: py,
-              dx: ann.dx || 30,
-              dy: ann.dy || -30,
+              dx: ann.dx ?? 30,
+              dy: ann.dy ?? -30,
               note: {
                 label: ann.label,
                 title: ann.title,

@@ -16,6 +16,7 @@ import type {
 } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { CoercibleNumber } from "./accessorUtils"
+import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
 export type SceneDatum = Datum | null
 export type SeriesDatum = Datum[] | null
@@ -721,6 +722,7 @@ export interface StreamXYFrameProps<T = Datum> {
 
   // ── Annotations ──────────────────────────────────
   annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
     index: number,
