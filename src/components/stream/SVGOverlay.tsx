@@ -8,7 +8,7 @@ import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
-import { createDefaultAnnotationRules, applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationRules"
+import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
 import { isTimeLandmark } from "./hitTestUtils"
 import { ticksForMode } from "../charts/shared/axisExtent"
@@ -594,21 +594,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
       stickyPositionCache: stickyPositionCacheRef.current
     }
 
-    const pairs = annotations
-      .map((annotation, i): AnnotationRenderPair | null => {
-        let node: React.ReactNode
-        if (svgAnnotationRules) {
-          // Try user rules first, fall back to defaults
-          const userResult = svgAnnotationRules(annotation, i, context)
-          node = userResult !== null && userResult !== undefined ? userResult : defaultRules(annotation, i, context)
-        } else {
-          node = defaultRules(annotation, i, context)
-        }
-        return node ? { node, annotation } : null
-      })
-      .filter((p): p is AnnotationRenderPair => p !== null)
-    // Apply annotation hierarchy (emphasis) — no-op when none declared.
-    return applyAnnotationEmphasis(pairs)
+    // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
+    // ordinal overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.
+    return renderAnnotationPass(annotations, defaultRules, svgAnnotationRules, context)
   }, [annotations, svgAnnotationRules, width, height, annXAccessor, annYAccessor, annotationData, scales, pointNodes, annCurve])
 
   // Linked crosshair from coordinate-based hover sync

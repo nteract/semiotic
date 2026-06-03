@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import * as React from "react"
-import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationRules"
+import { applyAnnotationEmphasis, renderAnnotationPass, type AnnotationRenderPair } from "./annotationRules"
 import type { Datum } from "./datumTypes"
+import type { AnnotationContext } from "../../realtime/types"
 
 // Minimal element-prop accessor so the assertions don't sprinkle `any`.
 type ElProps = {
@@ -65,5 +66,56 @@ describe("applyAnnotationEmphasis", () => {
     // The unspecified node passes through as its original element — no wrapper.
     expect(plain).toBeDefined()
     expect(propsOf(plain).className).toBeUndefined()
+  })
+})
+
+describe("renderAnnotationPass", () => {
+  const ctx = {} as AnnotationContext
+  const el = (id: string) => <g key={id} data-id={id} />
+
+  it("drops annotations whose rule renders nothing (null / undefined / falsy), matching .filter(Boolean)", () => {
+    const anns: Datum[] = [
+      { type: "a", id: "keep" },
+      { type: "b", id: "skip-null" },
+      { type: "c", id: "skip-zero" },
+      { type: "d", id: "skip-false" },
+    ]
+    // A rule may legally return a falsy ReactNode (null/undefined to skip, or
+    // 0/false). The pass drops all of them — the exact set the prior
+    // `.filter(Boolean)` removed — so this is not a behavior change.
+    const rule = (a: Datum): React.ReactNode | null => {
+      if (a.id === "keep") return el("keep")
+      if (a.id === "skip-null") return null
+      if (a.id === "skip-zero") return 0
+      return false
+    }
+    const out = renderAnnotationPass(anns, rule, undefined, ctx)
+    expect(out).toHaveLength(1)
+    expect(propsOf(out[0])["data-id"]).toBe("keep")
+  })
+
+  it("falls through to the default rule when the user rule returns null/undefined", () => {
+    const anns: Datum[] = [{ type: "x", id: "a" }, { type: "y", id: "b" }]
+    const userRule = (a: Datum): React.ReactNode | null => (a.id === "a" ? el("user-a") : null)
+    const defaultRule = (a: Datum) => el(`default-${a.id}`)
+    const out = renderAnnotationPass(anns, defaultRule, userRule, ctx)
+    expect(out.map((n) => propsOf(n)["data-id"])).toEqual(["user-a", "default-b"])
+  })
+
+  it("keeps a user rule's truthy result over the default", () => {
+    const anns: Datum[] = [{ type: "x", id: "a" }]
+    const out = renderAnnotationPass(anns, () => el("default"), () => el("user"), ctx)
+    expect(propsOf(out[0])["data-id"]).toBe("user")
+  })
+
+  it("applies emphasis hierarchy across the rendered nodes", () => {
+    const anns: Datum[] = [
+      { type: "x", id: "p", emphasis: "primary" },
+      { type: "x", id: "s", emphasis: "secondary" },
+      { type: "x", id: "d" },
+    ]
+    const out = renderAnnotationPass(anns, (a) => el(String(a.id)), undefined, ctx)
+    // secondary → unspecified → primary (innerId reads through the wrapper).
+    expect(out.map(innerId)).toEqual(["s", "d", "p"])
   })
 })

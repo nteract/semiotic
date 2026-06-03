@@ -252,9 +252,8 @@ describe("describeChart — author annotations", () => {
     expect(r.annotations).toBe(
       'The author has marked 2 features on this chart: a threshold line labeled "Target" and a callout labeled "Peak".'
     )
-    // It leads the text, ahead of the L1 encoding sentence.
-    expect(r.text.startsWith(r.annotations)).toBe(true)
-    expect(r.text.endsWith(r.levels.l1)).toBe(true)
+    // The annotation sentence leads the text, ahead of the L1 encoding sentence.
+    expect(r.text).toBe(`${r.annotations} ${r.levels.l1}`)
   })
 
   it("qualifies AI- and watcher-authored notes from their provenance", () => {
