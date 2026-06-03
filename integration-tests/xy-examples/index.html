@@ -22,6 +22,17 @@
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    /* Extent-override fixtures (all height 280) sit in a grid whose rows
+       stretch to the tallest member by default. The appended 300px
+       annotation fixture shares a row with xy-area-yextent-max and was
+       stretching it +20px, breaking an otherwise-stable baseline. Pin
+       these cards to their natural height so future taller appends can't
+       perturb their snapshots — the invariant the append comment assumed. */
+    [data-testid^="xy-line-yextent"],
+    [data-testid^="xy-line-xextent"],
+    [data-testid^="xy-area-yextent"] {
+      align-self: start;
+    }
     .test-case h2 {
       margin: 0 0 10px 0;
       font-size: 16px;
