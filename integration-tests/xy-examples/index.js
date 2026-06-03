@@ -156,33 +156,6 @@ const examples = [
       colorScheme: colors
     })
   }),
-  // M2 annotation placement fixture: repeated anchors, dense nearby marks,
-  // and a right-edge note. `autoPlaceAnnotations` should choose offsets
-  // instead of letting the default top-right position overlap marks/edges.
-  TestCase({
-    title: "Annotation Auto Placement",
-    testId: "xy-annotation-auto-place",
-    children: React.createElement(Scatterplot, {
-      data: annotationPlacementData,
-      xAccessor: "x",
-      yAccessor: "y",
-      xExtent: [0, 100],
-      yExtent: [0, 100],
-      colorBy: "category",
-      pointRadius: 6,
-      showLegend: false,
-      width: 380,
-      height: 300,
-      colorScheme: colors,
-      autoPlaceAnnotations: { defaultOffset: 40, notePadding: 10, connectorThreshold: 55 },
-      annotations: [
-        { type: "label", x: 24, y: 24, label: "Manual", dx: 28, dy: -24 },
-        { type: "label", x: 50, y: 50, label: "Center A" },
-        { type: "label", x: 50, y: 50, label: "Center B" },
-        { type: "label", x: 78, y: 52, label: "Edge" },
-      ],
-    })
-  }),
   // Landmark ticks with xScaleType="time"
   TestCase({
     title: "Landmark Ticks (scaleTime)",
@@ -637,6 +610,33 @@ const examples = [
       yAccessor: "value",
       yExtent: [undefined, 50],
       width: 400, height: 280, colorScheme: colors,
+    })
+  }),
+
+  // M2 annotation placement fixture: appended after existing snapshots so it
+  // cannot change CSS grid row-stretching for older XY visual baselines.
+  TestCase({
+    title: "Annotation Auto Placement",
+    testId: "xy-annotation-auto-place",
+    children: React.createElement(Scatterplot, {
+      data: annotationPlacementData,
+      xAccessor: "x",
+      yAccessor: "y",
+      xExtent: [0, 100],
+      yExtent: [0, 100],
+      colorBy: "category",
+      pointRadius: 6,
+      showLegend: false,
+      width: 380,
+      height: 300,
+      colorScheme: colors,
+      autoPlaceAnnotations: { defaultOffset: 40, notePadding: 10, connectorThreshold: 55 },
+      annotations: [
+        { type: "label", x: 24, y: 24, label: "Manual", dx: 28, dy: -24 },
+        { type: "label", x: 50, y: 50, label: "Center A" },
+        { type: "label", x: 50, y: 50, label: "Center B" },
+        { type: "label", x: 78, y: 52, label: "Edge" },
+      ],
     })
   })
 ]
