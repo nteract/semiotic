@@ -1,5 +1,6 @@
 import React from "react"
 import { LineChart } from "semiotic"
+import { applyAnnotationStatus } from "semiotic/ai"
 
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
@@ -249,11 +250,90 @@ const treated = applyAnnotationLifecycle([note], {
         ]}
       />
 
+      <p>
+        <code>applyAnnotationStatus</code> turns that editorial standing into a
+        default visual treatment — the orthogonal companion to{" "}
+        <code>applyAnnotationLifecycle</code>'s temporal one. Freshness,
+        importance (M1 <code>emphasis</code>), and editorial status are three
+        independent dimensions of the same render: a note can be
+        stale-and-disputed. Run freshness first, then status, and the opacity
+        composes (it multiplies in).
+      </p>
+
+      <Table
+        head={["status", "Default visual treatment"]}
+        rows={[
+          [`"accepted"`, "no change (full weight)"],
+          [`"proposed"`, "opacity ×0.7 + dashed (3 3) + label suffix “ (proposed)”"],
+          [`"disputed"`, "opacity ×0.7 + dashed (2 3) + label suffix “ (?)” — the query affordance"],
+          [`"retracted"`, "filtered out (or opacity ×0.25 with showRetractedAnnotations)"],
+        ]}
+      />
+
+      <p>
+        It also resolves <strong>supersession</strong>: a note whose{" "}
+        <code>stableId</code> is the <code>supersedes</code> target of another
+        present, non-retracted note is hidden — the revision replaced it —
+        unless you pass <code>showSupersededAnnotations</code>.
+      </p>
+
+      <CodeBlock
+        language="jsx"
+        code={`import { applyAnnotationStatus, applyAnnotationLifecycle } from "semiotic/ai"
+
+// Temporal first, then editorial — opacity composes (multiplies) across both.
+const treated = applyAnnotationStatus(
+  applyAnnotationLifecycle(annotations, { dataExtent: data.map(d => d.time) })
+)
+
+<LineChart data={data} xAccessor="time" yAccessor="value" annotations={treated} />`}
+      />
+
+      <p>
+        Below, four notes carry four statuses. The disputed note wears its{" "}
+        <code>(?)</code> query affordance, the proposed watcher note reads
+        provisionally, the retracted note is gone, and the accepted note paints
+        at full weight.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: lineData,
+          xAccessor: "week",
+          yAccessor: "score",
+          xLabel: "Week",
+          yLabel: "Score",
+          annotations: applyAnnotationStatus([
+            { type: "callout", x: 4, y: 24, label: "Confirmed peak", lifecycle: { status: "accepted" } },
+            { type: "callout", x: 6, y: 28, label: "Watcher flagged", dx: 20, dy: -36, lifecycle: { status: "proposed" } },
+            { type: "callout", x: 7, y: 32, label: "Spike contested", dx: 30, dy: -30, lifecycle: { status: "disputed" } },
+            { type: "callout", x: 9, y: 35, label: "Withdrawn note", lifecycle: { status: "retracted" } },
+          ]),
+        }}
+        type={LineChart}
+        startHidden={false}
+        overrideProps={{
+          annotations: `applyAnnotationStatus([
+  { type: "callout", x: 4, y: 24, label: "Confirmed peak",
+    lifecycle: { status: "accepted" } },
+  { type: "callout", x: 6, y: 28, label: "Watcher flagged", dx: 20, dy: -36,
+    lifecycle: { status: "proposed" } },   // → "Watcher flagged (proposed)", dimmed
+  { type: "callout", x: 7, y: 32, label: "Spike contested", dx: 30, dy: -30,
+    lifecycle: { status: "disputed" } },   // → "Spike contested (?)", dimmed
+  { type: "callout", x: 9, y: 35, label: "Withdrawn note",
+    lifecycle: { status: "retracted" } },  // → filtered out
+])`,
+        }}
+        hiddenProps={{}}
+      />
+
       <p style={{ fontSize: "0.95em", color: "var(--text-secondary)" }}>
-        The type surface ships now so authors and agents can stamp{" "}
-        <code>status</code> / <code>supersedes</code> today; status-driven
-        visual treatment (a query affordance on <code>disputed</code>, hiding{" "}
-        <code>retracted</code>) is on the roadmap.
+        Accept / dispute / retract / propose transitions are also{" "}
+        <em>observable</em>: call{" "}
+        <code>recordAnnotationStatusChange(toStatus, {"{ annotationId, fromStatus }"})</code>{" "}
+        from your review UI and the move lands in the{" "}
+        <Link to="/intelligence/conversation-arc">conversation arc</Link> — the
+        annotation becomes the durable node the arc is about, not chart chrome.
       </p>
 
       {/* ----------------------------------------------------------------- */}

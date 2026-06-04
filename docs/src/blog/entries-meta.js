@@ -20,6 +20,19 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "annotations-that-get-contested-and-heard",
+    title: "Annotations That Get Contested, and Heard",
+    subtitle:
+      "M7 and M8 finish the annotation arc: editorial status makes a note something a team can dispute, supersede, and retract — and the natural-language bridge makes every note something a non-visual reader actually encounters, in the description and in the navigation tree.",
+    author: "Elijah Meeks",
+    date: "2026-06-04",
+    tags: ["case-study", "roadmap", "accessibility"],
+    excerpt:
+      "The earlier milestones made annotations well-placed, un-crowded, legibly associated, responsive, and defensible. M7 adds the editorial half of the lifecycle — proposed / accepted / disputed / retracted, supersession chains, and conversation-arc events — so a note becomes the durable node a team argues over. M8 closes the loop with the reader: annotations lead the chart description and get their own branch in the navigation tree, so a screen-reader user meets the author's intent head-on.",
+    ogChart: { component: "LineChart" },
+    draft: true,
+  },
+  {
     slug: "annotations-that-adapt-and-travel",
     title: "Annotations That Adapt and Travel",
     subtitle:

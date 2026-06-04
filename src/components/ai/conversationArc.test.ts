@@ -4,8 +4,11 @@ import {
   enableConversationArc,
   getConversationArcStore,
   recordAudienceChange,
+  recordAnnotationStatusChange,
+  type AnnotationStatusChangedEvent,
   type ConversationArcEvent,
 } from "./conversationArc"
+import { summarizeArc } from "./useConversationArc"
 
 afterEach(() => {
   // Tests share module-scope state — reset between cases so order
@@ -278,5 +281,35 @@ describe("conversationArc — recordAudienceChange convenience", () => {
 
   it("returns null when the store is disabled", () => {
     expect(recordAudienceChange("executive")).toBeNull()
+  })
+})
+
+describe("recordAnnotationStatusChange (M7)", () => {
+  it("records an annotation-status-changed event when enabled", () => {
+    enableConversationArc({ sessionId: "s" })
+    const event = recordAnnotationStatusChange("disputed", {
+      annotationId: "claim-1",
+      fromStatus: "proposed",
+      chartId: "chart-7",
+    }) as AnnotationStatusChangedEvent | null
+    expect(event?.type).toBe("annotation-status-changed")
+    expect(event?.toStatus).toBe("disputed")
+    expect(event?.fromStatus).toBe("proposed")
+    expect(event?.annotationId).toBe("claim-1")
+    expect(event?.chartId).toBe("chart-7")
+  })
+
+  it("returns null when the store is disabled", () => {
+    expect(recordAnnotationStatusChange("accepted")).toBeNull()
+  })
+
+  it("does not pollute componentsSeen with status values in summarizeArc", () => {
+    enableConversationArc()
+    recordAnnotationStatusChange("disputed", { fromStatus: "proposed" })
+    const summary = summarizeArc(getConversationArcStore().getEvents())
+    // fromStatus/toStatus must not be read as chart-component names.
+    expect(summary.componentsSeen).not.toContain("disputed")
+    expect(summary.componentsSeen).not.toContain("proposed")
+    expect(summary.byType["annotation-status-changed"]).toBe(1)
   })
 })

@@ -451,6 +451,7 @@ export {
   currentTimestamp,
   computeAnnotationFreshness,
   applyAnnotationLifecycle,
+  applyAnnotationStatus,
   annotationFreshnessFor,
   bandFromAge,
   DEFAULT_LIFECYCLE_THRESHOLDS
@@ -468,6 +469,7 @@ export type {
   ComputeAnnotationFreshnessOptions,
   AnnotationLifecycleTreatment,
   ApplyAnnotationLifecycleOptions,
+  AnnotationStatusTreatment,
   LifecycleBand,
   LifecycleBandThresholds
 } from "./ai/annotationProvenance"
@@ -492,7 +494,8 @@ export {
   disableConversationArc,
   getConversationArcStore,
   subscribeToConversationArcChange,
-  recordAudienceChange
+  recordAudienceChange,
+  recordAnnotationStatusChange
 } from "./ai/conversationArc"
 export type {
   ConversationArcEvent,
@@ -512,7 +515,8 @@ export type {
   InterrogationAskedEvent,
   InterrogationAnsweredEvent,
   NavNodeFocusedEvent,
-  NavBranchExpandedEvent
+  NavBranchExpandedEvent,
+  AnnotationStatusChangedEvent
 } from "./ai/conversationArc"
 
 // AI Observation hooks

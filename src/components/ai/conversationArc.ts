@@ -15,6 +15,8 @@
 
 // ── Event Vocabulary ───────────────────────────────────────────────────
 
+import type { AnnotationStatus } from "./annotationProvenance"
+
 export type ConversationArcEventType =
   | "suggestion-shown"
   | "suggestion-chosen"
@@ -28,6 +30,7 @@ export type ConversationArcEventType =
   | "interrogation-answered"
   | "nav-node-focused"
   | "nav-branch-expanded"
+  | "annotation-status-changed"
 
 interface ConversationArcEventBase {
   /** Discriminator for the event variant. */
@@ -182,6 +185,28 @@ export interface NavBranchExpandedEvent extends ConversationArcEventBase {
   expanded: boolean
 }
 
+/**
+ * An annotation's editorial status transitioned (M7). The accept / dispute /
+ * retract / propose flow is what turns an annotation into the durable,
+ * observable node of the conversation arc (IDID §13.4): the note is the unit
+ * the arc is *about*, not chart chrome.
+ *
+ * `fromStatus`/`toStatus` are deliberately not named `from`/`to` — `summarizeArc`
+ * reads `from`/`to` as chart-component names (the `chart-replaced` shape), so a
+ * status value there would pollute `componentsSeen`.
+ */
+export interface AnnotationStatusChangedEvent extends ConversationArcEventBase {
+  type: "annotation-status-changed"
+  /** `provenance.stableId` of the annotation whose status changed, when known. */
+  annotationId?: string
+  /** Previous editorial status, if known. */
+  fromStatus?: AnnotationStatus
+  /** New editorial status. */
+  toStatus: AnnotationStatus
+  /** `chartId` of the chart carrying the annotation, when correlated. */
+  chartId?: string
+}
+
 export type ConversationArcEvent =
   | SuggestionShownEvent
   | SuggestionChosenEvent
@@ -195,6 +220,7 @@ export type ConversationArcEvent =
   | InterrogationAnsweredEvent
   | NavNodeFocusedEvent
   | NavBranchExpandedEvent
+  | AnnotationStatusChangedEvent
 
 /**
  * Input shape accepted by `record()`: the event variant without the
@@ -364,6 +390,33 @@ export function recordAudienceChange(
     audience,
     previous: previous ?? undefined,
     ...extra,
+  })
+}
+
+/**
+ * Sugar for an `annotation-status-changed` event (M7). Call it from the
+ * accept / dispute / retract / propose UI so the arc records how an
+ * annotation's editorial standing moved — the durable, observable node of the
+ * conversation. No-op (returns null) until `enableConversationArc()`.
+ */
+export function recordAnnotationStatusChange(
+  toStatus: AnnotationStatus,
+  opts?: {
+    annotationId?: string
+    fromStatus?: AnnotationStatus
+    chartId?: string
+    arcId?: string
+    meta?: Record<string, unknown>
+  }
+): ConversationArcEvent | null {
+  return facade.record({
+    type: "annotation-status-changed",
+    toStatus,
+    annotationId: opts?.annotationId,
+    fromStatus: opts?.fromStatus,
+    chartId: opts?.chartId,
+    arcId: opts?.arcId,
+    meta: opts?.meta,
   })
 }
 
