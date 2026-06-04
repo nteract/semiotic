@@ -137,7 +137,7 @@ const treated = applyAnnotationStatus(
       <p>
         It also resolves supersession (a note replaced by a present, non-retracted
         revision is hidden), and the transitions are <em>observable</em>:{" "}
-        <code>recordAnnotationStatusChange("disputed", {`{ annotationId, fromStatus }`})</code>{" "}
+        <code>recordAnnotationStatusChange("disputed", {"{ annotationId, fromStatus }"})</code>{" "}
         drops an event into the{" "}
         <Link to="/intelligence/conversation-arc">conversation arc</Link>. That's
         the point where an annotation stops being chart chrome and becomes the
