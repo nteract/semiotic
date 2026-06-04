@@ -26,10 +26,11 @@ export interface AnnotationLayoutConfig {
    */
   density?: boolean | AnnotationDensityConfig
   /**
-   * M3 — progressive disclosure. When `true`, density-deferred notes are kept
-   * in the output tagged `_annotationDeferred` (hidden by default, revealed on
-   * chart hover/focus) instead of dropped. Requires `density`. The persistent
-   * set is always rendered, so a non-hover reader still sees the core notes.
+   * M3 — progressive disclosure. When `true`, notes shed by `density` (M3) or
+   * the `responsive` breakpoint (M5) are kept in the output tagged
+   * `_annotationDeferred` (hidden by default, revealed on chart hover/focus)
+   * instead of dropped. The persistent set is always rendered, so a non-hover
+   * reader still sees the core notes. No effect unless a shedding pass is on.
    */
   progressiveDisclosure?: boolean
   /**
@@ -163,6 +164,9 @@ function applyVisibleProvenance(a: Datum): Datum {
       ? `${Math.round(Math.max(0, Math.min(1, prov.confidence)) * 100)}%`
       : null
   if (!source && !confidence) return a
+  // Only a string (or absent) label can carry the appended marker — never
+  // clobber a ReactNode / structured label.
+  if (a.label != null && typeof a.label !== "string") return a
   const marker = [source, confidence].filter(Boolean).join(" · ")
   const base = typeof a.label === "string" ? a.label : ""
   // Idempotent: the layout pass reads clean author input each render, but guard
@@ -493,8 +497,10 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
         ? densityConfig
         : {
             ...densityConfig,
+            // Clamp to 0, not 1: an explicit `maxAnnotations: 0` is a valid cap
+            // (callers can lean on `minVisible` alone), so scaling must preserve it.
             maxAnnotations: Math.max(
-              1,
+              0,
               Math.round((densityConfig.maxAnnotations ?? annotationBudget(width, height, densityConfig)) * factor)
             ),
           }
@@ -502,8 +508,9 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     for (const a of deferred) toShed.add(a)
   }
 
-  // M5 — responsive: as the plot narrows past the breakpoint, shed
-  // `secondary`-emphasis notes by importance. Primary and unmarked notes stay.
+  // M5 — responsive: once the plot narrows past the breakpoint, shed the
+  // lower-importance tier — every `secondary`-emphasis note — while keeping
+  // `primary` and unmarked notes.
   if (responsive) {
     const minWidth =
       typeof responsive === "object" && typeof responsive.minWidth === "number"

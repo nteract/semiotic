@@ -250,6 +250,16 @@ describe("annotationLayout", () => {
     expect(placed.label).toBe("Plain")
   })
 
+  it("never clobbers a non-string (ReactNode) label when stamping provenance", () => {
+    const node = { $$typeof: Symbol.for("react.element"), type: "span" } as unknown
+    const annotations: Datum[] = [
+      { type: "label", x: 50, y: 50, label: node, defensive: true, provenance: { source: "ai", confidence: 0.7 } },
+    ]
+    const [placed] = annotationLayout({ annotations, context: context(), density: true })
+    // Structured label left intact; the marker is not appended.
+    expect(placed.label).toBe(node)
+  })
+
   // ── M6: audience biases amount via the density budget ────────────────
   const audienceNotes = (): Datum[] =>
     Array.from({ length: 8 }, (_, i) => ({ type: "label", x: 50, y: 50, label: `n${i}` }))
