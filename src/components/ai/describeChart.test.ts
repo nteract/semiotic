@@ -291,4 +291,24 @@ describe("describeChart — author annotations", () => {
     expect(many.annotations).toContain("7 features")
     expect(many.annotations).toContain("and 2 more")
   })
+
+  it("describes only the current editorial annotation set", () => {
+    const r = describeChart(
+      "LineChart",
+      {
+        data,
+        xAccessor: "month",
+        yAccessor: "sales",
+        annotations: [
+          { type: "callout", label: "Old", provenance: { stableId: "claim-1" } },
+          { type: "callout", label: "Current", provenance: { stableId: "claim-2" }, lifecycle: { supersedes: "claim-1" } },
+          { type: "callout", label: "Withdrawn", lifecycle: { status: "retracted" } },
+        ],
+      },
+      { levels: ["l1"] }
+    )
+    expect(r.annotations).toContain('"Current"')
+    expect(r.annotations).not.toContain('"Old"')
+    expect(r.annotations).not.toContain('"Withdrawn"')
+  })
 })

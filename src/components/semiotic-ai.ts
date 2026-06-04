@@ -452,6 +452,7 @@ export {
   computeAnnotationFreshness,
   applyAnnotationLifecycle,
   applyAnnotationStatus,
+  filterAnnotationsByStatus,
   annotationFreshnessFor,
   bandFromAge,
   DEFAULT_LIFECYCLE_THRESHOLDS
@@ -470,6 +471,7 @@ export type {
   AnnotationLifecycleTreatment,
   ApplyAnnotationLifecycleOptions,
   AnnotationStatusTreatment,
+  AnnotationStatusVisibility,
   LifecycleBand,
   LifecycleBandThresholds
 } from "./ai/annotationProvenance"

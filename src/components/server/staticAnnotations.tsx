@@ -7,6 +7,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  */
 
 import * as React from "react"
+import Annotation from "../Annotation"
 import type { SemioticTheme } from "../store/ThemeStore"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationHierarchy"
 import type { AnnotationContext } from "../realtime/types"
@@ -288,23 +289,53 @@ function renderAnnotation(
     }
 
     case "label":
+    case "callout":
+    case "callout-circle":
+    case "callout-rect":
     case "text": {
       // Use resolveCoords so geo annotations with `coordinates: [lon, lat]`
       // and network annotations with raw pixel x/y both flow through.
       const { x: px, y: py } = resolveCoords(ann, scales, xAccessor, yAccessor)
       if (px == null || py == null) return null
-      const dx = ann.dx ?? 0
-      const dy = ann.dy ?? 0
+      const isText = ann.type === "text"
+      const dx = ann.dx ?? (isText ? 0 : 30)
+      const dy = ann.dy ?? (isText ? 0 : -30)
       const color = ann.color || theme.colors.text
+      if (!isText) {
+        const renderedType = ann.type === "callout" ? "callout-circle" : ann.type
+        const subject =
+          renderedType === "callout-circle"
+            ? { radius: ann.radius ?? 12, radiusPadding: ann.radiusPadding }
+            : renderedType === "callout-rect"
+              ? { width: ann.width, height: ann.height }
+              : undefined
+        return (
+          <Annotation
+            key={`ann-label-${index}`}
+            noteData={{
+              x: px,
+              y: py,
+              dx,
+              dy,
+              note: {
+                label: ann.label,
+                title: ann.title,
+                wrap: ann.wrap || 120,
+              },
+              type: renderedType,
+              ...(subject ? { subject } : {}),
+              connector: ann.connector || { end: "arrow" },
+              color,
+              disable: ann.disable,
+              opacity: ann.opacity,
+              strokeDasharray: ann.strokeDasharray,
+              className: ann.className,
+            }}
+          />
+        )
+      }
       return (
         <g key={`ann-label-${index}`}>
-          {ann.type === "label" && (
-            <line
-              x1={px} y1={py} x2={px + dx} y2={py + dy}
-              stroke={theme.colors.textSecondary}
-              strokeWidth={1}
-            />
-          )}
           <text
             x={px + dx}
             y={py + dy}
@@ -313,6 +344,8 @@ function renderAnnotation(
             fill={color}
             fontFamily={theme.typography.fontFamily}
             fontWeight={ann.fontWeight}
+            opacity={ann.opacity}
+            strokeDasharray={ann.strokeDasharray}
           >
             {ann.label || ann.title}
           </text>

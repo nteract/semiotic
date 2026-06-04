@@ -59,8 +59,10 @@
 - [Responsive](/features/responsive): responsiveWidth, responsiveHeight
 - [Accessibility](/features/accessibility): Keyboard navigation, ARIA labels
 - [Theming](/features/theming): ThemeProvider, dark mode
-- [Annotations](/features/annotations): Labels, thresholds, trend lines, anomaly bands
-- [Advanced Annotations](/features/advanced-annotations): Widget annotations — place React elements at data coordinates for alerts, comments, actions
+- [Annotations](/annotations/overview): Labels, callouts, thresholds, placement, density, and analytical overlays
+- [Annotation Design Guidance](/annotations/design-guidance): Audience, hierarchy, placement, association, cohesion, amount, and defensive annotations
+- [Advanced Annotations](/annotations/advanced): Widget annotations — place React elements at data coordinates for alerts, comments, actions
+- [Annotation Provenance & Lifecycle](/annotations/provenance-lifecycle): Provenance, freshness, editorial status, and supersession
 - [Serialization](/features/serialization): toConfig, fromConfig, toURL, copyConfig
 
 ## AI Integration

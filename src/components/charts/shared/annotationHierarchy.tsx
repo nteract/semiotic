@@ -37,14 +37,17 @@ const INFERRED_OPACITY_STEP = 0.06
  * inside the (pointer-events:none) overlay svg is fine. Identical across charts
  * — duplicate injections are harmless.
  */
-const DISCLOSURE_REVEAL_CSS =
+export const ANNOTATION_DISCLOSURE_REVEAL_CSS =
   ".annotation-deferred{opacity:0;transition:opacity .12s ease}" +
   ".stream-xy-frame:hover .annotation-deferred," +
   ".stream-ordinal-frame:hover .annotation-deferred," +
   ".stream-network-frame:hover .annotation-deferred," +
+  ".stream-geo-frame:hover .annotation-deferred," +
   ".stream-xy-frame:focus-within .annotation-deferred," +
   ".stream-ordinal-frame:focus-within .annotation-deferred," +
-  ".stream-network-frame:focus-within .annotation-deferred{opacity:1}"
+  ".stream-network-frame:focus-within .annotation-deferred," +
+  ".stream-geo-frame:focus-within .annotation-deferred{opacity:1}" +
+  "@media (prefers-reduced-motion:reduce){.annotation-deferred{transition:none}}"
 
 /**
  * Cohesion CSS for M5. `"layer"` presents annotations as a distinct editorial
@@ -213,7 +216,7 @@ export function applyAnnotationEmphasis(
 
   if (anyDeferred) {
     rendered.unshift(
-      <style key="annotation-disclosure-style">{DISCLOSURE_REVEAL_CSS}</style>
+      <style key="annotation-disclosure-style">{ANNOTATION_DISCLOSURE_REVEAL_CSS}</style>
     )
   }
   if (anyLayerCohesion) {

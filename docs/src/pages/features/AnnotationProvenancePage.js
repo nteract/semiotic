@@ -406,6 +406,8 @@ const treated = applyAnnotationStatus(
         <li><code>computeAnnotationFreshness(annotations, options?)</code> — populate <code>lifecycle.freshness</code>.</li>
         <li><code>annotationFreshnessFor(annotation, nowMs, thresholds?)</code> — classify a single annotation.</li>
         <li><code>applyAnnotationLifecycle(annotations, options?)</code> — freshness + default visual treatment.</li>
+        <li><code>filterAnnotationsByStatus(annotations, options?)</code> — hide retracted and superseded notes without applying styles.</li>
+        <li><code>applyAnnotationStatus(annotations, options?)</code> — editorial status visibility + default visual treatment.</li>
         <li><code>bandFromAge(ageMs, ttlMs, thresholds?)</code> — the shared lifecycle-band primitive.</li>
       </ul>
 

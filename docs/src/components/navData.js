@@ -140,6 +140,7 @@ const navData = [
     path: "/annotations",
     children: [
       { title: "Overview", path: "/annotations/overview" },
+      { title: "Design Guidance", path: "/annotations/design-guidance" },
       { title: "Advanced Annotations", path: "/annotations/advanced" },
       { title: "Provenance & Lifecycle", path: "/annotations/provenance-lifecycle" }
     ]

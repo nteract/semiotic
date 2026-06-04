@@ -79,12 +79,22 @@ export function createDefaultAnnotationRules(
     context: AnnotationContext
   ): React.ReactNode | null {
     switch (ann.type) {
-      // ── Label ─────────────────────────────────────────────────────────
-      case "label": {
+      // ── Labels and callouts ───────────────────────────────────────────
+      case "label":
+      case "callout":
+      case "callout-circle":
+      case "callout-rect": {
         const pos = resolveAnchoredPosition(ann, index, context)
         if (!pos) return null
         const { x: px, y: py } = pos
         if (!isInBounds(px, py, context)) return null
+        const renderedType = ann.type === "callout" ? "callout-circle" : ann.type
+        const subject =
+          renderedType === "callout-circle"
+            ? { radius: ann.radius ?? 12, radiusPadding: ann.radiusPadding }
+            : renderedType === "callout-rect"
+              ? { width: ann.width, height: ann.height }
+              : undefined
         return (
           <Annotation
             key={`ann-${index}`}
@@ -98,37 +108,14 @@ export function createDefaultAnnotationRules(
                 title: ann.title,
                 wrap: ann.wrap || 120
               },
-              type: "label",
+              type: renderedType,
+              ...(subject ? { subject } : {}),
               connector: ann.connector || { end: "arrow" },
-              color: ann.color
-            }}
-          />
-        )
-      }
-
-      // ── Callout ───────────────────────────────────────────────────────
-      case "callout": {
-        const pos = resolveAnchoredPosition(ann, index, context)
-        if (!pos) return null
-        const { x: px, y: py } = pos
-        if (!isInBounds(px, py, context)) return null
-        return (
-          <Annotation
-            key={`ann-${index}`}
-            noteData={{
-              x: px,
-              y: py,
-              dx: ann.dx ?? 30,
-              dy: ann.dy ?? -30,
-              note: {
-                label: ann.label,
-                title: ann.title,
-                wrap: ann.wrap || 120
-              },
-              type: "callout-circle",
-              subject: { radius: ann.radius || 12 },
-              connector: ann.connector || { end: "arrow" },
-              color: ann.color
+              color: ann.color,
+              disable: ann.disable,
+              opacity: ann.opacity,
+              strokeDasharray: ann.strokeDasharray,
+              className: ann.className
             }}
           />
         )
@@ -924,6 +911,8 @@ export function createDefaultAnnotationRules(
             y={ty}
             fill={textColor}
             fontSize={ann.fontSize || 11}
+            opacity={ann.opacity}
+            strokeDasharray={ann.strokeDasharray}
             dominantBaseline="middle"
             style={{ fontFamily: "inherit" }}
           >
@@ -934,7 +923,7 @@ export function createDefaultAnnotationRules(
           return React.cloneElement(textEl, { key: `ann-text-${index}` })
         }
         return (
-          <g key={`ann-text-${index}`}>
+          <g key={`ann-text-${index}`} opacity={ann.opacity} strokeDasharray={ann.strokeDasharray}>
             <line
               x1={px}
               y1={py}
@@ -945,7 +934,7 @@ export function createDefaultAnnotationRules(
               strokeOpacity={0.5}
               style={{ pointerEvents: "none" }}
             />
-            {textEl}
+            {React.cloneElement(textEl, { opacity: undefined, strokeDasharray: undefined })}
           </g>
         )
       }

@@ -5,7 +5,11 @@ import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
-import { applyAnnotationEmphasis, type AnnotationRenderPair } from "../charts/shared/annotationHierarchy"
+import {
+  ANNOTATION_DISCLOSURE_REVEAL_CSS,
+  applyAnnotationEmphasis,
+  type AnnotationRenderPair,
+} from "../charts/shared/annotationHierarchy"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { AnnotationContext } from "../realtime/types"
 
@@ -156,9 +160,15 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         }, [])
       )
     : null
+  const hasDeferredWidget = layoutAnnotations?.some(
+    (annotation) => annotation.type === "widget" && annotation._annotationDeferred === true
+  ) === true
 
   return (
     <>
+    {hasDeferredWidget && (
+      <style key="annotation-widget-disclosure-style">{ANNOTATION_DISCLOSURE_REVEAL_CSS}</style>
+    )}
     <svg
       role="img"
       width={totalWidth}
@@ -226,11 +236,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>
-    {/* Widget annotations — rendered as HTML divs so they can overflow the SVG.
-        Widgets live outside the SVG, so the SVG-scoped progressive-disclosure
-        reveal can't hide/show them. A density-deferred widget therefore stays
-        visible rather than vanishing — keeping the note reachable is safer than
-        silently dropping it (the persistent SVG notes still carry the budget). */}
+    {/* Widget annotations — rendered as HTML divs so they can overflow the SVG. */}
     {layoutAnnotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {
       const node = sceneNodes!.find(n =>
         n.id === annotation.nodeId ||
@@ -249,7 +255,11 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         <span style={{ fontSize: 18, cursor: "default" }}>{"ℹ️"}</span>
       )
       return (
-        <div key={`widget-${i}`} style={{
+        <div
+          key={`widget-${i}`}
+          className={annotation._annotationDeferred === true ? "annotation-deferred" : undefined}
+          data-annotation-disclosure={annotation._annotationDeferred === true ? "deferred" : undefined}
+          style={{
           position: "absolute",
           left: nx + dx - w / 2,
           top: ny + dy - h / 2,

@@ -15,9 +15,9 @@
 // and the editorial-state fields (`status`, `supersedes`) live on
 // `lifecycle`, parallel to the temporal `freshness` band — the two
 // lifecycle axes are orthogonal (a note can be fresh-but-disputed or
-// stale-but-accepted). Status-driven visual treatment is owed alongside
-// the editorial-lifecycle work; the types ship first so authors and
-// agents can stamp the fields now.
+// stale-but-accepted). Status-driven visibility and visual treatment ship
+// alongside the types so visual and non-visual surfaces can agree on which
+// notes are current.
 //
 // All fields are optional. Existing annotation arrays keep working
 // unchanged — the new blocks attach to whatever annotation shape the
@@ -547,7 +547,20 @@ export function applyAnnotationLifecycle<T>(
  * present fall back to the defaults below. `null` for a value removes the
  * default rather than applying it.
  */
-export interface AnnotationStatusTreatment {
+export interface AnnotationStatusVisibility {
+  /**
+   * Keep `retracted` annotations instead of filtering them out. Default false
+   * — retracted is hidden like `expired`.
+   */
+  showRetractedAnnotations?: boolean
+  /**
+   * Keep an annotation that another *present* note supersedes. Default false
+   * — a superseded note is hidden once its replacement is in the array.
+   */
+  showSupersededAnnotations?: boolean
+}
+
+export interface AnnotationStatusTreatment extends AnnotationStatusVisibility {
   /**
    * Opacity *factor* per status, multiplied into any existing opacity so it
    * composes with the freshness treatment (run `applyAnnotationLifecycle`
@@ -560,16 +573,6 @@ export interface AnnotationStatusTreatment {
    * default `" (?)"` is the query affordance the strategy calls for.
    */
   labelSuffix?: Partial<Record<AnnotationStatus, string>>
-  /**
-   * Keep `retracted` annotations (with the retracted treatment) instead of
-   * filtering them out. Default false — retracted is hidden like `expired`.
-   */
-  showRetractedAnnotations?: boolean
-  /**
-   * Keep an annotation that another *present* note supersedes. Default false
-   * — a superseded note is hidden once its replacement is in the array.
-   */
-  showSupersededAnnotations?: boolean
 }
 
 const DEFAULT_STATUS_OPACITY: Record<AnnotationStatus, number | null> = {
@@ -603,6 +606,33 @@ function pickStatus<V>(
 }
 
 /**
+ * Apply the default editorial visibility contract without changing annotation
+ * styling. Retracted notes and notes replaced by a present revision are hidden
+ * unless explicitly requested. Shared by visual treatment, chart descriptions,
+ * and navigation trees so they expose the same current set.
+ */
+export function filterAnnotationsByStatus<T>(
+  annotations: ReadonlyArray<Annotated<T>>,
+  options: AnnotationStatusVisibility = {}
+): Annotated<T>[] {
+  const showRetracted = options.showRetractedAnnotations === true
+  const showSuperseded = options.showSupersededAnnotations === true
+
+  // stableIds that a present, non-retracted note supersedes.
+  const supersededIds = new Set<string>()
+  for (const a of annotations) {
+    const target = a?.lifecycle?.supersedes
+    if (target && a?.lifecycle?.status !== "retracted") supersededIds.add(target)
+  }
+
+  return annotations.filter((annotation) => {
+    if (annotation?.lifecycle?.status === "retracted" && !showRetracted) return false
+    const myId = annotation?.provenance?.stableId
+    return !(myId && supersededIds.has(myId) && !showSuperseded)
+  })
+}
+
+/**
  * Apply the editorial-status visual treatment (M7) — the orthogonal companion
  * to {@link applyAnnotationLifecycle}'s temporal-freshness treatment. The two
  * compose (a note can be stale-and-disputed); run freshness first, then this.
@@ -627,24 +657,9 @@ export function applyAnnotationStatus<T>(
   annotations: ReadonlyArray<Annotated<T>>,
   options: AnnotationStatusTreatment = {}
 ): Annotated<T>[] {
-  const showRetracted = options.showRetractedAnnotations === true
-  const showSuperseded = options.showSupersededAnnotations === true
-
-  // stableIds that a present, non-retracted note supersedes.
-  const supersededIds = new Set<string>()
-  for (const a of annotations) {
-    const target = a?.lifecycle?.supersedes
-    if (target && a?.lifecycle?.status !== "retracted") supersededIds.add(target)
-  }
-
   const out: Annotated<T>[] = []
-  for (const annotation of annotations) {
+  for (const annotation of filterAnnotationsByStatus(annotations, options)) {
     const status = annotation?.lifecycle?.status
-
-    if (status === "retracted" && !showRetracted) continue
-
-    const myId = annotation?.provenance?.stableId
-    if (myId && supersededIds.has(myId) && !showSuperseded) continue
 
     if (!status) {
       out.push(annotation)

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **First-class annotation design assistance for 3.7.0.** `autoPlaceAnnotations` now composes collision-aware placement, curved connector routing, density budgets, progressive disclosure, responsive shedding, redundant association cues, cohesion modes, audience-aware amount, and defensive annotations. Per-annotation `emphasis` establishes hierarchy, while provenance confidence supplies a default reading order when hierarchy is not explicit.
+- **Annotation provenance and editorial lifecycle.** `AnnotationProvenance` and `AnnotationLifecycle` carry actor, evidence, confidence, stable identity, freshness, editorial status, and supersession metadata. `applyAnnotationLifecycle`, `applyAnnotationStatus`, and `filterAnnotationsByStatus` keep visual treatment, descriptions, and structured navigation aligned on the current annotation set.
+- **Annotation reception surfaces.** `describeChart` leads with author-marked features, `buildNavigationTree` adds an Annotations branch, and the accessibility audit checks color-only note-to-target association.
+- **Annotation design guidance docs.** The first-class Annotations docs section now includes Overview, Design Guidance, Advanced Annotations, and Provenance & Lifecycle pages with live examples.
+
+### Changed
+
+- Annotation note-type semantics are centralized so layout, density, diagnostics, and accessibility checks agree on what counts as a note and which notes draw connectors.
+- Static SVG annotation rendering now uses the shared note renderer for labels and callouts, including `callout-circle` and `callout-rect`.
+
+### Fixed
+
+- `callout-circle` and `callout-rect` are now handled by the default annotation rules instead of being documented but silently skipped.
+- Label and callout rules now pass connector disable, opacity, and stroke-dasharray metadata through to the annotation renderer, allowing lifecycle and editorial status treatments to render as documented.
+- Progressive disclosure now reveals deferred annotations in geo frames and correctly hides/reveals network HTML widget annotations.
+- Colored statistical overlays are no longer misclassified as color-only annotation-to-target correspondence failures.
+
 ## [3.6.0] - 2026-05-31
 
 ### Added

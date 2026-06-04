@@ -2,6 +2,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
 import { describeChart, chartValueFormatter, annotationPhrase } from "./describeChart"
 import { XY_FAMILY, BAR_FAMILY, PART_TO_WHOLE, DISTRIBUTION, roles, seriesField, fmtDim } from "./chartRoles"
+import { filterAnnotationsByStatus } from "./annotationProvenance"
 /**
  * buildNavigationTree — turn a chart config into a structured, labeled
  * navigation tree (chart → axes/series → data points), following the Olli /
@@ -54,14 +55,14 @@ function capitalize(s: string): string {
  * author-placed note, so a screen-reader user *encounters* author intent during
  * traversal (not only when an external `focusAnnotation` fires). Reuses
  * `annotationPhrase` so the tree and the prose description speak the same
- * language, and surfaces editorial `status` (M7) inline. `retracted`
- * (withdrawn) notes are skipped. Returns null when there's nothing to surface.
+ * language, and surfaces editorial `status` (M7) inline. Retracted and
+ * superseded notes are skipped. Returns null when there's nothing to surface.
  */
 function buildAnnotationBranch(props: Datum, maxLeaves: number): NavTreeNode | null {
   const raw = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
   if (!raw) return null
-  const items = raw.filter(
-    (a) => a && typeof a === "object" && (a.lifecycle?.status as string | undefined) !== "retracted"
+  const items = filterAnnotationsByStatus(
+    raw.filter((a): a is Datum => !!a && typeof a === "object")
   )
   if (items.length === 0) return null
 

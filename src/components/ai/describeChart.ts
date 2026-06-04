@@ -4,6 +4,7 @@ import type { ChartCapability, ChartFamily } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
 import type { AudienceProfile } from "./audienceProfile"
 import { XY_FAMILY, BAR_FAMILY, PART_TO_WHOLE, DISTRIBUTION, roles, seriesField, fmtDim } from "./chartRoles"
+import { filterAnnotationsByStatus } from "./annotationProvenance"
 /**
  * describeChart — generate a layered natural-language description of a chart
  * from its `(component, props)` config, following Lundgard & Satyanarayan's
@@ -442,7 +443,9 @@ export function annotationPhrase(ann: Datum): string {
 function annotationSentence(props: Datum): string | undefined {
   const raw = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
   if (!raw || raw.length === 0) return undefined
-  const items = raw.filter((a): a is Datum => !!a && typeof a === "object")
+  const items = filterAnnotationsByStatus(
+    raw.filter((a): a is Datum => !!a && typeof a === "object")
+  )
   if (items.length === 0) return undefined
 
   const phrases = items.map(annotationPhrase)

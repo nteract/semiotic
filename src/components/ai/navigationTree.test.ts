@@ -139,6 +139,21 @@ describe("buildNavigationTree — annotations branch (M8)", () => {
     ])
   })
 
+  it("skips superseded notes in both the root description and annotation branch", () => {
+    const tree = buildNavigationTree("LineChart", {
+      data, xAccessor: "month", yAccessor: "sales",
+      annotations: [
+        { type: "callout", label: "Old", provenance: { stableId: "claim-1" } },
+        { type: "callout", label: "Current", provenance: { stableId: "claim-2" }, lifecycle: { supersedes: "claim-1" } },
+      ],
+    })
+    expect(tree.label).toContain('"Current"')
+    expect(tree.label).not.toContain('"Old"')
+    expect(annotationBranch(tree)?.children?.map((c) => c.label)).toEqual([
+      `A callout labeled "Current".`,
+    ])
+  })
+
   it("surfaces annotations even on a root-only (non-stats) family", () => {
     const tree = buildNavigationTree("ForceDirectedGraph", {
       nodes: [{ id: "a" }], edges: [],

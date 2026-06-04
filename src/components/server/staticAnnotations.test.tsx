@@ -142,6 +142,21 @@ describe("renderStaticAnnotations", () => {
       expect(svg).toContain("<line") // connector
     })
 
+    it("renders circle and rect callout subjects", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [
+          { type: "callout-circle", x: 25, y: 25, label: "Circle", radius: 16 },
+          { type: "callout-rect", x: 75, y: 75, label: "Rect", width: 30, height: 20 },
+        ],
+      })
+      expect(svg).toContain('<circle r="16"')
+      expect(svg).toContain('width="30"')
+      expect(svg).toContain('height="20"')
+      expect(svg).toContain("Circle")
+      expect(svg).toContain("Rect")
+    })
+
     it("resolves coordinates from accessors", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,
@@ -163,9 +178,10 @@ describe("renderStaticAnnotations", () => {
       const x2Match = svg.match(/x2="([^"]+)"/)
 
       expect(svg).toContain("Geo")
+      expect(svg).toContain('transform="translate(384,150)"')
       expect(x1Match).not.toBeNull()
       expect(x2Match).not.toBeNull()
-      expect(Number(x1Match![1])).toBe(384)
+      expect(Number(x1Match![1])).toBe(0)
       expect(Number(x2Match![1])).toBeLessThan(Number(x1Match![1]))
     })
 
