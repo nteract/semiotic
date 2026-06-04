@@ -46,8 +46,28 @@ const DISCLOSURE_REVEAL_CSS =
   ".stream-ordinal-frame:focus-within .annotation-deferred," +
   ".stream-network-frame:focus-within .annotation-deferred{opacity:1}"
 
+/**
+ * Cohesion CSS for M5. `"layer"` presents annotations as a distinct editorial
+ * layer — the annotation-color and an italic editorial face, overriding the
+ * mark colors notes would otherwise inherit. `"blended"` is the default look
+ * (notes keep their author/mark colors), so it needs no rule — only the class
+ * hook. The `text` selector lets the rule win over per-element `fill`
+ * attributes (CSS beats presentation attributes), recoloring note text.
+ */
+const COHESION_LAYER_CSS =
+  ".annotation-cohesion--layer text," +
+  ".annotation-cohesion--layer tspan{" +
+  "fill:var(--semiotic-annotation-color,var(--semiotic-text-secondary,#666));" +
+  "font-style:italic}"
+
 function isDeferred(annotation: Datum): boolean {
   return annotation?._annotationDeferred === true
+}
+
+function cohesionMode(annotation: Datum): "blended" | "layer" | null {
+  return annotation?.cohesion === "blended" || annotation?.cohesion === "layer"
+    ? annotation.cohesion
+    : null
 }
 
 function explicitEmphasis(annotation: Datum): AnnotationEmphasis | null {
@@ -106,8 +126,10 @@ export function applyAnnotationEmphasis(
     (r) => r.emphasis != null || r.confidence != null
   )
   const anyDeferred = pairs.some((p) => isDeferred(p.annotation))
-  // Zero-overhead path: no hierarchy signal and nothing deferred → untouched.
-  if (!anyHierarchySignal && !anyDeferred) return pairs.map((p) => p.node)
+  const anyCohesion = pairs.some((p) => cohesionMode(p.annotation) != null)
+  const anyLayerCohesion = pairs.some((p) => cohesionMode(p.annotation) === "layer")
+  // Zero-overhead path: no hierarchy signal, nothing deferred, no cohesion mode.
+  if (!anyHierarchySignal && !anyDeferred && !anyCohesion) return pairs.map((p) => p.node)
 
   const inferredReading = ranked
     .filter((r) => r.emphasis == null && r.confidence != null)
@@ -160,6 +182,18 @@ export function applyAnnotationEmphasis(
         )
       }
 
+      // M5 cohesion: tag the note so it reads as part of the chart (`blended`,
+      // the default look — class hook only) or as a distinct editorial layer
+      // (`layer` — recolored italic via COHESION_LAYER_CSS).
+      const cohesion = cohesionMode(p.annotation)
+      if (cohesion) {
+        node = (
+          <g key={`annotation-cohesion-${i}`} className={`annotation-cohesion--${cohesion}`}>
+            {node}
+          </g>
+        )
+      }
+
       // M3 progressive disclosure: a density-deferred note is wrapped in a
       // hidden group revealed on chart hover/focus (see DISCLOSURE_REVEAL_CSS).
       if (deferred) {
@@ -180,6 +214,11 @@ export function applyAnnotationEmphasis(
   if (anyDeferred) {
     rendered.unshift(
       <style key="annotation-disclosure-style">{DISCLOSURE_REVEAL_CSS}</style>
+    )
+  }
+  if (anyLayerCohesion) {
+    rendered.unshift(
+      <style key="annotation-cohesion-style">{COHESION_LAYER_CSS}</style>
     )
   }
 

@@ -1,7 +1,7 @@
 import type { AnnotationContext } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAnchoredPosition } from "../charts/shared/annotationResolvers"
-import { annotationDensity, type AnnotationDensityConfig } from "./annotationDensity"
+import { annotationDensity, annotationBudget, type AnnotationDensityConfig } from "./annotationDensity"
 
 export interface AnnotationLayoutConfig {
   /** Distance from the anchor for the first candidate ring. */
@@ -26,10 +26,11 @@ export interface AnnotationLayoutConfig {
    */
   density?: boolean | AnnotationDensityConfig
   /**
-   * M3 — progressive disclosure. When `true`, density-deferred notes are kept
-   * in the output tagged `_annotationDeferred` (hidden by default, revealed on
-   * chart hover/focus) instead of dropped. Requires `density`. The persistent
-   * set is always rendered, so a non-hover reader still sees the core notes.
+   * M3 — progressive disclosure. When `true`, notes shed by `density` (M3) or
+   * the `responsive` breakpoint (M5) are kept in the output tagged
+   * `_annotationDeferred` (hidden by default, revealed on chart hover/focus)
+   * instead of dropped. The persistent set is always rendered, so a non-hover
+   * reader still sees the core notes. No effect unless a shedding pass is on.
    */
   progressiveDisclosure?: boolean
   /**
@@ -41,6 +42,41 @@ export interface AnnotationLayoutConfig {
    * anchor to the text: a spatial cue, not another color. Off by default.
    */
   redundantCues?: boolean
+  /**
+   * M5 — responsive annotation behavior. As the plot narrows past `minWidth`
+   * (default 480px), `secondary`-emphasis notes are shed by *importance* — a
+   * complement to `density`'s count budget. Pass `true` for the default
+   * breakpoint or `{ minWidth }` to tune it. With `progressiveDisclosure`,
+   * shed notes are deferred (revealable) rather than dropped. Primary and
+   * unmarked notes are always kept. Off by default.
+   */
+  responsive?: boolean | { minWidth?: number }
+  /**
+   * M5 — cohesion mode (Rahman et al.'s "Cohesion"). `"blended"` lets notes
+   * adopt the chart's visual language (mark colors / chart typography — the
+   * default look); `"layer"` presents them as a distinct editorial layer
+   * (annotation-color, italic editorial type). Stamped onto note-like
+   * annotations that don't set their own `cohesion`; a per-annotation
+   * `cohesion` always wins. Off (inherit) by default.
+   */
+  cohesion?: AnnotationCohesion
+  /**
+   * M6 — audience adaptation. An `AudienceProfile` (structurally, anything with
+   * a `familiarity` map) biases annotation *amount*: a low-familiarity audience
+   * keeps more notes (orienting context), an expert audience fewer. It scales
+   * the `density` budget, so it only takes effect when `density` is engaged.
+   */
+  audience?: AnnotationAudience
+}
+
+export type AnnotationCohesion = "blended" | "layer"
+
+/** Structural subset of `AudienceProfile` the annotation layer reads — anything
+ *  with a per-chart `familiarity` map satisfies it, so a real `AudienceProfile`
+ *  can be passed directly without coupling `recipes` to the `ai` module. */
+export interface AnnotationAudience {
+  name?: string
+  familiarity?: Partial<Record<string, number>>
 }
 
 export type AutoPlaceAnnotationsConfig = AnnotationLayoutConfig
@@ -78,6 +114,80 @@ function rendererOffset(a: Datum): Candidate {
 // Below this the text effectively sits on its anchor, so color isn't doing
 // any cross-chart association work and a connector would just be noise.
 const REDUNDANT_CUE_MIN_OFFSET = 8
+
+// M5 — plot width (px) at or below which responsive shedding kicks in.
+const DEFAULT_RESPONSIVE_MIN_WIDTH = 480
+
+// M6 — neutral familiarity (1..5 scale) when an audience declares none.
+const NEUTRAL_FAMILIARITY = 3
+
+/** Aggregate an audience's per-chart familiarity into one 1..5 number. The
+ *  annotation layer is chart-agnostic, so it reads the audience's overall
+ *  literacy (the mean of declared familiarities), defaulting to neutral. */
+function aggregateFamiliarity(audience: AnnotationAudience | undefined): number {
+  const map = audience?.familiarity
+  if (!map) return NEUTRAL_FAMILIARITY
+  const values = Object.values(map).filter((v): v is number => typeof v === "number" && Number.isFinite(v))
+  if (values.length === 0) return NEUTRAL_FAMILIARITY
+  return values.reduce((sum, v) => sum + v, 0) / values.length
+}
+
+/** Map aggregate familiarity to a density-budget multiplier: a low-familiarity
+ *  audience keeps more orienting notes (×1.5), an expert audience fewer (×0.6). */
+function audienceBudgetFactor(audience: AnnotationAudience | undefined): number {
+  if (!audience) return 1
+  const fam = aggregateFamiliarity(audience)
+  if (fam <= 2) return 1.5
+  if (fam >= 4) return 0.6
+  return 1
+}
+
+const SOURCE_LABELS: Record<string, string> = {
+  ai: "AI",
+  agent: "agent",
+  watcher: "watcher",
+  system: "system",
+  import: "imported",
+  computed: "computed",
+  user: "you",
+}
+
+/** M6 — make a traveling note's provenance visible on the chart itself, so a
+ *  screenshot stripped of metadata still says who made the note and how sure
+ *  they were. Appends `(AI · 70%)`-style text to the note's label. */
+function applyVisibleProvenance(a: Datum): Datum {
+  const prov = a?.provenance
+  if (!prov || typeof prov !== "object") return a
+  const source = typeof prov.source === "string" ? (SOURCE_LABELS[prov.source] ?? prov.source) : null
+  const confidence =
+    typeof prov.confidence === "number" && Number.isFinite(prov.confidence)
+      ? `${Math.round(Math.max(0, Math.min(1, prov.confidence)) * 100)}%`
+      : null
+  if (!source && !confidence) return a
+  // Only a string (or absent) label can carry the appended marker — never
+  // clobber a ReactNode / structured label.
+  if (a.label != null && typeof a.label !== "string") return a
+  const marker = [source, confidence].filter(Boolean).join(" · ")
+  const base = typeof a.label === "string" ? a.label : ""
+  // Idempotent: the layout pass reads clean author input each render, but guard
+  // against a note already carrying the marker.
+  if (base.includes(`(${marker})`)) return a
+  return { ...a, label: base ? `${base} (${marker})` : `(${marker})` }
+}
+
+/** Stamp a chart-wide cohesion mode onto note-like annotations that don't set
+ *  their own. A per-annotation `cohesion` always wins; the renderer reads the
+ *  resolved value to apply the visual treatment. */
+function applyCohesion(annotations: Datum[], cohesion: AnnotationCohesion): Datum[] {
+  let changed = false
+  const next = annotations.map((a) => {
+    if (!isPlaceableAnnotation(a)) return a
+    if (a.cohesion === "blended" || a.cohesion === "layer") return a
+    changed = true
+    return { ...a, cohesion }
+  })
+  return changed ? next : annotations
+}
 
 /** A colored `text` note offset from its anchor ties to its target by color
  *  alone — the renderer draws no connector for `text`. Flag it so the text
@@ -275,6 +385,9 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     density,
     progressiveDisclosure = false,
     redundantCues = false,
+    responsive,
+    cohesion,
+    audience,
   } = options
 
   const width = context.width || 0
@@ -355,26 +468,82 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     placed = cued ? next : placedRaw
   }
 
-  // M3 — density management runs after placement (it needs to know what landed
-  // before deciding what to shed). Off unless `density` is configured.
-  if (!density) return placed
+  // M6 — defensive/traveling notes carry their provenance *visibly* (source +
+  // confidence baked into the label) so a screenshot stripped of metadata still
+  // shows who made the note and how sure they were.
+  {
+    let stamped = false
+    const next = placed.map((a) => {
+      if (a?.defensive !== true) return a
+      const enriched = applyVisibleProvenance(a)
+      if (enriched !== a) stamped = true
+      return enriched
+    })
+    placed = stamped ? next : placed
+  }
 
-  const densityConfig = typeof density === "object" ? density : {}
-  const { visible, deferred } = annotationDensity({
-    annotations: placed,
-    width,
-    height,
-    ...densityConfig,
-  })
+  // ── Shedding — density (M3, by count) + responsive (M5, by importance) ──
+  // Both run after placement (they need to know what landed) and pool their
+  // verdicts into one shed set so a note shed by either is handled once.
+  const toShed = new Set<Datum>()
 
-  if (deferred.length === 0) return placed
-  if (!progressiveDisclosure) return visible
+  if (density) {
+    const densityConfig = typeof density === "object" ? density : {}
+    // M6 — audience biases amount by scaling the budget: a low-familiarity
+    // audience keeps more orienting notes, an expert audience fewer.
+    const factor = audienceBudgetFactor(audience)
+    const scaledConfig =
+      factor === 1
+        ? densityConfig
+        : {
+            ...densityConfig,
+            // Clamp to 0, not 1: an explicit `maxAnnotations: 0` is a valid cap
+            // (callers can lean on `minVisible` alone), so scaling must preserve it.
+            maxAnnotations: Math.max(
+              0,
+              Math.round((densityConfig.maxAnnotations ?? annotationBudget(width, height, densityConfig)) * factor)
+            ),
+          }
+    const { deferred } = annotationDensity({ annotations: placed, width, height, ...scaledConfig })
+    for (const a of deferred) toShed.add(a)
+  }
 
-  // Progressive disclosure: keep deferred notes, tagged so the SVG overlay
-  // hides them until the chart is hovered/focused. The persistent (`visible`)
-  // set is always rendered — the floor that a non-hover reader still receives.
-  const deferredSet = new Set<Datum>(deferred)
-  return placed.map((annotation) =>
-    deferredSet.has(annotation) ? { ...annotation, _annotationDeferred: true } : annotation
-  )
+  // M5 — responsive: once the plot narrows past the breakpoint, shed the
+  // lower-importance tier — every `secondary`-emphasis note — while keeping
+  // `primary` and unmarked notes.
+  if (responsive) {
+    const minWidth =
+      typeof responsive === "object" && typeof responsive.minWidth === "number"
+        ? responsive.minWidth
+        : DEFAULT_RESPONSIVE_MIN_WIDTH
+    if (width <= minWidth) {
+      for (const a of placed) {
+        if (isPlaceableAnnotation(a) && a.emphasis === "secondary") toShed.add(a)
+      }
+    }
+  }
+
+  // M6 — a defensive note is never shed by any pass (the traveling-caveat
+  // guarantee). annotationDensity already floors it; this also covers the
+  // responsive pass and any future shed source.
+  if (toShed.size > 0) {
+    for (const a of placed) {
+      if (a?.defensive === true) toShed.delete(a)
+    }
+  }
+
+  // Finalize: drop or (under progressive disclosure) defer the shed notes,
+  // then stamp the cohesion mode onto the survivors.
+  let result: Datum[]
+  if (toShed.size === 0) {
+    result = placed
+  } else if (progressiveDisclosure) {
+    // Keep shed notes tagged so the SVG overlay hides them until hover/focus —
+    // the kept set is the floor a non-hover reader still receives.
+    result = placed.map((a) => (toShed.has(a) ? { ...a, _annotationDeferred: true } : a))
+  } else {
+    result = placed.filter((a) => !toShed.has(a))
+  }
+
+  return cohesion ? applyCohesion(result, cohesion) : result
 }

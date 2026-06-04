@@ -60,6 +60,22 @@ describe("annotationDensity", () => {
     expect(deferred.map((a) => a.label)).toContain("secondary")
   })
 
+  it("never sheds a defensive note, even over budget (M6 traveling caveat)", () => {
+    const annotations = [
+      note("plain A"),
+      note("plain B"),
+      note("caveat", { defensive: true }),
+    ]
+    const { visible, deferred } = annotationDensity({
+      annotations,
+      width: 100,
+      height: 100,
+      maxAnnotations: 1,
+    })
+    expect(visible.map((a) => a.label)).toContain("caveat")
+    expect(deferred.map((a) => a.label)).not.toContain("caveat")
+  })
+
   it("ranks fresher notes above stale ones at equal emphasis", () => {
     const annotations = [
       note("stale", { lifecycle: { freshness: "stale" } }),

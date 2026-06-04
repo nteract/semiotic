@@ -61,6 +61,7 @@ import NavigatingAChartYouCantSee from "./entries/navigating-a-chart-you-cant-se
 import WhatAnAnnotationShouldCarry from "./entries/what-an-annotation-should-carry.js"
 import AnnotationsThatLeadAndLand from "./entries/annotations-that-lead-and-land.js"
 import AnnotationsThatMakeRoomAndMakeSense from "./entries/annotations-that-make-room-and-make-sense.js"
+import AnnotationsThatAdaptAndTravel from "./entries/annotations-that-adapt-and-travel.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -68,6 +69,7 @@ import AnnotationsThatMakeRoomAndMakeSense from "./entries/annotations-that-make
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  AnnotationsThatAdaptAndTravel,
   AnnotationsThatMakeRoomAndMakeSense,
   AnnotationsThatLeadAndLand,
   WhatAnAnnotationShouldCarry,
