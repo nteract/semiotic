@@ -238,6 +238,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     </svg>
     {/* Widget annotations — rendered as HTML divs so they can overflow the SVG. */}
     {layoutAnnotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {
+      const isDeferred = annotation._annotationDeferred === true
       const node = sceneNodes!.find(n =>
         n.id === annotation.nodeId ||
         (n.datum?.id === annotation.nodeId) ||
@@ -257,20 +258,20 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       return (
         <div
           key={`widget-${i}`}
-          className={annotation._annotationDeferred === true ? "annotation-deferred" : undefined}
-          data-annotation-disclosure={annotation._annotationDeferred === true ? "deferred" : undefined}
+          className={isDeferred ? "annotation-deferred" : undefined}
+          data-annotation-disclosure={isDeferred ? "deferred" : undefined}
           style={{
-          position: "absolute",
-          left: nx + dx - w / 2,
-          top: ny + dy - h / 2,
-          width: w,
-          height: h,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          pointerEvents: "auto",
-          zIndex: 5,
-        }}>
+            position: "absolute",
+            left: nx + dx - w / 2,
+            top: ny + dy - h / 2,
+            width: w,
+            height: h,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 5,
+          }}
+        >
           {content}
         </div>
       )

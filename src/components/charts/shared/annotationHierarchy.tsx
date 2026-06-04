@@ -38,7 +38,7 @@ const INFERRED_OPACITY_STEP = 0.06
  * — duplicate injections are harmless.
  */
 export const ANNOTATION_DISCLOSURE_REVEAL_CSS =
-  ".annotation-deferred{opacity:0;transition:opacity .12s ease}" +
+  ".annotation-deferred{opacity:0;pointer-events:none;transition:opacity .12s ease}" +
   ".stream-xy-frame:hover .annotation-deferred," +
   ".stream-ordinal-frame:hover .annotation-deferred," +
   ".stream-network-frame:hover .annotation-deferred," +
@@ -46,7 +46,7 @@ export const ANNOTATION_DISCLOSURE_REVEAL_CSS =
   ".stream-xy-frame:focus-within .annotation-deferred," +
   ".stream-ordinal-frame:focus-within .annotation-deferred," +
   ".stream-network-frame:focus-within .annotation-deferred," +
-  ".stream-geo-frame:focus-within .annotation-deferred{opacity:1}" +
+  ".stream-geo-frame:focus-within .annotation-deferred{opacity:1;pointer-events:auto}" +
   "@media (prefers-reduced-motion:reduce){.annotation-deferred{transition:none}}"
 
 /**

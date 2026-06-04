@@ -59,6 +59,10 @@ describe("NetworkSVGOverlay", () => {
     const deferred = container.querySelector(".annotation-deferred")
     expect(deferred).not.toBeNull()
     expect(deferred?.getAttribute("data-annotation-disclosure")).toBe("deferred")
-    expect(container.querySelector("style")?.textContent).toContain(".stream-network-frame")
+    expect((deferred as HTMLElement | null)?.style.pointerEvents).toBe("")
+    const css = container.querySelector("style")?.textContent ?? ""
+    expect(css).toContain(".stream-network-frame")
+    expect(css).toContain("pointer-events:none")
+    expect(css).toContain("pointer-events:auto")
   })
 })
