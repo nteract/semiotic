@@ -487,7 +487,7 @@ export default function AnnotationsPage() {
 
       <p>
         When a chart carries several annotations, give one a clear lead. Any
-        annotation accepts <code>emphasis: "primary" | "secondary"</code> — the
+        annotation accepts <code>emphasis: &quot;primary&quot; | &quot;secondary&quot;</code> — the
         same token charts use for dashboard hierarchy. A <code>secondary</code>{" "}
         annotation dims and yields z-order; a <code>primary</code> one paints at
         full weight and on top. If <code>emphasis</code> is omitted but
@@ -500,6 +500,13 @@ export default function AnnotationsPage() {
         dim composes with the freshness treatment from{" "}
         <Link to="/annotations/provenance-lifecycle">Provenance &amp; Lifecycle</Link>{" "}
         — a stale, secondary note becomes the quietest mark on the chart.
+      </p>
+      <p>
+        This treatment runs through the shared annotation render pass, so custom
+        SVG rules, stream overlays, and static SVG output all resolve hierarchy
+        the same way. The accessibility audit also credits explicit hierarchy
+        signals and warns when a multi-annotation chart has no declared reading
+        order.
       </p>
 
       <LiveExample
@@ -549,6 +556,16 @@ export default function AnnotationsPage() {
         authoritative by default, and <code>svgAnnotationRules</code> remains
         the full escape hatch.
       </p>
+      <p>
+        Pass <code>true</code> for the default greedy layout, or an object to tune
+        the recipe: <code>defaultOffset</code>, <code>notePadding</code>,{" "}
+        <code>markPadding</code>, <code>edgePadding</code>,{" "}
+        <code>preserveManualOffsets</code>, <code>routeLongConnectors</code>, and{" "}
+        <code>connectorThreshold</code>. The same pure function is exported from{" "}
+        <code>semiotic/recipes</code> as <code>annotationLayout</code>, so authors
+        who need tighter control can run it themselves before passing
+        annotations to a frame.
+      </p>
 
       <LiveExample
         frameProps={{
@@ -588,6 +605,80 @@ export default function AnnotationsPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Density & Progressive Disclosure */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="density">Density &amp; Progressive Disclosure</h2>
+
+      <p>
+        Too many notes is its own failure mode. Add a <code>density</code> key to{" "}
+        <code>autoPlaceAnnotations</code> and Semiotic sheds the lowest-priority
+        note annotations once they outgrow what the plot area carries
+        comfortably. Priority reads the signals you already set: an{" "}
+        <code>emphasis: &quot;primary&quot;</code> note is the floor and is never
+        shed, <code>provenance.confidence</code> breaks ties, and a stale or{" "}
+        <code>expired</code> <code>lifecycle.freshness</code> is dropped first.
+        Reference lines, bands, and statistical overlays never count toward the
+        budget — only explanatory notes do.
+      </p>
+      <p>
+        Pass <code>density: true</code> for the area-derived budget (about one
+        note per 20&nbsp;000&nbsp;px²) or an object to tune it —{" "}
+        <code>maxAnnotations</code> for a hard cap, <code>areaPerAnnotation</code>,{" "}
+        and <code>minVisible</code>. Add <code>progressiveDisclosure: true</code>{" "}
+        to keep the shed notes in the DOM, hidden until the chart is hovered or
+        focused, instead of dropping them — the persistent set stays the floor a
+        non-hover reader always sees. The pure split is exported from{" "}
+        <code>semiotic/recipes</code> as <code>annotationDensity</code> (returns{" "}
+        <code>{`{ visible, deferred, budget }`}</code>) alongside{" "}
+        <code>annotationBudget</code>, and <code>diagnoseConfig</code> raises an
+        advisory <code>ANNOTATION_DENSITY</code> warning when notes exceed the
+        budget.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "X Value",
+          yLabel: "Y Value",
+          pointIdAccessor: "label",
+          autoPlaceAnnotations: { density: { maxAnnotations: 3 } },
+          annotations: [
+            { type: "callout", pointId: "F", label: "Primary insight (always kept)", emphasis: "primary", radius: 14 },
+            { type: "label", pointId: "A", label: "Note A" },
+            { type: "label", pointId: "B", label: "Note B" },
+            { type: "label", pointId: "C", label: "Note C" },
+            { type: "label", pointId: "D", label: "Note D" },
+            { type: "label", pointId: "E", label: "Note E" },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { x: 10, y: 20, label: "A" },
+  { x: 25, y: 35, label: "B" },
+  { x: 40, y: 15, label: "C" },
+  { x: 55, y: 45, label: "D" },
+  { x: 70, y: 30, label: "E" },
+  { x: 85, y: 50, label: "F" }
+]`,
+          pointIdAccessor: `"label"`,
+          autoPlaceAnnotations: `{ density: { maxAnnotations: 3 } }`,
+          annotations: `[
+  { type: "callout", pointId: "F", label: "Primary insight (always kept)", emphasis: "primary", radius: 14 },
+  { type: "label", pointId: "A", label: "Note A" },
+  { type: "label", pointId: "B", label: "Note B" },
+  { type: "label", pointId: "C", label: "Note C" },
+  { type: "label", pointId: "D", label: "Note D" },
+  { type: "label", pointId: "E", label: "Note E" }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Curved Connectors */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="connectors">Curved Connectors</h2>
@@ -598,7 +689,7 @@ export default function AnnotationsPage() {
         <code>{`connector: { type: "curve" }`}</code>. The{" "}
         <code>curve</code> value controls how far it bows — a fraction of the
         connector length, default <code>0.25</code>; negate it to bow the other
-        way — and the arrowhead re-aligns to the curve's tangent. Below, the
+        way — and the arrowhead re-aligns to the curve&apos;s tangent. Below, the
         same callout is drawn with a straight and a curved connector.
       </p>
 
@@ -806,7 +897,7 @@ export default function AnnotationsPage() {
 
       <p>
         The <code>anomaly-band</code> annotation computes the mean and standard
-        deviation of your y-values, shades the "normal" range (mean ± N×σ), and
+        deviation of your y-values, shades the &quot;normal&quot; range (mean ± N×σ), and
         highlights individual outlier points that fall outside. Adjust{" "}
         <code>threshold</code> to control how many standard deviations define
         the boundary — the default is 2.
@@ -862,7 +953,7 @@ export default function AnnotationsPage() {
       <h3 id="loess">LOESS Smoothing</h3>
 
       <p>
-        For non-linear data, use <code>method: "loess"</code> on a{" "}
+        For non-linear data, use <code>method: &quot;loess&quot;</code> on a{" "}
         <code>trend</code> annotation. LOESS (Locally Weighted Scatterplot
         Smoothing) fits a local weighted regression at each point, producing a
         smooth curve that follows complex patterns better than a straight line.
@@ -1064,7 +1155,7 @@ export default function AnnotationsPage() {
       <p>
         Statistical annotations like <code>anomaly-band</code> work naturally
         on streaming charts — the band recomputes from the current window buffer
-        each frame, so the "normal" range adapts as data arrives. Outlier points
+        each frame, so the &quot;normal&quot; range adapts as data arrives. Outlier points
         are highlighted in real time as they enter the window.
       </p>
 

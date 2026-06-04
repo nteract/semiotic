@@ -107,6 +107,53 @@ describe("applyAnnotationEmphasis", () => {
     expect(propsOf(out[0]).className).toContain("annotation-emphasis--secondary")
     expect(propsOf(out[2]).className).toContain("annotation-emphasis--primary")
   })
+
+  describe("progressive disclosure (M3 density-deferred)", () => {
+    const deferredPair = (id: string): AnnotationRenderPair => ({
+      node: <g key={id} data-id={id} />,
+      annotation: { type: "label", _annotationDeferred: true } as Datum,
+    })
+
+    it("wraps deferred notes in a hidden, revealable group and injects reveal CSS", () => {
+      const out = applyAnnotationEmphasis([pair("keep"), deferredPair("hidden")])
+
+      // A <style> tag is prepended once when anything is deferred.
+      const style = out.find((n) => React.isValidElement(n) && n.type === "style")
+      expect(style).toBeDefined()
+      const css = String((propsOf(style).children) ?? "")
+      expect(css).toContain(".annotation-deferred")
+      expect(css).toContain(":hover")
+      expect(css).toContain(":focus-within")
+
+      // The deferred node is wrapped with the reveal class + disclosure attr.
+      const wrapped = out.find((n) => propsOf(n).className === "annotation-deferred")
+      expect(wrapped).toBeDefined()
+      expect(innerId(wrapped)).toBe("hidden")
+
+      // The persistent note is untouched (the floor a non-hover reader sees).
+      const persistent = out.find((n) => propsOf(n)["data-id"] === "keep")
+      expect(persistent).toBeDefined()
+    })
+
+    it("composes emphasis and deferral on the same note", () => {
+      const both: AnnotationRenderPair = {
+        node: <g key="x" data-id="x" />,
+        annotation: { type: "label", emphasis: "secondary", _annotationDeferred: true } as Datum,
+      }
+      const out = applyAnnotationEmphasis([both])
+      const wrapped = out.find((n) => propsOf(n).className === "annotation-deferred")
+      expect(wrapped).toBeDefined()
+      // The inner child carries the emphasis wrapper (dimmed secondary).
+      const inner = propsOf(wrapped).children
+      expect(propsOf(inner).className).toContain("annotation-emphasis--secondary")
+    })
+
+    it("stays zero-overhead when nothing is deferred or emphasised", () => {
+      const out = applyAnnotationEmphasis([pair("a"), pair("b")])
+      expect(out.some((n) => React.isValidElement(n) && n.type === "style")).toBe(false)
+      expect(out.map((n) => propsOf(n)["data-id"])).toEqual(["a", "b"])
+    })
+  })
 })
 
 describe("renderAnnotationPass", () => {

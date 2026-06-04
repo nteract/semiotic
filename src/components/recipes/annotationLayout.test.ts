@@ -98,4 +98,38 @@ describe("annotationLayout", () => {
 
     expect(placed.connector).toMatchObject({ type: "curve" })
   })
+
+  it("does not manage density unless configured", () => {
+    const annotations: Datum[] = Array.from({ length: 6 }, (_, i) => ({
+      type: "label", x: 50, y: 50, label: `n${i}`,
+    }))
+    const placed = annotationLayout({ annotations, context: context() })
+    expect(placed).toHaveLength(6)
+  })
+
+  it("sheds over-budget notes when density is enabled", () => {
+    const annotations: Datum[] = Array.from({ length: 6 }, (_, i) => ({
+      type: "label", x: 50, y: 50, label: `n${i}`,
+    }))
+    const placed = annotationLayout({
+      annotations,
+      context: context(),
+      density: { maxAnnotations: 2 },
+    })
+    expect(placed).toHaveLength(2)
+  })
+
+  it("keeps deferred notes tagged under progressive disclosure", () => {
+    const annotations: Datum[] = Array.from({ length: 6 }, (_, i) => ({
+      type: "label", x: 50, y: 50, label: `n${i}`,
+    }))
+    const placed = annotationLayout({
+      annotations,
+      context: context(),
+      density: { maxAnnotations: 2 },
+      progressiveDisclosure: true,
+    })
+    expect(placed).toHaveLength(6)
+    expect(placed.filter((a) => a._annotationDeferred === true)).toHaveLength(4)
+  })
 })

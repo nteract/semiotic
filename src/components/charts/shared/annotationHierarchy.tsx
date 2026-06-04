@@ -27,6 +27,29 @@ const INFERRED_MAX_OPACITY = 0.95
 const INFERRED_MIN_OPACITY = 0.72
 const INFERRED_OPACITY_STEP = 0.06
 
+/**
+ * Reveal CSS for M3 progressive disclosure. Density-deferred notes are hidden
+ * (opacity 0) until the chart they belong to is hovered or focused. The
+ * selectors are scoped to each frame's stable wrapper class so a chart only
+ * reveals its *own* deferred notes; `:focus-within` covers keyboard users who
+ * focus the canvas (the canvas lives inside the wrapper). Style rules are
+ * document-global regardless of where the `<style>` tag lands, so injecting it
+ * inside the (pointer-events:none) overlay svg is fine. Identical across charts
+ * — duplicate injections are harmless.
+ */
+const DISCLOSURE_REVEAL_CSS =
+  ".annotation-deferred{opacity:0;transition:opacity .12s ease}" +
+  ".stream-xy-frame:hover .annotation-deferred," +
+  ".stream-ordinal-frame:hover .annotation-deferred," +
+  ".stream-network-frame:hover .annotation-deferred," +
+  ".stream-xy-frame:focus-within .annotation-deferred," +
+  ".stream-ordinal-frame:focus-within .annotation-deferred," +
+  ".stream-network-frame:focus-within .annotation-deferred{opacity:1}"
+
+function isDeferred(annotation: Datum): boolean {
+  return annotation?._annotationDeferred === true
+}
+
 function explicitEmphasis(annotation: Datum): AnnotationEmphasis | null {
   return annotation?.emphasis === "primary" || annotation?.emphasis === "secondary"
     ? annotation.emphasis
@@ -82,7 +105,9 @@ export function applyAnnotationEmphasis(
   const anyHierarchySignal = ranked.some(
     (r) => r.emphasis != null || r.confidence != null
   )
-  if (!anyHierarchySignal) return pairs.map((p) => p.node)
+  const anyDeferred = pairs.some((p) => isDeferred(p.annotation))
+  // Zero-overhead path: no hierarchy signal and nothing deferred → untouched.
+  if (!anyHierarchySignal && !anyDeferred) return pairs.map((p) => p.node)
 
   const inferredReading = ranked
     .filter((r) => r.emphasis == null && r.confidence != null)
@@ -100,38 +125,63 @@ export function applyAnnotationEmphasis(
     if (r.emphasis) r.rank = EMPHASIS_RANK[r.emphasis]
   }
 
-  return ranked
+  const rendered = ranked
     .sort((a, b) => a.rank - b.rank || a.i - b.i)
     .map((r) => {
       const { p, i, emphasis, readingOrder } = r
-      if (emphasis !== "primary" && emphasis !== "secondary" && readingOrder == null) {
-        return p.node
+      const deferred = isDeferred(p.annotation)
+
+      let node: React.ReactNode = p.node
+      if (emphasis === "primary" || emphasis === "secondary" || readingOrder != null) {
+        const isInferred = emphasis == null && readingOrder != null
+        const className = isInferred
+          ? "annotation-emphasis annotation-emphasis--inferred"
+          : `annotation-emphasis annotation-emphasis--${emphasis}`
+
+        node = (
+          <g
+            key={`annotation-emphasis-${i}`}
+            className={className}
+            {...(emphasis === "secondary"
+              ? {
+                  opacity: SECONDARY_EMPHASIS_OPACITY,
+                  fontSize: SECONDARY_EMPHASIS_FONT_SIZE,
+                }
+              : {})}
+            {...(isInferred
+              ? {
+                  opacity: inferredOpacity(readingOrder),
+                  "data-annotation-reading-order": readingOrder,
+                }
+              : {})}
+          >
+            {p.node}
+          </g>
+        )
       }
 
-      const isInferred = emphasis == null && readingOrder != null
-      const className = isInferred
-        ? "annotation-emphasis annotation-emphasis--inferred"
-        : `annotation-emphasis annotation-emphasis--${emphasis}`
+      // M3 progressive disclosure: a density-deferred note is wrapped in a
+      // hidden group revealed on chart hover/focus (see DISCLOSURE_REVEAL_CSS).
+      if (deferred) {
+        node = (
+          <g
+            key={`annotation-deferred-${i}`}
+            className="annotation-deferred"
+            data-annotation-disclosure="deferred"
+          >
+            {node}
+          </g>
+        )
+      }
 
-      return (
-        <g
-          key={`annotation-emphasis-${i}`}
-          className={className}
-          {...(emphasis === "secondary"
-            ? {
-                opacity: SECONDARY_EMPHASIS_OPACITY,
-                fontSize: SECONDARY_EMPHASIS_FONT_SIZE,
-              }
-            : {})}
-          {...(isInferred
-            ? {
-                opacity: inferredOpacity(readingOrder),
-                "data-annotation-reading-order": readingOrder,
-              }
-            : {})}
-        >
-          {p.node}
-        </g>
-      )
+      return node
     })
+
+  if (anyDeferred) {
+    rendered.unshift(
+      <style key="annotation-disclosure-style">{DISCLOSURE_REVEAL_CSS}</style>
+    )
+  }
+
+  return rendered
 }
