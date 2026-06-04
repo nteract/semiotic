@@ -35,6 +35,8 @@ export type {
   AnnotationLayoutOptions,
   AutoPlaceAnnotations,
   AutoPlaceAnnotationsConfig,
+  AnnotationCohesion,
+  AnnotationAudience,
 } from "./recipes/annotationLayout"
 
 export { annotationDensity, annotationBudget, DEFAULT_AREA_PER_ANNOTATION } from "./recipes/annotationDensity"

@@ -679,6 +679,91 @@ export default function AnnotationsPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Responsive Annotations */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="responsive">Responsive Annotations</h2>
+
+      <p>
+        Density sheds by <em>count</em>; responsive behavior sheds by{" "}
+        <em>importance</em> as the plot narrows. Set{" "}
+        <code>{`autoPlaceAnnotations: { responsive: true }`}</code> and, once the
+        plot width drops to the breakpoint (480px by default, or{" "}
+        <code>{`{ minWidth }`}</code> to tune), <code>secondary</code>-emphasis
+        notes are dropped while <code>primary</code> and unmarked notes stay.
+        Pair it with <code>responsiveWidth</code> for a chart that adapts live,
+        or with <code>progressiveDisclosure</code> to defer the secondary notes
+        (revealed on hover) instead of dropping them. The two charts below carry
+        the same annotations at two widths.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          width: 600,
+          pointIdAccessor: "label",
+          autoPlaceAnnotations: { responsive: true },
+          annotations: [
+            { type: "callout", pointId: "F", label: "Primary (kept)", emphasis: "primary", radius: 12 },
+            { type: "label", pointId: "B", label: "Secondary B", emphasis: "secondary" },
+            { type: "label", pointId: "D", label: "Secondary D", emphasis: "secondary" },
+            { type: "label", pointId: "H", label: "Unmarked (kept)" },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          width: `600`,
+          pointIdAccessor: `"label"`,
+          autoPlaceAnnotations: `{ responsive: true }`,
+          annotations: `[
+  { type: "callout", pointId: "F", label: "Primary (kept)", emphasis: "primary", radius: 12 },
+  { type: "label", pointId: "B", label: "Secondary B", emphasis: "secondary" },
+  { type: "label", pointId: "D", label: "Secondary D", emphasis: "secondary" },
+  { type: "label", pointId: "H", label: "Unmarked (kept)" }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        At a constrained width the same configuration sheds the two{" "}
+        <code>secondary</code> notes, keeping only the primary and unmarked ones:
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          width: 360,
+          pointIdAccessor: "label",
+          autoPlaceAnnotations: { responsive: true },
+          annotations: [
+            { type: "callout", pointId: "F", label: "Primary (kept)", emphasis: "primary", radius: 12 },
+            { type: "label", pointId: "B", label: "Secondary B", emphasis: "secondary" },
+            { type: "label", pointId: "D", label: "Secondary D", emphasis: "secondary" },
+            { type: "label", pointId: "H", label: "Unmarked (kept)" },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          width: `360`,
+          pointIdAccessor: `"label"`,
+          autoPlaceAnnotations: `{ responsive: true }`,
+          annotations: `[
+  { type: "callout", pointId: "F", label: "Primary (kept)", emphasis: "primary", radius: 12 },
+  { type: "label", pointId: "B", label: "Secondary B", emphasis: "secondary" },
+  { type: "label", pointId: "D", label: "Secondary D", emphasis: "secondary" },
+  { type: "label", pointId: "H", label: "Unmarked (kept)" }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Curved Connectors */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="connectors">Curved Connectors</h2>
@@ -781,6 +866,139 @@ export default function AnnotationsPage() {
         }}
         hiddenProps={{}}
       />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Cohesion */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="cohesion">Cohesion</h2>
+
+      <p>
+        Should a note blend into the chart or stand apart from it? Cohesion is an
+        explicit choice. <code>cohesion: "blended"</code> (the default look) lets
+        notes adopt the chart&apos;s visual language — mark colors, chart
+        typography. <code>cohesion: "layer"</code> presents them as a distinct
+        editorial layer: the theme&apos;s <code>--semiotic-annotation-color</code>{" "}
+        and an italic editorial face, so the commentary reads as commentary. Set
+        it per annotation, or chart-wide via{" "}
+        <code>{`autoPlaceAnnotations: { cohesion: "layer" }`}</code> (a
+        per-annotation <code>cohesion</code> always wins). The example below puts
+        every note in the editorial layer.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          pointIdAccessor: "label",
+          autoPlaceAnnotations: { cohesion: "layer" },
+          annotations: [
+            { type: "label", pointId: "F", label: "Editorial note", dx: -70, dy: -20 },
+            { type: "label", pointId: "B", label: "Reads as commentary", dx: 30, dy: 30 },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          pointIdAccessor: `"label"`,
+          autoPlaceAnnotations: `{ cohesion: "layer" }`,
+          annotations: `[
+  { type: "label", pointId: "F", label: "Editorial note", dx: -70, dy: -20 },
+  { type: "label", pointId: "B", label: "Reads as commentary", dx: 30, dy: 30 }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Audience & Defensive Annotations */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="defensive">Audience &amp; Defensive Annotations</h2>
+
+      <p>
+        Charts travel. They get screenshotted, pasted into decks, and circulated
+        far from the page that produced them — stripped of provenance. A{" "}
+        <code>defensive</code> annotation anticipates that reuse: it is{" "}
+        <em>never</em> shed by the density budget or responsive shedding, so it
+        survives into every export, and when it carries{" "}
+        <code>provenance</code> the layout pass bakes the source and confidence{" "}
+        <em>visibly</em> into its label — so a stray screenshot still says who
+        made the note and how sure they were. Below, a tight density budget sheds
+        the ordinary notes, but the AI-sourced caveat stays and announces itself.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          pointIdAccessor: "label",
+          autoPlaceAnnotations: { density: { maxAnnotations: 2 } },
+          annotations: [
+            { type: "label", pointId: "A", label: "Note A" },
+            { type: "label", pointId: "C", label: "Note C" },
+            { type: "label", pointId: "E", label: "Note E" },
+            {
+              type: "callout",
+              pointId: "F",
+              label: "Spike may be a sensor glitch",
+              radius: 12,
+              dx: -90,
+              dy: -24,
+              defensive: true,
+              provenance: { source: "ai", confidence: 0.62 },
+            },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          pointIdAccessor: `"label"`,
+          autoPlaceAnnotations: `{ density: { maxAnnotations: 2 } }`,
+          annotations: `[
+  { type: "label", pointId: "A", label: "Note A" },
+  { type: "label", pointId: "C", label: "Note C" },
+  { type: "label", pointId: "E", label: "Note E" },
+  // Defensive: survives the budget; provenance is rendered visibly.
+  { type: "callout", pointId: "F", label: "Spike may be a sensor glitch",
+    radius: 12, dx: -90, dy: -24,
+    defensive: true, provenance: { source: "ai", confidence: 0.62 } }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        The same pass adapts annotation <em>amount</em> to the reader. Pass an{" "}
+        <code>AudienceProfile</code> as{" "}
+        <code>{`autoPlaceAnnotations: { density: true, audience }`}</code> and the
+        density budget scales by the audience&apos;s familiarity — a
+        low-familiarity audience keeps more orienting notes, an expert audience
+        fewer:
+      </p>
+
+      <pre
+        style={{
+          background: "var(--surface-2, #f5f5f5)",
+          border: "1px solid var(--surface-3, #e0e0e0)",
+          borderRadius: 8,
+          padding: "14px 16px",
+          overflowX: "auto",
+          fontSize: 13,
+          lineHeight: 1.5,
+          margin: "16px 0",
+        }}
+      >{`<Scatterplot
+  data={data}
+  xAccessor="x"
+  yAccessor="y"
+  autoPlaceAnnotations={{
+    density: true,
+    // Experts get a tighter budget (fewer notes); novices a looser one.
+    audience: { familiarity: { Scatterplot: 5 } },
+  }}
+  annotations={annotations}
+/>`}</pre>
 
       {/* ----------------------------------------------------------------- */}
       {/* Enclosures */}

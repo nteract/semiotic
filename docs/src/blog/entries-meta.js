@@ -20,6 +20,19 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "annotations-that-adapt-and-travel",
+    title: "Annotations That Adapt and Travel",
+    subtitle:
+      "M5 and M6 make the annotation layer responsive to its container and its reader, and let a note defend itself once the chart leaves the page: responsive shedding, cohesion modes, audience-scaled amount, and defensive traveling notes that carry their provenance visibly.",
+    author: "Elijah Meeks",
+    date: "2026-06-04",
+    tags: ["case-study", "roadmap"],
+    excerpt:
+      "Placement (M2) and density (M3) decided where notes land and how many fit. M5 makes that adapt to space and house style — shed secondary notes as the plot narrows, and choose whether notes blend into the chart or read as a distinct editorial layer. M6 adapts to the reader and to reuse: scale annotation amount by audience familiarity, and mark a note defensive so it survives every export with its source and confidence baked in.",
+    ogChart: { component: "Scatterplot" },
+    draft: true,
+  },
+  {
     slug: "annotations-that-make-room-and-make-sense",
     title: "Annotations That Make Room and Make Sense",
     subtitle:

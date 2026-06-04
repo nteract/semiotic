@@ -154,6 +154,37 @@ describe("applyAnnotationEmphasis", () => {
       expect(out.map((n) => propsOf(n)["data-id"])).toEqual(["a", "b"])
     })
   })
+
+  describe("cohesion modes (M5)", () => {
+    const cohesionPair = (id: string, cohesion: string): AnnotationRenderPair => ({
+      node: <g key={id} data-id={id} />,
+      annotation: { type: "label", cohesion } as Datum,
+    })
+
+    it("wraps a layer note with its class and injects the layer CSS", () => {
+      const out = applyAnnotationEmphasis([cohesionPair("ed", "layer")])
+      const wrapped = out.find((n) => propsOf(n).className === "annotation-cohesion--layer")
+      expect(wrapped).toBeDefined()
+      expect(innerId(wrapped)).toBe("ed")
+      const style = out.find((n) => React.isValidElement(n) && n.type === "style")
+      const css = String(propsOf(style).children ?? "")
+      expect(css).toContain(".annotation-cohesion--layer")
+      expect(css).toContain("font-style:italic")
+    })
+
+    it("wraps a blended note with its class but injects no CSS (default look)", () => {
+      const out = applyAnnotationEmphasis([cohesionPair("b", "blended")])
+      const wrapped = out.find((n) => propsOf(n).className === "annotation-cohesion--blended")
+      expect(wrapped).toBeDefined()
+      // blended is the default look — no layer recolor stylesheet.
+      expect(out.some((n) => React.isValidElement(n) && n.type === "style")).toBe(false)
+    })
+
+    it("stays zero-overhead when no cohesion mode is set", () => {
+      const out = applyAnnotationEmphasis([pair("a"), pair("b")])
+      expect(out.every((n) => !String(propsOf(n).className ?? "").includes("cohesion"))).toBe(true)
+    })
+  })
 })
 
 describe("renderAnnotationPass", () => {

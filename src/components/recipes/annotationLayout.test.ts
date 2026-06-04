@@ -154,4 +154,134 @@ describe("annotationLayout", () => {
     const placed = annotationLayout({ annotations, context: context(), redundantCues: true })
     expect(placed.every((a) => a._redundantConnector !== true)).toBe(true)
   })
+
+  // ── M5: responsive shedding ──────────────────────────────────────────
+  const mixedEmphasis = (): Datum[] => [
+    { type: "label", x: 50, y: 50, label: "Primary", emphasis: "primary" },
+    { type: "label", x: 50, y: 50, label: "Secondary A", emphasis: "secondary" },
+    { type: "label", x: 50, y: 50, label: "Secondary B", emphasis: "secondary" },
+    { type: "label", x: 50, y: 50, label: "Unmarked" },
+  ]
+
+  it("sheds secondary notes below the responsive breakpoint", () => {
+    // context() default width is 200 (≤ 480).
+    const placed = annotationLayout({ annotations: mixedEmphasis(), context: context(), responsive: true })
+    expect(placed.map((a) => a.label)).toEqual(["Primary", "Unmarked"])
+  })
+
+  it("keeps secondary notes above the responsive breakpoint", () => {
+    const placed = annotationLayout({ annotations: mixedEmphasis(), context: context({ width: 800 }), responsive: true })
+    expect(placed).toHaveLength(4)
+  })
+
+  it("honors a custom responsive minWidth", () => {
+    const placed = annotationLayout({ annotations: mixedEmphasis(), context: context({ width: 300 }), responsive: { minWidth: 250 } })
+    // 300 > 250 → above breakpoint → nothing shed.
+    expect(placed).toHaveLength(4)
+  })
+
+  it("defers (not drops) secondary notes when progressiveDisclosure is on", () => {
+    const placed = annotationLayout({
+      annotations: mixedEmphasis(),
+      context: context(),
+      responsive: true,
+      progressiveDisclosure: true,
+    })
+    expect(placed).toHaveLength(4)
+    expect(placed.filter((a) => a._annotationDeferred === true).map((a) => a.label))
+      .toEqual(["Secondary A", "Secondary B"])
+  })
+
+  // ── M5: cohesion ─────────────────────────────────────────────────────
+  it("stamps a chart-wide cohesion mode onto note annotations", () => {
+    const annotations: Datum[] = [
+      { type: "label", x: 50, y: 50, label: "A" },
+      { type: "y-threshold", value: 10, label: "limit" }, // not note-like → untouched
+    ]
+    const placed = annotationLayout({ annotations, context: context(), cohesion: "layer" })
+    expect(placed[0].cohesion).toBe("layer")
+    expect(placed[1].cohesion).toBeUndefined()
+  })
+
+  it("lets a per-annotation cohesion win over the chart-wide mode", () => {
+    const annotations: Datum[] = [
+      { type: "label", x: 50, y: 50, label: "A", cohesion: "blended" },
+      { type: "label", x: 50, y: 50, label: "B" },
+    ]
+    const placed = annotationLayout({ annotations, context: context(), cohesion: "layer" })
+    expect(placed[0].cohesion).toBe("blended")
+    expect(placed[1].cohesion).toBe("layer")
+  })
+
+  // ── M6: defensive / traveling annotations ────────────────────────────
+  it("never sheds a defensive note under the density budget", () => {
+    const annotations: Datum[] = [
+      { type: "label", x: 50, y: 50, label: "n0" },
+      { type: "label", x: 50, y: 50, label: "n1" },
+      { type: "label", x: 50, y: 50, label: "Caveat", defensive: true },
+    ]
+    const placed = annotationLayout({ annotations, context: context(), density: { maxAnnotations: 1 } })
+    expect(placed.some((a) => a.label?.startsWith("Caveat"))).toBe(true)
+  })
+
+  it("never sheds a defensive note below the responsive breakpoint", () => {
+    const annotations: Datum[] = [
+      { type: "label", x: 50, y: 50, label: "Secondary", emphasis: "secondary" },
+      { type: "label", x: 50, y: 50, label: "Caveat", emphasis: "secondary", defensive: true },
+    ]
+    // context() width 200 ≤ 480 → secondary notes shed, but defensive survives.
+    const placed = annotationLayout({ annotations, context: context(), responsive: true })
+    expect(placed.map((a) => a.label)).toEqual(["Caveat"])
+  })
+
+  it("bakes visible provenance into a defensive note's label", () => {
+    const annotations: Datum[] = [
+      { type: "label", x: 50, y: 50, label: "AI flagged this", defensive: true, provenance: { source: "ai", confidence: 0.7 } },
+    ]
+    const [placed] = annotationLayout({ annotations, context: context(), density: true })
+    expect(placed.label).toBe("AI flagged this (AI · 70%)")
+  })
+
+  it("does not touch the label of a non-defensive note with provenance", () => {
+    const annotations: Datum[] = [
+      { type: "label", x: 50, y: 50, label: "Plain", provenance: { source: "ai", confidence: 0.7 } },
+    ]
+    const [placed] = annotationLayout({ annotations, context: context(), density: true })
+    expect(placed.label).toBe("Plain")
+  })
+
+  // ── M6: audience biases amount via the density budget ────────────────
+  const audienceNotes = (): Datum[] =>
+    Array.from({ length: 8 }, (_, i) => ({ type: "label", x: 50, y: 50, label: `n${i}` }))
+
+  it("keeps fewer notes for an expert audience", () => {
+    const expert = annotationLayout({
+      annotations: audienceNotes(),
+      context: context({ width: 600, height: 400 }),
+      density: { maxAnnotations: 5 },
+      audience: { familiarity: { LineChart: 5, BarChart: 5 } },
+    })
+    // factor 0.6 → round(5 * 0.6) = 3.
+    expect(expert).toHaveLength(3)
+  })
+
+  it("keeps more notes for a low-familiarity audience", () => {
+    const novice = annotationLayout({
+      annotations: audienceNotes(),
+      context: context({ width: 600, height: 400 }),
+      density: { maxAnnotations: 4 },
+      audience: { familiarity: { LineChart: 1, BarChart: 2 } },
+    })
+    // factor 1.5 → round(4 * 1.5) = 6.
+    expect(novice).toHaveLength(6)
+  })
+
+  it("ignores audience when density is not engaged", () => {
+    const placed = annotationLayout({
+      annotations: audienceNotes(),
+      context: context({ width: 600, height: 400 }),
+      audience: { familiarity: { LineChart: 5 } },
+    })
+    expect(placed).toHaveLength(8)
+  })
 })

@@ -15,6 +15,7 @@ function flextreeLayout
 function marimekkoLayout
 function parallelCoordinatesLayout
 function waffleLayout
+interface AnnotationAudience
 interface AnnotationDensityConfig
 interface AnnotationDensityOptions
 interface AnnotationDensityResult
@@ -33,6 +34,7 @@ interface OrdinalLayoutContext
 interface OrdinalLayoutResult
 interface ParallelCoordinatesConfig
 interface WaffleConfig
+type AnnotationCohesion
 type AutoPlaceAnnotations
 type AutoPlaceAnnotationsConfig
 type CustomLayout

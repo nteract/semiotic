@@ -70,6 +70,12 @@ function isNote(a: Datum): boolean {
   return !!a && typeof a === "object" && NOTE_TYPES.has(String(a.type || ""))
 }
 
+/** Notes that are never shed by the budget: `primary` emphasis and M6
+ *  `defensive` (traveling caveat) notes. */
+function isFloor(a: Datum): boolean {
+  return a?.emphasis === "primary" || a?.defensive === true
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
@@ -134,10 +140,11 @@ export function annotationDensity(options: AnnotationDensityOptions): Annotation
     return { visible: annotations.slice(), deferred: [], budget }
   }
 
-  // `primary` emphasis is the floor — never shed.
-  const forced = noteEntries.filter((e) => e.annotation?.emphasis === "primary")
+  // The floor — never shed: `primary` emphasis, plus M6 `defensive` notes
+  // (traveling caveats that must survive into every export).
+  const forced = noteEntries.filter((e) => isFloor(e.annotation))
   const rest = noteEntries
-    .filter((e) => e.annotation?.emphasis !== "primary")
+    .filter((e) => !isFloor(e.annotation))
     .sort((a, b) => priority(b.annotation) - priority(a.annotation) || a.index - b.index)
 
   const slots = Math.max(0, budget - forced.length)
