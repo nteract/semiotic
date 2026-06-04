@@ -330,7 +330,7 @@ const treated = applyAnnotationStatus(
       <p style={{ fontSize: "0.95em", color: "var(--text-secondary)" }}>
         Accept / dispute / retract / propose transitions are also{" "}
         <em>observable</em>: call{" "}
-        <code>recordAnnotationStatusChange(toStatus, {`{ annotationId, fromStatus }`})</code>{" "}
+        <code>recordAnnotationStatusChange(toStatus, {"{ annotationId, fromStatus }"})</code>{" "}
         from your review UI and the move lands in the{" "}
         <Link to="/intelligence/conversation-arc">conversation arc</Link> — the
         annotation becomes the durable node the arc is about, not chart chrome.
