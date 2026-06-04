@@ -539,3 +539,142 @@ export function applyAnnotationLifecycle<T>(
   }
   return out
 }
+
+// ── Editorial-status visual treatment (M7) ────────────────────────────
+
+/**
+ * Style overrides per editorial status. Each map is partial — statuses not
+ * present fall back to the defaults below. `null` for a value removes the
+ * default rather than applying it.
+ */
+export interface AnnotationStatusTreatment {
+  /**
+   * Opacity *factor* per status, multiplied into any existing opacity so it
+   * composes with the freshness treatment (run `applyAnnotationLifecycle`
+   * first, then this). `null` disables the factor for that status.
+   */
+  opacity?: Partial<Record<AnnotationStatus, number | null>>
+  strokeDasharray?: Partial<Record<AnnotationStatus, string | null>>
+  /**
+   * Suffix appended to a string `label` for that status — the `disputed`
+   * default `" (?)"` is the query affordance the strategy calls for.
+   */
+  labelSuffix?: Partial<Record<AnnotationStatus, string>>
+  /**
+   * Keep `retracted` annotations (with the retracted treatment) instead of
+   * filtering them out. Default false — retracted is hidden like `expired`.
+   */
+  showRetractedAnnotations?: boolean
+  /**
+   * Keep an annotation that another *present* note supersedes. Default false
+   * — a superseded note is hidden once its replacement is in the array.
+   */
+  showSupersededAnnotations?: boolean
+}
+
+const DEFAULT_STATUS_OPACITY: Record<AnnotationStatus, number | null> = {
+  proposed: 0.7,
+  accepted: null,
+  disputed: 0.7,
+  retracted: 0.25,
+}
+
+const DEFAULT_STATUS_DASHARRAY: Record<AnnotationStatus, string | null> = {
+  proposed: "3 3",
+  accepted: null,
+  disputed: "2 3",
+  retracted: "2 4",
+}
+
+const DEFAULT_STATUS_SUFFIX: Record<AnnotationStatus, string> = {
+  proposed: " (proposed)",
+  accepted: "",
+  disputed: " (?)",
+  retracted: "",
+}
+
+function pickStatus<V>(
+  overrides: Partial<Record<AnnotationStatus, V | null>> | undefined,
+  defaults: Record<AnnotationStatus, V | null>,
+  status: AnnotationStatus
+): V | null {
+  if (overrides && status in overrides) return overrides[status] as V | null
+  return defaults[status]
+}
+
+/**
+ * Apply the editorial-status visual treatment (M7) — the orthogonal companion
+ * to {@link applyAnnotationLifecycle}'s temporal-freshness treatment. The two
+ * compose (a note can be stale-and-disputed); run freshness first, then this.
+ *
+ * Per status (overridable via options):
+ * - **accepted** — no change (full weight).
+ * - **proposed** — `opacity` ×0.7, dashed `"3 3"`, `label` suffix `" (proposed)"`.
+ *   An unreviewed (e.g. watcher) note reads provisionally.
+ * - **disputed** — `opacity` ×0.7, dashed `"2 3"`, `label` suffix `" (?)"`.
+ *   The suffix is the query affordance: a contested note announces itself.
+ * - **retracted** — filtered out by default (like `expired`); pass
+ *   `showRetractedAnnotations: true` to keep it at `opacity` ×0.25.
+ *
+ * Also resolves **supersession**: a note whose `provenance.stableId` is the
+ * `lifecycle.supersedes` target of another *present, non-retracted* note is
+ * hidden (the revision replaced it), unless `showSupersededAnnotations` is set.
+ *
+ * Pure — returns a new array; safe in SSR. Opacity is multiplied into any
+ * existing value, so it composes with freshness dimming and author-set opacity.
+ */
+export function applyAnnotationStatus<T>(
+  annotations: ReadonlyArray<Annotated<T>>,
+  options: AnnotationStatusTreatment = {}
+): Annotated<T>[] {
+  const showRetracted = options.showRetractedAnnotations === true
+  const showSuperseded = options.showSupersededAnnotations === true
+
+  // stableIds that a present, non-retracted note supersedes.
+  const supersededIds = new Set<string>()
+  for (const a of annotations) {
+    const target = a?.lifecycle?.supersedes
+    if (target && a?.lifecycle?.status !== "retracted") supersededIds.add(target)
+  }
+
+  const out: Annotated<T>[] = []
+  for (const annotation of annotations) {
+    const status = annotation?.lifecycle?.status
+
+    if (status === "retracted" && !showRetracted) continue
+
+    const myId = annotation?.provenance?.stableId
+    if (myId && supersededIds.has(myId) && !showSuperseded) continue
+
+    if (!status) {
+      out.push(annotation)
+      continue
+    }
+
+    const opacityFactor = pickStatus(options.opacity, DEFAULT_STATUS_OPACITY, status)
+    const dashArray = pickStatus(options.strokeDasharray, DEFAULT_STATUS_DASHARRAY, status)
+    const suffix = options.labelSuffix?.[status] ?? DEFAULT_STATUS_SUFFIX[status]
+
+    const next: Annotated<T> & {
+      opacity?: number
+      strokeDasharray?: string
+      label?: string
+    } = { ...annotation }
+
+    if (opacityFactor != null) {
+      const existing = typeof (next as { opacity?: number }).opacity === "number"
+        ? (next as { opacity: number }).opacity
+        : 1
+      next.opacity = existing * opacityFactor
+    }
+    if (dashArray != null && (next as { strokeDasharray?: string }).strokeDasharray == null) {
+      next.strokeDasharray = dashArray
+    }
+    if (suffix && typeof (next as { label?: string }).label === "string") {
+      next.label = (next as { label: string }).label + suffix
+    }
+
+    out.push(next)
+  }
+  return out
+}

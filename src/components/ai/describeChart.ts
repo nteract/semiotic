@@ -418,6 +418,23 @@ function annotationQualifier(ann: Datum): string {
 }
 
 /**
+ * One human phrase for a single annotation — its kind (provenance-qualified),
+ * plus its label if it has one: `an AI-suggested callout labeled "Peak"`.
+ * Exported so the navigation tree (`buildNavigationTree`) labels its annotation
+ * nodes with the same vocabulary the prose description uses — tree and prose
+ * speak the same language. Editorial status is *not* included here (it would
+ * change the prose sentence); callers that want it append it themselves.
+ */
+export function annotationPhrase(ann: Datum): string {
+  const type = typeof ann.type === "string" ? ann.type : "annotation"
+  const baseKind = ANNOTATION_KIND[type] || "an annotation"
+  const qualifier = annotationQualifier(ann)
+  const kind = qualifier ? qualifier + baseKind.replace(/^an? /, "") : baseKind
+  const label = typeof ann.label === "string" ? ann.label : typeof ann.title === "string" ? ann.title : undefined
+  return label ? `${kind} labeled "${label}"` : kind
+}
+
+/**
  * Summarize the author-placed annotations as one sentence. Returns undefined
  * when the chart carries none. Caps the enumerated list at five and rolls the
  * remainder into "and N more" so a heavily-annotated chart stays readable.
@@ -428,14 +445,7 @@ function annotationSentence(props: Datum): string | undefined {
   const items = raw.filter((a): a is Datum => !!a && typeof a === "object")
   if (items.length === 0) return undefined
 
-  const phrases = items.map((a) => {
-    const type = typeof a.type === "string" ? a.type : "annotation"
-    const baseKind = ANNOTATION_KIND[type] || "an annotation"
-    const qualifier = annotationQualifier(a)
-    const kind = qualifier ? qualifier + baseKind.replace(/^an? /, "") : baseKind
-    const label = typeof a.label === "string" ? a.label : typeof a.title === "string" ? a.title : undefined
-    return label ? `${kind} labeled "${label}"` : kind
-  })
+  const phrases = items.map(annotationPhrase)
 
   const shown = phrases.slice(0, 5)
   const more = phrases.length - shown.length

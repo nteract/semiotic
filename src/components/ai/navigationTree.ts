@@ -1,6 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
-import { describeChart, chartValueFormatter } from "./describeChart"
+import { describeChart, chartValueFormatter, annotationPhrase } from "./describeChart"
 import { XY_FAMILY, BAR_FAMILY, PART_TO_WHOLE, DISTRIBUTION, roles, seriesField, fmtDim } from "./chartRoles"
 /**
  * buildNavigationTree — turn a chart config into a structured, labeled
@@ -19,7 +19,7 @@ import { XY_FAMILY, BAR_FAMILY, PART_TO_WHOLE, DISTRIBUTION, roles, seriesField,
 // Types
 // ---------------------------------------------------------------------------
 
-export type NavTreeRole = "chart" | "axis" | "series" | "datum"
+export type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
 
 export interface NavTreeNode {
   /** Stable id within the tree. */
@@ -45,6 +45,57 @@ export interface BuildNavigationTreeOptions {
 // Families + role resolution (XY_FAMILY/BAR_FAMILY/PART_TO_WHOLE/DISTRIBUTION,
 // roles, seriesField, fmtDim) are shared with describeChart via ./chartRoles.
 
+function capitalize(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
+}
+
+/**
+ * Build the "Annotations" branch — a grouped node whose children announce each
+ * author-placed note, so a screen-reader user *encounters* author intent during
+ * traversal (not only when an external `focusAnnotation` fires). Reuses
+ * `annotationPhrase` so the tree and the prose description speak the same
+ * language, and surfaces editorial `status` (M7) inline. `retracted`
+ * (withdrawn) notes are skipped. Returns null when there's nothing to surface.
+ */
+function buildAnnotationBranch(props: Datum, maxLeaves: number): NavTreeNode | null {
+  const raw = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
+  if (!raw) return null
+  const items = raw.filter(
+    (a) => a && typeof a === "object" && (a.lifecycle?.status as string | undefined) !== "retracted"
+  )
+  if (items.length === 0) return null
+
+  let counter = 0
+  const children: NavTreeNode[] = items.slice(0, maxLeaves).map((a) => {
+    const status = a.lifecycle?.status as string | undefined
+    const statusSuffix = status && status !== "accepted" ? ` (${status})` : ""
+    return {
+      id: `annotation-${counter++}`,
+      role: "annotation",
+      level: 3,
+      label: `${capitalize(annotationPhrase(a))}${statusSuffix}.`,
+      datum: a,
+    }
+  })
+  if (items.length > maxLeaves) {
+    children.push({
+      id: `annotation-${counter++}`,
+      role: "annotation",
+      level: 3,
+      label: `…and ${items.length - maxLeaves} more annotations.`,
+    })
+  }
+
+  const n = items.length
+  return {
+    id: "annotations",
+    role: "annotation",
+    level: 2,
+    label: `Annotations: ${n === 1 ? "one marked feature" : `${n} marked features`}.`,
+    children,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -67,10 +118,17 @@ export function buildNavigationTree(
   const rootLabel = describeChart(component, props, { locale }).text || "Chart."
   const root: NavTreeNode = { id: "root", role: "chart", label: rootLabel, level: 1, children: [] }
 
+  // Author annotations become a first-class branch in every family — even the
+  // network/hierarchy/geo charts that otherwise return a root-only node.
+  const annotationBranch = buildAnnotationBranch(props, maxLeaves)
+
   const data = Array.isArray(props.data) ? (props.data as Datum[]) : null
   const statsFamily = XY_FAMILY.has(component) || BAR_FAMILY.has(component) ||
     PART_TO_WHOLE.has(component) || DISTRIBUTION.has(component)
-  if (!data || data.length === 0 || !statsFamily) return root
+  if (!data || data.length === 0 || !statsFamily) {
+    if (annotationBranch) root.children = [annotationBranch]
+    return root
+  }
 
   const { measure, measureFallback, dimension, dimensionFallback } = roles(component, props)
   const getMeasure = resolveAccessor(measure, measureFallback)
@@ -166,6 +224,7 @@ export function buildNavigationTree(
   } else {
     root.children = [...axisNodes, ...leaves(data, 2)]
   }
+  if (annotationBranch) root.children.push(annotationBranch)
 
   return root
 }

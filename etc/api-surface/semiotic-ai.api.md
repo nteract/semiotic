@@ -107,6 +107,7 @@ function ViolinPlot
 function accessibilityCaveats
 function annotationFreshnessFor
 function applyAnnotationLifecycle
+function applyAnnotationStatus
 function applyAudienceBias
 function applyScaleBias
 function auditAccessibility
@@ -151,6 +152,7 @@ function listIntents
 function profileData
 function proposeVariant
 function receivabilityBias
+function recordAnnotationStatusChange
 function recordAudienceChange
 function registerChartCapability
 function registerIntent
@@ -198,6 +200,8 @@ interface AccessibleNavTreeProps
 interface AnnotationLifecycle
 interface AnnotationLifecycleTreatment
 interface AnnotationProvenance
+interface AnnotationStatusChangedEvent
+interface AnnotationStatusTreatment
 interface AnomalyConfig
 interface AudienceBiasResult
 interface AudienceProfile

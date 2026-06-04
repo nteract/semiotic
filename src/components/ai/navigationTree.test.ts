@@ -91,6 +91,63 @@ describe("buildNavigationTree — part-to-whole & caps & degradation", () => {
   })
 })
 
+describe("buildNavigationTree — annotations branch (M8)", () => {
+  const data = [
+    { month: "Jan", sales: 100 },
+    { month: "Feb", sales: 250 },
+    { month: "Mar", sales: 180 },
+  ]
+  const annotationBranch = (tree: NavTreeNode) => tree.children?.find((c) => c.role === "annotation")
+
+  it("adds no annotation branch when the chart has none", () => {
+    const tree = buildNavigationTree("LineChart", { data, xAccessor: "month", yAccessor: "sales" })
+    expect(annotationBranch(tree)).toBeUndefined()
+  })
+
+  it("appends a grouped annotations branch after the data, reusing the prose vocabulary", () => {
+    const tree = buildNavigationTree("LineChart", {
+      data, xAccessor: "month", yAccessor: "sales",
+      annotations: [
+        { type: "callout", x: "Feb", label: "Peak to investigate" },
+        { type: "y-threshold", y: 200, label: "Target", provenance: { authorKind: "agent" } },
+      ],
+    })
+    const branch = annotationBranch(tree)
+    expect(branch?.label).toBe("Annotations: 2 marked features.")
+    expect(branch?.children?.map((c) => c.label)).toEqual([
+      `A callout labeled "Peak to investigate".`,
+      `An AI-suggested threshold line labeled "Target".`,
+    ])
+    // Each node carries its raw annotation for consumers (e.g. focusAnnotation).
+    expect(branch?.children?.[0].datum?.label).toBe("Peak to investigate")
+  })
+
+  it("surfaces editorial status inline and skips retracted notes", () => {
+    const tree = buildNavigationTree("LineChart", {
+      data, xAccessor: "month", yAccessor: "sales",
+      annotations: [
+        { type: "callout", x: "Feb", label: "Contested", lifecycle: { status: "disputed" } },
+        { type: "callout", x: "Mar", label: "Withdrawn", lifecycle: { status: "retracted" } },
+        { type: "callout", x: "Jan", label: "Confirmed", lifecycle: { status: "accepted" } },
+      ],
+    })
+    const labels = annotationBranch(tree)?.children?.map((c) => c.label)
+    // Retracted is gone; disputed wears its status; accepted reads plainly.
+    expect(labels).toEqual([
+      `A callout labeled "Contested" (disputed).`,
+      `A callout labeled "Confirmed".`,
+    ])
+  })
+
+  it("surfaces annotations even on a root-only (non-stats) family", () => {
+    const tree = buildNavigationTree("ForceDirectedGraph", {
+      nodes: [{ id: "a" }], edges: [],
+      annotations: [{ type: "label", x: 1, y: 1, label: "Cluster" }],
+    })
+    expect(tree.children?.map((c) => c.role)).toEqual(["annotation"])
+  })
+})
+
 describe("flattenVisible & countNodes", () => {
   const data = [
     { m: "Jan", v: 1, g: "A" }, { m: "Feb", v: 2, g: "A" },

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   annotationFreshnessFor,
   applyAnnotationLifecycle,
+  applyAnnotationStatus,
   computeAnnotationFreshness,
   currentTimestamp,
   withCurrentProvenance,
@@ -426,5 +427,77 @@ describe("annotationProvenance — currentTimestamp / withCurrentProvenance", ()
       createdAt: "2026-04-15T12:00:00Z",
     })
     expect(out.provenance?.createdAt).toBe("2026-04-15T12:00:00Z")
+  })
+})
+
+describe("applyAnnotationStatus (M7 editorial treatment)", () => {
+  const note = (label: string, lifecycle: AnnotationLifecycle, provenance?: AnnotationProvenance): Annotated<{ type: string; label: string }> => ({
+    type: "label",
+    label,
+    lifecycle,
+    ...(provenance ? { provenance } : {}),
+  })
+
+  it("leaves a note with no status untouched", () => {
+    const input = [{ type: "label", label: "plain" }]
+    const out = applyAnnotationStatus(input)
+    expect(out).toHaveLength(1)
+    expect(out[0]).toEqual(input[0])
+  })
+
+  it("filters retracted notes by default and keeps them with the flag", () => {
+    const input = [note("gone", { status: "retracted" }), note("here", { status: "accepted" })]
+    expect(applyAnnotationStatus(input).map((a) => a.label)).toEqual(["here"])
+    const kept = applyAnnotationStatus(input, { showRetractedAnnotations: true })
+    expect(kept.map((a) => a.label)).toEqual(["gone", "here"])
+    expect(kept[0].opacity).toBeCloseTo(0.25)
+  })
+
+  it("appends the query affordance to a disputed note and dims it", () => {
+    const [out] = applyAnnotationStatus([note("Contested", { status: "disputed" })])
+    expect(out.label).toBe("Contested (?)")
+    expect(out.opacity).toBeCloseTo(0.7)
+    expect(out.strokeDasharray).toBe("2 3")
+  })
+
+  it("renders a proposed note provisionally", () => {
+    const [out] = applyAnnotationStatus([note("Watcher note", { status: "proposed" })])
+    expect(out.label).toBe("Watcher note (proposed)")
+    expect(out.opacity).toBeCloseTo(0.7)
+  })
+
+  it("leaves accepted notes at full weight", () => {
+    const [out] = applyAnnotationStatus([note("Confirmed", { status: "accepted" })])
+    expect(out.label).toBe("Confirmed")
+    expect(out.opacity).toBeUndefined()
+  })
+
+  it("composes multiplicatively with freshness dimming", () => {
+    // aging (0.55) then disputed (×0.7) → 0.385.
+    const aged = applyAnnotationLifecycle(
+      [note("old + contested", { status: "disputed", ttlHint: DAY }, { createdAt: "2026-01-01T00:00:00Z" })],
+      { now: "2026-01-02T06:00:00Z" } // ~1.25× TTL → aging
+    )
+    const [out] = applyAnnotationStatus(aged)
+    expect(out.opacity).toBeCloseTo(0.55 * 0.7)
+  })
+
+  it("hides a note superseded by a present, non-retracted revision", () => {
+    const input = [
+      note("v1", {}, { stableId: "claim-1" }),
+      note("v2", { supersedes: "claim-1", status: "accepted" }, { stableId: "claim-2" }),
+    ]
+    expect(applyAnnotationStatus(input).map((a) => a.label)).toEqual(["v2"])
+    // ...unless explicitly kept.
+    expect(applyAnnotationStatus(input, { showSupersededAnnotations: true }).map((a) => a.label)).toEqual(["v1", "v2"])
+  })
+
+  it("does not hide a note whose superseding revision was itself retracted", () => {
+    const input = [
+      note("v1", {}, { stableId: "claim-1" }),
+      note("bad revision", { supersedes: "claim-1", status: "retracted" }, { stableId: "claim-2" }),
+    ]
+    // The retracted revision is filtered, and it no longer supersedes v1.
+    expect(applyAnnotationStatus(input).map((a) => a.label)).toEqual(["v1"])
   })
 })

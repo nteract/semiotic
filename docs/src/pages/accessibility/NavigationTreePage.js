@@ -65,6 +65,36 @@ function NavDemo() {
   )
 }
 
+const ANNOTATED = {
+  component: "LineChart",
+  props: {
+    data: [
+      { month: "Jan", sales: 4200 }, { month: "Feb", sales: 5100 },
+      { month: "Mar", sales: 6800 }, { month: "Apr", sales: 4600 },
+    ],
+    xAccessor: "month", yAccessor: "sales",
+    annotations: [
+      { type: "callout", x: "Mar", label: "Quarter-end peak" },
+      { type: "y-threshold", y: 6000, label: "Target", provenance: { authorKind: "agent" } },
+      { type: "callout", x: "Apr", label: "Dip is contested", lifecycle: { status: "disputed" } },
+    ],
+  },
+}
+
+function AnnotatedNavDemo() {
+  const tree = React.useMemo(() => buildNavigationTree(ANNOTATED.component, ANNOTATED.props), [])
+  return (
+    <div style={{ border: "1px solid var(--surface-3)", borderRadius: 8, padding: 8, margin: "20px 0", background: "var(--surface-1)" }}>
+      <p style={{ fontSize: 12, color: "var(--text-2)", margin: "4px 8px 8px" }}>
+        Expand <strong>Annotations</strong> to hear the author's notes — the
+        agent-suggested threshold and the contested dip announce their provenance
+        and editorial status.
+      </p>
+      <AccessibleNavTree tree={tree} label="Monthly sales with author notes — navigable structure" visible />
+    </div>
+  )
+}
+
 export default function NavigationTreePage() {
   return (
     <PageLayout
@@ -216,9 +246,49 @@ function SyncedChart({ data }) {
         leaf and auto-expands the path to it.
       </p>
 
+      <h2 id="annotations-branch">Annotations in the tree</h2>
+      <p>
+        An author-placed annotation <em>is</em> author intent in its purest
+        form, so it shouldn't be reachable only when some external code calls{" "}
+        <code>focusAnnotation</code>. When a chart carries annotations,{" "}
+        <code>buildNavigationTree</code> adds an <strong>Annotations</strong>{" "}
+        branch — a screen-reader user <em>encounters</em> the notes while
+        traversing, the same way they meet the axes and series. Each node reuses
+        the prose vocabulary from{" "}
+        <Link to="/accessibility/descriptions"><code>describeChart()</code></Link>{" "}
+        (so the tree and the description speak the same language), surfaces the
+        note's <Link to="/annotations/provenance-lifecycle">provenance and
+        editorial status</Link> inline (an agent-suggested threshold, a{" "}
+        <code>disputed</code> note), and skips <code>retracted</code> ones.
+      </p>
+      <AnnotatedNavDemo />
+      <CodeBlock
+        code={`const tree = buildNavigationTree("LineChart", {
+  data, xAccessor: "month", yAccessor: "sales",
+  annotations: [
+    { type: "callout", x: "Mar", label: "Quarter-end peak" },
+    { type: "y-threshold", y: 6000, label: "Target", provenance: { authorKind: "agent" } },
+    { type: "callout", x: "Apr", label: "Dip is contested", lifecycle: { status: "disputed" } },
+  ],
+})
+// → root
+//   ├ X axis / Value axis / data points…
+//   └ Annotations: 3 marked features.
+//       ├ A callout labeled "Quarter-end peak".
+//       ├ An AI-suggested threshold line labeled "Target".
+//       └ A callout labeled "Dip is contested" (disputed).`}
+      />
+      <p>
+        It works on every family — even network, hierarchy, and geo charts that
+        otherwise return a root-only node get their annotations branch, so the
+        author's intent is always reachable.
+      </p>
+
       <h2 id="annotation-anchors">Reaching an annotation's anchor</h2>
       <p>
-        An <Link to="/intelligence/conversation-arc">anchored annotation</Link> —
+        The branch lets a reader find a note <em>in the structure</em>; the flip
+        side is jumping from a note to the <em>data point it's about</em>. An{" "}
+        <Link to="/intelligence/conversation-arc">anchored annotation</Link> —
         an AI note pinned to a specific data point, say — is only "multiplayer"
         for sighted readers unless a non-visual reader can <em>get to</em> the
         anchored point. Pass the chart's <code>annotations</code> to{" "}
@@ -245,9 +315,10 @@ sync.focusAnnotation(note) // …or pass the annotation object; returns false if
         Full trees for XY, bar, part-to-whole, and distribution families. For
         network, hierarchy, geo, and single-value charts,{" "}
         <code>buildNavigationTree()</code> currently returns a root node with an
-        L1 label rather than a fabricated hierarchy — enabling{" "}
-        <code>navigable</code> still gives those charts a labeled entry point, and
-        richer structure for those families is on the roadmap.
+        L1 label (plus the Annotations branch, if any) rather than a fabricated
+        hierarchy — enabling <code>navigable</code> still gives those charts a
+        labeled entry point and any author notes, and richer data structure for
+        those families is on the roadmap.
       </p>
 
       <h2 id="telemetry">Reception telemetry</h2>
