@@ -60,6 +60,7 @@ import WhatAScreenReaderShouldHear from "./entries/what-a-screen-reader-should-h
 import NavigatingAChartYouCantSee from "./entries/navigating-a-chart-you-cant-see.js"
 import WhatAnAnnotationShouldCarry from "./entries/what-an-annotation-should-carry.js"
 import AnnotationsThatLeadAndLand from "./entries/annotations-that-lead-and-land.js"
+import AnnotationsThatMakeRoomAndMakeSense from "./entries/annotations-that-make-room-and-make-sense.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -67,6 +68,7 @@ import AnnotationsThatLeadAndLand from "./entries/annotations-that-lead-and-land
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  AnnotationsThatMakeRoomAndMakeSense,
   AnnotationsThatLeadAndLand,
   WhatAnAnnotationShouldCarry,
   NavigatingAChartYouCantSee,

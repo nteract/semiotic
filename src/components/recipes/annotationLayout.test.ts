@@ -132,4 +132,26 @@ describe("annotationLayout", () => {
     expect(placed).toHaveLength(6)
     expect(placed.filter((a) => a._annotationDeferred === true)).toHaveLength(4)
   })
+
+  it("does not add redundant cues unless configured", () => {
+    const annotations: Datum[] = [{ type: "text", x: 50, y: 50, label: "Echo", color: "#f00", dx: 30, dy: 20 }]
+    const [placed] = annotationLayout({ annotations, context: context() })
+    expect(placed._redundantConnector).toBeUndefined()
+  })
+
+  it("flags a colored, offset text note with a redundant leader cue", () => {
+    const annotations: Datum[] = [{ type: "text", x: 50, y: 50, label: "Echo", color: "#f00", dx: 30, dy: 20 }]
+    const [placed] = annotationLayout({ annotations, context: context(), redundantCues: true })
+    expect(placed._redundantConnector).toBe(true)
+  })
+
+  it("leaves colorless or on-anchor text notes alone under redundantCues", () => {
+    const annotations: Datum[] = [
+      { type: "text", x: 50, y: 50, label: "No color", dx: 30, dy: 20 },          // not color-linked
+      { type: "text", x: 50, y: 50, label: "On anchor", color: "#f00", dx: 0, dy: 0 }, // no offset → no association
+      { type: "label", x: 50, y: 50, label: "Has connector", color: "#f00" },     // already draws a connector
+    ]
+    const placed = annotationLayout({ annotations, context: context(), redundantCues: true })
+    expect(placed.every((a) => a._redundantConnector !== true)).toBe(true)
+  })
 })

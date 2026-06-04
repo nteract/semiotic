@@ -362,6 +362,11 @@ export function auditAccessibility(
   {
     const anns = annotations
     if (anns.length > 0) {
+      // M4 redundant-cue default: `autoPlaceAnnotations: { redundantCues: true }`
+      // makes the renderer add a leader line to colored `text` notes, so they no
+      // longer rely on color alone.
+      const apa = props.autoPlaceAnnotations
+      const redundantCues = typeof apa === "object" && apa !== null && (apa as Datum).redundantCues === true
       const cueless = anns.filter((a) => {
         if (typeof a.color !== "string") return false // not color-linked → not this problem
         const type = typeof a.type === "string" ? a.type : ""
@@ -372,8 +377,10 @@ export function auditAccessibility(
         const drawsSubject =
           type === "enclose" || type === "rect-enclose" || type === "bracket" || type === "highlight"
         const isReferenceLine = type === "y-threshold" || type === "x-threshold" || type === "band"
+        // redundantCues gives colored `text` notes a leader line at render time.
+        const drawsRedundantLeader = redundantCues && type === "text"
         // Any of these is a non-color cue → the association is redundant.
-        return !(drawsConnector || drawsSubject || isReferenceLine)
+        return !(drawsConnector || drawsSubject || isReferenceLine || drawsRedundantLeader)
       })
       f.push({
         id: "perceivable.annotation-association",
@@ -382,7 +389,7 @@ export function auditAccessibility(
         critical: false,
         ...(cueless.length === 0
           ? { status: "pass" as A11yStatus, message: "No annotation relies on color alone to indicate its target — wherever color is used, a connector, enclosure, or reference-line cue is present too." }
-          : { status: "warn" as A11yStatus, message: `${cueless.length} of ${anns.length} annotation(s) carry a color but no connector, enclosure, or reference-line cue, so a color-blind or non-visual reader can't tie them to their target (the correspondence problem).`, fix: "Add a connector (the label/callout default), place the note adjacent to its target, or enclose the target — don't rely on color matching alone." }),
+          : { status: "warn" as A11yStatus, message: `${cueless.length} of ${anns.length} annotation(s) carry a color but no connector, enclosure, or reference-line cue, so a color-blind or non-visual reader can't tie them to their target (the correspondence problem).`, fix: "Add a connector (the label/callout default), place the note adjacent to its target, enclose the target, or enable autoPlaceAnnotations: { redundantCues: true } to give colored text notes a leader line — don't rely on color matching alone." }),
       })
     }
   }
