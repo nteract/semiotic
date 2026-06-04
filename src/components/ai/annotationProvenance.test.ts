@@ -431,7 +431,11 @@ describe("annotationProvenance — currentTimestamp / withCurrentProvenance", ()
 })
 
 describe("applyAnnotationStatus (M7 editorial treatment)", () => {
-  const note = (label: string, lifecycle: AnnotationLifecycle, provenance?: AnnotationProvenance): Annotated<{ type: string; label: string }> => ({
+  // The treatment writes `opacity`/`strokeDasharray` (not on the public
+  // `Annotated<T>` return type), so the note shape declares them optional for
+  // the assertions to read.
+  type StatusNote = { type: string; label: string; opacity?: number; strokeDasharray?: string }
+  const note = (label: string, lifecycle: AnnotationLifecycle, provenance?: AnnotationProvenance): Annotated<StatusNote> => ({
     type: "label",
     label,
     lifecycle,
