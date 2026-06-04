@@ -174,6 +174,29 @@ describe("auditAccessibility — annotation→target association (correspondence
     })
     expect(status(r, "perceivable.annotation-association")).toBe("pass")
   })
+
+  it("passes a colored text note when redundantCues is enabled (M4)", () => {
+    const r = auditAccessibility("LineChart", {
+      ...base,
+      autoPlaceAnnotations: { redundantCues: true },
+      annotations: [
+        { type: "text", x: 2, y: 5000, label: "Echoes the red line", color: "#f00" },
+      ],
+    })
+    // redundantCues adds a leader line at render time → no longer color-alone.
+    expect(status(r, "perceivable.annotation-association")).toBe("pass")
+  })
+
+  it("still warns for colored text when autoPlace is on but redundantCues is not", () => {
+    const r = auditAccessibility("LineChart", {
+      ...base,
+      autoPlaceAnnotations: true,
+      annotations: [
+        { type: "text", x: 2, y: 5000, label: "Echoes the red line", color: "#f00" },
+      ],
+    })
+    expect(status(r, "perceivable.annotation-association")).toBe("warn")
+  })
 })
 
 describe("auditAccessibility — annotation hierarchy", () => {

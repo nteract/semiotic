@@ -911,18 +911,42 @@ export function createDefaultAnnotationRules(
         const pos = resolveAnchoredPosition(ann, index, context)
         if (!pos) return null
         const { x: px, y: py } = pos
-        return (
+        const tx = px + (ann.dx || 0)
+        const ty = py + (ann.dy || 0)
+        const textColor = ann.color || "var(--semiotic-text, #333)"
+        // M4 redundant-cue: a colored `text` note offset from its anchor ties to
+        // its target by color alone (text draws no connector). When the layout
+        // pass flagged `_redundantConnector`, add a faint leader line from the
+        // anchor to the text — a spatial cue a color-blind reader can follow.
+        const textEl = (
           <text
-            key={`ann-text-${index}`}
-            x={px + (ann.dx || 0)}
-            y={py + (ann.dy || 0)}
-            fill={ann.color || "var(--semiotic-text, #333)"}
+            x={tx}
+            y={ty}
+            fill={textColor}
             fontSize={ann.fontSize || 11}
             dominantBaseline="middle"
             style={{ fontFamily: "inherit" }}
           >
             {ann.label}
           </text>
+        )
+        if (ann._redundantConnector !== true) {
+          return React.cloneElement(textEl, { key: `ann-text-${index}` })
+        }
+        return (
+          <g key={`ann-text-${index}`}>
+            <line
+              x1={px}
+              y1={py}
+              x2={tx}
+              y2={ty}
+              stroke={textColor}
+              strokeWidth={1}
+              strokeOpacity={0.5}
+              style={{ pointerEvents: "none" }}
+            />
+            {textEl}
+          </g>
         )
       }
 

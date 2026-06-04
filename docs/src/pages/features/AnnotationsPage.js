@@ -729,6 +729,60 @@ export default function AnnotationsPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Association & Redundant Cues */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="association">Association &amp; Redundant Cues</h2>
+
+      <p>
+        An annotation that ties to its target by <em>color alone</em> fails the
+        correspondence problem: a color-blind reader can&apos;t match the hue,
+        and a screen-reader user never sees it at all. Labels and callouts
+        already draw a connector, and enclosures wrap their subject — but a{" "}
+        <code>text</code> note draws no connector, so a colored, offset{" "}
+        <code>text</code> note is the classic color-only case. Set{" "}
+        <code>{`autoPlaceAnnotations: { redundantCues: true }`}</code> and
+        Semiotic adds a faint leader line from the note back to its anchor: a{" "}
+        <em>spatial</em> cue, not another color, so the association survives
+        color-blindness. The accessibility audit&apos;s{" "}
+        <code>perceivable.annotation-association</code> check treats{" "}
+        <code>redundantCues</code> as satisfying the requirement.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "X Value",
+          yLabel: "Y Value",
+          pointIdAccessor: "label",
+          autoPlaceAnnotations: { redundantCues: true },
+          annotations: [
+            { type: "text", pointId: "B", label: "Echoes the series color", color: "#d7263d", dx: 40, dy: -28 },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { x: 10, y: 20, label: "A" },
+  { x: 25, y: 35, label: "B" },
+  { x: 40, y: 15, label: "C" },
+  { x: 55, y: 45, label: "D" },
+  { x: 70, y: 30, label: "E" },
+  { x: 85, y: 50, label: "F" }
+]`,
+          pointIdAccessor: `"label"`,
+          autoPlaceAnnotations: `{ redundantCues: true }`,
+          annotations: `[
+  { type: "text", pointId: "B", label: "Echoes the series color",
+    color: "#d7263d", dx: 40, dy: -28 }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Enclosures */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="enclosures">Enclosures</h2>

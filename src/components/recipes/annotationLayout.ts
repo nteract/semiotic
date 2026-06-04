@@ -32,6 +32,15 @@ export interface AnnotationLayoutConfig {
    * set is always rendered, so a non-hover reader still sees the core notes.
    */
   progressiveDisclosure?: boolean
+  /**
+   * M4 — redundant-cue default (Rahman et al.'s "Association"). A colored
+   * `text` note is the one note type that never draws a connector, so it ties
+   * to its target by color alone — invisible to a color-blind or non-visual
+   * reader. When `true`, an offset colored `text` note is flagged
+   * `_redundantConnector` so the renderer adds a faint leader line from the
+   * anchor to the text: a spatial cue, not another color. Off by default.
+   */
+  redundantCues?: boolean
 }
 
 export type AutoPlaceAnnotationsConfig = AnnotationLayoutConfig
@@ -63,6 +72,22 @@ function hasManualOffset(a: Datum): boolean {
 function rendererOffset(a: Datum): Candidate {
   if (a.type === "text" || a.type === "widget") return { dx: 0, dy: 0 }
   return { dx: DEFAULT_RENDERER_NOTE_DX, dy: DEFAULT_RENDERER_NOTE_DY }
+}
+
+// M4 — minimum anchor→text offset (px) before a leader line earns its keep.
+// Below this the text effectively sits on its anchor, so color isn't doing
+// any cross-chart association work and a connector would just be noise.
+const REDUNDANT_CUE_MIN_OFFSET = 8
+
+/** A colored `text` note offset from its anchor ties to its target by color
+ *  alone — the renderer draws no connector for `text`. Flag it so the text
+ *  rule adds a leader line (a spatial, CVD-safe cue). */
+function applyRedundantCue(a: Datum): Datum {
+  if (a.type !== "text" || typeof a.color !== "string") return a
+  const dx = typeof a.dx === "number" ? a.dx : 0
+  const dy = typeof a.dy === "number" ? a.dy : 0
+  if (Math.hypot(dx, dy) < REDUNDANT_CUE_MIN_OFFSET) return a
+  return { ...a, _redundantConnector: true }
 }
 
 function isPlaceableAnnotation(a: Datum): boolean {
@@ -249,6 +274,7 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     connectorThreshold = DEFAULT_CONNECTOR_THRESHOLD,
     density,
     progressiveDisclosure = false,
+    redundantCues = false,
   } = options
 
   const width = context.width || 0
@@ -313,7 +339,21 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     }
   })
 
-  const placed = changed ? output : annotations.slice()
+  const placedRaw = changed ? output : annotations.slice()
+
+  // M4 — redundant-cue default. Runs after placement so it sees the final
+  // offsets. Adds a leader-line flag to colored `text` notes that would
+  // otherwise rely on color alone (see `redundantCues`).
+  let placed = placedRaw
+  if (redundantCues) {
+    let cued = false
+    const next = placedRaw.map((a) => {
+      const enriched = applyRedundantCue(a)
+      if (enriched !== a) cued = true
+      return enriched
+    })
+    placed = cued ? next : placedRaw
+  }
 
   // M3 — density management runs after placement (it needs to know what landed
   // before deciding what to shed). Off unless `density` is configured.

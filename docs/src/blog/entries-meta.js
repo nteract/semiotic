@@ -20,6 +20,19 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "annotations-that-make-room-and-make-sense",
+    title: "Annotations That Make Room and Make Sense",
+    subtitle:
+      "M3 and M4 keep the annotation layer legible: a density budget sheds the lowest-priority notes when a chart gets crowded, and a redundant-cue default ties a colored note to its target with a spatial line instead of color alone.",
+    author: "Elijah Meeks",
+    date: "2026-06-03",
+    tags: ["case-study", "roadmap"],
+    excerpt:
+      "After hierarchy (M1) and placement (M2), the next two annotation milestones handle the failure modes that show up at scale: too many notes, and notes that only connect to their target by color. M3 adds an opt-in density budget with progressive disclosure; M4 adds an accessibility audit for color-only association and an opt-in redundant leader-line cue.",
+    ogChart: { component: "Scatterplot" },
+    draft: true,
+  },
+  {
     slug: "annotations-that-lead-and-land",
     title: "Annotations That Lead and Land",
     subtitle:
