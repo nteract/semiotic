@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { isNoteAnnotation } from "../charts/shared/annotationTypes"
 
 /**
  * M3 — Amount & density management (Rahman et al.'s sixth consideration:
@@ -26,8 +27,6 @@ import type { Datum } from "../charts/shared/datumTypes"
  * The persistent set is the floor and is never empty when any note exists — the
  * paper's "keep the core message persistent; hover is not guaranteed."
  */
-
-const NOTE_TYPES = new Set(["label", "callout", "callout-circle", "callout-rect", "text", "widget"])
 
 /** Plot area (px²) allotted per note before the budget tightens. */
 export const DEFAULT_AREA_PER_ANNOTATION = 20000
@@ -67,7 +66,7 @@ export interface AnnotationDensityResult {
 }
 
 function isNote(a: Datum): boolean {
-  return !!a && typeof a === "object" && NOTE_TYPES.has(String(a.type || ""))
+  return isNoteAnnotation(a)
 }
 
 /** Notes that are never shed by the budget: `primary` emphasis and M6

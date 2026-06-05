@@ -1,6 +1,7 @@
 import type { AnnotationContext } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAnchoredPosition } from "../charts/shared/annotationResolvers"
+import { isNoteAnnotation } from "../charts/shared/annotationTypes"
 import { annotationDensity, annotationBudget, type AnnotationDensityConfig } from "./annotationDensity"
 
 export interface AnnotationLayoutConfig {
@@ -92,7 +93,6 @@ type Candidate = { dx: number; dy: number }
 type GeoProjection = (coords: [number, number]) => [number, number] | null
 type ScalesWithGeoProjection = AnnotationContext["scales"] & { geoProjection?: GeoProjection }
 
-const NOTE_TYPES = new Set(["label", "callout", "callout-circle", "callout-rect", "text", "widget"])
 const DEFAULT_OFFSET = 32
 const DEFAULT_NOTE_PADDING = 6
 const DEFAULT_MARK_PADDING = 4
@@ -201,7 +201,7 @@ function applyRedundantCue(a: Datum): Datum {
 }
 
 function isPlaceableAnnotation(a: Datum): boolean {
-  return !!a && typeof a === "object" && NOTE_TYPES.has(String(a.type || ""))
+  return isNoteAnnotation(a)
 }
 
 function textLines(text: string | undefined, wrap: number): string[] {

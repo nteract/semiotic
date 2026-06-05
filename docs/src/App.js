@@ -71,6 +71,7 @@ import StreamGeoFramePage from "./pages/frames/GeoFramePage"
 // New feature pages
 import AxesPage from "./pages/features/AxesPage"
 import AnnotationsPage from "./pages/features/AnnotationsPage"
+import AnnotationDesignPage from "./pages/features/AnnotationDesignPage"
 import AnnotationFlowPage from "./pages/features/AnnotationFlowPage"
 import AnnotationProvenancePage from "./pages/features/AnnotationProvenancePage"
 import TooltipsPage from "./pages/features/TooltipsPage"
@@ -442,6 +443,7 @@ export default function DocsApp() {
             <Route path="annotations" element={<Outlet />}>
               <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<AnnotationsPage />} />
+              <Route path="design-guidance" element={<AnnotationDesignPage />} />
               <Route path="advanced" element={<AnnotationFlowPage />} />
               <Route path="provenance-lifecycle" element={<AnnotationProvenancePage />} />
             </Route>

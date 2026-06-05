@@ -197,6 +197,17 @@ describe("auditAccessibility — annotation→target association (correspondence
     })
     expect(status(r, "perceivable.annotation-association")).toBe("warn")
   })
+
+  it("does not treat colored statistical overlays as correspondence notes", () => {
+    const r = auditAccessibility("LineChart", {
+      ...base,
+      annotations: [
+        { type: "trend", color: "#f00" },
+        { type: "forecast", color: "#0f0" },
+      ],
+    })
+    expect(find(r, "perceivable.annotation-association")).toBeUndefined()
+  })
 })
 
 describe("auditAccessibility — annotation hierarchy", () => {

@@ -136,6 +136,7 @@ function enableConversationArc
 function evaluateVariantProposal
 function explainCapabilityFit
 function exportChart
+function filterAnnotationsByStatus
 function flattenVisible
 function formatAccessibilityAudit
 function fromConfig
@@ -202,6 +203,7 @@ interface AnnotationLifecycleTreatment
 interface AnnotationProvenance
 interface AnnotationStatusChangedEvent
 interface AnnotationStatusTreatment
+interface AnnotationStatusVisibility
 interface AnomalyConfig
 interface AudienceBiasResult
 interface AudienceProfile

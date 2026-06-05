@@ -122,8 +122,12 @@ describe("applyAnnotationEmphasis", () => {
       expect(style).toBeDefined()
       const css = String((propsOf(style).children) ?? "")
       expect(css).toContain(".annotation-deferred")
+      expect(css).toContain("pointer-events:none")
+      expect(css).toContain("pointer-events:auto")
       expect(css).toContain(":hover")
       expect(css).toContain(":focus-within")
+      expect(css).toContain(".stream-geo-frame")
+      expect(css).toContain("prefers-reduced-motion")
 
       // The deferred node is wrapped with the reveal class + disclosure attr.
       const wrapped = out.find((n) => propsOf(n).className === "annotation-deferred")

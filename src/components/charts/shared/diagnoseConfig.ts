@@ -8,6 +8,11 @@ import type { Datum } from "./datumTypes"
 
 import { VALIDATION_MAP, validateProps } from "./validateProps"
 import { annotationBudget } from "../../recipes/annotationDensity"
+import {
+  annotationDrawsConnector,
+  annotationType,
+  isNoteAnnotation,
+} from "./annotationTypes"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -571,7 +576,6 @@ function checkFunctionAccessors(
 // and a connector long enough to suggest the note could have been adjacent.
 // Advisory only (warnings). The label/callout default offset (~42px) sits well
 // under both thresholds, so default-placed notes never trip this.
-const NOTE_ANNOTATION_TYPES = new Set(["label", "callout", "callout-circle", "callout-rect", "text"])
 const FAR_PLACEMENT_PX = 120
 const VERY_LONG_CONNECTOR_PX = 250
 
@@ -584,15 +588,16 @@ function checkAnnotationConnectors(
   if (!anns) return
   for (const a of anns) {
     if (!a || typeof a !== "object") continue
-    const type = typeof a.type === "string" ? a.type : ""
-    if (!NOTE_ANNOTATION_TYPES.has(type)) continue
+    const type = annotationType(a)
+    // Widgets are HTML affordances rather than anchored SVG notes, so the
+    // connector-distance diagnostic does not apply to them.
+    if (!isNoteAnnotation(a) || type === "widget") continue
     const dx = typeof a.dx === "number" ? a.dx : 0
     const dy = typeof a.dy === "number" ? a.dy : 0
     const dist = Math.hypot(dx, dy)
     const label = typeof a.label === "string" ? a.label : typeof a.title === "string" ? a.title : type
-    const connectorDisabled = Array.isArray(a.disable) && (a.disable as unknown[]).includes("connector")
     // `text` never draws a connector; label/callout draw one unless disabled.
-    const hasConnector = type !== "text" && !connectorDisabled
+    const hasConnector = annotationDrawsConnector(a)
 
     if (!hasConnector && dist > FAR_PLACEMENT_PX) {
       out.push({
@@ -617,8 +622,6 @@ function checkAnnotationConnectors(
 // annotations against the same area-derived budget the runtime density pass
 // uses, and suggest emphasis or progressive disclosure when they pile up.
 // Reference lines, bands and overlays don't count toward the budget.
-const DENSITY_NOTE_TYPES = new Set(["label", "callout", "callout-circle", "callout-rect", "text", "widget"])
-
 function checkAnnotationDensity(
   _component: string,
   props: Datum,
@@ -627,9 +630,7 @@ function checkAnnotationDensity(
   const anns = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
   if (!anns) return
 
-  const noteCount = anns.filter(
-    (a) => a && typeof a === "object" && DENSITY_NOTE_TYPES.has(String(a.type || ""))
-  ).length
+  const noteCount = anns.filter(isNoteAnnotation).length
   if (noteCount === 0) return
 
   const width = typeof props.width === "number" ? props.width : 600

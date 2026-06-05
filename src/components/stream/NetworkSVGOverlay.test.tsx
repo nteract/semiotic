@@ -31,4 +31,38 @@ describe("NetworkSVGOverlay", () => {
     expect(node).not.toBeNull()
     expect(Number(node!.getAttribute("data-dx"))).toBeLessThan(0)
   })
+
+  it("hides density-deferred HTML widgets with the shared disclosure CSS", () => {
+    const { container } = render(
+      <NetworkSVGOverlay
+        width={200}
+        height={120}
+        totalWidth={240}
+        totalHeight={160}
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        labels={[]}
+        sceneNodes={[
+          { type: "node", id: "node-a", cx: 60, cy: 60, datum: { id: "node-a" } },
+          { type: "node", id: "node-b", cx: 140, cy: 60, datum: { id: "node-b" } },
+        ]}
+        annotations={[
+          { type: "widget", nodeId: "node-a", emphasis: "primary", content: "Keep" },
+          { type: "widget", nodeId: "node-b", emphasis: "secondary", content: "Reveal" },
+        ]}
+        autoPlaceAnnotations={{
+          responsive: { minWidth: 240 },
+          progressiveDisclosure: true,
+        }}
+      />
+    )
+
+    const deferred = container.querySelector(".annotation-deferred")
+    expect(deferred).not.toBeNull()
+    expect(deferred?.getAttribute("data-annotation-disclosure")).toBe("deferred")
+    expect((deferred as HTMLElement | null)?.style.pointerEvents).toBe("")
+    const css = container.querySelector("style")?.textContent ?? ""
+    expect(css).toContain(".stream-network-frame")
+    expect(css).toContain("pointer-events:none")
+    expect(css).toContain("pointer-events:auto")
+  })
 })

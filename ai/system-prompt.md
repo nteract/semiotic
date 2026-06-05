@@ -84,12 +84,15 @@ Callback receiving `ChartObservation`: `{ type: "hover"|"click"|"brush"|"selecti
 ### emphasis
 `emphasis="primary"` makes a chart span two columns inside a `ChartGrid`.
 
-## Annotations (XY and ordinal charts)
+## Annotations (all chart families)
 - `annotations={[{ type: "y-threshold", value: 200, label: "SLA limit", color: "#e45050", labelPosition: "right" }]}` — horizontal reference line (works on XY and vertical ordinal charts). `labelPosition`: "left"|"center"|"right"
 - `annotations={[{ type: "x-threshold", value: 50, label: "Cutoff", labelPosition: "top" }]}` — vertical reference line. `labelPosition`: "top"|"center"|"bottom"
+- `annotations={[{ type: "callout-circle", x: 5, y: 20, label: "Peak", radius: 12 }]}` — data-bound callout; use `callout-rect` with `width`/`height` for a rectangular subject
 - `annotations={[{ type: "category-highlight", category: "Q3 2024", color: "#4589ff", opacity: 0.15 }]}` — highlight a category column/row in ordinal charts
 - `annotations={[{ type: "widget", time: 42, latency: 850, dy: -10, content: <span>Alert</span> }]}` — place React element at data coordinates
 - `annotations={[{ type: "enclose", coordinates: [datum1, datum2], label: "Cluster" }]}` — circle enclosing data points
+- `autoPlaceAnnotations={{ density: true, progressiveDisclosure: true, redundantCues: true }}` — opt-in placement, clutter management, and non-color association support
+- Annotation metadata: `emphasis`, `defensive`, `provenance`, and `lifecycle`; use `applyAnnotationLifecycle`, `applyAnnotationStatus`, and `filterAnnotationsByStatus` from `semiotic/ai`
 
 ## Theming & Brand Styling
 All charts respond to CSS custom properties on any ancestor:

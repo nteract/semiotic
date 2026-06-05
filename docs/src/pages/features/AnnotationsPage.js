@@ -375,7 +375,7 @@ export default function AnnotationsPage() {
         { label: "Overview", path: "/annotations/overview" },
       ]}
       prevPage={{ title: "Structured Navigation", path: "/accessibility/navigation" }}
-      nextPage={{ title: "Advanced Annotations", path: "/annotations/advanced" }}
+      nextPage={{ title: "Design Guidance", path: "/annotations/design-guidance" }}
     >
       <p>
         Annotations are first-class citizens in Semiotic. Every chart component
@@ -1507,17 +1507,18 @@ export default function AnnotationsPage() {
             ["callout", "All", "x, y (or pointId), label, radius", "Callout with circular subject highlight"],
             ["callout-circle", "All", "x, y, label, radius", "Same as callout with explicit circle subject"],
             ["callout-rect", "All", "x, y, label, width, height", "Callout with rectangular subject"],
+            ["text", "All", "x, y, label, dx, dy", "Plain text at an anchored data position"],
+            ["widget", "All", "x, y (or nodeId), content, width, height", "React content anchored in data space"],
             ["enclose", "All", "coordinates, label, padding", "Circle enclosing a set of data points"],
             ["rect-enclose", "All", "coordinates, label, padding", "Rectangle enclosing a set of data points"],
-            ["enclose-hull", "All", "coordinates, label", "Convex hull enclosing data points"],
+            ["highlight", "All", "style", "Redraws a mark on annotation layer with custom style"],
+            ["bracket", "Ordinal", "category, label, width, height, depth", "Bracket spanning a category or range"],
             ["trend", "XY", "method, color, bandwidth, label", "Regression line (linear, polynomial, or loess)"],
             ["band", "XY", "y0, y1, fill, fillOpacity, label", "Shaded horizontal band between two values"],
+            ["envelope", "XY", "bounds, fill, fillOpacity, label", "Envelope around a series or coordinate set"],
             ["anomaly-band", "XY", "threshold, fill, anomalyColor, label", "Mean ± N×σ band with highlighted outliers"],
             ["forecast", "XY", "steps, confidence, method, fill, label", "Extrapolated trend with widening confidence envelope"],
-            ["highlight", "All", "style", "Redraws a mark on annotation layer with custom style"],
-            ["desaturation-layer", "All", "style", "Semi-transparent overlay for focus+context"],
-            ["frame-hover", "All", "(none)", "Tooltip div centered on the hovered data point"],
-            ["category", "Ordinal", "categories, label, position, depth", "Bracket annotation around columns"],
+            ["category-highlight", "Ordinal", "category, color, opacity, label", "Highlight an ordinal category band"],
           ].map(([type, charts, props, desc], i) => (
             <tr key={type} style={{ background: i % 2 ? "var(--surface-1)" : "transparent" }}>
               <td style={tdCodeStyle}>{type}</td>

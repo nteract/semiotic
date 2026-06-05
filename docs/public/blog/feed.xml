@@ -5,15 +5,37 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-05-24T00:00:00Z</updated>
+  <updated>2026-06-01T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Anchored conversations: when the AI knows which point you&apos;re asking about</title>
+    <id>https://semiotic3.nteract.io/blog/anchored-conversations</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/anchored-conversations"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/anchored-conversations.png"/>
+    <published>2026-06-01T00:00:00Z</published>
+    <updated>2026-06-01T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <summary type="text">Chat-with-chart works, but the user has to verbalize which point they care about and the AI has to verbalize where the answer applies. Both steps lose the spatial information that&apos;s already on screen. Bidirectional point-anchored AI conversation, with useChartFocus + useChartInterrogation as the building blocks.</summary>
+  </entry>
+  <entry>
+    <title>Semiotic 3.6.0</title>
+    <id>https://semiotic3.nteract.io/blog/release-3-6-0</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-6-0"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-6-0.png"/>
+    <published>2026-05-26T00:00:00Z</published>
+    <updated>2026-05-26T00:00:00Z</updated>
+    <author><name>AI-Generated</name></author>
+    <category term="release"/>
+    <summary type="text">3.6.0 turns Semiotic&apos;s observation hooks, native annotations, and streaming runtime into an explicit AI-facing surface. Charts declare what they&apos;re for; datasets get profiled and ranked; audiences get calibrated; conversations anchor back to the chart instead of stopping at a chat bubble. Three case-study posts published alongside the release walk through what the new shape makes possible.</summary>
+  </entry>
   <entry>
     <title>Charts that know what they&apos;re for</title>
     <id>https://semiotic3.nteract.io/blog/charts-that-know-what-theyre-for</id>
     <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/charts-that-know-what-theyre-for"/>
     <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/charts-that-know-what-theyre-for.png"/>
-    <published>2026-05-24T00:00:00Z</published>
-    <updated>2026-05-24T00:00:00Z</updated>
+    <published>2026-05-25T00:00:00Z</published>
+    <updated>2026-05-25T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
     <category term="case-study"/>
     <summary type="text">Semiotic 3.6.0 ships a chart recommendation engine that&apos;s heuristic-first, LLM-optional, and audience-aware. Charts now carry descriptors that declare what data shapes they serve and which questions they answer; an AudienceProfile layers per-org familiarity and adoption targets on top; a separate &apos;stretch&apos; surface grows literacy without forcing it.</summary>

@@ -26,6 +26,7 @@ import type { Datum } from "./datumTypes"
 
 import { VALIDATION_MAP } from "./validateProps"
 import { contrastRatio } from "./diagnoseConfig"
+import { annotationDrawsConnector, annotationType, isNoteAnnotation } from "./annotationTypes"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -355,12 +356,13 @@ export function auditAccessibility(
 
   // Annotation→target association (the "correspondence problem", Rahman et al.):
   // a note must tie to its target by more than color. Label/callout draw a
-  // connector, enclosures wrap the target, thresholds/bands span the plot — all
-  // non-color cues. A colored `text`/`widget` note, or a callout with its
-  // connector disabled, ties to its target by color + position alone, which a
-  // color-blind or non-visual reader can't follow.
+  // connector. A colored `text`/`widget` note, or a callout with its connector
+  // disabled, ties to its target by color + position alone, which a color-blind
+  // or non-visual reader can't follow. Statistical overlays, enclosures, and
+  // reference lines are spatial encodings rather than correspondence notes, so
+  // this note-specific heuristic does not audit them.
   {
-    const anns = annotations
+    const anns = annotations.filter(isNoteAnnotation)
     if (anns.length > 0) {
       // M4 redundant-cue default: `autoPlaceAnnotations: { redundantCues: true }`
       // makes the renderer add a leader line to colored `text` notes, so they no
@@ -369,18 +371,11 @@ export function auditAccessibility(
       const redundantCues = typeof apa === "object" && apa !== null && (apa as Datum).redundantCues === true
       const cueless = anns.filter((a) => {
         if (typeof a.color !== "string") return false // not color-linked → not this problem
-        const type = typeof a.type === "string" ? a.type : ""
-        const connectorDisabled = Array.isArray(a.disable) && (a.disable as unknown[]).includes("connector")
-        const drawsConnector =
-          (type === "label" || type === "callout" || type === "callout-circle" || type === "callout-rect") &&
-          !connectorDisabled
-        const drawsSubject =
-          type === "enclose" || type === "rect-enclose" || type === "bracket" || type === "highlight"
-        const isReferenceLine = type === "y-threshold" || type === "x-threshold" || type === "band"
+        const type = annotationType(a)
         // redundantCues gives colored `text` notes a leader line at render time.
         const drawsRedundantLeader = redundantCues && type === "text"
         // Any of these is a non-color cue → the association is redundant.
-        return !(drawsConnector || drawsSubject || isReferenceLine || drawsRedundantLeader)
+        return !(annotationDrawsConnector(a) || drawsRedundantLeader)
       })
       f.push({
         id: "perceivable.annotation-association",

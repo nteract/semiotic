@@ -71,6 +71,13 @@ with d3-geo projections, zoom/pan, tile basemaps, and drag-rotate globe spinning
 LOESS smoothing, forecast with confidence envelopes, and anomaly detection.
 Marginal distribution graphics on scatterplot axes with a single prop.
 
+**First-class annotations.** Annotations are data-bound objects, not post-hoc
+artwork. Labels, callouts, thresholds, enclosures, statistical overlays, and
+React widgets move with the chart and render through browser, SSR, and export
+paths. Opt into placement, hierarchy, density, progressive disclosure,
+audience-aware amount, provenance, and editorial lifecycle when the chart
+needs to communicate more than its encoding alone.
+
 ### Start simple, go deep
 
 | Layer | For | Example |
@@ -520,7 +527,8 @@ Agent-facing API surface:
 - [Getting Started](https://semiotic.nteract.io/getting-started)
 - [Charts](https://semiotic.nteract.io/charts) — chart types with live examples
 - [Frames](https://semiotic.nteract.io/frames) — full Frame API reference
-- [Features](https://semiotic.nteract.io/features) — axes, annotations, tooltips, styling, Vega-Lite translator
+- [Features](https://semiotic.nteract.io/features) — axes, tooltips, interaction, responsive behavior, and composition
+- [Annotations](https://semiotic.nteract.io/annotations) — first-class annotation types, design guidance, provenance, and lifecycle
 - [Cookbook](https://semiotic.nteract.io/cookbook) — advanced patterns and recipes
 - [Playground](https://semiotic.nteract.io/playground) — interactive prop exploration
 

@@ -5,6 +5,7 @@ import {
   applyAnnotationStatus,
   computeAnnotationFreshness,
   currentTimestamp,
+  filterAnnotationsByStatus,
   withCurrentProvenance,
   withProvenance,
   type Annotated,
@@ -503,5 +504,15 @@ describe("applyAnnotationStatus (M7 editorial treatment)", () => {
     ]
     // The retracted revision is filtered, and it no longer supersedes v1.
     expect(applyAnnotationStatus(input).map((a) => a.label)).toEqual(["v1"])
+  })
+
+  it("shares its default visibility contract without applying styles", () => {
+    const input = [
+      note("v1", {}, { stableId: "claim-1" }),
+      note("v2", { supersedes: "claim-1", status: "accepted" }, { stableId: "claim-2" }),
+      note("gone", { status: "retracted" }),
+    ]
+    expect(filterAnnotationsByStatus(input).map((a) => a.label)).toEqual(["v2"])
+    expect(filterAnnotationsByStatus(input)[0].opacity).toBeUndefined()
   })
 })
