@@ -57,7 +57,10 @@ describe("ProportionalSymbolMap", () => {
           <ProportionalSymbolMap points={samplePoints} sizeBy="population" loading={false} />
         </Wrapper>
       )
-      expect(container.querySelector(".stream-geo-frame")).toBeTruthy()
+      expect(lastGeoFrameProps.points).toBe(samplePoints)
+      expect(lastGeoFrameProps.pointStyle(samplePoints[1]).r).toBeGreaterThan(
+        lastGeoFrameProps.pointStyle(samplePoints[3]).r
+      )
     })
 
     it("renders without error when points transitions from empty to populated", () => {
@@ -73,7 +76,10 @@ describe("ProportionalSymbolMap", () => {
           <ProportionalSymbolMap points={samplePoints} sizeBy="population" />
         </Wrapper>
       )
-      expect(container.querySelector(".stream-geo-frame")).toBeTruthy()
+      expect(lastGeoFrameProps.points).toBe(samplePoints)
+      expect(lastGeoFrameProps.pointStyle(samplePoints[1]).r).toBeGreaterThan(
+        lastGeoFrameProps.pointStyle(samplePoints[3]).r
+      )
     })
 
     it("survives the loading→data transition without a hooks-count error", () => {
@@ -95,7 +101,10 @@ describe("ProportionalSymbolMap", () => {
             </Wrapper>
           )
         ).not.toThrow()
-        expect(container.querySelector(".stream-geo-frame")).toBeTruthy()
+        expect(lastGeoFrameProps.points).toBe(samplePoints)
+        expect(lastGeoFrameProps.pointStyle(samplePoints[1]).r).toBeGreaterThan(
+          lastGeoFrameProps.pointStyle(samplePoints[3]).r
+        )
         const hookErr = errSpy.mock.calls.some((c) =>
           String(c[0]).includes("Rendered more hooks") ||
           String(c[0]).includes("change in the order of Hooks")

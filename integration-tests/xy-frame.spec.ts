@@ -131,8 +131,41 @@ test.describe("XY Charts - Scatter and Bubble", () => {
     await waitForChartReady(page, "xy-annotation-auto-place")
     const testCase = page.locator('[data-testid="xy-annotation-auto-place"]')
 
-    await expect(testCase.locator("svg text", { hasText: "Edge" })).toBeVisible({ timeout: 5000 })
-    await expect(testCase.locator("svg text", { hasText: "Center A" })).toBeVisible()
+    const geometry = await testCase.evaluate((container) => {
+      const chartRect = container.getBoundingClientRect()
+      const labels = Array.from(container.querySelectorAll("svg text")).map((node) => {
+        const rect = node.getBoundingClientRect()
+        return {
+          text: node.textContent ?? "",
+          left: rect.left - chartRect.left,
+          right: rect.right - chartRect.left,
+          top: rect.top - chartRect.top,
+          bottom: rect.bottom - chartRect.top,
+        }
+      })
+      return { width: chartRect.width, height: chartRect.height, labels }
+    })
+    if (geometry.width <= 0 || geometry.height <= 0) {
+      throw new Error("Expected xy-annotation-auto-place chart to have a layout box")
+    }
+    const { labels } = geometry
+    const edge = labels.find((label) => label.text.includes("Edge"))
+    const center = labels.find((label) => label.text.includes("Center A"))
+    if (!edge || !center) {
+      throw new Error("Expected auto-placed Edge and Center A annotation labels")
+    }
+    for (const label of [edge, center]) {
+      expect(label.left).toBeGreaterThanOrEqual(-1)
+      expect(label.right).toBeLessThanOrEqual(geometry.width + 1)
+      expect(label.top).toBeGreaterThanOrEqual(-1)
+      expect(label.bottom).toBeLessThanOrEqual(geometry.height + 1)
+    }
+    const labelsOverlap =
+      edge.left < center.right &&
+      center.left < edge.right &&
+      edge.top < center.bottom &&
+      center.top < edge.bottom
+    expect(labelsOverlap).toBe(false)
     await expect(testCase).toHaveScreenshot("xy-annotation-auto-place.png", {
       maxDiffPixels: 150
     })

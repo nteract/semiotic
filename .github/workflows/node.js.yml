@@ -47,6 +47,9 @@ jobs:
       - name: Check capability matrix freshness
         run: npm run check:capabilities
 
+      - name: Check visual baseline capability coverage
+        run: npm run check:visual-baseline-capabilities
+
       - name: Check blog metadata registry freshness
         run: npm run check:blog-entries
 
@@ -200,7 +203,7 @@ jobs:
         # first time and skipped on subsequent runs — which left
         # single-test misses (a flaky run, a renamed test) permanently
         # failing CI because no second bootstrap pass would fire.
-        run: npx playwright test --update-snapshots=missing
+        run: node scripts/run-playwright-missing-snapshot-bootstrap.mjs
 
       - name: Upload snapshot baselines
         if: always()

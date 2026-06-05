@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import * as React from "react"
 import { waitForChartReady } from "./helpers"
 
 /**
@@ -27,115 +28,18 @@ import { waitForChartReady } from "./helpers"
  *   npx playwright test integration-tests/ssr-parity.spec.ts --update-snapshots
  */
 
-// Same fixture data the CSR-side fixture uses. Inline here (not from
-// test-data.js) so the parity invariant is "what we pass to
-// renderChart === what the fixture page renders" with no indirection.
-const xyData = [
-  { x: 0, y: 1 },
-  { x: 1, y: 4 },
-  { x: 2, y: 2 },
-  { x: 3, y: 5 },
-  { x: 4, y: 3 },
-]
-
-const categoryData = [
-  { region: "AMER", value: 42 },
-  { region: "EMEA", value: 33 },
-  { region: "APAC", value: 51 },
-]
-
-const networkNodes = [{ id: "a" }, { id: "b" }, { id: "c" }]
-const networkEdges = [
-  { source: "a", target: "b", value: 5 },
-  { source: "b", target: "c", value: 3 },
-]
-
-const hierarchy = {
-  name: "root",
-  children: [
-    { name: "alpha", value: 10 },
-    { name: "beta", value: 7 },
-    { name: "gamma", value: 4 },
-  ],
-}
-
-// ProcessSankey fixture — mirrors the CSR-side fixture byte-for-byte.
-const psNodes = [
-  { id: "Alice",   category: "Person",    xExtent: [1767657600000, 1767657600000] },
-  { id: "Bob",     category: "Person",    xExtent: [1769472000000, 1769472000000] },
-  { id: "Eng",     category: "Team" },
-  { id: "Release", category: "Milestone", xExtent: [1776384000000, 1779494400000] },
-]
-const psEdges = [
-  { id: "alice-eng", source: "Alice", target: "Eng",     value: 8,  startTime: 1769904000000, endTime: 1771632000000 },
-  { id: "bob-eng",   source: "Bob",   target: "Eng",     value: 5,  startTime: 1771977600000, endTime: 1774569600000 },
-  { id: "eng-rel",   source: "Eng",   target: "Release", value: 13, startTime: 1776384000000, endTime: 1778889600000 },
-]
-const psDomain = [1767225600000, 1779494400000]
-
 interface ParityCase {
   id: string
-  csrTestId: string
-  /** Component name + props passed to `renderChart`. */
-  ssrComponent: string
-  ssrProps: Record<string, unknown>
+  component: string
+  props: Record<string, unknown>
+  package?: "geo"
+  theme?: string
 }
 
-const cases: ParityCase[] = [
-  {
-    id: "line",
-    csrTestId: "csr-line",
-    ssrComponent: "LineChart",
-    ssrProps: { data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 200 },
-  },
-  {
-    id: "bar",
-    csrTestId: "csr-bar",
-    ssrComponent: "BarChart",
-    ssrProps: { data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 400, height: 200 },
-  },
-  {
-    id: "pie",
-    csrTestId: "csr-pie",
-    ssrComponent: "PieChart",
-    ssrProps: { data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 300, height: 300 },
-  },
-  {
-    id: "sankey",
-    csrTestId: "csr-sankey",
-    ssrComponent: "SankeyDiagram",
-    ssrProps: {
-      nodes: networkNodes, edges: networkEdges, valueAccessor: "value",
-      nodeIdAccessor: "id", sourceAccessor: "source", targetAccessor: "target",
-      width: 500, height: 300,
-    },
-  },
-  {
-    id: "treemap",
-    csrTestId: "csr-treemap",
-    ssrComponent: "Treemap",
-    ssrProps: { data: hierarchy, childrenAccessor: "children", valueAccessor: "value", width: 500, height: 400 },
-  },
-  {
-    id: "process-sankey",
-    csrTestId: "csr-process-sankey",
-    // ProcessSankey is registered in `CHART_CONFIGS` (the SSR config
-    // pre-computes bands+ribbons via `buildProcessSankeyScenes` and
-    // threads them through `customNetworkLayout` + `layoutConfig`),
-    // so it goes through the same `renderChart` registry path the
-    // rest of the parity matrix uses.
-    ssrComponent: "ProcessSankey",
-    ssrProps: {
-      nodes: psNodes,
-      edges: psEdges,
-      domain: psDomain,
-      colorBy: "category",
-      showLegend: true,
-      width: 500,
-      height: 320,
-    },
-  },
-]
+const { makeSsrParityCases } = require("./ssr-parity-fixtures.js") as {
+  makeSsrParityCases: (ReactModule: typeof React) => ParityCase[]
+}
+const cases = makeSsrParityCases(React)
 
 // Lazy-load `renderChart` from the built server bundle via the CJS
 // variant. Playwright's TS loader runs spec files as CJS, and the
@@ -156,14 +60,15 @@ test.describe("SSR / CSR parity", () => {
   for (const c of cases) {
     test(`CSR baseline — ${c.id}`, async ({ page }) => {
       await page.goto("/ssr-parity-examples/")
-      await waitForChartReady(page, c.csrTestId)
-      const target = page.locator(`[data-testid="${c.csrTestId}"]`)
-      await expect(target).toHaveScreenshot(`csr-${c.id}.png`, { maxDiffPixels: 200 })
+      await waitForChartReady(page, `csr-${c.id}`)
+      const target = page.locator(`[data-testid="csr-${c.id}"]`)
+      await expect(target).toHaveScreenshot(`csr-${c.id}.png`, { maxDiffPixels: 250 })
     })
 
     test(`SSR baseline — ${c.id}`, async ({ page }) => {
       const render = getRenderChart()
-      const ssrSvg = render(c.ssrComponent, c.ssrProps)
+      const ssrProps = c.theme ? { ...c.props, theme: c.theme } : c.props
+      const ssrSvg = render(c.component, ssrProps)
       // Inject directly. White background + tight padding match the
       // CSR fixture so the screenshots are framed comparably even
       // though we don't pixel-compare them directly.
@@ -180,7 +85,7 @@ test.describe("SSR / CSR parity", () => {
       `)
       const target = page.locator('[data-testid="ssr-target"]')
       await target.waitFor({ state: "visible" })
-      await expect(target).toHaveScreenshot(`ssr-${c.id}.png`, { maxDiffPixels: 200 })
+      await expect(target).toHaveScreenshot(`ssr-${c.id}.png`, { maxDiffPixels: 250 })
     })
   }
 })

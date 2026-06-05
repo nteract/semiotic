@@ -9,20 +9,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Accessibility audit, descriptions, and structured reader navigation.** `auditAccessibility()` /
+  `formatAccessibilityAudit()` grade chart configs against Chartability-style heuristics, while
+  `describeChart()`, `buildNavigationTree()`, `AccessibleNavTree`, and `useNavigationSync()` provide
+  layered chart descriptions, WAI-ARIA tree navigation, bidirectional tree/canvas focus sync, and
+  annotation-anchor focus for non-visual readers.
+- **IDID reader-grounding and receivability primitives.** `describeChart()` can emit an optional L4
+  communicative-act sentence from a chart capability, `buildReaderGrounding()` combines description,
+  intent, and structure into one agent-readable payload, `AudienceProfile.receptionModality` lets
+  `suggestCharts()` penalize charts a non-visual audience cannot receive, and
+  `accessibilityCaveats()` feeds audit warnings into recommendation caveats.
+- **Conversation-arc telemetry.** `enableConversationArc()`, `disableConversationArc()`,
+  `getConversationArcStore()`, `useConversationArc()`, and `summarizeArc()` expose a bounded,
+  opt-in event stream for suggestion, interrogation, navigation, export, and annotation-status
+  events, with zero overhead while disabled.
+- **Variant-discovery extension surface.** `proposeVariant()`, `evaluateVariantProposal()`,
+  `registerVariantDiscovery()`, and the `VariantProposal` / `VariantScore` types give external
+  heuristic or model-driven variant proposers a stable contract; scoring remains a neutral baseline
+  until the heuristic evaluator lands.
+- **Chart repair workflow primitive.** `repairChartConfig()` and the MCP `repairChartConfig` tool
+  use capability fit and chart suggestions to critique a proposed chart choice and return safer
+  alternatives for agent retry loops.
+- **`semiotic/value` and `BigNumber`.** A focal-value KPI component now ships as a lightweight value
+  entry point, with formatting, threshold, comparison/target, staleness, push-buffer, and slot APIs
+  for embedding trend or chart context.
 - **First-class annotation design assistance for 3.7.0.** `autoPlaceAnnotations` now composes collision-aware placement, curved connector routing, density budgets, progressive disclosure, responsive shedding, redundant association cues, cohesion modes, audience-aware amount, and defensive annotations. Per-annotation `emphasis` establishes hierarchy, while provenance confidence supplies a default reading order when hierarchy is not explicit.
 - **Annotation provenance and editorial lifecycle.** `AnnotationProvenance` and `AnnotationLifecycle` carry actor, evidence, confidence, stable identity, freshness, editorial status, and supersession metadata. `applyAnnotationLifecycle`, `applyAnnotationStatus`, and `filterAnnotationsByStatus` keep visual treatment, descriptions, and structured navigation aligned on the current annotation set.
 - **Annotation reception surfaces.** `describeChart` leads with author-marked features, `buildNavigationTree` adds an Annotations branch, and the accessibility audit checks color-only note-to-target association.
+- **Annotation connector diagnostics.** `diagnoseConfig()` now warns about far notes without a
+  connector and very long connectors, keeping placement guidance aligned with the annotation design
+  assistant.
 - **Annotation design guidance docs.** The first-class Annotations docs section now includes Overview, Design Guidance, Advanced Annotations, and Provenance & Lifecycle pages with live examples.
+- **Linked-hover series mode.** `linkedHover={{ mode: "series" }}` now resolves each chart's
+  series-identity field automatically, with `seriesField` available as an override for cross-chart
+  series highlighting.
+- **Capability-driven visual baseline gate.** `check:visual-baseline-capabilities` derives SSR and
+  linked-hover visual coverage requirements from `chartSpecs.ts`, verifies the current Playwright
+  evidence, and keeps the remaining SSR/CSR parity and linked-hover interaction snapshots in
+  one-way burn-down maps. It is wired into CI, `release:check`, and `prepublishOnly`.
+- **Expanded SSR/CSR visual parity matrix.** Shared Playwright fixtures now cover the high-risk
+  SSR paths for `DifferenceChart`, `Heatmap`, `QuadrantChart`, geo maps, and statistical ordinal
+  charts, plus frame background/foreground graphics, a dark-theme SSR case, annotation callouts,
+  progressive disclosure, lifecycle/status styling, geo annotations, and a network widget
+  annotation browser fixture. The `supportsSSR` burn-down drops from 29 to 17 entries.
 
 ### Changed
 
 - Annotation note-type semantics are centralized so layout, density, diagnostics, and accessibility checks agree on what counts as a note and which notes draw connectors.
 - Static SVG annotation rendering now uses the shared note renderer for labels and callouts, including `callout-circle` and `callout-rect`.
+- React hooks linting now enforces `react-hooks/rules-of-hooks`, with exhaustive-deps staged as a
+  warning while legacy dependency sites are burned down.
+- `check:capabilities` now rejects `serverChartConfigs.ts` entries that are absent from
+  `chartSpecs.ts`, with an explicit server-only exception for `Sparkline`.
 
 ### Fixed
 
+- Hook-order regressions across loading/empty/data transitions were fixed across the HOC catalog,
+  including the remaining Minimap validation early-return path, so charts no longer trip React's
+  "Rendered more hooks than during the previous render" failure when async data arrives.
 - `callout-circle` and `callout-rect` are now handled by the default annotation rules instead of being documented but silently skipped.
 - Label and callout rules now pass connector disable, opacity, and stroke-dasharray metadata through to the annotation renderer, allowing lifecycle and editorial status treatments to render as documented.
+- Value-anchored annotations now have explicit regression coverage for sort, filter, and rescale
+  reflow so labels stay bound to their data values rather than incidental array positions.
 - Progressive disclosure now reveals deferred annotations in geo frames and correctly hides/reveals network HTML widget annotations.
 - Colored statistical overlays are no longer misclassified as color-only annotation-to-target correspondence failures.
 
