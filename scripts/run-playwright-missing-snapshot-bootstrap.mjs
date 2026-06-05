@@ -1,22 +1,34 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process"
+import { mkdtempSync, readFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+
+// Write the JSON report to a file rather than stdout. Playwright pipes the
+// `webServer` (Parcel) output and any test `console.log` to the same stdout
+// the JSON reporter would use, so capturing stdout and `JSON.parse`-ing it is
+// unreliable — the interleaved logs make it invalid JSON, which previously
+// dropped this script into its fallback path and surfaced a raw exit code 1
+// even on a clean missing-snapshot bootstrap run. A dedicated report file is
+// the only output we parse; `list` stays on the console for human-readable CI
+// logs.
+const reportDir = mkdtempSync(join(tmpdir(), "pw-bootstrap-"))
+const reportPath = join(reportDir, "results.json")
 
 const args = [
   "playwright",
   "test",
   "--update-snapshots=missing",
-  "--reporter=json",
+  "--reporter=list,json",
   ...process.argv.slice(2),
 ]
 
 const result = spawnSync("npx", args, {
   cwd: process.cwd(),
   encoding: "utf8",
-  env: process.env,
-  stdio: ["inherit", "pipe", "pipe"],
+  env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_NAME: reportPath },
+  stdio: "inherit",
 })
-
-if (result.stderr) process.stderr.write(result.stderr)
 
 function collectFailedResults(node, failures = []) {
   if (!node || typeof node !== "object") return failures
@@ -37,21 +49,27 @@ function collectFailedResults(node, failures = []) {
   return failures
 }
 
-let report
-try {
-  report = JSON.parse(result.stdout)
-} catch {
-  if (result.stdout) process.stdout.write(result.stdout)
-  process.exit(result.status ?? 1)
-}
-
 if (result.status === 0) {
   console.log("Playwright visual suite passed.")
   process.exit(0)
 }
 
+let report
+try {
+  report = JSON.parse(readFileSync(reportPath, "utf8"))
+} catch (error) {
+  console.error(
+    `Could not read Playwright JSON report at ${reportPath}: ${error.message}`
+  )
+  process.exit(result.status ?? 1)
+}
+
 const failures = collectFailedResults(report)
-const missingSnapshotRe = /A snapshot doesn't exist at .*?, writing actual\./
+// All phrasings Playwright uses when `--update-snapshots=missing` writes a
+// fresh baseline instead of comparing against an existing one. A failure whose
+// errors are *only* these is a bootstrap write, not a regression.
+const missingSnapshotRe =
+  /A snapshot doesn't exist at .*?, writing actual\.|A snapshot is not provided, generating new baseline\.|A snapshot is generated at /
 const nonBootstrapFailures = failures.filter(
   (failure) =>
     failure.errors.length === 0 ||

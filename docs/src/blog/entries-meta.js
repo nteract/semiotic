@@ -114,13 +114,12 @@ export const allBlogEntriesMeta = [
     slug: "auditing-what-you-cant-see",
     title: "Auditing What You Can't See",
     subtitle:
-      "A static accessibility audit for Semiotic charts, organized by Chartability (POUR-CAF) — and the design decision at its center: being honest about what a static check can't know.",
-    author: "Semiotic Team",
-    date: "2026-06-01",
+      "A static accessibility audit for Semiotic charts, organized by Chartability (POUR-CAF) and the design decision at its center: being honest about what a static check can't know.",
+    author: "Elijah Meeks",
+    date: "2026-06-05",
     tags: ["case-study", "accessibility"],
     excerpt:
-      "A canvas chart is an opaque image to a screen reader, and automated checkers can't see it. auditAccessibility() grades a chart config against Chartability's heuristics — crediting the built-ins every chart ships, flagging the author-actionable gaps, and, most importantly, marking what it cannot know as 'manual' instead of manufacturing a false green checkmark.",
-    draft: true,
+      "A canvas chart is an opaque image to a screen reader, and automated checkers can't see it. auditAccessibility() grades a chart config against Chartability's heuristics crediting the built-ins every chart ships, flagging the author-actionable gaps, and, most importantly, marking what it cannot know as 'manual' instead of manufacturing a false green checkmark.",
   },
   {
     slug: "scale-aware-suggestions",
