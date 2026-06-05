@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test"
 import * as React from "react"
 import { waitForChartReady } from "./helpers"
-import { makeSsrParityCases } from "./ssr-parity-fixtures.js"
 
 /**
  * SSR / CSR visual parity gate.
@@ -37,7 +36,10 @@ interface ParityCase {
   theme?: string
 }
 
-const cases = makeSsrParityCases(React) as ParityCase[]
+const { makeSsrParityCases } = require("./ssr-parity-fixtures.js") as {
+  makeSsrParityCases: (ReactModule: typeof React) => ParityCase[]
+}
+const cases = makeSsrParityCases(React)
 
 // Lazy-load `renderChart` from the built server bundle via the CJS
 // variant. Playwright's TS loader runs spec files as CJS, and the

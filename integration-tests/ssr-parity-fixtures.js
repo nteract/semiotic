@@ -209,7 +209,7 @@ const geoAnnotations = [
   { type: "callout", coordinates: [20, 55], label: "Beta", dx: 24, dy: -24, color: "#7c3aed" },
 ]
 
-export function makeSsrParityCases(React) {
+function makeSsrParityCases(React) {
   return [
     {
       id: "line",
@@ -452,3 +452,5 @@ export function makeSsrParityCases(React) {
     },
   ]
 }
+
+module.exports = { makeSsrParityCases }
