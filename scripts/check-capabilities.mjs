@@ -5,14 +5,14 @@
  * aspirational. It should describe real runtime behavior and be
  * checked." — this script is the check.
  *
- * Today the script enforces two locks (the cheapest, highest-signal
- * pair):
+ * Today the script enforces the cheapest, highest-signal runtime locks:
  *
  *   1. `supportsSSR: true` ↔ entry in `serverChartConfigs.ts`
  *      CHART_CONFIGS. A chart claiming SSR support must be
  *      registered for `renderChart()`. A chart in CHART_CONFIGS but
- *      claiming `supportsSSR: false` is also an error — drift in the
- *      other direction.
+ *      claiming `supportsSSR: false` is also an error. Server configs
+ *      outside chartSpecs must appear in the explicit server-only
+ *      allowlist below.
  *
  *   2. `supportsPush: true` ↔ HOC source imports
  *      `useFrameImperativeHandle` (or a documented exemption tag in
@@ -20,10 +20,11 @@
  *      standardized push-API surface; charts claiming push support
  *      without it would expose an inconsistent ref API.
  *
- * Future locks (reserved as TODO comments in the script) will check
- * `supportsLinkedHover` ↔ `useChartSelection` import,
- * `supportsLegend` ↔ legend-rendering signal, and `layoutMode:
- * "custom"` ↔ `customNetworkLayout`/`customXYLayout`/etc. import.
+ *   3. `supportsLinkedHover: true` ↔ standardized selection wiring.
+ *
+ *   4. `layoutMode: "custom"` ↔ custom-layout dispatch.
+ *
+ *   5. `ai/capabilities.json` mirrors chartSpecs.
  *
  * Usage:
  *   node scripts/check-capabilities.mjs
@@ -80,6 +81,16 @@ for (const match of registrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) {
   ssrRegistered.add(match[1])
 }
 
+// Configs that legitimately serve server-only renderChart paths rather
+// than HOC capability entries. Keep this list tiny; adding here means a
+// config intentionally will not surface through the capability matrix.
+const SERVER_CONFIG_ONLY = new Map([
+  [
+    "Sparkline",
+    "compact server-rendered line used by renderChart(); not a HOC chartSpecs entry",
+  ],
+])
+
 // ── Index HOC source files for the push-API gate ───────────────────
 //
 // `supportsPush: true` charts must import the shared
@@ -101,6 +112,29 @@ for (const dir of HOC_DIRS) {
 
 // ── Run the locks ─────────────────────────────────────────────────
 const errors = []
+
+const specNames = new Set(specEntries.map((entry) => entry.name))
+for (const chart of [...ssrRegistered].sort()) {
+  if (!specNames.has(chart) && !SERVER_CONFIG_ONLY.has(chart)) {
+    errors.push(
+      `✗ ${chart}: registered in serverChartConfigs.ts but absent from chartSpecs.ts. ` +
+      `Either add it to chartSpecs with capabilities.supportsSSR=true, or document it in SERVER_CONFIG_ONLY.`,
+    )
+  }
+}
+for (const chart of SERVER_CONFIG_ONLY.keys()) {
+  if (specNames.has(chart)) {
+    errors.push(
+      `✗ ${chart}: appears in SERVER_CONFIG_ONLY but now exists in chartSpecs.ts. ` +
+      `Remove the server-only exception and let the SSR lock cover it.`,
+    )
+  }
+  if (!ssrRegistered.has(chart)) {
+    errors.push(
+      `✗ ${chart}: SERVER_CONFIG_ONLY entry is stale because CHART_CONFIGS no longer registers it.`,
+    )
+  }
+}
 
 for (const e of specEntries) {
   // Lock 1: SSR claim ↔ CHART_CONFIGS membership.
@@ -197,7 +231,7 @@ for (const e of specEntries) {
   //     produce a categorical interaction surface.
 }
 
-// ── Lock 3: ai/capabilities.json mirrors chartSpecs ───────────────
+// ── Lock 5: ai/capabilities.json mirrors chartSpecs ───────────────
 //
 // `ai/capabilities.json` is consumed by `ai/chartSuggestions.cjs` so
 // the AI suggestion path can filter recommendations by capability

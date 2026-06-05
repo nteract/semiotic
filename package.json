@@ -161,6 +161,7 @@
     "check:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs --check",
     "check:ssr": "node scripts/check-ssr-alignment.js",
     "check:capabilities": "node scripts/check-capabilities.mjs",
+    "check:visual-baseline-capabilities": "node scripts/check-visual-baseline-capabilities.mjs",
     "check:capability-coverage": "node scripts/check-capability-coverage.mjs",
     "scorecard": "node scripts/run-capability-scorecard.mjs",
     "docs:capabilities": "node scripts/generate-capabilities-md.mjs && node scripts/generate-capabilities-json.mjs",
@@ -173,8 +174,8 @@
     "check:blog-entries": "node scripts/check-blog-entry-sync.mjs",
     "check:bundle-sizes": "node scripts/sync-bundle-sizes.mjs --check",
     "docs:bundle-sizes": "node scripts/sync-bundle-sizes.mjs",
-    "release:check": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:capability-coverage && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:capability-coverage && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:bundle-sizes && npm run size"
+    "release:check": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:bundle-sizes && npm run size"
   },
   "targets": {
     "website": {

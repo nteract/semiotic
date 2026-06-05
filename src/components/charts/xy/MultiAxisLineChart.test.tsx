@@ -195,29 +195,27 @@ describe("MultiAxisLineChart", () => {
     // otherwise React throws "Rendered more hooks than during the previous
     // render". Regression guard for the misplaced `setup.earlyReturn` return.
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    const ref = React.createRef<RealtimeFrameHandle>()
     try {
       // Inline the series literal (so `yAccessor` is contextually typed as a
       // key of the data, not widened to `string`) and keep `data` on both
       // renders so TDatum is inferred consistently. `loading` still drives the
       // loading→data transition regardless of data presence.
-      const { container, rerender } = render(
-        <MultiAxisLineChart data={sampleData} xAccessor="time" series={[
+      const { rerender } = render(
+        <MultiAxisLineChart ref={ref} data={sampleData} xAccessor="time" series={[
           { yAccessor: "temperature", label: "Temperature" },
           { yAccessor: "humidity", label: "Humidity" },
         ]} loading width={600} height={400} />
       )
       expect(() =>
         rerender(
-          <MultiAxisLineChart data={sampleData} xAccessor="time" series={[
+          <MultiAxisLineChart ref={ref} data={sampleData} xAccessor="time" series={[
             { yAccessor: "temperature", label: "Temperature" },
             { yAccessor: "humidity", label: "Humidity" },
           ]} width={600} height={400} />
         )
       ).not.toThrow()
-      // The frame must actually render once data arrives — if a hooks-count
-      // error fired, the error boundary would swallow the render and no
-      // canvas would mount.
-      expect(container.querySelector("canvas")).toBeTruthy()
+      expect(ref.current?.getData()).toHaveLength(sampleData.length * 2)
       const hookErr = errSpy.mock.calls.some((c) =>
         String(c[0]).includes("Rendered more hooks") ||
         String(c[0]).includes("change in the order of Hooks")

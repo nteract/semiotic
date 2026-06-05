@@ -155,6 +155,53 @@ const examples = [
       width: 400,
       height: 400,
     })
+  }),
+
+  TestCase({
+    title: "Force Graph with Widget Annotation",
+    testId: "network-widget-annotation",
+    children: React.createElement(ForceDirectedGraph, {
+      nodes: networkData.nodes,
+      edges: networkData.edges,
+      nodeIDAccessor: "id",
+      sourceAccessor: "source",
+      targetAccessor: "target",
+      nodeSize: 8,
+      iterations: 500,
+      width: 400,
+      height: 400,
+      colorScheme: colors,
+      frameProps: {
+        annotations: [
+          {
+            type: "widget",
+            nodeId: networkData.nodes[0].id,
+            _annotationDeferred: true,
+            width: 96,
+            height: 30,
+            dx: 0,
+            dy: -34,
+            content: React.createElement(
+              "span",
+              {
+                "data-testid": "network-widget-content",
+                style: {
+                  background: "#2b6cb0",
+                  borderRadius: 4,
+                  color: "white",
+                  display: "block",
+                  fontSize: 12,
+                  lineHeight: "18px",
+                  padding: "4px 8px",
+                  whiteSpace: "nowrap",
+                },
+              },
+              "Network note"
+            ),
+          },
+        ],
+      },
+    })
   })
 ]
 

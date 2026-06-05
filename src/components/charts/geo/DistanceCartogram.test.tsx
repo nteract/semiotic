@@ -104,7 +104,16 @@ describe("DistanceCartogram", () => {
             </Wrapper>
           )
         ).not.toThrow()
-        expect(container.querySelector(".stream-geo-frame")).toBeTruthy()
+        expect(lastGeoFrameProps.points).toEqual(samplePoints)
+        expect(lastGeoFrameProps.projectionTransform).toEqual(
+          expect.objectContaining({
+            center: "London",
+            centerAccessor: "id",
+            costAccessor: "flightHours",
+            lineMode: "straight",
+            strength: 1,
+          })
+        )
         const hookErr = errSpy.mock.calls.some((c) =>
           String(c[0]).includes("Rendered more hooks") ||
           String(c[0]).includes("change in the order of Hooks")

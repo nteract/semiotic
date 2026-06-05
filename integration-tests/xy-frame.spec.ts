@@ -131,8 +131,34 @@ test.describe("XY Charts - Scatter and Bubble", () => {
     await waitForChartReady(page, "xy-annotation-auto-place")
     const testCase = page.locator('[data-testid="xy-annotation-auto-place"]')
 
-    await expect(testCase.locator("svg text", { hasText: "Edge" })).toBeVisible({ timeout: 5000 })
-    await expect(testCase.locator("svg text", { hasText: "Center A" })).toBeVisible()
+    const chartBox = await testCase.boundingBox()
+    if (!chartBox) throw new Error("Expected xy-annotation-auto-place chart to have a layout box")
+    const labels = await testCase.locator("svg text").evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const rect = node.getBoundingClientRect()
+        return {
+          text: node.textContent ?? "",
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+        }
+      })
+    )
+    const edge = labels.find((label) => label.text.includes("Edge"))
+    const center = labels.find((label) => label.text.includes("Center A"))
+    if (!edge || !center) {
+      throw new Error("Expected auto-placed Edge and Center A annotation labels")
+    }
+    const chartRight = chartBox.x + chartBox.width
+    const chartBottom = chartBox.y + chartBox.height
+    for (const label of [edge, center]) {
+      expect(label.left).toBeGreaterThanOrEqual(chartBox.x)
+      expect(label.right).toBeLessThanOrEqual(chartRight)
+      expect(label.top).toBeGreaterThanOrEqual(chartBox.y)
+      expect(label.bottom).toBeLessThanOrEqual(chartBottom)
+    }
+    expect(edge.left < center.right && center.left < edge.right).toBe(false)
     await expect(testCase).toHaveScreenshot("xy-annotation-auto-place.png", {
       maxDiffPixels: 150
     })

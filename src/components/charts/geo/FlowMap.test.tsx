@@ -88,7 +88,10 @@ describe("FlowMap", () => {
           <FlowMap nodes={sampleNodes} flows={sampleFlows} valueAccessor="passengers" />
         </Wrapper>
       )
-      expect(container.querySelector(".stream-geo-frame")).toBeTruthy()
+      expect(lastGeoFrameProps.lines).toHaveLength(sampleFlows.length)
+      expect(lastGeoFrameProps.lineStyle(sampleFlows[0])).toEqual(
+        expect.objectContaining({ opacity: expect.any(Number) })
+      )
     })
 
     it("renders without error when loading transitions to false", () => {
@@ -126,7 +129,8 @@ describe("FlowMap", () => {
             </Wrapper>
           )
         ).not.toThrow()
-        expect(container.querySelector(".stream-geo-frame")).toBeTruthy()
+        expect(lastGeoFrameProps.lines).toHaveLength(sampleFlows.length)
+        expect(lastGeoFrameProps.lineType).toBe("geo")
         const hookErr = errSpy.mock.calls.some((c) =>
           String(c[0]).includes("Rendered more hooks") ||
           String(c[0]).includes("change in the order of Hooks")
