@@ -6,6 +6,7 @@ import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
+import useContainerWidth from "../../hooks/useContainerWidth"
 
 // ---------------------------------------------------------------------------
 // Sample data
@@ -23,6 +24,77 @@ const lineData = [
   { week: 9, score: 35 },
   { week: 10, score: 30 },
 ]
+
+const semanticAnchorStates = {
+  original: {
+    label: "Original data",
+    status: "Target present at week 5, score 20",
+    data: [
+      { week: 1, score: 12, stableId: "w1" },
+      { week: 2, score: 18, stableId: "w2" },
+      { week: 3, score: 15, stableId: "w3" },
+      { week: 4, score: 24, stableId: "w4" },
+      { week: 5, score: 20, stableId: "q3-spike" },
+      { week: 6, score: 28, stableId: "w6" },
+      { week: 7, score: 32, stableId: "w7" },
+      { week: 8, score: 27, stableId: "w8" },
+      { week: 9, score: 35, stableId: "w9" },
+      { week: 10, score: 30, stableId: "w10" },
+    ],
+  },
+  refreshed: {
+    label: "Refresh: target moved",
+    status: "Same stableId now resolves at week 7, score 34",
+    data: [
+      { week: 1, score: 12, stableId: "w1" },
+      { week: 2, score: 17, stableId: "w2" },
+      { week: 3, score: 15, stableId: "w3" },
+      { week: 4, score: 22, stableId: "w4" },
+      { week: 5, score: 21, stableId: "w5" },
+      { week: 6, score: 26, stableId: "w6" },
+      { week: 7, score: 34, stableId: "q3-spike" },
+      { week: 8, score: 29, stableId: "w8" },
+      { week: 9, score: 33, stableId: "w9" },
+      { week: 10, score: 31, stableId: "w10" },
+    ],
+  },
+  gone: {
+    label: "Refresh: target gone",
+    status: "No matching stableId; callout falls back to recorded week 5, score 20",
+    data: [
+      { week: 1, score: 12, stableId: "w1" },
+      { week: 2, score: 17, stableId: "w2" },
+      { week: 3, score: 15, stableId: "w3" },
+      { week: 4, score: 22, stableId: "w4" },
+      { week: 5, score: 21, stableId: "w5" },
+      { week: 6, score: 26, stableId: "w6" },
+      { week: 7, score: 27, stableId: "w7" },
+      { week: 8, score: 29, stableId: "w8" },
+      { week: 9, score: 33, stableId: "w9" },
+      { week: 10, score: 31, stableId: "w10" },
+    ],
+  },
+}
+
+const semanticAnchorAnnotation = {
+  type: "callout",
+  x: 5,
+  y: 20,
+  label: "Same semantic note",
+  dx: 34,
+  dy: -42,
+  color: "#8250df",
+  provenance: {
+    stableId: "q3-spike",
+    authorKind: "watcher",
+    basis: "statistical-test",
+    confidence: 0.82,
+  },
+  lifecycle: {
+    anchor: "semantic",
+    status: "accepted",
+  },
+}
 
 // ---------------------------------------------------------------------------
 // Table styles (matches the Annotations overview page)
@@ -64,6 +136,78 @@ function Table({ head, rows }) {
   )
 }
 
+function SemanticAnchorDemo() {
+  const [stateKey, setStateKey] = React.useState("original")
+  const [containerRef, containerWidth] = useContainerWidth()
+  const state = semanticAnchorStates[stateKey]
+  const chartWidth = Math.max(320, Math.min(containerWidth || 640, 760))
+
+  return (
+    <div style={{
+      border: "1px solid var(--surface-3)",
+      borderRadius: 8,
+      overflow: "hidden",
+      margin: "20px 0",
+      background: "var(--surface-1)",
+    }}>
+      <div style={{
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap",
+        padding: 12,
+        borderBottom: "1px solid var(--surface-3)",
+      }}>
+        {Object.entries(semanticAnchorStates).map(([key, option]) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={stateKey === key}
+            onClick={() => setStateKey(key)}
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: "1px solid var(--surface-3)",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+              background: stateKey === key ? "var(--accent, #0969da)" : "var(--surface-2)",
+              color: stateKey === key ? "#fff" : "var(--text-1)",
+            }}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <div ref={containerRef} style={{ padding: 16, overflow: "hidden" }}>
+        <LineChart
+          data={state.data}
+          xAccessor="week"
+          yAccessor="score"
+          width={chartWidth}
+          height={320}
+          showPoints
+          pointIdAccessor="stableId"
+          xExtent={[1, 10]}
+          yExtent={[10, 38]}
+          xLabel="Week"
+          yLabel="Score"
+          annotations={[semanticAnchorAnnotation]}
+          margin={{ left: 55, right: 96, top: 40, bottom: 55 }}
+        />
+        <div style={{
+          marginTop: 10,
+          paddingTop: 10,
+          borderTop: "1px dashed var(--surface-3)",
+          color: "var(--text-secondary)",
+          fontSize: 13,
+          lineHeight: 1.5,
+        }}>
+          <strong>{state.label}:</strong> {state.status}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -95,7 +239,7 @@ export default function AnnotationProvenancePage() {
         substrate described in{" "}
         <Link to="/intelligence/interrogation">Interrogation</Link> and{" "}
         <Link to="/intelligence/conversation-arc">Conversation Arc</Link>. The
-        schema is the union of Semiotic's shipped fields and the{" "}
+        schema is the union of Semiotic&apos;s shipped fields and the{" "}
         <code>ChartAnnotationProvenance</code> shape from the Intent-Driven
         Information Design framework.
       </p>
@@ -114,6 +258,7 @@ const annotated = withProvenance(
       confidence: 0.78,
       createdAt: "2026-04-02T14:32:00Z",
       dataVersion: "2026-W14",
+      stableId: "deploy-spike-2026-w14",
     },
     lifecycle: {
       ttlHint: "P14D",              // fresh for two weeks, then ages
@@ -132,8 +277,8 @@ const annotated = withProvenance(
         collapses into one: <strong>who</strong> created the annotation
         (<code>authorKind</code>), <strong>how</strong> its claim was derived
         (<code>basis</code>), and a coarse <strong>origin</strong> label
-        (<code>source</code>). A <code>"human"</code> author can relay a
-        <code> "statistical-test"</code> basis, so keeping the actor and the
+        (<code>source</code>). A <code>&quot;human&quot;</code> author can relay a
+        <code> &quot;statistical-test&quot;</code> basis, so keeping the actor and the
         evidence-type separate lets a reader — or an agent — weight a note by
         the strength of its evidence, not just who left it.
       </p>
@@ -156,7 +301,7 @@ const annotated = withProvenance(
       <h2 id="two-axes">Lifecycle has two orthogonal axes</h2>
 
       <p>
-        "How does this note age?" is two questions, not one, and they are
+        &quot;How does this note age?&quot; is two questions, not one, and they are
         independent — a note can be <em>fresh but disputed</em>, or{" "}
         <em>stale but accepted</em>. Semiotic models both on the{" "}
         <code>lifecycle</code> block.
@@ -176,10 +321,10 @@ const annotated = withProvenance(
       <p>
         <code>computeAnnotationFreshness</code> classifies each annotation into
         a band from its <code>createdAt</code> and <code>ttlHint</code> relative
-        to "now"; <code>applyAnnotationLifecycle</code> does that and applies a
+        to <code>now</code>; <code>applyAnnotationLifecycle</code> does that and applies a
         default visual treatment in one pass. Both are pure and SSR-safe. For
         streaming / time-series charts, pass <code>dataExtent</code> so the
-        latest data point becomes "now" — freshness then tracks chart-time, not
+        latest data point becomes <code>now</code> — freshness then tracks chart-time, not
         wall-clock.
       </p>
 
@@ -214,7 +359,7 @@ const treated = applyAnnotationLifecycle([note], {
       <p>
         Per-band defaults are overridable (pass <code>opacity</code>,{" "}
         <code>strokeDasharray</code>, or <code>labelSuffix</code> maps; set a
-        band to <code>null</code> to disable its default). An annotation's own{" "}
+        band to <code>null</code> to disable its default). An annotation&apos;s own{" "}
         <code>opacity</code> / <code>strokeDasharray</code> always win over the
         treatment.
       </p>
@@ -233,9 +378,9 @@ const treated = applyAnnotationLifecycle([note], {
       <p>
         A conversational chart accumulates truth, error, speculation, and
         institutional folklore. <code>status</code> is the mechanism for
-        contesting a note: a watcher leaves it <code>"proposed"</code>, a human
-        marks it <code>"accepted"</code> or <code>"disputed"</code>, and{" "}
-        <code>"retracted"</code> withdraws it. <code>supersedes</code> links a
+        contesting a note: a watcher leaves it <code>&quot;proposed&quot;</code>, a human
+        marks it <code>&quot;accepted&quot;</code> or <code>&quot;disputed&quot;</code>, and{" "}
+        <code>&quot;retracted&quot;</code> withdraws it. <code>supersedes</code> links a
         revision to the <code>stableId</code> of the note it replaces, forming a
         revision chain.
       </p>
@@ -253,7 +398,7 @@ const treated = applyAnnotationLifecycle([note], {
       <p>
         <code>applyAnnotationStatus</code> turns that editorial standing into a
         default visual treatment — the orthogonal companion to{" "}
-        <code>applyAnnotationLifecycle</code>'s temporal one. Freshness,
+        <code>applyAnnotationLifecycle</code>&apos;s temporal one. Freshness,
         importance (M1 <code>emphasis</code>), and editorial status are three
         independent dimensions of the same render: a note can be
         stale-and-disputed. Run freshness first, then status, and the opacity
@@ -341,7 +486,7 @@ const treated = applyAnnotationStatus(
 
       <p>
         <code>lifecycle.anchor</code> controls how a note re-resolves its
-        position as data changes. Mirror it onto the annotation's top-level{" "}
+        position as data changes. Mirror it onto the annotation&apos;s top-level{" "}
         <code>anchor</code> field (or let <code>applyAnnotationLifecycle</code>{" "}
         do it) so the streaming resolver picks it up.
       </p>
@@ -352,8 +497,42 @@ const treated = applyAnnotationStatus(
           [`"fixed"`, "Default. Anchored to fixed data coordinates; disappears when out of view."],
           [`"latest"`, "Re-pins to the most recent datum each frame."],
           [`"sticky"`, "Stays at its last known pixel position after the target scrolls off."],
-          [`"semantic"`, "Re-resolves via provenance.stableId when new data arrives, falling back to the recorded coordinate (runtime support landing incrementally)."],
+          [`"semantic"`, "Re-resolves via provenance.stableId when new data arrives, falling back to the recorded coordinate if the target is gone."],
         ]}
+      />
+
+      <h3 id="semantic-anchor-demo">Semantic anchor demo</h3>
+
+      <p>
+        The callout below is authored once at the recorded coordinate{" "}
+        <code>{`{ x: 5, y: 20 }`}</code>, but its lifecycle asks Semiotic to
+        resolve by <code>provenance.stableId</code>. When the same target id
+        appears at a new point after refresh, the note moves with that target.
+        When the target id is absent, the note falls back to its recorded
+        coordinate.
+      </p>
+
+      <SemanticAnchorDemo />
+
+      <CodeBlock
+        language="jsx"
+        code={`const annotation = {
+  type: "callout",
+  x: 5,
+  y: 20,
+  label: "Same semantic note",
+  provenance: { stableId: "q3-spike" },
+  lifecycle: { anchor: "semantic", status: "accepted" },
+}
+
+<LineChart
+  data={refreshedData}
+  xAccessor="week"
+  yAccessor="score"
+  showPoints
+  pointIdAccessor="stableId"
+  annotations={[annotation]}
+/>`}
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -402,7 +581,7 @@ const treated = applyAnnotationStatus(
       <ul>
         <li><code>withProvenance(annotation, {`{ provenance?, lifecycle? }`})</code> — attach the blocks (pure).</li>
         <li><code>withCurrentProvenance(annotation, rest?)</code> — stamp <code>createdAt = now</code> unless already set.</li>
-        <li><code>currentTimestamp()</code> — ISO 8601 "now" for <code>createdAt</code>.</li>
+        <li><code>currentTimestamp()</code> — ISO 8601 <code>now</code> for <code>createdAt</code>.</li>
         <li><code>computeAnnotationFreshness(annotations, options?)</code> — populate <code>lifecycle.freshness</code>.</li>
         <li><code>annotationFreshnessFor(annotation, nowMs, thresholds?)</code> — classify a single annotation.</li>
         <li><code>applyAnnotationLifecycle(annotations, options?)</code> — freshness + default visual treatment.</li>

@@ -1106,8 +1106,8 @@ const ann = withProvenance(
         The anchor mode matters when data refreshes. <code>"fixed"</code> keeps the recorded
         coordinate verbatim; <code>"latest"</code> re-pins to the most recent data point;{" "}
         <code>"sticky"</code> rides forward until removed (the existing streaming behavior);{" "}
-        <code>"semantic"</code> re-resolves via <code>stableId</code> when new data arrives — that's
-        the M3 anchor-resolution algorithm.
+        <code>"semantic"</code> re-resolves via <code>stableId</code> when new data arrives,
+        falling back to the recorded coordinate when the target is gone.
       </p>
 
       <h2>Variant discovery</h2>

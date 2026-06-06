@@ -28,9 +28,7 @@ export interface LineStyle {
  *   on `AnnotationContext`.
  * - `"semantic"`: re-resolves via `provenance.stableId` when new data
  *   arrives, falling back to the recorded coordinate if the anchor
- *   can no longer be located. Runtime implementation lands incrementally
- *   alongside the AI annotation lifecycle work; today it behaves like
- *   `"fixed"`.
+ *   can no longer be located.
  */
 export type AnnotationAnchor = "fixed" | "latest" | "sticky" | "semantic"
 

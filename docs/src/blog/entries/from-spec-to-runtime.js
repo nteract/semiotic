@@ -505,11 +505,12 @@ const ann = withCurrentProvenance(
       </p>
 
       <p>
-        The annotation side still owes the <code style={inlineCode}>semantic</code> anchor's actual
+        The annotation side now gives the <code style={inlineCode}>semantic</code> anchor an actual
         resolution algorithm — finding "the Q3 spike" by <code style={inlineCode}>stableId</code>{" "}
-        after the data refreshes. That's the M3 hook into the existing{" "}
-        <code style={inlineCode}>annotationResolvers.ts</code> sticky-cache pathway, which is why
-        anchor mode dedup mattered for unblocking it.
+        after the data refreshes, then falling back to the recorded coordinate when the target is
+        gone. That's the M3 hook into the existing{" "}
+        <code style={inlineCode}>annotationResolvers.ts</code> pathway, which is why anchor mode
+        dedup mattered for unblocking it.
       </p>
 
       <h2>What this looks like from the outside</h2>
