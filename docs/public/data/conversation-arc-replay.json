@@ -1,0 +1,75 @@
+[
+  {
+    "type": "suggestion-shown",
+    "timestamp": 1780718400000,
+    "sessionId": "docs-replay-fixture",
+    "arcId": "eda-to-exec-brief",
+    "intent": "trend",
+    "components": ["LineChart", "AreaChart", "Scatterplot"],
+    "topScore": 4.7,
+    "audience": "analyst"
+  },
+  {
+    "type": "suggestion-chosen",
+    "timestamp": 1780718418000,
+    "sessionId": "docs-replay-fixture",
+    "arcId": "eda-to-exec-brief",
+    "component": "LineChart",
+    "rank": 1,
+    "source": "user"
+  },
+  {
+    "type": "audience-set",
+    "timestamp": 1780718432000,
+    "sessionId": "docs-replay-fixture",
+    "arcId": "eda-to-exec-brief",
+    "audience": "executive",
+    "previous": "analyst"
+  },
+  {
+    "type": "chart-rendered",
+    "timestamp": 1780718445000,
+    "sessionId": "docs-replay-fixture",
+    "arcId": "eda-to-exec-brief",
+    "component": "LineChart",
+    "chartId": "quarterly-revenue"
+  },
+  {
+    "type": "chart-edited",
+    "timestamp": 1780718474000,
+    "sessionId": "docs-replay-fixture",
+    "arcId": "eda-to-exec-brief",
+    "component": "LineChart",
+    "chartId": "quarterly-revenue",
+    "changedProps": ["annotations", "title", "summary"]
+  },
+  {
+    "type": "annotation-status-changed",
+    "timestamp": 1780718500000,
+    "sessionId": "docs-replay-fixture",
+    "arcId": "eda-to-exec-brief",
+    "annotationId": "q3-growth-note",
+    "fromStatus": "proposed",
+    "toStatus": "accepted",
+    "chartId": "quarterly-revenue"
+  },
+  {
+    "type": "nav-node-focused",
+    "timestamp": 1780718526000,
+    "sessionId": "docs-replay-fixture",
+    "arcId": "eda-to-exec-brief",
+    "chartId": "quarterly-revenue",
+    "nodeId": "chart:quarterly-revenue/series:North",
+    "role": "series",
+    "level": 2,
+    "label": "North revenue series"
+  },
+  {
+    "type": "chart-exported",
+    "timestamp": 1780718560000,
+    "sessionId": "docs-replay-fixture",
+    "arcId": "eda-to-exec-brief",
+    "component": "LineChart",
+    "format": "jsx"
+  }
+]

@@ -285,6 +285,27 @@ configToJSX(config)
 Supports bar, line, area, point, rect, arc, tick marks with encoding translation
 for color, size, aggregation, and binning.
 
+### Conversation Arc Telemetry
+
+Capture and replay the path an AI-assisted chart session took:
+
+```ts
+import {
+  createLocalStorageConversationArcSink,
+  enableConversationArc,
+  getConversationArcStore,
+  loadConversationArc,
+  registerConversationArcSink,
+} from "semiotic/ai"
+
+const sink = createLocalStorageConversationArcSink({ key: "my-app:arc" })
+registerConversationArcSink(sink)
+enableConversationArc({ sessionId: "session-abc" })
+
+getConversationArcStore().record({ type: "chart-rendered", component: "LineChart" })
+loadConversationArc(sink.load(), { enabled: false })
+```
+
 ## Bundle Sizes
 
 Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need everything** — use the sub-path that matches your chart type:

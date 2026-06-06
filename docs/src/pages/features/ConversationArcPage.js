@@ -3,11 +3,15 @@ import {
   analystPersona,
   applyAnnotationLifecycle,
   annotationFreshnessFor,
+  createLocalStorageConversationArcSink,
   dataScientistPersona,
   disableConversationArc,
   enableConversationArc,
   executivePersona,
+  loadConversationArc,
   recordAudienceChange,
+  registerConversationArcSink,
+  summarizeArc,
   useChartSuggestions,
   useConversationArc,
   withProvenance,
@@ -16,6 +20,7 @@ import { CategoryColorProvider, DotPlot, LineChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
+import replayFixture from "../../../public/data/conversation-arc-replay.json"
 
 // ── Live event log driven by the actual ConversationArcStore ─────────
 
@@ -107,6 +112,11 @@ const TYPE_COLORS = {
   "chart-replaced": "var(--semiotic-warning, #d49a00)",
   "chart-exported": "var(--semiotic-secondary, #6a52d9)",
   "chart-abandoned": "var(--semiotic-danger, #c43d3d)",
+  "interrogation-asked": "var(--semiotic-info, #3a8eff)",
+  "interrogation-answered": "var(--semiotic-success, #2d8a4a)",
+  "nav-node-focused": "var(--semiotic-secondary, #6a52d9)",
+  "nav-branch-expanded": "var(--semiotic-secondary, #6a52d9)",
+  "annotation-status-changed": "var(--semiotic-danger, #c43d3d)",
 }
 
 // Same palette as the button borders, but using the hex fallbacks
@@ -121,7 +131,24 @@ const TYPE_COLORS_HEX = {
   "chart-replaced": "#d49a00",
   "chart-exported": "#6a52d9",
   "chart-abandoned": "#c43d3d",
+  "interrogation-asked": "#3a8eff",
+  "interrogation-answered": "#2d8a4a",
+  "nav-node-focused": "#6a52d9",
+  "nav-branch-expanded": "#6a52d9",
+  "annotation-status-changed": "#c43d3d",
 }
+
+const EVENT_ORDER = [
+  ...EVENT_PRESETS.map((p) => p.type),
+  "interrogation-asked",
+  "interrogation-answered",
+  "nav-node-focused",
+  "nav-branch-expanded",
+  "annotation-status-changed",
+]
+
+const PERSISTENCE_STORAGE_KEY = "semiotic-docs:conversation-arc"
+const REPLAY_FIXTURE_PATH = "docs/public/data/conversation-arc-replay.json"
 
 // Categories on the y-axis appear in the order the first event of
 // each type arrives. That's `sort: "auto"`'s streaming behavior on
@@ -133,10 +160,9 @@ const timeFormat = (ms) => {
 
 // ── Live summary panel — same hook, same buffer ──────────────────────
 
-function ArcSummaryPanel({ summary, enabled }) {
+function ArcSummaryPanel({ summary, enabled, label = "Live summary · summarizeArc(history)" }) {
   // Per-type counts in the same color the buttons + dotplot use, so
   // it's obvious which counters correspond to which actions.
-  const orderedTypes = EVENT_PRESETS.map((p) => p.type)
   return (
     <div
       style={{
@@ -159,10 +185,10 @@ function ArcSummaryPanel({ summary, enabled }) {
             fontSize: 10,
           }}
         >
-          Live summary · <code>summarizeArc(history)</code>
+          {label}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {orderedTypes.map((type) => {
+          {EVENT_ORDER.map((type) => {
             const count = summary.byType[type] ?? 0
             return (
               <span
@@ -442,6 +468,383 @@ function ArcDemo() {
               </span>
             </div>
           ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Persistence + replay demo ────────────────────────────────────────
+
+function PersistenceReplayDemo() {
+  const { history, summary, enabled, sessionId, record } = useConversationArc({
+    enableOnMount: false,
+  })
+  const sinkRef = useRef(null)
+  const unregisterRef = useRef(null)
+  const [savedEvents, setSavedEvents] = useState([])
+  const [fixtureEvents, setFixtureEvents] = useState([])
+  const [status, setStatus] = useState("No persistence sink registered yet.")
+
+  useEffect(
+    () => () => {
+      unregisterRef.current?.()
+      unregisterRef.current = null
+      sinkRef.current = null
+    },
+    [],
+  )
+
+  const ensureSink = () => {
+    if (!sinkRef.current) {
+      const sink = createLocalStorageConversationArcSink({
+        key: PERSISTENCE_STORAGE_KEY,
+        maxEvents: 100,
+      })
+      sinkRef.current = sink
+      unregisterRef.current = registerConversationArcSink(sink)
+    }
+    return sinkRef.current
+  }
+
+  const refreshSaved = () => {
+    const sink = ensureSink()
+    const loaded = sink.load()
+    setSavedEvents(loaded)
+    return loaded
+  }
+
+  const startPersistence = () => {
+    ensureSink()
+    enableConversationArc({ capacity: 100, sessionId: "docs-persisted" })
+    refreshSaved()
+    setStatus("LocalStorageSink registered; new accepted events will persist.")
+  }
+
+  const recordSampleArc = () => {
+    ensureSink()
+    enableConversationArc({ capacity: 100, sessionId: "docs-persisted" })
+
+    const now = Date.now()
+    const arcId = `docs-local-${now}`
+    const events = [
+      {
+        type: "suggestion-shown",
+        timestamp: now,
+        sessionId: "docs-persisted",
+        arcId,
+        intent: "compare-categories",
+        components: ["GroupedBarChart", "BarChart", "DotPlot"],
+        topScore: 4.4,
+        audience: "analyst",
+      },
+      {
+        type: "suggestion-chosen",
+        timestamp: now + 1800,
+        sessionId: "docs-persisted",
+        arcId,
+        component: "GroupedBarChart",
+        rank: 1,
+        source: "user",
+      },
+      {
+        type: "chart-rendered",
+        timestamp: now + 3200,
+        sessionId: "docs-persisted",
+        arcId,
+        component: "GroupedBarChart",
+        chartId: "regional-revenue",
+      },
+      {
+        type: "chart-edited",
+        timestamp: now + 5400,
+        sessionId: "docs-persisted",
+        arcId,
+        component: "GroupedBarChart",
+        chartId: "regional-revenue",
+        changedProps: ["annotations", "legend", "summary"],
+      },
+      {
+        type: "chart-exported",
+        timestamp: now + 8100,
+        sessionId: "docs-persisted",
+        arcId,
+        component: "GroupedBarChart",
+        format: "jsx",
+      },
+    ]
+
+    events.forEach((event) => record(event))
+    const loaded = refreshSaved()
+    setStatus(`Recorded ${events.length} events; ${loaded.length} total events persisted locally.`)
+  }
+
+  const clearLiveBuffer = () => {
+    loadConversationArc([], {
+      capacity: 100,
+      enabled: false,
+      sessionId: sessionId || "docs-persisted",
+    })
+    setStatus("Live buffer cleared without clearing the localStorage artifact.")
+  }
+
+  const replaySaved = () => {
+    const loaded = refreshSaved()
+    loadConversationArc(loaded, {
+      capacity: Math.max(loaded.length, 1),
+      enabled: false,
+      sessionId: loaded[0]?.sessionId || "docs-replay-local",
+    })
+    setStatus(`Replayed ${loaded.length} locally persisted events into the live inspector.`)
+  }
+
+  const loadFixture = () => {
+    const events = replayFixture.map((event) => ({ ...event }))
+    setFixtureEvents(events)
+    loadConversationArc(events, {
+      capacity: Math.max(events.length, 1),
+      enabled: false,
+      sessionId: events[0]?.sessionId || "docs-replay-fixture",
+    })
+    setStatus(`Loaded ${events.length} events from ${REPLAY_FIXTURE_PATH}.`)
+  }
+
+  const clearPersisted = () => {
+    const sink = ensureSink()
+    sink.clear()
+    setSavedEvents([])
+    setFixtureEvents([])
+    loadConversationArc([], {
+      capacity: 100,
+      enabled: false,
+      sessionId: sessionId || "docs-persisted",
+    })
+    setStatus("Persisted localStorage artifact and live buffer cleared.")
+  }
+
+  const persistedSummary = summarizeArc(savedEvents)
+  const fixtureSummary = summarizeArc(fixtureEvents)
+  const previewEvents = history.slice(-7).reverse()
+
+  return (
+    <div
+      style={{
+        border: "1px solid var(--surface-3)",
+        borderRadius: 12,
+        padding: 20,
+        background: "var(--surface-1)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <button
+          onClick={startPersistence}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 14,
+            border: "none",
+            background: "var(--accent)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 500,
+          }}
+        >
+          Register local sink
+        </button>
+        <button
+          onClick={recordSampleArc}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 14,
+            border: "1px solid var(--semiotic-success, #2d8a4a)",
+            background: "transparent",
+            color: "var(--semiotic-success, #2d8a4a)",
+            cursor: "pointer",
+            fontWeight: 500,
+          }}
+        >
+          Record persisted arc
+        </button>
+        <button
+          onClick={clearLiveBuffer}
+          disabled={!history.length}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 14,
+            border: "1px solid var(--surface-3)",
+            background: "var(--surface-2)",
+            color: "var(--text)",
+            cursor: history.length ? "pointer" : "default",
+            opacity: history.length ? 1 : 0.5,
+          }}
+        >
+          Clear live
+        </button>
+        <button
+          onClick={replaySaved}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 14,
+            border: "1px solid var(--semiotic-secondary, #6a52d9)",
+            background: "transparent",
+            color: "var(--semiotic-secondary, #6a52d9)",
+            cursor: "pointer",
+          }}
+        >
+          Replay local
+        </button>
+        <button
+          onClick={loadFixture}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 14,
+            border: "1px solid var(--semiotic-info, #3a8eff)",
+            background: "transparent",
+            color: "var(--semiotic-info, #3a8eff)",
+            cursor: "pointer",
+          }}
+        >
+          Replay fixture
+        </button>
+        <button
+          onClick={clearPersisted}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 14,
+            border: "1px solid var(--semiotic-danger, #c43d3d)",
+            background: "transparent",
+            color: "var(--semiotic-danger, #c43d3d)",
+            cursor: "pointer",
+          }}
+        >
+          Clear persisted
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: 10,
+        }}
+      >
+        {[
+          { label: "live buffer", value: history.length, detail: enabled ? "recording" : "replay" },
+          { label: "session", value: sessionId || "none", detail: "active store id" },
+          { label: "localStorage", value: savedEvents.length, detail: PERSISTENCE_STORAGE_KEY },
+          { label: "fixture", value: fixtureEvents.length, detail: REPLAY_FIXTURE_PATH },
+        ].map((metric) => (
+          <div
+            key={metric.label}
+            style={{
+              border: "1px solid var(--surface-3)",
+              background: "var(--surface-2)",
+              borderRadius: 8,
+              padding: "10px 12px",
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                color: "var(--text-secondary)",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                fontSize: 10,
+                marginBottom: 4,
+              }}
+            >
+              {metric.label}
+            </div>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: typeof metric.value === "number" ? 22 : 14,
+                color: "var(--text)",
+                overflowWrap: "anywhere",
+              }}
+            >
+              {metric.value}
+            </div>
+            <div style={{ color: "var(--text-secondary)", fontSize: 11, marginTop: 2 }}>
+              {metric.detail}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <ArcSummaryPanel summary={summary} enabled={enabled} />
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+        <ArcSummaryPanel
+          summary={persistedSummary}
+          enabled={savedEvents.length > 0}
+          label="Persisted summary · summarizeArc(localStorage)"
+        />
+        <ArcSummaryPanel
+          summary={fixtureSummary}
+          enabled={fixtureEvents.length > 0}
+          label="Fixture summary · summarizeArc(JSON artifact)"
+        />
+      </div>
+
+      <div
+        style={{
+          background: "var(--surface-2)",
+          borderRadius: 8,
+          padding: 10,
+          fontSize: 12,
+          color: "var(--text-secondary)",
+        }}
+      >
+        {status}
+      </div>
+
+      <div
+        style={{
+          maxHeight: 220,
+          overflowY: "auto",
+          background: "var(--surface-2)",
+          padding: 10,
+          borderRadius: 8,
+          fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
+          fontSize: 12,
+        }}
+      >
+        {previewEvents.length === 0 ? (
+          <em style={{ color: "var(--text-secondary)" }}>
+            The replayed or recorded arc will appear here.
+          </em>
+        ) : (
+          previewEvents.map((event, i) => (
+            <div
+              key={`${event.timestamp}-${i}`}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "120px 170px minmax(0, 1fr)",
+                gap: 8,
+                padding: "4px 0",
+                borderBottom: "1px dotted var(--surface-3)",
+              }}
+            >
+              <span style={{ color: "var(--text-secondary)" }}>
+                {new Date(event.timestamp).toLocaleTimeString()}
+              </span>
+              <span style={{ color: TYPE_COLORS[event.type] ?? "var(--text)", fontWeight: 600 }}>
+                {event.type}
+              </span>
+              <span style={{ color: "var(--text)", overflowWrap: "anywhere" }}>
+                {JSON.stringify(
+                  Object.fromEntries(
+                    Object.entries(event).filter(
+                      ([k]) => k !== "type" && k !== "timestamp" && k !== "sessionId",
+                    ),
+                  ),
+                )}
+              </span>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )
@@ -834,13 +1237,13 @@ function FreshnessDemo() {
             marginBottom: 4,
           }}
         >
-          Pretend "now" is <code style={{ fontSize: 13 }}>{nowIso.slice(0, 10)}</code>
+          Pretend &quot;now&quot; is <code style={{ fontSize: 13 }}>{nowIso.slice(0, 10)}</code>
         </label>
         <input
           type="range"
           min={SLIDER_MIN}
           max={SLIDER_MAX}
-          step={86_400_000}
+          step={86400000}
           value={nowMs}
           onChange={(e) => setNowIso(new Date(parseInt(e.target.value, 10)).toISOString())}
           style={{ width: "100%" }}
@@ -948,10 +1351,9 @@ export default function ConversationArcPage() {
       </ul>
       <p>
         These ship together. Annotation freshness and the default visual treatment are live (the
-        demo below uses them directly). The conversation-arc store is functional; full
-        sink/persistence helpers and the <code>useConversationArc</code>
-        hook arrive incrementally. Variant discovery's plug point is callable today; the built-in
-        heuristic proposer and scorer arrive in subsequent passes.
+        demo below uses them directly). The conversation-arc store, React hook, persistence sinks,
+        and replay hydration helpers are functional. Variant discovery&apos;s plug point is callable
+        today; the built-in heuristic proposer and scorer arrive in subsequent passes.
       </p>
 
       <h2>Conversation-arc telemetry</h2>
@@ -968,6 +1370,16 @@ export default function ConversationArcPage() {
         store — not a re-render of local state.
       </p>
       <ArcDemo />
+
+      <h3>Persistence + replay</h3>
+      <p>
+        Registering a sink makes accepted events durable without changing the recording API. The
+        demo below writes a sample arc to <code>localStorage</code>, clears only the live buffer,
+        replays the local artifact, and can hydrate the same inspector from a static JSON fixture at{" "}
+        <code>{REPLAY_FIXTURE_PATH}</code>. Replay uses <code>loadConversationArc()</code>, so it
+        updates the visible store snapshot without re-firing sinks or analytics subscribers.
+      </p>
+      <PersistenceReplayDemo />
 
       <h3>Wiring — React</h3>
       <p>
@@ -1003,20 +1415,39 @@ function ArcInspector() {
       </p>
       <CodeBlock language="jsx">
         {`import {
+  createLocalStorageConversationArcSink,
+  createWebhookConversationArcSink,
   enableConversationArc,
   getConversationArcStore,
+  loadConversationArc,
+  registerConversationArcSink,
 } from "semiotic/ai"
 
 enableConversationArc({ capacity: 1000, sessionId: "session-abc" })
 
+const localSink = createLocalStorageConversationArcSink({
+  key: "my-app:conversation-arc",
+})
+const unregisterLocal = registerConversationArcSink(localSink)
+
+registerConversationArcSink(createWebhookConversationArcSink({
+  url: "/analytics/conversation-arc",
+  headers: { "X-App": "viz-builder" },
+}))
+
 const store = getConversationArcStore()
 const unsubscribe = store.subscribe((event) => {
-  // Send to your sink — analytics, IndexedDB, replay file.
+  // In-process observer: update an inspector, console, or live dashboard.
   console.log(event.type, event)
 })
 
-// Talk-time: flush the buffer to a recorded fixture for replay.
-const allEvents = store.flush()`}
+// Later: hydrate an inspector from the durable local artifact.
+const savedEvents = localSink.load()
+loadConversationArc(savedEvents, { enabled: false })
+
+// Teardown when the app owns this lifecycle.
+unsubscribe()
+unregisterLocal()`}
       </CodeBlock>
 
       <h3>Auto-instrumentation</h3>
@@ -1034,18 +1465,18 @@ const allEvents = store.flush()`}
         <li>
           <code>AccessibleNavTree</code> emits <code>nav-node-focused</code> and{" "}
           <code>nav-branch-expanded</code> as a reader traverses the{" "}
-          <Link to="/accessibility/navigation">navigation tree</Link> — the arc's first{" "}
-          <em>reception</em>-side signal, correlated by the tree's <code>chartId</code>.
+          <Link to="/accessibility/navigation">navigation tree</Link> — the arc&apos;s first{" "}
+          <em>reception</em>-side signal, correlated by the tree&apos;s <code>chartId</code>.
         </li>
       </ul>
       <p>
-        Both are zero-overhead when the arc store is disabled (the default). For audience-picker
-        UIs, call <code>recordAudienceChange(next, previous)</code> in the picker's{" "}
+        All are zero-overhead when the arc store is disabled (the default). For audience-picker
+        UIs, call <code>recordAudienceChange(next, previous)</code> in the picker&apos;s{" "}
         <code>onChange</code> handler.
       </p>
 
       <p>
-        Try it: change the intent or audience below. No <code>record()</code> calls in the demo's
+        Try it: change the intent or audience below. No <code>record()</code> calls in the demo&apos;s
         own component code — only <code>useChartSuggestions</code> running and{" "}
         <code>recordAudienceChange</code> on the picker. Watch the event log fill in.
       </p>
@@ -1053,15 +1484,16 @@ const allEvents = store.flush()`}
 
       <h3>Event vocabulary</h3>
       <p>
-        Twelve variants in a discriminated union: <code>suggestion-shown</code>,{" "}
+        Thirteen variants in a discriminated union: <code>suggestion-shown</code>,{" "}
         <code>suggestion-chosen</code>, <code>audience-set</code>, <code>chart-rendered</code>,{" "}
         <code>chart-edited</code>, <code>chart-replaced</code>, <code>chart-exported</code>,{" "}
         <code>chart-abandoned</code>, <code>interrogation-asked</code>,{" "}
         <code>interrogation-answered</code>, and the reception pair{" "}
-        <code>nav-node-focused</code> / <code>nav-branch-expanded</code>. Each carries the fields a
-        downstream analytics or replay system would actually consume (component name, rank, format,
-        reason; node id, role, and level for the nav events). The <code>arcId</code> field threads
-        multiple events into a single named arc when you need it.
+        <code>nav-node-focused</code> / <code>nav-branch-expanded</code>, plus{" "}
+        <code>annotation-status-changed</code>. Each carries the fields a downstream analytics or
+        replay system would actually consume (component name, rank, format, reason; node id, role,
+        and level for the nav events; annotation id and status transition for contested notes). The{" "}
+        <code>arcId</code> field threads multiple events into a single named arc when you need it.
       </p>
 
       <h2>Annotation provenance + lifecycle</h2>
@@ -1079,7 +1511,7 @@ const allEvents = store.flush()`}
       <h3>Lifecycle scrubber</h3>
       <p>
         The chart below carries two annotations — one from a user with a 30-day TTL, one from an AI
-        with a 14-day TTL and lower confidence. Drag the slider to advance "now" and watch them
+        with a 14-day TTL and lower confidence. Drag the slider to advance &quot;now&quot; and watch them
         drift through <code>fresh → aging → stale → expired</code>:
       </p>
       <FreshnessDemo />
@@ -1103,17 +1535,17 @@ const ann = withProvenance(
       </CodeBlock>
 
       <p>
-        The anchor mode matters when data refreshes. <code>"fixed"</code> keeps the recorded
-        coordinate verbatim; <code>"latest"</code> re-pins to the most recent data point;{" "}
-        <code>"sticky"</code> rides forward until removed (the existing streaming behavior);{" "}
-        <code>"semantic"</code> re-resolves via <code>stableId</code> when new data arrives,
+        The anchor mode matters when data refreshes. <code>&quot;fixed&quot;</code> keeps the recorded
+        coordinate verbatim; <code>&quot;latest&quot;</code> re-pins to the most recent data point;{" "}
+        <code>&quot;sticky&quot;</code> rides forward until removed (the existing streaming behavior);{" "}
+        <code>&quot;semantic&quot;</code> re-resolves via <code>stableId</code> when new data arrives,
         falling back to the recorded coordinate when the target is gone.
       </p>
 
       <h2>Variant discovery</h2>
       <p>
         Hand-curated <code>capability.variants</code> are bounded by what humans wrote. Variant
-        discovery is the API surface for proposing configurations the registry doesn't include —
+        discovery is the API surface for proposing configurations the registry doesn&apos;t include —
         from heuristic walkers, LLM agents, or future ML models — and scoring them with the same
         rubric the built-in suggester uses.
       </p>
@@ -1162,7 +1594,7 @@ const scores = proposals.map((p) => evaluateVariantProposal(p, profile))`}
       <h2>Why these three together</h2>
       <p>
         The arc records what happened. The annotations preserve what the user said about it. Variant
-        discovery keeps the system honest about what it doesn't yet know — and where the learning
+        discovery keeps the system honest about what it doesn&apos;t yet know — and where the learning
         slots in.
       </p>
     </PageLayout>

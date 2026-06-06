@@ -22,7 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Conversation-arc telemetry.** `enableConversationArc()`, `disableConversationArc()`,
   `getConversationArcStore()`, `useConversationArc()`, and `summarizeArc()` expose a bounded,
   opt-in event stream for suggestion, interrogation, navigation, export, and annotation-status
-  events, with zero overhead while disabled.
+  events, with zero overhead while disabled. `registerConversationArcSink()`,
+  `createLocalStorageConversationArcSink()`, `createIndexedDBConversationArcSink()`,
+  `createWebhookConversationArcSink()`, `loadConversationArc()`, and `replayConversationArc()` add
+  opt-in durable capture and replay hydration without duplicating sink or analytics events.
 - **Variant-discovery extension surface.** `proposeVariant()`, `evaluateVariantProposal()`,
   `registerVariantDiscovery()`, and the `VariantProposal` / `VariantScore` types give external
   heuristic or model-driven variant proposers a stable contract; scoring remains a neutral baseline
