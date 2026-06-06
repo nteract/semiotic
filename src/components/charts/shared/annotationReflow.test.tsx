@@ -15,7 +15,11 @@ import type { Datum } from "./datumTypes"
 const xScale = scaleLinear().domain([0, 10]).range([0, 200])
 const yScale = scaleLinear().domain([0, 10]).range([200, 0])
 
-function ctx(data: Datum[], scales = { x: xScale, y: yScale }): AnnotationContext {
+function ctx(
+  data: Datum[],
+  scales = { x: xScale, y: yScale },
+  overrides: Partial<AnnotationContext> = {}
+): AnnotationContext {
   return {
     scales: { x: scales.x, y: scales.y, time: scales.x, value: scales.y },
     xAccessor: "x",
@@ -24,6 +28,7 @@ function ctx(data: Datum[], scales = { x: xScale, y: yScale }): AnnotationContex
     height: 200,
     data,
     frameType: "xy",
+    ...overrides,
   }
 }
 
@@ -80,5 +85,79 @@ describe("annotation reflow binding", () => {
     expect(notePos(a)).not.toEqual(notePos(b))
     expect(notePos(a)).toEqual({ x: xScale(9), y: yScale(9) })
     expect(notePos(b)).toEqual({ x: xScale(2), y: yScale(2) })
+  })
+
+  it("re-resolves a semantic annotation through provenance.stableId when the target is still present", () => {
+    const semantic: Datum = {
+      type: "callout",
+      x: 5,
+      y: 5,
+      label: "Q3 spike",
+      lifecycle: { anchor: "semantic" },
+      provenance: { stableId: "q3-spike" },
+    }
+    const node = rules(
+      semantic,
+      0,
+      ctx([{ stableId: "q3-spike", x: 7, y: 3 }])
+    )
+    expect(notePos(node)).toEqual({ x: xScale(7), y: yScale(3) })
+  })
+
+  it("moves a semantic annotation when refreshed data relocates the same stable target", () => {
+    const semantic: Datum = {
+      type: "callout",
+      x: 5,
+      y: 5,
+      label: "Q3 spike",
+      anchor: "semantic",
+      provenance: { stableId: "q3-spike" },
+    }
+    const before = rules(
+      semantic,
+      0,
+      ctx([{ stableId: "q3-spike", x: 5, y: 5 }])
+    )
+    const after = rules(
+      semantic,
+      0,
+      ctx([{ stableId: "q3-spike", x: 8, y: 4 }])
+    )
+    expect(notePos(before)).toEqual({ x: xScale(5), y: yScale(5) })
+    expect(notePos(after)).toEqual({ x: xScale(8), y: yScale(4) })
+  })
+
+  it("falls back to the recorded coordinate when a semantic target is gone", () => {
+    const semantic: Datum = {
+      type: "callout",
+      x: 5,
+      y: 5,
+      label: "Q3 spike",
+      anchor: "semantic",
+      provenance: { stableId: "q3-spike" },
+    }
+    const node = rules(semantic, 0, ctx([{ stableId: "other-point", x: 8, y: 4 }]))
+    expect(notePos(node)).toEqual({ x: xScale(5), y: yScale(5) })
+  })
+
+  it("prefers point scene nodes for semantic anchors when pointIdAccessor is configured", () => {
+    const semantic: Datum = {
+      type: "callout",
+      x: 5,
+      y: 5,
+      label: "Q3 spike",
+      anchor: "semantic",
+      provenance: { stableId: "q3-spike" },
+    }
+    const node = rules(
+      semantic,
+      0,
+      ctx(
+        [{ stableId: "q3-spike", x: 5, y: 5 }],
+        { x: xScale, y: yScale },
+        { pointNodes: [{ pointId: "q3-spike", x: 33, y: 44, r: 3 }] }
+      )
+    )
+    expect(notePos(node)).toEqual({ x: 33, y: 44 })
   })
 })

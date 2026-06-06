@@ -444,7 +444,7 @@ export type {
 // M1: type surface + withProvenance builder.
 // M2: computeAnnotationFreshness + applyAnnotationLifecycle (default
 // visual treatment, overridable per band; expired hidden by default).
-// M3 still owed: stable-id anchor resolution after data refresh.
+// M3: stable-id anchor resolution after data refresh.
 export {
   withProvenance,
   withCurrentProvenance,

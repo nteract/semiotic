@@ -5,9 +5,9 @@
 // to carry provenance (who/where/when/on-what-basis) and lifecycle
 // (temporal freshness + editorial status, TTL, anchor strategy).
 //
-// Freshness computation (`computeAnnotationFreshness`) and the default
-// visual treatment (`applyAnnotationLifecycle`) ship; stable-id anchor
-// re-resolution (the `"semantic"` anchor) is still owed.
+// Freshness computation (`computeAnnotationFreshness`), the default
+// visual treatment (`applyAnnotationLifecycle`), and stable-id anchor
+// re-resolution (the `"semantic"` anchor) ship together.
 //
 // This type surface is the union of the shipped fields and IDID's §8
 // `ChartAnnotationProvenance` (idid.md). The paper packs everything into
