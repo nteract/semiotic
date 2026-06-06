@@ -923,7 +923,14 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const hitDatum = hit?.datum
         ? enrichDatumWithBand(hit.datum, store.resolvedRibbons)
         : {}
-      let hover: HoverData = buildHoverData(hitDatum, posX, posY)
+      const xInvert = store.scales?.x?.invert
+      const xValue = typeof xInvert === "function" ? xInvert(posX) : undefined
+      let hover: HoverData = buildHoverData(
+        hitDatum,
+        posX,
+        posY,
+        xValue != null ? { xValue, xPx: posX } : undefined
+      )
 
       // Multi-tooltip mode: attach all series values at this X to the hover data.
       // Keep the interpolation generous for sparse paths, but range-bounded in
@@ -933,20 +940,19 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         const allHits = findAllNodesAtX(store.scene, posX, Math.max(hoverRadius, adjustedWidth))
         if (allHits.length > 0) {
           const yInvert = store.scales.y.invert
-          const xInvert = store.scales.x.invert
           // Read the cached theme primary (updated from the render loop) so
           // each hit without its own color falls back to --semiotic-primary.
           // Avoids re-invoking resolveThemeColors (getComputedStyle) on every
           // pointermove. Required by downstream consumers like MultiPointTooltip
           // that render a color swatch from s.color.
           const fallbackColor = themePrimaryRef.current
-          const xValue = xInvert ? xInvert(posX) : posX
+          const multiXValue = xInvert ? xInvert(posX) : posX
           if (!hit) {
-            const syntheticDatum: Datum = { xValue }
-            if (typeof xAccessor === "string") syntheticDatum[xAccessor] = xValue
-            hover = buildHoverData(syntheticDatum, posX, posY, { xValue, xPx: posX })
+            const syntheticDatum: Datum = { xValue: multiXValue }
+            if (typeof xAccessor === "string") syntheticDatum[xAccessor] = multiXValue
+            hover = buildHoverData(syntheticDatum, posX, posY, { xValue: multiXValue, xPx: posX })
           } else {
-            hover.xValue = xValue
+            hover.xValue = multiXValue
             hover.xPx = posX
           }
           hover.allSeries = allHits.map(h => {
@@ -1019,7 +1025,14 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree, store.maxPointRadius)
       if (!hit) { customClickBehavior(null); return }
       const rawDatum = hit.datum || {}
-      customClickBehavior(buildHoverData(rawDatum, hit.x, hit.y))
+      const xInvert = store.scales?.x?.invert
+      const xValue = typeof xInvert === "function" ? xInvert(hit.x) : undefined
+      customClickBehavior(buildHoverData(
+        rawDatum,
+        hit.x,
+        hit.y,
+        xValue != null ? { xValue, xPx: hit.x } : undefined
+      ))
     }
     const onClick = useCallback(
       (e: React.MouseEvent) => clickHandlerRef.current(e),

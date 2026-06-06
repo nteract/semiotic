@@ -32,12 +32,19 @@ const result = spawnSync("npx", args, {
 
 function collectFailedResults(node, failures = []) {
   if (!node || typeof node !== "object") return failures
-  if (Array.isArray(node.tests)) {
-    for (const test of node.tests) {
+  // In Playwright's JSON report the human-readable title lives on the
+  // `spec`, while the per-attempt status/errors live on `spec.tests[].results`.
+  // Read both from the spec so failures print a real title rather than
+  // `undefined`.
+  for (const spec of node.specs ?? []) {
+    const title = [spec.title, spec.tests?.[0]?.projectName]
+      .filter(Boolean)
+      .join(" — ")
+    for (const test of spec.tests ?? []) {
       for (const result of test.results ?? []) {
         if (result.status === "failed" || result.status === "timedOut" || result.status === "interrupted") {
           failures.push({
-            title: test.title,
+            title: title || spec.title || "(unknown test)",
             errors: (result.errors ?? []).map((error) => error.message ?? String(error)),
           })
         }
@@ -45,7 +52,6 @@ function collectFailedResults(node, failures = []) {
     }
   }
   for (const suite of node.suites ?? []) collectFailedResults(suite, failures)
-  for (const spec of node.specs ?? []) collectFailedResults(spec, failures)
   return failures
 }
 

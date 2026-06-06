@@ -1078,6 +1078,27 @@ describe("useChartSelection click-to-lock crosshair", () => {
     expect(result.current.crosshair).toBeNull()
   })
 
+  it("click can lock using frame-provided xValue when the hit datum lacks xField", () => {
+    const { result } = renderHook(
+      () => {
+        const selection = useChartSelection({
+          linkedHover: { name: LOCK_NAME, mode: "x-position", xField: "time" },
+          chartType: "LineChart",
+        })
+        const crosshair = useCrosshairPosition(LOCK_NAME)
+        return { selection, crosshair }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.selection.customClickBehavior({ x: 10, y: 20, xValue: 42, data: { value: 100 } })
+    })
+
+    expect(result.current.crosshair?.xValue).toBe(42)
+    expect(result.current.crosshair?.locked).toBe(true)
+  })
+
   it("click does NOT toggle lock in field-based mode", () => {
     const { result } = renderHook(
       () => {
