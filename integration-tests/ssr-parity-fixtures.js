@@ -25,6 +25,28 @@ const groupedXyData = [
   { x: 3, y: 11, series: "B" },
 ]
 
+const bubbleData = [
+  { x: 1, y: 4, size: 12, category: "Alpha" },
+  { x: 2, y: 7, size: 22, category: "Beta" },
+  { x: 3, y: 5, size: 16, category: "Alpha" },
+  { x: 4, y: 9, size: 28, category: "Gamma" },
+]
+
+const candlestickData = [
+  { day: 1, open: 12, high: 18, low: 10, close: 16 },
+  { day: 2, open: 16, high: 20, low: 14, close: 15 },
+  { day: 3, open: 15, high: 24, low: 13, close: 22 },
+  { day: 4, open: 22, high: 26, low: 19, close: 21 },
+]
+
+const connectedScatterData = [
+  { x: 10, y: 20, order: 1 },
+  { x: 20, y: 42, order: 2 },
+  { x: 32, y: 34, order: 3 },
+  { x: 42, y: 62, order: 4 },
+  { x: 54, y: 48, order: 5 },
+]
+
 const differenceData = [
   { x: 0, actual: 12, target: 10 },
   { x: 1, actual: 14, target: 16 },
@@ -59,6 +81,44 @@ const categoryData = [
   { region: "APAC", value: 51 },
 ]
 
+const groupedCategoryData = [
+  { region: "AMER", segment: "Enterprise", value: 26 },
+  { region: "AMER", segment: "SMB", value: 16 },
+  { region: "EMEA", segment: "Enterprise", value: 18 },
+  { region: "EMEA", segment: "SMB", value: 15 },
+  { region: "APAC", segment: "Enterprise", value: 28 },
+  { region: "APAC", segment: "SMB", value: 23 },
+]
+
+const funnelData = [
+  { step: "Visited", value: 100 },
+  { step: "Activated", value: 52 },
+  { step: "Paid", value: 24 },
+]
+
+const likertLevels = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+const likertData = [
+  { question: "Clarity", level: "Strongly Disagree", value: 4 },
+  { question: "Clarity", level: "Disagree", value: 8 },
+  { question: "Clarity", level: "Neutral", value: 12 },
+  { question: "Clarity", level: "Agree", value: 28 },
+  { question: "Clarity", level: "Strongly Agree", value: 18 },
+  { question: "Trust", level: "Strongly Disagree", value: 6 },
+  { question: "Trust", level: "Disagree", value: 10 },
+  { question: "Trust", level: "Neutral", value: 16 },
+  { question: "Trust", level: "Agree", value: 22 },
+  { question: "Trust", level: "Strongly Agree", value: 14 },
+]
+
+const swimlaneData = [
+  { lane: "Design", phase: "Plan", value: 18 },
+  { lane: "Design", phase: "Build", value: 28 },
+  { lane: "Engineering", phase: "Plan", value: 14 },
+  { lane: "Engineering", phase: "Build", value: 34 },
+  { lane: "Research", phase: "Plan", value: 22 },
+  { lane: "Research", phase: "Build", value: 19 },
+]
+
 const statisticalData = [
   { category: "Alpha", value: 20 },
   { category: "Alpha", value: 24 },
@@ -81,6 +141,13 @@ const networkNodes = [{ id: "a" }, { id: "b" }, { id: "c" }]
 const networkEdges = [
   { source: "a", target: "b", value: 5 },
   { source: "b", target: "c", value: 3 },
+]
+
+const chordEdges = [
+  { source: "Product", target: "Support", value: 8 },
+  { source: "Support", target: "Success", value: 5 },
+  { source: "Success", target: "Product", value: 3 },
+  { source: "Product", target: "Sales", value: 6 },
 ]
 
 const hierarchy = {
@@ -217,14 +284,154 @@ function makeSsrParityCases(React) {
       props: { data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 200 },
     },
     {
+      id: "area",
+      component: "AreaChart",
+      props: { data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 220 },
+    },
+    {
+      id: "stacked-area",
+      component: "StackedAreaChart",
+      props: {
+        data: groupedXyData,
+        xAccessor: "x",
+        yAccessor: "y",
+        areaBy: "series",
+        colorBy: "series",
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      id: "scatter",
+      component: "Scatterplot",
+      props: { data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 220 },
+    },
+    {
+      id: "bubble",
+      component: "BubbleChart",
+      props: {
+        data: bubbleData,
+        xAccessor: "x",
+        yAccessor: "y",
+        sizeBy: "size",
+        colorBy: "category",
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      id: "candlestick",
+      component: "CandlestickChart",
+      props: {
+        data: candlestickData,
+        xAccessor: "day",
+        highAccessor: "high",
+        lowAccessor: "low",
+        openAccessor: "open",
+        closeAccessor: "close",
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      id: "connected-scatter",
+      component: "ConnectedScatterplot",
+      props: {
+        data: connectedScatterData,
+        xAccessor: "x",
+        yAccessor: "y",
+        orderAccessor: "order",
+        width: 420,
+        height: 240,
+      },
+    },
+    {
       id: "bar",
       component: "BarChart",
       props: { data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 400, height: 200 },
     },
     {
+      id: "grouped-bar",
+      component: "GroupedBarChart",
+      props: {
+        data: groupedCategoryData,
+        categoryAccessor: "region",
+        valueAccessor: "value",
+        groupBy: "segment",
+        colorBy: "segment",
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      id: "stacked-bar",
+      component: "StackedBarChart",
+      props: {
+        data: groupedCategoryData,
+        categoryAccessor: "region",
+        valueAccessor: "value",
+        stackBy: "segment",
+        colorBy: "segment",
+        width: 420,
+        height: 240,
+      },
+    },
+    {
       id: "pie",
       component: "PieChart",
       props: { data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 300, height: 300 },
+    },
+    {
+      id: "donut",
+      component: "DonutChart",
+      props: { data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 320, height: 320 },
+    },
+    {
+      id: "funnel",
+      component: "FunnelChart",
+      props: { data: funnelData, stepAccessor: "step", valueAccessor: "value", width: 420, height: 240 },
+    },
+    {
+      id: "gauge",
+      component: "GaugeChart",
+      props: {
+        value: 72,
+        min: 0,
+        max: 100,
+        thresholds: [
+          { value: 50, color: "#ef4444" },
+          { value: 80, color: "#f59e0b" },
+          { value: 100, color: "#16a34a" },
+        ],
+        width: 320,
+        height: 260,
+      },
+    },
+    {
+      id: "likert",
+      component: "LikertChart",
+      props: {
+        data: likertData,
+        categoryAccessor: "question",
+        levelAccessor: "level",
+        countAccessor: "value",
+        levels: likertLevels,
+        width: 460,
+        height: 260,
+      },
+    },
+    {
+      id: "swimlane",
+      component: "SwimlaneChart",
+      props: {
+        data: swimlaneData,
+        categoryAccessor: "lane",
+        subcategoryAccessor: "phase",
+        valueAccessor: "value",
+        colorBy: "phase",
+        width: 460,
+        height: 260,
+      },
     },
     {
       id: "sankey",
@@ -241,9 +448,44 @@ function makeSsrParityCases(React) {
       },
     },
     {
+      id: "chord",
+      component: "ChordDiagram",
+      props: {
+        edges: chordEdges,
+        valueAccessor: "value",
+        sourceAccessor: "source",
+        targetAccessor: "target",
+        width: 420,
+        height: 360,
+      },
+    },
+    {
+      id: "force-directed",
+      component: "ForceDirectedGraph",
+      props: {
+        nodes: networkNodes,
+        edges: networkEdges,
+        nodeIdAccessor: "id",
+        sourceAccessor: "source",
+        targetAccessor: "target",
+        width: 420,
+        height: 320,
+      },
+    },
+    {
       id: "treemap",
       component: "Treemap",
       props: { data: hierarchy, childrenAccessor: "children", valueAccessor: "value", width: 500, height: 400 },
+    },
+    {
+      id: "tree",
+      component: "TreeDiagram",
+      props: { data: hierarchy, childrenAccessor: "children", width: 420, height: 320 },
+    },
+    {
+      id: "circlepack",
+      component: "CirclePack",
+      props: { data: hierarchy, childrenAccessor: "children", valueAccessor: "value", width: 420, height: 360 },
     },
     {
       id: "process-sankey",

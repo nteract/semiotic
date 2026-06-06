@@ -86,23 +86,6 @@ for (const chart of ssrParityCharts) {
 // Known SSR-capable charts that still need chart-specific SSR/CSR parity
 // cases. Do not add to this map casually; the intended direction is down.
 const SSR_PARITY_BURN_DOWN = new Map([
-  ["AreaChart", "SSR/CSR parity case not chart-specific yet"],
-  ["BubbleChart", "SSR/CSR parity case not chart-specific yet"],
-  ["CandlestickChart", "SSR/CSR parity case not chart-specific yet"],
-  ["ConnectedScatterplot", "SSR/CSR parity case not chart-specific yet"],
-  ["Scatterplot", "SSR/CSR parity case not chart-specific yet"],
-  ["StackedAreaChart", "SSR/CSR parity case not chart-specific yet"],
-  ["DonutChart", "SSR/CSR parity case not chart-specific yet"],
-  ["FunnelChart", "SSR/CSR parity case not chart-specific yet"],
-  ["GaugeChart", "SSR/CSR parity case not chart-specific yet"],
-  ["GroupedBarChart", "SSR/CSR parity case not chart-specific yet"],
-  ["LikertChart", "SSR/CSR parity case not chart-specific yet"],
-  ["StackedBarChart", "SSR/CSR parity case not chart-specific yet"],
-  ["SwimlaneChart", "SSR/CSR parity case not chart-specific yet"],
-  ["ChordDiagram", "SSR/CSR parity case not chart-specific yet"],
-  ["CirclePack", "SSR/CSR parity case not chart-specific yet"],
-  ["ForceDirectedGraph", "SSR/CSR parity case not chart-specific yet"],
-  ["TreeDiagram", "SSR/CSR parity case not chart-specific yet"],
 ])
 
 const ssrBurnDownCharts = new Set(SSR_PARITY_BURN_DOWN.keys())
@@ -132,6 +115,33 @@ const linkedHoverEvidence = [
     requiredSnippets: [
       "linked-hover dims non-matching categories on sibling chart",
       "linked-hover-state.png",
+    ],
+  },
+  {
+    charts: ["Scatterplot", "LineChart", "AreaChart", "StackedAreaChart"],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover dims XY series targets",
+      "linked-hover-xy-series-state.png",
+    ],
+  },
+  {
+    charts: ["Scatterplot", "GroupedBarChart", "StackedBarChart", "DonutChart", "PieChart", "FunnelChart"],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover dims ordinal composition targets",
+      "linked-hover-ordinal-state.png",
+    ],
+  },
+  {
+    charts: ["Scatterplot", "BoxPlot", "DotPlot", "Histogram", "RidgelinePlot", "SwarmPlot", "ViolinPlot"],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover dims statistical ordinal targets",
+      "linked-hover-statistical-state.png",
     ],
   },
 ]
@@ -165,29 +175,15 @@ for (const evidence of linkedHoverEvidence) {
 // interaction-state screenshots. Do not add to this map casually; the
 // intended direction is down.
 const LINKED_HOVER_BURN_DOWN = new Map([
-  ["AreaChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["BubbleChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["CandlestickChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["ConnectedScatterplot", "no chart-specific linked-hover interaction snapshot yet"],
   ["DifferenceChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["Heatmap", "no chart-specific linked-hover interaction snapshot yet"],
-  ["LineChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["MultiAxisLineChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["QuadrantChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["StackedAreaChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["BoxPlot", "no chart-specific linked-hover interaction snapshot yet"],
-  ["DonutChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["DotPlot", "no chart-specific linked-hover interaction snapshot yet"],
-  ["FunnelChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["GroupedBarChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["Histogram", "no chart-specific linked-hover interaction snapshot yet"],
   ["LikertChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["PieChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["RidgelinePlot", "no chart-specific linked-hover interaction snapshot yet"],
-  ["StackedBarChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["SwarmPlot", "no chart-specific linked-hover interaction snapshot yet"],
   ["SwimlaneChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["ViolinPlot", "no chart-specific linked-hover interaction snapshot yet"],
   ["ChordDiagram", "no chart-specific linked-hover interaction snapshot yet"],
   ["CirclePack", "no chart-specific linked-hover interaction snapshot yet"],
   ["ForceDirectedGraph", "no chart-specific linked-hover interaction snapshot yet"],

@@ -248,4 +248,82 @@ test.describe("Brush & Selection - Visual snapshots", () => {
       maxDiffPixels: 200,
     })
   })
+
+  test("linked-hover dims XY series targets", async ({ page }) => {
+    await waitForChartReady(page, "xy-linked-hover")
+    const testCase = page.locator('[data-testid="xy-linked-hover"]')
+    await testCase.scrollIntoViewIfNeeded()
+    const sourceCanvas = testCase.locator("canvas").first()
+    const box = await sourceCanvas.boundingBox()
+    if (!box) throw new Error("xy linked-hover source canvas bounding box unavailable")
+    await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3)
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("linked-hover-xy-series-state.png", {
+      maxDiffPixels: 260,
+    })
+  })
+
+  test("linked-hover dims ordinal composition targets", async ({ page }) => {
+    await waitForChartReady(page, "ordinal-linked-hover")
+    const testCase = page.locator('[data-testid="ordinal-linked-hover"]')
+    await testCase.scrollIntoViewIfNeeded()
+    const sourceCanvas = testCase.locator("canvas").first()
+    const box = await sourceCanvas.boundingBox()
+    if (!box) throw new Error("ordinal linked-hover source canvas bounding box unavailable")
+    await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3)
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("linked-hover-ordinal-state.png", {
+      maxDiffPixels: 320,
+    })
+  })
+
+  test("linked-hover dims statistical ordinal targets", async ({ page }) => {
+    await waitForChartReady(page, "statistical-linked-hover")
+    const testCase = page.locator('[data-testid="statistical-linked-hover"]')
+    await testCase.scrollIntoViewIfNeeded()
+    const sourceCanvas = testCase.locator("canvas").first()
+    const box = await sourceCanvas.boundingBox()
+    if (!box) throw new Error("statistical linked-hover source canvas bounding box unavailable")
+    await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3)
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("linked-hover-statistical-state.png", {
+      maxDiffPixels: 360,
+    })
+  })
+
+  test("linked-hover click lock persists x-position crosshair", async ({ page }) => {
+    await waitForChartReady(page, "linked-crosshair-lock")
+    const testCase = page.locator('[data-testid="linked-crosshair-lock"]')
+    await testCase.scrollIntoViewIfNeeded()
+    const sourceCanvas = testCase.locator("canvas").first()
+    const box = await sourceCanvas.boundingBox()
+    if (!box) throw new Error("linked crosshair source canvas bounding box unavailable")
+    const plotMargin = 20
+    const plotWidth = box.width - plotMargin * 2
+    const plotHeight = box.height - plotMargin * 2
+    const hoverLine = testCase.locator('line[stroke*="semiotic-text-secondary"]')
+    let lockPoint: { x: number; y: number } | null = null
+    for (const yFraction of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+      for (const xFraction of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+        const x = box.x + plotMargin + plotWidth * xFraction
+        const y = box.y + plotMargin + plotHeight * yFraction
+        await page.mouse.move(x, y)
+        await waitForRafs(page, 1)
+        if ((await hoverLine.count()) > 0) {
+          lockPoint = { x, y }
+          break
+        }
+      }
+      if (lockPoint) break
+    }
+    if (!lockPoint) throw new Error("linked crosshair hover line did not render before lock")
+    await page.mouse.click(lockPoint.x, lockPoint.y)
+    await waitForRafs(page, 2)
+    await page.mouse.move(0, 0)
+    await waitForRafs(page, 4)
+    await expect(testCase.locator('line[stroke="white"]')).toHaveCount(1)
+    await expect(testCase).toHaveScreenshot("linked-hover-crosshair-locked-state.png", {
+      maxDiffPixels: 220,
+    })
+  })
 })
