@@ -32763,6 +32763,98 @@ Dark-mode presets: ${THEME_PRESET_NAMES.filter((n) => n.includes("dark")).join("
     content: [{ type: "text", text: usage.join("\n") }]
   };
 }
+function profileInputFromVariantArgs(args) {
+  const props = args.props ?? {};
+  if (Array.isArray(args.data)) {
+    return { data: args.data };
+  }
+  if (Array.isArray(props.data)) {
+    return { data: props.data };
+  }
+  if (Array.isArray(props.nodes) && (Array.isArray(props.edges) || Array.isArray(props.links))) {
+    return {
+      data: [],
+      rawInput: {
+        nodes: props.nodes,
+        edges: props.edges ?? props.links
+      }
+    };
+  }
+  if (props.data && typeof props.data === "object" && !Array.isArray(props.data)) {
+    return { data: [], rawInput: props.data };
+  }
+  return { data: [] };
+}
+function buildVariantProposalProps(proposal, profile, audience) {
+  if (proposal.buildProps) return proposal.buildProps(profile, audience);
+  const capability = (0, import_ai3.getCapability)(proposal.baseComponent);
+  const variant = proposal.variantKey ? capability?.variants?.find((v) => v.key === proposal.variantKey) : void 0;
+  return capability ? capability.buildProps(profile, variant) : {};
+}
+async function proposeChartVariantsHandler(args) {
+  const { component, intent, maxResults, audience } = args;
+  const capability = (0, import_ai3.getCapability)(component);
+  if (!capability) {
+    return {
+      content: [{ type: "text", text: `No chart capability registered for "${component}". Call suggestCharts first to pick from known capability components.` }],
+      isError: true
+    };
+  }
+  const { data, rawInput } = profileInputFromVariantArgs(args);
+  const profile = (0, import_ai3.profileData)(data, { rawInput });
+  const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
+  const fitReason = capability.fits(profile);
+  const proposals = (0, import_ai3.proposeVariant)(component, capability, {
+    profile,
+    audience,
+    intent: intentArg,
+    existingVariants: capability.variants
+  });
+  const ranked = proposals.map((proposal) => {
+    const score = (0, import_ai3.evaluateVariantProposal)(proposal, profile, audience, {
+      intent: intentArg,
+      baselineComponent: component
+    });
+    return {
+      proposal,
+      score,
+      props: buildVariantProposalProps(proposal, profile, audience)
+    };
+  }).sort((a, b) => {
+    if (b.score.fit !== a.score.fit) return b.score.fit - a.score.fit;
+    if (a.score.risk !== b.score.risk) return a.score.risk - b.score.risk;
+    return b.score.novelty - a.score.novelty;
+  }).slice(0, maxResults ?? 8);
+  const lines = [
+    `${ranked.length} variant proposal${ranked.length === 1 ? "" : "s"} for ${component}${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}:`,
+    ...fitReason ? [`Base chart fit warning: ${fitReason}`] : [],
+    "",
+    ...ranked.map((entry, i) => {
+      const label = entry.proposal.label ?? entry.proposal.variantKey ?? entry.proposal.id;
+      const tags = entry.proposal.tags?.length ? ` [${entry.proposal.tags.join(", ")}]` : "";
+      const reasons = entry.score.reasons.length ? `
+   ${entry.score.reasons.join("; ")}` : "";
+      return `${i + 1}. ${entry.proposal.baseComponent} / ${label}${tags} (fit ${entry.score.fit.toFixed(1)}/5, novelty ${entry.score.novelty.toFixed(2)}, risk ${entry.score.risk.toFixed(2)})${reasons}`;
+    })
+  ];
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: {
+      component,
+      profile: {
+        rowCount: profile.rowCount,
+        primary: profile.primary,
+        categoryCount: profile.categoryCount ?? null,
+        seriesCount: profile.seriesCount ?? null,
+        hasHierarchy: profile.hasHierarchy,
+        hasNetwork: profile.hasNetwork,
+        hasGeo: profile.hasGeo
+      },
+      fitReason,
+      proposals: ranked
+    }
+  };
+}
 async function suggestChartsHandler(args) {
   const { data, intent, maxResults, allow, deny, audience } = args;
   const intentArg = Array.isArray(intent) ? intent : intent ? [intent] : void 0;
@@ -33233,6 +33325,32 @@ function createServer2() {
     repairChartConfigHandler
   );
   srv.tool(
+    "proposeChartVariants",
+    "Propose and score chart variants for a selected Semiotic component. Uses the capability registry plus heuristic variant discovery: registered variants, conservative transforms, and same-intent cross-family alternatives. Returns ranked proposals with fit/novelty/risk scores, rationale, and ready-to-use props. Use after suggestCharts when an agent wants to actively explore variants rather than stop at the first chart recommendation.",
+    {
+      component: external_exports3.string().describe("Base chart component to vary, e.g. 'LineChart', 'BarChart', or 'BoxPlot'."),
+      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Existing chart props. If props.data is present it is profiled; network/hierarchy/geo object data can be passed here as raw input."),
+      data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).optional().describe("Row data to profile. Overrides props.data when present."),
+      intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("Ranking intent(s), e.g. trend, distribution, rank, compare-categories, composition-over-time."),
+      maxResults: external_exports3.number().int().min(1).max(20).optional().describe("Cap on proposals returned (default 8)."),
+      audience: external_exports3.object({
+        name: external_exports3.string().optional(),
+        familiarity: external_exports3.record(external_exports3.string(), external_exports3.number()).optional(),
+        targets: external_exports3.record(
+          external_exports3.string(),
+          external_exports3.object({
+            direction: external_exports3.enum(["increase", "decrease"]),
+            weight: external_exports3.number().int().min(1).max(3).optional(),
+            reason: external_exports3.string().optional()
+          })
+        ).optional(),
+        exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional(),
+        receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel \u2014 see suggestCharts.")
+      }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality.")
+    },
+    proposeChartVariantsHandler
+  );
+  srv.tool(
     "suggestCharts",
     "Recommend Semiotic charts for a dataset using heuristic capability descriptors. Each chart declares which data shapes it serves and which intents (trend, compare-categories, distribution, correlation, part-to-whole, etc.) it answers \u2014 the engine returns a ranked list with scores, reasons, caveats, and ready-to-use props. Heuristic only; no LLM call. Use the result as structured context when answering 'what chart should I use?' or generating chart code.",
     {
@@ -33304,7 +33422,7 @@ async function main() {
     });
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
-      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme");
+      console.error("Tools: getSchema, suggestChart, suggestCharts, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme");
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples");
     });
   } else {

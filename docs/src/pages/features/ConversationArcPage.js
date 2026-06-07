@@ -1352,8 +1352,8 @@ export default function ConversationArcPage() {
       <p>
         These ship together. Annotation freshness and the default visual treatment are live (the
         demo below uses them directly). The conversation-arc store, React hook, persistence sinks,
-        and replay hydration helpers are functional. Variant discovery&apos;s plug point is callable
-        today; the built-in heuristic proposer and scorer arrive in subsequent passes.
+        and replay hydration helpers are functional. Variant discovery now includes the built-in
+        heuristic proposer, evaluator, registration plug point, and MCP tool.
       </p>
 
       <h2>Conversation-arc telemetry</h2>
@@ -1580,15 +1580,20 @@ registerVariantDiscovery((component, capability, context) => {
 })
 
 const proposals = proposeVariant("StackedAreaChart", capability, ctx)
-const scores = proposals.map((p) => evaluateVariantProposal(p, profile))`}
+const scores = proposals.map((p) =>
+  evaluateVariantProposal(p, profile, ctx.audience, {
+    intent: ["trend", "composition-over-time"],
+    baselineComponent: "StackedAreaChart",
+  })
+)`}
       </CodeBlock>
 
       <p>
-        At M1, <code>proposeVariant</code> and <code>evaluateVariantProposal</code> are stubs — they
-        return empty proposals and a neutral baseline score. The point is the contract:{" "}
-        <code>VariantProposal</code> and <code>VariantScore</code> are stable shapes consumers can
-        wire end-to-end today. Heuristic proposal lands in M2; scoring + the MCP{" "}
-        <code>proposeChartVariants</code> tool land in M3.
+        <code>proposeVariant</code> now emits registered capability variants, conservative
+        heuristic variants, and same-intent cross-family alternatives.{" "}
+        <code>evaluateVariantProposal</code> scores each proposal against fit, intent, rubric deltas,
+        novelty, risk, and audience bias. Agents can call the same path through the MCP{" "}
+        <code>proposeChartVariants</code> tool.
       </p>
 
       <h2>Why these three together</h2>

@@ -26,10 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `createLocalStorageConversationArcSink()`, `createIndexedDBConversationArcSink()`,
   `createWebhookConversationArcSink()`, `loadConversationArc()`, and `replayConversationArc()` add
   opt-in durable capture and replay hydration without duplicating sink or analytics events.
-- **Variant-discovery extension surface.** `proposeVariant()`, `evaluateVariantProposal()`,
-  `registerVariantDiscovery()`, and the `VariantProposal` / `VariantScore` types give external
-  heuristic or model-driven variant proposers a stable contract; scoring remains a neutral baseline
-  until the heuristic evaluator lands.
+- **Variant-discovery API and MCP tool.** `proposeVariant()` emits registered variants,
+  conservative heuristic transforms, and same-intent cross-family alternatives;
+  `evaluateVariantProposal()` scores fit, novelty, risk, rubric deltas, and audience bias; and
+  MCP now exposes `proposeChartVariants` for agent-driven variant exploration.
 - **Chart repair workflow primitive.** `repairChartConfig()` and the MCP `repairChartConfig` tool
   use capability fit and chart suggestions to critique a proposed chart choice and return safer
   alternatives for agent retry loops.
