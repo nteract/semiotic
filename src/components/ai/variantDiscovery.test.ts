@@ -249,6 +249,63 @@ describe("variantDiscovery — evaluateVariantProposal", () => {
     expect(score.reasons).toHaveLength(1)
     expect(score.reasons[0]).toMatch(/No capability registered/)
   })
+
+  // Regression: variant scoring must mirror suggestCharts and penalize
+  // configurations the declared non-visual channel can't receive, so
+  // proposeChartVariants doesn't rank an effectively-unreceivable variant.
+  it("down-ranks a many-slice pie variant for a screen-reader audience", () => {
+    const eightCategories = Array.from({ length: 8 }, (_, i) => ({ vendor: `V${i}`, share: 20 - i }))
+    const profile = profileData(eightCategories)
+    const proposal: VariantProposal = {
+      id: "PieChart:base",
+      baseComponent: "PieChart",
+      source: "heuristic",
+    }
+
+    const visual = evaluateVariantProposal(proposal, profile, { receptionModality: "visual" }, {
+      intent: "part-to-whole",
+    })
+    const screenReader = evaluateVariantProposal(proposal, profile, { receptionModality: "screen-reader" }, {
+      intent: "part-to-whole",
+    })
+
+    expect(screenReader.fit).toBeLessThan(visual.fit)
+    expect(screenReader.reasons.some((r) => r.includes("screen reader"))).toBe(true)
+    expect(visual.reasons.some((r) => r.includes("screen reader"))).toBe(false)
+  })
+})
+
+describe("variantDiscovery — horizontal ranked heuristic gating", () => {
+  // Regression: the horizontal+sort transform must only attach to categorical
+  // charts that actually expose orientation AND sort. Bars/DotPlot qualify;
+  // Pie/Donut/Gauge (no orientation) and Likert/Swimlane (no sort) must not
+  // receive a proposal that would leak unsupported keys.
+  const sixCategories = Array.from({ length: 6 }, (_, i) => ({ product: `P${i}`, units: 30 - i * 3 }))
+
+  it("proposes a horizontal ranked view for DotPlot (supports orientation + sort)", () => {
+    // BarChart already ships a horizontal variant, so the heuristic correctly
+    // skips it; DotPlot is in the supporting set with no existing horizontal
+    // variant, so the heuristic should fire.
+    const profile = profileData(sixCategories)
+    const proposals = proposeVariant("DotPlot", getCapability("DotPlot")!, {
+      profile,
+      intent: "rank",
+    })
+    const horizontal = proposals.find((p) => p.id === "DotPlot:heuristic-horizontal")
+    expect(horizontal).toBeDefined()
+    expect(horizontal!.tags).toContain("horizontal")
+    expect(horizontal!.buildProps?.(profile)).toMatchObject({ orientation: "horizontal", sort: "desc" })
+  })
+
+  it("does NOT propose a horizontal view for PieChart (no orientation prop)", () => {
+    const profile = profileData(sixCategories)
+    const proposals = proposeVariant("PieChart", getCapability("PieChart")!, {
+      profile,
+      intent: "rank",
+    })
+    expect(proposals.some((p) => p.tags?.includes("horizontal"))).toBe(false)
+    expect(proposals.some((p) => p.id === "PieChart:heuristic-horizontal")).toBe(false)
+  })
 })
 
 describe("variantDiscovery — registration plug point", () => {

@@ -6,6 +6,7 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
@@ -349,6 +350,8 @@ export default function CandlestickChartPage() {
         builder — so you can reuse the component for things like daily high/low
         temperatures, p5/p95 bands, or any "two endpoints per x" series.
       </p>
+
+      <ChartGrounding component="CandlestickChart" />
 
       <h2 id="quick-start">Quick Start</h2>
       <StreamingToggle

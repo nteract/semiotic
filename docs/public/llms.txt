@@ -5,76 +5,109 @@
 ## Docs
 
 - [Getting Started](/getting-started): Installation, quick examples, and first chart
-- [Charts](/charts): All chart types with live examples and prop tables
-- [Features](/features): Axes, annotations, tooltips, theming, responsive, composition, accessibility
+- [Choose a Chart](/choose): Profile a dataset and rank charts by fit and communicative act
+- [Charts](/charts): All chart types with live examples, prop tables, and grounding panels
 - [Frames](/frames): StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame — full control API
+- [Features](/features): Axes, tooltips, interaction, responsive, composition, accessibility
+- [Theming](/theming/theme-provider): ThemeProvider, presets, semantic colors, serialization
 - [Cookbook](/cookbook): Advanced patterns and recipes
-- [Playground](/playground): Interactive prop exploration for every chart type
+- [Playground](/playground): Interactive, shareable prop exploration for every chart type
 
 ## Charts — XY
 
-- [LineChart](/charts/line-chart): Time series, trends, multi-line with forecast and anomaly detection
-- [AreaChart](/charts/area-chart): Filled areas with gradient fill and percentile bands (y0Accessor)
-- [StackedAreaChart](/charts/stacked-area-chart): Part-to-whole trends with optional normalization
-- [Scatterplot](/charts/scatterplot): XY points with color, size, and marginal graphics
-- [ConnectedScatterplot](/charts/connected-scatterplot): Sequential points with viridis coloring
-- [BubbleChart](/charts/bubble-chart): Scatter with required size dimension
-- [Heatmap](/charts/heatmap): Grid/matrix with color-encoded values
+- [LineChart](/charts/line-chart): Line traces with curve interpolation, area fill, and point markers. _(act: tracking)_
+- [AreaChart](/charts/area-chart): Filled area chart with optional stroke line. _(act: tracking)_
+- [DifferenceChart](/charts/difference-chart): Two-series difference chart: fills the area between series A and series B with a color that switches at each crossover — A's color where A > B, B's… _(act: comparing)_
+- [StackedAreaChart](/charts/stacked-area-chart): Stacked area chart with optional normalization to 100%. _(act: apportioning)_
+- [Scatterplot](/charts/scatterplot): Individual data points plotted by x/y position with optional size and color encoding. _(act: alerting)_
+- [BubbleChart](/charts/bubble-chart): Scatterplot with required size dimension for three-variable comparison. _(act: relating)_
+- [Heatmap](/charts/heatmap): Grid/matrix visualization with color-encoded cell values. _(act: relating)_
+- [QuadrantChart](/charts/quadrant-chart): Scatterplot divided into four labeled, colored quadrants by center lines. _(act: relating)_
+- [MultiAxisLineChart](/charts/multi-axis-line-chart): Dual Y-axis line chart for comparing two series with different scales on the same x axis. _(act: comparing)_
+- [CandlestickChart](/charts/candlestick-chart): OHLC candlestick bars, or a range chart when open/close are omitted. _(act: alerting)_
+- [ConnectedScatterplot](/charts/connected-scatterplot): Scatterplot where points are connected in order, showing trajectories through 2D space. _(act: tracking)_
+- [ScatterplotMatrix](/charts/scatterplot-matrix): Multi-panel scatterplot grid with crossfilter brushing. _(act: relating)_
 
 ## Charts — Ordinal
 
-- [BarChart](/charts/bar-chart): Vertical or horizontal bars
-- [StackedBarChart](/charts/stacked-bar-chart): Stacked bars with optional normalization
-- [GroupedBarChart](/charts/grouped-bar-chart): Side-by-side bars
-- [SwarmPlot](/charts/swarm-plot): Beeswarm dot plots
-- [BoxPlot](/charts/box-plot): Box-and-whisker distribution
-- [Histogram](/charts/histogram): Binned frequency distribution
-- [ViolinPlot](/charts/violin-plot): Kernel density per category
-- [DotPlot](/charts/dot-plot): Cleveland-style dot plots
-- [PieChart](/charts/pie-chart): Proportional slices
-- [DonutChart](/charts/donut-chart): Pie with center content
+- [BarChart](/charts/bar-chart): Vertical or horizontal bars for categorical comparisons. _(act: ranking)_
+- [StackedBarChart](/charts/stacked-bar-chart): Stacked bars for part-to-whole comparisons across categories. _(act: comparing)_
+- [GroupedBarChart](/charts/grouped-bar-chart): Side-by-side bars for comparing sub-categories within categories. _(act: comparing)_
+- [SwarmPlot](/charts/swarm-plot): Beeswarm/jittered dot plot showing individual data points within categories. _(act: alerting)_
+- [BoxPlot](/charts/box-plot): Box-and-whisker plots showing statistical distribution (median, quartiles, outliers) per category. _(act: characterizing)_
+- [Histogram](/charts/histogram): Binned frequency distribution chart. _(act: characterizing)_
+- [ViolinPlot](/charts/violin-plot): Violin plots showing the full distribution shape (kernel density) per category. _(act: characterizing)_
+- [DotPlot](/charts/dot-plot): Cleveland-style dot plot for comparing values across categories. _(act: ranking)_
+- [PieChart](/charts/pie-chart): Proportional slices in a circle for part-to-whole relationships. _(act: apportioning)_
+- [DonutChart](/charts/donut-chart): Pie chart with a hole in the center. _(act: apportioning)_
+- [GaugeChart](/charts/gauge-chart): Single-value gauge with threshold zones, needle indicator, and configurable sweep angle. _(act: comparing)_
+- [FunnelChart](/charts/funnel-chart): Funnel visualization with two orientations. _(act: tracing)_
+- [SwimlaneChart](/charts/swimlane-chart): Categorical lanes with sequentially stacked items colored by subcategory. _(act: comparing)_
+- [LikertChart](/charts/likert-chart): Visualize Likert scale survey responses. _(act: comparing)_
 
 ## Charts — Network
 
-- [ForceDirectedGraph](/charts/force-directed-graph): Physics-based node-link diagrams
-- [SankeyDiagram](/charts/sankey-diagram): Weighted flow diagrams
-- [ChordDiagram](/charts/chord-diagram): Circular inter-relationships
-- [TreeDiagram](/charts/tree-diagram): Hierarchical tree layouts
-- [Treemap](/charts/treemap): Space-filling rectangles
-- [CirclePack](/charts/circle-pack): Nested circles
-- [OrbitDiagram](/charts/orbit-diagram): Animated orbital hierarchy layout
+- [ForceDirectedGraph](/charts/force-directed-graph): Physics-based node-link diagram. _(act: tracing)_
+- [SankeyDiagram](/charts/sankey-diagram): Flow diagram showing weighted connections between nodes. _(act: tracing)_
+- [ProcessSankey](/charts/process-sankey): Temporal sankey with a real time x-axis. _(act: tracing)_
+- [ChordDiagram](/charts/chord-diagram): Circular diagram showing inter-relationships and flow volumes between groups. _(act: tracing)_
+- [TreeDiagram](/charts/tree-diagram): Hierarchical tree layout. _(act: nesting)_
+- [Treemap](/charts/treemap): Space-filling rectangular hierarchy visualization. _(act: nesting)_
+- [CirclePack](/charts/circle-pack): Nested circles representing hierarchical data. _(act: nesting)_
+- [OrbitDiagram](/charts/orbit-diagram): Animated orbital diagram showing hierarchical data as nodes orbiting a center. _(act: nesting)_
+
+## Charts — Geo
+
+- [ChoroplethMap](/charts/choropleth-map): Geographic choropleth map with colored regions based on data values. _(act: locating)_
+- [ProportionalSymbolMap](/charts/proportional-symbol-map): Geographic map with sized symbols at point locations. _(act: locating)_
+- [FlowMap](/charts/flow-map): Geographic flow map showing movement between locations with animated particles. _(act: tracing)_
+- [DistanceCartogram](/charts/distance-cartogram): Cartogram distorting geographic positions based on travel time or cost from a center point. _(act: ranking)_
+
+## Charts — Value
+
+- [BigNumber](/charts/big-number): Focal-value display: one number, optionally with comparison / target / threshold zones (mapped to semantic theme roles) / four layout modes (tile /… _(act: presenting)_
 
 ## Charts — Realtime
 
-- [RealtimeLineChart](/charts/realtime-line-chart): Streaming line on canvas
-- [RealtimeHistogram](/charts/realtime-histogram): Streaming temporal histogram
-- [RealtimeSwarmChart](/charts/realtime-swarm-chart): Streaming scatter
-- [RealtimeWaterfallChart](/charts/realtime-waterfall-chart): Streaming waterfall
-- [RealtimeHeatmap](/charts/realtime-heatmap): Streaming 2D heatmap
+- [RealtimeLineChart](/charts/realtime-line-chart): Streaming line chart rendered on canvas.
+- [RealtimeHistogram](/charts/realtime-histogram): Streaming bar chart with binned aggregation.
+- [RealtimeSwarmChart](/charts/realtime-swarm-chart): Streaming swarm/scatter chart showing individual data points over time.
+- [RealtimeWaterfallChart](/charts/realtime-waterfall-chart): Streaming waterfall chart with positive/negative bars and connectors.
+- [RealtimeHeatmap](/charts/realtime-heatmap): Streaming 2D heatmap with binned time and value aggregation.
+
+## Intelligence (AI surface)
+
+- [Chart Suggestions](/intelligence/suggestions): suggestCharts — rank charts for a dataset and intent
+- [Capability Authoring](/intelligence/capability-authoring): ChartCapability descriptors, registerChartCapability, registerIntent
+- [Audience Profiles](/intelligence/audience-profiles): AudienceProfile — familiarity, targets, stretch picks, reception modality
+- [Variant Discovery & Repair](/intelligence/variant-discovery): proposeVariant, evaluateVariantProposal, repairChartConfig
+- [Interrogation](/intelligence/interrogation): useChartInterrogation — chat with a chart's data
+- [Agent-Reader Grounding](/intelligence/reader-grounding): buildReaderGrounding — description + intent + structure payload
+- [CLI & MCP](/intelligence/cli-mcp): npx semiotic-ai flags and the npx semiotic-mcp tool server
 
 ## Features
 
 - [Coordinated Views](/features/linked-charts): LinkedCharts, cross-highlighting, crossfilter brushing
 - [Composition](/features/composition): ChartGrid, ContextLayout, CategoryColorProvider
 - [Responsive](/features/responsive): responsiveWidth, responsiveHeight
-- [Accessibility](/features/accessibility): Keyboard navigation, ARIA labels
-- [Theming](/features/theming): ThemeProvider, dark mode
+- [Accessibility](/accessibility/overview): Keyboard navigation, ARIA, audit, descriptions, structured navigation, preference hooks
 - [Annotations](/annotations/overview): Labels, callouts, thresholds, placement, density, and analytical overlays
-- [Annotation Design Guidance](/annotations/design-guidance): Audience, hierarchy, placement, association, cohesion, amount, and defensive annotations
-- [Advanced Annotations](/annotations/advanced): Widget annotations — place React elements at data coordinates for alerts, comments, actions
 - [Annotation Provenance & Lifecycle](/annotations/provenance-lifecycle): Provenance, freshness, editorial status, and supersession
-- [Serialization](/features/serialization): toConfig, fromConfig, toURL, copyConfig
+- [Serialization](/intelligence/serialization): toConfig, fromConfig, toURL, copyConfig, configToJSX
+- [Server Rendering](/using-ssr): renderChart, renderToImage, renderToAnimatedGif, renderDashboard
 
-## AI Integration
+## AI Integration (machine-readable)
 
 - [CLAUDE.md](/CLAUDE.md): Full AI assistant guide with all props and patterns
 - [schema.json](/schema.json): Machine-readable component schemas
 - [API Reference](/api-reference.md): Compact system prompt for context-constrained agents
 - [Examples](/examples.md): Copy-paste code examples for every chart type
+- [llms-full.txt](/llms-full.txt): Expanded single-file documentation dump
 
 ## Optional
 
 - [Cookbook — Radar](/cookbook/radar-plot): Radar/spider charts
 - [Cookbook — Timeline](/cookbook/timeline): Timeline visualizations
 - [Cookbook — Marginal Graphics](/cookbook/marginal-graphics): Distribution plots in scatter margins
-- [Vega-Lite Translator](/features/vega-lite-translator): Convert Vega-Lite specs to Semiotic
+- [Custom Charts](/features/custom-charts): XY/Ordinal/Network custom layouts and semiotic/recipes
+- [Vega-Lite Translator](/intelligence/vega-lite): Convert Vega-Lite specs to Semiotic

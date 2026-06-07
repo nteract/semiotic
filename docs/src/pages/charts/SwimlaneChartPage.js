@@ -5,6 +5,7 @@ import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -313,6 +314,8 @@ export default function SwimlaneChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
       {/* ----------------------------------------------------------------- */}
+      <ChartGrounding component="SwimlaneChart" />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

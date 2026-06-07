@@ -70,4 +70,61 @@ describe("StreamNetworkFrame", () => {
       }
     })
   })
+
+  // ── Regression: function-prop churn must not re-ingest the hierarchy ───
+  //
+  // A parent passing fresh inline-arrow callbacks each render (e.g. an
+  // animated OrbitDiagram whose `nodeStyle`/`revolution` props are recreated
+  // on every page re-render) churns the pipelineConfig — functions never
+  // compare shallow-equal, so `useStableShallow` can't dedupe them. Before
+  // the fix the hierarchy-ingest effect depended on the config, so each such
+  // re-render re-ingested the data AND fired a setState (syncCustomOverlays).
+  // Compounding with a continuous animation's frame loop, that tripped
+  // React's max-update-depth guard and OOM-crashed the tab. The ingest effect
+  // must react only to data/dimension changes; config changes are handled by
+  // the dedicated updateConfig effect.
+  describe("regression: function-prop identity churn does not re-ingest", () => {
+    it("re-runs updateConfig but not ingestHierarchy when only a function prop's identity changes", async () => {
+      const data = { name: "root", children: [{ name: "a" }, { name: "b" }] }
+
+      const StoreModule = await import("./NetworkPipelineStore")
+      const ingestSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "ingestHierarchy")
+      const updateSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "updateConfig")
+
+      try {
+        const { rerender } = render(
+          <StreamNetworkFrame
+            chartType="orbit"
+            data={data}
+            childrenAccessor="children"
+            nodeIDAccessor="name"
+            nodeStyle={() => ({ fill: "#111" })}
+          />
+        )
+
+        const ingestAfterMount = ingestSpy.mock.calls.length
+        const updateAfterMount = updateSpy.mock.calls.length
+        expect(ingestAfterMount).toBeGreaterThan(0)
+
+        // Re-render with a brand-new nodeStyle function identity (same data ref).
+        rerender(
+          <StreamNetworkFrame
+            chartType="orbit"
+            data={data}
+            childrenAccessor="children"
+            nodeIDAccessor="name"
+            nodeStyle={() => ({ fill: "#222" })}
+          />
+        )
+
+        // Config change still propagates...
+        expect(updateSpy.mock.calls.length).toBeGreaterThan(updateAfterMount)
+        // ...but the hierarchy is NOT re-ingested (no setState compounding).
+        expect(ingestSpy.mock.calls.length).toBe(ingestAfterMount)
+      } finally {
+        ingestSpy.mockRestore()
+        updateSpy.mockRestore()
+      }
+    })
+  })
 })

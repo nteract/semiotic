@@ -6,6 +6,7 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import Tabs from "../../components/Tabs"
@@ -530,6 +531,19 @@ export default function LineChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
       {/* ----------------------------------------------------------------- */}
+      <ChartGrounding
+        component="LineChart"
+        props={{
+          data: [
+            { month: 1, revenue: 120 }, { month: 2, revenue: 145 },
+            { month: 3, revenue: 138 }, { month: 4, revenue: 162 }, { month: 5, revenue: 175 },
+          ],
+          xAccessor: "month",
+          yAccessor: "revenue",
+          title: "Monthly revenue",
+        }}
+      />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

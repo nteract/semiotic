@@ -321,6 +321,37 @@ sync.focusAnnotation(note) // …or pass the annotation object; returns false if
         those families is on the roadmap.
       </p>
 
+      <h2 id="sync">Bidirectional sync</h2>
+      <p>
+        A nav tree is most useful wired to the canvas: focusing a leaf should
+        highlight the matching mark, and hovering a mark should move the tree.{" "}
+        <code>useNavigationSync</code> rides the module-global selection and
+        observation stores, so <strong>no provider is needed</strong> — give the
+        chart a <code>chartId</code> and <code>selection</code>, give the tree{" "}
+        <code>activeId</code> / <code>onActiveChange</code>.
+      </p>
+      <CodeBlock language="jsx">{`import { useNavigationSync, AccessibleNavTree } from "semiotic"
+
+const sync = useNavigationSync({ tree, chartId: "sales", annotations })
+
+<LineChart chartId="sales" selection={sync.selection} {...props} />
+<AccessibleNavTree
+  tree={tree}
+  activeId={sync.activeId}
+  onActiveChange={sync.onActiveChange}
+/>`}</CodeBlock>
+      <p>
+        It returns <code>{`{ activeId, onActiveChange, selection, annotatedIds, focusAnnotation }`}</code>.
+        Tree → canvas highlights the matching mark (a field-value selection);
+        canvas → tree maps the hovered or clicked datum back to its leaf. When
+        you pass the chart's <code>annotations</code>, an anchored note resolves
+        to its nav leaf: <code>annotatedIds</code> are the leaves that carry a
+        note, and <code>focusAnnotation(annotation | index)</code> jumps both the
+        tree and the canvas to the anchored point — so a non-visual reader can
+        reach an AI's anchored annotation. Also exported from{" "}
+        <code>semiotic/ai</code>.
+      </p>
+
       <h2 id="telemetry">Reception telemetry</h2>
       <p>
         Traversal is also a <em>signal</em>. When the{" "}

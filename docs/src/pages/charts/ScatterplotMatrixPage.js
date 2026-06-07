@@ -5,6 +5,7 @@ import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -157,6 +158,8 @@ export default function ScatterplotMatrixPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
       {/* ----------------------------------------------------------------- */}
+      <ChartGrounding component="ScatterplotMatrix" />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

@@ -2,7 +2,10 @@ import React, { useRef, useEffect } from "react"
 import { ConnectedScatterplot } from "semiotic"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
+import ComponentMeta from "../../components/ComponentMeta"
+import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
@@ -256,6 +259,19 @@ export default function ConnectedScatterplotPage() {
       prevPage={{ title: "Scatterplot", path: "/charts/scatterplot" }}
       nextPage={{ title: "Bubble Chart", path: "/charts/bubble-chart" }}
     >
+      <ComponentMeta
+        componentName="ConnectedScatterplot"
+        importStatement='import { ConnectedScatterplot } from "semiotic"'
+        tier="charts"
+        wraps="StreamXYFrame"
+        wrapsPath="/frames/xy-frame"
+        related={[
+          { name: "Scatterplot", path: "/charts/scatterplot" },
+          { name: "LineChart", path: "/charts/line-chart" },
+          { name: "BubbleChart", path: "/charts/bubble-chart" },
+        ]}
+      />
+
       <p>
         A connected scatterplot draws lines between consecutive data points, revealing the
         trajectory through a two-dimensional space. Points are colored using a viridis gradient from
@@ -263,6 +279,8 @@ export default function ConnectedScatterplotPage() {
         source point. When fewer than 100 points are plotted, a semi-transparent white halo is drawn
         under each line for legibility.
       </p>
+
+      <ChartGrounding component="ConnectedScatterplot" />
 
       <h2 id="quick-start">Quick Start</h2>
 
@@ -391,31 +409,7 @@ export default function ConnectedScatterplotPage() {
 
       <h2 id="props">Props</h2>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9em" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid var(--surface-3)" }}>
-            <th style={{ textAlign: "left", padding: 8 }}>Prop</th>
-            <th style={{ textAlign: "left", padding: 8 }}>Type</th>
-            <th style={{ textAlign: "left", padding: 8 }}>Default</th>
-            <th style={{ textAlign: "left", padding: 8 }}>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {chartProps.map(({ name, type, required, default: def, description }) => (
-            <tr key={name} style={{ borderBottom: "1px solid var(--surface-3)" }}>
-              <td style={{ padding: 8 }}>
-                <code>{name}</code>
-                {required && <span style={{ color: "red" }}> *</span>}
-              </td>
-              <td style={{ padding: 8 }}>
-                <code>{type}</code>
-              </td>
-              <td style={{ padding: 8 }}>{def || "—"}</td>
-              <td style={{ padding: 8 }}>{description}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <PropTable componentName="ConnectedScatterplot" props={chartProps} />
 
       <h2 id="related">Related</h2>
 

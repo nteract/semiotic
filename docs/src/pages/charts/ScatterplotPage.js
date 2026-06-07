@@ -6,6 +6,7 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
@@ -203,6 +204,19 @@ export default function ScatterplotPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
       {/* ----------------------------------------------------------------- */}
+      <ChartGrounding
+        component="Scatterplot"
+        props={{
+          data: [
+            { height: 160, weight: 55 }, { height: 170, weight: 68 },
+            { height: 178, weight: 78 }, { height: 182, weight: 85 },
+          ],
+          xAccessor: "height",
+          yAccessor: "weight",
+          title: "Height vs. weight",
+        }}
+      />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

@@ -15,6 +15,7 @@ import ApiReferencePage from "./pages/api/ApiReferencePage"
 // New chart pages
 import GettingStartedPage from "./pages/GettingStartedPage"
 import MigrationPage from "./pages/MigrationPage"
+import ChooseChartPage from "./pages/ChooseChartPage"
 import LineChartPage from "./pages/charts/LineChartPage"
 import AreaChartPage from "./pages/charts/AreaChartPage"
 import DifferenceChartPage from "./pages/charts/DifferenceChartPage"
@@ -95,6 +96,10 @@ import ChartModesPage from "./pages/features/ChartModesPage"
 import ObservationHooksPage from "./pages/features/ObservationHooksPage"
 import SerializationPage from "./pages/features/SerializationPage"
 import VegaLiteTranslatorPage from "./pages/features/VegaLiteTranslatorPage"
+import VariantDiscoveryPage from "./pages/features/VariantDiscoveryPage"
+import CapabilityAuthoringPage from "./pages/features/CapabilityAuthoringPage"
+import AudienceProfilesPage from "./pages/features/AudienceProfilesPage"
+import CliMcpPage from "./pages/features/CliMcpPage"
 import StreamingSystemModelPage from "./pages/features/StreamingSystemModelPage"
 import PerformancePage from "./pages/features/PerformancePage"
 import PushApiPage from "./pages/features/PushApiPage"
@@ -462,6 +467,10 @@ export default function DocsApp() {
               <Route path="temporal-lifecycle" element={<TemporalLifecyclePage />} />
               <Route path="serialization" element={<SerializationPage />} />
               <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
+              <Route path="variant-discovery" element={<VariantDiscoveryPage />} />
+              <Route path="capability-authoring" element={<CapabilityAuthoringPage />} />
+              <Route path="audience-profiles" element={<AudienceProfilesPage />} />
+              <Route path="cli-mcp" element={<CliMcpPage />} />
             </Route>
 
             {/* Redirects from old /features/<slug> paths */}
@@ -506,6 +515,7 @@ export default function DocsApp() {
             {/* Getting Started */}
             <Route path="getting-started" element={<GettingStartedPage />} />
             <Route path="migration" element={<MigrationPage />} />
+            <Route path="choose" element={<ChooseChartPage />} />
 
             {/* 404 catch-all */}
             <Route path="*" element={<NotFoundPage />} />

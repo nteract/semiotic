@@ -197,7 +197,7 @@ All HOCs accept `annotations`. Coordinates use data field names.
 
 ## Theming
 
-CSS custom properties: `--semiotic-{bg, text, text-secondary, border, grid, primary, secondary, surface, success, danger, warning, error, info, focus, font-family, annotation-color, legend-font-size, title-font-size, tick-font-family, tick-font-size (10px), axis-label-font-size (12px), tooltip-{bg, text, radius, font-size, shadow}}`.
+CSS custom properties: `--semiotic-{bg, text, text-secondary, border, grid, primary, secondary, surface, success, danger, warning, error, info, focus, font-family, annotation-color, legend-font-size, title-font-size, tick-font-family, tick-font-size (12px), axis-label-font-size (12px), tooltip-{bg, text, radius, font-size, shadow}}`.
 
 ```jsx
 <ThemeProvider theme="tufte">                                            {/* named preset */}

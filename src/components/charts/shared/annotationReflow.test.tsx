@@ -5,8 +5,8 @@ import { createDefaultAnnotationRules } from "./annotationRules"
 import type { AnnotationContext } from "../../realtime/types"
 import type { Datum } from "./datumTypes"
 
-// The paper's core data-binding promise (Rahman et al.; idid.md §10 Land):
-// "labels move with the data." A value-anchored annotation must resolve
+// The core data-binding promise (Rahman et al.): "labels move with the
+// data." A value-anchored annotation must resolve
 // through the chart's scale to its DATA coordinates — never to its array
 // index — so reordering (sort) or filtering the data leaves a still-present
 // anchor pinned to the same data point, and a rescale moves it with the axis.

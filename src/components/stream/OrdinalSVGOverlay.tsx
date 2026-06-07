@@ -361,7 +361,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
           // Per-axis font-size resolution — see SVGOverlay for the
           // rationale. CSS var with literal fallback so consumers
           // override via the var rather than fighting inline specificity.
-          const tickFontStyle = { fontSize: "var(--semiotic-tick-font-size, 10px)" }
+          const tickFontStyle = { fontSize: "var(--semiotic-tick-font-size, 12px)" }
           const axisLabelFontStyle = { fontSize: "var(--semiotic-axis-label-font-size, 12px)" }
           return (
           <g className="ordinal-axes">

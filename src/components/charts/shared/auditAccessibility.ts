@@ -301,9 +301,9 @@ export function auditAccessibility(
     principle: "perceivable",
     heuristic: "Small text size",
     critical: true,
-    status: "warn",
-    message: "Semiotic's default tick font is 10px, below Chartability's 9pt/12px floor. Axis ticks may be too small for low-vision readers.",
-    fix: "Set --semiotic-tick-font-size: 12px (and --semiotic-axis-label-font-size ≥ 12px) on a wrapping element, or via a theme, when your audience needs it.",
+    status: "pass",
+    message: "Semiotic's default tick and axis-label fonts are 12px, meeting Chartability's 9pt/12px floor.",
+    fix: "If a theme or override lowers --semiotic-tick-font-size below 12px, raise it back for low-vision audiences.",
   })
   f.push({
     id: "perceivable.seizure-risk",

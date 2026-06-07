@@ -180,7 +180,7 @@ export const LIGHT_THEME: SemioticTheme = {
     fontFamily: "sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   }
 }
 
@@ -213,7 +213,7 @@ export const DARK_THEME: SemioticTheme = {
     fontFamily: "sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10
+    tickSize: 12
   }
 }
 

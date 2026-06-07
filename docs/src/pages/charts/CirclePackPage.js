@@ -6,6 +6,7 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -109,6 +110,8 @@ export default function CirclePackPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
       {/* ----------------------------------------------------------------- */}
+      <ChartGrounding component="CirclePack" />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

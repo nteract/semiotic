@@ -259,7 +259,7 @@ describe("font-size CSS variables", () => {
     const tickText = container.querySelector("text.semiotic-axis-tick") as SVGTextElement | null
     expect(tickText).toBeTruthy()
     const style = tickText!.getAttribute("style") || ""
-    expect(style).toContain("var(--semiotic-tick-font-size, 10px)")
+    expect(style).toContain("var(--semiotic-tick-font-size, 12px)")
   })
 
   it("axis label text references --semiotic-axis-label-font-size", () => {
@@ -314,6 +314,6 @@ describe("font-size CSS variables", () => {
     const tickTexts = Array.from(container.querySelectorAll("text.semiotic-axis-tick"))
     const landmark = tickTexts.find(t => (t.getAttribute("style") || "").includes("calc("))
     expect(landmark).toBeTruthy()
-    expect(landmark!.getAttribute("style")).toContain("calc(var(--semiotic-tick-font-size, 10px) + 1px)")
+    expect(landmark!.getAttribute("style")).toContain("calc(var(--semiotic-tick-font-size, 12px) + 1px)")
   })
 })

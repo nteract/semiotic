@@ -1,8 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
+import { toConfig, fromConfig, toURL, fromURL, copyConfig } from "semiotic"
 import PageLayout from "./PageLayout"
 import PropControls from "./PropControls"
 import CodeBlock from "./CodeBlock"
 import { propertyToString } from "./LiveExample"
+
+// Build a serializable ChartConfig from the current knob-derived props.
+// Returns null when the component isn't in the serialization registry
+// (some playgrounds wrap composite/streaming demos) so callers can hide
+// the share affordances rather than throw. `toConfig` already strips
+// functions, React nodes, and (with includeData:false) data arrays.
+function buildConfig(componentName, props, { includeData }) {
+  try {
+    return toConfig(componentName, props, { includeData })
+  } catch {
+    return null
+  }
+}
 
 /**
  * Orchestrator for playground pages.
@@ -43,7 +57,47 @@ export default function PlaygroundLayout({
   const [values, setValues] = useState(defaults)
   const [datasetIndex, setDatasetIndex] = useState(0)
   const [containerWidth, setContainerWidth] = useState(null)
+  const [copied, setCopied] = useState(null)
   const vizRef = useRef(null)
+  // Skip the URL-write effect until the mount-time restore has run, so a
+  // restored permalink isn't immediately overwritten by default state.
+  const restoredRef = useRef(false)
+
+  // ── Permalink restore (mount) ──────────────────────────────────────────
+  // Read ?sc= (serialized config) and ?ds= (dataset index) and rehydrate the
+  // playground. The config round-trips through the library's own
+  // fromURL/fromConfig, mapping serialized props back onto the knobs they
+  // came from. Unknown/malformed configs are ignored — a bad link degrades to
+  // defaults rather than crashing.
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      restoredRef.current = true
+      return
+    }
+    const search = window.location.search
+    try {
+      if (search.includes("sc=")) {
+        const { props } = fromConfig(fromURL(search))
+        const restored = {}
+        for (const c of controls) {
+          if (props[c.name] !== undefined) restored[c.name] = props[c.name]
+        }
+        if (Object.keys(restored).length > 0) {
+          setValues((prev) => ({ ...prev, ...restored }))
+        }
+      }
+      const params = new URLSearchParams(search)
+      const ds = params.get("ds")
+      if (ds !== null) {
+        const i = parseInt(ds, 10)
+        if (Number.isInteger(i) && i >= 0 && i < datasets.length) setDatasetIndex(i)
+      }
+    } catch {
+      /* malformed permalink — fall back to defaults */
+    }
+    restoredRef.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ResizeObserver for responsive chart width
   useEffect(() => {
@@ -92,13 +146,60 @@ export default function PlaygroundLayout({
     }
   }
 
-  // Apply responsive width
-  if (containerWidth) {
-    chartProps.width = containerWidth
-  }
+  // `chartProps` is now the clean, serializable prop set (knob values + data
+  // accessors). The measured container width is a preview-only concern, so it
+  // rides on a separate `renderProps` and never leaks into the shared config.
+  const renderProps = containerWidth ? { ...chartProps, width: containerWidth } : chartProps
 
   // Generate code string
   const code = generateCode(componentName, controls, values, defaults, currentDataset)
+
+  // Serializable config for the share affordances. URL excludes data (the
+  // dataset picker restores it via ?ds=) to keep links short; the JSON export
+  // includes data so the copied artifact is self-contained and runnable.
+  const urlConfig = buildConfig(componentName, chartProps, { includeData: false })
+  const shareable = urlConfig !== null
+
+  // ── Permalink write (on knob / dataset change) ─────────────────────────
+  // Only diverge the URL from its clean form once the state is non-default, so
+  // a fresh visit keeps a tidy address bar and a reset clears the query.
+  const isDefaultState =
+    datasetIndex === 0 && controls.every((c) => values[c.name] === defaults[c.name])
+  useEffect(() => {
+    if (!restoredRef.current || typeof window === "undefined") return
+    try {
+      if (isDefaultState || !urlConfig) {
+        window.history.replaceState(null, "", window.location.pathname)
+      } else {
+        const sc = toURL(urlConfig) // "sc=<encoded>"
+        window.history.replaceState(null, "", `${window.location.pathname}?${sc}&ds=${datasetIndex}`)
+      }
+    } catch {
+      /* never let a share-state write break the page */
+    }
+    // urlConfig is recomputed each render; key the effect off its serialized form
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(values), datasetIndex])
+
+  const handleCopy = useCallback(
+    async (kind) => {
+      if (typeof window === "undefined") return
+      try {
+        if (kind === "link") {
+          const sc = toURL(buildConfig(componentName, chartProps, { includeData: false }))
+          const url = `${window.location.origin}${window.location.pathname}?${sc}&ds=${datasetIndex}`
+          await navigator.clipboard.writeText(url)
+        } else {
+          await copyConfig(buildConfig(componentName, chartProps, { includeData: true }), "json")
+        }
+        setCopied(kind)
+        setTimeout(() => setCopied(null), 2000)
+      } catch {
+        /* clipboard denied or non-serializable — no-op */
+      }
+    },
+    [componentName, chartProps, datasetIndex]
+  )
 
   return (
     <PageLayout
@@ -133,7 +234,7 @@ export default function PlaygroundLayout({
         {containerWidth ? (
           <ChartComponent
             key={`chart-hover-${values.enableHover}`}
-            {...chartProps}
+            {...renderProps}
           />
         ) : null}
       </div>
@@ -148,6 +249,20 @@ export default function PlaygroundLayout({
 
       {/* Generated code */}
       <h2 id="generated-code">Generated Code</h2>
+      {shareable && (
+        <div className="playground-share-toolbar" style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          <button type="button" className="playground-share-button" onClick={() => handleCopy("link")}>
+            {copied === "link" ? "Link copied!" : "Copy link"}
+          </button>
+          <button type="button" className="playground-share-button" onClick={() => handleCopy("config")}>
+            {copied === "config" ? "Config copied!" : "Copy config (JSON)"}
+          </button>
+          <span className="playground-share-hint" style={{ alignSelf: "center", fontSize: "0.85em", color: "var(--text-secondary)" }}>
+            The link restores this exact configuration; the config is a portable
+            <code> ChartConfig</code> artifact.
+          </span>
+        </div>
+      )}
       <CodeBlock code={code} language="jsx" />
     </PageLayout>
   )

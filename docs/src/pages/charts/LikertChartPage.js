@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react"
 import { LikertChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import CodeBlock from "../../components/CodeBlock"
+import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
@@ -220,6 +222,19 @@ export default function LikertChartPage() {
       prevPage={{ title: "Stacked Bar Chart", path: "/charts/stacked-bar-chart" }}
       nextPage={{ title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" }}
     >
+      <ComponentMeta
+        componentName="LikertChart"
+        importStatement='import { LikertChart } from "semiotic"'
+        tier="charts"
+        wraps="StreamOrdinalFrame"
+        wrapsPath="/frames/ordinal-frame"
+        related={[
+          { name: "StackedBarChart", path: "/charts/stacked-bar-chart" },
+          { name: "BarChart", path: "/charts/bar-chart" },
+          { name: "GroupedBarChart", path: "/charts/grouped-bar-chart" },
+        ]}
+      />
+
       <p>
         Visualize Likert scale survey data as diverging bar charts (horizontal)
         or stacked 100% bar charts (vertical). Supports raw integer scores,
@@ -229,6 +244,8 @@ export default function LikertChartPage() {
       {/* ================================================================= */}
       {/* Quick Start: Horizontal Diverging */}
       {/* ================================================================= */}
+      <ChartGrounding component="LikertChart" />
+
       <h2 id="quick-start">Quick Start — Diverging (Horizontal)</h2>
 
       <p>

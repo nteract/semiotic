@@ -51,6 +51,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   linked-hover visual coverage requirements from `chartSpecs.ts`, verifies the current Playwright
   evidence, and keeps the remaining SSR/CSR parity and linked-hover interaction snapshots in
   one-way burn-down maps. It is wired into CI, `release:check`, and `prepublishOnly`.
+- **Shareable, restorable docs playgrounds.** Every `/playground/*` page now
+  serializes its knob + dataset state into the URL (`?sc=…&ds=…`) and restores it
+  on load, with "Copy link" and "Copy config (JSON)" affordances. The round-trip
+  dogfoods the library's own `toConfig` / `toURL` / `fromURL` / `fromConfig` /
+  `copyConfig` so a playground configuration becomes a portable, inspectable
+  `ChartConfig` artifact; non-serializable composite playgrounds degrade
+  gracefully (no toolbar, no URL writes).
+- **Faithful "Copy" in docs live examples.** The code a docs `LiveExample` copies to the clipboard
+  now serializes the real props the chart rendered with, instead of the trimmed/elided display stub —
+  so copied example code reproduces the example rather than referencing undefined or shortened values.
+  Display stays readable; copy is runnable. The pure code-generation moved to a React-free
+  `codegen` module.
+- **Generated, complete `llms.txt`.** `docs:llms` (`scripts/generate-llms-txt.mjs`) regenerates the
+  root `llms.txt` retrieval index with the full chart catalog derived from `chartSpecs` (grouped by
+  family, every charted component), each entry tagged with its communicative act
+  (`resolveCommunicativeAct`) so an agent reader gets what a chart is *for*, not just what it shows.
+  Replaces the previously hand-maintained (and stale) index; kept fresh by the `check:llms` gate in CI
+  and `release:check`, and regenerated during `website:build`.
+- **Docs: per-chart "At a glance" grounding panel.** A reusable `ChartGrounding` component renders,
+  live for each chart, the communicative act it performs (`buildReaderGrounding`), a layered L1–L3
+  description (`describeChart`), the chart type's reader caveats, and an accessibility badge
+  (`auditAccessibility` — hovering the badge lists the specific findings; clicking opens the full
+  audit) — the reader/agent grounding for the chart, computed from the shipped intelligence APIs so it
+  can't drift. Now on all 39 static chart pages (props centralized in a reviewed fixtures map;
+  realtime/push-only charts are exempt), and enforced by `check:docs-coverage`.
+- **Docs: "Reshape to unlock" generative suggestions.** The `/choose` picker now goes beyond charts the
+  data already fits: from a flat table's field profile it proposes the *transform* that unlocks
+  Semiotic's distinctive charts — pivot two columns into a **Sankey**, stamp an event log with time for
+  a **ProcessSankey**, nest categories into a **Treemap**, etc. — each with the reshape and why that
+  chart is worth it. Surfaces the flow/temporal/hierarchy/geo charts that a fit-only recommender can
+  never reach. Driven by a pure `suggestReshapes(profile)` heuristic.
+- **Docs: "Choose a Chart" front door.** A new top-level `/choose` page profiles a dataset and ranks
+  the catalog by fit and communicative act (live `suggestCharts`), showing each recommendation's score,
+  reasons, and caveats with links to the chart pages. An audience selector demonstrates how the ranking
+  shifts per reader — with the biasing familiarity/targets and their rationale shown — and surfaces
+  governed stretch picks. Users can arrive with data and intent instead of a component name.
+- **Docs: a11y hooks & theming serialization.** The Accessibility docs now cover the preference hooks
+  `useReducedMotion` / `useHighContrast` and the `useNavigationSync` tree↔canvas sync hook; the Theming
+  docs now cover `resolveThemePreset`, `themeToCSS`, `themeToTokens`, and building custom theme objects.
+  Custom Charts cross-links the related Cookbook recipes.
+- **Docs: AI authoring & tooling pages.** The Intelligence docs section gains four pages closing the
+  previously-undocumented AI surface: **CLI & MCP** (every `npx semiotic-ai` flag and every
+  `npx semiotic-mcp` tool, with agent setup), **Variant Discovery & Repair** (`proposeVariant`,
+  `evaluateVariantProposal`, `registerVariantDiscovery`, `repairChartConfig`), **Capability Authoring**
+  (the `ChartCapability` descriptor, `registerChartCapability`, `registerIntent`, and the intent
+  taxonomy), and **Audience Profiles** (the `AudienceProfile` shape, suggestion bias, stretch picks,
+  reception modality, and governance).
+- **Playground control-drift gate.** `check:docs-playground-controls` checks each playground's
+  `select` knobs against `chartSpecs.ts`: a knob bound to an enum-typed prop can no longer offer an
+  option the chart doesn't accept. It only gates enum-typed props (and treats `mapProps`-transformed
+  pages as informational), so an enum member renamed in the API now fails the build instead of
+  leaving a dead knob. Wired into CI, `release:check`, and `prepublishOnly`.
+- **Prop-table drift gate.** `check:docs-prop-tables` resolves each chart's prop surface from
+  `chartSpecs.ts` (`ownProps` over resolved `PROP_BAGS`) and AST-checks every chart page's
+  documented prop names against it, failing if a statically-required prop is undocumented. It keeps
+  the hand-authored tables (and their curation) verifiable against the canonical registry rather than
+  replacing them; `--verbose` reports props documented but absent from `chartSpecs` as a follow-up
+  backlog. Wired into CI, `release:check`, and `prepublishOnly`.
+- **Docs coverage gate + per-page quality bar.** `check:docs-coverage` derives the required
+  chart-page set from `chartSpecs.ts` and verifies every chart page renders the standard contract
+  (`ComponentMeta`, a prop table, and an interactive example), with one-way burn-down maps for the
+  three charts documented elsewhere. Wired into CI, `release:check`, and `prepublishOnly`. The
+  previously-inconsistent `ConnectedScatterplot`, `DifferenceChart`, `LikertChart`, `OrbitDiagram`,
+  `BigNumber`, and `ProcessSankey` pages were backfilled to meet the bar.
 - **Expanded SSR/CSR visual parity matrix.** Shared Playwright fixtures now cover the high-risk
   SSR paths for `DifferenceChart`, `Heatmap`, `QuadrantChart`, geo maps, and statistical ordinal
   charts, plus frame background/foreground graphics, a dark-theme SSR case, annotation callouts,
@@ -59,6 +123,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Default tick/axis font size raised from 10px to 12px** across every shipped theme, the runtime
+  light/dark/high-contrast defaults, and the SVG-overlay CSS-var fallbacks, so axis text clears
+  Chartability's 9pt/12px legibility floor out of the box. `auditAccessibility`'s
+  `perceivable.small-text` heuristic now reports `pass` on the defaults instead of warning, and the
+  `ChartGrounding` docs badge leads with the verdict ("Passes a11y · N advisories") with the specific
+  findings surfaced on hover. Override per chart via `theme.typography.tickSize` or the
+  `--semiotic-tick-font-size` CSS variable.
 - Annotation note-type semantics are centralized so layout, density, diagnostics, and accessibility checks agree on what counts as a note and which notes draw connectors.
 - Static SVG annotation rendering now uses the shared note renderer for labels and callouts, including `callout-circle` and `callout-rect`.
 - React hooks linting now enforces `react-hooks/rules-of-hooks`, with exhaustive-deps staged as a
@@ -71,12 +142,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hook-order regressions across loading/empty/data transitions were fixed across the HOC catalog,
   including the remaining Minimap validation early-return path, so charts no longer trip React's
   "Rendered more hooks than during the previous render" failure when async data arrives.
+- **Animated network charts (OrbitDiagram and other hierarchy layouts) no longer crash the tab when
+  given unmemoized function props.** The hierarchy-ingest effect in `StreamNetworkFrame` no longer
+  re-runs on pipeline-config identity changes — so a parent passing fresh inline-arrow callbacks
+  (`nodeStyle`, `revolution`, …) on each render no longer re-ingests data and fires a `setState` per
+  render, which previously compounded with the continuous animation frame loop until React's
+  max-update-depth guard tripped and the page ran out of memory. Config/style changes are still
+  applied (via the dedicated `updateConfig` effect), and data/dimension changes still re-ingest.
 - `callout-circle` and `callout-rect` are now handled by the default annotation rules instead of being documented but silently skipped.
 - Label and callout rules now pass connector disable, opacity, and stroke-dasharray metadata through to the annotation renderer, allowing lifecycle and editorial status treatments to render as documented.
 - Value-anchored annotations now have explicit regression coverage for sort, filter, and rescale
   reflow so labels stay bound to their data values rather than incidental array positions.
 - Progressive disclosure now reveals deferred annotations in geo frames and correctly hides/reveals network HTML widget annotations.
 - Colored statistical overlays are no longer misclassified as color-only annotation-to-target correspondence failures.
+- Variant discovery now mirrors `suggestCharts` for non-visual audiences: `evaluateVariantProposal`
+  audits a proposal's props and folds the receivability penalty into its fit, so
+  `proposeChartVariants` no longer ranks variants that can't be received via the declared modality.
+- The "horizontal ranked view" variant heuristic is restricted to categorical charts that actually
+  expose `orientation` + `sort` (`BarChart`, `GroupedBarChart`, `StackedBarChart`, `DotPlot`),
+  preventing unsupported prop leakage onto Pie/Donut/Gauge/Likert/Swimlane.
+- The MCP `proposeChartVariants` tool strips the non-serializable `buildProps` function from each
+  proposal in `structuredContent`, keeping the JSON output transport-safe while preserving the
+  computed `props`.
 
 ## [3.6.0] - 2026-05-31
 

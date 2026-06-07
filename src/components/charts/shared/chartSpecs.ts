@@ -40,8 +40,7 @@ export type DataShape = "array" | "object" | "network" | "realtime" | "none"
 export type ChartCategory = "xy" | "ordinal" | "network" | "geo" | "realtime" | "value"
 
 /**
- * Capability tags for runtime behavior. Driven by the
- * `hoc-frame-architecture-audit` Phase 1: each chart declares which
+ * Capability tags for runtime behavior. Each chart declares which
  * features it actually supports so docs, AI/MCP tools, and CI gates
  * can read structured truth instead of inferring it from the source.
  *

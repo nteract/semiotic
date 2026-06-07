@@ -719,6 +719,17 @@ import {
             For richer composition examples, see <Link to="/recipes/benchmark-dashboard">recipes pages</Link>.
             Streamgraph baseline lives on <Link to="/charts/stacked-area-chart">StackedAreaChart</Link>.
           </li>
+          <li>
+            <strong>See it end-to-end in the Cookbook.</strong> Several Cookbook
+            entries build the same chart concepts as worked examples —{" "}
+            <Link to="/cookbook/marimekko-chart">Marimekko</Link>,{" "}
+            <Link to="/cookbook/slope-chart">Slope</Link>,{" "}
+            <Link to="/cookbook/radar-plot">Radar</Link>,{" "}
+            <Link to="/cookbook/isotype-chart">Isotype</Link>, and{" "}
+            <Link to="/cookbook/timeline">Timeline</Link>. Some use these layout
+            functions; others reach the same result through a Stream Frame
+            directly — useful for comparing the two routes.
+          </li>
         </ul>
       </section>
     </PageLayout>
