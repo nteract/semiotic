@@ -496,12 +496,13 @@ const ann = withCurrentProvenance(
       </p>
 
       <p>
-        On the conversation-arc side, the sink shape is intentionally still{" "}
-        <code style={inlineCode}>subscribe()</code>. M3 adds first-party{" "}
-        <code style={inlineCode}>LocalStorageSink</code>,{" "}
-        <code style={inlineCode}>IndexedDBSink</code>, and a{" "}
-        <code style={inlineCode}>WebhookSink</code> stub alongside the existing primitive. Then M4
-        records a real session as a replay fixture for the talk's screenshot path.
+        On the conversation-arc side, the store now has first-party persistence hooks:{" "}
+        <code style={inlineCode}>registerConversationArcSink</code>,{" "}
+        <code style={inlineCode}>createLocalStorageConversationArcSink</code>,{" "}
+        <code style={inlineCode}>createIndexedDBConversationArcSink</code>, and{" "}
+        <code style={inlineCode}>createWebhookConversationArcSink</code>. Replay stays separate
+        from recording through <code style={inlineCode}>loadConversationArc</code>, so a fixture can
+        hydrate the inspector without duplicating analytics events.
       </p>
 
       <p>

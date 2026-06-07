@@ -163,6 +163,7 @@ function SemanticAnchorDemo() {
             type="button"
             aria-pressed={stateKey === key}
             onClick={() => setStateKey(key)}
+            style={{
               padding: "6px 12px",
               borderRadius: 6,
               border: "1px solid var(--surface-3)",

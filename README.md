@@ -285,6 +285,27 @@ configToJSX(config)
 Supports bar, line, area, point, rect, arc, tick marks with encoding translation
 for color, size, aggregation, and binning.
 
+### Conversation Arc Telemetry
+
+Capture and replay the path an AI-assisted chart session took:
+
+```ts
+import {
+  createLocalStorageConversationArcSink,
+  enableConversationArc,
+  getConversationArcStore,
+  loadConversationArc,
+  registerConversationArcSink,
+} from "semiotic/ai"
+
+const sink = createLocalStorageConversationArcSink({ key: "my-app:arc" })
+registerConversationArcSink(sink)
+enableConversationArc({ sessionId: "session-abc" })
+
+getConversationArcStore().record({ type: "chart-rendered", component: "LineChart" })
+loadConversationArc(sink.load(), { enabled: false })
+```
+
 ## Bundle Sizes
 
 Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need everything** — use the sub-path that matches your chart type:
@@ -294,19 +315,19 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **89 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **73 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **67 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
-| `semiotic/geo` | **54 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **94 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/server` | **125 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/utils` | **36 KB** | ThemeProvider, validators, serialization — no chart components |
-| `semiotic/recipes` | **8 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/xy` | **90 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **74 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **68 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/geo` | **55 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
+| `semiotic/realtime` | **95 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/server` | **127 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/utils` | **37 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/recipes` | **9 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **4 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/ai` | **243 KB** | All 42 HOCs + validation — optimized for LLM code generation |
-| `semiotic` | **201 KB** | Everything below (full bundle) |
+| `semiotic/ai` | **246 KB** | All 42 HOCs + validation — optimized for LLM code generation |
+| `semiotic` | **203 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 

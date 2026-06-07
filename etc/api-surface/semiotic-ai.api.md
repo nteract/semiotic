@@ -125,6 +125,9 @@ function computeEffectiveScale
 function configToJSX
 function copyConfig
 function countNodes
+function createIndexedDBConversationArcSink
+function createLocalStorageConversationArcSink
+function createWebhookConversationArcSink
 function currentTimestamp
 function describeChart
 function deserializeSelections
@@ -150,16 +153,19 @@ function getRegisteredVariantDiscovery
 function getStreamCapabilities
 function inferIntent
 function listIntents
+function loadConversationArc
 function profileData
 function proposeVariant
 function receivabilityBias
 function recordAnnotationStatusChange
 function recordAudienceChange
 function registerChartCapability
+function registerConversationArcSink
 function registerIntent
 function registerStreamChartCapability
 function registerVariantDiscovery
 function repairChartConfig
+function replayConversationArc
 function resolveCardinalityToNumber
 function resolveCommunicativeAct
 function resolveRowsToNumber
@@ -236,6 +242,8 @@ interface ClickEndObservation
 interface ClickObservation
 interface ComputeAnnotationFreshnessOptions
 interface ContextLayoutProps
+interface ConversationArcSink
+interface ConversationArcStorageLike
 interface ConversationArcStore
 interface ConversationArcSummary
 interface DashboardPanel
@@ -258,6 +266,7 @@ interface FieldTypeChange
 interface ForecastConfig
 interface HoverEndObservation
 interface HoverObservation
+interface IndexedDBConversationArcSinkOptions
 interface InferIntentResult
 interface IntentDescriptor
 interface InterrogationAnsweredEvent
@@ -267,6 +276,8 @@ interface InterrogationFocus
 interface InterrogationMessage
 interface InterrogationResult
 interface LifecycleBandThresholds
+interface LoadConversationArcOptions
+interface LocalStorageConversationArcSinkOptions
 interface NavBranchExpandedEvent
 interface NavNodeFocusedEvent
 interface NavTreeNode
@@ -325,6 +336,7 @@ interface VariantProposal
 interface VariantScore
 interface VegaLiteEncoding
 interface VegaLiteSpec
+interface WebhookConversationArcSinkOptions
 type A11yPrinciple
 type A11yStatus
 type Annotated
@@ -346,6 +358,7 @@ type ConversationArcEvent
 type ConversationArcEventInput
 type ConversationArcEventType
 type ConversationArcListener
+type ConversationArcWebhookFetch
 type CopyFormat
 type DescribeLevel
 type EvaluateVariantProposalFn

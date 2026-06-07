@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
+  createLocalStorageConversationArcSink,
+  createWebhookConversationArcSink,
   disableConversationArc,
   enableConversationArc,
   getConversationArcStore,
+  loadConversationArc,
   recordAudienceChange,
   recordAnnotationStatusChange,
+  registerConversationArcSink,
   type AnnotationStatusChangedEvent,
   type ConversationArcEvent,
 } from "./conversationArc"
@@ -15,6 +19,22 @@ afterEach(() => {
   // doesn't matter and a failing test doesn't poison the next one.
   getConversationArcStore().reset()
 })
+
+class MemoryStorage {
+  private values = new Map<string, string>()
+
+  getItem(key: string) {
+    return this.values.get(key) ?? null
+  }
+
+  setItem(key: string, value: string) {
+    this.values.set(key, value)
+  }
+
+  removeItem(key: string) {
+    this.values.delete(key)
+  }
+}
 
 describe("conversationArc — default (disabled) surface", () => {
   it("is a no-op until enabled", () => {
@@ -202,6 +222,139 @@ describe("conversationArc — ring buffer", () => {
   it("rejects non-positive capacity", () => {
     expect(() => enableConversationArc({ capacity: 0 })).toThrow(/positive/)
     expect(() => enableConversationArc({ capacity: -5 })).toThrow(/positive/)
+  })
+})
+
+describe("conversationArc — sinks and replay", () => {
+  it("writes accepted events to registered sinks and stops after unregister", () => {
+    const record = vi.fn()
+    const unregister = registerConversationArcSink({ record })
+
+    getConversationArcStore().record({ type: "chart-rendered", component: "Disabled" })
+    expect(record).not.toHaveBeenCalled()
+
+    enableConversationArc({ sessionId: "sink-test" })
+    getConversationArcStore().record({ type: "chart-rendered", component: "LineChart" })
+    unregister()
+    getConversationArcStore().record({ type: "chart-rendered", component: "BarChart" })
+
+    expect(record).toHaveBeenCalledTimes(1)
+    expect(record.mock.calls[0]?.[0]).toMatchObject({
+      type: "chart-rendered",
+      component: "LineChart",
+      sessionId: "sink-test",
+    })
+  })
+
+  it("localStorage sink appends, trims, loads, and clears events", () => {
+    const storage = new MemoryStorage()
+    const sink = createLocalStorageConversationArcSink({
+      storage,
+      key: "arc:test",
+      maxEvents: 2,
+    })
+
+    registerConversationArcSink(sink)
+    enableConversationArc()
+    getConversationArcStore().record({ type: "chart-rendered", component: "A" })
+    getConversationArcStore().record({ type: "chart-rendered", component: "B" })
+    getConversationArcStore().record({ type: "chart-rendered", component: "C" })
+
+    const persisted = sink.load() as Extract<
+      ConversationArcEvent,
+      { type: "chart-rendered" }
+    >[]
+    expect(persisted.map((event) => event.component)).toEqual(["B", "C"])
+
+    getConversationArcStore().clear()
+    expect(sink.load()).toEqual([])
+  })
+
+  it("flush notifies sinks with the exported events", () => {
+    const flush = vi.fn()
+    registerConversationArcSink({ flush })
+    enableConversationArc()
+    getConversationArcStore().record({ type: "chart-rendered", component: "A" })
+
+    const flushed = getConversationArcStore().flush()
+
+    expect(flushed).toHaveLength(1)
+    expect(flush).toHaveBeenCalledTimes(1)
+    expect(flush.mock.calls[0]?.[0]).toEqual(flushed)
+  })
+
+  it("webhook sink posts mapped event payloads", () => {
+    const fetcher = vi.fn().mockResolvedValue({})
+    const sink = createWebhookConversationArcSink({
+      url: "https://example.test/arc",
+      method: "PUT",
+      headers: { "X-Arc": "1" },
+      fetch: fetcher,
+      mapEvent: (event) => ({ type: event.type, sessionId: event.sessionId }),
+    })
+
+    registerConversationArcSink(sink)
+    enableConversationArc({ sessionId: "webhook-test" })
+    getConversationArcStore().record({ type: "chart-exported", component: "LineChart", format: "svg" })
+
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledWith(
+      "https://example.test/arc",
+      expect.objectContaining({
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Arc": "1" },
+        body: JSON.stringify({ type: "chart-exported", sessionId: "webhook-test" }),
+      })
+    )
+  })
+
+  it("loadConversationArc hydrates replay events without re-emitting to sinks or listeners", () => {
+    const sinkRecord = vi.fn()
+    const listener = vi.fn()
+    registerConversationArcSink({ record: sinkRecord })
+    getConversationArcStore().subscribe(listener)
+
+    const saved: ConversationArcEvent[] = [
+      {
+        type: "chart-rendered",
+        component: "ReplayChart",
+        timestamp: 111,
+        sessionId: "saved-session",
+      },
+      {
+        type: "chart-exported",
+        component: "ReplayChart",
+        format: "jsx",
+        timestamp: 222,
+        sessionId: "saved-session",
+      },
+    ]
+
+    const loaded = loadConversationArc(saved)
+
+    expect(loaded).toEqual(saved)
+    expect(getConversationArcStore().enabled).toBe(false)
+    expect(getConversationArcStore().sessionId).toBe("saved-session")
+    expect(getConversationArcStore().getEvents()).toEqual(saved)
+    expect(sinkRecord).not.toHaveBeenCalled()
+    expect(listener).not.toHaveBeenCalled()
+  })
+
+  it("loadConversationArc can append and apply capacity", () => {
+    loadConversationArc(
+      [
+        { type: "chart-rendered", component: "A", timestamp: 1, sessionId: "s" },
+        { type: "chart-rendered", component: "B", timestamp: 2, sessionId: "s" },
+      ],
+      { capacity: 2 }
+    )
+
+    const loaded = loadConversationArc(
+      [{ type: "chart-rendered", component: "C", timestamp: 3, sessionId: "s" }],
+      { append: true, capacity: 2 }
+    ) as Extract<ConversationArcEvent, { type: "chart-rendered" }>[]
+
+    expect(loaded.map((event) => event.component)).toEqual(["B", "C"])
   })
 })
 

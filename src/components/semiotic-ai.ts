@@ -476,7 +476,7 @@ export type {
   LifecycleBandThresholds
 } from "./ai/annotationProvenance"
 
-// Conversation-arc — M2 React hook + summarize helper.
+// Conversation-arc — React hook + summarize helper.
 // Hook handles subscription teardown and snapshot stability for
 // `useSyncExternalStore` consumers. `summarizeArc` is the pure
 // reducer (server-safe, replay-safe).
@@ -487,15 +487,22 @@ export type {
   ConversationArcSummary
 } from "./ai/useConversationArc"
 
-// Conversation-arc telemetry — opt-in event vocabulary + ring-buffer store.
+// Conversation-arc telemetry — opt-in event vocabulary + ring-buffer store +
+// persistence / replay helpers.
 // Default surface is a no-op; call `enableConversationArc()` to start
-// recording. Eight event types track the AI-assisted authoring arc
-// from suggestion through transformation to outcome.
+// recording. Durable sinks are explicitly registered, so disabled
+// telemetry stays zero-overhead.
 export {
   enableConversationArc,
   disableConversationArc,
   getConversationArcStore,
   subscribeToConversationArcChange,
+  registerConversationArcSink,
+  createLocalStorageConversationArcSink,
+  createIndexedDBConversationArcSink,
+  createWebhookConversationArcSink,
+  loadConversationArc,
+  replayConversationArc,
   recordAudienceChange,
   recordAnnotationStatusChange
 } from "./ai/conversationArc"
@@ -505,7 +512,14 @@ export type {
   ConversationArcEventInput,
   ConversationArcStore,
   ConversationArcListener,
+  ConversationArcSink,
+  ConversationArcStorageLike,
   EnableConversationArcOptions,
+  LoadConversationArcOptions,
+  LocalStorageConversationArcSinkOptions,
+  IndexedDBConversationArcSinkOptions,
+  ConversationArcWebhookFetch,
+  WebhookConversationArcSinkOptions,
   SuggestionShownEvent,
   SuggestionChosenEvent,
   AudienceSetEvent,
