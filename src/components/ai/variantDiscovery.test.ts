@@ -9,14 +9,16 @@ import {
   type VariantProposal,
 } from "./variantDiscovery"
 import type { ChartCapability, ChartDataProfile } from "./chartCapabilityTypes"
+import type { IntentId } from "./intents"
+import { getCapability } from "./chartCapabilities"
+import { profileData } from "./profileData"
 
 afterEach(() => {
   clearVariantDiscovery()
 })
 
-// Minimal stubs sufficient to type-check call sites. The M1 surface
-// doesn't actually inspect them — real fixtures arrive with the M2/M3
-// implementations.
+// Minimal stubs sufficient for registry/dispatch behavior. Tests that
+// exercise the real heuristics use built-in capabilities and profiled data.
 const stubCapability: ChartCapability = {
   component: "LineChart",
   family: "time-series",
@@ -56,6 +58,61 @@ describe("variantDiscovery — proposeVariant", () => {
     expect(result).toEqual([])
   })
 
+  it("emits registered capability variants as manual proposals", () => {
+    const capability: ChartCapability = {
+      ...stubCapability,
+      variants: [
+        {
+          key: "smooth",
+          label: "Smooth trend",
+          props: { curve: "monotoneX" },
+          intentDeltas: { trend: 1 },
+          rubricDeltas: { precision: -1 },
+          tags: ["smooth"],
+        },
+      ],
+      buildProps: (_profile, variant) => ({
+        data: _profile.data,
+        ...(variant?.props ?? {}),
+      }),
+    }
+
+    const result = proposeVariant("LineChart", capability, {
+      profile: stubProfile,
+      intent: "trend",
+    })
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({
+      id: "LineChart:smooth",
+      baseComponent: "LineChart",
+      label: "Smooth trend",
+      source: "manual",
+      variantKey: "smooth",
+      tags: ["smooth"],
+    })
+    expect(result[0].buildProps?.(stubProfile)).toMatchObject({ curve: "monotoneX" })
+  })
+
+  it("adds same-intent cross-family alternatives when the profile supports them", () => {
+    const data = Array.from({ length: 24 }, (_, i) => ({
+      group: ["A", "B", "C"][i % 3],
+      value: 10 + (i % 3) * 4 + Math.sin(i),
+    }))
+    const profile = profileData(data)
+    const capability = getCapability("BoxPlot")!
+
+    const result = proposeVariant("BoxPlot", capability, {
+      profile,
+      intent: "distribution",
+    })
+
+    const alternatives = result.filter((p) => p.tags?.includes("cross-family"))
+    expect(alternatives.length).toBeGreaterThan(0)
+    expect(alternatives.some((p) => p.baseComponent !== "BoxPlot")).toBe(true)
+    expect(alternatives[0].rationale).toMatch(/distribution alternative/)
+  })
+
   it("dispatches through every registered discovery function", () => {
     registerVariantDiscovery(() => [
       { id: "A:variant-a", baseComponent: "A", source: "heuristic" },
@@ -70,15 +127,15 @@ describe("variantDiscovery — proposeVariant", () => {
   })
 
   it("forwards (component, capability, context) to each proposer", () => {
-    const calls: Array<{ component: string; intent?: string }> = []
+    const calls: Array<{ component: string; intent?: IntentId | ReadonlyArray<IntentId> }> = []
     registerVariantDiscovery((component, _capability, context) => {
       calls.push({ component, intent: context.intent })
       return []
     })
 
-    proposeVariant("LineChart", stubCapability, { profile: stubProfile, intent: "trend" })
+    proposeVariant("LineChart", stubCapability, { profile: stubProfile, intent: ["trend", "change-detection"] })
 
-    expect(calls).toEqual([{ component: "LineChart", intent: "trend" }])
+    expect(calls).toEqual([{ component: "LineChart", intent: ["trend", "change-detection"] }])
   })
 
   it("deduplicates proposals by id — first proposer wins", () => {
@@ -139,21 +196,58 @@ describe("variantDiscovery — proposeVariant", () => {
 })
 
 describe("variantDiscovery — evaluateVariantProposal", () => {
-  it("returns a neutral baseline score (M1 placeholder)", () => {
+  it("scores proposal fit, novelty, risk, and narrative reasons", () => {
+    const profile = profileData([
+      { month: 1, revenue: 10 },
+      { month: 2, revenue: 15 },
+      { month: 3, revenue: 12 },
+      { month: 4, revenue: 20 },
+      { month: 5, revenue: 24 },
+    ])
+    const capability = getCapability("LineChart")!
+    const proposal = proposeVariant("LineChart", capability, {
+      profile,
+      intent: "trend",
+    }).find((p) => p.id === "LineChart:smooth")!
+
+    const score = evaluateVariantProposal(
+      proposal,
+      profile,
+      {
+        targets: {
+          LineChart: {
+            direction: "increase",
+            weight: 1,
+            reason: "standardize trend-reading workflows",
+          },
+        },
+      },
+      { intent: "trend", baselineComponent: "LineChart" },
+    )
+
+    expect(score.proposalId).toBe("LineChart:smooth")
+    expect(score.fit).toBeGreaterThan(4)
+    expect(score.novelty).toBeGreaterThan(0)
+    expect(score.risk).toBeGreaterThan(0)
+    expect(score.reasons.join(" ")).toContain("Intent fit")
+    expect(score.reasons.join(" ")).toContain("standardize trend-reading workflows")
+  })
+
+  it("rejects proposals for unknown capabilities", () => {
     const proposal: VariantProposal = {
-      id: "LineChart:streamgraph",
-      baseComponent: "StackedAreaChart",
-      source: "manual",
+      id: "UnknownChart:model-variant",
+      baseComponent: "UnknownChart",
+      source: "model",
     }
 
     const score = evaluateVariantProposal(proposal, stubProfile)
 
-    expect(score.proposalId).toBe("LineChart:streamgraph")
+    expect(score.proposalId).toBe("UnknownChart:model-variant")
     expect(score.fit).toBe(0)
-    expect(score.novelty).toBe(0)
-    expect(score.risk).toBe(0)
+    expect(score.novelty).toBe(1)
+    expect(score.risk).toBe(1)
     expect(score.reasons).toHaveLength(1)
-    expect(score.reasons[0]).toMatch(/M1: scoring not implemented/)
+    expect(score.reasons[0]).toMatch(/No capability registered/)
   })
 })
 

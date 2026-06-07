@@ -418,11 +418,9 @@ export {
 } from "./ai/intents"
 export type { BuiltInIntentId, IntentId, IntentDescriptor } from "./ai/intents"
 
-// Variant discovery — interface design (M1).
-// Heuristic implementation lands in M2; MCP `proposeChartVariants`
-// wraps this surface in M3; the external-model plug point is M4.
-// `proposeVariant` already dispatches through any functions registered
-// via `registerVariantDiscovery`, so consumers can wire end-to-end now.
+// Variant discovery — heuristic proposal + evaluation surface. The built-in
+// proposer emits registered capability variants, adds conservative heuristic
+// transforms, and lets external discovery functions register model/agent picks.
 export {
   proposeVariant,
   evaluateVariantProposal,
@@ -436,6 +434,7 @@ export type {
   VariantScore,
   VariantRejectionReason,
   VariantDiscoveryContext,
+  EvaluateVariantProposalOptions,
   ProposeVariantFn,
   EvaluateVariantProposalFn
 } from "./ai/variantDiscovery"

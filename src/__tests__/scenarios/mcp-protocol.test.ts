@@ -321,6 +321,7 @@ describe("MCP protocol round-trip", () => {
       "getSchema",
       "groundChart",
       "interrogateChart",
+      "proposeChartVariants",
       "renderChart",
       "repairChartConfig",
       "reportIssue",
@@ -480,6 +481,36 @@ describe("MCP protocol round-trip", () => {
     }, "suggest-err")
 
     expect(result.result.isError).toBe(true)
+  })
+
+  it("proposeChartVariants returns ranked variant proposals", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "proposeChartVariants",
+      arguments: {
+        component: "LineChart",
+        data: [
+          { month: 1, revenue: 10 },
+          { month: 2, revenue: 15 },
+          { month: 3, revenue: 12 },
+          { month: 4, revenue: 20 },
+          { month: 5, revenue: 24 },
+        ],
+        intent: "trend",
+        maxResults: 4,
+      },
+    }, "variants-line")
+
+    expect(result.result).toBeDefined()
+    expect(result.result.isError).toBeFalsy()
+    const text = result.result.content[0].text
+    expect(text).toContain("variant proposal")
+    expect(text).toContain("LineChart")
+    const proposals = result.result.structuredContent.proposals
+    expect(Array.isArray(proposals)).toBe(true)
+    expect(proposals.length).toBeGreaterThan(0)
+    expect(proposals[0].proposal.id).toMatch(/^LineChart:/)
+    expect(proposals[0].score.fit).toBeGreaterThan(0)
+    expect(proposals[0].props.data).toHaveLength(5)
   })
 
   it("suggestChart filters recommendations by capability constraint", async () => {

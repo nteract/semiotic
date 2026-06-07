@@ -260,6 +260,7 @@ interface Diagnosis
 interface DiagnosisResult
 interface EffectiveScale
 interface EnableConversationArcOptions
+interface EvaluateVariantProposalOptions
 interface ExplainCapabilityFitResult
 interface FieldCandidate
 interface FieldTypeChange

@@ -239,11 +239,12 @@ Heuristic chart-suggestion engine — no LLM required. Charts ship capability de
 - **MCP tool**: `suggestCharts(data, intent?)`.
 
 ### Conversation-arc telemetry (`semiotic/ai`)
-Opt-in event store recording the AI session arc: `suggestion-shown → suggestion-chosen → audience-set → chart-rendered → chart-edited → chart-replaced → chart-exported | chart-abandoned`, plus `interrogation-asked`/`interrogation-answered`. Module-scoped, no provider needed. Default surface is no-op — call `enableConversationArc()` to start.
+Opt-in event store recording the AI session arc: `suggestion-shown → suggestion-chosen → audience-set → chart-rendered → chart-edited → chart-replaced → chart-exported | chart-abandoned`, plus `interrogation-asked`/`interrogation-answered`, reader-navigation events, and `annotation-status-changed`. Module-scoped, no provider needed. Default surface is no-op — call `enableConversationArc()` to start.
 - **`enableConversationArc({ capacity?, sessionId? })`** / **`disableConversationArc()`**. Bounded ring buffer (default 1000 events).
 - **`getConversationArcStore()`** → `{ enabled, sessionId, capacity, record, flush, getEvents, subscribe, clear, reset }`. `getEvents()` returns referentially stable snapshot.
 - **`useConversationArc({ enableOnMount?, disableOnUnmount?, capacity?, sessionId? })`** → `{ history, summary, enabled, sessionId, record, clear }`. Uses `useSyncExternalStore`.
 - **`summarizeArc(events)`** → pure reducer. Server/replay safe.
+- **Persistence / replay**: `registerConversationArcSink(sink)` attaches an opt-in durable sink. Built-ins: `createLocalStorageConversationArcSink({ key?, storage?, maxEvents? })`, `createIndexedDBConversationArcSink({ dbName?, storeName?, indexedDB?, maxEvents? })`, and `createWebhookConversationArcSink({ url, method?, headers?, fetch?, mapEvent? })`. Sinks receive accepted events only; disabled telemetry is still zero-overhead. `loadConversationArc(events, { enabled?, capacity?, sessionId?, append? })` / `replayConversationArc(...)` hydrate the visible store snapshot without re-emitting events to listeners or sinks; default `enabled: false` makes replay safe for analytics.
 - **`recordAudienceChange(audience, previous?, { arcId?, meta? }?)`** — sugar for `audience-set`. Call from audience-picker `onChange`.
 - **Events**: `ConversationArcEvent` discriminated union. Each variant carries its own payload.
 - **Auto-instrumented**: `useChartSuggestions` emits `suggestion-shown` (dedup by component-list + intent); `useChartInterrogation` emits `interrogation-asked` + `interrogation-answered` (with `latencyMs`); `AccessibleNavTree` emits the reception pair `nav-node-focused`/`nav-branch-expanded` on reader traversal (keyboard/click), correlated by its `chartId` prop. Zero-overhead when disabled.
@@ -258,7 +259,7 @@ Two optional blocks attach to any annotation — existing arrays keep working un
 - **`annotationFreshnessFor(annotation, nowMs, thresholds?)`** → classifies a single annotation. Explicit `lifecycle.freshness` wins.
 - **`applyAnnotationLifecycle(annotations, { now?, dataExtent?, opacity?, strokeDasharray?, labelSuffix?, showExpiredAnnotations?, thresholds? })`** → freshness + default visuals (aging dims opacity 0.55, stale dims + dashes `"4 4"`, expired filtered; set `showExpiredAnnotations: true` to keep). Per-band overrides; pass `null` to disable a band default. Annotation-level `opacity`/`strokeDasharray` win.
 - **`applyAnnotationStatus(annotations, { opacity?, strokeDasharray?, labelSuffix?, showRetractedAnnotations?, showSupersededAnnotations? })`** (M7) → editorial-status treatment, orthogonal to freshness: `disputed`→`(?)` + dim, `proposed`→provisional dim+dash, `retracted`→filtered (like expired), `accepted`→full. Opacity **multiplies** into existing, so it composes with `applyAnnotationLifecycle` (run freshness first). Also resolves `supersedes` — a note superseded by a present, non-retracted note is hidden. Use **`filterAnnotationsByStatus`** when a non-visual or custom surface needs the same visibility contract without styling. Emit transitions via **`recordAnnotationStatusChange(toStatus, { annotationId?, fromStatus?, chartId? })`** → conversation-arc `annotation-status-changed` event.
-- Still owed: stable-id anchor resolution after data refresh.
+- **Semantic anchors**: `anchor: "semantic"` / `lifecycle.anchor: "semantic"` re-resolves through `provenance.stableId` after data refresh, using point scene nodes or matching data rows and falling back to the recorded coordinate when the target is gone.
 
 ### Temporal lifecycle (shared `semiotic/realtime` + `semiotic/ai`)
 Three systems answer "how does this look as it ages?" on three different time axes — not interchangeable.
@@ -274,11 +275,12 @@ Shared primitive: **`bandFromAge(ageMs, ttlMs, thresholds?)`** → `"fresh"|"agi
 **Streaming chart-time aging**: pass chart's `dataExtent` to `applyAnnotationLifecycle` — latest data point becomes "now". Pair with `withCurrentProvenance(annotation, { author?, source? })` / `currentTimestamp()` to auto-stamp `createdAt`. Full survey: `/intelligence/temporal-lifecycle`.
 
 ### Variant discovery (`semiotic/ai`)
-Interface for proposing/scoring variants beyond `capability.variants`. M1 ships type surface + stubs; behavior in later milestones.
-- **`VariantProposal`**: `{ id, baseComponent, intentDeltas?, rubricDeltas?, buildProps?, rationale?, source: "manual"|"heuristic"|"model", variantKey?, tags? }`.
+Interface for proposing/scoring variants beyond `capability.variants`. The built-in proposer emits registered variants, conservative heuristic transforms, and same-intent cross-family alternatives; external recommenders can register model/agent proposers.
+- **`VariantProposal`**: `{ id, baseComponent, label?, intentDeltas?, rubricDeltas?, buildProps?, rationale?, source: "manual"|"heuristic"|"model", variantKey?, tags? }`.
 - **`VariantScore`**: `{ proposalId, fit (0–5), novelty (0–1), risk (0–1), reasons }`. Mixes with `suggestCharts` composite scores.
-- **`proposeVariant(component, capability, context)`** → `VariantProposal[]` (stub returns `[]`).
-- **`evaluateVariantProposal(proposal, profile, audience?)`** → `VariantScore` (stub returns neutral baseline).
+- **`proposeVariant(component, capability, context)`** → `VariantProposal[]`. Context accepts `{ profile, audience?, intent?, existingVariants? }`.
+- **`evaluateVariantProposal(proposal, profile, audience?, { intent?, baselineComponent? }?)`** → `VariantScore`.
+- **MCP tool**: `proposeChartVariants(component, props?, data?, intent?, audience?)` ranks proposals and returns ready-to-use props.
 - **`registerVariantDiscovery(fn)`** → registers proposer. `proposeVariant` dispatches through all and dedupes by `proposal.id`. Returns unregister. Inspect: `getRegisteredVariantDiscovery()` / `clearVariantDiscovery()`.
 
 ## AI Behavior Contracts
