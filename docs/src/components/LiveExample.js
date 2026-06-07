@@ -1,159 +1,15 @@
 import React, { useState, useEffect, useRef } from "react"
 import { StreamOrdinalFrame } from "semiotic"
-import { processNodes } from "../process"
-import theme from "../theme"
+import {
+  propertyToString,
+  getFunctionString,
+  getFramePropsString,
+  getCodeBlock,
+} from "./codegen"
 
-// ---------------------------------------------------------------------------
-// Helper functions (ported from DocumentFrame.js)
-// ---------------------------------------------------------------------------
-
-const objectToString = (obj, indent, trimmed) => {
-  if (!obj) return ""
-  let newObj = "{ "
-  const keys = Object.keys(obj),
-    len = keys.length - 1
-
-  keys.forEach((k, i) => {
-    newObj += k + ": " + propertyToString(obj[k], indent + 1, trimmed)
-    if (i !== len) newObj += ", "
-  })
-
-  newObj += " }"
-  return newObj
-}
-
-export const propertyToString = (value, indent, trimmed) => {
-  let string
-  const type = typeof value
-  const isArray = Array.isArray(value)
-  let spaces = ""
-  let x = 0
-  for (x; x <= indent - 1; x++) {
-    spaces += "  "
-  }
-  if (type === "function") {
-    string = value.toString()
-  } else if (type === "object" && !isArray) {
-    string = objectToString(value, indent, trimmed)
-  } else if (isArray) {
-    const arr = trimmed ? value.slice(0, 2) : value
-    string = (
-      "[" +
-      arr.map((d) => propertyToString(d, indent + 1, trimmed)) +
-      `${value.length > 2 && trimmed ? ", ... " : ""}]`
-    ).replace(/},{/g, `},\n${spaces}    {`)
-  } else {
-    string = JSON.stringify(value)
-  }
-  return string
-}
-
-const getFunctionString = (functions, overrideProps) => {
-  let functionsString = ""
-
-  Object.keys(functions).forEach((d) => {
-    functionsString += overrideProps[d] || functions[d]
-    functionsString += "\n"
-  })
-
-  if (functionsString) functionsString += "\n"
-
-  return functionsString
-}
-
-const getFramePropsString = (
-  frameProps,
-  functions,
-  overrideProps,
-  trimmed,
-  hiddenProps
-) => {
-  const frameString = Object.keys(frameProps)
-    .filter((d) => !hiddenProps[d])
-    .map((d) => {
-      const order = processNodes.findIndex((p) => p.keys.indexOf(d) !== -1)
-      const match = processNodes[order]
-
-      return {
-        key: d,
-        value: frameProps[d],
-        label: match ? match.label : "Other",
-        order: match
-          ? order + (match.keys.indexOf(d) / match.keys.length)
-          : processNodes.length,
-      }
-    })
-    .sort((a, b) => a.order - b.order)
-
-  let framePropsString = "const frameProps = { ",
-    category
-
-  frameString.forEach((d, i) => {
-    if (i !== 0) framePropsString += "\n"
-
-    if (category !== d.label && trimmed) {
-      framePropsString += "\n/* --- " + d.label + " --- */\n"
-      category = d.label
-    }
-
-    let string =
-      (functions[d.key] && (functions[d.key].name || d.key)) ||
-      (overrideProps[d.key] && typeof overrideProps[d.key] === "string"
-        ? overrideProps[d.key]
-        : propertyToString(overrideProps[d.key], 0, trimmed)) ||
-      propertyToString(d.value, 0, trimmed)
-
-    if (string !== "") {
-      framePropsString += `  ${d.key}: ${string}${
-        (i !== frameString.length - 1 && ",") || ""
-      }`
-    }
-  })
-
-  framePropsString += "\n}"
-  return framePropsString
-}
-
-const getCodeBlock = (
-  frameName,
-  pre,
-  functionsString,
-  framePropsString,
-  overrideRender
-) => {
-  const importTheme = `const theme = ${JSON.stringify(theme)}`
-
-  let render =
-    overrideRender ||
-    `export default () => {
-  return <${frameName} {...frameProps} />
-}`
-
-  let codeblock = `import { ${frameName} } from "semiotic"
-${pre || ""}${(pre && "\n") || ""}${importTheme}
-${functionsString}${framePropsString}
-
-${render}`
-  let addImport = false
-
-  if (codeblock.indexOf("theme") !== -1) {
-    codeblock = codeblock.replace(/theme\[(.*?)]/g, (s, m) => {
-      const tryParse = parseInt(m, 10)
-      if (isNaN(tryParse)) {
-        addImport = true
-        return s
-      }
-
-      return `"${theme[m]}"`
-    })
-  }
-
-  if (!addImport) {
-    codeblock = codeblock.replace(importTheme + "\n", "")
-  }
-
-  return codeblock
-}
+// Re-export so existing importers (PlaygroundLayout) keep their
+// `import { propertyToString } from "./LiveExample"`.
+export { propertyToString }
 
 // ---------------------------------------------------------------------------
 // LiveExample component
@@ -235,13 +91,17 @@ export default function LiveExample({
     overrideRender
   )
 
-  // Build the full code string (for copy)
+  // Build the full code string (for copy). `faithful: true` serializes the
+  // real frameProps the chart rendered with — ignoring the display-only
+  // overrideProps stubs — so the copied code reproduces the example instead of
+  // referencing a trimmed/elided value.
   const fullFramePropsString = getFramePropsString(
     frameProps,
     functions,
     overrideProps,
     false,
-    hiddenProps
+    hiddenProps,
+    true
   )
   const fullCode = getCodeBlock(
     frameName,

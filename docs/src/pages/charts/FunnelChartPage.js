@@ -7,6 +7,7 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 
@@ -325,6 +326,8 @@ export default function FunnelChartPage() {
       {/* ================================================================= */}
       {/* Vertical Orientation (Bar Funnel) */}
       {/* ================================================================= */}
+      <ChartGrounding component="FunnelChart" />
+
       <h2 id="vertical">Vertical Orientation (Bar Funnel)</h2>
       <p>
         Set <code>orientation="vertical"</code> to render funnel data as

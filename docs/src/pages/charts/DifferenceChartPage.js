@@ -1,10 +1,12 @@
 import React, { useRef, useEffect } from "react"
 import { DifferenceChart } from "semiotic"
 
+import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
@@ -176,6 +178,19 @@ export default function DifferenceChartPage() {
       ]}
       nextPage={{ title: "StackedAreaChart", path: "/charts/stacked-area-chart" }}
     >
+      <ComponentMeta
+        componentName="DifferenceChart"
+        importStatement='import { DifferenceChart } from "semiotic"'
+        tier="charts"
+        wraps="StreamXYFrame"
+        wrapsPath="/frames/xy-frame"
+        related={[
+          { name: "AreaChart", path: "/charts/area-chart" },
+          { name: "LineChart", path: "/charts/line-chart" },
+          { name: "StackedAreaChart", path: "/charts/stacked-area-chart" },
+        ]}
+      />
+
       <p>
         DifferenceChart fills the region between two series with a color that
         switches based on which series is higher at each x. Crossovers are
@@ -194,6 +209,8 @@ export default function DifferenceChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start (with streaming toggle) */}
       {/* ----------------------------------------------------------------- */}
+      <ChartGrounding component="DifferenceChart" />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

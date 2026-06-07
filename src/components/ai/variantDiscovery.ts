@@ -17,8 +17,16 @@ import type {
   IntentScorer,
 } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
-import { applyAudienceBias, type AudienceProfile } from "./audienceProfile"
+import {
+  applyAudienceBias,
+  receivabilityBias,
+  type AudienceProfile,
+  type ReceptionModality,
+  type ReceivabilitySignal,
+} from "./audienceProfile"
 import { getCapabilities, getCapability } from "./chartCapabilities"
+import { auditAccessibility } from "../charts/shared/auditAccessibility"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Proposal ──────────────────────────────────────────────────────────
 
@@ -264,6 +272,19 @@ function variantHasProp(
   return variants.some((variant) => variant.props?.[key] === value)
 }
 
+/**
+ * Categorical components that expose BOTH `orientation` and `sort`, so the
+ * "horizontal ranked view" heuristic can attach those props without leaking
+ * keys the component doesn't accept. Other categorical charts (Pie/Donut/Gauge
+ * lack orientation; Likert/Swimlane lack sort) are intentionally excluded.
+ */
+const HORIZONTAL_RANKED_COMPONENTS = new Set([
+  "BarChart",
+  "GroupedBarChart",
+  "StackedBarChart",
+  "DotPlot",
+])
+
 function builtInHeuristicProposals(
   component: string,
   capability: ChartCapability,
@@ -281,7 +302,14 @@ function builtInHeuristicProposals(
   const wantsRankOrCategory =
     intents.includes("rank") || intents.includes("compare-categories")
 
+  // The horizontal+sort transform only produces valid props for categorical
+  // charts that actually expose both `orientation` and `sort`. Pie/Donut/Gauge
+  // (no orientation) and Likert/Swimlane (no sort) are categorical but would
+  // leak unsupported keys, so gate on the explicit supporting set.
+  const supportsHorizontalRankedView = HORIZONTAL_RANKED_COMPONENTS.has(component)
+
   if (
+    supportsHorizontalRankedView &&
     capability.family === "categorical" &&
     !variantHasProp(existingVariants, "orientation", "horizontal") &&
     (wantsRankOrCategory || (profile.categoryCount ?? 0) >= 6)
@@ -455,7 +483,27 @@ export const evaluateVariantProposal: EvaluateVariantProposalFn = (
   const intentScores = intentScoresFor(capability, profile, proposal.intentDeltas)
   const baseFit = compositeScore(intentScores, rankingIntents)
   const rubric = applyRubricDeltas(capability.rubric, proposal.rubricDeltas)
-  const biased = applyAudienceBias(baseFit, rubric, proposal.baseComponent, audience)
+
+  // Receivability: mirror `suggestCharts`. When the audience declares a
+  // non-visual reception channel, audit the proposal's actual props and fold
+  // the receivability penalty into the same bias term, so variant ranking
+  // doesn't promote configurations whose meaning can't survive the declared
+  // modality (e.g. a many-slice pie for a screen reader). Visual audiences pay
+  // nothing — the audit is skipped entirely.
+  let receivability: ReceivabilitySignal | undefined
+  const modality = audience?.receptionModality
+  if (modality && modality !== "visual") {
+    const variant = proposal.variantKey
+      ? capability.variants?.find((v) => v.key === proposal.variantKey)
+      : undefined
+    const props = proposal.buildProps
+      ? proposal.buildProps(profile, audience)
+      : capability.buildProps(profile, variant)
+    const audit = auditAccessibility(proposal.baseComponent, props as Datum)
+    receivability = receivabilityBias(audit, modality as ReceptionModality)
+  }
+
+  const biased = applyAudienceBias(baseFit, rubric, proposal.baseComponent, audience, receivability)
   const fit = clamp(biased.score, 0, 5)
 
   let novelty = proposal.source === "manual" ? 0.15 : proposal.source === "heuristic" ? 0.45 : 0.75
@@ -482,6 +530,7 @@ export const evaluateVariantProposal: EvaluateVariantProposalFn = (
   }
   if (proposal.source !== "manual") reasons.push(`${proposal.source} proposal; verify against domain context.`)
   if (biased.appliedReason) reasons.push(biased.appliedReason)
+  if (biased.receivabilityReason) reasons.push(biased.receivabilityReason)
   if (proposal.rubricDeltas && Object.values(proposal.rubricDeltas).some((delta) => (delta ?? 0) < 0)) {
     reasons.push("Rubric tradeoff: improves one reading mode while reducing precision or accuracy.")
   }

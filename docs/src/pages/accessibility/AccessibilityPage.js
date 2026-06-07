@@ -529,6 +529,34 @@ const result = diagnoseConfig("LineChart", {
       {/* ----------------------------------------------------------------- */}
       {/* Testing */}
       {/* ----------------------------------------------------------------- */}
+      <h2 id="preference-hooks">Preference hooks</h2>
+      <p>
+        Charts auto-detect <code>prefers-reduced-motion</code> and{" "}
+        <code>forced-colors</code> and adapt (animations off, high-contrast
+        focus rings). When you build chrome <em>around</em> a chart — custom
+        intros, transitions, decorative motion — read the same signals so your
+        UI stays consistent with the chart. Two hooks expose them, from{" "}
+        <code>semiotic/utils</code>:
+      </p>
+      <CodeBlock language="jsx">{`import { useReducedMotion, useHighContrast } from "semiotic/utils"
+
+function Panel() {
+  const reduceMotion = useReducedMotion()   // boolean, live-updates on change
+  const highContrast = useHighContrast()    // boolean
+
+  return (
+    <LineChart
+      animate={reduceMotion ? false : { duration: 600 }}
+      {...props}
+    />
+  )
+}`}</CodeBlock>
+      <p>
+        Both return a boolean and re-render on OS-preference change, so they
+        compose like any other reactive value. The chart honors these
+        automatically — the hooks are for the surrounding UI.
+      </p>
+
       <h2 id="testing">Testing Accessibility</h2>
 
       <ul>

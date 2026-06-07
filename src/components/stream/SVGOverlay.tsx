@@ -720,8 +720,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
           // CSS var with the literal default as the fallback — consumers
           // override the var on any DOM ancestor and the cascade carries
           // through. Landmark ticks get a +1px bump via calc().
-          const tickFontStyle = { fontSize: "var(--semiotic-tick-font-size, 10px)" }
-          const tickFontStyleLandmark = { fontSize: "calc(var(--semiotic-tick-font-size, 10px) + 1px)" }
+          const tickFontStyle = { fontSize: "var(--semiotic-tick-font-size, 12px)" }
+          const tickFontStyleLandmark = { fontSize: "calc(var(--semiotic-tick-font-size, 12px) + 1px)" }
           const axisLabelFontStyle = { fontSize: "var(--semiotic-axis-label-font-size, 12px)" }
           const bottomTickAnchorMode = bottomAxis?.tickAnchor
           const leftTickAnchorMode = leftAxis?.tickAnchor

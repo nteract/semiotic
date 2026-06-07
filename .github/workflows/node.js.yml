@@ -50,6 +50,18 @@ jobs:
       - name: Check visual baseline capability coverage
         run: npm run check:visual-baseline-capabilities
 
+      - name: Check docs coverage and per-page quality
+        run: npm run check:docs-coverage
+
+      - name: Check prop-table drift vs chartSpecs
+        run: npm run check:docs-prop-tables
+
+      - name: Check playground control drift vs chartSpecs
+        run: npm run check:docs-playground-controls
+
+      - name: Check llms.txt freshness
+        run: npm run check:llms
+
       - name: Check blog metadata registry freshness
         run: npm run check:blog-entries
 

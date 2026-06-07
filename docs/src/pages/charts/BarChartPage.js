@@ -6,6 +6,7 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
@@ -214,6 +215,19 @@ export default function BarChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
       {/* ----------------------------------------------------------------- */}
+      <ChartGrounding
+        component="BarChart"
+        props={{
+          data: [
+            { category: "AMER", value: 42 }, { category: "EMEA", value: 33 },
+            { category: "APAC", value: 51 }, { category: "LATAM", value: 18 },
+          ],
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          title: "Sales by region",
+        }}
+      />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

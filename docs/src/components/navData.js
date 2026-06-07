@@ -12,6 +12,10 @@ const navData = [
     path: "/migration"
   },
   {
+    title: "Choose a Chart",
+    path: "/choose"
+  },
+  {
     title: "Charts",
     path: "/charts",
     tier: "charts",
@@ -158,7 +162,11 @@ const navData = [
       { title: "Conversation Arc", path: "/intelligence/conversation-arc" },
       { title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" },
       { title: "Serialization", path: "/intelligence/serialization" },
-      { title: "Vega-Lite Translator", path: "/intelligence/vega-lite" }
+      { title: "Vega-Lite Translator", path: "/intelligence/vega-lite" },
+      { title: "Variant Discovery", path: "/intelligence/variant-discovery" },
+      { title: "Capability Authoring", path: "/intelligence/capability-authoring" },
+      { title: "Audience Profiles", path: "/intelligence/audience-profiles" },
+      { title: "CLI & MCP", path: "/intelligence/cli-mcp" }
     ]
   },
   {

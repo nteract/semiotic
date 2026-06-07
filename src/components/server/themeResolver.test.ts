@@ -76,7 +76,7 @@ describe("themeStyles", () => {
     expect(s.fontFamily).toBe("sans-serif")
     expect(s.titleSize).toBe(16)
     expect(s.labelSize).toBe(12)
-    expect(s.tickSize).toBe(10)
+    expect(s.tickSize).toBe(12)
     expect(s.categorical).toEqual(LIGHT_THEME.colors.categorical)
   })
 

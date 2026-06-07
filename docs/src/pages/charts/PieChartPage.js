@@ -6,6 +6,7 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
@@ -174,6 +175,19 @@ export default function PieChartPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
       {/* ----------------------------------------------------------------- */}
+      <ChartGrounding
+        component="PieChart"
+        props={{
+          data: [
+            { category: "Search", value: 42 }, { category: "Direct", value: 33 },
+            { category: "Social", value: 25 },
+          ],
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          title: "Traffic by source",
+        }}
+      />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

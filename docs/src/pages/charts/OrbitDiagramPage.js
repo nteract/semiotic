@@ -2,8 +2,30 @@ import React from "react"
 import { OrbitDiagram } from "semiotic"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
+import ComponentMeta from "../../components/ComponentMeta"
+import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import { Link } from "react-router-dom"
+
+const orbitDiagramProps = [
+  { name: "data", type: "object", required: true, description: "Root of the hierarchy with children" },
+  { name: "childrenAccessor", type: "string | function", default: '"children"', description: "How to access children" },
+  { name: "nodeIdAccessor", type: "string | function", default: '"name"', description: "How to identify nodes" },
+  { name: "orbitMode", type: '"flat" | "solar" | "atomic" | number[]', default: '"flat"', description: "Ring capacity pattern" },
+  { name: "orbitSize", type: "number | function", default: "2.95", description: "Ring size divisor per depth" },
+  { name: "speed", type: "number", default: "0.25", description: "Rotation speed (degrees/frame)" },
+  { name: "revolution", type: "function", default: "(n) => 1/(depth+1)", description: "Per-node speed modifier (overrides revolutionStyle)" },
+  { name: "revolutionStyle", type: '"locked" | "decay" | "alternate"', default: '"locked"', description: "Preset revolution pattern" },
+  { name: "eccentricity", type: "number | function", default: "1", description: "Vertical squash (1=circle, 0.5=ellipse)" },
+  { name: "showRings", type: "boolean", default: "true", description: "Draw orbital ring paths" },
+  { name: "nodeRadius", type: "number | function", default: "6", description: "Node circle radius" },
+  { name: "showLabels", type: "boolean", default: "false", description: "Show node name labels" },
+  { name: "animated", type: "boolean", default: "true", description: "Enable orbital animation" },
+  { name: "colorBy", type: "string | function", description: "Field for node colors" },
+  { name: "colorByDepth", type: "boolean", default: "false", description: "Color by hierarchy depth" },
+  { name: "tooltip", type: "function", default: "default", description: "Custom tooltip (static mode only — disabled during animation)" },
+]
 
 const orgData = {
   name: "CEO",
@@ -42,6 +64,16 @@ const orgData = {
   ]
 }
 
+// Hoisted to module scope so the animated OrbitDiagram receives stable
+// function identities. Inline arrows recreated on every page render would
+// churn the network frame's pipeline config (functions never compare
+// shallow-equal), re-firing the hierarchy-ingest effect on each parent
+// re-render and compounding with the orbit's continuous animation frame
+// loop until React's max-update-depth guard trips. See CLAUDE.md
+// "Performance": memoize function accessors.
+const solarRevolution = (n) => 1 / (n.depth + 1)
+const solarNodeRadius = (n) => (n.depth === 0 ? 16 : n.data?.children ? 8 : 4)
+
 const solarSystem = {
   name: "Sun",
   children: [
@@ -69,12 +101,27 @@ export default function OrbitDiagramPage() {
       ]}
       prevPage={{ title: "Circle Pack", path: "/charts/circle-pack" }}
     >
+      <ComponentMeta
+        componentName="OrbitDiagram"
+        importStatement='import { OrbitDiagram } from "semiotic"'
+        tier="charts"
+        wraps="StreamNetworkFrame"
+        wrapsPath="/frames/network-frame"
+        related={[
+          { name: "TreeDiagram", path: "/charts/tree-diagram" },
+          { name: "CirclePack", path: "/charts/circle-pack" },
+          { name: "Treemap", path: "/charts/treemap" },
+        ]}
+      />
+
       <p>
         OrbitDiagram arranges hierarchical data as orbital rings — children
         revolve around their parent node. It's an animated alternative to
         tree layouts that emphasizes the <em>relationship</em> between parent
         and children rather than the structure.
       </p>
+
+      <ChartGrounding component="OrbitDiagram" />
 
       <h2 id="quick-start">Quick Start</h2>
 
@@ -120,8 +167,8 @@ export default function OrbitDiagramPage() {
           orbitMode: "solar",
           eccentricity: 0.7,
           speed: 0.4,
-          revolution: (n) => 1 / (n.depth + 1),
-          nodeRadius: (n) => n.depth === 0 ? 16 : n.data?.children ? 8 : 4,
+          revolution: solarRevolution,
+          nodeRadius: solarNodeRadius,
           colorByDepth: true,
           showLabels: true,
           width: 500,
@@ -181,43 +228,7 @@ export default function OrbitDiagramPage() {
 
       <h2 id="props">Props</h2>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9em" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid var(--surface-3)" }}>
-            <th style={{ textAlign: "left", padding: 8 }}>Prop</th>
-            <th style={{ textAlign: "left", padding: 8 }}>Type</th>
-            <th style={{ textAlign: "left", padding: 8 }}>Default</th>
-            <th style={{ textAlign: "left", padding: 8 }}>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {[
-            ["data", "object", "required", "Root of the hierarchy with children"],
-            ["childrenAccessor", "string | fn", '"children"', "How to access children"],
-            ["nodeIdAccessor", "string | fn", '"name"', "How to identify nodes"],
-            ["orbitMode", '"flat"|"solar"|"atomic"|number[]', '"flat"', "Ring capacity pattern"],
-            ["orbitSize", "number | fn", "2.95", "Ring size divisor per depth"],
-            ["speed", "number", "0.25", "Rotation speed (degrees/frame)"],
-            ["revolution", "fn", "(n) => 1/(depth+1)", "Per-node speed modifier (overrides revolutionStyle)"],
-            ["revolutionStyle", '"locked"|"decay"|"alternate"', '"locked"', "Preset revolution pattern"],
-            ["eccentricity", "number | fn", "1", "Vertical squash (1=circle, 0.5=ellipse)"],
-            ["showRings", "boolean", "true", "Draw orbital ring paths"],
-            ["nodeRadius", "number | fn", "6", "Node circle radius"],
-            ["showLabels", "boolean", "false", "Show node name labels"],
-            ["animated", "boolean", "true", "Enable orbital animation"],
-            ["colorBy", "string | fn", "—", "Field for node colors"],
-            ["colorByDepth", "boolean", "false", "Color by hierarchy depth"],
-            ["tooltip", "fn", "default", "Custom tooltip (static mode only — disabled during animation)"],
-          ].map(([name, type, def, desc]) => (
-            <tr key={name} style={{ borderBottom: "1px solid var(--surface-3)" }}>
-              <td style={{ padding: 8 }}><code>{name}</code></td>
-              <td style={{ padding: 8 }}><code>{type}</code></td>
-              <td style={{ padding: 8 }}>{def}</td>
-              <td style={{ padding: 8 }}>{desc}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <PropTable componentName="OrbitDiagram" props={orbitDiagramProps} />
 
       <h2 id="orbit-modes">Orbit Modes</h2>
 

@@ -11,7 +11,37 @@ import { DonutChart, PieChart } from "semiotic/ordinal"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import CodeBlock from "../../components/CodeBlock"
+import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
+
+const bigNumberProps = [
+  { name: "value", type: "number", required: true, description: "The focal value to display." },
+  { name: "label", type: "string", description: "Short caption above the value." },
+  { name: "caption", type: "string", description: "Secondary caption below the value." },
+  { name: "format", type: '"number" | "currency" | "percent" | "compact" | "duration" | function', default: '"number"', description: "Value formatter; pass a function for full control." },
+  { name: "locale", type: "string", description: "BCP-47 locale for number/currency formatting." },
+  { name: "currency", type: "string", description: "ISO currency code when format is \"currency\"." },
+  { name: "precision", type: "number", description: "Fraction-digit count for the formatted value." },
+  { name: "prefix", type: "string", description: "Text rendered before the value." },
+  { name: "suffix", type: "string", description: "Text rendered after the value." },
+  { name: "unit", type: "string", description: "Unit appended to the value and the aria-label." },
+  { name: "comparison", type: "object", description: "{ value, label?, format?, direction? } — drives the delta row." },
+  { name: "target", type: "object", description: "{ value, label?, format?, direction? } — drives the % -of-target readout." },
+  { name: "delta", type: "number", description: "Explicit delta override (otherwise derived from comparison)." },
+  { name: "showDeltaPercent", type: "boolean", default: "true", description: "Show the percent change alongside the signed delta." },
+  { name: "direction", type: '"higher-is-better" | "lower-is-better" | "neutral"', default: '"higher-is-better"', description: "How delta sign maps to sentiment." },
+  { name: "sentiment", type: '"auto" | "positive" | "negative" | "neutral"', default: '"auto"', description: "Force the sentiment color instead of deriving it." },
+  { name: "thresholds", type: "array", description: "[{ at, level, color?, label? }] — resolved by highest at ≤ value, painted via --semiotic-{level}." },
+  { name: "mode", type: '"tile" | "presentation" | "inline" | "thumbnail"', default: '"tile"', description: "Layout/typography preset." },
+  { name: "windowSize", type: "number", default: "60", description: "Caps the push buffer surfaced via getData() / slot context." },
+  { name: "animate", type: "boolean | object", description: "Tween between value changes ({ duration?, easing?, intro? })." },
+  { name: "stalenessThreshold", type: "number", description: "Milliseconds without a push after which the card dims." },
+  { name: "staleLabel", type: "string", description: "Label shown when the value is stale." },
+  { name: "trendSlot", type: "ReactNode | function", description: "Wide chart slot beneath the value (sparkline-aspect charts)." },
+  { name: "chartSlot", type: "ReactNode | function", description: "Square chart slot beside the value (donut/pie/scatter)." },
+  { name: "chartSize", type: "number", description: "Pixels reserved for chartSlot; defaults to inner card height." },
+]
 
 // ---------------------------------------------------------------------------
 // Shared styles for this page
@@ -232,6 +262,8 @@ export default function BigNumberPage() {
           { name: "Sparkline", path: "/charts/sparkline" },
         ]}
       />
+
+      <ChartGrounding component="BigNumber" />
 
       <h2 id="quick-start">Quick Start</h2>
       <p>
@@ -854,6 +886,18 @@ semiotic-bignumber--empty                (only when value is empty)
         Threshold zones use semantic theme roles, so a high-contrast or forced-colors theme
         automatically remaps the value text colour without per-card overrides.
       </p>
+
+      <h2 id="props">Props</h2>
+      <p style={sectionNote}>
+        Core props are listed below. <code>BigNumber</code> also accepts slot
+        overrides (<code>headerSlot</code>, <code>valueSlot</code>,{" "}
+        <code>deltaSlot</code>, <code>footerSlot</code>) and layout props
+        (<code>align</code>, <code>padding</code>, <code>emphasis</code>,{" "}
+        <code>color</code>, <code>background</code>, <code>borderColor</code>,{" "}
+        <code>borderRadius</code>), each a ReactNode or{" "}
+        <code>(ctx) =&gt; ReactNode</code>.
+      </p>
+      <PropTable componentName="BigNumber" props={bigNumberProps} />
 
       <h2 id="future-frame">Future SingleValueFrame</h2>
       <p style={sectionNote}>

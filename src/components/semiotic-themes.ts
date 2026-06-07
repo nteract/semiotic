@@ -50,7 +50,7 @@ export const PASTELS_LIGHT: SemioticTheme = {
     fontFamily: "Inter, system-ui, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#fff5ee",
@@ -86,7 +86,7 @@ export const PASTELS_DARK: SemioticTheme = {
     fontFamily: "Inter, system-ui, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#251e35",
@@ -124,7 +124,7 @@ export const BI_TOOL_LIGHT: SemioticTheme = {
     fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#ffffff",
@@ -160,7 +160,7 @@ export const BI_TOOL_DARK: SemioticTheme = {
     fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#1f2937",
@@ -198,7 +198,7 @@ export const ITALIAN_LIGHT: SemioticTheme = {
     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#ffffff",
@@ -234,7 +234,7 @@ export const ITALIAN_DARK: SemioticTheme = {
     fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#1a1a1a",
@@ -272,7 +272,7 @@ export const TUFTE_LIGHT: SemioticTheme = {
     fontFamily: "Georgia, 'Times New Roman', serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
     tickFontFamily: "'Courier New', Courier, monospace",
     legendSize: 11,
   },
@@ -310,7 +310,7 @@ export const TUFTE_DARK: SemioticTheme = {
     fontFamily: "Georgia, 'Times New Roman', serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#262520",
@@ -348,7 +348,7 @@ export const JOURNALIST_LIGHT: SemioticTheme = {
     fontFamily: "'Franklin Gothic Medium', 'Libre Franklin', Arial, sans-serif",
     titleSize: 18,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
     tickFontFamily: "'Courier New', Courier, monospace",
     legendSize: 11,
   },
@@ -386,7 +386,7 @@ export const JOURNALIST_DARK: SemioticTheme = {
     fontFamily: "'Franklin Gothic Medium', 'Libre Franklin', Arial, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#1e1e1e",
@@ -424,7 +424,7 @@ export const PLAYFUL_LIGHT: SemioticTheme = {
     fontFamily: "'Nunito', 'Poppins', system-ui, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#ffffff",
@@ -460,7 +460,7 @@ export const PLAYFUL_DARK: SemioticTheme = {
     fontFamily: "'Nunito', 'Poppins', system-ui, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#1f1138",
@@ -520,7 +520,7 @@ export const CARBON_LIGHT: SemioticTheme = {
     fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#ffffff",
@@ -557,7 +557,7 @@ export const CARBON_DARK: SemioticTheme = {
     fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
     titleSize: 16,
     labelSize: 12,
-    tickSize: 10,
+    tickSize: 12,
   },
   tooltip: {
     background: "#262626",

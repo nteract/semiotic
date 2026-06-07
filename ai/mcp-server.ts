@@ -552,8 +552,12 @@ async function proposeChartVariantsHandler(args: {
         intent: intentArg,
         baselineComponent: component,
       })
+      // `proposal.buildProps` is a function; MCP structuredContent must be
+      // JSON-serializable, so strip it (and any future non-serializable
+      // fields) here. The executable output lives in the computed `props`.
+      const { buildProps: _buildProps, ...proposalMeta } = proposal
       return {
-        proposal,
+        proposal: proposalMeta,
         score,
         props: buildVariantProposalProps(proposal, profile, audience),
       }

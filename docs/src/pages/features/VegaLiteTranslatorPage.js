@@ -240,7 +240,7 @@ export default function VegaLiteTranslatorPage() {
         { label: "Vega-Lite Translator", path: "/intelligence/vega-lite" },
       ]}
       prevPage={{ title: "Serialization", path: "/intelligence/serialization" }}
-      nextPage={{ title: "Styling", path: "/theming/styling" }}
+      nextPage={{ title: "Variant Discovery", path: "/intelligence/variant-discovery" }}
     >
       {/* ── Why ────────────────────────────────────────────────────────── */}
       <section>

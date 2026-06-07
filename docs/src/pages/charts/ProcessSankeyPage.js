@@ -4,9 +4,33 @@ import { ProcessSankey } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import CodeBlock from "../../components/CodeBlock"
+import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
+import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
+
+// Core props for the scannable contract. The prose subsections below
+// (Data / Accessors / Layout / …) remain the detailed reference.
+const processSankeyProps = [
+  { name: "nodes", type: "array", required: true, description: "Node records; may carry xExtent: [start, end] for an explicit lifetime." },
+  { name: "edges", type: "array", required: true, description: "Edge records with source, target, value, startTime, endTime." },
+  { name: "domain", type: "[number, number]", required: true, description: "[tStart, tEnd] of the x-axis." },
+  { name: "axisTicks", type: "array", description: "Optional [{ date, label }] tick overrides." },
+  { name: "xExtentAccessor", type: "string | function", description: "Per-node [start, end] lifetime accessor." },
+  { name: "pairing", type: '"value" | "temporal"', default: '"value"', description: "How incoming/outgoing flows are paired into ribbons." },
+  { name: "packing", type: '"off" | "reuse"', default: '"reuse"', description: "Pack lifetime-disjoint nodes into shared rows." },
+  { name: "laneOrder", type: '"crossing-min" | "inside-out" | "crossing-min+inside-out" | "insertion"', default: '"crossing-min"', description: "Vertical lane ordering strategy." },
+  { name: "lifetimeMode", type: '"full" | "half"', default: '"full"', description: "Whether a node lane spans its full lifetime or half." },
+  { name: "ribbonLane", type: '"source" | "target" | "both"', description: "Which side(s) ribbons attach to." },
+  { name: "colorBy", type: "string | function", description: "Field/accessor that drives categorical node + ribbon color." },
+  { name: "showLaneRails", type: "boolean", description: "Draw the rail guides behind lanes." },
+  { name: "showLabels", type: "boolean", default: "true", description: "Render node labels." },
+  { name: "showQualityReadout", type: "boolean", description: "Overlay the layout-quality (crossing) readout." },
+  { name: "showParticles", type: "boolean", description: "Animate particles along ribbons (pair with particleStyle)." },
+  { name: "timeFormat", type: "string | function", description: "Formatter for axis ticks and tooltip time fields." },
+  { name: "valueFormat", type: "string | function", description: "Formatter for flow values." },
+]
 
 // Default formatter the sandbox uses for both axis ticks and tooltip
 // time fields. ProcessSankey treats `timeFormat` the same way XY charts
@@ -568,6 +592,8 @@ export default function ProcessSankeyPage() {
         </li>
       </ul>
 
+      <ChartGrounding component="ProcessSankey" />
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -918,6 +944,13 @@ export default function ProcessSankeyPage() {
       </div>
 
       <h2 id="props">Props reference</h2>
+
+      <PropTable componentName="ProcessSankey" props={processSankeyProps} />
+
+      <p>
+        The subsections below are the detailed reference for the data shape,
+        accessors, layout controls, and visual options summarized above.
+      </p>
 
       <h3>Data</h3>
       <ul>

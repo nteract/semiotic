@@ -9,9 +9,9 @@
 // visual treatment (`applyAnnotationLifecycle`), and stable-id anchor
 // re-resolution (the `"semantic"` anchor) ship together.
 //
-// This type surface is the union of the shipped fields and IDID's §8
-// `ChartAnnotationProvenance` (idid.md). The paper packs everything into
-// one flat block; here the origin/evidence fields live on `provenance`
+// This type surface is the union of the shipped fields and the IDID
+// framework's `ChartAnnotationProvenance` shape. That shape packs
+// everything into one flat block; here the origin/evidence fields live on `provenance`
 // and the editorial-state fields (`status`, `supersedes`) live on
 // `lifecycle`, parallel to the temporal `freshness` band — the two
 // lifecycle axes are orthogonal (a note can be fresh-but-disputed or

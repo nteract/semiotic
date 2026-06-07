@@ -979,6 +979,54 @@ const ssrCSS = Object.entries(THEME_PRESETS)
       {/* ================================================================= */}
       {/* Props */}
       {/* ================================================================= */}
+      <h2 id="serialization">Serialization &amp; custom themes</h2>
+      <p>
+        A theme is a plain object — start from a preset and override, or build
+        your own. <code>resolveThemePreset(name)</code> returns a preset's theme
+        object so you can spread and tweak it:
+      </p>
+      <CodeBlock language="jsx">{`import { ThemeProvider } from "semiotic"
+import { resolveThemePreset } from "semiotic"
+
+const tufte = resolveThemePreset("tufte")
+const myTheme = {
+  ...tufte,
+  mode: "light",
+  colors: { ...tufte.colors, categorical: ["#1f77b4", "#ff7f0e", "#2ca02c"] },
+}
+
+<ThemeProvider theme={myTheme}>{/* charts */}</ThemeProvider>`}</CodeBlock>
+      <p>
+        For design-system pipelines, two serializers turn a theme into portable
+        artifacts:
+      </p>
+      <ul>
+        <li>
+          <code>themeToCSS(theme, selector = ":root")</code> — emits the theme as
+          a CSS custom-property block scoped to <code>selector</code>. Drop it in
+          a stylesheet and the charts (which read <code>--semiotic-*</code> vars)
+          pick it up with no <code>ThemeProvider</code> needed.
+        </li>
+        <li>
+          <code>themeToTokens(theme)</code> — emits a flat token object (DTCG-
+          friendly) for handing colors and typography to a token store or other
+          tools.
+        </li>
+      </ul>
+      <CodeBlock language="jsx">{`import { themeToCSS, themeToTokens, resolveThemePreset } from "semiotic"
+
+const css = themeToCSS(resolveThemePreset("carbon"), ".carbon-charts")
+// → ".carbon-charts { --semiotic-bg: …; --semiotic-primary: …; … }"
+
+const tokens = themeToTokens(resolveThemePreset("carbon"))
+// → { "--semiotic-bg": "…", … } — feed a design-token store`}</CodeBlock>
+      <p>
+        Because the runtime reads CSS variables, a serialized theme and a{" "}
+        <code>ThemeProvider</code> theme are interchangeable — emit CSS at build
+        time for zero-runtime theming, or provide the object at runtime for
+        dynamic switching.
+      </p>
+
       <h2 id="props">Props Reference</h2>
 
       <h3>ThemeProvider</h3>
