@@ -122,6 +122,7 @@ const chartGroundingFixtures = {
   StackedAreaChart: { data: seriesData, xAccessor: "x", yAccessor: "y", areaBy: "series", title: "Composition over time" },
   Scatterplot: { data: bubbleData, xAccessor: "x", yAccessor: "y", title: "Y by X" },
   ConnectedScatterplot: { data: connectedScatterData, xAccessor: "x", yAccessor: "y", orderAccessor: "order", title: "Trajectory through X–Y space" },
+  DifferenceChart: { data: differenceData, xAccessor: "x", seriesAAccessor: "actual", seriesBAccessor: "target", seriesALabel: "Actual", seriesBLabel: "Target", title: "Actual vs. target over time" },
   BubbleChart: { data: bubbleData, xAccessor: "x", yAccessor: "y", sizeBy: "size", title: "Y by X, sized by magnitude" },
   Heatmap: { data: heatmapData, xAccessor: "xBin", yAccessor: "yBin", valueAccessor: "value", title: "Value by bin" },
   ScatterplotMatrix: { data: matrixData, fields: ["reach", "cost", "score"], title: "Pairwise relationships" },

@@ -470,6 +470,48 @@ const StreamNetworkFrame = forwardRef<
   // shape (primitives, sub-objects of primitives, primitive arrays).
   const stablePipelineConfig = useStableShallow(pipelineConfig)
 
+  // Stable signature of only the *layout/ingest-affecting* config — the
+  // fields that change node positions (so a change must re-ingest and
+  // re-run the layout plugin): data accessors, hierarchy/sankey/force/orbit
+  // layout parameters, and the custom layout. Render-only props (nodeStyle,
+  // edgeStyle, orbitRevolution, nodeSize, labels, colors, realtime encoding,
+  // animation) are deliberately excluded — those are applied by the
+  // `updateConfig` effect + the next `buildScene` without a re-ingest. The
+  // hierarchy-ingest effect below depends on this instead of the full
+  // pipeline config so a parent passing fresh inline-arrow *style* callbacks
+  // on every render can't re-ingest + setState in a loop (which compounds
+  // with a continuous animation's frame loop into React's max-update-depth
+  // crash), while genuine layout-parameter changes still take effect.
+  const stableLayoutConfig = useStableShallow({
+    chartType,
+    nodeIDAccessor,
+    sourceAccessor,
+    targetAccessor,
+    valueAccessor,
+    childrenAccessor,
+    hierarchySum,
+    orientation,
+    nodeAlign,
+    nodePaddingRatio,
+    nodeWidth,
+    iterations,
+    forceStrength,
+    padAngle,
+    groupWidth,
+    sortGroups,
+    edgeSort,
+    treeOrientation,
+    edgeType,
+    padding,
+    paddingTop,
+    tensionConfig,
+    orbitMode,
+    orbitSize,
+    orbitEccentricity,
+    customNetworkLayout,
+    layoutConfig,
+  })
+
   // ── Refs ─────────────────────────────────────────────────────────────
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -934,19 +976,13 @@ const StreamNetworkFrame = forwardRef<
       dirtyRef.current = true
       scheduleRender()
     }
-    // NOTE: `stablePipelineConfig` is deliberately NOT a dependency here.
-    // This effect re-ingests data and rebuilds the scene from scratch
-    // (calling `syncCustomOverlays`, a setState). Config changes — including
-    // render-only function props like `nodeStyle` and `orbitRevolution` —
-    // are already handled by the dedicated `updateConfig` effect above, which
-    // preserves orbit/hierarchy plugin state and repaints via `scheduleRender`
-    // without a re-ingest. Re-running here on config identity meant that a
-    // parent passing fresh inline-arrow callbacks each render (functions never
-    // compare shallow-equal, so `useStableShallow` can't absorb them) would
-    // re-ingest + setState on every re-render, compounding with a continuous
-    // animation's frame loop until React's max-update-depth guard trips and
-    // the tab OOMs. Data/dimension/palette changes still trigger re-ingest.
-  }, [safeNodes, safeEdges, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, scheduleRender, colorScheme, syncCustomOverlays])
+    // Gated on `stableLayoutConfig` (layout/ingest-affecting fields only), NOT
+    // the full `stablePipelineConfig`. Render-only style/animation function
+    // props are excluded there, so their identity churn no longer re-ingests +
+    // setState every render (the loop that crashed continuously-animated
+    // charts); genuine layout-parameter, data, dimension, and palette changes
+    // still re-ingest. See the `stableLayoutConfig` definition above.
+  }, [safeNodes, safeEdges, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, scheduleRender, colorScheme, syncCustomOverlays])
 
   // ── Initial streaming data ───────────────────────────────────────────
 

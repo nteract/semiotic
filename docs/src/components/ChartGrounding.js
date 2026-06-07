@@ -37,7 +37,21 @@ export default function ChartGrounding({ component, props }) {
     }
     audit = auditAccessibility(component, auditProps, { describe: true })
     if (capability?.caveats) {
-      const profile = profileData(resolvedProps.data || resolvedProps.nodes || [])
+      // Pass both the row array AND a rawInput so structure detection can
+      // populate profile.network / profile.hierarchy for network, hierarchy,
+      // and geo fixtures (e.g. a `{ nodes, edges }` config would otherwise
+      // only surface `nodes` and leave the graph structure unset). When
+      // `data` is a non-array object (a hierarchy root), it IS the rawInput.
+      const rows = Array.isArray(resolvedProps.data)
+        ? resolvedProps.data
+        : Array.isArray(resolvedProps.nodes)
+          ? resolvedProps.nodes
+          : []
+      const rawInput =
+        resolvedProps.data && typeof resolvedProps.data === "object" && !Array.isArray(resolvedProps.data)
+          ? resolvedProps.data
+          : resolvedProps
+      const profile = profileData(rows, { rawInput })
       caveats = capability.caveats(profile) || []
     }
   } catch {

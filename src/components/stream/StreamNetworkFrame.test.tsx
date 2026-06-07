@@ -126,5 +126,41 @@ describe("StreamNetworkFrame", () => {
         updateSpy.mockRestore()
       }
     })
+
+    it("DOES re-ingest when a layout-affecting prop (orbitMode) changes", async () => {
+      const data = { name: "root", children: [{ name: "a" }, { name: "b" }, { name: "c" }] }
+
+      const StoreModule = await import("./NetworkPipelineStore")
+      const ingestSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "ingestHierarchy")
+
+      try {
+        const { rerender } = render(
+          <StreamNetworkFrame
+            chartType="orbit"
+            data={data}
+            childrenAccessor="children"
+            nodeIDAccessor="name"
+            orbitMode="flat"
+          />
+        )
+
+        const ingestAfterMount = ingestSpy.mock.calls.length
+
+        // Layout parameter change must recompute node positions → re-ingest.
+        rerender(
+          <StreamNetworkFrame
+            chartType="orbit"
+            data={data}
+            childrenAccessor="children"
+            nodeIDAccessor="name"
+            orbitMode="solar"
+          />
+        )
+
+        expect(ingestSpy.mock.calls.length).toBeGreaterThan(ingestAfterMount)
+      } finally {
+        ingestSpy.mockRestore()
+      }
+    })
   })
 })
