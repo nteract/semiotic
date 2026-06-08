@@ -54,6 +54,25 @@ export const REQUIRED_API_ASSETS = [
   },
 ]
 
+export const REQUIRED_MACHINE_READABLE_ROUTES = [
+  {
+    routePath: "",
+    keyword: "Streaming-First Visualization for React",
+  },
+  {
+    routePath: "getting-started",
+    keyword: "streaming-first visualization library",
+  },
+  {
+    routePath: "charts/line-chart",
+    keyword: "LineChart",
+  },
+  {
+    routePath: "blog/release-3-7-0",
+    keyword: "receivability release",
+  },
+]
+
 export function routeHtmlPath(buildDir, routePath) {
   return routePath ? resolve(buildDir, routePath, "index.html") : resolve(buildDir, "index.html")
 }
@@ -62,6 +81,7 @@ export function validateDocsBuild({
   buildDir = DEFAULT_BUILD_DIR,
   routes = REQUIRED_DOCS_ROUTES,
   apiAssets = REQUIRED_API_ASSETS,
+  machineReadableRoutes = REQUIRED_MACHINE_READABLE_ROUTES,
 } = {}) {
   const failures = []
 
@@ -79,6 +99,52 @@ export function validateDocsBuild({
     expectIncludes(failures, html, 'rel="alternate" type="text/plain" href="/llms.txt"', route.routePath, "LLM alternate")
     expectIncludes(failures, html, 'data-jsonld="semiotic"', route.routePath, "Semiotic JSON-LD")
     expectIncludes(failures, html, "AI / Machine-readable docs", route.routePath, "noscript AI docs fallback")
+  }
+
+  const manifestPath = resolve(buildDir, "llms-routes.json")
+  let routeDocs = []
+  if (!existsSync(manifestPath)) {
+    failures.push(`Missing machine-readable route manifest at ${manifestPath}`)
+  } else {
+    try {
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"))
+      routeDocs = Array.isArray(manifest.routes) ? manifest.routes : []
+      if (routeDocs.length === 0) {
+        failures.push(`Machine-readable route manifest has no routes at ${manifestPath}`)
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      failures.push(`Could not parse machine-readable route manifest at ${manifestPath}: ${message}`)
+    }
+  }
+
+  for (const route of machineReadableRoutes) {
+    const filePath = routeHtmlPath(buildDir, route.routePath)
+    if (!existsSync(filePath)) {
+      failures.push(`Missing machine-readable route HTML ${route.routePath || "/"} at ${filePath}`)
+      continue
+    }
+
+    const html = readFileSync(filePath, "utf8")
+    expectIncludes(failures, html, 'id="semiotic-route-doc"', route.routePath, "route JSON doc")
+    expectIncludes(failures, html, 'id="machine-readable-page"', route.routePath, "machine-readable noscript content")
+    expectIncludes(failures, html, route.keyword, route.routePath, "machine-readable keyword")
+
+    const routeKey = route.routePath || "/"
+    const routeDoc = routeDocs.find((doc) => doc?.route === routeKey)
+    if (!routeDoc) {
+      failures.push(`Missing ${routeKey} in llms-routes.json`)
+      continue
+    }
+    if (typeof routeDoc.text !== "string" || routeDoc.text.length < 200) {
+      failures.push(`Machine-readable text for ${routeKey} is too short in llms-routes.json`)
+    }
+    if (!routeDoc.text?.includes(route.keyword)) {
+      failures.push(`Machine-readable text for ${routeKey} is missing keyword: ${route.keyword}`)
+    }
+    if (!Array.isArray(routeDoc.headings) || routeDoc.headings.length === 0) {
+      failures.push(`Machine-readable headings for ${routeKey} are missing in llms-routes.json`)
+    }
   }
 
   for (const asset of apiAssets) {
@@ -131,5 +197,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1)
   }
 
-  console.log(`✅ docs route smoke check passed (${REQUIRED_DOCS_ROUTES.length} routes, ${REQUIRED_API_ASSETS.length} API assets)`)
+  console.log(
+    `✅ docs route smoke check passed (${REQUIRED_DOCS_ROUTES.length} routes, ${REQUIRED_API_ASSETS.length} API assets, ${REQUIRED_MACHINE_READABLE_ROUTES.length} machine-readable routes)`
+  )
 }

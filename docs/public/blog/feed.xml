@@ -5,19 +5,19 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-06-08T00:00:00Z</updated>
+  <updated>2026-06-07T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
   <entry>
-    <title>Annotations That Adapt and Travel</title>
-    <id>https://semiotic3.nteract.io/blog/annotations-that-adapt-and-travel</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/annotations-that-adapt-and-travel"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/annotations-that-adapt-and-travel.png"/>
-    <published>2026-06-08T00:00:00Z</published>
-    <updated>2026-06-08T00:00:00Z</updated>
+    <title>Annotations That Lead and Land</title>
+    <id>https://semiotic3.nteract.io/blog/annotations-that-lead-and-land</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/annotations-that-lead-and-land"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/annotations-that-lead-and-land.png"/>
+    <published>2026-06-07T00:00:00Z</published>
+    <updated>2026-06-07T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
     <category term="case-study"/>
     <category term="roadmap"/>
-    <summary type="text">Placement (M2) and density (M3) decided where notes land and how many fit. M5 makes that adapt to space and house style. It sheds secondary notes as the plot narrows, and chooses whether notes blend into the chart or read as a distinct editorial layer. M6 adapts to the reader and to reuse: scale annotation amount by audience familiarity, and mark a note defensive so it survives every export with its source and confidence baked in.</summary>
+    <summary type="text">Semiotic already treated annotations as data-bound objects. Now it helps authors make design decisions with those objects: primary and secondary notes, inferred reading order from confidence, an accessibility audit hook, and an opt-in annotationLayout recipe that places notes near their targets while avoiding obvious collisions.</summary>
   </entry>
   <entry>
     <title>Semiotic 3.7.0</title>

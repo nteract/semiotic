@@ -84,6 +84,35 @@ describe("docs prerender helpers", () => {
     expect(html).not.toContain("old fallback")
   })
 
+  it("embeds route-specific machine-readable HTML and JSON when provided", () => {
+    const shell = `
+      <html>
+        <head>
+          <title>Semiotic</title>
+          <meta property=og:url content=https://example.com/>
+          <link rel=canonical href=https://example.com/>
+        </head>
+        <body><noscript>old fallback</noscript><div id="root"></div></body>
+      </html>
+    `
+    const html = generatePage(shell, "charts/line-chart", null, {
+      route: "charts/line-chart",
+      url: "https://semiotic3.nteract.io/charts/line-chart",
+      html: "<article><h1>LineChart</h1><p>LineChart route content for agents.</p></article>",
+      text: "LineChart route content for agents.",
+      headings: [{ level: 1, text: "LineChart" }],
+      codeBlocks: ['import { LineChart } from "semiotic/xy"'],
+      links: [{ text: "LineChart", href: "/charts/line-chart" }],
+    })
+
+    expect(html).toContain('id="semiotic-route-doc"')
+    expect(html).toContain('id="machine-readable-page"')
+    expect(html).toContain('data-machine-readable-route="charts/line-chart"')
+    expect(html).toContain("<h1>LineChart</h1>")
+    expect(html).toContain('"route":"charts/line-chart"')
+    expect(html).toContain('"codeBlocks":["import { LineChart } from \\"semiotic/xy\\""]')
+  })
+
   it("replaces minified canonical tags for nested routes", () => {
     const html = generatePage(
       '<html><head><title>Shell</title><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>',

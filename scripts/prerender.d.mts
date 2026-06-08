@@ -14,10 +14,21 @@ export interface BlogEntryMeta {
   tags?: string[]
 }
 
+export interface MachineReadableRouteDoc {
+  route: string
+  url: string
+  html: string
+  text: string
+  headings?: Array<{ level: number; text: string }>
+  codeBlocks?: string[]
+  links?: Array<{ text: string; href: string }>
+}
+
 export function generatePage(
   shellHtml: string,
   routePath: string,
-  blogMeta?: BlogEntryMeta | null
+  blogMeta?: BlogEntryMeta | null,
+  machineDoc?: MachineReadableRouteDoc | null
 ): string
 
 export function prerender(): Promise<void>

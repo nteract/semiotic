@@ -14,8 +14,10 @@
  */
 
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "fs"
+import { tmpdir } from "os"
 import { resolve, dirname } from "path"
 import { fileURLToPath, pathToFileURL } from "url"
+import { JSDOM } from "jsdom"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BUILD_DIR = resolve(__dirname, "../docs/build")
@@ -24,6 +26,7 @@ const PUBLIC_API_DIR = resolve(__dirname, "../docs/public/api")
 const PUBLIC_BLOG_OG_DIR = resolve(__dirname, "../docs/public/blog/og")
 const SITE_URL = "https://semiotic3.nteract.io"
 const DEFAULT_OG_IMAGE = `${SITE_URL}/assets/img/semiotic-social.png`
+const ROUTE_DOCS_MANIFEST = "llms-routes.json"
 
 // Per-route SEO metadata. Keys are route paths exactly as extracted from
 // App.js (no leading slash, "" for the landing page). Routes not listed
@@ -277,7 +280,8 @@ async function loadBlogEntries() {
   try {
     const metaPath = resolve(__dirname, "../docs/src/blog/entries-meta.js")
     if (!existsSync(metaPath)) return []
-    const mod = await import(pathToFileURL(metaPath).href)
+    const source = readFileSync(metaPath, "utf8")
+    const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
     return mod.blogEntriesMeta || []
   } catch (err) {
     console.warn("[prerender] could not load blog metadata:", err.message)
@@ -285,12 +289,350 @@ async function loadBlogEntries() {
   }
 }
 
+// ── Static route content renderer ──────────────────────────────────────────
+//
+// Parcel gives us the interactive SPA bundle. For machine readers, we also
+// render the matching React route in Node, strip visual/interactive chrome, and
+// embed the remaining semantic content in each route's <noscript> fallback.
+// This keeps the docs app interactive for browsers while making fetched HTML
+// useful without running client JavaScript.
+
+const RENDERER_ENTRY = `
+import React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { StaticRouter } from "react-router"
+
+const storage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+}
+
+globalThis.localStorage = globalThis.localStorage || storage
+if (!globalThis.navigator?.clipboard) {
+  Object.defineProperty(globalThis, "navigator", {
+    value: { clipboard: { writeText: async () => {} } },
+    configurable: true,
+  })
+}
+globalThis.window = globalThis.window || {}
+Object.assign(globalThis.window, {
+  Prism: globalThis.window.Prism || null,
+  localStorage: globalThis.localStorage,
+  matchMedia: globalThis.window.matchMedia || (() => ({ matches: false, addEventListener() {}, removeEventListener() {} })),
+  addEventListener: globalThis.window.addEventListener || (() => {}),
+  removeEventListener: globalThis.window.removeEventListener || (() => {}),
+  dispatchEvent: globalThis.window.dispatchEvent || (() => true),
+  CustomEvent: globalThis.window.CustomEvent || class CustomEvent {
+    constructor(type, init = {}) {
+      this.type = type
+      this.detail = init.detail
+    }
+  },
+  location: globalThis.window.location || { pathname: "/", search: "", hash: "" },
+  history: globalThis.window.history || { replaceState() {} },
+})
+
+const elementStub = () => ({
+  style: {},
+  setAttribute() {},
+  appendChild() {},
+  remove() {},
+  select() {},
+  getContext: () => ({
+    canvas: {},
+    beginPath() {},
+    closePath() {},
+    moveTo() {},
+    lineTo() {},
+    bezierCurveTo() {},
+    quadraticCurveTo() {},
+    arc() {},
+    rect() {},
+    fill() {},
+    stroke() {},
+    clearRect() {},
+    fillRect() {},
+    strokeRect() {},
+    save() {},
+    restore() {},
+    translate() {},
+    rotate() {},
+    scale() {},
+    setLineDash() {},
+    measureText: (text) => ({ width: String(text || "").length * 7 }),
+    createLinearGradient: () => ({ addColorStop() {} }),
+    createRadialGradient: () => ({ addColorStop() {} }),
+    createPattern: () => null,
+  }),
+})
+
+globalThis.document = globalThis.document || {
+  documentElement: {
+    getAttribute: () => "dark",
+    setAttribute() {},
+  },
+  body: elementStub(),
+  head: { appendChild() {} },
+  querySelector: () => null,
+  createElement: elementStub,
+  addEventListener() {},
+  removeEventListener() {},
+  execCommand: () => false,
+}
+
+globalThis.MutationObserver = globalThis.MutationObserver || class MutationObserver {
+  observe() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = globalThis.ResizeObserver || class ResizeObserver {
+  observe() {}
+  disconnect() {}
+}
+globalThis.IntersectionObserver = globalThis.IntersectionObserver || class IntersectionObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+const { default: App } = await import("../docs/src/App.js")
+
+const muteStaticRenderWarning = (args) => {
+  const message = String(args[0] || "")
+  return (
+    message.startsWith("[semiotic] ") ||
+    message.includes("<Navigate> must not be used on the initial render")
+  )
+}
+
+export function renderRoute(routePath) {
+  const pathname = routePath ? "/" + routePath.replace(/^\\/+/, "") : "/"
+  globalThis.window.location = { pathname, search: "", hash: "" }
+  const warn = console.warn
+  const error = console.error
+  console.warn = (...args) => {
+    if (!muteStaticRenderWarning(args)) warn(...args)
+  }
+  console.error = (...args) => {
+    if (!muteStaticRenderWarning(args)) error(...args)
+  }
+  try {
+    return renderToStaticMarkup(
+      React.createElement(
+        StaticRouter,
+        { location: pathname },
+        React.createElement(App),
+      ),
+    )
+  } finally {
+    console.warn = warn
+    console.error = error
+  }
+}
+`
+
+async function createStaticRouteRenderer() {
+  const { build: esbuild } = await import("esbuild")
+  const outfile = resolve(tmpdir(), `semiotic-docs-route-renderer-${process.pid}-${Date.now()}.mjs`)
+  await esbuild({
+    stdin: {
+      contents: RENDERER_ENTRY,
+      loader: "jsx",
+      resolveDir: __dirname,
+    },
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    outfile,
+    loader: {
+      ".js": "jsx",
+      ".css": "empty",
+      ".csv": "text",
+      ".gif": "file",
+      ".jpeg": "file",
+      ".jpg": "file",
+      ".png": "file",
+    },
+    assetNames: "assets/[name]-[hash]",
+    external: ["canvas"],
+    banner: {
+      js: 'import { createRequire as __semioticCreateRequire } from "module"; const require = __semioticCreateRequire(import.meta.url);',
+    },
+    logLevel: "silent",
+  })
+
+  const mod = await import(pathToFileURL(outfile).href)
+  return mod.renderRoute
+}
+
+function sanitizeRouteHtml(renderedHtml, routePath) {
+  if (!renderedHtml) return null
+
+  const dom = new JSDOM(`<body>${renderedHtml}</body>`)
+  const doc = dom.window.document
+  const source =
+    doc.querySelector(".App--blog article") ||
+    doc.querySelector(".container") ||
+    doc.querySelector(".App") ||
+    doc.body
+  const root = source.cloneNode(true)
+
+  root.querySelectorAll([
+    "script",
+    "style",
+    "svg",
+    "canvas",
+    "img",
+    "picture",
+    "video",
+    "button",
+    "input",
+    "textarea",
+    "select",
+    "iframe",
+    ".page-toc",
+    ".page-breadcrumbs",
+    ".page-nav",
+    ".sidebar-toggle",
+    ".github-links",
+    "[aria-hidden='true']",
+  ].join(",")).forEach((el) => el.remove())
+
+  root.querySelectorAll("*").forEach((el) => {
+    for (const attr of Array.from(el.attributes)) {
+      const name = attr.name.toLowerCase()
+      const keep =
+        name === "href" ||
+        name === "datetime" ||
+        name === "data-prop" ||
+        name === "data-required" ||
+        (name === "id" && /^h[1-6]$/i.test(el.tagName))
+      if (!keep || name.startsWith("on")) el.removeAttribute(attr.name)
+    }
+    if (el.tagName === "A") {
+      const href = el.getAttribute("href")
+      if (!href || href.startsWith("file:") || href.startsWith("data:")) {
+        el.removeAttribute("href")
+      }
+    }
+  })
+
+  let removedEmpty = true
+  while (removedEmpty) {
+    removedEmpty = false
+    root.querySelectorAll("div, span").forEach((el) => {
+      if (el.children.length === 0 && !el.textContent.trim()) {
+        el.remove()
+        removedEmpty = true
+      }
+    })
+  }
+
+  const html = normalizeMachineHtml(root.innerHTML)
+  const text = normalizeText(readableText(root))
+  if (!html || !text) return null
+
+  const headings = Array.from(root.querySelectorAll("h1, h2, h3"))
+    .map((el) => ({
+      level: Number(el.tagName.slice(1)),
+      text: normalizeText(el.textContent),
+    }))
+    .filter((heading) => heading.text)
+
+  const codeBlocks = Array.from(root.querySelectorAll("pre"))
+    .map((el) => normalizeCode(el.textContent))
+    .filter(Boolean)
+
+  const links = Array.from(root.querySelectorAll("a[href]"))
+    .map((el) => ({
+      text: normalizeText(el.textContent),
+      href: el.getAttribute("href"),
+    }))
+    .filter((link) => link.text && link.href)
+
+  return {
+    route: routePath || "/",
+    url: routePath ? `${SITE_URL}/${routePath}` : SITE_URL,
+    html,
+    text,
+    headings,
+    codeBlocks,
+    links,
+  }
+}
+
+function normalizeMachineHtml(html) {
+  return html
+    .replace(/\sdata-discover="[^"]*"/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/>\s+</g, "><")
+    .trim()
+}
+
+function normalizeText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim()
+}
+
+function readableText(node) {
+  if (!node) return ""
+  if (node.nodeType === 3) return node.nodeValue || ""
+  if (node.nodeType !== 1 && node.nodeType !== 9 && node.nodeType !== 11) return ""
+
+  const tag = node.tagName || ""
+  const children = Array.from(node.childNodes).map(readableText).filter(Boolean)
+  if (children.length === 0) return ""
+
+  if (tag === "TR") return `\n${children.map(normalizeText).filter(Boolean).join(" | ")}\n`
+  if (tag === "LI") return `\n- ${children.join(" ")}\n`
+  if (tag === "PRE") return `\n${node.textContent || ""}\n`
+  if (/^(H[1-6]|P|DIV|SECTION|ARTICLE|TABLE|THEAD|TBODY|UL|OL|DL|DT|DD|BLOCKQUOTE)$/i.test(tag)) {
+    return `\n${children.join(" ")}\n`
+  }
+
+  return children.join(" ")
+}
+
+function normalizeCode(text) {
+  return String(text || "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+
+function renderMachineReadableFallback(doc) {
+  if (!doc) return ""
+  return `
+      <section id="machine-readable-page" data-machine-readable-route="${escHtml(doc.route)}" style="max-width:800px;margin:24px auto;padding:20px;font-family:system-ui,sans-serif;line-height:1.55;">
+        <h2>Machine-readable page content</h2>
+        <p><strong>Canonical:</strong> <a href="${escHtml(doc.url)}">${escHtml(doc.url)}</a></p>
+        ${doc.html}
+      </section>`
+}
+
+function routeDocForScript(doc) {
+  if (!doc) return null
+  return {
+    route: doc.route,
+    url: doc.url,
+    text: doc.text,
+    headings: doc.headings,
+    codeBlocks: doc.codeBlocks,
+    links: doc.links,
+  }
+}
+
+function machineDocScript(doc) {
+  const payload = routeDocForScript(doc)
+  if (!payload) return ""
+  const json = JSON.stringify(payload).replace(/</g, "\\u003c")
+  return `<script type="application/json" id="semiotic-route-doc">${json}</script>`
+}
+
 // ── Generate pre-rendered HTML for a route ──────────────────────────────
 
 const escHtml = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
-export function generatePage(shellHtml, routePath, blogMeta = null) {
+export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc = null) {
   const slugTitle = routePath
     .split("/")
     .filter(Boolean)
@@ -318,7 +660,7 @@ export function generatePage(shellHtml, routePath, blogMeta = null) {
       <p>This page requires JavaScript for interactive chart demos.</p>
       <p><strong>AI / Machine-readable docs:</strong> <a href="/llms.txt">llms.txt</a> \u00b7 <a href="/llms-full.txt">llms-full.txt</a> \u00b7 <a href="/CLAUDE.md">CLAUDE.md</a> \u00b7 <a href="/schema.json">schema.json</a> \u00b7 <a href="/api-reference.md">API Reference</a> \u00b7 <a href="/examples.md">Examples</a></p>
       <p><a href="https://github.com/nteract/semiotic">View on GitHub</a> \u00b7 <code>npx semiotic-ai</code> for CLI access</p>
-    </nav>`
+    </nav>${renderMachineReadableFallback(machineDoc)}`
 
   // JSON-LD injected here (not in source HTML) to avoid Parcel's jsonld transformer
   const llmsAlternate = '<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable documentation index" />'
@@ -342,7 +684,7 @@ export function generatePage(shellHtml, routePath, blogMeta = null) {
   } while (normalizedShell !== previousShell)
 
   let html = normalizedShell
-    .replace(/<title>[^<]*<\/title>/, `${llmsAlternate}${blogFeedAlternate}<title>${fullTitle}</title>${jsonLd}`)
+    .replace(/<title>[^<]*<\/title>/, `${llmsAlternate}${blogFeedAlternate}<title>${fullTitle}</title>${jsonLd}${machineDocScript(machineDoc)}`)
     .replace(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>${navHtml}</noscript>`)
     .replace(/<meta\b(?=[^>]*\bproperty=["']?og:url["']?)[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`)
     .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`)
@@ -431,16 +773,36 @@ export async function prerender() {
   const shellHtml = readFileSync(shellPath, "utf-8")
   const routes = extractRoutes()
   const blogEntries = await loadBlogEntries()
+  let renderRoute = null
+  try {
+    renderRoute = await createStaticRouteRenderer()
+  } catch (err) {
+    console.warn("[prerender] could not initialize static route renderer:", err.message)
+  }
+
+  const routeDocs = []
+  const machineDocForRoute = (route) => {
+    if (!renderRoute) return null
+    try {
+      const doc = sanitizeRouteHtml(renderRoute(route), route)
+      const scriptDoc = routeDocForScript(doc)
+      if (scriptDoc) routeDocs.push(scriptDoc)
+      return doc
+    } catch (err) {
+      console.warn(`[prerender] could not render machine-readable content for /${route}: ${err.message}`)
+      return null
+    }
+  }
 
   console.log(`Pre-rendering ${routes.length} routes (+ ${blogEntries.length} blog entries)...`)
 
-  writeFileSync(shellPath, generatePage(shellHtml, ""))
+  writeFileSync(shellPath, generatePage(shellHtml, "", null, machineDocForRoute("")))
   let created = 1
   for (const route of routes) {
     if (route === "/" || route === "" || route === "*" || route.includes(":")) continue
     const dir = resolve(BUILD_DIR, route)
     mkdirSync(dir, { recursive: true })
-    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route))
+    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, null, machineDocForRoute(route)))
     created++
   }
 
@@ -451,7 +813,7 @@ export async function prerender() {
     const route = `blog/${entry.slug}`
     const dir = resolve(BUILD_DIR, route)
     mkdirSync(dir, { recursive: true })
-    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, entry))
+    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, entry, machineDocForRoute(route)))
     created++
   }
 
@@ -499,9 +861,18 @@ export async function prerender() {
 
   const copiedApiAssets = copyDocsApiAssets()
   const copiedOgCards = copyBlogOgCards()
+  writeFileSync(
+    resolve(BUILD_DIR, ROUTE_DOCS_MANIFEST),
+    JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      site: SITE_URL,
+      routes: routeDocs,
+    }, null, 2) + "\n",
+  )
 
   console.log(`\u2705 ${created} pages pre-rendered`)
   console.log(`\u2705 sitemap.txt + sitemap.xml + robots.txt written`)
+  console.log(`\u2705 ${ROUTE_DOCS_MANIFEST} written (${routeDocs.length} routes)`)
   if (copiedApiAssets.length > 0) {
     console.log(`\u2705 copied API assets: ${copiedApiAssets.join(", ")}`)
   }
