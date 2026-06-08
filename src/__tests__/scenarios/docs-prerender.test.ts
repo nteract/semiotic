@@ -142,6 +142,29 @@ describe("docs prerender helpers", () => {
     expect(doc?.html).toContain("<span>Span</span>")
   })
 
+  it("sanitizes links in blog article machine-readable HTML", () => {
+    const doc = sanitizeRouteHtml(`
+      <div class="App App--blog">
+        <nav><a href="javascript:alert(1)">Unsafe chrome</a></nav>
+        <article>
+          <h1>Blog Post</h1>
+          <p>
+            <a href="/blog">Blog home</a>
+            <a href=" JavaScript:alert(1)">Unsafe blog link</a>
+          </p>
+        </article>
+      </div>
+    `, "blog/example-post")
+
+    expect(doc?.route).toBe("blog/example-post")
+    expect(doc?.text).toContain("Blog Post")
+    expect(doc?.text).not.toContain("Unsafe chrome")
+    expect(doc?.links).toEqual([{ text: "Blog home", href: "/blog" }])
+    expect(doc?.html).toContain('<a href="/blog">Blog home</a>')
+    expect(doc?.html).toContain("<a>Unsafe blog link</a>")
+    expect(doc?.html).not.toContain("javascript:")
+  })
+
   it("replaces minified canonical tags for nested routes", () => {
     const html = generatePage(
       '<html><head><title>Shell</title><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com></head><body><noscript>old</noscript></body></html>',
