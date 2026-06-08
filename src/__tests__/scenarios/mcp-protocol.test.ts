@@ -789,7 +789,7 @@ describe("MCP protocol round-trip", () => {
 })
 
 describe("MCP HTTP transport smoke", () => {
-  let proc: ChildProcess
+  let proc: ChildProcess | undefined
   let port: number
 
   beforeEach(async () => {
@@ -799,7 +799,8 @@ describe("MCP HTTP transport smoke", () => {
   })
 
   afterEach(() => {
-    proc.kill("SIGTERM")
+    proc?.kill("SIGTERM")
+    proc = undefined
   })
 
   it("initializes a Streamable HTTP session and lists tools", async () => {

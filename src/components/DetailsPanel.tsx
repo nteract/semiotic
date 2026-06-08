@@ -85,28 +85,6 @@ export function DetailsPanel({
   // Use direct observation prop if provided, otherwise fall back to store
   const latest = directObservation !== undefined ? directObservation : storeLatest
 
-  useEffect(() => {
-    if (!latest) return
-
-    if (latest.type === "click" || latest.type === "hover") {
-      const obs = latest as ClickObservation
-      setSelectedDatum(obs.datum)
-      setSelectedObservation(obs)
-      if (!isOpen) {
-        setIsOpen(true)
-        setIsAnimating(true)
-        clearTimeout(animTimerRef.current)
-        animTimerRef.current = setTimeout(() => setIsAnimating(false), ANIMATION_DURATION)
-      }
-    } else if (dismissOnEmpty && (latest.type === "click-end" || latest.type === "hover-end")) {
-      handleClose()
-    }
-  }, [latest])
-
-  useEffect(() => {
-    onToggle?.(isOpen)
-  }, [isOpen, onToggle])
-
   const handleClose = useCallback(() => {
     setIsAnimating(true)
     setIsOpen(false)
@@ -117,6 +95,30 @@ export function DetailsPanel({
       setSelectedObservation(null)
     }, ANIMATION_DURATION)
   }, [])
+
+  useEffect(() => {
+    if (!latest) return
+
+    if (latest.type === "click" || latest.type === "hover") {
+      const obs = latest as ClickObservation
+      setSelectedDatum(obs.datum)
+      setSelectedObservation(obs)
+      setIsOpen((wasOpen) => {
+        if (!wasOpen) {
+          setIsAnimating(true)
+          clearTimeout(animTimerRef.current)
+          animTimerRef.current = setTimeout(() => setIsAnimating(false), ANIMATION_DURATION)
+        }
+        return true
+      })
+    } else if (dismissOnEmpty && (latest.type === "click-end" || latest.type === "hover-end")) {
+      handleClose()
+    }
+  }, [dismissOnEmpty, handleClose, latest])
+
+  useEffect(() => {
+    onToggle?.(isOpen)
+  }, [isOpen, onToggle])
 
   useEffect(() => {
     return () => clearTimeout(animTimerRef.current)

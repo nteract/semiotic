@@ -92,7 +92,7 @@ describe("DistanceCartogram", () => {
       // old position.
       const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
       try {
-        const { rerender, container } = render(
+        const { rerender } = render(
           <Wrapper>
             <DistanceCartogram center="London" costAccessor="flightHours" loading />
           </Wrapper>

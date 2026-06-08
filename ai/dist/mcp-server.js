@@ -32815,8 +32815,9 @@ async function proposeChartVariantsHandler(args) {
       intent: intentArg,
       baselineComponent: component
     });
+    const { buildProps: _buildProps, ...proposalMeta } = proposal;
     return {
-      proposal,
+      proposal: proposalMeta,
       score,
       props: buildVariantProposalProps(proposal, profile, audience)
     };

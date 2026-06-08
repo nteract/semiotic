@@ -1,12 +1,66 @@
 import * as React from "react"
 
+type AnnotationEventHandlers = Record<string, (e: React.SyntheticEvent) => void>
+
+type AnnotationNote = {
+  label?: string
+  title?: string
+  wrap?: number
+  orientation?: string
+  align?: string
+  noWrap?: boolean
+}
+
+type AnnotationConnector = {
+  end?: "arrow"
+  type?: "line" | "curve"
+  curve?: number
+}
+
+type AnnotationSubject = {
+  radius?: number
+  radiusPadding?: number
+  width?: number
+  height?: number
+  custom?: React.ReactElement | React.ReactElement[]
+  x?: number
+  y?: number
+  x1?: number
+  x2?: number
+  y1?: number
+  y2?: number
+  type?: string
+  depth?: number
+  [key: string]: unknown
+}
+
+type AnnotationRendererProps = {
+  connector?: AnnotationConnector
+  color?: string
+  className?: string
+  disable?: string[]
+  dx?: number
+  dy?: number
+  events?: AnnotationEventHandlers
+  note?: AnnotationNote
+  nx?: number
+  ny?: number
+  opacity?: number
+  strokeDasharray?: string
+  subject?: AnnotationSubject
+  type?: string
+  x?: number | number[]
+  y?: number | number[]
+  "data-testid"?: string
+}
+
 /** Props for the single-annotation renderer. Consumed only by `SemioticAnnotation`
  *  below; the broader annotation API flows through the frame-level `annotations`
  *  array and its `svgAnnotationRules` hook. */
 export interface AnnotationProps {
   noteData: {
-    eventListeners?: Record<string, (e: React.SyntheticEvent) => void>
-    events?: Record<string, (e: React.SyntheticEvent) => void>
+    eventListeners?: AnnotationEventHandlers
+    events?: AnnotationEventHandlers
     type: string
     screenCoordinates?: number[][]
     /** When truthy, `screenCoordinates` is read as a sequence of anchor points
@@ -20,12 +74,12 @@ export interface AnnotationProps {
     ny?: number
     dx?: number
     dy?: number
-    note: { label?: string; title?: string; wrap?: number; orientation?: string; align?: string; noWrap?: boolean }
+    note: AnnotationNote
     i?: number
     fixedPosition?: boolean
     label?: string
-    connector?: { end?: "arrow"; type?: "line" | "curve"; curve?: number }
-    subject?: Record<string, unknown>
+    connector?: AnnotationConnector
+    subject?: AnnotationSubject
     color?: string
     className?: string
     disable?: string[]
@@ -80,14 +134,7 @@ function bracketPath(
 }
 
 function renderNote(
-  note: {
-    label?: string
-    title?: string
-    orientation?: string
-    align?: string
-    wrap?: number
-    noWrap?: boolean
-  },
+  note: AnnotationNote | undefined,
   dx: number,
   dy: number,
   color?: string
@@ -272,7 +319,7 @@ function renderNote(
 
 function renderSubject(
   type: string,
-  subject: any,
+  subject?: AnnotationSubject,
   color?: string,
   annotX?: number,
   annotY?: number
@@ -413,10 +460,10 @@ function renderSubject(
 function renderConnector(
   dx: number,
   dy: number,
-  connector: any,
+  connector?: AnnotationConnector,
   color?: string,
   type?: string,
-  subject?: any
+  subject?: AnnotationSubject
 ) {
   const elements: React.ReactElement[] = []
 
@@ -538,10 +585,10 @@ function renderConnector(
   return <g className="annotation-connector">{elements}</g>
 }
 
-function AnnotationRenderer(props: any) {
+function AnnotationRenderer(props: AnnotationRendererProps) {
   const {
-    x = 0,
-    y = 0,
+    x: rawX = 0,
+    y: rawY = 0,
     dx: baseDx,
     dy: baseDy,
     nx,
@@ -559,6 +606,8 @@ function AnnotationRenderer(props: any) {
     "data-testid": dataTestId
   } = props
 
+  const x = Array.isArray(rawX) ? rawX[0] ?? 0 : rawX
+  const y = Array.isArray(rawY) ? rawY[0] ?? 0 : rawY
   const disableSet = new Set(Array.isArray(disable) ? disable : [])
 
   let dx = baseDx || 0

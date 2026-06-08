@@ -41,6 +41,7 @@ import type {
 import type { LegendGroup } from "../../types/legendTypes"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
+type MarginSide = "top" | "right" | "bottom" | "left"
 type TimeLike = number | Date | string
 
 function toTime(value: TimeLike | undefined | null): number {
@@ -623,10 +624,10 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
   // `margin={{ right: 30 }}` (e.g. positioning their own external
   // legend) would silently get 140 px reserved out from under them.
   const legendActive = (showLegend ?? !!colorBy) && !!colorBy
-  const userMarginSet = useCallback((side: keyof typeof setup.margin): boolean => {
+  const userMarginSet = useCallback((side: MarginSide): boolean => {
     if (userMargin == null) return false
     if (typeof userMargin === "number") return true
-    return (userMargin as Partial<typeof setup.margin>)[side] != null
+    return (userMargin as Partial<Record<MarginSide, number>>)[side] != null
   }, [userMargin])
   const margin = useMemo(() => {
     const merged = { ...setup.margin }

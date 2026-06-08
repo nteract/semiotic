@@ -250,8 +250,10 @@ export const ChartContainer = React.forwardRef<
   }, [navigable, chartConfig])
   const navVisible = typeof navigable === "object" && navigable.visible === true
 
-  const exportConfig =
-    typeof actions?.export === "object" ? actions.export : {}
+  const exportConfig = React.useMemo(
+    () => (typeof actions?.export === "object" ? actions.export : {}),
+    [actions?.export]
+  )
   const copyConfigFormat =
     typeof actions?.copyConfig === "object" ? actions.copyConfig.format : "json"
 

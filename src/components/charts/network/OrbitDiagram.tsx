@@ -216,6 +216,12 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     loadingContent,
   })
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const {
+    colorScale,
+    customClickBehavior,
+    customHoverBehavior,
+    themeCategorical,
+  } = setup
 
   // ── Node style — d is a RealtimeNode, user data on d.data ───────────────
   // Resolve the scheme colors array for root node coloring
@@ -235,14 +241,14 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
           ? schemeColors[0]
           : DEPTH_COLORS[(d.depth || 0) % DEPTH_COLORS.length]
       } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), setup.colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), colorScale)
       } else {
-        baseStyle.fill = resolveDefaultFill(undefined, setup.themeCategorical, colorScheme, undefined, categoryIndexMap)
+        baseStyle.fill = resolveDefaultFill(undefined, themeCategorical, colorScheme, undefined, categoryIndexMap)
       }
       baseStyle.opacity = isRoot ? 1 : 0.85
       return baseStyle
     }
-  }, [colorBy, colorByDepth, setup.colorScale, schemeColors, setup.themeCategorical, colorScheme, categoryIndexMap])
+  }, [colorBy, colorByDepth, colorScale, schemeColors, themeCategorical, colorScheme, categoryIndexMap])
 
   const nodeStyleFn = useMemo(
     () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
@@ -258,26 +264,26 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
   // Unwrap RealtimeNode wrapper — StreamNetworkFrame's hover payload has
   // data: RealtimeNode, and the user's raw datum is on RealtimeNode.data
   const wrappedHoverBehavior = useMemo(() => {
-    if (!setup.customHoverBehavior) return undefined
+    if (!customHoverBehavior) return undefined
     return (hover: Datum | null) => {
       if (hover && hover.data && hover.data.data !== undefined) {
-        setup.customHoverBehavior({ ...hover, data: hover.data.data })
+        customHoverBehavior({ ...hover, data: hover.data.data })
       } else {
-        setup.customHoverBehavior(hover)
+        customHoverBehavior(hover)
       }
     }
-  }, [setup.customHoverBehavior])
+  }, [customHoverBehavior])
 
   const wrappedClickBehavior = useMemo(() => {
-    if (!setup.customClickBehavior) return undefined
+    if (!customClickBehavior) return undefined
     return (click: Datum | null) => {
       if (click && click.data && click.data.data !== undefined) {
-        setup.customClickBehavior({ ...click, data: click.data.data })
+        customClickBehavior({ ...click, data: click.data.data })
       } else {
-        setup.customClickBehavior(click)
+        customClickBehavior(click)
       }
     }
-  }, [setup.customClickBehavior])
+  }, [customClickBehavior])
 
   // Validate
   const error = validateObjectData({ componentName: "OrbitDiagram", data })

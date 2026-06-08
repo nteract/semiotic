@@ -89,7 +89,7 @@ describe("ProportionalSymbolMap", () => {
       // during the previous render".
       const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
       try {
-        const { rerender, container } = render(
+        const { rerender } = render(
           <Wrapper>
             <ProportionalSymbolMap sizeBy="population" loading />
           </Wrapper>
