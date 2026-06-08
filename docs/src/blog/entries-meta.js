@@ -36,7 +36,7 @@ export const allBlogEntriesMeta = [
     subtitle:
       "Editorial status makes a note something a team can dispute, supersede, and retract to become the natural-language bridge that makes every note something a non-visual reader actually encounters, in the description and in the navigation tree.",
     author: "Elijah Meeks",
-    date: "2026-06-08",
+    date: "2026-06-10",
     tags: ["case-study", "roadmap", "accessibility"],
     excerpt:
       "Annotations need to be well-placed, un-crowded, legibly associated, responsive, and defensible. But they also need to know where they are in the annotation lifecycle: proposed / accepted / disputed / retracted, supersession chains, and conversation-arc events. This way, a note becomes the durable node that captures conversation and meaning-making. Annotations lead the chart description and get their own branch in the navigation tree, so a screen-reader user meets the author's intent head-on.",
@@ -54,6 +54,7 @@ export const allBlogEntriesMeta = [
     excerpt:
       "Make annotations adapt to space and house style. It sheds secondary notes as the plot narrows, and chooses whether notes blend into the chart or read as a distinct editorial layer. M6 adapts to the reader and to reuse: scale annotation amount by audience familiarity, and mark a note defensive so it survives every export with its source and confidence baked in.",
     ogChart: { component: "Scatterplot" },
+    draft: true,
   },
   {
     slug: "annotations-that-make-room-and-make-sense",
