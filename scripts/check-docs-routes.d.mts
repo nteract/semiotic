@@ -10,10 +10,16 @@ export interface RequiredApiAsset {
   description: string
 }
 
+export interface RequiredMachineReadableRoute {
+  routePath: string
+  keyword: string
+}
+
 export interface DocsBuildValidationOptions {
   buildDir?: string
   routes?: RequiredDocsRoute[]
   apiAssets?: RequiredApiAsset[]
+  machineReadableRoutes?: RequiredMachineReadableRoute[]
 }
 
 export interface DocsBuildValidationResult {
@@ -24,6 +30,8 @@ export interface DocsBuildValidationResult {
 export const REQUIRED_DOCS_ROUTES: RequiredDocsRoute[]
 
 export const REQUIRED_API_ASSETS: RequiredApiAsset[]
+
+export const REQUIRED_MACHINE_READABLE_ROUTES: RequiredMachineReadableRoute[]
 
 export function routeHtmlPath(buildDir: string, routePath: string): string
 

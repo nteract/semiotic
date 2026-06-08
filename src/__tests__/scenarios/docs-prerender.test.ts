@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { extractRoutesFromSource, generatePage, copyDocsApiAssets } from "../../../scripts/prerender.mjs"
+import { extractRoutesFromSource, generatePage, copyDocsApiAssets, sanitizeRouteHtml } from "../../../scripts/prerender.mjs"
 
 describe("docs prerender helpers", () => {
   it("extracts nested docs routes without leaking the previous parent", () => {
@@ -82,6 +82,87 @@ describe("docs prerender helpers", () => {
     expect(html).toContain('data-jsonld="semiotic"')
     expect(html).toContain("AI / Machine-readable docs")
     expect(html).not.toContain("old fallback")
+  })
+
+  it("embeds route-specific machine-readable HTML and JSON when provided", () => {
+    const shell = `
+      <html>
+        <head>
+          <title>Semiotic</title>
+          <meta property=og:url content=https://example.com/>
+          <link rel=canonical href=https://example.com/>
+        </head>
+        <body><noscript>old fallback</noscript><div id="root"></div></body>
+      </html>
+    `
+    const html = generatePage(shell, "charts/line-chart", null, {
+      route: "charts/line-chart",
+      url: "https://semiotic3.nteract.io/charts/line-chart",
+      html: "<article><h1>LineChart</h1><p>LineChart route content for agents.</p></article>",
+      text: "LineChart route content for agents.",
+      headings: [{ level: 1, text: "LineChart" }],
+      codeBlocks: ['import { LineChart } from "semiotic/xy"'],
+      links: [{ text: "LineChart", href: "/charts/line-chart" }],
+    })
+
+    expect(html).toContain('id="semiotic-route-doc"')
+    expect(html).toContain('id="machine-readable-page"')
+    expect(html).toContain('data-machine-readable-route="charts/line-chart"')
+    expect(html).toContain("<h1>LineChart</h1>")
+    expect(html).toContain('"route":"charts/line-chart"')
+    expect(html).toContain('"codeBlocks":["import { LineChart } from \\"semiotic/xy\\""]')
+  })
+
+  it("removes unsafe link protocols from sanitized route HTML", () => {
+    const doc = sanitizeRouteHtml(`
+      <main class="App">
+        <h1>Links</h1>
+        <p>
+          <a href="/charts">Charts</a>
+          <a href="https://example.com">External</a>
+          <a href=" JAVASCRIPT:alert(1)">Script</a>
+          <a href="vbscript:alert(1)">VBScript</a>
+          <a href="daTa:text/html,evil">Data</a>
+          <a href="fi&#10;le:///tmp/secret">File</a>
+          <span href="javascript:alert(1)">Span</span>
+        </p>
+      </main>
+    `, "links")
+
+    expect(doc?.links).toEqual([
+      { text: "Charts", href: "/charts" },
+      { text: "External", href: "https://example.com" },
+    ])
+    expect(doc?.html).toContain('<a href="/charts">Charts</a>')
+    expect(doc?.html).toContain('<a href="https://example.com">External</a>')
+    expect(doc?.html).toContain("<a>Script</a>")
+    expect(doc?.html).toContain("<a>VBScript</a>")
+    expect(doc?.html).toContain("<a>Data</a>")
+    expect(doc?.html).toContain("<a>File</a>")
+    expect(doc?.html).toContain("<span>Span</span>")
+  })
+
+  it("sanitizes links in blog article machine-readable HTML", () => {
+    const doc = sanitizeRouteHtml(`
+      <div class="App App--blog">
+        <nav><a href="javascript:alert(1)">Unsafe chrome</a></nav>
+        <article>
+          <h1>Blog Post</h1>
+          <p>
+            <a href="/blog">Blog home</a>
+            <a href=" JavaScript:alert(1)">Unsafe blog link</a>
+          </p>
+        </article>
+      </div>
+    `, "blog/example-post")
+
+    expect(doc?.route).toBe("blog/example-post")
+    expect(doc?.text).toContain("Blog Post")
+    expect(doc?.text).not.toContain("Unsafe chrome")
+    expect(doc?.links).toEqual([{ text: "Blog home", href: "/blog" }])
+    expect(doc?.html).toContain('<a href="/blog">Blog home</a>')
+    expect(doc?.html).toContain("<a>Unsafe blog link</a>")
+    expect(doc?.html).not.toContain("javascript:")
   })
 
   it("replaces minified canonical tags for nested routes", () => {
