@@ -35,7 +35,7 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with 42 HOC charts (XY, ordinal, network, realtime), optimized for LLM code generation. Geo charts are in `semiotic/geo` to keep d3-geo out of non-geo bundles.
+- **`semiotic/ai`** — a single import with the 47-chart capability catalog (XY, ordinal, network, realtime, geo, value), optimized for LLM code generation. Prefer family subpaths such as `semiotic/xy`, `semiotic/geo`, and `semiotic/value` when bundle size matters.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
@@ -326,7 +326,7 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/themes` | **4 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/ai` | **246 KB** | All 42 HOCs + validation — optimized for LLM code generation |
+| `semiotic/ai` | **246 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
 | `semiotic` | **203 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
@@ -418,7 +418,7 @@ No API keys or authentication required. The server runs locally via stdio. HTTP 
 | Tool | Description |
 |------|-------------|
 | **`renderChart`** | Render a Semiotic chart to static SVG. Supports the components returned by `getSchema` that are marked `[renderable]`. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string or validation errors with fix suggestions. |
-| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 46 chart schemas. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
+| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 47 chart schemas. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
 | **`suggestChart`** | Legacy sample-row recommender. Pass `{ data: [{...}, ...] }` with 1–5 sample objects plus optional broad intent/capability filters. |
 | **`suggestCharts`** | Capability-based recommender for bounded row data. Returns ranked chart suggestions with scores, reasons, caveats, import paths, and ready-to-use props. |
 | **`suggestStreamCharts`** | Recommend realtime charts from a stream schema, throughput, and retention hints. |
@@ -538,7 +538,7 @@ Semiotic is indexed by AI-coding-agent documentation tools so your assistant (Cl
 
 Agent-facing API surface:
 
-- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface (46 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
+- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface (47 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
 - [**`semiotic.nteract.io/llms.txt`**](https://semiotic.nteract.io/llms.txt) + [**`/llms-full.txt`**](https://semiotic.nteract.io/llms-full.txt) — deployed at the docs site per the [llms.txt standard](https://llmstxt.org). Agents fetch the navigation map (`llms.txt`) or the full inlined docs (`llms-full.txt`) over HTTP; they're not part of the npm package itself.
 
 ## Documentation

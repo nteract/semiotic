@@ -20,15 +20,26 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "release-3-7-0",
+    title: "Semiotic 3.7.0",
+    subtitle:
+      "The receivability release: reader-grounded charts, structured navigation, annotation lifecycle, conversation-arc persistence, variant repair, and a new BigNumber value entry point.",
+    author: "AI-Generated",
+    date: "2026-06-07",
+    tags: ["release"],
+    excerpt:
+      "3.7.0 makes Semiotic's AI and annotation work receivable: charts can describe themselves, expose structured navigation, carry annotation provenance, persist authoring context, repair or vary agent proposals, and render focal values through the new BigNumber entry point.",
+  },
+  {
     slug: "annotations-that-get-contested-and-heard",
     title: "Annotations That Get Contested, and Heard",
     subtitle:
-      "M7 and M8 finish the annotation arc: editorial status makes a note something a team can dispute, supersede, and retract — and the natural-language bridge makes every note something a non-visual reader actually encounters, in the description and in the navigation tree.",
+      "Editorial status makes a note something a team can dispute, supersede, and retract to become the natural-language bridge that makes every note something a non-visual reader actually encounters, in the description and in the navigation tree.",
     author: "Elijah Meeks",
-    date: "2026-06-04",
+    date: "2026-06-08",
     tags: ["case-study", "roadmap", "accessibility"],
     excerpt:
-      "The earlier milestones made annotations well-placed, un-crowded, legibly associated, responsive, and defensible. M7 adds the editorial half of the lifecycle — proposed / accepted / disputed / retracted, supersession chains, and conversation-arc events — so a note becomes the durable node a team argues over. M8 closes the loop with the reader: annotations lead the chart description and get their own branch in the navigation tree, so a screen-reader user meets the author's intent head-on.",
+      "Annotations need to be well-placed, un-crowded, legibly associated, responsive, and defensible. But they also need to know where they are in the annotation lifecycle: proposed / accepted / disputed / retracted, supersession chains, and conversation-arc events. This way, a note becomes the durable node that captures conversation and meaning-making. Annotations lead the chart description and get their own branch in the navigation tree, so a screen-reader user meets the author's intent head-on.",
     ogChart: { component: "LineChart" },
     draft: true,
   },
@@ -36,25 +47,24 @@ export const allBlogEntriesMeta = [
     slug: "annotations-that-adapt-and-travel",
     title: "Annotations That Adapt and Travel",
     subtitle:
-      "M5 and M6 make the annotation layer responsive to its container and its reader, and let a note defend itself once the chart leaves the page: responsive shedding, cohesion modes, audience-scaled amount, and defensive traveling notes that carry their provenance visibly.",
+      "Make the annotation layer responsive to its container and its reader, and let a note defend itself once the chart leaves the page: responsive shedding, cohesion modes, audience-scaled amount, and defensive traveling notes that carry their provenance visibly.",
     author: "Elijah Meeks",
-    date: "2026-06-04",
+    date: "2026-06-09",
     tags: ["case-study", "roadmap"],
     excerpt:
-      "Placement (M2) and density (M3) decided where notes land and how many fit. M5 makes that adapt to space and house style — shed secondary notes as the plot narrows, and choose whether notes blend into the chart or read as a distinct editorial layer. M6 adapts to the reader and to reuse: scale annotation amount by audience familiarity, and mark a note defensive so it survives every export with its source and confidence baked in.",
+      "Make annotations adapt to space and house style. It sheds secondary notes as the plot narrows, and chooses whether notes blend into the chart or read as a distinct editorial layer. M6 adapts to the reader and to reuse: scale annotation amount by audience familiarity, and mark a note defensive so it survives every export with its source and confidence baked in.",
     ogChart: { component: "Scatterplot" },
-    draft: true,
   },
   {
     slug: "annotations-that-make-room-and-make-sense",
     title: "Annotations That Make Room and Make Sense",
     subtitle:
-      "M3 and M4 keep the annotation layer legible: a density budget sheds the lowest-priority notes when a chart gets crowded, and a redundant-cue default ties a colored note to its target with a spatial line instead of color alone.",
+      "Keep the annotation layer legible: a density budget sheds the lowest-priority notes when a chart gets crowded, and a redundant-cue default ties a colored note to its target with a spatial line instead of color alone.",
     author: "Elijah Meeks",
-    date: "2026-06-03",
+    date: "2026-06-08",
     tags: ["case-study", "roadmap"],
     excerpt:
-      "After hierarchy (M1) and placement (M2), the next two annotation milestones handle the failure modes that show up at scale: too many notes, and notes that only connect to their target by color. M3 adds an opt-in density budget with progressive disclosure; M4 adds an accessibility audit for color-only association and an opt-in redundant leader-line cue.",
+      "After hierarchy and placement, the next two annotation milestones handle the failure modes that show up at scale: too many notes, and notes that only connect to their target by color. This is achieved via an opt-in density budget with progressive disclosure and an accessibility audit for color-only association and an opt-in redundant leader-line cue.",
     ogChart: { component: "Scatterplot" },
     draft: true,
   },
@@ -62,14 +72,13 @@ export const allBlogEntriesMeta = [
     slug: "annotations-that-lead-and-land",
     title: "Annotations That Lead and Land",
     subtitle:
-      "M1 and M2 move annotations from first-class objects toward design assistance: hierarchy gives notes a reading order, and opt-in placement chooses sensible offsets without taking control away from authors.",
+      "Move annotations from first-class objects toward design assistance: hierarchy gives notes a reading order, and opt-in placement chooses sensible offsets without taking control away from authors.",
     author: "Elijah Meeks",
-    date: "2026-06-03",
+    date: "2026-06-07",
     tags: ["case-study", "roadmap"],
     excerpt:
-      "Semiotic already treated annotations as data-bound objects. The M1 and M2 work starts helping authors make design decisions with those objects: primary and secondary notes, inferred reading order from confidence, an accessibility audit hook, and an opt-in annotationLayout recipe that places notes near their targets while avoiding obvious collisions.",
+      "Semiotic already treated annotations as data-bound objects. Now it helps authors make design decisions with those objects: primary and secondary notes, inferred reading order from confidence, an accessibility audit hook, and an opt-in annotationLayout recipe that places notes near their targets while avoiding obvious collisions.",
     ogChart: { component: "Scatterplot" },
-    draft: true,
   },
   {
     slug: "what-an-annotation-should-carry",
