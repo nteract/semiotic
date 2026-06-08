@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { extractRoutesFromSource, generatePage, copyDocsApiAssets } from "../../../scripts/prerender.mjs"
+import { extractRoutesFromSource, generatePage, copyDocsApiAssets, sanitizeRouteHtml } from "../../../scripts/prerender.mjs"
 
 describe("docs prerender helpers", () => {
   it("extracts nested docs routes without leaking the previous parent", () => {
@@ -111,6 +111,35 @@ describe("docs prerender helpers", () => {
     expect(html).toContain("<h1>LineChart</h1>")
     expect(html).toContain('"route":"charts/line-chart"')
     expect(html).toContain('"codeBlocks":["import { LineChart } from \\"semiotic/xy\\""]')
+  })
+
+  it("removes unsafe link protocols from sanitized route HTML", () => {
+    const doc = sanitizeRouteHtml(`
+      <main class="App">
+        <h1>Links</h1>
+        <p>
+          <a href="/charts">Charts</a>
+          <a href="https://example.com">External</a>
+          <a href=" JAVASCRIPT:alert(1)">Script</a>
+          <a href="vbscript:alert(1)">VBScript</a>
+          <a href="daTa:text/html,evil">Data</a>
+          <a href="fi&#10;le:///tmp/secret">File</a>
+          <span href="javascript:alert(1)">Span</span>
+        </p>
+      </main>
+    `, "links")
+
+    expect(doc?.links).toEqual([
+      { text: "Charts", href: "/charts" },
+      { text: "External", href: "https://example.com" },
+    ])
+    expect(doc?.html).toContain('<a href="/charts">Charts</a>')
+    expect(doc?.html).toContain('<a href="https://example.com">External</a>')
+    expect(doc?.html).toContain("<a>Script</a>")
+    expect(doc?.html).toContain("<a>VBScript</a>")
+    expect(doc?.html).toContain("<a>Data</a>")
+    expect(doc?.html).toContain("<a>File</a>")
+    expect(doc?.html).toContain("<span>Span</span>")
   })
 
   it("replaces minified canonical tags for nested routes", () => {

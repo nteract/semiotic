@@ -31,4 +31,6 @@ export function generatePage(
   machineDoc?: MachineReadableRouteDoc | null
 ): string
 
+export function sanitizeRouteHtml(renderedHtml: string, routePath: string): MachineReadableRouteDoc | null
+
 export function prerender(): Promise<void>

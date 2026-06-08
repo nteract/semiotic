@@ -13,7 +13,7 @@
  * demos render as empty containers in the static HTML (expected).
  */
 
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "fs"
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "fs"
 import { tmpdir } from "os"
 import { resolve, dirname } from "path"
 import { fileURLToPath, pathToFileURL } from "url"
@@ -433,39 +433,45 @@ export function renderRoute(routePath) {
 
 async function createStaticRouteRenderer() {
   const { build: esbuild } = await import("esbuild")
-  const outfile = resolve(tmpdir(), `semiotic-docs-route-renderer-${process.pid}-${Date.now()}.mjs`)
-  await esbuild({
-    stdin: {
-      contents: RENDERER_ENTRY,
-      loader: "jsx",
-      resolveDir: __dirname,
-    },
-    bundle: true,
-    platform: "node",
-    format: "esm",
-    outfile,
-    loader: {
-      ".js": "jsx",
-      ".css": "empty",
-      ".csv": "text",
-      ".gif": "file",
-      ".jpeg": "file",
-      ".jpg": "file",
-      ".png": "file",
-    },
-    assetNames: "assets/[name]-[hash]",
-    external: ["canvas"],
-    banner: {
-      js: 'import { createRequire as __semioticCreateRequire } from "module"; const require = __semioticCreateRequire(import.meta.url);',
-    },
-    logLevel: "silent",
-  })
+  const tempDir = mkdtempSync(resolve(tmpdir(), "semiotic-docs-route-renderer-"))
+  const outfile = resolve(tempDir, "renderer.mjs")
 
-  const mod = await import(pathToFileURL(outfile).href)
-  return mod.renderRoute
+  try {
+    await esbuild({
+      stdin: {
+        contents: RENDERER_ENTRY,
+        loader: "jsx",
+        resolveDir: __dirname,
+      },
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      outfile,
+      loader: {
+        ".js": "jsx",
+        ".css": "empty",
+        ".csv": "text",
+        ".gif": "file",
+        ".jpeg": "file",
+        ".jpg": "file",
+        ".png": "file",
+      },
+      assetNames: "assets/[name]-[hash]",
+      external: ["canvas"],
+      banner: {
+        js: 'import { createRequire as __semioticCreateRequire } from "module"; const require = __semioticCreateRequire(import.meta.url);',
+      },
+      logLevel: "silent",
+    })
+
+    const mod = await import(pathToFileURL(outfile).href)
+    return mod.renderRoute
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true })
+  }
 }
 
-function sanitizeRouteHtml(renderedHtml, routePath) {
+export function sanitizeRouteHtml(renderedHtml, routePath) {
   if (!renderedHtml) return null
 
   const dom = new JSDOM(`<body>${renderedHtml}</body>`)
@@ -509,11 +515,9 @@ function sanitizeRouteHtml(renderedHtml, routePath) {
         (name === "id" && /^h[1-6]$/i.test(el.tagName))
       if (!keep || name.startsWith("on")) el.removeAttribute(attr.name)
     }
-    if (el.tagName === "A") {
-      const href = el.getAttribute("href")
-      if (!href || href.startsWith("file:") || href.startsWith("data:")) {
-        el.removeAttribute("href")
-      }
+    const href = el.getAttribute("href")
+    if (href !== null && shouldRemoveSanitizedHref(href)) {
+      el.removeAttribute("href")
     }
   })
 
@@ -567,6 +571,11 @@ function normalizeMachineHtml(html) {
     .replace(/\s+/g, " ")
     .replace(/>\s+</g, "><")
     .trim()
+}
+
+function shouldRemoveSanitizedHref(href) {
+  const normalizedHref = href.trim().replace(/[\x00-\x20\x7f]+/g, "").toLowerCase()
+  return !normalizedHref || /^(?:file|data|javascript|vbscript):/.test(normalizedHref)
 }
 
 function normalizeText(text) {
