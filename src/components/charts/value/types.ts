@@ -261,7 +261,7 @@ export interface BigNumberProps<_TDatum extends Datum = Datum> {
   align?: "start" | "center" | "end"
   /** Reserve width. Default 280 (tile), 540 (presentation), unset (inline/thumbnail). */
   width?: number | string
-  /** Reserve height. Default 160 (tile), 320 (presentation), unset (inline/thumbnail). */
+  /** Reserve height. Default 184 (tile), 320 (presentation), unset (inline/thumbnail). */
   height?: number | string
   /** Inner padding; number or `{top, right, bottom, left}`. */
   padding?:

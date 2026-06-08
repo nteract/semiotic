@@ -61,7 +61,7 @@ const BLURBS = {
   "./themes":   "Theme presets only (tufte, carbon, etc.)",
   "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
   "./value":    "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)",
-  "./ai":       "All 42 HOCs + validation — optimized for LLM code generation",
+  "./ai":       "All 47 schema-backed charts + validation — optimized for LLM code generation",
 }
 
 // Display order — independent of `package.json` key order so the

@@ -40,7 +40,7 @@ const bigNumberProps = [
   { name: "staleLabel", type: "string", description: "Label shown when the value is stale." },
   { name: "trendSlot", type: "ReactNode | function", description: "Wide chart slot beneath the value (sparkline-aspect charts)." },
   { name: "chartSlot", type: "ReactNode | function", description: "Square chart slot beside the value (donut/pie/scatter)." },
-  { name: "chartSize", type: "number", description: "Pixels reserved for chartSlot; defaults to inner card height." },
+  { name: "chartSize", type: "number", description: "Pixels reserved for chartSlot; defaults to 44px in tile mode and 80px in presentation mode." },
 ]
 
 // ---------------------------------------------------------------------------

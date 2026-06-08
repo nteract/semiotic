@@ -10,7 +10,7 @@ import {
   useChartMode,
   useLegendInteraction,
   getCrosshairProps,
-  } from "./hooks"
+} from "./hooks"
 import { SelectionProvider } from "../../store/SelectionStore"
 import { useSelection } from "../../store/useSelection"
 import { ObservationProvider } from "../../store/ObservationStore"

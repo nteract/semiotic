@@ -1140,7 +1140,19 @@ const BigNumberInner = (
  *   precision={0}
  *   comparison={{ value: 980000, label: "vs Q2" }}
  *   target={{ value: 1500000, label: "Q3 plan" }}
- *   trend={[820000, 870000, 920000, 1010000, 1120000, 1284900]}
+ *   trendSlot={(ctx) => (
+ *     <LineChart
+ *       data={[820000, 870000, 920000, 1010000, 1120000, 1284900].map(
+ *         (y, x) => ({ x, y })
+ *       )}
+ *       xAccessor="x"
+ *       yAccessor="y"
+ *       mode="sparkline"
+ *       width={240}
+ *       height={32}
+ *       color={ctx.color}
+ *     />
+ *   )}
  *   thresholds={[
  *     { at: -Infinity, level: "danger" },
  *     { at: 1000000,   level: "warning" },
