@@ -248,5 +248,4 @@ export default {
   ...META,
   component: Body,
   ogChart: { component: "Scatterplot" },
-  draft: true,
 }

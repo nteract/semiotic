@@ -31,6 +31,18 @@ export const allBlogEntriesMeta = [
       "3.7.0 makes Semiotic's AI and annotation work receivable: charts can describe themselves, expose structured navigation, carry annotation provenance, persist authoring context, repair or vary agent proposals, and render focal values through the new BigNumber entry point.",
   },
   {
+    slug: "release-gates-for-fast-prs",
+    title: "How Semiotic Keeps Fast PRs Clean",
+    subtitle:
+      "The CI and release gate behind Semiotic's current PR pace: registry drift checks, docs freshness, AI-facing contracts, visual diffs, performance comparison, pack smoke tests, and publish verification.",
+    author: "Elijah Meeks",
+    date: "2026-06-08",
+    tags: ["case-study", "release", "process"],
+    excerpt:
+      "Semiotic can move through a high volume of PRs because review is backed by a stack of specific gates: builds, types, registry drift checks, docs and AI freshness, visual baselines, performance comparison, package smoke tests, and release verification. Humans review the rendered changes and the code that actually needs judgment.",
+    draft: true,
+  },
+  {
     slug: "annotations-that-get-contested-and-heard",
     title: "Annotations That Get Contested, and Heard",
     subtitle:
@@ -54,7 +66,6 @@ export const allBlogEntriesMeta = [
     excerpt:
       "Make annotations adapt to space and house style. It sheds secondary notes as the plot narrows, and chooses whether notes blend into the chart or read as a distinct editorial layer. M6 adapts to the reader and to reuse: scale annotation amount by audience familiarity, and mark a note defensive so it survives every export with its source and confidence baked in.",
     ogChart: { component: "Scatterplot" },
-    draft: true,
   },
   {
     slug: "annotations-that-make-room-and-make-sense",
