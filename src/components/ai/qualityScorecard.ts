@@ -130,7 +130,11 @@ export function runQualityScorecard(
         maxResults: 40,
       })
     } catch {
-      // A descriptor crashed on this fixture — flag it.
+      // A descriptor crashed on this fixture — flag it. Agreement fields keep
+      // their documented contract: a crash on an expectation-bearing fixture
+      // is a miss (false), but a fixture with no expectations stays null so
+      // a crash on a stress fixture can't skew the agreement rates.
+      const hadExpectations = !!fixture.expected && fixture.expected.length > 0
       perFixture.push({
         fixture: fixture.name,
         shape: fixture.shape,
@@ -140,8 +144,8 @@ export function runQualityScorecard(
         topThree: [],
         fittingCount: 0,
         rejectedCount: 0,
-        expertAgreement: false,
-        topPickAgreement: false,
+        expertAgreement: hadExpectations ? false : null,
+        topPickAgreement: hadExpectations ? false : null,
         noFitHonored: null,
       })
       continue

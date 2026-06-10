@@ -273,13 +273,17 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
 
   // Render evidence — ground truth about what the chart actually contains
   // (mark counts by type, resolved domains, emptiness, annotation count),
-  // computed from the same scene graph the server SVG converter walks. An
-  // agent repair loop can react to "this rendered zero data marks" without
-  // pixel inspection. Components without a server render config (a handful
-  // of MCP-renderable charts) simply omit the block.
+  // computed from the rendered scene graph. When the component has a server
+  // render config, the returned SVG is taken from the SAME
+  // renderChartWithEvidence call, so the evidence and the SVG are guaranteed
+  // to describe one render. Components without a server render config (a
+  // handful of MCP-renderable charts) keep the React-SSR SVG from
+  // renderHOCToSVG above — which also already ran prop validation — and
+  // simply omit the evidence block.
   let evidenceBlock: { type: "text"; text: string } | null = null
   try {
-    const { evidence } = renderChartWithEvidence(component as never, props)
+    const { svg: evidenceSvg, evidence } = renderChartWithEvidence(component as never, props)
+    svg = evidenceSvg
     evidenceBlock = {
       type: "text" as const,
       text: `Render evidence:\n${JSON.stringify(evidence, null, 2)}`,

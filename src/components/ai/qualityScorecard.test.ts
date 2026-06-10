@@ -65,4 +65,38 @@ describe("runQualityScorecard", () => {
       expect(report.perFixture[0]).toBeDefined()
     }
   })
+
+  it("keeps agreement fields null when a descriptor crashes on a no-expectation fixture", () => {
+    // A crash on a stress fixture (no `expected`) must not count as an
+    // agreement miss — only expectation-bearing fixtures may move the rates.
+    const throwingCapability = {
+      component: "ThrowingChart",
+      family: "categorical",
+      importPath: "semiotic/ordinal",
+      rubric: { familiarity: 3, accuracy: 3, precision: 3 },
+      fits: () => {
+        throw new Error("descriptor crash")
+      },
+      intentScores: {},
+      buildProps: () => ({}),
+    } as never
+    const data = [{ category: "A", value: 1 }]
+
+    const noExpectations = runQualityScorecard(
+      [{ name: "crash, no expectations", data }],
+      [throwingCapability]
+    )
+    expect(noExpectations.perFixture[0].expertAgreement).toBeNull()
+    expect(noExpectations.perFixture[0].topPickAgreement).toBeNull()
+    expect(noExpectations.summary.expertAgreementRate).toBe(0)
+    expect(noExpectations.summary.top1AgreementRate).toBe(0)
+
+    const withExpectations = runQualityScorecard(
+      [{ name: "crash, with expectations", data, expected: ["BarChart"] }],
+      [throwingCapability]
+    )
+    // A crash on an expectation-bearing fixture IS a miss.
+    expect(withExpectations.perFixture[0].expertAgreement).toBe(false)
+    expect(withExpectations.perFixture[0].topPickAgreement).toBe(false)
+  })
 })

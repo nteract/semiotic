@@ -32566,7 +32566,8 @@ async function renderChartHandler(args) {
   let svg = result.svg;
   let evidenceBlock = null;
   try {
-    const { evidence } = (0, import_server2.renderChartWithEvidence)(component, props);
+    const { svg: evidenceSvg, evidence } = (0, import_server2.renderChartWithEvidence)(component, props);
+    svg = evidenceSvg;
     evidenceBlock = {
       type: "text",
       text: `Render evidence:

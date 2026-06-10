@@ -47,8 +47,8 @@ describe("NetworkCustomChart", () => {
   const trivialLayout: NetworkCustomLayout = (ctx) => ({
     sceneNodes: ctx.nodes.map((n, i) => ({
       type: "circle" as const,
-      x: i * 10,
-      y: i * 10,
+      cx: i * 10,
+      cy: i * 10,
       r: 4,
       style: { fill: ctx.resolveColor(String(i)) },
       datum: n,
