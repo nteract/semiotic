@@ -52,6 +52,7 @@ import MultimodalResponse from "./entries/multimodal-response.js"
 import AnchoredConversations from "./entries/anchored-conversations.js"
 import LiveDashboard from "./entries/live-conversational-dashboard.js"
 import Release370 from "./entries/release-3-7-0.js"
+import ReleaseGatesForFastPrs from "./entries/release-gates-for-fast-prs.js"
 import Release360 from "./entries/release-3-6-0.js"
 import TalkTrackIntelligence from "./entries/talk-track-intelligence.js"
 import FromSpecToRuntime from "./entries/from-spec-to-runtime.js"
@@ -72,6 +73,7 @@ import AnnotationsThatGetContestedAndHeard from "./entries/annotations-that-get-
  */
 export const allBlogEntries = [
   Release370,
+  ReleaseGatesForFastPrs,
   AnnotationsThatGetContestedAndHeard,
   AnnotationsThatAdaptAndTravel,
   AnnotationsThatMakeRoomAndMakeSense,
