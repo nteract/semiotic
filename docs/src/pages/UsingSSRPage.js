@@ -620,6 +620,38 @@ const svg = renderToStaticSVG(chartConfig.type, chartConfig.props)`}
         language="js"
       />
 
+      <h3 id="render-evidence">Render Evidence</h3>
+
+      <p>
+        <code>renderChartWithEvidence</code> returns the SVG <em>plus</em> a
+        machine-readable account of what actually rendered, computed from the
+        same scene graph the SVG converter walks: mark counts by scene type,
+        resolved axis domains, an <code>empty</code> flag, category/node/edge
+        counts, the annotation count, and the accessible name. A non-visual
+        caller — an agent repair loop, a CI assertion, a report pipeline —
+        checks <code>evidence.empty</code> or <code>evidence.markCount</code>{" "}
+        instead of parsing SVG, and a chart that silently rendered zero data
+        marks becomes a detectable condition rather than a blank image. The
+        MCP <code>renderChart</code> tool returns the same block alongside its
+        SVG/PNG output.
+      </p>
+
+      <CodeBlock
+        code={`import { renderChartWithEvidence } from "semiotic/server"
+
+const { svg, evidence } = renderChartWithEvidence("BarChart", {
+  data, categoryAccessor: "product", valueAccessor: "units", title: "Sales",
+})
+
+evidence.markCount        // 3 — data marks in the rendered scene
+evidence.markCountByType  // { rect: 3 }
+evidence.empty            // false — EMPTY_SCENE appears in warnings when true
+evidence.categories       // ["Widget", "Gadget", "Sprocket"]
+evidence.yDomain          // [0, 682] — the resolved scale domain
+evidence.ariaLabel        // "Sales"`}
+        language="js"
+      />
+
       {/* -------------------------------------------------------------- */}
       <h2 id="nextjs-examples">Next.js Integration Examples</h2>
 

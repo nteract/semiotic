@@ -17,7 +17,8 @@
     "baseUrl": ".",
     "paths": {
       "semiotic/ai": ["./dist/semiotic-ai.d.ts"],
-      "semiotic/geo": ["./dist/semiotic-geo.d.ts"]
+      "semiotic/geo": ["./dist/semiotic-geo.d.ts"],
+      "semiotic/server": ["./dist/semiotic-server.d.ts"]
     }
   },
   "include": [

@@ -811,7 +811,8 @@ const BigNumberInner = (
         className={`${rootClassName} semiotic-bignumber--empty`}
         style={{
           ...containerStyle,
-          color: "var(--semiotic-text-secondary, #999)",
+          // #666 fallback = LIGHT_THEME.textSecondary; #999 fails WCAG AA.
+          color: "var(--semiotic-text-secondary, #666)",
           fontSize: 13,
           alignItems: "center",
           justifyContent: "center"

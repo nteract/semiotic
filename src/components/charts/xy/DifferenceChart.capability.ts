@@ -28,7 +28,11 @@ export const DifferenceChartCapability: ChartCapability = {
   },
 
   intentScores: {
-    "compare-series": 5,
+    // Full marks only at the chart's native two-series shape. With 3+
+    // series the buildProps pivot silently drops everything outside the top
+    // two — a chart that hides a series is not the best answer to "compare
+    // the series"; LineChart / GroupedBarChart show them all.
+    "compare-series": (p) => (p.seriesCount === 2 ? 5 : 3),
     "change-detection": 4,
     "trend": 3,
   },

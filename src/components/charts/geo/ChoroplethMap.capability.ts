@@ -8,7 +8,10 @@ export const ChoroplethMapCapability: ChartCapability = {
 
   fits: (profile) => {
     if (!profile.hasGeo || !profile.geo) return "needs a GeoJSON FeatureCollection via rawInput"
-    if (profile.geo.features.length < 1) return "needs at least 1 area feature"
+    // A choropleth encodes value-by-area; a single polygon has nothing to
+    // compare — point-based geo charts are the honest answer for an
+    // outline-plus-points dataset.
+    if (profile.geo.features.length < 2) return "needs at least 2 area features to compare"
     return null
   },
 

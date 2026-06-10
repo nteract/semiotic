@@ -82,6 +82,22 @@ npx semiotic-ai --help`}</CodeBlock>
       </p>
       <CodeBlock language="bash">{`echo '{"component":"BarChart","props":{"data":[{"region":"AMER","value":42}],"categoryAccessor":"region","valueAccessor":"value"}}' \\
   | npx semiotic-ai --doctor`}</CodeBlock>
+      <p>
+        Beyond structural validation, the diagnostics include a{" "}
+        <strong>misleading-design pack</strong> — checks for patterns that
+        deceive readers (and, per the chart-deception literature, deceive
+        vision-language models the same way): inverted axes
+        (<code>INVERTED_AXIS</code>), unlabeled dual-axis charts
+        (<code>DUAL_AXIS_UNLABELED</code>), trend windows cropped to a
+        favorable slice (<code>CHERRY_PICKED_WINDOW</code>), negative values in
+        part-to-whole encodings (<code>PART_TO_WHOLE_NEGATIVE</code>),
+        B-spline curves that don't pass through the data points
+        (<code>NON_PASSING_CURVE</code>), slope-distorting aspect ratios
+        (<code>EXTREME_ASPECT_RATIO</code>), and over-sliced pies
+        (<code>PIE_TOO_MANY_SLICES</code>) — alongside the long-standing
+        non-zero-baseline and color-contrast checks. Each diagnosis carries an
+        actionable <code>fix</code>.
+      </p>
 
       <h3 id="audit-a11y">Audit accessibility (--audit-a11y)</h3>
       <p>
@@ -102,7 +118,7 @@ npx semiotic-ai --help`}</CodeBlock>
       </p>
       <p>The server exposes these tools:</p>
       <ul>
-        <li><code>renderChart</code> — render a component + props to a static SVG/PNG snapshot.</li>
+        <li><code>renderChart</code> — render a component + props to a static SVG/PNG snapshot. The response includes a <strong>render-evidence</strong> JSON block (mark counts by scene type, resolved axis domains, an <code>empty</code> flag, annotation count, and the accessible name) computed from the rendered scene graph — agents verify the chart actually drew data marks by reading the evidence instead of parsing SVG. The same payload is available in code as <code>renderChartWithEvidence</code> from <code>semiotic/server</code>.</li>
         <li><code>suggestCharts</code> — rank charts for a dataset and intent (see <Link to="/intelligence/suggestions">Chart Suggestions</Link>).</li>
         <li><code>diagnoseConfig</code> — flag anti-patterns in a proposed config.</li>
         <li><code>interrogateChart</code> — answer a natural-language question about a chart's data (see <Link to="/intelligence/interrogation">Interrogation</Link>).</li>

@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Render evidence.** `renderChartWithEvidence()` (`semiotic/server`) returns the SVG plus a
+  machine-readable `RenderEvidence` object computed from the rendered scene graph — mark counts by
+  scene type, resolved axis domains, an `empty` flag, category/node/edge counts, annotation count,
+  and the accessible name — so agent repair loops and CI assertions can verify a chart actually drew
+  data marks without pixel inspection. The MCP `renderChart` tool now returns the same evidence block
+  alongside its SVG/PNG output.
+- **Misleading-design diagnostics.** `diagnoseConfig()` gains a deception-check pack: inverted
+  extents (`INVERTED_AXIS`), unlabeled dual-axis series (`DUAL_AXIS_UNLABELED`), trend windows
+  cropped to a favorable slice (`CHERRY_PICKED_WINDOW`), negative values in part-to-whole encodings
+  (`PART_TO_WHOLE_NEGATIVE` — an error for pie/donut/funnel), non-interpolating `curve="basis"`
+  smoothing (`NON_PASSING_CURVE`), slope-distorting aspect ratios (`EXTREME_ASPECT_RATIO`), and
+  over-sliced pies (`PIE_TOO_MANY_SLICES`). These patterns mislead human readers and — per the
+  chart-deception literature — vision-language models the same way.
+- **Theme contrast conformance gate.** Every shipped theme preset is now tested against WCAG-derived
+  floors (4.5:1 for text/tooltip/annotation roles, 3:1 for the focus indicator), with sub-3:1 mark
+  colors pinned in an exact-match known-exceptions ledger so palette regressions fail and
+  improvements must shrink the ledger. The axe integration scan re-enables the `color-contrast`
+  rule on the strength of the gate.
+- **Scorecard top-1 agreement.** The capability quality scorecard now reports strict
+  `top1AgreementRate` beside the lenient top-3 rate (current canonical set: 93% top-1 / 100% top-3),
+  ranks the top-3 over *distinct components* rather than variants of one chart, and gains fixtures
+  for the previously unexercised Heatmap, GaugeChart, FlowMap, and DistanceCartogram descriptors.
+
+### Changed
+
+- **Theme legibility fixes (WCAG AA).** `pastels` `textSecondary`/`focus`/`annotation`, `bi-tool`
+  `textSecondary`, and the `tufte-dark`/`journalist`/`playful` `annotation` colors were deepened to
+  clear the contrast floors; the empty-state / BigNumber-empty / data-table-caption fallback color
+  moved from `#999` (2.8:1) to `#666`, matching the default theme's `textSecondary`.
+- **Capability descriptor judgment fixes.** `DifferenceChart` no longer takes full `compare-series`
+  marks when it would silently drop series beyond its native two; flat `BarChart` yields on crossed
+  two-categorical matrices (Grouped/Stacked/Heatmap show the matrix) and on raw-observation data;
+  `ChoroplethMap` requires at least two area features (a one-region choropleth has nothing to
+  compare).
+- `contrastRatio()` now parses 3-digit hex shorthand (`#333`), making the default themes measurable.
+
+### Tests
+
+- Colocated tests for the `NetworkCustomChart` and `OrdinalCustomChart` escape hatches (the
+  XY variant was already covered).
+
 ## [3.7.0] - 2026-06-07
 
 ### Added
