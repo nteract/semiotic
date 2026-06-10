@@ -41,6 +41,7 @@ import * as path from "path"
 import * as http from "http"
 import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
+import { renderChartWithEvidence } from "semiotic/server"
 import {
   diagnoseConfig,
   auditAccessibility,
@@ -270,6 +271,23 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
 
   let svg = result.svg!
 
+  // Render evidence — ground truth about what the chart actually contains
+  // (mark counts by type, resolved domains, emptiness, annotation count),
+  // computed from the same scene graph the server SVG converter walks. An
+  // agent repair loop can react to "this rendered zero data marks" without
+  // pixel inspection. Components without a server render config (a handful
+  // of MCP-renderable charts) simply omit the block.
+  let evidenceBlock: { type: "text"; text: string } | null = null
+  try {
+    const { evidence } = renderChartWithEvidence(component as never, props)
+    evidenceBlock = {
+      type: "text" as const,
+      text: `Render evidence:\n${JSON.stringify(evidence, null, 2)}`,
+    }
+  } catch {
+    // No server render config for this component — evidence unavailable.
+  }
+
   // Inject theme CSS custom properties into the SVG root element.
   // We add a <style> block inside the SVG rather than wrapping in a <div>,
   // because sharp requires pure SVG input for PNG rasterization.
@@ -293,7 +311,10 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
       const pngBuffer: Buffer = await sharpFn(Buffer.from(svg)).png().toBuffer()
       const base64 = pngBuffer.toString("base64")
       return {
-        content: [{ type: "text" as const, text: `data:image/png;base64,${base64}` }],
+        content: [
+          { type: "text" as const, text: `data:image/png;base64,${base64}` },
+          ...(evidenceBlock ? [evidenceBlock] : []),
+        ],
       }
     } catch (err: any) {
       if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
@@ -309,7 +330,10 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   }
 
   return {
-    content: [{ type: "text" as const, text: svg }],
+    content: [
+      { type: "text" as const, text: svg },
+      ...(evidenceBlock ? [evidenceBlock] : []),
+    ],
   }
 }
 
@@ -1013,7 +1037,7 @@ function createServer(): McpServer {
 
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image, plus a "Render evidence" JSON block (mark counts by type, resolved axis domains, empty flag, annotation count, accessible name) — read the evidence instead of parsing the SVG to verify the chart actually rendered data marks. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),

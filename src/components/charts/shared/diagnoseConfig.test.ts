@@ -397,4 +397,273 @@ describe("diagnoseConfig", () => {
       expect(result.diagnoses.map(d => d.code)).not.toContain("ANNOTATION_DENSITY")
     })
   })
+
+  describe("misleading-design checks (deception pack)", () => {
+    const trendData = Array.from({ length: 20 }, (_, i) => ({
+      x: i + 1,
+      y: 50 + i * 2,
+    }))
+    const trendBase: Datum = {
+      data: trendData,
+      xAccessor: "x",
+      yAccessor: "y",
+      title: "Trend",
+    }
+
+    describe("INVERTED_AXIS", () => {
+      it("flags a descending yExtent", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          yExtent: [100, 0],
+        })
+        const diag = result.diagnoses.find(d => d.code === "INVERTED_AXIS")
+        expect(diag).toBeDefined()
+        expect(diag?.severity).toBe("warning")
+        expect(diag?.message).toContain("inverted")
+      })
+
+      it("flags a descending xExtent", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          xExtent: [20, 1],
+        })
+        expect(result.diagnoses.map(d => d.code)).toContain("INVERTED_AXIS")
+      })
+
+      it("accepts ascending extents", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          yExtent: [0, 100],
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("INVERTED_AXIS")
+      })
+
+      it("ignores partial extents with nulls", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          yExtent: [null, 100],
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("INVERTED_AXIS")
+      })
+    })
+
+    describe("DUAL_AXIS_UNLABELED", () => {
+      const dualData = Array.from({ length: 10 }, (_, i) => ({
+        month: i + 1,
+        revenue: 100 + i * 10,
+        users: 1000 + i * 50,
+      }))
+
+      it("flags two-series config with unlabeled series", () => {
+        const result = diagnoseConfig("MultiAxisLineChart", {
+          data: dualData,
+          xAccessor: "month",
+          series: [{ yAccessor: "revenue" }, { yAccessor: "users" }],
+          title: "Dual",
+        })
+        const diag = result.diagnoses.find(d => d.code === "DUAL_AXIS_UNLABELED")
+        expect(diag).toBeDefined()
+        expect(diag?.message).toContain("false equivalence")
+      })
+
+      it("accepts two labeled series", () => {
+        const result = diagnoseConfig("MultiAxisLineChart", {
+          data: dualData,
+          xAccessor: "month",
+          series: [
+            { yAccessor: "revenue", label: "Revenue ($)" },
+            { yAccessor: "users", label: "Users" },
+          ],
+          title: "Dual",
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("DUAL_AXIS_UNLABELED")
+      })
+
+      it("ignores three-series configs (multi-line fallback, single scale)", () => {
+        const result = diagnoseConfig("MultiAxisLineChart", {
+          data: dualData,
+          xAccessor: "month",
+          series: [
+            { yAccessor: "revenue" },
+            { yAccessor: "users" },
+            { yAccessor: "month" },
+          ],
+          title: "Triple",
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("DUAL_AXIS_UNLABELED")
+      })
+    })
+
+    describe("CHERRY_PICKED_WINDOW", () => {
+      it("flags an xExtent that crops most of the data", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          xExtent: [15, 20], // shows ~26% of x range 1..20
+        })
+        const diag = result.diagnoses.find(d => d.code === "CHERRY_PICKED_WINDOW")
+        expect(diag).toBeDefined()
+        expect(diag?.message).toContain("%")
+      })
+
+      it("accepts a window covering most of the data", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          xExtent: [2, 20], // ~95% coverage
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("CHERRY_PICKED_WINDOW")
+      })
+
+      it("does not fire without an explicit xExtent", () => {
+        const result = diagnoseConfig("LineChart", trendBase)
+        expect(result.diagnoses.map(d => d.code)).not.toContain("CHERRY_PICKED_WINDOW")
+      })
+    })
+
+    describe("PART_TO_WHOLE_NEGATIVE", () => {
+      it("errors on negative pie slice values", () => {
+        const result = diagnoseConfig("PieChart", {
+          data: [
+            { category: "A", value: 40 },
+            { category: "B", value: -10 },
+            { category: "C", value: 70 },
+          ],
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          title: "Mix",
+        })
+        const diag = result.diagnoses.find(d => d.code === "PART_TO_WHOLE_NEGATIVE")
+        expect(diag).toBeDefined()
+        expect(diag?.severity).toBe("error")
+        expect(result.ok).toBe(false)
+      })
+
+      it("warns on normalized stacked bars with negatives", () => {
+        const result = diagnoseConfig("StackedBarChart", {
+          data: [
+            { category: "A", group: "g1", value: 40 },
+            { category: "A", group: "g2", value: -10 },
+          ],
+          categoryAccessor: "category",
+          stackBy: "group",
+          valueAccessor: "value",
+          normalize: true,
+          title: "Stack",
+        })
+        const diag = result.diagnoses.find(d => d.code === "PART_TO_WHOLE_NEGATIVE")
+        expect(diag).toBeDefined()
+        expect(diag?.severity).toBe("warning")
+      })
+
+      it("does not flag un-normalized stacks (diverging stacks are legitimate)", () => {
+        const result = diagnoseConfig("StackedBarChart", {
+          data: [
+            { category: "A", group: "g1", value: 40 },
+            { category: "A", group: "g2", value: -10 },
+          ],
+          categoryAccessor: "category",
+          stackBy: "group",
+          valueAccessor: "value",
+          title: "Diverging",
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("PART_TO_WHOLE_NEGATIVE")
+      })
+
+      it("accepts all-positive pie values", () => {
+        const result = diagnoseConfig("PieChart", {
+          data: [
+            { category: "A", value: 40 },
+            { category: "B", value: 60 },
+          ],
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          title: "Shares",
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("PART_TO_WHOLE_NEGATIVE")
+      })
+    })
+
+    describe("NON_PASSING_CURVE", () => {
+      it("flags curve=basis on a line chart", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          curve: "basis",
+        })
+        const diag = result.diagnoses.find(d => d.code === "NON_PASSING_CURVE")
+        expect(diag).toBeDefined()
+        expect(diag?.message).toContain("does NOT pass through")
+      })
+
+      it("accepts interpolating curves", () => {
+        for (const curve of ["monotoneX", "catmullRom", "linear"]) {
+          const result = diagnoseConfig("LineChart", { ...trendBase, curve })
+          expect(result.diagnoses.map(d => d.code)).not.toContain("NON_PASSING_CURVE")
+        }
+      })
+    })
+
+    describe("EXTREME_ASPECT_RATIO", () => {
+      it("flags an extremely wide trend chart", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          width: 1200,
+          height: 100,
+        })
+        const diag = result.diagnoses.find(d => d.code === "EXTREME_ASPECT_RATIO")
+        expect(diag).toBeDefined()
+        expect(diag?.message).toContain("flattens")
+      })
+
+      it("skips sparkline mode", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          width: 1200,
+          height: 100,
+          mode: "sparkline",
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("EXTREME_ASPECT_RATIO")
+      })
+
+      it("accepts conventional aspect ratios", () => {
+        const result = diagnoseConfig("LineChart", {
+          ...trendBase,
+          width: 600,
+          height: 400,
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("EXTREME_ASPECT_RATIO")
+      })
+    })
+
+    describe("PIE_TOO_MANY_SLICES", () => {
+      it("flags a pie with more than 8 categories", () => {
+        const data = Array.from({ length: 12 }, (_, i) => ({
+          category: `cat-${i}`,
+          value: 10 + i,
+        }))
+        const result = diagnoseConfig("PieChart", {
+          data,
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          title: "Crowded",
+        })
+        const diag = result.diagnoses.find(d => d.code === "PIE_TOO_MANY_SLICES")
+        expect(diag).toBeDefined()
+        expect(diag?.message).toContain("12 slices")
+        expect(diag?.fix).toContain("BarChart")
+      })
+
+      it("accepts a pie with few categories", () => {
+        const result = diagnoseConfig("DonutChart", {
+          data: [
+            { category: "A", value: 40 },
+            { category: "B", value: 35 },
+            { category: "C", value: 25 },
+          ],
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          title: "Tidy",
+        })
+        expect(result.diagnoses.map(d => d.code)).not.toContain("PIE_TOO_MANY_SLICES")
+      })
+    })
+  })
 })

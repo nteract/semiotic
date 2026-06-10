@@ -7,6 +7,7 @@ _Edit dist/semiotic-server.d.ts's sources, then re-run `npm run docs:api-surface
 function generateFrameSVGs
 function generateFrameSequence
 function renderChart
+function renderChartWithEvidence
 function renderDashboard
 function renderGeoToStaticSVG
 function renderNetworkToStaticSVG
@@ -22,6 +23,7 @@ interface DashboardChart
 interface DashboardLayout
 interface LegendLayout
 interface RenderDashboardOptions
+interface RenderEvidence
 interface RenderToImageOptions
 type ThemeInput
 ```

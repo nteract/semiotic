@@ -35,11 +35,15 @@ export const PASTELS_LIGHT: SemioticTheme = {
     background: "#fdf6f0",
     surface: "#fff5ee",
     text: "#4a3728",
-    textSecondary: "#8b7355",
+    // textSecondary and annotation/focus are deliberately deeper than the
+    // pastel marks: they render as text (ticks, editorial notes) and a focus
+    // ring, so they must clear WCAG AA (4.5:1 text, 3:1 indicator) against
+    // the cream background. Gated by semiotic-themes.contrast.test.ts.
+    textSecondary: "#7a644a",
     grid: "#e8d5c4",
     border: "#e8d5c4",
-    focus: "#c9a0dc",
-    annotation: "#c9a0dc",
+    focus: "#8a5fae",
+    annotation: "#8a5fae",
     success: "#9ad4a3",
     danger: "#e8869a",
     warning: "#f0c888",
@@ -109,7 +113,8 @@ export const BI_TOOL_LIGHT: SemioticTheme = {
     background: "#f5f6f8",
     surface: "#ffffff",
     text: "#2c3e50",
-    textSecondary: "#7f8c9b",
+    // 4.61:1 on #f5f6f8 — tick/secondary text must clear WCAG AA 4.5:1.
+    textSecondary: "#64717f",
     grid: "#d8dce3",
     border: "#d8dce3",
     focus: "#2563eb",
@@ -299,7 +304,9 @@ export const TUFTE_DARK: SemioticTheme = {
     grid: "#3d3c35",
     border: "#3d3c35",
     focus: "#c05050",
-    annotation: "#c05050",
+    // Brighter than primary: annotation paints editorial *text*, which needs
+    // WCAG AA 4.5:1 on the dark paper (#c05050 is only 3.7:1 here).
+    annotation: "#d06a6a",
     success: "#7a8b5a",
     danger: "#c05050",
     warning: "#c8a060",
@@ -337,7 +344,9 @@ export const JOURNALIST_LIGHT: SemioticTheme = {
     grid: "#d4d4d4",
     border: "#d4d4d4",
     focus: "#e45050",
-    annotation: "#e45050",
+    // Deeper than the headline red: annotation paints editorial *text*,
+    // which needs WCAG AA 4.5:1 on white (#e45050 is only 3.8:1).
+    annotation: "#c63b3b",
     success: "#2d7a3d",
     danger: "#c8303a",
     warning: "#d4a843",
@@ -413,7 +422,9 @@ export const PLAYFUL_LIGHT: SemioticTheme = {
     grid: "#e8d0f8",
     border: "#e8d0f8",
     focus: "#8b5cf6",
-    annotation: "#8b5cf6",
+    // Deeper violet than primary: annotation paints editorial *text*, which
+    // needs WCAG AA 4.5:1 on the near-white background (4.0:1 at #8b5cf6).
+    annotation: "#7a47e8",
     success: "#10d870",
     danger: "#ff4b6e",
     warning: "#ffaa33",

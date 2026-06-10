@@ -8,7 +8,7 @@ const THEMES = {
     fontFamily: "Inter, system-ui, sans-serif",
     light: {
       bg: "#fdf6f0", card: "#fff5ee", border: "#e8d5c4", text: "#4a3728",
-      muted: "#8b7355", dim: "#b09a7e", accent: "#c9a0dc", green: "#88d4ab", red: "#e8a0a0",
+      muted: "#7a644a", dim: "#b09a7e", accent: "#c9a0dc", green: "#88d4ab", red: "#e8a0a0",
     },
     dark: {
       bg: "#1a1525", card: "#251e35", border: "#3d3455", text: "#e8ddf0",
@@ -21,7 +21,7 @@ const THEMES = {
     fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
     light: {
       bg: "#f5f6f8", card: "#ffffff", border: "#d8dce3", text: "#2c3e50",
-      muted: "#7f8c9b", dim: "#a0aab5", accent: "#2563eb", green: "#16a34a", red: "#dc2626",
+      muted: "#64717f", dim: "#a0aab5", accent: "#2563eb", green: "#16a34a", red: "#dc2626",
     },
     dark: {
       bg: "#111827", card: "#1f2937", border: "#374151", text: "#f3f4f6",

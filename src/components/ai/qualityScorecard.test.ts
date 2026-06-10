@@ -19,6 +19,27 @@ describe("runQualityScorecard", () => {
     expect(report.summary.expertAgreementRate).toBeGreaterThanOrEqual(0.9)
   })
 
+  it("top-1 agreement rate stays above 85% across the canonical set", () => {
+    // The strict metric: the engine's #1 pick is an expert pick. 2026-06
+    // baseline is 92.9% (26/28) with two documented judgment-call misses
+    // (BubbleChart over ConnectedScatterplot; DotPlot over Heatmap on a
+    // crossed-categorical matrix). The floor sits one miss below the
+    // baseline — ratchet it upward as descriptor tuning closes the gap, and
+    // treat any drop below the floor as a descriptor regression, not a
+    // reason to relax the gate. Always report this number next to the
+    // lenient top-3 rate.
+    const report = runQualityScorecard(CANONICAL_FIXTURES)
+    expect(report.summary.top1AgreementRate).toBeGreaterThanOrEqual(0.85)
+  })
+
+  it("top-3 ranks distinct components, not variants of one chart", () => {
+    const report = runQualityScorecard(CANONICAL_FIXTURES)
+    for (const f of report.perFixture) {
+      const distinct = new Set(f.topThree.map((t) => t.component))
+      expect(distinct.size).toBe(f.topThree.length)
+    }
+  })
+
   it("emits per-capability tallies for every registered chart", () => {
     const report = runQualityScorecard(CANONICAL_FIXTURES)
     const names = new Set(report.perCapability.map((c) => c.component))

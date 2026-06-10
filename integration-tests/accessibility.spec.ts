@@ -526,9 +526,11 @@ test.describe("Accessibility - axe-core automated scanning", () => {
         .exclude("canvas") // canvas is opaque to axe — tested manually above
         // Excluded rules:
         // - landmark-one-main, region: test harness pages lack <main>; not a chart library concern
-        // - color-contrast: some example themes have low-contrast text (tracked separately)
         // - nested-interactive: ChartContainer toolbar nesting (tracked separately)
-        .disableRules(["landmark-one-main", "region", "color-contrast", "nested-interactive"])
+        // color-contrast is ENABLED: every shipped preset's text roles are
+        // gated at WCAG AA by src/components/semiotic-themes.contrast.test.ts,
+        // so DOM text painted from theme tokens must hold up here too.
+        .disableRules(["landmark-one-main", "region", "nested-interactive"])
         .analyze()
       expect(results.violations).toEqual([])
     })

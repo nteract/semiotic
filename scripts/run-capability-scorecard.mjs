@@ -42,7 +42,10 @@ console.log("============================")
 console.log(`Fixtures evaluated:        ${report.summary.fixtureCount}`)
 console.log(`Capabilities tested:       ${report.summary.capabilityCount}`)
 console.log(
-  `Expert agreement rate:     ${fmtPct(report.summary.expertAgreementRate)}`
+  `Expert agreement (top-3):  ${fmtPct(report.summary.expertAgreementRate)}`
+)
+console.log(
+  `Expert agreement (top-1):  ${fmtPct(report.summary.top1AgreementRate)}`
 )
 console.log(
   `Overall caveat coverage:   ${fmtPct(report.summary.overallCaveatCoverage)}`

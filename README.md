@@ -35,11 +35,11 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with the 47-chart capability catalog (XY, ordinal, network, realtime, geo, value), optimized for LLM code generation. Prefer family subpaths such as `semiotic/xy`, `semiotic/geo`, and `semiotic/value` when bundle size matters.
+- **`semiotic/ai`** — a single import with the 47-chart capability catalog (XY, ordinal, network, realtime, geo, value), optimized for LLM code generation. Note: the published entry files are pre-bundled, so importing one chart from `semiotic/ai` still ships most of the bundle — treat it as a codegen/tooling surface and use family subpaths (`semiotic/xy`, `semiotic/geo`, `semiotic/value`, …) in production code, at roughly half the single-chart cost.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
-- **`diagnoseConfig(component, props)`** — programmatic anti-pattern detector with 12 checks and actionable fixes
+- **`diagnoseConfig(component, props)`** — programmatic anti-pattern detector with actionable fixes, spanning validation, encoding, accessibility, and misleading-design (deception) checks
 - **`CLAUDE.md`** — instruction files auto-synced for Claude, Cursor, Copilot, Windsurf, and Cline
 - **`llms.txt`** — machine-readable documentation following the emerging standard
 

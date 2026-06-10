@@ -21,8 +21,15 @@ export const BarChartCapability: ChartCapability = {
     // BarChart's implicit aggregation hides the within-category distribution.
     "compare-categories": (p) => {
       if (!p.categoryCount) return 0
+      // A second crossed categorical (service × weekday, region × product)
+      // means flat bars silently aggregate one dimension away — the honest
+      // answers are GroupedBar/StackedBar/Heatmap, which show the matrix.
+      if (p.candidates.category.length >= 2) return 3
       const obsPerCategory = p.rowCount / p.categoryCount
-      if (obsPerCategory >= 10) return 3   // distribution-shaped — yield to distribution charts
+      // Raw-observation data (many rows per category, continuous y) makes a
+      // bar per row overdraw into noise — a distribution-chart shape, not a
+      // bar-chart shape. Score it as a poor fit, not a near-miss.
+      if (obsPerCategory >= 10) return 2
       return 5
     },
     "rank": 5,

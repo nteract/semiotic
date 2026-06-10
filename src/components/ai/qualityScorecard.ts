@@ -35,6 +35,8 @@ export interface PerCapabilityScore {
   rejectedOn: number
   /** Number of fixtures where this capability appeared in the top-3 ranked suggestions. */
   inTopThreeOn: number
+  /** Number of fixtures where this capability was the #1 ranked suggestion. */
+  topPickOn: number
   /** Fixtures where the human expert picked this chart AND it was in top-3 ranking. */
   expertAgreementCount: number
   /** Mean composite score across fixtures where it fit. */
@@ -56,6 +58,10 @@ export interface PerFixtureScore {
   rejectedCount: number
   /** True if the top-3 ranking contained at least one expected component (when expected is provided). */
   expertAgreement: boolean | null
+  /** True if the #1 ranked suggestion was an expected component — the strict
+   *  form of agreement. Reported alongside the lenient top-3 form so the
+   *  scorecard can't flatter itself with close-second behavior. */
+  topPickAgreement: boolean | null
   /** Did the engine honor `expectsNoFit`? */
   noFitHonored: boolean | null
 }
@@ -68,6 +74,11 @@ export interface ScorecardReport {
     capabilityCount: number
     /** Fraction of expectation-bearing fixtures where the engine agreed with the expert. */
     expertAgreementRate: number
+    /** Strict agreement: fraction of expectation-bearing fixtures where the
+     *  engine's #1 pick was an expert pick. Always reported next to the
+     *  lenient top-3 rate — the gap between the two is the honest measure of
+     *  how often the engine is merely "not completely wrong." */
+    top1AgreementRate: number
     /** Average caveat coverage across all suggestions. */
     overallCaveatCoverage: number
     /** Average variant utilization across all suggestions. */
@@ -91,6 +102,7 @@ export function runQualityScorecard(
       fitsOn: 0,
       rejectedOn: 0,
       inTopThreeOn: 0,
+      topPickOn: 0,
       expertAgreementCount: 0,
       averageScore: 0,
       caveatCoverage: 0,
@@ -129,19 +141,36 @@ export function runQualityScorecard(
         fittingCount: 0,
         rejectedCount: 0,
         expertAgreement: false,
+        topPickAgreement: false,
         noFitHonored: null,
       })
       continue
     }
 
-    const topThree = result.fitting.slice(0, 3).map((s) => ({
-      component: s.component,
-      variantKey: s.variant?.key,
-      score: s.score,
-    }))
+    // Top three *distinct components* — `fitting` is ranked per
+    // (component × variant), so a naive slice(0, 3) can be three variants of
+    // the same chart, which silently turns the lenient top-3 agreement
+    // metric into top-1. Dedupe by component, keeping each chart's
+    // best-ranked suggestion.
+    const topThree: Array<{ component: string; variantKey?: string; score: number }> = []
+    const seenComponents = new Set<string>()
+    for (const s of result.fitting) {
+      if (seenComponents.has(s.component)) continue
+      seenComponents.add(s.component)
+      topThree.push({
+        component: s.component,
+        variantKey: s.variant?.key,
+        score: s.score,
+      })
+      if (topThree.length === 3) break
+    }
 
     const expertAgreement = fixture.expected && fixture.expected.length > 0
       ? topThree.some((t) => fixture.expected!.includes(t.component))
+      : null
+
+    const topPickAgreement = fixture.expected && fixture.expected.length > 0
+      ? topThree.length > 0 && fixture.expected.includes(topThree[0].component)
       : null
 
     const noFitHonored = fixture.expectsNoFit === true
@@ -158,6 +187,7 @@ export function runQualityScorecard(
       fittingCount: result.fitting.length,
       rejectedCount: result.rejected.length,
       expertAgreement,
+      topPickAgreement,
       noFitHonored,
     })
 
@@ -178,6 +208,10 @@ export function runQualityScorecard(
     for (const t of topThree) {
       const row = perCapability.get(t.component)
       if (row) row.inTopThreeOn += 1
+    }
+    if (topThree[0]) {
+      const row = perCapability.get(topThree[0].component)
+      if (row) row.topPickOn += 1
     }
     if (fixture.expected && expertAgreement) {
       for (const t of topThree) {
@@ -209,6 +243,9 @@ export function runQualityScorecard(
   const expertAgreementRate = fixturesWithExpectations.length === 0
     ? 0
     : fixturesWithExpectations.filter((f) => f.expertAgreement === true).length / fixturesWithExpectations.length
+  const top1AgreementRate = fixturesWithExpectations.length === 0
+    ? 0
+    : fixturesWithExpectations.filter((f) => f.topPickAgreement === true).length / fixturesWithExpectations.length
 
   const allSuggestionCount = Array.from(suggestionCount.values()).reduce((a, b) => a + b, 0)
   const allCaveatCount = Array.from(caveatCount.values()).reduce((a, b) => a + b, 0)
@@ -221,6 +258,7 @@ export function runQualityScorecard(
       fixtureCount: fixtures.length,
       capabilityCount: capabilities.length,
       expertAgreementRate,
+      top1AgreementRate,
       overallCaveatCoverage: allSuggestionCount === 0 ? 0 : allCaveatCount / allSuggestionCount,
       overallVariantUtilization: allSuggestionCount === 0 ? 0 : allVariantCount / allSuggestionCount,
     },

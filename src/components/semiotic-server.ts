@@ -5,9 +5,12 @@ export {
   renderNetworkToStaticSVG,
   renderGeoToStaticSVG,
   renderChart,
+  renderChartWithEvidence,
   renderToImage,
   renderDashboard,
 } from "./server/renderToStaticSVG"
+
+export type { RenderEvidence } from "./server/renderEvidence"
 
 export type {
   RenderToImageOptions,

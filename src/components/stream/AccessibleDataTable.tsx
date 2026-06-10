@@ -425,8 +425,9 @@ const VISIBLE_TD_STYLE: React.CSSProperties = {
 const CAPTION_STYLE: React.CSSProperties = {
   textAlign: "left",
   fontSize: 11,
+  // #666 fallback = LIGHT_THEME.textSecondary; #999 fails WCAG AA for text.
   color:
-    "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #999))",
+    "var(--semiotic-data-table-muted-text, var(--semiotic-text-secondary, #666))",
   marginBottom: 4,
   fontStyle: "italic"
 }

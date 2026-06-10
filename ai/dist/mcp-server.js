@@ -32433,6 +32433,7 @@ ${errors.join("\n")}`
 }
 
 // ai/mcp-server.ts
+var import_server2 = require("semiotic/server");
 var import_ai3 = require("semiotic/ai");
 var {
   componentIndexFromSchema,
@@ -32563,6 +32564,16 @@ async function renderChartHandler(args) {
     };
   }
   let svg = result.svg;
+  let evidenceBlock = null;
+  try {
+    const { evidence } = (0, import_server2.renderChartWithEvidence)(component, props);
+    evidenceBlock = {
+      type: "text",
+      text: `Render evidence:
+${JSON.stringify(evidence, null, 2)}`
+    };
+  } catch {
+  }
   if (theme && Object.keys(theme).length > 0) {
     const validVars = Object.entries(theme).filter(([k]) => k.startsWith("--semiotic-")).map(([k, v]) => `${k}: ${v}`).join("; ");
     if (validVars) {
@@ -32576,7 +32587,10 @@ async function renderChartHandler(args) {
       const pngBuffer = await sharpFn(Buffer.from(svg)).png().toBuffer();
       const base643 = pngBuffer.toString("base64");
       return {
-        content: [{ type: "text", text: `data:image/png;base64,${base643}` }]
+        content: [
+          { type: "text", text: `data:image/png;base64,${base643}` },
+          ...evidenceBlock ? [evidenceBlock] : []
+        ]
       };
     } catch (err) {
       if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
@@ -32599,7 +32613,10 @@ ${svg}` }],
     }
   }
   return {
-    content: [{ type: "text", text: svg }]
+    content: [
+      { type: "text", text: svg },
+      ...evidenceBlock ? [evidenceBlock] : []
+    ]
   };
 }
 function filterUsageModeDiagnoses(component, usageMode, diagnoses) {
@@ -33191,7 +33208,7 @@ function createServer2() {
   );
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image, plus a "Render evidence" JSON block (mark counts by type, resolved axis domains, empty flag, annotation count, accessible name) \u2014 read the evidence instead of parsing the SVG to verify the chart actually rendered data marks. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
     {
       component: external_exports3.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
