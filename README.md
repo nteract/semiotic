@@ -320,13 +320,13 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/network` | **68 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **55 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
 | `semiotic/realtime` | **95 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/server` | **127 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/utils` | **37 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/server` | **128 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/utils` | **38 KB** | ThemeProvider, validators, serialization — no chart components |
 | `semiotic/recipes` | **9 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **4 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/ai` | **246 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai` | **250 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
 | `semiotic` | **203 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
