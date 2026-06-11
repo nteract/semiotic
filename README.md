@@ -411,13 +411,16 @@ Add to your MCP client config (e.g. `claude_desktop_config.json` for Claude Desk
 }
 ```
 
-No API keys or authentication required. The server runs locally via stdio. HTTP mode is also available for inspectors and web clients: `npx semiotic-mcp --http --port 3001`.
+No API keys or authentication required. The server runs locally via stdio. HTTP mode is also available for inspectors, web clients, and ChatGPT Apps SDK experiments: `npx semiotic-mcp --http --port 3001`.
+
+For ChatGPT developer mode, expose the HTTP endpoint over HTTPS with a tunnel and create a connector that points at `https://<your-tunnel>/mcp`. The experimental Apps SDK surface is `renderInteractiveChart`, which returns a `text/html;profile=mcp-app` widget template plus a hidden SVG payload rendered by Semiotic on the MCP server.
 
 ### Tools
 
 | Tool | Description |
 |------|-------------|
-| **`renderChart`** | Render a Semiotic chart to static SVG. Supports the components returned by `getSchema` that are marked `[renderable]`. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string or validation errors with fix suggestions. |
+| **`renderChart`** | Render a Semiotic chart to static SVG. Supports the components returned by `getSchema` that are marked `[renderable]`. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string plus a "Render evidence" JSON block (mark counts by scene type, resolved axis domains, empty flag, annotation count, accessible name) so agents can verify the chart drew data marks, or validation errors with fix suggestions. |
+| **`renderInteractiveChart`** | Render a static-data chart as a ChatGPT Apps widget. Uses the same Semiotic server render path as `renderChart`, then hydrates an iframe UI with fit, zoom, data, hover, and render-evidence controls. |
 | **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 47 chart schemas. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
 | **`suggestChart`** | Legacy sample-row recommender. Pass `{ data: [{...}, ...] }` with 1–5 sample objects plus optional broad intent/capability filters. |
 | **`suggestCharts`** | Capability-based recommender for bounded row data. Returns ranked chart suggestions with scores, reasons, caveats, import paths, and ready-to-use props. |
@@ -439,6 +442,7 @@ No API keys or authentication required. The server runs locally via stdio. HTTP 
 | **`semiotic://behavior-contracts`** | Agent-visible semantic rules for color precedence, required prop combinations, push refs, and renderability. |
 | **`semiotic://system-prompt`** | Compact AI instructions with import rules, chart props, SSR guidance, and pitfalls. |
 | **`semiotic://examples`** | Copy-paste chart examples by data shape. |
+| **`ui://semiotic/chart-widget.html`** | ChatGPT Apps / MCP Apps widget template used by `renderInteractiveChart`. |
 
 ### Prompts
 
@@ -488,6 +492,25 @@ Args: {
   }
 }
 → Returns: <svg>...</svg>
+```
+
+### Example: render a ChatGPT Apps widget
+
+```
+Tool: renderInteractiveChart
+Args: {
+  "component": "BarChart",
+  "props": {
+    "title": "Revenue by Quarter",
+    "data": [
+      { "quarter": "Q1", "revenue": 120 },
+      { "quarter": "Q2", "revenue": 180 }
+    ],
+    "categoryAccessor": "quarter",
+    "valueAccessor": "revenue"
+  }
+}
+→ Returns: structured chart summary for the model + hidden SVG/widget metadata for ChatGPT.
 ```
 
 ### Example: diagnose a broken config

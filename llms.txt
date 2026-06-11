@@ -27,7 +27,7 @@ Entry points: `semiotic`, `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`,
 
 ## AI Integration
 
-- [MCP Server](https://github.com/nteract/semiotic/blob/main/README.md#mcp-server): 5 tools — getSchema, suggestChart, renderChart, diagnoseConfig, reportIssue
+- [MCP Server](https://github.com/nteract/semiotic/blob/main/README.md#mcp-server): MCP tools for schemas, suggestions, diagnosis, static rendering, and ChatGPT Apps widget rendering via renderInteractiveChart
 - [AI Examples](https://github.com/nteract/semiotic/blob/main/ai/examples.md): Code examples for AI code generation
 - [System Prompt](https://github.com/nteract/semiotic/blob/main/ai/system-prompt.md): Compact component reference for LLM context
 

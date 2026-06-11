@@ -1,7 +1,7 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes fifteen tools, five resources, and two prompts:
+ * Exposes sixteen tools, six resources, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — legacy sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
@@ -17,6 +17,7 @@
  *   13. auditAccessibility — Chartability accessibility audit
  *   14. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
  *   15. applyTheme — returns usage guidance for theme presets
+ *   16. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -131,6 +132,8 @@ for (const tool of schema.tools) {
 const allComponentNames = Object.keys(schemaByComponent).sort()
 const componentNames = Object.keys(COMPONENT_REGISTRY).sort()
 const REPO = "nteract/semiotic"
+const SEMIOTIC_CHART_WIDGET_URI = "ui://semiotic/chart-widget.html"
+const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app"
 
 function aiFilePath(fileName: string): string {
   return path.resolve(__dirname, "..", fileName)
@@ -154,6 +157,31 @@ function textResource(uri: URL, mimeType: string, text: string) {
   }
 }
 
+function appResource(uri: URL, text: string) {
+  return {
+    contents: [{
+      uri: uri.href,
+      mimeType: MCP_APP_MIME_TYPE,
+      text,
+      _meta: {
+        ui: {
+          prefersBorder: true,
+          csp: {
+            connectDomains: [],
+            resourceDomains: [],
+          },
+        },
+        "openai/widgetDescription": "Interactive Semiotic chart preview rendered by the semiotic-mcp server.",
+        "openai/widgetPrefersBorder": true,
+        "openai/widgetCSP": {
+          connect_domains: [],
+          resource_domains: [],
+        },
+      },
+    }],
+  }
+}
+
 function promptMessage(text: string) {
   return {
     messages: [{
@@ -164,6 +192,293 @@ function promptMessage(text: string) {
       },
     }],
   }
+}
+
+function stripUnsafeSvg(svg: string): string {
+  // Defense-in-depth before the SVG is injected into the widget iframe via
+  // innerHTML: drop script elements, inline event handlers, and javascript:
+  // URLs. Semiotic's renderer never emits any of these, so stripping is safe.
+  return svg
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "")
+    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "")
+    .replace(/\s(href|xlink:href)\s*=\s*(["'])\s*javascript:[^"']*\2/gi, "")
+}
+
+function parseRenderEvidence(result: ToolResult): Record<string, unknown> | null {
+  const evidenceText = result.content.find((block) => block.text.startsWith("Render evidence:\n"))?.text
+  if (!evidenceText) return null
+  try {
+    return JSON.parse(evidenceText.replace(/^Render evidence:\n/, ""))
+  } catch {
+    return null
+  }
+}
+
+function chartTitleFromProps(component: string, props: Record<string, unknown>): string {
+  return typeof props.title === "string" && props.title.trim()
+    ? props.title.trim()
+    : component
+}
+
+function chartDatumCount(props: Record<string, unknown>): number | null {
+  if (Array.isArray(props.data)) return props.data.length
+  if (Array.isArray(props.nodes)) return props.nodes.length
+  if (Array.isArray(props.edges)) return props.edges.length
+  if (Array.isArray(props.links)) return props.links.length
+  return null
+}
+
+function renderSemioticChartWidgetHTML(): string {
+  return `
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: Canvas;
+      --fg: CanvasText;
+      --muted: color-mix(in srgb, CanvasText 62%, Canvas 38%);
+      --border: color-mix(in srgb, CanvasText 16%, Canvas 84%);
+      --panel: color-mix(in srgb, Canvas 94%, CanvasText 6%);
+      --accent: #2f6fed;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); }
+    main { display: grid; gap: 10px; padding: 12px; min-height: 100vh; }
+    header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    h1 { font-size: 16px; line-height: 1.25; margin: 0; font-weight: 650; }
+    .summary { margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+    button {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--fg);
+      border-radius: 6px;
+      font: inherit;
+      font-size: 12px;
+      padding: 6px 8px;
+      cursor: pointer;
+    }
+    button[aria-pressed="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+    input[type="range"] { width: 92px; }
+    .chart-shell {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-height: 260px;
+      background: white;
+    }
+    .chart-shell.fit svg { width: 100%; height: auto; }
+    .chart {
+      min-width: 360px;
+      padding: 10px;
+      transform-origin: top left;
+    }
+    .chart svg { display: block; max-width: none; }
+    .empty {
+      min-height: 240px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+    }
+    .drawer {
+      display: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: auto;
+      max-height: 220px;
+    }
+    .drawer.open { display: block; }
+    pre {
+      margin: 0;
+      padding: 10px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { position: sticky; top: 0; background: var(--panel); }
+    .hover {
+      position: fixed;
+      pointer-events: none;
+      z-index: 10;
+      max-width: 280px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+      box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+      font-size: 12px;
+      display: none;
+    }
+    @media (max-width: 520px) {
+      main { padding: 10px; }
+      header { display: grid; }
+      .toolbar { justify-content: start; }
+      .chart { min-width: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1 id="title">Semiotic chart</h1>
+        <div class="summary" id="summary">Waiting for a tool result...</div>
+      </div>
+      <div class="toolbar" aria-label="Chart controls">
+        <button id="fit" type="button" aria-pressed="true">Fit</button>
+        <button id="data" type="button" aria-pressed="false">Data</button>
+        <button id="evidence" type="button" aria-pressed="false">Evidence</button>
+        <label>Zoom <input id="zoom" type="range" min="60" max="180" value="100" /></label>
+      </div>
+    </header>
+    <section id="chartShell" class="chart-shell fit" aria-label="Rendered Semiotic chart">
+      <div id="chart" class="chart"><div class="empty">Ask ChatGPT to render a Semiotic chart.</div></div>
+    </section>
+    <section id="dataDrawer" class="drawer" aria-label="Chart data"></section>
+    <section id="evidenceDrawer" class="drawer" aria-label="Render evidence"><pre id="evidenceText">{}</pre></section>
+  </main>
+  <div id="hover" class="hover" role="status" aria-live="polite"></div>
+  <script>
+    const state = { output: null, meta: null };
+    const titleEl = document.getElementById("title");
+    const summaryEl = document.getElementById("summary");
+    const chartEl = document.getElementById("chart");
+    const chartShell = document.getElementById("chartShell");
+    const dataDrawer = document.getElementById("dataDrawer");
+    const evidenceDrawer = document.getElementById("evidenceDrawer");
+    const evidenceText = document.getElementById("evidenceText");
+    const hover = document.getElementById("hover");
+    const fitButton = document.getElementById("fit");
+    const dataButton = document.getElementById("data");
+    const evidenceButton = document.getElementById("evidence");
+    const zoom = document.getElementById("zoom");
+
+    function html(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function currentPayload() {
+      const openai = window.openai || {};
+      const output = state.output || openai.toolOutput || null;
+      const meta = state.meta || openai.toolResultMetadata || openai.toolResponseMetadata || openai._meta || null;
+      return { output, meta };
+    }
+
+    function sampleRows(meta) {
+      const props = meta?.props || {};
+      if (Array.isArray(props.data)) return props.data.slice(0, 50);
+      if (Array.isArray(props.nodes)) return props.nodes.slice(0, 50);
+      if (Array.isArray(props.edges)) return props.edges.slice(0, 50);
+      if (Array.isArray(props.links)) return props.links.slice(0, 50);
+      return [];
+    }
+
+    function renderTable(rows) {
+      if (!rows.length) return '<pre>No row data was provided in the widget metadata.</pre>';
+      const columns = Array.from(rows.reduce((set, row) => {
+        Object.keys(row || {}).forEach((key) => set.add(key));
+        return set;
+      }, new Set()));
+      return '<table><thead><tr>' + columns.map((col) => '<th>' + html(col) + '</th>').join('') +
+        '</tr></thead><tbody>' + rows.map((row) => '<tr>' + columns.map((col) => '<td>' + html(row?.[col]) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+    }
+
+    function render(output, meta) {
+      const payload = output || {};
+      const hidden = meta || {};
+      titleEl.textContent = payload.title || payload.component || "Semiotic chart";
+      summaryEl.textContent = payload.summary || "Rendered by semiotic-mcp.";
+      const svg = hidden.svg || payload.svg;
+      if (svg) {
+        chartEl.innerHTML = svg;
+      } else {
+        chartEl.innerHTML = '<div class="empty">No SVG payload received. The model-visible chart summary is still available above.</div>';
+      }
+      const rows = sampleRows(hidden);
+      dataDrawer.innerHTML = renderTable(rows);
+      evidenceText.textContent = JSON.stringify(payload.evidence || hidden.evidence || {}, null, 2);
+    }
+
+    function rerenderFromGlobals() {
+      const payload = currentPayload();
+      render(payload.output, payload.meta);
+    }
+
+    fitButton.addEventListener("click", () => {
+      const enabled = !chartShell.classList.contains("fit");
+      chartShell.classList.toggle("fit", enabled);
+      fitButton.setAttribute("aria-pressed", String(enabled));
+    });
+    dataButton.addEventListener("click", () => {
+      const open = !dataDrawer.classList.contains("open");
+      dataDrawer.classList.toggle("open", open);
+      dataButton.setAttribute("aria-pressed", String(open));
+    });
+    evidenceButton.addEventListener("click", () => {
+      const open = !evidenceDrawer.classList.contains("open");
+      evidenceDrawer.classList.toggle("open", open);
+      evidenceButton.setAttribute("aria-pressed", String(open));
+    });
+    zoom.addEventListener("input", () => {
+      chartEl.style.transform = 'scale(' + Number(zoom.value) / 100 + ')';
+      chartEl.style.width = (10000 / Number(zoom.value)) + '%';
+    });
+    chartEl.addEventListener("mousemove", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element) || target === chartEl) {
+        hover.style.display = "none";
+        return;
+      }
+      const label = target.getAttribute("aria-label") || target.textContent?.trim() || target.tagName.toLowerCase();
+      hover.textContent = label.slice(0, 180);
+      hover.style.left = Math.min(event.clientX + 12, window.innerWidth - 300) + "px";
+      hover.style.top = Math.min(event.clientY + 12, window.innerHeight - 70) + "px";
+      hover.style.display = "block";
+    });
+    chartEl.addEventListener("mouseleave", () => {
+      hover.style.display = "none";
+    });
+    window.addEventListener("message", (event) => {
+      if (event.source !== window.parent) return;
+      const message = event.data;
+      if (!message || message.jsonrpc !== "2.0") return;
+      if (message.method === "ui/notifications/tool-result") {
+        state.output = message.params?.structuredContent || null;
+        state.meta = message.params?._meta || null;
+        render(state.output, state.meta);
+      }
+    }, { passive: true });
+    window.addEventListener("openai:set_globals", (event) => {
+      const globals = event.detail?.globals || {};
+      state.output = globals.toolOutput || state.output;
+      state.meta = globals.toolResultMetadata || globals.toolResponseMetadata || globals._meta || state.meta;
+      rerenderFromGlobals();
+    }, { passive: true });
+    rerenderFromGlobals();
+  </script>
+</body>
+</html>`.trim()
 }
 
 // ── Tool handlers ────────────────────────────────────────────────────────
@@ -190,6 +505,7 @@ type ToolResult = {
   content: Array<{ type: "text"; text: string }>
   isError?: boolean
   structuredContent?: Record<string, unknown>
+  _meta?: Record<string, unknown>
 }
 
 async function getSchemaHandler(args: { component?: string }): Promise<ToolResult> {
@@ -338,6 +654,56 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
       { type: "text" as const, text: svg },
       ...(evidenceBlock ? [evidenceBlock] : []),
     ],
+  }
+}
+
+async function renderInteractiveChartHandler(args: {
+  component?: string
+  props?: Record<string, any>
+  theme?: Record<string, string>
+}): Promise<ToolResult> {
+  const component = args.component
+  const props: Record<string, any> = args.props ?? {}
+  const rendered = await renderChartHandler({
+    component,
+    props,
+    theme: args.theme,
+    format: "svg",
+  })
+
+  if (rendered.isError) return rendered
+
+  const svg = stripUnsafeSvg(rendered.content[0]?.text ?? "")
+  const evidence = parseRenderEvidence(rendered)
+  const title = chartTitleFromProps(component || "Semiotic chart", props)
+  const datumCount = chartDatumCount(props)
+  const summary = [
+    `Rendered ${title} with ${component}.`,
+    datumCount == null ? "No row count was inferred from props." : `${datumCount} input row${datumCount === 1 ? "" : "s"} available in the widget data drawer.`,
+    "Use the widget controls to zoom, fit width, inspect data, and inspect render evidence.",
+  ].join(" ")
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: `Rendered ${title} (${component}) as an interactive ChatGPT Apps widget.`,
+    }],
+    structuredContent: {
+      component: component ?? "SemioticChart",
+      title,
+      summary,
+      datumCount,
+      evidence,
+    },
+    _meta: {
+      component,
+      title,
+      props,
+      theme: args.theme ?? null,
+      svg,
+      evidence,
+      generatedAt: new Date().toISOString(),
+    },
   }
 }
 
@@ -948,6 +1314,28 @@ function createServer(): McpServer {
     (uri) => textResource(uri, "text/markdown", readAIFile("examples.md"))
   )
 
+  srv.registerResource(
+    "semiotic-chatgpt-chart-widget",
+    SEMIOTIC_CHART_WIDGET_URI,
+    {
+      title: "Semiotic ChatGPT Chart Widget",
+      description: "MCP Apps widget template for interactive Semiotic chart previews inside ChatGPT.",
+      mimeType: MCP_APP_MIME_TYPE,
+      _meta: {
+        ui: {
+          prefersBorder: true,
+          csp: {
+            connectDomains: [],
+            resourceDomains: [],
+          },
+        },
+        "openai/widgetDescription": "Interactive Semiotic chart preview rendered by the semiotic-mcp server.",
+        "openai/widgetPrefersBorder": true,
+      },
+    },
+    (uri) => appResource(uri, renderSemioticChartWidgetHTML())
+  )
+
   srv.registerPrompt(
     "build-semiotic-chart",
     {
@@ -1049,6 +1437,39 @@ function createServer(): McpServer {
       format: z.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns a Base64-encoded PNG image. PNG requires the 'sharp' package."),
     },
     renderChartHandler
+  )
+
+  srv.registerTool(
+    "renderInteractiveChart",
+    {
+      title: "Render interactive Semiotic chart",
+      description: `Render a static-data Semiotic chart as a ChatGPT Apps widget. Use this after suggestCharts/getSchema/diagnoseConfig when the user wants to see an interactive chart inside ChatGPT. The server renders Semiotic to SVG and the widget adds fit, zoom, data, hover, and render-evidence controls. Available components: ${componentNames.join(", ")}.`,
+      inputSchema: {
+        component: z.string().describe("Renderable chart component name, e.g. 'LineChart', 'BarChart', 'GaugeChart'."),
+        props: z.record(z.string(), z.unknown()).optional().describe("Static Semiotic chart props, including data/accessors where required."),
+        theme: z.record(z.string(), z.string()).optional().describe("CSS custom properties such as { '--semiotic-bg': '#fff', '--semiotic-text': '#111' }. Only --semiotic-* variables are applied."),
+      },
+      outputSchema: {
+        component: z.string(),
+        title: z.string(),
+        summary: z.string(),
+        datumCount: z.number().nullable(),
+        evidence: z.record(z.string(), z.unknown()).nullable(),
+      },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+      _meta: {
+        ui: { resourceUri: SEMIOTIC_CHART_WIDGET_URI },
+        "openai/outputTemplate": SEMIOTIC_CHART_WIDGET_URI,
+        "openai/toolInvocation/invoking": "Rendering Semiotic chart...",
+        "openai/toolInvocation/invoked": "Rendered Semiotic chart.",
+      },
+    },
+    renderInteractiveChartHandler
   )
 
   srv.tool(
@@ -1342,8 +1763,8 @@ async function main() {
 
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
-      console.error("Tools: getSchema, suggestChart, suggestCharts, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme")
-      console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples")
+      console.error("Tools: getSchema, suggestChart, suggestCharts, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme")
+      console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html")
     })
   } else {
     // Default: stdio mode for Claude Desktop, Claude Code, Cursor, etc.
