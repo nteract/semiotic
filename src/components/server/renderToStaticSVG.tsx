@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { LegendLayout } from "../types/legendTypes"
+import { extractRenderEvidence, type RenderEvidence } from "./renderEvidence"
 import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 /**
  * Server-side rendering of Semiotic charts to standalone SVG strings.
@@ -1771,6 +1772,23 @@ export function renderChart(
   }
 
   return svg
+}
+
+/**
+ * Render a chart and return the SVG alongside structured render evidence —
+ * mark counts by scene type, resolved axis domains, an `empty` flag,
+ * annotation count, and the accessible name — computed from the rendered
+ * output. The same payload the MCP `renderChart` tool appends to its
+ * response, so agents can verify a chart actually drew data marks without
+ * parsing SVG.
+ */
+export function renderChartWithEvidence(
+  component: ChartName,
+  props: Datum,
+  options?: RenderChartOptions
+): { svg: string; evidence: RenderEvidence } {
+  const svg = renderChart(component, props, options)
+  return { svg, evidence: extractRenderEvidence(svg, { annotations: props.annotations }) }
 }
 
 // ── Image export ────────────────────────────────────────────────────────

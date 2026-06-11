@@ -323,6 +323,7 @@ describe("MCP protocol round-trip", () => {
       "interrogateChart",
       "proposeChartVariants",
       "renderChart",
+      "renderInteractiveChart",
       "repairChartConfig",
       "reportIssue",
       "suggestChart",
@@ -344,6 +345,7 @@ describe("MCP protocol round-trip", () => {
       "semiotic://examples",
       "semiotic://schema",
       "semiotic://system-prompt",
+      "ui://semiotic/chart-widget.html",
     ])
   })
 
@@ -380,6 +382,21 @@ describe("MCP protocol round-trip", () => {
     expect(ids).toContain("color.category-precedence")
     expect(ids).toContain("streaming.push-mode-data")
     expect(ids).toContain("props.required-combinations")
+  })
+
+  it("resources/read returns the ChatGPT Apps chart widget", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "ui://semiotic/chart-widget.html",
+    }, "resources-read-chart-widget")
+
+    expect(result.result).toBeDefined()
+    const content = result.result.contents[0]
+    expect(content.mimeType).toBe("text/html;profile=mcp-app")
+    expect(content.text).toContain("ui/notifications/tool-result")
+    expect(content.text).toContain("Rendered Semiotic chart")
+    expect(content._meta.ui.prefersBorder).toBe(true)
+    expect(content._meta.ui.csp.connectDomains).toEqual([])
+    expect(content._meta["openai/widgetDescription"]).toContain("Semiotic chart")
   })
 
   it("prompts/list exposes chart build and debug workflows", async () => {
@@ -584,6 +601,41 @@ describe("MCP protocol round-trip", () => {
     expect(text).toContain("</svg>")
   })
 
+  it("renderChart appends a render-evidence block", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "renderChart",
+      arguments: {
+        component: "BarChart",
+        props: {
+          title: "Evidence Check",
+          data: [
+            { category: "A", value: 10 },
+            { category: "B", value: 20 },
+          ],
+          categoryAccessor: "category",
+          valueAccessor: "value",
+          width: 300,
+          height: 200,
+          annotations: [{ type: "y-threshold", value: 15, label: "target" }],
+        },
+      },
+    }, "render-evidence")
+
+    expect(result.result.isError).toBeFalsy()
+    const evidenceBlock = result.result.content.find((c: { text: string }) =>
+      c.text.startsWith("Render evidence:\n")
+    )
+    expect(evidenceBlock).toBeDefined()
+    const evidence = JSON.parse(evidenceBlock.text.replace(/^Render evidence:\n/, ""))
+    expect(evidence.empty).toBe(false)
+    expect(evidence.markCounts.rect).toBeGreaterThanOrEqual(2)
+    expect(evidence.annotationCount).toBe(1)
+    expect(evidence.accessibleName).toBe("Evidence Check")
+    const allTicks = evidence.axes.flatMap((a: { tickLabels: string[] }) => a.tickLabels)
+    expect(allTicks).toContain("A")
+    expect(allTicks).toContain("B")
+  })
+
   it("renderChart works for a newly repaired registry component", async () => {
     const result = await sendRequest(proc, "tools/call", {
       name: "renderChart",
@@ -619,6 +671,47 @@ describe("MCP protocol round-trip", () => {
 
     expect(result.result.isError).toBe(true)
     expect(result.result.content[0].text).toContain("Unknown component")
+  })
+
+  it("renderInteractiveChart returns a ChatGPT Apps widget payload", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "renderInteractiveChart",
+      arguments: {
+        component: "BarChart",
+        props: {
+          title: "Revenue by Region",
+          data: [
+            { region: "North", revenue: 10 },
+            { region: "South", revenue: 18 },
+          ],
+          categoryAccessor: "region",
+          valueAccessor: "revenue",
+          width: 320,
+          height: 220,
+        },
+      },
+    }, "render-app-chart")
+
+    expect(result.result).toBeDefined()
+    expect(result.result.isError).toBeFalsy()
+    expect(result.result.content[0].text).toContain("interactive ChatGPT Apps widget")
+    expect(result.result.structuredContent.component).toBe("BarChart")
+    expect(result.result.structuredContent.title).toBe("Revenue by Region")
+    expect(result.result.structuredContent.datumCount).toBe(2)
+    expect(result.result.structuredContent.evidence).toBeTruthy()
+    expect(result.result._meta.svg).toContain("<svg")
+    expect(result.result._meta.props.data).toHaveLength(2)
+  })
+
+  it("renderInteractiveChart advertises its Apps SDK widget template", async () => {
+    const result = await sendRequest(proc, "tools/list", {}, "list-app-render-shape")
+
+    const tools = result.result.tools as Array<{ name: string; _meta?: Record<string, any>; annotations?: Record<string, unknown> }>
+    const render = tools.find((t) => t.name === "renderInteractiveChart")!
+    expect(render._meta?.ui).toEqual({ resourceUri: "ui://semiotic/chart-widget.html" })
+    expect(render._meta?.["openai/outputTemplate"]).toBe("ui://semiotic/chart-widget.html")
+    expect(render.annotations?.readOnlyHint).toBe(true)
+    expect(render.annotations?.destructiveHint).toBe(false)
   })
 
   it("renderChart is strict about data: HOCs without a data prop fail to render", async () => {

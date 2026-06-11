@@ -163,6 +163,7 @@ HOC charts render SVG automatically in server environments. For standalone gener
 import { renderChart, renderToImage, renderToAnimatedGif, renderDashboard } from "semiotic/server"
 
 const svg = renderChart("BarChart", { data, categoryAccessor, valueAccessor, theme: "tufte", showLegend, showGrid, annotations })
+const { svg: svg2, evidence } = renderChartWithEvidence("BarChart", { ... })  // + render evidence: markCounts by scene type, axis domains, empty flag, annotationCount, accessibleName
 const png = await renderToImage("LineChart", { ... }, { format: "png", scale: 2 })  // requires sharp
 const gif = await renderToAnimatedGif("line", data, { xAccessor, yAccessor, theme: "dark" }, { fps: 12, transitionFrames: 4, decay: { type: "linear" } })  // requires sharp + gifenc
 const dashboard = renderDashboard([{ component: "BarChart", props }, { component: "PieChart", colSpan: 2, props }], { title, theme, layout: { columns: 2 } })
