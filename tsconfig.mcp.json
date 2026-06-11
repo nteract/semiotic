@@ -13,17 +13,17 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "react-jsx",
     "declaration": false,
-    "rootDir": ".",
+    "rootDir": "./ai",
     "baseUrl": ".",
     "paths": {
       "semiotic/ai": ["./dist/semiotic-ai.d.ts"],
-      "semiotic/geo": ["./dist/semiotic-geo.d.ts"]
+      "semiotic/geo": ["./dist/semiotic-geo.d.ts"],
+      "semiotic/server": ["./dist/semiotic-server.d.ts"]
     }
   },
   "include": [
     "./ai/mcp-server.ts",
     "./ai/renderHOCToSVG.tsx",
-    "./ai/componentRegistry.ts",
-    "./src/components/server/renderEvidence.ts"
+    "./ai/componentRegistry.ts"
   ]
 }

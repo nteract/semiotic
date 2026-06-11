@@ -371,6 +371,104 @@ const transitionEvents = [
   }
 ]
 
+// Category × category matrix with a numeric value — fixture for Heatmap.
+// Dense enough (8 services × 7 weekdays = 56 cells) that a matrix is the
+// honest expert answer over grouped bars.
+const incidentsByServiceAndDay = (() => {
+  const services = [
+    "auth", "billing", "search", "ingest",
+    "notify", "reports", "exports", "webhooks"
+  ]
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  return services.flatMap((service, si) =>
+    days.map((day, di) => ({
+      service,
+      day,
+      incidents: Math.round(
+        2 + Math.abs(Math.sin(si * 1.7 + di)) * 9 + (di >= 5 ? -1.5 : 1.5)
+      )
+    }))
+  )
+})()
+
+// Single focal value against an implicit 0–100 plan — fixture for GaugeChart.
+const capacityUtilization = [{ metric: "Cluster capacity used", value: 78 }]
+
+// Geo flows: FeatureCollection + point nodes + weighted origin→destination
+// flows — the shape profileData's geo branch exposes as profile.geo.points /
+// profile.geo.flows. Fixture for FlowMap.
+const shippingFlows = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      id: "outline",
+      properties: { name: "Region" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [-125, 24],
+            [-66, 24],
+            [-66, 50],
+            [-125, 50],
+            [-125, 24]
+          ]
+        ]
+      }
+    }
+  ],
+  points: [
+    { id: "SEA", lon: -122.3, lat: 47.6 },
+    { id: "SFO", lon: -122.4, lat: 37.8 },
+    { id: "DEN", lon: -104.9, lat: 39.7 },
+    { id: "ORD", lon: -87.6, lat: 41.9 },
+    { id: "ATL", lon: -84.4, lat: 33.7 },
+    { id: "JFK", lon: -73.8, lat: 40.6 }
+  ],
+  flows: [
+    { source: "SEA", target: "ORD", value: 320 },
+    { source: "SFO", target: "JFK", value: 540 },
+    { source: "SFO", target: "ATL", value: 210 },
+    { source: "DEN", target: "ORD", value: 180 },
+    { source: "ORD", target: "JFK", value: 460 },
+    { source: "ATL", target: "JFK", value: 250 }
+  ]
+}
+
+// Geo points with a travel-cost field — fixture for DistanceCartogram
+// (cost-space distortion around a center point).
+const travelTimesFromHQ = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      id: "outline",
+      properties: { name: "Region" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [-125, 24],
+            [-66, 24],
+            [-66, 50],
+            [-125, 50],
+            [-125, 24]
+          ]
+        ]
+      }
+    }
+  ],
+  points: [
+    { id: "HQ", lon: -122.4, lat: 37.8, cost: 0 },
+    { id: "Seattle", lon: -122.3, lat: 47.6, cost: 95 },
+    { id: "Denver", lon: -104.9, lat: 39.7, cost: 150 },
+    { id: "Chicago", lon: -87.6, lat: 41.9, cost: 245 },
+    { id: "Atlanta", lon: -84.4, lat: 33.7, cost: 280 },
+    { id: "New York", lon: -73.8, lat: 40.6, cost: 330 }
+  ]
+}
+
 export const CANONICAL_FIXTURES: ReadonlyArray<ScorecardFixture> = [
   // Time-series family
   {
@@ -546,6 +644,42 @@ export const CANONICAL_FIXTURES: ReadonlyArray<ScorecardFixture> = [
     data: transitionEvents,
     intent: "flow",
     expected: ["SankeyDiagram", "ProcessSankey", "ChordDiagram"]
+  },
+
+  // Category × category matrix — exercises Heatmap
+  {
+    name: "incidents by service and weekday, intent=compare-categories",
+    shape: "56 cells = 8 services × 7 weekdays, numeric incident count",
+    data: incidentsByServiceAndDay,
+    intent: "compare-categories",
+    expected: ["Heatmap", "GroupedBarChart"]
+  },
+  // Single focal value — exercises GaugeChart (BigNumber is the co-equal
+  // expert answer for an unthresholded single value, so both count).
+  {
+    name: "capacity utilization single value, intent=part-to-whole",
+    shape: "1 row, one numeric value against an implicit 0–100 plan",
+    data: capacityUtilization,
+    intent: "part-to-whole",
+    expected: ["GaugeChart", "BigNumber"]
+  },
+  // Geo origin→destination flows — exercises FlowMap
+  {
+    name: "shipping flows between cities, intent=flow",
+    shape: "6 lat/lon nodes, 6 weighted flows, 1 outline feature",
+    data: [],
+    rawInput: shippingFlows,
+    intent: "flow",
+    expected: ["FlowMap"]
+  },
+  // Geo points with travel cost — exercises DistanceCartogram
+  {
+    name: "travel times from HQ, intent=geo",
+    shape: "6 lat/lon points with a cost field measured from a center",
+    data: [],
+    rawInput: travelTimesFromHQ,
+    intent: "geo",
+    expected: ["DistanceCartogram", "ProportionalSymbolMap"]
   },
 
   // Stress fixtures — expect no fitting chart for these.

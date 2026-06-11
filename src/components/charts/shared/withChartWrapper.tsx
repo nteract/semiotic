@@ -50,7 +50,10 @@ const EMPTY_STYLE: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  color: "var(--semiotic-text-secondary, #999)",
+  // Fallback matches LIGHT_THEME.textSecondary (#666 — 5.7:1 on white).
+  // #999 was 2.8:1, a WCAG AA failure axe caught once color-contrast was
+  // re-enabled in the integration scan.
+  color: "var(--semiotic-text-secondary, #666)",
   fontSize: 13,
   fontFamily: "inherit",
   border: "1px dashed var(--semiotic-border, #ddd)",

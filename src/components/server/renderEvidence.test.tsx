@@ -1,110 +1,155 @@
-// Polyfill TextEncoder/TextDecoder for react-dom/server in jsdom
-import { TextEncoder, TextDecoder } from "util"
-Object.assign(global, { TextEncoder, TextDecoder })
+import { describe, expect, it } from "vitest"
 
-import { extractRenderEvidence } from "./renderEvidence"
 import { renderChart, renderChartWithEvidence } from "./renderToStaticSVG"
 
-// ── Standalone server SVG dialect (renderChart output) ───────────────
+/**
+ * Render evidence — ground truth emitted from the same scene the SVG
+ * converter walks. These tests pin the contract the MCP renderChart tool
+ * and agent repair loops depend on: marks are counted from the rendered
+ * scene (never inferred from props), emptiness is explicit, and domains
+ * are the *resolved* scale domains.
+ */
+
+const lineData = Array.from({ length: 12 }, (_, i) => ({
+  month: i + 1,
+  revenue: 100 + i * 12,
+}))
+
+const barData = [
+  { product: "Widget", units: 480 },
+  { product: "Gadget", units: 620 },
+  { product: "Sprocket", units: 290 },
+]
 
 describe("renderChartWithEvidence", () => {
-  const barProps = {
-    title: "Revenue by Region",
-    data: [
-      { region: "North", revenue: 10 },
-      { region: "South", revenue: 18 },
-      { region: "West", revenue: 14 }
-    ],
-    categoryAccessor: "region",
-    valueAccessor: "revenue",
-    width: 320,
-    height: 220
-  }
+  it("returns the same SVG renderChart returns", () => {
+    const props = {
+      data: lineData,
+      xAccessor: "month",
+      yAccessor: "revenue",
+      title: "Revenue",
+    }
+    const svgOnly = renderChart("LineChart", props)
+    const { svg } = renderChartWithEvidence("LineChart", props)
+    expect(svg).toBe(svgOnly)
+  })
 
-  it("returns the same SVG as renderChart plus evidence", () => {
-    const { svg, evidence } = renderChartWithEvidence("BarChart", barProps)
-    expect(svg).toBe(renderChart("BarChart", barProps))
+  it("emits XY evidence with marks, domains, and the component name", () => {
+    const { evidence } = renderChartWithEvidence("LineChart", {
+      data: lineData,
+      xAccessor: "month",
+      yAccessor: "revenue",
+      title: "Revenue over time",
+    })
+    expect(evidence.component).toBe("LineChart")
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.status).toBe("ok")
     expect(evidence.empty).toBe(false)
-    expect(evidence.totalMarks).toBeGreaterThanOrEqual(3)
-    expect(evidence.markCounts.rect).toBeGreaterThanOrEqual(3)
+    expect(evidence.markCount).toBeGreaterThan(0)
+    expect(Object.keys(evidence.markCountByType).length).toBeGreaterThan(0)
+    // Resolved domains cover the data (extentPadding may widen them).
+    expect(evidence.xDomain).toBeDefined()
+    expect(evidence.xDomain![0]).toBeLessThanOrEqual(1)
+    expect(evidence.xDomain![1]).toBeGreaterThanOrEqual(12)
+    expect(evidence.yDomain).toBeDefined()
+    expect(evidence.yDomain![1]).toBeGreaterThanOrEqual(232)
+    expect(evidence.ariaLabel).toBe("Revenue over time")
+    expect(evidence.warnings).toEqual([])
   })
 
-  it("extracts axis tick labels and resolved domain", () => {
-    const { evidence } = renderChartWithEvidence("BarChart", barProps)
-    expect(evidence.axes.length).toBeGreaterThan(0)
-    const allTicks = evidence.axes.flatMap(a => a.tickLabels)
-    expect(allTicks).toContain("North")
-    expect(allTicks).toContain("South")
-    const withDomain = evidence.axes.find(a => a.domain)
-    expect(withDomain?.domain).toHaveLength(2)
+  it("reports an empty render honestly", () => {
+    const { svg, evidence } = renderChartWithEvidence("LineChart", {
+      data: [],
+      xAccessor: "month",
+      yAccessor: "revenue",
+    })
+    expect(svg).toContain("<svg")
+    expect(evidence.status).toBe("empty")
+    expect(evidence.empty).toBe(true)
+    expect(evidence.markCount).toBe(0)
+    expect(evidence.warnings).toContain("EMPTY_SCENE")
   })
 
-  it("reads the accessible name from the rendered title", () => {
-    const { evidence } = renderChartWithEvidence("BarChart", barProps)
-    expect(evidence.accessibleName).toBe("Revenue by Region")
-    expect(evidence.title).toBe("Revenue by Region")
-  })
-
-  it("counts annotations from props", () => {
+  it("emits ordinal evidence with the category domain", () => {
     const { evidence } = renderChartWithEvidence("BarChart", {
-      ...barProps,
+      data: barData,
+      categoryAccessor: "product",
+      valueAccessor: "units",
+      title: "Sales",
+    })
+    expect(evidence.frameType).toBe("ordinal")
+    expect(evidence.empty).toBe(false)
+    expect(evidence.categories).toEqual(["Widget", "Gadget", "Sprocket"])
+    expect(evidence.yDomain).toBeDefined()
+    expect(evidence.yDomain![1]).toBeGreaterThanOrEqual(620)
+  })
+
+  it("emits network evidence with node and edge counts", () => {
+    const { evidence } = renderChartWithEvidence("SankeyDiagram", {
+      edges: [
+        { source: "A", target: "B", value: 10 },
+        { source: "B", target: "C", value: 6 },
+      ],
+      title: "Flow",
+    })
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.empty).toBe(false)
+    expect(evidence.nodeCount).toBeGreaterThanOrEqual(3)
+    expect(evidence.edgeCount).toBe(2)
+    expect(evidence.markCount).toBe(
+      (evidence.nodeCount ?? 0) + (evidence.edgeCount ?? 0)
+    )
+  })
+
+  it("emits geo evidence from rendered features", () => {
+    const { evidence } = renderChartWithEvidence("ChoroplethMap", {
+      areas: [
+        {
+          type: "Feature",
+          id: "CA",
+          properties: { name: "California", value: 39 },
+          geometry: {
+            type: "Polygon",
+            coordinates: [[[-124, 32], [-114, 32], [-114, 42], [-124, 42], [-124, 32]]],
+          },
+        },
+        {
+          type: "Feature",
+          id: "TX",
+          properties: { name: "Texas", value: 29 },
+          geometry: {
+            type: "Polygon",
+            coordinates: [[[-106, 26], [-93, 26], [-93, 36], [-106, 36], [-106, 26]]],
+          },
+        },
+      ],
+      valueAccessor: "value",
+      title: "States",
+    })
+    expect(evidence.frameType).toBe("geo")
+    expect(evidence.empty).toBe(false)
+    expect(evidence.markCount).toBeGreaterThanOrEqual(2)
+  })
+
+  it("counts annotations supplied to the render", () => {
+    const { evidence } = renderChartWithEvidence("LineChart", {
+      data: lineData,
+      xAccessor: "month",
+      yAccessor: "revenue",
       annotations: [
-        { type: "category-highlight", category: "North", label: "leader" },
-        { type: "y-threshold", value: 15, label: "target" }
-      ]
+        { type: "y-threshold", value: 150, label: "Target" },
+        { type: "label", month: 6, revenue: 172, label: "Mid-year" },
+      ],
     })
     expect(evidence.annotationCount).toBe(2)
   })
 
-  it("reports a LineChart path mark", () => {
+  it("generates an aria label when no title or description is given", () => {
     const { evidence } = renderChartWithEvidence("LineChart", {
-      data: [
-        { x: 1, y: 2 },
-        { x: 2, y: 5 },
-        { x: 3, y: 4 }
-      ],
-      xAccessor: "x",
-      yAccessor: "y",
-      width: 320,
-      height: 220
+      data: lineData,
+      xAccessor: "month",
+      yAccessor: "revenue",
     })
-    expect(evidence.empty).toBe(false)
-    expect(evidence.markCounts.path).toBeGreaterThanOrEqual(1)
-  })
-})
-
-// ── HOC SSR dialect (wrapper div + data svg + overlay svg) ────────────
-
-describe("extractRenderEvidence — HOC SSR markup", () => {
-  const hocMarkup = `<div class="stream-ordinal-frame" role="img" aria-label="Revenue by Region" style="position:relative"><svg xmlns="http://www.w3.org/2000/svg" width="320" height="220"><g transform="translate(70,50)"><rect x="18" y="51" width="77" height="58" fill="#1f77b4"></rect><rect x="114" y="5" width="77" height="104" fill="#1f77b4"></rect></g></svg><svg role="img" width="320" height="220"><title>Revenue by Region</title><desc>Revenue by Region — ordinal data visualization</desc><g transform="translate(70,50)"><g class="ordinal-axes"><g class="semiotic-axis semiotic-axis-bottom" data-orient="bottom"><line x1="0" y1="110" x2="210" y2="110"></line><g><text class="semiotic-axis-tick">North</text></g><g><text class="semiotic-axis-tick">South</text></g></g><g class="semiotic-axis semiotic-axis-left" data-orient="left"><line x1="0" y1="0" x2="0" y2="110"></line><g><text class="semiotic-axis-tick">0</text></g><g><text class="semiotic-axis-tick">15</text></g></g></g></g></svg></div>`
-
-  it("counts only data-layer marks, not axis chrome", () => {
-    const evidence = extractRenderEvidence(hocMarkup)
-    expect(evidence.markCounts).toEqual({ rect: 2 })
-    expect(evidence.totalMarks).toBe(2)
-    expect(evidence.empty).toBe(false)
-  })
-
-  it("extracts per-orient axes with tick labels and domains", () => {
-    const evidence = extractRenderEvidence(hocMarkup)
-    expect(evidence.axes).toHaveLength(2)
-    const bottom = evidence.axes.find(a => a.orient === "bottom")
-    expect(bottom?.tickLabels).toEqual(["North", "South"])
-    expect(bottom?.domain).toEqual(["North", "South"])
-    const left = evidence.axes.find(a => a.orient === "left")
-    expect(left?.domain).toEqual(["0", "15"])
-  })
-
-  it("prefers the wrapper aria-label as the accessible name", () => {
-    const evidence = extractRenderEvidence(hocMarkup)
-    expect(evidence.accessibleName).toBe("Revenue by Region")
-    expect(evidence.description).toContain("ordinal data visualization")
-  })
-
-  it("flags an empty render", () => {
-    const empty = `<div class="stream-xy-frame" role="img" aria-label="XY chart"><svg width="320" height="220"><g></g></svg><svg role="img"><title>XY Chart</title></svg></div>`
-    const evidence = extractRenderEvidence(empty)
-    expect(evidence.empty).toBe(true)
-    expect(evidence.totalMarks).toBe(0)
+    expect(evidence.ariaLabel).toMatch(/xy chart, \d+ marks/)
   })
 })

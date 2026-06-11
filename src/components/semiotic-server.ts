@@ -10,6 +10,8 @@ export {
   renderDashboard,
 } from "./server/renderToStaticSVG"
 
+export type { RenderEvidence } from "./server/renderEvidence"
+
 export type {
   RenderToImageOptions,
   DashboardChart,
@@ -17,9 +19,6 @@ export type {
   RenderDashboardOptions,
 } from "./server/renderToStaticSVG"
 export type { LegendLayout } from "./types/legendTypes"
-
-export { extractRenderEvidence } from "./server/renderEvidence"
-export type { RenderEvidence, AxisEvidence } from "./server/renderEvidence"
 
 export { renderToAnimatedGif, generateFrameSVGs, generateFrameSequence } from "./server/animatedGif"
 export type { AnimatedGifOptions } from "./server/animatedGif"

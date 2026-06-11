@@ -78,6 +78,22 @@ npx semiotic-ai --help`}</CodeBlock>
       </p>
       <CodeBlock language="bash">{`echo '{"component":"BarChart","props":{"data":[{"region":"AMER","value":42}],"categoryAccessor":"region","valueAccessor":"value"}}' \\
   | npx semiotic-ai --doctor`}</CodeBlock>
+      <p>
+        Beyond structural validation, the diagnostics include a{" "}
+        <strong>misleading-design pack</strong> — checks for patterns that
+        deceive readers (and, per the chart-deception literature, deceive
+        vision-language models the same way): inverted axes
+        (<code>INVERTED_AXIS</code>), unlabeled dual-axis charts
+        (<code>DUAL_AXIS_UNLABELED</code>), trend windows cropped to a
+        favorable slice (<code>CHERRY_PICKED_WINDOW</code>), negative values in
+        part-to-whole encodings (<code>PART_TO_WHOLE_NEGATIVE</code>),
+        B-spline curves that don't pass through the data points
+        (<code>NON_PASSING_CURVE</code>), slope-distorting aspect ratios
+        (<code>EXTREME_ASPECT_RATIO</code>), and over-sliced pies
+        (<code>PIE_TOO_MANY_SLICES</code>) — alongside the long-standing
+        non-zero-baseline and color-contrast checks. Each diagnosis carries an
+        actionable <code>fix</code>.
+      </p>
 
       <h3 id="audit-a11y">Audit accessibility (--audit-a11y)</h3>
       <p>

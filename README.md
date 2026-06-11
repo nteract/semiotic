@@ -35,11 +35,11 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with the 47-chart capability catalog (XY, ordinal, network, realtime, geo, value), optimized for LLM code generation. Prefer family subpaths such as `semiotic/xy`, `semiotic/geo`, and `semiotic/value` when bundle size matters.
+- **`semiotic/ai`** — a single import with the 47-chart capability catalog (XY, ordinal, network, realtime, geo, value), optimized for LLM code generation. Note: the published entry files are pre-bundled, so importing one chart from `semiotic/ai` still ships most of the bundle — treat it as a codegen/tooling surface and use family subpaths (`semiotic/xy`, `semiotic/geo`, `semiotic/value`, …) in production code, at roughly half the single-chart cost.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
-- **`diagnoseConfig(component, props)`** — programmatic anti-pattern detector with 12 checks and actionable fixes
+- **`diagnoseConfig(component, props)`** — programmatic anti-pattern detector with actionable fixes, spanning validation, encoding, accessibility, and misleading-design (deception) checks
 - **`CLAUDE.md`** — instruction files auto-synced for Claude, Cursor, Copilot, Windsurf, and Cline
 - **`llms.txt`** — machine-readable documentation following the emerging standard
 
@@ -320,13 +320,13 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/network` | **68 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **55 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
 | `semiotic/realtime` | **95 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/server` | **127 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/utils` | **37 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/server` | **128 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/utils` | **38 KB** | ThemeProvider, validators, serialization — no chart components |
 | `semiotic/recipes` | **9 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **4 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/ai` | **246 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai` | **250 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
 | `semiotic` | **203 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->

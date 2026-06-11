@@ -7,7 +7,7 @@ const report = runQualityScorecard(CANONICAL_FIXTURES)
 const fmtPct = (n: number) => `${(n * 100).toFixed(0)}%`
 const fmtScore = (n: number) => n.toFixed(2)
 
-console.log(`Expert agreement: ${fmtPct(report.summary.expertAgreementRate)} across ${report.summary.fixtureCount} fixtures`)
+console.log(`Expert agreement: top-3 ${fmtPct(report.summary.expertAgreementRate)} / top-1 ${fmtPct(report.summary.top1AgreementRate)} across ${report.summary.fixtureCount} fixtures`)
 console.log(`Caveat coverage:  ${fmtPct(report.summary.overallCaveatCoverage)}`)
 console.log(`Variant util:     ${fmtPct(report.summary.overallVariantUtilization)}`)
 console.log("")

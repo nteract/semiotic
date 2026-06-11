@@ -1,6 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { LegendLayout } from "../types/legendTypes"
-import { extractRenderEvidence, type RenderEvidence } from "./renderEvidence"
 import { isGradientLegendConfig, isLegendConfig } from "../types/legendTypes"
 /**
  * Server-side rendering of Semiotic charts to standalone SVG strings.
@@ -51,6 +50,13 @@ import type {
 
 import { GeoPipelineStore } from "../stream/GeoPipelineStore"
 import type { GeoPipelineConfig, StreamGeoFrameProps } from "../stream/geoTypes"
+
+import {
+  buildEvidence,
+  numericDomain,
+  type EvidenceSink,
+  type RenderEvidence,
+} from "./renderEvidence"
 
 // Shared scene → SVG converters
 import {
@@ -440,7 +446,7 @@ function generateAxesSVG(
 
 // ── StreamXYFrame SSR ───────────────────────────────────────────────────
 
-function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): string {
+function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 300]
@@ -551,6 +557,16 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
   store.computeScene({ width, height })
 
   if (!store.scales || store.scene.length === 0) {
+    if (sink) {
+      sink.evidence = buildEvidence({
+        frameType: "xy",
+        width: size[0], height: size[1],
+        marks: [],
+        title: props.title, description: props.description,
+        annotations: props.annotations,
+        extraWarnings: store.scales ? [] : ["NO_SCALES"],
+      })
+    }
     return ReactDOMServer.renderToStaticMarkup(
       wrapSVG(null, {
         width: size[0], height: size[1],
@@ -561,6 +577,19 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps): strin
         idPrefix: props._idPrefix,
       })
     )
+  }
+
+  if (sink) {
+    sink.evidence = buildEvidence({
+      frameType: "xy",
+      width: size[0], height: size[1],
+      marks: store.scene,
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      xDomain: numericDomain(store.scales.x?.domain?.()),
+      yDomain: numericDomain(store.scales.y?.domain?.()),
+      legendItems: xyLegendCategories.length > 0 ? xyLegendCategories.length : undefined,
+    })
   }
 
   const idPfx = (props as ThemeAwareProps)._idPrefix
@@ -703,9 +732,18 @@ const HIERARCHICAL_TYPES: Set<string> = new Set([
   "tree", "cluster", "treemap", "circlepack", "partition"
 ])
 
-function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): string {
+function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
   const chartType: NetworkChartType = props.chartType || "force"
+  const emptyNetworkEvidence = () =>
+    buildEvidence({
+      frameType: "network",
+      width: size[0], height: size[1],
+      marks: [],
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      nodeCount: 0, edgeCount: 0,
+    })
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
   const margin = { ...defaultMargin, ...props.margin }
@@ -808,6 +846,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   if (HIERARCHICAL_TYPES.has(chartType)) {
     const hierarchyRoot = props.data || props.edges
     if (!hierarchyRoot || Array.isArray(hierarchyRoot)) {
+      if (sink) sink.evidence = emptyNetworkEvidence()
       return ReactDOMServer.renderToStaticMarkup(
         wrapSVG(null, {
           width: size[0], height: size[1],
@@ -827,6 +866,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
     const propsEdges = Array.isArray(props.edges) ? filterSparseArray(props.edges) : []
 
     if (propsNodes.length === 0 && propsEdges.length === 0) {
+      if (sink) sink.evidence = emptyNetworkEvidence()
       return ReactDOMServer.renderToStaticMarkup(
         wrapSVG(null, {
           width: size[0], height: size[1],
@@ -929,6 +969,21 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps): s
   const s = themeStyles(theme)
   for (const label of labels) {
     if (!label.fill) label.fill = s.text
+  }
+
+  if (sink) {
+    sink.evidence = buildEvidence({
+      frameType: "network",
+      width: size[0], height: size[1],
+      marks: [
+        ...sceneNodes.map((n) => ({ type: `node:${(n as { type?: string }).type ?? "node"}` })),
+        ...sceneEdges.map((e) => ({ type: `edge:${(e as { type?: string }).type ?? "edge"}` })),
+      ],
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      nodeCount: sceneNodes.length,
+      edgeCount: sceneEdges.length,
+    })
   }
 
   const edgeElements = sceneEdges
@@ -1145,7 +1200,7 @@ function generateOrdinalAxesSVG(
   }
 }
 
-function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): string {
+function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
   const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
   const size = props.size || [500, 400]
@@ -1233,6 +1288,16 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
   store.computeScene({ width, height })
 
   if (!store.scales || store.scene.length === 0) {
+    if (sink) {
+      sink.evidence = buildEvidence({
+        frameType: "ordinal",
+        width: size[0], height: size[1],
+        marks: [],
+        title: props.title, description: props.description,
+        annotations: props.annotations,
+        extraWarnings: store.scales ? [] : ["NO_SCALES"],
+      })
+    }
     return ReactDOMServer.renderToStaticMarkup(
       wrapSVG(null, {
         width: size[0], height: size[1],
@@ -1243,6 +1308,19 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
         idPrefix: props._idPrefix,
       })
     )
+  }
+
+  if (sink) {
+    const oDomain = store.scales.o?.domain?.()
+    sink.evidence = buildEvidence({
+      frameType: "ordinal",
+      width: size[0], height: size[1],
+      marks: store.scene,
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      yDomain: numericDomain(store.scales.r?.domain?.()),
+      categories: Array.isArray(oDomain) ? oDomain.map(String) : undefined,
+    })
   }
 
   const idPfx = (props as ThemeAwareProps)._idPrefix
@@ -1367,7 +1445,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps): s
 
 // ── Geo SSR ─────────────────────────────────────────────────────────────
 
-function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
+function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
   const defaultMargin = { top: 10, right: 10, bottom: 10, left: 10 }
   const size: [number, number] = props.size || [props.width || 600, props.height || 400]
@@ -1449,6 +1527,17 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps): string {
   if (props.lines) store.setLines(lines)
 
   store.computeScene({ width, height })
+
+  if (sink) {
+    sink.evidence = buildEvidence({
+      frameType: "geo",
+      width: size[0], height: size[1],
+      marks: store.scene,
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      legendItems: geoLegendCategories.length > 0 ? geoLegendCategories.length : undefined,
+    })
+  }
 
   if (store.scene.length === 0) {
     // Even when the data scene is empty, bg/fg graphics and annotations are
@@ -1678,8 +1767,51 @@ function pickDefinedProps(source: Datum, keys: readonly string[]): Datum {
 export function renderChart(
   component: ChartName,
   props: Datum,
-  _options?: RenderChartOptions
+  options?: RenderChartOptions
 ): string {
+  return renderChartInternal(component, props, options).svg
+}
+
+/**
+ * Render a chart and return machine-readable evidence about what actually
+ * rendered — mark counts by scene type, resolved axis domains, emptiness,
+ * legend/annotation counts, and the accessible name. The evidence is computed
+ * from the same scene graph the SVG converter walks, so it is ground truth a
+ * non-visual caller (an agent repair loop, a CI assertion) can quote without
+ * pixel inspection. Exposed through the MCP `renderChart` tool response.
+ */
+export function renderChartWithEvidence(
+  component: ChartName,
+  props: Datum,
+  options?: RenderChartOptions
+): { svg: string; evidence: RenderEvidence } {
+  const sink: EvidenceSink = {}
+  const { svg, frameType } = renderChartInternal(component, props, options, sink)
+  const evidence: RenderEvidence =
+    sink.evidence ??
+    // Defensive: every frame renderer populates the sink, so this only fires
+    // if a future renderer forgets — surface that as its own warning rather
+    // than returning undefined evidence.
+    buildEvidence({
+      frameType,
+      width: typeof props.width === "number" ? props.width : 600,
+      height: typeof props.height === "number" ? props.height : 400,
+      marks: [],
+      title: typeof props.title === "string" ? props.title : undefined,
+      description: typeof props.description === "string" ? props.description : undefined,
+      annotations: props.annotations,
+      extraWarnings: ["NO_EVIDENCE"],
+    })
+  evidence.component = component
+  return { svg, evidence }
+}
+
+function renderChartInternal(
+  component: ChartName,
+  props: Datum,
+  _options?: RenderChartOptions,
+  sink?: EvidenceSink
+): { svg: string; frameType: RenderEvidence["frameType"] } {
   // Extract common props
   const {
     data, width = 600, height = 400, theme, title, description,
@@ -1716,14 +1848,14 @@ export function renderChart(
   const frameProps2 = config.buildProps(data, colorBy, colorScheme, common, rest)
 
   // Dispatch to the appropriate frame renderer
-  const renderers: Record<string, (p: any) => string> = {
+  const renderers: Record<string, (p: any, sink?: EvidenceSink) => string> = {
     xy: renderStreamXYFrame,
     ordinal: renderOrdinalFrame,
     network: renderNetworkFrame,
     geo: renderGeoFrame,
   }
   const renderFn = renderers[config.frameType]
-  let svg = renderFn(frameProps2)
+  let svg = renderFn(frameProps2, sink)
 
   // GaugeChart post-processing: inject needle SVG. The gauge config's
   // buildProps attaches a `__gauge` descriptor (see serverChartConfigs.ts —
@@ -1771,24 +1903,7 @@ export function renderChart(
     svg = svg.replace("</svg>", `${needleEl}</svg>`)
   }
 
-  return svg
-}
-
-/**
- * Render a chart and return the SVG alongside structured render evidence —
- * mark counts by scene type, resolved axis domains, an `empty` flag,
- * annotation count, and the accessible name — computed from the rendered
- * output. The same payload the MCP `renderChart` tool appends to its
- * response, so agents can verify a chart actually drew data marks without
- * parsing SVG.
- */
-export function renderChartWithEvidence(
-  component: ChartName,
-  props: Datum,
-  options?: RenderChartOptions
-): { svg: string; evidence: RenderEvidence } {
-  const svg = renderChart(component, props, options)
-  return { svg, evidence: extractRenderEvidence(svg, { annotations: props.annotations }) }
+  return { svg, frameType: config.frameType as RenderEvidence["frameType"] }
 }
 
 // ── Image export ────────────────────────────────────────────────────────

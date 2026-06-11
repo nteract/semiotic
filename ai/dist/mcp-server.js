@@ -32432,165 +32432,8 @@ ${errors.join("\n")}`
   }
 }
 
-// src/components/server/renderEvidence.ts
-var GEOMETRIC_TAGS = ["rect", "circle", "ellipse", "line", "path", "polygon", "polyline"];
-var MARK_TAGS = [...GEOMETRIC_TAGS, "text"];
-function decodeEntities(value) {
-  return value.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#x?\d+;?/g, (m) => {
-    const code = m.startsWith("&#x") ? parseInt(m.slice(3), 16) : parseInt(m.slice(2), 10);
-    return Number.isFinite(code) ? String.fromCharCode(code) : m;
-  }).replace(/&amp;/g, "&");
-}
-function findGroups(markup, predicate) {
-  const regions = [];
-  const tagPattern = /<g\b[^>]*>|<\/g>/g;
-  const stack = [];
-  let match;
-  while ((match = tagPattern.exec(markup)) !== null) {
-    const token = match[0];
-    if (token.startsWith("</")) {
-      const top = stack.pop();
-      if (top && top.matched) {
-        regions.push({
-          openTag: top.openTag,
-          inner: markup.slice(top.contentStart, match.index),
-          start: top.start,
-          end: match.index + token.length
-        });
-      }
-    } else if (!token.endsWith("/>")) {
-      stack.push({
-        openTag: token,
-        matched: predicate(token),
-        start: match.index,
-        contentStart: match.index + token.length
-      });
-    }
-  }
-  return regions;
-}
-function outermostOnly(regions) {
-  return regions.filter(
-    (region) => !regions.some((other) => other !== region && other.start < region.start && region.end <= other.end)
-  );
-}
-function countTags(markup) {
-  const counts = {};
-  for (const tag of MARK_TAGS) {
-    const pattern = new RegExp(`<${tag}\\b`, "g");
-    const found = markup.match(pattern);
-    if (found && found.length > 0) counts[tag] = found.length;
-  }
-  return counts;
-}
-function subtractCounts(base, removed) {
-  const result = {};
-  for (const [tag, count] of Object.entries(base)) {
-    const remaining = count - (removed[tag] ?? 0);
-    if (remaining > 0) result[tag] = remaining;
-  }
-  return result;
-}
-function mergeCounts(target, source) {
-  for (const [tag, count] of Object.entries(source)) {
-    target[tag] = (target[tag] ?? 0) + count;
-  }
-}
-function attrValue(tag, name) {
-  const match = tag.match(new RegExp(`${name}\\s*=\\s*"([^"]*)"`));
-  return match ? decodeEntities(match[1]) : null;
-}
-var NON_DATA_GROUP = /\b(?:id="[^"]*(?:axes|grid|annotations|legend)"|class="[^"]*(?:semiotic-axis|semiotic-grid|stream-axes|ordinal-axes)[^"]*")/;
-function svgRegions(markup) {
-  const regions = [];
-  const pattern = /<svg\b[^>]*>[\s\S]*?<\/svg>/g;
-  let match;
-  while ((match = pattern.exec(markup)) !== null) {
-    const openEnd = match[0].indexOf(">");
-    regions.push({ openTag: match[0].slice(0, openEnd + 1), full: match[0] });
-  }
-  return regions;
-}
-function extractMarkCounts(svg) {
-  const dataAreaGroups = outermostOnly(findGroups(svg, (tag) => /id="[^"]*data-area"/.test(tag)));
-  if (dataAreaGroups.length > 0) {
-    const counts = {};
-    for (const area of dataAreaGroups) {
-      const chrome2 = outermostOnly(findGroups(area.inner, (tag) => NON_DATA_GROUP.test(tag)));
-      const removed2 = {};
-      for (const group of chrome2) mergeCounts(removed2, countTags(group.inner));
-      mergeCounts(counts, subtractCounts(countTags(area.inner), removed2));
-    }
-    return counts;
-  }
-  const layers = svgRegions(svg);
-  const dataLayers = layers.filter((layer) => !/\brole="img"/.test(layer.openTag));
-  if (dataLayers.length > 0) {
-    const counts = {};
-    for (const layer of dataLayers) mergeCounts(counts, countTags(layer.full));
-    return counts;
-  }
-  const chrome = outermostOnly(findGroups(svg, (tag) => NON_DATA_GROUP.test(tag)));
-  const removed = {};
-  for (const group of chrome) mergeCounts(removed, countTags(group.inner));
-  return subtractCounts(countTags(svg), removed);
-}
-function extractAxes(svg) {
-  const axes = [];
-  const overlayAxes = outermostOnly(findGroups(svg, (tag) => /class="[^"]*\bsemiotic-axis\b/.test(tag)));
-  if (overlayAxes.length > 0) {
-    for (const group of overlayAxes) {
-      const orient = attrValue(group.openTag, "data-orient") ?? group.openTag.match(/semiotic-axis-(\w+)/)?.[1] ?? "axes";
-      const tickLabels = [];
-      const tickPattern = /<text\b[^>]*class="[^"]*semiotic-axis-tick[^"]*"[^>]*>([\s\S]*?)<\/text>/g;
-      let tick;
-      while ((tick = tickPattern.exec(group.inner)) !== null) {
-        tickLabels.push(decodeEntities(tick[1].replace(/<[^>]*>/g, "")));
-      }
-      axes.push({
-        orient,
-        tickLabels,
-        domain: tickLabels.length > 0 ? [tickLabels[0], tickLabels[tickLabels.length - 1]] : null
-      });
-    }
-    return axes;
-  }
-  const standaloneAxes = outermostOnly(findGroups(svg, (tag) => /id="[^"]*axes"/.test(tag)));
-  for (const group of standaloneAxes) {
-    const tickLabels = [];
-    const textPattern = /<text\b[^>]*>([\s\S]*?)<\/text>/g;
-    let text;
-    while ((text = textPattern.exec(group.inner)) !== null) {
-      tickLabels.push(decodeEntities(text[1].replace(/<[^>]*>/g, "")));
-    }
-    axes.push({
-      orient: "axes",
-      tickLabels,
-      domain: tickLabels.length > 0 ? [tickLabels[0], tickLabels[tickLabels.length - 1]] : null
-    });
-  }
-  return axes;
-}
-function extractRenderEvidence(svg, options) {
-  const annotations = options?.annotations;
-  const markCounts = extractMarkCounts(svg);
-  const totalMarks = GEOMETRIC_TAGS.reduce((sum, tag) => sum + (markCounts[tag] ?? 0), 0);
-  const ariaLabel = svg.match(/\baria-label="([^"]*)"/);
-  const title = svg.match(/<title\b[^>]*>([\s\S]*?)<\/title>/);
-  const description = svg.match(/<desc\b[^>]*>([\s\S]*?)<\/desc>/);
-  return {
-    empty: totalMarks === 0,
-    markCounts,
-    totalMarks,
-    axes: extractAxes(svg),
-    annotationCount: Array.isArray(annotations) ? annotations.length : 0,
-    accessibleName: ariaLabel ? decodeEntities(ariaLabel[1]) : title ? decodeEntities(title[1]) : null,
-    title: title ? decodeEntities(title[1]) : null,
-    description: description ? decodeEntities(description[1]) : null
-  };
-}
-
 // ai/mcp-server.ts
+var import_server2 = require("semiotic/server");
 var import_ai3 = require("semiotic/ai");
 var {
   componentIndexFromSchema,
@@ -33020,18 +32863,23 @@ async function renderChartHandler(args) {
     };
   }
   let svg = result.svg;
+  let evidenceBlock = null;
+  try {
+    const { svg: evidenceSvg, evidence } = (0, import_server2.renderChartWithEvidence)(component, props);
+    svg = evidenceSvg;
+    evidenceBlock = {
+      type: "text",
+      text: `Render evidence:
+${JSON.stringify(evidence, null, 2)}`
+    };
+  } catch {
+  }
   if (theme && Object.keys(theme).length > 0) {
     const validVars = Object.entries(theme).filter(([k]) => k.startsWith("--semiotic-")).map(([k, v]) => `${k}: ${v}`).join("; ");
     if (validVars) {
       svg = svg.replace(/<svg([^>]*)>/, `<svg$1><style>:root { ${validVars} }</style>`);
     }
   }
-  const evidence = extractRenderEvidence(svg, { annotations: props.annotations });
-  const evidenceBlock = {
-    type: "text",
-    text: `Render evidence:
-${JSON.stringify(evidence, null, 2)}`
-  };
   if (format === "png") {
     try {
       const sharpMod = await Function('return import("sharp")')();
@@ -33039,7 +32887,10 @@ ${JSON.stringify(evidence, null, 2)}`
       const pngBuffer = await sharpFn(Buffer.from(svg)).png().toBuffer();
       const base643 = pngBuffer.toString("base64");
       return {
-        content: [{ type: "text", text: `data:image/png;base64,${base643}` }, evidenceBlock]
+        content: [
+          { type: "text", text: `data:image/png;base64,${base643}` },
+          ...evidenceBlock ? [evidenceBlock] : []
+        ]
       };
     } catch (err) {
       if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
@@ -33062,7 +32913,10 @@ ${svg}` }],
     }
   }
   return {
-    content: [{ type: "text", text: svg }, evidenceBlock]
+    content: [
+      { type: "text", text: svg },
+      ...evidenceBlock ? [evidenceBlock] : []
+    ]
   };
 }
 async function renderInteractiveChartHandler(args) {
@@ -33717,7 +33571,7 @@ function createServer2() {
   );
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image, plus a "Render evidence" JSON block (mark counts by scene type, resolved axis domains, an empty flag, annotation count, accessible name) \u2014 read the evidence to verify the chart drew data marks instead of parsing SVG. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image, plus a "Render evidence" JSON block (mark counts by type, resolved axis domains, empty flag, annotation count, accessible name) \u2014 read the evidence instead of parsing the SVG to verify the chart actually rendered data marks. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
     {
       component: external_exports3.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
