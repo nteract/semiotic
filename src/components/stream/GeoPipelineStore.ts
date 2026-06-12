@@ -33,6 +33,7 @@ import type {
 import { RingBuffer } from "../realtime/RingBuffer"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
+import { computePulseIntensity, hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 
@@ -1216,19 +1217,18 @@ export class GeoPipelineStore {
     const pulse = this.config.pulse
     if (!pulse || !this.timestampBuffer) return
 
-    const duration = pulse.duration ?? 500
     const now = performance.now()
-
     const pointNodes = this.scene.filter(
       (n): n is PointSceneNode => n.type === "point"
     )
-
     const timestamps = this.timestampBuffer.toArray()
 
     for (let i = 0; i < pointNodes.length && i < timestamps.length; i++) {
-      const elapsed = now - timestamps[i]
-      if (elapsed < duration) {
-        const intensity = 1 - elapsed / duration
+      // Share the pulse-intensity curve with the XY/realtime pipeline so a
+      // change to the fade math (pipelinePulse.computePulseIntensity) reaches
+      // geo too. Behaviourally identical to the previous inline 1 - age/dur.
+      const intensity = computePulseIntensity(pulse, timestamps[i], now)
+      if (intensity > 0) {
         pointNodes[i]._pulseIntensity = intensity
         pointNodes[i]._pulseColor = pulse.color || "rgba(255,255,255,0.6)"
         pointNodes[i]._pulseGlowRadius = pulse.glowRadius ?? 4
@@ -1237,10 +1237,10 @@ export class GeoPipelineStore {
   }
 
   get hasActivePulses(): boolean {
-    if (!this.timestampBuffer || this.timestampBuffer.size === 0) return false
-    const duration = this.config.pulse?.duration ?? 500
-    const newest = this.timestampBuffer.toArray()[this.timestampBuffer.size - 1]
-    return performance.now() - newest < duration
+    // Delegate to the shared check (peek() avoids the toArray() allocation the
+    // inline version did). `?? {}` preserves the previous 500ms default when
+    // no pulse config is present.
+    return hasActivePulsesShared(this.config.pulse ?? {}, this.timestampBuffer)
   }
 
   // ── Transition ─────────────────────────────────────────────────
@@ -1275,6 +1275,21 @@ export class GeoPipelineStore {
             hasMovement = true
           }
         }
+      }
+    }
+
+    // Enter: points present now but absent from the previous scene fade in
+    // from opacity 0. The XY/ordinal families get this from the shared
+    // transition engine; geo's transition is position-only, so without this
+    // new points popped in abruptly while existing points glided. (Exit-fade
+    // for removed points is not yet handled — it requires carrying the removed
+    // nodes through the transition, which geo's fresh-scene-per-compute model
+    // doesn't currently support.)
+    for (const node of pointNodes) {
+      if (node.pointId && !prevPos.has(node.pointId)) {
+        node._targetOpacity = node.style?.opacity ?? 1
+        node.style = { ...node.style, opacity: 0 }
+        hasMovement = true
       }
     }
 
@@ -1315,6 +1330,10 @@ export class GeoPipelineStore {
         node.x = lerp(startX, node._targetX, t)
         node.y = lerp(startY, node._targetY, t)
       }
+      // Entering points fade 0 → target opacity along the eased progress.
+      if (node._targetOpacity != null) {
+        node.style = { ...node.style, opacity: node._targetOpacity * t }
+      }
     }
 
     if (rawT >= 1) {
@@ -1325,6 +1344,10 @@ export class GeoPipelineStore {
           node.y = node._targetY!
           node._targetX = undefined
           node._targetY = undefined
+        }
+        if (node._targetOpacity != null) {
+          node.style = { ...node.style, opacity: node._targetOpacity }
+          node._targetOpacity = undefined
         }
       }
       this.activeTransition = null

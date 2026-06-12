@@ -278,6 +278,7 @@ describe("NetworkPipelineStore", () => {
       )
       store.buildScene([600, 400])
       expect(store.nodes.size).toBe(2)
+      const versionBeforeClear = store.layoutVersion
 
       store.clear()
       expect(store.nodes.size).toBe(0)
@@ -286,8 +287,18 @@ describe("NetworkPipelineStore", () => {
       expect(store.sceneEdges).toEqual([])
       expect(store.labels).toEqual([])
       expect(store.tension).toBe(0)
-      expect(store.layoutVersion).toBe(0)
+      // layoutVersion is monotonic — clear() bumps it rather than resetting to
+      // 0, since a reset could collide with a consumer's last-seen value and
+      // skip the post-clear repaint.
+      expect(store.layoutVersion).toBeGreaterThan(versionBeforeClear)
       expect(store.lastIngestTime).toBe(0)
+      // Topology-diff state must reset, so a clear()+reload diffs against an
+      // empty previous graph rather than the pre-clear node/edge set.
+      expect(store.addedNodes.size).toBe(0)
+      expect(store.removedNodes.size).toBe(0)
+      expect(store.addedEdges.size).toBe(0)
+      expect(store.removedEdges.size).toBe(0)
+      expect(store.lastTopologyChangeTime).toBe(0)
     })
   })
 
@@ -313,6 +324,49 @@ describe("NetworkPipelineStore", () => {
         showParticles: true
       }))
       expect(store.particlePool).not.toBeNull()
+    })
+  })
+
+  // ── Node spatial index (hit-testing quadtree) ───────────────────────
+  describe("node quadtree", () => {
+    const makeForceGraph = (count: number) => ({
+      nodes: Array.from({ length: count }, (_, i) => ({ id: `n${i}` })),
+      edges: Array.from({ length: Math.max(0, count - 1) }, (_, i) => ({
+        source: `n${i}`,
+        target: `n${i + 1}`,
+        value: 1
+      }))
+    })
+
+    it("is null for a small force graph (below the threshold)", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      const { nodes, edges } = makeForceGraph(3)
+      store.ingestBounded(nodes, edges, [600, 400])
+      store.buildScene([600, 400])
+      expect(store.nodeQuadtree).toBeNull()
+    })
+
+    it("builds an index once the scene exceeds the circle-node threshold", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      const { nodes, edges } = makeForceGraph(520)
+      store.ingestBounded(nodes, edges, [600, 400])
+      store.buildScene([600, 400])
+
+      const qt = store.nodeQuadtree
+      expect(qt).not.toBeNull()
+      expect(qt!.size()).toBeGreaterThan(500)
+      expect(store.maxNodeRadius).toBeGreaterThan(0)
+    })
+
+    it("invalidates the lazily-cached index after clear()", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      const { nodes, edges } = makeForceGraph(520)
+      store.ingestBounded(nodes, edges, [600, 400])
+      store.buildScene([600, 400])
+      expect(store.nodeQuadtree).not.toBeNull()
+
+      store.clear()
+      expect(store.nodeQuadtree).toBeNull()
     })
   })
 

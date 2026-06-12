@@ -16,14 +16,20 @@ export interface QuadtreeHit<T> {
  * much larger visual radius can still be a valid hit that `find()` would
  * hide.
  *
- * `T` must expose `x`, `y`, and `r` — the standard `PointSceneNode` shape.
+ * By default `T` must expose `x`, `y`, and `r` (the standard `PointSceneNode`
+ * shape). Pass `getX`/`getY`/`getR` accessors to index nodes that store their
+ * center under different field names — e.g. network circle nodes use `cx`/`cy`.
+ * The quadtree itself must be built with matching `.x()`/`.y()` accessors.
  */
-export function findHitPointInQuadtree<T extends { x: number; y: number; r: number }>(
+export function findHitPointInQuadtree<T>(
   qt: Quadtree<T>,
   px: number,
   py: number,
   maxDistance: number,
-  maxPointRadius: number
+  maxPointRadius: number,
+  getX: (n: T) => number = (n) => (n as { x: number }).x,
+  getY: (n: T) => number = (n) => (n as { y: number }).y,
+  getR: (n: T) => number = (n) => (n as { r: number }).r
 ): QuadtreeHit<T> | null {
   const searchRadius = Math.max(maxDistance, maxPointRadius + 5, 12)
   const xMin = px - searchRadius
@@ -46,10 +52,10 @@ export function findHitPointInQuadtree<T extends { x: number; y: number; r: numb
       let leaf: QuadtreeLeaf<T> | undefined = node
       do {
         const point = leaf.data
-        const dx = point.x - px
-        const dy = point.y - py
+        const dx = getX(point) - px
+        const dy = getY(point) - py
         const dist = Math.sqrt(dx * dx + dy * dy)
-        const hitR = getHitRadius(point.r, maxDistance)
+        const hitR = getHitRadius(getR(point), maxDistance)
         if (dist <= hitR && dist < bestDist) {
           best = point
           bestDist = dist

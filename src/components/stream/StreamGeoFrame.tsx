@@ -27,6 +27,7 @@ import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import { useFrame } from "./useFrame"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
+import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
@@ -969,11 +970,11 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         }
       }
 
-      // Staleness
-      if (staleness) {
-        const stale = performance.now() - store.lastIngestTime > (staleness.threshold ?? 5000)
-        if (stale !== isStale) setIsStale(stale)
-      }
+      // Staleness badge state is owned by the shared useStalenessCheck hook
+      // (1s poll, with the `lastIngestTime === 0` guard). No per-render update
+      // here: that path lacked the guard and flipped a never-ingested chart to
+      // "STALE", diverging from the XY/ordinal/network frames. The hook fires on
+      // a timer, which is the correct cadence for "no new data" anyway.
 
       // Only trigger SVG overlay re-render when data or hover/annotation state changed
       const annotationsChanged = annotations !== prevAnnotationsRef.current
@@ -1391,25 +1392,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           )}
         />
         {staleness?.showBadge && (
-          <div
-            className="stream-staleness-badge"
-            style={{
-              position: "absolute",
-              ...(staleness.badgePosition === "top-left" ? { top: 4, left: 4 } :
-                staleness.badgePosition === "bottom-left" ? { bottom: 4, left: 4 } :
-                staleness.badgePosition === "bottom-right" ? { bottom: 4, right: 4 } :
-                { top: 4, right: 4 }),
-              padding: "2px 8px",
-              borderRadius: 4,
-              fontSize: 11,
-              fontWeight: 600,
-              pointerEvents: "none",
-              background: isStale ? "#dc3545" : "#28a745",
-              color: "white"
-            }}
-          >
-            {isStale ? "STALE" : "LIVE"}
-          </div>
+          <StalenessBadge isStale={isStale} position={staleness.badgePosition} />
         )}
         {zoomable && (
           <div

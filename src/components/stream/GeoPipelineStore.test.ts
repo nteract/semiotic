@@ -363,4 +363,51 @@ describe("GeoPipelineStore", () => {
       expect(() => store.removeLine("a")).toThrow(/lineIdAccessor/)
     })
   })
+
+  describe("transition enter-fade", () => {
+    it("fades in points that enter on a data change, leaving existing points opaque", () => {
+      const store = new GeoPipelineStore(makeConfig({
+        pointIdAccessor: "id",
+        transition: { duration: 300 },
+        introAnimation: false
+      }))
+      // First render settles two points at full opacity — no intro animation,
+      // and no previous scene to transition from.
+      store.setPoints([
+        { id: "a", lon: -100, lat: 40 },
+        { id: "b", lon: -80, lat: 35 }
+      ])
+      store.computeScene({ width: 600, height: 400 })
+
+      // Second render adds "c" — it should enter by fading in from opacity 0.
+      store.setPoints([
+        { id: "a", lon: -100, lat: 40 },
+        { id: "b", lon: -80, lat: 35 },
+        { id: "c", lon: -120, lat: 45 }
+      ])
+      store.computeScene({ width: 600, height: 400 })
+
+      const findPoint = (id: string) =>
+        store.scene.find(
+          (n): n is PointSceneNode => n.type === "point" && n.pointId === id
+        )
+
+      const pointC = findPoint("c")
+      expect(pointC).toBeDefined()
+      // Entering point starts transparent with a positive opacity target.
+      expect(pointC!.style?.opacity).toBe(0)
+      const target = pointC!._targetOpacity
+      expect(target).toBeGreaterThan(0)
+
+      // Pre-existing points are not "entering" — they carry no enter-fade target.
+      expect(findPoint("a")!._targetOpacity).toBeUndefined()
+
+      // Completing the transition restores the target opacity and clears state.
+      const done = store.advanceTransition(performance.now() + 1000)
+      expect(done).toBe(false)
+      const pointCDone = findPoint("c")
+      expect(pointCDone!.style?.opacity).toBe(target)
+      expect(pointCDone!._targetOpacity).toBeUndefined()
+    })
+  })
 })
