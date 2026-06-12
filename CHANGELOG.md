@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.7.1] - 2026-06-11
 
 ### Added
 
@@ -31,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `top1AgreementRate` beside the lenient top-3 rate (current canonical set: 93% top-1 / 100% top-3),
   ranks the top-3 over *distinct components* rather than variants of one chart, and gains fixtures
   for the previously unexercised Heatmap, GaugeChart, FlowMap, and DistanceCartogram descriptors.
+- **ChatGPT Apps widget (experimental).** The MCP server gains `renderInteractiveChart`, which
+  renders a static-data chart through the same server render path as `renderChart` and returns a
+  `text/html;profile=mcp-app` widget (`ui://semiotic/chart-widget.html`) with fit/zoom, data,
+  hover, and render-evidence controls for ChatGPT developer-mode connectors over
+  `semiotic-mcp --http`. A deployment playbook lives in the repo as `CHATGPT_APPS_DEPLOYMENT.md`,
+  and an MCP protocol test suite covers the tool and widget resource end to end.
+- **Docs prerender route artifacts.** The docs build now emits one prerendered HTML file per
+  route with sanitized, route-specific machine-readable content in each page's `<noscript>`
+  fallback, plus a `docs/build/llms-routes.json` route index for agent readers; the docs route
+  check verifies the output.
 
 ### Changed
 

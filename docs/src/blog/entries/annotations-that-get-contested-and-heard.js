@@ -254,5 +254,4 @@ export default {
   ...META,
   component: Body,
   ogChart: { component: "LineChart" },
-  draft: true,
 }
