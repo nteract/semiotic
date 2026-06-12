@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.2] - 2026-06-12
+
+### Added
+
+- **Stateless MCP HTTP mode for hosted connectors.** `semiotic-mcp --http` now creates an
+  ephemeral MCP server + Streamable HTTP transport per request, returns JSON responses instead of
+  holding long-lived SSE streams open, and exposes `/mcp`, `/healthz`, and `/health` endpoints. This
+  makes the read-only MCP tool surface suitable for autoscaling serverless hosts such as Cloud Run.
+- **Cloud Run deployment wrapper.** `deploy/cloud-run` packages a minimal public MCP deployment that
+  runs the published `semiotic-mcp` binary, documents unauthenticated read-only deployment, health
+  endpoints, host allowlisting, and ChatGPT/Claude connector setup, and includes hosted-app privacy
+  and terms pages for app review.
+
+### Changed
+
+- **MCP HTTP hardening.** HTTP mode normalizes the `Host` header for optional
+  `MCP_ALLOWED_HOSTS` DNS-rebinding protection, returns clean 404s for non-MCP paths including
+  `.well-known/*` probes, makes request teardown idempotent, and closes each per-request transport
+  promptly to avoid serverless keep-alive leaks.
+- **Docs dark-mode polish.** The visible `AccessibleNavTree` selected row now resolves through
+  `--semiotic-surface`, `--semiotic-grid`, and `--semiotic-bg`, with `--semiotic-text` applied to
+  visible rows. The Accessibility / Structured Navigation bidirectional BarChart now mirrors the
+  docs theme by switching between `carbon` and `carbon-dark`.
+- **Annotation blog demo reliability.** The "Annotations That Get Contested, and Heard" chart now
+  uses numeric XY coordinates with month tick formatting, so editorial-status callouts render on the
+  visible line while the prose and navigation tree keep human-readable month labels.
+- **Cloud Run wrapper release line.** The Cloud Run package now depends on `semiotic@^3.7.2` so the
+  hosted wrapper resolves the 3.7.2 MCP server after the npm package is published.
+
+### Fixed
+
+- Fixed a light selected-row fallback in the accessible navigation tree when the docs site was in
+  dark mode but no `--semiotic-surface` token was present.
+- Fixed the bidirectional sync demo's BarChart rendering as a light Carbon island inside dark docs.
+- Fixed missing visual annotations in the contested-annotations blog demo caused by string month
+  values being used as XY coordinates.
+
 ## [3.7.1] - 2026-06-11
 
 ### Added

@@ -12,6 +12,18 @@ Simple charts in 5 lines. Network graphs, streaming data, and coordinated
 dashboards when you need them. Structured schemas and an MCP server so
 AI coding assistants generate correct chart code on the first try.
 
+## What's New in 3.7.2
+
+3.7.2 is a deployment and docs-polish patch release:
+
+- `semiotic-mcp --http` now runs in stateless Streamable HTTP mode, with JSON responses,
+  health endpoints, optional `MCP_ALLOWED_HOSTS` host-header protection, and serverless-friendly
+  request teardown.
+- `deploy/cloud-run` contains a minimal Google Cloud Run wrapper for publishing the MCP server as a
+  public read-only connector for ChatGPT, Claude, and other MCP clients.
+- The Accessibility docs' visible navigation tree and bidirectional BarChart examples now honor
+  dark mode, and the contested-annotations blog demo renders its editorial-status callouts reliably.
+
 ```jsx
 import { LineChart } from "semiotic/xy"
 
@@ -411,9 +423,13 @@ Add to your MCP client config (e.g. `claude_desktop_config.json` for Claude Desk
 }
 ```
 
-No API keys or authentication required. The server runs locally via stdio. HTTP mode is also available for inspectors, web clients, and ChatGPT Apps SDK experiments: `npx semiotic-mcp --http --port 3001`.
+No API keys or authentication required. The server runs locally via stdio. HTTP mode is also available for inspectors, web clients, and ChatGPT Apps SDK experiments: `npx semiotic-mcp --http --port 3001`. In 3.7.2 HTTP mode is stateless: each request gets a fresh read-only MCP server + transport, so it can autoscale on serverless hosts without sticky sessions.
 
 For ChatGPT developer mode, expose the HTTP endpoint over HTTPS with a tunnel and create a connector that points at `https://<your-tunnel>/mcp`. The experimental Apps SDK surface is `renderInteractiveChart`, which returns a `text/html;profile=mcp-app` widget template plus a hidden SVG payload rendered by Semiotic on the MCP server.
+
+For a hosted deployment, see `deploy/cloud-run`. The wrapper runs the published `semiotic-mcp`
+binary, exposes `/mcp` plus health endpoints, and supports `MCP_ALLOWED_HOSTS` for production
+host-header allowlisting.
 
 ### Tools
 

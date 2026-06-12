@@ -33826,7 +33826,7 @@ async function main() {
     const healthBody = () => JSON.stringify({
       status: "ok",
       name: "semiotic-mcp",
-      version: schema.version || "unknown",
+      version: schema.version || "3.0.0",
       transport: "streamable-http",
       mode: "stateless"
     });

@@ -16,6 +16,7 @@ import type { Datum } from "../../components/charts/shared/datumTypes"
  */
 
 import { spawn, type ChildProcess } from "child_process"
+import * as http from "http"
 import * as net from "net"
 import * as path from "path"
 
@@ -33,10 +34,10 @@ function spawnServer(): ChildProcess {
 }
 
 /** Spawn the MCP server process in Streamable HTTP mode. */
-function spawnHTTPServer(port: number): ChildProcess {
+function spawnHTTPServer(port: number, env: NodeJS.ProcessEnv = {}): ChildProcess {
   return spawn("node", [SERVER_PATH, "--http", "--port", String(port)], {
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, NODE_ENV: "test" },
+    env: { ...process.env, NODE_ENV: "test", ...env },
   })
 }
 
@@ -179,12 +180,63 @@ async function sendHTTPRPC(port: number, message: Datum, sessionId?: string): Pr
   }
 }
 
-async function spawnReadyHTTPServer(): Promise<{ proc: ChildProcess; port: number }> {
+function requestHTTP(port: number, pathName: string, options: {
+  method?: string
+  host?: string
+  body?: Datum
+  headers?: Record<string, string>
+} = {}): Promise<{
+  body?: unknown
+  headers: http.IncomingHttpHeaders
+  status: number
+  text: string
+}> {
+  return new Promise((resolve, reject) => {
+    const bodyText = options.body ? JSON.stringify(options.body) : undefined
+    const req = http.request({
+      host: "127.0.0.1",
+      port,
+      path: pathName,
+      method: options.method ?? (bodyText ? "POST" : "GET"),
+      headers: {
+        ...(options.host ? { Host: options.host } : {}),
+        ...(bodyText ? {
+          Accept: "application/json, text/event-stream",
+          "Content-Type": "application/json",
+        } : {}),
+        ...options.headers,
+      },
+    }, (res) => {
+      let text = ""
+      res.setEncoding("utf8")
+      res.on("data", (chunk) => { text += chunk })
+      res.on("end", () => {
+        let body
+        try {
+          body = text ? JSON.parse(text) : undefined
+        } catch {
+          body = undefined
+        }
+        resolve({
+          body,
+          headers: res.headers,
+          status: res.statusCode ?? 0,
+          text,
+        })
+      })
+    })
+    req.on("error", reject)
+    if (bodyText) req.write(bodyText)
+    req.end()
+  })
+}
+
+async function spawnReadyHTTPServer(env: NodeJS.ProcessEnv = {}): Promise<{ proc: ChildProcess; port: number }> {
   let lastError: unknown
 
   for (let attempt = 0; attempt < HTTP_START_RETRIES; attempt++) {
     const port = await getOpenPort()
-    const proc = spawnHTTPServer(port)
+    const proc = spawnHTTPServer(port, env)
     try {
       await waitForHTTPServer(proc)
       return { proc, port }
@@ -893,8 +945,9 @@ describe("MCP HTTP transport smoke", () => {
     port = server.port
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
     proc = undefined
   })
 
@@ -930,5 +983,49 @@ describe("MCP HTTP transport smoke", () => {
     expect(names).toContain("getSchema")
     expect(names).toContain("suggestChart")
     expect(names).toContain("renderChart")
+  })
+
+  it("serves stateless health/info JSON and clean 404s for discovery probes", async () => {
+    const health = await requestHTTP(port, "/healthz")
+    const healthBody = health.body as Record<string, unknown>
+
+    expect(health.status).toBe(200)
+    expect(healthBody).toMatchObject({
+      status: "ok",
+      name: "semiotic-mcp",
+      transport: "streamable-http",
+      mode: "stateless",
+    })
+    expect(String(healthBody.version)).toMatch(/^\d+\.\d+\.\d+/)
+
+    const info = await requestHTTP(port, "/mcp")
+    const infoBody = info.body as Record<string, unknown>
+    expect(info.status).toBe(200)
+    expect(infoBody.transport).toBe("streamable-http")
+    expect(infoBody.mode).toBe("stateless")
+
+    const probe = await requestHTTP(port, "/.well-known/oauth-protected-resource")
+    expect(probe.status).toBe(404)
+    expect(probe.body).toEqual({ error: "Not found" })
+  })
+
+  it("enforces MCP_ALLOWED_HOSTS against raw and normalized Host headers", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+
+    const server = await spawnReadyHTTPServer({ MCP_ALLOWED_HOSTS: "allowed.example" })
+    proc = server.proc
+    port = server.port
+
+    const rejected = await requestHTTP(port, "/healthz")
+    expect(rejected.status).toBe(403)
+    expect(rejected.body).toMatchObject({
+      error: { message: "Forbidden host" },
+    })
+
+    const accepted = await requestHTTP(port, "/healthz", { host: "allowed.example:443" })
+    expect(accepted.status).toBe(200)
+    expect(accepted.body).toMatchObject({ status: "ok" })
   })
 })
