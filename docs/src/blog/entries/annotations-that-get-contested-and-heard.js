@@ -16,14 +16,13 @@ const META = {
     "Annotations need to be well-placed, un-crowded, legibly associated, responsive, and defensible. But they also need to know where they are in the annotation lifecycle: proposed / accepted / disputed / retracted, supersession chains, and conversation-arc events. This way, a note becomes the durable node that captures conversation and meaning-making. Annotations lead the chart description and get their own branch in the navigation tree, so a screen-reader user meets the author's intent head-on.",
 }
 
-const data = [
-  { month: "Jan", sales: 4200 },
-  { month: "Feb", sales: 5100 },
-  { month: "Mar", sales: 6800 },
-  { month: "Apr", sales: 4600 },
-  { month: "May", sales: 5200 },
-  { month: "Jun", sales: 7100 },
-]
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+const data = MONTHS.map((month, i) => ({
+  month,
+  monthIndex: i + 1,
+  sales: [4200, 5100, 6800, 4600, 5200, 7100][i],
+}))
+const monthFormat = (m) => MONTHS[m - 1] ?? String(m)
 
 const chartFrame = {
   border: "1px solid var(--surface-3)",
@@ -47,7 +46,7 @@ const preStyle = {
 const STATUS_ANNOTATIONS = [
   {
     type: "callout",
-    x: "Mar",
+    x: 3,
     y: 6800,
     label: "Confirmed peak",
     dx: -40,
@@ -56,7 +55,7 @@ const STATUS_ANNOTATIONS = [
   },
   {
     type: "callout",
-    x: "Apr",
+    x: 4,
     y: 4600,
     label: "Watcher flagged dip",
     dx: 10,
@@ -65,7 +64,7 @@ const STATUS_ANNOTATIONS = [
   },
   {
     type: "callout",
-    x: "Jun",
+    x: 6,
     y: 7100,
     label: "Spike contested",
     dx: -50,
@@ -74,7 +73,7 @@ const STATUS_ANNOTATIONS = [
   },
   {
     type: "callout",
-    x: "Feb",
+    x: 2,
     y: 5100,
     label: "Withdrawn note",
     dx: 10,
@@ -91,8 +90,10 @@ function StatusDemo() {
         width={560}
         height={300}
         data={data}
-        xAccessor="month"
+        xAccessor="monthIndex"
         yAccessor="sales"
+        xFormat={monthFormat}
+        xExtent={[1, 6]}
         annotations={treated}
       />
       <p style={{ fontSize: 12, color: "var(--text-2)", margin: "4px 6px 0" }}>

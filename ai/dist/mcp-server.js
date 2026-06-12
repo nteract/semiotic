@@ -32435,21 +32435,24 @@ ${errors.join("\n")}`
 // ai/mcp-server.ts
 var import_server2 = require("semiotic/server");
 var import_ai3 = require("semiotic/ai");
+var import_componentMetadata = __toESM(require_componentMetadata());
+var import_chartSuggestions = __toESM(require_chartSuggestions());
+var import_behaviorContracts = __toESM(require_behaviorContracts());
 var {
   componentIndexFromSchema,
   metadataForComponent
-} = require_componentMetadata();
+} = import_componentMetadata.default;
 var {
   formatSuggestionReport,
   suggestCharts
-} = require_chartSuggestions();
+} = import_chartSuggestions.default;
 var {
   BEHAVIOR_CONTRACTS,
   behaviorContractsFor,
   dataRequiredForUsageMode,
   formatDoctorBehaviorContracts,
   normalizeUsageMode
-} = require_behaviorContracts();
+} = import_behaviorContracts.default;
 var schemaPath = path.resolve(__dirname, "../schema.json");
 var schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
 var schemaByComponent = {};
@@ -33403,6 +33406,12 @@ async function groundChartHandler(args) {
     structuredContent: grounding
   };
 }
+var READ_ONLY_TOOL_ANNOTATIONS = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: false
+};
 function createServer2() {
   const srv = new McpServer({
     name: "semiotic",
@@ -33547,6 +33556,7 @@ function createServer2() {
     "getSchema",
     `Return the prop schema for a Semiotic chart component. Pass { component: '<name>' } to get its props, or omit component to list all available components. Components marked [renderable] can be passed to renderChart for static SVG output.`,
     { component: external_exports3.string().optional().describe("Component name, e.g. 'LineChart'. Omit to list all.") },
+    READ_ONLY_TOOL_ANNOTATIONS,
     getSchemaHandler
   );
   srv.tool(
@@ -33567,6 +33577,7 @@ function createServer2() {
         // validation from being unreachable from MCP callers.
       }).strict().optional().describe("Capability constraints \u2014 set a key to true to require, false to forbid. Unset keys are ignored.")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestChartHandler
   );
   srv.tool(
@@ -33578,6 +33589,7 @@ function createServer2() {
       theme: external_exports3.record(external_exports3.string(), external_exports3.string()).optional().describe("CSS custom properties for theming, e.g. { '--semiotic-bg': '#1a1a2e', '--semiotic-text': '#ededed' }. Only --semiotic-* variables are applied."),
       format: external_exports3.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns a Base64-encoded PNG image. PNG requires the 'sharp' package.")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     renderChartHandler
   );
   srv.registerTool(
@@ -33620,6 +33632,7 @@ function createServer2() {
       props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
       usageMode: external_exports3.enum(["static", "push", "renderChart", "server"]).optional().describe("Validation mode. Use 'push' for ref-based React HOCs that omit data; use 'static' or omit for renderChart/MCP/static data configs.")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     diagnoseConfigHandler
   );
   srv.tool(
@@ -33632,6 +33645,7 @@ function createServer2() {
       describe: external_exports3.boolean().optional().describe("True if ChartContainer's describe option (auto-generated L1\u2013L3 description via describeChart) is enabled \u2014 passes the 'features described' heuristic."),
       navigable: external_exports3.boolean().optional().describe("True if ChartContainer's navigable option (structured navigation tree via buildNavigationTree) is enabled \u2014 passes the 'navigable structure' heuristic.")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     auditAccessibilityHandler
   );
   srv.tool(
@@ -33642,6 +33656,7 @@ function createServer2() {
       body: external_exports3.string().optional().describe("Issue body with details, reproduction steps, diagnoseConfig output"),
       labels: external_exports3.union([external_exports3.array(external_exports3.string()), external_exports3.string()]).optional().describe("GitHub labels, e.g. ['bug'] or 'bug'")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     reportIssueHandler
   );
   srv.tool(
@@ -33650,6 +33665,7 @@ function createServer2() {
     {
       name: external_exports3.string().optional().describe("Theme preset name, e.g. 'tufte', 'pastels-dark', 'bi-tool'. Omit to list all available themes.")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     applyThemeHandler
   );
   srv.tool(
@@ -33660,6 +33676,7 @@ function createServer2() {
       props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).describe("The full chart props including data"),
       query: external_exports3.string().optional().describe("A natural language question about the chart data")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     interrogateChartHandler
   );
   srv.tool(
@@ -33669,6 +33686,7 @@ function createServer2() {
       component: external_exports3.string().describe("Chart component name, e.g. 'LineChart'"),
       props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).describe("The full chart props including data")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     groundChartHandler
   );
   srv.tool(
@@ -33689,6 +33707,7 @@ function createServer2() {
       intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("Ranking intent."),
       maxResults: external_exports3.number().int().min(1).max(20).optional()
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestStreamChartsHandler
   );
   srv.tool(
@@ -33700,6 +33719,7 @@ function createServer2() {
       maxPanels: external_exports3.number().int().min(1).max(12).optional().describe("Maximum panels (default 6)."),
       diversifyByFamily: external_exports3.boolean().optional().describe("Prefer not to repeat chart families across panels (default true).")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestDashboardHandler
   );
   srv.tool(
@@ -33724,6 +33744,7 @@ function createServer2() {
       intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional(),
       maxResults: external_exports3.number().int().min(1).max(20).optional()
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestStretchChartsHandler
   );
   srv.tool(
@@ -33735,6 +33756,7 @@ function createServer2() {
       intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("User intent \u2014 informs ranking of alternatives when the chart doesn't fit."),
       maxAlternatives: external_exports3.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3).")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     repairChartConfigHandler
   );
   srv.tool(
@@ -33761,6 +33783,7 @@ function createServer2() {
         receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel \u2014 see suggestCharts.")
       }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality.")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     proposeChartVariantsHandler
   );
   srv.tool(
@@ -33787,6 +33810,7 @@ function createServer2() {
         receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel. A non-visual value down-ranks charts the audience can't receive in that channel (e.g. a many-slice pie for a screen reader) and adds receivability caveats.")
       }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality.")
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestChartsHandler
   );
   return srv;
@@ -33798,39 +33822,82 @@ var parsedPort = portFlagIndex !== -1 && cliArgs[portFlagIndex + 1] != null ? pa
 var port = Number.isFinite(parsedPort) ? parsedPort : 3001;
 async function main() {
   if (httpMode) {
-    const sessions = /* @__PURE__ */ new Map();
+    const allowedHosts = (process.env.MCP_ALLOWED_HOSTS || "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+    const healthBody = () => JSON.stringify({
+      status: "ok",
+      name: "semiotic-mcp",
+      version: schema.version || "unknown",
+      transport: "streamable-http",
+      mode: "stateless"
+    });
     const httpServer = http.createServer(async (req, res) => {
       res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, mcp-session-id");
-      res.setHeader("Access-Control-Expose-Headers", "mcp-session-id");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Accept, Authorization, mcp-session-id, MCP-Protocol-Version, Last-Event-ID"
+      );
+      res.setHeader("Access-Control-Expose-Headers", "MCP-Protocol-Version");
       if (req.method === "OPTIONS") {
         res.writeHead(204);
         res.end();
         return;
       }
-      const sessionId = req.headers["mcp-session-id"];
-      if (sessionId && sessions.has(sessionId)) {
-        const session = sessions.get(sessionId);
-        await session.transport.handleRequest(req, res);
-      } else if (!sessionId) {
-        const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => `semiotic-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-        });
-        const srv = createServer2();
-        await srv.connect(transport);
-        transport.onclose = () => {
-          const sid2 = transport.sessionId;
-          if (sid2) sessions.delete(sid2);
-        };
-        await transport.handleRequest(req, res);
-        const sid = transport.sessionId;
-        if (sid) {
-          sessions.set(sid, { server: srv, transport });
+      const pathname = (() => {
+        try {
+          return new URL(req.url || "/", "http://localhost").pathname;
+        } catch {
+          return "/";
         }
-      } else {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Unknown session. Send a request without mcp-session-id to start a new session." }, id: null }));
+      })();
+      if (allowedHosts.length > 0) {
+        const host = (req.headers.host || "").toLowerCase();
+        if (!allowedHosts.includes(host)) {
+          res.writeHead(403, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Forbidden host" }, id: null }));
+          return;
+        }
+      }
+      if (req.method === "GET" && (pathname === "/healthz" || pathname === "/health")) {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(healthBody());
+        return;
+      }
+      if (pathname !== "/" && pathname !== "/mcp") {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Not found" }));
+        return;
+      }
+      if (req.method === "GET") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(healthBody());
+        return;
+      }
+      if (req.method !== "POST") {
+        res.writeHead(405, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Method not allowed" }, id: null }));
+        return;
+      }
+      const srv = createServer2();
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: void 0,
+        enableJsonResponse: true
+      });
+      res.on("close", () => {
+        Promise.resolve(transport.close()).catch(() => {
+        });
+        Promise.resolve(srv.close()).catch(() => {
+        });
+      });
+      try {
+        await srv.connect(transport);
+        await transport.handleRequest(req, res);
+      } catch (err) {
+        console.error("Request handling error:", err);
+        if (!res.headersSent) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }));
+        }
       }
     });
     httpServer.listen(port, () => {

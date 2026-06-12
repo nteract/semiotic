@@ -195,7 +195,8 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
           paddingLeft: 6 + (node.level - 1) * 16,
           cursor: hasChildren ? "pointer" : "default",
           fontSize: 13,
-          background: node.id === activeId ? "var(--semiotic-surface, #f0f4f8)" : "transparent",
+          color: "var(--semiotic-text, currentColor)",
+          background: node.id === activeId ? "var(--semiotic-surface, var(--semiotic-grid, var(--semiotic-bg, #f0f4f8)))" : "transparent",
           outline: "none",
         } : undefined}
       >

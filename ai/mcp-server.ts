@@ -61,11 +61,16 @@ import {
   evaluateVariantProposal,
 } from "semiotic/ai"
 import type { IntentId, StreamSchema, AudienceProfile, ChartDataProfile, VariantProposal } from "semiotic/ai"
+// Sibling .cjs modules (authored as CommonJS, also consumed by the CLI/doctor).
+// esModuleInterop maps each module.exports object to the default import.
+import componentMetadataModule from "./componentMetadata.cjs"
+import chartSuggestionsModule from "./chartSuggestions.cjs"
+import behaviorContractsModule from "./behaviorContracts.cjs"
 
 const {
   componentIndexFromSchema,
   metadataForComponent,
-} = require("./componentMetadata.cjs") as {
+} = componentMetadataModule as {
   componentIndexFromSchema: (schema: any) => {
     version?: string
     totalComponents: number
@@ -91,7 +96,7 @@ const {
 const {
   formatSuggestionReport,
   suggestCharts,
-} = require("./chartSuggestions.cjs") as {
+} = chartSuggestionsModule as {
   formatSuggestionReport: (result: SuggestChartResult) => string
   suggestCharts: (args: {
     data?: any[]
@@ -111,7 +116,7 @@ const {
   dataRequiredForUsageMode,
   formatDoctorBehaviorContracts,
   normalizeUsageMode,
-} = require("./behaviorContracts.cjs") as {
+} = behaviorContractsModule as {
   BEHAVIOR_CONTRACTS: Array<Record<string, unknown>>
   dataRequiredForUsageMode: (component: string, usageMode?: string) => boolean
   behaviorContractsFor: (args: { component?: string; props?: Record<string, any> }) => Array<Record<string, unknown>>
@@ -625,7 +630,6 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   if (format === "png") {
     try {
       // Dynamic import — sharp is an optional dependency
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const sharpMod = await (Function('return import("sharp")')() as Promise<any>)
       const sharpFn = sharpMod.default || sharpMod
       const pngBuffer: Buffer = await sharpFn(Buffer.from(svg)).png().toBuffer()
@@ -1245,6 +1249,17 @@ async function groundChartHandler(args: {
   }
 }
 
+// Every Semiotic MCP tool is a pure computation over its arguments — nothing is
+// mutated, persisted, or fetched over the network (reportIssue only builds a
+// GitHub URL string; it never posts). OpenAI's MCP review requires
+// readOnlyHint/openWorldHint/destructiveHint to be set explicitly on every tool.
+const READ_ONLY_TOOL_ANNOTATIONS = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: false,
+} as const
+
 // ── Server factory ───────────────────────────────────────────────────────
 // Creates a fresh McpServer with all tools registered.
 // HTTP mode needs one instance per session (McpServer can only connect to one transport).
@@ -1403,6 +1418,7 @@ function createServer(): McpServer {
     "getSchema",
     `Return the prop schema for a Semiotic chart component. Pass { component: '<name>' } to get its props, or omit component to list all available components. Components marked [renderable] can be passed to renderChart for static SVG output.`,
     { component: z.string().optional().describe("Component name, e.g. 'LineChart'. Omit to list all.") },
+    READ_ONLY_TOOL_ANNOTATIONS,
     getSchemaHandler
   )
 
@@ -1424,6 +1440,7 @@ function createServer(): McpServer {
         // validation from being unreachable from MCP callers.
       }).strict().optional().describe("Capability constraints — set a key to true to require, false to forbid. Unset keys are ignored."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestChartHandler
   )
 
@@ -1436,6 +1453,7 @@ function createServer(): McpServer {
       theme: z.record(z.string(), z.string()).optional().describe("CSS custom properties for theming, e.g. { '--semiotic-bg': '#1a1a2e', '--semiotic-text': '#ededed' }. Only --semiotic-* variables are applied."),
       format: z.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns a Base64-encoded PNG image. PNG requires the 'sharp' package."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     renderChartHandler
   )
 
@@ -1480,6 +1498,7 @@ function createServer(): McpServer {
       props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
       usageMode: z.enum(["static", "push", "renderChart", "server"]).optional().describe("Validation mode. Use 'push' for ref-based React HOCs that omit data; use 'static' or omit for renderChart/MCP/static data configs."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     diagnoseConfigHandler
   )
 
@@ -1493,6 +1512,7 @@ function createServer(): McpServer {
       describe: z.boolean().optional().describe("True if ChartContainer's describe option (auto-generated L1–L3 description via describeChart) is enabled — passes the 'features described' heuristic."),
       navigable: z.boolean().optional().describe("True if ChartContainer's navigable option (structured navigation tree via buildNavigationTree) is enabled — passes the 'navigable structure' heuristic."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     auditAccessibilityHandler
   )
 
@@ -1504,6 +1524,7 @@ function createServer(): McpServer {
       body: z.string().optional().describe("Issue body with details, reproduction steps, diagnoseConfig output"),
       labels: z.union([z.array(z.string()), z.string()]).optional().describe("GitHub labels, e.g. ['bug'] or 'bug'"),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     reportIssueHandler
   )
 
@@ -1513,6 +1534,7 @@ function createServer(): McpServer {
     {
       name: z.string().optional().describe("Theme preset name, e.g. 'tufte', 'pastels-dark', 'bi-tool'. Omit to list all available themes."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     applyThemeHandler
   )
 
@@ -1524,6 +1546,7 @@ function createServer(): McpServer {
       props: z.record(z.string(), z.unknown()).describe("The full chart props including data"),
       query: z.string().optional().describe("A natural language question about the chart data"),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     interrogateChartHandler
   )
 
@@ -1534,6 +1557,7 @@ function createServer(): McpServer {
       component: z.string().describe("Chart component name, e.g. 'LineChart'"),
       props: z.record(z.string(), z.unknown()).describe("The full chart props including data"),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     groundChartHandler
   )
 
@@ -1560,6 +1584,7 @@ function createServer(): McpServer {
         .describe("Ranking intent."),
       maxResults: z.number().int().min(1).max(20).optional(),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestStreamChartsHandler
   )
 
@@ -1572,6 +1597,7 @@ function createServer(): McpServer {
       maxPanels: z.number().int().min(1).max(12).optional().describe("Maximum panels (default 6)."),
       diversifyByFamily: z.boolean().optional().describe("Prefer not to repeat chart families across panels (default true)."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestDashboardHandler
   )
 
@@ -1604,6 +1630,7 @@ function createServer(): McpServer {
       intent: z.union([z.string(), z.array(z.string())]).optional(),
       maxResults: z.number().int().min(1).max(20).optional(),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestStretchChartsHandler
   )
 
@@ -1619,6 +1646,7 @@ function createServer(): McpServer {
         .describe("User intent — informs ranking of alternatives when the chart doesn't fit."),
       maxAlternatives: z.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3)."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     repairChartConfigHandler
   )
 
@@ -1657,6 +1685,7 @@ function createServer(): McpServer {
         .optional()
         .describe("Audience profile — familiarity, adoption targets, exposure level, and reception modality."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     proposeChartVariantsHandler
   )
 
@@ -1695,6 +1724,7 @@ function createServer(): McpServer {
         .optional()
         .describe("Audience profile — familiarity, adoption targets, exposure level, and reception modality."),
     },
+    READ_ONLY_TOOL_ANNOTATIONS,
     suggestChartsHandler
   )
 
@@ -1713,15 +1743,45 @@ const port = Number.isFinite(parsedPort) ? parsedPort : 3001
 
 async function main() {
   if (httpMode) {
-    // HTTP mode — session-based, one server+transport per session
-    const sessions = new Map<string, { server: McpServer; transport: StreamableHTTPServerTransport }>()
+    // HTTP mode — STATELESS Streamable HTTP: a fresh McpServer + transport per
+    // request, no session map. Every Semiotic tool is an independent read-only
+    // request/response with no per-session state, so sessions would be pure
+    // overhead. Stateless lets Cloud Run autoscale freely (no session affinity
+    // or single-instance pin) and removes any session-leak surface. The cost is
+    // building a server per request — trivial at this QPS, and we use neither
+    // server-initiated SSE streams nor resumability. See deploy/cloud-run/README.md.
+    //
+    // enableJsonResponse: POSTs return a single application/json body instead of
+    // holding an SSE stream open — the right shape for serverless.
+    // sessionIdGenerator: undefined selects stateless mode in the SDK.
+
+    // DNS-rebinding defense (CVE-2025-66414): opt-in Host-header allowlist.
+    // The SDK's built-in allowedHosts option is deprecated in favor of doing
+    // this in the request handler. Set MCP_ALLOWED_HOSTS to your public
+    // hostname(s) in production; leave unset for local dev.
+    const allowedHosts = (process.env.MCP_ALLOWED_HOSTS || "")
+      .split(",")
+      .map((h) => h.trim().toLowerCase())
+      .filter(Boolean)
+
+    const healthBody = () =>
+      JSON.stringify({
+        status: "ok",
+        name: "semiotic-mcp",
+        version: schema.version || "unknown",
+        transport: "streamable-http",
+        mode: "stateless",
+      })
 
     const httpServer = http.createServer(async (req, res) => {
-      // CORS headers for browser-based inspectors
+      // Public read-only server: permissive CORS for browser-based MCP clients.
       res.setHeader("Access-Control-Allow-Origin", "*")
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, mcp-session-id")
-      res.setHeader("Access-Control-Expose-Headers", "mcp-session-id")
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Accept, Authorization, mcp-session-id, MCP-Protocol-Version, Last-Event-ID",
+      )
+      res.setHeader("Access-Control-Expose-Headers", "MCP-Protocol-Version")
 
       if (req.method === "OPTIONS") {
         res.writeHead(204)
@@ -1729,35 +1789,76 @@ async function main() {
         return
       }
 
-      const sessionId = req.headers["mcp-session-id"] as string | undefined
+      const pathname = (() => {
+        try {
+          return new URL(req.url || "/", "http://localhost").pathname
+        } catch {
+          return "/"
+        }
+      })()
 
-      if (sessionId && sessions.has(sessionId)) {
-        // Existing session — route to its transport
-        const session = sessions.get(sessionId)!
-        await session.transport.handleRequest(req, res)
-      } else if (!sessionId) {
-        // New session — create server + transport
-        const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => `semiotic-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        })
-        const srv = createServer()
+      // Host-header allowlist (DNS-rebinding defense). Opt-in via env.
+      if (allowedHosts.length > 0) {
+        const host = (req.headers.host || "").toLowerCase()
+        if (!allowedHosts.includes(host)) {
+          res.writeHead(403, { "Content-Type": "application/json" })
+          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Forbidden host" }, id: null }))
+          return
+        }
+      }
+
+      // Dedicated health endpoint for platform probes (Cloud Run, uptime checks).
+      if (req.method === "GET" && (pathname === "/healthz" || pathname === "/health")) {
+        res.writeHead(200, { "Content-Type": "application/json" })
+        res.end(healthBody())
+        return
+      }
+
+      // MCP lives at / and /mcp only. Everything else (favicon, and notably
+      // .well-known/* discovery probes) gets a clean 404. A 404 on
+      // /.well-known/oauth-protected-resource is the correct signal that this
+      // is an unauthenticated server — a 200 with non-OAuth JSON would confuse
+      // a client's auth-discovery flow.
+      if (pathname !== "/" && pathname !== "/mcp") {
+        res.writeHead(404, { "Content-Type": "application/json" })
+        res.end(JSON.stringify({ error: "Not found" }))
+        return
+      }
+
+      // Friendly info for a human (or probe) hitting the URL in a browser.
+      // Stateless mode has no standalone SSE stream, so GET carries no MCP role.
+      if (req.method === "GET") {
+        res.writeHead(200, { "Content-Type": "application/json" })
+        res.end(healthBody())
+        return
+      }
+
+      if (req.method !== "POST") {
+        res.writeHead(405, { "Content-Type": "application/json" })
+        res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed" }, id: null }))
+        return
+      }
+
+      // Stateless: one ephemeral server+transport for this request only. Reusing
+      // a stateless transport across requests is a known SDK bug, so we never do.
+      const srv = createServer()
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+        enableJsonResponse: true,
+      })
+      res.on("close", () => {
+        Promise.resolve(transport.close()).catch(() => {})
+        Promise.resolve(srv.close()).catch(() => {})
+      })
+      try {
         await srv.connect(transport)
-
-        transport.onclose = () => {
-          const sid = transport.sessionId
-          if (sid) sessions.delete(sid)
-        }
-
         await transport.handleRequest(req, res)
-
-        const sid = transport.sessionId
-        if (sid) {
-          sessions.set(sid, { server: srv, transport })
+      } catch (err) {
+        console.error("Request handling error:", err)
+        if (!res.headersSent) {
+          res.writeHead(500, { "Content-Type": "application/json" })
+          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }))
         }
-      } else {
-        // Session ID provided but not found — stale session
-        res.writeHead(400, { "Content-Type": "application/json" })
-        res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Unknown session. Send a request without mcp-session-id to start a new session." }, id: null }))
       }
     })
 

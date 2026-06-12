@@ -34,6 +34,14 @@ describe("AccessibleNavTree — ARIA structure", () => {
     expect(leaf).toHaveAttribute("aria-setsize", "5")
   })
 
+  it("uses theme-aware colors for visible selected rows", () => {
+    render(<AccessibleNavTree tree={singleSeries} label="Sales nav" visible />)
+    const root = screen.getAllByRole("treeitem")[0]
+    const style = root.getAttribute("style") || ""
+    expect(style).toContain("color: var(--semiotic-text, currentColor)")
+    expect(style).toContain("background: var(--semiotic-surface, var(--semiotic-grid, var(--semiotic-bg, #f0f4f8)))")
+  })
+
   it("collapses series branches until expanded", () => {
     render(<AccessibleNavTree tree={multiSeries} />)
     // The West series' second point is hidden while the branch is collapsed.
