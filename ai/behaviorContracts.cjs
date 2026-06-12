@@ -15,13 +15,17 @@ const DOC_MARKER_START = "<!-- semiotic-behavior-contracts:start -->"
 const DOC_MARKER_END = "<!-- semiotic-behavior-contracts:end -->"
 
 // Components whose static config requires `data` are derived from
-// `ai/schema.json` rather than maintained as a hand-curated list. The schema
-// already declares which components require data — duplicating that here led
-// to drift (Heatmap, FunnelChart, MinimapChart, ScatterplotMatrix, and the
-// hierarchy charts were schema-required but missing from the local list,
-// which made `dataRequiredForUsageMode` incorrectly return `false` and
-// suppressed the "data is required" error in --doctor / MCP diagnoseConfig
-// even when usageMode wasn't `push`).
+// `ai/schema.json` rather than maintained as a hand-curated list.
+//
+// A component needs data in STATIC usage if its schema declares a `data` input
+// prop — NOT merely if `data` is in the `required` array. `required` lists the
+// semantic accessors a chart needs (highAccessor, subcategoryAccessor, series,
+// …), and several data-driven charts don't put `data` itself there:
+// CandlestickChart, MultiAxisLineChart, QuadrantChart, DifferenceChart,
+// LikertChart, and SwimlaneChart. Keying off `required.includes("data")` missed
+// exactly those — they'd render blank with no data yet passed --doctor / MCP
+// diagnoseConfig as "OK" in static mode. Keying off the presence of a `data`
+// property catches them (and still includes the charts that DO list `data`).
 //
 // `STATIC_DATA_COMPONENTS` stays exported as a Set for test/legacy callers
 // that probe the surface, and is rebuilt from disk at module load time.
@@ -41,8 +45,10 @@ function loadStaticDataComponentsFromSchema() {
       const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"))
       const out = new Set()
       for (const tool of schema.tools || []) {
-        const required = tool.function?.parameters?.required || []
-        if (required.includes("data")) out.add(tool.function.name)
+        const properties = tool.function?.parameters?.properties || {}
+        // Data-driven if the schema declares a `data` input prop, regardless of
+        // whether `data` appears in `required` (see note above).
+        if ("data" in properties) out.add(tool.function.name)
       }
       if (out.size > 0) return out
     } catch {
@@ -114,6 +120,10 @@ const PUSH_MODE_COMPONENTS = [
   "Scatterplot",
   "BubbleChart",
   "ConnectedScatterplot",
+  "CandlestickChart",
+  "MultiAxisLineChart",
+  "QuadrantChart",
+  "DifferenceChart",
   "BarChart",
   "StackedBarChart",
   "GroupedBarChart",

@@ -23,6 +23,53 @@ describe("diagnoseConfig", () => {
     expect(result.ok).toBe(false)
   })
 
+  it("flags missing data for accessor-only charts not listing data in required (C2)", () => {
+    // CandlestickChart lists highAccessor/lowAccessor (not "data") in required,
+    // so a dataless static config used to pass as OK and render blank.
+    // diagnoseConfig merges validateProps, which now emits the data
+    // requirement; the MCP/CLI usageMode filter keeps it in static and drops it
+    // in push (see ai-behavior-contracts dataRequiredForUsageMode tests).
+    const result = diagnoseConfig("CandlestickChart", {
+      xAccessor: "day",
+      highAccessor: "high",
+      lowAccessor: "low",
+    })
+    expect(result.ok).toBe(false)
+    expect(result.diagnoses.map(d => d.message)).toContain('"data" is required for CandlestickChart.')
+  })
+
+  it("warns on an unrecognized colorScheme name but not a known scheme or an array", () => {
+    const base = { data: [{ category: "A", value: 1 }], categoryAccessor: "category", valueAccessor: "value" }
+    const typo = diagnoseConfig("BarChart", { ...base, colorScheme: "viridisx" })
+    expect(typo.diagnoses.map(d => d.code)).toContain("UNKNOWN_COLOR_SCHEME")
+
+    const known = diagnoseConfig("BarChart", { ...base, colorScheme: "tableau10" })
+    expect(known.diagnoses.map(d => d.code)).not.toContain("UNKNOWN_COLOR_SCHEME")
+
+    const array = diagnoseConfig("BarChart", { ...base, colorScheme: ["#111", "#222"] })
+    expect(array.diagnoses.map(d => d.code)).not.toContain("UNKNOWN_COLOR_SCHEME")
+  })
+
+  it("does not second-guess Heatmap's enum-validated colorScheme", () => {
+    // Heatmap has its own colorScheme enum (incl. "custom") validated by
+    // validateProps; the diagnoseConfig warning must not contradict it.
+    const result = diagnoseConfig("Heatmap", {
+      data: [{ x: "a", y: "b", value: 1 }],
+      xAccessor: "x", yAccessor: "y", valueAccessor: "value",
+      colorScheme: "custom",
+    })
+    expect(result.diagnoses.map(d => d.code)).not.toContain("UNKNOWN_COLOR_SCHEME")
+  })
+
+  it("recognizes every COLOR_SCHEMES name (KNOWN_COLOR_SCHEMES drift guard)", async () => {
+    const { COLOR_SCHEMES } = await import("./colorUtils")
+    const base = { data: [{ category: "A", value: 1 }], categoryAccessor: "category", valueAccessor: "value" }
+    for (const name of Object.keys(COLOR_SCHEMES)) {
+      const result = diagnoseConfig("BarChart", { ...base, colorScheme: name })
+      expect(result.diagnoses.map(d => d.code)).not.toContain("UNKNOWN_COLOR_SCHEME")
+    }
+  })
+
   it("detects bad width", () => {
     const result = diagnoseConfig("LineChart", {
       data: [{ x: 1, y: 2 }],

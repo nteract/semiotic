@@ -552,6 +552,22 @@ describe("MCP protocol round-trip", () => {
     expect(result.result.isError).toBe(true)
   })
 
+  it("suggestChart accepts the broader suggestCharts intent vocabulary", async () => {
+    // "compare-categories" is part of the suggestCharts (plural) 13-intent
+    // taxonomy. It used to be hard-rejected by suggestChart's zod enum; now it
+    // is translated into this engine's space rather than erroring.
+    const result = await sendRequest(proc, "tools/call", {
+      name: "suggestChart",
+      arguments: {
+        data: [{ category: "A", value: 10 }, { category: "B", value: 20 }],
+        intent: "compare-categories",
+      },
+    }, "suggest-vocab")
+
+    expect(result.result.isError).toBeFalsy()
+    expect(result.result.structuredContent.ok).toBe(true)
+  })
+
   it("proposeChartVariants returns ranked variant proposals", async () => {
     const result = await sendRequest(proc, "tools/call", {
       name: "proposeChartVariants",
@@ -912,6 +928,30 @@ describe("MCP protocol round-trip", () => {
     const text = result.result.content[0].text
     expect(text).toContain("ThemeProvider")
     expect(text).toContain('theme="tufte"')
+    // The import snippets must reference the real export (TUFTE_LIGHT, not a
+    // mangled "TUFTE") and must not reference an undefined `themeObject`.
+    expect(text).toContain("TUFTE_LIGHT")
+    expect(text).not.toContain("themeObject")
+    expect(text).toContain("theme={TUFTE_LIGHT}")
+  })
+
+  it("applyTheme resolves carbon and dark presets to their real exports", async () => {
+    const carbon = await sendRequest(proc, "tools/call", {
+      name: "applyTheme",
+      arguments: { name: "carbon" },
+    }, "theme-carbon")
+    // carbon/carbon-dark are documented presets that used to be rejected.
+    expect(carbon.result.isError).toBeFalsy()
+    expect(carbon.result.content[0].text).toContain("CARBON_LIGHT")
+
+    const dark = await sendRequest(proc, "tools/call", {
+      name: "applyTheme",
+      arguments: { name: "dark" },
+    }, "theme-dark")
+    expect(dark.result.isError).toBeFalsy()
+    // "dark" must resolve to DARK_THEME, not the old "_DARK" mangle.
+    expect(dark.result.content[0].text).toContain("DARK_THEME")
+    expect(dark.result.content[0].text).not.toContain("{ _DARK }")
   })
 
   it("applyTheme with unknown theme returns error", async () => {

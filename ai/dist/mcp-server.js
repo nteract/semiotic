@@ -7030,7 +7030,7 @@ var require_chartSuggestions = __commonJS({
   "ai/chartSuggestions.cjs"(exports2, module2) {
     "use strict";
     var path2 = require("path");
-    var VALID_INTENTS = [
+    var VALID_INTENTS2 = [
       "comparison",
       "trend",
       "distribution",
@@ -7163,10 +7163,10 @@ var require_chartSuggestions = __commonJS({
       const data = args.data;
       const intent = args.intent;
       const capabilities = args.capabilities;
-      if (intent && !VALID_INTENTS.includes(intent)) {
+      if (intent && !VALID_INTENTS2.includes(intent)) {
         return {
           ok: false,
-          error: `Unknown intent "${intent}". Expected one of: ${VALID_INTENTS.join(", ")}.`
+          error: `Unknown intent "${intent}". Expected one of: ${VALID_INTENTS2.join(", ")}.`
         };
       }
       if (capabilities) {
@@ -7384,7 +7384,7 @@ ${result.filteredOut.map((s) => `- ${s.component}: ${s.reason}`).join("\n")}
 
 Relax the capability constraints, or use getSchema to browse alternatives.` : `
 
-Try providing intent ('${VALID_INTENTS.join("', '")}') to narrow recommendations, or use getSchema to browse available components.`;
+Try providing intent ('${VALID_INTENTS2.join("', '")}') to narrow recommendations, or use getSchema to browse available components.`;
         return `Could not confidently recommend a chart type.
 
 ${result.fieldSummary}${tail}`;
@@ -7423,7 +7423,7 @@ For accessibility, use \`colorScheme={COLOR_BLIND_SAFE_CATEGORICAL}\` (import fr
       return Object.entries(capabilities).filter(([, v]) => v != null).map(([k, v]) => `${k}=${v}`).join(", ");
     }
     module2.exports = {
-      VALID_INTENTS,
+      VALID_INTENTS: VALID_INTENTS2,
       VALID_CAPABILITY_KEYS,
       formatSuggestionReport: formatSuggestionReport2,
       suggestCharts: suggestCharts2,
@@ -7453,8 +7453,8 @@ var require_behaviorContracts = __commonJS({
           const schema2 = JSON.parse(fs2.readFileSync(schemaPath2, "utf8"));
           const out = /* @__PURE__ */ new Set();
           for (const tool of schema2.tools || []) {
-            const required2 = tool.function?.parameters?.required || [];
-            if (required2.includes("data")) out.add(tool.function.name);
+            const properties = tool.function?.parameters?.properties || {};
+            if ("data" in properties) out.add(tool.function.name);
           }
           if (out.size > 0) return out;
         } catch {
@@ -7520,6 +7520,10 @@ var require_behaviorContracts = __commonJS({
       "Scatterplot",
       "BubbleChart",
       "ConnectedScatterplot",
+      "CandlestickChart",
+      "MultiAxisLineChart",
+      "QuadrantChart",
+      "DifferenceChart",
       "BarChart",
       "StackedBarChart",
       "GroupedBarChart",
@@ -32444,7 +32448,8 @@ var {
 } = import_componentMetadata.default;
 var {
   formatSuggestionReport,
-  suggestCharts
+  suggestCharts,
+  VALID_INTENTS
 } = import_chartSuggestions.default;
 var {
   BEHAVIOR_CONTRACTS,
@@ -32827,8 +32832,23 @@ ${JSON.stringify(contracts, null, 2)}` : "";
 ${JSON.stringify(entry, null, 2)}${contractText}` }]
   };
 }
+var SUGGEST_INTENT_ALIASES = {
+  "compare-series": "comparison",
+  "compare-categories": "comparison",
+  "rank": "comparison",
+  "part-to-whole": "composition",
+  "composition-over-time": "composition",
+  "correlation": "relationship",
+  "flow": "network",
+  "geo": "geographic",
+  "outlier-detection": "distribution",
+  "change-detection": "trend"
+};
 async function suggestChartHandler(args) {
-  const result = suggestCharts(args);
+  let intent = args.intent;
+  if (intent && SUGGEST_INTENT_ALIASES[intent]) intent = SUGGEST_INTENT_ALIASES[intent];
+  if (intent && !VALID_INTENTS.includes(intent)) intent = void 0;
+  const result = suggestCharts({ ...args, intent });
   const content = [{ type: "text", text: formatSuggestionReport(result) }];
   if (!result.ok) {
     return { content, isError: true, structuredContent: result };
@@ -32876,6 +32896,10 @@ async function renderChartHandler(args) {
 ${JSON.stringify(evidence, null, 2)}`
     };
   } catch {
+    evidenceBlock = {
+      type: "text",
+      text: `Render evidence: unavailable for ${component} (no server render config). The SVG above is the validated React render; mark-count / domain evidence is only produced for components with a server render path.`
+    };
   }
   if (theme && Object.keys(theme).length > 0) {
     const validVars = Object.entries(theme).filter(([k]) => k.startsWith("--semiotic-")).map(([k, v]) => `${k}: ${v}`).join("; ");
@@ -33049,23 +33073,26 @@ async function reportIssueHandler(args) {
 ${url2}` }]
   };
 }
-var THEME_PRESET_NAMES = [
-  "light",
-  "dark",
-  "high-contrast",
-  "pastels",
-  "pastels-dark",
-  "bi-tool",
-  "bi-tool-dark",
-  "italian",
-  "italian-dark",
-  "tufte",
-  "tufte-dark",
-  "journalist",
-  "journalist-dark",
-  "playful",
-  "playful-dark"
-];
+var THEME_PRESETS = {
+  "light": "LIGHT_THEME",
+  "dark": "DARK_THEME",
+  "high-contrast": "HIGH_CONTRAST_THEME",
+  "pastels": "PASTELS_LIGHT",
+  "pastels-dark": "PASTELS_DARK",
+  "bi-tool": "BI_TOOL_LIGHT",
+  "bi-tool-dark": "BI_TOOL_DARK",
+  "italian": "ITALIAN_LIGHT",
+  "italian-dark": "ITALIAN_DARK",
+  "tufte": "TUFTE_LIGHT",
+  "tufte-dark": "TUFTE_DARK",
+  "journalist": "JOURNALIST_LIGHT",
+  "journalist-dark": "JOURNALIST_DARK",
+  "playful": "PLAYFUL_LIGHT",
+  "playful-dark": "PLAYFUL_DARK",
+  "carbon": "CARBON_LIGHT",
+  "carbon-dark": "CARBON_DARK"
+};
+var THEME_PRESET_NAMES = Object.keys(THEME_PRESETS);
 async function applyThemeHandler(args) {
   const name = args.name;
   if (!name) {
@@ -33085,6 +33112,7 @@ Dark-mode presets: ${THEME_PRESET_NAMES.filter((n) => n.includes("dark")).join("
       isError: true
     };
   }
+  const exportName = THEME_PRESETS[name];
   const usage = [
     `## Theme: "${name}"`,
     "",
@@ -33098,24 +33126,23 @@ Dark-mode presets: ${THEME_PRESET_NAMES.filter((n) => n.includes("dark")).join("
     "",
     "### Option 2: Import the theme object",
     "```jsx",
-    `import { ${name.replace(/-./g, (c) => c[1].toUpperCase()).replace(/^./, (c) => c.toUpperCase()).replace(/Dark$/, "_DARK").replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase()} } from "semiotic/themes"`,
-    `<ThemeProvider theme={themeObject}>`,
+    `import { ${exportName} } from "semiotic/themes"`,
+    `<ThemeProvider theme={${exportName}}>`,
     `  <BarChart ... />`,
     `</ThemeProvider>`,
     "```",
     "",
     "### Option 3: CSS custom properties (no React required)",
     "```jsx",
-    `import { themeToCSS } from "semiotic/themes"`,
-    `import { ${name.replace(/-./g, (c) => c[1].toUpperCase()).replace(/^./, (c) => c.toUpperCase()).replace(/Dark$/, "_DARK").replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase()} } from "semiotic/themes"`,
-    `const css = themeToCSS(themeObject, ".my-charts")`,
+    `import { themeToCSS, ${exportName} } from "semiotic/themes"`,
+    `const css = themeToCSS(${exportName}, ".my-charts")`,
     "// Outputs CSS custom properties string for embedding in a stylesheet",
     "```",
     "",
     "### Option 4: Design tokens JSON",
     "```jsx",
-    `import { themeToTokens } from "semiotic/themes"`,
-    `const tokens = themeToTokens(themeObject)`,
+    `import { themeToTokens, ${exportName} } from "semiotic/themes"`,
+    `const tokens = themeToTokens(${exportName})`,
     "// Style Dictionary / DTCG-compatible token format",
     "```",
     "",
@@ -33561,10 +33588,10 @@ function createServer2() {
   );
   srv.tool(
     "suggestChart",
-    "Recommend Semiotic chart types for a given data sample. Pass { data: [...] } with 1-5 sample objects. Optionally pass intent to narrow suggestions, or capabilities to require/forbid features (push API, linked hover, SSR, selection, legend). Returns ranked recommendations with example props; charts that don't satisfy the capability constraints are dropped.",
+    "Lightweight heuristic chart recommender for a small data sample (1-5 rows) with capability filtering (push API, linked hover, SSR, selection, legend). Returns ranked recommendations with example props. For richer capability-descriptor ranking (scores, reasons, caveats) and the full 13-intent taxonomy, prefer `suggestCharts` (plural).",
     {
       data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).min(1).max(5).describe("1-5 sample data objects"),
-      intent: external_exports3.enum(["comparison", "trend", "distribution", "relationship", "composition", "geographic", "network", "hierarchy"]).optional().describe("Visualization intent to narrow suggestions"),
+      intent: external_exports3.string().optional().describe("Visualization intent. Accepts this engine's intents (comparison, trend, distribution, relationship, composition, geographic, network, hierarchy) AND the richer suggestCharts taxonomy (compare-categories, part-to-whole, correlation, flow, geo, rank, \u2026), which is translated automatically; an unrecognized intent is ignored rather than rejected."),
       capabilities: external_exports3.object({
         push: external_exports3.boolean().optional().describe("Require ref-based push API (live streaming via ref.current.push())"),
         linkedHover: external_exports3.boolean().optional().describe("Require cross-chart linked hover support"),
