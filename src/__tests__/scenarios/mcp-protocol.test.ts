@@ -16,12 +16,40 @@ import type { Datum } from "../../components/charts/shared/datumTypes"
  */
 
 import { spawn, type ChildProcess } from "child_process"
+import { existsSync } from "fs"
 import * as http from "http"
 import * as net from "net"
 import * as path from "path"
 
 const SERVER_PATH = path.resolve(__dirname, "../../../ai/dist/mcp-server.js")
 const HTTP_START_RETRIES = 3
+
+// The bundled server externalizes the library entry points (build:mcp passes
+// --external:semiotic/ai etc.), which resolve through package.json `exports`
+// to dist/*.min.js — Rollup output that only exists after `npm run dist`. On
+// a fresh clone, plain `npm test` would otherwise fail every spawn with a
+// cryptic "Process exited with code 1 before responding to initialize".
+const REQUIRED_BUNDLES = [
+  SERVER_PATH,
+  // The server's runtime requires (mirrors the build:mcp --external flags):
+  path.resolve(__dirname, "../../../dist/semiotic-ai.min.js"),
+  path.resolve(__dirname, "../../../dist/geo.min.js"),
+  path.resolve(__dirname, "../../../dist/server.min.js"),
+]
+const MISSING_BUNDLES = REQUIRED_BUNDLES.filter((bundle) => !existsSync(bundle))
+const SERVER_DEPS_READY = MISSING_BUNDLES.length === 0
+if (!SERVER_DEPS_READY) {
+  const message =
+    "[mcp-protocol.test] MCP server suites need built bundles — run `npm run dist` " +
+    "(and `npm run build:mcp` if ai/dist is stale). Missing: " +
+    MISSING_BUNDLES.join(", ")
+  if (process.env.CI) {
+    // In CI a missing bundle means the dist step was dropped or reordered —
+    // fail loudly rather than silently skipping all MCP protocol coverage.
+    throw new Error(message)
+  }
+  console.warn(message)
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -329,7 +357,7 @@ async function initializeServer(proc: ChildProcess): Promise<any> {
 
 // ── Tests ────────────────────────────────────────────────────────────
 
-describe("MCP protocol round-trip", () => {
+describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
   let proc: ChildProcess
 
   beforeEach(async () => {
@@ -975,7 +1003,7 @@ describe("MCP protocol round-trip", () => {
   })
 })
 
-describe("MCP HTTP transport smoke", () => {
+describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
   let proc: ChildProcess | undefined
   let port: number
 
