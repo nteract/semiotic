@@ -363,6 +363,12 @@ export class PipelineStore {
   // ── Color map caching ──────────────────────────────────────────────
   /** Unified color map cache keyed by sorted category set — shared across point, swarm, etc. */
   private _colorMapCache: { key: string; map: Map<string, string>; version: number } | null = null
+  /** groupData() result cache. The line/area/stacked-area builders all re-bucket
+   *  the same buffer by group on every scene build (twice per frame for stacked
+   *  area); cache keyed on (_ingestVersion, group accessor, data ref) so a
+   *  streaming push re-buckets once rather than per builder. Mirrors the
+   *  resolveColorMap cache. Buckets are read-only downstream, so sharing is safe. */
+  private _groupDataCache: { version: number; group: ((d: Datum) => string) | undefined; data: Datum[]; result: { key: string; data: Datum[] }[] } | null = null
   /** Separate group→color map for resolveGroupColor (insertion-order based, never invalidates _colorMapCache).
    *  FIFO-bounded to `GROUP_COLOR_MAP_CAP` entries — in long-running streams with unique group IDs (e.g. UUIDs
    *  as `lineBy` keys) this would otherwise grow unboundedly. Evicted groups that re-appear get a new palette
@@ -1413,18 +1419,31 @@ export class PipelineStore {
   // ── Helpers ──────────────────────────────────────────────────────────
 
   private groupData(data: Datum[]): { key: string; data: Datum[] }[] {
+    // Fast path: same buffer, same grouping, same ingest → reuse the buckets.
+    if (
+      this._groupDataCache &&
+      this._groupDataCache.version === this._ingestVersion &&
+      this._groupDataCache.group === this.getGroup &&
+      this._groupDataCache.data === data
+    ) {
+      return this._groupDataCache.result
+    }
+
+    let result: { key: string; data: Datum[] }[]
     if (!this.getGroup) {
-      return [{ key: "_default", data }]
+      result = [{ key: "_default", data }]
+    } else {
+      const groups = new Map<string, Datum[]>()
+      for (const d of data) {
+        const key = this.getGroup(d)
+        if (!groups.has(key)) groups.set(key, [])
+        groups.get(key)!.push(d)
+      }
+      result = Array.from(groups.entries()).map(([key, data]) => ({ key, data }))
     }
 
-    const groups = new Map<string, Datum[]>()
-    for (const d of data) {
-      const key = this.getGroup(d)
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key)!.push(d)
-    }
-
-    return Array.from(groups.entries()).map(([key, data]) => ({ key, data }))
+    this._groupDataCache = { version: this._ingestVersion, group: this.getGroup, data, result }
+    return result
   }
 
   /**
@@ -1728,6 +1747,7 @@ export class PipelineStore {
     this._quadtree = null
     this._maxPointRadius = 0
     this._colorMapCache = null
+    this._groupDataCache = null
     this._groupColorMap = new Map()
     this._groupColorCounter = 0
     this._barCategoryCache = null

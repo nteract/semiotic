@@ -75,6 +75,20 @@ export class NetworkPipelineStore {
   private _nodeQuadtreeRevision = -1
   private static readonly QUADTREE_THRESHOLD = 500
 
+  // ── Materialized array cache ────────────────────────────────────────────
+  // buildScene, tickAnimation, and particle rendering each need the node/edge
+  // Maps as arrays every frame during animation. `Array.from` on every frame
+  // allocates O(n+m) garbage for a graph that hasn't structurally changed
+  // (a 5k-node/10k-edge orbit/sankey churns millions of slots/sec → GC stalls).
+  // Cache keyed on layoutVersion — which bumps on every Map mutation
+  // (ingest/remove/clear) but NOT on an animation tick — so animation frames
+  // reuse the arrays. Handed only to non-hierarchical layout plugins, which
+  // read them (mutating node-object positions in place); hierarchical plugins
+  // use the arrays as scratch and get fresh copies.
+  private _nodesArrCache: RealtimeNode[] | null = null
+  private _edgesArrCache: RealtimeEdge[] | null = null
+  private _arrCacheVersion = -1
+
   // ── Particles ─────────────────────────────────────────────────────────
 
   particlePool: ParticlePool | null = null
@@ -102,6 +116,8 @@ export class NetworkPipelineStore {
   // ── Decay sort cache ──────────────────────────────────────────────────
   /** Cached sorted node-timestamp entries for applyDecay(); null = needs rebuild */
   private _decaySortedNodes: Array<[string, number]> | null = null
+  /** id→age-index map derived from _decaySortedNodes; rebuilt with it, not per frame. */
+  private _decayAgeMap: Map<string, number> | null = null
 
   // ── Topology diffing ───────────────────────────────────────────────────
 
@@ -582,13 +598,14 @@ export class NetworkPipelineStore {
   buildScene(size: [number, number]): void {
     // Any sceneNodes rebuild invalidates the lazily-built node quadtree.
     this._sceneNodesRevision++
-    const nodesArr = Array.from(this.nodes.values())
-    const edgesArr = Array.from(this.edges.values())
 
     // customLayout escape hatch — short-circuit plugin dispatch and let the
     // user emit scene primitives directly. Hit testing, decay, and SSR keep
     // working because they consume `this.sceneNodes`/`sceneEdges`.
     if (this.config.customNetworkLayout) {
+      // User code may freely read or mutate these — always hand it fresh arrays.
+      const nodesArr = Array.from(this.nodes.values())
+      const edgesArr = Array.from(this.edges.values())
       // Palette + resolveColor share the same shape across network and
       // ordinal customLayout escape hatches — see `customLayoutPalette.ts`.
       const palette = resolveCustomLayoutPalette(
@@ -636,6 +653,13 @@ export class NetworkPipelineStore {
 
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin) return
+
+    // Non-hierarchical plugins (force/sankey/chord) only read these arrays
+    // (mutating node-object positions in place), so they share the per-frame
+    // cache. Hierarchical plugins (orbit/hierarchy) use them as mutable scratch
+    // (clear + rebuild), so they get fresh arrays.
+    const nodesArr = plugin.hierarchical ? Array.from(this.nodes.values()) : this.nodesArray
+    const edgesArr = plugin.hierarchical ? Array.from(this.edges.values()) : this.edgesArray
 
     const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
       nodesArr,
@@ -704,6 +728,31 @@ export class NetworkPipelineStore {
     return this._maxNodeRadius
   }
 
+  /**
+   * Per-frame-stable node/edge arrays (see field docs). Rebuilt only when
+   * layoutVersion changes — i.e. on a Map mutation, never on an animation tick.
+   */
+  private _ensureArrays(): void {
+    if (this._arrCacheVersion === this.layoutVersion && this._nodesArrCache && this._edgesArrCache) {
+      return
+    }
+    this._nodesArrCache = Array.from(this.nodes.values())
+    this._edgesArrCache = Array.from(this.edges.values())
+    this._arrCacheVersion = this.layoutVersion
+  }
+
+  /** Cached node array — safe only for read / position-mutate consumers. */
+  get nodesArray(): RealtimeNode[] {
+    this._ensureArrays()
+    return this._nodesArrCache!
+  }
+
+  /** Cached edge array — safe only for read / position-mutate consumers. */
+  get edgesArray(): RealtimeEdge[] {
+    this._ensureArrays()
+    return this._edgesArrCache!
+  }
+
   // ── Animation tick (orbit etc.) ──────────────────────────────────────
 
   /** Whether the current layout plugin drives continuous animation (respects orbitAnimated config) */
@@ -723,8 +772,10 @@ export class NetworkPipelineStore {
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin?.tick) return false
 
-    const nodesArr = Array.from(this.nodes.values())
-    const edgesArr = Array.from(this.edges.values())
+    // Non-hierarchical layouts (force) share the per-frame array cache; the
+    // hierarchical orbit layout uses them as scratch, so it gets fresh arrays.
+    const nodesArr = plugin.hierarchical ? Array.from(this.nodes.values()) : this.nodesArray
+    const edgesArr = plugin.hierarchical ? Array.from(this.edges.values()) : this.edgesArray
     return plugin.tick(nodesArr, edgesArr, this.config, size, deltaTime)
   }
 
@@ -1135,15 +1186,19 @@ export class NetworkPipelineStore {
     const nodeCount = this.nodeTimestamps.size
     if (nodeCount <= 1) return
 
-    // Sort nodes by creation time (oldest first) — cached when topology is stable
+    // Sort nodes by creation time (oldest first) and build the id→age-index map
+    // — both cached when topology is stable. The age map used to be rebuilt
+    // every frame (O(n) Map alloc + fill) even though the sort was cached; now
+    // it rebuilds only when the sort does (i.e. on a topology change).
     if (!this._decaySortedNodes) {
       this._decaySortedNodes = Array.from(this.nodeTimestamps.entries()).sort((a, b) => a[1] - b[1])
+      const ageMap = new Map<string, number>()
+      for (let i = 0; i < this._decaySortedNodes.length; i++) {
+        ageMap.set(this._decaySortedNodes[i][0], i)
+      }
+      this._decayAgeMap = ageMap
     }
-    const sorted = this._decaySortedNodes
-    const nodeAgeMap = new Map<string, number>()
-    for (let i = 0; i < sorted.length; i++) {
-      nodeAgeMap.set(sorted[i][0], i)
-    }
+    const nodeAgeMap = this._decayAgeMap!
 
     for (const node of this.sceneNodes) {
       const nodeId = node.id

@@ -370,6 +370,42 @@ describe("NetworkPipelineStore", () => {
     })
   })
 
+  // ── Materialized array cache (per-frame allocation avoidance) ────────
+  describe("node/edge array cache", () => {
+    it("reuses the arrays across reads until a topology change, then rebuilds", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      store.ingestBounded([{ id: "A" }, { id: "B" }], [{ source: "A", target: "B", value: 1 }], [600, 400])
+
+      const nodes1 = store.nodesArray
+      const edges1 = store.edgesArray
+      // Repeated reads with no Map mutation return the same array (the cache
+      // that lets animation frames skip the per-frame Array.from).
+      expect(store.nodesArray).toBe(nodes1)
+      expect(store.edgesArray).toBe(edges1)
+
+      // A topology change bumps layoutVersion, invalidating the cache.
+      store.ingestBounded(
+        [{ id: "A" }, { id: "B" }, { id: "C" }],
+        [{ source: "A", target: "B", value: 1 }],
+        [600, 400]
+      )
+      expect(store.nodesArray).not.toBe(nodes1)
+      expect(store.nodesArray.length).toBe(3)
+    })
+
+    it("stays consistent with the underlying maps", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      store.ingestBounded([{ id: "A" }, { id: "B" }], [{ source: "A", target: "B", value: 1 }], [600, 400])
+      expect(store.nodesArray.length).toBe(store.nodes.size)
+      expect(store.edgesArray.length).toBe(store.edges.size)
+
+      store.clear()
+      // clear() bumps layoutVersion, so the cache rebuilds to the empty maps.
+      expect(store.nodesArray.length).toBe(0)
+      expect(store.edgesArray.length).toBe(0)
+    })
+  })
+
   // ── getLayoutData ──────────────────────────────────────────────────
 
 })

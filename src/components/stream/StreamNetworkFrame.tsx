@@ -1317,7 +1317,9 @@ const StreamNetworkFrame = forwardRef<
 
     // Render particles (sankey only) — stop entirely when stale
     if (showParticles && store.particlePool && !currentlyStale) {
-      const edges = Array.from(store.edges.values())
+      // Read-only consumer — reuse the store's per-frame cached array instead
+      // of allocating a fresh one every animation frame.
+      const edges = store.edgesArray
       if (edges.length > 0) {
         spawnNetworkParticles(
           store.particlePool,
