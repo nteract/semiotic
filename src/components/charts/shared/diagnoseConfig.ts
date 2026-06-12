@@ -776,7 +776,8 @@ function checkPartToWholeNegative(
 
   const accProp = pieLike ?? stackLike!
   const accValue = props[accProp]
-  const accessor = typeof accValue === "string" ? accValue : pieLike ? "value" : "y"
+  const accessor =
+    typeof accValue === "string" ? accValue : accProp === "yAccessor" ? "y" : "value"
   const data = props.data
   if (!data || !Array.isArray(data) || data.length === 0) return
 

@@ -20,6 +20,17 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "release-3-7-1",
+    title: "Semiotic 3.7.1",
+    subtitle:
+      "The verification release: render evidence for agent loops, misleading-design diagnostics, WCAG contrast gates on every theme, an experimental ChatGPT Apps widget, and honest top-1 scorecard numbers.",
+    author: "AI-Generated",
+    date: "2026-06-11",
+    tags: ["release"],
+    excerpt:
+      "3.7.1 makes charts checkable: renderChartWithEvidence() returns scene-graph ground truth so agents can verify marks actually drew, diagnoseConfig() flags deceptive designs like cherry-picked windows and over-sliced pies, every theme preset is gated against WCAG contrast floors, and the MCP server ships an experimental ChatGPT Apps chart widget.",
+  },
+  {
     slug: "release-3-7-0",
     title: "Semiotic 3.7.0",
     subtitle:
@@ -53,7 +64,6 @@ export const allBlogEntriesMeta = [
     excerpt:
       "Annotations need to be well-placed, un-crowded, legibly associated, responsive, and defensible. But they also need to know where they are in the annotation lifecycle: proposed / accepted / disputed / retracted, supersession chains, and conversation-arc events. This way, a note becomes the durable node that captures conversation and meaning-making. Annotations lead the chart description and get their own branch in the navigation tree, so a screen-reader user meets the author's intent head-on.",
     ogChart: { component: "LineChart" },
-    draft: true,
   },
   {
     slug: "annotations-that-adapt-and-travel",

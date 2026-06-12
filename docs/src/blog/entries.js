@@ -51,6 +51,7 @@ import ChartsThatKnow from "./entries/charts-that-know-what-theyre-for.js"
 import MultimodalResponse from "./entries/multimodal-response.js"
 import AnchoredConversations from "./entries/anchored-conversations.js"
 import LiveDashboard from "./entries/live-conversational-dashboard.js"
+import Release371 from "./entries/release-3-7-1.js"
 import Release370 from "./entries/release-3-7-0.js"
 import ReleaseGatesForFastPrs from "./entries/release-gates-for-fast-prs.js"
 import Release360 from "./entries/release-3-6-0.js"
@@ -72,6 +73,7 @@ import AnnotationsThatGetContestedAndHeard from "./entries/annotations-that-get-
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  Release371,
   Release370,
   ReleaseGatesForFastPrs,
   AnnotationsThatGetContestedAndHeard,

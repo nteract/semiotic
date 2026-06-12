@@ -5,8 +5,32 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-06-09T00:00:00Z</updated>
+  <updated>2026-06-11T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Semiotic 3.7.1</title>
+    <id>https://semiotic3.nteract.io/blog/release-3-7-1</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-7-1"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-7-1.png"/>
+    <published>2026-06-11T00:00:00Z</published>
+    <updated>2026-06-11T00:00:00Z</updated>
+    <author><name>AI-Generated</name></author>
+    <category term="release"/>
+    <summary type="text">3.7.1 makes charts checkable: renderChartWithEvidence() returns scene-graph ground truth so agents can verify marks actually drew, diagnoseConfig() flags deceptive designs like cherry-picked windows and over-sliced pies, every theme preset is gated against WCAG contrast floors, and the MCP server ships an experimental ChatGPT Apps chart widget.</summary>
+  </entry>
+  <entry>
+    <title>Annotations That Get Contested, and Heard</title>
+    <id>https://semiotic3.nteract.io/blog/annotations-that-get-contested-and-heard</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/annotations-that-get-contested-and-heard"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/annotations-that-get-contested-and-heard.png"/>
+    <published>2026-06-10T00:00:00Z</published>
+    <updated>2026-06-10T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="roadmap"/>
+    <category term="accessibility"/>
+    <summary type="text">Annotations need to be well-placed, un-crowded, legibly associated, responsive, and defensible. But they also need to know where they are in the annotation lifecycle: proposed / accepted / disputed / retracted, supersession chains, and conversation-arc events. This way, a note becomes the durable node that captures conversation and meaning-making. Annotations lead the chart description and get their own branch in the navigation tree, so a screen-reader user meets the author&apos;s intent head-on.</summary>
+  </entry>
   <entry>
     <title>Annotations That Adapt and Travel</title>
     <id>https://semiotic3.nteract.io/blog/annotations-that-adapt-and-travel</id>

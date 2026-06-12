@@ -554,6 +554,22 @@ describe("diagnoseConfig", () => {
         expect(diag?.severity).toBe("warning")
       })
 
+      it("falls back to the component's default value accessor when omitted", () => {
+        const result = diagnoseConfig("StackedBarChart", {
+          data: [
+            { category: "A", group: "g1", value: 40 },
+            { category: "A", group: "g2", value: -10 },
+          ],
+          categoryAccessor: "category",
+          stackBy: "group",
+          normalize: true,
+          title: "Stack",
+        })
+        const diag = result.diagnoses.find(d => d.code === "PART_TO_WHOLE_NEGATIVE")
+        expect(diag).toBeDefined()
+        expect(diag?.message).toContain('"value"')
+      })
+
       it("does not flag un-normalized stacks (diverging stacks are legitimate)", () => {
         const result = diagnoseConfig("StackedBarChart", {
           data: [
