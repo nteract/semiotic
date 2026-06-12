@@ -1,0 +1,17 @@
+{
+  "name": "semiotic-mcp-cloudrun",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Thin wrapper that runs the published semiotic-mcp server in HTTP mode on Google Cloud Run",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "start": "semiotic-mcp --http --port ${PORT:-8080}"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "semiotic": "^3.7.1"
+  }
+}
