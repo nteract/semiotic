@@ -24,6 +24,7 @@
   "include": [
     "./ai/mcp-server.ts",
     "./ai/renderHOCToSVG.tsx",
-    "./ai/componentRegistry.ts"
+    "./ai/componentRegistry.ts",
+    "./ai/cjs-modules.d.ts"
   ]
 }

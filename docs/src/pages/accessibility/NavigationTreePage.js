@@ -3,6 +3,7 @@ import { buildNavigationTree, AccessibleNavTree, useNavigationSync, BarChart, Th
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
 
 const BIDIR_DATA = [
   { month: "Jan", sales: 4200 }, { month: "Feb", sales: 5100 },
@@ -13,10 +14,13 @@ const BIDIR_PROPS = { component: "BarChart", props: { data: BIDIR_DATA, category
 function BiDirDemo() {
   const tree = React.useMemo(() => buildNavigationTree(BIDIR_PROPS.component, BIDIR_PROPS.props), [])
   const sync = useNavigationSync({ tree, chartId: "nav-bidir-demo", matchFields: ["month"] })
+  const [docsTheme] = useDocsTheme()
+  const themeName = docsTheme === "dark" ? "carbon-dark" : "carbon"
+
   return (
     <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start", margin: "20px 0" }}>
       <div style={{ flex: "1 1 320px", minWidth: 280 }}>
-        <ThemeProvider theme="carbon">
+        <ThemeProvider theme={themeName}>
           <BarChart
             {...BIDIR_PROPS.props}
             chartId="nav-bidir-demo"
