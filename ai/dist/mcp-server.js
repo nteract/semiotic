@@ -33851,8 +33851,9 @@ async function main() {
         }
       })();
       if (allowedHosts.length > 0) {
-        const host = (req.headers.host || "").toLowerCase();
-        if (!allowedHosts.includes(host)) {
+        const rawHost = String(req.headers.host || "").trim().toLowerCase();
+        const normalizedHost = rawHost.startsWith("[") ? rawHost.replace(/^\[([^\]]+)\](?::\d+)?$/, "$1") : rawHost.split(":")[0];
+        if (!allowedHosts.includes(rawHost) && !allowedHosts.includes(normalizedHost)) {
           res.writeHead(403, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Forbidden host" }, id: null }));
           return;
@@ -33883,12 +33884,16 @@ async function main() {
         sessionIdGenerator: void 0,
         enableJsonResponse: true
       });
-      res.on("close", () => {
+      let torndown = false;
+      const teardown = () => {
+        if (torndown) return;
+        torndown = true;
         Promise.resolve(transport.close()).catch(() => {
         });
         Promise.resolve(srv.close()).catch(() => {
         });
-      });
+      };
+      res.on("close", teardown);
       try {
         await srv.connect(transport);
         await transport.handleRequest(req, res);
@@ -33898,6 +33903,8 @@ async function main() {
           res.writeHead(500, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }));
         }
+      } finally {
+        teardown();
       }
     });
     httpServer.listen(port, () => {

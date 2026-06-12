@@ -1798,9 +1798,15 @@ async function main() {
       })()
 
       // Host-header allowlist (DNS-rebinding defense). Opt-in via env.
+      // req.headers.host usually carries a port (localhost:3001) and may be
+      // bracketed for IPv6 ([::1]:3001). Allowlist entries are typically bare
+      // hosts, so match against both the raw header and a port-stripped form.
       if (allowedHosts.length > 0) {
-        const host = (req.headers.host || "").toLowerCase()
-        if (!allowedHosts.includes(host)) {
+        const rawHost = String(req.headers.host || "").trim().toLowerCase()
+        const normalizedHost = rawHost.startsWith("[")
+          ? rawHost.replace(/^\[([^\]]+)\](?::\d+)?$/, "$1")
+          : rawHost.split(":")[0]
+        if (!allowedHosts.includes(rawHost) && !allowedHosts.includes(normalizedHost)) {
           res.writeHead(403, { "Content-Type": "application/json" })
           res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Forbidden host" }, id: null }))
           return
@@ -1846,10 +1852,21 @@ async function main() {
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
       })
-      res.on("close", () => {
+      // Tear down exactly once. enableJsonResponse returns a single JSON body,
+      // so a normal request is done the moment handleRequest resolves — close
+      // in finally rather than waiting on res "close", which may not fire
+      // promptly on keep-alive connections and would otherwise leak a
+      // connected server+transport per request. The close handler stays for
+      // aborted requests that never reach finally; the guard makes the two
+      // paths idempotent.
+      let torndown = false
+      const teardown = () => {
+        if (torndown) return
+        torndown = true
         Promise.resolve(transport.close()).catch(() => {})
         Promise.resolve(srv.close()).catch(() => {})
-      })
+      }
+      res.on("close", teardown)
       try {
         await srv.connect(transport)
         await transport.handleRequest(req, res)
@@ -1859,6 +1876,8 @@ async function main() {
           res.writeHead(500, { "Content-Type": "application/json" })
           res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }))
         }
+      } finally {
+        teardown()
       }
     })
 
