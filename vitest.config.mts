@@ -19,10 +19,22 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text-summary'],
       thresholds: {
-        statements: 62,
-        branches: 52,
-        functions: 63,
-        lines: 65
+        // Global floors raised toward the measured aggregate (~78/68/81/80) so
+        // the gate bites a real regression instead of leaving ~16 points of
+        // slack on branches. A ~6-point buffer absorbs normal churn.
+        statements: 72,
+        branches: 62,
+        functions: 76,
+        lines: 74,
+        // Per-file floors so the gate bites where risk concentrates, not just
+        // on the blended average (a thin file eroding barely moves the global
+        // number). Set just below current measured coverage — they ratchet
+        // against regression. Raise the frame floors as frame-level behavioral
+        // tests are added (the Stream Geo/Network frames are the least covered).
+        'src/components/stream/StreamGeoFrame.tsx': { statements: 33, branches: 30, functions: 36, lines: 34 },
+        'src/components/stream/StreamNetworkFrame.tsx': { statements: 33, branches: 30, functions: 34, lines: 37 },
+        'src/components/stream/pipelineTransitions.ts': { statements: 52, branches: 38, functions: 30, lines: 55 },
+        'src/components/charts/network/processSankey/algorithm.ts': { statements: 80, branches: 74, functions: 76, lines: 82 },
       }
     },
     benchmark: {
