@@ -898,7 +898,7 @@ describe("MCP HTTP transport smoke", () => {
     proc = undefined
   })
 
-  it("initializes a Streamable HTTP session and lists tools", async () => {
+  it("initializes a stateless Streamable HTTP request and lists tools", async () => {
     const init = await sendHTTPRPC(port, {
       jsonrpc: "2.0",
       id: "http-init",
@@ -913,21 +913,17 @@ describe("MCP HTTP transport smoke", () => {
     expect(init.response.status).toBe(200)
     expect(init.body.result.serverInfo.name).toBe("semiotic")
 
-    const sessionId = init.response.headers.get("mcp-session-id")
-    expect(sessionId).toMatch(/^semiotic-/)
-
-    const initialized = await sendHTTPRPC(port, {
-      jsonrpc: "2.0",
-      method: "notifications/initialized",
-    }, sessionId!)
-    expect(initialized.response.status).toBe(202)
+    // Stateless mode issues no session: the server uses an ephemeral
+    // server+transport per request, so no mcp-session-id header comes back
+    // and subsequent requests carry no session id.
+    expect(init.response.headers.get("mcp-session-id")).toBeNull()
 
     const tools = await sendHTTPRPC(port, {
       jsonrpc: "2.0",
       id: "http-tools",
       method: "tools/list",
       params: {},
-    }, sessionId!)
+    })
 
     expect(tools.response.status).toBe(200)
     const names = tools.body.result.tools.map((tool: { name: string }) => tool.name)
