@@ -36,7 +36,7 @@ answer yes. The command prints the service URL when it finishes.
 
 | Flag | Reason |
 |---|---|
-| `--allow-unauthenticated` | Public endpoint. The server is read-only (every tool is `readOnlyHint: true`), so no auth is required. |
+| `--allow-unauthenticated` | Public endpoint. The server is read-only (every tool is `readOnlyHint: true`), but you should still add request size caps + rate limiting (e.g. Cloud Armor / API Gateway) to prevent abuse and unexpected rendering cost. |
 | `--memory 1Gi` | Headroom for `sharp` PNG rendering. |
 | `MCP_ALLOWED_HOSTS=...` | DNS-rebinding defense — the server rejects requests whose `Host` header isn't in this list. Set it to your Cloud Run hostname (and any custom domain, comma-separated). |
 
