@@ -1427,8 +1427,15 @@ export class NetworkPipelineStore {
     this.nodes.clear()
     this.edges.clear()
     this._decaySortedNodes = null
-    // Invalidate the lazily-built node spatial index.
+    this._decayAgeMap = null
+    // Invalidate the lazily-built node spatial index AND the materialized
+    // node/edge array caches. These hold references to the actual node/edge
+    // objects, so nulling them lets clear() promptly release a (possibly large)
+    // pre-clear graph instead of retaining it until the next render rebuilds
+    // the caches.
     this._nodeQuadtree = null
+    this._nodesArrCache = null
+    this._edgesArrCache = null
     this._sceneNodesRevision++
     this.tension = 0
     // Monotonic — never reset to 0. A reset could collide with a consumer's

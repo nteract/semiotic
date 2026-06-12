@@ -16,11 +16,32 @@ export interface QuadtreeHit<T> {
  * much larger visual radius can still be a valid hit that `find()` would
  * hide.
  *
- * By default `T` must expose `x`, `y`, and `r` (the standard `PointSceneNode`
- * shape). Pass `getX`/`getY`/`getR` accessors to index nodes that store their
- * center under different field names — e.g. network circle nodes use `cx`/`cy`.
- * The quadtree itself must be built with matching `.x()`/`.y()` accessors.
+ * For the standard `{ x, y, r }` node shape (e.g. `PointSceneNode`) call it
+ * without accessors. For nodes that store their center under different field
+ * names (e.g. network circle nodes use `cx`/`cy`) pass `getX`/`getY`/`getR` —
+ * the typed overload requires them, so an incompatible shape is a compile
+ * error rather than a runtime NaN. The quadtree itself must be built with
+ * matching `.x()`/`.y()` accessors.
  */
+// Default `{ x, y, r }` shape — no accessors needed.
+export function findHitPointInQuadtree<T extends { x: number; y: number; r: number }>(
+  qt: Quadtree<T>,
+  px: number,
+  py: number,
+  maxDistance: number,
+  maxPointRadius: number
+): QuadtreeHit<T> | null
+// Arbitrary node shape — explicit accessors required.
+export function findHitPointInQuadtree<T>(
+  qt: Quadtree<T>,
+  px: number,
+  py: number,
+  maxDistance: number,
+  maxPointRadius: number,
+  getX: (n: T) => number,
+  getY: (n: T) => number,
+  getR: (n: T) => number
+): QuadtreeHit<T> | null
 export function findHitPointInQuadtree<T>(
   qt: Quadtree<T>,
   px: number,
