@@ -8,10 +8,14 @@ Semiotic is a React data visualization library with canvas-first chart rendering
 git clone https://github.com/nteract/semiotic.git
 cd semiotic
 npm install
+npm run dist
 npm test
 npm run typescript
-npm run dist
 ```
+
+Build the library bundles (`npm run dist`) before the first `npm test`: the MCP
+protocol suites spawn the bundled server, which resolves `semiotic/*` entry
+points from `dist/`. Without them those suites are skipped with a warning.
 
 The repo pins Node with Volta in `package.json`. Use that version when possible.
 
