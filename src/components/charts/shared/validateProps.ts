@@ -73,6 +73,15 @@ export function validateProps(
 ): ValidationResult {
   const errors: string[] = []
 
+  // This validator exists to catch malformed agent-generated configs, so it
+  // must return a result rather than throw when handed malformed input itself.
+  // A null / non-object `props` (e.g. from a repair loop or a direct
+  // `semiotic/ai` / `semiotic/utils` caller) is normalized to `{}` so the
+  // required-prop and Object.entries passes below don't dereference null.
+  if (props == null || typeof props !== "object") {
+    props = {} as Datum
+  }
+
   // 1. Component name check
   const spec = VALIDATION_MAP[componentName]
   if (!spec) {
@@ -89,6 +98,21 @@ export function validateProps(
     if (props[req] === undefined || props[req] === null) {
       errors.push(`"${req}" is required for ${componentName}.`)
     }
+  }
+
+  // 2b. Array-shape charts need a `data` prop in static usage even when "data"
+  // isn't in `required` (those lists hold semantic accessors). Without this,
+  // CandlestickChart / MultiAxisLineChart / QuadrantChart / DifferenceChart /
+  // SwimlaneChart / LikertChart validated as OK with no data and rendered
+  // blank. The canonical message lets the usageMode filter keep it in static
+  // and drop it in push. The guard avoids double-emitting for charts that
+  // already list "data" in `required` (handled in the loop above).
+  if (
+    spec.dataShape === "array" &&
+    !spec.required.includes("data") &&
+    (props.data === undefined || props.data === null)
+  ) {
+    errors.push(`"data" is required for ${componentName}.`)
   }
 
   // 3. Prop types & enum values

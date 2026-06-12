@@ -3,6 +3,8 @@ import {
   validateProcessSankey,
   computeProcessSankeyLayout,
   buildEdgeIndex,
+  countCrossings,
+  totalEdgeLength,
   formatProcessSankeyIssue,
   type ProcessSankeyNode,
   type ProcessSankeyEdge,
@@ -268,5 +270,116 @@ describe("computeProcessSankeyLayout", () => {
     const bPlainInside = plain.nodeData.B.samples.filter((s) => s.t >= 3 && s.t <= 5)
     const bHintedInside = hinted.nodeData.B.samples.filter((s) => s.t >= 3 && s.t <= 5)
     expect(bHintedInside).toEqual(bPlainInside)
+  })
+})
+
+// The lane-ordering optimizers (countCrossings/totalEdgeLength and the reorder
+// passes that consume them) previously had no direct tests — they were only
+// reached transitively through computeProcessSankeyLayout with a single
+// laneOrder. A tie-breaking or off-by-one bug there silently produces a
+// worse-but-valid layout, invisible to node-count/position assertions.
+
+describe("countCrossings", () => {
+  it("counts a crossing when slot order inverts between source and target", () => {
+    // A(0)→D(3) and B(1)→C(2): sources ordered A<B but targets ordered D>C,
+    // so the two bands cross. Both overlap in time, no shared endpoints.
+    const slots = { A: 0, B: 1, C: 2, D: 3 }
+    const edges: ProcessSankeyEdge[] = [
+      { id: "e1", source: "A", target: "D", value: 1, startTime: 0, endTime: 10 },
+      { id: "e2", source: "B", target: "C", value: 1, startTime: 0, endTime: 10 },
+    ]
+    expect(countCrossings(slots, edges)).toBe(1)
+  })
+
+  it("counts zero when the bands run parallel", () => {
+    // A(0)→C(2) and B(1)→D(3): order preserved on both ends → no crossing.
+    const slots = { A: 0, B: 1, C: 2, D: 3 }
+    const edges: ProcessSankeyEdge[] = [
+      { id: "e1", source: "A", target: "C", value: 1, startTime: 0, endTime: 10 },
+      { id: "e2", source: "B", target: "D", value: 1, startTime: 0, endTime: 10 },
+    ]
+    expect(countCrossings(slots, edges)).toBe(0)
+  })
+
+  it("ignores edge pairs that share an endpoint", () => {
+    // A→D and A→C share source A — they fan out, never counted as a crossing.
+    const slots = { A: 0, C: 2, D: 3 }
+    const edges: ProcessSankeyEdge[] = [
+      { id: "e1", source: "A", target: "D", value: 1, startTime: 0, endTime: 10 },
+      { id: "e2", source: "A", target: "C", value: 1, startTime: 0, endTime: 10 },
+    ]
+    expect(countCrossings(slots, edges)).toBe(0)
+  })
+
+  it("ignores geometrically-crossing edges that are disjoint in time", () => {
+    // Same inverting slots as the first case, but the time windows don't
+    // overlap — temporally-separate flows can reuse a lane without crossing.
+    const slots = { A: 0, B: 1, C: 2, D: 3 }
+    const edges: ProcessSankeyEdge[] = [
+      { id: "e1", source: "A", target: "D", value: 1, startTime: 0, endTime: 10 },
+      { id: "e2", source: "B", target: "C", value: 1, startTime: 20, endTime: 30 },
+    ]
+    expect(countCrossings(slots, edges)).toBe(0)
+  })
+})
+
+describe("totalEdgeLength", () => {
+  it("sums |slot distance| weighted by edge value", () => {
+    const slots = { A: 0, B: 2, C: 5 }
+    const edges: ProcessSankeyEdge[] = [
+      { id: "ab", source: "A", target: "B", value: 3, startTime: 0, endTime: 10 }, // |0-2|*3 = 6
+      { id: "bc", source: "B", target: "C", value: 2, startTime: 0, endTime: 10 }, // |2-5|*2 = 6
+    ]
+    expect(totalEdgeLength(slots, edges)).toBe(12)
+  })
+
+  it("treats a zero/absent value as 1", () => {
+    const slots = { A: 0, B: 4 }
+    const edges: ProcessSankeyEdge[] = [
+      { id: "ab", source: "A", target: "B", value: 0, startTime: 0, endTime: 10 }, // |0-4|*1 = 4
+    ]
+    expect(totalEdgeLength(slots, edges)).toBe(4)
+  })
+})
+
+describe("computeProcessSankeyLayout — laneOrder variants", () => {
+  // A multi-flow graph with cross-connections (ae, cd) so lane ordering has
+  // real choices to make. The existing suite only ever ran "crossing-min".
+  const nodes: ProcessSankeyNode[] = [
+    { id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }, { id: "E" }, { id: "F" },
+  ]
+  const edges: ProcessSankeyEdge[] = [
+    { id: "ad", source: "A", target: "D", value: 5, startTime: 10, endTime: 30 },
+    { id: "be", source: "B", target: "E", value: 5, startTime: 10, endTime: 30 },
+    { id: "cf", source: "C", target: "F", value: 5, startTime: 10, endTime: 30 },
+    { id: "ae", source: "A", target: "E", value: 3, startTime: 12, endTime: 28 },
+    { id: "cd", source: "C", target: "D", value: 3, startTime: 12, endTime: 28 },
+  ]
+  const base = {
+    plotH: 400,
+    pairing: "temporal" as const,
+    packing: "reuse" as const,
+    lifetimeMode: "half" as const,
+  }
+  const LANE_ORDERS = ["insertion", "crossing-min", "inside-out", "crossing-min+inside-out"] as const
+
+  for (const laneOrder of LANE_ORDERS) {
+    it(`produces a valid layout for laneOrder="${laneOrder}"`, () => {
+      const layout = computeProcessSankeyLayout(nodes, edges, { ...base, laneOrder })
+      expect(layout).toBeTruthy()
+      for (const n of nodes) {
+        expect(layout.centerlines).toHaveProperty(n.id)
+      }
+      expect(layout.crossingsAfter === null || Number.isFinite(layout.crossingsAfter)).toBe(true)
+    })
+  }
+
+  it("crossing-minimizing lane orders never increase crossings vs. the initial order", () => {
+    for (const laneOrder of ["crossing-min", "crossing-min+inside-out"] as const) {
+      const layout = computeProcessSankeyLayout(nodes, edges, { ...base, laneOrder })
+      if (layout.crossingsBefore != null && layout.crossingsAfter != null) {
+        expect(layout.crossingsAfter).toBeLessThanOrEqual(layout.crossingsBefore)
+      }
+    }
   })
 })

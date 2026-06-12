@@ -34,6 +34,7 @@ import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
+import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
@@ -822,7 +823,10 @@ const StreamNetworkFrame = forwardRef<
     storeRef.current?.clear()
     nodeColorMap.current.clear()
     colorIndexRef.current = 0
-    setLayoutVersion(0)
+    // clear() bumps layoutVersion monotonically; sync React state to the new
+    // value so the render fires (never force 0 — that can equal the last-seen
+    // value and skip the post-clear repaint).
+    setLayoutVersion(storeRef.current?.layoutVersion ?? 0)
     setHoverData(null)
     hoverRef.current = null
     dirtyRef.current = true
@@ -1062,7 +1066,10 @@ const StreamNetworkFrame = forwardRef<
       store.sceneNodes,
       store.sceneEdges,
       chartX,
-      chartY
+      chartY,
+      30,
+      store.nodeQuadtree,
+      store.maxNodeRadius
     )
 
     if (!hit) {
@@ -1125,7 +1132,10 @@ const StreamNetworkFrame = forwardRef<
       store.sceneNodes,
       store.sceneEdges,
       chartX,
-      chartY
+      chartY,
+      30,
+      store.nodeQuadtree,
+      store.maxNodeRadius
     )
 
     if (hit) {
@@ -1307,7 +1317,9 @@ const StreamNetworkFrame = forwardRef<
 
     // Render particles (sankey only) — stop entirely when stale
     if (showParticles && store.particlePool && !currentlyStale) {
-      const edges = Array.from(store.edges.values())
+      // Read-only consumer — reuse the store's per-frame cached array instead
+      // of allocating a fresh one every animation frame.
+      const edges = store.edgesArray
       if (edges.length > 0) {
         spawnNetworkParticles(
           store.particlePool,
@@ -1626,30 +1638,7 @@ const StreamNetworkFrame = forwardRef<
       {tooltipElement}
 
       {staleness?.showBadge && (
-        <div
-          className="stream-staleness-badge"
-          style={{
-            position: "absolute",
-            ...(staleness.badgePosition === "top-left"
-              ? { top: 4, left: 4 }
-              : staleness.badgePosition === "bottom-left"
-              ? { bottom: 4, left: 4 }
-              : staleness.badgePosition === "bottom-right"
-              ? { bottom: 4, right: 4 }
-              : { top: 4, right: 4 }),
-            background: isStale ? "#dc3545" : "#28a745",
-            color: "white",
-            fontSize: 10,
-            fontWeight: 700,
-            padding: "2px 6px",
-            borderRadius: 3,
-            letterSpacing: "0.05em",
-            zIndex: 3,
-            pointerEvents: "none"
-          }}
-        >
-          {isStale ? "STALE" : "LIVE"}
-        </div>
+        <StalenessBadge isStale={isStale} position={staleness.badgePosition} />
       )}
       </div>{/* end role="img" */}
     </div>

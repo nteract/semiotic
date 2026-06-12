@@ -35,6 +35,24 @@ describe("suggestCharts", () => {
     expect(suggestions[0].score).toBeGreaterThan(3)
   })
 
+  it("collapses identical-score variants of the same component", () => {
+    // With variants enabled, a component with several equally-ranked variants
+    // (e.g. BarChart's sort orderings) must appear once per distinct score
+    // rather than flooding the list and crowding out diverse components.
+    const result = suggestCharts(categorical, {
+      intent: "compare-categories",
+      includeVariants: true,
+      maxResults: 30,
+    })
+    expect(result.length).toBeGreaterThan(0)
+    const seen = new Set<string>()
+    for (const s of result) {
+      const key = `${s.component}:${s.score.toFixed(4)}`
+      expect(seen.has(key)).toBe(false)
+      seen.add(key)
+    }
+  })
+
   it("ranks BarChart highly for categorical with intent=rank", () => {
     const suggestions = suggestCharts(categorical, { intent: "rank", includeVariants: false })
     expect(suggestions[0].component).toBe("BarChart")
@@ -86,12 +104,15 @@ describe("suggestCharts", () => {
   })
 
   it("smooth variant boosts trend score relative to base for LineChart", () => {
-    const suggestions = suggestCharts(temporalMultiSeries, { intent: "trend", allow: ["LineChart"] })
-    const base = suggestions.find((s) => s.variant?.key === "linear")
-    const smooth = suggestions.find((s) => s.variant?.key === "smooth")
-    expect(base).toBeDefined()
-    expect(smooth).toBeDefined()
-    expect((smooth!.score)).toBeGreaterThanOrEqual(base!.score)
+    // Score the variants directly rather than reading them out of the ranked
+    // suggestCharts list — that list now collapses variants of one component
+    // that tie on score, so for strongly-trending data (where both cap out)
+    // only one would survive. scoreChart exposes the per-variant score.
+    const base = scoreChart("LineChart", temporalMultiSeries, { intent: "trend", variantKey: "linear" })
+    const smooth = scoreChart("LineChart", temporalMultiSeries, { intent: "trend", variantKey: "smooth" })
+    expect("score" in base).toBe(true)
+    expect("score" in smooth).toBe(true)
+    expect((smooth as { score: number }).score).toBeGreaterThanOrEqual((base as { score: number }).score)
   })
 
   it("excludes PieChart when there are too many categories", () => {

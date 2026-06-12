@@ -1,7 +1,9 @@
+import * as React from "react"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
+import type { StreamNetworkFrameHandle } from "./networkTypes"
 
 // ResizeObserver is polyfilled globally in src/setupTests.ts.
 
@@ -161,6 +163,44 @@ describe("StreamNetworkFrame", () => {
       } finally {
         ingestSpy.mockRestore()
       }
+    })
+  })
+
+  // ── Push API + clear→reload lifecycle ────────────────────────────────
+  // Exercises the frame's imperative handle and the push→ingest→clear→reload
+  // path — the frame-level boundary for the store's topology-diff clear() reset.
+  describe("push API + clear→reload lifecycle", () => {
+    it("pushMany/clear round-trips through the store and reloads fresh", async () => {
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      render(
+        <StreamNetworkFrame
+          ref={ref}
+          chartType="sankey"
+          nodeIDAccessor="id"
+          sourceAccessor="source"
+          targetAccessor="target"
+          valueAccessor="value"
+        />
+      )
+      await act(async () => {
+        ref.current!.pushMany([
+          { source: "A", target: "B", value: 5 },
+          { source: "B", target: "C", value: 3 },
+        ])
+      })
+      const loaded = ref.current!.getTopology()
+      expect(loaded.edges.length).toBeGreaterThan(0)
+      expect(loaded.nodes.length).toBeGreaterThan(0)
+
+      await act(async () => { ref.current!.clear() })
+      const cleared = ref.current!.getTopology()
+      expect(cleared.edges.length).toBe(0)
+      expect(cleared.nodes.length).toBe(0)
+
+      // Reload after clear behaves fresh (frame-level boundary for the
+      // NetworkPipelineStore.clear() topology-diff reset).
+      await act(async () => { ref.current!.pushMany([{ source: "X", target: "Y", value: 2 }]) })
+      expect(ref.current!.getTopology().edges.length).toBeGreaterThan(0)
     })
   })
 })

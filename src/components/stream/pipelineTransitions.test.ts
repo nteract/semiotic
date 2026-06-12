@@ -13,7 +13,7 @@ import {
   type PrevPosition,
   type PrevPath,
 } from "./pipelineTransitions"
-import type { CandlestickSceneNode, SceneNode, TransitionConfig } from "./types"
+import type { CandlestickSceneNode, PointSceneNode, RectSceneNode, SceneNode, TransitionConfig } from "./types"
 
 const ctx: TransitionContext = {
   runtimeMode: "streaming",
@@ -192,5 +192,160 @@ describe("pipelineTransitions — candlestick", () => {
     expect(exit.bodyWidth).toBe(11)
     expect(exit._targetOpacity).toBe(0)
     expect(state.scene).toContain(exit)
+  })
+})
+
+// Point and rect are the most common scene-node types but their transition
+// branches were only exercised "implicitly". These mirror the candlestick
+// contract: snapshot → seed-target-and-rollback → enter-fade → lerp-and-snap.
+
+function makePoint(overrides: Partial<PointSceneNode> = {}): PointSceneNode {
+  return {
+    type: "point",
+    x: 100,
+    y: 50,
+    r: 4,
+    style: { opacity: 1 },
+    datum: { x: 5, y: 50 },
+    pointId: "p1",
+    ...overrides,
+  }
+}
+
+describe("pipelineTransitions — point", () => {
+  it("snapshotPositions records x/y/r and opacity", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makePoint({ x: 100, y: 50, r: 4 })], prevPos, prevPath)
+    const [prev] = [...prevPos.values()]
+    expect(prev.x).toBe(100)
+    expect(prev.y).toBe(50)
+    expect(prev.r).toBe(4)
+    expect(prev.opacity).toBe(1)
+  })
+
+  it("startTransition on a moved point seeds _targetX/_targetY and rolls back to prev", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makePoint({ pointId: "p1", x: 100, y: 50 })], prevPos, prevPath)
+
+    const moved = makePoint({ pointId: "p1", x: 200, y: 90 }) // same identity, new position
+    const state = { scene: [moved as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    expect(moved._targetX).toBe(200)
+    expect(moved._targetY).toBe(90)
+    // Rolled back to prev coords so advanceTransition lerps forward.
+    expect(moved.x).toBe(100)
+    expect(moved.y).toBe(50)
+    expect(state.activeTransition).not.toBeNull()
+  })
+
+  it("entering point fades in from opacity 0", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makePoint({ pointId: "p1" })], prevPos, prevPath)
+
+    const kept = makePoint({ pointId: "p1" })
+    const entering = makePoint({ pointId: "p2", x: 300, y: 70 })
+    const state = { scene: [kept as SceneNode, entering as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    expect(entering.style?.opacity).toBe(0)
+    expect(entering._targetOpacity).toBe(1)
+  })
+
+  it("advanceTransition lerps x/y toward target, then snaps and clears at t=1", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makePoint({ pointId: "p1", x: 100, y: 50 })], prevPos, prevPath)
+
+    const moved = makePoint({ pointId: "p1", x: 200, y: 90 })
+    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+      scene: [moved as SceneNode], exitNodes: [], activeTransition: null,
+    }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+    const startTime = state.activeTransition.startTime
+
+    advanceTransition(startTime + 150, transition, state, prevPos, prevPath)
+    expect(moved.x).toBeGreaterThan(100)
+    expect(moved.x).toBeLessThan(200)
+    expect(moved.y).toBeGreaterThan(50)
+    expect(moved.y).toBeLessThan(90)
+
+    advanceTransition(startTime + 400, transition, state, prevPos, prevPath)
+    expect(moved.x).toBe(200)
+    expect(moved.y).toBe(90)
+    expect(moved._targetX).toBeUndefined()
+    expect(moved._targetY).toBeUndefined()
+    expect(state.activeTransition).toBeNull()
+  })
+})
+
+function makeRect(overrides: Partial<RectSceneNode> = {}): RectSceneNode {
+  return {
+    type: "rect",
+    x: 100,
+    y: 50,
+    w: 20,
+    h: 80,
+    style: { opacity: 1 },
+    datum: { category: "A", value: 10 },
+    ...overrides,
+  }
+}
+
+describe("pipelineTransitions — rect", () => {
+  it("snapshotPositions records x/y/w/h and opacity", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeRect({ x: 100, y: 50, w: 20, h: 80 })], prevPos, prevPath)
+    const [prev] = [...prevPos.values()]
+    expect(prev.x).toBe(100)
+    expect(prev.y).toBe(50)
+    expect(prev.w).toBe(20)
+    expect(prev.h).toBe(80)
+    expect(prev.opacity).toBe(1)
+  })
+
+  it("startTransition on a moved (regrown) bar seeds _targetY/_targetH and rolls back", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeRect({ datum: { category: "A" }, y: 50, h: 80 })], prevPos, prevPath)
+
+    // Same category identity, taller bar (grew from the top).
+    const moved = makeRect({ datum: { category: "A" }, y: 20, h: 110 })
+    const state = { scene: [moved as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    expect(moved._targetY).toBe(20)
+    expect(moved._targetH).toBe(110)
+    // Rolled back to prev geometry.
+    expect(moved.y).toBe(50)
+    expect(moved.h).toBe(80)
+    expect(state.activeTransition).not.toBeNull()
+  })
+
+  it("advanceTransition lerps height toward target, then snaps and clears at t=1", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeRect({ datum: { category: "A" }, y: 50, h: 80 })], prevPos, prevPath)
+
+    const moved = makeRect({ datum: { category: "A" }, y: 20, h: 110 })
+    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+      scene: [moved as SceneNode], exitNodes: [], activeTransition: null,
+    }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+    const startTime = state.activeTransition.startTime
+
+    advanceTransition(startTime + 150, transition, state, prevPos, prevPath)
+    expect(moved.h).toBeGreaterThan(80)
+    expect(moved.h).toBeLessThan(110)
+
+    advanceTransition(startTime + 400, transition, state, prevPos, prevPath)
+    expect(moved.y).toBe(20)
+    expect(moved.h).toBe(110)
+    expect(moved._targetH).toBeUndefined()
+    expect(state.activeTransition).toBeNull()
   })
 })

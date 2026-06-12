@@ -46,6 +46,7 @@ import { composeOverlays } from "./composeOverlays"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
+import { StalenessBadge } from "./StalenessBadge"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
@@ -1235,25 +1236,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         )}
 
         {staleness?.showBadge && (
-          <div
-            className="stream-staleness-badge"
-            style={{
-              position: "absolute",
-              ...(staleness.badgePosition === "top-left" ? { top: 4, left: 4 } :
-                staleness.badgePosition === "bottom-left" ? { bottom: 4, left: 4 } :
-                staleness.badgePosition === "bottom-right" ? { bottom: 4, right: 4 } :
-                { top: 4, right: 4 }),
-              padding: "2px 8px",
-              borderRadius: 4,
-              fontSize: 11,
-              fontWeight: 600,
-              pointerEvents: "none",
-              background: isStale ? "#dc3545" : "#28a745",
-              color: "white"
-            }}
-          >
-            {isStale ? "STALE" : "LIVE"}
-          </div>
+          <StalenessBadge isStale={isStale} position={staleness.badgePosition} />
         )}
         <FocusRing
           active={kbFocusIndexRef.current >= 0}

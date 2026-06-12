@@ -289,7 +289,21 @@ export function suggestCharts(
     return b.rubric.familiarity - a.rubric.familiarity
   })
 
-  return out.slice(0, maxResults)
+  // Collapse identical-score variants of the same component. Several variants of
+  // one chart that rank identically add no information and crowd diverse
+  // components out of the top-N (e.g. three BarChart variants all at 4.00).
+  // Keep the best-ranked entry per (component, score) — the sort already put the
+  // strongest variant first; variants that score *differently* are preserved as
+  // genuinely distinct recommendations.
+  const seenComponentScore = new Set<string>()
+  const deduped = out.filter((s) => {
+    const key = `${s.component}:${s.score.toFixed(4)}`
+    if (seenComponentScore.has(key)) return false
+    seenComponentScore.add(key)
+    return true
+  })
+
+  return deduped.slice(0, maxResults)
 }
 
 /**

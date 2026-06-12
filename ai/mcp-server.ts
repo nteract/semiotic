@@ -96,8 +96,10 @@ const {
 const {
   formatSuggestionReport,
   suggestCharts,
+  VALID_INTENTS,
 } = chartSuggestionsModule as {
   formatSuggestionReport: (result: SuggestChartResult) => string
+  VALID_INTENTS: string[]
   suggestCharts: (args: {
     data?: any[]
     intent?: string
@@ -542,12 +544,35 @@ async function getSchemaHandler(args: { component?: string }): Promise<ToolResul
   }
 }
 
+// Map the suggestCharts (plural, capability-engine) 13-intent taxonomy onto
+// this heuristic engine's 8 intents, so an agent that learned one tool's
+// vocabulary isn't hard-rejected by the other. Unmapped custom intents are
+// dropped (the tool returns general suggestions, matching the plural tool's
+// custom-intent tolerance) rather than erroring.
+const SUGGEST_INTENT_ALIASES: Record<string, string> = {
+  "compare-series": "comparison",
+  "compare-categories": "comparison",
+  "rank": "comparison",
+  "part-to-whole": "composition",
+  "composition-over-time": "composition",
+  "correlation": "relationship",
+  "flow": "network",
+  "geo": "geographic",
+  "outlier-detection": "distribution",
+  "change-detection": "trend",
+}
+
 async function suggestChartHandler(args: {
   data?: any[]
   intent?: string
   capabilities?: { push?: boolean; linkedHover?: boolean; ssr?: boolean; selection?: boolean; legend?: boolean }
 }): Promise<ToolResult> {
-  const result = suggestCharts(args)
+  // Translate the broader suggestCharts vocabulary into this engine's space;
+  // drop anything neither vocabulary recognizes rather than hard-rejecting it.
+  let intent = args.intent
+  if (intent && SUGGEST_INTENT_ALIASES[intent]) intent = SUGGEST_INTENT_ALIASES[intent]
+  if (intent && !VALID_INTENTS.includes(intent)) intent = undefined
+  const result = suggestCharts({ ...args, intent })
   const content = [{ type: "text" as const, text: formatSuggestionReport(result) }]
   if (!result.ok) {
     return { content, isError: true, structuredContent: result }
@@ -610,7 +635,14 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
       text: `Render evidence:\n${JSON.stringify(evidence, null, 2)}`,
     }
   } catch {
-    // No server render config for this component — evidence unavailable.
+    // No server render config for this component — say so explicitly rather
+    // than silently omitting the block, so an agent can distinguish "no
+    // evidence is produced for this component" from "evidence was forgotten".
+    // The SVG above is still the validated React-SSR render.
+    evidenceBlock = {
+      type: "text" as const,
+      text: `Render evidence: unavailable for ${component} (no server render config). The SVG above is the validated React render; mark-count / domain evidence is only produced for components with a server render path.`,
+    }
   }
 
   // Inject theme CSS custom properties into the SVG root element.
@@ -806,16 +838,30 @@ async function reportIssueHandler(args: { title?: string; body?: string; labels?
   }
 }
 
-// Named theme presets (inlined to avoid runtime dependency on semiotic-themes bundle)
-const THEME_PRESET_NAMES = [
-  "light", "dark", "high-contrast",
-  "pastels", "pastels-dark",
-  "bi-tool", "bi-tool-dark",
-  "italian", "italian-dark",
-  "tufte", "tufte-dark",
-  "journalist", "journalist-dark",
-  "playful", "playful-dark",
-]
+// Named theme presets → their exported constant name in `semiotic/themes`.
+// Inlined (not imported) to avoid a runtime dependency on the themes bundle;
+// kept honest by the applyTheme test, which asserts every export name resolves
+// against the real module.
+const THEME_PRESETS: Record<string, string> = {
+  "light": "LIGHT_THEME",
+  "dark": "DARK_THEME",
+  "high-contrast": "HIGH_CONTRAST_THEME",
+  "pastels": "PASTELS_LIGHT",
+  "pastels-dark": "PASTELS_DARK",
+  "bi-tool": "BI_TOOL_LIGHT",
+  "bi-tool-dark": "BI_TOOL_DARK",
+  "italian": "ITALIAN_LIGHT",
+  "italian-dark": "ITALIAN_DARK",
+  "tufte": "TUFTE_LIGHT",
+  "tufte-dark": "TUFTE_DARK",
+  "journalist": "JOURNALIST_LIGHT",
+  "journalist-dark": "JOURNALIST_DARK",
+  "playful": "PLAYFUL_LIGHT",
+  "playful-dark": "PLAYFUL_DARK",
+  "carbon": "CARBON_LIGHT",
+  "carbon-dark": "CARBON_DARK",
+}
+const THEME_PRESET_NAMES = Object.keys(THEME_PRESETS)
 
 async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
   const name = args.name
@@ -833,6 +879,9 @@ async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
     }
   }
 
+  // The exported constant for this preset (e.g. "tufte" → TUFTE_LIGHT). Used
+  // verbatim in the import + reference so the generated snippets compile.
+  const exportName = THEME_PRESETS[name]
   const usage = [
     `## Theme: "${name}"`,
     "",
@@ -846,24 +895,23 @@ async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
     "",
     "### Option 2: Import the theme object",
     "```jsx",
-    `import { ${name.replace(/-./g, c => c[1].toUpperCase()).replace(/^./, c => c.toUpperCase()).replace(/Dark$/, '_DARK').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()} } from "semiotic/themes"`,
-    `<ThemeProvider theme={themeObject}>`,
+    `import { ${exportName} } from "semiotic/themes"`,
+    `<ThemeProvider theme={${exportName}}>`,
     `  <BarChart ... />`,
     `</ThemeProvider>`,
     "```",
     "",
     "### Option 3: CSS custom properties (no React required)",
     "```jsx",
-    `import { themeToCSS } from "semiotic/themes"`,
-    `import { ${name.replace(/-./g, c => c[1].toUpperCase()).replace(/^./, c => c.toUpperCase()).replace(/Dark$/, '_DARK').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()} } from "semiotic/themes"`,
-    `const css = themeToCSS(themeObject, ".my-charts")`,
+    `import { themeToCSS, ${exportName} } from "semiotic/themes"`,
+    `const css = themeToCSS(${exportName}, ".my-charts")`,
     "// Outputs CSS custom properties string for embedding in a stylesheet",
     "```",
     "",
     "### Option 4: Design tokens JSON",
     "```jsx",
-    `import { themeToTokens } from "semiotic/themes"`,
-    `const tokens = themeToTokens(themeObject)`,
+    `import { themeToTokens, ${exportName} } from "semiotic/themes"`,
+    `const tokens = themeToTokens(${exportName})`,
     "// Style Dictionary / DTCG-compatible token format",
     "```",
     "",
@@ -1424,10 +1472,10 @@ function createServer(): McpServer {
 
   srv.tool(
     "suggestChart",
-    "Recommend Semiotic chart types for a given data sample. Pass { data: [...] } with 1-5 sample objects. Optionally pass intent to narrow suggestions, or capabilities to require/forbid features (push API, linked hover, SSR, selection, legend). Returns ranked recommendations with example props; charts that don't satisfy the capability constraints are dropped.",
+    "Lightweight heuristic chart recommender for a small data sample (1-5 rows) with capability filtering (push API, linked hover, SSR, selection, legend). Returns ranked recommendations with example props. For richer capability-descriptor ranking (scores, reasons, caveats) and the full 13-intent taxonomy, prefer `suggestCharts` (plural).",
     {
       data: z.array(z.record(z.string(), z.unknown())).min(1).max(5).describe("1-5 sample data objects"),
-      intent: z.enum(["comparison", "trend", "distribution", "relationship", "composition", "geographic", "network", "hierarchy"]).optional().describe("Visualization intent to narrow suggestions"),
+      intent: z.string().optional().describe("Visualization intent. Accepts this engine's intents (comparison, trend, distribution, relationship, composition, geographic, network, hierarchy) AND the richer suggestCharts taxonomy (compare-categories, part-to-whole, correlation, flow, geo, rank, …), which is translated automatically; an unrecognized intent is ignored rather than rejected."),
       capabilities: z.object({
         push: z.boolean().optional().describe("Require ref-based push API (live streaming via ref.current.push())"),
         linkedHover: z.boolean().optional().describe("Require cross-chart linked hover support"),

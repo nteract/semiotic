@@ -22,7 +22,14 @@ export function geoCanvasRenderer(
   for (const node of geoAreas) {
     if (!node.pathData) continue
 
-    const path = new Path2D(node.pathData)
+    // Reuse the Path2D the hit tester also caches on the node (GeoCanvasHitTester)
+    // rather than re-parsing the SVG path string on every repaint. A geo-area
+    // node's `pathData` is fixed for its lifetime — a projection/zoom change
+    // rebuilds the scene with fresh node objects, so the cache invalidates
+    // naturally. Path2D string parsing is among the most expensive canvas ops,
+    // and pan/zoom/drag-rotate repaint every animation frame.
+    if (!node._cachedPath2D) node._cachedPath2D = new Path2D(node.pathData)
+    const path = node._cachedPath2D
 
     // Fill
     const fillColor = node.style.fill || "#e0e0e0"

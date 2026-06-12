@@ -42,3 +42,44 @@ describe("validateProps typo-aware suggestions", () => {
     expect(result.errors).toHaveLength(0)
   })
 })
+
+describe("validateProps — malformed input must not throw", () => {
+  it("returns a result (not a TypeError) for null / non-object props", () => {
+    // This validator exists to catch malformed agent input; handed malformed
+    // input itself it must still return a result. Direct callers include
+    // repair loops and the public semiotic/ai + semiotic/utils surface.
+    expect(() => validateProps("LineChart", null as never)).not.toThrow()
+    expect(() => validateProps("BarChart", undefined as never)).not.toThrow()
+    expect(() => validateProps("BarChart", 42 as never)).not.toThrow()
+    const result = validateProps("LineChart", null as never)
+    expect(result.valid).toBe(false)
+  })
+})
+
+describe("validateProps — array charts require data in static usage", () => {
+  // These charts list semantic accessors (not `data`) in `required`, so they
+  // used to validate as OK with no data and render blank. The data requirement
+  // is now enforced via the canonical "data is required" message, which the
+  // usageMode filter keeps in static mode and drops in push mode.
+  const accessorOnly: Record<string, Record<string, unknown>> = {
+    CandlestickChart: { xAccessor: "day", highAccessor: "high", lowAccessor: "low" },
+    MultiAxisLineChart: { series: [{ yAccessor: "a" }, { yAccessor: "b" }] },
+    QuadrantChart: { xAccessor: "x", yAccessor: "y" },
+    DifferenceChart: { xAccessor: "x", seriesAAccessor: "a", seriesBAccessor: "b" },
+    SwimlaneChart: { subcategoryAccessor: "s", valueAccessor: "v" },
+    LikertChart: { categoryAccessor: "c", valueAccessor: "v" },
+  }
+
+  for (const [component, props] of Object.entries(accessorOnly)) {
+    it(`${component}: flags missing data`, () => {
+      const result = validateProps(component, props)
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContain(`"data" is required for ${component}.`)
+    })
+
+    it(`${component}: no data error once data is provided`, () => {
+      const result = validateProps(component, { ...props, data: [{}] })
+      expect(result.errors).not.toContain(`"data" is required for ${component}.`)
+    })
+  }
+})

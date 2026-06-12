@@ -7,6 +7,8 @@ import type {
   NetworkBezierEdge
 } from "./networkTypes"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
+import { findHitPointInQuadtree } from "./quadtreeHitTest"
+import type { Quadtree } from "d3-quadtree"
 
 export interface NetworkHitResult {
   type: "node" | "edge"
@@ -26,7 +28,9 @@ export function findNearestNetworkNode(
   sceneEdges: NetworkSceneEdge[],
   px: number,
   py: number,
-  maxDistance = 30
+  maxDistance = 30,
+  nodeQuadtree?: Quadtree<NetworkCircleNode> | null,
+  maxNodeRadius = 0
 ): NetworkHitResult | null {
   // Check nodes — for nested rects (treemap) we want the smallest
   // containing rect, so we track rect hits by area separately.
@@ -34,7 +38,25 @@ export function findNearestNetworkNode(
   let bestDist = maxDistance
   let bestRectArea = Infinity
 
+  // Fast path: when a circle-node quadtree is available (large force/orbit
+  // graphs) query it instead of scanning every circle. It returns the nearest
+  // circle whose hit radius contains the cursor — exactly the circle the linear
+  // scan would pick — so the merge with rect/arc/edge results is unchanged, and
+  // the scan below then skips circle nodes (the quadtree visit is authoritative).
+  if (nodeQuadtree) {
+    const hit = findHitPointInQuadtree(
+      nodeQuadtree, px, py, maxDistance, maxNodeRadius,
+      (n) => n.cx, (n) => n.cy, (n) => n.r
+    )
+    if (hit) {
+      bestNode = { type: "node", datum: hit.node.datum, x: hit.node.cx, y: hit.node.cy, distance: hit.distance }
+      bestDist = hit.distance
+    }
+  }
+
   for (const node of sceneNodes) {
+    // Circles are handled by the quadtree fast path above.
+    if (nodeQuadtree && node.type === "circle") continue
     const result = hitTestNode(node, px, py, maxDistance)
     if (!result) continue
 
