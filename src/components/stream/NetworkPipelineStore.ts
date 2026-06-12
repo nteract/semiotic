@@ -7,10 +7,12 @@ import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPal
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
+import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import type {
   NetworkPipelineConfig,
   NetworkSceneNode,
   NetworkSceneEdge,
+  NetworkCircleNode,
   NetworkLabel,
   RealtimeNode,
   RealtimeEdge,
@@ -41,6 +43,13 @@ export class NetworkPipelineStore {
   nodes: Map<string, RealtimeNode> = new Map()
   edges: Map<string, RealtimeEdge> = new Map()
   tension = 0
+  /**
+   * Monotonic scene/layout-rebuild counter — Network's equivalent of the
+   * `version` field on the XY/Ordinal/Geo stores. Shared cross-store
+   * convention: bumps on every layout rebuild and on clear(); never resets to
+   * a prior value, so a consumer comparing against a last-seen value can
+   * always detect "something changed."
+   */
   layoutVersion = 0
 
   // ── Scene graph ───────────────────────────────────────────────────────
@@ -50,6 +59,35 @@ export class NetworkPipelineStore {
   labels: NetworkLabel[] = []
   /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
   customLayoutOverlays: import("react").ReactNode = null
+
+  // ── Spatial index for node hit testing ─────────────────────────────────
+  // Circle-node hit testing (force/orbit graphs) is O(n) per hover frame
+  // without an index. Above QUADTREE_THRESHOLD circles we lazily build a
+  // quadtree over their centers and query it in O(log n), mirroring the
+  // XY/ordinal point quadtree. Lazy + revision-keyed so it's only built when a
+  // hover actually occurs after the scene changed (not on every animation
+  // frame). Hit testing reads `sceneNodes`, which only change in buildScene(),
+  // so a quadtree built from them is exactly as fresh as a linear scan.
+  private _nodeQuadtree: Quadtree<NetworkCircleNode> | null = null
+  private _maxNodeRadius = 0
+  /** Bumped whenever sceneNodes is rebuilt; keys the quadtree cache. */
+  private _sceneNodesRevision = 0
+  private _nodeQuadtreeRevision = -1
+  private static readonly QUADTREE_THRESHOLD = 500
+
+  // ── Materialized array cache ────────────────────────────────────────────
+  // buildScene, tickAnimation, and particle rendering each need the node/edge
+  // Maps as arrays every frame during animation. `Array.from` on every frame
+  // allocates O(n+m) garbage for a graph that hasn't structurally changed
+  // (a 5k-node/10k-edge orbit/sankey churns millions of slots/sec → GC stalls).
+  // Cache keyed on layoutVersion — which bumps on every Map mutation
+  // (ingest/remove/clear) but NOT on an animation tick — so animation frames
+  // reuse the arrays. Handed only to non-hierarchical layout plugins, which
+  // read them (mutating node-object positions in place); hierarchical plugins
+  // use the arrays as scratch and get fresh copies.
+  private _nodesArrCache: RealtimeNode[] | null = null
+  private _edgesArrCache: RealtimeEdge[] | null = null
+  private _arrCacheVersion = -1
 
   // ── Particles ─────────────────────────────────────────────────────────
 
@@ -78,6 +116,8 @@ export class NetworkPipelineStore {
   // ── Decay sort cache ──────────────────────────────────────────────────
   /** Cached sorted node-timestamp entries for applyDecay(); null = needs rebuild */
   private _decaySortedNodes: Array<[string, number]> | null = null
+  /** id→age-index map derived from _decaySortedNodes; rebuilt with it, not per frame. */
+  private _decayAgeMap: Map<string, number> | null = null
 
   // ── Topology diffing ───────────────────────────────────────────────────
 
@@ -556,13 +596,16 @@ export class NetworkPipelineStore {
    * Build the scene graph from current layout positions.
    */
   buildScene(size: [number, number]): void {
-    const nodesArr = Array.from(this.nodes.values())
-    const edgesArr = Array.from(this.edges.values())
+    // Any sceneNodes rebuild invalidates the lazily-built node quadtree.
+    this._sceneNodesRevision++
 
     // customLayout escape hatch — short-circuit plugin dispatch and let the
     // user emit scene primitives directly. Hit testing, decay, and SSR keep
     // working because they consume `this.sceneNodes`/`sceneEdges`.
     if (this.config.customNetworkLayout) {
+      // User code may freely read or mutate these — always hand it fresh arrays.
+      const nodesArr = Array.from(this.nodes.values())
+      const edgesArr = Array.from(this.edges.values())
       // Palette + resolveColor share the same shape across network and
       // ordinal customLayout escape hatches — see `customLayoutPalette.ts`.
       const palette = resolveCustomLayoutPalette(
@@ -611,6 +654,13 @@ export class NetworkPipelineStore {
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin) return
 
+    // Non-hierarchical plugins (force/sankey/chord) only read these arrays
+    // (mutating node-object positions in place), so they share the per-frame
+    // cache. Hierarchical plugins (orbit/hierarchy) use them as mutable scratch
+    // (clear + rebuild), so they get fresh arrays.
+    const nodesArr = plugin.hierarchical ? Array.from(this.nodes.values()) : this.nodesArray
+    const edgesArr = plugin.hierarchical ? Array.from(this.edges.values()) : this.edgesArray
+
     const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
       nodesArr,
       edgesArr,
@@ -621,6 +671,86 @@ export class NetworkPipelineStore {
     this.sceneNodes = sceneNodes
     this.sceneEdges = sceneEdges
     this.labels = labels
+  }
+
+  /**
+   * Lazily (re)build the circle-node spatial index. Only built when the scene
+   * holds more than QUADTREE_THRESHOLD circle nodes (force/orbit graphs); for
+   * rect (sankey/treemap) and arc (chord) scenes — which carry far fewer marks
+   * and need area/angular hit logic — it stays null and the hit tester scans
+   * linearly. Always tracks `_maxNodeRadius` so the hit query can widen its
+   * search to cover the largest node.
+   */
+  private rebuildNodeQuadtree(): void {
+    let circleCount = 0
+    let maxR = 0
+    for (const node of this.sceneNodes) {
+      if (node.type === "circle") {
+        circleCount++
+        if (node.r > maxR) maxR = node.r
+      }
+    }
+    this._maxNodeRadius = maxR
+
+    if (circleCount <= NetworkPipelineStore.QUADTREE_THRESHOLD) {
+      this._nodeQuadtree = null
+      return
+    }
+
+    const circles: NetworkCircleNode[] = new Array(circleCount)
+    let i = 0
+    for (const node of this.sceneNodes) {
+      if (node.type === "circle") circles[i++] = node
+    }
+    this._nodeQuadtree = d3Quadtree<NetworkCircleNode>()
+      .x(n => n.cx)
+      .y(n => n.cy)
+      .addAll(circles)
+  }
+
+  /**
+   * Circle-node spatial index for hit testing, or null when the scene is small
+   * or not circle-based. Rebuilt on demand only after the scene changed, so a
+   * settled graph indexes once and animation frames without a hover pay nothing.
+   */
+  get nodeQuadtree(): Quadtree<NetworkCircleNode> | null {
+    if (this._nodeQuadtreeRevision !== this._sceneNodesRevision) {
+      this.rebuildNodeQuadtree()
+      this._nodeQuadtreeRevision = this._sceneNodesRevision
+    }
+    return this._nodeQuadtree
+  }
+
+  /** Largest circle-node radius in the current scene (widens the hit query). */
+  get maxNodeRadius(): number {
+    // Touch the getter so _maxNodeRadius reflects the current scene.
+    void this.nodeQuadtree
+    return this._maxNodeRadius
+  }
+
+  /**
+   * Per-frame-stable node/edge arrays (see field docs). Rebuilt only when
+   * layoutVersion changes — i.e. on a Map mutation, never on an animation tick.
+   */
+  private _ensureArrays(): void {
+    if (this._arrCacheVersion === this.layoutVersion && this._nodesArrCache && this._edgesArrCache) {
+      return
+    }
+    this._nodesArrCache = Array.from(this.nodes.values())
+    this._edgesArrCache = Array.from(this.edges.values())
+    this._arrCacheVersion = this.layoutVersion
+  }
+
+  /** Cached node array — safe only for read / position-mutate consumers. */
+  get nodesArray(): RealtimeNode[] {
+    this._ensureArrays()
+    return this._nodesArrCache!
+  }
+
+  /** Cached edge array — safe only for read / position-mutate consumers. */
+  get edgesArray(): RealtimeEdge[] {
+    this._ensureArrays()
+    return this._edgesArrCache!
   }
 
   // ── Animation tick (orbit etc.) ──────────────────────────────────────
@@ -642,8 +772,10 @@ export class NetworkPipelineStore {
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin?.tick) return false
 
-    const nodesArr = Array.from(this.nodes.values())
-    const edgesArr = Array.from(this.edges.values())
+    // Non-hierarchical layouts (force) share the per-frame array cache; the
+    // hierarchical orbit layout uses them as scratch, so it gets fresh arrays.
+    const nodesArr = plugin.hierarchical ? Array.from(this.nodes.values()) : this.nodesArray
+    const edgesArr = plugin.hierarchical ? Array.from(this.edges.values()) : this.edgesArray
     return plugin.tick(nodesArr, edgesArr, this.config, size, deltaTime)
   }
 
@@ -1054,15 +1186,19 @@ export class NetworkPipelineStore {
     const nodeCount = this.nodeTimestamps.size
     if (nodeCount <= 1) return
 
-    // Sort nodes by creation time (oldest first) — cached when topology is stable
+    // Sort nodes by creation time (oldest first) and build the id→age-index map
+    // — both cached when topology is stable. The age map used to be rebuilt
+    // every frame (O(n) Map alloc + fill) even though the sort was cached; now
+    // it rebuilds only when the sort does (i.e. on a topology change).
     if (!this._decaySortedNodes) {
       this._decaySortedNodes = Array.from(this.nodeTimestamps.entries()).sort((a, b) => a[1] - b[1])
+      const ageMap = new Map<string, number>()
+      for (let i = 0; i < this._decaySortedNodes.length; i++) {
+        ageMap.set(this._decaySortedNodes[i][0], i)
+      }
+      this._decayAgeMap = ageMap
     }
-    const sorted = this._decaySortedNodes
-    const nodeAgeMap = new Map<string, number>()
-    for (let i = 0; i < sorted.length; i++) {
-      nodeAgeMap.set(sorted[i][0], i)
-    }
+    const nodeAgeMap = this._decayAgeMap!
 
     for (const node of this.sceneNodes) {
       const nodeId = node.id
@@ -1291,8 +1427,20 @@ export class NetworkPipelineStore {
     this.nodes.clear()
     this.edges.clear()
     this._decaySortedNodes = null
+    this._decayAgeMap = null
+    // Invalidate the lazily-built node spatial index AND the materialized
+    // node/edge array caches. These hold references to the actual node/edge
+    // objects, so nulling them lets clear() promptly release a (possibly large)
+    // pre-clear graph instead of retaining it until the next render rebuilds
+    // the caches.
+    this._nodeQuadtree = null
+    this._nodesArrCache = null
+    this._edgesArrCache = null
+    this._sceneNodesRevision++
     this.tension = 0
-    this.layoutVersion = 0
+    // Monotonic — never reset to 0. A reset could collide with a consumer's
+    // last-seen value and skip a render after clear()+reload.
+    this.layoutVersion++
     this.sceneNodes = []
     this.sceneEdges = []
     this.labels = []
@@ -1302,6 +1450,19 @@ export class NetworkPipelineStore {
     this._lastPositionSnapshot = null
     this.nodeTimestamps.clear()
     this.edgeTimestamps.clear()
+    // Topology-diff tracking must reset too. Otherwise recordTopologyDiff()
+    // after a clear()+reload diffs the new graph against the pre-clear node/
+    // edge sets and mis-classifies every reappearing node as unchanged —
+    // breaking enter/exit highlighting and getTopologyDiff().
+    this.previousNodeIds = new Set()
+    this.previousEdgeKeys = new Set()
+    this.addedNodes = new Set()
+    this.removedNodes = new Set()
+    this.addedEdges = new Set()
+    this.removedEdges = new Set()
+    this.lastTopologyChangeTime = 0
+    this._boundedPrevSnapshot = null
+    this._boundedEdgeSnapshot = null
     if (this.particlePool) {
       this.particlePool.clear()
     }

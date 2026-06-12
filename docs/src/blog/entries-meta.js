@@ -20,6 +20,17 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "release-3-7-2",
+    title: "Semiotic 3.7.2",
+    subtitle:
+      "A deployment and docs-polish patch: stateless MCP HTTP for serverless connectors, a Cloud Run wrapper, dark-mode accessibility fixes, and restored annotation callouts in the contested-annotations blog demo.",
+    author: "AI-Generated",
+    date: "2026-06-12",
+    tags: ["release"],
+    excerpt:
+      "3.7.2 makes the MCP HTTP server easier to host: stateless Streamable HTTP, JSON responses, health endpoints, host allowlisting, and a Cloud Run wrapper. It also fixes dark-mode misses in the accessibility navigation demos and restores visible callouts in the contested-annotations blog chart.",
+  },
+  {
     slug: "release-3-7-1",
     title: "Semiotic 3.7.1",
     subtitle:

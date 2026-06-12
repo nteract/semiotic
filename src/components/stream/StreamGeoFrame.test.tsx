@@ -126,4 +126,31 @@ describe("StreamGeoFrame — legend category emission", () => {
       expect(onCategoriesChange).toHaveBeenLastCalledWith([])
     })
   })
+
+  // ── Push API + clear→reload lifecycle ────────────────────────────────
+  // Exercises the frame's imperative handle and the push→ingest→clear→reload
+  // path — the frame-level boundary for the store's clear() reset.
+  describe("push API + clear→reload lifecycle", () => {
+    it("push/clear/getData round-trips through the store and reloads fresh", async () => {
+      const ref = React.createRef<StreamGeoFrameHandle>()
+      render(
+        <StreamGeoFrame
+          ref={ref}
+          projection="mercator"
+          xAccessor="lon"
+          yAccessor="lat"
+          pointIdAccessor="id"
+        />
+      )
+      await act(async () => { ref.current!.push({ id: "a", lon: -100, lat: 40 }) })
+      await act(async () => { ref.current!.push({ id: "b", lon: -80, lat: 35 }) })
+      expect(ref.current!.getData().length).toBe(2)
+
+      await act(async () => { ref.current!.clear() })
+      expect(ref.current!.getData().length).toBe(0)
+
+      await act(async () => { ref.current!.push({ id: "c", lon: -120, lat: 45 }) })
+      expect(ref.current!.getData().length).toBe(1)
+    })
+  })
 })

@@ -92,6 +92,37 @@ describe("AI behavior contract metadata", () => {
       expect(dataRequiredForUsageMode(c, "push")).toBe(true)
     }
   })
+
+  it("required-combination contracts agree with dataRequiredForUsageMode (no drift)", () => {
+    // REQUIRED_COMBINATIONS is hand-maintained. If an entry claims `data` is
+    // statically required, dataRequiredForUsageMode (schema-derived) must agree
+    // — otherwise the printed contract promises something validation doesn't
+    // enforce. This is the SwimlaneChart drift that previously let dataless
+    // static configs pass --doctor: the contract said staticRequired:["data",…]
+    // while dataRequiredForUsageMode returned false.
+    const combos = requiredCombinationsFor() as Array<{
+      component: string
+      required: string[]
+      staticRequired?: string[]
+    }>
+    for (const combo of combos) {
+      const staticReq = combo.staticRequired || combo.required
+      if (staticReq.includes("data")) {
+        expect(dataRequiredForUsageMode(combo.component, "static")).toBe(true)
+      }
+    }
+  })
+
+  it("flags missing data for accessor-only static charts (CandlestickChart, SwimlaneChart, …)", () => {
+    // These declare a `data` schema prop but list only accessors in `required`,
+    // so they used to pass --doctor / diagnoseConfig with no data.
+    for (const c of ["CandlestickChart", "MultiAxisLineChart", "QuadrantChart",
+                     "DifferenceChart", "SwimlaneChart", "LikertChart"]) {
+      expect(dataRequiredForUsageMode(c, "static")).toBe(true)
+      // …but push mode must still exempt them (they all support the push API).
+      expect(dataRequiredForUsageMode(c, "push")).toBe(false)
+    }
+  })
 })
 
 describe("AI behavior contracts — color precedence", () => {

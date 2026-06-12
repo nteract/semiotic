@@ -42,6 +42,15 @@ const NETWORK_COMPONENTS = new Set([
   "ForceDirectedGraph", "SankeyDiagram", "ChordDiagram"
 ])
 
+// Named color schemes that resolve to a palette (colorUtils.COLOR_SCHEMES).
+// A string `colorScheme` outside this set silently falls back to the default
+// palette, so a typo produces wrong colors with no error. Kept in sync with
+// COLOR_SCHEMES by a drift test in diagnoseConfig.test.ts.
+const KNOWN_COLOR_SCHEMES = new Set([
+  "category10", "tableau10", "set3",
+  "blues", "reds", "greens", "oranges", "purples", "viridis", "plasma",
+])
+
 function checkEmptyData(
   component: string,
   props: Datum,
@@ -510,8 +519,30 @@ function checkMissingDescription(
     out.push({
       severity: "warning",
       code: "MISSING_DESCRIPTION",
-      message: `No title, description, or summary provided. Screen readers will use a generic label like "XY chart".`,
+      message: `No title, description, or summary provided. Screen readers will fall back to a generic chart-type label.`,
       fix: `Add a title="..." prop for a brief label, or description="..." for a detailed aria-label, or summary="..." for a screen-reader-only note describing the chart's purpose.`,
+    })
+  }
+}
+
+function checkUnknownColorScheme(
+  component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  const scheme = props.colorScheme
+  // Arrays are explicit palettes; non-strings aren't named schemes.
+  if (typeof scheme !== "string") return
+  // Charts with an explicit colorScheme enum (e.g. Heatmap's sequential names,
+  // including "custom") are validated by validateProps — don't second-guess it.
+  const spec = VALIDATION_MAP[component]
+  if (spec?.props?.colorScheme?.enum) return
+  if (!KNOWN_COLOR_SCHEMES.has(scheme)) {
+    out.push({
+      severity: "warning",
+      code: "UNKNOWN_COLOR_SCHEME",
+      message: `colorScheme "${scheme}" is not a recognized named scheme — the chart will fall back to the default palette.`,
+      fix: `Use a known scheme name (${[...KNOWN_COLOR_SCHEMES].join(", ")}) or pass an explicit color array, e.g. colorScheme={["#1f77b4", "#ff7f0e"]}.`,
     })
   }
 }
@@ -909,6 +940,7 @@ export function diagnoseConfig(
   checkHeatmapStringAccessor(componentName, props, diagnoses)
   checkColorContrast(componentName, props, diagnoses)
   checkAdjacentCategoryContrast(componentName, props, diagnoses)
+  checkUnknownColorScheme(componentName, props, diagnoses)
   checkMissingDescription(componentName, props, diagnoses)
   checkFunctionAccessors(componentName, props, diagnoses)
   checkAnnotationConnectors(componentName, props, diagnoses)

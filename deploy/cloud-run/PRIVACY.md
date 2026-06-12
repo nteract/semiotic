@@ -21,5 +21,3 @@ Users should not submit sensitive personal data, confidential business data, reg
 Contact
 
 For questions about this policy, contact the maintainers through the Semiotic repository at https://github.com/nteract/semiotic.
-
-Commit directly or open a PR.

@@ -955,6 +955,13 @@ export class OrdinalPipelineStore {
     const indexMap = this.getDatumIndexMap(data)
 
     for (const node of nodes) {
+      // Decay dims marks by their position in the time-ordered buffer, which is
+      // undefined for aggregate/distribution marks (a wedge is a category total;
+      // violin/boxplot are distribution summaries) and decorative connectors —
+      // none maps to a single buffer index. Pulse intentionally DOES handle
+      // wedges ("this category just received a point" is meaningful for an
+      // aggregate); decay does not, by the same reasoning. This asymmetry is
+      // deliberate, not an oversight.
       if (node.type === "connector" || node.type === "violin" || node.type === "boxplot" || node.type === "wedge") continue
       const idx = indexMap.get(node.datum)
       if (idx == null) continue
@@ -1482,6 +1489,12 @@ export class OrdinalPipelineStore {
     this.columns = {}
     this._pointQuadtree = null
     this._maxPointRadius = 0
+    // The categorical color cache must reset too, or a clear()+reload assigns
+    // colors from a polluted palette index (drift) and reappearing categories
+    // keep stale colors — unlike a freshly-mounted chart. Mirrors the reset in
+    // updateConfig() and XY's clear() (_colorMapCache/_groupColorMap).
+    this._colorSchemeMap = null
+    this._colorSchemeIndex = 0
     this._dataVersion++
     this.version++
   }

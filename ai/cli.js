@@ -163,6 +163,21 @@ function validatePropsWithSchema(componentName, props, usageMode = "static") {
     }
   }
 
+  // Array-shape charts that declare a `data` schema prop need it in static
+  // usage even when "data" isn't in `required` (those lists hold semantic
+  // accessors). Without this, --doctor passed dataless static CandlestickChart /
+  // MultiAxisLineChart / QuadrantChart / DifferenceChart / SwimlaneChart /
+  // LikertChart configs that render blank. dataRequiredForUsageMode is true for
+  // them in static and false in push, mirroring the MCP diagnoseConfig path.
+  if (
+    "data" in properties &&
+    !required.includes("data") &&
+    dataRequiredForUsageMode(component.name, usageMode) &&
+    (props.data === undefined || props.data === null)
+  ) {
+    errors.push(`"data" is required for ${component.name}.`)
+  }
+
   for (const [propName, value] of Object.entries(props)) {
     if (value === undefined || value === null) continue
     const propSchema = properties[propName]

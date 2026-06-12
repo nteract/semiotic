@@ -278,6 +278,7 @@ describe("NetworkPipelineStore", () => {
       )
       store.buildScene([600, 400])
       expect(store.nodes.size).toBe(2)
+      const versionBeforeClear = store.layoutVersion
 
       store.clear()
       expect(store.nodes.size).toBe(0)
@@ -286,8 +287,18 @@ describe("NetworkPipelineStore", () => {
       expect(store.sceneEdges).toEqual([])
       expect(store.labels).toEqual([])
       expect(store.tension).toBe(0)
-      expect(store.layoutVersion).toBe(0)
+      // layoutVersion is monotonic — clear() bumps it rather than resetting to
+      // 0, since a reset could collide with a consumer's last-seen value and
+      // skip the post-clear repaint.
+      expect(store.layoutVersion).toBeGreaterThan(versionBeforeClear)
       expect(store.lastIngestTime).toBe(0)
+      // Topology-diff state must reset, so a clear()+reload diffs against an
+      // empty previous graph rather than the pre-clear node/edge set.
+      expect(store.addedNodes.size).toBe(0)
+      expect(store.removedNodes.size).toBe(0)
+      expect(store.addedEdges.size).toBe(0)
+      expect(store.removedEdges.size).toBe(0)
+      expect(store.lastTopologyChangeTime).toBe(0)
     })
   })
 
@@ -313,6 +324,85 @@ describe("NetworkPipelineStore", () => {
         showParticles: true
       }))
       expect(store.particlePool).not.toBeNull()
+    })
+  })
+
+  // ── Node spatial index (hit-testing quadtree) ───────────────────────
+  describe("node quadtree", () => {
+    const makeForceGraph = (count: number) => ({
+      nodes: Array.from({ length: count }, (_, i) => ({ id: `n${i}` })),
+      edges: Array.from({ length: Math.max(0, count - 1) }, (_, i) => ({
+        source: `n${i}`,
+        target: `n${i + 1}`,
+        value: 1
+      }))
+    })
+
+    it("is null for a small force graph (below the threshold)", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      const { nodes, edges } = makeForceGraph(3)
+      store.ingestBounded(nodes, edges, [600, 400])
+      store.buildScene([600, 400])
+      expect(store.nodeQuadtree).toBeNull()
+    })
+
+    it("builds an index once the scene exceeds the circle-node threshold", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      const { nodes, edges } = makeForceGraph(520)
+      store.ingestBounded(nodes, edges, [600, 400])
+      store.buildScene([600, 400])
+
+      const qt = store.nodeQuadtree
+      expect(qt).not.toBeNull()
+      expect(qt!.size()).toBeGreaterThan(500)
+      expect(store.maxNodeRadius).toBeGreaterThan(0)
+    })
+
+    it("invalidates the lazily-cached index after clear()", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      const { nodes, edges } = makeForceGraph(520)
+      store.ingestBounded(nodes, edges, [600, 400])
+      store.buildScene([600, 400])
+      expect(store.nodeQuadtree).not.toBeNull()
+
+      store.clear()
+      expect(store.nodeQuadtree).toBeNull()
+    })
+  })
+
+  // ── Materialized array cache (per-frame allocation avoidance) ────────
+  describe("node/edge array cache", () => {
+    it("reuses the arrays across reads until a topology change, then rebuilds", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      store.ingestBounded([{ id: "A" }, { id: "B" }], [{ source: "A", target: "B", value: 1 }], [600, 400])
+
+      const nodes1 = store.nodesArray
+      const edges1 = store.edgesArray
+      // Repeated reads with no Map mutation return the same array (the cache
+      // that lets animation frames skip the per-frame Array.from).
+      expect(store.nodesArray).toBe(nodes1)
+      expect(store.edgesArray).toBe(edges1)
+
+      // A topology change bumps layoutVersion, invalidating the cache.
+      store.ingestBounded(
+        [{ id: "A" }, { id: "B" }, { id: "C" }],
+        [{ source: "A", target: "B", value: 1 }],
+        [600, 400]
+      )
+      expect(store.nodesArray).not.toBe(nodes1)
+      expect(store.nodesArray.length).toBe(3)
+    })
+
+    it("stays consistent with the underlying maps", () => {
+      const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
+      store.ingestBounded([{ id: "A" }, { id: "B" }], [{ source: "A", target: "B", value: 1 }], [600, 400])
+      expect(store.nodesArray.length).toBe(store.nodes.size)
+      expect(store.edgesArray.length).toBe(store.edges.size)
+
+      store.clear()
+      // clear() bumps layoutVersion, so the cache rebuilds to the empty maps.
+      expect(store.nodesArray.length).toBe(0)
+      expect(store.edgesArray.length).toBe(0)
     })
   })
 

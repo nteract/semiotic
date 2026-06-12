@@ -1,3 +1,4 @@
+import { quadtree as d3Quadtree } from "d3-quadtree"
 import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
 import type {
   NetworkCircleNode,
@@ -487,6 +488,60 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       const result = findNearestNetworkNode([circle], [lineEdge], 200, 100)
       expect(result).not.toBeNull()
       expect(result!.type).toBe("node")
+    })
+  })
+
+  // ── Quadtree fast path (large force/orbit graphs) ────────────────────
+  // The quadtree path must be a pure optimization: for any cursor position it
+  // must return exactly what the linear scan returns. A jittered grid avoids
+  // equidistant ties (where two equally-near nodes are both valid), so we can
+  // assert the *same node*, not just the same distance.
+  describe("quadtree-accelerated circle hit testing", () => {
+    const circles: NetworkCircleNode[] = []
+    for (let row = 0; row < 25; row++) {
+      for (let col = 0; col < 25; col++) {
+        circles.push({
+          type: "circle",
+          // Non-commensurate offsets break grid symmetry so no probe point is
+          // exactly equidistant from two centers.
+          cx: 20 + col * 20 + ((row * 7) % 5) * 0.37,
+          cy: 20 + row * 20 + ((col * 3) % 4) * 0.29,
+          r: 6,
+          style: { fill: "#4e79a7" },
+          datum: { id: `n-${row}-${col}` }
+        })
+      }
+    }
+    const maxR = 6
+    const qt = d3Quadtree<NetworkCircleNode>()
+      .x((n) => n.cx)
+      .y((n) => n.cy)
+      .addAll(circles)
+
+    it("returns the same node as the linear scan for every probe point", () => {
+      let hits = 0
+      for (let px = 0; px <= 520; px += 7) {
+        for (let py = 0; py <= 520; py += 11) {
+          const linear = findNearestNetworkNode(circles, [], px, py, 30)
+          const indexed = findNearestNetworkNode(circles, [], px, py, 30, qt, maxR)
+          // Same hit-or-miss verdict everywhere.
+          expect(indexed?.datum?.id ?? null).toBe(linear?.datum?.id ?? null)
+          if (linear && indexed) {
+            expect(indexed.distance).toBeCloseTo(linear.distance, 6)
+            expect(indexed.x).toBe(linear.x)
+            expect(indexed.y).toBe(linear.y)
+            hits++
+          }
+        }
+      }
+      // Sanity: the sweep actually exercised hits, not just misses.
+      expect(hits).toBeGreaterThan(100)
+    })
+
+    it("falls back to the linear scan when the quadtree is null", () => {
+      const a = findNearestNetworkNode(circles, [], 220, 220, 30, null, maxR)
+      const b = findNearestNetworkNode(circles, [], 220, 220, 30)
+      expect(a?.datum?.id).toBe(b?.datum?.id)
     })
   })
 
