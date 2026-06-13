@@ -33850,6 +33850,7 @@ var port = Number.isFinite(parsedPort) ? parsedPort : 3001;
 async function main() {
   if (httpMode) {
     const allowedHosts = (process.env.MCP_ALLOWED_HOSTS || "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+    const openaiAppsChallengeToken = (process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim();
     const healthBody = () => JSON.stringify({
       status: "ok",
       name: "semiotic-mcp",
@@ -33889,6 +33890,14 @@ async function main() {
       if (req.method === "GET" && (pathname === "/healthz" || pathname === "/health")) {
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(healthBody());
+        return;
+      }
+      if (req.method === "GET" && pathname === "/.well-known/openai-apps-challenge" && openaiAppsChallengeToken) {
+        res.writeHead(200, {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store"
+        });
+        res.end(openaiAppsChallengeToken);
         return;
       }
       if (pathname !== "/" && pathname !== "/mcp") {

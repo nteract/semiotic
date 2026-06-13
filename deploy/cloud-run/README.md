@@ -52,7 +52,8 @@ add `--max-instances N` as a cost ceiling, or `--min-instances 1` to keep it alw
 | `/` , `/mcp` | POST | MCP Streamable HTTP (JSON-RPC). `/mcp` is the canonical URL to give clients. Returns a JSON response. |
 | `/` , `/mcp` | GET | 200 JSON info blob (for humans/browsers — stateless mode has no session SSE stream). |
 | `/healthz`, `/health` | GET | 200 health JSON (for uptime checks). |
-| anything else (`/favicon.ico`, `/.well-known/*`) | any | 404. The 404 on `/.well-known/oauth-protected-resource` is the correct signal that this is an unauthenticated server. |
+| `/.well-known/openai-apps-challenge` | GET | 200 plain-text OpenAI Apps domain verification token when `OPENAI_APPS_CHALLENGE_TOKEN` is set. |
+| anything else (`/favicon.ico`, other `/.well-known/*` probes) | any | 404. The 404 on `/.well-known/oauth-protected-resource` is the correct signal that this is an unauthenticated server. |
 
 ## Environment variables
 
@@ -60,6 +61,29 @@ add `--max-instances N` as a cost ceiling, or `--min-instances 1` to keep it alw
 |---|---|---|
 | `PORT` | `8080` (Cloud Run sets this) | Listen port. |
 | `MCP_ALLOWED_HOSTS` | unset (disabled) | Comma-separated `Host` allowlist. Unset → no host check (fine for local dev). Set in production. |
+| `OPENAI_APPS_CHALLENGE_TOKEN` | unset | Raw token shown by ChatGPT Apps domain verification. When set, the server serves it from `/.well-known/openai-apps-challenge`. |
+
+## Verify a ChatGPT Apps domain
+
+In the OpenAI domain verification dialog, use the Cloud Run origin as the Challenge Base
+URL, not the MCP path:
+
+```
+https://semiotic-mcp-481507046413.us-central1.run.app
+```
+
+Then put the dialog's token into Cloud Run without committing it:
+
+```sh
+gcloud run services update semiotic-mcp --region us-central1 \
+  --update-env-vars "OPENAI_APPS_CHALLENGE_TOKEN=PASTE_TOKEN_HERE"
+```
+
+Check that Cloud Run is serving the token before clicking Verify:
+
+```sh
+curl https://YOUR-SERVICE-URL.run.app/.well-known/openai-apps-challenge
+```
 
 ## Connect a client
 
@@ -73,4 +97,4 @@ ChatGPT: add it as a connector / app using the `/mcp` URL.
 ## Updating
 
 When a new `semiotic` is published, re-run the same `gcloud run deploy` command — the
-build does a fresh `npm install` and picks up the latest `^3.7.2`-compatible release.
+build does a fresh `npm install` and picks up the latest `^3.7.3`-compatible release.
