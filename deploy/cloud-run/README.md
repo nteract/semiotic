@@ -45,6 +45,22 @@ scales to zero when idle (≈no cost; a few-second cold start on the next reques
 add `--max-instances N` as a cost ceiling, or `--min-instances 1` to keep it always warm
 (~$10–20/mo). Neither is required for correctness.
 
+## Continuous deployment (us-west1)
+
+In addition to the manually-deployed `us-central1` service above, a second service —
+**`semiotic-mcp-server`** in **`us-west1`** — auto-deploys on every push to `main` via a Cloud
+Build trigger (`rmgpgab-semiotic-mcp-server-…`). It builds the **same way** as the manual
+deploy — Cloud Buildpacks, no Dockerfile — so two trigger settings are load-bearing:
+
+| Setting | Must be | Why |
+|---|---|---|
+| Build type | **Buildpacks**, not Dockerfile | There is no Dockerfile in this repo. A Dockerfile build fails immediately with `lstat /workspace/Dockerfile: no such file or directory`. |
+| Build context / source directory | **`deploy/cloud-run`**, not the repo root | The root `package.json`'s `start` script is the docs website (`parcel serve`), not the MCP server. |
+
+If the trigger is ever recreated, set both in the Cloud Run console (service → *Edit continuous
+deployment* → Build type: buildpacks, Build context directory: `/deploy/cloud-run`). The
+`us-central1` service has no trigger — deploy it manually with the command above.
+
 ## Endpoints
 
 | Path | Method | Behavior |
