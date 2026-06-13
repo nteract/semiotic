@@ -1077,6 +1077,27 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     expect(probe.body).toEqual({ error: "Not found" })
   })
 
+  it("serves the OpenAI Apps domain challenge token when configured", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+
+    const token = "test-openai-apps-domain-token"
+    const server = await spawnReadyHTTPServer({ OPENAI_APPS_CHALLENGE_TOKEN: ` ${token} ` })
+    proc = server.proc
+    port = server.port
+
+    const challenge = await requestHTTP(port, "/.well-known/openai-apps-challenge")
+    expect(challenge.status).toBe(200)
+    expect(challenge.headers["content-type"]).toContain("text/plain")
+    expect(challenge.headers["cache-control"]).toBe("no-store")
+    expect(challenge.text).toBe(token)
+
+    const oauthProbe = await requestHTTP(port, "/.well-known/oauth-protected-resource")
+    expect(oauthProbe.status).toBe(404)
+    expect(oauthProbe.body).toEqual({ error: "Not found" })
+  })
+
   it("enforces MCP_ALLOWED_HOSTS against raw and normalized Host headers", async () => {
     proc?.kill("SIGTERM")
     if (proc) await waitForProcessExit(proc)

@@ -1811,6 +1811,7 @@ async function main() {
       .split(",")
       .map((h) => h.trim().toLowerCase())
       .filter(Boolean)
+    const openaiAppsChallengeToken = (process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim()
 
     const healthBody = () =>
       JSON.stringify({
@@ -1865,6 +1866,22 @@ async function main() {
       if (req.method === "GET" && (pathname === "/healthz" || pathname === "/health")) {
         res.writeHead(200, { "Content-Type": "application/json" })
         res.end(healthBody())
+        return
+      }
+
+      // ChatGPT Apps domain verification expects the raw challenge token at
+      // the origin-root well-known URL. Keep it env-driven so deployments can
+      // rotate or remove the token without committing it.
+      if (
+        req.method === "GET" &&
+        pathname === "/.well-known/openai-apps-challenge" &&
+        openaiAppsChallengeToken
+      ) {
+        res.writeHead(200, {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store",
+        })
+        res.end(openaiAppsChallengeToken)
         return
       }
 
