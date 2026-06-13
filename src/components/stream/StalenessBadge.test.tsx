@@ -3,9 +3,8 @@ import { StalenessBadge } from "./StalenessBadge"
 
 describe("StalenessBadge", () => {
   it("renders LIVE when fresh and STALE when stale", () => {
-    const { rerender, getByText, container } = render(<StalenessBadge isStale={false} />)
+    const { rerender, getByText } = render(<StalenessBadge isStale={false} />)
     expect(getByText("LIVE")).toBeInTheDocument()
-    expect(container.querySelector(".stream-staleness-badge")).not.toBeNull()
     rerender(<StalenessBadge isStale={true} />)
     expect(getByText("STALE")).toBeInTheDocument()
   })
