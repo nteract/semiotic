@@ -82,7 +82,7 @@ gcloud run services update semiotic-mcp --region us-central1 \
 Check that Cloud Run is serving the token before clicking Verify:
 
 ```sh
-curl https://semiotic-mcp-481507046413.us-central1.run.app/.well-known/openai-apps-challenge
+curl https://YOUR-SERVICE-URL.run.app/.well-known/openai-apps-challenge
 ```
 
 ## Connect a client
