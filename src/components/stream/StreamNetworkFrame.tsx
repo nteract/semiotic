@@ -277,6 +277,7 @@ const StreamNetworkFrame = forwardRef<
     orbitAnimated,
     customNetworkLayout,
     layoutConfig,
+    layoutSelection,
   } = props
 
   // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
@@ -400,6 +401,7 @@ const StreamNetworkFrame = forwardRef<
       orbitAnimated,
       customNetworkLayout,
       layoutConfig,
+      layoutSelection,
     }),
     [
       chartType,
@@ -454,6 +456,7 @@ const StreamNetworkFrame = forwardRef<
       currentTheme,
       customNetworkLayout,
       layoutConfig,
+      layoutSelection,
     ]
   )
 
@@ -483,6 +486,14 @@ const StreamNetworkFrame = forwardRef<
   // on every render can't re-ingest + setState in a loop (which compounds
   // with a continuous animation's frame loop into React's max-update-depth
   // crash), while genuine layout-parameter changes still take effect.
+  //
+  // `layoutConfig` is deliberately EXCLUDED: it's threaded to a custom layout
+  // as `ctx.config` and read only during `buildScene` (the custom layout) —
+  // never during ingest, which rebuilds the node/edge maps the config doesn't
+  // touch. So a `layoutConfig` change re-runs the layout via the
+  // `updateConfig` effect → render-loop `buildScene` (an in-place re-layout),
+  // with no topology re-ingest. That makes config-driven custom-layout updates
+  // — interaction state, styling, animation progress — cheap to drive per frame.
   const stableLayoutConfig = useStableShallow({
     chartType,
     nodeIDAccessor,
@@ -510,7 +521,6 @@ const StreamNetworkFrame = forwardRef<
     orbitSize,
     orbitEccentricity,
     customNetworkLayout,
-    layoutConfig,
   })
 
   // ── Refs ─────────────────────────────────────────────────────────────
@@ -557,11 +567,6 @@ const StreamNetworkFrame = forwardRef<
   const [_layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
   const [isStale, setIsStale] = useState(false)
-  // Lifted from `storeRef.current.customLayoutOverlays` so React re-renders
-  // when overlays change. Synced after every `buildScene` call via
-  // `syncOverlays`. React's reference-equality short-circuit means
-  // null→null and same-ref updates don't trigger spurious re-renders.
-  const [customOverlays, setCustomOverlays] = useState<React.ReactNode>(null)
 
   const hoverRef = useRef<typeof hoverData>(null)
 
@@ -698,23 +703,23 @@ const StreamNetworkFrame = forwardRef<
   const isContinuous =
     ((chartType === "sankey" || !!customNetworkLayout) && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
 
-  // Update config when props change
+  // customLayout overlays are read straight from `storeRef.current.customLayoutOverlays`
+  // at render time (see the `foregroundGraphics` composition below) — the same
+  // pattern as StreamXYFrame. Every overlay-changing path (config/data/theme/
+  // hover) already sets `dirtyRef` + `scheduleRender`, and the render loop's
+  // throttled `setAnnotationFrame` re-renders to pick up the fresh overlays.
+  // So no separate React state / per-change setState is needed (and can't
+  // compound with a per-frame morph into a "Maximum update depth" storm).
+
+  // Update config when props change. A render-only config change (e.g. the
+  // resolved selection predicate driving dim/highlight) flows through here
+  // too: updateConfig → dirty → render-loop buildScene re-emits the overlays
+  // → setAnnotationFrame re-render reads them.
   useEffect(() => {
     storeRef.current?.updateConfig(stablePipelineConfig)
     dirtyRef.current = true
     scheduleRender()
   }, [stablePipelineConfig, scheduleRender])
-
-  // Sync the customLayout overlay output to React state. Called after every
-  // data-change `buildScene` so the overlay re-renders when topology or
-  // theme changes. We deliberately do NOT call this from the per-frame
-  // render loop (transition/animation rebuilds): the user's layout function
-  // may return a fresh JSX reference each call, which would force a React
-  // re-render every animation frame. Streaming overlays should update via
-  // data changes, not via animation ticks.
-  const syncCustomOverlays = useCallback(() => {
-    setCustomOverlays(storeRef.current?.customLayoutOverlays ?? null)
-  }, [])
 
   // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
   // is handled by useFrame above when themeDirtyRef is provided. But there's
@@ -729,7 +734,6 @@ const StreamNetworkFrame = forwardRef<
     const store = storeRef.current
     if (!store) return
     store.buildScene([adjustedWidth, adjustedHeight])
-    syncCustomOverlays()
     for (const sceneNode of store.sceneNodes) {
       if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
         nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
@@ -737,7 +741,7 @@ const StreamNetworkFrame = forwardRef<
     }
     dirtyRef.current = true
     scheduleRender()
-  }, [currentTheme, adjustedWidth, adjustedHeight, scheduleRender, syncCustomOverlays])
+  }, [currentTheme, adjustedWidth, adjustedHeight, scheduleRender])
 
   // ── Layout execution ─────────────────────────────────────────────────
 
@@ -747,7 +751,6 @@ const StreamNetworkFrame = forwardRef<
 
     store.runLayout([adjustedWidth, adjustedHeight])
     store.buildScene([adjustedWidth, adjustedHeight])
-    syncCustomOverlays()
     dirtyRef.current = true
 
     // Sync nodeColorMap from actual scene fills so particle/hover colors
@@ -778,7 +781,7 @@ const StreamNetworkFrame = forwardRef<
       const { nodes, edges } = store.getLayoutData()
       onTopologyChange(nodes, edges)
     }
-  }, [adjustedWidth, adjustedHeight, onTopologyChange, colorScheme, syncCustomOverlays])
+  }, [adjustedWidth, adjustedHeight, onTopologyChange, colorScheme])
 
   // ── Push API ─────────────────────────────────────────────────────────
 
@@ -943,7 +946,6 @@ const StreamNetworkFrame = forwardRef<
       // Hierarchy data: single root object
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
       store.buildScene([adjustedWidth, adjustedHeight])
-      syncCustomOverlays()
       dirtyRef.current = true
       scheduleRender()
     } else {
@@ -955,7 +957,6 @@ const StreamNetworkFrame = forwardRef<
 
       store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
       store.buildScene([adjustedWidth, adjustedHeight])
-      syncCustomOverlays()
 
       // Sync nodeColorMap from actual scene fills so particle/hover colors
       // match the rendered node colors exactly (same logic as runLayout sync)
@@ -986,7 +987,7 @@ const StreamNetworkFrame = forwardRef<
     // setState every render (the loop that crashed continuously-animated
     // charts); genuine layout-parameter, data, dimension, and palette changes
     // still re-ingest. See the `stableLayoutConfig` definition above.
-  }, [safeNodes, safeEdges, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, scheduleRender, colorScheme, syncCustomOverlays])
+  }, [safeNodes, safeEdges, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, scheduleRender, colorScheme])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -1359,6 +1360,11 @@ const StreamNetworkFrame = forwardRef<
     const wasDirty = dirtyRef.current
     dirtyRef.current = false
 
+    // NOTE: custom-layout overlays are re-synced from the `updateConfig` effect
+    // (a render-only config change) and the ingest path (data change) — never
+    // from this render loop, so continuous animation / a parent's per-frame
+    // morph can't drive a per-frame `setCustomOverlays` storm.
+
     // Update canvas aria-label imperatively after scene changes
     if (wasDirty || isTransitioning || animationTicked) {
       const canvas = canvasRef.current
@@ -1617,7 +1623,7 @@ const StreamNetworkFrame = forwardRef<
         legendHighlightedCategory={legendHighlightedCategory}
         legendIsolatedCategories={legendIsolatedCategories}
         foregroundGraphics={
-          composeOverlays(resolvedForeground, customOverlays)
+          composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
         }
         annotations={annotations}
         autoPlaceAnnotations={autoPlaceAnnotations}

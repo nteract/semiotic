@@ -247,6 +247,11 @@ export function RecipesIndex() {
           title="Network Explorer"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
+        <PageLink
+          href="/recipes/data-lineage-kstreams"
+          title="Data Lineage (KStreams)"
+          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
+        />
 
         <div className="sub-header">Streaming Visualization</div>
 

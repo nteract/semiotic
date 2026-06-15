@@ -396,14 +396,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const [currentScales, setCurrentScales] = useState<OrdinalScales | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
     const [isStale, setIsStale] = useState(false)
-    // Lifted from store.customLayoutOverlays so React re-renders when overlays
-    // change. Synced via syncCustomOverlays() after data-change scene rebuilds.
-    // Same pattern as the network frame; reference-equality short-circuits
-    // no-op updates.
-    const [customOverlays, setCustomOverlays] = useState<React.ReactNode>(null)
-    const syncCustomOverlays = useCallback(() => {
-      setCustomOverlays(storeRef.current?.customLayoutOverlays ?? null)
-    }, [])
+    // customLayout overlays are read straight from store.customLayoutOverlays at
+    // render time (see the foregroundGraphics composition below) — same pattern
+    // as StreamXYFrame / StreamNetworkFrame. The render loop's `setAnnotationFrame`
+    // re-render (fired on `wasDirty`, after `computeScene` refreshes the store)
+    // picks up fresh overlays, so no separate React state / setState is needed.
 
     // ── Hover config ─────────────────────────────────────────────────────
 
@@ -481,7 +478,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       pieceStyle, summaryStyle, colorScheme, barColors,
       decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
       isStreaming, currentTheme,
-      customLayout, layoutConfig, margin,
+      // layoutConfig omitted — a custom-layout config change re-layouts via the
+      // updateConfig effect (computeScene), not a topology re-ingest.
+      customLayout, margin,
     ])
 
     // Stabilize the config reference so inline-object / inline-array
@@ -812,7 +811,6 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       if (wasDirty && !transitionActive) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         emitLegendCategories()
-        syncCustomOverlays()
         dirtyRef.current = false
       }
 
@@ -1194,7 +1192,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           legendPosition={legendPosition}
           legendLayout={legendLayout}
           foregroundGraphics={
-            composeOverlays(resolvedForeground, customOverlays)
+            composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
           }
           annotations={annotations}
           autoPlaceAnnotations={autoPlaceAnnotations}

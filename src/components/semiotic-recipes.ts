@@ -19,6 +19,9 @@ export type { FlextreeConfig } from "./recipes/flextree"
 export { dagreLayout } from "./recipes/dagre"
 export type { DagreConfig } from "./recipes/dagre"
 
+export { lineageDagLayout } from "./recipes/lineageDag"
+export type { LineageDagConfig, LineageLod, LineageStoreSlot } from "./recipes/lineageDag"
+
 // ── Ordinal recipes (use with OrdinalCustomChart's customLayout) ──
 export { marimekkoLayout } from "./recipes/marimekko"
 export type { MarimekkoConfig } from "./recipes/marimekko"

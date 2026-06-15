@@ -445,6 +445,36 @@ const edges = g.edges().map(e => {
       </section>
 
       <section>
+        <h2>Lineage DAG with composite glyphs (network)</h2>
+        <p>
+          <code>lineageDagLayout</code> renders a pre-positioned layered
+          lineage/DAG where each node is a <strong>composite glyph</strong> —
+          a partition-colored container, a semantic icon, a truncated label, and
+          a chip per attached item — that stays a single hit-testable unit: one
+          canvas <code>rect</code> owns the hit area while the icon, label, and
+          chips ride the layout's <code>overlays</code> (which is{" "}
+          <code>pointer-events: none</code>, so it never steals a hover). It
+          collapses through full → compact → icon → dot as the graph gets denser,
+          renders <code>isBackEdge</code> cycles as distinct dashed loops, and dims
+          to a host-supplied reachable set. Because it only <em>reads</em>{" "}
+          pre-computed layer/row coordinates, output is deterministic. See the full
+          interactive build — main view, synced minimap, and a snapshot morph — in{" "}
+          <Link to="/recipes/data-lineage-kstreams">Data Lineage (KStreams)</Link>.
+        </p>
+        <CodeBlock language="jsx">{`import { NetworkCustomChart } from "semiotic/network"
+import { lineageDagLayout } from "semiotic/recipes"
+
+<NetworkCustomChart
+  nodes={nodes}   // each { id, x: layer, y: row, partition, semantic, stores, label }
+  edges={edges}   // each { source, target, edgeType, isBackEdge }
+  layout={lineageDagLayout}
+  layoutConfig={{ layerCount, maxLayerSize, reachableIds, selectedId,
+                  renderIcon, partitionColors }}
+  selection={{ name: "lineage" }}   // LinkedCharts → ctx.selection highlights across views
+/>`}</CodeBlock>
+      </section>
+
+      <section>
         <h2>Streamgraph</h2>
         <p>
           Streamgraphs aren't a recipe — they're <code>StackedAreaChart</code> with{" "}

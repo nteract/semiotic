@@ -252,6 +252,7 @@ export type { LinkedChartsProps } from "./LinkedCharts"
 
 export {
   useSelection,
+  useSelectionActions,
   useLinkedHover,
   useBrushSelection,
   useFilteredData
@@ -260,6 +261,7 @@ export {
 export type {
   UseSelectionOptions,
   UseSelectionResult,
+  UseSelectionActionsResult,
   UseLinkedHoverOptions,
   UseLinkedHoverResult,
   UseBrushSelectionOptions,

@@ -204,6 +204,7 @@ const navData = [
       { title: "KPI Card + Sparkline", path: "/recipes/kpi-card-sparkline" },
       { title: "Time Series with Brush", path: "/recipes/time-series-brush" },
       { title: "Network Explorer", path: "/recipes/network-explorer" },
+      { title: "Data Lineage (KStreams)", path: "/recipes/data-lineage-kstreams" },
       { title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" },
       { title: "Streaming Migration Map", path: "/recipes/streaming-migration-map" },
       { title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" }

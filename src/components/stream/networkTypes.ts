@@ -568,6 +568,11 @@ export interface NetworkPipelineConfig {
   customNetworkLayout?: import("./networkCustomLayout").NetworkCustomLayout
   /** User-supplied config blob threaded through to NetworkLayoutContext.config. */
   layoutConfig?: object
+  /** Resolved shared-selection predicate, surfaced to a custom layout as
+   *  `NetworkLayoutContext.selection`. Render-only — deliberately kept out of
+   *  the layout/ingest-affecting signature so a selection change re-runs
+   *  `buildScene` (re-emitting dimmed marks) without a re-ingest or re-layout. */
+  layoutSelection?: import("./networkCustomLayout").NetworkLayoutSelection | null
 }
 
 // ── Component props ─────────────────────────────────────────────────
@@ -714,6 +719,10 @@ export interface StreamNetworkFrameProps<T = Datum> {
   customNetworkLayout?: import("./networkCustomLayout").NetworkCustomLayout
   /** User-supplied config blob threaded through to NetworkLayoutContext.config. */
   layoutConfig?: object
+  /** Resolved shared-selection predicate, surfaced to a custom layout as
+   *  `NetworkLayoutContext.selection`. Set by `NetworkCustomChart` from its
+   *  `selection` / `linkedHover` wiring; render-only (no re-ingest on change). */
+  layoutSelection?: import("./networkCustomLayout").NetworkLayoutSelection | null
 }
 
 // ── Ref handle ──────────────────────────────────────────────────────

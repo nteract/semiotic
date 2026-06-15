@@ -99,6 +99,54 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
   return { predicate, isActive, selectPoints, selectInterval, clear, clientId }
 }
 
+// ── useSelectionActions ──────────────────────────────────────────────────────
+
+export interface UseSelectionActionsResult {
+  /** Set a point selection (categorical values) under this client's clause. */
+  selectPoints: (fieldValues: Record<string, unknown[]>) => void
+  /** Clear this client's clause. */
+  clear: () => void
+  /** This client's ID. */
+  clientId: string
+}
+
+/**
+ * Write-only access to a named selection that **does not subscribe** to the
+ * selection state — selecting only the stable `setClause`/`clearClause`
+ * actions, so the calling component never re-renders when the selection
+ * changes.
+ *
+ * Use this when a *container* needs to push a selection (e.g. from a hover
+ * handler) but only the leaf consumers (the charts reading the selection)
+ * should re-render. Pairs with `LinkedCharts` for the
+ * provider-at-top / consumers-at-leaves pattern: the writer stays out of the
+ * re-render path, avoiding per-interaction reconciliation + allocation in the
+ * container subtree. For read + write, use `useSelection`.
+ */
+export function useSelectionActions(name: string, clientId?: string): UseSelectionActionsResult {
+  const autoId = useId()
+  const cid = clientId || autoId
+  // Selecting stable action refs only — never the `selections` slice — so this
+  // component is not a subscriber and won't re-render on selection changes.
+  const setClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
+  const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
+
+  const selectPoints = useCallback(
+    (fieldValues: Record<string, unknown[]>) => {
+      const fields: Record<string, FieldSelection> = {}
+      for (const [field, values] of Object.entries(fieldValues)) {
+        fields[field] = { type: "point", values: new Set(values) }
+      }
+      setClause(name, { clientId: cid, type: "point", fields })
+    },
+    [name, cid, setClause]
+  )
+
+  const clear = useCallback(() => clearClauseFn(name, cid), [name, cid, clearClauseFn])
+
+  return { selectPoints, clear, clientId: cid }
+}
+
 // ── useLinkedHover ─────────────────────────────────────────────────────────
 
 export interface UseLinkedHoverOptions {

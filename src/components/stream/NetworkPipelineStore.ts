@@ -627,6 +627,7 @@ export class NetworkPipelineStore {
         },
         resolveColor: buildResolveColor(palette),
         config: (this.config.layoutConfig ?? {}) as Record<string, unknown>,
+        selection: this.config.layoutSelection ?? null,
       }
       let result
       try {
