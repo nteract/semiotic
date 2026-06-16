@@ -12,16 +12,15 @@ Simple charts in 5 lines. Network graphs, streaming data, and coordinated
 dashboards when you need them. Structured schemas and an MCP server so
 AI coding assistants generate correct chart code on the first try.
 
-## What's New in 3.7.3
+## What's New in 3.7.4
 
-3.7.3 is a hosted ChatGPT Apps patch release:
+3.7.4 is a network-chart and maintenance patch release:
 
-- `semiotic-mcp --http` can now serve the OpenAI Apps domain verification challenge from
-  `/.well-known/openai-apps-challenge` when `OPENAI_APPS_CHALLENGE_TOKEN` is configured.
-- The Cloud Run wrapper docs now include the exact Challenge Base URL, token environment variable,
-  and `curl` check for ChatGPT Apps verification.
-- MCP HTTP tests now cover the Apps challenge route while preserving the unauthenticated OAuth
-  discovery 404 behavior.
+- `semiotic/recipes` adds lineage DAG helpers for laying out data-flow and KStreams-style network
+  diagrams.
+- Network custom layouts now preserve selection metadata through streaming layout and render paths.
+- Docs add the KStreams data-lineage recipe and expand custom network chart guidance, alongside
+  dependency updates for Prettier, TypeScript ESLint, Rollup, and Sharp.
 
 ```jsx
 import { LineChart } from "semiotic/xy"

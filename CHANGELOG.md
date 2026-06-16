@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.4] - 2026-06-15
+
+### Added
+
+- **Lineage DAG recipe helpers.** `semiotic/recipes` now exports lineage DAG helpers for
+  data-flow and KStreams-style network layouts, with tests covering stable topology layout.
+- **KStreams data-lineage docs demo.** The docs add a KStreams recipe page and example data,
+  plus expanded custom network chart guidance for selection-aware layouts.
+
+### Fixed
+
+- **Network custom layout selection metadata.** Network custom layouts now preserve selection
+  metadata through pipeline layout and render paths, with regression coverage for selection
+  actions and `NetworkCustomChart` behavior.
+
+### Changed
+
+- Refreshed developer/dependency tooling, including Prettier, TypeScript ESLint, Rollup, and Sharp.
+
 ## [3.7.3] - 2026-06-13
 
 ### Added
