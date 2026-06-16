@@ -89,7 +89,7 @@ export default function ReaderGroundingPage() {
         { label: "Agent-Reader Grounding", path: "/intelligence/reader-grounding" },
       ]}
       prevPage={{ title: "Interrogation", path: "/intelligence/interrogation" }}
-      nextPage={{ title: "Conversation Arc", path: "/intelligence/conversation-arc" }}
+      nextPage={{ title: "Data Pitfalls Bridge", path: "/intelligence/data-pitfalls" }}
     >
       <p>
         A capability descriptor says how a chart <em>should</em> be used — which

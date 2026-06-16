@@ -108,6 +108,7 @@ import CapabilitiesPage from "./pages/features/CapabilitiesPage"
 import InterrogationPage from "./pages/features/InterrogationPage"
 import SuggestionsPage from "./pages/features/SuggestionsPage"
 import ReaderGroundingPage from "./pages/features/ReaderGroundingPage"
+import DataPitfallsBridgePage from "./pages/features/DataPitfallsBridgePage"
 import ScaleAwarePage from "./pages/features/ScaleAwarePage"
 import ConversationArcPage from "./pages/features/ConversationArcPage"
 import TemporalLifecyclePage from "./pages/features/TemporalLifecyclePage"
@@ -465,6 +466,7 @@ export default function DocsApp() {
               <Route path="scale" element={<ScaleAwarePage />} />
               <Route path="interrogation" element={<InterrogationPage />} />
               <Route path="reader-grounding" element={<ReaderGroundingPage />} />
+              <Route path="data-pitfalls" element={<DataPitfallsBridgePage />} />
               <Route path="conversation-arc" element={<ConversationArcPage />} />
               <Route path="temporal-lifecycle" element={<TemporalLifecyclePage />} />
               <Route path="serialization" element={<SerializationPage />} />
