@@ -620,7 +620,7 @@ const input = toDataPitfallsChain("LineChart", props, {
   context: "Question: did monthly revenue improve enough to justify adding capacity?",
   narrative: "Monthly revenue is accelerating sharply.",
   rendered: { svg, evidence },
-  config: { includeData: false }, // keep sensitive row data out when needed
+  config: { includeData: false }, // omits raw rows from config/JSX stages
 })
 
 const report = await detectPitfalls(input, {
@@ -669,7 +669,7 @@ if (hasBlockingFindings(report)) process.exit(1)`}
     evidence,  // optional renderChartWithEvidence() payload
     image,     // optional base64 PNG/JPEG/GIF/WebP for Vision review
   },
-  config: { includeData: false },
+  config: { includeData: false }, // other stages may still summarize data-derived facts
   grounding: { includeStructure: false },
   accessibility: { inChartContainer: true, describe: true, navigable: true },
   additionalStages: [

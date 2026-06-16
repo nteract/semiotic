@@ -105,7 +105,7 @@ export interface DataPitfallsBridgeOptions {
   narrative?: string
   /** Optional output from a render path. */
   rendered?: DataPitfallsRenderedChart
-  /** Forwarded to toConfig. Use includeData: false for sensitive data. */
+  /** Forwarded to toConfig. Use includeData: false to omit raw rows from config/JSX stages; other stages may still summarize data. */
   config?: ToConfigOptions
   /** Forwarded to buildReaderGrounding. */
   grounding?: ChartReaderGroundingOptions
@@ -277,7 +277,7 @@ export function buildDataPitfallsBridge(
     ))
   }
 
-  if (options.rendered && "evidence" in options.rendered) {
+  if (options.rendered?.evidence != null) {
     stages.push(textStage(
       "Semiotic render evidence",
       [

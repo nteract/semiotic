@@ -123,6 +123,30 @@ describe("dataPitfallsBridge", () => {
     expect(textOrCodeArtifact(evidence).content).toContain("\"markCount\": 1")
   })
 
+  it("omits render evidence when the rendered evidence value is nullish", () => {
+    const input = toDataPitfallsChain("LineChart", {
+      data: sales,
+      xAccessor: "month",
+      yAccessor: "sales",
+      title: "Monthly sales",
+    }, {
+      rendered: {
+        svg: "<svg><path /></svg>",
+        evidence: undefined,
+      },
+      includeGrounding: false,
+      includeDiagnostics: false,
+      includeAccessibility: false,
+    })
+
+    expect(input.stages.map((s) => s.role)).toEqual([
+      "Semiotic chart config",
+      "Semiotic chart JSX",
+      "Rendered chart SVG",
+    ])
+    expect(input.stages.some((s) => s.role === "Semiotic render evidence")).toBe(false)
+  })
+
   it("can omit heavyweight stages and data from the serialized config", () => {
     const input = toDataPitfallsChain("LineChart", {
       data: sales,
