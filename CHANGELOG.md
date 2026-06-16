@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Lineage DAG recipe helpers.** `semiotic/recipes` now exports lineage DAG helpers for
   data-flow and KStreams-style network layouts, with tests covering stable topology layout.
-- **KStreams data-lineage docs demo.** The docs add a KStreams recipe page and example data,
+- **KStreams docs demo.** The docs add a KStreams recipe page and example data,
   plus expanded custom network chart guidance for selection-aware layouts.
 
 ### Fixed

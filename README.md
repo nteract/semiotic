@@ -19,7 +19,7 @@ AI coding assistants generate correct chart code on the first try.
 - `semiotic/recipes` adds lineage DAG helpers for laying out data-flow and KStreams-style network
   diagrams.
 - Network custom layouts now preserve selection metadata through streaming layout and render paths.
-- Docs add the KStreams data-lineage recipe and expand custom network chart guidance, alongside
+- Docs add the KStreams DAG recipe and expand custom network chart guidance, alongside
   dependency updates for Prettier, TypeScript ESLint, Rollup, and Sharp.
 
 ```jsx
