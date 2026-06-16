@@ -699,9 +699,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation, heatmapXBins, heatmapYBins,
       showValues, heatmapValueFormat,
       isStreaming, pointIdAccessor, curve, currentTheme,
-      // layoutConfig omitted — a custom-layout config change re-layouts via the
-      // updateConfig effect (computeScene), not a topology re-ingest.
-      customLayout, margin
+      customLayout, layoutConfig, margin
     ])
 
     // Stabilize the config reference so inline-object / inline-array

@@ -478,9 +478,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       pieceStyle, summaryStyle, colorScheme, barColors,
       decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
       isStreaming, currentTheme,
-      // layoutConfig omitted — a custom-layout config change re-layouts via the
-      // updateConfig effect (computeScene), not a topology re-ingest.
-      customLayout, margin,
+      customLayout, layoutConfig, margin,
     ])
 
     // Stabilize the config reference so inline-object / inline-array

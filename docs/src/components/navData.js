@@ -1,19 +1,19 @@
 const navData = [
   {
     title: "Home",
-    path: "/"
+    path: "/",
   },
   {
     title: "Getting Started",
-    path: "/getting-started"
+    path: "/getting-started",
   },
   {
     title: "Migrating to v3",
-    path: "/migration"
+    path: "/migration",
   },
   {
     title: "Choose a Chart",
-    path: "/choose"
+    path: "/choose",
   },
   {
     title: "Charts",
@@ -40,8 +40,8 @@ const navData = [
           { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
           { title: "Realtime Heatmap", path: "/charts/realtime-heatmap" },
           { title: "Realtime Histogram", path: "/charts/realtime-histogram" },
-          { title: "Candlestick Chart", path: "/charts/candlestick-chart" }
-        ]
+          { title: "Candlestick Chart", path: "/charts/candlestick-chart" },
+        ],
       },
       {
         title: "Categorical",
@@ -60,8 +60,8 @@ const navData = [
           { title: "Gauge Chart", path: "/charts/gauge-chart" },
           { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" },
           { title: "Funnel Chart", path: "/charts/funnel-chart" },
-          { title: "Swimlane Chart", path: "/charts/swimlane-chart" }
-        ]
+          { title: "Swimlane Chart", path: "/charts/swimlane-chart" },
+        ],
       },
       {
         title: "Network",
@@ -74,8 +74,8 @@ const navData = [
           { title: "Tree Diagram", path: "/charts/tree-diagram" },
           { title: "Treemap", path: "/charts/treemap" },
           { title: "Circle Pack", path: "/charts/circle-pack" },
-          { title: "Orbit Diagram", path: "/charts/orbit-diagram" }
-        ]
+          { title: "Orbit Diagram", path: "/charts/orbit-diagram" },
+        ],
       },
       {
         title: "Geo",
@@ -85,17 +85,15 @@ const navData = [
           { title: "Proportional Symbol Map", path: "/charts/proportional-symbol-map" },
           { title: "Flow Map", path: "/charts/flow-map" },
           { title: "Distance Cartogram", path: "/charts/distance-cartogram" },
-          { title: "Tile Maps", path: "/charts/tile-map" }
-        ]
+          { title: "Tile Maps", path: "/charts/tile-map" },
+        ],
       },
       {
         title: "Value",
         category: "value",
-        children: [
-          { title: "Big Number", path: "/charts/big-number" }
-        ]
-      }
-    ]
+        children: [{ title: "Big Number", path: "/charts/big-number" }],
+      },
+    ],
   },
   {
     title: "Frames",
@@ -105,8 +103,8 @@ const navData = [
       { title: "StreamXYFrame", path: "/frames/xy-frame" },
       { title: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
       { title: "StreamNetworkFrame", path: "/frames/network-frame" },
-      { title: "StreamGeoFrame", path: "/frames/geo-frame" }
-    ]
+      { title: "StreamGeoFrame", path: "/frames/geo-frame" },
+    ],
   },
   {
     title: "Features",
@@ -126,8 +124,8 @@ const navData = [
       { title: "Streaming System Model", path: "/features/streaming-system-model" },
       { title: "Performance", path: "/features/performance" },
       { title: "Push API", path: "/features/push-api" },
-      { title: "Custom Charts", path: "/features/custom-charts" }
-    ]
+      { title: "Custom Charts", path: "/features/custom-charts" },
+    ],
   },
   {
     title: "Accessibility",
@@ -136,8 +134,8 @@ const navData = [
       { title: "Overview", path: "/accessibility/overview" },
       { title: "Chartability Audit", path: "/accessibility/audit" },
       { title: "Chart Descriptions", path: "/accessibility/descriptions" },
-      { title: "Structured Navigation", path: "/accessibility/navigation" }
-    ]
+      { title: "Structured Navigation", path: "/accessibility/navigation" },
+    ],
   },
   {
     title: "Annotations",
@@ -146,8 +144,8 @@ const navData = [
       { title: "Overview", path: "/annotations/overview" },
       { title: "Design Guidance", path: "/annotations/design-guidance" },
       { title: "Advanced Annotations", path: "/annotations/advanced" },
-      { title: "Provenance & Lifecycle", path: "/annotations/provenance-lifecycle" }
-    ]
+      { title: "Provenance & Lifecycle", path: "/annotations/provenance-lifecycle" },
+    ],
   },
   {
     title: "Intelligence",
@@ -166,8 +164,8 @@ const navData = [
       { title: "Variant Discovery", path: "/intelligence/variant-discovery" },
       { title: "Capability Authoring", path: "/intelligence/capability-authoring" },
       { title: "Audience Profiles", path: "/intelligence/audience-profiles" },
-      { title: "CLI & MCP", path: "/intelligence/cli-mcp" }
-    ]
+      { title: "CLI & MCP", path: "/intelligence/cli-mcp" },
+    ],
   },
   {
     title: "Theming",
@@ -176,8 +174,8 @@ const navData = [
       { title: "Styling", path: "/theming/styling" },
       { title: "Theme Provider", path: "/theming/theme-provider" },
       { title: "Semantic Colors", path: "/theming/semantic-colors" },
-      { title: "Theme Explorer", path: "/theming/theme-explorer" }
-    ]
+      { title: "Theme Explorer", path: "/theming/theme-explorer" },
+    ],
   },
   {
     title: "Cookbook",
@@ -195,7 +193,7 @@ const navData = [
       { title: "Timeline", path: "/cookbook/timeline" },
       { title: "Radar Plot", path: "/cookbook/radar-plot" },
       { title: "Isotype Chart", path: "/cookbook/isotype-chart" },
-    ]
+    ],
   },
   {
     title: "Recipes",
@@ -204,11 +202,11 @@ const navData = [
       { title: "KPI Card + Sparkline", path: "/recipes/kpi-card-sparkline" },
       { title: "Time Series with Brush", path: "/recipes/time-series-brush" },
       { title: "Network Explorer", path: "/recipes/network-explorer" },
-      { title: "Data Lineage (KStreams)", path: "/recipes/data-lineage-kstreams" },
+      { title: "Kafka Streams", path: "/recipes/kstreams" },
       { title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" },
       { title: "Streaming Migration Map", path: "/recipes/streaming-migration-map" },
-      { title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" }
-    ]
+      { title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" },
+    ],
   },
   {
     title: "Playground",
@@ -233,8 +231,8 @@ const navData = [
       { title: "Forecast & Anomaly", path: "/playground/forecast" },
       { title: "Choropleth Map", path: "/playground/choropleth-map" },
       { title: "Distance Cartogram", path: "/playground/distance-cartogram" },
-      { title: "Animation", path: "/playground/animation" }
-    ]
+      { title: "Animation", path: "/playground/animation" },
+    ],
   },
   {
     title: "Server Rendering",
@@ -246,16 +244,16 @@ const navData = [
       { title: "Dashboard Gallery", path: "/server/dashboards" },
       { title: "Email Preview", path: "/server/email" },
       { title: "Export & Embed", path: "/server/export" },
-    ]
+    ],
   },
   {
     title: "API Reference",
     path: "/api",
     children: [
       { title: "Charts", path: "/api/charts" },
-      { title: "TypeDoc API", path: "/api/typedoc" }
-    ]
-  }
+      { title: "TypeDoc API", path: "/api/typedoc" },
+    ],
+  },
 ]
 
 export default navData
@@ -281,7 +279,10 @@ export function getBreadcrumbs(path, items = navData, parents = []) {
       return [...parents, { title: item.title, path: item.path }]
     }
     if (item.children) {
-      const found = getBreadcrumbs(path, item.children, [...parents, { title: item.title, path: item.path }])
+      const found = getBreadcrumbs(path, item.children, [
+        ...parents,
+        { title: item.title, path: item.path },
+      ])
       if (found) return found
     }
   }
@@ -290,10 +291,10 @@ export function getBreadcrumbs(path, items = navData, parents = []) {
 
 // Helper: get prev/next page for navigation
 export function getPrevNext(path) {
-  const flat = flattenNav().filter(item => item.path !== "/" && item.path)
-  const index = flat.findIndex(item => item.path === path)
+  const flat = flattenNav().filter((item) => item.path !== "/" && item.path)
+  const index = flat.findIndex((item) => item.path === path)
   return {
     prev: index > 0 ? flat[index - 1] : null,
-    next: index < flat.length - 1 ? flat[index + 1] : null
+    next: index < flat.length - 1 ? flat[index + 1] : null,
   }
 }

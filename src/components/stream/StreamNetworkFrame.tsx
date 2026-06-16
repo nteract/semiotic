@@ -1360,10 +1360,10 @@ const StreamNetworkFrame = forwardRef<
     const wasDirty = dirtyRef.current
     dirtyRef.current = false
 
-    // NOTE: custom-layout overlays are re-synced from the `updateConfig` effect
-    // (a render-only config change) and the ingest path (data change) — never
-    // from this render loop, so continuous animation / a parent's per-frame
-    // morph can't drive a per-frame `setCustomOverlays` storm.
+    // NOTE: custom-layout overlays are read directly from
+    // `storeRef.current.customLayoutOverlays` during React render (see the
+    // `foregroundGraphics` composition). The render loop only triggers throttled
+    // re-renders via `setAnnotationFrame`, so there's no per-frame overlay setState.
 
     // Update canvas aria-label imperatively after scene changes
     if (wasDirty || isTransitioning || animationTicked) {

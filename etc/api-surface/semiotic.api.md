@@ -100,6 +100,7 @@ function useFilteredData
 function useLinkedHover
 function useNavigationSync
 function useSelection
+function useSelectionActions
 function useTheme
 interface AccessibleNavTreeProps
 interface AnnotationContext
@@ -206,6 +207,7 @@ interface UseLinkedHoverOptions
 interface UseLinkedHoverResult
 interface UseNavigationSyncOptions
 interface UseNavigationSyncResult
+interface UseSelectionActionsResult
 interface UseSelectionOptions
 interface UseSelectionResult
 interface VegaLiteEncoding

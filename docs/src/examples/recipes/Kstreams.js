@@ -37,9 +37,27 @@ function TopicIcon({ size }) {
   const s = size
   return (
     <g>
-      <rect x={s * 0.08} y={s * 0.12} width={s * 0.84} height={s * 0.76} rx={s * 0.16} fill="rgba(255,255,255,0.16)" stroke="rgba(255,255,255,0.55)" strokeWidth={1} />
+      <rect
+        x={s * 0.08}
+        y={s * 0.12}
+        width={s * 0.84}
+        height={s * 0.76}
+        rx={s * 0.16}
+        fill="rgba(255,255,255,0.16)"
+        stroke="rgba(255,255,255,0.55)"
+        strokeWidth={1}
+      />
       {[0.34, 0.5, 0.66].map((f) => (
-        <line key={f} x1={s * 0.24} y1={s * f} x2={s * 0.76} y2={s * f} stroke="rgba(255,255,255,0.75)" strokeWidth={1} strokeLinecap="round" />
+        <line
+          key={f}
+          x1={s * 0.24}
+          y1={s * f}
+          x2={s * 0.76}
+          y2={s * f}
+          stroke="rgba(255,255,255,0.75)"
+          strokeWidth={1}
+          strokeLinecap="round"
+        />
       ))}
     </g>
   )
@@ -60,7 +78,15 @@ function renderKstreamsIcon({ semantic, partition, size, color }) {
   return (
     <g>
       <rect width={size} height={size} rx={5} fill={color} stroke="rgba(255,255,255,0.18)" />
-      <text x={size / 2} y={size / 2 + 1} textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.56} fontWeight={700} fill="#fff">
+      <text
+        x={size / 2}
+        y={size / 2 + 1}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize={size * 0.56}
+        fontWeight={700}
+        fill="#fff"
+      >
         {glyph}
       </text>
     </g>
@@ -90,16 +116,27 @@ function nodeTooltip(hd) {
   const label = raw.label || raw.id
   if (!label) return null
   const isTopic = typeof raw.partition === "string" && raw.partition.startsWith("topic")
-  const typeText = isTopic ? `Topic · ${raw.partition.replace("topic-", "")}` : (raw.semantic || "processor")
+  const typeText = isTopic
+    ? `Topic · ${raw.partition.replace("topic-", "")}`
+    : raw.semantic || "processor"
   const nStores = raw.stores ? raw.stores.length : 0
   return (
     <div style={tooltipStyle}>
-      <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-secondary, #9a9aae)" }}>
+      <div
+        style={{
+          fontSize: "10px",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          color: "var(--text-secondary, #9a9aae)",
+        }}
+      >
         {typeText}
       </div>
       <div style={{ fontWeight: 700, marginTop: "2px", wordBreak: "break-all" }}>{label}</div>
       {nStores > 0 && (
-        <div style={{ marginTop: "4px", fontSize: "11px", color: "var(--text-secondary, #9a9aae)" }}>
+        <div
+          style={{ marginTop: "4px", fontSize: "11px", color: "var(--text-secondary, #9a9aae)" }}
+        >
           {nStores} state store{nStores !== 1 ? "s" : ""}
         </div>
       )}
@@ -171,13 +208,19 @@ function LineageViews() {
 
   const rootChoices = useMemo(
     () => full.nodes.filter((n) => n.partition === "topic-source").map((n) => n.id),
-    [full]
+    [full],
   )
 
   // "All roots" renders the whole topology in the main view; otherwise the
   // downstream subgraph of the chosen root.
-  const layoutV1 = useMemo(() => dagLayoutFromGraph(showAll ? topologyV1 : subgraphFrom(topologyV1, rootId)), [rootId, showAll])
-  const layoutV2 = useMemo(() => dagLayoutFromGraph(showAll ? topologyV2 : subgraphFrom(topologyV2, rootId)), [rootId, showAll])
+  const layoutV1 = useMemo(
+    () => dagLayoutFromGraph(showAll ? topologyV1 : subgraphFrom(topologyV1, rootId)),
+    [rootId, showAll],
+  )
+  const layoutV2 = useMemo(
+    () => dagLayoutFromGraph(showAll ? topologyV2 : subgraphFrom(topologyV2, rootId)),
+    [rootId, showAll],
+  )
   const fullLayout = useMemo(() => dagLayoutFromGraph(full), [full])
 
   // ── Snapshot morph: tween positions between the two variant layouts ───────
@@ -243,7 +286,7 @@ function LineageViews() {
         reach.clear()
       }
     },
-    [reach, full]
+    [reach, full],
   )
 
   const selectNode = useCallback((datum) => {
@@ -258,7 +301,7 @@ function LineageViews() {
         reach.clear()
       }
     },
-    [selectNode, reach]
+    [selectNode, reach],
   )
 
   const reset = useCallback(() => {
@@ -266,7 +309,10 @@ function LineageViews() {
     reach.clear()
   }, [reach])
 
-  const selectedNode = useMemo(() => full.nodes.find((n) => n.id === selectedId) || null, [full, selectedId])
+  const selectedNode = useMemo(
+    () => full.nodes.find((n) => n.id === selectedId) || null,
+    [full, selectedId],
+  )
 
   // Interpolate every geometry knob by dispT so detail ↔ compact animates:
   // glyph size + layer/row spacing shrink, the canvas narrows, edges thin.
@@ -306,7 +352,16 @@ function LineageViews() {
       minGapY,
       edgeWidth: edgeW,
     }),
-    [mainLayout.layerCount, mainLayout.maxLayerSize, selectedId, nodeW, nodeH, minGapX, minGapY, edgeW]
+    [
+      mainLayout.layerCount,
+      mainLayout.maxLayerSize,
+      selectedId,
+      nodeW,
+      nodeH,
+      minGapX,
+      minGapY,
+      edgeW,
+    ],
   )
 
   const miniConfig = useMemo(
@@ -317,22 +372,50 @@ function LineageViews() {
       lod: "dot",
       partitionColors: PARTITION_COLORS,
     }),
-    [fullLayout.layerCount, fullLayout.maxLayerSize, selectedId]
+    [fullLayout.layerCount, fullLayout.maxLayerSize, selectedId],
   )
 
   return (
-    <div ref={wrapRef} style={fs ? { background: "var(--bg, #0f0f17)", padding: 16, height: "100vh", overflow: "auto", boxSizing: "border-box" } : undefined}>
+    <div
+      ref={wrapRef}
+      style={
+        fs
+          ? {
+              background: "var(--bg, #0f0f17)",
+              padding: 16,
+              height: "100vh",
+              overflow: "auto",
+              boxSizing: "border-box",
+            }
+          : undefined
+      }
+    >
       {/* Controls */}
-      <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "14px", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          alignItems: "center",
+          marginBottom: "14px",
+          flexWrap: "wrap",
+        }}
+      >
         <label style={{ fontSize: "13px", color: "var(--text-secondary, #8888a0)" }}>
           Root topic:{" "}
           <select
             value={rootId}
-            onChange={(e) => { setRootId(e.target.value); reset() }}
+            onChange={(e) => {
+              setRootId(e.target.value)
+              reset()
+            }}
             style={selectStyle}
           >
             <option value="__all__">All roots — full topology</option>
-            {rootChoices.map((id) => <option key={id} value={id}>{id}</option>)}
+            {rootChoices.map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
           </select>
         </label>
         <label style={{ fontSize: "13px", color: "var(--text-secondary, #8888a0)" }}>
@@ -350,26 +433,54 @@ function LineageViews() {
         <button
           onClick={() => setVariant((v) => (v === 1 ? 2 : 1))}
           disabled={animating}
-          style={{ ...btnStyle, opacity: animating ? 0.5 : 1, cursor: animating ? "default" : "pointer" }}
+          style={{
+            ...btnStyle,
+            opacity: animating ? 0.5 : 1,
+            cursor: animating ? "default" : "pointer",
+          }}
         >
           {variant === 1 ? "▶ Morph to snapshot v2" : "◀ Morph to snapshot v1"}
         </button>
         <span style={{ fontSize: "12px", color: "var(--text-secondary, #8888a0)" }}>
-          Snapshot <strong style={{ color: "var(--text-primary, #f0f0f5)" }}>v{variant}</strong>{tween ? " — morphing…" : ""}
+          Snapshot <strong style={{ color: "var(--text-primary, #f0f0f5)" }}>v{variant}</strong>
+          {tween ? " — morphing…" : ""}
         </span>
         <button onClick={toggleFs} style={{ ...btnStyle, marginLeft: "auto" }}>
           {fs ? "⤡ Exit full screen" : "⤢ Full screen"}
         </button>
-        <button onClick={reset} style={btnStyle}>Reset</button>
+        <button onClick={reset} style={btnStyle}>
+          Reset
+        </button>
       </div>
 
       <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
         {/* Main lineage view */}
         <div style={{ flex: "1 1 640px", minWidth: 0 }}>
-          <div style={{ fontSize: "12px", color: "var(--text-secondary, #8888a0)", marginBottom: "6px" }}>
-            {showAll ? "Full topology — all roots" : <>Downstream lineage from <code>{rootId}</code></>} · hover to preview reach · click to select · scroll for wide graphs
+          <div
+            style={{
+              fontSize: "12px",
+              color: "var(--text-secondary, #8888a0)",
+              marginBottom: "6px",
+            }}
+          >
+            {showAll ? (
+              "Full topology — all roots"
+            ) : (
+              <>
+                Downstream lineage from <code>{rootId}</code>
+              </>
+            )}{" "}
+            · hover to preview reach · click to select · scroll for wide graphs
           </div>
-          <div style={{ overflowX: "auto", overflowY: "hidden", maxWidth: "100%", border: "1px solid var(--surface-3, #2a2a38)", borderRadius: "6px" }}>
+          <div
+            style={{
+              overflowX: "auto",
+              overflowY: "hidden",
+              maxWidth: "100%",
+              border: "1px solid var(--surface-3, #2a2a38)",
+              borderRadius: "6px",
+            }}
+          >
             <NetworkCustomChart
               key="main"
               chartId="kstreams-main"
@@ -391,11 +502,25 @@ function LineageViews() {
         {/* Sidebar: minimap + detail */}
         <div style={{ flex: "0 0 280px", display: "flex", flexDirection: "column", gap: "16px" }}>
           <div>
-            <div style={{ fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>Topology overview</div>
-            <div style={{ fontSize: "11px", color: "var(--text-secondary, #8888a0)", marginBottom: "6px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
+              Topology overview
+            </div>
+            <div
+              style={{
+                fontSize: "11px",
+                color: "var(--text-secondary, #8888a0)",
+                marginBottom: "6px",
+              }}
+            >
               Whole app · click a topic to re-root · shares hover/selection with the main view
             </div>
-            <div style={{ border: "1px solid var(--surface-3, #2a2a38)", borderRadius: "6px", overflow: "hidden" }}>
+            <div
+              style={{
+                border: "1px solid var(--surface-3, #2a2a38)",
+                borderRadius: "6px",
+                overflow: "hidden",
+              }}
+            >
               <NetworkCustomChart
                 key="mini"
                 chartId="kstreams-mini"
@@ -451,7 +576,11 @@ const NodeDetail = React.memo(function NodeDetail({ node, full }) {
   const downstream = reachableFrom(full, node.id).size - 1
   return (
     <div style={{ borderTop: "1px solid var(--surface-3, #2a2a38)", paddingTop: "12px" }}>
-      <div style={{ fontSize: "13px", fontWeight: 700, wordBreak: "break-all", marginBottom: "4px" }}>{node.label}</div>
+      <div
+        style={{ fontSize: "13px", fontWeight: 700, wordBreak: "break-all", marginBottom: "4px" }}
+      >
+        {node.label}
+      </div>
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
         <Tag color={PARTITION_COLORS[node.partition]}>{node.partition}</Tag>
         <Tag color="#555">{node.semantic}</Tag>
@@ -461,9 +590,22 @@ const NodeDetail = React.memo(function NodeDetail({ node, full }) {
       <DetailRow label="In / out degree" value={`${node.inDegree} / ${node.outDegree}`} />
       {node.stores && node.stores.length > 0 && (
         <div style={{ marginTop: "8px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-secondary, #8888a0)", marginBottom: "4px" }}>State stores</div>
+          <div
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "var(--text-secondary, #8888a0)",
+              marginBottom: "4px",
+            }}
+          >
+            State stores
+          </div>
           <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px" }}>
-            {node.stores.map((s) => <li key={s} style={{ wordBreak: "break-all" }}>{s}</li>)}
+            {node.stores.map((s) => (
+              <li key={s} style={{ wordBreak: "break-all" }}>
+                {s}
+              </li>
+            ))}
           </ul>
         </div>
       )}
@@ -472,19 +614,31 @@ const NodeDetail = React.memo(function NodeDetail({ node, full }) {
 })
 
 const Tag = ({ color, children }) => (
-  <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, color: "#fff", background: color || "#555" }}>
+  <span
+    style={{
+      display: "inline-block",
+      padding: "2px 8px",
+      borderRadius: "999px",
+      fontSize: "11px",
+      fontWeight: 600,
+      color: "#fff",
+      background: color || "#555",
+    }}
+  >
     {children}
   </span>
 )
 
 const DetailRow = ({ label, value }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", padding: "2px 0" }}>
+  <div
+    style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", padding: "2px 0" }}
+  >
     <span style={{ color: "var(--text-secondary, #8888a0)" }}>{label}</span>
     <span style={{ fontWeight: 600 }}>{value}</span>
   </div>
 )
 
-export default function DataLineageKstreams() {
+export default function Kstreams() {
   return (
     <LinkedCharts>
       <LineageViews />

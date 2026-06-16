@@ -12,6 +12,7 @@ function bulletLayout
 function calendarLayout
 function dagreLayout
 function flextreeLayout
+function lineageDagLayout
 function marimekkoLayout
 function parallelCoordinatesLayout
 function waffleLayout
@@ -27,6 +28,8 @@ interface DagreConfig
 interface FlextreeConfig
 interface LayoutContext
 interface LayoutResult
+interface LineageDagConfig
+interface LineageStoreSlot
 interface MarimekkoConfig
 interface NetworkLayoutContext
 interface NetworkLayoutResult
@@ -38,6 +41,7 @@ type AnnotationCohesion
 type AutoPlaceAnnotations
 type AutoPlaceAnnotationsConfig
 type CustomLayout
+type LineageLod
 type NetworkCustomLayout
 type OrdinalCustomLayout
 ```

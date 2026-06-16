@@ -248,8 +248,8 @@ export function RecipesIndex() {
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
         <PageLink
-          href="/recipes/data-lineage-kstreams"
-          title="Data Lineage (KStreams)"
+          href="/recipes/kstreams"
+          title="Kafka Streams"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
 
@@ -285,8 +285,8 @@ export function PlaygroundIndex() {
   return (
     <div className="margin-bottom">
       <p>
-        Interactively explore Semiotic's chart components. Adjust props via
-        controls and see changes in real time with auto-generated code.
+        Interactively explore Semiotic's chart components. Adjust props via controls and see changes
+        in real time with auto-generated code.
       </p>
       <div className="subpages">
         <PageLink
