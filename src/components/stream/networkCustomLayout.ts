@@ -7,6 +7,34 @@ import type {
   RealtimeEdge,
 } from "./networkTypes"
 import type { ThemeSemanticColors } from "./types"
+import type { Datum } from "../charts/shared/datumTypes"
+
+/**
+ * The shared selection state, projected into the custom-layout context.
+ *
+ * When the chart participates in a `LinkedCharts` / selection store (via
+ * `NetworkCustomChart`'s `selection` / `linkedHover` props), the frame
+ * threads the resolved predicate here so a custom layout can dim or
+ * highlight marks by the *shared* selection — the same predicate the
+ * built-in HOCs apply to `nodeStyle`. Mirrors `SelectionHookResult`.
+ *
+ * `predicate` receives the **raw** datum (the user object you passed in
+ * `nodes`, i.e. `node.data ?? node`), matching the `d.data || d`
+ * convention the built-in network charts use. `isActive` is `false`
+ * when no selection clause is present — when `false`, treat every mark
+ * as selected (draw at full weight).
+ *
+ * This is orthogonal to `config` (your `layoutConfig` blob): use `config`
+ * for host-owned highlight sets you compute yourself (e.g. a graph
+ * reachability set), and `selection` for cross-chart coordination that
+ * rides the shared store.
+ */
+export interface NetworkLayoutSelection {
+  /** Whether a selection clause is currently active. */
+  isActive: boolean
+  /** Returns `true` when the raw datum matches the active selection. */
+  predicate: (datum: Datum) => boolean
+}
 
 /**
  * customLayout escape hatch for `StreamNetworkFrame`.
@@ -59,6 +87,14 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
   resolveColor: (key: string) => string
   /** User-supplied config blob threaded through `layoutConfig`. */
   config: C
+  /**
+   * Shared-selection projection. Present when the chart is wired to a
+   * `LinkedCharts` / selection store; `null` otherwise. Use
+   * `selection.isActive` + `selection.predicate(node.data ?? node)` to
+   * dim/highlight marks by the cross-chart selection. See
+   * {@link NetworkLayoutSelection}.
+   */
+  selection?: NetworkLayoutSelection | null
 }
 
 export interface NetworkLayoutResult {

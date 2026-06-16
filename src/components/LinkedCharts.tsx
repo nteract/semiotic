@@ -14,10 +14,11 @@ import { useResponsiveSize } from "./stream/useResponsiveSize"
 type LegendInteractionMode = "highlight" | "isolate" | "none"
 
 // Re-export hooks for convenience
-export { useSelection, useLinkedHover, useBrushSelection, useFilteredData } from "./store/useSelection"
+export { useSelection, useSelectionActions, useLinkedHover, useBrushSelection, useFilteredData } from "./store/useSelection"
 export type {
   UseSelectionOptions,
   UseSelectionResult,
+  UseSelectionActionsResult,
   UseLinkedHoverOptions,
   UseLinkedHoverResult,
   UseBrushSelectionOptions,

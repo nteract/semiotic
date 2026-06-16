@@ -129,6 +129,7 @@ import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
+import KstreamsPage from "./pages/recipes/KstreamsPage"
 import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
 import RoslingBubbleChartPage from "./pages/recipes/RoslingBubbleChartPage"
 import StreamingMigrationMapPage from "./pages/recipes/StreamingMigrationMapPage"
@@ -355,6 +356,7 @@ export default function DocsApp() {
               <Route path="kpi-card-sparkline" element={<KpiCardSparklinePage />} />
               <Route path="time-series-brush" element={<TimeSeriesBrushPage />} />
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
+              <Route path="kstreams" element={<KstreamsPage />} />
               <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
               <Route path="streaming-migration-map" element={<StreamingMigrationMapPage />} />
               <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />

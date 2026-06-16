@@ -68,30 +68,30 @@ const flextreeNodes = [
   //   Tutorials  h=70 → center 100+35 = 135   (tall card)
   //   API        h=32 → center 100+16 = 116   (short pill)
   //   Recipes    h=58 → center 100+29 = 129   (medium card)
-  { id: "tutorials", label: "Tutorials",     x: 171, y: 135, width: 92, height: 70 },
-  { id: "api",       label: "API Reference", x: 422, y: 116, width: 58, height: 32 },
-  { id: "recipes",   label: "Recipes",       x: 571, y: 129, width: 80, height: 58 },
+  { id: "tutorials", label: "Tutorials", x: 171, y: 135, width: 92, height: 70 },
+  { id: "api", label: "API Reference", x: 422, y: 116, width: 58, height: 32 },
+  { id: "recipes", label: "Recipes", x: 571, y: 129, width: 80, height: 58 },
 
   // Row 2 — tops aligned at y=200.
   //   short pills h=26 → center 200+13 = 213
   //   First Chart h=86 → center 200+43 = 243   (very tall card)
   //   Horizon     h=68 → center 200+34 = 234   (tall card)
-  { id: "setup",       label: "Setup",       x: 31,  y: 213, width: 58, height: 26 },
+  { id: "setup", label: "Setup", x: 31, y: 213, width: 58, height: 26 },
   { id: "first-chart", label: "First Chart", x: 164, y: 243, width: 84, height: 86 },
-  { id: "streaming",   label: "Streaming",   x: 304, y: 213, width: 72, height: 26 },
-  { id: "charts",      label: "Charts",      x: 387, y: 213, width: 58, height: 26 },
-  { id: "frames",      label: "Frames",      x: 457, y: 213, width: 58, height: 26 },
-  { id: "waffle",      label: "Waffle",      x: 533, y: 213, width: 58, height: 26 },
-  { id: "horizon",     label: "Horizon",     x: 606, y: 234, width: 64, height: 68 },
+  { id: "streaming", label: "Streaming", x: 304, y: 213, width: 72, height: 26 },
+  { id: "charts", label: "Charts", x: 387, y: 213, width: 58, height: 26 },
+  { id: "frames", label: "Frames", x: 457, y: 213, width: 58, height: 26 },
+  { id: "waffle", label: "Waffle", x: 533, y: 213, width: 58, height: 26 },
+  { id: "horizon", label: "Horizon", x: 606, y: 234, width: 64, height: 68 },
 
   // Row 3 — tops aligned at y=320. Only the wide / tall row-2 nodes have
   // children; the rest stop at row 2. That's the asymmetric depth real
   // documentation trees actually exhibit.
   //   leaves h=26 → center 320+13 = 333
-  { id: "data",   label: "Data",   x: 95,  y: 333, width: 46, height: 26 },
+  { id: "data", label: "Data", x: 95, y: 333, width: 46, height: 26 },
   { id: "render", label: "Render", x: 159, y: 333, width: 58, height: 26 },
-  { id: "theme",  label: "Theme",  x: 228, y: 333, width: 56, height: 26 },
-  { id: "bands",  label: "Bands",  x: 606, y: 333, width: 54, height: 26 },
+  { id: "theme", label: "Theme", x: 228, y: 333, width: 56, height: 26 },
+  { id: "bands", label: "Bands", x: 606, y: 333, width: 54, height: 26 },
 ]
 const flextreeEdges = [
   // Row 0 → 1
@@ -133,43 +133,43 @@ function buildStreamgraphData() {
 // Marimekko: revenue by region × product. Region totals vary so bar widths
 // vary; product mix varies within each region so segment heights vary too.
 const marimekkoData = [
-  { region: "AMER",  product: "Hardware",   revenue: 280 },
-  { region: "AMER",  product: "Software",   revenue: 220 },
-  { region: "AMER",  product: "Services",   revenue: 100 },
-  { region: "EMEA",  product: "Hardware",   revenue: 160 },
-  { region: "EMEA",  product: "Software",   revenue: 200 },
-  { region: "EMEA",  product: "Services",   revenue:  80 },
-  { region: "APAC",  product: "Hardware",   revenue: 130 },
-  { region: "APAC",  product: "Software",   revenue:  90 },
-  { region: "APAC",  product: "Services",   revenue:  60 },
-  { region: "LATAM", product: "Hardware",   revenue:  60 },
-  { region: "LATAM", product: "Software",   revenue:  35 },
-  { region: "LATAM", product: "Services",   revenue:  20 },
+  { region: "AMER", product: "Hardware", revenue: 280 },
+  { region: "AMER", product: "Software", revenue: 220 },
+  { region: "AMER", product: "Services", revenue: 100 },
+  { region: "EMEA", product: "Hardware", revenue: 160 },
+  { region: "EMEA", product: "Software", revenue: 200 },
+  { region: "EMEA", product: "Services", revenue: 80 },
+  { region: "APAC", product: "Hardware", revenue: 130 },
+  { region: "APAC", product: "Software", revenue: 90 },
+  { region: "APAC", product: "Services", revenue: 60 },
+  { region: "LATAM", product: "Hardware", revenue: 60 },
+  { region: "LATAM", product: "Software", revenue: 35 },
+  { region: "LATAM", product: "Services", revenue: 20 },
 ]
 
 // Bullet: 4 KPIs, each with their own scale. Note "Profit Margin" is a
 // percentage, "Order Size" is dollars — bullet's per-row scale handles
 // both side-by-side without any unit normalization.
 const bulletData = [
-  { metric: "Revenue ($M)",        actual: 270, target: 250, ranges: [150, 225, 300] },
-  { metric: "Profit Margin (%)",   actual:  23, target:  27, ranges: [ 20,  25,  30] },
-  { metric: "Order Size ($)",      actual: 102, target: 120, ranges: [ 80, 110, 140] },
-  { metric: "New Customers",       actual: 540, target: 600, ranges: [400, 550, 700] },
+  { metric: "Revenue ($M)", actual: 270, target: 250, ranges: [150, 225, 300] },
+  { metric: "Profit Margin (%)", actual: 23, target: 27, ranges: [20, 25, 30] },
+  { metric: "Order Size ($)", actual: 102, target: 120, ranges: [80, 110, 140] },
+  { metric: "New Customers", actual: 540, target: 600, ranges: [400, 550, 700] },
 ]
 
 // Parallel coordinates: a small cars-style dataset. Five fields with very
 // different units (mpg vs hp vs weight) — each axis has its own scale.
 const parallelCarsData = [
-  { name: "compact",   mpg: 32, hp:  95, weight: 2200, accel: 16, year: 2018 },
-  { name: "sedan",     mpg: 26, hp: 180, weight: 3100, accel: 12, year: 2019 },
-  { name: "suv",       mpg: 21, hp: 240, weight: 4200, accel: 10, year: 2020 },
-  { name: "truck",     mpg: 17, hp: 310, weight: 5400, accel:  9, year: 2017 },
-  { name: "ev",        mpg: 92, hp: 350, weight: 4400, accel:  6, year: 2022 },
-  { name: "sport",     mpg: 24, hp: 400, weight: 3200, accel:  5, year: 2021 },
-  { name: "minivan",   mpg: 22, hp: 280, weight: 4600, accel: 11, year: 2019 },
-  { name: "hybrid",    mpg: 52, hp: 130, weight: 3000, accel: 13, year: 2020 },
-  { name: "wagon",     mpg: 28, hp: 195, weight: 3400, accel: 11, year: 2018 },
-  { name: "coupe",     mpg: 25, hp: 320, weight: 3300, accel:  7, year: 2021 },
+  { name: "compact", mpg: 32, hp: 95, weight: 2200, accel: 16, year: 2018 },
+  { name: "sedan", mpg: 26, hp: 180, weight: 3100, accel: 12, year: 2019 },
+  { name: "suv", mpg: 21, hp: 240, weight: 4200, accel: 10, year: 2020 },
+  { name: "truck", mpg: 17, hp: 310, weight: 5400, accel: 9, year: 2017 },
+  { name: "ev", mpg: 92, hp: 350, weight: 4400, accel: 6, year: 2022 },
+  { name: "sport", mpg: 24, hp: 400, weight: 3200, accel: 5, year: 2021 },
+  { name: "minivan", mpg: 22, hp: 280, weight: 4600, accel: 11, year: 2019 },
+  { name: "hybrid", mpg: 52, hp: 130, weight: 3000, accel: 13, year: 2020 },
+  { name: "wagon", mpg: 28, hp: 195, weight: 3400, accel: 11, year: 2018 },
+  { name: "coupe", mpg: 25, hp: 320, weight: 3300, accel: 7, year: 2021 },
 ]
 
 // Parallel-coords demo wrapped to demonstrate hover highlighting.
@@ -191,7 +191,7 @@ function ParallelCoordinatesDemo() {
   }, [])
   const highlightFn = useMemo(
     () => (hoveredName ? (d) => d.name === hoveredName : undefined),
-    [hoveredName]
+    [hoveredName],
   )
 
   return (
@@ -213,7 +213,14 @@ function ParallelCoordinatesDemo() {
         enableHover
         onObservation={onObservation}
       />
-      <div style={{ marginTop: 8, fontSize: 12, color: "var(--semiotic-text-secondary, #666)", minHeight: 18 }}>
+      <div
+        style={{
+          marginTop: 8,
+          fontSize: 12,
+          color: "var(--semiotic-text-secondary, #666)",
+          minHeight: 18,
+        }}
+      >
         {hoveredName ? `Highlighting: ${hoveredName}` : "Hover any line to highlight."}
       </div>
     </>
@@ -230,27 +237,34 @@ export default function CustomChartsPage() {
     <PageLayout title="Custom Charts" subtitle="Bespoke geometry on top of the built-in pipeline">
       <section>
         <p>
-          When the catalog doesn't fit, <code>XYCustomChart</code> lets you supply a layout
-          function that emits scene nodes directly. The frame still owns scales, theme,
-          hit testing, transitions, decay, accessibility, and SSR — your layout owns the
-          geometry. Most novel chart types (waffle, calendar, streamgraph,
-          flextree, dagre) decompose into the same primitives the built-in HOCs use.
+          When the catalog doesn't fit, <code>XYCustomChart</code> lets you supply a layout function
+          that emits scene nodes directly. The frame still owns scales, theme, hit testing,
+          transitions, decay, accessibility, and SSR — your layout owns the geometry. Most novel
+          chart types (waffle, calendar, streamgraph, flextree, dagre) decompose into the same
+          primitives the built-in HOCs use.
         </p>
         <p>
-          Layouts ship in <code>semiotic/recipes</code>. You can use them as-is or copy
-          one and customize. Writing your own is ~30 lines.
+          Layouts ship in <code>semiotic/recipes</code>. You can use them as-is or copy one and
+          customize. Writing your own is ~30 lines.
         </p>
       </section>
 
       <section>
         <h2>Waffle chart</h2>
         <p>
-          A grid of cells where each cell represents one share of the total. Categories
-          fill row-major, allocated proportionally with the largest-remainder method.
-          The whole layout is ~40 lines and emits <code>RectSceneNode</code>s — every
-          theme, hover, and selection feature works without extra wiring.
+          A grid of cells where each cell represents one share of the total. Categories fill
+          row-major, allocated proportionally with the largest-remainder method. The whole layout is
+          ~40 lines and emits <code>RectSceneNode</code>s — every theme, hover, and selection
+          feature works without extra wiring.
         </p>
-        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+        <div
+          style={{
+            background: "var(--surface-2, #f8f8f8)",
+            borderRadius: 8,
+            padding: 16,
+            border: "1px solid var(--border-color, #e0e0e0)",
+          }}
+        >
           <XYCustomChart
             data={waffleData}
             layout={waffleLayout}
@@ -291,12 +305,19 @@ import { waffleLayout } from "semiotic/recipes"
       <section>
         <h2>Calendar heatmap</h2>
         <p>
-          GitHub-style day-by-day grid. 53 ISO weeks × 7 days, color-encoded by daily
-          value. The recipe handles the day-of-week / week-of-year math; the active theme
-          provides the default <code>surface → primary</code> color ramp. Pass a custom{" "}
-          <code>colorRamp</code> for non-default ramps.
+          GitHub-style day-by-day grid. 53 ISO weeks × 7 days, color-encoded by daily value. The
+          recipe handles the day-of-week / week-of-year math; the active theme provides the default{" "}
+          <code>surface → primary</code> color ramp. Pass a custom <code>colorRamp</code> for
+          non-default ramps.
         </p>
-        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+        <div
+          style={{
+            background: "var(--surface-2, #f8f8f8)",
+            borderRadius: 8,
+            padding: 16,
+            border: "1px solid var(--border-color, #e0e0e0)",
+          }}
+        >
           <XYCustomChart
             data={calendarData}
             layout={calendarLayout}
@@ -327,48 +348,48 @@ import { waffleLayout } from "semiotic/recipes"
 />`}</CodeBlock>
       </section>
 
-
       <section>
         <h2>Flextree (network)</h2>
         <p>
-          Hierarchical trees where node sizes vary along the major axis —
-          rendered through <code>NetworkCustomChart</code>. The user runs{" "}
-          <code>d3-flextree</code> (a BYO dep) to compute positions, then
-          passes the laid-out nodes and parent → child edges into the chart.
-          The recipe handles scene emission: rect nodes, smooth bezier
-          edges from parent-bottom to child-top, optional labels.
+          Hierarchical trees where node sizes vary along the major axis — rendered through{" "}
+          <code>NetworkCustomChart</code>. The user runs <code>d3-flextree</code> (a BYO dep) to
+          compute positions, then passes the laid-out nodes and parent → child edges into the chart.
+          The recipe handles scene emission: rect nodes, smooth bezier edges from parent-bottom to
+          child-top, optional labels.
         </p>
         <p>
-          The demo below is what flextree exists for. Four kinds of
-          variation that uniform-height <code>d3-tree</code> can't pack
-          tightly are all present at once:
+          The demo below is what flextree exists for. Four kinds of variation that uniform-height{" "}
+          <code>d3-tree</code> can't pack tightly are all present at once:
         </p>
         <ul>
           <li>
-            <strong>Per-node height.</strong> Row 1's <em>Tutorials</em>{" "}
-            (tall card) sits next to <em>API Reference</em> (short pill);
-            Row 2's <em>First Chart</em> is taller than every other rect
-            in the row.
+            <strong>Per-node height.</strong> Row 1's <em>Tutorials</em> (tall card) sits next to{" "}
+            <em>API Reference</em> (short pill); Row 2's <em>First Chart</em> is taller than every
+            other rect in the row.
           </li>
           <li>
-            <strong>Per-node width.</strong> Each rect hugs its label —
-            from the 46px <em>Data</em> leaf to the 92px{" "}
-            <em>Tutorials</em> card.
+            <strong>Per-node width.</strong> Each rect hugs its label — from the 46px <em>Data</em>{" "}
+            leaf to the 92px <em>Tutorials</em> card.
           </li>
           <li>
-            <strong>Asymmetric subtree breadth.</strong>{" "}
-            <em>Tutorials</em>'s subtree is huge (3 leaves, one of which
-            itself has 3 sub-leaves), so it claims most of the horizontal
-            room. <em>API Reference</em> only needs a narrow slot.
+            <strong>Asymmetric subtree breadth.</strong> <em>Tutorials</em>'s subtree is huge (3
+            leaves, one of which itself has 3 sub-leaves), so it claims most of the horizontal room.{" "}
+            <em>API Reference</em> only needs a narrow slot.
           </li>
           <li>
-            <strong>Asymmetric depth.</strong> Two branches drop a 3rd row
-            of children; the others stop at row 2. Real documentation /
-            project trees look like this; flextree packs them without
-            forcing every leaf to the deepest level.
+            <strong>Asymmetric depth.</strong> Two branches drop a 3rd row of children; the others
+            stop at row 2. Real documentation / project trees look like this; flextree packs them
+            without forcing every leaf to the deepest level.
           </li>
         </ul>
-        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+        <div
+          style={{
+            background: "var(--surface-2, #f8f8f8)",
+            borderRadius: 8,
+            padding: 16,
+            border: "1px solid var(--border-color, #e0e0e0)",
+          }}
+        >
           <NetworkCustomChart
             nodes={flextreeNodes}
             edges={flextreeEdges}
@@ -411,11 +432,10 @@ const edges = tree.links().map(l => ({
       <section>
         <h2>Dagre (network)</h2>
         <p>
-          Layered DAG layout from <code>dagre</code> (BYO dep). Same shape as
-          flextree: run <code>dagre.layout(g)</code>, flatten nodes/edges,
-          pass to <code>NetworkCustomChart</code>. Edges with a{" "}
-          <code>points</code> waypoint array render as polylines through
-          those points; without waypoints, fall back to a straight line.
+          Layered DAG layout from <code>dagre</code> (BYO dep). Same shape as flextree: run{" "}
+          <code>dagre.layout(g)</code>, flatten nodes/edges, pass to <code>NetworkCustomChart</code>
+          . Edges with a <code>points</code> waypoint array render as polylines through those
+          points; without waypoints, fall back to a straight line.
         </p>
         <CodeBlock language="jsx">{`import dagre from "dagre"
 import { NetworkCustomChart } from "semiotic/network"
@@ -445,23 +465,55 @@ const edges = g.edges().map(e => {
       </section>
 
       <section>
+        <h2>Lineage DAG with composite glyphs (network)</h2>
+        <p>
+          <code>lineageDagLayout</code> renders a pre-positioned layered lineage/DAG where each node
+          is a <strong>composite glyph</strong> — a partition-colored container, a semantic icon, a
+          truncated label, and a chip per attached item — that stays a single hit-testable unit: one
+          canvas <code>rect</code> owns the hit area while the icon, label, and chips ride the
+          layout's <code>overlays</code> (which is <code>pointer-events: none</code>, so it never
+          steals a hover). It collapses through full → compact → icon → dot as the graph gets
+          denser, renders <code>isBackEdge</code> cycles as distinct dashed loops, and dims to a
+          host-supplied reachable set. Because it only <em>reads</em> pre-computed layer/row
+          coordinates, output is deterministic. See the full interactive build — main view, synced
+          minimap, and a snapshot morph — in <Link to="/recipes/kstreams">Kafka Streams</Link>.
+        </p>
+        <CodeBlock language="jsx">{`import { NetworkCustomChart } from "semiotic/network"
+import { lineageDagLayout } from "semiotic/recipes"
+
+<NetworkCustomChart
+  nodes={nodes}   // each { id, x: layer, y: row, partition, semantic, stores, label }
+  edges={edges}   // each { source, target, edgeType, isBackEdge }
+  layout={lineageDagLayout}
+  layoutConfig={{ layerCount, maxLayerSize, reachableIds, selectedId,
+                  renderIcon, partitionColors }}
+  selection={{ name: "lineage" }}   // LinkedCharts → ctx.selection highlights across views
+/>`}</CodeBlock>
+      </section>
+
+      <section>
         <h2>Streamgraph</h2>
         <p>
           Streamgraphs aren't a recipe — they're <code>StackedAreaChart</code> with{" "}
-          <code>baseline="wiggle"</code> (Byron–Wattenberg offset, post-centered on
-          y=0) or <code>baseline="silhouette"</code> (symmetric centering). The same
-          layout pipeline that drives stacked areas handles the offset; no escape
-          hatch needed.
+          <code>baseline="wiggle"</code> (Byron–Wattenberg offset, post-centered on y=0) or{" "}
+          <code>baseline="silhouette"</code> (symmetric centering). The same layout pipeline that
+          drives stacked areas handles the offset; no escape hatch needed.
         </p>
         <p>
-          For the canonical streamgraph aesthetic — a "central anchor" series with
-          smaller series wrapping outward — pair the baseline with{" "}
-          <code>stackOrder="insideOut"</code>. The series with the largest total
-          ends up in the middle straddling y=0; smaller series alternate above and
-          below it. Without an explicit order, series stack alphabetically (which
-          is stable under streaming but visually arbitrary).
+          For the canonical streamgraph aesthetic — a "central anchor" series with smaller series
+          wrapping outward — pair the baseline with <code>stackOrder="insideOut"</code>. The series
+          with the largest total ends up in the middle straddling y=0; smaller series alternate
+          above and below it. Without an explicit order, series stack alphabetically (which is
+          stable under streaming but visually arbitrary).
         </p>
-        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+        <div
+          style={{
+            background: "var(--surface-2, #f8f8f8)",
+            borderRadius: 8,
+            padding: 16,
+            border: "1px solid var(--border-color, #e0e0e0)",
+          }}
+        >
           <StackedAreaChart
             data={streamData}
             xAccessor="t"
@@ -490,15 +542,20 @@ const edges = g.edges().map(e => {
       <section>
         <h2>Marimekko (ordinal)</h2>
         <p>
-          Variable-width stacked bars where each bar's width encodes its
-          category's contribution to the grand total, and the inner stacked
-          segments encode the within-category breakdown by{" "}
-          <code>stackBy</code>. Both dimensions are proportional, making it
-          the natural pick for cohort revenue analysis, market share by
-          segment × product, or any "what's the mix within the mix"
-          question.
+          Variable-width stacked bars where each bar's width encodes its category's contribution to
+          the grand total, and the inner stacked segments encode the within-category breakdown by{" "}
+          <code>stackBy</code>. Both dimensions are proportional, making it the natural pick for
+          cohort revenue analysis, market share by segment × product, or any "what's the mix within
+          the mix" question.
         </p>
-        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+        <div
+          style={{
+            background: "var(--surface-2, #f8f8f8)",
+            borderRadius: 8,
+            padding: 16,
+            border: "1px solid var(--border-color, #e0e0e0)",
+          }}
+        >
           <OrdinalCustomChart
             data={marimekkoData}
             layout={marimekkoLayout}
@@ -534,15 +591,20 @@ import { marimekkoLayout } from "semiotic/recipes"
       <section>
         <h2>Bullet chart (ordinal)</h2>
         <p>
-          Stephen Few's compact KPI replacement for half-circle gauges.
-          Each row stacks three layers: qualitative range bands (poor →
-          satisfactory → good) as backgrounds, a thinner dark bar for the
-          actual measured value, and a perpendicular tick at the target.
-          Each row is independently scaled so metrics in different units
-          (dollars, percentages, counts) sit side-by-side without any
-          shared axis.
+          Stephen Few's compact KPI replacement for half-circle gauges. Each row stacks three
+          layers: qualitative range bands (poor → satisfactory → good) as backgrounds, a thinner
+          dark bar for the actual measured value, and a perpendicular tick at the target. Each row
+          is independently scaled so metrics in different units (dollars, percentages, counts) sit
+          side-by-side without any shared axis.
         </p>
-        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+        <div
+          style={{
+            background: "var(--surface-2, #f8f8f8)",
+            borderRadius: 8,
+            padding: 16,
+            border: "1px solid var(--border-color, #e0e0e0)",
+          }}
+        >
           <OrdinalCustomChart
             data={bulletData}
             layout={bulletLayout}
@@ -587,26 +649,28 @@ import { marimekkoLayout } from "semiotic/recipes"
       <section>
         <h2>Parallel coordinates (ordinal)</h2>
         <p>
-          One polyline per row, traced across N parallel vertical axes.
-          Each axis represents a numeric field with its own independent
-          linear scale, so columns in different units (mpg, horsepower,
-          weight) can sit side-by-side without normalizing. Useful for
-          high-dimensional pattern hunting: clusters of similar rows,
-          outliers that swing wildly between axes, and inverse correlations
-          (lines crossing). Set <code>colorBy</code> to color groups.
+          One polyline per row, traced across N parallel vertical axes. Each axis represents a
+          numeric field with its own independent linear scale, so columns in different units (mpg,
+          horsepower, weight) can sit side-by-side without normalizing. Useful for high-dimensional
+          pattern hunting: clusters of similar rows, outliers that swing wildly between axes, and
+          inverse correlations (lines crossing). Set <code>colorBy</code> to color groups.
         </p>
         <p>
-          <strong>Interaction:</strong> hover any line to dim its neighbors.
-          The recipe accepts a <code>highlightFn</code> predicate; the demo
-          wraps the chart in a small component that tracks the hovered
-          row's name and feeds it to the recipe. The same hook is the
-          intended integration point for a future{" "}
-          <code>&lt;ParallelCoordinatesBrushes&gt;</code> overlay (drag
-          ranges on each axis to filter rows) and for{" "}
-          <code>useBrushSelection</code>-style linked brushing across
-          coordinated charts.
+          <strong>Interaction:</strong> hover any line to dim its neighbors. The recipe accepts a{" "}
+          <code>highlightFn</code> predicate; the demo wraps the chart in a small component that
+          tracks the hovered row's name and feeds it to the recipe. The same hook is the intended
+          integration point for a future <code>&lt;ParallelCoordinatesBrushes&gt;</code> overlay
+          (drag ranges on each axis to filter rows) and for <code>useBrushSelection</code>-style
+          linked brushing across coordinated charts.
         </p>
-        <div style={{ background: "var(--surface-2, #f8f8f8)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color, #e0e0e0)" }}>
+        <div
+          style={{
+            background: "var(--surface-2, #f8f8f8)",
+            borderRadius: 8,
+            padding: 16,
+            border: "1px solid var(--border-color, #e0e0e0)",
+          }}
+        >
           <ParallelCoordinatesDemo />
         </div>
         <CodeBlock language="jsx">{`import { parallelCoordinatesLayout } from "semiotic/recipes"
@@ -638,13 +702,12 @@ function ParallelCoords({ cars }) {
       <section>
         <h2>Writing your own layout</h2>
         <p>
-          A layout is a pure function: <code>{"(ctx) => { nodes, overlays? }"}</code>. The
-          context exposes the frame's scales, plot-rect dimensions, theme, and a{" "}
-          <code>resolveColor</code> helper that honors the same{" "}
-          <code>CategoryColorProvider</code> / <code>ThemeProvider</code> cascade built-in
-          charts use. Emit standard scene nodes (<code>rect</code>, <code>line</code>,{" "}
-          <code>area</code>, <code>point</code>, <code>heatcell</code>) and the frame
-          handles the rest.
+          A layout is a pure function: <code>{"(ctx) => { nodes, overlays? }"}</code>. The context
+          exposes the frame's scales, plot-rect dimensions, theme, and a <code>resolveColor</code>{" "}
+          helper that honors the same <code>CategoryColorProvider</code> /{" "}
+          <code>ThemeProvider</code> cascade built-in charts use. Emit standard scene nodes (
+          <code>rect</code>, <code>line</code>, <code>area</code>, <code>point</code>,{" "}
+          <code>heatcell</code>) and the frame handles the rest.
         </p>
         <CodeBlock language="tsx">{`import type { CustomLayout } from "semiotic/xy"
 
@@ -679,25 +742,40 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
 
         <h3>What you get for free</h3>
         <ul>
-          <li><strong>Hit testing.</strong> Hover, tooltip, click — quadtree built from your scene-node geometry.</li>
-          <li><strong>Transitions.</strong> Enter/exit/move animations run through the same pipeline as built-in charts.</li>
-          <li><strong>Theme cascade.</strong> Use <code>ctx.resolveColor</code> instead of hard-coded literals and the chart honors <code>ThemeProvider</code> + <code>CategoryColorProvider</code>.</li>
-          <li><strong>SSR.</strong> Scene nodes serialize to SVG via the same path the built-in charts use.</li>
-          <li><strong>Streaming.</strong> Layouts re-run on each push/pushMany — your custom waffle becomes a streaming waffle without extra plumbing.</li>
+          <li>
+            <strong>Hit testing.</strong> Hover, tooltip, click — quadtree built from your
+            scene-node geometry.
+          </li>
+          <li>
+            <strong>Transitions.</strong> Enter/exit/move animations run through the same pipeline
+            as built-in charts.
+          </li>
+          <li>
+            <strong>Theme cascade.</strong> Use <code>ctx.resolveColor</code> instead of hard-coded
+            literals and the chart honors <code>ThemeProvider</code> +{" "}
+            <code>CategoryColorProvider</code>.
+          </li>
+          <li>
+            <strong>SSR.</strong> Scene nodes serialize to SVG via the same path the built-in charts
+            use.
+          </li>
+          <li>
+            <strong>Streaming.</strong> Layouts re-run on each push/pushMany — your custom waffle
+            becomes a streaming waffle without extra plumbing.
+          </li>
         </ul>
       </section>
 
       <section>
         <h2>Sub-path import</h2>
         <p>
-          Each frame's escape-hatch HOC ships from its own sub-path:{" "}
-          <code>XYCustomChart</code> from <code>semiotic/xy</code>,{" "}
-          <code>NetworkCustomChart</code> from <code>semiotic/network</code>,{" "}
-          <code>OrdinalCustomChart</code> from <code>semiotic/ordinal</code>.
-          Layout recipes live on <code>semiotic/recipes</code> as a separate
-          sub-path so they only land in the bundle if you actually use them.
-          BYO deps (<code>d3-flextree</code>, <code>dagre</code>) are imported by
-          your code, not Semiotic — keeps the library small.
+          Each frame's escape-hatch HOC ships from its own sub-path: <code>XYCustomChart</code> from{" "}
+          <code>semiotic/xy</code>, <code>NetworkCustomChart</code> from{" "}
+          <code>semiotic/network</code>, <code>OrdinalCustomChart</code> from{" "}
+          <code>semiotic/ordinal</code>. Layout recipes live on <code>semiotic/recipes</code> as a
+          separate sub-path so they only land in the bundle if you actually use them. BYO deps (
+          <code>d3-flextree</code>, <code>dagre</code>) are imported by your code, not Semiotic —
+          keeps the library small.
         </p>
         <CodeBlock language="jsx">{`import { XYCustomChart } from "semiotic/xy"
 import { NetworkCustomChart } from "semiotic/network"
@@ -712,23 +790,36 @@ import {
       <section>
         <h2>Notes</h2>
         <ul>
-          <li><strong>Plot-relative coordinates.</strong> Scene-node positions are in plot space — the frame already translates by the resolved <code>margin</code>. Use <code>ctx.dimensions.plot</code> for the drawing rect.</li>
-          <li><strong>Renderer dispatch.</strong> When <code>customLayout</code> is provided, the frame uses a renderer set that handles every node type, so your layout can emit any mix of rects, areas, lines, etc. regardless of <code>chartType</code>.</li>
-          <li><strong>Extents.</strong> If your layout uses scales, pass <code>xExtent</code> / <code>yExtent</code> on <code>XYCustomChart</code> to lock the domain. Layouts that don't use scales (waffle, calendar) ignore them.</li>
           <li>
-            For richer composition examples, see <Link to="/recipes/benchmark-dashboard">recipes pages</Link>.
-            Streamgraph baseline lives on <Link to="/charts/stacked-area-chart">StackedAreaChart</Link>.
+            <strong>Plot-relative coordinates.</strong> Scene-node positions are in plot space — the
+            frame already translates by the resolved <code>margin</code>. Use{" "}
+            <code>ctx.dimensions.plot</code> for the drawing rect.
           </li>
           <li>
-            <strong>See it end-to-end in the Cookbook.</strong> Several Cookbook
-            entries build the same chart concepts as worked examples —{" "}
+            <strong>Renderer dispatch.</strong> When <code>customLayout</code> is provided, the
+            frame uses a renderer set that handles every node type, so your layout can emit any mix
+            of rects, areas, lines, etc. regardless of <code>chartType</code>.
+          </li>
+          <li>
+            <strong>Extents.</strong> If your layout uses scales, pass <code>xExtent</code> /{" "}
+            <code>yExtent</code> on <code>XYCustomChart</code> to lock the domain. Layouts that
+            don't use scales (waffle, calendar) ignore them.
+          </li>
+          <li>
+            For richer composition examples, see{" "}
+            <Link to="/recipes/benchmark-dashboard">recipes pages</Link>. Streamgraph baseline lives
+            on <Link to="/charts/stacked-area-chart">StackedAreaChart</Link>.
+          </li>
+          <li>
+            <strong>See it end-to-end in the Cookbook.</strong> Several Cookbook entries build the
+            same chart concepts as worked examples —{" "}
             <Link to="/cookbook/marimekko-chart">Marimekko</Link>,{" "}
             <Link to="/cookbook/slope-chart">Slope</Link>,{" "}
             <Link to="/cookbook/radar-plot">Radar</Link>,{" "}
             <Link to="/cookbook/isotype-chart">Isotype</Link>, and{" "}
-            <Link to="/cookbook/timeline">Timeline</Link>. Some use these layout
-            functions; others reach the same result through a Stream Frame
-            directly — useful for comparing the two routes.
+            <Link to="/cookbook/timeline">Timeline</Link>. Some use these layout functions; others
+            reach the same result through a Stream Frame directly — useful for comparing the two
+            routes.
           </li>
         </ul>
       </section>

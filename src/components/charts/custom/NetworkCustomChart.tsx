@@ -7,10 +7,11 @@ import type {
   StreamNetworkFrameHandle,
 } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import type { NetworkCustomLayout } from "../../stream/networkCustomLayout"
+import type { NetworkCustomLayout, NetworkLayoutSelection } from "../../stream/networkCustomLayout"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps } from "../shared/types"
 import { SafeRender } from "../shared/withChartWrapper"
+import { useChartSelection } from "../shared/hooks"
 import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { filterSparseArray } from "../shared/sparseArray"
 
@@ -44,7 +45,7 @@ export interface NetworkCustomChartProps<
    */
   /** Additional StreamNetworkFrame props for advanced customization. */
   frameProps?: Partial<Omit<StreamNetworkFrameProps,
-    "nodes" | "edges" | "chartType" | "size" | "customNetworkLayout" | "layoutConfig"
+    "nodes" | "edges" | "chartType" | "size" | "customNetworkLayout" | "layoutConfig" | "layoutSelection"
   >>
 }
 
@@ -91,6 +92,11 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     margin: userMargin,
     className,
     colorScheme,
+    selection,
+    linkedHover,
+    onObservation,
+    onClick,
+    chartId,
     frameProps = {},
   } = props
 
@@ -107,6 +113,35 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
 
   const safeNodes = useMemo(() => filterSparseArray(nodes ?? []), [nodes])
   const safeEdges = useMemo(() => filterSparseArray(edges ?? []), [edges])
+
+  // Selection / linked-hover wiring — the custom-chart scaffold is the
+  // light variant (no useChartSetup), so call useChartSelection directly,
+  // exactly as the built-in network HOCs do through useNetworkChartSetup.
+  // `customHoverBehavior` emits into the shared selection store on hover;
+  // `activeSelectionHook` carries the consume-side predicate.
+  const { customHoverBehavior, customClickBehavior, activeSelectionHook } = useChartSelection({
+    selection,
+    linkedHover,
+    fallbackFields: [],
+    onObservation,
+    onClick,
+    chartType: "NetworkCustomChart",
+    chartId,
+  })
+
+  // Project the shared selection into the layout context so a custom
+  // layout can dim/highlight by the cross-chart selection. Memoized on
+  // (isActive, predicate) — both are stable until the selection changes
+  // (useSelection memoizes the predicate) — so this only sheds a fresh
+  // identity, re-running buildScene, on a real selection change, never
+  // per render. That keeps it out of any update loop.
+  const layoutSelection = useMemo<NetworkLayoutSelection | null>(
+    () =>
+      activeSelectionHook?.isActive
+        ? { isActive: true, predicate: activeSelectionHook.predicate }
+        : null,
+    [activeSelectionHook?.isActive, activeSelectionHook?.predicate]
+  )
 
   const { width, height, enableHover, title, description, summary, accessibleTable } = resolved
 
@@ -130,6 +165,13 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     summary,
     accessibleTable,
     enableHover,
+    // Emit hover/click into the shared selection store (and fire
+    // onObservation/onClick) only when something consumes them — mirrors
+    // the built-in network HOC gating.
+    customHoverBehavior: (linkedHover || onObservation || onClick) ? customHoverBehavior : undefined,
+    customClickBehavior: (onObservation || onClick) ? customClickBehavior : undefined,
+    // Consume side: the resolved predicate the layout reads as ctx.selection.
+    layoutSelection,
     // No `showLegend` pass-through: custom layouts own color resolution,
     // so the auto-legend infrastructure can't run. Pass a real legend
     // through `frameProps.legend` if you want one.

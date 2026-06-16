@@ -247,6 +247,11 @@ export function RecipesIndex() {
           title="Network Explorer"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
+        <PageLink
+          href="/recipes/kstreams"
+          title="Kafka Streams"
+          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
+        />
 
         <div className="sub-header">Streaming Visualization</div>
 
@@ -280,8 +285,8 @@ export function PlaygroundIndex() {
   return (
     <div className="margin-bottom">
       <p>
-        Interactively explore Semiotic's chart components. Adjust props via
-        controls and see changes in real time with auto-generated code.
+        Interactively explore Semiotic's chart components. Adjust props via controls and see changes
+        in real time with auto-generated code.
       </p>
       <div className="subpages">
         <PageLink
