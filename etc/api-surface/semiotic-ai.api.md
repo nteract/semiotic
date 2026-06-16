@@ -112,6 +112,7 @@ function applyAudienceBias
 function applyScaleBias
 function auditAccessibility
 function bandFromAge
+function buildDataPitfallsBridge
 function buildNavigationTree
 function buildReaderGrounding
 function classifyCardinalityBand
@@ -183,6 +184,7 @@ function suggestStretchCharts
 function summarizeArc
 function summarizeData
 function toConfig
+function toDataPitfallsChain
 function toURL
 function unregisterChartCapability
 function unregisterStreamChartCapability
@@ -248,6 +250,17 @@ interface ConversationArcStore
 interface ConversationArcSummary
 interface DashboardPanel
 interface DashboardSuggestion
+interface DataPitfallsBridgeOptions
+interface DataPitfallsBridgeResult
+interface DataPitfallsChainInput
+interface DataPitfallsChainStage
+interface DataPitfallsDocumentInput
+interface DataPitfallsImageInput
+interface DataPitfallsImageSource
+interface DataPitfallsRenderedChart
+interface DataPitfallsSlideContent
+interface DataPitfallsSlidesInput
+interface DataPitfallsTextInput
 interface DataQualityProfile
 interface DataScaleProfile
 interface DataSummary
@@ -361,6 +374,8 @@ type ConversationArcEventType
 type ConversationArcListener
 type ConversationArcWebhookFetch
 type CopyFormat
+type DataPitfallsImageMediaType
+type DataPitfallsSingleArtifactInput
 type DescribeLevel
 type EvaluateVariantProposalFn
 type FieldBand
