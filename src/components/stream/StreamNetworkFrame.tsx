@@ -1296,8 +1296,13 @@ const StreamNetworkFrame = forwardRef<
       store.applyThresholds(now)
     }
 
-    // Topology diff highlighting (always active for streaming)
-    store.applyTopologyDiff(now)
+    // Topology diff highlighting (newly-added nodes glow briefly). Active for
+    // streaming, but suppressed when the consumer opts out of animation with
+    // `animate={false}` — a bounded/static chart (e.g. a minimap) shouldn't
+    // pulse every node on its first render.
+    if (animate !== false) {
+      store.applyTopologyDiff(now)
+    }
 
     // Staleness dimming
     const staleThreshold = staleness?.threshold ?? 5000
@@ -1406,7 +1411,7 @@ const StreamNetworkFrame = forwardRef<
     // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation),
     // OR to retry a throttled setAnnotationFrame so a one-shot dirty event
     // that landed inside the throttle gate still reconciles the SVG layer.
-    if (isContinuous || isTransitioning || store.transition != null || animationTicked || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff || pendingAnnotationFrameRef.current) {
+    if (isContinuous || isTransitioning || store.transition != null || animationTicked || store.hasActivePulses || store.hasActiveThresholds || (animate !== false && store.hasActiveTopologyDiff) || pendingAnnotationFrameRef.current) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }
