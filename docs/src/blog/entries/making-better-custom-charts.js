@@ -2,7 +2,7 @@
 import React, { useMemo } from "react"
 import { Link } from "react-router-dom"
 import { XYCustomChart } from "semiotic/xy"
-import { unstable_fromGofishIR, unstable_gofishFlowerIR } from "semiotic/experimental"
+import { unstable_fromGofishIR, unstable_gofishFlowerIR } from "../../../../src/components/semiotic-experimental"
 
 // Entry metadata first so the sync check reads the canonical strings
 // before any UI-string literals.

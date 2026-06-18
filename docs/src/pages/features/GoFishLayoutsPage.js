@@ -11,7 +11,7 @@ import {
   unstable_gofishPolarRibbonIR as polarRibbonIR,
   unstable_gofishPythonMemoryIR as pythonMemoryIR,
   unstable_gofishTitanicCircleTreemapIR as titanicCircleTreemapIR,
-} from "semiotic/experimental"
+} from "../../../../src/components/semiotic-experimental"
 import {
   buildTooltipEntries,
   extractTooltipDatum,
