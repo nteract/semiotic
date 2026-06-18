@@ -6,6 +6,7 @@ export default function CodeBlock({
   language = "jsx",
   showLineNumbers = false,
   showCopyButton = true,
+  wrap = false,
   className = ""
 }) {
   // Support children as fallback for code prop
@@ -74,7 +75,9 @@ export default function CodeBlock({
     },
     copyButton: {
       background: "none",
-      border: "1px solid var(--surface-3)",
+      borderWidth: "1px",
+      borderStyle: "solid",
+      borderColor: "var(--surface-3)",
       borderRadius: "4px",
       padding: "2px 8px",
       fontSize: "12px",
@@ -119,14 +122,18 @@ export default function CodeBlock({
     },
     lineContentCell: {
       paddingLeft: "0",
-      whiteSpace: "pre",
+      whiteSpace: wrap ? "pre-wrap" : "pre",
+      overflowWrap: wrap ? "anywhere" : undefined,
+      wordBreak: wrap ? "break-word" : undefined,
       fontFamily: "var(--font-code)",
       fontSize: "14px",
       lineHeight: "1.6",
       color: "var(--text-primary)"
     },
     inlineCode: {
-      whiteSpace: "pre",
+      whiteSpace: wrap ? "pre-wrap" : "pre",
+      overflowWrap: wrap ? "anywhere" : undefined,
+      wordBreak: wrap ? "break-word" : undefined,
       fontFamily: "var(--font-code)",
       fontSize: "14px",
       lineHeight: "1.6",
@@ -142,12 +149,6 @@ export default function CodeBlock({
           <button
             onClick={handleCopy}
             style={styles.copyButton}
-            onMouseEnter={(e) => {
-              e.target.style.borderColor = "var(--text-secondary)"
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.borderColor = "var(--surface-3)"
-            }}
             aria-label={copied ? "Copied" : "Copy code to clipboard"}
           >
             {copied ? "Copied!" : "Copy"}

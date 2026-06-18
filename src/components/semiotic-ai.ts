@@ -194,6 +194,25 @@ export type {
   ChartReaderGroundingIntent
 } from "./ai/readerGrounding"
 export {
+  buildDataPitfallsBridge,
+  toDataPitfallsChain
+} from "./ai/dataPitfallsBridge"
+export type {
+  DataPitfallsBridgeOptions,
+  DataPitfallsBridgeResult,
+  DataPitfallsChainInput,
+  DataPitfallsChainStage,
+  DataPitfallsDocumentInput,
+  DataPitfallsImageInput,
+  DataPitfallsImageMediaType,
+  DataPitfallsImageSource,
+  DataPitfallsRenderedChart,
+  DataPitfallsSlideContent,
+  DataPitfallsSlidesInput,
+  DataPitfallsSingleArtifactInput,
+  DataPitfallsTextInput
+} from "./ai/dataPitfallsBridge"
+export {
   buildNavigationTree,
   flattenVisible,
   countNodes

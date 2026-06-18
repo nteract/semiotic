@@ -105,6 +105,23 @@ Charts serialize to JSON and back: `toConfig`, `fromConfig`, `toURL`,
 translates them to Semiotic configs — works with `configToJSX()` for
 full round-trip from notebooks and AI-generated specs.
 
+Need an external pitfall review? `toDataPitfallsChain()` builds a
+dependency-free chain input for [`datapitfalls`](https://github.com/bjonesdataliteracy/datapitfalls),
+combining the Semiotic config, JSX, reader grounding, diagnostics,
+accessibility audit, and optional rendered SVG/image evidence:
+
+```ts
+import { toDataPitfallsChain } from "semiotic/ai"
+import { detectPitfalls } from "datapitfalls"
+
+const input = toDataPitfallsChain("LineChart", props, {
+  narrative: "Monthly sales are accelerating.",
+  rendered: { svg, evidence },
+})
+
+const report = await detectPitfalls(input, { apiKey: process.env.ANTHROPIC_API_KEY })
+```
+
 ### When to use something else
 
 Need a standard bar or line chart for a dashboard you'll never need to
