@@ -238,6 +238,24 @@ describe("buffer array cache invalidation", () => {
     store.clear()
     expect(store.getData()).toHaveLength(0)
   })
+
+  // update()/remove() are data activity — they must refresh the staleness clock
+  // so a chart streamed via in-place mutation isn't falsely flagged stale.
+  it("update() refreshes lastIngestTime", () => {
+    const store = makeStore({ pointIdAccessor: "id" })
+    setData(store, [{ id: "a", x: 1, y: 10 }])
+    store.lastIngestTime = 1 // simulate a long-idle (would-be-stale) clock
+    store.update("a", (d) => ({ ...d, y: 99 }))
+    expect(store.lastIngestTime).toBeGreaterThan(1)
+  })
+
+  it("remove() refreshes lastIngestTime", () => {
+    const store = makeStore({ pointIdAccessor: "id" })
+    setData(store, [{ id: "a", x: 1, y: 10 }, { id: "b", x: 2, y: 20 }])
+    store.lastIngestTime = 1
+    store.remove("b")
+    expect(store.lastIngestTime).toBeGreaterThan(1)
+  })
 })
 
 // ── Scene rebuild after config changes ───────────────────────────────────

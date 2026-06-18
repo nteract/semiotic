@@ -54,6 +54,11 @@ const ROUTE_META = {
     description:
       "Semiotic features: streaming push API, animated transitions, accessibility, annotations, coordinated views, themed CSS variables, SSR, and AI-facing tooling.",
   },
+  "features/gofish-layouts": {
+    title: "Experimental GoFish Adapter — Semiotic",
+    description:
+      "Temporary PR preview for rendering GoFish Frontend IR through Semiotic custom layouts; not a Semiotic release API contract.",
+  },
   annotations: {
     title: "Annotations — Semiotic",
     description:

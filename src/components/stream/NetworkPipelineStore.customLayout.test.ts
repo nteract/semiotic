@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { afterEach, describe, it, expect, vi } from "vitest"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import type { NetworkPipelineConfig, NetworkCircleNode, NetworkLineEdge } from "./networkTypes"
 import type { NetworkLayoutContext } from "./networkCustomLayout"
@@ -12,6 +12,10 @@ function baseConfig(extra: Partial<NetworkPipelineConfig> = {}): NetworkPipeline
     ...extra,
   }
 }
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe("NetworkPipelineStore customNetworkLayout", () => {
   it("invokes customLayout instead of plugin dispatch", () => {
@@ -155,6 +159,24 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     store.buildScene([100, 100])
 
     expect(store.customLayoutOverlays).toBe(overlay)
+  })
+
+  it("warns when customNetworkLayout returns overlays without scene nodes", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
+    const overlay = { _sentinel: true } as unknown as React.ReactNode
+    const layout = () => ({
+      sceneNodes: [],
+      sceneEdges: [],
+      labels: [],
+      overlays: overlay,
+    })
+    const store = new NetworkPipelineStore(baseConfig({
+      customNetworkLayout: layout,
+    }))
+    store.ingestBounded([{ id: "a" }], [], [100, 100])
+    store.buildScene([100, 100])
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("returned overlays but no data-bearing scene nodes"))
   })
 
   it("clears overlays when customLayout is removed", () => {

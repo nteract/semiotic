@@ -125,6 +125,7 @@ const navData = [
       { title: "Performance", path: "/features/performance" },
       { title: "Push API", path: "/features/push-api" },
       { title: "Custom Charts", path: "/features/custom-charts" },
+      { title: "Experimental GoFish Adapter", path: "/features/gofish-layouts" },
     ],
   },
   {

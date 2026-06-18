@@ -21,6 +21,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
 
 // Map of entry-point name → its built `.d.ts` file.
+// `semiotic-experimental` is intentionally omitted: that sub-path is packaged
+// for collaborator previews, but is not a stable API contract for CI snapshots.
 const ENTRIES = {
   semiotic: "dist/semiotic.d.ts",
   "semiotic-xy": "dist/semiotic-xy.d.ts",

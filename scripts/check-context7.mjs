@@ -18,10 +18,12 @@
  *      repo on a missing folder, which surfaces internal docs the
  *      `folders` allowlist was meant to curate out.
  *
- *   3. Sub-path drift — rule 0 enumerates the public sub-path imports
- *      (`semiotic/xy`, `semiotic/ordinal`, etc.). When `package.json`
- *      exports a new sub-path, the rule should mention it; when an
- *      export disappears, the rule must drop the stale name.
+ *   3. Sub-path drift — rule 0 enumerates the stable public sub-path
+ *      imports (`semiotic/xy`, `semiotic/ordinal`, etc.). When
+ *      `package.json` exports a new stable sub-path, the rule should
+ *      mention it; when an export disappears, the rule must drop the
+ *      stale name. Temporary experimental sub-paths are intentionally
+ *      ignored.
  *
  * Run via `npm run check:context7`. Wired into release/prepublish and
  * the CI workflow so a stale manifest can't merge unnoticed.
@@ -103,9 +105,13 @@ if (Array.isArray(manifest.folders)) {
 // every sub-path package.json exports also appears in the rule, and
 // that the rule doesn't name a sub-path that has been removed.
 const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"))
+// Experimental preview subpaths are intentionally omitted from Context7 so
+// agents do not treat temporary collaborator APIs as stable import guidance.
+const IGNORED_SUBPATHS = new Set(["experimental"])
 const exportedSubpaths = Object.keys(pkg.exports || {})
   .filter((k) => k.startsWith("./") && k !== "./package.json")
   .map((k) => k.slice(2))
+  .filter((k) => !IGNORED_SUBPATHS.has(k))
 
 const subpathRule = (manifest.rules || []).find((r) => r.includes("sub-path"))
 if (!subpathRule) {

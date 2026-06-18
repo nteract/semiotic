@@ -4,6 +4,7 @@ import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
 import type { NetworkLayoutContext } from "./networkCustomLayout"
 import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
+import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
@@ -59,6 +60,7 @@ export class NetworkPipelineStore {
   labels: NetworkLabel[] = []
   /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
   customLayoutOverlays: import("react").ReactNode = null
+  private _customLayoutDiagnosticsWarned = new Set<string>()
 
   // ── Spatial index for node hit testing ─────────────────────────────────
   // Circle-node hit testing (force/orbit graphs) is O(n) per hover frame
@@ -646,6 +648,12 @@ export class NetworkPipelineStore {
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
       this.customLayoutOverlays = result.overlays ?? null
+      warnCustomLayoutDiagnostics({
+        label: "customNetworkLayout",
+        nodes: this.sceneNodes,
+        overlays: this.customLayoutOverlays,
+        warned: this._customLayoutDiagnosticsWarned,
+      })
       return
     }
 
@@ -1331,6 +1339,7 @@ export class NetworkPipelineStore {
     const previous = node.data ? { ...node.data } : {}
     node.data = updater(node.data ?? {})
     this.layoutVersion++
+    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
     return previous
   }
 
@@ -1354,7 +1363,10 @@ export class NetworkPipelineStore {
         if (newValue != null) edge.value = Number(newValue)
       }
     }
-    if (results.length > 0) this.layoutVersion++
+    if (results.length > 0) {
+      this.layoutVersion++
+      this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    }
     return results
   }
 
@@ -1376,6 +1388,7 @@ export class NetworkPipelineStore {
       }
     }
     this.layoutVersion++
+    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
     return true
   }
 
@@ -1420,7 +1433,10 @@ export class NetworkPipelineStore {
       this.edges.delete(key)
       this.edgeTimestamps.delete(key)
     }
-    if (toDelete.length > 0) this.layoutVersion++
+    if (toDelete.length > 0) {
+      this.layoutVersion++
+      this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    }
     return toDelete.length > 0
   }
 

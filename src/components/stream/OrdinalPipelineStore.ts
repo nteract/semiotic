@@ -45,6 +45,7 @@ import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext, SceneBuilderFn } from "./ordinalSceneBuilders/types"
 import type { OrdinalLayoutContext } from "./ordinalCustomLayout"
 import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
+import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import type { MarginType } from "../types/marginType"
 
 const SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
@@ -110,6 +111,7 @@ export class OrdinalPipelineStore {
   columns: Record<string, OrdinalColumn> = {}
   /** Overlays returned from customLayout (consumed by StreamOrdinalFrame). */
   customLayoutOverlays: import("react").ReactNode = null
+  private _customLayoutDiagnosticsWarned = new Set<string>()
   version = 0
   /** Bumped whenever the buffer is mutated. Used to invalidate per-frame caches. */
   private _dataVersion = 0
@@ -727,7 +729,14 @@ export class OrdinalPipelineStore {
         return []
       }
       this.customLayoutOverlays = result.overlays ?? null
-      return result.nodes ?? []
+      const nodes = result.nodes ?? []
+      warnCustomLayoutDiagnostics({
+        label: "ordinal customLayout",
+        nodes,
+        overlays: this.customLayoutOverlays,
+        warned: this._customLayoutDiagnosticsWarned,
+      })
+      return nodes
     }
 
     // Built-in chart types: clear stale overlays from a prior customLayout run.
@@ -1432,6 +1441,8 @@ export class OrdinalPipelineStore {
 
     this._dataVersion++
     this.version++
+    // A removal is data activity — refresh the staleness clock.
+    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
     return removed
   }
 
@@ -1470,6 +1481,9 @@ export class OrdinalPipelineStore {
 
     this._dataVersion++
     this.version++
+    // An in-place update is data activity — refresh the staleness clock so a
+    // chart streamed via update() (e.g. a refill demo) isn't flagged stale.
+    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
     return previous
   }
 

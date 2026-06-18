@@ -486,6 +486,14 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // note #3.
     const dirtyRef = useRef(false)
 
+    // Last plot dimensions a computeScene ran at. A responsive width change
+    // must re-solve the scene even mid-transition — otherwise the canvas keeps
+    // the pre-measure width while the viewBox-scaled SVG overlay already
+    // reflects the new width, drifting custom-layout overlays off their canvas
+    // scene nodes (progressively, since the error scales with x) until the
+    // transition ends.
+    const lastSceneDimsRef = useRef({ w: -1, h: -1 })
+
     // XY resolves foreground/background locally (not via useFrame) because
     // the marginalGraphics branch below may expand margin, and function-form
     // graphics must be evaluated against the final margin. Having useFrame
@@ -1141,13 +1149,24 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
+      // A responsive resize must re-solve the scene at the new dimensions even
+      // mid-transition, so canvas scene nodes and the viewBox-scaled SVG overlay
+      // stay aligned (otherwise custom-layout overlays drift off their nodes
+      // until the transition ends).
+      const dimsChanged =
+        lastSceneDimsRef.current.w !== adjustedWidth || lastSceneDimsRef.current.h !== adjustedHeight
+
       // Determine if data canvas needs repaint (data/props changed or animating).
       // Use transitionActive so reduced-motion fast-forwarded transitions still repaint.
-      const needsDataRepaint = dirtyRef.current || transitionActive
+      const needsDataRepaint = dirtyRef.current || transitionActive || dimsChanged
+      let computedSceneThisFrame = false
 
-      // Compute scene graph (scales + scene nodes) — only when data changed
-      if (needsDataRepaint && !isTransitioning) {
+      // Compute scene graph (scales + scene nodes) — when data changed, or when
+      // the dimensions changed (the latter wins over an active transition).
+      if (needsDataRepaint && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
+        computedSceneThisFrame = true
         emitLegendCategories()
       }
 
@@ -1282,7 +1301,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // ── React state updates ──────────────────────────────────────────
       const wasDirty = dirtyRef.current
-      dirtyRef.current = false
+      // If a prop/layout/size change arrives while a transition is active,
+      // computeScene is intentionally deferred. Keep the dirty flag set so
+      // the next non-transition frame applies the new responsive dimensions
+      // instead of leaving canvas scene nodes and SVG overlays out of sync.
+      dirtyRef.current = wasDirty && isTransitioning && !computedSceneThisFrame
 
       // Push scales into React state so SVGOverlay renders axes/grid
       if (wasDirty && store.scales) {
@@ -1315,8 +1338,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }
       }
 
-      // Trigger React re-render for SVG annotations
-      if (wasDirty && annotations && annotations.length > 0) {
+      // Trigger React re-render for SVG annotations and custom-layout overlays.
+      // CustomLayout overlays are stored on PipelineStore during computeScene;
+      // without this, responsive first paint can leave the canvas scene at the
+      // latest measured width while overlay glyphs remain from the prior solve
+      // until another React state change happens.
+      if (computedSceneThisFrame && ((annotations && annotations.length > 0) || customLayout)) {
         setAnnotationFrame(f => f + 1)
       }
 

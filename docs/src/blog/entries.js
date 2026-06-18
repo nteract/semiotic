@@ -58,6 +58,7 @@ import ReleaseGatesForFastPrs from "./entries/release-gates-for-fast-prs.js"
 import Release360 from "./entries/release-3-6-0.js"
 import TalkTrackIntelligence from "./entries/talk-track-intelligence.js"
 import FromSpecToRuntime from "./entries/from-spec-to-runtime.js"
+import MakingBetterCustomCharts from "./entries/making-better-custom-charts.js"
 import ScaleAwareSuggestions from "./entries/scale-aware-suggestions.js"
 import AuditingWhatYouCantSee from "./entries/auditing-what-you-cant-see.js"
 import WhatAScreenReaderShouldHear from "./entries/what-a-screen-reader-should-hear.js"
@@ -74,6 +75,7 @@ import AnnotationsThatGetContestedAndHeard from "./entries/annotations-that-get-
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  MakingBetterCustomCharts,
   Release372,
   Release371,
   Release370,

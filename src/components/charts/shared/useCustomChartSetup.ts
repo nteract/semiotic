@@ -119,7 +119,7 @@ interface DataSetupOptions extends ScaffoldOptions {
   chartId?: string
   loading?: boolean
   loadingContent?: ReactNode | false
-  emptyContent?: ReactNode
+  emptyContent?: ReactNode | false
 }
 
 interface DataSetupResult<TFrameHandle> extends ScaffoldResult<TFrameHandle> {

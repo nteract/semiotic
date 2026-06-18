@@ -8,10 +8,13 @@ const DEFAULT_AREA_PER_ANNOTATION
 function annotationBudget
 function annotationDensity
 function annotationLayout
+function buildTooltipEntries
 function bulletLayout
 function calendarLayout
 function dagreLayout
+function extractTooltipDatum
 function flextreeLayout
+function formatTooltipValue
 function lineageDagLayout
 function marimekkoLayout
 function parallelCoordinatesLayout
@@ -24,6 +27,8 @@ interface AnnotationLayoutConfig
 interface AnnotationLayoutOptions
 interface BulletConfig
 interface CalendarConfig
+interface CustomTooltipEntry
+interface CustomTooltipEntryOptions
 interface DagreConfig
 interface FlextreeConfig
 interface LayoutContext
