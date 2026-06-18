@@ -228,6 +228,18 @@ async function createBundle(options = {}) {
   }
 }
 
+async function createBundlesWithConcurrency(bundles, concurrency) {
+  const workers = Array.from(
+    { length: Math.min(concurrency, bundles.length) },
+    async (_, workerIndex) => {
+      for (let i = workerIndex; i < bundles.length; i += concurrency) {
+        await createBundle(bundles[i])
+      }
+    }
+  )
+  await Promise.all(workers)
+}
+
 function buildDeclarations() {
   try {
     execSync("npx tsc -p tsconfig.declarations.json", { stdio: "inherit" })
@@ -247,7 +259,7 @@ function buildDeclarations() {
     "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
     "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
     "semiotic-geo", "semiotic-themes", "semiotic-utils", "semiotic-recipes",
-    "semiotic-value"
+    "semiotic-experimental", "semiotic-value"
   ]
   for (const name of entryPoints) {
     const src = `dist/components/${name}.d.ts`
@@ -315,6 +327,10 @@ async function build() {
 
   const minify = isProduction
   const analyze = isAnalyze
+  const requestedConcurrency = Number.parseInt(process.env.SEMIOTIC_BUILD_CONCURRENCY ?? "2", 10)
+  const bundleConcurrency = Number.isFinite(requestedConcurrency) && requestedConcurrency > 0
+    ? requestedConcurrency
+    : 2
 
   // Three categories drive the post-build directive-placement gate:
   //   serverOnly: true   — must NOT carry "use client" (semiotic/server)
@@ -352,16 +368,24 @@ async function build() {
     { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
     { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify },
     { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify },
+    // Unstable preview surface for adapters such as GoFish. It is packaged so
+    // collaborators can test it, but CI/docs gates intentionally ignore it as a
+    // stable API contract.
+    { input: "src/components/semiotic-experimental.ts", name: "semiotic-experimental", analyze: false, minify },
     // `semiotic-value` is a plain-React HOC bundle — single component
     // (BigNumber) plus pure formatting/threshold helpers. Client-only
     // because BigNumber uses useState/useEffect/useImperativeHandle.
     { input: "src/components/semiotic-value.ts", name: "semiotic-value", analyze: false, minify, clientOnly: true }
   ]
 
-  await Promise.all([
-    ...bundles.map(b => createBundle(b)),
-    buildDeclarations()
-  ])
+  buildDeclarations()
+
+  // Rollup keeps a full module graph per active bundle. Starting every entry
+  // point at once can push CI over the 8GB Node heap when a temporary preview
+  // bundle is added, so keep peak memory bounded while still allowing local
+  // callers to opt into more parallelism.
+  console.log(`Bundling ${bundles.length} entry points with concurrency ${bundleConcurrency}`)
+  await createBundlesWithConcurrency(bundles, bundleConcurrency)
 
   createLegacyAliases(bundles)
 
@@ -388,9 +412,10 @@ async function build() {
  *   sub-path would crash with browser-API errors at runtime ("window
  *   is not defined", etc.).
  *
- * - **Neither** — agnostic. Pure-function bundles (`semiotic/data`,
- *   `semiotic/recipes`) contain no React component code, so they
- *   neither need nor harm from the directive. Skip them.
+ * - **Neither** — agnostic. Pure-function or preview bundles
+ *   (`semiotic/data`, `semiotic/recipes`, `semiotic/experimental`) contain
+ *   no client-only React component code, so they neither need nor harm from
+ *   the directive. Skip them.
  *
  * Reading the file synchronously is cheap (we just wrote them) and
  * lets the build fail fast with a clear diagnostic.

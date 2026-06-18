@@ -104,6 +104,7 @@ import StreamingSystemModelPage from "./pages/features/StreamingSystemModelPage"
 import PerformancePage from "./pages/features/PerformancePage"
 import PushApiPage from "./pages/features/PushApiPage"
 import CustomChartsPage from "./pages/features/CustomChartsPage"
+import GoFishLayoutsPage from "./pages/features/GoFishLayoutsPage"
 import CapabilitiesPage from "./pages/features/CapabilitiesPage"
 import InterrogationPage from "./pages/features/InterrogationPage"
 import SuggestionsPage from "./pages/features/SuggestionsPage"
@@ -434,6 +435,7 @@ export default function DocsApp() {
               <Route path="performance" element={<PerformancePage />} />
               <Route path="push-api" element={<PushApiPage />} />
               <Route path="custom-charts" element={<CustomChartsPage />} />
+              <Route path="gofish-layouts" element={<GoFishLayoutsPage />} />
             </Route>
 
             {/* Accessibility — first-class category (before Intelligence).

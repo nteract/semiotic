@@ -767,6 +767,93 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
       </section>
 
       <section>
+        <h2>Recipe authoring contracts</h2>
+        <p>
+          Custom layouts work best when they split semantic marks from decorative chrome. Emit
+          data-bearing scene nodes for anything the reader can hover, click, select, animate, or
+          describe. Render labels, petals, ribbons, arrows, silhouettes, and other visual detail as
+          keyed SVG overlays. If a layout returns overlays without scene nodes, or every scene node
+          has <code>datum: null</code>, Semiotic warns in development because hover callbacks and
+          tooltips have nothing useful to read.
+        </p>
+        <ul>
+          <li>
+            <strong>Stable ids.</strong> Give each emitted node a stable identity such as{" "}
+            <code>_transitionKey</code>, <code>pointId</code>, or a recipe-specific id so transitions
+            can interpolate between solved states.
+          </li>
+          <li>
+            <strong>Transparent hit targets.</strong> Pictorial glyphs often need a simple scene node
+            underneath the visible overlay. Use a transparent rect or point with a useful datum.
+          </li>
+          <li>
+            <strong>Tooltip payloads.</strong> Shape datums with user-facing keys, then use{" "}
+            <code>buildTooltipEntries</code> to unwrap hover payloads consistently across custom
+            chart families.
+          </li>
+        </ul>
+        <CodeBlock language="tsx">{`import { buildTooltipEntries } from "semiotic/recipes"
+
+const hit = {
+  type: "rect",
+  x, y,
+  w: width,
+  h: height,
+  style: { fill: "rgba(0,0,0,0)", stroke: "none" },
+  datum: { category, amount, kind: "bottle" },
+  group: category,
+  _transitionKey: \`bottle-hit-\${category}\`,
+}
+
+function Tooltip(hover) {
+  const rows = buildTooltipEntries(hover)
+  return rows.length ? (
+    <div className="semiotic-tooltip">
+      {rows.map((row) => <div key={row.key}>{row.label}: {row.formatted}</div>)}
+    </div>
+  ) : null
+}`}</CodeBlock>
+      </section>
+
+      <section>
+        <h2>Push semantics</h2>
+        <p>
+          The push API supports two different mental models. Append streams add observations over
+          time: a new event, trade, request, or passenger enters the layout. State updates replace
+          an existing object's current value: a bottle's fill level changes, a node moves, or a KPI
+          updates. Use <code>ref.current.push(datum)</code> for append streams and{" "}
+          <code>ref.current.update(id, updater)</code> when identity should stay fixed.
+        </p>
+        <CodeBlock language="jsx">{`const ref = useRef(null)
+
+// Append semantics: add another observation.
+ref.current.push({ id: "event-42", category: "A", value: 12 })
+
+// State semantics: update an existing object in place.
+ref.current.update("planning", (d) => ({
+  ...d,
+  amount: nextAmount,
+}))`}</CodeBlock>
+        <p>
+          The <Link to="/features/gofish-layouts">experimental GoFish adapter</Link> page uses the bottle-fill
+          example as the canonical state-update pattern: the same five bottles remain in the scene
+          graph while their fill values animate between solved states.
+        </p>
+      </section>
+
+      <section>
+        <h2>Network custom diagrams</h2>
+        <p>
+          <code>NetworkCustomChart</code> is not limited to network science charts. It is the right
+          escape hatch for semantic diagrams with nodes, edges, and stable identity: state machines,
+          dependency diagrams, lineage diagrams, Python Tutor memory diagrams, process maps, and
+          other object-reference systems. Use scene rects/circles for the semantic objects and
+          network edges for relationships; reserve overlays for labels, dividers, arrows, and other
+          detail that should not intercept interaction.
+        </p>
+      </section>
+
+      <section>
         <h2>Sub-path import</h2>
         <p>
           Each frame's escape-hatch HOC ships from its own sub-path: <code>XYCustomChart</code> from{" "}
@@ -784,6 +871,7 @@ import {
   waffleLayout, calendarLayout,
   flextreeLayout, dagreLayout,
   marimekkoLayout, bulletLayout, parallelCoordinatesLayout,
+  buildTooltipEntries,
 } from "semiotic/recipes"`}</CodeBlock>
       </section>
 

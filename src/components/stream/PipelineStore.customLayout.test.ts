@@ -1,7 +1,11 @@
-import { describe, it, expect } from "vitest"
+import { afterEach, describe, it, expect, vi } from "vitest"
 import { PipelineStore } from "./PipelineStore"
 import type { LayoutContext } from "./customLayout"
 import type { RectSceneNode, AreaSceneNode } from "./types"
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe("PipelineStore customLayout integration", () => {
   it("invokes customLayout instead of chart-type dispatch", () => {
@@ -61,6 +65,55 @@ describe("PipelineStore customLayout integration", () => {
     store.computeScene({ width: 100, height: 100 })
 
     expect(store.customLayoutOverlays).toBe(sentinel)
+  })
+
+  it("warns when customLayout returns overlays without scene nodes", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
+    const sentinel = { _sentinel: true } as unknown as React.ReactNode
+    const layout = () => ({ nodes: [], overlays: sentinel })
+    const store = new PipelineStore({
+      chartType: "custom",
+      windowSize: 100,
+      windowMode: "sliding",
+      arrowOfTime: "right",
+      extentPadding: 0,
+      xAccessor: "x",
+      yAccessor: "y",
+      customLayout: layout,
+    })
+    store.ingest({ inserts: [{ x: 1, y: 1 }], bounded: true })
+    store.computeScene({ width: 100, height: 100 })
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("returned overlays but no data-bearing scene nodes"))
+  })
+
+  it("warns when customLayout scene nodes all have null datums", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
+    const layout = () => ({
+      nodes: [{
+        type: "rect",
+        x: 0,
+        y: 0,
+        w: 10,
+        h: 10,
+        style: { fill: "#000" },
+        datum: null,
+      } satisfies RectSceneNode],
+    })
+    const store = new PipelineStore({
+      chartType: "custom",
+      windowSize: 100,
+      windowMode: "sliding",
+      arrowOfTime: "right",
+      extentPadding: 0,
+      xAccessor: "x",
+      yAccessor: "y",
+      customLayout: layout,
+    })
+    store.ingest({ inserts: [{ x: 1, y: 1 }], bounded: true })
+    store.computeScene({ width: 100, height: 100 })
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("every scene-node datum is null"))
   })
 
   it("renders empty scene when layout throws", () => {

@@ -75,25 +75,28 @@ describe("pointCanvasRenderer", () => {
     expect(ctx.fillStyle).toBe("#4e79a7")
   })
 
-  it("sets globalAlpha from style.opacity", () => {
+  it("applies style.opacity to globalAlpha", () => {
     const ctx = createMockCanvasContext()
+    const alphaValues: number[] = []
+    let _alpha = 1
+    Object.defineProperty(ctx, "globalAlpha", { get: () => _alpha, set: (v: number) => { _alpha = v; alphaValues.push(v) } })
     const node = makePointNode({ style: { fill: "#4e79a7", opacity: 0.5 } })
 
     pointCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
-    expect(ctx.globalAlpha).toBe(1) // reset at end
-    // Verify alpha was set to 0.5 at some point during rendering
-    // Since resetMocks is on, we check the final reset
+    expect(alphaValues).toContain(0.5)
   })
 
-  it("sets globalAlpha from style.fillOpacity when opacity is absent", () => {
+  it("applies style.fillOpacity to globalAlpha when opacity is absent", () => {
     const ctx = createMockCanvasContext()
+    const alphaValues: number[] = []
+    let _alpha = 1
+    Object.defineProperty(ctx, "globalAlpha", { get: () => _alpha, set: (v: number) => { _alpha = v; alphaValues.push(v) } })
     const node = makePointNode({ style: { fill: "#4e79a7", fillOpacity: 0.3 } })
 
     pointCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
-    // globalAlpha is reset to 1 at the end of the loop
-    expect(ctx.globalAlpha).toBe(1)
+    expect(alphaValues).toContain(0.3)
   })
 
   it("renders pulse glow when _pulseIntensity > 0", () => {
@@ -177,7 +180,7 @@ describe("pointCanvasRenderer", () => {
     expect(ctx.fill).toHaveBeenCalledTimes(3)
   })
 
-  it("resets globalAlpha to 1 after rendering each node", () => {
+  it("applies each node's alpha without clobbering between nodes (relies on save/restore)", () => {
     const ctx = createMockCanvasContext()
     const alphaValues: number[] = []
 
@@ -198,9 +201,30 @@ describe("pointCanvasRenderer", () => {
 
     pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
 
-    // Each node: set opacity, then reset to 1
-    // So we expect: 0.3, 1, 0.7, 1
-    expect(alphaValues).toEqual([0.3, 1, 0.7, 1])
+    // One alpha set per node (base 1 × node alpha); no per-node reset to 1.
+    expect(alphaValues).toEqual([0.3, 0.7])
+    expect(ctx.restore).toHaveBeenCalled()
+  })
+
+  it("multiplies node alpha into the incoming base alpha for EVERY node (staleness dim)", () => {
+    const ctx = createMockCanvasContext()
+    const alphaValues: number[] = []
+    // Incoming chart-wide dim (e.g. staleness) before the renderer runs.
+    let _alpha = 0.5
+    Object.defineProperty(ctx, "globalAlpha", {
+      get: () => _alpha,
+      set: (v: number) => {
+        _alpha = v
+        alphaValues.push(v)
+      }
+    })
+
+    const nodes = [makePointNode({ style: { fill: "#f00" } }), makePointNode({ style: { fill: "#0f0" } })]
+    pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
+
+    // Every node honors the 0.5 base — not just the first (the bug was the
+    // rest resetting to full opacity).
+    expect(alphaValues).toEqual([0.5, 0.5])
   })
 
   it("handles decay via reduced style.opacity", () => {
@@ -221,7 +245,5 @@ describe("pointCanvasRenderer", () => {
     pointCanvasRenderer(ctx, [node], makeScales(), makeLayout())
 
     expect(alphaValues[0]).toBe(0.2)
-    // Reset at end
-    expect(alphaValues[alphaValues.length - 1]).toBe(1)
   })
 })

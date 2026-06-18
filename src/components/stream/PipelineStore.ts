@@ -70,6 +70,7 @@ import { buildSwarmScene } from "./xySceneBuilders/swarmScene"
 import { buildWaterfallScene } from "./xySceneBuilders/waterfallScene"
 import { buildCandlestickScene } from "./xySceneBuilders/candlestickScene"
 import type { CustomLayout, LayoutContext } from "./customLayout"
+import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import type { MarginType } from "../types/marginType"
 
 // ── Axis direction helpers ─────────────────────────────────────────────
@@ -403,6 +404,7 @@ export class PipelineStore {
   version = 0
   /** Overlays returned from customLayout (consumed by StreamXYFrame for SVGOverlay). */
   customLayoutOverlays: import("react").ReactNode = null
+  private _customLayoutDiagnosticsWarned = new Set<string>()
 
   /** True when the x accessor returns Date objects (auto-detected on first data ingestion) */
   xIsDate = false
@@ -1199,7 +1201,14 @@ export class PipelineStore {
         return []
       }
       this.customLayoutOverlays = result.overlays ?? null
-      return result.nodes ?? []
+      const nodes = result.nodes ?? []
+      warnCustomLayoutDiagnostics({
+        label: "customLayout",
+        nodes,
+        overlays: this.customLayoutOverlays,
+        warned: this._customLayoutDiagnosticsWarned,
+      })
+      return nodes
     }
 
     // Built-in chart types: ensure stale overlays from a prior customLayout
@@ -1654,6 +1663,9 @@ export class PipelineStore {
     this.needsFullRebuild = true
     this._bufferDirty = true
     this._ingestVersion++
+    // A removal is data activity — refresh the staleness clock so a chart
+    // mutated via remove() isn't flagged stale.
+    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
     return removed
   }
 
@@ -1706,6 +1718,9 @@ export class PipelineStore {
     this.needsFullRebuild = true
     this._bufferDirty = true
     this._ingestVersion++
+    // An in-place update is data activity — refresh the staleness clock so a
+    // chart streamed via update() isn't flagged stale between updates.
+    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
     return previous
   }
 

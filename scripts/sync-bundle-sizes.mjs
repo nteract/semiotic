@@ -4,10 +4,10 @@
  * formats two views (table + bullet list), and upserts them into the
  * docs targets that surface bundle sizes to consumers and AI agents.
  *
- * Source of truth: `package.json#exports` → resolves each subpath to
- *   its `*.module.min.js` artifact under `dist/`. The script never
- *   hand-maintains a list of subpaths — adding a new entry-point in
- *   `package.json` makes the new bundle show up here automatically.
+ * Source of truth: stable `package.json#exports` entries → resolves each
+ *   subpath to its `*.module.min.js` artifact under `dist/`. The script
+ *   intentionally ignores unstable preview exports such as
+ *   `semiotic/experimental`.
  *
  * Marker blocks (same pattern as `generate-ai-behavior-contracts.mjs`):
  *   <!-- semiotic-bundle-sizes:start -->
@@ -44,6 +44,9 @@ const printOnly = args.has("--print")
 
 const MARKER_START = "<!-- semiotic-bundle-sizes:start -->"
 const MARKER_END = "<!-- semiotic-bundle-sizes:end -->"
+// Unstable preview bundles are packaged for collaborators but are intentionally
+// omitted from the consumer-facing bundle-size table and CI drift gate.
+const IGNORED_EXPORTS = new Set(["./experimental"])
 
 // Subpath → short "what's inside" blurb shown in the README table.
 // Keep these short and stable; they describe *which charts/utilities*
@@ -146,11 +149,12 @@ function measure() {
     })
   }
 
-  // Cross-check: every package export key should appear in ORDER
-  // (except the metadata-only `./package.json`). Catches a fresh
-  // export landing without an ORDER + BLURBS update.
+  // Cross-check: every stable package export key should appear in ORDER
+  // (except the metadata-only `./package.json` and explicitly ignored
+  // preview exports). Catches a fresh stable export landing without an
+  // ORDER + BLURBS update.
   for (const subpath of Object.keys(exports)) {
-    if (subpath === "./package.json") continue
+    if (subpath === "./package.json" || IGNORED_EXPORTS.has(subpath)) continue
     if (!ORDER.includes(subpath)) {
       errors.push(`Export ${subpath} is not listed in ORDER (sync-bundle-sizes.mjs)`)
     }

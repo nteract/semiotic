@@ -396,6 +396,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const [currentScales, setCurrentScales] = useState<OrdinalScales | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
     const [isStale, setIsStale] = useState(false)
+    const lastSceneDimsRef = useRef({ w: -1, h: -1 })
     // customLayout overlays are read straight from store.customLayoutOverlays at
     // render time (see the foregroundGraphics composition below) — same pattern
     // as StreamXYFrame / StreamNetworkFrame. The render loop's `setAnnotationFrame`
@@ -805,15 +806,21 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
+      const dimsChanged =
+        lastSceneDimsRef.current.w !== adjustedWidth || lastSceneDimsRef.current.h !== adjustedHeight
       const wasDirty = dirtyRef.current
-      if (wasDirty && !transitionActive) {
+      let computedSceneThisFrame = false
+
+      if ((wasDirty || dimsChanged) && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
+        computedSceneThisFrame = true
         emitLegendCategories()
-        dirtyRef.current = false
       }
+      dirtyRef.current = wasDirty && isTransitioning && !computedSceneThisFrame
 
       // Update canvas aria-label imperatively after scene changes
-      if (wasDirty || isTransitioning) {
+      if (computedSceneThisFrame || isTransitioning) {
         canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
       }
 
@@ -902,7 +909,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       }
 
       // Push scales to React state for SVG overlay
-      if (wasDirty && store.scales) {
+      if (computedSceneThisFrame && store.scales) {
         setCurrentScales(store.scales)
         setAnnotationFrame(f => f + 1)
       }

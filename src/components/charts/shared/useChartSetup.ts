@@ -81,7 +81,7 @@ export interface ChartSetupInput {
   /** Custom content rendered in place of the default skeleton while `loading` is true. */
   loadingContent?: ReactNode | false
   /** Empty content override */
-  emptyContent?: ReactNode
+  emptyContent?: ReactNode | false
   /** Resolved width from useChartMode */
   width: number
   /** Resolved height from useChartMode */

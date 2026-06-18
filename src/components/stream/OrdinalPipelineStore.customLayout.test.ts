@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { afterEach, describe, it, expect, vi } from "vitest"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "./ordinalTypes"
 import type { OrdinalLayoutContext } from "./ordinalCustomLayout"
@@ -17,6 +17,10 @@ function baseConfig(extra: Partial<OrdinalPipelineConfig> = {}): OrdinalPipeline
     ...extra,
   }
 }
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe("OrdinalPipelineStore customLayout", () => {
   it("invokes customLayout instead of chart-type dispatch", () => {
@@ -60,6 +64,17 @@ describe("OrdinalPipelineStore customLayout", () => {
     store.computeScene({ width: 100, height: 100 })
 
     expect(store.customLayoutOverlays).toBe(sentinel)
+  })
+
+  it("warns when customLayout returns overlays without scene nodes", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
+    const sentinel = { _sentinel: true } as unknown as React.ReactNode
+    const layout = () => ({ nodes: [], overlays: sentinel })
+    const store = new OrdinalPipelineStore(baseConfig({ customLayout: layout }))
+    store.ingest({ inserts: [{ category: "A", value: 1 }], bounded: true })
+    store.computeScene({ width: 100, height: 100 })
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("returned overlays but no data-bearing scene nodes"))
   })
 
   it("clears overlays when customLayout is removed", () => {

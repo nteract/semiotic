@@ -628,6 +628,27 @@ describe("OrdinalPipelineStore", () => {
     })
   })
 
+  // ── Staleness clock on in-place mutation ────────────────────────────
+  // A refill-style demo (e.g. boba) streams via update(); the staleness clock
+  // must treat that as activity so the chart isn't dimmed as "stale".
+  describe("staleness clock refresh", () => {
+    it("update() refreshes lastIngestTime", () => {
+      const store = new OrdinalPipelineStore(makeConfig({ dataIdAccessor: "category" }))
+      store.ingest({ inserts: makeData(["A"], [10]), bounded: true })
+      store.lastIngestTime = 1 // simulate a long-idle (would-be-stale) clock
+      store.update("A", (d) => ({ ...d, value: 99 }))
+      expect(store.lastIngestTime).toBeGreaterThan(1)
+    })
+
+    it("remove() refreshes lastIngestTime", () => {
+      const store = new OrdinalPipelineStore(makeConfig({ dataIdAccessor: "category" }))
+      store.ingest({ inserts: makeData(["A", "B"], [10, 20]), bounded: true })
+      store.lastIngestTime = 1
+      store.remove("B")
+      expect(store.lastIngestTime).toBeGreaterThan(1)
+    })
+  })
+
   // ── rExtent with zero ─────────────────────────────────────────────────
 
   describe("rExtent with explicit zero", () => {

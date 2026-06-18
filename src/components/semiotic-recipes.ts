@@ -65,3 +65,13 @@ export type {
   OrdinalLayoutContext,
   OrdinalLayoutResult,
 } from "./stream/ordinalCustomLayout"
+
+export {
+  buildTooltipEntries,
+  extractTooltipDatum,
+  formatTooltipValue,
+} from "./recipes/customTooltip"
+export type {
+  CustomTooltipEntry,
+  CustomTooltipEntryOptions,
+} from "./recipes/customTooltip"

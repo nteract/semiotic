@@ -15,14 +15,17 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layo
 
   ctx.save()
   try {
+    // Preserve the incoming canvas alpha (e.g. a chart-wide staleness dim) and
+    // multiply each node's own opacity into it, rather than clobbering it to 1
+    // — otherwise only the first node honored the dim and the rest reset to
+    // full. `ctx.restore()` puts the base alpha back when we're done.
+    const baseAlpha = ctx.globalAlpha
     for (const node of pointNodes) {
       ctx.beginPath()
       ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
 
-      const alpha = node.style.opacity ?? node.style.fillOpacity
-      if (alpha != null) {
-        ctx.globalAlpha = alpha
-      }
+      const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
+      ctx.globalAlpha = baseAlpha * alpha
 
       ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, "#4e79a7")
       ctx.fill()
@@ -35,8 +38,6 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layo
 
       // Pulse glow ring
       renderCirclePulse(ctx, node)
-
-      ctx.globalAlpha = 1
     }
   } finally {
     ctx.restore()
