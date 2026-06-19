@@ -491,7 +491,28 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
         && typeof hoverData.x === "number"
         && typeof hoverData.y === "number"
         && hasLegacyFrameMarker)
-      const datum = normalizeHoverDatum(looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData)
+      let datum = normalizeHoverDatum(looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData)
+      // Network frames wrap the user's datum twice. HoverData.data is the
+      // RealtimeNode/RealtimeEdge that layout produced (carrying x0/y0/
+      // sourceLinks — and, for edges, `source`/`target` resolved to node
+      // OBJECTS), while the raw datum the user passed in `nodes`/`edges`
+      // sits one level deeper at `.data`. Unwrap that extra level so network
+      // HOC tooltips receive raw data, matching the XY/ordinal contract.
+      // Without it a custom tooltip rendering `edge.source` gets a node
+      // object and React throws "Objects are not valid as a React child".
+      // `nodeOrEdge` is set only by StreamNetworkFrame, so XY/ordinal hover
+      // data is left untouched.
+      const isNetworkHover =
+        hoverData?.nodeOrEdge === "node" || hoverData?.nodeOrEdge === "edge"
+      if (
+        isNetworkHover &&
+        datum &&
+        typeof datum === "object" &&
+        datum.data &&
+        typeof datum.data === "object"
+      ) {
+        datum = datum.data
+      }
       const result = userFn(datum)
       if (result === null || result === undefined) return null
       return (
