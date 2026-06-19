@@ -595,6 +595,53 @@ describe("StreamOrdinalFrame", () => {
       expect(svgs.length).toBeGreaterThan(0)
     })
 
+    it("thins crowded category labels so they do not overlap", () => {
+      // 40 bins in a 400px-wide chart — the temporal-histogram case. Drawing
+      // every label overlaps; the axis should thin to a readable subset.
+      const data = Array.from({ length: 40 }, (_, i) => ({
+        category: `2026-${String(i + 1).padStart(2, "0")}`,
+        value: (i % 7) + 1,
+      }))
+      const { container } = render(
+        <StreamOrdinalFrame
+          chartType="bar"
+          data={data}
+          oAccessor="category"
+          rAccessor="value"
+          size={[400, 300]}
+          showAxes={true}
+        />
+      )
+      // Vertical bars put categories on the bottom axis.
+      const catTicks = container.querySelectorAll(
+        ".semiotic-axis-bottom .semiotic-axis-tick"
+      )
+      expect(catTicks.length).toBeGreaterThan(0)
+      expect(catTicks.length).toBeLessThan(data.length)
+    })
+
+    it("keeps every label when categories are few enough to fit", () => {
+      const data = [
+        { category: "A", value: 10 },
+        { category: "B", value: 20 },
+        { category: "C", value: 15 },
+      ]
+      const { container } = render(
+        <StreamOrdinalFrame
+          chartType="bar"
+          data={data}
+          oAccessor="category"
+          rAccessor="value"
+          size={[600, 300]}
+          showAxes={true}
+        />
+      )
+      const catTicks = container.querySelectorAll(
+        ".semiotic-axis-bottom .semiotic-axis-tick"
+      )
+      expect(catTicks.length).toBe(data.length)
+    })
+
     it("renders title in SVG overlay when title is a string", () => {
       const data = [{ category: "A", value: 10 }]
       const { container } = render(

@@ -230,15 +230,47 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   const isHorizontal = scales?.projection === "horizontal"
   const showCategoryTicks = showCategoryTicksProp !== false
 
-  // Category labels (band scale)
+  // Category labels (band scale). When many categories crowd the axis —
+  // the classic temporal-histogram / many-bin case — drawing every label
+  // produces an unreadable overlapping smear. Thin to evenly-spaced labels
+  // (every Nth) so the remaining set never collides. The thinning is a
+  // no-op when labels already fit (step === 1), so charts with few
+  // categories render byte-identically.
   const categoryTicks = useMemo(() => {
     if (!showAxes || !showCategoryTicks || !scales || isRadial) return []
-    return scales.o.domain().map((cat, index) => ({
+    const band = scales.o.bandwidth()
+    const all = scales.o.domain().map((cat, index) => ({
       value: cat,
-      pixel: (scales.o(cat) ?? 0) + scales.o.bandwidth() / 2,
+      pixel: (scales.o(cat) ?? 0) + band / 2,
       label: oFormat ? oFormat(cat, index) : cat
     }))
-  }, [showAxes, showCategoryTicks, scales, oFormat, isRadial])
+    if (all.length <= 2) return all
+
+    // Uniform spacing between adjacent category centers (band scale).
+    const spacing = Math.abs(all[1].pixel - all[0].pixel) || band
+    // Pixel footprint each label needs along the axis. Vertical bars lay
+    // horizontal labels along the bottom (footprint = text width); horizontal
+    // bars stack labels down the left axis (footprint = line height).
+    let needed: number
+    if (isHorizontal) {
+      needed = 16 // line height + breathing room
+    } else {
+      let maxChars = 0
+      let hasNodeLabel = false
+      for (const t of all) {
+        if (typeof t.label === "string") maxChars = Math.max(maxChars, t.label.length)
+        else if (typeof t.label === "number") maxChars = Math.max(maxChars, String(t.label).length)
+        else hasNodeLabel = true
+      }
+      // 6.5 px/char mirrors the heuristic in SVGOverlay; ReactNode labels
+      // can't be measured, so assume the 60px foreignObject width.
+      needed = Math.max(maxChars * 6.5, hasNodeLabel ? 60 : 0) + 6
+    }
+
+    const step = Math.max(1, Math.ceil(needed / spacing))
+    if (step === 1) return all
+    return all.filter((_, i) => i % step === 0)
+  }, [showAxes, showCategoryTicks, scales, oFormat, isRadial, isHorizontal])
 
   // Value ticks (linear scale) — custom rTickValues override d3 ticks
   const rTickValues = props.rTickValues

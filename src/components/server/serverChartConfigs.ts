@@ -655,25 +655,58 @@ const gaugeChart: ChartConfig = {
 
 const forceDirectedGraph: ChartConfig = {
   frameType: "network",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "force",
-    nodes: rest.nodes,
-    edges: rest.edges,
-    nodeIDAccessor: rest.nodeIDAccessor,
-    sourceAccessor: rest.sourceAccessor,
-    targetAccessor: rest.targetAccessor,
-    colorBy,
-    colorScheme,
-    iterations: rest.iterations,
-    forceStrength: rest.forceStrength,
-    showLabels: rest.showLabels,
-    nodeLabel: rest.nodeLabel,
-    nodeSize: rest.nodeSize,
-    nodeSizeRange: rest.nodeSizeRange,
-    nodeStyle: rest.nodeStyle,
-    edgeStyle: rest.edgeStyle,
-    ...common,
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    // Mirror the HOC's edgeWidth/edgeColor/edgeOpacity handling so that
+    // `renderChart("ForceDirectedGraph", { edgeWidth: "weight" })` honors
+    // edge weight in SSR. An explicit edgeStyle wins; otherwise synthesize
+    // one when any edge primitive prop is set. The edge callback receives a
+    // RealtimeEdge wrapper (user data on .data) — read field/function
+    // accessors against the raw edge, matching the HOC.
+    const { edgeWidth, edgeColor, edgeOpacity } = rest
+    const hasEdgePrimitives =
+      edgeWidth !== undefined || edgeColor !== undefined || edgeOpacity !== undefined
+    const edgeStyle =
+      rest.edgeStyle ??
+      (hasEdgePrimitives
+        ? (d: Datum) => {
+            const edge = (d?.data as Datum) || d
+            let strokeWidth = 1
+            if (typeof edgeWidth === "number") {
+              strokeWidth = edgeWidth
+            } else if (typeof edgeWidth === "function") {
+              strokeWidth = edgeWidth(edge)
+            } else if (typeof edgeWidth === "string") {
+              const raw = edge?.[edgeWidth]
+              const n = typeof raw === "number" ? raw : Number(raw)
+              strokeWidth = Number.isFinite(n) && n > 0 ? n : 1
+            }
+            return {
+              stroke: edgeColor ?? "#999",
+              strokeWidth,
+              opacity: edgeOpacity ?? 0.6,
+            }
+          }
+        : undefined)
+    return {
+      chartType: "force",
+      nodes: rest.nodes,
+      edges: rest.edges,
+      nodeIDAccessor: rest.nodeIDAccessor,
+      sourceAccessor: rest.sourceAccessor,
+      targetAccessor: rest.targetAccessor,
+      colorBy,
+      colorScheme,
+      iterations: rest.iterations,
+      forceStrength: rest.forceStrength,
+      showLabels: rest.showLabels,
+      nodeLabel: rest.nodeLabel,
+      nodeSize: rest.nodeSize,
+      nodeSizeRange: rest.nodeSizeRange,
+      nodeStyle: rest.nodeStyle,
+      edgeStyle,
+      ...common,
+    }
+  },
 }
 
 // ProcessSankey is unique among network HOCs in that it doesn't use a

@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **ForceDirectedGraph edge width now honors a weight field.** A string `edgeWidth`
+  accessor (e.g. `edgeWidth="weight"`) read the property off the `RealtimeEdge`
+  wrapper instead of the underlying edge data, so every edge silently fell back to
+  width 1. Field and function `edgeWidth` accessors now resolve against the raw edge
+  (mirroring node styling), and the `semiotic/server` `renderChart` path gained the
+  same `edgeWidth`/`edgeColor`/`edgeOpacity` handling for SSR parity.
+- **Crowded bar-chart category labels no longer overlap.** Ordinal category axes
+  (BarChart and siblings) now thin their tick labels to an evenly-spaced subset when
+  too many bins crowd the axis — the classic temporal-histogram case. Charts with few
+  enough categories to fit are unchanged.
+- **Custom-layout overlays no longer drift on the first responsive resize.** XY custom
+  layouts (`XYCustomChart`, GoFish recipes) skipped the layout re-run on a
+  dimension-only change and took `computeScene`'s fast coordinate-remap path, which
+  rescales canvas scene nodes but never regenerates the SVG overlays — so glyph chrome
+  (e.g. the GoFish flower petals) stayed at the pre-measurement width and sat offset
+  from their scene nodes until any other change forced a rebuild. Custom layouts now
+  always re-run on a size change, keeping overlays and scene nodes aligned.
+
+### Changed
+
+- **BarChart suggestion caveat for temporal categories.** When a BarChart's category
+  axis holds time-bin labels (month/weekday names, `YYYY-MM`, `Q3`, `Week 12`, or a
+  temporal field name), `suggestCharts` now surfaces a caveat pointing toward a
+  time-aware treatment (real dates + LineChart/AreaChart, or a temporal histogram for
+  streaming counts).
+
 ## [3.7.4] - 2026-06-15
 
 ### Added
