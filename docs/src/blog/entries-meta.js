@@ -20,6 +20,19 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "streaming-that-aggregates-itself",
+    title: "Streaming that aggregates itself",
+    subtitle:
+      "Most front-end streaming charts get slower as the stream gets faster. Semiotic's new streaming-aggregation layer makes per-frame cost depend on how much you can see, not how much arrives — the Kafka Streams windowing model, client-side.",
+    author: "Elijah Meeks",
+    date: "2026-06-18",
+    tags: ["case-study", "realtime"],
+    excerpt:
+      "Buffering raw records and redrawing them is the default front-end streaming pattern, and it scales with stream volume — exactly the wrong axis. Aggregate on ingest into bounded event-time windows and the cost follows the resolution of the view instead. Here's why that single move collapses bounded memory, downsampling, backpressure, and windowing into one mechanism, with live charts.",
+    draft: true,
+    ogChart: { component: "LineChart" },
+  },
+  {
     slug: "making-better-custom-charts",
     title: "Making Better Custom Charts",
     subtitle:

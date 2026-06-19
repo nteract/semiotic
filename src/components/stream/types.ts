@@ -79,14 +79,34 @@ export interface TransitionConfig {
 }
 
 export interface StalenessConfig {
-  /** ms without data before "stale" (default: 5000) */
+  /**
+   * ms without data before "stale" (default: 5000). In graded mode this
+   * is the base TTL the lifecycle bands are measured against — `aging`
+   * begins here, `stale` at 1.5×, `expired` at 3× (overridable).
+   */
   threshold?: number
-  /** Canvas alpha when stale (default: 0.5) */
+  /** Canvas alpha when stale, binary mode (default: 0.5) */
   dimOpacity?: number
   /** Render LIVE/STALE badge (default: false) */
   showBadge?: boolean
   /** Badge position (default: "top-right") */
   badgePosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right"
+  /**
+   * Opt into graded (banded) staleness. Instead of a single live→stale
+   * flip at `threshold`, frames that support graded staleness dim
+   * progressively through fresh → aging → stale → expired as idle time
+   * crosses multiples of `threshold`, sharing one schedule with per-datum
+   * decay and annotation freshness. (Currently honored by `StreamXYFrame`,
+   * which backs the realtime XY charts; other frames treat it as binary.)
+   * `true` uses the default per-band opacities; pass an object to override
+   * the band thresholds or opacities.
+   */
+  graded?: boolean | {
+    /** Multiples of `threshold` marking each band edge (see LifecycleBandThresholds). */
+    thresholds?: import("../realtime/lifecycleBands").LifecycleBandThresholds
+    /** Per-band canvas alpha override. Missing bands use the defaults. */
+    opacities?: Partial<Record<import("../realtime/lifecycleBands").LifecycleBand, number>>
+  }
 }
 
 // ── Marginal graphics ─────────────────────────────────────────────────

@@ -3,7 +3,9 @@ import {
   buildForecast,
   buildAnomalyAnnotations,
   createSegmentLineStyle,
+  stampForecastOpacity,
   SEGMENT_FIELD,
+  FORECAST_OPACITY_FIELD,
 } from "./statisticalOverlays"
 import type { ForecastConfig, AnomalyConfig } from "./statisticalOverlays"
 import type { Datum } from "./datumTypes"
@@ -541,5 +543,89 @@ describe("createSegmentLineStyle", () => {
     expect(result.opacity).toBe(0.8)
     expect(result.strokeLinecap).toBe("round")
     expect(result.strokeWidth).toBe(2)
+  })
+
+  it("uses a stamped per-point opacity over the flat forecastOpacity", () => {
+    const styleFn = createSegmentLineStyle(baseStyle, { forecastOpacity: 0.9 })
+    const result = styleFn({ [SEGMENT_FIELD]: "forecast", [FORECAST_OPACITY_FIELD]: 0.3 })
+    expect(result.strokeOpacity).toBe(0.3)
+  })
+
+  it("falls back to forecastOpacity when no per-point opacity is stamped", () => {
+    const styleFn = createSegmentLineStyle(baseStyle, { forecastOpacity: 0.9 })
+    const result = styleFn({ [SEGMENT_FIELD]: "forecast" })
+    expect(result.strokeOpacity).toBe(0.9)
+  })
+})
+
+describe("stampForecastOpacity", () => {
+  const getUpper = (d: Datum) => d.upper as number | undefined
+  const getLower = (d: Datum) => d.lower as number | undefined
+
+  it("is a no-op when neither uncertaintyOpacity nor confidenceAccessor is set", () => {
+    const points: Datum[] = [{ upper: 5, lower: 1 }]
+    stampForecastOpacity(points, {}, getUpper, getLower)
+    expect(points[0][FORECAST_OPACITY_FIELD]).toBeUndefined()
+  })
+
+  it("fades wider intervals more than narrow ones", () => {
+    const points: Datum[] = [
+      { upper: 1, lower: 0 }, // narrowest → max opacity
+      { upper: 5, lower: 0 },
+      { upper: 11, lower: 1 }, // widest → min opacity
+    ]
+    stampForecastOpacity(points, { uncertaintyOpacity: true }, getUpper, getLower)
+    const ops = points.map((p) => p[FORECAST_OPACITY_FIELD] as number)
+    expect(ops[0]).toBeCloseTo(1, 9) // default max
+    expect(ops[2]).toBeCloseTo(0.15, 9) // default min
+    expect(ops[1]).toBeGreaterThan(ops[2])
+    expect(ops[1]).toBeLessThan(ops[0])
+  })
+
+  it("honors a custom opacity range", () => {
+    const points: Datum[] = [
+      { upper: 1, lower: 0 },
+      { upper: 11, lower: 1 },
+    ]
+    stampForecastOpacity(points, { uncertaintyOpacity: { min: 0.4, max: 0.8 } }, getUpper, getLower)
+    expect(points[0][FORECAST_OPACITY_FIELD]).toBeCloseTo(0.8, 9)
+    expect(points[1][FORECAST_OPACITY_FIELD]).toBeCloseTo(0.4, 9)
+  })
+
+  it("maps confidence to opacity (higher confidence → more opaque)", () => {
+    const points: Datum[] = [{ conf: 1 }, { conf: 0 }, { conf: 0.5 }]
+    stampForecastOpacity(points, { confidenceAccessor: "conf" }, getUpper, getLower)
+    expect(points[0][FORECAST_OPACITY_FIELD]).toBe(1)
+    expect(points[1][FORECAST_OPACITY_FIELD]).toBe(0.15)
+    expect(points[2][FORECAST_OPACITY_FIELD]).toBeCloseTo(0.575, 5)
+  })
+
+  it("clamps out-of-range confidence values", () => {
+    const points: Datum[] = [{ conf: 5 }, { conf: -2 }]
+    stampForecastOpacity(points, { confidenceAccessor: "conf" }, getUpper, getLower)
+    expect(points[0][FORECAST_OPACITY_FIELD]).toBe(1)
+    expect(points[1][FORECAST_OPACITY_FIELD]).toBe(0.15)
+  })
+})
+
+describe("buildForecast — uncertainty opacity (auto mode)", () => {
+  it("stamps per-point opacity on forecast points, fading the far horizon", () => {
+    const data: Datum[] = []
+    for (let i = 0; i < 10; i++) data.push({ x: i, y: i * 2 })
+    const config: ForecastConfig = {
+      trainEnd: 9,
+      steps: 5,
+      uncertaintyOpacity: true,
+    }
+    const { processedData } = buildForecast(data, "x", "y", config)
+    const forecastPts = processedData.filter(
+      (d) => d[SEGMENT_FIELD] === "forecast" && d[FORECAST_OPACITY_FIELD] != null
+    )
+    expect(forecastPts.length).toBeGreaterThan(0)
+    const ops = forecastPts.map((d) => d[FORECAST_OPACITY_FIELD] as number)
+    // Prediction interval widens with horizon → opacity should not increase.
+    for (let i = 1; i < ops.length; i++) {
+      expect(ops[i]).toBeLessThanOrEqual(ops[i - 1] + 1e-9)
+    }
   })
 })

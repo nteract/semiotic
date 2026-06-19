@@ -30,6 +30,7 @@ import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
 import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
+import { resolveStaleness } from "./stalenessBands"
 import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
@@ -1176,10 +1177,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // getComputedStyle on every pointermove event at high pointer rates.
       themePrimaryRef.current = theme.primary
 
-      // Staleness check (used by both canvases)
-      const staleThreshold = staleness?.threshold ?? 5000
-      const currentlyStale = staleness && store.lastIngestTime > 0 &&
-        (now - store.lastIngestTime) > staleThreshold
+      // Staleness check (used by both canvases). `resolveStaleness`
+      // handles both the binary flip and the graded (banded) ramp.
+      const idleMs = store.lastIngestTime > 0 ? now - store.lastIngestTime : 0
+      const resolvedStaleness = resolveStaleness(staleness, idleMs)
+      const currentlyStale = staleness && resolvedStaleness.isStale
 
       // ── Data canvas: only repaint when data/props changed ─────────────
       if (needsDataRepaint) {
@@ -1187,8 +1189,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         if (ctx) {
           ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-          if (currentlyStale) {
-            ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
+          if (staleness && resolvedStaleness.alpha < 1) {
+            ctx.globalAlpha = resolvedStaleness.alpha
           }
 
           // Background.
@@ -1254,7 +1256,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
           ctx.restore()
 
-          if (currentlyStale) {
+          if (staleness && resolvedStaleness.alpha < 1) {
             ctx.globalAlpha = 1
           }
         }

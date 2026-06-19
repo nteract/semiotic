@@ -68,6 +68,7 @@ import AnnotationsThatLeadAndLand from "./entries/annotations-that-lead-and-land
 import AnnotationsThatMakeRoomAndMakeSense from "./entries/annotations-that-make-room-and-make-sense.js"
 import AnnotationsThatAdaptAndTravel from "./entries/annotations-that-adapt-and-travel.js"
 import AnnotationsThatGetContestedAndHeard from "./entries/annotations-that-get-contested-and-heard.js"
+import StreamingThatAggregatesItself from "./entries/streaming-that-aggregates-itself.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -75,6 +76,7 @@ import AnnotationsThatGetContestedAndHeard from "./entries/annotations-that-get-
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  StreamingThatAggregatesItself,
   MakingBetterCustomCharts,
   Release372,
   Release371,

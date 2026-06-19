@@ -5,7 +5,10 @@ _Edit dist/semiotic-realtime.d.ts's sources, then re-run `npm run docs:api-surfa
 
 ```
 class IncrementalExtent
+class ReorderBuffer
 class RingBuffer
+class RunningStats
+class WindowAccumulator
 const DEFAULT_LIFECYCLE_THRESHOLDS
 function RealtimeHeatmap
 function RealtimeHistogram
@@ -15,11 +18,17 @@ function RealtimeWaterfallChart
 function StreamNetworkFrame
 function StreamXYFrame
 function TemporalHistogram
+function bandBounds
 function bandFromAge
+function parseWindowDuration
+function statValue
 function useStreamStatus
+interface AggregateConfig
+interface AggregatedWindow
 interface AnnotationContext
 interface BarStyle
 interface CrosshairStyle
+interface EventTimeConfig
 interface HoverAnnotationConfig
 interface HoverData
 interface LifecycleBandThresholds
@@ -29,6 +38,8 @@ interface RealtimeHistogramProps
 interface RealtimeLineChartProps
 interface RealtimeSwarmChartProps
 interface RealtimeWaterfallChartProps
+interface ReorderBufferConfig
+interface ReorderResult
 interface StreamNetworkFrameHandle
 interface StreamNetworkFrameProps
 interface StreamStatusOptions
@@ -38,11 +49,16 @@ interface StreamXYFrameProps
 interface SwarmStyle
 interface TemporalHistogramProps
 interface WaterfallStyle
+interface WindowAccumulatorConfig
+type AggregateBand
+type AggregateStat
 type ArrowOfTime
+type LatePolicy
 type LifecycleBand
 type NetworkChartType
 type StreamChartType
 type StreamStatus
 type ThresholdType
 type WindowMode
+type WindowType
 ```
