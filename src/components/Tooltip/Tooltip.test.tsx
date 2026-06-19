@@ -270,6 +270,85 @@ describe("normalizeTooltip", () => {
   it("returns false for undefined", () => {
     expect(normalizeTooltip(undefined)).toBe(false)
   })
+
+  it("unwraps a network EDGE wrapper to the raw datum (source/target as ids, not node objects)", () => {
+    // A custom tooltip that renders `edge.source` directly. Before the fix it
+    // received the RealtimeEdge whose `source` is a node OBJECT, throwing
+    // "Objects are not valid as a React child" on hover.
+    const fn = (d: Datum) => `${d.source} -> ${d.target} (${d.flowType})`
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
+    // RealtimeEdge after sankey layout: source/target resolved to node
+    // objects, raw user edge preserved at `.data`.
+    const hoverData = {
+      __semioticHoverData: true,
+      nodeOrEdge: "edge",
+      x: 10,
+      y: 20,
+      data: {
+        source: { id: "A", x0: 0, x1: 12, sourceLinks: [], targetLinks: [] },
+        target: { id: "B", x0: 80, x1: 92, sourceLinks: [], targetLinks: [] },
+        value: 5,
+        sankeyWidth: 5,
+        data: { source: "A", target: "B", value: 5, flowType: "transition" },
+      },
+    }
+    const rendered = wrapped(hoverData)
+    expect(rendered).not.toBeNull()
+    expect(rendered?.props.children).toBe("A -> B (transition)")
+  })
+
+  it("unwraps a network NODE wrapper to the raw datum", () => {
+    const fn = (d: Datum) => `${d.label} / ${d.type}`
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
+    const hoverData = {
+      __semioticHoverData: true,
+      nodeOrEdge: "node",
+      x: 10,
+      y: 20,
+      data: {
+        id: "A",
+        x0: 0,
+        x1: 12,
+        value: 5,
+        sourceLinks: [],
+        targetLinks: [],
+        data: { id: "A", label: "Alpha", type: "Teacher" },
+      },
+    }
+    const rendered = wrapped(hoverData)
+    expect(rendered).not.toBeNull()
+    expect(rendered?.props.children).toBe("Alpha / Teacher")
+  })
+
+  it("leaves the network wrapper intact when it carries no raw `.data` payload", () => {
+    const fn = (d: Datum) => d.id
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
+    const hoverData = {
+      __semioticHoverData: true,
+      nodeOrEdge: "node",
+      x: 10,
+      y: 20,
+      data: { id: "A", x0: 0, x1: 12, value: 5 },
+    }
+    const rendered = wrapped(hoverData)
+    expect(rendered).not.toBeNull()
+    expect(rendered?.props.children).toBe("A")
+  })
+
+  it("does not unwrap already-raw network datums that merely have a `.data` field (e.g. NetworkCustomChart scene datum)", () => {
+    const fn = (d: Datum) => d.id
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
+    const hoverData = {
+      __semioticHoverData: true,
+      nodeOrEdge: "node",
+      x: 10,
+      y: 20,
+      data: { id: "A", data: { nested: true } },
+    }
+    const rendered = wrapped(hoverData)
+    expect(rendered).not.toBeNull()
+    expect(rendered?.props.children).toBe("A")
+  })
 })
 
 describe("buildDefaultTooltip with title role", () => {

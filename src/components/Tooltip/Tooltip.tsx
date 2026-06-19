@@ -491,7 +491,36 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
         && typeof hoverData.x === "number"
         && typeof hoverData.y === "number"
         && hasLegacyFrameMarker)
-      const datum = normalizeHoverDatum(looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData)
+      let datum = normalizeHoverDatum(looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData)
+      // Network frames wrap the user's datum twice. HoverData.data is the
+      // RealtimeNode/RealtimeEdge that layout produced (carrying x0/y0/
+      // sourceLinks — and, for edges, `source`/`target` resolved to node
+      // OBJECTS), while the raw datum the user passed in `nodes`/`edges`
+      // sits one level deeper at `.data`. Unwrap that extra level so network
+      // HOC tooltips receive raw data, matching the XY/ordinal contract.
+      // Without it a custom tooltip rendering `edge.source` gets a node
+      // object and React throws "Objects are not valid as a React child".
+      //
+      // Match only genuine RealtimeNode/RealtimeEdge wrappers, not just the
+      // presence of `nodeOrEdge` + a nested `.data`: every node built by the
+      // network pipeline has numeric x0/x1 (createNode), and every edge a
+      // numeric sankeyWidth (0 for non-sankey layouts). A customNetworkLayout
+      // hit whose datum is the user's own object — even one that happens to
+      // carry an incidental `.data` field — lacks those layout fields and is
+      // passed through untouched.
+      const isNodeWrapper =
+        hoverData?.nodeOrEdge === "node" &&
+        typeof datum?.x0 === "number" &&
+        typeof datum?.x1 === "number"
+      const isEdgeWrapper =
+        hoverData?.nodeOrEdge === "edge" && typeof datum?.sankeyWidth === "number"
+      if (
+        (isNodeWrapper || isEdgeWrapper) &&
+        datum.data &&
+        typeof datum.data === "object"
+      ) {
+        datum = datum.data
+      }
       const result = userFn(datum)
       if (result === null || result === undefined) return null
       return (
