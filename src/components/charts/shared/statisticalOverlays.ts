@@ -73,6 +73,24 @@ export interface ForecastConfig {
   /** Stroke opacity for the forecast line segment (0–1). Default: 1 */
   forecastOpacity?: number
   /**
+   * Ramp each forecast point's opacity by its uncertainty — wider
+   * prediction interval (longer horizon) renders fainter, fusing
+   * confidence into the encoding instead of a single flat opacity.
+   * `true` ramps across `[0.15, 1]`; pass `{ min, max }` to bound the
+   * range. Honored by `createSegmentLineStyle`; overrides
+   * `forecastOpacity` per point. Mutually exclusive with
+   * `confidenceAccessor` (which wins if both are set).
+   */
+  uncertaintyOpacity?: boolean | { min?: number; max?: number }
+  /**
+   * Externally-supplied per-point confidence in `[0, 1]` (field name or
+   * function). When set, each forecast point's opacity is interpolated
+   * across the `uncertaintyOpacity` range (or `[0.15, 1]`) by its
+   * confidence — higher confidence, more opaque. Use when the consumer's
+   * model emits a confidence rather than a prediction interval.
+   */
+  confidenceAccessor?: string | ((d: Datum) => number)
+  /**
    * Training line stroke color.
    * - `"darken"`: auto-darken the line's own color by 50% (hex colors only —
    *   non-hex values like `rgb()` or CSS variables pass through unchanged).
@@ -122,6 +140,67 @@ export interface ForecastConfig {
 /** Internal segment marker added to each datum */
 export const SEGMENT_FIELD = "__forecastSegment" as const
 export type SegmentType = "training" | "training-base" | "observed" | "forecast"
+
+/** Internal per-point opacity stamped by the uncertainty ramp. */
+export const FORECAST_OPACITY_FIELD = "__forecastOpacity" as const
+
+/**
+ * Stamp `__forecastOpacity` on forecast points so `createSegmentLineStyle`
+ * can fade each by its uncertainty. Two sources, confidence wins:
+ *
+ * - `confidenceAccessor` — opacity = lerp(min, max, confidence∈[0,1]).
+ * - `uncertaintyOpacity` — opacity ramped by prediction-interval width
+ *   (narrowest → max, widest → min), normalized across the given points.
+ *
+ * Mutates the supplied point objects in place; no-op when neither source
+ * is configured. Pure otherwise (only reads via the passed accessors).
+ */
+export function stampForecastOpacity(
+  points: Datum[],
+  config: ForecastConfig,
+  getUpper: (d: Datum) => number | undefined,
+  getLower: (d: Datum) => number | undefined
+): void {
+  const ramp = config.uncertaintyOpacity
+  const conf = config.confidenceAccessor
+  if (!ramp && !conf) return
+
+  const range = typeof ramp === "object" ? ramp : {}
+  const minO = range.min ?? 0.15
+  const maxO = range.max ?? 1
+
+  if (conf) {
+    const read = typeof conf === "function" ? conf : (d: Datum) => d[conf] as number
+    for (const p of points) {
+      const c = read(p)
+      if (c != null && Number.isFinite(c)) {
+        const t = Math.max(0, Math.min(1, c))
+        p[FORECAST_OPACITY_FIELD] = minO + t * (maxO - minO)
+      }
+    }
+    return
+  }
+
+  // Interval-width ramp: collect widths, normalize, fade the wide ones.
+  const widths = points.map((p) => {
+    const u = getUpper(p)
+    const l = getLower(p)
+    return u != null && l != null && Number.isFinite(u) && Number.isFinite(l)
+      ? Math.abs(u - l)
+      : NaN
+  })
+  const finite = widths.filter((w) => Number.isFinite(w))
+  if (finite.length === 0) return
+  const minW = Math.min(...finite)
+  const maxW = Math.max(...finite)
+  const span = maxW - minW
+  points.forEach((p, i) => {
+    const w = widths[i]
+    if (!Number.isFinite(w)) return
+    const t = span > 0 ? (w - minW) / span : 0 // 0 = narrowest interval
+    p[FORECAST_OPACITY_FIELD] = maxO - t * (maxO - minO)
+  })
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -274,6 +353,19 @@ function buildPrecomputed(
     })
   }
 
+  // Ramp per-point opacity by interval width / confidence (opt-in). Only
+  // the forecast-segment points are faded; observed/training stay solid.
+  if (config.uncertaintyOpacity || config.confidenceAccessor) {
+    const readUpper = upperAcc
+      ? (typeof upperAcc === "function" ? upperAcc : (d: Datum) => d[upperAcc] as number)
+      : () => undefined
+    const readLower = lowerAcc
+      ? (typeof lowerAcc === "function" ? lowerAcc : (d: Datum) => d[lowerAcc] as number)
+      : () => undefined
+    const forecastPts = processedData.filter((d) => d[SEGMENT_FIELD] === "forecast")
+    stampForecastOpacity(forecastPts, config, readUpper, readLower)
+  }
+
   // Anomaly dots from isAnomaly field
   if (isAnomalyAcc) {
     const anomalyStyleProp = config.anomalyStyle
@@ -412,6 +504,14 @@ function buildAutoForecast(
         })
       }
 
+      // Ramp per-point opacity by interval width / confidence (opt-in).
+      stampForecastOpacity(
+        forecastPoints,
+        config,
+        (d) => d.__forecastUpper as number | undefined,
+        (d) => d.__forecastLower as number | undefined
+      )
+
       // Envelope annotation drawn from the actual forecast data points
       annotations.push({
         type: "envelope",
@@ -548,11 +648,15 @@ export function createSegmentLineStyle(
       }
     }
     if (segment === "forecast") {
+      // Per-point uncertainty ramp (if stamped) wins over the flat
+      // forecastOpacity — wider intervals / lower confidence draw fainter.
+      const perPoint = d[FORECAST_OPACITY_FIELD] as number | undefined
+      const resolvedOpacity = perPoint != null ? perPoint : forecastOpacity
       return {
         ...base,
         stroke: forecastColor,
         strokeDasharray: forecastDash,
-        ...(forecastOpacity != null && { strokeOpacity: forecastOpacity }),
+        ...(resolvedOpacity != null && { strokeOpacity: resolvedOpacity }),
       }
     }
     return base

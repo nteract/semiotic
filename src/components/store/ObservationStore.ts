@@ -51,6 +51,26 @@ export interface ClickEndObservation extends ObservationBase {
   type: "click-end"
 }
 
+/**
+ * Emitted when an event-time stream receives a record outside its
+ * lateness/grace window (see `ReorderBuffer`). Surfaces lateness as an
+ * observable signal — for stream diagnostics — rather than silently
+ * dropping it.
+ */
+export interface LateDataObservation extends ObservationBase {
+  type: "late-data"
+  /** The late datum that arrived outside the grace window. */
+  datum: Datum
+  /** Event-time of the late datum. */
+  eventTime: number
+  /** Watermark (largest event-time seen) when it arrived. */
+  watermark: number
+  /** Whether it was dropped or kept, per the late policy. */
+  policy: "drop" | "keep"
+  /** Running total of late events seen on this chart. */
+  lateCount: number
+}
+
 export type ChartObservation =
   | HoverObservation
   | HoverEndObservation
@@ -60,6 +80,7 @@ export type ChartObservation =
   | SelectionEndObservation
   | ClickObservation
   | ClickEndObservation
+  | LateDataObservation
 
 export type OnObservationCallback = (observation: ChartObservation) => void
 

@@ -210,6 +210,20 @@ const OG_CHART_PRESETS = {
       },
     },
   },
+  LineChart: {
+    chartType: "LineChart",
+    // An aggregated-looking series: smooth windowed means rather than a
+    // raw jittery stream. Numeric x keeps the SSR linear-scale path.
+    defaults: {
+      data: Array.from({ length: 20 }, (_, i) => ({
+        x: i,
+        y: 50 + Math.sin(i * 0.5) * 22 + i * 1.4,
+      })),
+      xAccessor: "x",
+      yAccessor: "y",
+      showPoints: true,
+    },
+  },
   FunnelChart: {
     chartType: "FunnelChart",
     defaults: {

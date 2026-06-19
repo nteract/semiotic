@@ -118,6 +118,7 @@ const navData = [
       { title: "Linked Charts", path: "/features/linked-charts" },
       { title: "Legends", path: "/features/legends" },
       { title: "Realtime Encoding", path: "/features/realtime-encoding" },
+      { title: "Streaming Aggregation", path: "/features/streaming-aggregation" },
       { title: "Chart Container", path: "/features/chart-container" },
       { title: "Chart States", path: "/features/chart-states" },
       { title: "Chart Modes", path: "/features/chart-modes" },

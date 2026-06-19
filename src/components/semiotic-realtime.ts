@@ -9,6 +9,14 @@ import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 // Data structures
 import { RingBuffer } from "./realtime/RingBuffer"
 import { IncrementalExtent } from "./realtime/IncrementalExtent"
+import { RunningStats } from "./realtime/RunningStats"
+import {
+  WindowAccumulator,
+  statValue,
+  bandBounds,
+} from "./realtime/WindowAccumulator"
+import { parseWindowDuration } from "./realtime/parseWindowDuration"
+import { ReorderBuffer } from "./realtime/ReorderBuffer"
 
 // Chart HOCs
 import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
@@ -22,6 +30,12 @@ export {
   StreamNetworkFrame,
   RingBuffer,
   IncrementalExtent,
+  RunningStats,
+  WindowAccumulator,
+  statValue,
+  bandBounds,
+  parseWindowDuration,
+  ReorderBuffer,
   RealtimeLineChart,
   RealtimeHistogram,
   TemporalHistogram,
@@ -29,6 +43,24 @@ export {
   RealtimeWaterfallChart,
   RealtimeHeatmap
 }
+
+// Windowed aggregation types
+export type {
+  WindowType,
+  AggregateStat,
+  AggregateBand,
+  WindowAccumulatorConfig,
+  AggregatedWindow,
+} from "./realtime/WindowAccumulator"
+export type { AggregateConfig } from "./charts/realtime/aggregate"
+
+// Event-time ingestion types
+export type {
+  LatePolicy,
+  ReorderBufferConfig,
+  ReorderResult,
+} from "./realtime/ReorderBuffer"
+export type { EventTimeConfig } from "./charts/realtime/eventTime"
 
 // Types
 export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"

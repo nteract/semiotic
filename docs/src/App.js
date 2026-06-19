@@ -90,6 +90,7 @@ import ThemeExplorerPage from "./pages/theming/ThemeExplorerPage"
 import SemanticColorsPage from "./pages/theming/SemanticColorsPage"
 import LegendsPage from "./pages/features/LegendsPage"
 import RealtimeEncodingPage from "./pages/features/RealtimeEncodingPage"
+import StreamingAggregationPage from "./pages/features/StreamingAggregationPage"
 import ChartContainersPage from "./pages/features/ChartContainersPage"
 import ChartStatesPage from "./pages/features/ChartStatesPage"
 import ChartModesPage from "./pages/features/ChartModesPage"
@@ -429,6 +430,7 @@ export default function DocsApp() {
               <Route path="linked-charts" element={<SmallMultiplesPage />} />
               <Route path="legends" element={<LegendsPage />} />
               <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
+              <Route path="streaming-aggregation" element={<StreamingAggregationPage />} />
               <Route path="chart-container" element={<ChartContainersPage />} />
               <Route path="chart-states" element={<ChartStatesPage />} />
               <Route path="chart-modes" element={<ChartModesPage />} />
