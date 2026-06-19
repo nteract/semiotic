@@ -334,6 +334,21 @@ describe("normalizeTooltip", () => {
     expect(rendered).not.toBeNull()
     expect(rendered?.props.children).toBe("A")
   })
+
+  it("does not unwrap already-raw network datums that merely have a `.data` field (e.g. NetworkCustomChart scene datum)", () => {
+    const fn = (d: Datum) => d.id
+    const wrapped = normalizeTooltip(fn) as (d: Datum) => TooltipElement | null
+    const hoverData = {
+      __semioticHoverData: true,
+      nodeOrEdge: "node",
+      x: 10,
+      y: 20,
+      data: { id: "A", data: { nested: true } },
+    }
+    const rendered = wrapped(hoverData)
+    expect(rendered).not.toBeNull()
+    expect(rendered?.props.children).toBe("A")
+  })
 })
 
 describe("buildDefaultTooltip with title role", () => {
