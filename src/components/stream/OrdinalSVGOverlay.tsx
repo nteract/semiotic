@@ -248,20 +248,24 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
 
     // Uniform spacing between adjacent category centers (band scale).
     const spacing = Math.abs(all[1].pixel - all[0].pixel) || band
+    // Measure the labels: longest string (in chars) and whether any are
+    // ReactNodes (rendered in a 60×24 foreignObject — unmeasurable text).
+    let maxChars = 0
+    let hasNodeLabel = false
+    for (const t of all) {
+      if (typeof t.label === "string") maxChars = Math.max(maxChars, t.label.length)
+      else if (typeof t.label === "number") maxChars = Math.max(maxChars, String(t.label).length)
+      else hasNodeLabel = true
+    }
     // Pixel footprint each label needs along the axis. Vertical bars lay
     // horizontal labels along the bottom (footprint = text width); horizontal
-    // bars stack labels down the left axis (footprint = line height).
+    // bars stack labels down the left axis (footprint = line height — and
+    // ReactNode labels render in a 24px-tall foreignObject, so reserve that
+    // much so the "never collides" guarantee holds for them too).
     let needed: number
     if (isHorizontal) {
-      needed = 16 // line height + breathing room
+      needed = hasNodeLabel ? 24 : 16
     } else {
-      let maxChars = 0
-      let hasNodeLabel = false
-      for (const t of all) {
-        if (typeof t.label === "string") maxChars = Math.max(maxChars, t.label.length)
-        else if (typeof t.label === "number") maxChars = Math.max(maxChars, String(t.label).length)
-        else hasNodeLabel = true
-      }
       // 6.5 px/char mirrors the heuristic in SVGOverlay; ReactNode labels
       // can't be measured, so assume the 60px foreignObject width.
       needed = Math.max(maxChars * 6.5, hasNodeLabel ? 60 : 0) + 6

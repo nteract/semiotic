@@ -691,7 +691,9 @@ const forceDirectedGraph: ChartConfig = {
       chartType: "force",
       nodes: rest.nodes,
       edges: rest.edges,
-      nodeIDAccessor: rest.nodeIDAccessor,
+      // Accept the canonical `nodeIdAccessor` (and the legacy `nodeIDAccessor`
+      // alias), matching the HOC and the other network SSR configs.
+      nodeIDAccessor: rest.nodeIdAccessor || rest.nodeIDAccessor,
       sourceAccessor: rest.sourceAccessor,
       targetAccessor: rest.targetAccessor,
       colorBy,

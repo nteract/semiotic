@@ -1,8 +1,11 @@
 import type { ChartCapability, ChartDataProfile } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
 
-// Field names that signal the category axis is really a time bin.
-const TEMPORAL_NAME = /(date|time|timestamp|month|week|day|year|quarter|qtr|hour|minute)/i
+// Field names that signal the category axis is really a time bin. Matched at
+// token boundaries (not substrings) so ordinary words that merely contain a
+// temporal token — "candidate" (date), "holiday"/"payday" (day), "runtime"
+// (time), "yearly"/"monthly" (year/month + suffix) — don't false-positive.
+const TEMPORAL_NAME = /(^|[^a-z])(date|time|timestamp|month|week|day|year|quarter|qtr|hour|minute)(?=[^a-z]|$)/i
 // Month / weekday names (full + common abbreviations).
 const MONTH_OR_WEEKDAY = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december|mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i
 // Period-style bin labels: ISO date / year-month, "2026", "Q3", "Week 12".
@@ -21,7 +24,10 @@ const PERIOD_LABEL = /^(\d{4}(-\d{1,2}(-\d{1,2})?)?|q[1-4]|week\s*\d+|wk\s*\d+|\
 function looksTemporalCategory(profile: ChartDataProfile): boolean {
   const field = profile.primary.category
   if (!field) return false
-  if (TEMPORAL_NAME.test(field)) return true
+  // Split camelCase ("saleMonth" → "sale Month") so the boundary regex sees the
+  // temporal token as its own word.
+  const tokenizedField = field.replace(/([a-z])([A-Z])/g, "$1 $2")
+  if (TEMPORAL_NAME.test(tokenizedField)) return true
 
   const rows = profile.data
   if (!rows || rows.length === 0) return false
