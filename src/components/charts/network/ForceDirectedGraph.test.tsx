@@ -198,6 +198,41 @@ describe("ForceDirectedGraph", () => {
     expect(style.opacity).toBe(0.6)
   })
 
+  it("edgeStyle reads width from a string field on the wrapped edge data", () => {
+    const weightedEdges = [
+      { source: "A", target: "B", weight: 5 },
+      { source: "B", target: "C", weight: 2 },
+      { source: "C", target: "A", weight: 1 }
+    ]
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph nodes={sampleNodes} edges={weightedEdges} edgeWidth="weight" />
+      </TooltipProvider>
+    )
+
+    const styleFn = lastNetworkFrameProps.edgeStyle
+    // Frame callbacks receive a RealtimeEdge wrapper; user data is on .data
+    expect(styleFn({ data: { source: "A", target: "B", weight: 5 } }).strokeWidth).toBe(5)
+    // Missing / non-positive weight falls back to 1
+    expect(styleFn({ data: { source: "A", target: "B" } }).strokeWidth).toBe(1)
+    expect(styleFn({ data: { source: "A", target: "B", weight: 0 } }).strokeWidth).toBe(1)
+  })
+
+  it("edgeStyle reads width from a function accessor against raw edge data", () => {
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph
+          nodes={sampleNodes}
+          edges={sampleEdges}
+          edgeWidth={(e: { weight?: number }) => (e.weight ?? 1) * 2}
+        />
+      </TooltipProvider>
+    )
+
+    const styleFn = lastNetworkFrameProps.edgeStyle
+    expect(styleFn({ data: { source: "A", target: "B", weight: 3 } }).strokeWidth).toBe(6)
+  })
+
   it("applies custom width and height", () => {
     render(
       <TooltipProvider>

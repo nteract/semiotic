@@ -668,8 +668,20 @@ export class PipelineStore {
 
     // Fast path: if only layout dimensions changed (no data or config change),
     // remap existing scene node coordinates instead of rebuilding from scratch.
+    //
+    // Excluded for custom layouts: a custom layout positions both scene nodes
+    // AND overlays with arbitrary geometry (fixed pixel offsets, non-linear
+    // padding floors, glyph chrome), so a *proportional* coordinate remap is
+    // not equivalent to re-running the layout — and crucially `remapScene`
+    // never regenerates `customLayoutOverlays`, so the overlay glyphs would
+    // stay at the previous dimensions while the canvas scene nodes move,
+    // drifting the two apart on a responsive resize (the classic "flowers
+    // offset from their stems until any other change forces a rebuild" bug).
+    // Re-running the layout on a dimension change is the correct behavior for
+    // these and the per-resize cost is acceptable.
     if (
       !this.needsFullRebuild &&
+      !config.customLayout &&
       this.lastLayout &&
       this.scene.length > 0 &&
       this.scales &&

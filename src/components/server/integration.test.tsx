@@ -94,6 +94,22 @@ describe("SVG generation (end-to-end)", () => {
     }
   })
 
+  it("ForceDirectedGraph honors edgeWidth field for edge stroke widths", () => {
+    const svg = renderChart("ForceDirectedGraph", {
+      nodes: [{ id: "X" }, { id: "Y" }, { id: "Z" }],
+      edges: [
+        { source: "X", target: "Y", weight: 8 },
+        { source: "Y", target: "Z", weight: 2 },
+      ],
+      edgeWidth: "weight",
+      width: 300, height: 200,
+    })
+    expect(isValidSVG(svg)).toBe(true)
+    // Each weight maps directly to a stroke width on the edge line.
+    expect(svg).toMatch(/stroke-width="8(?:[^0-9]|$)/)
+    expect(svg).toMatch(/stroke-width="2(?:[^0-9]|$)/)
+  })
+
   it("renderToStaticSVG dispatches correctly for all frame types", () => {
     const xy = renderToStaticSVG("xy", { chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y", size: [300, 200] } as StaticFrameProps)
     const ordinal = renderToStaticSVG("ordinal", { chartType: "bar", data: barData, oAccessor: "category", rAccessor: "value", size: [300, 200] } as StaticFrameProps)

@@ -43,6 +43,18 @@ const bottleData = [
   { id: "ship", category: "Ship", amount: 55 },
 ]
 
+// The boba volume sliders edit the last cup on the menu (the IR's final row).
+// Read its name + original volumes from the IR so the controls stay in sync if
+// the spec changes.
+const bobaCupRows = bobaIR?.root?.data?.rows ?? []
+const lastBobaCup = bobaCupRows[bobaCupRows.length - 1] ?? {}
+const lastBobaCupName = lastBobaCup.name ?? "the last cup"
+const bobaVolumeDefaults = {
+  bobaTeaVolume: Number(lastBobaCup.teaVolume) || 660,
+  bobaBobaVolume: Number(lastBobaCup.bobaVolume) || 150,
+  bobaIceVolume: Number(lastBobaCup.iceVolume) || 120,
+}
+
 // IR docs can carry large inline datasets (Titanic). Abridge long `rows`
 // arrays so the spec stays readable when shown in the page.
 function irForDisplay(doc) {
@@ -200,7 +212,7 @@ const demoMeta = {
     visualConfig: (c) => ({ cupWidthRatio: c.cupWidth }),
     question: "Can an ordinal frame render a menu of bespoke, data-driven pictorial glyphs as separate categories?",
     contract:
-      "Each drink is one ordinal item on the band scale. Its tea + tapioca + ice volumes (plus cup-size params) add up to a drink height the derive lambda solves; the cups share one scale and a baseline so they read as a menu on a shelf. A transparent hit rect per cup carries the volumes and pearl/ice counts into the scene graph; the cup outline, tea, tapioca pearls, ice, lid, and straw are keyed SVG overlays. Refilling a cup's boba volume re-solves and re-renders its pearl bed in place.",
+      "Each drink is one ordinal item on the band scale. Its tea + tapioca + ice volumes (plus cup-size params) add up to a drink height the derive lambda solves; the cups share one scale and a baseline so they read as a menu on a shelf. A transparent hit rect per cup carries the volumes and pearl/ice counts into the scene graph; the cup outline, tea, tapioca pearls, ice, lid, and straw are keyed SVG overlays. The tea / boba / ice sliders edit the last cup's volumes; because the layout re-runs the derive over the live buffer, each edit re-solves and re-renders that cup's tea fill, pearl bed, and ice in place.",
   },
 }
 
@@ -225,69 +237,120 @@ function getDemo(active, controls, cfg) {
   }
 }
 
-function getControl(active, controls, setControls) {
+// Returns the ordered list of slider controls for the active demo. Most demos
+// have a single visual control; boba adds three data controls that edit the
+// last cup's tea / boba / ice volumes.
+function getControls(active, controls, setControls) {
   const update = (key) => (event) =>
     setControls((prev) => ({ ...prev, [key]: Number(event.target.value) }))
   if (active === "flower") {
-    return {
-      label: "Petal radius",
-      value: controls.flowerRadius,
-      min: 22,
-      max: 48,
-      onChange: update("flowerRadius"),
-      suffix: "px",
-    }
+    return [
+      {
+        key: "flowerRadius",
+        label: "Petal radius",
+        value: controls.flowerRadius,
+        min: 22,
+        max: 48,
+        onChange: update("flowerRadius"),
+        suffix: "px",
+      },
+    ]
   }
   if (active === "bottle") {
-    return {
-      label: "Bottle height",
-      value: controls.bottleHeight,
-      min: 150,
-      max: 260,
-      onChange: update("bottleHeight"),
-      suffix: "px",
-    }
+    return [
+      {
+        key: "bottleHeight",
+        label: "Bottle height",
+        value: controls.bottleHeight,
+        min: 150,
+        max: 260,
+        onChange: update("bottleHeight"),
+        suffix: "px",
+      },
+    ]
   }
   if (active === "polar") {
-    return {
-      label: "Outer radius",
-      value: controls.outerRadius,
-      min: 112,
-      max: 178,
-      onChange: update("outerRadius"),
-      suffix: "px",
-    }
+    return [
+      {
+        key: "outerRadius",
+        label: "Outer radius",
+        value: controls.outerRadius,
+        min: 112,
+        max: 178,
+        onChange: update("outerRadius"),
+        suffix: "px",
+      },
+    ]
   }
   if (active === "titanic") {
-    return {
-      label: "Treemap padding",
-      value: controls.treemapPadding,
-      min: 0,
-      max: 6,
-      step: 0.5,
-      onChange: update("treemapPadding"),
-      suffix: "px",
-    }
+    return [
+      {
+        key: "treemapPadding",
+        label: "Treemap padding",
+        value: controls.treemapPadding,
+        min: 0,
+        max: 6,
+        step: 0.5,
+        onChange: update("treemapPadding"),
+        suffix: "px",
+      },
+    ]
   }
   if (active === "boba") {
-    return {
-      label: "Cup width",
-      value: controls.cupWidth,
-      min: 0.6,
-      max: 1,
-      step: 0.01,
-      onChange: update("cupWidth"),
-      suffix: "× band",
-    }
+    return [
+      {
+        key: "cupWidth",
+        label: "Cup width",
+        value: controls.cupWidth,
+        min: 0.6,
+        max: 1,
+        step: 0.01,
+        onChange: update("cupWidth"),
+        suffix: "× band",
+      },
+      {
+        key: "bobaTeaVolume",
+        label: `${lastBobaCupName} tea`,
+        value: controls.bobaTeaVolume,
+        min: 0,
+        max: 800,
+        step: 10,
+        onChange: update("bobaTeaVolume"),
+        suffix: " ml",
+      },
+      {
+        key: "bobaBobaVolume",
+        label: `${lastBobaCupName} boba`,
+        value: controls.bobaBobaVolume,
+        min: 0,
+        max: 400,
+        step: 5,
+        onChange: update("bobaBobaVolume"),
+        suffix: " ml",
+      },
+      {
+        key: "bobaIceVolume",
+        label: `${lastBobaCupName} ice`,
+        value: controls.bobaIceVolume,
+        min: 0,
+        max: 250,
+        step: 5,
+        onChange: update("bobaIceVolume"),
+        suffix: " ml",
+      },
+    ]
   }
-  return {
-    label: "Heap gap",
-    value: controls.heapGap,
-    min: 4,
-    max: 34,
-    onChange: update("heapGap"),
-    suffix: "px",
-  }
+  return [
+    {
+      key: "heapGap",
+      label: "Heap gap",
+      value: controls.heapGap,
+      min: 4,
+      max: 34,
+      onChange: update("heapGap"),
+      suffix: "px",
+    },
+  ]
 }
 
 function extractObservedDatum(obs) {
@@ -370,13 +433,15 @@ export default function GoFishLayoutsPage() {
     treemapPadding: 2,
     heapGap: 18,
     cupWidth: 0.92,
+    ...bobaVolumeDefaults,
   })
   const irDoc = useMemo(() => applyControlsToIR(active, controls), [active, controls])
   const adapterCfg = useMemo(() => unstable_fromGofishIR(irDoc), [irDoc])
   const demo = useMemo(() => getDemo(active, controls, adapterCfg), [active, controls, adapterCfg])
   const irText = useMemo(() => irForDisplay(irDoc), [irDoc])
-  const control = getControl(active, controls, setControls)
+  const controlList = getControls(active, controls, setControls)
   const seedData = demo.data
+  const lastCupName = seedData?.[seedData.length - 1]?.name
 
   // Staleness is a streaming feature: only arm it while the demo is actively
   // auto-streaming, so a static gallery view never dims to "stale" on idle (and
@@ -426,6 +491,37 @@ export default function GoFishLayoutsPage() {
     const timer = window.setInterval(pushOne, 1100)
     return () => window.clearInterval(timer)
   }, [active, pushOne, streaming])
+
+  // Boba: apply the volume sliders to the last cup in place. The ordinal layout
+  // re-runs the `bobaGeometry` derive over the live buffer on every solve, so
+  // mutating the cup's raw volumes via the ref re-renders its tea fill, pearl
+  // bed, and ice with the chart's normal transition — no full clear/re-push,
+  // which would flash every cup. Runs after the reset effect above on a demo
+  // switch (effects fire in order), so the cup exists before we update it.
+  useEffect(() => {
+    if (active !== "boba" || !lastCupName) return
+    chartRef.current?.update?.(lastCupName, (d) => ({
+      ...d,
+      teaVolume: controls.bobaTeaVolume,
+      bobaVolume: controls.bobaBobaVolume,
+      iceVolume: controls.bobaIceVolume,
+    }))
+  }, [
+    active,
+    lastCupName,
+    controls.bobaTeaVolume,
+    controls.bobaBobaVolume,
+    controls.bobaIceVolume,
+  ])
+
+  // Reset re-seeds the original menu and, for boba, returns the volume sliders
+  // to the cup's original volumes so the controls and chart stay in sync.
+  const handleReset = useCallback(() => {
+    resetPushData()
+    if (active === "boba") {
+      setControls((prev) => ({ ...prev, ...bobaVolumeDefaults }))
+    }
+  }, [resetPushData, active])
 
   return (
     <PageLayout
@@ -605,19 +701,25 @@ export default function GoFishLayoutsPage() {
             }}
           >
             <h3 style={{ marginTop: 0 }}>Controls</h3>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
-              {control.label}: {control.value}
-              {control.suffix}
-            </label>
-            <input
-              type="range"
-              min={control.min}
-              max={control.max}
-              step={control.step ?? 1}
-              value={control.value}
-              onChange={control.onChange}
-              style={{ width: "100%" }}
-            />
+            {controlList.map((control) => (
+              <div key={control.key} style={{ marginBottom: 12 }}>
+                <label
+                  style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}
+                >
+                  {control.label}: {control.value}
+                  {control.suffix}
+                </label>
+                <input
+                  type="range"
+                  min={control.min}
+                  max={control.max}
+                  step={control.step ?? 1}
+                  value={control.value}
+                  onChange={control.onChange}
+                  style={{ width: "100%" }}
+                />
+              </div>
+            ))}
             {active === "python" ? (
               <p style={{ marginTop: 12 }}>
                 Pointer edges are rendered by <code>NetworkCustomChart</code> with particles
@@ -645,7 +747,7 @@ export default function GoFishLayoutsPage() {
                 >
                   {streaming ? "Stop stream" : "Auto stream"}
                 </button>
-                <button type="button" style={smallButtonStyle} onClick={resetPushData}>
+                <button type="button" style={smallButtonStyle} onClick={handleReset}>
                   Reset
                 </button>
                 <span

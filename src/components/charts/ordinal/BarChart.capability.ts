@@ -1,5 +1,47 @@
-import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import type { ChartCapability, ChartDataProfile } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
+
+// Field names that signal the category axis is really a time bin. Matched at
+// token boundaries (not substrings) so ordinary words that merely contain a
+// temporal token — "candidate" (date), "holiday"/"payday" (day), "runtime"
+// (time), "yearly"/"monthly" (year/month + suffix) — don't false-positive.
+const TEMPORAL_NAME = /(^|[^a-z])(date|time|timestamp|month|week|day|year|quarter|qtr|hour|minute)(?=[^a-z]|$)/i
+// Month / weekday names (full + common abbreviations).
+const MONTH_OR_WEEKDAY = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december|mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i
+// Period-style bin labels: ISO date / year-month, "2026", "Q3", "Week 12".
+const PERIOD_LABEL = /^(\d{4}(-\d{1,2}(-\d{1,2})?)?|q[1-4]|week\s*\d+|wk\s*\d+|\d{1,2}:\d{2})$/i
+
+/**
+ * Heuristic: does BarChart's category axis actually hold ordered time bins?
+ * The data profiler classes string labels like "Jan" or "2026-01" as plain
+ * categories (date *typing* only happens for real Date/parsable values, which
+ * would be picked as an x-axis and reject BarChart outright). So a bar chart
+ * over string time bins — the temporal-histogram case — is invisible to the
+ * profiler. Detect it from the field name or the shape of the labels so we can
+ * surface an honest caveat. Conservative on values (needs a majority match) to
+ * avoid false positives on ordinary categories.
+ */
+function looksTemporalCategory(profile: ChartDataProfile): boolean {
+  const field = profile.primary.category
+  if (!field) return false
+  // Split camelCase ("saleMonth" → "sale Month") so the boundary regex sees the
+  // temporal token as its own word.
+  const tokenizedField = field.replace(/([a-z])([A-Z])/g, "$1 $2")
+  if (TEMPORAL_NAME.test(tokenizedField)) return true
+
+  const rows = profile.data
+  if (!rows || rows.length === 0) return false
+  let matches = 0
+  let seen = 0
+  for (const row of rows) {
+    const raw = (row as Record<string, unknown>)[field]
+    if (raw == null) continue
+    seen++
+    const label = String(raw).trim()
+    if (MONTH_OR_WEEKDAY.test(label) || PERIOD_LABEL.test(label)) matches++
+  }
+  return seen > 0 && matches / seen >= 0.6
+}
 
 export const BarChartCapability: ChartCapability = {
   component: "BarChart",
@@ -35,6 +77,16 @@ export const BarChartCapability: ChartCapability = {
     "rank": 5,
     "part-to-whole": (p) => ((p.categoryCount ?? 0) <= 8 ? 3 : 2),
     "distribution": 1,
+  },
+
+  caveats: (profile) => {
+    const out: string[] = []
+    if (looksTemporalCategory(profile)) {
+      out.push(
+        "category axis looks like time bins — for a time series, supply real dates and use LineChart/AreaChart (reads trend, scales the time axis); for streaming counts use a temporal histogram"
+      )
+    }
+    return out
   },
 
   variants: [

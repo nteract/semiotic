@@ -60,6 +60,30 @@ describe("suggestCharts", () => {
     expect(suggestions[0].props.valueAccessor).toBe("units")
   })
 
+  it("caveats BarChart when its category axis is really time bins", () => {
+    // String month labels profile as plain categories (no real date field),
+    // so BarChart fits and ranks — but it is acting as a temporal histogram.
+    const monthlyBins = [
+      { month: "Jan", count: 12 },
+      { month: "Feb", count: 18 },
+      { month: "Mar", count: 9 },
+      { month: "Apr", count: 22 },
+      { month: "May", count: 15 },
+      { month: "Jun", count: 27 },
+    ]
+    const suggestions = suggestCharts(monthlyBins, { intent: "compare-categories", includeVariants: false })
+    const bar = suggestions.find((s) => s.component === "BarChart")
+    expect(bar).toBeDefined()
+    expect(bar!.caveats.some((c) => /time bin|temporal/i.test(c))).toBe(true)
+  })
+
+  it("does not caveat BarChart for ordinary (non-temporal) categories", () => {
+    const suggestions = suggestCharts(categorical, { intent: "rank", includeVariants: false })
+    const bar = suggestions.find((s) => s.component === "BarChart")
+    expect(bar).toBeDefined()
+    expect(bar!.caveats.some((c) => /time bin|temporal/i.test(c))).toBe(false)
+  })
+
   it("ranks Histogram highly for distribution intent", () => {
     const suggestions = suggestCharts(distributionData, { intent: "distribution", includeVariants: false })
     expect(suggestions[0].component).toBe("Histogram")

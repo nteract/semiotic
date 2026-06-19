@@ -67,6 +67,55 @@ describe("PipelineStore customLayout integration", () => {
     expect(store.customLayoutOverlays).toBe(sentinel)
   })
 
+  it("re-runs the layout (regenerating overlays) on a dimension-only change", () => {
+    // Regression: a dimension-only change must NOT take computeScene's fast
+    // remap path for custom layouts. remapScene only proportionally rescales
+    // scene nodes and never regenerates customLayoutOverlays, so the overlay
+    // glyphs would freeze at the previous width while the canvas scene nodes
+    // moved — the "flowers offset from their stems until any other change"
+    // bug on the GoFish flower demo (responsive resize).
+    let invocations = 0
+    const layout = (ctx: LayoutContext) => {
+      invocations++
+      const w = ctx.dimensions.plot.width
+      const node: RectSceneNode = {
+        type: "rect",
+        // A fixed pixel offset that a proportional remap would get wrong.
+        x: w - 24,
+        y: 0,
+        w: 4,
+        h: 10,
+        style: { fill: "#0f0" },
+        datum: { tag: "stem" },
+      }
+      // Overlay encodes the width it was solved at so we can detect staleness.
+      return { nodes: [node], overlays: { _solvedWidth: w } as unknown as React.ReactNode }
+    }
+    const store = new PipelineStore({
+      chartType: "custom",
+      windowSize: 100,
+      windowMode: "sliding",
+      arrowOfTime: "right",
+      extentPadding: 0,
+      xAccessor: "x",
+      yAccessor: "y",
+      customLayout: layout,
+    })
+    store.ingest({ inserts: [{ x: 1, y: 1 }], bounded: true })
+
+    store.computeScene({ width: 200, height: 100 })
+    expect(invocations).toBe(1)
+    expect((store.customLayoutOverlays as unknown as { _solvedWidth: number })._solvedWidth).toBe(200)
+    expect((store.scene[0] as RectSceneNode).x).toBe(200 - 24)
+
+    // Dimension-only change: the layout must run again at the new width.
+    store.computeScene({ width: 400, height: 100 })
+    expect(invocations).toBe(2)
+    expect((store.customLayoutOverlays as unknown as { _solvedWidth: number })._solvedWidth).toBe(400)
+    // Scene node honors the fixed offset at the new width — not a 2× remap.
+    expect((store.scene[0] as RectSceneNode).x).toBe(400 - 24)
+  })
+
   it("warns when customLayout returns overlays without scene nodes", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
     const sentinel = { _sentinel: true } as unknown as React.ReactNode

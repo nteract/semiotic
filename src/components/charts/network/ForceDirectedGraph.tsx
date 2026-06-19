@@ -295,13 +295,29 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     [baseNodeStyle, stroke, strokeWidth, opacity]
   )
 
-  // Edge style function
+  // Edge style function — d is a RealtimeEdge wrapper; user data lives on
+  // d.data (mirrors baseNodeStyle's `d.data || d`). A field/function
+  // accessor must resolve against the raw edge, not the wrapper, or the
+  // weight is never read and edge width silently falls back to 1.
   const baseEdgeStyle = useMemo(() => {
-    return (d: Datum) => ({
-      stroke: edgeColor,
-      strokeWidth: typeof edgeWidth === "number" ? edgeWidth : typeof edgeWidth === "function" ? edgeWidth(d) : d[edgeWidth] || 1,
-      opacity: edgeOpacity
-    })
+    return (d: Datum) => {
+      const edge = d.data || d
+      let resolvedWidth: number
+      if (typeof edgeWidth === "number") {
+        resolvedWidth = edgeWidth
+      } else if (typeof edgeWidth === "function") {
+        resolvedWidth = edgeWidth(edge)
+      } else {
+        const raw = edge[edgeWidth]
+        const n = typeof raw === "number" ? raw : Number(raw)
+        resolvedWidth = Number.isFinite(n) && n > 0 ? n : 1
+      }
+      return {
+        stroke: edgeColor,
+        strokeWidth: resolvedWidth,
+        opacity: edgeOpacity
+      }
+    }
   }, [edgeWidth, edgeColor, edgeOpacity])
 
   // Top-level primitive props also apply to edges (stroke color, width, opacity).
