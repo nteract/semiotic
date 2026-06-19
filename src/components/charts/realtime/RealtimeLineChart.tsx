@@ -314,7 +314,11 @@ export const RealtimeLineChart = forwardRef(
         return
       }
       const cfg = aggConfigRef.current!
-      const acc = createAccumulator({ ...cfg, retain: cfg.retain ?? windowSizeProp })
+      // `retain` is the sole retention control for aggregate mode — leaving it
+      // unset means unbounded windows, matching AggregateConfig's documented
+      // default. (Deliberately not coupled to `windowSize`, which is the
+      // ring-buffer eviction policy and does not apply to aggregated output.)
+      const acc = createAccumulator(cfg)
       accRef.current = acc
       if (acc && data) {
         const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
@@ -325,7 +329,7 @@ export const RealtimeLineChart = forwardRef(
         }
       }
       setAggRows(acc ? aggregatedRows(acc, cfg) : [])
-    }, [aggKey, aggEnabled, data, windowSizeProp])
+    }, [aggKey, aggEnabled, data])
 
     // Re-emit (without rebuilding) when only the readout config changes.
     useEffect(() => {
@@ -368,10 +372,11 @@ export const RealtimeLineChart = forwardRef(
         reorderRef.current = null
         return
       }
-      const { timeAccessor: ta } = accessorsRef.current
+      // Read the accessor live so a post-mount `timeAccessor` change is
+      // honored without rebuilding the buffer.
       reorderRef.current = createReorderBuffer(
         eventTimeRef.current!,
-        (d) => readNum(d, ta, "time") ?? NaN
+        (d) => readNum(d, accessorsRef.current.timeAccessor, "time") ?? NaN
       )
     }, [etKey, eventTimeEnabled])
 
@@ -461,7 +466,9 @@ export const RealtimeLineChart = forwardRef(
     const frameValueAccessor = aggEnabled ? AGG_VALUE : valueAccessor
     // Controlled aggregated data is re-passed whole each render — no eviction.
     const frameWindowMode = aggEnabled ? "growing" : windowMode
-    const aggCapacity = aggregate?.retain ?? windowSizeProp ?? 600
+    // Display capacity for the controlled aggregated rows — large enough to
+    // hold every retained window (or the current row count when unbounded).
+    const aggCapacity = aggregate?.retain ?? Math.max(aggRows.length, 600)
     const frameWindowSize = aggEnabled ? Math.max(1, aggCapacity) : windowSize
     const frameBand =
       aggEnabled && aggregate && hasBand(aggregate)

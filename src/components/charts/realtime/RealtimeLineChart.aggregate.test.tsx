@@ -55,6 +55,27 @@ describe("RealtimeLineChart — aggregate mode", () => {
     expect(ref.current.getData()).toHaveLength(3)
   })
 
+  it("does not bound windows by windowSize — retain is the sole control", () => {
+    const ref = React.createRef<any>()
+    render(
+      <TooltipProvider>
+        <RealtimeLineChart
+          ref={ref}
+          timeAccessor="t"
+          valueAccessor="v"
+          windowSize={3}
+          aggregate={{ size: 10 }} // no retain → unbounded despite windowSize=3
+        />
+      </TooltipProvider>
+    )
+    act(() => {
+      const points = []
+      for (let t = 0; t < 100; t += 10) points.push({ t, v: t }) // 10 windows
+      ref.current.pushMany(points)
+    })
+    expect(ref.current.getData().length).toBe(10)
+  })
+
   it("emits band bounds when a band is requested", () => {
     const ref = React.createRef<any>()
     render(

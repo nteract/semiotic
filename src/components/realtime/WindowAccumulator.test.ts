@@ -6,7 +6,7 @@ import {
 } from "./WindowAccumulator"
 
 function byStart(rows: AggregatedWindow[]) {
-  return rows.map(r => ({ start: r.start, ...r }))
+  return [...rows].sort((a, b) => a.start - b.start)
 }
 
 describe("WindowAccumulator — tumbling", () => {

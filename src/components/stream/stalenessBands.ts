@@ -52,7 +52,12 @@ export function resolveStaleness(
   idleMs: number
 ): ResolvedStaleness {
   if (!staleness || !(idleMs > 0)) return FRESH
-  const threshold = staleness.threshold ?? 5000
+  // Clamp non-positive thresholds to the default so binary and graded modes
+  // agree — `bandFromAge` treats a non-positive TTL as always-fresh, whereas
+  // binary `idleMs > 0` would read as always-stale. Neither degenerate reading
+  // is intended.
+  const threshold =
+    staleness.threshold != null && staleness.threshold > 0 ? staleness.threshold : 5000
   const graded = staleness.graded
 
   if (graded) {

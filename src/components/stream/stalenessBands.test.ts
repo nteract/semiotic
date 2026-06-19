@@ -21,6 +21,13 @@ describe("resolveStaleness — binary mode", () => {
   it("treats no idle (idleMs<=0) as fresh", () => {
     expect(resolveStaleness({ threshold: 5000 }, 0).isStale).toBe(false)
   })
+
+  it("clamps a non-positive threshold to the default (binary and graded agree)", () => {
+    // threshold 0 would read as always-stale binary / always-fresh graded —
+    // both degenerate. Clamped to 5000, a 1s idle is fresh in either mode.
+    expect(resolveStaleness({ threshold: 0 }, 1000).isStale).toBe(false)
+    expect(resolveStaleness({ threshold: 0, graded: true }, 1000).band).toBe("fresh")
+  })
 })
 
 describe("resolveStaleness — graded mode", () => {
