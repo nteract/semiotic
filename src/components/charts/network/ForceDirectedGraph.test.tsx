@@ -199,9 +199,14 @@ describe("ForceDirectedGraph", () => {
   })
 
   it("edgeStyle reads width from a string field on the wrapped edge data", () => {
+    const weightedEdges = [
+      { source: "A", target: "B", weight: 5 },
+      { source: "B", target: "C", weight: 2 },
+      { source: "C", target: "A", weight: 1 }
+    ]
     render(
       <TooltipProvider>
-        <ForceDirectedGraph nodes={sampleNodes} edges={sampleEdges} edgeWidth="weight" />
+        <ForceDirectedGraph nodes={sampleNodes} edges={weightedEdges} edgeWidth="weight" />
       </TooltipProvider>
     )
 

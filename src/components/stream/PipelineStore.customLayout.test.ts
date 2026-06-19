@@ -105,13 +105,13 @@ describe("PipelineStore customLayout integration", () => {
 
     store.computeScene({ width: 200, height: 100 })
     expect(invocations).toBe(1)
-    expect((store.customLayoutOverlays as { _solvedWidth: number })._solvedWidth).toBe(200)
+    expect((store.customLayoutOverlays as unknown as { _solvedWidth: number })._solvedWidth).toBe(200)
     expect((store.scene[0] as RectSceneNode).x).toBe(200 - 24)
 
     // Dimension-only change: the layout must run again at the new width.
     store.computeScene({ width: 400, height: 100 })
     expect(invocations).toBe(2)
-    expect((store.customLayoutOverlays as { _solvedWidth: number })._solvedWidth).toBe(400)
+    expect((store.customLayoutOverlays as unknown as { _solvedWidth: number })._solvedWidth).toBe(400)
     // Scene node honors the fixed offset at the new width — not a 2× remap.
     expect((store.scene[0] as RectSceneNode).x).toBe(400 - 24)
   })
