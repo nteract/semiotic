@@ -500,14 +500,22 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       // HOC tooltips receive raw data, matching the XY/ordinal contract.
       // Without it a custom tooltip rendering `edge.source` gets a node
       // object and React throws "Objects are not valid as a React child".
-      // `nodeOrEdge` is set only by StreamNetworkFrame, so XY/ordinal hover
-      // data is left untouched.
-      const isNetworkHover =
-        hoverData?.nodeOrEdge === "node" || hoverData?.nodeOrEdge === "edge"
+      //
+      // Match only genuine RealtimeNode/RealtimeEdge wrappers, not just the
+      // presence of `nodeOrEdge` + a nested `.data`: every node built by the
+      // network pipeline has numeric x0/x1 (createNode), and every edge a
+      // numeric sankeyWidth (0 for non-sankey layouts). A customNetworkLayout
+      // hit whose datum is the user's own object — even one that happens to
+      // carry an incidental `.data` field — lacks those layout fields and is
+      // passed through untouched.
+      const isNodeWrapper =
+        hoverData?.nodeOrEdge === "node" &&
+        typeof datum?.x0 === "number" &&
+        typeof datum?.x1 === "number"
+      const isEdgeWrapper =
+        hoverData?.nodeOrEdge === "edge" && typeof datum?.sankeyWidth === "number"
       if (
-        isNetworkHover &&
-        datum &&
-        typeof datum === "object" &&
+        (isNodeWrapper || isEdgeWrapper) &&
         datum.data &&
         typeof datum.data === "object"
       ) {
