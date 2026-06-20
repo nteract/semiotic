@@ -9,12 +9,12 @@ const META = {
   slug: "streaming-that-aggregates-itself",
   title: "Streaming that aggregates itself",
   subtitle:
-    "Most front-end streaming charts get slower as the stream gets faster. Semiotic's new streaming-aggregation layer makes per-frame cost depend on how much you can see, not how much arrives — the Kafka Streams windowing model, client-side.",
+    "Most front-end streaming charts get slower as the stream gets faster. Semiotic's new streaming-aggregation layer makes per-frame cost depend on how much you can see, not how much arrives, just like the Kafka Streams windowing model, except client-side.",
   author: "Elijah Meeks",
-  date: "2026-06-18",
+  date: "2026-06-19",
   tags: ["case-study", "realtime"],
   excerpt:
-    "Buffering raw records and redrawing them is the default front-end streaming pattern, and it scales with stream volume — exactly the wrong axis. Aggregate on ingest into bounded event-time windows and the cost follows the resolution of the view instead. Here's why that single move collapses bounded memory, downsampling, backpressure, and windowing into one mechanism, with live charts.",
+    "Buffering raw records and redrawing them is the default front-end streaming pattern, and it scales with stream volume. Aggregate on ingest into bounded event-time windows and the cost follows the resolution of the view instead. That collapses bounded memory, downsampling, backpressure, and windowing into one mechanism, with live charts.",
 }
 
 const chartFrame = {
@@ -104,7 +104,12 @@ function ChipGroup({ label, options, value, onChange, accent }) {
         {label}
       </span>
       {options.map((o) => (
-        <Chip key={o.value} active={value === o.value} onClick={() => onChange(o.value)} accent={accent}>
+        <Chip
+          key={o.value}
+          active={value === o.value}
+          onClick={() => onChange(o.value)}
+          accent={accent}
+        >
           {o.label}
         </Chip>
       ))}
@@ -156,7 +161,13 @@ function FirehoseDemo() {
         <div ref={containerRef}>
           <div style={controlsRow}>
             <ChipGroup label="stat" options={STATS} value={stat} onChange={setStat} />
-            <ChipGroup label="band" options={BANDS} value={band} onChange={setBand} accent="#0ea5e9" />
+            <ChipGroup
+              label="band"
+              options={BANDS}
+              value={band}
+              onChange={setBand}
+              accent="#0ea5e9"
+            />
           </div>
           {containerWidth && (
             <RealtimeLineChart
@@ -217,7 +228,10 @@ function EventTimeDemo() {
           <div style={controlsRow}>
             <ChipGroup
               label="event-time"
-              options={[{ value: "on", label: "on" }, { value: "off", label: "off" }]}
+              options={[
+                { value: "on", label: "on" },
+                { value: "off", label: "off" },
+              ]}
               value={enabled ? "on" : "off"}
               onChange={(v) => setEnabled(v === "on")}
               accent="#10b981"
@@ -244,7 +258,7 @@ function EventTimeDemo() {
           <div style={readout}>
             {enabled
               ? `reordered within a 2s grace window · ${late} late record${late === 1 ? "" : "s"} dropped & counted`
-              : "raw arrival order — out-of-order arrivals zigzag the line"}
+              : "raw arrival order (out-of-order arrivals zigzag the line)"}
           </div>
         </div>
       </ThemeProvider>
@@ -258,34 +272,30 @@ function Body() {
   return (
     <article style={{ lineHeight: 1.65 }}>
       <p>
-        Here is the uncomfortable property of almost every front-end streaming
-        chart: it gets <em>slower</em> as the stream gets <em>faster</em>. The
-        standard pattern is to buffer raw records and redraw them, so the work
-        per frame is tied to how many records arrived. Point the chart at a
-        50,000-messages-per-second Kafka topic and it falls over — not because
-        drawing 50,000 points is useful (you can't see them), but because the
-        renderer never got the memo that volume and resolution are different
-        things.
+        Here is the uncomfortable property of almost every front-end streaming chart: it gets{" "}
+        <em>slower</em> as the stream gets <em>faster</em>. The standard pattern is to buffer raw
+        records and redraw them, so the work per frame is tied to how many records arrived. Point
+        the chart at a 50,000-messages-per-second Kafka topic and it falls over. That's not because
+        drawing 50,000 points is useful (you can't see them), but because the renderer never got the
+        memo that volume and resolution are different things.
       </p>
 
       <p>
-        Semiotic now ships a streaming-aggregation layer that fixes the axis.
-        Instead of buffering raw points, it <strong>aggregates on ingest</strong>{" "}
-        into bounded, event-time windows, so per-frame cost follows the{" "}
-        <em>resolution of the view</em> — the number of windows you can actually
-        see — not the arrival rate. It is, almost exactly, the Kafka Streams
-        windowed-aggregation model expressed client-side. The whole thing is
-        opt-in props on the realtime charts you already have.
+        Semiotic now ships a streaming-aggregation layer that fixes the axis. Instead of buffering
+        raw points, it <strong>aggregates on ingest</strong> into bounded, event-time windows, so
+        per-frame cost follows the <em>resolution of the view</em>—the number of windows you can
+        actually see—not the arrival rate. It is, almost exactly, the Kafka Streams
+        windowed-aggregation model expressed client-side. The whole thing is opt-in props on the
+        realtime charts you already have.
       </p>
 
-      <h2>Why this is the right axis</h2>
+      <h2>Why this works</h2>
 
       <p>
         The insight isn't mine. It's the transferable core of{" "}
-        <em>AGAMI: Scalable Visual Analytics over Multidimensional Data Streams</em>{" "}
-        (Lu, Wong, …, Joshi, Malensek — University of San Francisco, IEEE/ACM
-        BDCAT 2020), a distributed-backend system whose central data-structure
-        idea drops cleanly onto a client renderer:
+        <em>AGAMI: Scalable Visual Analytics over Multidimensional Data Streams</em> (Lu, Wong, …,
+        Joshi, Malensek — University of San Francisco, IEEE/ACM BDCAT 2020), a distributed-backend
+        system whose central data-structure idea drops cleanly onto a client renderer:
       </p>
 
       <blockquote
@@ -296,43 +306,38 @@ function Body() {
           color: "var(--text-secondary)",
         }}
       >
-        Don't buffer raw records and evict the oldest. Aggregate on ingest into a
-        compact, bounded summary built from online running statistics. Memory and
-        per-frame work then scale with the resolution of the view, not the volume
-        of the stream.
+        Don't buffer raw records and evict the oldest. Aggregate on ingest into a compact, bounded
+        summary built from online running statistics. Memory and per-frame work then scale with the
+        resolution of the view, not the volume of the stream.
       </blockquote>
 
       <p>
-        That one move collapses four things people normally treat as separate
-        streaming problems — <strong>bounded memory</strong>,{" "}
-        <strong>downsampling / level-of-detail</strong>,{" "}
-        <strong>backpressure</strong>, and <strong>windowing semantics</strong> —
-        into a single mechanism. If your chart only ever holds a bounded number of
-        window aggregates, memory is bounded by construction, the marks are an
-        honest aggregate rather than dropped points, and a firehose renders the
-        same as a trickle because the render work doesn't depend on the input
-        rate. You don't need a flow-control protocol to handle backpressure; you
-        need to stop pretending every record deserves a pixel.
+        That allows us to treat <strong>bounded memory</strong>,{" "}
+        <strong>downsampling / level-of-detail</strong>, <strong>backpressure</strong>, and{" "}
+        <strong>windowing semantics</strong> with a single mechanism. If your chart only ever holds
+        a bounded number of window aggregates, memory is bounded by construction, the marks are an
+        aggregate rather than dropped points, and a firehose renders the same as a trickle because
+        the render work doesn't depend on the input rate. It's true in data analysis but especially
+        in data visualization: we do not need to pretend that every datapoint needs to be seen to
+        create effective visualization.
       </p>
 
       <h2>The firehose</h2>
 
       <p>
-        The chart below pushes <strong>15 events every 80&nbsp;ms</strong> — a
-        deliberate firehose. It never draws more than a couple of dozen marks.
-        Each window carries a full online statistics object (count, mean,
-        variance, min, max via Welford's method), so you can flip the rendered
-        statistic and the band without touching the data path:
+        The chart below pushes <strong>15 events every 80&nbsp;ms</strong> — a deliberate firehose.
+        It never draws more than a couple of dozen marks. Each window carries a full online
+        statistics object (count, mean, variance, min, max via Welford's method), so you can flip
+        the rendered statistic and the band without touching the data path:
       </p>
 
       <FirehoseDemo />
 
       <p>
         Watch the readout: tens of thousands of events, a few dozen marks. The{" "}
-        <code style={ic}>retain</code> option caps the live window count, so the
-        chart's memory is flat no matter how long it runs. The ±σ band isn't a
-        second pass over a buffer — it falls straight out of the per-window
-        variance the accumulator already maintains.
+        <code style={ic}>retain</code> option caps the live window count, so the chart's memory is
+        flat no matter how long it runs. The ±σ band isn't a second pass over a buffer, it just
+        falls straight out of the per-window variance the accumulator already maintains.
       </p>
 
       <pre style={code}>{`<RealtimeLineChart
@@ -349,29 +354,25 @@ function Body() {
 />`}</pre>
 
       <p>
-        One naming caveat, because it bites people: this is the{" "}
-        <strong>aggregation window</strong> — the interval events are reduced
-        over. It is <em>not</em> the same as <code style={ic}>windowMode</code>{" "}
-        (<code style={ic}>"sliding" | "growing"</code>), which is the ring
-        buffer's eviction policy. Two different concepts that the streaming
-        literature unhelpfully gives the same word; Semiotic keeps them distinct.
+        One naming caveat: this is referred to in Semiotic as the{" "}
+        <strong>aggregation window</strong>. It is the interval events are reduced over. It is{" "}
+        <em>not</em> the same as <code style={ic}>windowMode</code> (
+        <code style={ic}>"sliding" | "growing"</code>), which is the ring buffer's eviction policy.
+        Two different concepts that the streaming literature unhelpfully gives the same word;
+        Semiotic keeps them distinct.
       </p>
 
       <h2>Event-time, not arrival-time</h2>
 
       <p>
         The other half of the Kafka model is that windows key on the timestamp{" "}
-        <em>in the record</em>, not when it showed up. Real streams arrive
-        jittery and merged from multiple sources, and a chart that appends in
-        arrival order draws a zigzag that means nothing. Turn on{" "}
-        <code style={ic}>eventTime</code> and Semiotic buffers events for a
-        bounded <strong>lateness / grace window</strong> and releases them in
-        event-time order. A record older than{" "}
-        <code style={ic}>watermark − lateness</code> is <em>late</em>: dropped or
-        kept per policy, and — crucially — counted and surfaced through{" "}
-        <code style={ic}>onObservation</code> so lateness is a signal you can see,
-        not a silent correctness bug. Toggle it off below to bring the zigzag
-        back:
+        <em>in the record</em>, not when it showed up. Real streams arrive jittery and merged from
+        multiple sources, and a chart that appends in arrival order draws a zigzag that means
+        nothing. Turn on <code style={ic}>eventTime</code> and Semiotic buffers events for a bounded{" "}
+        <strong>lateness / grace window</strong> and releases them in event-time order. A record
+        older than <code style={ic}>watermark − lateness</code> is <em>late</em>: dropped or kept
+        per policy, and counted and surfaced through <code style={ic}>onObservation</code> so
+        lateness is a signal and not a silent bug. Toggle it off below to bring the zigzag back:
       </p>
 
       <EventTimeDemo />
@@ -385,45 +386,44 @@ function Body() {
 />`}</pre>
 
       <p>
-        The tradeoff is explicit and worth stating: a lateness window delays
-        display by that much in exchange for correct ordering. That's the same
-        deal Kafka Streams offers with its grace period, and it's the honest one —
-        you can't both show data instantly and guarantee it's in order.
+        The tradeoff is explicit: a lateness window delays display by that much in exchange for
+        correct ordering. This is a fact of all watermark strategies. That's the same deal Kafka
+        Streams offers with its grace period, because you can't both show data instantly and
+        guarantee it's in order.
       </p>
 
       <h2>What sets it apart from the usual front-end streaming kit</h2>
 
       <p>
-        Most charting libraries treat "realtime" as "call setData faster." That
-        gives you three failure modes the aggregation model sidesteps:
+        Most charting libraries treat "realtime" as "call setData faster." That gives you three
+        failure modes the aggregation model sidesteps:
       </p>
 
       <ul>
         <li>
-          <strong>Cost tied to volume.</strong> Re-rendering the raw buffer means
-          a faster stream is a slower chart. Aggregation makes render cost
-          O(visible windows) — independent of input rate.
+          <strong>Cost tied to volume.</strong> Re-rendering the raw buffer means a faster stream is
+          a slower chart. Aggregation makes render cost O(visible windows) independent of input
+          rate.
         </li>
         <li>
-          <strong>Unbounded memory.</strong> "Keep the last N points" is a
-          band-aid that still scales N with rate to preserve a time span. A
-          retained window set is bounded in the dimension you actually care
-          about: time on screen.
+          <strong>Unbounded memory.</strong> "Keep the last N points" is a band-aid that still
+          scales N with rate to preserve a time span. A retained window set is bounded in the
+          dimension you actually care about: time on screen.
         </li>
         <li>
-          <strong>Arrival-order lies.</strong> Plotting points as they land
-          conflates network jitter with signal. Event-time windowing and a grace
-          buffer separate the two, and report the lateness instead of hiding it.
+          <strong>Arrival-order lies.</strong> Plotting points as they land conflates network jitter
+          with signal. Event-time windowing and a grace buffer separate the two, and report the
+          lateness instead of hiding it.
         </li>
       </ul>
 
       <p>
-        And because the chart props are sugar over pure modules, you can drop to
-        the primitives when you need them. <code style={ic}>RunningStats</code>{" "}
-        (Welford online stats with an O(1) parallel <code style={ic}>merge</code>
+        The chart props are a helpful abstraction over pure modules, so you can drop to the
+        primitives when you need them. <code style={ic}>RunningStats</code> (Welford online stats
+        with an O(1) parallel <code style={ic}>merge</code>
         ), <code style={ic}>WindowAccumulator</code> (the windowing engine), and{" "}
-        <code style={ic}>ReorderBuffer</code> (the lateness buffer) all import
-        from <code style={ic}>semiotic/realtime</code> and run headless:
+        <code style={ic}>ReorderBuffer</code> (the lateness buffer) all import from{" "}
+        <code style={ic}>semiotic/realtime</code> and run headless:
       </p>
 
       <pre style={code}>{`import { WindowAccumulator } from "semiotic/realtime"
@@ -432,53 +432,51 @@ const acc = new WindowAccumulator({ window: "tumbling", size: 60_000 })
 acc.push(eventTimeMs, value)   // O(1) amortized, any arrival order
 acc.emit()                     // [{ start, end, count, mean, stddev, min, max, partial }]`}</pre>
 
-      <h2>When to reach for it — and when not</h2>
+      <h2>When to use it</h2>
 
       <p>
-        Reach for aggregation when the stream is faster than the eye: metrics
-        firehoses, high-frequency sensors, request traces, anything where the
-        signal is the <em>distribution over an interval</em>, not the individual
-        event. Reach for event-time mode whenever records can arrive out of order
-        — merged sources, mobile clients, replays.
+        Aggregate when the stream is faster than the eye: metrics firehoses, high-frequency sensors,
+        request traces, anything where the signal is the <em>distribution over an interval</em>, not
+        the individual event. Use event-time mode whenever records can arrive out of order as in
+        merged sources, mobile clients, replays.
       </p>
 
       <p>
-        Don't reach for it when every individual event matters and the rate is
-        low — a handful of discrete events a second belong on a plain{" "}
+        Don't use it when every individual event matters and the rate is low. A handful of discrete
+        events a second belong on a plain{" "}
         <Link to="/charts/realtime-line-chart">RealtimeLineChart</Link> or{" "}
-        <Link to="/charts/realtime-swarm-chart">RealtimeSwarmChart</Link> with the
-        raw push API, where you keep per-point identity, hover, and{" "}
-        <code style={ic}>update(id, …)</code>. Aggregation is a reduction; if you
-        need the rows, don't reduce them.
+        <Link to="/charts/realtime-swarm-chart">RealtimeSwarmChart</Link> with the raw push API,
+        where you keep per-point identity, hover, and <code style={ic}>update(id, …)</code>.
+        Aggregation is a reduction; if you need the rows, don't reduce them.
       </p>
 
       <h2>Where this shows up</h2>
 
       <p>
-        The example here is a synthetic metric, but the shape is everywhere a
-        bounded screen meets an unbounded stream:
+        The example here is a synthetic metric, but the shape is everywhere a bounded screen meets
+        an unbounded stream:
       </p>
 
       <ul>
         <li>
-          <strong>Observability / APM</strong> — p50/p95 latency over rolling
-          windows, request rate per service, error counts by minute.
+          <strong>Observability / APM</strong> — p50/p95 latency over rolling windows, request rate
+          per service, error counts by minute.
         </li>
         <li>
-          <strong>Kafka / event pipelines</strong> — throughput and lag per
-          partition, exactly the windowed-aggregation model these charts mirror.
+          <strong>Kafka / event pipelines</strong> — throughput and lag per partition, exactly the
+          windowed-aggregation model these charts mirror.
         </li>
         <li>
-          <strong>IoT sensor fleets</strong> — thousands of devices reporting on
-          their own clocks, arriving late and out of order over flaky links.
+          <strong>IoT sensor fleets</strong> — thousands of devices reporting on their own clocks,
+          arriving late and out of order over flaky links.
         </li>
         <li>
-          <strong>Financial tick data</strong> — OHLC bars are tumbling windows;
-          a ±σ band is a volatility envelope.
+          <strong>Financial tick data</strong> — OHLC bars are tumbling windows; a ±σ band is a
+          volatility envelope.
         </li>
         <li>
-          <strong>Log analytics</strong> — events-per-interval by level, where the
-          interesting thing is the rate, not the line.
+          <strong>Log analytics</strong> — events-per-interval by level, where the interesting thing
+          is the rate, not the line.
         </li>
       </ul>
 
@@ -486,23 +484,19 @@ acc.emit()                     // [{ start, end, count, mean, stddev, min, max, 
 
       <ul>
         <li>
-          <Link to="/features/streaming-aggregation">
-            Streaming Aggregation
-          </Link>{" "}
-          — the full interactive feature page (tumbling/hopping/session, banded
-          staleness, the primitives)
+          <Link to="/features/streaming-aggregation">Streaming Aggregation</Link> — the full
+          interactive feature page (tumbling/hopping/session, banded staleness, the primitives)
         </li>
         <li>
-          <Link to="/features/realtime-encoding">Realtime Encoding</Link> — decay,
-          pulse, transitions, staleness
+          <Link to="/features/realtime-encoding">Realtime Encoding</Link> — decay, pulse,
+          transitions, staleness
         </li>
         <li>
-          <Link to="/charts/realtime-line-chart">RealtimeLineChart</Link> — the
-          chart these props attach to
+          <Link to="/charts/realtime-line-chart">RealtimeLineChart</Link> — the chart these props
+          attach to
         </li>
         <li>
-          <Link to="/features/push-api">Push API</Link> — the ref-based ingestion
-          model underneath
+          <Link to="/features/push-api">Push API</Link> — the ref-based ingestion model underneath
         </li>
       </ul>
     </article>
@@ -511,7 +505,6 @@ acc.emit()                     // [{ start, end, count, mean, stddev, min, max, 
 
 export default {
   ...META,
-  draft: true,
   ogChart: { component: "LineChart" },
   component: Body,
 }

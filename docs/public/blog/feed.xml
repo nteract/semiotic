@@ -5,8 +5,20 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-06-12T00:00:00Z</updated>
+  <updated>2026-06-19T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Streaming that aggregates itself</title>
+    <id>https://semiotic3.nteract.io/blog/streaming-that-aggregates-itself</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/streaming-that-aggregates-itself"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/streaming-that-aggregates-itself.png"/>
+    <published>2026-06-19T00:00:00Z</published>
+    <updated>2026-06-19T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="realtime"/>
+    <summary type="text">Buffering raw records and redrawing them is the default front-end streaming pattern, and it scales with stream volume — exactly the wrong axis. Aggregate on ingest into bounded event-time windows and the cost follows the resolution of the view instead. Here&apos;s why that single move collapses bounded memory, downsampling, backpressure, and windowing into one mechanism, with live charts.</summary>
+  </entry>
   <entry>
     <title>Semiotic 3.7.2</title>
     <id>https://semiotic3.nteract.io/blog/release-3-7-2</id>
