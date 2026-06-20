@@ -18,7 +18,7 @@
     <category term="case-study"/>
     <category term="network"/>
     <category term="ai"/>
-    <summary type="text">Every charting library hits the wall where the catalog runs out. This is about what&apos;s on the other side of that wall in Semiotic — a custom-layout surface principled enough to host a domain pipeline&apos;s lineage DAG and to interpret another library&apos;s serialized grammar, escape hatches and all.</summary>
+    <summary type="text">Every charting library hits the wall where the catalog runs out. This is about what&apos;s on the other side of that wall in Semiotic: a custom-layout surface principled enough to host a domain pipeline&apos;s lineage DAG and to interpret another library&apos;s serialized grammar, escape hatches and all.</summary>
   </entry>
   <entry>
     <title>Streaming that aggregates itself</title>
