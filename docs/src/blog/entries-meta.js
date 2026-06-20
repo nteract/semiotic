@@ -35,13 +35,12 @@ export const allBlogEntriesMeta = [
     slug: "making-better-custom-charts",
     title: "Making Better Custom Charts",
     subtitle:
-      "The custom-chart escape hatch grew up: a scene-node/overlay contract, a real Kafka Streams lineage view that lets your pipeline own layout, and a GoFish IR interpreter that executes a foreign grammar instead of recognizing it.",
+      "The custom-chart escape hatch grows up: a scene-node/overlay contract, a real Kafka Streams lineage view that lets your pipeline own layout, and a GoFish IR interpreter that executes a foreign grammar instead of recognizing it.",
     author: "Elijah Meeks",
-    date: "2026-06-17",
+    date: "2026-06-20",
     tags: ["case-study", "network", "ai"],
     excerpt:
-      "Every charting library hits the wall where the catalog runs out. This is about what's on the other side of that wall in Semiotic — a custom-layout surface principled enough to host a domain pipeline's lineage DAG and to interpret another library's serialized grammar, escape hatches and all.",
-    draft: true,
+      "Every charting library hits the wall where the catalog runs out. This is about what's on the other side of that wall in Semiotic: a custom-layout surface principled enough to host a domain pipeline's lineage DAG and to interpret another library's serialized grammar, escape hatches and all.",
   },
   {
     slug: "release-3-7-2",

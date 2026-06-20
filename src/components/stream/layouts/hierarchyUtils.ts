@@ -71,7 +71,16 @@ export function resolveLabelFn(
   nodeLabel: string | ((d: Datum) => string) | undefined
 ): ((d: Datum) => string) | null {
   if (!nodeLabel) return null
-  if (typeof nodeLabel === "function") return nodeLabel
+  // In hierarchy layouts the original datum is nested under the scene
+  // node's `.data` (the node itself only carries layout coords + id/depth/
+  // value). Unwrap before calling a user accessor so a `nodeLabel`
+  // function reads the same datum fields as colorBy/nodeStyle/tooltip —
+  // matching the `d.data || d` convention used everywhere else in the
+  // family. The string form already checks `d.data` first below.
+  if (typeof nodeLabel === "function") {
+    const fn = nodeLabel
+    return (d: Datum) => fn(d.data ?? d)
+  }
   return (d: Datum) => d.data?.[nodeLabel] || d[nodeLabel] || d.id
 }
 

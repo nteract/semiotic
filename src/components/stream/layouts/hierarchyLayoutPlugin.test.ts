@@ -160,6 +160,52 @@ describe("hierarchyLayoutPlugin", () => {
       // Treemap has no edges in the scene
       expect(scene.sceneEdges.length).toBe(0)
     })
+
+    it("calls a nodeLabel function with the original datum (not the scene node wrapper)", () => {
+      // The user datum carries a `label` field that lives only on the
+      // original object — the scene node nests it under `.data`. A
+      // nodeLabel *function* must receive that datum so accessors read
+      // the same fields as colorBy/nodeStyle/tooltip.
+      const labelledHierarchy = {
+        name: "root",
+        label: "Everything",
+        children: [
+          {
+            name: "A",
+            label: "Branch A",
+            children: [
+              { name: "A1", label: "Leaf A1", value: 6 },
+              { name: "A2", label: "Leaf A2", value: 6 }
+            ]
+          }
+        ]
+      }
+      const nodes: RealtimeNode[] = []
+      const edges: RealtimeEdge[] = []
+      const config: any = {
+        chartType: "treemap",
+        childrenAccessor: "children",
+        nodeIDAccessor: "name",
+        __hierarchyRoot: labelledHierarchy,
+        showLabels: true,
+        // Parent labels render in the paddingTop band, leaves centered.
+        labelMode: "all",
+        paddingTop: 18,
+        nodeLabel: (d: any) => d.label
+      }
+      const size: [number, number] = [600, 400]
+
+      hierarchyLayoutPlugin.computeLayout(nodes, edges, config, size)
+      const scene = hierarchyLayoutPlugin.buildScene(nodes, edges, config, size)
+
+      const texts = scene.labels.map(l => l.text)
+      // Parent ("Branch A") and leaves resolve from the datum, not the
+      // node id ("A"/"A1") — proving the function received `d.data`.
+      expect(texts).toContain("Branch A")
+      expect(texts).toContain("Leaf A1")
+      expect(texts).toContain("Leaf A2")
+      expect(texts).not.toContain("A")
+    })
   })
 
   describe("circlepack layout", () => {
