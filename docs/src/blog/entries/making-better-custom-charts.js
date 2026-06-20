@@ -264,7 +264,10 @@ function FlowerFromIR() {
     // Local clone so only THIS blog example resizes — the exported
     // flowerIR is shared with /features/gofish-layouts
     // we're willing to do hacky stuff like this because this is not the final API
-    const ir = structuredClone(unstable_gofishFlowerIR)
+    const ir =
+      typeof structuredClone === "function"
+        ? structuredClone(unstable_gofishFlowerIR)
+        : JSON.parse(JSON.stringify(unstable_gofishFlowerIR))
     const polarLayer = ir.root.mark.children[1] // the { coord: { type: "polar" } } layer
     polarLayer.options = { ...polarLayer.options, radiusFactor: 1.5 } // default is 0.2
     return unstable_fromGofishIR(ir)
