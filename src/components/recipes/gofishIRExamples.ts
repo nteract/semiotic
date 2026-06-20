@@ -320,11 +320,11 @@ export const titanicCircleTreemapIR: GofishIRDocument = {
           type: "treemap",
           __combinator: true,
           options: { valueField: "fare", paddingInner: 1.5 },
-          children: [{ type: "circle", fill: field("survived") }],
-        },
-      ],
-    },
-  },
+          children: [{ type: "circle", fill: field("survived") }]
+        }
+      ]
+    }
+  }
 }
 
 // ── Python Tutor memory diagram ─────────────────────────────────────────────
@@ -446,7 +446,14 @@ export const bobaIR: GofishIRDocument = {
       __combinator: true,
       // `uniform` fit reads the shared content box so every cup scales by one
       // factor; `anchorY: "end"` bottom-aligns them onto a shared shelf.
-      options: { coord: { type: "unit", fit: "uniform", boxField: "_g.box", anchorY: "end" } },
+      options: {
+        coord: {
+          type: "unit",
+          fit: "uniform",
+          boxField: "_g.box",
+          anchorY: "end"
+        }
+      },
       children: [
         {
           type: "polygon",

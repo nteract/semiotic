@@ -5,8 +5,21 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-06-19T00:00:00Z</updated>
+  <updated>2026-06-20T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Making Better Custom Charts</title>
+    <id>https://semiotic3.nteract.io/blog/making-better-custom-charts</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/making-better-custom-charts"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/making-better-custom-charts.png"/>
+    <published>2026-06-20T00:00:00Z</published>
+    <updated>2026-06-20T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="network"/>
+    <category term="ai"/>
+    <summary type="text">Every charting library hits the wall where the catalog runs out. This is about what&apos;s on the other side of that wall in Semiotic: a custom-layout surface principled enough to host a domain pipeline&apos;s lineage DAG and to interpret another library&apos;s serialized grammar, escape hatches and all.</summary>
+  </entry>
   <entry>
     <title>Streaming that aggregates itself</title>
     <id>https://semiotic3.nteract.io/blog/streaming-that-aggregates-itself</id>
@@ -17,7 +30,7 @@
     <author><name>Elijah Meeks</name></author>
     <category term="case-study"/>
     <category term="realtime"/>
-    <summary type="text">Buffering raw records and redrawing them is the default front-end streaming pattern, and it scales with stream volume — exactly the wrong axis. Aggregate on ingest into bounded event-time windows and the cost follows the resolution of the view instead. Here&apos;s why that single move collapses bounded memory, downsampling, backpressure, and windowing into one mechanism, with live charts.</summary>
+    <summary type="text">Buffering raw records and redrawing them is the default front-end streaming pattern, and it scales with stream volume. Aggregate on ingest into bounded event-time windows and the cost follows the resolution of the view instead. That collapses bounded memory, downsampling, backpressure, and windowing into one mechanism, with live charts.</summary>
   </entry>
   <entry>
     <title>Semiotic 3.7.2</title>
