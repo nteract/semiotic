@@ -98,18 +98,25 @@ describe("prepareChart", () => {
   })
 
   it("can surface error diagnostics as non-blocking when asked", () => {
-    // Empty data is an error-severity diagnosis.
-    const blocking = prepareChart({
+    // These margins pass structural validation but leave no drawing area.
+    const impossibleMargins = {
       component: "BarChart",
-      props: { data: [], categoryAccessor: "cat", valueAccessor: "val" },
-    })
+      props: {
+        data: BARS,
+        categoryAccessor: "cat",
+        valueAccessor: "val",
+        width: 100,
+        height: 100,
+        margin: { left: 60, right: 60, top: 60, bottom: 60 },
+      },
+    }
+    const blocking = prepareChart(impossibleMargins)
     expect(blocking.ok).toBe(false)
-    const nonBlocking = prepareChart(
-      { component: "BarChart", props: { data: [], categoryAccessor: "cat", valueAccessor: "val" } },
-      { treatErrorsAsBlocking: false }
-    )
+    expect(blocking.validation.valid).toBe(true)
+    const nonBlocking = prepareChart(impossibleMargins, { treatErrorsAsBlocking: false })
     // diagnostics still reported, but they don't block ok
-    expect(nonBlocking.diagnostics.length).toBeGreaterThanOrEqual(0)
+    expect(nonBlocking.ok).toBe(true)
+    expect(nonBlocking.diagnostics.some((d) => d.code === "MARGIN_OVERFLOW_H")).toBe(true)
   })
 
   it("does not mutate the input props", () => {

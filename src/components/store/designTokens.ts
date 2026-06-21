@@ -34,14 +34,14 @@ interface FlatToken {
 }
 
 function isTokenNode(node: unknown): node is Record<string, unknown> {
-  return typeof node === "object" && node !== null && "$value" in (node as object)
+  return !!node && typeof node === "object" && "$value" in node
 }
 
 /** Walk a DTCG tree into a flat list of tokens, inheriting group `$type`. */
 function flattenDesignTokens(tokens: unknown): FlatToken[] {
   const out: FlatToken[] = []
   const walk = (node: unknown, path: string[], inheritedType?: string): void => {
-    if (typeof node !== "object" || node === null) return
+    if (!node || typeof node !== "object") return
     const obj = node as Record<string, unknown>
     const groupType = (obj.$type as string | undefined) ?? inheritedType
     if (isTokenNode(obj)) {
@@ -115,22 +115,46 @@ const COLOR_HEURISTICS: Array<[ColorRole, RegExp]> = [
   ["annotation", /^(annotation|callout)$/],
 ]
 
+const RGB_RE = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)(?:\s*,\s*[\d.]+)?\s*\)$/i
+
+function looksLikeColor(value: string): boolean {
+  const v = value.trim()
+  return (
+    /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(v) ||
+    RGB_RE.test(v) ||
+    /^hsla?\(/i.test(v)
+  )
+}
+
 function isColor(t: FlatToken): boolean {
-  return (t.type === "color" || typeof t.value === "string") && typeof t.value === "string"
+  return typeof t.value === "string" && (t.type === "color" || looksLikeColor(t.value))
 }
 
 // ── Mode detection ───────────────────────────────────────────────────────────
 
-/** Relative luminance of a hex color (0 dark … 1 light); null if not parseable. */
-function luminance(hex: unknown): number | null {
-  if (typeof hex !== "string") return null
-  let h = hex.trim().replace(/^#/, "")
+/** Relative luminance of a hex or rgb(a) color (0 dark … 1 light); null if not parseable. */
+function luminance(color: unknown): number | null {
+  if (typeof color !== "string") return null
+  const s = color.trim()
+  let h = s.replace(/^#/, "")
   if (h.length === 3) h = h.split("").map((c) => c + c).join("")
-  if (!/^[0-9a-f]{6}$/i.test(h)) return null
-  const r = parseInt(h.slice(0, 2), 16) / 255
-  const g = parseInt(h.slice(2, 4), 16) / 255
-  const b = parseInt(h.slice(4, 6), 16) / 255
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  if (/^[0-9a-f]{6}$/i.test(h)) {
+    const r = parseInt(h.slice(0, 2), 16) / 255
+    const g = parseInt(h.slice(2, 4), 16) / 255
+    const b = parseInt(h.slice(4, 6), 16) / 255
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+
+  const rgb = s.match(RGB_RE)
+  if (rgb) {
+    const r = Number(rgb[1]) / 255
+    const g = Number(rgb[2]) / 255
+    const b = Number(rgb[3]) / 255
+    if ([r, g, b].some((v) => Number.isNaN(v) || v < 0 || v > 1)) return null
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+
+  return null
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────

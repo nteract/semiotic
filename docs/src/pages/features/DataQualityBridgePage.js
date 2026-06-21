@@ -91,7 +91,7 @@ export default function DataQualityBridgePage() {
   const [ageDays, setAgeDays] = useState(0)
 
   // Build provenanced annotations from the two artifact sources, then merge.
-  const { annotations, unplaced, dbtResult, geResult } = useMemo(() => {
+  const { annotations, unplaced, dbtResult } = useMemo(() => {
     const opts = { ttlHint: TTL_HINT }
     const dbt = fromDbtArtifacts({ sources: DBT_SOURCES, runResults: DBT_RUN_RESULTS }, opts)
     const ge = fromGreatExpectations(GE_VALIDATION, opts)

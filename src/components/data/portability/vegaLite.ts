@@ -65,7 +65,7 @@ export function toVegaLite(config: ChartConfig): VegaLiteSpec & { warnings?: str
   const warnings: string[] = []
   const props: AnyProps = config.props || {}
   const enc: Record<string, VegaLiteEncoding> = {}
-  let mark: VegaLiteSpec["mark"] = "point"
+  let mark: VegaLiteSpec["mark"]
 
   const component = config.component
 

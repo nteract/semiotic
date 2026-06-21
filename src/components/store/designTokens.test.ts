@@ -38,6 +38,17 @@ describe("designTokensToTheme", () => {
   it("detects dark mode from the resolved background luminance", () => {
     expect(designTokensToTheme({ color: { bg: { $type: "color", $value: "#0b0f17" } } }).mode).toBe("dark")
     expect(designTokensToTheme({ color: { bg: { $type: "color", $value: "#fafafa" } } }).mode).toBe("light")
+    expect(designTokensToTheme({ color: { bg: { $value: "rgb(11, 15, 23)" } } }).mode).toBe("dark")
+    expect(designTokensToTheme({ color: { bg: { $value: "rgba(250, 250, 250, 0.8)" } } }).mode).toBe("light")
+  })
+
+  it("does not map untyped non-color strings into color roles", () => {
+    const theme = designTokensToTheme({
+      typography: {
+        text: { $value: "16px" },
+      },
+    })
+    expect(theme.colors.text).not.toBe("16px")
   })
 
   it("resolves DTCG alias references", () => {

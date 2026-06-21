@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useMemo, useState } from "react"
+import React, { useMemo } from "react"
 import { Link } from "react-router-dom"
 import { BarChart } from "semiotic"
 import { NetworkCustomChart } from "semiotic/network"
