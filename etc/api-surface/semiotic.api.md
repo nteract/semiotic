@@ -89,6 +89,7 @@ function normalizeTooltip
 function resolveThemePreset
 function serializeSelections
 function smartTickFormat
+function smartTooltipEntries
 function themeToCSS
 function themeToTokens
 function toConfig
@@ -179,6 +180,8 @@ interface SelectionConfig
 interface SemanticGradientStop
 interface SemioticTheme
 interface SerializedSelection
+interface SmartTooltipEntry
+interface SmartTooltipResult
 interface StackedAreaChartProps
 interface StackedBarChartProps
 interface StreamLayout

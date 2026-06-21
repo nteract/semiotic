@@ -115,6 +115,7 @@ function bandFromAge
 function buildDataPitfallsBridge
 function buildNavigationTree
 function buildReaderGrounding
+function chartGenerationTool
 function classifyCardinalityBand
 function classifyFieldBand
 function classifyRowBand
@@ -126,10 +127,12 @@ function computeEffectiveScale
 function configToJSX
 function copyConfig
 function countNodes
+function createChartToolHandler
 function createIndexedDBConversationArcSink
 function createLocalStorageConversationArcSink
 function createWebhookConversationArcSink
 function currentTimestamp
+function dataQualityToAnnotations
 function describeChart
 function deserializeSelections
 function diagnoseConfig
@@ -144,6 +147,8 @@ function filterAnnotationsByStatus
 function flattenVisible
 function formatAccessibilityAudit
 function fromConfig
+function fromDbtArtifacts
+function fromGreatExpectations
 function fromURL
 function fromVegaLite
 function getCapabilities
@@ -155,6 +160,7 @@ function getStreamCapabilities
 function inferIntent
 function listIntents
 function loadConversationArc
+function prepareChart
 function profileData
 function proposeVariant
 function receivabilityBias
@@ -183,8 +189,10 @@ function suggestStreamCharts
 function suggestStretchCharts
 function summarizeArc
 function summarizeData
+function toAnthropicTool
 function toConfig
 function toDataPitfallsChain
+function toOpenAITool
 function toURL
 function unregisterChartCapability
 function unregisterStreamChartCapability
@@ -239,6 +247,8 @@ interface ChartRenderedEvent
 interface ChartReplacedEvent
 interface ChartRubric
 interface ChartScalePreference
+interface ChartToolDefinition
+interface ChartToolOptions
 interface ChartVariant
 interface ClickEndObservation
 interface ClickObservation
@@ -261,10 +271,14 @@ interface DataPitfallsRenderedChart
 interface DataPitfallsSlideContent
 interface DataPitfallsSlidesInput
 interface DataPitfallsTextInput
+interface DataQualityAnnotationOptions
+interface DataQualityAnnotationsResult
 interface DataQualityProfile
+interface DataQualityResult
 interface DataScaleProfile
 interface DataSummary
 interface DateFieldSummary
+interface DbtArtifacts
 interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
@@ -278,6 +292,7 @@ interface ExplainCapabilityFitResult
 interface FieldCandidate
 interface FieldTypeChange
 interface ForecastConfig
+interface GEValidationResult
 interface HoverEndObservation
 interface HoverObservation
 interface IndexedDBConversationArcSinkOptions
@@ -298,6 +313,9 @@ interface NavTreeNode
 interface NumericFieldSummary
 interface PerCapabilityScore
 interface PerFixtureScore
+interface PrepareChartInput
+interface PrepareChartOptions
+interface PrepareChartResult
 interface PrimaryRoleChange
 interface ProfileDataOptions
 interface ProfileDiff
@@ -333,6 +351,7 @@ interface SuggestionShownEvent
 interface SummarizeOptions
 interface ToConfigOptions
 interface UnknownFieldSummary
+interface UnplacedDataQualityResult
 interface UseChartFocusOptions
 interface UseChartInterrogationOptions
 interface UseChartInterrogationResult
@@ -376,6 +395,8 @@ type ConversationArcWebhookFetch
 type CopyFormat
 type DataPitfallsImageMediaType
 type DataPitfallsSingleArtifactInput
+type DataQualityCheckKind
+type DataQualityStatus
 type DescribeLevel
 type EvaluateVariantProposalFn
 type FieldBand
@@ -393,6 +414,7 @@ type PrimaryRole
 type ProposeVariantFn
 type QualityFitFn
 type ReceptionModality
+type RenderFn
 type RepairResult
 type ScaleBand
 type ScaleFitFn

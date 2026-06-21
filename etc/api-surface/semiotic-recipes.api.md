@@ -17,6 +17,7 @@ function flextreeLayout
 function formatTooltipValue
 function lineageDagLayout
 function marimekkoLayout
+function mermaidDagLayout
 function parallelCoordinatesLayout
 function waffleLayout
 interface AnnotationAudience
@@ -36,6 +37,7 @@ interface LayoutResult
 interface LineageDagConfig
 interface LineageStoreSlot
 interface MarimekkoConfig
+interface MermaidDagConfig
 interface NetworkLayoutContext
 interface NetworkLayoutResult
 interface OrdinalLayoutContext

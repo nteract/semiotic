@@ -5,11 +5,17 @@ _Edit dist/semiotic-data.d.ts's sources, then re-run `npm run docs:api-surface` 
 
 ```
 function bin
+function fromArrow
 function fromVegaLite
 function groupBy
 function mergeData
 function pivot
 function rollup
+interface ArrowColumnLike
+interface ArrowFieldLike
+interface ArrowSchemaLike
+interface ArrowTableLike
+interface FromArrowOptions
 interface VegaLiteEncoding
 interface VegaLiteSpec
 ```
