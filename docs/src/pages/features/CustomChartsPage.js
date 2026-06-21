@@ -835,7 +835,7 @@ ref.current.update("planning", (d) => ({
   amount: nextAmount,
 }))`}</CodeBlock>
         <p>
-          The <Link to="/features/gofish-layouts">experimental GoFish adapter</Link> page uses the bottle-fill
+          The <Link to="/interoperability/gofish">experimental GoFish adapter</Link> page uses the bottle-fill
           example as the canonical state-update pattern: the same five bottles remain in the scene
           graph while their fill values animate between solved states.
         </p>

@@ -19,6 +19,7 @@
  */
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
+import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 import * as React from "react"
 import {
   useRef,
@@ -129,6 +130,25 @@ const defaultTooltipStyle: React.CSSProperties = {
   whiteSpace: "nowrap"
 }
 
+/** Render an ordinal datum smartly: a name/label title, a type, a value, then
+ *  the rest — for swarm/point and custom-layout fallbacks. `skipPositional`
+ *  stays off because in user data x/y are values, not coordinates. */
+function smartOrdinalTooltip(d: Datum) {
+  const smart = smartTooltipEntries(d, { skipPositional: false })
+  if (smart.title == null && smart.entries.length === 0) return null
+  return (
+    <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+      {smart.title != null && <div style={{ fontWeight: "bold" }}>{String(smart.title)}</div>}
+      {smart.entries.map((e) => (
+        <div key={e.key}>
+          <span style={{ opacity: 0.7 }}>{e.key}:</span>{" "}
+          {typeof e.value === "number" ? e.value.toLocaleString() : String(e.value)}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   const d = hover.data || {}
   const stats = hover.stats
@@ -181,21 +201,10 @@ function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   const rAccessor = hover.__rAccessor
   const hoverChartType = hover.__chartType
 
-  // For swarm/point charts, show all datum fields (point-level data, not aggregated)
+  // For swarm/point charts, show the datum fields (point-level data, not
+  // aggregated) — smartly: a name/label title, then a type, a value, the rest.
   if (hoverChartType === "swarm" || hoverChartType === "point") {
-    const entries = Object.entries(d).filter(
-      ([k]) => !k.startsWith("_") && k !== "data"
-    )
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        {entries.map(([k, v]) => (
-          <div key={k}>
-            <span style={{ opacity: 0.7 }}>{k}:</span>{" "}
-            {typeof v === "number" ? v.toLocaleString() : String(v)}
-          </div>
-        ))}
-      </div>
-    )
+    return smartOrdinalTooltip(d)
   }
 
   // For regular pieces (bar, pie, etc.) — use accessor names to find category and value
@@ -205,21 +214,10 @@ function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
     ?? (rAccessor && d[rAccessor] != null ? d[rAccessor] : null)
     ?? d.value ?? d.__rValue ?? d.pct ?? ""
 
-  // If standard fields didn't match, show all non-internal fields from the datum
+  // If standard fields didn't match, fall back to the smart field selection
+  // (custom ordinal layouts, unusual datums) instead of dumping every field.
   if (!category && value === "") {
-    const entries = Object.entries(d).filter(
-      ([k]) => !k.startsWith("_") && k !== "data"
-    )
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        {entries.map(([k, v]) => (
-          <div key={k}>
-            <span style={{ opacity: 0.7 }}>{k}:</span>{" "}
-            {typeof v === "number" ? v.toLocaleString() : String(v)}
-          </div>
-        ))}
-      </div>
-    )
+    return smartOrdinalTooltip(d)
   }
 
   return (

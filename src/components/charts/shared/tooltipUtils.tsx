@@ -60,6 +60,12 @@ export function resolveValue(d: Datum, acc: string | ((d: Datum) => any)): unkno
   return typeof acc === "function" ? acc(d) : d[acc]
 }
 
+// Smart default-tooltip field selection lives in its own dependency-free module
+// (so the Tooltip components can use it without an import cycle). Re-exported
+// here for callers that already import from tooltipUtils.
+export { smartTooltipEntries } from "./smartTooltip"
+export type { SmartTooltipEntry, SmartTooltipResult } from "./smartTooltip"
+
 /**
  * Build TooltipFieldConfig rows for a `band` prop config so the default
  * tooltip surfaces envelope values automatically. Reads from the

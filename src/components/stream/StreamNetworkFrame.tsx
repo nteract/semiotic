@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
+import { formatVal, smartTooltipEntries } from "../charts/shared/tooltipUtils"
 import * as React from "react"
 import {
   useRef,
@@ -158,10 +159,24 @@ function DefaultNetworkTooltip({
   const weightedDegree = (node.sourceLinks || []).reduce((s, e) => s + (e.value || 0), 0)
     + (node.targetLinks || []).reduce((s, e) => s + (e.value || 0), 0)
 
+  // Smartly surface the user datum's meaningful fields — a name for the title,
+  // then a type/kind, then a value, then the rest — instead of just the id.
+  // This is what makes the default tooltip useful for custom/recipe layouts
+  // (Mermaid, lineage, dagre, …) where the id alone says nothing.
+  const userDatum = (node.data ?? node) as Datum
+  const smart = smartTooltipEntries(userDatum)
+  const heading = smart.title != null ? String(smart.title) : node.id
+  const hasValueRow = smart.entries.some((e) => VALUE_ROW_RE.test(e.key))
+
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      <div style={{ fontWeight: 600 }}>{node.id}</div>
-      {node.value != null && node.value > 0 && (
+      <div style={{ fontWeight: 600 }}>{heading}</div>
+      {smart.entries.map((e) => (
+        <div key={e.key} style={{ marginTop: 4, opacity: 0.8 }}>
+          {e.key}: {formatVal(e.value)}
+        </div>
+      ))}
+      {!hasValueRow && node.value != null && node.value > 0 && (
         <div style={{ marginTop: 4, opacity: 0.8 }}>
           Total:{" "}
           {typeof node.value === "number"
@@ -178,6 +193,8 @@ function DefaultNetworkTooltip({
     </div>
   )
 }
+
+const VALUE_ROW_RE = /^(value|amount|total|count|weight|score)$/i
 // Tell FlippingTooltip's chrome detector that this component paints its
 // own chrome internally. Without this, the wrapper double-wraps and a
 // theme with a light tooltip background (Carbon, journalist-light, etc.)

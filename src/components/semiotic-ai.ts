@@ -213,6 +213,36 @@ export type {
   DataPitfallsTextInput
 } from "./ai/dataPitfallsBridge"
 export {
+  dataQualityToAnnotations,
+  fromDbtArtifacts,
+  fromGreatExpectations
+} from "./ai/dataQualityBridge"
+export type {
+  DataQualityStatus,
+  DataQualityCheckKind,
+  DataQualityResult,
+  DataQualityAnnotationOptions,
+  DataQualityAnnotationsResult,
+  UnplacedDataQualityResult,
+  DbtArtifacts,
+  GEValidationResult
+} from "./ai/dataQualityBridge"
+export {
+  prepareChart,
+  chartGenerationTool,
+  toAnthropicTool,
+  toOpenAITool,
+  createChartToolHandler
+} from "./ai/generativeChart"
+export type {
+  RenderFn,
+  PrepareChartInput,
+  PrepareChartOptions,
+  PrepareChartResult,
+  ChartToolDefinition,
+  ChartToolOptions
+} from "./ai/generativeChart"
+export {
   buildNavigationTree,
   flattenVisible,
   countNodes

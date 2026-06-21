@@ -112,6 +112,15 @@ export const BarChartCapability: ChartCapability = {
       intentDeltas: { "rank": +1 },
       rubricDeltas: { precision: +1 },
     },
+    {
+      key: "annotated-threshold",
+      label: "With alert threshold",
+      description:
+        "A target/threshold reference turns the bars into an alert — read for which categories breach. Pair with a provenanced annotation (e.g. from the data-quality bridge) and the communicative act becomes \"alerting\".",
+      props: { showGrid: true },
+      tags: ["alert", "annotated-threshold", "monitoring"],
+      intentDeltas: { "outlier-detection": +2 },
+    },
   ],
 
   buildProps: (profile, variant) => ({

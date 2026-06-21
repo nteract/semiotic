@@ -39,6 +39,8 @@ const xyAxisProps: Record<string, PropDef> = {
   yLabel: { type: "string" },
   xFormat: { type: "function" },
   yFormat: { type: "function" },
+  xScaleType: { type: "string", enum: ["linear", "log", "time"] },
+  yScaleType: { type: "string", enum: ["linear", "log", "time"] },
 }
 
 const ordinalAxisProps: Record<string, PropDef> = {

@@ -2,6 +2,7 @@ import * as React from "react"
 import type { Accessor } from "../charts/shared/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import { normalizeHoverDatum } from "../stream/hoverUtils"
+import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 
 /**
  * Configuration for a single tooltip field
@@ -304,7 +305,7 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
       return null
     }
 
-    const lines: Array<{ label?: string; value: string }> = []
+    const lines: Array<{ label?: string; value: string; bold?: boolean }> = []
 
     // Add title line if specified
     if (title) {
@@ -343,14 +344,18 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
         })
       })
     } else {
-      // Default: show all non-internal properties
-      const keys = Object.keys(data).filter(
-        (k) => !k.startsWith("_") && k !== "data"
-      )
-      keys.forEach((key) => {
+      // Default (no fields declared): use the smart heuristic — a bold title
+      // (name/label), then a type, a value, and the rest — instead of dumping
+      // every property in object order. `skipPositional: false` keeps x/y here
+      // because in a generic datum they are usually the data, not pixel coords.
+      const smart = smartTooltipEntries(data, { skipPositional: false })
+      if (smart.title != null) {
+        lines.push({ label: undefined, value: formatValue(smart.title, format), bold: true })
+      }
+      smart.entries.forEach((entry) => {
         lines.push({
-          label: showLabels ? key : undefined,
-          value: formatValue(data[key], format)
+          label: showLabels ? entry.key : undefined,
+          value: formatValue(entry.value, format)
         })
       })
     }
@@ -368,7 +373,13 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
         style={mergedStyle}
       >
         {lines.map((line, index) => (
-          <div key={index} style={{ marginBottom: index < lines.length - 1 ? "4px" : 0 }}>
+          <div
+            key={index}
+            style={{
+              marginBottom: index < lines.length - 1 ? "4px" : 0,
+              fontWeight: line.bold ? "bold" : undefined,
+            }}
+          >
             {line.label && (
               <strong>
                 {line.label}

@@ -201,6 +201,8 @@ const xyAxisProps: Record<string, ChartPropSpec> = {
   yLabel: { type: "string" },
   xFormat: { type: "function", omitFromSchema: true },
   yFormat: { type: "function", omitFromSchema: true },
+  xScaleType: { type: "string", enum: ["linear", "log", "time"], description: "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)." },
+  yScaleType: { type: "string", enum: ["linear", "log", "time"], description: "y scale type." },
 }
 
 const ordinalAxisProps: Record<string, ChartPropSpec> = {

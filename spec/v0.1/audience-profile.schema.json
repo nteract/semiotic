@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semiotic.dev/spec/v0.1/audience-profile.schema.json",
+  "title": "IDID Audience Profile",
+  "description": "A serializable description of WHO is reading the charts and what the organization is trying to grow. The library never measures familiarity — it consumes a profile produced however the org sees fit (surveys, telemetry, manager judgment) and biases its ranking accordingly. Carrying this profile across tools is what lets a suggestion be calibrated to a real audience instead of a generic data-literate baseline. See ./README.md for the x-idid-status convention.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "const": "0.1",
+      "x-idid-status": "spec"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name. A ranking engine may surface this in its reasons so a reader can see whose policy shaped the result.",
+      "x-idid-status": "shipped"
+    },
+    "familiarity": {
+      "type": "object",
+      "description": "Per-chart familiarity override, 1–5, keyed by component name. Replaces the chart capability's rubric.familiarity for listed charts; unlisted charts fall back to the descriptor.",
+      "propertyNames": { "type": "string" },
+      "additionalProperties": { "type": "integer", "minimum": 1, "maximum": 5 },
+      "x-idid-status": "shipped"
+    },
+    "targets": {
+      "type": "object",
+      "description": "Adoption targets — which charts the org wants to grow or reduce. A ranking engine applies a score bias so growth targets win close calls and reduce targets fall back unless they are the only fit.",
+      "propertyNames": { "type": "string" },
+      "additionalProperties": { "$ref": "#/$defs/target" },
+      "x-idid-status": "shipped"
+    },
+    "exposureLevel": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "description": "Controls visibility of stretch picks (unfamiliar-but-relevant charts). 0 = never surface stretches; 1 = surface in a separate stretch list (default when an audience is set); 2 = same as 1 but lowers the familiarity threshold for what counts as a stretch, widening the menu.",
+      "x-idid-status": "shipped"
+    },
+    "receptionModality": {
+      "type": "string",
+      "enum": ["visual", "screen-reader", "sonified", "agent"],
+      "description": "The channel this audience receives charts through. Orthogonal to familiarity: a reader can be highly familiar with a chart yet unable to RECEIVE it in their channel (an 8-slice pie is familiar but illegible to a screen reader). A non-visual modality instructs a host to down-rank charts whose meaning does not survive that channel. Defaults to \"visual\" (no receivability bias).",
+      "x-idid-status": "shipped"
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "title": "Audience Target",
+      "required": ["direction"],
+      "additionalProperties": false,
+      "properties": {
+        "direction": { "type": "string", "enum": ["increase", "decrease"] },
+        "weight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Controls bias magnitude. Default 1."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable rationale; a ranking engine may surface it in its reasons when the target fires."
+        }
+      }
+    }
+  }
+}
