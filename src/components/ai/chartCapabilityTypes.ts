@@ -104,6 +104,22 @@ export interface ChartDataProfile extends DataSummary {
   hasRepeatedX: boolean
   /** True when the primary x candidate is monotonic. */
   monotonicX: boolean
+  /**
+   * How amenable the (x × series) grid is to stacking. Only populated when both
+   * a primary x and series field exist. A stacked area/bar reads as bands only
+   * when series share x columns; when most columns hold a single series, the
+   * renderer zero-fills the gaps and every layer collapses into an isolated
+   * triangular spike instead of a continuous band. Capabilities gate on this to
+   * decline stacking on near-unique x (flat record lists, scatter-shaped data).
+   */
+  stackability?: {
+    /** Mean distinct series present per x value. ~1 → spiky; ~seriesCount → dense. */
+    seriesPerX: number
+    /** Fraction of x columns where 2+ series coexist (where stacking is visible). */
+    multiSeriesFraction: number
+    /** Number of distinct x columns considered. */
+    xColumns: number
+  }
   /** True when there is at least one date-typed candidate. */
   hasTimeAxis: boolean
   /**
