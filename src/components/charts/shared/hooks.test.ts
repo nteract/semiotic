@@ -719,6 +719,23 @@ describe("useLegendInteraction", () => {
     expect(result.current.legendSelectionHook).toBeNull()
   })
 
+  it("non-isolate mode returns a hook-local empty isolated category set", () => {
+    const first = renderHook(() =>
+      useLegendInteraction("highlight", "cat", allCategories)
+    )
+    const second = renderHook(() =>
+      useLegendInteraction("highlight", "cat", allCategories)
+    )
+
+    const firstEmptySet = first.result.current.isolatedCategories
+    first.rerender()
+
+    expect(first.result.current.isolatedCategories).toBe(firstEmptySet)
+
+    firstEmptySet.add("A")
+    expect(second.result.current.isolatedCategories.has("A")).toBe(false)
+  })
+
   it("isolate mode: onLegendClick toggles category in isolatedCategories", () => {
     const { result } = renderHook(() =>
       useLegendInteraction("isolate", "cat", allCategories)

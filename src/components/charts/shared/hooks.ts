@@ -19,7 +19,6 @@ import type { Datum } from "./datumTypes"
  * Default fill color used when no colorBy is specified
  */
 export const DEFAULT_COLOR = "#007bff"
-const EMPTY_CATEGORY_SET = new Set<string>()
 
 function resolveHoverXPosition(d: Datum, datum: Datum | null | undefined, xField: string): number | null {
   const candidate = d.xValue ?? datum?.[xField]
@@ -39,8 +38,8 @@ function observationDatum(d: Datum): Datum {
 
 function hasOwnEnumerableKey(value: object | undefined | null): boolean {
   if (!value) return false
-  for (const _key in value) {
-    return true
+  for (const key in value) {
+    if (Object.prototype.hasOwnProperty.call(value, key)) return true
   }
   return false
 }
@@ -565,6 +564,7 @@ export function useLegendInteraction(
 ): LegendInteractionState {
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null)
   const [isolatedCategories, setIsolatedCategories] = useState<Set<string>>(new Set())
+  const emptyIsolatedCategories = useMemo(() => new Set<string>(), [])
 
   const onLegendHover = useCallback(
     (item: { label: string } | null) => {
@@ -624,7 +624,7 @@ export function useLegendInteraction(
 
   return {
     highlightedCategory: mode === "highlight" ? highlightedCategory : null,
-    isolatedCategories: mode === "isolate" ? isolatedCategories : EMPTY_CATEGORY_SET,
+    isolatedCategories: mode === "isolate" ? isolatedCategories : emptyIsolatedCategories,
     onLegendHover,
     onLegendClick,
     legendSelectionHook

@@ -123,8 +123,8 @@ function createSource<T>(
 }
 
 function hasOwnEnumerableKey(value: object): boolean {
-  for (const _key in value) {
-    return true
+  for (const key in value) {
+    if (Object.prototype.hasOwnProperty.call(value, key)) return true
   }
   return false
 }

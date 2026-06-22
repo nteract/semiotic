@@ -221,6 +221,8 @@ function renderNote(
         style={{ overflow: "visible" }}
       >
         <div
+          // @ts-expect-error xmlns is needed for HTML inside SVG foreignObject.
+          xmlns="http://www.w3.org/1999/xhtml"
           style={{
             color: textFill,
             fontSize: "12px",
