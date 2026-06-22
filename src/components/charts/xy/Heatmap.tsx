@@ -6,20 +6,7 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import { scaleSequential } from "d3-scale"
-import {
-  interpolateBlues,
-  interpolateReds,
-  interpolateGreens,
-  interpolateViridis,
-  interpolateOranges,
-  interpolatePurples,
-  interpolateGreys,
-  interpolatePlasma,
-  interpolateInferno,
-  interpolateMagma,
-  interpolateCividis,
-  interpolateTurbo,
-} from "../shared/colorPalettes"
+import { getSequentialInterpolator } from "../shared/colorPalettes"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -360,26 +347,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
       return customColorScale
     }
 
-    // Sequential d3-scale-chromatic schemes. Covers every scheme name
-    // declared by the built-in SemioticTheme presets — tufte ("oranges"),
-    // pastels ("purples"), playful ("viridis"), etc. — so theme-driven
-    // colorScheme resolution always finds an interpolator.
-    const interpolators: Record<string, (t: number) => string> = {
-      blues: interpolateBlues,
-      reds: interpolateReds,
-      greens: interpolateGreens,
-      viridis: interpolateViridis,
-      oranges: interpolateOranges,
-      purples: interpolatePurples,
-      greys: interpolateGreys,
-      plasma: interpolatePlasma,
-      inferno: interpolateInferno,
-      magma: interpolateMagma,
-      cividis: interpolateCividis,
-      turbo: interpolateTurbo,
-    }
-
-    const interpolator = interpolators[colorScheme as string] || interpolateBlues
+    const interpolator = getSequentialInterpolator(colorScheme as string)
 
     return scaleSequential(interpolator).domain(valueDomain)
   }, [colorScheme, customColorScale, valueDomain])

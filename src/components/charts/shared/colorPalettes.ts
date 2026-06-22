@@ -178,6 +178,25 @@ export const interpolateTurbo = rgbInterpolator([
   "#cdf134", "#fbb91f", "#f56918", "#c52f06", "#7a0403",
 ])
 
+export const SEQUENTIAL_INTERPOLATORS: Record<string, (t: number) => string> = {
+  blues: interpolateBlues,
+  reds: interpolateReds,
+  greens: interpolateGreens,
+  viridis: interpolateViridis,
+  oranges: interpolateOranges,
+  purples: interpolatePurples,
+  greys: interpolateGreys,
+  plasma: interpolatePlasma,
+  inferno: interpolateInferno,
+  magma: interpolateMagma,
+  cividis: interpolateCividis,
+  turbo: interpolateTurbo,
+}
+
+export function getSequentialInterpolator(scheme: string | undefined): (t: number) => string {
+  return scheme ? (SEQUENTIAL_INTERPOLATORS[scheme] || interpolateBlues) : interpolateBlues
+}
+
 // ── Diverging (ColorBrewer 11-stop) ───────────────────────────────────
 
 export const interpolateRdBu = rgbInterpolator([
