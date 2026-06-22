@@ -109,6 +109,52 @@ function assertProductionBundle(absolutePath, bundleRel, errors) {
   }
 }
 
+function relFromRoot(absolutePath) {
+  return `./${absolutePath.slice(repoRoot.length + 1)}`
+}
+
+function localModuleSpecifiers(text) {
+  const specifiers = new Set()
+  const patterns = [
+    /\b(?:import|export)\s*[^"'()]*?\s*from\s*["'](\.\/[^"']+)["']/g,
+    /\bimport\s*["'](\.\/[^"']+)["']/g,
+    /\bimport\(\s*["'](\.\/[^"']+)["']\s*\)/g,
+  ]
+  for (const re of patterns) {
+    let match
+    while ((match = re.exec(text)) !== null) {
+      specifiers.add(match[1])
+    }
+  }
+  return specifiers
+}
+
+function resolveBundleFiles(entryAbs, errors) {
+  const seen = new Set()
+  const files = []
+  const visit = (absolutePath) => {
+    if (seen.has(absolutePath)) return
+    seen.add(absolutePath)
+    if (!existsSync(absolutePath)) {
+      errors.push(`Referenced bundle chunk missing: ${relFromRoot(absolutePath)} (run \`npm run dist:prod\`)`)
+      return
+    }
+    const text = readFileSync(absolutePath, "utf8")
+    files.push(absolutePath)
+    for (const specifier of localModuleSpecifiers(text)) {
+      visit(resolve(dirname(absolutePath), specifier))
+    }
+  }
+  visit(entryAbs)
+  return files
+}
+
+function gzipBundleSize(absolutePaths) {
+  // Code-split chunks are separate network transfers, so sum each file's gzip
+  // size instead of gzipping their concatenation as one artificial blob.
+  return absolutePaths.reduce((sum, absolutePath) => sum + gzipSize(absolutePath), 0)
+}
+
 function kbRound(bytes) {
   return Math.round(bytes / 1024)
 }
@@ -139,12 +185,15 @@ function measure() {
       continue
     }
     statSync(bundleAbs) // throws if unreadable
-    assertProductionBundle(bundleAbs, bundleRel, errors)
+    const bundleFiles = resolveBundleFiles(bundleAbs, errors)
+    for (const absolutePath of bundleFiles) {
+      assertProductionBundle(absolutePath, relFromRoot(absolutePath), errors)
+    }
     rows.push({
       subpath,
       importPath: subpathToImportPath(subpath),
       bundle: bundleRel,
-      kb: kbRound(gzipSize(bundleAbs)),
+      kb: kbRound(gzipBundleSize(bundleFiles)),
       blurb: BLURBS[subpath],
     })
   }
