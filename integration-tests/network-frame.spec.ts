@@ -114,8 +114,8 @@ test.describe("Network Charts - HOC default coverage", () => {
     await frame.hover({ position: { x: 12, y: 12 } })
     await expect(widget).toHaveCSS("opacity", "1")
     await expect(widget).toHaveCSS("pointer-events", "auto")
-    await expect(testCase).toHaveScreenshot("network-widget-annotation.png", {
-      maxDiffPixels: 150,
+    await expect(testCase.locator('[data-testid="network-widget-content"]')).toHaveScreenshot("network-widget-content-visible.png", {
+      maxDiffPixels: 20,
     })
   })
 })
