@@ -343,18 +343,18 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | Entry Point | gzip | What's inside |
 |---|---|---|
 | `semiotic/xy` | **91 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **75 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **70 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/ordinal` | **76 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **71 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **56 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **100 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/realtime` | **101 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
 | `semiotic/server` | **129 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/utils` | **39 KB** | ThemeProvider, validators, serialization — no chart components |
-| `semiotic/recipes` | **11 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/themes` | **4 KB** | Theme presets only (tufte, carbon, etc.) |
-| `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
+| `semiotic/recipes` | **13 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/themes` | **6 KB** | Theme presets only (tufte, carbon, etc.) |
+| `semiotic/data` | **4 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/ai` | **256 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
-| `semiotic` | **207 KB** | Everything below (full bundle) |
+| `semiotic/ai` | **261 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic` | **209 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 
