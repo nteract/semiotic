@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { getMax } from "../charts/shared/minMax"
 
 /**
  * GoFish escape-hatch lambda registry.
@@ -330,8 +331,8 @@ function normalizeBobaCell(cm: BobaCm, shared: BobaShared): BobaCellGeometry {
 
 /** Shared normalization across a menu of cups (or one cup, standalone). */
 function bobaShared(cms: BobaCm[]): BobaShared {
-  const halfWidth = Math.max(...cms.map((c) => c.halfWidth), 1)
-  const topExtent = Math.max(...cms.map((c) => Math.max(c.cupHeight, STRAW_HEIGHT_CM)), 1)
+  const halfWidth = getMax(cms.map((c) => c.halfWidth), 1)
+  const topExtent = getMax(cms.map((c) => Math.max(c.cupHeight, STRAW_HEIGHT_CM)), 1)
   return { halfWidth, topExtent, ref: Math.max(2 * halfWidth, topExtent) }
 }
 

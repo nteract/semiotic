@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { bin as d3Bin } from "d3-array"
 import type { ScaleLinear } from "d3-scale"
 import type { MarginalConfig, MarginalType } from "./types"
+import { getMax } from "../charts/shared/minMax"
 
 export type MarginalOrient = "top" | "bottom" | "left" | "right"
 
@@ -196,7 +197,7 @@ export function MarginalGraphics({
     const bins = binner(values)
     if (bins.length === 0) return null
 
-    const maxCount = Math.max(...bins.map((b: any) => b.length))
+    const maxCount = getMax(bins.map((b: any) => b.length))
     if (maxCount === 0) return null
 
     if (config.type === "histogram") {

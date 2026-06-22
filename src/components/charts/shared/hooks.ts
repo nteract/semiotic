@@ -19,6 +19,7 @@ import type { Datum } from "./datumTypes"
  * Default fill color used when no colorBy is specified
  */
 export const DEFAULT_COLOR = "#007bff"
+const EMPTY_CATEGORY_SET = new Set<string>()
 
 function resolveHoverXPosition(d: Datum, datum: Datum | null | undefined, xField: string): number | null {
   const candidate = d.xValue ?? datum?.[xField]
@@ -34,6 +35,14 @@ function observationDatum(d: Datum): Datum {
     return { ...datum, xValue: d.xValue }
   }
   return datum || {}
+}
+
+function hasOwnEnumerableKey(value: object | undefined | null): boolean {
+  if (!value) return false
+  for (const _key in value) {
+    return true
+  }
+  return false
 }
 
 /**
@@ -132,6 +141,7 @@ export function useColorScale(
   const themeCategorical = useThemeCategorical()
   return useMemo(() => {
     if (!colorBy) return undefined
+    const providerColors = categoryColors ?? undefined
     // Resolve effective scheme: explicit prop > theme categorical > "category10"
     const effectiveScheme: string | string[] = colorScheme
       ?? (themeCategorical && themeCategorical.length > 0 ? themeCategorical : undefined)
@@ -142,30 +152,30 @@ export function useColorScale(
     // the pipeline's color assignment.
     if (data.length === 0) {
       // Still use CategoryColorProvider if available — it has stable colors
-      if (categoryColors && Object.keys(categoryColors).length > 0) {
+      if (providerColors && hasOwnEnumerableKey(providerColors)) {
         // Use effectiveScheme as fallback for categories not in the provider
         const fallbackScale = createColorScale([{ _: "a" }], "_", effectiveScheme)
-        return (v: string) => categoryColors[v] || fallbackScale(v)
+        return (v: string) => providerColors[v] || fallbackScale(v)
       }
       return undefined
     }
     // When colorBy is a function, derive categories from data and build an ordinal scale
     if (typeof colorBy === "function") {
       const categories = Array.from(new Set(data.map(d => String(colorBy(d)))))
-      if (categoryColors && Object.keys(categoryColors).length > 0) {
+      if (providerColors && hasOwnEnumerableKey(providerColors)) {
         // Use CategoryColorProvider colors, with effectiveScheme as fallback for unknown categories
         const syntheticData = categories.map(c => ({ _cat: c }))
         const fallbackScale = createColorScale(syntheticData, "_cat", effectiveScheme)
-        return (v: string) => categoryColors[v] || fallbackScale(v)
+        return (v: string) => providerColors[v] || fallbackScale(v)
       }
       // Build a synthetic data array so createColorScale can derive unique values
       const syntheticData = categories.map(c => ({ _cat: c }))
       return createColorScale(syntheticData, "_cat", effectiveScheme)
     }
     // If a CategoryColorProvider is present, use its color map as the scale
-    if (categoryColors && Object.keys(categoryColors).length > 0) {
+    if (providerColors && hasOwnEnumerableKey(providerColors)) {
       const fallbackScale = createColorScale(data, colorBy as string, effectiveScheme)
-      return (v: string) => categoryColors[v] || fallbackScale(v)
+      return (v: string) => providerColors[v] || fallbackScale(v)
     }
     return createColorScale(data, colorBy as string, effectiveScheme)
   }, [data, colorBy, colorScheme, categoryColors, themeCategorical])
@@ -614,7 +624,7 @@ export function useLegendInteraction(
 
   return {
     highlightedCategory: mode === "highlight" ? highlightedCategory : null,
-    isolatedCategories: mode === "isolate" ? isolatedCategories : new Set(),
+    isolatedCategories: mode === "isolate" ? isolatedCategories : EMPTY_CATEGORY_SET,
     onLegendHover,
     onLegendClick,
     legendSelectionHook

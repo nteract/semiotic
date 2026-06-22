@@ -20,6 +20,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
+import { getMinMax } from "../shared/minMax"
 
 export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -169,7 +170,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
   const sizeDomain = useMemo(() => {
     if (!sizeBy) return undefined
     const sizes = safeData.map((d) => typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy])
-    return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
+    return getMinMax(sizes)
   }, [safeData, sizeBy])
 
   const themeCategorical = useThemeCategorical()

@@ -7,6 +7,7 @@ import type { StreamXYFrameHandle, HoverData, Style } from "../../stream/types"
 import { brush as d3Brush } from "d3-brush"
 import { select as d3Select } from "d3-selection"
 import { getColor } from "../shared/colorUtils"
+import { getMax, getMinMax } from "../shared/minMax"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
@@ -337,20 +338,23 @@ function DiagonalCell({
   const activePredicate = activeHook.predicate
 
   const histogram = useMemo(() => {
-    const values = data.map((d) => d[field]).filter((v) => v != null && !isNaN(v))
+    const colorField = typeof colorBy === "string" ? colorBy : null
+    const values: number[] = []
+    const categorySet = new Set<string>()
+    for (const d of data) {
+      const value = d[field]
+      if (value != null && !isNaN(value)) values.push(Number(value))
+      if (colorField) {
+        const category = d[colorField]
+        if (category != null) categorySet.add(String(category))
+      }
+    }
     if (values.length === 0) return { bars: [], selectedBars: [], categoryBars: [], selectedCategoryBars: [], max: 0, categories: [] }
 
-    const min = Math.min(...values)
-    const max = Math.max(...values)
+    const [min, max] = getMinMax(values)
     const binWidth = (max - min) / bins || 1
 
-    // Resolve colorBy to a string field name for category extraction
-    const colorField = typeof colorBy === "string" ? colorBy : null
-
-    // Get unique categories (stable order), filtering out null/undefined values
-    const categories: string[] = colorField
-      ? [...new Set(data.map((d) => d[colorField]).filter((v) => v != null).map(String))]
-      : []
+    const categories = Array.from(categorySet)
     // O(1) category→index lookup
     const categoryIndexMap = new Map<string, number>(categories.map((cat, i) => [cat, i]))
 
@@ -380,7 +384,7 @@ function DiagonalCell({
       }
     }
 
-    const maxCount = Math.max(...counts, 1)
+    const maxCount = getMax(counts, 1)
 
     // Build stacked bar segments per bin per category
     const categoryBars = categoryCounts.map((catCounts, i) => {
@@ -600,7 +604,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     if (!shouldShowLegend || !colorBy) return null
     const colorField = typeof colorBy === "string" ? colorBy : null
     if (!colorField) return null
-    const categories = [...new Set(indexedData.map((d) => d[colorField]))]
+    const categories = Array.from(new Set(indexedData.map((d) => d[colorField]).filter((v) => v != null)))
     return categories.map((cat) => ({
       label: String(cat),
       color: colorScale ? colorScale(String(cat)) : DEFAULT_COLOR

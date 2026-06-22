@@ -4,9 +4,8 @@
  * bounded and push-mode data.
  *
  * **Bounded mode** (`isPushMode: false`) — derive `[min, max]` from
- * the `data` array each render. Identical to inline
- * `Math.min(...sizes), Math.max(...sizes)` patterns the consuming
- * HOCs used to duplicate.
+ * the `data` array each render. This replaces the inline spread-based
+ * min/max patterns the consuming HOCs used to duplicate.
  *
  * **Push mode** (`isPushMode: true`) — bounded `data` is unavailable
  * because the chart's data prop is omitted; the user pushes through

@@ -5,13 +5,15 @@ interface DataSummaryState {
   /** When true, AccessibleDataTable renders visibly instead of sr-only */
   visible: boolean
   setVisible: React.Dispatch<React.SetStateAction<boolean>>
+  toggle: () => void
 }
 
 const DataSummaryContext = React.createContext<DataSummaryState | null>(null)
 
 export function DataSummaryProvider({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = React.useState(false)
-  const value = React.useMemo(() => ({ visible, setVisible }), [visible])
+  const toggle = React.useCallback(() => setVisible(v => !v), [])
+  const value = React.useMemo(() => ({ visible, setVisible, toggle }), [visible, toggle])
   return (
     <DataSummaryContext.Provider value={value}>
       {children}
@@ -25,5 +27,5 @@ export function useDataSummary(): DataSummaryState | null {
 
 export function useDataSummaryToggle(): (() => void) | null {
   const ctx = React.useContext(DataSummaryContext)
-  return ctx ? () => ctx.setVisible(v => !v) : null
+  return ctx ? ctx.toggle : null
 }

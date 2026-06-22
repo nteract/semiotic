@@ -9,6 +9,10 @@ type AnnotationNote = {
   orientation?: string
   align?: string
   noWrap?: boolean
+  /** Render note text in a foreignObject for browser-native HTML wrapping. */
+  useHTML?: boolean
+  /** Alias for useHTML. */
+  html?: boolean
 }
 
 type AnnotationConnector = {
@@ -180,6 +184,7 @@ function renderNote(
     title ? (noWrap ? [title] : wrapText(title, wrap)) : []
   const labelLines =
     label ? (noWrap ? [label] : wrapText(label, wrap)) : []
+  const useHTML = note.useHTML || note.html
 
   // For leftRight orientation, offset text horizontally away from the note-line
   const textX = orientation === "leftRight"
@@ -191,41 +196,84 @@ function renderNote(
 
   const textFill = color || "var(--semiotic-annotation-color, var(--semiotic-text, #333))"
 
-  if (titleLines.length > 0) {
+  if (useHTML) {
+    const width = wrap
+    const totalLines = titleLines.length + labelLines.length
+    const height = Math.max(lineHeight, totalLines * lineHeight + (title && label ? labelPad : 0))
+    const foreignObjectX = textAnchor === "end"
+      ? textX - width
+      : textAnchor === "middle"
+        ? textX - width / 2
+        : textX
+    const textAlign = textAnchor === "end"
+      ? "right"
+      : textAnchor === "middle"
+        ? "center"
+        : "left"
     textElements.push(
-      <text
-        key="annotation-note-title"
-        className="annotation-note-title"
-        fill={textFill}
-        textAnchor={textAnchor}
-        fontWeight="bold"
+      <foreignObject
+        key="annotation-note-html"
+        className="annotation-note-html"
+        x={foreignObjectX}
+        y={-lineHeight}
+        width={width}
+        height={height + lineHeight}
+        style={{ overflow: "visible" }}
       >
-        {titleLines.map((line, i) => (
-          <tspan key={i} x={textX} dy={i === 0 ? 0 : lineHeight}>
-            {line}
-          </tspan>
-        ))}
-      </text>
+        <div
+          style={{
+            color: textFill,
+            fontSize: "12px",
+            lineHeight: `${lineHeight}px`,
+            overflow: "visible",
+            textAlign,
+            whiteSpace: noWrap ? "nowrap" : "normal",
+            wordBreak: "break-word"
+          }}
+        >
+          {title && <div className="annotation-note-title" style={{ fontWeight: "bold" }}>{title}</div>}
+          {label && <div className="annotation-note-label">{label}</div>}
+        </div>
+      </foreignObject>
     )
     yOffset = titleLines.length * lineHeight
-  }
+  } else {
+    if (titleLines.length > 0) {
+      textElements.push(
+        <text
+          key="annotation-note-title"
+          className="annotation-note-title"
+          fill={textFill}
+          textAnchor={textAnchor}
+          fontWeight="bold"
+        >
+          {titleLines.map((line, i) => (
+            <tspan key={i} x={textX} dy={i === 0 ? 0 : lineHeight}>
+              {line}
+            </tspan>
+          ))}
+        </text>
+      )
+      yOffset = titleLines.length * lineHeight
+    }
 
-  if (labelLines.length > 0) {
-    textElements.push(
-      <text
-        key="annotation-note-label"
-        className="annotation-note-label"
-        fill={textFill}
-        textAnchor={textAnchor}
-        y={yOffset}
-      >
-        {labelLines.map((line, i) => (
-          <tspan key={i} x={textX} dy={i === 0 ? 0 : lineHeight}>
-            {line}
-          </tspan>
-        ))}
-      </text>
-    )
+    if (labelLines.length > 0) {
+      textElements.push(
+        <text
+          key="annotation-note-label"
+          className="annotation-note-label"
+          fill={textFill}
+          textAnchor={textAnchor}
+          y={yOffset}
+        >
+          {labelLines.map((line, i) => (
+            <tspan key={i} x={textX} dy={i === 0 ? 0 : lineHeight}>
+              {line}
+            </tspan>
+          ))}
+        </text>
+      )
+    }
   }
 
   let noteLine = null

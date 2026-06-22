@@ -33,6 +33,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
+import { getMinMax } from "../shared/minMax"
 
 /**
  * Heatmap component props
@@ -350,7 +351,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
   // Calculate value domain
   const valueDomain = useMemo(() => {
     const values = safeData.map(getValueFn)
-    return [Math.min(...values), Math.max(...values)] as [number, number]
+    return getMinMax(values)
   }, [safeData, getValueFn])
 
   // Create color scale

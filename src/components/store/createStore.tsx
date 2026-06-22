@@ -21,7 +21,7 @@ export interface StoreProviderProps<T> {
 
 export function createStore<T>(
   fn: (set: (updater: (current: T) => Partial<T>) => void) => T
-): [React.FC<StoreProviderProps<T>>, <R>(selector: (state: T) => R) => R] {
+): [React.FC<StoreProviderProps<T>>, <R>(selector: (state: T) => R, equalityFn?: (a: R, b: R) => boolean) => R] {
   // `createContext` is called lazily — not at module load. Why: React
   // Server Components ship a build of `react` that omits `createContext`
   // entirely (along with the rest of the client-only API surface). When
@@ -47,14 +47,36 @@ export function createStore<T>(
     return <Ctx.Provider value={source} children={children} />
   }
 
-  const useSelector = <R,>(selector: (state: T) => R): R => {
+  const useSelector = <R,>(
+    selector: (state: T) => R,
+    equalityFn?: (a: R, b: R) => boolean
+  ): R => {
     const Ctx = getCtx()
     const source = useContext(Ctx) ?? fallbackSource
     const selectorRef = useRef(selector)
     selectorRef.current = selector
+    const lastSelectedRef = useRef<{ hasValue: boolean; value: R | undefined }>({
+      hasValue: false,
+      value: undefined
+    })
     const getSnapshot = useCallback(
-      () => selectorRef.current(source.getState()),
-      [source]
+      () => {
+        const nextSelected = selectorRef.current(source.getState())
+        const lastSelected = lastSelectedRef.current
+        if (
+          lastSelected.hasValue &&
+          equalityFn &&
+          equalityFn(lastSelected.value as R, nextSelected)
+        ) {
+          return lastSelected.value as R
+        }
+        lastSelectedRef.current = {
+          hasValue: true,
+          value: nextSelected
+        }
+        return nextSelected
+      },
+      [source, equalityFn]
     )
     const getServerSnapshot = useCallback(
       () => selectorRef.current(source.getState()),
@@ -70,24 +92,26 @@ function createSource<T>(
   fn: (set: (updater: (current: T) => Partial<T>) => void) => T,
   initialState?: Partial<T>
 ): Source<T> {
-  const events = new EventTarget()
+  const listeners = new Set<() => void>()
   let state = {
     ...fn(set),
     ...(initialState ?? {})
   } as T
 
   function set(updater: (current: T) => Partial<T>) {
-    state = { ...state, ...updater(state) } as T
-    // Plain `Event`, not `CustomEvent`. CustomEvent landed as a Node
-    // global in v19; using it would crash store updates fired during
-    // SSR on Node 18 (the package's lower bound). The `detail` field is
-    // never read by subscribers, so there's no functional difference.
-    events.dispatchEvent(new Event("update"))
+    const update = updater(state)
+    if (!hasOwnEnumerableKey(update)) return
+    state = { ...state, ...update } as T
+    for (const listener of listeners) {
+      listener()
+    }
   }
 
   function subscribe(cb: () => void) {
-    events.addEventListener("update", cb)
-    return () => events.removeEventListener("update", cb)
+    listeners.add(cb)
+    return () => {
+      listeners.delete(cb)
+    }
   }
 
   return {
@@ -96,4 +120,11 @@ function createSource<T>(
     },
     subscribe
   }
+}
+
+function hasOwnEnumerableKey(value: object): boolean {
+  for (const _key in value) {
+    return true
+  }
+  return false
 }

@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { getMinMax } from "../charts/shared/minMax"
 /**
  * Data transform helpers for common data shapes.
  * Import from "semiotic/data"
@@ -22,8 +23,9 @@ export function bin<T extends Datum>(
 
   if (values.length === 0) return []
 
-  const min = options.domain ? options.domain[0] : Math.min(...values)
-  const max = options.domain ? options.domain[1] : Math.max(...values)
+  const [dataMin, dataMax] = getMinMax(values)
+  const min = options.domain ? options.domain[0] : dataMin
+  const max = options.domain ? options.domain[1] : dataMax
 
   if (min === max) {
     return [{ category: `${min}-${max}`, value: values.length }]
@@ -87,10 +89,10 @@ export function rollup<T extends Datum>(
         aggregated = vals.reduce((a, b) => a + b, 0) / vals.length
         break
       case "min":
-        aggregated = Math.min(...vals)
+        aggregated = getMinMax(vals)[0]
         break
       case "max":
-        aggregated = Math.max(...vals)
+        aggregated = getMinMax(vals)[1]
         break
       case "sum":
       default:

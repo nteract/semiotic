@@ -19,6 +19,7 @@ import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { getMinMax } from "../shared/minMax"
 
 export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
@@ -233,7 +234,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     const acc = typeof sizeBy === "function" ? sizeBy : (d: Datum) => d?.[sizeBy as string]
     const vals = safeData.filter(Boolean).map(d => acc(d)).filter(v => v != null && isFinite(v))
     if (vals.length === 0) return undefined
-    return [Math.min(...vals), Math.max(...vals)] as [number, number]
+    return getMinMax(vals)
   }, [safeData, sizeBy])
 
   const pointStyleFn = useMemo(() => {

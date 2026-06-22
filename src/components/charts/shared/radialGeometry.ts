@@ -16,6 +16,7 @@
  * each function is a few lines of math with a documented input
  * convention.
  */
+import { getMinMax } from "./minMax"
 
 /** Result of `sweepToAngles`. All angles are in the
  *  12-o'clock-zero, clockwise-positive convention used by pieScene
@@ -138,10 +139,8 @@ export function computeArcBoundingBox(sweepDegrees: number = 240): ArcBoundingBo
   }
   const xs = points.map((p) => p[0])
   const ys = points.map((p) => p[1])
-  const minX = Math.min(...xs)
-  const maxX = Math.max(...xs)
-  const minY = Math.min(...ys)
-  const maxY = Math.max(...ys)
+  const [minX, maxX] = getMinMax(xs)
+  const [minY, maxY] = getMinMax(ys)
   return {
     minX, maxX, minY, maxY,
     width: maxX - minX,

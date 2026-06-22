@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
+import { getMinMax } from "../shared/minMax"
 
 /**
  * Quadrant label and color configuration
@@ -306,7 +307,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
       .map((d) => typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy])
       .filter((v): v is number => typeof v === "number" && Number.isFinite(v))
     if (sizes.length === 0) return undefined
-    return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
+    return getMinMax(sizes)
   }, [safeData, sizeBy])
 
   // Resolve x/y accessors for quadrant coloring

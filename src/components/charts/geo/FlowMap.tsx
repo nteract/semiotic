@@ -7,6 +7,7 @@ import StreamGeoFrame from "../../stream/StreamGeoFrame"
 import type { StreamGeoFrameProps, ProjectionProp, StreamGeoFrameHandle } from "../../stream/geoTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { getMinMax } from "../shared/minMax"
 
 // Stable internal keys for synthesized line-coord objects. The
 // frame's xAccessor / yAccessor would otherwise need to know how to
@@ -475,7 +476,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     const vals = safeFlows.filter(f => f && typeof f === "object").map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
     if (vals.length === 0) return () => edgeWidthRange[0]
     return scaleLinear()
-      .domain([Math.min(...vals), Math.max(...vals)])
+      .domain(getMinMax(vals))
       .range(edgeWidthRange)
   }, [safeFlows, valueAccessor, edgeWidthRange])
 
