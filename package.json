@@ -100,6 +100,7 @@
   },
   "files": [
     "dist/*.min.js",
+    "dist/*-semiotic-*.js",
     "dist/*-statisticalOverlays-*.js",
     "dist/**/*.d.ts",
     "ai/schema.json",
