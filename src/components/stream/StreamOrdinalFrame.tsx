@@ -393,6 +393,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [currentScales, setCurrentScales] = useState<OrdinalScales | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
+    const lastAnnotationFrameTimeRef = useRef(0)
     const [isStale, setIsStale] = useState(false)
     const lastSceneDimsRef = useRef({ w: -1, h: -1 })
     // customLayout overlays are read straight from store.customLayoutOverlays at
@@ -910,6 +911,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       if (computedSceneThisFrame && store.scales) {
         setCurrentScales(store.scales)
         setAnnotationFrame(f => f + 1)
+        lastAnnotationFrameTimeRef.current = now
+      } else if (isTransitioning && store.scales && now - lastAnnotationFrameTimeRef.current >= 33) {
+        setAnnotationFrame(f => f + 1)
+        lastAnnotationFrameTimeRef.current = now
       }
 
       // Update staleness badge state

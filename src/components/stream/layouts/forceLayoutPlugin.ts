@@ -7,8 +7,8 @@ import {
   forceManyBody
 } from "d3-force"
 import { scaleLinear } from "d3-scale"
-import { min, max } from "d3-array"
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
+import { getMinMax } from "../../charts/shared/minMax"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {
   NetworkLayoutPlugin,
@@ -448,17 +448,17 @@ function resolveNodeSizeFn(
   // String accessor: look up value on node.data and scale to range
   const range = nodeSizeRange || [5, 20]
 
-  // Extract all numeric values to compute domain
-  const values = allNodes
-    .map((n) => n.data?.[nodeSize])
-    .filter((v): v is number => v != null && typeof v === "number")
+  const values: number[] = []
+  for (const node of allNodes) {
+    const value = node.data?.[nodeSize]
+    if (typeof value === "number") values.push(value)
+  }
 
   if (values.length === 0) {
     return () => range[0]
   }
 
-  const domainMin = min(values) ?? 0
-  const domainMax = max(values) ?? 1
+  const [domainMin, domainMax] = getMinMax(values)
 
   // If all values are the same, return the midpoint of the range
   if (domainMin === domainMax) {

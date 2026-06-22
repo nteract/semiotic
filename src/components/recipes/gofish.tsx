@@ -19,6 +19,7 @@ import type {
   RealtimeNode,
 } from "../stream/networkTypes"
 import { createSafeDatum, resolveAccessor } from "./recipeUtils"
+import { getMax, getMinMax } from "../charts/shared/minMax"
 
 export type GofishGlyphMark =
   | {
@@ -350,8 +351,9 @@ export const gofishFlowerLayout = createGofishGlyphLayout<GofishFlowerConfig>((c
   const xStart = plot.x + xPad
   const xEnd = plot.x + plot.width - xPad
   const xValues = ctx.data.map((d) => number(getX(d))).filter(Number.isFinite)
-  const minX = xValues.length ? Math.min(...xValues) : 0
-  const maxX = xValues.length ? Math.max(...xValues) : 1
+  const [dataMinX, dataMaxX] = xValues.length ? getMinMax(xValues) : [0, 1]
+  const minX = dataMinX
+  const maxX = dataMaxX
   const marks: GofishGlyphMark[] = []
 
   Array.from(groups.entries()).forEach(([lake, rows], lakeIndex) => {
@@ -1343,7 +1345,7 @@ export function layoutTreemapStrip<T>(
 ): Array<TreemapStripRegion<T>> {
   if (!entries.length) return []
   const totalValue = sum(entries, (entry) => Math.max(0, entry.value))
-  const maxHeightValue = Math.max(...entries.map((entry) => Math.max(0, entry.heightValue ?? entry.value)), 1)
+  const maxHeightValue = getMax(entries.map((entry) => Math.max(0, entry.heightValue ?? entry.value)), 1)
   const layoutHeight = Math.max(1, bounds.height * 0.82)
   const availableWidth = Math.max(1, bounds.width - gap * Math.max(0, entries.length - 1))
   const targetArea = availableWidth * layoutHeight * 0.82

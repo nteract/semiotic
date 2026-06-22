@@ -1,4 +1,5 @@
 import type { Datum } from "./datumTypes"
+import { getMax, getMinMax } from "./minMax"
 /**
  * Statistical overlay processing for LineChart.
  *
@@ -191,8 +192,7 @@ export function stampForecastOpacity(
   })
   const finite = widths.filter((w) => Number.isFinite(w))
   if (finite.length === 0) return
-  const minW = Math.min(...finite)
-  const maxW = Math.max(...finite)
+  const [minW, maxW] = getMinMax(finite)
   const span = maxW - minW
   points.forEach((p, i) => {
     const w = widths[i]
@@ -488,7 +488,7 @@ function buildAutoForecast(
         : 1.0
 
       const allX = data.map((d) => d[xAccessor] as number).filter((v) => v != null && isFinite(v))
-      const xMax = Math.max(...allX)
+      const xMax = getMax(allX)
       const step = points.length > 1 ? (points[n - 1][0] - points[0][0]) / (n - 1) : 1
 
       for (let i = 1; i <= steps; i++) {

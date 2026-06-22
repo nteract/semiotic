@@ -6,42 +6,14 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * buildStreamingHeatmapScene — continuous x/y discretized into bins with
  *   count/sum/mean aggregation.
  *
- * Dependencies: SceneGraph (buildHeatcellNode), d3-scale/chromatic, accessorUtils
+ * Dependencies: SceneGraph (buildHeatcellNode), color palettes, accessorUtils
  * Consumed by: PipelineStore.buildSceneNodes (chartType "heatmap")
  */
-import {
-  interpolateBlues,
-  interpolateReds,
-  interpolateGreens,
-  interpolateViridis,
-  interpolateOranges,
-  interpolatePurples,
-  interpolateGreys,
-  interpolatePlasma,
-  interpolateInferno,
-  interpolateMagma,
-  interpolateCividis,
-  interpolateTurbo,
-} from "../../charts/shared/colorPalettes"
+import { getSequentialInterpolator, SEQUENTIAL_INTERPOLATORS } from "../../charts/shared/colorPalettes"
 import type { HeatcellSceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor } from "../accessorUtils"
 import type { XYSceneContext } from "./types"
-
-const HEAT_INTERPOLATORS: Record<string, (t: number) => string> = {
-  blues: interpolateBlues,
-  reds: interpolateReds,
-  greens: interpolateGreens,
-  viridis: interpolateViridis,
-  oranges: interpolateOranges,
-  purples: interpolatePurples,
-  greys: interpolateGreys,
-  plasma: interpolatePlasma,
-  inferno: interpolateInferno,
-  magma: interpolateMagma,
-  cividis: interpolateCividis,
-  turbo: interpolateTurbo,
-}
 
 // Precomputed color LUT: 256 entries per scheme, built lazily and cached.
 // Avoids per-cell d3 interpolation (which creates CSS strings through multiple fn calls).
@@ -49,11 +21,11 @@ const COLOR_LUT_SIZE = 256
 const colorLutCache = new Map<string, string[]>()
 
 function getColorLut(schemeName: string): string[] {
-  const cacheKey = schemeName in HEAT_INTERPOLATORS ? schemeName : "blues"
+  const cacheKey = schemeName in SEQUENTIAL_INTERPOLATORS ? schemeName : "blues"
   let lut = colorLutCache.get(cacheKey)
   if (lut) return lut
   lut = new Array(COLOR_LUT_SIZE)
-  const fn = HEAT_INTERPOLATORS[cacheKey] || interpolateBlues
+  const fn = getSequentialInterpolator(cacheKey)
   for (let i = 0; i < COLOR_LUT_SIZE; i++) {
     lut[i] = fn(i / (COLOR_LUT_SIZE - 1))
   }

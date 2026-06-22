@@ -34,7 +34,7 @@ function suggestField(target: string, available: string[]): string | null {
 
 interface ArrayDataValidation {
   componentName: string
-  data: any[] | undefined | null
+  data: any
   accessors?: Record<string, AccessorLike | undefined>
   requiredProps?: Datum
 }
@@ -75,9 +75,6 @@ export function validateArrayData({
   // Check data exists and is non-empty
   // undefined/null = push API mode, skip validation
   if (data == null) return null
-  if (!Array.isArray(data) || data.length === 0) {
-    return `${componentName}: No data provided. Pass a non-empty array to the data prop.`
-  }
 
   // Check if data is an object but not an array (common hierarchy mistake)
   if (!Array.isArray(data) && typeof data === "object") {
@@ -85,6 +82,10 @@ export function validateArrayData({
       `${componentName}: data should be an array, but received an object. ` +
       `If this is hierarchical data, use TreeDiagram, Treemap, or CirclePack instead.`
     )
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
+    return `${componentName}: No data provided. Pass a non-empty array to the data prop.`
   }
 
   // Check accessors against a sample of data points

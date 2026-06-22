@@ -9,6 +9,8 @@
 // The HOC component (`ProcessSankey.tsx`) wraps this with prop parsing,
 // SVG drawing, and accessor unwrapping.
 
+import { getMin } from "../../shared/minMax"
+
 // ---------------------------------------------------------------------------
 // Public types (canonical home — `algorithm.d.ts` is deleted, this file
 // is the single source of truth now that the implementation is TS).
@@ -338,7 +340,7 @@ export function computeNode(
   // other side if available; if a deficit remains, batch a `create`
   // event at `xExtent[0] - 1` (or `firstEventTime - 1`) so the band
   // reads as one continuous mass through the whole lifetime.
-  const firstEventTime: number | null = events.length ? Math.min(...events.map((e) => e.time)) : null
+  const firstEventTime: number | null = events.length ? getMin(events.map((e) => e.time)) : null
   const xStart: number | null = Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[0])
     ? node.xExtent[0]
     : null

@@ -1,5 +1,6 @@
 import { quantile as d3Quantile } from "d3-array"
 import { buildRectNode } from "../SceneGraph"
+import { getMax, getMinMax } from "../../charts/shared/minMax"
 import type {
   OrdinalSceneNode,
   OrdinalLayout,
@@ -128,7 +129,7 @@ export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayou
       const idx = Math.min(Math.floor((v - vMin) / binWidth), bins - 1)
       counts[idx]++
     }
-    const maxCount = Math.max(...counts, 1)
+    const maxCount = getMax(counts, 1)
 
     // Build symmetric violin path
     const halfWidth = col.width / 2 * 0.9
@@ -227,8 +228,9 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
 
     if (values.length === 0) continue
 
-    const vMin = globalMin != null && isFinite(globalMin) ? globalMin : Math.min(...values)
-    const vMax = globalMax != null && isFinite(globalMax) ? globalMax : Math.max(...values)
+    const [dataMin, dataMax] = getMinMax(values)
+    const vMin = globalMin != null && isFinite(globalMin) ? globalMin : dataMin
+    const vMax = globalMax != null && isFinite(globalMax) ? globalMax : dataMax
     const binWidth = (vMax - vMin) / numBins || 1
 
     const counts = new Array(numBins).fill(0)
@@ -240,7 +242,7 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
     }
 
     const total = values.length
-    const maxCount = Math.max(...counts, 1)
+    const maxCount = getMax(counts, 1)
 
     const style = resolveSummaryStyle(col.pieceData[0], col.name)
 
@@ -301,7 +303,7 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
       const idx = Math.min(Math.floor((v - vMin) / binWidth), numBins - 1)
       counts[idx]++
     }
-    const maxCount = Math.max(...counts, 1)
+    const maxCount = getMax(counts, 1)
 
     const style = resolveSummaryStyle(col.pieceData[0], col.name)
     const halfBand = col.width * amplitude

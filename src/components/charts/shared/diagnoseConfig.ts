@@ -48,7 +48,8 @@ const NETWORK_COMPONENTS = new Set([
 // COLOR_SCHEMES by a drift test in diagnoseConfig.test.ts.
 const KNOWN_COLOR_SCHEMES = new Set([
   "category10", "tableau10", "set3",
-  "blues", "reds", "greens", "oranges", "purples", "viridis", "plasma",
+  "blues", "reds", "greens", "oranges", "purples", "greys",
+  "viridis", "plasma", "inferno", "magma", "cividis", "turbo",
 ])
 
 function checkEmptyData(

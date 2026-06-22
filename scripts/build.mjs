@@ -12,7 +12,7 @@ const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
 const isAnalyze = args.includes("--analyze")
 
-function useClientPlugin({ serverOnly = false } = {}) {
+function useClientPlugin({ serverOnly = false, clientOnly = false } = {}) {
   const clientModules = new Set()
   return {
     name: "use-client",
@@ -35,6 +35,15 @@ function useClientPlugin({ serverOnly = false } = {}) {
       // chunk → tag the chunk" produces a false positive here.
       // Server bundles set this flag to opt out unconditionally.
       if (serverOnly) return null
+      // ESM code-splitting can emit the public entry file as a facade
+      // chunk whose only content is `export { ... } from "./shared.js"`.
+      // In that shape, `chunk.modules` does not include the client-tagged
+      // source modules, so the transitive-module heuristic below never
+      // fires even though the public entry is client-only. Tag the entry
+      // facade explicitly for bundles marked `clientOnly`.
+      if (clientOnly && chunk.isEntry) {
+        return { code: `"use client";\n${code}`, map: null }
+      }
       for (const id of Object.keys(chunk.modules)) {
         if (clientModules.has(id)) {
           return { code: `"use client";\n${code}`, map: null }
@@ -52,6 +61,7 @@ async function createBundle(options = {}) {
     analyze = false,
     minify = false,
     serverOnly = false,
+    clientOnly = false,
   } = options
 
   // The `useClientPlugin` is split across two hook phases: `transform`
@@ -69,7 +79,7 @@ async function createBundle(options = {}) {
   // is the LAST thing to run, prepending `"use client";` onto the
   // already-minified output. Terser never sees the directive, so it
   // can't strip it.
-  const useClient = useClientPlugin({ serverOnly })
+  const useClient = useClientPlugin({ serverOnly, clientOnly })
 
   const plugins = [
     external({

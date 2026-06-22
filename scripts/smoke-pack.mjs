@@ -12,7 +12,7 @@
  * built (`npm run dist`). Exits non-zero on any import failure.
  */
 import { execSync } from "node:child_process"
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readdirSync, existsSync } from "node:fs"
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readdirSync, existsSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -58,6 +58,42 @@ function findTarball(dir) {
     )
   }
   return join(dir, tarball)
+}
+
+function localModuleSpecifiers(text) {
+  const specifiers = new Set()
+  const patterns = [
+    /\b(?:import|export)\s*[^"'()]*?\s*from\s*["'](\.\/[^"']+)["']/g,
+    /\bimport\s*["'](\.\/[^"']+)["']/g,
+    /\bimport\(\s*["'](\.\/[^"']+)["']\s*\)/g,
+  ]
+  for (const re of patterns) {
+    let match
+    while ((match = re.exec(text)) !== null) {
+      specifiers.add(match[1])
+    }
+  }
+  return specifiers
+}
+
+function assertLocalChunksExist(packageRoot, entryRel, failures) {
+  const seen = new Set()
+  const visit = (relPath) => {
+    if (seen.has(relPath)) return
+    seen.add(relPath)
+    const absPath = join(packageRoot, relPath.replace(/^\.\//, ""))
+    if (!existsSync(absPath)) {
+      failures.push(`${entryRel}: missing local ESM chunk ${relPath}`)
+      return
+    }
+    const text = readFileSync(absPath, "utf8")
+    const baseDir = dirname(relPath)
+    for (const specifier of localModuleSpecifiers(text)) {
+      const nextRel = `./${resolve(packageRoot, baseDir, specifier).slice(packageRoot.length + 1)}`
+      visit(nextRel)
+    }
+  }
+  visit(entryRel)
 }
 
 const tmp = mkdtempSync(join(tmpdir(), "semiotic-smoke-"))
@@ -106,6 +142,10 @@ try {
     if (!exportEntry) {
       failures.push(`${importPath}: missing entry in package.json exports`)
       continue
+    }
+
+    if (exportEntry.import) {
+      assertLocalChunksExist(join(proj, "node_modules/semiotic"), exportEntry.import, failures)
     }
 
     // ESM import

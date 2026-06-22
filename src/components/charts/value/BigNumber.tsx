@@ -23,7 +23,6 @@ import { useReducedMotion } from "../../stream/useMediaPreferences"
 import {
   buildFormatter,
   decorate,
-  formatDeltaPercent,
   formatSignedDelta
 } from "./formatting"
 import { colorForLevel, resolveThreshold } from "./thresholdSparkline"
@@ -585,24 +584,41 @@ const BigNumberInner = (
     computedDelta != null && Number.isFinite(computedDelta)
       ? formatSignedDelta(computedDelta, deltaFormatter)
       : null
+  const deltaPercentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale ?? "en-US", {
+        style: "percent",
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 0,
+        signDisplay: "exceptZero",
+      }),
+    [locale]
+  )
   const deltaPercent =
     comparisonValue != null &&
     Number.isFinite(effectiveValue) &&
-    (showDeltaPercent ?? true)
-      ? formatDeltaPercent(comparisonValue, effectiveValue as number, locale)
+    (showDeltaPercent ?? true) &&
+    comparisonValue !== 0
+      ? deltaPercentFormatter.format(
+          ((effectiveValue as number) - comparisonValue) / Math.abs(comparisonValue)
+        )
       : null
 
   // ── Target ───────────────────────────────────────────────────────
+  const targetPercentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale ?? "en-US", {
+        style: "percent",
+        maximumFractionDigits: 0
+      }),
+    [locale]
+  )
   const targetPercent = useMemo(() => {
     if (!target || !Number.isFinite(effectiveValue) || !target.value)
       return null
     const ratio = (effectiveValue as number) / target.value
-    const nf = new Intl.NumberFormat(locale ?? "en-US", {
-      style: "percent",
-      maximumFractionDigits: 0
-    })
-    return nf.format(ratio)
-  }, [target, effectiveValue, locale])
+    return targetPercentFormatter.format(ratio)
+  }, [target, effectiveValue, targetPercentFormatter])
   const targetFormatter = useMemo(
     () =>
       buildFormatter(target?.format ?? format ?? "number", {

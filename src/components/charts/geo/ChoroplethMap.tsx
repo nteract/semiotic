@@ -16,43 +16,9 @@ import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/with
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { scaleSequential } from "d3-scale"
-import {
-  interpolateBlues,
-  interpolateReds,
-  interpolateGreens,
-  interpolateViridis,
-  interpolateOranges,
-  interpolatePurples,
-  interpolateGreys,
-  interpolatePlasma,
-  interpolateInferno,
-  interpolateMagma,
-  interpolateCividis,
-  interpolateTurbo,
-} from "../shared/colorPalettes"
-import { extent } from "d3-array"
+import { getSequentialInterpolator } from "../shared/colorPalettes"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
-
-// Sequential d3-scale-chromatic schemes. Covers every scheme name that a
-// built-in SemioticTheme preset emits via `colors.sequential` (tufte →
-// "oranges", pastels → "purples", playful → "viridis", etc.) so the theme
-// fallback actually produces a different palette instead of silently
-// reverting to `interpolateBlues`.
-const SCHEME_MAP: Record<string, (t: number) => string> = {
-  blues: interpolateBlues,
-  reds: interpolateReds,
-  greens: interpolateGreens,
-  viridis: interpolateViridis,
-  oranges: interpolateOranges,
-  purples: interpolatePurples,
-  greys: interpolateGreys,
-  plasma: interpolatePlasma,
-  inferno: interpolateInferno,
-  magma: interpolateMagma,
-  cividis: interpolateCividis,
-  turbo: interpolateTurbo,
-}
 
 /**
  * ChoroplethMap component props
@@ -266,11 +232,20 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
 
   // Build sequential color scale
   const colorScale = useMemo(() => {
-    if (!resolvedAreas) return scaleSequential(interpolateBlues).domain([0, 1])
-    const values = resolvedAreas.map(f => valAcc(f)).filter(v => v != null && isFinite(v))
-    const [min, max] = extent(values) as [number, number]
-    const interpolator = SCHEME_MAP[colorScheme] || interpolateBlues
-    return scaleSequential(interpolator).domain([min ?? 0, max ?? 1])
+    if (!resolvedAreas) return scaleSequential(getSequentialInterpolator(undefined)).domain([0, 1])
+    let min = Infinity
+    let max = -Infinity
+    for (const feature of resolvedAreas) {
+      const value = valAcc(feature)
+      if (value == null || !isFinite(value)) continue
+      if (value < min) min = value
+      if (value > max) max = value
+    }
+    const interpolator = getSequentialInterpolator(colorScheme)
+    return scaleSequential(interpolator).domain([
+      Number.isFinite(min) ? min : 0,
+      Number.isFinite(max) ? max : 1
+    ])
   }, [resolvedAreas, valAcc, colorScheme])
 
   // Selection

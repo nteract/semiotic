@@ -10,6 +10,7 @@ import regression from "regression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
 import type { Datum } from "./datumTypes"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
+import { getMinMax } from "./minMax"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 
@@ -294,10 +295,12 @@ export function createDefaultAnnotationRules(
         const padding = ann.padding || 10
         const xs = coords.map((c) => c.x)
         const ys = coords.map((c) => c.y)
-        const minX = Math.min(...xs) - padding
-        const maxX = Math.max(...xs) + padding
-        const minY = Math.min(...ys) - padding
-        const maxY = Math.max(...ys) + padding
+        const [rawMinX, rawMaxX] = getMinMax(xs)
+        const [rawMinY, rawMaxY] = getMinMax(ys)
+        const minX = rawMinX - padding
+        const maxX = rawMaxX + padding
+        const minY = rawMinY - padding
+        const maxY = rawMaxY + padding
         return (
           <g key={`ann-${index}`}>
             <rect

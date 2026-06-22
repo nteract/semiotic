@@ -577,6 +577,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // change effect all come from useFrame (above).
 
     const [annotationFrame, setAnnotationFrame] = useState(0)
+    const lastAnnotationFrameTimeRef = useRef(0)
 
     // Scales state: updated after each scene computation so SVGOverlay re-renders
     const [currentScales, setCurrentScales] = useState<StreamScales | null>(null)
@@ -1345,8 +1346,17 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // without this, responsive first paint can leave the canvas scene at the
       // latest measured width while overlay glyphs remain from the prior solve
       // until another React state change happens.
-      if (computedSceneThisFrame && ((annotations && annotations.length > 0) || customLayout)) {
+      // During transitions, scene nodes are interpolated imperatively on the
+      // store between React renders. Throttle overlay invalidation so SVG
+      // annotations track the canvas without asking React to reconcile at 60Hz.
+      const hasSvgOverlayContent = (annotations && annotations.length > 0) || customLayout
+      const wantsAnnotationFrame = hasSvgOverlayContent && (computedSceneThisFrame || isTransitioning)
+      if (
+        wantsAnnotationFrame &&
+        (computedSceneThisFrame || now - lastAnnotationFrameTimeRef.current >= 33)
+      ) {
         setAnnotationFrame(f => f + 1)
+        lastAnnotationFrameTimeRef.current = now
       }
 
       // Update staleness React state for badge

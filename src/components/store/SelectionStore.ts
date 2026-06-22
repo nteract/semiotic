@@ -92,12 +92,51 @@ function ensureSelection(
   return sel
 }
 
+function fieldSelectionsAreEqual(a: FieldSelection, b: FieldSelection): boolean {
+  if (a.type !== b.type) return false
+  if (a.type === "interval" && b.type === "interval") {
+    return a.range[0] === b.range[0] && a.range[1] === b.range[1]
+  }
+  if (a.type === "point" && b.type === "point") {
+    if (a.values.size !== b.values.size) return false
+    for (const value of a.values) {
+      if (!b.values.has(value)) return false
+    }
+    return true
+  }
+  return false
+}
+
+function clausesAreEqual(a: SelectionClause, b: SelectionClause): boolean {
+  if (a.clientId !== b.clientId || a.type !== b.type) return false
+  const aFields = Object.entries(a.fields)
+  if (aFields.length !== countObjectKeys(b.fields)) return false
+  for (const [field, selection] of aFields) {
+    const otherSelection = b.fields[field]
+    if (!otherSelection || !fieldSelectionsAreEqual(selection, otherSelection)) {
+      return false
+    }
+  }
+  return true
+}
+
+function countObjectKeys(value: object): number {
+  let count = 0
+  for (const _key in value) {
+    count++
+  }
+  return count
+}
+
 export const [SelectionProvider, useSelectionSelector] = createStore<SelectionStoreState>(
   (set) => ({
     selections: new Map<string, Selection>(),
 
     setClause(selectionName: string, clause: SelectionClause) {
       set((current: SelectionStoreState) => {
+        const existingSelection = current.selections.get(selectionName)
+        const existingClause = existingSelection?.clauses.get(clause.clientId)
+        if (existingClause && clausesAreEqual(existingClause, clause)) return {}
         const selections = new Map(current.selections)
         const sel = ensureSelection(selections, selectionName)
         const clauses = new Map(sel.clauses)
@@ -110,7 +149,7 @@ export const [SelectionProvider, useSelectionSelector] = createStore<SelectionSt
     clearClause(selectionName: string, clientId: string) {
       set((current: SelectionStoreState) => {
         const existing = current.selections.get(selectionName)
-        if (!existing) return {}
+        if (!existing || !existing.clauses.has(clientId)) return {}
         const selections = new Map(current.selections)
         const clauses = new Map(existing.clauses)
         clauses.delete(clientId)
@@ -121,6 +160,8 @@ export const [SelectionProvider, useSelectionSelector] = createStore<SelectionSt
 
     setResolution(selectionName: string, mode: ResolutionMode) {
       set((current: SelectionStoreState) => {
+        const existing = current.selections.get(selectionName)
+        if (existing?.resolution === mode) return {}
         const selections = new Map(current.selections)
         const sel = ensureSelection(selections, selectionName)
         selections.set(selectionName, { ...sel, resolution: mode })
@@ -130,11 +171,10 @@ export const [SelectionProvider, useSelectionSelector] = createStore<SelectionSt
 
     clearSelection(selectionName: string) {
       set((current: SelectionStoreState) => {
+        const sel = current.selections.get(selectionName)
+        if (!sel || sel.clauses.size === 0) return {}
         const selections = new Map(current.selections)
-        const sel = selections.get(selectionName)
-        if (sel) {
-          selections.set(selectionName, { ...sel, clauses: new Map() })
-        }
+        selections.set(selectionName, { ...sel, clauses: new Map() })
         return { selections }
       })
     }

@@ -402,6 +402,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const hoveredNodeRef = useRef<GeoSceneNode | null>(null)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
+    const lastAnnotationFrameTimeRef = useRef(0)
 
     // Staleness
     const [isStale, setIsStale] = useState(false)
@@ -979,8 +980,16 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       // Only trigger SVG overlay re-render when data or hover/annotation state changed
       const annotationsChanged = annotations !== prevAnnotationsRef.current
       if (annotationsChanged) prevAnnotationsRef.current = annotations
-      if (dirtyRef.current || annotationsChanged) {
+      const wantsAnnotationFrame =
+        dirtyRef.current ||
+        annotationsChanged ||
+        (isTransitioning && annotations && annotations.length > 0)
+      if (
+        wantsAnnotationFrame &&
+        (dirtyRef.current || annotationsChanged || now - lastAnnotationFrameTimeRef.current >= 33)
+      ) {
         setAnnotationFrame(f => f + 1)
+        lastAnnotationFrameTimeRef.current = now
       }
 
       // Reschedule if animating or tiles still loading

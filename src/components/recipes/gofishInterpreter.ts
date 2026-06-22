@@ -14,6 +14,7 @@ import type {
   GofishOperatorIR,
   GofishRootIR,
 } from "./gofishIR"
+import { getMax, getMinMax } from "../charts/shared/minMax"
 
 /**
  * GoFish IR interpreter.
@@ -188,7 +189,7 @@ function withAggregatedScale(
   const field = leafSizeField(template, axis)
   if (!field) return () => {}
   const channel: GofishChannelValue = { type: "field", name: field }
-  const max = Math.max(...groups.map((g) => sumChannel(channel, g.rows)), 0)
+  const max = getMax(groups.map((g) => sumChannel(channel, g.rows)), 0)
   if (max <= (engine.domains.get(field) ?? 0)) return () => {}
   const prev = engine.sizeOverride.get(field)
   engine.sizeOverride.set(field, max)
@@ -553,7 +554,7 @@ function distribute(
     // edge — so the slot region a child fills is a value-scaled bar.
     const sizeBy = node.options?.sizeBy as string | undefined
     const crossVals = sizeBy ? items.map((it) => sumChannel({ type: "field", name: sizeBy }, it.rows)) : []
-    const crossMax = sizeBy ? Math.max(...crossVals, 0) : 0
+    const crossMax = sizeBy ? getMax(crossVals, 0) : 0
     const slot = (extent - spacing * (items.length - 1)) / items.length
     items.forEach((it, i) => {
       const lo = axisLo + i * (slot + spacing)
@@ -648,8 +649,7 @@ function scatter(
 
 function makeScale(values: number[], lo: number, hi: number): (v: number) => number {
   if (values.length === 0) return () => (lo + hi) / 2
-  let min = Math.min(...values)
-  let max = Math.max(...values)
+  let [min, max] = getMinMax(values)
   if (min === max) {
     min -= 0.5
     max += 0.5

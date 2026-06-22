@@ -3,33 +3,21 @@ import {
   schemeCategory10,
   schemeTableau10,
   schemeSet3,
-  interpolateBlues,
-  interpolateReds,
-  interpolateGreens,
-  interpolateOranges,
-  interpolatePurples,
-  interpolateViridis,
-  interpolatePlasma
+  SEQUENTIAL_INTERPOLATORS
 } from "./colorPalettes"
 import type { Datum } from "./datumTypes"
 
 /**
  * Predefined color schemes
  */
-export const COLOR_SCHEMES = {
+export const COLOR_SCHEMES: Record<string, readonly string[] | ((t: number) => string)> = {
   // Categorical schemes
   category10: schemeCategory10,
   tableau10: schemeTableau10,
   set3: schemeSet3,
 
   // Sequential schemes (for continuous data)
-  blues: interpolateBlues,
-  reds: interpolateReds,
-  greens: interpolateGreens,
-  oranges: interpolateOranges,
-  purples: interpolatePurples,
-  viridis: interpolateViridis,
-  plasma: interpolatePlasma
+  ...SEQUENTIAL_INTERPOLATORS
 }
 
 /**

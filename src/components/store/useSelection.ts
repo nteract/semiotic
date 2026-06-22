@@ -63,9 +63,12 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
   const selectPoints = useCallback(
     (fieldValues: Record<string, unknown[]>) => {
       const fields: Record<string, FieldSelection> = {}
+      let hasFields = false
       for (const [field, values] of Object.entries(fieldValues)) {
         fields[field] = { type: "point", values: new Set(values) }
+        hasFields = true
       }
+      if (!hasFields) return
       const clause: SelectionClause = {
         clientId,
         type: "point",
@@ -79,9 +82,12 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
   const selectInterval = useCallback(
     (fieldRanges: Record<string, [number, number]>) => {
       const fields: Record<string, FieldSelection> = {}
+      let hasFields = false
       for (const [field, range] of Object.entries(fieldRanges)) {
         fields[field] = { type: "interval", range }
+        hasFields = true
       }
+      if (!hasFields) return
       const clause: SelectionClause = {
         clientId,
         type: "interval",
@@ -134,9 +140,12 @@ export function useSelectionActions(name: string, clientId?: string): UseSelecti
   const selectPoints = useCallback(
     (fieldValues: Record<string, unknown[]>) => {
       const fields: Record<string, FieldSelection> = {}
+      let hasFields = false
       for (const [field, values] of Object.entries(fieldValues)) {
         fields[field] = { type: "point", values: new Set(values) }
+        hasFields = true
       }
+      if (!hasFields) return
       setClause(name, { clientId: cid, type: "point", fields })
     },
     [name, cid, setClause]
@@ -187,7 +196,7 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
           fieldValues[field] = [val]
         }
       }
-      if (Object.keys(fieldValues).length > 0) {
+      if (hasOwnEnumerableKey(fieldValues)) {
         selectPoints(fieldValues)
       }
     },
@@ -269,12 +278,12 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
         if (xField) fieldRanges[xField] = [Math.min(extent[0][0], extent[1][0]), Math.max(extent[0][0], extent[1][0])]
         if (yField) fieldRanges[yField] = [Math.min(extent[0][1], extent[1][1]), Math.max(extent[0][1], extent[1][1])]
       } else if (brushType === "xBrush" && isLinearBrushExtent(extent)) {
-        if (xField) fieldRanges[xField] = [Math.min(...extent), Math.max(...extent)]
+        if (xField) fieldRanges[xField] = [Math.min(extent[0], extent[1]), Math.max(extent[0], extent[1])]
       } else if (brushType === "yBrush" && isLinearBrushExtent(extent)) {
-        if (yField) fieldRanges[yField] = [Math.min(...extent), Math.max(...extent)]
+        if (yField) fieldRanges[yField] = [Math.min(extent[0], extent[1]), Math.max(extent[0], extent[1])]
       }
 
-      if (Object.keys(fieldRanges).length > 0) {
+      if (hasOwnEnumerableKey(fieldRanges)) {
         selectInterval(fieldRanges)
       }
     },
@@ -291,6 +300,13 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
   )
 
   return { brushInteraction, predicate, isActive, clear }
+}
+
+function hasOwnEnumerableKey(value: object): boolean {
+  for (const key in value) {
+    if (Object.prototype.hasOwnProperty.call(value, key)) return true
+  }
+  return false
 }
 
 // ── useFilteredData ────────────────────────────────────────────────────────

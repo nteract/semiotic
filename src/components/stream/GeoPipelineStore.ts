@@ -33,6 +33,7 @@ import type {
 import { RingBuffer } from "../realtime/RingBuffer"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
+import { getMax } from "../charts/shared/minMax"
 import { computePulseIntensity, hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -1111,7 +1112,7 @@ export class GeoPipelineStore {
     const costs = pointNodes
       .map(n => (n.datum ? costAcc(n.datum) : NaN))
       .filter(c => isFinite(c) && c >= 0)
-    const maxCost = Math.max(...costs, 1)
+    const maxCost = getMax(costs, 1)
 
     const availableRadius = Math.min(layout.width, layout.height) / 2
 
