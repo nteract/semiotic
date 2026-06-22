@@ -69,6 +69,15 @@ export const AreaChartCapability: ChartCapability = {
       tags: ["step"],
       intentDeltas: { "change-detection": +1 },
     },
+    {
+      key: "annotated-threshold",
+      label: "With alert threshold",
+      description:
+        "A reference threshold or expected band turns the area into an alert — read for breaches. Pair with a provenanced annotation (e.g. from the data-quality bridge) and the communicative act becomes \"alerting\".",
+      props: { showGrid: true },
+      tags: ["alert", "annotated-threshold", "monitoring"],
+      intentDeltas: { "outlier-detection": +2, "change-detection": +1 },
+    },
   ],
 
   buildProps: (profile, variant) => {

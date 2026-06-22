@@ -287,6 +287,38 @@ export function resolveCommunicativeAct(
   return componentAct(component)
 }
 
+// ── Metadata-driven act flip (the "Expand" step) ─────────────────────────────
+//
+// A *generated* alert annotation — a threshold/band/callout stamped with
+// system/agent provenance, e.g. from the data-quality bridge (a dbt freshness
+// failure, a Great Expectations breach) — flips the chart's communicative act
+// to "alerting" regardless of what it otherwise reports. Same chart, new act,
+// driven entirely by external metadata. The gate is provenance, not mere
+// presence: a hand-placed callout doesn't turn a report into an alert.
+
+const ALERT_ANNOTATION_TYPES = new Set(["y-threshold", "x-threshold", "band", "callout", "label"])
+const GENERATED_AUTHOR_KINDS = new Set(["system", "agent", "watcher"])
+const GENERATED_SOURCES = new Set(["ai", "agent", "system", "computed", "dbt", "great-expectations"])
+const EVIDENCE_BASES = new Set(["rule", "statistical-test", "llm-inference", "computed"])
+
+/** True when props carry a provenanced, system/agent-generated alert annotation. */
+export function hasGeneratedAlertAnnotation(props: Datum): boolean {
+  const anns = (props as { annotations?: unknown }).annotations
+  if (!Array.isArray(anns)) return false
+  return anns.some((a) => {
+    if (!a || typeof a !== "object") return false
+    const ann = a as { type?: unknown; provenance?: Record<string, unknown> }
+    if (typeof ann.type !== "string" || !ALERT_ANNOTATION_TYPES.has(ann.type)) return false
+    const prov = ann.provenance
+    if (!prov || typeof prov !== "object") return false
+    return (
+      GENERATED_AUTHOR_KINDS.has(prov.authorKind as string) ||
+      GENERATED_SOURCES.has(prov.source as string) ||
+      EVIDENCE_BASES.has(prov.basis as string)
+    )
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Formatting
 // ---------------------------------------------------------------------------
@@ -467,7 +499,7 @@ export function describeChart(
   // L4 is opt-in: auto-append when intent context is supplied and `levels`
   // wasn't pinned, so "pass a capability → get L4" is ergonomic without
   // changing the default L1–L3 output every existing caller relies on.
-  if (!explicitLevels && options.capability) want.add("l4")
+  if (!explicitLevels && (options.capability || hasGeneratedAlertAnnotation(props))) want.add("l4")
 
   const fmtNum = chartValueFormatter(options.locale ?? "en")
   const kind = kindPhrase(component)
@@ -542,7 +574,11 @@ export function describeChart(
 
   // ── L4: intent / communicative act (the illocutionary sentence) ──────────
   if (want.has("l4")) {
-    const act = resolveCommunicativeAct(component, options.capability)
+    // A generated alert annotation flips the act to "alerting" — the same chart,
+    // a new communicative act, driven by external metadata.
+    const act = hasGeneratedAlertAnnotation(props)
+      ? "alerting"
+      : resolveCommunicativeAct(component, options.capability)
     if (act) {
       levels.l4 = l4Sentence(act, component, props, stats, measureName, dimensionName, fmtNum, options.audience)
     }

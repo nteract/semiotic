@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semiotic.dev/spec/v0.1/annotation-provenance.schema.json",
+  "title": "IDID Annotation Provenance & Lifecycle",
+  "description": "Two orthogonal metadata blocks that attach to any chart annotation: WHERE it came from and how much to trust it (provenance), and HOW it ages and stands editorially (lifecycle). This is the primitive that distinguishes 'insight text beside a chart' from a provenance-tracked claim ON the chart — and the one that must survive being carried into another tool's annotation model. See ./README.md for the x-idid-status convention. Open string unions are expressed as type:string with a recognized-values list rather than a closed enum, faithful to the runtime types; closed unions use enum.",
+  "type": "object",
+  "$ref": "#/$defs/annotated",
+  "$defs": {
+    "annotated": {
+      "title": "Annotated",
+      "type": "object",
+      "description": "Wrapper concept: any annotation MAY carry an optional provenance block and an optional lifecycle block. Attaching neither leaves an annotation unchanged.",
+      "additionalProperties": true,
+      "properties": {
+        "provenance": { "$ref": "#/$defs/provenance" },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" }
+      }
+    },
+    "provenance": {
+      "title": "Annotation Provenance",
+      "type": "object",
+      "description": "Where an annotation came from and how confident we should be in it.",
+      "additionalProperties": true,
+      "properties": {
+        "author": {
+          "type": "string",
+          "description": "Display name or stable id of who created the annotation — a person, agent, or watcher. Together with authorKind this expresses a structured author { kind, id }.",
+          "x-idid-status": "shipped"
+        },
+        "authorKind": {
+          "type": "string",
+          "description": "Actor category — WHO created the annotation. Distinct from basis (HOW it was derived) and the coarser source. Open string; recognized values below.",
+          "x-idid-recognized-values": ["human", "agent", "watcher", "system"],
+          "examples": ["human", "agent", "watcher", "system"],
+          "x-idid-status": "shipped"
+        },
+        "source": {
+          "type": "string",
+          "description": "Coarse origin label, kept as a single convenience field when the finer authorKind/basis split is not needed. Open string; recognized values below.",
+          "x-idid-recognized-values": ["user", "ai", "agent", "import", "computed", "system"],
+          "examples": ["user", "ai", "agent", "import", "computed", "system"],
+          "x-idid-status": "shipped"
+        },
+        "basis": {
+          "type": "string",
+          "description": "Evidence type — HOW the claim was derived (a hand note, a statistical test, a rule, an LLM inference, an external source). Distinct from authorKind: a human author can relay a statistical-test basis. Lets a reader weight a note by the strength of its evidence, not just who left it. Open string; recognized values below.",
+          "x-idid-recognized-values": ["human-note", "statistical-test", "rule", "llm-inference", "external-source", "computed"],
+          "examples": ["human-note", "statistical-test", "rule", "llm-inference", "external-source", "computed"],
+          "x-idid-status": "shipped"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confidence in the assertion, 0–1. 1 is a hand-placed user annotation; LLM-suggested annotations typically land below 0.8.",
+          "x-idid-status": "shipped"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp marking when the annotation was created. Drives lifecycle.freshness together with lifecycle.ttlHint.",
+          "x-idid-status": "shipped"
+        },
+        "dataVersion": {
+          "type": "string",
+          "description": "Identifier of the data snapshot the annotation was made against. Lets a consumer distinguish 'written about last week's data' from 'still tracks current data', independent of wall-clock freshness.",
+          "x-idid-status": "shipped"
+        },
+        "stableId": {
+          "type": "string",
+          "description": "Stable, opaque identifier that survives data refresh and chart recreation. Used to re-locate 'the Q3 spike' after new data arrives (semantic anchoring), and as the target of another annotation's lifecycle.supersedes.",
+          "x-idid-status": "shipped"
+        }
+      }
+    },
+    "lifecycle": {
+      "title": "Annotation Lifecycle",
+      "type": "object",
+      "description": "Two orthogonal axes: the TEMPORAL band (freshness, derived from createdAt + ttlHint) and the EDITORIAL state (status, driven by an accept/dispute/retract flow). A note can be fresh-but-disputed or stale-but-accepted.",
+      "additionalProperties": true,
+      "properties": {
+        "freshness": {
+          "type": "string",
+          "enum": ["fresh", "aging", "stale", "expired"],
+          "description": "Temporal band. When omitted, a host derives it from ttlHint and the data's current temporal extent. Closed union.",
+          "x-idid-status": "shipped"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["proposed", "accepted", "disputed", "retracted"],
+          "description": "Editorial standing, orthogonal to freshness. proposed = placed but unreviewed; accepted = confirmed; disputed = contested; retracted = withdrawn (treat like an expired note). Closed union.",
+          "x-idid-status": "shipped"
+        },
+        "supersedes": {
+          "type": "string",
+          "description": "provenance.stableId of the annotation this one replaces. Forms a revision chain; the superseded note is typically hidden once its replacement is accepted.",
+          "x-idid-status": "shipped"
+        },
+        "ttlHint": {
+          "description": "How long this annotation should be considered fresh. Either an ISO 8601 duration string (\"PT24H\", \"P7D\") or a number of milliseconds. Freshness walks fresh → aging → stale → expired as 'now' advances past createdAt + ttlHint.",
+          "oneOf": [
+            { "type": "string", "description": "ISO 8601 duration" },
+            { "type": "number", "description": "milliseconds" }
+          ],
+          "x-idid-status": "shipped"
+        },
+        "anchor": {
+          "type": "string",
+          "enum": ["fixed", "latest", "sticky", "semantic"],
+          "description": "Anchor resolution strategy across renders. fixed (default) = pinned to datum coordinates; latest = re-pins to the most recent datum each frame; sticky = stays at last known pixel position after the target scrolls off; semantic = re-resolves via provenance.stableId when new data arrives. Closed union.",
+          "x-idid-status": "shipped"
+        }
+      }
+    },
+    "lifecycleBandThresholds": {
+      "title": "Lifecycle Band Thresholds",
+      "type": "object",
+      "description": "Multipliers of ttl that mark the upper edge of each band. Defaults: fresh < 1.0×ttl, aging < 1.5×ttl, stale < 3.0×ttl, expired ≥ 3.0×ttl. The shared age→band classifier (bandFromAge) reads these.",
+      "additionalProperties": false,
+      "properties": {
+        "fresh": { "type": "number", "description": "Upper edge of fresh, ×ttl. Default 1.0." },
+        "aging": { "type": "number", "description": "Upper edge of aging, ×ttl. Default 1.5." },
+        "stale": { "type": "number", "description": "Upper edge of stale, ×ttl. Default 3.0." }
+      }
+    }
+  }
+}

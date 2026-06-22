@@ -527,6 +527,12 @@ export default function GoFishLayoutsPage() {
     <PageLayout
       title="Experimental GoFish IR Adapter"
       subtitle="Temporary PR preview for rendering serialized GoFish Frontend IR through Semiotic custom layouts"
+      breadcrumbs={[
+        { label: "Interoperability", path: "/interoperability" },
+        { label: "GoFish IR Adapter", path: "/interoperability/gofish" },
+      ]}
+      prevPage={{ title: "Mermaid Adapter", path: "/interoperability/mermaid" }}
+      nextPage={{ title: "Apache Arrow Adapter", path: "/interoperability/arrow" }}
     >
       <section>
         <p>
@@ -535,7 +541,7 @@ export default function GoFishLayoutsPage() {
           glyphs, packed layouts, and semantic diagrams. Each chart below is driven by a serialized{" "}
           <strong>GoFish Frontend IR</strong> document — the JSON a GoFish <code>to_ir</code> pass
           emits — run through <code>unstable_fromGofishIR</code>, the GoFish analogue of the{" "}
-          <Link to="/intelligence/vega-lite">Vega-Lite translator</Link>. The adapter does not
+          <Link to="/interoperability/vega-lite">Vega-Lite translator</Link>. The adapter does not
           recognize archetypes — it <em>interprets</em> the spec, walking{" "}
           <code>data → operators → mark</code> and executing <code>spread</code>/<code>stack</code>/
           <code>group</code>/<code>scatter</code>/<code>treemap</code>, the <code>polar</code>{" "}

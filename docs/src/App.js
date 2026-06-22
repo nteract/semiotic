@@ -114,6 +114,13 @@ import DataPitfallsBridgePage from "./pages/features/DataPitfallsBridgePage"
 import ScaleAwarePage from "./pages/features/ScaleAwarePage"
 import ConversationArcPage from "./pages/features/ConversationArcPage"
 import TemporalLifecyclePage from "./pages/features/TemporalLifecyclePage"
+import PortabilitySpecPage from "./pages/features/PortabilitySpecPage"
+import DataQualityBridgePage from "./pages/features/DataQualityBridgePage"
+import GenerativeUIPage from "./pages/features/GenerativeUIPage"
+import ObservablePlotPage from "./pages/features/ObservablePlotPage"
+import InteroperabilityPage from "./pages/features/InteroperabilityPage"
+import MermaidPage from "./pages/features/MermaidPage"
+import ArrowPage from "./pages/features/ArrowPage"
 
 // New cookbook pages
 import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
@@ -438,7 +445,7 @@ export default function DocsApp() {
               <Route path="performance" element={<PerformancePage />} />
               <Route path="push-api" element={<PushApiPage />} />
               <Route path="custom-charts" element={<CustomChartsPage />} />
-              <Route path="gofish-layouts" element={<GoFishLayoutsPage />} />
+              <Route path="gofish-layouts" element={<Navigate to="/interoperability/gofish" replace />} />
             </Route>
 
             {/* Accessibility — first-class category (before Intelligence).
@@ -474,11 +481,30 @@ export default function DocsApp() {
               <Route path="conversation-arc" element={<ConversationArcPage />} />
               <Route path="temporal-lifecycle" element={<TemporalLifecyclePage />} />
               <Route path="serialization" element={<SerializationPage />} />
-              <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
               <Route path="variant-discovery" element={<VariantDiscoveryPage />} />
               <Route path="capability-authoring" element={<CapabilityAuthoringPage />} />
               <Route path="audience-profiles" element={<AudienceProfilesPage />} />
               <Route path="cli-mcp" element={<CliMcpPage />} />
+              {/* Adapter/interop pages moved to /interoperability — redirects preserve old links. */}
+              <Route path="vega-lite" element={<Navigate to="/interoperability/vega-lite" replace />} />
+              <Route path="portability-spec" element={<Navigate to="/interoperability/portability-spec" replace />} />
+              <Route path="observable-plot" element={<Navigate to="/interoperability/observable-plot" replace />} />
+              <Route path="data-quality-bridge" element={<Navigate to="/interoperability/data-quality-bridge" replace />} />
+              <Route path="generative-ui" element={<Navigate to="/interoperability/generative-ui" replace />} />
+            </Route>
+
+            {/* Interoperability — adapters + the portability schema, one coherent home. */}
+            <Route path="interoperability" element={<Outlet />}>
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<InteroperabilityPage />} />
+              <Route path="portability-spec" element={<PortabilitySpecPage />} />
+              <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
+              <Route path="observable-plot" element={<ObservablePlotPage />} />
+              <Route path="mermaid" element={<MermaidPage />} />
+              <Route path="gofish" element={<GoFishLayoutsPage />} />
+              <Route path="arrow" element={<ArrowPage />} />
+              <Route path="data-quality-bridge" element={<DataQualityBridgePage />} />
+              <Route path="generative-ui" element={<GenerativeUIPage />} />
             </Route>
 
             {/* Redirects from old /features/<slug> paths */}
@@ -508,7 +534,7 @@ export default function DocsApp() {
             />
             <Route
               path="features/vega-lite"
-              element={<Navigate to="/intelligence/vega-lite" replace />}
+              element={<Navigate to="/interoperability/vega-lite" replace />}
             />
 
             {/* Using Server-Side Rendering */}

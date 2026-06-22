@@ -163,7 +163,7 @@ function renderAnnotation(
         const px = scales.r(value)
         if (px == null) return null
         return (
-          <g key={`ann-ythresh-${index}`}>
+          <g key={`ann-ythresh-${index}`} opacity={ann.opacity}>
             <line x1={px} y1={0} x2={px} y2={layout.height}
               stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray} />
             {label && (
@@ -212,19 +212,22 @@ function renderAnnotation(
       const dasharray = ann.strokeDasharray || "6,4"
       const lineWidth = ann.strokeWidth ?? 1.5
       return (
-        <g key={`ann-xthresh-${index}`}>
+        <g key={`ann-xthresh-${index}`} opacity={ann.opacity}>
           <line
             x1={px} y1={0} x2={px} y2={layout.height}
             stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray}
           />
           {label && (
             <text
-              x={px + 4}
+              x={px > layout.width * 0.6 ? px - 4 : px + 4}
               y={labelPos === "bottom" ? layout.height - 4 : labelPos === "center" ? layout.height / 2 : 12}
-              textAnchor="start"
+              textAnchor={px > layout.width * 0.6 ? "end" : "start"}
               fontSize={theme.typography.tickSize}
               fill={color}
               fontFamily={theme.typography.fontFamily}
+              stroke={theme.colors.background}
+              strokeWidth={3}
+              paintOrder="stroke"
             >
               {label}
             </text>
@@ -240,20 +243,26 @@ function renderAnnotation(
       const top = Math.min(y0, y1)
       const height = Math.abs(y1 - y0)
       const fill = ann.fill || resolveAnnotationColor(ann, theme)
-      const opacity = ann.opacity ?? 0.1
+      // Base fill alpha from `fillOpacity` (matches the client renderer);
+      // `opacity` is the group/decay alpha so freshness dimming composes.
+      const fillOpacity = ann.fillOpacity ?? 0.1
       return (
-        <g key={`ann-band-${index}`}>
+        <g key={`ann-band-${index}`} opacity={ann.opacity}>
           <rect
             x={0} y={top} width={layout.width} height={height}
-            fill={fill} opacity={opacity}
+            fill={fill} fillOpacity={fillOpacity}
           />
           {ann.label && (
             <text
-              x={layout.width - 4} y={top + 12}
+              x={layout.width - 4} y={Math.max(top, 0) + 13}
               textAnchor="end"
               fontSize={theme.typography.tickSize}
-              fill={fill}
+              fill={ann.color || resolveAnnotationColor(ann, theme)}
               fontFamily={theme.typography.fontFamily}
+              fontWeight="bold"
+              stroke={theme.colors.background}
+              strokeWidth={3}
+              paintOrder="stroke"
             >
               {ann.label}
             </text>

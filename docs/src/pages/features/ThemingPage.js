@@ -727,6 +727,37 @@ const ssrCSS = Object.entries(THEME_PRESETS)
         language="jsx"
       />
 
+      <h3 id="design-tokens-import">Importing a brand's design tokens</h3>
+      <p>
+        The inverse of <code>themeToTokens</code> reads a{" "}
+        <a href="https://tr.designtokens.org/format/" target="_blank" rel="noreferrer">
+          W3C Design Tokens (DTCG)
+        </a>{" "}
+        file <em>into</em> a Semiotic theme — so charts theme from the same source
+        of truth as the rest of the product. It round-trips exactly for tokens
+        Semiotic emitted (the <code>semiotic.*</code> group), and falls back to
+        leaf-name heuristics for a foreign brand file (<code>color.brand.primary</code>,{" "}
+        <code>semantic.error</code>, <code>fg.default</code>, …), resolving{" "}
+        <code>{`{alias}`}</code> references and detecting light/dark from the
+        background. Pin anything unconventional with the <code>mapping</code> option.
+      </p>
+      <CodeBlock
+        code={`import { designTokensToTheme } from "semiotic/themes"
+import { ThemeProvider } from "semiotic"
+import brandTokens from "./design-tokens.json"   // your DTCG file
+
+const theme = designTokensToTheme(brandTokens, {
+  // optional: pin a role to a token path when names are unconventional
+  mapping: { categorical: "color.chart.qualitative" },
+})
+
+<ThemeProvider theme={theme}><Dashboard /></ThemeProvider>
+
+// Round-trips with the exporter:
+// designTokensToTheme(themeToTokens(t)) recovers t's roles + palette.`}
+        language="jsx"
+      />
+
       {/* ================================================================= */}
       {/* CSS-only theming (no ThemeProvider) */}
       {/* ================================================================= */}

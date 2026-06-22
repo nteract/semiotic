@@ -89,6 +89,15 @@ export const LineChartCapability: ChartCapability = {
       intentDeltas: { "change-detection": +1, "trend": -1 },
       rubricDeltas: { precision: +1 },
     },
+    {
+      key: "annotated-threshold",
+      label: "With alert threshold",
+      description:
+        "A reference threshold or band turns the chart from a report into an alert — read it for breaches of the expected range. Pair with a provenanced annotation (e.g. from the data-quality bridge) and the chart's communicative act becomes \"alerting\".",
+      props: { showGrid: true, showPoints: true },
+      tags: ["alert", "annotated-threshold", "monitoring"],
+      intentDeltas: { "outlier-detection": +2, "change-detection": +1 },
+    },
   ],
 
   buildProps: (profile, variant) => {

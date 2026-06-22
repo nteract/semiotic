@@ -69,6 +69,11 @@ import AnnotationsThatMakeRoomAndMakeSense from "./entries/annotations-that-make
 import AnnotationsThatAdaptAndTravel from "./entries/annotations-that-adapt-and-travel.js"
 import AnnotationsThatGetContestedAndHeard from "./entries/annotations-that-get-contested-and-heard.js"
 import StreamingThatAggregatesItself from "./entries/streaming-that-aggregates-itself.js"
+import MetadataThatTravels from "./entries/metadata-that-travels.js"
+import WhenThePipelineBreaks from "./entries/when-the-pipeline-breaks.js"
+import GenerationIsCheap from "./entries/generation-is-cheap-trust-is-scarce.js"
+import NotebookToProduction from "./entries/notebook-to-production.js"
+import AnInteroperabilityLayer from "./entries/an-interoperability-layer.js"
 
 /**
  * Every entry, drafts included. Consumers that need the full list (direct
@@ -76,6 +81,11 @@ import StreamingThatAggregatesItself from "./entries/streaming-that-aggregates-i
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  AnInteroperabilityLayer,
+  NotebookToProduction,
+  GenerationIsCheap,
+  WhenThePipelineBreaks,
+  MetadataThatTravels,
   StreamingThatAggregatesItself,
   MakingBetterCustomCharts,
   Release372,

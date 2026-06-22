@@ -139,6 +139,14 @@ describe("suggestCharts", () => {
     expect((smooth as { score: number }).score).toBeGreaterThanOrEqual((base as { score: number }).score)
   })
 
+  it("annotated-threshold variant boosts the alerting intent (outlier-detection) over base", () => {
+    const base = scoreChart("LineChart", temporalMultiSeries, { intent: "outlier-detection", variantKey: "linear" })
+    const alert = scoreChart("LineChart", temporalMultiSeries, { intent: "outlier-detection", variantKey: "annotated-threshold" })
+    expect("score" in base).toBe(true)
+    expect("score" in alert).toBe(true)
+    expect((alert as { score: number }).score).toBeGreaterThan((base as { score: number }).score)
+  })
+
   it("excludes PieChart when there are too many categories", () => {
     const tooManyCategories = Array.from({ length: 15 }, (_, i) => ({ name: `Cat${i}`, count: i + 1 }))
     const suggestions = suggestCharts(tooManyCategories)

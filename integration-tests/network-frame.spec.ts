@@ -106,15 +106,16 @@ test.describe("Network Charts - HOC default coverage", () => {
   test("renders network widget annotation", async ({ page }) => {
     await waitForChartReady(page, "network-widget-annotation")
     const testCase = page.locator('[data-testid="network-widget-annotation"]')
+    const frame = testCase.locator(".stream-network-frame")
     const widget = testCase.locator(".annotation-deferred")
     await expect(testCase.locator('[data-testid="network-widget-content"]')).toHaveText("Network note")
     await expect(widget).toHaveCSS("opacity", "0")
     await expect(widget).toHaveCSS("pointer-events", "none")
-    await testCase.hover()
+    await frame.hover({ position: { x: 12, y: 12 } })
     await expect(widget).toHaveCSS("opacity", "1")
     await expect(widget).toHaveCSS("pointer-events", "auto")
-    await expect(testCase).toHaveScreenshot("network-widget-annotation.png", {
-      maxDiffPixels: 150,
+    await expect(testCase.locator('[data-testid="network-widget-content"]')).toHaveScreenshot("network-widget-content-visible.png", {
+      maxDiffPixels: 20,
     })
   })
 })

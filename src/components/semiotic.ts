@@ -343,6 +343,11 @@ export type {
   MultiLineTooltipConfig
 } from "./Tooltip/Tooltip"
 
+// Smart default-tooltip field selection — reusable by custom-chart authors
+// building their own tooltip content from an arbitrary datum.
+export { smartTooltipEntries } from "./charts/shared/tooltipUtils"
+export type { SmartTooltipEntry, SmartTooltipResult } from "./charts/shared/tooltipUtils"
+
 // ── Streaming types ────────────────────────────────────────────────────
 
 export type {

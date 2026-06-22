@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semiotic.dev/spec/v0.1/chart-capability.schema.json",
+  "title": "IDID Chart Capability",
+  "description": "A library-neutral, declarative description of what a chart is good at, so an agent or a heuristic engine can rank it against a dataset and an intent WITHOUT executing any rendering library. This is the serializable subset of a chart's capability — the imperative gates (fits, buildProps, scoring functions) a host library may attach are implementation details and are intentionally NOT part of the portable spec. See ./README.md for the field-status convention (x-idid-status).",
+  "type": "object",
+  "required": ["component", "rubric"],
+  "additionalProperties": true,
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "const": "0.1",
+      "description": "The IDID portability spec version this descriptor targets.",
+      "x-idid-status": "spec"
+    },
+    "component": {
+      "type": "string",
+      "description": "Stable name of the chart this descriptor is about (e.g. \"BarChart\", \"SankeyDiagram\"). The portable identity of the chart; how a host resolves it to a renderer is a binding concern.",
+      "x-idid-status": "shipped"
+    },
+    "family": {
+      "type": "string",
+      "description": "Coarse chart family. Open string — recognized values are listed in examples but a host may use its own taxonomy.",
+      "examples": ["xy", "ordinal", "network", "hierarchy", "geo", "value", "custom"],
+      "x-idid-status": "shipped"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "Where the implementing library exposes the chart (e.g. \"semiotic/ordinal\"). Advisory; a binding may ignore it.",
+      "x-idid-status": "shipped"
+    },
+    "rubric": {
+      "$ref": "#/$defs/rubric",
+      "description": "Audience-independent base rubric, before any audience override or variant delta."
+    },
+    "intentScores": {
+      "type": "object",
+      "description": "Per-intent suitability, 0–5. Missing intents default to 0. Keys are intent ids — the 13 built-in ids are in $defs/intentId, and hosts may register custom intents (open string).",
+      "propertyNames": { "type": "string" },
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 5
+      },
+      "x-idid-status": "shipped"
+    },
+    "variants": {
+      "type": "array",
+      "description": "Settings that meaningfully change what the chart is good for (e.g. a streamgraph variant of a stacked area). Deltas are additive against the base intentScores/rubric and clamped to range by the consumer.",
+      "items": { "$ref": "#/$defs/variant" },
+      "x-idid-status": "shipped"
+    },
+    "caveats": {
+      "type": "array",
+      "description": "Static, audience-independent caveats this chart always carries (e.g. \"log scale skipped for negative values\"). The portable form of a host's dynamic caveat function: the host may emit additional data-dependent caveats at runtime.",
+      "items": { "type": "string" },
+      "x-idid-status": "shipped"
+    },
+    "tags": {
+      "type": "array",
+      "description": "Free-form classification tags consumers can filter on.",
+      "items": { "type": "string" },
+      "x-idid-status": "shipped"
+    }
+  },
+  "$defs": {
+    "rubric": {
+      "type": "object",
+      "title": "Chart Rubric",
+      "description": "Three 1–5 axes. familiarity = how well-known the chart is to a general audience; accuracy = how faithfully it represents the data; precision = how readable individual values are.",
+      "required": ["familiarity", "accuracy", "precision"],
+      "additionalProperties": false,
+      "properties": {
+        "familiarity": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "accuracy": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "precision": { "type": "integer", "minimum": 1, "maximum": 5 }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "title": "Chart Variant",
+      "required": ["key", "label"],
+      "additionalProperties": true,
+      "properties": {
+        "key": { "type": "string", "description": "Stable variant identifier within the capability." },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "intentDeltas": {
+          "type": "object",
+          "description": "Additive per-intent score deltas (e.g. {\"trend\": 1, \"part-to-whole\": -2}).",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "type": "number" }
+        },
+        "rubricDeltas": {
+          "type": "object",
+          "description": "Additive rubric deltas — usually small (e.g. smoothing trades precision for familiarity).",
+          "additionalProperties": false,
+          "properties": {
+            "familiarity": { "type": "number" },
+            "accuracy": { "type": "number" },
+            "precision": { "type": "number" }
+          }
+        },
+        "caveats": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "props": {
+          "type": "object",
+          "description": "Implementation-specific props the host merges to realize this variant. Opaque to the spec; a non-Semiotic host may ignore it.",
+          "x-idid-status": "shipped"
+        }
+      }
+    },
+    "intentId": {
+      "title": "Intent",
+      "description": "Communicative intent the chart is being ranked for. The 13 built-in ids are below; hosts may register additional intents, so this is an open string in practice.",
+      "type": "string",
+      "examples": [
+        "trend",
+        "compare-series",
+        "compare-categories",
+        "rank",
+        "part-to-whole",
+        "distribution",
+        "correlation",
+        "flow",
+        "hierarchy",
+        "geo",
+        "outlier-detection",
+        "composition-over-time",
+        "change-detection"
+      ]
+    }
+  }
+}

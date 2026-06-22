@@ -8,8 +8,62 @@ import {
   buildDefaultTooltip,
   buildOrdinalTooltip,
   bandTooltipFields,
+  smartTooltipEntries,
 } from "./tooltipUtils"
 import type { Datum } from "./datumTypes"
+
+describe("smartTooltipEntries", () => {
+  it("uses name/label as the title and shows a type, dropping the redundant id", () => {
+    const r = smartTooltipEntries({ id: "B", name: "Valid?", type: "decision", shape: "diamond" })
+    expect(r.title).toBe("Valid?")
+    // type chosen over its synonym `shape`; id dropped because a name exists
+    expect(r.entries).toEqual([{ key: "type", value: "decision" }])
+  })
+
+  it("falls back to the raw shape as the type when no friendly type is present", () => {
+    const r = smartTooltipEntries({ id: "B", label: "Decide", shape: "diamond", layer: 1, row: 0 })
+    expect(r.title).toBe("Decide")
+    // layer/row are positional and skipped; shape is the only type-family field
+    expect(r.entries).toEqual([{ key: "shape", value: "diamond" }])
+  })
+
+  it("orders type before value before the rest, deduping each family", () => {
+    const r = smartTooltipEntries({ name: "Node", group: "A", value: 10, amount: 99, note: "hi" })
+    expect(r.title).toBe("Node")
+    expect(r.entries.map((e) => e.key)).toEqual(["group", "value", "note"])
+  })
+
+  it("skips positional, internal, and non-primitive fields", () => {
+    const r = smartTooltipEntries({
+      name: "N",
+      x: 1, y: 2, x0: 0, layer: 3, depth: 2,
+      _internal: "x",
+      meta: { a: 1 },
+      items: [1, 2],
+      ok: true,
+    })
+    expect(r.title).toBe("N")
+    expect(r.entries).toEqual([{ key: "ok", value: true }])
+  })
+
+  it("uses id as the title when there is no name, and keeps it", () => {
+    const r = smartTooltipEntries({ id: "n1", value: 5 })
+    expect(r.title).toBe("n1")
+    expect(r.entries).toEqual([{ key: "value", value: 5 }])
+  })
+
+  it("caps the number of rows", () => {
+    const datum: Datum = { name: "N" }
+    for (let i = 0; i < 12; i++) datum[`f${i}`] = i
+    const r = smartTooltipEntries(datum, { maxEntries: 3 })
+    expect(r.entries).toHaveLength(3)
+  })
+
+  it("returns no entries for empty or non-object input", () => {
+    expect(smartTooltipEntries(null).entries).toEqual([])
+    expect(smartTooltipEntries({}).entries).toEqual([])
+  })
+})
 
 type DefaultHover = Parameters<ReturnType<typeof buildDefaultTooltip>>[0]
 const hover = (data: Datum | null): DefaultHover => ({ data, x: 0, y: 0 })

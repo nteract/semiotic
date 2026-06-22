@@ -117,6 +117,24 @@
             "yLabel": {
               "type": "string"
             },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
+            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -325,6 +343,24 @@
             "yLabel": {
               "type": "string"
             },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
+            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -532,6 +568,24 @@
             "yLabel": {
               "type": "string"
             },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
+            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -714,6 +768,24 @@
             "yLabel": {
               "type": "string"
             },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
+            },
             "data": {
               "type": "array",
               "description": "Array of data objects"
@@ -891,6 +963,24 @@
             },
             "yLabel": {
               "type": "string"
+            },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
             },
             "data": {
               "type": "array",
@@ -1091,6 +1181,24 @@
             "yLabel": {
               "type": "string"
             },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
+            },
             "data": {
               "type": "array",
               "description": "Array of data objects shared by both series"
@@ -1234,6 +1342,24 @@
             },
             "yLabel": {
               "type": "string"
+            },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
             },
             "data": {
               "type": "array"
@@ -1407,6 +1533,24 @@
             },
             "yLabel": {
               "type": "string"
+            },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
             },
             "data": {
               "type": "array",
@@ -1584,6 +1728,24 @@
             "yLabel": {
               "type": "string"
             },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
+            },
             "data": {
               "type": "array",
               "description": "Array of data objects with x, y, and value"
@@ -1756,6 +1918,24 @@
             },
             "yLabel": {
               "type": "string"
+            },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
             },
             "data": {
               "type": "array",
@@ -7598,6 +7778,24 @@
             },
             "yLabel": {
               "type": "string"
+            },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "y scale type."
             },
             "data": {
               "type": "array",

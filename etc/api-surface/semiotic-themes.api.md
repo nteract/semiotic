@@ -25,9 +25,11 @@ const PLAYFUL_LIGHT
 const THEME_PRESETS
 const TUFTE_DARK
 const TUFTE_LIGHT
+function designTokensToTheme
 function resolveThemePreset
 function themeToCSS
 function themeToTokens
+interface DesignTokensToThemeOptions
 interface SemioticTheme
 type ThemePresetName
 ```

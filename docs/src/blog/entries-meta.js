@@ -20,6 +20,71 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "an-interoperability-layer",
+    title: "An Interoperability Layer for Semiotic",
+    subtitle:
+      "Semiotic's adapters now live in one coherent Interoperability section, joined by two new ones: fromMermaid turns the web's dominant text-to-graph language into interactive, accessible graphs, and fromArrow feeds in-browser DuckDB/Arrow data straight into the chart accessor path.",
+    author: "Elijah Meeks",
+    date: "2026-06-21",
+    tags: ["case-study", "network"],
+    excerpt:
+      "An adapter is more than a parser — it carries the metadata a source format lacks and refuses rather than mistranslate. The new Interoperability layer gathers Semiotic's adapters in one place and adds fromMermaid (accessible graphs from Mermaid text) and fromArrow (columnar DuckDB/Arrow data into charts).",
+    ogChart: { component: "ForceDirectedGraph" },
+    draft: true,
+  },
+  {
+    slug: "notebook-to-production",
+    title: "From Notebook to Production, Without the Rewrite",
+    subtitle:
+      "fromObservablePlot maps an Observable Plot spec to a Semiotic chart, so a chart sketched in a notebook crosses the production boundary carrying the accessible table, keyboard nav, description, theme tokens, and SSR it never had — and refuses, out loud, what it can't translate faithfully.",
+    author: "Elijah Meeks",
+    date: "2026-06-21",
+    tags: ["case-study", "xy"],
+    excerpt:
+      "Observable Plot is the fastest way to think with data; the rewrite into a production component is the tax. The new fromObservablePlot adapter collapses it — translate the encoding, inherit the accessibility, theming, and SSR Semiotic already ships — while warning rather than approximating where Plot's imperative API has no faithful equivalent.",
+    ogChart: { component: "LineChart" },
+    draft: true,
+  },
+  {
+    slug: "generation-is-cheap-trust-is-scarce",
+    title: "Generation Is Cheap; Trust Is Scarce",
+    subtitle:
+      "Semiotic's generative-UI trust layer turns an LLM's chart proposal into a result that's either guaranteed renderable or comes back with precise reasons and ranked alternatives — validate, diagnose, repair, prove — so an agent never ships a chart it hasn't earned.",
+    author: "Elijah Meeks",
+    date: "2026-06-21",
+    tags: ["case-study", "ai"],
+    excerpt:
+      "An LLM can emit a chart in a sentence; that was never the hard part. The hard part is trust — hand-written chart code breaks on first paint, and a plausible chart for the wrong data misleads the reader who can't tell. The trust layer is the deterministic gate between a model's confidence and the user's screen, and it ships no AI-SDK dependency.",
+    ogChart: { component: "BarChart" },
+    draft: true,
+  },
+  {
+    slug: "when-the-pipeline-breaks",
+    title: "When the Pipeline Breaks, the Chart Should Say So",
+    subtitle:
+      "Semiotic's data-truth bridge turns dbt freshness failures and Great Expectations validations into provenanced, lifecycled annotations on the chart — so a stale or out-of-bounds series announces itself instead of laundering a pipeline failure into a confident-looking line.",
+    author: "Elijah Meeks",
+    date: "2026-06-21",
+    tags: ["case-study", "xy"],
+    excerpt:
+      "A dashboard that silently renders broken data is worse than none. The data-truth bridge puts the quality signal where the reader is already looking — on the chart, as an annotation carrying who found the problem, how, when, and against which data snapshot — from the dbt and Great Expectations artifacts your pipeline already produces. Read-only, and honest about what it can't place.",
+    ogChart: { component: "LineChart" },
+    draft: true,
+  },
+  {
+    slug: "metadata-that-travels",
+    title: "Metadata That Travels",
+    subtitle:
+      "An adapter shouldn't just reproduce a format — it should export the ideas the format is missing. The IDID portability spec writes three of them (chart capability, audience profile, annotation provenance) as library-neutral JSON Schemas, with bidirectional Vega-Lite as the proof.",
+    author: "Elijah Meeks",
+    date: "2026-06-21",
+    tags: ["case-study"],
+    excerpt:
+      "A chart an AI can pick correctly, a screen reader can receive, and that carries its own provenance is worth more than one that merely looks right — and those properties are metadata, portable in a way a renderer is not. The portability spec standardizes three of them as JSON Schemas, and toVegaLite round-trips a chart through the dominant interchange format with the metadata preserved.",
+    ogChart: { component: "BarChart" },
+    draft: true,
+  },
+  {
     slug: "streaming-that-aggregates-itself",
     title: "Streaming that aggregates itself",
     subtitle:

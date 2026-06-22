@@ -169,6 +169,42 @@ describe("describeChart — L4 intent / communicative act", () => {
     expect(r.levels.l4).toBe("This is an alerting chart; the peak of 900 at 3 is the point to investigate.")
   })
 
+  it("flips the act to alerting when a generated alert annotation is present (Expand)", () => {
+    const spike = [
+      { m: 1, v: 100 }, { m: 2, v: 120 }, { m: 3, v: 900 }, { m: 4, v: 130 },
+    ]
+    // No capability passed — a provenanced (system-authored) threshold alone
+    // auto-surfaces L4 and forces the alerting act. Same chart, new act, driven
+    // by external metadata.
+    const r = describeChart("LineChart", {
+      data: spike,
+      xAccessor: "m",
+      yAccessor: "v",
+      annotations: [
+        {
+          type: "y-threshold",
+          value: 500,
+          label: "SLA floor",
+          provenance: { authorKind: "system", basis: "rule", source: "dbt" },
+        },
+      ],
+    })
+    expect(r.levels.l4?.startsWith("This is an alerting chart;")).toBe(true)
+  })
+
+  it("does NOT flip to alerting for a hand-placed (un-provenanced) callout", () => {
+    const r = describeChart("LineChart", {
+      data: rising,
+      xAccessor: "month",
+      yAccessor: "sales",
+      annotations: [{ type: "callout", x: "Feb", y: 6000, label: "launch" }],
+    }, {
+      levels: ["l4"],
+      capability: { family: "time-series", intentScores: { trend: 5 } },
+    })
+    expect(r.levels.l4?.startsWith("This is a trend chart;")).toBe(true)
+  })
+
   it("derives the act from a resolved dominant intent (change-detection → alerting)", () => {
     const r = describeChart("LineChart", { data: rising, xAccessor: "month", yAccessor: "sales" }, {
       levels: ["l4"],

@@ -805,3 +805,8 @@ export function themeToTokens(theme: SemioticTheme): Datum {
     },
   }
 }
+
+// W3C Design Tokens → theme (the inverse of themeToTokens; imports a brand's
+// design-token file into a Semiotic theme).
+export { designTokensToTheme } from "./store/designTokens"
+export type { DesignTokensToThemeOptions } from "./store/designTokens"

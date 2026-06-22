@@ -236,11 +236,11 @@ export default function VegaLiteTranslatorPage() {
     <PageLayout
       title="Vega-Lite Translator"
       breadcrumbs={[
-        { label: "Intelligence", path: "/intelligence" },
-        { label: "Vega-Lite Translator", path: "/intelligence/vega-lite" },
+        { label: "Interoperability", path: "/interoperability" },
+        { label: "Vega-Lite Translator", path: "/interoperability/vega-lite" },
       ]}
-      prevPage={{ title: "Serialization", path: "/intelligence/serialization" }}
-      nextPage={{ title: "Variant Discovery", path: "/intelligence/variant-discovery" }}
+      prevPage={{ title: "Portability Spec", path: "/interoperability/portability-spec" }}
+      nextPage={{ title: "Observable Plot", path: "/interoperability/observable-plot" }}
     >
       {/* ── Why ────────────────────────────────────────────────────────── */}
       <section>

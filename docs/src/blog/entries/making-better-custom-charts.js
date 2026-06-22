@@ -660,7 +660,7 @@ function Body() {
 
       <p>
         Six examples ride this interpreter at{" "}
-        <Link to="/features/gofish-layouts">/features/gofish-layouts</Link>, across three frames:
+        <Link to="/interoperability/gofish">/features/gofish-layouts</Link>, across three frames:
         flower / bottle / polar-ribbon / circle-treemap on the XY frame, the boba cups on the
         ordinal frame (one cup per category), and the Python Tutor memory diagram on the network
         frame.
@@ -728,7 +728,7 @@ function Body() {
           the linked detail + minimap views.
         </li>
         <li>
-          <Link to="/features/gofish-layouts">Experimental GoFish Adapter</Link> — the six
+          <Link to="/interoperability/gofish">Experimental GoFish Adapter</Link> — the six
           interpreted examples and the live IR for each.
         </li>
       </ul>

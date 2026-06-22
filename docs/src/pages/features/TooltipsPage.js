@@ -195,6 +195,31 @@ export default function TooltipsPage() {
         <code>Tooltip</code> or <code>MultiLineTooltip</code> utilities:
       </p>
 
+      <h3 id="smart-defaults">Smart defaults for custom &amp; network charts</h3>
+      <p>
+        When a chart can't declare tooltip fields — a{" "}
+        <code>NetworkCustomChart</code> layout, a recipe like the Mermaid or
+        lineage DAG, anything "weird" — the default tooltip is no longer a dump of
+        every property in object order. It picks a meaningful{" "}
+        <strong>title</strong> (a <code>name</code>/<code>label</code>/
+        <code>title</code> field, falling back to <code>id</code>), then a{" "}
+        <strong>type</strong> (<code>type</code>/<code>kind</code>/
+        <code>category</code>/<code>shape</code>…), then a{" "}
+        <strong>value</strong>, then the rest — skipping positional and internal
+        bookkeeping (<code>x</code>/<code>y</code>/<code>layer</code>/
+        <code>row</code>/<code>depth</code>, <code>_</code>-prefixed keys, nested
+        objects). So a Mermaid node shows its name and{" "}
+        <em>type: decision</em> rather than a bare id. The same heuristic backs
+        the generic <code>MultiLineTooltip</code> default (and the XY/ordinal
+        custom-layout fallbacks) — anywhere a tooltip would otherwise dump every
+        field, it now leads with a title and orders the rest by role. To steer
+        it, give your datum a <code>name</code> (or <code>label</code>) and a{" "}
+        <code>type</code> field; to override entirely, pass a{" "}
+        <code>tooltip</code> function. The same heuristic is exposed as the pure{" "}
+        <code>smartTooltipEntries(datum)</code> helper (from{" "}
+        <code>semiotic</code>).
+      </p>
+
       <LiveExample
         frameProps={{
           data: lineData,
