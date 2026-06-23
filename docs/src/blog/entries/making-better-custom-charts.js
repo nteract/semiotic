@@ -499,7 +499,7 @@ function Body() {
         Every charting library has a map, and every map has an edge. Beyond that edge there be
         dragons or, in our case, the chart your data actually needs and the library doesn't have: a
         Kafka Streams topology, a memory diagram, a boba tea, a stack of data-driven wine bottles...
-        Semiotic's answer to the edge is the <Link to="/features/custom-charts">Custom Charts</Link>{" "}
+        Semiotic's answer to the edge is the <Link to="/custom-charts/overview">Custom Charts</Link>{" "}
         surface. This provides a layout function that emits scene primitives and gets the frame's
         runtime for free. While custom charts were always provided in Semiotic, recently three
         different improvements made that experience better: a clear contract for what a custom
@@ -720,7 +720,7 @@ function Body() {
 
       <ul>
         <li>
-          <Link to="/features/custom-charts">Custom Charts</Link> — the XY / ordinal / network
+          <Link to="/custom-charts/overview">Custom Charts</Link> — the XY / ordinal / network
           escape-hatch surface and the scene-node/overlay contract.
         </li>
         <li>

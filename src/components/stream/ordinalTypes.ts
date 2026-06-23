@@ -7,6 +7,7 @@ import type {
   AnnotationContext
 } from "../realtime/types"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import type { SymbolName } from "./symbolPath"
 import type {
   Style,
   SceneDatum,
@@ -191,12 +192,13 @@ export interface TrapezoidSceneNode {
 }
 
 // Re-export scene node types from XY that we reuse
-export type { Style, PointSceneNode, RectSceneNode } from "./types"
-import type { PointSceneNode, RectSceneNode } from "./types"
+export type { Style, PointSceneNode, RectSceneNode, SymbolSceneNode } from "./types"
+import type { PointSceneNode, RectSceneNode, SymbolSceneNode } from "./types"
 
 export type OrdinalSceneNode =
   | RectSceneNode
   | PointSceneNode
+  | SymbolSceneNode
   | WedgeSceneNode
   | BoxplotSceneNode
   | ViolinSceneNode
@@ -238,6 +240,10 @@ export interface OrdinalPipelineConfig {
   categoryAccessor?: string | ((d: Datum) => string)
   valueAccessor?: string | ((d: Datum) => number) | Array<string | ((d: Datum) => number)>
   colorAccessor?: string | ((d: Datum) => string)
+  /** Categorical accessor → glyph shape (swarm/dot). Emits SymbolSceneNodes. */
+  symbolAccessor?: string | ((d: Datum) => string)
+  /** Explicit `{category → shape}` map; unmapped categories auto-assign. */
+  symbolMap?: Record<string, SymbolName>
   stackBy?: string | ((d: Datum) => string)
   groupBy?: string | ((d: Datum) => string)
   timeAccessor?: string | ((d: Datum) => number)
@@ -341,6 +347,9 @@ export interface OrdinalPipelineConfig {
   /** Resolved margin — passed through so OrdinalLayoutContext.dimensions.margin
    *  reflects what the frame actually used. */
   layoutMargin?: import("../types/marginType").MarginType
+  /** Resolved shared selection projected into OrdinalLayoutContext.selection.
+   *  Owned by a dedicated frame effect (kept off the rebuild path). */
+  layoutSelection?: import("./customLayoutSelection").CustomLayoutSelection | null
 }
 
 // ── Component props ────────────────────────────────────────────────────
@@ -356,6 +365,10 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   /** Value field — the quantitative dimension (replaces rAccessor). Can be array for multiAxis. */
   valueAccessor?: string | ((d: T) => number) | Array<string | ((d: T) => number)>
   colorAccessor?: string | ((d: T) => string)
+  /** Categorical accessor → glyph shape (swarm/dot). */
+  symbolAccessor?: string | ((d: T) => string)
+  /** Explicit `{category → shape}` map for `symbolAccessor`; unmapped auto-assign. */
+  symbolMap?: Record<string, SymbolName>
   stackBy?: string | ((d: T) => string)
   groupBy?: string | ((d: T) => string)
   timeAccessor?: string | ((d: T) => number)
@@ -537,6 +550,10 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   customLayout?: import("./ordinalCustomLayout").OrdinalCustomLayout
   /** User-supplied config blob threaded through to OrdinalLayoutContext.config. */
   layoutConfig?: object
+  /** Resolved shared selection projected into `OrdinalLayoutContext.selection`.
+   *  Kept off the rebuild path — restyles (if the layout returned `restyle`) or
+   *  rebuilds, never re-ingests. */
+  layoutSelection?: import("./customLayoutSelection").CustomLayoutSelection | null
 }
 
 // ── Ref handle ─────────────────────────────────────────────────────────

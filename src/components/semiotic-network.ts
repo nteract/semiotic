@@ -17,6 +17,8 @@ export { CirclePack } from "./charts/network/CirclePack"
 export { OrbitDiagram } from "./charts/network/OrbitDiagram"
 export { ProcessSankey } from "./charts/network/ProcessSankey"
 export { NetworkCustomChart } from "./charts/custom/NetworkCustomChart"
+export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
+export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 
 // Stream Frame types
 export type {

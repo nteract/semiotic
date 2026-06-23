@@ -6,8 +6,9 @@ import type {
   RealtimeNode,
   RealtimeEdge,
 } from "./networkTypes"
-import type { ThemeSemanticColors } from "./types"
+import type { Style, ThemeSemanticColors } from "./types"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 
 /**
  * The shared selection state, projected into the custom-layout context.
@@ -106,4 +107,21 @@ export interface NetworkLayoutResult {
   labels?: NetworkLabel[]
   /** SVG overlays composited above the canvas. */
   overlays?: ReactNode
+  /**
+   * **Per-frame restyle of canvas marks, without re-positioning.** When present,
+   * a selection/hover change re-applies styles to the existing scene nodes and
+   * repaints — it does **not** re-run the layout or rebuild the quadtree. Return
+   * a style patch merged onto the node's *base* style (the style it was emitted
+   * with); return nothing to leave it unchanged.
+   *
+   * This is the canvas counterpart to {@link useCustomLayoutSelection} (which
+   * restyles `overlays`): compute geometry once in the layout body, and express
+   * selection-driven dimming/highlighting here so hover stays O(nodes) paint
+   * instead of O(nodes+edges) relayout. Providing it opts the chart into the
+   * cheap selection path; omit it and selection changes re-run the layout (the
+   * pre-existing behavior).
+   */
+  restyle?: (node: NetworkSceneNode, selection: CustomLayoutSelection | null) => Partial<Style> | void
+  /** Per-frame restyle of edges — same contract as {@link NetworkLayoutResult.restyle}. */
+  restyleEdge?: (edge: NetworkSceneEdge, selection: CustomLayoutSelection | null) => Partial<Style> | void
 }

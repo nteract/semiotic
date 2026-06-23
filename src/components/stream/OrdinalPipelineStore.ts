@@ -43,7 +43,8 @@ import { buildBarFunnelScene } from "./ordinalSceneBuilders/barFunnelScene"
 import { buildSwimlaneScene } from "./ordinalSceneBuilders/swimlaneScene"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext, SceneBuilderFn } from "./ordinalSceneBuilders/types"
-import type { OrdinalLayoutContext } from "./ordinalCustomLayout"
+import type { OrdinalLayoutContext, OrdinalLayoutResult } from "./ordinalCustomLayout"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import type { MarginType } from "../types/marginType"
@@ -81,6 +82,7 @@ export class OrdinalPipelineStore {
   private getStack: ((d: Datum) => string) | undefined
   private getGroup: ((d: Datum) => string) | undefined
   private getColor: ((d: Datum) => string) | undefined
+  private getSymbol: ((d: Datum) => string) | undefined
   private getConnector: ((d: Datum) => string) | undefined
   private getDataId: ((d: Datum) => string) | undefined
 
@@ -112,6 +114,12 @@ export class OrdinalPipelineStore {
   /** Overlays returned from customLayout (consumed by StreamOrdinalFrame). */
   customLayoutOverlays: import("react").ReactNode = null
   private _customLayoutDiagnosticsWarned = new Set<string>()
+  /** Per-frame restyle callback from the custom layout result (see OrdinalLayoutResult.restyle). */
+  private _customRestyle: OrdinalLayoutResult["restyle"] = undefined
+  /** True when the active custom layout supplied a `restyle`. */
+  hasCustomRestyle = false
+  /** Base (as-emitted) style per node, so restyle passes don't compound. */
+  private _baseStyles = new WeakMap<object, Style>()
   version = 0
   /** Bumped whenever the buffer is mutated. Used to invalidate per-frame caches. */
   private _dataVersion = 0
@@ -157,6 +165,7 @@ export class OrdinalPipelineStore {
     this.getStack = resolveStringAccessor(config.stackBy)
     this.getGroup = resolveStringAccessor(config.groupBy)
     this.getColor = resolveStringAccessor(config.colorAccessor)
+    this.getSymbol = resolveStringAccessor(config.symbolAccessor)
     this.getConnector = resolveStringAccessor(config.connectorAccessor)
     this.getDataId = resolveStringAccessor(config.dataIdAccessor)
 
@@ -698,6 +707,7 @@ export class OrdinalPipelineStore {
       getStack: this.getStack,
       getGroup: this.getGroup,
       getColor: this.getColor,
+      getSymbol: this.getSymbol,
       getConnector: this.getConnector,
       getO: this.getO,
       multiScales: this.multiScales,
@@ -726,10 +736,21 @@ export class OrdinalPipelineStore {
           console.error("[semiotic] ordinal customLayout threw:", err)
         }
         this.customLayoutOverlays = null
+        this._customRestyle = undefined
+        this.hasCustomRestyle = false
         return []
       }
       this.customLayoutOverlays = result.overlays ?? null
       const nodes = result.nodes ?? []
+      // Stash the restyle callback; snapshot base styles + apply once for the
+      // current selection (these `nodes` become `this.scene`).
+      this._customRestyle = result.restyle
+      this.hasCustomRestyle = !!result.restyle
+      if (this.hasCustomRestyle) {
+        this._baseStyles = new WeakMap()
+        for (const n of nodes) if (n.style) this._baseStyles.set(n, n.style)
+        this.applyCustomRestyle(nodes, this.config.layoutSelection ?? null)
+      }
       warnCustomLayoutDiagnostics({
         label: "ordinal customLayout",
         nodes,
@@ -741,6 +762,8 @@ export class OrdinalPipelineStore {
 
     // Built-in chart types: clear stale overlays from a prior customLayout run.
     this.customLayoutOverlays = null
+    this._customRestyle = undefined
+    this.hasCustomRestyle = false
 
     const ctx = this.getSceneContext()
     const builder = SCENE_BUILDERS[this.config.chartType]
@@ -808,6 +831,7 @@ export class OrdinalPipelineStore {
       },
       resolveColor: buildResolveColor(palette),
       config: (cfg.layoutConfig ?? {}) as Record<string, unknown>,
+      selection: cfg.layoutSelection ?? null,
     }
   }
 
@@ -1525,6 +1549,31 @@ export class OrdinalPipelineStore {
     return this.getR
   }
 
+  /** Update the selection the layout reads at the next rebuild, without one. */
+  setLayoutSelection(selection: CustomLayoutSelection | null): void {
+    this.config.layoutSelection = selection
+  }
+
+  private applyCustomRestyle(nodes: OrdinalSceneNode[], selection: CustomLayoutSelection | null): void {
+    const fn = this._customRestyle
+    if (!fn) return
+    for (const node of nodes) {
+      const base = this._baseStyles.get(node) ?? node.style ?? ({} as Style)
+      const patch = fn(node, selection)
+      node.style = patch ? { ...base, ...patch } : base
+    }
+  }
+
+  /**
+   * Re-apply the custom layout's `restyle` to the existing scene for
+   * `selection`, off each node's base style — no relayout, no quadtree rebuild.
+   * No-op when the layout supplied no `restyle`.
+   */
+  restyleScene(selection: CustomLayoutSelection | null): void {
+    if (!this._customRestyle) return
+    this.applyCustomRestyle(this.scene, selection)
+  }
+
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
     const prev = { ...this.config }
 
@@ -1596,6 +1645,9 @@ export class OrdinalPipelineStore {
     }
     if ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {
       this.getColor = this.config.colorAccessor != null ? resolveStringAccessor(this.config.colorAccessor) : undefined
+    }
+    if ("symbolAccessor" in config && !accessorsEquivalent(config.symbolAccessor, prev.symbolAccessor)) {
+      this.getSymbol = this.config.symbolAccessor != null ? resolveStringAccessor(this.config.symbolAccessor) : undefined
     }
     if ("connectorAccessor" in config && !accessorsEquivalent(config.connectorAccessor, prev.connectorAccessor)) {
       this.getConnector = this.config.connectorAccessor != null ? resolveStringAccessor(this.config.connectorAccessor) : undefined

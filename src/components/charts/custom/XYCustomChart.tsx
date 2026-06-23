@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { forwardRef } from "react"
+import { forwardRef, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -117,6 +117,15 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     yLabel: props.yLabel,
   })
 
+  // Project the resolved shared selection into the layout (ctx.selection) +
+  // the overlay context. Memoized on (isActive, predicate) so it only changes
+  // identity on a real selection change. Must run before the early return.
+  const sel = setup.effectiveSelectionHook
+  const layoutSelection = useMemo(
+    () => (sel?.isActive ? { isActive: true, predicate: sel.predicate } : null),
+    [sel?.isActive, sel?.predicate]
+  )
+
   if (earlyReturn) return earlyReturn
 
   const { width, height, enableHover, showGrid, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
@@ -128,6 +137,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     // Pass through as-is — coercing to a fresh {} when omitted breaks the
     // pipelineConfig useMemo identity and forces a store rebuild every render.
     layoutConfig,
+    ...(layoutSelection && { layoutSelection }),
     xExtent,
     yExtent,
     colorScheme,

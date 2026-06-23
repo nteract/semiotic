@@ -27,6 +27,7 @@ import type {
   LineSceneNode,
   AreaSceneNode,
   PointSceneNode,
+  SymbolSceneNode,
   RectSceneNode,
   HeatcellSceneNode,
   CandlestickSceneNode
@@ -39,11 +40,13 @@ import type {
   NetworkCircleNode,
   NetworkRectNode,
   NetworkArcNode,
+  NetworkSymbolNode,
   NetworkLineEdge,
   NetworkBezierEdge,
   NetworkRibbonEdge,
   NetworkCurvedEdge
 } from "./networkTypes"
+import { symbolPathString } from "./symbolPath"
 
 import { hasAnyCornerRadius, clampCornerRadii } from "./renderers/cornerRadii"
 import { annularSectorPath, buildGaugeGradientGeometry } from "./renderers/wedgePathBuilder"
@@ -82,6 +85,31 @@ function parseHeatcellColor(color: string): [number, number, number] {
 function svgFill(fill: string | CanvasPattern | undefined, fallback = "#4e79a7"): string {
   if (!fill || typeof fill !== "string") return fallback
   return fill
+}
+
+/**
+ * Shared SVG serializer for the XY/ordinal `SymbolSceneNode` (x/y-based) — the
+ * sibling of the network symbol case in `networkSceneNodeToSVG` (cx/cy). Both
+ * delegate glyph-path generation to `symbolPathString`, matching the canvas
+ * renderer exactly (fill only when a fill is set, so stroke-only glyphs stay
+ * unfilled in SSR too).
+ */
+function symbolSceneNodeToSVG(n: SymbolSceneNode, i: number, idPrefix?: string): React.ReactNode {
+  const d = symbolPathString(n.symbolType, n.size, n.path)
+  const transform = n.rotation
+    ? `translate(${n.x},${n.y}) rotate(${(n.rotation * 180) / Math.PI})`
+    : `translate(${n.x},${n.y})`
+  return (
+    <path
+      key={`${idPrefix ?? ""}symbol-${i}`}
+      d={d}
+      transform={transform}
+      fill={n.style.fill ? svgFill(n.style.fill) : "none"}
+      opacity={n.style.opacity}
+      stroke={n.style.stroke}
+      strokeWidth={n.style.strokeWidth}
+    />
+  )
 }
 
 /**
@@ -255,6 +283,8 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
         />
       )
     }
+    case "symbol":
+      return symbolSceneNodeToSVG(node as SymbolSceneNode, i)
     case "rect": {
       const n = node as RectSceneNode
       return (
@@ -379,6 +409,24 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
           key={`net-arc-${i}`}
           d={arcPath}
           transform={`translate(${n.cx},${n.cy})`}
+          fill={svgFill(n.style.fill)}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+          opacity={n.style.opacity}
+        />
+      )
+    }
+    case "symbol": {
+      const n = node as NetworkSymbolNode
+      const d = symbolPathString(n.symbolType, n.size, n.path)
+      const transform = n.rotation
+        ? `translate(${n.cx},${n.cy}) rotate(${(n.rotation * 180) / Math.PI})`
+        : `translate(${n.cx},${n.cy})`
+      return (
+        <path
+          key={`net-symbol-${i}`}
+          d={d}
+          transform={transform}
           fill={svgFill(n.style.fill)}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
@@ -571,6 +619,8 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
         />
       )
     }
+    case "symbol":
+      return symbolSceneNodeToSVG(node as SymbolSceneNode, i, idPrefix)
     case "wedge": {
       const n = node as WedgeSceneNode
       // Scene stores angles in canvas convention (0 = 3 o'clock).

@@ -125,7 +125,16 @@ const navData = [
       { title: "Streaming System Model", path: "/features/streaming-system-model" },
       { title: "Performance", path: "/features/performance" },
       { title: "Push API", path: "/features/push-api" },
-      { title: "Custom Charts", path: "/features/custom-charts" },
+    ],
+  },
+  {
+    title: "Custom Charts",
+    path: "/custom-charts",
+    children: [
+      { title: "Overview", path: "/custom-charts/overview" },
+      { title: "Custom Layouts", path: "/custom-charts/custom-layouts" },
+      { title: "Glyph Marks", path: "/custom-charts/glyph-marks" },
+      { title: "Recipe Chrome Kit", path: "/custom-charts/recipe-kit" },
     ],
   },
   {
@@ -222,6 +231,7 @@ const navData = [
       { title: "Benchmark Dashboard", path: "/recipes/benchmark-dashboard" },
       { title: "Streaming Migration Map", path: "/recipes/streaming-migration-map" },
       { title: "Rosling Bubble Chart", path: "/recipes/rosling-bubble-chart" },
+      { title: "Satellites in Space", path: "/recipes/satellites-in-space" },
     ],
   },
   {

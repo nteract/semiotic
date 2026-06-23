@@ -2,7 +2,8 @@ import { interpolateNumber } from "d3-interpolate"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
-import type { NetworkLayoutContext } from "./networkCustomLayout"
+import type { NetworkLayoutContext, NetworkLayoutResult } from "./networkCustomLayout"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
@@ -61,6 +62,16 @@ export class NetworkPipelineStore {
   /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
   customLayoutOverlays: import("react").ReactNode = null
   private _customLayoutDiagnosticsWarned = new Set<string>()
+  /** Per-frame restyle callbacks from the custom layout result. When set, the
+   *  frame routes selection changes through `restyleScene()` (style-only repaint)
+   *  instead of a full `buildScene()`. */
+  private _customRestyle: NetworkLayoutResult["restyle"] = undefined
+  private _customRestyleEdge: NetworkLayoutResult["restyleEdge"] = undefined
+  /** True when the active custom layout supplied a `restyle`/`restyleEdge`. */
+  hasCustomRestyle = false
+  /** Base (as-emitted) style per mark, so a restyle pass starts from the layout's
+   *  own style rather than compounding patches across selection changes. */
+  private _baseStyles = new WeakMap<object, import("./types").Style>()
 
   // ── Spatial index for node hit testing ─────────────────────────────────
   // Circle-node hit testing (force/orbit graphs) is O(n) per hover frame
@@ -165,6 +176,13 @@ export class NetworkPipelineStore {
     const prev = this.config
     if (prev.__orbitState) config.__orbitState = prev.__orbitState
     if (prev.__hierarchyRoot) config.__hierarchyRoot = prev.__hierarchyRoot
+    // `layoutSelection` is owned by a dedicated frame effect (so a selection
+    // change can repaint via restyleScene instead of forcing a rebuild), and is
+    // intentionally not part of the rebuild-triggering pipelineConfig — preserve
+    // it across other config updates.
+    if (config.layoutSelection === undefined && prev.layoutSelection != null) {
+      config.layoutSelection = prev.layoutSelection
+    }
     this.config = config
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,
@@ -597,6 +615,47 @@ export class NetworkPipelineStore {
   /**
    * Build the scene graph from current layout positions.
    */
+  /** Update the selection the layout reads at the next `buildScene`, without
+   *  triggering a rebuild. The frame calls this on selection change; whether it
+   *  then repaints (restyle) or rebuilds is the frame's decision. */
+  setLayoutSelection(selection: CustomLayoutSelection | null): void {
+    this.config.layoutSelection = selection
+  }
+
+  /** Snapshot each mark's as-emitted style so {@link restyleScene} can re-apply
+   *  patches from the original rather than compounding. */
+  private snapshotBaseStyles(): void {
+    this._baseStyles = new WeakMap()
+    for (const node of this.sceneNodes) this._baseStyles.set(node, node.style)
+    for (const edge of this.sceneEdges) this._baseStyles.set(edge, edge.style)
+  }
+
+  /**
+   * Re-apply the custom layout's `restyle`/`restyleEdge` to the existing scene
+   * for `selection`, mutating styles **in place** off each mark's base style.
+   * Does NOT bump the scene revision — positions are unchanged, so the quadtree
+   * stays valid and no relayout/repack happens. The frame repaints the canvas
+   * after calling this. No-op when the layout supplied no restyle callbacks.
+   */
+  restyleScene(selection: CustomLayoutSelection | null): void {
+    if (this._customRestyle) {
+      const fn = this._customRestyle
+      for (const node of this.sceneNodes) {
+        const base = this._baseStyles.get(node) ?? node.style
+        const patch = fn(node, selection)
+        node.style = patch ? { ...base, ...patch } : base
+      }
+    }
+    if (this._customRestyleEdge) {
+      const fn = this._customRestyleEdge
+      for (const edge of this.sceneEdges) {
+        const base = this._baseStyles.get(edge) ?? edge.style
+        const patch = fn(edge, selection)
+        edge.style = patch ? { ...base, ...patch } : base
+      }
+    }
+  }
+
   buildScene(size: [number, number]): void {
     // Any sceneNodes rebuild invalidates the lazily-built node quadtree.
     this._sceneNodesRevision++
@@ -648,6 +707,17 @@ export class NetworkPipelineStore {
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
       this.customLayoutOverlays = result.overlays ?? null
+      // Stash per-frame restyle callbacks. Their presence opts the chart into
+      // the cheap selection path: snapshot each mark's emitted (base) style, then
+      // apply the restyle once for the current selection. `restyleScene()` later
+      // re-applies onto these bases without re-running the layout.
+      this._customRestyle = result.restyle
+      this._customRestyleEdge = result.restyleEdge
+      this.hasCustomRestyle = !!(result.restyle || result.restyleEdge)
+      if (this.hasCustomRestyle) {
+        this.snapshotBaseStyles()
+        this.restyleScene(this.config.layoutSelection ?? null)
+      }
       warnCustomLayoutDiagnostics({
         label: "customNetworkLayout",
         nodes: this.sceneNodes,
@@ -656,6 +726,10 @@ export class NetworkPipelineStore {
       })
       return
     }
+    // Non-custom path: no restyle callbacks in effect.
+    this._customRestyle = undefined
+    this._customRestyleEdge = undefined
+    this.hasCustomRestyle = false
 
     // Built-in chart types: clear stale overlays from a prior customLayout run.
     this.customLayoutOverlays = null

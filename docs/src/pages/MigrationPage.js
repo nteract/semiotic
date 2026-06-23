@@ -665,7 +665,7 @@ npx prettier --write ./src`}
         These low-level building blocks are gone. <code>ProcessViz</code> was a debugging aid;{" "}
         <code>Mark</code> and <code>SpanOrDiv</code> were primitives no longer needed once frames
         switched to canvas. If you depended on them, replace with direct SVG/HTML elements or scene
-        primitives via the <Link to="/features/custom-charts">custom layout APIs</Link>.
+        primitives via the <Link to="/custom-charts/overview">custom layout APIs</Link>.
       </p>
 
       {/* ---------------------------------------------------------------- */}

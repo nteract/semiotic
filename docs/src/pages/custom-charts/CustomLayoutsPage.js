@@ -234,13 +234,23 @@ export default function CustomChartsPage() {
   const streamData = useMemo(() => buildStreamgraphData(), [])
 
   return (
-    <PageLayout title="Custom Charts" subtitle="Bespoke geometry on top of the built-in pipeline">
+    <PageLayout
+      title="Custom Layouts"
+      subtitle="The escape-hatch HOCs and the recipe gallery"
+      breadcrumbs={[
+        { label: "Custom Charts", path: "/custom-charts/overview" },
+        { label: "Custom Layouts", path: "/custom-charts/custom-layouts" },
+      ]}
+      prevPage={{ title: "Overview", path: "/custom-charts/overview" }}
+      nextPage={{ title: "Glyph Marks", path: "/custom-charts/glyph-marks" }}
+    >
       <section>
         <p>
-          When the catalog doesn't fit, <code>XYCustomChart</code> lets you supply a layout function
-          that emits scene nodes directly. The frame still owns scales, theme, hit testing,
-          transitions, decay, accessibility, and SSR — your layout owns the geometry. Most novel
-          chart types (waffle, calendar, streamgraph, flextree, dagre) decompose into the same
+          When the catalog doesn't fit, the three custom-chart HOCs — <code>XYCustomChart</code>,{" "}
+          <code>OrdinalCustomChart</code>, and <code>NetworkCustomChart</code> — let you supply a
+          layout function that emits scene nodes directly. The frame still owns scales, theme, hit
+          testing, transitions, decay, accessibility, and SSR — your layout owns the geometry. Most
+          novel chart types (waffle, calendar, streamgraph, flextree, dagre) decompose into the same
           primitives the built-in HOCs use.
         </p>
         <p>

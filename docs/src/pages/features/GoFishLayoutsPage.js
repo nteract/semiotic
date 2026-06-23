@@ -562,7 +562,7 @@ export default function GoFishLayoutsPage() {
         <p>
           This is not a runtime dependency on GoFish — it consumes GoFish’s published IR, not its
           renderer. It is a concrete integration with the{" "}
-          <Link to="/features/custom-charts">Custom Charts</Link> surface: a serialized grammar in,
+          <Link to="/custom-charts/overview">Custom Charts</Link> surface: a serialized grammar in,
           stable mark identity, data-bearing nodes, theme-aware color resolution, transitions, and
           streaming out.
         </p>

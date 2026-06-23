@@ -355,4 +355,61 @@ describe("buildPointScene", () => {
     const nodes = buildPointScene(ctx, data)
     expect(nodes[0].style.fill).toBe("#ff00aa")
   })
+
+  // ── Symbol (shape) channel — symbolBy ─────────────────────────────────
+
+  it("emits SymbolSceneNodes mapped by symbolMap when a symbol accessor is set", () => {
+    const data = [
+      { x: 10, y: 20, cls: "Civil" },
+      { x: 30, y: 40, cls: "Defense" },
+    ]
+    const ctx = makeCtx({
+      config: { chartType: "scatter", symbolMap: { Civil: "star", Defense: "triangle" } },
+      getSymbol: (d) => d.cls,
+    })
+    const nodes = buildPointScene(ctx, data)
+    expect(nodes).toHaveLength(2)
+    expect(nodes[0]).toMatchObject({ type: "symbol", x: 10, y: 20, symbolType: "star" })
+    expect(nodes[1]).toMatchObject({ type: "symbol", x: 30, y: 40, symbolType: "triangle" })
+  })
+
+  it("encodes the point radius as d3-symbol area (πr²)", () => {
+    const data = [{ x: 10, y: 20, cls: "A" }]
+    const ctx = makeCtx({
+      config: { chartType: "scatter" }, // default r = 5
+      getSymbol: (d) => d.cls,
+    })
+    const nodes = buildPointScene(ctx, data)
+    expect(nodes[0].type).toBe("symbol")
+    expect((nodes[0] as { size: number }).size).toBeCloseTo(Math.PI * 25)
+  })
+
+  it("auto-assigns distinct shapes to unmapped categories, deterministically", () => {
+    const data = [
+      { x: 1, y: 1, cls: "A" },
+      { x: 2, y: 2, cls: "B" },
+      { x: 3, y: 3, cls: "A" },
+    ]
+    const ctx = makeCtx({ config: { chartType: "scatter" }, getSymbol: (d) => d.cls })
+    const a = buildPointScene(ctx, data) as { symbolType?: string }[]
+    // Same category → same shape; different categories → different shapes.
+    expect(a[0].symbolType).toBe(a[2].symbolType)
+    expect(a[0].symbolType).not.toBe(a[1].symbolType)
+    // Deterministic across rebuilds (cache is per-call but data order is stable).
+    const b = buildPointScene(makeCtx({ config: { chartType: "scatter" }, getSymbol: (d) => d.cls }), data) as {
+      symbolType?: string
+    }[]
+    expect(b.map((n) => n.symbolType)).toEqual(a.map((n) => n.symbolType))
+  })
+
+  it("carries pointId onto symbol nodes for annotation anchoring", () => {
+    const data = [{ x: 10, y: 20, cls: "A", id: "p1" }]
+    const ctx = makeCtx({
+      config: { chartType: "scatter", symbolMap: { A: "diamond" } },
+      getSymbol: (d) => d.cls,
+      getPointId: (d) => d.id,
+    })
+    const nodes = buildPointScene(ctx, data)
+    expect(nodes[0].pointId).toBe("p1")
+  })
 })

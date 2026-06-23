@@ -44,6 +44,7 @@ import type {
   ThemeSemanticColors,
   BandConfig
 } from "./types"
+import type { SymbolName } from "./symbolPath"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent, type CoercibleNumber } from "./accessorUtils"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
@@ -69,7 +70,8 @@ import { buildBarScene } from "./xySceneBuilders/barScene"
 import { buildSwarmScene } from "./xySceneBuilders/swarmScene"
 import { buildWaterfallScene } from "./xySceneBuilders/waterfallScene"
 import { buildCandlestickScene } from "./xySceneBuilders/candlestickScene"
-import type { CustomLayout, LayoutContext } from "./customLayout"
+import type { CustomLayout, LayoutContext, LayoutResult } from "./customLayout"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import type { MarginType } from "../types/marginType"
 
@@ -198,6 +200,10 @@ export interface PipelineConfig {
   valueAccessor?: string | ((d: Datum) => CoercibleNumber)
   colorAccessor?: string | ((d: Datum) => string)
   sizeAccessor?: string | ((d: Datum) => CoercibleNumber)
+  /** Categorical accessor → glyph shape (scatter/bubble). Emits SymbolSceneNodes. */
+  symbolAccessor?: string | ((d: Datum) => string)
+  /** Explicit `{category → shape}` map; unmapped categories auto-assign. */
+  symbolMap?: Record<string, SymbolName>
   groupAccessor?: string | ((d: Datum) => string)
   categoryAccessor?: string | ((d: Datum) => string)
   lineDataAccessor?: string
@@ -317,6 +323,9 @@ export interface PipelineConfig {
   layoutConfig?: object
   /** Resolved margin — passed through so LayoutContext.dimensions.margin reflects what the frame actually used. */
   layoutMargin?: MarginType
+  /** Resolved shared selection projected into LayoutContext.selection. Owned by
+   *  a dedicated frame effect (kept off the rebuild-triggering path). */
+  layoutSelection?: CustomLayoutSelection | null
 }
 
 // ── PipelineStore ──────────────────────────────────────────────────────
@@ -334,6 +343,7 @@ export class PipelineStore {
   private getCategory: ((d: Datum) => string) | undefined
   private getSize: ((d: Datum) => number) | undefined
   private getColor: ((d: Datum) => string) | undefined
+  private getSymbol: ((d: Datum) => string) | undefined
   private getY0: ((d: Datum) => number) | undefined
   /** Unified ribbon list — `boundsAccessor` + `band` both compose into
    *  this single array (see `resolveRibbons`). Read by the scene
@@ -405,6 +415,12 @@ export class PipelineStore {
   /** Overlays returned from customLayout (consumed by StreamXYFrame for SVGOverlay). */
   customLayoutOverlays: import("react").ReactNode = null
   private _customLayoutDiagnosticsWarned = new Set<string>()
+  /** Per-frame restyle callback from the custom layout result (see LayoutResult.restyle). */
+  private _customRestyle: LayoutResult["restyle"] = undefined
+  /** True when the active custom layout supplied a `restyle`. */
+  hasCustomRestyle = false
+  /** Base (as-emitted) style per node, so restyle passes don't compound. */
+  private _baseStyles = new WeakMap<object, Style>()
 
   /** True when the x accessor returns Date objects (auto-detected on first data ingestion) */
   xIsDate = false
@@ -444,6 +460,7 @@ export class PipelineStore {
       ? resolveAccessor(config.sizeAccessor, "size")
       : undefined
     this.getColor = resolveStringAccessor(config.colorAccessor)
+    this.getSymbol = resolveStringAccessor(config.symbolAccessor)
     this.getY0 = config.y0Accessor
       ? resolveAccessor(config.y0Accessor, "y0")
       : undefined
@@ -1200,6 +1217,7 @@ export class PipelineStore {
         // `CustomLayout<C>` parameter — at this boundary, hand the value
         // through as the default `Record<string, unknown>`.
         config: (config.layoutConfig ?? {}) as Record<string, unknown>,
+        selection: config.layoutSelection ?? null,
       }
       let result
       try {
@@ -1210,10 +1228,22 @@ export class PipelineStore {
           console.error("[semiotic] customLayout threw:", err)
         }
         this.customLayoutOverlays = null
+        this._customRestyle = undefined
+        this.hasCustomRestyle = false
         return []
       }
       this.customLayoutOverlays = result.overlays ?? null
       const nodes = result.nodes ?? []
+      // Stash the per-frame restyle callback; its presence opts into the cheap
+      // selection path. Snapshot base styles and apply once for the current
+      // selection (these `nodes` become `this.scene`, so restyleScene mutates them).
+      this._customRestyle = result.restyle
+      this.hasCustomRestyle = !!result.restyle
+      if (this.hasCustomRestyle) {
+        this._baseStyles = new WeakMap()
+        for (const n of nodes) if (n.style) this._baseStyles.set(n, n.style)
+        this.applyCustomRestyle(nodes, config.layoutSelection ?? null)
+      }
       warnCustomLayoutDiagnostics({
         label: "customLayout",
         nodes,
@@ -1226,6 +1256,8 @@ export class PipelineStore {
     // Built-in chart types: ensure stale overlays from a prior customLayout
     // run don't bleed through after the user removes the prop.
     this.customLayoutOverlays = null
+    this._customRestyle = undefined
+    this.hasCustomRestyle = false
 
     if (data.length === 0) return []
 
@@ -1237,6 +1269,7 @@ export class PipelineStore {
       getY0: this.getY0,
       getSize: this.getSize,
       getColor: this.getColor,
+      getSymbol: this.getSymbol,
       getGroup: this.getGroup,
       getCategory: this.getCategory,
       getPointId: this.getPointId,
@@ -1803,6 +1836,32 @@ export class PipelineStore {
     return this.getCategory
   }
 
+  /** Update the selection the layout reads at the next rebuild, without
+   *  triggering one. The frame then either repaints (restyle) or rebuilds. */
+  setLayoutSelection(selection: CustomLayoutSelection | null): void {
+    this.config.layoutSelection = selection
+  }
+
+  private applyCustomRestyle(nodes: SceneNode[], selection: CustomLayoutSelection | null): void {
+    const fn = this._customRestyle
+    if (!fn) return
+    for (const node of nodes) {
+      const base = this._baseStyles.get(node) ?? node.style ?? ({} as Style)
+      const patch = fn(node, selection)
+      node.style = patch ? { ...base, ...patch } : base
+    }
+  }
+
+  /**
+   * Re-apply the custom layout's `restyle` to the existing scene for
+   * `selection`, off each node's base style — no relayout, no quadtree rebuild
+   * (positions are unchanged). No-op when the layout supplied no `restyle`.
+   */
+  restyleScene(selection: CustomLayoutSelection | null): void {
+    if (!this._customRestyle) return
+    this.applyCustomRestyle(this.scene, selection)
+  }
+
   updateConfig(config: Partial<PipelineConfig>): void {
     const prev = { ...this.config }
 
@@ -1893,6 +1952,10 @@ export class PipelineStore {
       this.getSize = this.config.sizeAccessor
         ? resolveAccessor(this.config.sizeAccessor, "size")
         : undefined
+      accessorChanged = true
+    }
+    if ("symbolAccessor" in config && !accessorsEquivalent(config.symbolAccessor, prev.symbolAccessor)) {
+      this.getSymbol = this.config.symbolAccessor != null ? resolveStringAccessor(this.config.symbolAccessor) : undefined
       accessorChanged = true
     }
     if ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor)) {

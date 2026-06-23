@@ -392,6 +392,8 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "vertical" },
       sizeBy: { type: ["string", "function"], description: "Key for variable point sizing" },
       sizeRange: { type: "array", default: [3, 8] },
+      symbolBy: { type: ["string", "function"], description: "Categorical field → glyph shape; each point renders as a d3-shape glyph instead of a circle." },
+      symbolMap: { type: "object", description: "Explicit {category → shape} map for symbolBy; unmapped categories auto-assign." },
       pointRadius: { type: "number", default: 4 },
       pointOpacity: { type: "number", default: 0.7 },
       categoryPadding: { type: "number", default: 20 },
@@ -894,6 +896,8 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       yAccessor: { type: ["string", "function"], default: "y" },
       sizeBy: { type: ["string", "function"], description: "Key for variable point sizing" },
       sizeRange: { type: "array", default: [3, 15], description: "Min and max radius for sizeBy scaling" },
+      symbolBy: { type: ["string", "function"], description: "Categorical field → glyph shape; each mark renders as a d3-shape glyph (circle/square/triangle/diamond/star/cross/wye/chevron) instead of a circle." },
+      symbolMap: { type: "object", description: "Explicit {category → shape} map for symbolBy; unmapped categories auto-assign." },
       pointRadius: { type: "number", default: 5, description: "Fixed point radius" },
       pointOpacity: { type: "number", default: 0.8 },
       regression: {

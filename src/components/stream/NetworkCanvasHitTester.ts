@@ -4,9 +4,11 @@ import type {
   NetworkCircleNode,
   NetworkRectNode,
   NetworkArcNode,
+  NetworkSymbolNode,
   NetworkBezierEdge
 } from "./networkTypes"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
+import { symbolRadius } from "./symbolPath"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import type { Quadtree } from "d3-quadtree"
 
@@ -105,9 +107,37 @@ function hitTestNode(
       return hitTestRect(node, px, py)
     case "arc":
       return hitTestArc(node, px, py)
+    case "symbol":
+      return hitTestSymbol(node, px, py, maxDistance)
     default:
       return null
   }
+}
+
+function hitTestSymbol(
+  node: NetworkSymbolNode,
+  px: number,
+  py: number,
+  maxDistance: number = 30
+): NetworkHitResult | null {
+  // Treat the glyph as a circle of its effective radius. The scan picks the
+  // nearest mark within tolerance, so dense clusters resolve to the closest
+  // glyph — the natural read for a packed beeswarm.
+  const dx = px - node.cx
+  const dy = py - node.cy
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  const tolerance = getHitRadius(symbolRadius(node.size), maxDistance)
+
+  if (dist <= tolerance) {
+    return {
+      type: "node",
+      datum: node.datum,
+      x: node.cx,
+      y: node.cy,
+      distance: dist
+    }
+  }
+  return null
 }
 
 function hitTestCircle(

@@ -38,10 +38,23 @@ export interface NetworkCustomChartProps<
   colorScheme?: string | string[]
   enableHover?: boolean
   /**
+   * Annotations rendered over the chart. A custom network layout's marks are
+   * anchorable by id: emit a scene node with `id: <foo>` and an annotation with
+   * `pointId: "<foo>"` resolves to that mark's center (the editorial-callout
+   * story, now unified with the built-in network charts). Data-coordinate
+   * anchoring doesn't apply — custom layouts own their own geometry — so anchor
+   * by `pointId`, or draw bespoke callouts with the recipe chrome kit's
+   * `markCallout`.
+   */
+  annotations?: StreamNetworkFrameProps["annotations"]
+  /** Collision-avoiding auto-placement for the annotations above. */
+  autoPlaceAnnotations?: StreamNetworkFrameProps["autoPlaceAnnotations"]
+  /**
    * Custom layouts own their own color resolution (the layout function
    * decides what each node looks like), so the auto-legend infrastructure
    * the built-in network HOCs use can't run. To render a legend, build a
-   * `legendGroups` array yourself and pass it through `frameProps.legend`.
+   * `legendGroups` array yourself (see `legendGroupsFrom`) and pass it through
+   * `frameProps.legend`.
    */
   /** Additional StreamNetworkFrame props for advanced customization. */
   frameProps?: Partial<Omit<StreamNetworkFrameProps,
@@ -97,6 +110,8 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     onObservation,
     onClick,
     chartId,
+    annotations,
+    autoPlaceAnnotations,
     frameProps = {},
   } = props
 
@@ -172,6 +187,10 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     customClickBehavior: (onObservation || onClick) ? customClickBehavior : undefined,
     // Consume side: the resolved predicate the layout reads as ctx.selection.
     layoutSelection,
+    // Annotations anchor to emitted marks by `pointId` (the scene node's id);
+    // `frameProps` can still override if a caller needs the raw frame prop.
+    ...(annotations != null && { annotations }),
+    ...(autoPlaceAnnotations != null && { autoPlaceAnnotations }),
     // No `showLegend` pass-through: custom layouts own color resolution,
     // so the auto-legend infrastructure can't run. Pass a real legend
     // through `frameProps.legend` if you want one.

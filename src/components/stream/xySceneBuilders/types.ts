@@ -8,6 +8,7 @@ import type { AreaGradientConfig } from "./areaGradient"
  * accessing PipelineStore instance fields directly.
  */
 import type { StreamScales, Style, CurveType, BarStyle, ThemeSemanticColors } from "../types"
+import type { SymbolName } from "../symbolPath"
 import type { ResolvedRibbon } from "./ribbonScene"
 
 export interface XYSceneContext {
@@ -18,6 +19,8 @@ export interface XYSceneContext {
   getY0?: (d: Datum) => number | null
   getSize?: (d: Datum) => number
   getColor?: (d: Datum) => string
+  /** Categorical accessor → glyph shape (scatter/bubble symbolBy). */
+  getSymbol?: (d: Datum) => string
   getGroup?: (d: Datum) => string
   getCategory?: (d: Datum) => string
   getPointId?: (d: Datum) => string
@@ -62,6 +65,8 @@ export interface XYSceneConfig {
   // Point/bubble
   pointStyle?: (d: Datum) => Style & { r?: number }
   sizeRange?: [number, number]
+  /** Explicit `{category → shape}` map for symbolBy; unmapped auto-assign. */
+  symbolMap?: Record<string, SymbolName>
 
   // Heatmap
   xAccessor?: string | ((d: Datum) => any)

@@ -17,6 +17,8 @@ export interface OrdinalSceneContext {
   getStack?: (d: Datum) => string
   getGroup?: (d: Datum) => string
   getColor?: (d: Datum) => string
+  /** Categorical accessor → glyph shape (swarm/dot symbolBy). */
+  getSymbol?: (d: Datum) => string
   getConnector?: (d: Datum) => string
   getO: (d: Datum) => string
   multiScales: ScaleLinear<number, number>[]

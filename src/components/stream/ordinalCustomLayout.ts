@@ -3,7 +3,8 @@ import type { ScaleBand, ScaleLinear } from "d3-scale"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { MarginType } from "../types/marginType"
 import type { OrdinalSceneNode, OrdinalScales } from "./ordinalTypes"
-import type { ThemeSemanticColors } from "./types"
+import type { Style, ThemeSemanticColors } from "./types"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 
 /**
  * customLayout escape hatch for `StreamOrdinalFrame`.
@@ -74,6 +75,13 @@ export interface OrdinalLayoutContext<C extends object = Record<string, unknown>
   resolveColor: (key: string) => string
   /** User-supplied config blob threaded through `layoutConfig`. */
   config: C
+  /**
+   * Shared-selection projection (from `selection` / `linkedHover`). `null` when
+   * unwired. For selection-driven styling without a relayout, use
+   * {@link OrdinalLayoutResult.restyle} (canvas) / `useCustomLayoutSelection`
+   * (overlays) rather than recomputing geometry here.
+   */
+  selection?: CustomLayoutSelection | null
 }
 
 export interface OrdinalLayoutResult {
@@ -81,4 +89,12 @@ export interface OrdinalLayoutResult {
   nodes?: OrdinalSceneNode[]
   /** SVG overlays composited above the canvas (labels, axis lines, annotations). */
   overlays?: ReactNode
+  /**
+   * **Per-frame restyle of canvas marks, without re-positioning.** When present,
+   * a selection/hover change re-applies styles to the existing scene nodes +
+   * repaints — no relayout, no quadtree rebuild. Return a style patch merged onto
+   * the node's *base* style. Providing it opts into the cheap selection path.
+   * Pairs with `useCustomLayoutSelection` for the `overlays`.
+   */
+  restyle?: (node: OrdinalSceneNode, selection: CustomLayoutSelection | null) => Partial<Style> | void
 }

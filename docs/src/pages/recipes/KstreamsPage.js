@@ -240,7 +240,7 @@ export default function KstreamsPage() {
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/features/custom-charts">Custom Charts</Link> — the customLayout escape hatch
+          <Link to="/custom-charts/overview">Custom Charts</Link> — the customLayout escape hatch
         </li>
         <li>
           <Link to="/recipes/network-explorer">Network Explorer</Link> — force-directed interaction

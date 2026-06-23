@@ -268,6 +268,11 @@ export function RecipesIndex() {
           title="Rosling Bubble Chart"
           thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
         />
+        <PageLink
+          href="/recipes/satellites-in-space"
+          title="Satellites in Space"
+          thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
+        />
 
         <div className="sub-header">Dashboards</div>
 

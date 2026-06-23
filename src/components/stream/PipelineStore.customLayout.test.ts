@@ -247,3 +247,58 @@ describe("PipelineStore customLayout integration", () => {
     expect(area.clipRect).toEqual({ x: 1, y: 2, width: 3, height: 4 })
   })
 })
+
+describe("PipelineStore custom-layout restyle + selection channel", () => {
+  type Sel = { isActive: boolean; predicate: (d: { id?: string }) => boolean }
+  const dimRestyle = (node: { datum: unknown }, selection: Sel | null) =>
+    selection?.isActive && !selection.predicate(node.datum as { id?: string }) ? { opacity: 0.1 } : { opacity: 1 }
+
+  function makeStore(opts: { restyle?: typeof dimRestyle; layoutSelection?: Sel } = {}) {
+    let capturedSel: unknown
+    const layout = (ctx: LayoutContext) => {
+      capturedSel = ctx.selection
+      return {
+        nodes: ctx.data.map((d, i) => ({
+          type: "point" as const, x: i * 10, y: 0, r: 4, style: { fill: "#abc", opacity: 1 }, datum: d, pointId: String(d.id),
+        })),
+        ...(opts.restyle && { restyle: opts.restyle }),
+      }
+    }
+    const store = new PipelineStore({
+      chartType: "custom", windowSize: 100, windowMode: "sliding", arrowOfTime: "right", extentPadding: 0,
+      xAccessor: "x", yAccessor: "y", customLayout: layout,
+      ...(opts.layoutSelection && { layoutSelection: opts.layoutSelection as never }),
+    })
+    store.ingest({ inserts: [{ id: "a", x: 0, y: 0 }, { id: "b", x: 1, y: 0 }], bounded: true })
+    store.computeScene({ width: 200, height: 100 })
+    return { store, getCapturedSel: () => capturedSel }
+  }
+
+  it("threads ctx.selection into the layout", () => {
+    const sel: Sel = { isActive: true, predicate: (d) => d.id === "a" }
+    const { getCapturedSel } = makeStore({ layoutSelection: sel })
+    expect(getCapturedSel()).toEqual(sel)
+  })
+
+  it("flags hasCustomRestyle and restyleScene mutates styles off base (no compounding)", () => {
+    const { store } = makeStore({ restyle: dimRestyle })
+    expect(store.hasCustomRestyle).toBe(true)
+    store.restyleScene({ isActive: true, predicate: (d: { id?: string }) => d.id === "a" })
+    const byId = new Map(store.scene.map((n) => [(n.datum as { id: string }).id, n]))
+    expect(byId.get("a")!.style.opacity).toBe(1)
+    expect(byId.get("b")!.style.opacity).toBe(0.1)
+    // Re-restyle off base — not compounded.
+    store.restyleScene({ isActive: true, predicate: (d: { id?: string }) => d.id === "b" })
+    expect(byId.get("a")!.style.opacity).toBe(0.1)
+    expect(byId.get("b")!.style.opacity).toBe(1)
+    expect(byId.get("a")!.style.fill).toBe("#abc")
+  })
+
+  it("hasCustomRestyle is false (and restyleScene a no-op) without a restyle callback", () => {
+    const { store } = makeStore()
+    expect(store.hasCustomRestyle).toBe(false)
+    const before = store.scene[0].style.opacity
+    store.restyleScene({ isActive: true, predicate: () => false })
+    expect(store.scene[0].style.opacity).toBe(before)
+  })
+})

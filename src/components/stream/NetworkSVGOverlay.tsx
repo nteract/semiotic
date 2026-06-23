@@ -12,6 +12,7 @@ import {
 } from "../charts/shared/annotationHierarchy"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { AnnotationContext } from "../realtime/types"
+import { symbolRadius } from "./symbolPath"
 
 type AnnotationAnchorNode = {
   type: string
@@ -27,27 +28,36 @@ type AnnotationAnchorNode = {
   r?: number
   /** Arc nodes (chord, radial) carry an outer radius. */
   outerR?: number
+  /** Symbol nodes (the per-datum glyph channel) carry a d3-symbol area. */
+  size?: number
 }
 
 type NetworkAnnotationContext = AnnotationContext & { sceneNodes?: AnnotationAnchorNode[] }
 
-function nodeAnchorId(node: AnnotationAnchorNode): string | undefined {
+/** Anchor id for a scene node — used to resolve `pointId`-anchored annotations
+ *  to a mark a layout emitted (incl. custom-layout marks). Exported for tests. */
+export function nodeAnchorId(node: AnnotationAnchorNode): string | undefined {
   const id = node.id ?? node.datum?.id ?? node.datum?.data?.id ?? node.datum?.data?.name
   return id == null ? undefined : String(id)
 }
 
-function nodeCenter(node: AnnotationAnchorNode): { x: number; y: number; r: number } | null {
+/** Center + effective radius of a scene node for annotation anchoring. Exported
+ *  for tests. */
+export function nodeCenter(node: AnnotationAnchorNode): { x: number; y: number; r: number } | null {
   const x = node.cx ?? (node.x != null && node.w != null ? node.x + node.w / 2 : node.x)
   const y = node.cy ?? (node.y != null && node.h != null ? node.y + node.h / 2 : node.y)
   if (typeof x !== "number" || typeof y !== "number") return null
-  // Prefer the mark's own radius (circle nodes) or outer radius (arc nodes);
-  // only rect nodes lack both, so fall back to half their largest dimension.
+  // Prefer the mark's own radius (circle nodes), outer radius (arc nodes), or
+  // a symbol glyph's effective radius; only rect nodes lack all three, so fall
+  // back to half their largest dimension.
   const r =
     typeof node.r === "number"
       ? Math.max(1, node.r)
       : typeof node.outerR === "number"
         ? Math.max(1, node.outerR)
-        : Math.max(1, node.w ?? 0, node.h ?? 0) / 2
+        : typeof node.size === "number"
+          ? Math.max(1, symbolRadius(node.size))
+          : Math.max(1, node.w ?? 0, node.h ?? 0) / 2
   return { x, y, r }
 }
 

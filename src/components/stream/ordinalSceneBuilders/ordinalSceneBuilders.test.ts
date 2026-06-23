@@ -722,6 +722,27 @@ describe("buildSwarmScene", () => {
     const nodes = buildSwarmScene(ctx, layout)
     expect(nodes).toHaveLength(0)
   })
+
+  it("emits SymbolSceneNodes (size πr²) when a symbol accessor is set", () => {
+    const ctx = makeCtx({
+      config: { ...makeConfig(), symbolMap: { Civil: "star", Defense: "triangle" } },
+      getSymbol: (d: Datum) => d.cls as string,
+      resolvePieceStyle: () => ({ fill: "#000", r: 4 }),
+      columns: {
+        A: makeColumn("A", [
+          { category: "A", value: 30, cls: "Civil" },
+          { category: "A", value: 40, cls: "Defense" },
+        ]),
+      },
+    })
+    const nodes = buildSwarmScene(ctx, layout)
+    expect(nodes).toHaveLength(2)
+    expect(nodes.every((n) => n.type === "symbol")).toBe(true)
+    const [a, b] = nodes as Array<{ symbolType?: string; size?: number }>
+    expect(a.symbolType).toBe("star")
+    expect(b.symbolType).toBe("triangle")
+    expect(a.size).toBeCloseTo(Math.PI * 16)
+  })
 })
 
 // ── statisticalScene ────────────────────────────────────────────────────

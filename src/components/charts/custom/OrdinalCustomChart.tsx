@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { forwardRef } from "react"
+import { forwardRef, useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type {
   StreamOrdinalFrameProps,
@@ -141,6 +141,14 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     mode: props.mode,
   })
 
+  // Project the resolved shared selection into the layout (ctx.selection) + the
+  // overlay context. Must run before the early return (rules-of-hooks).
+  const sel = setup.effectiveSelectionHook
+  const layoutSelection = useMemo(
+    () => (sel?.isActive ? { isActive: true, predicate: sel.predicate } : null),
+    [sel?.isActive, sel?.predicate]
+  )
+
   if (earlyReturn) return earlyReturn
 
   const { width, height, enableHover, showGrid, title, description, summary, accessibleTable } = resolved
@@ -150,6 +158,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     ...(data != null && { data: safeData }),
     customLayout: layout as OrdinalCustomLayout,
     layoutConfig,
+    ...(layoutSelection && { layoutSelection }),
     // Map our user-facing accessor names to the frame's bounded-mode prop
     // names (oAccessor/rAccessor). The frame's `categoryAccessor`/
     // `valueAccessor` props are streaming-mode aliases and would be

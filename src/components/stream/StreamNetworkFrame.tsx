@@ -28,6 +28,7 @@ import {
 } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { composeOverlays } from "./composeOverlays"
+import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
 import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
@@ -51,6 +52,7 @@ import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { networkRectRenderer } from "./renderers/networkRectRenderer"
 import { networkCircleRenderer } from "./renderers/networkCircleRenderer"
 import { networkArcRenderer } from "./renderers/networkArcRenderer"
+import { networkSymbolRenderer } from "./renderers/networkSymbolRenderer"
 import { networkEdgeRenderer } from "./renderers/networkEdgeRenderer"
 import {
   renderNetworkParticles,
@@ -418,7 +420,9 @@ const StreamNetworkFrame = forwardRef<
       orbitAnimated,
       customNetworkLayout,
       layoutConfig,
-      layoutSelection,
+      // NOTE: `layoutSelection` is intentionally NOT part of pipelineConfig — a
+      // selection change must not trigger the rebuild path. A dedicated effect
+      // below feeds it to the store and either restyles (cheap) or rebuilds.
     }),
     [
       chartType,
@@ -473,7 +477,6 @@ const StreamNetworkFrame = forwardRef<
       currentTheme,
       customNetworkLayout,
       layoutConfig,
-      layoutSelection,
     ]
   )
 
@@ -737,6 +740,25 @@ const StreamNetworkFrame = forwardRef<
     dirtyRef.current = true
     scheduleRender()
   }, [stablePipelineConfig, scheduleRender])
+
+  // Selection / hover channel for custom layouts — kept OFF the rebuild path.
+  // When the layout supplied `restyle`/`restyleEdge`, a selection change only
+  // re-applies styles to the existing scene + repaints (no relayout, no quadtree
+  // rebuild); otherwise it falls back to the rebuild path so `ctx.selection`
+  // reaches the layout. Either way the overlay subtree re-renders against the
+  // new selection via CustomLayoutSelectionProvider below.
+  useEffect(() => {
+    const store = storeRef.current
+    if (!store) return
+    const sel = layoutSelection ?? null
+    store.setLayoutSelection(sel)
+    if (store.hasCustomRestyle) {
+      store.restyleScene(sel)
+    } else {
+      dirtyRef.current = true
+    }
+    scheduleRender()
+  }, [layoutSelection, scheduleRender])
 
   // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
   // is handled by useFrame above when themeDirtyRef is provided. But there's
@@ -1337,6 +1359,7 @@ const StreamNetworkFrame = forwardRef<
     networkRectRenderer(ctx, store.sceneNodes)
     networkCircleRenderer(ctx, store.sceneNodes)
     networkArcRenderer(ctx, store.sceneNodes)
+    networkSymbolRenderer(ctx, store.sceneNodes)
 
     // Render particles (sankey only) — stop entirely when stale
     if (showParticles && store.particlePool && !currentlyStale) {
@@ -1555,7 +1578,7 @@ const StreamNetworkFrame = forwardRef<
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
           foregroundGraphics={
-            composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
+            composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
           }
           annotations={annotations}
           autoPlaceAnnotations={autoPlaceAnnotations}
@@ -1645,7 +1668,7 @@ const StreamNetworkFrame = forwardRef<
         legendHighlightedCategory={legendHighlightedCategory}
         legendIsolatedCategories={legendIsolatedCategories}
         foregroundGraphics={
-          composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
+          composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
         }
         annotations={annotations}
         autoPlaceAnnotations={autoPlaceAnnotations}

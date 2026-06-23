@@ -44,6 +44,7 @@ import type {
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { composeOverlays } from "./composeOverlays"
+import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
@@ -66,6 +67,7 @@ import { filterSparseArray } from "../charts/shared/sparseArray"
 import { getDevicePixelRatio } from "./canvasSetup"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
+import { symbolCanvasRenderer } from "./renderers/symbolCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
@@ -89,8 +91,8 @@ const withConnectors = (renderers: AnyRendererFn[]): AnyRendererFn[] =>
 const RENDERERS: Record<OrdinalChartType, AnyRendererFn[]> = {
   bar: withConnectors([barCanvasRenderer]),
   clusterbar: withConnectors([barCanvasRenderer]),
-  point: withConnectors([pointCanvasRenderer]),
-  swarm: withConnectors([pointCanvasRenderer]),
+  point: withConnectors([pointCanvasRenderer, symbolCanvasRenderer]),
+  swarm: withConnectors([pointCanvasRenderer, symbolCanvasRenderer]),
   pie: [wedgeCanvasRenderer],
   donut: [wedgeCanvasRenderer],
   boxplot: withConnectors([boxplotCanvasRenderer, pointCanvasRenderer]),
@@ -105,6 +107,7 @@ const RENDERERS: Record<OrdinalChartType, AnyRendererFn[]> = {
   custom: withConnectors([
     barCanvasRenderer,
     pointCanvasRenderer,
+    symbolCanvasRenderer,
     wedgeCanvasRenderer,
     boxplotCanvasRenderer,
     violinCanvasRenderer,
@@ -240,6 +243,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       oAccessor = "category",
       rAccessor = "value",
       colorAccessor,
+      symbolAccessor,
+      symbolMap,
       stackBy,
       groupBy,
       multiAxis,
@@ -324,6 +329,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       summary,
       customLayout,
       layoutConfig,
+      layoutSelection,
     } = props
 
     // dirtyRef is declared before useFrame so it can be threaded in for
@@ -422,6 +428,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       oAccessor: isStreaming ? undefined : oAccessor,
       rAccessor: isStreaming ? undefined : rAccessor,
       colorAccessor,
+      symbolAccessor,
+      symbolMap,
       stackBy,
       groupBy,
       multiAxis,
@@ -470,7 +478,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       layoutMargin: margin,
     }), [
       chartType, windowSize, windowMode, extentPadding, projection,
-      oAccessor, rAccessor, colorAccessor, stackBy, groupBy, multiAxis,
+      oAccessor, rAccessor, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis,
       timeAccessor, valueAccessor, categoryAccessor,
       rExtent, oExtent, axisExtent, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle,
       dynamicColumnWidth,
@@ -510,6 +518,23 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       dirtyRef.current = true
       scheduleRender()
     }, [stablePipelineConfig, scheduleRender])
+
+    // Custom-layout selection channel — off the rebuild path. With a `restyle`
+    // callback a selection change re-applies styles + repaints (no relayout);
+    // otherwise it rebuilds so `ctx.selection` reaches the layout. Overlays
+    // re-render via CustomLayoutSelectionProvider below.
+    useEffect(() => {
+      const store = storeRef.current
+      if (!store) return
+      const sel = layoutSelection ?? null
+      store.setLayoutSelection(sel)
+      if (store.hasCustomRestyle) {
+        store.restyleScene(sel)
+      } else {
+        dirtyRef.current = true
+      }
+      scheduleRender()
+    }, [layoutSelection, scheduleRender])
 
     // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
     // is handled by useFrame above when themeDirtyRef is provided.
@@ -1072,7 +1097,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             legendPosition={legendPosition}
             legendLayout={legendLayout}
             foregroundGraphics={
-              composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
+              composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
             }
             annotations={annotations}
             autoPlaceAnnotations={autoPlaceAnnotations}
@@ -1200,7 +1225,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           legendPosition={legendPosition}
           legendLayout={legendLayout}
           foregroundGraphics={
-            composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
+            composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
           }
           annotations={annotations}
           autoPlaceAnnotations={autoPlaceAnnotations}

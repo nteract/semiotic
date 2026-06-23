@@ -5,6 +5,9 @@ import { NetworkCustomChart } from "./NetworkCustomChart"
 import type { NetworkCustomLayout } from "../../stream/networkCustomLayout"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
+import { nodeAnchorId, nodeCenter } from "../../stream/NetworkSVGOverlay"
+import { resolveAnchoredPosition } from "../shared/annotationResolvers"
+import { symbolRadius } from "../../stream/symbolPath"
 
 // Mock StreamNetworkFrame to inspect the props NetworkCustomChart forwards —
 // same seam the XY/Ordinal custom-chart tests use. The contract under test:
@@ -19,6 +22,8 @@ let lastNetworkFrameProps: {
   nodeIDAccessor?: unknown
   sourceAccessor?: unknown
   targetAccessor?: unknown
+  annotations?: unknown
+  autoPlaceAnnotations?: unknown
 } | null = null
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
@@ -118,5 +123,57 @@ describe("NetworkCustomChart", () => {
     expect(lastNetworkFrameProps).not.toBeNull()
     expect("nodes" in (lastNetworkFrameProps ?? {})).toBe(false)
     expect("edges" in (lastNetworkFrameProps ?? {})).toBe(false)
+  })
+
+  it("forwards annotations + autoPlaceAnnotations to the frame", () => {
+    const annotations = [{ type: "callout", pointId: "a", label: "Peak" }]
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart nodes={nodes} layout={trivialLayout} annotations={annotations} autoPlaceAnnotations />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps?.annotations).toBe(annotations)
+    expect(lastNetworkFrameProps?.autoPlaceAnnotations).toBe(true)
+  })
+
+  it("omits the annotations prop entirely when not supplied", () => {
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart nodes={nodes} layout={trivialLayout} />
+      </TooltipProvider>
+    )
+    expect("annotations" in (lastNetworkFrameProps ?? {})).toBe(false)
+  })
+})
+
+describe("custom-layout marks are annotation-anchorable by id", () => {
+  // A custom layout's symbol mark: carries `id`, `cx/cy`, and a d3-symbol `size`
+  // (no `r`/`outerR`/`w`/`h`). The network overlay harvests it into the
+  // annotation `pointNodes`, so a `pointId` annotation resolves to its center.
+  const symbolNode = { type: "symbol", id: "sat-42", cx: 120, cy: 80, size: 200, datum: { id: "sat-42" } }
+
+  it("nodeAnchorId resolves the mark id", () => {
+    expect(nodeAnchorId(symbolNode)).toBe("sat-42")
+  })
+
+  it("nodeCenter uses the glyph's effective radius for a symbol node", () => {
+    const c = nodeCenter(symbolNode)
+    expect(c).not.toBeNull()
+    expect(c!.x).toBe(120)
+    expect(c!.y).toBe(80)
+    expect(c!.r).toBeCloseTo(symbolRadius(200))
+  })
+
+  it("resolveAnchoredPosition anchors a pointId annotation to the emitted mark", () => {
+    const center = nodeCenter(symbolNode)!
+    const context = {
+      scales: null,
+      width: 600,
+      height: 400,
+      frameType: "network" as const,
+      pointNodes: [{ pointId: nodeAnchorId(symbolNode), ...center }],
+    }
+    const pos = resolveAnchoredPosition({ type: "callout", pointId: "sat-42", label: "L" }, 0, context)
+    expect(pos).toEqual({ x: 120, y: 80 })
   })
 })

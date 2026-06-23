@@ -224,7 +224,7 @@ export default function ObservationHooksPage() {
         { label: "Intelligence", path: "/intelligence" },
         { label: "Observation Hooks", path: "/intelligence/observation-hooks" },
       ]}
-      prevPage={{ title: "Custom Charts", path: "/features/custom-charts" }}
+      prevPage={{ title: "Custom Charts", path: "/custom-charts/overview" }}
       nextPage={{ title: "Capability Matrix", path: "/intelligence/capabilities" }}
     >
       <p>

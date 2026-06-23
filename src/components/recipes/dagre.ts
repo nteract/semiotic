@@ -7,6 +7,7 @@ import type {
   RealtimeNode,
 } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
+import { readField } from "./recipeUtils"
 
 export interface DagreConfig {
   /** Default node width when nodes don't carry a `width` field. @default 100 */
@@ -73,11 +74,7 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
   const labelAcc = cfg.labelAccessor ?? "label"
   const getLabel = typeof labelAcc === "function"
     ? labelAcc
-    : (d: Datum) => {
-        const wrapped = (d as { data?: Record<string, unknown> }).data
-        const fromData = wrapped ? wrapped[labelAcc] : undefined
-        return String(fromData ?? d[labelAcc] ?? d.id ?? "")
-      }
+    : (d: Datum) => String(readField(d, labelAcc, d.id ?? ""))
 
   const positions = new Map<string, { x: number; y: number; w: number; h: number }>()
   const sceneNodes: NetworkRectNode[] = []

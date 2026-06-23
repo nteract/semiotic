@@ -233,6 +233,11 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
         break
 
+      case "symbol":
+        if (node.size <= 0) break
+        points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
+        break
+
       case "line": {
         const line = node
         const data = Array.isArray(line.datum) ? line.datum : []
@@ -312,6 +317,9 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
       })
     } else if (node.type === "point") {
       points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
+    } else if (node.type === "symbol") {
+      if (node.size <= 0) continue
+      points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
     } else if (node.type === "wedge" && node.cx != null) {
       if (node.datum === null) continue
       const midAngle = ((node.startAngle || 0) + (node.endAngle || 0)) / 2
@@ -360,6 +368,9 @@ export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
         group: node.datum?.id ?? "_default"
       })
     } else if (node.type === "arc" && node.cx != null) {
+      points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum?.id ?? "_default" })
+    } else if (node.type === "symbol" && node.cx != null) {
+      if (node.size <= 0) continue
       points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum?.id ?? "_default" })
     }
   }
