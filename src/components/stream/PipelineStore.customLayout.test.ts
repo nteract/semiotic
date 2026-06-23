@@ -1,7 +1,7 @@
 import { afterEach, describe, it, expect, vi } from "vitest"
 import { PipelineStore } from "./PipelineStore"
 import type { LayoutContext } from "./customLayout"
-import type { RectSceneNode, AreaSceneNode } from "./types"
+import type { RectSceneNode, AreaSceneNode, PointSceneNode } from "./types"
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -284,7 +284,7 @@ describe("PipelineStore custom-layout restyle + selection channel", () => {
     const { store } = makeStore({ restyle: dimRestyle })
     expect(store.hasCustomRestyle).toBe(true)
     store.restyleScene({ isActive: true, predicate: (d: { id?: string }) => d.id === "a" })
-    const byId = new Map(store.scene.map((n) => [(n.datum as { id: string }).id, n]))
+    const byId = new Map(store.scene.map((n) => [(n.datum as { id: string }).id, n as PointSceneNode] as const))
     expect(byId.get("a")!.style.opacity).toBe(1)
     expect(byId.get("b")!.style.opacity).toBe(0.1)
     // Re-restyle off base — not compounded.
@@ -297,8 +297,8 @@ describe("PipelineStore custom-layout restyle + selection channel", () => {
   it("hasCustomRestyle is false (and restyleScene a no-op) without a restyle callback", () => {
     const { store } = makeStore()
     expect(store.hasCustomRestyle).toBe(false)
-    const before = store.scene[0].style.opacity
+    const before = (store.scene[0] as PointSceneNode).style.opacity
     store.restyleScene({ isActive: true, predicate: () => false })
-    expect(store.scene[0].style.opacity).toBe(before)
+    expect((store.scene[0] as PointSceneNode).style.opacity).toBe(before)
   })
 })

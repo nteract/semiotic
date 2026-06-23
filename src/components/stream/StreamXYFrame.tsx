@@ -761,10 +761,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // returned a `restyle`, a selection change re-applies styles + repaints (no
     // relayout / quadtree rebuild); otherwise it rebuilds so `ctx.selection`
     // reaches the layout. Overlays re-render via CustomLayoutSelectionProvider.
+    const lastLayoutSelectionRef = useRef<unknown>(null)
     useEffect(() => {
       const store = storeRef.current
       if (!store) return
       const sel = layoutSelection ?? null
+      if (lastLayoutSelectionRef.current === sel) return
+      lastLayoutSelectionRef.current = sel
       store.setLayoutSelection(sel)
       if (store.hasCustomRestyle) {
         store.restyleScene(sel)

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { packedClusterMatrix } from "./packedClusterMatrix"
+import type { PackedClusterMatrixConfig } from "./packedClusterMatrix"
 import { shade, makeShade, readField, dimFor, matchesHighlight, signatureKey, LayoutCache } from "./recipeUtils"
 import { roundedEnclosure, boundsOf, bandLabel, markCallout } from "./recipeChrome"
 import { legendGroupsFrom } from "./recipeLegend"
@@ -10,19 +11,22 @@ import type { NetworkLayoutContext, NetworkLayoutSelection } from "../stream/net
 import type { RealtimeNode, NetworkSymbolNode } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 
+type FoundElement = { type: unknown; props: Record<string, unknown> }
+
 /** Recursively collect React elements in a node tree matching a predicate. */
 function findElements(
   node: unknown,
-  pred: (el: { type: unknown; props: Record<string, unknown> }) => boolean,
-  out: ReactElement[] = []
-): ReactElement[] {
+  pred: (el: FoundElement) => boolean,
+  out: FoundElement[] = []
+): FoundElement[] {
   if (Array.isArray(node)) {
     for (const c of node) findElements(c, pred, out)
     return out
   }
   if (node && typeof node === "object" && "type" in node) {
-    const el = node as ReactElement & { props: Record<string, unknown> }
-    if (pred({ type: el.type, props: el.props ?? {} })) out.push(el)
+    const el = node as { type: unknown; props?: Record<string, unknown> }
+    const found: FoundElement = { type: el.type, props: el.props ?? {} }
+    if (pred(found)) out.push(found)
     if (el.props && "children" in el.props) findElements(el.props.children, pred, out)
   }
   return out
@@ -44,11 +48,11 @@ function nodesFrom(rows: Sat[]): RealtimeNode[] {
   return rows.map((r) => ({ id: r.id, data: r as unknown as Datum })) as unknown as RealtimeNode[]
 }
 
-function makeCtx<C extends object>(
-  config: C,
+function makeCtx(
+  config: PackedClusterMatrixConfig,
   nodes: RealtimeNode[],
   selection: NetworkLayoutSelection | null = null
-): NetworkLayoutContext<C> {
+): NetworkLayoutContext<PackedClusterMatrixConfig> {
   return {
     nodes,
     edges: [],
@@ -73,7 +77,7 @@ const SAMPLE: Sat[] = [
   { id: "c1", region: "China", orbit: "MEO", mass: 1500, category: "Navigation", klass: "Defense", launch: "2018-01-01" },
 ]
 
-const baseConfig = {
+const baseConfig: PackedClusterMatrixConfig = {
   columnAccessor: "region",
   rowAccessor: "orbit",
   sizeAccessor: "mass",
@@ -82,7 +86,7 @@ const baseConfig = {
   shadeAccessor: "launch",
   columnOrder: ["US", "EU", "China"],
   rowOrder: ["LEO", "MEO", "GEO"],
-  symbolMap: { Biz: "circle", Civil: "star", Defense: "triangle" } as Record<string, string>,
+  symbolMap: { Biz: "circle", Civil: "star", Defense: "triangle" },
 }
 
 describe("packedClusterMatrix", () => {
@@ -214,12 +218,12 @@ describe("packedClusterMatrix", () => {
   it("composite glyph: base circles + a stroked icon only for mapped values", () => {
     // iconAccessor → base mark is ALWAYS a circle; only values in iconMap get an
     // inner stroked icon (drawn in the overlay, not as a scene/hit node).
-    const cfg = {
+    const cfg: PackedClusterMatrixConfig = {
       columnAccessor: "region",
       rowAccessor: "orbit",
       sizeAccessor: "mass",
       iconAccessor: "klass",
-      iconMap: { Civil: "star" } as Record<string, string>,
+      iconMap: { Civil: "star" },
       iconColor: "#fff",
       columnOrder: ["US", "EU", "China"],
       rowOrder: ["LEO", "MEO", "GEO"],
@@ -236,7 +240,7 @@ describe("packedClusterMatrix", () => {
   })
 
   it("banded mode draws one enclosure per row-band; stacked draws one per cell", () => {
-    const enclosureCount = (cfg: object) => {
+    const enclosureCount = (cfg: PackedClusterMatrixConfig) => {
       const r = packedClusterMatrix(makeCtx(cfg, nodesFrom(SAMPLE)))
       return findElements(r.overlays, (el) => el.type === "rect" && el.props?.fill === "none").length
     }

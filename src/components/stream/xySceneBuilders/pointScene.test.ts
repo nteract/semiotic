@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { buildPointScene } from "./pointScene"
 import type { XYSceneContext } from "./types"
+import type { PointSceneNode } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
@@ -91,7 +92,7 @@ describe("buildPointScene", () => {
     const nodes = buildPointScene(ctx, data)
 
     expect(nodes).toHaveLength(1)
-    expect(nodes[0].r).toBe(5)
+    expect((nodes[0] as PointSceneNode).r).toBe(5)
   })
 
   it("uses default radius of 10 for bubble chartType", () => {
@@ -100,7 +101,7 @@ describe("buildPointScene", () => {
     const nodes = buildPointScene(ctx, data)
 
     expect(nodes).toHaveLength(1)
-    expect(nodes[0].r).toBe(10)
+    expect((nodes[0] as PointSceneNode).r).toBe(10)
   })
 
   it("applies size accessor with sizeRange scaling", () => {
@@ -117,11 +118,11 @@ describe("buildPointScene", () => {
 
     expect(nodes).toHaveLength(3)
     // min size value (0) → sizeRange[0] = 4
-    expect(nodes[0].r).toBe(4)
+    expect((nodes[0] as PointSceneNode).r).toBe(4)
     // mid size value (50) → midpoint = 12
-    expect(nodes[1].r).toBe(12)
+    expect((nodes[1] as PointSceneNode).r).toBe(12)
     // max size value (100) → sizeRange[1] = 20
-    expect(nodes[2].r).toBe(20)
+    expect((nodes[2] as PointSceneNode).r).toBe(20)
   })
 
   it("uses default sizeRange [3, 15] when none specified", () => {
@@ -136,8 +137,8 @@ describe("buildPointScene", () => {
     const nodes = buildPointScene(ctx, data)
 
     // min → 3, max → 15
-    expect(nodes[0].r).toBe(3)
-    expect(nodes[1].r).toBe(15)
+    expect((nodes[0] as PointSceneNode).r).toBe(3)
+    expect((nodes[1] as PointSceneNode).r).toBe(15)
   })
 
   it("produces midpoint radius when all size values are equal", () => {
@@ -152,8 +153,8 @@ describe("buildPointScene", () => {
     const nodes = buildPointScene(ctx, data)
 
     // When minSize === maxSize, returns average of sizeRange
-    expect(nodes[0].r).toBe(12)
-    expect(nodes[1].r).toBe(12)
+    expect((nodes[0] as PointSceneNode).r).toBe(12)
+    expect((nodes[1] as PointSceneNode).r).toBe(12)
   })
 
   it("does not apply sizeScale when pointStyle is set (pointStyle takes precedence)", () => {
@@ -172,8 +173,8 @@ describe("buildPointScene", () => {
     const nodes = buildPointScene(ctx, data)
 
     // pointStyle returns r=7, and sizeScale is not built when pointStyle exists
-    expect(nodes[0].r).toBe(7)
-    expect(nodes[1].r).toBe(7)
+    expect((nodes[0] as PointSceneNode).r).toBe(7)
+    expect((nodes[1] as PointSceneNode).r).toBe(7)
   })
 
   it("applies color accessor when pointStyle returns no fill", () => {
@@ -288,10 +289,10 @@ describe("buildPointScene", () => {
 
     expect(nodes[0].style.fill).toBe("red")
     expect(nodes[0].style.opacity).toBe(1)
-    expect(nodes[0].r).toBe(8)
+    expect((nodes[0] as PointSceneNode).r).toBe(8)
     expect(nodes[1].style.fill).toBe("gray")
     expect(nodes[1].style.opacity).toBe(0.3)
-    expect(nodes[1].r).toBe(4)
+    expect((nodes[1] as PointSceneNode).r).toBe(4)
   })
 
   it("applies scale transforms to x and y coordinates", () => {
@@ -321,8 +322,8 @@ describe("buildPointScene", () => {
     // Only size=50 is valid for scale computation, so minSize === maxSize === 50
     // That means sizeScale returns midpoint = (4 + 20) / 2 = 12
     // For the NaN datum, sizeScale won't be applied, so it keeps the default r = 5
-    expect(nodes[0].r).toBe(5)
-    expect(nodes[1].r).toBe(12)
+    expect((nodes[0] as PointSceneNode).r).toBe(5)
+    expect((nodes[1] as PointSceneNode).r).toBe(12)
   })
 
   // ── Theme-aware default fill (Phase A milestone 4) ────────────────────

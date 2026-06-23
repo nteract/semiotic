@@ -47,6 +47,7 @@ export type {
   NetworkCustomLayout,
   NetworkLayoutContext,
   NetworkLayoutResult,
+  NetworkHtmlMark,
 } from "./stream/networkCustomLayout"
 
 // ProcessSankey temporal-validation primitives. External code

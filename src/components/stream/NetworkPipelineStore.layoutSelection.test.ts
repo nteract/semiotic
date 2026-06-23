@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import type { NetworkPipelineConfig } from "./networkTypes"
-import type { NetworkLayoutContext } from "./networkCustomLayout"
+import type { NetworkLayoutContext, NetworkCustomLayout } from "./networkCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 
 function baseConfig(extra: Partial<NetworkPipelineConfig> = {}): NetworkPipelineConfig {
@@ -62,7 +62,7 @@ describe("NetworkPipelineStore — layoutSelection → ctx.selection", () => {
     const sel = { isActive: true, predicate: (d: Datum) => d.id === "a" }
     const store = new NetworkPipelineStore(baseConfig({ layoutSelection: sel }))
     store.updateConfig(baseConfig()) // no layoutSelection in the new config
-    expect(store.config.layoutSelection).toBe(sel)
+    expect((store as unknown as { config: NetworkPipelineConfig }).config.layoutSelection).toBe(sel)
   })
 })
 
@@ -70,7 +70,7 @@ describe("NetworkPipelineStore — layoutSelection → ctx.selection", () => {
 // updates — selection changes re-apply styles to the existing scene without a
 // relayout (no scene-revision bump → quadtree stays valid).
 describe("NetworkPipelineStore — custom-layout restyle pass", () => {
-  const restyleLayout = (ctx: NetworkLayoutContext) => ({
+  const restyleLayout: NetworkCustomLayout = (ctx) => ({
     sceneNodes: ctx.nodes.map((n, i) => ({
       type: "circle" as const,
       cx: i * 10,
@@ -81,8 +81,8 @@ describe("NetworkPipelineStore — custom-layout restyle pass", () => {
       id: n.id,
     })),
     sceneEdges: [],
-    restyle: (node: { datum: Datum }, selection: { isActive: boolean; predicate: (d: Datum) => boolean } | null) =>
-      selection?.isActive && !selection.predicate(node.datum) ? { opacity: 0.1 } : { opacity: 1 },
+    restyle: (node, selection) =>
+      selection?.isActive && !selection.predicate(node.datum as Datum) ? { opacity: 0.1 } : { opacity: 1 },
   })
 
   function buildRestyleStore() {
@@ -144,6 +144,6 @@ describe("NetworkPipelineStore — custom-layout restyle pass", () => {
     const rev = (store as unknown as { _sceneNodesRevision: number })._sceneNodesRevision
     store.setLayoutSelection({ isActive: true, predicate: (d: Datum) => d.id === "a" })
     expect((store as unknown as { _sceneNodesRevision: number })._sceneNodesRevision).toBe(rev)
-    expect(store.config.layoutSelection?.isActive).toBe(true)
+    expect((store as unknown as { config: NetworkPipelineConfig }).config.layoutSelection?.isActive).toBe(true)
   })
 })

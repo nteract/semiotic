@@ -427,7 +427,7 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
           key={`net-symbol-${i}`}
           d={d}
           transform={transform}
-          fill={svgFill(n.style.fill)}
+          fill={n.style.fill ? svgFill(n.style.fill) : "none"}
           stroke={n.style.stroke}
           strokeWidth={n.style.strokeWidth}
           opacity={n.style.opacity}

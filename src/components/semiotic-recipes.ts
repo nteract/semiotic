@@ -65,6 +65,7 @@ export type {
   NetworkCustomLayout,
   NetworkLayoutContext,
   NetworkLayoutResult,
+  NetworkHtmlMark,
 } from "./stream/networkCustomLayout"
 export type {
   OrdinalCustomLayout,

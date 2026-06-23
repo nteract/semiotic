@@ -98,6 +98,44 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
   selection?: NetworkLayoutSelection | null
 }
 
+/**
+ * An HTML/React node positioned in plot space, rendered into a real DOM layer
+ * above the canvas (and above the SVG `overlays`) — **not** an SVG
+ * `<foreignObject>`.
+ *
+ * Reach for this over `overlays` when a mark is text-heavy or a rich component
+ * (a labelled card, an Axon widget) **and** it dims/animates on interaction.
+ * HTML-in-SVG (`<foreignObject>`) gets no compositor layer, so an `opacity`
+ * change — the common hover-dim — re-rasterizes the text; on a large graph that
+ * stalls the interaction. A real DOM element composites `opacity` / `transform`
+ * / `visibility` without re-painting its contents.
+ *
+ * The framework owns placement: each mark is wrapped in an absolutely-positioned
+ * element that tracks the same margin (and any future zoom/pan) transform the
+ * canvas and `overlays` receive, so a mark at `(x, y)` lands exactly where a
+ * `sceneNode` at `(x, y)` does. The consumer owns the content's appearance.
+ *
+ * Marks are non-interactive by default (`pointer-events: none`) — pointer events
+ * fall through to the canvas, so existing `sceneNodes` hit-testing
+ * (`onObservation` / `onClick`) is unaffected. Emit a transparent hit-rect
+ * `sceneNode` per mark to keep the canvas authoritative for interaction.
+ */
+export interface NetworkHtmlMark {
+  /** Stable identity for keying / reconciliation across layout runs. A
+   *  position-only update repositions without remounting the content. */
+  id: string
+  /** Top-left x in plot coordinates — the same space as `sceneNodes`. */
+  x: number
+  /** Top-left y in plot coordinates — the same space as `sceneNodes`. */
+  y: number
+  /** Wrapper width in plot units. */
+  width: number
+  /** Wrapper height in plot units. */
+  height: number
+  /** Arbitrary HTML/React rendered inside the positioned wrapper. */
+  content: ReactNode
+}
+
 export interface NetworkLayoutResult {
   /** Positioned scene primitives. Circles, rects, or arcs. */
   sceneNodes?: NetworkSceneNode[]
@@ -107,6 +145,16 @@ export interface NetworkLayoutResult {
   labels?: NetworkLabel[]
   /** SVG overlays composited above the canvas. */
   overlays?: ReactNode
+  /**
+   * HTML/React nodes positioned in plot space, rendered into one real DOM layer
+   * above the canvas and SVG `overlays`. Use for rich-text / component marks that
+   * dim or animate on hover — they composite `opacity`/`transform` changes
+   * instead of re-rasterizing text the way an SVG `<foreignObject>` does. The
+   * framework owns positioning + transform so marks stay pixel-aligned with
+   * `sceneNodes`. Additive: a layout that omits it renders no extra DOM. See
+   * {@link NetworkHtmlMark}.
+   */
+  htmlMarks?: NetworkHtmlMark[]
   /**
    * **Per-frame restyle of canvas marks, without re-positioning.** When present,
    * a selection/hover change re-applies styles to the existing scene nodes and

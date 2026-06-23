@@ -227,6 +227,148 @@ function ParallelCoordinatesDemo() {
   )
 }
 
+// ── HTML marks demo ────────────────────────────────────────────────────────
+// `htmlMarks` (network custom layouts) render rich, framework-positioned DOM
+// nodes in a layer ABOVE the canvas + SVG overlays — the right tool for
+// text-heavy cards that dim on hover, because a real <div> composites an
+// opacity change instead of re-rasterizing text the way an SVG <foreignObject>
+// does. Edges stay on the canvas; one transparent canvas hit-rect per card
+// keeps hover/click authoritative; the hovered id flows back through
+// layoutConfig so each card re-renders dimmed.
+const htmlMarkNodes = [
+  { id: "orders", title: "Orders", meta: "REST · 1.2k rps" },
+  { id: "payments", title: "Payments", meta: "gRPC · 480 rps" },
+  { id: "inventory", title: "Inventory", meta: "queue · 90 rps" },
+  { id: "shipping", title: "Shipping", meta: "batch · hourly" },
+]
+const htmlMarkEdges = [
+  { source: "orders", target: "payments" },
+  { source: "orders", target: "inventory" },
+  { source: "payments", target: "shipping" },
+  { source: "inventory", target: "shipping" },
+]
+
+const HTML_CARD_W = 150
+const HTML_CARD_H = 58
+
+const htmlCardLayout = (ctx) => {
+  const { plot } = ctx.dimensions
+  const { hoveredId } = ctx.config
+  const colW = plot.width / ctx.nodes.length
+  const cy = plot.height / 2
+  const posById = new Map(
+    ctx.nodes.map((node, i) => [node.id, { cx: colW * (i + 0.5), cy }]),
+  )
+
+  // Transparent hit-rects: the visible card is an htmlMark; the rect only owns
+  // hit-testing so canvas hover/onObservation stays authoritative.
+  const sceneNodes = ctx.nodes.map((node) => {
+    const p = posById.get(node.id)
+    return {
+      type: "rect",
+      x: p.cx - HTML_CARD_W / 2,
+      y: p.cy - HTML_CARD_H / 2,
+      w: HTML_CARD_W,
+      h: HTML_CARD_H,
+      style: { fill: "rgba(0,0,0,0)", stroke: "none" },
+      datum: node.data ?? node,
+      id: node.id,
+    }
+  })
+
+  const sceneEdges = ctx.edges.map((edge) => {
+    const s = posById.get(edge.source)
+    const t = posById.get(edge.target)
+    return {
+      type: "line",
+      x1: s.cx + HTML_CARD_W / 2,
+      y1: s.cy,
+      x2: t.cx - HTML_CARD_W / 2,
+      y2: t.cy,
+      style: { stroke: "var(--semiotic-border, #cbd5e1)", strokeWidth: 1.5, opacity: 0.8 },
+      datum: edge,
+    }
+  })
+
+  const htmlMarks = ctx.nodes.map((node) => {
+    const p = posById.get(node.id)
+    const data = node.data ?? node
+    const dim = hoveredId != null && hoveredId !== node.id
+    return {
+      id: node.id,
+      x: p.cx - HTML_CARD_W / 2,
+      y: p.cy - HTML_CARD_H / 2,
+      width: HTML_CARD_W,
+      height: HTML_CARD_H,
+      content: (
+        <div
+          style={{
+            boxSizing: "border-box",
+            width: "100%",
+            height: "100%",
+            padding: "8px 12px",
+            borderRadius: 8,
+            border: "1px solid var(--semiotic-border, #cbd5e1)",
+            background: "var(--semiotic-surface, #ffffff)",
+            color: "var(--semiotic-text, #111827)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            // Composite-only: this opacity flip does NOT re-rasterize the text.
+            opacity: dim ? 0.25 : 1,
+            transition: "opacity 140ms ease",
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{data.title ?? node.id}</div>
+          <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #6b7280)" }}>
+            {data.meta}
+          </div>
+        </div>
+      ),
+    }
+  })
+
+  return { sceneNodes, sceneEdges, htmlMarks }
+}
+
+function HtmlMarksDemo() {
+  const [hoveredId, setHoveredId] = useState(null)
+  const onObservation = useCallback((obs) => {
+    if (obs.type === "hover" && obs.datum) {
+      const row = obs.datum.data ?? obs.datum
+      setHoveredId(row?.id ?? null)
+    } else if (obs.type === "hover-end") {
+      setHoveredId(null)
+    }
+  }, [])
+
+  return (
+    <>
+      <NetworkCustomChart
+        nodes={htmlMarkNodes}
+        edges={htmlMarkEdges}
+        layout={htmlCardLayout}
+        layoutConfig={{ hoveredId }}
+        width={720}
+        height={200}
+        margin={{ top: 20, right: 24, bottom: 20, left: 24 }}
+        enableHover
+        onObservation={onObservation}
+      />
+      <div
+        style={{
+          marginTop: 8,
+          fontSize: 12,
+          color: "var(--semiotic-text-secondary, #666)",
+          minHeight: 18,
+        }}
+      >
+        {hoveredId
+          ? `Hovering ${hoveredId} — the other cards dim via a composite-only opacity change.`
+          : "Hover a card. Cards are real DOM (htmlMarks); edges paint on the canvas; hit-testing rides transparent canvas rects."}
+      </div>
+    </>
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────
 
 export default function CustomChartsPage() {
@@ -860,6 +1002,63 @@ ref.current.update("planning", (d) => ({
           other object-reference systems. Use scene rects/circles for the semantic objects and
           network edges for relationships; reserve overlays for labels, dividers, arrows, and other
           detail that should not intercept interaction.
+        </p>
+      </section>
+
+      <section>
+        <h2>HTML marks (rich DOM nodes)</h2>
+        <p>
+          A network layout can return <code>htmlMarks</code> alongside <code>sceneNodes</code> /{" "}
+          <code>sceneEdges</code> / <code>overlays</code>: positioned HTML/React nodes that Semiotic
+          renders into one real-DOM layer <strong>above the canvas and SVG overlays</strong> (stack
+          order: canvas → <code>overlays</code> → <code>htmlMarks</code>). Each mark is{" "}
+          <code>{"{ id, x, y, width, height, content }"}</code> in the <em>same plot space</em> as{" "}
+          <code>sceneNodes</code> — the framework owns the margin (and any future zoom/pan) transform,
+          so a mark at <code>(x, y)</code> lands exactly where a scene node at <code>(x, y)</code>{" "}
+          does.
+        </p>
+        <p>
+          Reach for it over an SVG <code>&lt;foreignObject&gt;</code> when a node is{" "}
+          <strong>text-heavy or a rich component and dims/animates on hover</strong>. HTML laid out
+          inside SVG gets no compositor layer, so an <code>opacity</code> change — the everyday
+          hover-dim — forces the browser to re-rasterize the node's text; across a large graph that
+          stalls the interaction. A real <code>&lt;div&gt;</code> composites <code>opacity</code> /{" "}
+          <code>transform</code> / <code>visibility</code> changes without repainting its contents.
+          Marks are <code>pointer-events: none</code> by default, so keep a transparent hit-rect
+          scene node per card and let the canvas stay authoritative for hover, tooltip, and click.
+        </p>
+        <HtmlMarksDemo />
+        <CodeBlock language="tsx">{`import { NetworkCustomChart } from "semiotic/network"
+import type { NetworkCustomLayout } from "semiotic/network"
+
+const cardLayout: NetworkCustomLayout = (ctx) => {
+  const place = (node) => /* your positions, in plot space */ ({ x, y })
+
+  return {
+    // Transparent canvas rect per node → owns hit-testing (onObservation/onClick).
+    sceneNodes: ctx.nodes.map((node) => {
+      const { x, y } = place(node)
+      return { type: "rect", x, y, w: 150, h: 58,
+               style: { fill: "rgba(0,0,0,0)" }, datum: node.data, id: node.id }
+    }),
+    // SVG edges paint beneath the cards.
+    sceneEdges: edges,
+    // Rich HTML cards, positioned in the SAME plot space, rendered as real DOM.
+    htmlMarks: ctx.nodes.map((node) => {
+      const { x, y } = place(node)
+      return { id: node.id, x, y, width: 150, height: 58,
+               content: <NodeCard {...node.data} /> }  // dims via opacity → composite-only
+    }),
+  }
+}
+
+<NetworkCustomChart nodes={nodes} edges={edges} layout={cardLayout} />`}</CodeBlock>
+        <p>
+          The card's <code>content</code> can call <code>useCustomLayoutSelection()</code> to read
+          the shared <Link to="/coordinated-views">selection</Link> and dim itself — that updates the
+          DOM layer <strong>without re-running the layout</strong>, so hover stays cheap even on big
+          graphs (the demo above drives the dim through <code>layoutConfig</code> for brevity, which
+          re-runs the layout each hover — fine at four nodes, but prefer the selection path at scale).
         </p>
       </section>
 

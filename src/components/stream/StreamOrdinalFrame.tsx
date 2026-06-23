@@ -523,10 +523,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     // callback a selection change re-applies styles + repaints (no relayout);
     // otherwise it rebuilds so `ctx.selection` reaches the layout. Overlays
     // re-render via CustomLayoutSelectionProvider below.
+    const lastLayoutSelectionRef = useRef<unknown>(null)
     useEffect(() => {
       const store = storeRef.current
       if (!store) return
       const sel = layoutSelection ?? null
+      if (lastLayoutSelectionRef.current === sel) return
+      lastLayoutSelectionRef.current = sel
       store.setLayoutSelection(sel)
       if (store.hasCustomRestyle) {
         store.restyleScene(sel)

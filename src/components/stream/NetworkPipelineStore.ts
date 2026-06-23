@@ -2,7 +2,7 @@ import { interpolateNumber } from "d3-interpolate"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
-import type { NetworkLayoutContext, NetworkLayoutResult } from "./networkCustomLayout"
+import type { NetworkLayoutContext, NetworkLayoutResult, NetworkHtmlMark } from "./networkCustomLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
@@ -61,6 +61,10 @@ export class NetworkPipelineStore {
   labels: NetworkLabel[] = []
   /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
   customLayoutOverlays: import("react").ReactNode = null
+  /** HTML marks returned from customNetworkLayout — positioned DOM nodes the
+   *  frame renders in a layer above the canvas/overlays (consumed by
+   *  StreamNetworkFrame). Empty for built-in chart types. */
+  customLayoutHtmlMarks: NetworkHtmlMark[] = []
   private _customLayoutDiagnosticsWarned = new Set<string>()
   /** Per-frame restyle callbacks from the custom layout result. When set, the
    *  frame routes selection changes through `restyleScene()` (style-only repaint)
@@ -701,12 +705,14 @@ export class NetworkPipelineStore {
         this.sceneEdges = []
         this.labels = []
         this.customLayoutOverlays = null
+        this.customLayoutHtmlMarks = []
         return
       }
       this.sceneNodes = result.sceneNodes ?? []
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
       this.customLayoutOverlays = result.overlays ?? null
+      this.customLayoutHtmlMarks = result.htmlMarks ?? []
       // Stash per-frame restyle callbacks. Their presence opts the chart into
       // the cheap selection path: snapshot each mark's emitted (base) style, then
       // apply the restyle once for the current selection. `restyleScene()` later
@@ -731,8 +737,10 @@ export class NetworkPipelineStore {
     this._customRestyleEdge = undefined
     this.hasCustomRestyle = false
 
-    // Built-in chart types: clear stale overlays from a prior customLayout run.
+    // Built-in chart types: clear stale overlays / HTML marks from a prior
+    // customLayout run.
     this.customLayoutOverlays = null
+    this.customLayoutHtmlMarks = []
 
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin) return

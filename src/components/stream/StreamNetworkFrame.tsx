@@ -38,6 +38,7 @@ import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
+import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
@@ -747,10 +748,13 @@ const StreamNetworkFrame = forwardRef<
   // rebuild); otherwise it falls back to the rebuild path so `ctx.selection`
   // reaches the layout. Either way the overlay subtree re-renders against the
   // new selection via CustomLayoutSelectionProvider below.
+  const lastLayoutSelectionRef = useRef<unknown>(null)
   useEffect(() => {
     const store = storeRef.current
     if (!store) return
     const sel = layoutSelection ?? null
+    if (lastLayoutSelectionRef.current === sel) return
+    lastLayoutSelectionRef.current = sel
     store.setLayoutSelection(sel)
     if (store.hasCustomRestyle) {
       store.restyleScene(sel)
@@ -1585,6 +1589,11 @@ const StreamNetworkFrame = forwardRef<
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={0}
         />
+        <NetworkHtmlMarksLayer
+          marks={store?.customLayoutHtmlMarks}
+          margin={margin}
+          selection={layoutSelection ?? null}
+        />
       </div>
     )
   }
@@ -1674,6 +1683,15 @@ const StreamNetworkFrame = forwardRef<
         autoPlaceAnnotations={autoPlaceAnnotations}
         svgAnnotationRules={svgAnnotationRules}
         annotationFrame={annotationFrame}
+      />
+
+      {/* HTML marks: a real-DOM layer above the canvas + SVG overlays, read
+          straight from the store (same render-time read as customLayoutOverlays).
+          `pointer-events: none` keeps the canvas authoritative for hit-testing. */}
+      <NetworkHtmlMarksLayer
+        marks={store?.customLayoutHtmlMarks}
+        margin={margin}
+        selection={layoutSelection ?? null}
       />
 
       <FocusRing
