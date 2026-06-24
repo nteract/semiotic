@@ -1078,8 +1078,18 @@ const StreamNetworkFrame = forwardRef<
   // come from useFrame above; frame still owns the closure bodies.
   const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
 
+  // A custom layout with no restyle handler paints its hover state off-canvas
+  // (React overlays / HTML marks), so the canvas needs no redraw on pointer move.
+  // Dirtying + redrawing a (possibly very wide) canvas every move is the dominant
+  // hover cost on large custom-layout graphs, so skip the canvas work there — the
+  // observation (customHoverBehavior) and the tooltip (setHoverData) still update
+  // via React. Built-in charts and restyle-driven layouts keep the redraw.
+  const hoverPaintsCanvas = (): boolean =>
+    !customNetworkLayout || (storeRef.current?.hasCustomRestyle ?? false)
+
   hoverHandlerRef.current = (e: HoverPointerCoords) => {
     if (!enableHover) return
+    const paintsCanvas = hoverPaintsCanvas()
 
     const canvas = canvasRef.current
     if (!canvas) return
@@ -1097,8 +1107,11 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
-        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
-        scheduleRender()
+        if (customHoverBehavior) {
+          customHoverBehavior(null)
+          if (paintsCanvas) dirtyRef.current = true
+        }
+        if (paintsCanvas) scheduleRender()
       }
       return
     }
@@ -1120,8 +1133,11 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
-        if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
-        scheduleRender()
+        if (customHoverBehavior) {
+          customHoverBehavior(null)
+          if (paintsCanvas) dirtyRef.current = true
+        }
+        if (paintsCanvas) scheduleRender()
       }
       return
     }
@@ -1133,16 +1149,23 @@ const StreamNetworkFrame = forwardRef<
 
     hoverRef.current = hover
     setHoverData(hover)
-    if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
-    scheduleRender()
+    if (customHoverBehavior) {
+      customHoverBehavior(hover)
+      if (paintsCanvas) dirtyRef.current = true
+    }
+    if (paintsCanvas) scheduleRender()
   }
 
   hoverLeaveRef.current = () => {
     if (hoverRef.current) {
+      const paintsCanvas = hoverPaintsCanvas()
       hoverRef.current = null
       setHoverData(null)
-      if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
-      scheduleRender()
+      if (customHoverBehavior) {
+        customHoverBehavior(null)
+        if (paintsCanvas) dirtyRef.current = true
+      }
+      if (paintsCanvas) scheduleRender()
     }
   }
 

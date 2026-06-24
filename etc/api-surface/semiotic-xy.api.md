@@ -19,11 +19,13 @@ function ScatterplotMatrix
 function StackedAreaChart
 function StreamXYFrame
 function XYCustomChart
+function useCustomLayoutSelection
 interface AreaChartProps
 interface BubbleChartProps
 interface CandlestickChartProps
 interface CenterlineStyle
 interface ConnectedScatterplotProps
+interface CustomLayoutSelection
 interface DifferenceChartProps
 interface HeatmapProps
 interface LayoutContext

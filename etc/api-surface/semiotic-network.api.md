@@ -15,9 +15,11 @@ function StreamNetworkFrame
 function TreeDiagram
 function Treemap
 function formatProcessSankeyIssue
+function useCustomLayoutSelection
 function validateProcessSankey
 interface ChordDiagramProps
 interface CirclePackProps
+interface CustomLayoutSelection
 interface ForceDirectedGraphProps
 interface NetworkCustomChartProps
 interface NetworkHtmlMark

@@ -97,6 +97,7 @@ function toURL
 function useBrushSelection
 function useCategoryColors
 function useChartObserver
+function useCustomLayoutSelection
 function useFilteredData
 function useLinkedHover
 function useNavigationSync
@@ -130,6 +131,7 @@ interface CirclePackProps
 interface ConnectedScatterplotProps
 interface ContextLayoutProps
 interface CrosshairStyle
+interface CustomLayoutSelection
 interface DetailsPanelProps
 interface DifferenceChartProps
 interface DonutChartProps
