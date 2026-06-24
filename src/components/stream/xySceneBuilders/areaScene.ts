@@ -80,7 +80,9 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): Scene
   // (`config.stackOrder ?? "key"`); the two paths must agree on order
   // because wiggle offsets are order-dependent.
   const sortByKey = () => groups.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
-  if (stackOrder === "key") {
+  if (stackOrder === "input") {
+    // Preserve first-seen group order from ctx.groupData(data).
+  } else if (stackOrder === "key") {
     sortByKey()
   } else if (stackOrder === "asc" || stackOrder === "desc" || stackOrder === "insideOut") {
     // Compute per-group totals using the SAME validity filter as the

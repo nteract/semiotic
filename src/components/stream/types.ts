@@ -627,13 +627,15 @@ export interface StreamXYFrameProps<T = Datum> {
   /**
    * Stack order — controls which series sits at the top, middle, or bottom.
    * - "key" (default): alphabetical by group key
+   * - "input": first-seen group order within the current data
+   *   buffer/window; streaming eviction can change this order
    * - "insideOut": largest-total series in the middle, smaller alternating
    *   above/below. Combined with `baseline: "wiggle"` or `"silhouette"`,
    *   produces the canonical streamgraph look where a "central anchor"
    *   layer sits across y=0 and other layers stack outward.
    * - "asc" / "desc": by total ascending / descending
    */
-  stackOrder?: "key" | "insideOut" | "asc" | "desc"
+  stackOrder?: "key" | "input" | "insideOut" | "asc" | "desc"
 
   // ── Bounds/uncertainty ─────────────────────────
   /**
