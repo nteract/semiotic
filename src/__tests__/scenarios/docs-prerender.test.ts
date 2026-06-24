@@ -106,6 +106,8 @@ describe("docs prerender helpers", () => {
     })
 
     expect(html).toContain('id="semiotic-route-doc"')
+    expect(html).toContain('property="og:title" content="Semiotic - LineChart"')
+    expect(html).toContain('name="twitter:title" content="Semiotic - LineChart"')
     expect(html).toContain('id="machine-readable-page"')
     expect(html).toContain('data-machine-readable-route="charts/line-chart"')
     expect(html).toContain("<h1>LineChart</h1>")
@@ -244,7 +246,7 @@ describe("docs prerender helpers", () => {
     expect(html).toContain('<title>Charts — Semiotic</title>')
     // Section description comes from the ROUTE_META map.
     expect(html).toContain('name="description" content="The Semiotic chart catalog')
-    expect(html).toContain('property="og:title" content="Charts — Semiotic"')
+    expect(html).toContain('property="og:title" content="Semiotic - Charts"')
     expect(html).toContain('property="og:type" content="website"')
     // Generic shell description is gone.
     expect(html).not.toContain('generic landing description')
@@ -256,8 +258,9 @@ describe("docs prerender helpers", () => {
     const html = generatePage(shell, "cookbook/homerun-map")
 
     expect(html).toContain('<title>Cookbook — Homerun Map — Semiotic</title>')
-    // No ROUTE_META entry → shell description is inherited unchanged.
-    expect(html).toContain('name=description content="generic shell description"')
+    expect(html).toContain('property="og:title" content="Semiotic - Cookbook - Homerun Map"')
+    expect(html).toContain('name="twitter:title" content="Semiotic - Cookbook - Homerun Map"')
+    expect(html).toContain('name="description" content="Semiotic is a React data visualization framework.')
   })
 
   it("copies generated API JSON assets into the static build", () => {

@@ -27,6 +27,8 @@ const PUBLIC_BLOG_OG_DIR = resolve(__dirname, "../docs/public/blog/og")
 const SITE_URL = "https://semiotic3.nteract.io"
 const DEFAULT_OG_IMAGE = `${SITE_URL}/assets/img/semiotic-social.png`
 const ROUTE_DOCS_MANIFEST = "llms-routes.json"
+const DEFAULT_SOCIAL_DESCRIPTION =
+  "Semiotic is a React data visualization framework. Build interactive charts, network diagrams, geo maps, and streaming visualizations from simple, composable components."
 
 // Per-route SEO metadata. Keys are route paths exactly as extracted from
 // App.js (no leading slash, "" for the landing page). Routes not listed
@@ -651,6 +653,19 @@ function machineDocScript(doc) {
 const escHtml = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
+function titleWithoutSemioticSuffix(title) {
+  return String(title || "")
+    .replace(/\s+\u2014\s+Semiotic(?:\s+API Reference|\s+Theming|\s+Blog)?$/, "")
+    .trim()
+}
+
+function previewTitle(routePath, fullTitle, machineDoc) {
+  if (!routePath) return fullTitle
+  const h1 = machineDoc?.headings?.find((heading) => heading.level === 1)?.text
+  const pageTitle = h1 || titleWithoutSemioticSuffix(fullTitle) || routePath
+  return `Semiotic - ${pageTitle.replace(/\s+\u2014\s+/g, " - ")}`
+}
+
 export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc = null) {
   const slugTitle = routePath
     .split("/")
@@ -708,16 +723,15 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
     .replace(/<meta\b(?=[^>]*\bproperty=["']?og:url["']?)[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`)
     .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`)
 
-  // Per-entry / per-section meta enrichment. Both blog entries and
-  // ROUTE_META-mapped section pages need the same shape: drop the
-  // generic shell tags, then inject page-specific description / og /
-  // twitter / JSON-LD markup.
+  // Per-entry / per-route meta enrichment. Social unfurlers usually do
+  // not run the SPA, so every prerendered route gets explicit og/twitter
+  // titles. Descriptions can stay generic for fallback docs pages.
   //
   // Anchor the injection at `<body` (case-insensitive) rather than
   // `</head>` — Parcel's HTML minifier strips the implicit `</head>`
   // closing tag, so a `</head>`-anchored regex silently no-ops on the
   // built shell. `<body>` is always emitted.
-  if (blogMeta || routeMeta) {
+  if (blogMeta || routeMeta || routePath !== "") {
     let metaTags
     if (blogMeta) {
       const ogImage = `${SITE_URL}/blog/og/${blogMeta.slug}.png`
@@ -751,10 +765,11 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
         `<script type="application/ld+json" data-jsonld="blog-entry">${blogJsonLd}</script>`,
       ].join("")
     } else {
-      const description = routeMeta.description || ""
+      const description = routeMeta?.description || DEFAULT_SOCIAL_DESCRIPTION
       const escDescription = escHtml(description)
-      const escTitle = escHtml(routeMeta.title)
-      const ogImage = routeMeta.ogImage || DEFAULT_OG_IMAGE
+      const socialTitle = previewTitle(routePath, fullTitle, machineDoc)
+      const escTitle = escHtml(socialTitle)
+      const ogImage = routeMeta?.ogImage || DEFAULT_OG_IMAGE
       metaTags = [
         `<meta name="description" content="${escDescription}" />`,
         `<meta property="og:type" content="website" />`,
