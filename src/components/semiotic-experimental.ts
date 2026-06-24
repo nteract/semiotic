@@ -8,34 +8,28 @@
  */
 
 // PR-preview surface for the GoFish collaboration. The adapter is intentionally
-// named `unstable-gofish-ir-adapter`; it is available here so GoFish can test
-// against Semiotic's custom chart pipeline without promoting the API to the
-// normal recipe catalog.
+// named `unstable-gofish-displaylist-adapter`; it is available here so GoFish
+// can test against Semiotic's custom chart pipeline without promoting the API
+// to the normal recipe catalog. It consumes GoFish's *DisplayList* render IR —
+// the baked, viewport-locked output of `toDisplayList({ w, h })`.
 export {
   EXPERIMENTAL_GOFISH_ADAPTER_NAME,
   unstable_fromGofishIR,
 } from "./recipes/gofishIR"
 export type {
-  GofishIRDocument as UnstableGofishIRDocument,
+  GofishDisplayListDocument as UnstableGofishDisplayListDocument,
+  GofishDisplayItem as UnstableGofishDisplayItem,
   GofishChartConfig as UnstableGofishChartConfig,
-  GofishChartFamily as UnstableGofishChartFamily,
   FromGofishIROptions as UnstableFromGofishIROptions,
 } from "./recipes/gofishIR"
 export {
-  registerGofishLambda as unstable_registerGofishLambda,
-  unregisterGofishLambda as unstable_unregisterGofishLambda,
-} from "./recipes/gofishLambdas"
-export type {
-  GofishLambda as UnstableGofishLambda,
-} from "./recipes/gofishLambdas"
-export {
   gofishIRExamples as unstable_gofishIRExamples,
+  barsIR as unstable_gofishBarsIR,
   flowerIR as unstable_gofishFlowerIR,
+  treemapIR as unstable_gofishTreemapIR,
   bottleIR as unstable_gofishBottleIR,
-  polarRibbonIR as unstable_gofishPolarRibbonIR,
-  titanicCircleTreemapIR as unstable_gofishTitanicCircleTreemapIR,
-  pythonMemoryIR as unstable_gofishPythonMemoryIR,
   bobaIR as unstable_gofishBobaIR,
+  pythonIR as unstable_gofishPythonIR,
 } from "./recipes/gofishIRExamples"
 export type { GofishIRExample as UnstableGofishIRExample } from "./recipes/gofishIRExamples"
 
