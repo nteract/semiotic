@@ -223,7 +223,7 @@ export interface PipelineConfig {
   /** Stacked area baseline mode. Only consulted by stackedarea chart type. */
   baseline?: "zero" | "wiggle" | "silhouette"
   /** Stack order — see StreamXYFrameProps.stackOrder. */
-  stackOrder?: "key" | "insideOut" | "asc" | "desc"
+  stackOrder?: "key" | "input" | "insideOut" | "asc" | "desc"
 
   // Candlestick accessors
   openAccessor?: string | ((d: Datum) => CoercibleNumber)
@@ -802,7 +802,9 @@ export class PipelineStore {
           // groups between frames and the rendered stack swaps layers.
           const keyCmp = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0
           let groupKeys: string[]
-          if (order === "insideOut") {
+          if (order === "input") {
+            groupKeys = groups.map((g) => g.key)
+          } else if (order === "insideOut") {
             const sorted = [...groups].map((g) => g.key)
               .sort((a, b) => {
                 const d = (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0)

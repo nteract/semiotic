@@ -200,17 +200,40 @@ const differenceChart: ChartConfig = {
 
 const stackedAreaChart: ChartConfig = {
   frameType: "xy",
-  buildProps: (data, colorBy, colorScheme, common, rest) => ({
-    chartType: "stackedarea",
-    data,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y",
-    groupAccessor: rest.areaBy,
-    colorAccessor: colorBy || rest.areaBy,
-    colorScheme,
-    normalize: rest.normalize,
-    ...common,
-  }),
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const colorAccessor = colorBy || rest.areaBy
+    const colorScale =
+      typeof colorAccessor === "string" && Array.isArray(data)
+        ? createColorScale(data, colorAccessor, colorScheme)
+        : undefined
+    const lineStyle =
+      rest.areaOpacity == null
+        ? undefined
+        : (d: Datum) => {
+            const color =
+              colorAccessor == null ? undefined : getColor(d, colorAccessor, colorScale)
+            return {
+              fill: color,
+              stroke: color,
+              strokeWidth: 2,
+              fillOpacity: rest.areaOpacity,
+            }
+          }
+
+    return {
+      chartType: "stackedarea",
+      data,
+      xAccessor: rest.xAccessor || "x",
+      yAccessor: rest.yAccessor || "y",
+      groupAccessor: rest.areaBy,
+      colorAccessor,
+      colorScheme,
+      normalize: rest.normalize,
+      stackOrder: rest.stackOrder,
+      lineStyle,
+      ...common,
+    }
+  },
 }
 
 const candlestickChart: ChartConfig = {

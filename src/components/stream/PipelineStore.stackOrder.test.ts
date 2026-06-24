@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { PipelineStore } from "./PipelineStore"
 import type { AreaSceneNode } from "./types"
 
-function buildStore(stackOrder: "key" | "insideOut" | "asc" | "desc" | undefined) {
+function buildStore(stackOrder: "key" | "input" | "insideOut" | "asc" | "desc" | undefined) {
   return new PipelineStore({
     chartType: "stackedarea",
     runtimeMode: "bounded",
@@ -59,6 +59,24 @@ describe("stackOrder", () => {
     const store = buildStore(undefined)
     ingestStreamgraphData(store)
     expect(getAreaGroupOrder(store)).toEqual(["alpha", "bravo", "charlie", "delta", "echo"])
+  })
+
+  it("'input' preserves first-seen group order", () => {
+    const store = buildStore("input")
+    const data: Record<string, unknown>[] = []
+    const profiles = [
+      { group: "charlie", base: 12 },
+      { group: "alpha", base: 1 },
+      { group: "echo", base: 9 },
+      { group: "bravo", base: 6 },
+      { group: "delta", base: 3 },
+    ]
+    for (let i = 0; i < 20; i++) {
+      for (const p of profiles) data.push({ t: i, group: p.group, v: p.base })
+    }
+    store.ingest({ inserts: data, bounded: true })
+    store.computeScene({ width: 600, height: 200 })
+    expect(getAreaGroupOrder(store)).toEqual(["charlie", "alpha", "echo", "bravo", "delta"])
   })
 
   it("'insideOut' places the largest-total group in the middle", () => {

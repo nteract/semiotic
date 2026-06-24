@@ -511,6 +511,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps, sink?:
     scalePadding: props.scalePadding,
     binSize: props.binSize,
     normalize: props.normalize,
+    stackOrder: props.stackOrder,
     boundsAccessor: props.boundsAccessor,
     boundsStyle: props.boundsStyle,
     // Mixed-frame props (DifferenceChart, LineChart fillArea[]).

@@ -247,6 +247,26 @@ describe("Component SSR — XY Charts", () => {
     expect(html).toContain("<path")
   })
 
+  it("renderChart('StackedAreaChart', …) honors areaOpacity", () => {
+    const svg = renderChart("StackedAreaChart", {
+      data: [
+        { x: 1, y: 10, group: "A" },
+        { x: 2, y: 20, group: "A" },
+        { x: 1, y: 15, group: "B" },
+        { x: 2, y: 25, group: "B" },
+      ],
+      xAccessor: "x",
+      yAccessor: "y",
+      areaBy: "group",
+      colorBy: "group",
+      areaOpacity: 1,
+      width: 400,
+      height: 300,
+    })
+
+    expect(svg).toContain('fill-opacity="1"')
+  })
+
   it("Scatterplot renders circle elements", () => {
     const html = renderComponent(
       <Scatterplot data={xyData} xAccessor="x" yAccessor="y" width={400} height={300} />

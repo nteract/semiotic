@@ -97,13 +97,12 @@ const DOC_CATEGORIES = [
   "Ordinal Charts",
   "Network Charts",
   "Geo Charts",
-  "Frames",
-  "Features",
   "Custom Charts",
   "Accessibility",
   "Annotations",
   "Intelligence",
   "Interoperability",
+  "Features",
   "Theming",
   "Cookbook",
   "Recipes",
@@ -117,9 +116,8 @@ const DOC_CATEGORY_COLORS: Record<string, string> = {
   "Ordinal Charts": "#4589ff",
   "Network Charts": "#78a9ff",
   "Geo Charts": "#a6c8ff",
-  Frames: "#007d79",
-  Features: "#009d9a",
-  "Custom Charts": "#24a148",
+  "Custom Charts": "#d0e2ff",
+  Features: "#007d79",
   Theming: "#42be65",
   Cookbook: "#6fdc8c",
   Recipes: "#a7f0ba",
@@ -187,6 +185,73 @@ const GEO_CHART_PAGES = new Set([
   "FlowMapPage",
   "DistanceCartogramPage",
   "TileMapPage"
+])
+
+const CUSTOM_CHART_PAGES = new Set([
+  "CustomChartsOverviewPage",
+  "CustomLayoutsPage",
+  "GlyphMarksPage",
+  "RecipeKitPage"
+])
+
+const ACCESSIBILITY_PAGES = new Set([
+  "AccessibilityPage",
+  "AccessibilityAuditPage",
+  "DescribeChartPage",
+  "NavigationTreePage"
+])
+
+const ANNOTATION_PAGES = new Set([
+  "AnnotationsPage",
+  "AnnotationDesignPage",
+  "AnnotationFlowPage",
+  "AnnotationProvenancePage"
+])
+
+const INTELLIGENCE_PAGES = new Set([
+  "AudienceProfilesPage",
+  "CapabilitiesPage",
+  "CapabilityAuthoringPage",
+  "ConversationArcPage",
+  "DataPitfallsBridgePage",
+  "DataQualityBridgePage",
+  "GenerativeUIPage",
+  "InterrogationPage",
+  "ReaderGroundingPage",
+  "ScaleAwarePage",
+  "SuggestionsPage",
+  "VariantDiscoveryPage"
+])
+
+const INTEROPERABILITY_PAGES = new Set([
+  "ArrowPage",
+  "InteroperabilityPage",
+  "MermaidPage",
+  "ObservablePlotPage",
+  "PortabilitySpecPage",
+  "SerializationPage",
+  "VegaLiteTranslatorPage"
+])
+
+const THEMING_PAGES = new Set([
+  "SemanticColorsPage",
+  "ThemeExplorerPage",
+  "ThemingPage"
+])
+
+const SERVER_RENDERING_PAGES = new Set([
+  "DashboardGalleryPage",
+  "EmailPreviewPage",
+  "ExportPage",
+  "RenderStudioPage",
+  "SSRGalleryPage",
+  "ThemeShowcasePage",
+  "UsingSSRPage"
+])
+
+const API_REFERENCE_PAGES = new Set([
+  "ApiReferencePage",
+  "ChartsApiPage"
 ])
 
 function readJsonAtTag<T>(tag: string, path: string): T {
@@ -363,7 +428,14 @@ function chartDocCategory(component: string): string | null {
 function docsCategoryForRoute(fullPath: string, component: string): string | null {
   const top = fullPath.split("/")[0]
   if (top === "charts") return chartDocCategory(component)
-  if (top === "frames") return "Frames"
+  if (CUSTOM_CHART_PAGES.has(component)) return "Custom Charts"
+  if (ACCESSIBILITY_PAGES.has(component)) return "Accessibility"
+  if (ANNOTATION_PAGES.has(component)) return "Annotations"
+  if (INTELLIGENCE_PAGES.has(component)) return "Intelligence"
+  if (INTEROPERABILITY_PAGES.has(component)) return "Interoperability"
+  if (THEMING_PAGES.has(component)) return "Theming"
+  if (SERVER_RENDERING_PAGES.has(component)) return "Server Rendering"
+  if (API_REFERENCE_PAGES.has(component)) return "API Reference"
   if (top === "features") return "Features"
   if (top === "custom-charts") return "Custom Charts"
   if (top === "accessibility") return "Accessibility"
@@ -681,6 +753,8 @@ function buildDashboard() {
     areaBy: "category",
     colorBy: "category",
     colorScheme: DOC_CATEGORIES.map((category) => DOC_CATEGORY_COLORS[category]),
+    areaOpacity: 1,
+    stackOrder: "input",
     width: 544,
     height: 218,
     margin: { top: 14, right: 26, bottom: 36, left: 42 },

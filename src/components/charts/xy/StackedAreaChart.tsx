@@ -141,12 +141,13 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
    *
    * - `"key"` (default): alphabetical by series key. Stable under
    *   streaming (no re-shuffling on data eviction).
+   * - `"input"`: first-seen series order from the data stream.
    * - `"insideOut"`: largest-total series in the middle, smaller series
    *   wrapping outward. The classic d3 streamgraph aesthetic — gives
    *   you a "central anchor" layer with everything else built off of it.
    * - `"asc"` / `"desc"`: by total ascending / descending.
    */
-  stackOrder?: "key" | "insideOut" | "asc" | "desc"
+  stackOrder?: "key" | "input" | "insideOut" | "asc" | "desc"
 
   /**
    * Enable hover annotations
