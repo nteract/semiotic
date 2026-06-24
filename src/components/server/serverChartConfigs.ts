@@ -212,11 +212,15 @@ const stackedAreaChart: ChartConfig = {
         : (d: Datum) => {
             const color =
               colorAccessor == null ? undefined : getColor(d, colorAccessor, colorScale)
+            const showLine = rest.showLine ?? true
+            const stroke = rest.stroke ?? color
+            const strokeWidth = rest.strokeWidth ?? rest.lineWidth ?? 2
             return {
-              fill: color,
-              stroke: color,
-              strokeWidth: 2,
+              fill: rest.color ?? color,
+              stroke: showLine ? stroke : "none",
+              ...(showLine ? { strokeWidth } : {}),
               fillOpacity: rest.areaOpacity,
+              ...(rest.opacity == null ? {} : { opacity: rest.opacity }),
             }
           }
 

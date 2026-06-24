@@ -25,6 +25,7 @@ const OUTPUT_PATH = resolve(
 )
 const MARKER_START = "<!-- semiotic-readme-dashboard:start -->"
 const MARKER_END = "<!-- semiotic-readme-dashboard:end -->"
+let attemptedTagFetch = false
 
 const RELEASE_TAGS = [
   "v3.0.0",
@@ -254,33 +255,48 @@ const API_REFERENCE_PAGES = new Set([
   "ChartsApiPage"
 ])
 
-function readJsonAtTag<T>(tag: string, path: string): T {
-  const text = execFileSync("git", ["show", `${tag}:${path}`], {
+function fetchTagsOnce() {
+  if (attemptedTagFetch) return
+  attemptedTagFetch = true
+  execFileSync("git", ["fetch", "--tags", "--force"], {
     cwd: repoRoot,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "ignore"],
+    stdio: ["ignore", "ignore", "ignore"],
     maxBuffer: 20 * 1024 * 1024
   })
-  return JSON.parse(text) as T
+}
+
+function gitShow(args: string[]): string {
+  try {
+    return execFileSync("git", ["show", ...args], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 20 * 1024 * 1024
+    })
+  } catch {
+    fetchTagsOnce()
+    return execFileSync("git", ["show", ...args], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 20 * 1024 * 1024
+    })
+  }
+}
+
+function readJsonAtTag<T>(tag: string, path: string): T {
+  return JSON.parse(gitShow([`${tag}:${path}`])) as T
 }
 
 function readTextAtVersion(version: string, path: string): string {
   if (!version.startsWith("v")) {
     return readFileSync(resolve(repoRoot, path), "utf8")
   }
-  return execFileSync("git", ["show", `${version}:${path}`], {
-    cwd: repoRoot,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "ignore"],
-    maxBuffer: 20 * 1024 * 1024
-  })
+  return gitShow([`${version}:${path}`])
 }
 
 function tagDate(tag: string): string {
-  return execFileSync("git", ["show", "-s", "--format=%cs", tag], {
-    cwd: repoRoot,
-    encoding: "utf8"
-  }).trim()
+  return gitShow(["-s", "--format=%cs", tag]).trim()
 }
 
 function currentVersion(): string {

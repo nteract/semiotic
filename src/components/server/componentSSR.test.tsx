@@ -260,11 +260,13 @@ describe("Component SSR — XY Charts", () => {
       areaBy: "group",
       colorBy: "group",
       areaOpacity: 1,
+      lineWidth: 5,
       width: 400,
       height: 300,
     })
 
     expect(svg).toContain('fill-opacity="1"')
+    expect(svg).toContain('stroke-width="5"')
   })
 
   it("Scatterplot renders circle elements", () => {
