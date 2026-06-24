@@ -20,6 +20,7 @@ interface ChordDiagramProps
 interface CirclePackProps
 interface ForceDirectedGraphProps
 interface NetworkCustomChartProps
+interface NetworkHtmlMark
 interface NetworkLabel
 interface NetworkLayoutContext
 interface NetworkLayoutResult

@@ -38,6 +38,7 @@ interface LineageDagConfig
 interface LineageStoreSlot
 interface MarimekkoConfig
 interface MermaidDagConfig
+interface NetworkHtmlMark
 interface NetworkLayoutContext
 interface NetworkLayoutResult
 interface OrdinalLayoutContext
