@@ -22,15 +22,18 @@ import type {
 } from "./networkTypes"
 import type { HoverData } from "../realtime/types"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import {
-  DEFAULT_TENSION_CONFIG,
-  DEFAULT_PARTICLE_STYLE
-} from "./networkTypes"
+import { DEFAULT_TENSION_CONFIG, DEFAULT_PARTICLE_STYLE } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
-import { extractNetworkNavPoints, buildNavGraph, resolvePosition, nextNetworkIndex, type NavGraph } from "./keyboardNav"
+import {
+  extractNetworkNavPoints,
+  buildNavGraph,
+  resolvePosition,
+  nextNetworkIndex,
+  type NavGraph
+} from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
@@ -39,11 +42,26 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
-import { networkSceneNodeToSVG, networkSceneEdgeToSVG, networkLabelToSVG, isServerEnvironment } from "./SceneToSVG"
-import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
+import {
+  networkSceneNodeToSVG,
+  networkSceneEdgeToSVG,
+  networkLabelToSVG,
+  isServerEnvironment
+} from "./SceneToSVG"
+import {
+  useHydration,
+  useWasHydratingFromSSR,
+  useHydrationLifecycle
+} from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { resolveCSSColor } from "./renderers/resolveCSSColor"
-import { NetworkAccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeNetworkAriaLabel } from "./AccessibleDataTable"
+import {
+  NetworkAccessibleDataTable,
+  AriaLiveTooltip,
+  ScreenReaderSummary,
+  SkipToTableLink,
+  computeNetworkAriaLabel
+} from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
 // Canvas setup
@@ -82,11 +100,7 @@ const defaultTooltipStyle: React.CSSProperties = {
   whiteSpace: "nowrap"
 }
 
-function DefaultNetworkTooltip({
-  data
-}: {
-  data: HoverData
-}) {
+function DefaultNetworkTooltip({ data }: { data: HoverData }) {
   if (data.nodeOrEdge === "edge") {
     const edge = data.data as RealtimeEdge | null
     if (!edge) return null
@@ -117,7 +131,8 @@ function DefaultNetworkTooltip({
   // Hierarchy nodes have a __hierarchyNode with a .parent chain.
   // Show ancestor breadcrumb: grandparent → parent → **node**
   type HierarchyNode = { data?: Datum; parent?: HierarchyNode }
-  const hNode = (node as RealtimeNode & { __hierarchyNode?: HierarchyNode }).__hierarchyNode
+  const hNode = (node as RealtimeNode & { __hierarchyNode?: HierarchyNode })
+    .__hierarchyNode
   if (hNode) {
     const ancestors: string[] = []
     let cur: HierarchyNode | undefined = hNode
@@ -158,9 +173,11 @@ function DefaultNetworkTooltip({
   }
 
   // Compute degree centrality from source/target links
-  const degree = (node.sourceLinks?.length || 0) + (node.targetLinks?.length || 0)
-  const weightedDegree = (node.sourceLinks || []).reduce((s, e) => s + (e.value || 0), 0)
-    + (node.targetLinks || []).reduce((s, e) => s + (e.value || 0), 0)
+  const degree =
+    (node.sourceLinks?.length || 0) + (node.targetLinks?.length || 0)
+  const weightedDegree =
+    (node.sourceLinks || []).reduce((s, e) => s + (e.value || 0), 0) +
+    (node.targetLinks || []).reduce((s, e) => s + (e.value || 0), 0)
 
   // Smartly surface the user datum's meaningful fields — a name for the title,
   // then a type/kind, then a value, then the rest — instead of just the id.
@@ -190,7 +207,8 @@ function DefaultNetworkTooltip({
       {degree > 0 && (
         <div style={{ marginTop: 4, opacity: 0.8 }}>
           Connections: {degree}
-          {weightedDegree !== degree && ` (weighted: ${weightedDegree.toLocaleString()})`}
+          {weightedDegree !== degree &&
+            ` (weighted: ${weightedDegree.toLocaleString()})`}
         </div>
       )}
     </div>
@@ -297,14 +315,16 @@ const StreamNetworkFrame = forwardRef<
     orbitAnimated,
     customNetworkLayout,
     layoutConfig,
-    layoutSelection,
+    layoutSelection
   } = props
 
   // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
   // Network has two margin defaults — CENTERED for radial chart types, the
   // standard DEFAULT_MARGIN for everything else. Resolve the family default
   // before handing it to useFrame.
-  const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
+  const baseMargin = CENTERED_TYPES.has(chartType)
+    ? CENTERED_MARGIN
+    : DEFAULT_MARGIN
   // dirtyRef declared before useFrame so it can be threaded in for the
   // theme-change effect. Network inits to true (load-bearing).
   const dirtyRef = useRef(true)
@@ -318,7 +338,7 @@ const StreamNetworkFrame = forwardRef<
     backgroundGraphics,
     animate,
     transitionProp,
-    themeDirtyRef: dirtyRef,
+    themeDirtyRef: dirtyRef
   })
   const {
     reducedMotionRef,
@@ -335,7 +355,7 @@ const StreamNetworkFrame = forwardRef<
     rafRef,
     renderFnRef,
     scheduleRender,
-    currentTheme,
+    currentTheme
   } = frame
 
   // ── Hydration boundary ─────────────────────────────────────────────────
@@ -348,7 +368,7 @@ const StreamNetworkFrame = forwardRef<
   const wasHydratingFromSSR = useWasHydratingFromSSR()
   const safeNodes = useMemo(() => filterSparseArray(nodesProp), [nodesProp])
   const safeEdges = useMemo(
-    () => Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : edgesProp,
+    () => (Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : edgesProp),
     [edgesProp]
   )
 
@@ -420,7 +440,7 @@ const StreamNetworkFrame = forwardRef<
       orbitShowRings,
       orbitAnimated,
       customNetworkLayout,
-      layoutConfig,
+      layoutConfig
       // NOTE: `layoutSelection` is intentionally NOT part of pipelineConfig — a
       // selection change must not trigger the rebuild path. A dedicated effect
       // below feeds it to the store and either restyles (cheap) or rebuilds.
@@ -464,7 +484,9 @@ const StreamNetworkFrame = forwardRef<
       nodeSizeRange,
       decay,
       pulse,
-      transition?.duration, transition?.easing, introEnabled,
+      transition?.duration,
+      transition?.easing,
+      introEnabled,
       staleness,
       thresholds,
       orbitMode,
@@ -477,7 +499,7 @@ const StreamNetworkFrame = forwardRef<
       orbitAnimated,
       currentTheme,
       customNetworkLayout,
-      layoutConfig,
+      layoutConfig
     ]
   )
 
@@ -541,7 +563,7 @@ const StreamNetworkFrame = forwardRef<
     orbitMode,
     orbitSize,
     orbitEccentricity,
-    customNetworkLayout,
+    customNetworkLayout
   })
 
   // ── Refs ─────────────────────────────────────────────────────────────
@@ -620,10 +642,10 @@ const StreamNetworkFrame = forwardRef<
       }
       // No colorBy → all nodes get the same first palette color (matches HOC nodeStyle).
       // With colorBy (handled above), nodes cycle through the palette by category.
-      const colors = Array.isArray(colorScheme)
-        ? colorScheme
-        : DEFAULT_COLORS
-      const color = colorBy ? colors[colorIndexRef.current++ % colors.length] : colors[0]
+      const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
+      const color = colorBy
+        ? colors[colorIndexRef.current++ % colors.length]
+        : colors[0]
       nodeColorMap.current.set(node.id, color)
       return color
     },
@@ -686,7 +708,9 @@ const StreamNetworkFrame = forwardRef<
       if (typeof particleStyle.color === "function") {
         const sourceNode = resolveEdgeEndpoint(edge.source)
         if (sourceNode) {
-          return (particleStyle.color as (e: RealtimeEdge, n: RealtimeNode) => string)(edge, sourceNode)
+          return (
+            particleStyle.color as (e: RealtimeEdge, n: RealtimeNode) => string
+          )(edge, sourceNode)
         }
         return edgeFallbackColor
       }
@@ -707,7 +731,15 @@ const StreamNetworkFrame = forwardRef<
       }
       return edgeFallbackColor
     },
-    [particleStyleProp?.colorBy, particleStyle.color, particleStyle.colorBy, getNodeColor, getEdgeColor, edgeFallbackColor, resolveEdgeEndpoint]
+    [
+      particleStyleProp?.colorBy,
+      particleStyle.color,
+      particleStyle.colorBy,
+      getNodeColor,
+      getEdgeColor,
+      edgeFallbackColor,
+      resolveEdgeEndpoint
+    ]
   )
 
   // scheduleRender comes from useFrame above (the previous Network-local
@@ -722,7 +754,9 @@ const StreamNetworkFrame = forwardRef<
   // bezier control points), (c) pulse encoding, (d) explicit store
   // animation state (transitions, push-mode intro).
   const isContinuous =
-    ((chartType === "sankey" || !!customNetworkLayout) && showParticles) || !!pulse || (storeRef.current?.isAnimating ?? false)
+    ((chartType === "sankey" || !!customNetworkLayout) && showParticles) ||
+    !!pulse ||
+    (storeRef.current?.isAnimating ?? false)
 
   // customLayout overlays are read straight from `storeRef.current.customLayoutOverlays`
   // at render time (see the `foregroundGraphics` composition below) — the same
@@ -806,9 +840,7 @@ const StreamNetworkFrame = forwardRef<
       }
     }
     // Fill remaining from palette (streaming: new nodes not yet in scene)
-    const colors = Array.isArray(colorScheme)
-      ? colorScheme
-      : DEFAULT_COLORS
+    const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
     const layoutNodes = Array.from(store.nodes.values())
     for (let i = 0; i < layoutNodes.length; i++) {
       const node = layoutNodes[i]
@@ -897,9 +929,15 @@ const StreamNetworkFrame = forwardRef<
         if (removed) {
           // Clear hover if the removed node was being hovered
           const hoveredId = hoverRef.current?.data
-            ? (typeof nodeIDAccessor === "function" ? nodeIDAccessor(hoverRef.current.data) : hoverRef.current.data[nodeIDAccessor])
+            ? typeof nodeIDAccessor === "function"
+              ? nodeIDAccessor(hoverRef.current.data)
+              : hoverRef.current.data[nodeIDAccessor]
             : undefined
-          if (hoverRef.current && hoverRef.current.nodeOrEdge === "node" && hoveredId === id) {
+          if (
+            hoverRef.current &&
+            hoverRef.current.nodeOrEdge === "node" &&
+            hoveredId === id
+          ) {
             hoverRef.current = null
             setHoverData(null)
           }
@@ -911,18 +949,28 @@ const StreamNetworkFrame = forwardRef<
         return removed
       },
       removeEdge: (sourceIdOrEdgeId: string, targetId?: string) => {
-        const removed = storeRef.current?.removeEdge(sourceIdOrEdgeId, targetId) ?? false
+        const removed =
+          storeRef.current?.removeEdge(sourceIdOrEdgeId, targetId) ?? false
         if (removed) {
           // Clear hover if the removed edge was being hovered
           if (hoverRef.current && hoverRef.current.nodeOrEdge === "edge") {
             const hoveredEdge = hoverRef.current.data
-            const hSrc = typeof hoveredEdge?.source === "object" ? hoveredEdge.source.id : hoveredEdge?.source
-            const hTgt = typeof hoveredEdge?.target === "object" ? hoveredEdge.target.id : hoveredEdge?.target
+            const hSrc =
+              typeof hoveredEdge?.source === "object"
+                ? hoveredEdge.source.id
+                : hoveredEdge?.source
+            const hTgt =
+              typeof hoveredEdge?.target === "object"
+                ? hoveredEdge.target.id
+                : hoveredEdge?.target
             let matches: boolean
             if (targetId !== undefined) {
               matches = hSrc === sourceIdOrEdgeId && hTgt === targetId
             } else if (edgeIdAccessor && hoveredEdge) {
-              const getEid = typeof edgeIdAccessor === "function" ? edgeIdAccessor : (d: Datum) => d?.[edgeIdAccessor]
+              const getEid =
+                typeof edgeIdAccessor === "function"
+                  ? edgeIdAccessor
+                  : (d: Datum) => d?.[edgeIdAccessor]
               matches = getEid(hoveredEdge) === sourceIdOrEdgeId
             } else {
               matches = true // no accessor to compare — conservatively clear
@@ -946,8 +994,13 @@ const StreamNetworkFrame = forwardRef<
         }
         return previous
       },
-      updateEdge: (sourceId: string, targetId: string, updater: (data: Datum) => Datum) => {
-        const previous = storeRef.current?.updateEdge(sourceId, targetId, updater) ?? []
+      updateEdge: (
+        sourceId: string,
+        targetId: string,
+        updater: (data: Datum) => Datum
+      ) => {
+        const previous =
+          storeRef.current?.updateEdge(sourceId, targetId, updater) ?? []
         if (previous.length > 0) {
           runLayout()
           dirtyRef.current = true
@@ -960,26 +1013,48 @@ const StreamNetworkFrame = forwardRef<
         storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] },
       getTopologyDiff: () => {
         const store = storeRef.current
-        if (!store) return { addedNodes: [], removedNodes: [], addedEdges: [], removedEdges: [] }
+        if (!store)
+          return {
+            addedNodes: [],
+            removedNodes: [],
+            addedEdges: [],
+            removedEdges: []
+          }
         return {
           addedNodes: Array.from(store.addedNodes),
           removedNodes: Array.from(store.removedNodes),
           addedEdges: Array.from(store.addedEdges),
-          removedEdges: Array.from(store.removedEdges),
+          removedEdges: Array.from(store.removedEdges)
         }
       },
       relayout: forceRelayout,
       getTension: () => storeRef.current?.tension ?? 0
     }),
-    [pushEdge, pushManyEdges, clearAll, forceRelayout, runLayout, scheduleRender]
+    [
+      pushEdge,
+      pushManyEdges,
+      clearAll,
+      forceRelayout,
+      runLayout,
+      scheduleRender
+    ]
   )
 
   // ── Bounded data ingestion ───────────────────────────────────────────
 
   // Determine if this is a hierarchical chart type
-  const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition", "orbit"].includes(chartType)
+  const isHierarchical = [
+    "tree",
+    "cluster",
+    "treemap",
+    "circlepack",
+    "partition",
+    "orbit"
+  ].includes(chartType)
   // Resolve hierarchy root: `data` prop or single-object `edges` prop
-  const hierarchyRoot = isHierarchical ? (dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)) : undefined
+  const hierarchyRoot = isHierarchical
+    ? dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)
+    : undefined
 
   useEffect(() => {
     const store = storeRef.current
@@ -1009,9 +1084,7 @@ const StreamNetworkFrame = forwardRef<
         }
       }
       // Fill remaining from palette (streaming: new nodes not yet in scene)
-      const colors = Array.isArray(colorScheme)
-        ? colorScheme
-        : DEFAULT_COLORS
+      const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
       const layoutNodes = Array.from(store.nodes.values())
       for (let i = 0; i < layoutNodes.length; i++) {
         const node = layoutNodes[i]
@@ -1030,7 +1103,18 @@ const StreamNetworkFrame = forwardRef<
     // setState every render (the loop that crashed continuously-animated
     // charts); genuine layout-parameter, data, dimension, and palette changes
     // still re-ingest. See the `stableLayoutConfig` definition above.
-  }, [safeNodes, safeEdges, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, scheduleRender, colorScheme])
+  }, [
+    safeNodes,
+    safeEdges,
+    dataProp,
+    hierarchyRoot,
+    isHierarchical,
+    adjustedWidth,
+    adjustedHeight,
+    stableLayoutConfig,
+    scheduleRender,
+    colorScheme
+  ])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -1049,9 +1133,22 @@ const StreamNetworkFrame = forwardRef<
       if (onObservation) {
         const now = Date.now()
         if (d) {
-          onObservation({ type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "StreamNetworkFrame", chartId })
+          onObservation({
+            type: "hover",
+            datum: d.data || {},
+            x: d.x,
+            y: d.y,
+            timestamp: now,
+            chartType: "StreamNetworkFrame",
+            chartId
+          })
         } else {
-          onObservation({ type: "hover-end", timestamp: now, chartType: "StreamNetworkFrame", chartId })
+          onObservation({
+            type: "hover-end",
+            timestamp: now,
+            chartType: "StreamNetworkFrame",
+            chartId
+          })
         }
       }
     },
@@ -1064,9 +1161,22 @@ const StreamNetworkFrame = forwardRef<
       if (onObservation) {
         const now = Date.now()
         if (d) {
-          onObservation({ type: "click", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "StreamNetworkFrame", chartId })
+          onObservation({
+            type: "click",
+            datum: d.data || {},
+            x: d.x,
+            y: d.y,
+            timestamp: now,
+            chartType: "StreamNetworkFrame",
+            chartId
+          })
         } else {
-          onObservation({ type: "click-end", timestamp: now, chartType: "StreamNetworkFrame", chartId })
+          onObservation({
+            type: "click-end",
+            timestamp: now,
+            chartType: "StreamNetworkFrame",
+            chartId
+          })
         }
       }
     },
@@ -1076,7 +1186,8 @@ const StreamNetworkFrame = forwardRef<
   // ── Hover handlers ───────────────────────────────────────────────────
   // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
   // come from useFrame above; frame still owns the closure bodies.
-  const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } = frame
+  const { hoverHandlerRef, hoverLeaveRef, onPointerMove, onPointerLeave } =
+    frame
 
   // A custom layout with no restyle handler paints its hover state off-canvas
   // (React overlays / HTML marks), so the canvas needs no redraw on pointer move.
@@ -1144,7 +1255,7 @@ const StreamNetworkFrame = forwardRef<
 
     const rawDatum = hit.datum || {}
     const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y, {
-      nodeOrEdge: hit.type as "node" | "edge",
+      nodeOrEdge: hit.type as "node" | "edge"
     })
 
     hoverRef.current = hover
@@ -1207,9 +1318,11 @@ const StreamNetworkFrame = forwardRef<
 
     if (hit) {
       const rawDatum = hit.datum || {}
-      customClickBehavior(buildHoverData(rawDatum, hit.x, hit.y, {
-        nodeOrEdge: hit.type as "node" | "edge",
-      }))
+      customClickBehavior(
+        buildHoverData(rawDatum, hit.x, hit.y, {
+          nodeOrEdge: hit.type as "node" | "edge"
+        })
+      )
     } else {
       customClickBehavior(null)
     }
@@ -1224,79 +1337,124 @@ const StreamNetworkFrame = forwardRef<
   // ── Keyboard navigation ───────────────────────────────────────────
 
   const kbFocusIndexRef = useRef(-1)
-  const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+  const focusedNavPointRef = useRef<{
+    shape?: string
+    w?: number
+    h?: number
+  } | null>(null)
   const neighborIndexRef = useRef(-1)
-  const onKeyDown = useCallback((e: React.KeyboardEvent) => {
-    const store = storeRef.current
-    if (!store) return
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const store = storeRef.current
+      if (!store) return
 
-    // Always rebuild NavGraph from current sceneNodes — positions change during
-    // force simulation ticks and transition interpolation, so caching risks stale coordinates
-    const navPoints = extractNetworkNavPoints(store.sceneNodes as NetworkSceneNode[])
-    if (navPoints.length === 0) return
-    const graph: NavGraph = buildNavGraph(navPoints)
+      // Always rebuild NavGraph from current sceneNodes — positions change during
+      // force simulation ticks and transition interpolation, so caching risks stale coordinates
+      const navPoints = extractNetworkNavPoints(
+        store.sceneNodes as NetworkSceneNode[]
+      )
+      if (navPoints.length === 0) return
+      const graph: NavGraph = buildNavGraph(navPoints)
 
-    const current = kbFocusIndexRef.current
+      const current = kbFocusIndexRef.current
 
-    if (current < 0) {
-      if (e.key === "Escape") return
-      const isNav = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown", "Enter"].includes(e.key)
-      if (!isNav) return
+      if (current < 0) {
+        if (e.key === "Escape") return
+        const isNav = [
+          "ArrowRight",
+          "ArrowLeft",
+          "ArrowUp",
+          "ArrowDown",
+          "Home",
+          "End",
+          "PageUp",
+          "PageDown",
+          "Enter"
+        ].includes(e.key)
+        if (!isNav) return
+        e.preventDefault()
+        kbFocusIndexRef.current = 0
+        neighborIndexRef.current = -1
+        const point = graph.flat[0]
+        focusedNavPointRef.current = {
+          shape: point.shape,
+          w: point.w,
+          h: point.h
+        }
+        const rawDatum = point.datum || {}
+        const hover: HoverData = buildHoverData(rawDatum, point.x, point.y, {
+          nodeOrEdge: "node"
+        })
+        hoverRef.current = hover
+        setHoverData(hover)
+        if (customHoverBehavior) {
+          customHoverBehavior(hover)
+          dirtyRef.current = true
+        }
+        scheduleRender()
+        return
+      }
+
+      const pos = resolvePosition(graph, current)
+      const next = nextNetworkIndex(
+        e.key,
+        pos,
+        graph,
+        store.sceneEdges ?? [],
+        neighborIndexRef
+      )
+      if (next === null) return
+
       e.preventDefault()
-      kbFocusIndexRef.current = 0
-      neighborIndexRef.current = -1
-      const point = graph.flat[0]
-      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
+
+      if (next < 0) {
+        kbFocusIndexRef.current = -1
+        focusedNavPointRef.current = null
+        neighborIndexRef.current = -1
+        hoverRef.current = null
+        setHoverData(null)
+        if (customHoverBehavior) {
+          customHoverBehavior(null)
+          dirtyRef.current = true
+        }
+        scheduleRender()
+        return
+      }
+
+      kbFocusIndexRef.current = next
+      const point = graph.flat[next]
+      focusedNavPointRef.current = {
+        shape: point.shape,
+        w: point.w,
+        h: point.h
+      }
       const rawDatum = point.datum || {}
-      const hover: HoverData = buildHoverData(rawDatum, point.x, point.y, {
-        nodeOrEdge: "node",
-      })
+      const hover: HoverData = {
+        data: rawDatum,
+        x: point.x,
+        y: point.y,
+        __semioticHoverData: true,
+        nodeOrEdge: "node"
+      }
       hoverRef.current = hover
       setHoverData(hover)
-      if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
+      if (customHoverBehavior) {
+        customHoverBehavior(hover)
+        dirtyRef.current = true
+      }
       scheduleRender()
-      return
-    }
+    },
+    [customHoverBehavior, scheduleRender]
+  )
 
-    const pos = resolvePosition(graph, current)
-    const next = nextNetworkIndex(e.key, pos, graph, store.sceneEdges ?? [], neighborIndexRef)
-    if (next === null) return
-
-    e.preventDefault()
-
-    if (next < 0) {
+  const onMouseMoveWrapped = useCallback(
+    (e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
-      neighborIndexRef.current = -1
-      hoverRef.current = null
-      setHoverData(null)
-      if (customHoverBehavior) { customHoverBehavior(null); dirtyRef.current = true }
-      scheduleRender()
-      return
-    }
-
-    kbFocusIndexRef.current = next
-    const point = graph.flat[next]
-    focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-    const rawDatum = point.datum || {}
-    const hover: HoverData = {
-      data: rawDatum,
-      x: point.x,
-      y: point.y,
-      __semioticHoverData: true,
-      nodeOrEdge: "node",
-    }
-    hoverRef.current = hover
-    setHoverData(hover)
-    if (customHoverBehavior) { customHoverBehavior(hover); dirtyRef.current = true }
-    scheduleRender()
-  }, [customHoverBehavior, scheduleRender])
-
-  const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
-    kbFocusIndexRef.current = -1
-    focusedNavPointRef.current = null
-    onPointerMove(e)
-  }, [onPointerMove])
+      onPointerMove(e)
+    },
+    [onPointerMove]
+  )
 
   // ── Render function ──────────────────────────────────────────────────
 
@@ -1320,11 +1478,15 @@ const StreamNetworkFrame = forwardRef<
 
     // Fast-forward transitions when reduced motion is active so target positions
     // are applied immediately and transition state is cleared properly
-    const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
+    const transitionActive = store.advanceTransition(
+      reducedMotionRef.current ? now + 1e6 : now
+    )
     const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
     // Advance layout animation (e.g. orbit rotation) — skip when reduced motion
-    const animationTicked = reducedMotionRef.current ? false : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
+    const animationTicked = reducedMotionRef.current
+      ? false
+      : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
 
     if (transitionActive || dirtyRef.current || animationTicked) {
       // Rebuild scene for current positions
@@ -1372,8 +1534,10 @@ const StreamNetworkFrame = forwardRef<
 
     // Staleness dimming
     const staleThreshold = staleness?.threshold ?? 5000
-    const currentlyStale = staleness && store.lastIngestTime > 0 &&
-      (now - store.lastIngestTime) > staleThreshold
+    const currentlyStale =
+      staleness &&
+      store.lastIngestTime > 0 &&
+      now - store.lastIngestTime > staleThreshold
 
     if (currentlyStale) {
       ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
@@ -1405,8 +1569,11 @@ const StreamNetworkFrame = forwardRef<
         // Compute per-edge speed multipliers for proportional flow rate
         let edgeSpeedMultipliers: number[] | undefined
         if (particleStyle.proportionalSpeed) {
-          const maxValue = edges.reduce((max, e) => Math.max(max, e.value || 1), 1)
-          edgeSpeedMultipliers = edges.map(e => {
+          const maxValue = edges.reduce(
+            (max, e) => Math.max(max, e.value || 1),
+            1
+          )
+          edgeSpeedMultipliers = edges.map((e) => {
             const ratio = (e.value || 1) / maxValue
             // Scale between 0.3x and 2x so low-value edges still move
             return 0.3 + ratio * 1.7
@@ -1441,7 +1608,14 @@ const StreamNetworkFrame = forwardRef<
     if (wasDirty || isTransitioning || animationTicked) {
       const canvas = canvasRef.current
       if (canvas) {
-        canvas.setAttribute("aria-label", computeNetworkAriaLabel(store.sceneNodes?.length ?? 0, store.sceneEdges?.length ?? 0, "Network chart"))
+        canvas.setAttribute(
+          "aria-label",
+          computeNetworkAriaLabel(
+            store.sceneNodes?.length ?? 0,
+            store.sceneEdges?.length ?? 0,
+            "Network chart"
+          )
+        )
       }
     }
 
@@ -1462,8 +1636,14 @@ const StreamNetworkFrame = forwardRef<
     // and the rAF chain would keep spinning forever waiting for an
     // update that nothing was asking for anymore).
     const wantsAnnotationUpdate =
-      wasDirty || isTransitioning || animationTicked || pendingAnnotationFrameRef.current
-    if (wantsAnnotationUpdate && (now - lastAnnotationFrameTimeRef.current) >= 33) {
+      wasDirty ||
+      isTransitioning ||
+      animationTicked ||
+      pendingAnnotationFrameRef.current
+    if (
+      wantsAnnotationUpdate &&
+      now - lastAnnotationFrameTimeRef.current >= 33
+    ) {
       setAnnotationFrame((f) => f + 1)
       lastAnnotationFrameTimeRef.current = now
       pendingAnnotationFrameRef.current = false
@@ -1478,7 +1658,16 @@ const StreamNetworkFrame = forwardRef<
     // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation),
     // OR to retry a throttled setAnnotationFrame so a one-shot dirty event
     // that landed inside the throttle gate still reconciles the SVG layer.
-    if (isContinuous || isTransitioning || store.transition != null || animationTicked || store.hasActivePulses || store.hasActiveThresholds || (animate !== false && store.hasActiveTopologyDiff) || pendingAnnotationFrameRef.current) {
+    if (
+      isContinuous ||
+      isTransitioning ||
+      store.transition != null ||
+      animationTicked ||
+      store.hasActivePulses ||
+      store.hasActiveThresholds ||
+      (animate !== false && store.hasActiveTopologyDiff) ||
+      pendingAnnotationFrameRef.current
+    ) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }
@@ -1490,7 +1679,7 @@ const StreamNetworkFrame = forwardRef<
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
-    renderFnRef,
+    renderFnRef
     // No frame-specific cleanup — useFrame handles the rAF/pointermove
     // refs on unmount.
   })
@@ -1502,7 +1691,14 @@ const StreamNetworkFrame = forwardRef<
 
   // ── Staleness timer ─────────────────────────────────────────────────
 
-  useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
+  useStalenessCheck(
+    staleness,
+    storeRef,
+    dirtyRef,
+    scheduleRender,
+    isStale,
+    setIsStale
+  )
 
   // ── Tooltip ──────────────────────────────────────────────────────────
 
@@ -1532,8 +1728,17 @@ const StreamNetworkFrame = forwardRef<
   if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
     const store = storeRef.current
     if (store) {
-      const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition", "orbit"].includes(chartType)
-      const hierarchyRoot = isHierarchical ? (dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)) : undefined
+      const isHierarchical = [
+        "tree",
+        "cluster",
+        "treemap",
+        "circlepack",
+        "partition",
+        "orbit"
+      ].includes(chartType)
+      const hierarchyRoot = isHierarchical
+        ? dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)
+        : undefined
 
       if (isHierarchical && hierarchyRoot) {
         store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
@@ -1542,7 +1747,10 @@ const StreamNetworkFrame = forwardRef<
         const rawNodes = safeNodes
         const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
         if (rawNodes.length > 0 || rawEdges.length > 0) {
-          store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
+          store.ingestBounded(rawNodes, rawEdges, [
+            adjustedWidth,
+            adjustedHeight
+          ])
           store.buildScene([adjustedWidth, adjustedHeight])
         }
       }
@@ -1560,11 +1768,13 @@ const StreamNetworkFrame = forwardRef<
         ref={responsiveRef}
         className={`stream-network-frame${className ? ` ${className}` : ""}`}
         role="img"
-        aria-label={description || (typeof title === "string" ? title : "Network chart")}
+        aria-label={
+          description || (typeof title === "string" ? title : "Network chart")
+        }
         style={{
           position: "relative",
           width: responsiveWidth ? "100%" : size[0],
-          height: responsiveHeight ? "100%" : size[1],
+          height: responsiveHeight ? "100%" : size[1]
         }}
       >
         <ScreenReaderSummary summary={summary} />
@@ -1581,11 +1791,23 @@ const StreamNetworkFrame = forwardRef<
           )}
           <g transform={`translate(${margin.left},${margin.top})`}>
             {background && (
-              <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
+              <rect
+                x={0}
+                y={0}
+                width={adjustedWidth}
+                height={adjustedHeight}
+                fill={background}
+              />
             )}
-            {sceneEdges.map((edge, i) => networkSceneEdgeToSVG(edge, i)).filter(Boolean)}
-            {sceneNodes.map((node, i) => networkSceneNodeToSVG(node, i)).filter(Boolean)}
-            {labels.map((label, i) => networkLabelToSVG(label, i)).filter(Boolean)}
+            {sceneEdges
+              .map((edge, i) => networkSceneEdgeToSVG(edge, i))
+              .filter(Boolean)}
+            {sceneNodes
+              .map((node, i) => networkSceneNodeToSVG(node, i))
+              .filter(Boolean)}
+            {labels
+              .map((label, i) => networkLabelToSVG(label, i))
+              .filter(Boolean)}
           </g>
         </svg>
         <NetworkSVGOverlay
@@ -1604,9 +1826,13 @@ const StreamNetworkFrame = forwardRef<
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={
-            composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
-          }
+          foregroundGraphics={composeOverlays(
+            resolvedForeground,
+            wrapWithCustomLayoutSelection(
+              storeRef.current?.customLayoutOverlays,
+              layoutSelection ?? null
+            )
+          )}
           annotations={annotations}
           autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
@@ -1630,109 +1856,139 @@ const StreamNetworkFrame = forwardRef<
       ref={responsiveRef}
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
       role="group"
-      aria-label={description || (typeof title === "string" ? title : "Network chart")}
+      aria-label={
+        description || (typeof title === "string" ? title : "Network chart")
+      }
       tabIndex={0}
       style={{
         position: "relative",
         width: responsiveWidth ? "100%" : size[0],
         height: responsiveHeight ? "100%" : size[1],
-        overflow: "visible",
+        overflow: "visible"
       }}
       onKeyDown={onKeyDown}
     >
       {accessibleTable && <SkipToTableLink tableId={tableId} />}
-      {accessibleTable && <NetworkAccessibleDataTable nodes={store?.sceneNodes ?? []} edges={store?.sceneEdges ?? []} chartType="Network chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
+      {accessibleTable && (
+        <NetworkAccessibleDataTable
+          nodes={store?.sceneNodes ?? []}
+          edges={store?.sceneEdges ?? []}
+          chartType="Network chart"
+          tableId={tableId}
+          chartTitle={typeof title === "string" ? title : undefined}
+        />
+      )}
       <ScreenReaderSummary summary={summary} />
       {/* Live region MUST live outside the role="img" wrapper — AT treats the
           image as atomic and never announces content nested inside it. */}
       <AriaLiveTooltip hoverPoint={hoverData} />
       <div
         role="img"
-        aria-label={description || (typeof title === "string" ? title : "Network chart")}
+        aria-label={
+          description || (typeof title === "string" ? title : "Network chart")
+        }
         style={{ position: "relative", width: "100%", height: "100%" }}
         onMouseMove={enableHover ? onMouseMoveWrapped : undefined}
         onMouseLeave={enableHover ? onPointerLeave : undefined}
-        onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
+        onClick={customClickBehaviorProp || onObservation ? onClick : undefined}
       >
-      {resolvedBackground && (
-        <svg
-          overflow="visible"
+        {resolvedBackground && (
+          <svg
+            overflow="visible"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: size[0],
+              height: size[1],
+              pointerEvents: "none",
+              overflow: "visible"
+            }}
+          >
+            <g transform={`translate(${margin.left},${margin.top})`}>
+              {resolvedBackground}
+            </g>
+          </svg>
+        )}
+
+        <canvas
+          ref={canvasRef}
+          aria-label={computeNetworkAriaLabel(
+            store?.sceneNodes?.length ?? 0,
+            store?.sceneEdges?.length ?? 0,
+            "Network chart"
+          )}
           style={{
             position: "absolute",
             top: 0,
-            left: 0,
-            width: size[0],
-            height: size[1],
-            pointerEvents: "none",
-            overflow: "visible"
+            left: 0
           }}
-        >
-          <g transform={`translate(${margin.left},${margin.top})`}>
-            {resolvedBackground}
-          </g>
-        </svg>
-      )}
+        />
 
-      <canvas
-        ref={canvasRef}
-        aria-label={computeNetworkAriaLabel(store?.sceneNodes?.length ?? 0, store?.sceneEdges?.length ?? 0, "Network chart")}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0
-        }}
-      />
+        <NetworkSVGOverlay
+          width={adjustedWidth}
+          height={adjustedHeight}
+          totalWidth={size[0]}
+          totalHeight={size[1]}
+          margin={margin}
+          labels={store?.labels || []}
+          sceneNodes={store?.sceneNodes}
+          title={title}
+          legend={legend}
+          legendPosition={legendPosition}
+          legendLayout={legendLayout}
+          legendHoverBehavior={legendHoverBehavior}
+          legendClickBehavior={legendClickBehavior}
+          legendHighlightedCategory={legendHighlightedCategory}
+          legendIsolatedCategories={legendIsolatedCategories}
+          foregroundGraphics={composeOverlays(
+            resolvedForeground,
+            wrapWithCustomLayoutSelection(
+              storeRef.current?.customLayoutOverlays,
+              layoutSelection ?? null
+            )
+          )}
+          annotations={annotations}
+          autoPlaceAnnotations={autoPlaceAnnotations}
+          svgAnnotationRules={svgAnnotationRules}
+          annotationFrame={annotationFrame}
+        />
 
-      <NetworkSVGOverlay
-        width={adjustedWidth}
-        height={adjustedHeight}
-        totalWidth={size[0]}
-        totalHeight={size[1]}
-        margin={margin}
-        labels={store?.labels || []}
-        sceneNodes={store?.sceneNodes}
-        title={title}
-        legend={legend}
-        legendPosition={legendPosition}
-        legendLayout={legendLayout}
-        legendHoverBehavior={legendHoverBehavior}
-        legendClickBehavior={legendClickBehavior}
-        legendHighlightedCategory={legendHighlightedCategory}
-        legendIsolatedCategories={legendIsolatedCategories}
-        foregroundGraphics={
-          composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
-        }
-        annotations={annotations}
-        autoPlaceAnnotations={autoPlaceAnnotations}
-        svgAnnotationRules={svgAnnotationRules}
-        annotationFrame={annotationFrame}
-      />
-
-      {/* HTML marks: a real-DOM layer above the canvas + SVG overlays, read
+        {/* HTML marks: a real-DOM layer above the canvas + SVG overlays, read
           straight from the store (same render-time read as customLayoutOverlays).
           `pointer-events: none` keeps the canvas authoritative for hit-testing. */}
-      <NetworkHtmlMarksLayer
-        marks={store?.customLayoutHtmlMarks}
-        margin={margin}
-        selection={layoutSelection ?? null}
-      />
+        <NetworkHtmlMarksLayer
+          marks={store?.customLayoutHtmlMarks}
+          margin={margin}
+          selection={layoutSelection ?? null}
+        />
 
-      <FocusRing
-        active={kbFocusIndexRef.current >= 0}
-        hoverPoint={hoverData}
-        margin={margin}
-        size={size}
-        shape={focusedNavPointRef.current?.shape as "circle" | "rect" | "wedge" | undefined}
-        width={focusedNavPointRef.current?.w}
-        height={focusedNavPointRef.current?.h}
-      />
+        <FocusRing
+          active={kbFocusIndexRef.current >= 0}
+          hoverPoint={hoverData}
+          margin={margin}
+          size={size}
+          shape={
+            focusedNavPointRef.current?.shape as
+              | "circle"
+              | "rect"
+              | "wedge"
+              | undefined
+          }
+          width={focusedNavPointRef.current?.w}
+          height={focusedNavPointRef.current?.h}
+        />
 
-      {tooltipElement}
+        {tooltipElement}
 
-      {staleness?.showBadge && (
-        <StalenessBadge isStale={isStale} position={staleness.badgePosition} />
-      )}
-      </div>{/* end role="img" */}
+        {staleness?.showBadge && (
+          <StalenessBadge
+            isStale={isStale}
+            position={staleness.badgePosition}
+          />
+        )}
+      </div>
+      {/* end role="img" */}
     </div>
   )
 })

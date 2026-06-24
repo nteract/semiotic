@@ -2,11 +2,22 @@ import { interpolateNumber } from "d3-interpolate"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
-import type { NetworkLayoutContext, NetworkLayoutResult, NetworkHtmlMark } from "./networkCustomLayout"
+import type {
+  NetworkLayoutContext,
+  NetworkLayoutResult,
+  NetworkHtmlMark
+} from "./networkCustomLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
-import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
+import {
+  resolveCustomLayoutPalette,
+  buildResolveColor
+} from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
-import { computeEasing, computeRawProgress, lerp } from "./pipelineTransitionUtils"
+import {
+  computeEasing,
+  computeRawProgress,
+  lerp
+} from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
@@ -23,9 +34,7 @@ import type {
   BezierCache,
   BezierPoint
 } from "./networkTypes"
-import {
-  DEFAULT_TENSION_CONFIG
-} from "./networkTypes"
+import { DEFAULT_TENSION_CONFIG } from "./networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 
 const CURVATURE = 0.5
@@ -120,9 +129,15 @@ export class NetworkPipelineStore {
   transition: ActiveTransition | null = null
   private _hasRenderedOnce = false
   /** Snapshot of node positions from before bounded re-ingestion cleared the maps */
-  private _boundedPrevSnapshot: Map<string, { x0: number; x1: number; y0: number; y1: number }> | null = null
+  private _boundedPrevSnapshot: Map<
+    string,
+    { x0: number; x1: number; y0: number; y1: number }
+  > | null = null
   /** Snapshot of edge positions from before bounded re-ingestion cleared the maps */
-  private _boundedEdgeSnapshot: Map<string, { y0: number; y1: number; sankeyWidth: number }> | null = null
+  private _boundedEdgeSnapshot: Map<
+    string,
+    { y0: number; y1: number; sankeyWidth: number }
+  > | null = null
 
   // ── Realtime encoding timestamps ──────────────────────────────────────
 
@@ -168,7 +183,10 @@ export class NetworkPipelineStore {
     // control points HOC-side and writes them onto each edge before
     // pushing to the frame, so the pool can drive particles through
     // the standard ribbon path math.
-    if (config.showParticles && (config.chartType === "sankey" || !!config.customNetworkLayout)) {
+    if (
+      config.showParticles &&
+      (config.chartType === "sankey" || !!config.customNetworkLayout)
+    ) {
       this.particlePool = new ParticlePool(2000)
     }
   }
@@ -196,7 +214,11 @@ export class NetworkPipelineStore {
     // Create particle pool on demand; keep it alive when toggled off
     // so that toggling showParticles false→true doesn't lose canvas state.
     // Gate matches the constructor — sankey OR customNetworkLayout.
-    if (config.showParticles && (config.chartType === "sankey" || !!config.customNetworkLayout) && !this.particlePool) {
+    if (
+      config.showParticles &&
+      (config.chartType === "sankey" || !!config.customNetworkLayout) &&
+      !this.particlePool
+    ) {
       this.particlePool = new ParticlePool(2000)
     }
   }
@@ -207,16 +229,18 @@ export class NetworkPipelineStore {
    * Ingest hierarchy root data for tree/treemap/circlepack/partition layouts.
    * The hierarchy root is passed to the layout plugin via config.__hierarchyRoot.
    */
-  ingestHierarchy(
-    rootData: any,
-    size: [number, number]
-  ): void {
+  ingestHierarchy(rootData: any, size: [number, number]): void {
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
     this._boundedPrevSnapshot = new Map()
     for (const [id, node] of this.nodes) {
       if (node.x0 !== 0 || node.x1 !== 0 || node.y0 !== 0 || node.y1 !== 0) {
-        this._boundedPrevSnapshot.set(id, { x0: node.x0, x1: node.x1, y0: node.y0, y1: node.y1 })
+        this._boundedPrevSnapshot.set(id, {
+          x0: node.x0,
+          x1: node.x1,
+          y0: node.y0,
+          y1: node.y1
+        })
       }
     }
 
@@ -251,28 +275,37 @@ export class NetworkPipelineStore {
       valueAccessor = "value"
     } = this.config
 
-    const getNodeId = typeof nodeIDAccessor === "function"
-      ? nodeIDAccessor
-      : (d: Datum) => d[nodeIDAccessor]
+    const getNodeId =
+      typeof nodeIDAccessor === "function"
+        ? nodeIDAccessor
+        : (d: Datum) => d[nodeIDAccessor]
 
-    const getSource = typeof sourceAccessor === "function"
-      ? sourceAccessor
-      : (d: Datum) => d[sourceAccessor]
+    const getSource =
+      typeof sourceAccessor === "function"
+        ? sourceAccessor
+        : (d: Datum) => d[sourceAccessor]
 
-    const getTarget = typeof targetAccessor === "function"
-      ? targetAccessor
-      : (d: Datum) => d[targetAccessor]
+    const getTarget =
+      typeof targetAccessor === "function"
+        ? targetAccessor
+        : (d: Datum) => d[targetAccessor]
 
-    const getValue = typeof valueAccessor === "function"
-      ? valueAccessor
-      : (d: Datum) => d[valueAccessor] ?? 1
+    const getValue =
+      typeof valueAccessor === "function"
+        ? valueAccessor
+        : (d: Datum) => d[valueAccessor] ?? 1
 
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
     this._boundedPrevSnapshot = new Map()
     for (const [id, node] of this.nodes) {
       if (node.x0 !== 0 || node.x1 !== 0 || node.y0 !== 0 || node.y1 !== 0) {
-        this._boundedPrevSnapshot.set(id, { x0: node.x0, x1: node.x1, y0: node.y0, y1: node.y1 })
+        this._boundedPrevSnapshot.set(id, {
+          x0: node.x0,
+          x1: node.x1,
+          y0: node.y0,
+          y1: node.y1
+        })
       }
     }
     this._boundedEdgeSnapshot = new Map()
@@ -280,7 +313,11 @@ export class NetworkPipelineStore {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
       const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
       if (edge.sankeyWidth > 0) {
-        this._boundedEdgeSnapshot.set(`${src}\0${tgt}`, { y0: edge.y0, y1: edge.y1, sankeyWidth: edge.sankeyWidth })
+        this._boundedEdgeSnapshot.set(`${src}\0${tgt}`, {
+          y0: edge.y0,
+          y1: edge.y1,
+          sankeyWidth: edge.sankeyWidth
+        })
       }
     }
 
@@ -326,7 +363,7 @@ export class NetworkPipelineStore {
         y1: 0,
         sankeyWidth: 0,
         data: raw,
-        _edgeKey: key,
+        _edgeKey: key
       }
       // For customNetworkLayout charts (e.g. ProcessSankey), `runLayout`
       // short-circuits before `finalizeLayout` would have computed
@@ -367,7 +404,8 @@ export class NetworkPipelineStore {
     const { source, target, value } = push
     const isFirst = this.nodes.size === 0
     let topologyChanged = false
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const now =
+      typeof performance !== "undefined" ? performance.now() : Date.now()
     this.lastIngestTime = now
     this._decaySortedNodes = null
 
@@ -408,7 +446,12 @@ export class NetworkPipelineStore {
       topologyChanged = true
     }
 
-    return isFirst || topologyChanged || valueChanged || this.tension >= this.tensionConfig.threshold
+    return (
+      isFirst ||
+      topologyChanged ||
+      valueChanged ||
+      this.tension >= this.tensionConfig.threshold
+    )
   }
 
   // ── Layout execution ──────────────────────────────────────────────────
@@ -471,7 +514,8 @@ export class NetworkPipelineStore {
           }
         }
       }
-      this.config.__previousPositions = prevPositions.size > 0 ? prevPositions : undefined
+      this.config.__previousPositions =
+        prevPositions.size > 0 ? prevPositions : undefined
     }
 
     // Execute layout — hierarchical plugins push into the arrays directly
@@ -491,8 +535,10 @@ export class NetworkPipelineStore {
       }
       for (let i = 0; i < edgesArr.length; i++) {
         const edge = edgesArr[i]
-        const srcId = typeof edge.source === "string" ? edge.source : edge.source.id
-        const tgtId = typeof edge.target === "string" ? edge.target : edge.target.id
+        const srcId =
+          typeof edge.source === "string" ? edge.source : edge.source.id
+        const tgtId =
+          typeof edge.target === "string" ? edge.target : edge.target.id
         const key = edge._edgeKey || `${srcId}\0${tgtId}\0${i}`
         edge._edgeKey = key
         this.edges.set(key, edge)
@@ -506,8 +552,10 @@ export class NetworkPipelineStore {
         for (const node of this.nodes.values()) {
           const prev = snapshot.get(node.id)
           if (prev) {
-            node._prevX0 = prev.x0; node._prevX1 = prev.x1
-            node._prevY0 = prev.y0; node._prevY1 = prev.y1
+            node._prevX0 = prev.x0
+            node._prevX1 = prev.x1
+            node._prevY0 = prev.y0
+            node._prevY1 = prev.y1
           }
         }
       }
@@ -535,19 +583,36 @@ export class NetworkPipelineStore {
 
     // Check if we have meaningful previous positions to animate from
     const hasOldPositions = nodesArr.some(
-      (n) => n._prevX0 !== undefined &&
-        (n._prevX0 !== 0 || n._prevX1 !== 0 || n._prevY0 !== 0 || n._prevY1 !== 0)
+      (n) =>
+        n._prevX0 !== undefined &&
+        (n._prevX0 !== 0 ||
+          n._prevX1 !== 0 ||
+          n._prevY0 !== 0 ||
+          n._prevY1 !== 0)
     )
 
     // Resolve transition duration: config.transition (from animate) > tensionConfig
-    const transitionDuration = this.config.transition?.duration ?? this.tensionConfig.transitionDuration
+    const transitionDuration =
+      this.config.transition?.duration ?? this.tensionConfig.transitionDuration
 
     // Intro animation: synthesize center-origin prev positions on first layout.
     // Only for deterministic layouts (sankey, tree, treemap, circlepack) — force/chord
     // layouts compute positions from randomized starting points and don't benefit
     // from a center-origin intro (it fights the simulation).
-    const deterministicLayout = ["sankey", "tree", "treemap", "circlepack", "partition"].includes(this.config.chartType)
-    if (!this._hasRenderedOnce && this.config.introAnimation && deterministicLayout && nodesArr.length > 0 && transitionDuration > 0) {
+    const deterministicLayout = [
+      "sankey",
+      "tree",
+      "treemap",
+      "circlepack",
+      "partition"
+    ].includes(this.config.chartType)
+    if (
+      !this._hasRenderedOnce &&
+      this.config.introAnimation &&
+      deterministicLayout &&
+      nodesArr.length > 0 &&
+      transitionDuration > 0
+    ) {
       const cx = size[0] / 2
       const cy = size[1] / 2
       for (const node of this.nodes.values()) {
@@ -563,11 +628,17 @@ export class NetworkPipelineStore {
         edge._introFromZero = true
       }
       this.restorePreviousPositions()
-      this.transition = { startTime: performance.now(), duration: transitionDuration }
+      this.transition = {
+        startTime: performance.now(),
+        duration: transitionDuration
+      }
     } else if (hasOldPositions && transitionDuration > 0) {
       // Data-change transition: reset to previous positions (animation starts from here)
       this.restorePreviousPositions()
-      this.transition = { startTime: performance.now(), duration: transitionDuration }
+      this.transition = {
+        startTime: performance.now(),
+        duration: transitionDuration
+      }
     }
 
     this._hasRenderedOnce = true
@@ -607,9 +678,14 @@ export class NetworkPipelineStore {
       if (!currentEdgeKeys.has(key)) this.removedEdges.add(key)
     }
 
-    if (this.addedNodes.size > 0 || this.removedNodes.size > 0 ||
-        this.addedEdges.size > 0 || this.removedEdges.size > 0) {
-      this.lastTopologyChangeTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    if (
+      this.addedNodes.size > 0 ||
+      this.removedNodes.size > 0 ||
+      this.addedEdges.size > 0 ||
+      this.removedEdges.size > 0
+    ) {
+      this.lastTopologyChangeTime =
+        typeof performance !== "undefined" ? performance.now() : Date.now()
     }
 
     this.previousNodeIds = currentNodeIds
@@ -684,15 +760,15 @@ export class NetworkPipelineStore {
         dimensions: {
           width: size[0],
           height: size[1],
-          plot: { x: 0, y: 0, width: size[0], height: size[1] },
+          plot: { x: 0, y: 0, width: size[0], height: size[1] }
         },
         theme: {
           semantic: this.config.themeSemantic ?? {},
-          categorical: [...palette],
+          categorical: [...palette]
         },
         resolveColor: buildResolveColor(palette),
         config: (this.config.layoutConfig ?? {}) as Record<string, unknown>,
-        selection: this.config.layoutSelection ?? null,
+        selection: this.config.layoutSelection ?? null
       }
       let result
       try {
@@ -728,7 +804,7 @@ export class NetworkPipelineStore {
         label: "customNetworkLayout",
         nodes: this.sceneNodes,
         overlays: this.customLayoutOverlays,
-        warned: this._customLayoutDiagnosticsWarned,
+        warned: this._customLayoutDiagnosticsWarned
       })
       return
     }
@@ -749,8 +825,12 @@ export class NetworkPipelineStore {
     // (mutating node-object positions in place), so they share the per-frame
     // cache. Hierarchical plugins (orbit/hierarchy) use them as mutable scratch
     // (clear + rebuild), so they get fresh arrays.
-    const nodesArr = plugin.hierarchical ? Array.from(this.nodes.values()) : this.nodesArray
-    const edgesArr = plugin.hierarchical ? Array.from(this.edges.values()) : this.edgesArray
+    const nodesArr = plugin.hierarchical
+      ? Array.from(this.nodes.values())
+      : this.nodesArray
+    const edgesArr = plugin.hierarchical
+      ? Array.from(this.edges.values())
+      : this.edgesArray
 
     const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
       nodesArr,
@@ -794,8 +874,8 @@ export class NetworkPipelineStore {
       if (node.type === "circle") circles[i++] = node
     }
     this._nodeQuadtree = d3Quadtree<NetworkCircleNode>()
-      .x(n => n.cx)
-      .y(n => n.cy)
+      .x((n) => n.cx)
+      .y((n) => n.cy)
       .addAll(circles)
   }
 
@@ -824,7 +904,11 @@ export class NetworkPipelineStore {
    * layoutVersion changes — i.e. on a Map mutation, never on an animation tick.
    */
   private _ensureArrays(): void {
-    if (this._arrCacheVersion === this.layoutVersion && this._nodesArrCache && this._edgesArrCache) {
+    if (
+      this._arrCacheVersion === this.layoutVersion &&
+      this._nodesArrCache &&
+      this._edgesArrCache
+    ) {
       return
     }
     this._nodesArrCache = Array.from(this.nodes.values())
@@ -865,8 +949,12 @@ export class NetworkPipelineStore {
 
     // Non-hierarchical layouts (force) share the per-frame array cache; the
     // hierarchical orbit layout uses them as scratch, so it gets fresh arrays.
-    const nodesArr = plugin.hierarchical ? Array.from(this.nodes.values()) : this.nodesArray
-    const edgesArr = plugin.hierarchical ? Array.from(this.edges.values()) : this.edgesArray
+    const nodesArr = plugin.hierarchical
+      ? Array.from(this.nodes.values())
+      : this.nodesArray
+    const edgesArr = plugin.hierarchical
+      ? Array.from(this.edges.values())
+      : this.edgesArray
     return plugin.tick(nodesArr, edgesArr, this.config, size, deltaTime)
   }
 
@@ -935,7 +1023,11 @@ export class NetworkPipelineStore {
       ) {
         edge.y0 = lerp(edge._prevY0, edge._targetY0, t)
         edge.y1 = lerp(edge._prevY1!, edge._targetY1!, t)
-        edge.sankeyWidth = lerp(edge._prevSankeyWidth, edge._targetSankeyWidth!, t)
+        edge.sankeyWidth = lerp(
+          edge._prevSankeyWidth,
+          edge._targetSankeyWidth!,
+          t
+        )
       }
     }
 
@@ -960,20 +1052,32 @@ export class NetworkPipelineStore {
       // For bounded re-ingestion, nodes were recreated with zeroed positions.
       // Use the snapshot (captured before clear) as the "previous" positions.
       const prev = snapshot?.get(node.id)
-      if (prev && node.x0 === 0 && node.x1 === 0 && node.y0 === 0 && node.y1 === 0) {
-        node._prevX0 = prev.x0; node._prevX1 = prev.x1
-        node._prevY0 = prev.y0; node._prevY1 = prev.y1
+      if (
+        prev &&
+        node.x0 === 0 &&
+        node.x1 === 0 &&
+        node.y0 === 0 &&
+        node.y1 === 0
+      ) {
+        node._prevX0 = prev.x0
+        node._prevX1 = prev.x1
+        node._prevY0 = prev.y0
+        node._prevY1 = prev.y1
       } else {
-        node._prevX0 = node.x0; node._prevX1 = node.x1
-        node._prevY0 = node.y0; node._prevY1 = node.y1
+        node._prevX0 = node.x0
+        node._prevX1 = node.x1
+        node._prevY0 = node.y0
+        node._prevY1 = node.y1
       }
     }
     const edgeSnapshot = this._boundedEdgeSnapshot
     for (const edge of this.edges.values()) {
       // For bounded re-ingestion, look up previous edge position from snapshot
       if (edgeSnapshot && edge.sankeyWidth === 0) {
-        const src = typeof edge.source === "string" ? edge.source : edge.source.id
-        const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+        const src =
+          typeof edge.source === "string" ? edge.source : edge.source.id
+        const tgt =
+          typeof edge.target === "string" ? edge.target : edge.target.id
         const prevEdge = edgeSnapshot.get(`${src}\0${tgt}`)
         if (prevEdge) {
           edge._prevY0 = prevEdge.y0
@@ -1001,7 +1105,8 @@ export class NetworkPipelineStore {
     for (const node of this.nodes.values()) {
       // Sankey/treemap/partition set x0/x1/y0/y1 — derive x/y from those.
       // Force/chord set x/y directly — derive x0/x1 from x/y.
-      const hasBox = node.x0 !== 0 || node.x1 !== 0 || node.y0 !== 0 || node.y1 !== 0
+      const hasBox =
+        node.x0 !== 0 || node.x1 !== 0 || node.y0 !== 0 || node.y1 !== 0
       if (hasBox) {
         node.width = node.x1 - node.x0
         node.height = node.y1 - node.y0
@@ -1147,11 +1252,19 @@ export class NetworkPipelineStore {
 
     // Stub edges: particles travel outbound stub, then teleport to inbound stub
     if (edge._circularStub) {
-      const stubLen = Math.max(15, Math.min(40, (cpd.rightFullExtent - cpd.sourceX) * 0.33))
-      const stubLenT = Math.max(15, Math.min(40, (cpd.targetX - cpd.leftFullExtent) * 0.33))
+      const stubLen = Math.max(
+        15,
+        Math.min(40, (cpd.rightFullExtent - cpd.sourceX) * 0.33)
+      )
+      const stubLenT = Math.max(
+        15,
+        Math.min(40, (cpd.targetX - cpd.leftFullExtent) * 0.33)
+      )
 
       // Two segments: outbound stub (t=0..0.5), then teleport to inbound stub (t=0.5..1)
-      const segments: Array<[BezierPoint, BezierPoint, BezierPoint, BezierPoint]> = [
+      const segments: Array<
+        [BezierPoint, BezierPoint, BezierPoint, BezierPoint]
+      > = [
         // Outbound: source → source+stubLen (first half of t)
         [
           { x: cpd.sourceX, y: cpd.sourceY },
@@ -1194,7 +1307,9 @@ export class NetworkPipelineStore {
       ]
     }
 
-    const segments: Array<[BezierPoint, BezierPoint, BezierPoint, BezierPoint]> = []
+    const segments: Array<
+      [BezierPoint, BezierPoint, BezierPoint, BezierPoint]
+    > = []
     for (let i = 0; i < waypoints.length - 1; i++) {
       const a = waypoints[i]
       const b = waypoints[i + 1]
@@ -1252,8 +1367,14 @@ export class NetworkPipelineStore {
     for (const edge of this.sceneEdges) {
       const edgeDatum = edge.datum
       if (!edgeDatum) continue
-      const sourceId = typeof edgeDatum.source === "object" ? edgeDatum.source?.id : edgeDatum.source
-      const targetId = typeof edgeDatum.target === "object" ? edgeDatum.target?.id : edgeDatum.target
+      const sourceId =
+        typeof edgeDatum.source === "object"
+          ? edgeDatum.source?.id
+          : edgeDatum.source
+      const targetId =
+        typeof edgeDatum.target === "object"
+          ? edgeDatum.target?.id
+          : edgeDatum.target
       if (!sourceId || !targetId) continue
       const key = `${sourceId}\0${targetId}`
       const ts = this.edgeTimestamps.get(key)
@@ -1282,7 +1403,9 @@ export class NetworkPipelineStore {
     // every frame (O(n) Map alloc + fill) even though the sort was cached; now
     // it rebuilds only when the sort does (i.e. on a topology change).
     if (!this._decaySortedNodes) {
-      this._decaySortedNodes = Array.from(this.nodeTimestamps.entries()).sort((a, b) => a[1] - b[1])
+      this._decaySortedNodes = Array.from(this.nodeTimestamps.entries()).sort(
+        (a, b) => a[1] - b[1]
+      )
       const ageMap = new Map<string, number>()
       for (let i = 0; i < this._decaySortedNodes.length; i++) {
         ageMap.set(this._decaySortedNodes[i][0], i)
@@ -1331,8 +1454,9 @@ export class NetworkPipelineStore {
   /** Whether there is an active topology diff animation */
   get hasActiveTopologyDiff(): boolean {
     if (this.addedNodes.size === 0) return false
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-    return (now - this.lastTopologyChangeTime) < 2000
+    const now =
+      typeof performance !== "undefined" ? performance.now() : Date.now()
+    return now - this.lastTopologyChangeTime < 2000
   }
 
   /**
@@ -1358,7 +1482,10 @@ export class NetworkPipelineStore {
 
       if (thresholds.critical !== undefined && value >= thresholds.critical) {
         alertColor = criticalColor
-      } else if (thresholds.warning !== undefined && value >= thresholds.warning) {
+      } else if (
+        thresholds.warning !== undefined &&
+        value >= thresholds.warning
+      ) {
         alertColor = warningColor
       }
 
@@ -1398,9 +1525,10 @@ export class NetworkPipelineStore {
   get hasActivePulses(): boolean {
     const pulse = this.config.pulse
     if (!pulse || this.lastIngestTime === 0) return false
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const now =
+      typeof performance !== "undefined" ? performance.now() : Date.now()
     const duration = pulse.duration ?? 500
-    return (now - this.lastIngestTime) < duration
+    return now - this.lastIngestTime < duration
   }
 
   // ── Public accessors ──────────────────────────────────────────────────
@@ -1421,7 +1549,8 @@ export class NetworkPipelineStore {
     const previous = node.data ? { ...node.data } : {}
     node.data = updater(node.data ?? {})
     this.layoutVersion++
-    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime =
+      typeof performance !== "undefined" ? performance.now() : Date.now()
     return previous
   }
 
@@ -1429,11 +1558,18 @@ export class NetworkPipelineStore {
    * Update all edges between source and target. Handles parallel edges.
    * Returns array of previous data values (one per updated edge), or empty array.
    */
-  updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[] {
+  updateEdge(
+    sourceId: string,
+    targetId: string,
+    updater: (data: Datum) => Datum
+  ): Datum[] {
     const valAcc = this.config.valueAccessor
-    const valFn = typeof valAcc === "function" ? valAcc
-      : valAcc ? (d: Datum) => d[valAcc]
-      : (d: Datum) => d.value
+    const valFn =
+      typeof valAcc === "function"
+        ? valAcc
+        : valAcc
+          ? (d: Datum) => d[valAcc]
+          : (d: Datum) => d.value
     const results: Datum[] = []
     for (const [, edge] of this.edges) {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
@@ -1447,7 +1583,8 @@ export class NetworkPipelineStore {
     }
     if (results.length > 0) {
       this.layoutVersion++
-      this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+      this.lastIngestTime =
+        typeof performance !== "undefined" ? performance.now() : Date.now()
     }
     return results
   }
@@ -1470,7 +1607,8 @@ export class NetworkPipelineStore {
       }
     }
     this.layoutVersion++
-    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime =
+      typeof performance !== "undefined" ? performance.now() : Date.now()
     return true
   }
 
@@ -1492,9 +1630,12 @@ export class NetworkPipelineStore {
       // Single-ID mode: use edgeIdAccessor
       const accessor = this.config.edgeIdAccessor
       if (!accessor) {
-        throw new Error("removeEdge(edgeId) requires edgeIdAccessor to be configured. Use removeEdge(sourceId, targetId) instead.")
+        throw new Error(
+          "removeEdge(edgeId) requires edgeIdAccessor to be configured. Use removeEdge(sourceId, targetId) instead."
+        )
       }
-      const getEdgeId = typeof accessor === "function" ? accessor : (d: Datum) => d?.[accessor]
+      const getEdgeId =
+        typeof accessor === "function" ? accessor : (d: Datum) => d?.[accessor]
       for (const [edgeKey, edge] of this.edges) {
         if (edge.data && getEdgeId(edge.data) === sourceIdOrEdgeId) {
           toDelete.push(edgeKey)
@@ -1503,8 +1644,10 @@ export class NetworkPipelineStore {
     } else {
       // Two-ID mode: match source + target
       for (const [edgeKey, edge] of this.edges) {
-        const src = typeof edge.source === "string" ? edge.source : edge.source.id
-        const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
+        const src =
+          typeof edge.source === "string" ? edge.source : edge.source.id
+        const tgt =
+          typeof edge.target === "string" ? edge.target : edge.target.id
         if (src === sourceIdOrEdgeId && tgt === targetId) {
           toDelete.push(edgeKey)
         }
@@ -1517,7 +1660,8 @@ export class NetworkPipelineStore {
     }
     if (toDelete.length > 0) {
       this.layoutVersion++
-      this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+      this.lastIngestTime =
+        typeof performance !== "undefined" ? performance.now() : Date.now()
     }
     return toDelete.length > 0
   }
@@ -1593,7 +1737,8 @@ function isValidBezierCache(value: unknown): value is BezierCache {
   if (!value || typeof value !== "object") return false
   const b = value as Partial<BezierCache>
   if (typeof b.circular !== "boolean") return false
-  if (typeof b.halfWidth !== "number" || !Number.isFinite(b.halfWidth)) return false
+  if (typeof b.halfWidth !== "number" || !Number.isFinite(b.halfWidth))
+    return false
   if (b.circular) {
     if (!Array.isArray(b.segments) || b.segments.length === 0) return false
     for (const seg of b.segments) {
