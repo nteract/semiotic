@@ -1,9 +1,10 @@
 import React from "react"
-import { render, act } from "@testing-library/react"
+import { render, act, waitFor } from "@testing-library/react"
 import { RealtimeLineChart } from "./RealtimeLineChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { AGG_VALUE, AGG_COUNT } from "./aggregate"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 
 describe("RealtimeLineChart — aggregate mode", () => {
   let cleanup: () => void
@@ -11,7 +12,7 @@ describe("RealtimeLineChart — aggregate mode", () => {
   afterEach(() => { cleanup() })
 
   it("reduces pushed events into windowed rows via getData", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <RealtimeLineChart
@@ -23,20 +24,20 @@ describe("RealtimeLineChart — aggregate mode", () => {
       </TooltipProvider>
     )
     act(() => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { t: 1, v: 10 },
         { t: 5, v: 20 }, // window [0,10): mean 15
         { t: 12, v: 100 }, // window [10,20)
       ])
     })
-    const rows = ref.current.getData()
+    const rows = ref.current!.getData()
     expect(rows).toHaveLength(2)
-    const first = rows.find((r: any) => r[AGG_COUNT] === 2)
-    expect(first[AGG_VALUE]).toBe(15)
+    const first = rows.find((r) => r[AGG_COUNT] === 2)
+    expect(first?.[AGG_VALUE]).toBe(15)
   })
 
   it("keeps render rows bounded regardless of event volume (retain)", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <RealtimeLineChart
@@ -50,13 +51,13 @@ describe("RealtimeLineChart — aggregate mode", () => {
     act(() => {
       const points = []
       for (let t = 0; t < 1000; t += 10) points.push({ t, v: t })
-      ref.current.pushMany(points)
+      ref.current!.pushMany(points)
     })
-    expect(ref.current.getData()).toHaveLength(3)
+    expect(ref.current!.getData()).toHaveLength(3)
   })
 
   it("does not bound windows by windowSize — retain is the sole control", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <RealtimeLineChart
@@ -71,13 +72,13 @@ describe("RealtimeLineChart — aggregate mode", () => {
     act(() => {
       const points = []
       for (let t = 0; t < 100; t += 10) points.push({ t, v: t }) // 10 windows
-      ref.current.pushMany(points)
+      ref.current!.pushMany(points)
     })
-    expect(ref.current.getData().length).toBe(10)
+    expect(ref.current!.getData().length).toBe(10)
   })
 
   it("emits band bounds when a band is requested", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <RealtimeLineChart
@@ -89,15 +90,15 @@ describe("RealtimeLineChart — aggregate mode", () => {
       </TooltipProvider>
     )
     act(() => {
-      ref.current.pushMany([{ t: 1, v: 5 }, { t: 2, v: 25 }])
+      ref.current!.pushMany([{ t: 1, v: 5 }, { t: 2, v: 25 }])
     })
-    const row = ref.current.getData()[0]
+    const row = ref.current!.getData()[0]
     expect(row.__aggLower).toBe(5)
     expect(row.__aggUpper).toBe(25)
   })
 
   it("clear resets the aggregated rows", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <RealtimeLineChart
@@ -108,14 +109,14 @@ describe("RealtimeLineChart — aggregate mode", () => {
         />
       </TooltipProvider>
     )
-    act(() => { ref.current.push({ t: 1, v: 10 }) })
-    expect(ref.current.getData().length).toBe(1)
-    act(() => { ref.current.clear() })
-    expect(ref.current.getData().length).toBe(0)
+    act(() => { ref.current!.push({ t: 1, v: 10 }) })
+    expect(ref.current!.getData().length).toBe(1)
+    act(() => { ref.current!.clear() })
+    expect(ref.current!.getData().length).toBe(0)
   })
 
   it("seeds the accumulator from an initial data array", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<RealtimeFrameHandle>()
     render(
       <TooltipProvider>
         <RealtimeLineChart
@@ -127,17 +128,30 @@ describe("RealtimeLineChart — aggregate mode", () => {
         />
       </TooltipProvider>
     )
-    const rows = ref.current.getData()
+    const rows = ref.current!.getData()
     expect(rows).toHaveLength(1)
     expect(rows[0][AGG_VALUE]).toBe(20)
   })
 
-  it("renders a canvas frame in aggregate mode", () => {
+  it("renders aggregated rows into the canvas scene", async () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
     const { container } = render(
       <TooltipProvider>
-        <RealtimeLineChart timeAccessor="t" valueAccessor="v" aggregate={{ size: 10 }} />
+        <RealtimeLineChart
+          ref={ref}
+          timeAccessor="t"
+          valueAccessor="v"
+          aggregate={{ size: 10 }}
+        />
       </TooltipProvider>
     )
-    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    act(() => {
+      ref.current!.pushMany([{ t: 1, v: 10 }, { t: 12, v: 20 }])
+    })
+    await waitFor(() => {
+      const label = container.querySelector("canvas[aria-label]")?.getAttribute("aria-label") ?? ""
+      expect(label).toContain("line chart")
+      expect(label).toContain("1 lines")
+    })
   })
 })

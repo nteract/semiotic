@@ -12,15 +12,15 @@ Simple charts in 5 lines. Network graphs, streaming data, and coordinated
 dashboards when you need them. Structured schemas and an MCP server so
 AI coding assistants generate correct chart code on the first try.
 
-## What's New in 3.7.4
+## What's New in 3.7.5
 
-3.7.4 is a network-chart and maintenance patch release:
+3.7.5 is a chart-correctness and responsive-layout patch release:
 
-- `semiotic/recipes` adds lineage DAG helpers for laying out data-flow and KStreams-style network
-  diagrams.
-- Network custom layouts now preserve selection metadata through streaming layout and render paths.
-- Docs add the KStreams DAG recipe and expand custom network chart guidance, alongside
-  dependency updates for Prettier, TypeScript ESLint, Rollup, and Sharp.
+- ForceDirectedGraph string `edgeWidth` accessors now read the underlying edge data, and server
+  rendering handles `edgeWidth`, `edgeColor`, and `edgeOpacity` for SSR parity.
+- Crowded ordinal category axes now thin tick labels to avoid overlapping temporal-histogram bins.
+- XY custom-layout overlays now re-run on responsive size changes, keeping SVG chrome aligned with
+  canvas scene nodes after first measurement.
 
 ```jsx
 import { LineChart } from "semiotic/xy"
