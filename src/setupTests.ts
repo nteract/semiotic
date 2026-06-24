@@ -20,6 +20,7 @@ const canvasMethods = [
   "setTransform",
   "translate",
   "scale",
+  "rotate",
   "clearRect",
   "fillRect",
   "strokeRect",
