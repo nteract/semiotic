@@ -12,6 +12,10 @@ Simple charts in 5 lines. Network graphs, streaming data, and coordinated
 dashboards when you need them. Structured schemas and an MCP server so
 AI coding assistants generate correct chart code on the first try.
 
+<!-- semiotic-readme-dashboard:start -->
+<img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
+<!-- semiotic-readme-dashboard:end -->
+
 ## What's New in 3.7.5
 
 3.7.5 is a chart-correctness and responsive-layout patch release:
