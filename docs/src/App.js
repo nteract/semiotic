@@ -104,7 +104,10 @@ import CliMcpPage from "./pages/features/CliMcpPage"
 import StreamingSystemModelPage from "./pages/features/StreamingSystemModelPage"
 import PerformancePage from "./pages/features/PerformancePage"
 import PushApiPage from "./pages/features/PushApiPage"
-import CustomChartsPage from "./pages/features/CustomChartsPage"
+import CustomChartsOverviewPage from "./pages/custom-charts/CustomChartsOverviewPage"
+import CustomLayoutsPage from "./pages/custom-charts/CustomLayoutsPage"
+import GlyphMarksPage from "./pages/custom-charts/GlyphMarksPage"
+import RecipeKitPage from "./pages/custom-charts/RecipeKitPage"
 import GoFishLayoutsPage from "./pages/features/GoFishLayoutsPage"
 import CapabilitiesPage from "./pages/features/CapabilitiesPage"
 import InterrogationPage from "./pages/features/InterrogationPage"
@@ -142,6 +145,7 @@ import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
 import KstreamsPage from "./pages/recipes/KstreamsPage"
 import BenchmarkDashboardPage from "./pages/recipes/BenchmarkDashboardPage"
 import RoslingBubbleChartPage from "./pages/recipes/RoslingBubbleChartPage"
+import SatellitesInSpacePage from "./pages/recipes/SatellitesInSpacePage"
 import StreamingMigrationMapPage from "./pages/recipes/StreamingMigrationMapPage"
 import BlogIndexPage from "./blog/BlogIndexPage"
 import { useDocsTheme } from "./hooks/useDocsTheme"
@@ -370,6 +374,7 @@ export default function DocsApp() {
               <Route path="benchmark-dashboard" element={<BenchmarkDashboardPage />} />
               <Route path="streaming-migration-map" element={<StreamingMigrationMapPage />} />
               <Route path="rosling-bubble-chart" element={<RoslingBubbleChartPage />} />
+              <Route path="satellites-in-space" element={<SatellitesInSpacePage />} />
               {/* `minards-map` and `process-vs-classic-sankey` graduated to /blog/. */}
               <Route path="minards-map" element={<Navigate to="/blog/minards-march" replace />} />
               <Route
@@ -444,8 +449,18 @@ export default function DocsApp() {
               <Route path="streaming-system-model" element={<StreamingSystemModelPage />} />
               <Route path="performance" element={<PerformancePage />} />
               <Route path="push-api" element={<PushApiPage />} />
-              <Route path="custom-charts" element={<CustomChartsPage />} />
               <Route path="gofish-layouts" element={<Navigate to="/interoperability/gofish" replace />} />
+              <Route path="custom-charts" element={<Navigate to="/custom-charts/overview" replace />} />
+            </Route>
+
+            {/* Custom Charts — first-class section (the escape-hatch HOCs + recipe
+                kit). Moved out of Features; old /features/custom-charts redirects above. */}
+            <Route path="custom-charts" element={<Outlet />}>
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<CustomChartsOverviewPage />} />
+              <Route path="custom-layouts" element={<CustomLayoutsPage />} />
+              <Route path="glyph-marks" element={<GlyphMarksPage />} />
+              <Route path="recipe-kit" element={<RecipeKitPage />} />
             </Route>
 
             {/* Accessibility — first-class category (before Intelligence).

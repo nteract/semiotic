@@ -1,7 +1,8 @@
 import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
-import type { PointSceneNode, RectSceneNode } from "./types"
+import type { PointSceneNode, RectSceneNode, SymbolSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
+import { symbolRadius } from "./symbolPath"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 
 export interface OrdinalHitResult {
@@ -57,6 +58,9 @@ export function findNearestOrdinalNode(
         if (pointQuadtree) break
         result = hitTestPoint(node, px, py, maxDistance)
         break
+      case "symbol":
+        result = hitTestSymbol(node, px, py, maxDistance)
+        break
       case "wedge":
         if (node.datum === null) break
         result = hitTestWedge(node, px, py)
@@ -105,6 +109,18 @@ function hitTestPoint(node: PointSceneNode, px: number, py: number, maxDistance:
       y: node.y,
       distance: dist
     }
+  }
+  return null
+}
+
+/** Glyph hit-test as a circle of the symbol's effective radius. */
+function hitTestSymbol(node: SymbolSceneNode, px: number, py: number, maxDistance: number = 30): OrdinalHitResult | null {
+  const dx = px - node.x
+  const dy = py - node.y
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  const hitR = getHitRadius(symbolRadius(node.size), maxDistance)
+  if (dist <= hitR) {
+    return { datum: node.datum, x: node.x, y: node.y, distance: dist }
   }
   return null
 }

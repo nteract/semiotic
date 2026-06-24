@@ -1,7 +1,8 @@
 import * as React from "react"
 import type { ReactNode } from "react"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
-import type { NetworkSceneNode, RealtimeNode, RealtimeEdge } from "../stream/networkTypes"
+import type { NetworkSceneNode, RealtimeNode } from "../stream/networkTypes"
+import { readField } from "./recipeUtils"
 
 /**
  * Layered flowchart layout for the Mermaid adapter (and any pre-layered DAG).
@@ -59,13 +60,6 @@ type NodeShape =
   | "hexagon"
   | "flag"
 
-function read(d: RealtimeNode | RealtimeEdge, key: string, fallback: unknown): unknown {
-  const wrapped = (d as { data?: Record<string, unknown> }).data
-  const fromData = wrapped ? wrapped[key] : undefined
-  if (fromData != null) return fromData
-  const own = (d as unknown as Record<string, unknown>)[key]
-  return own == null ? fallback : own
-}
 
 function truncate(label: string, maxChars: number): string {
   return label.length > maxChars ? `${label.slice(0, Math.max(1, maxChars - 1))}…` : label
@@ -168,7 +162,7 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
   const byLayer = new Map<number, RealtimeNode[]>()
   let maxLayer = 0
   for (const n of ctx.nodes) {
-    const layer = Math.round(Number(read(n, layerAcc, 0)))
+    const layer = Math.round(Number(readField(n, layerAcc, 0)))
     maxLayer = Math.max(maxLayer, layer)
     const list = byLayer.get(layer) || []
     list.push(n)
@@ -177,7 +171,7 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
   const layerCount = maxLayer + 1
   let maxInLayer = 1
   for (const list of byLayer.values()) {
-    list.sort((a, b) => Number(read(a, rowAcc, 0)) - Number(read(b, rowAcc, 0)))
+    list.sort((a, b) => Number(readField(a, rowAcc, 0)) - Number(readField(b, rowAcc, 0)))
     maxInLayer = Math.max(maxInLayer, list.length)
   }
 
@@ -210,8 +204,8 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
       const cross = crossAt(i, list.length)
       const cx = horizontal ? depth : cross
       const cy = horizontal ? cross : depth
-      const shape = String(read(node, shapeAcc, "rect")) as NodeShape
-      const label = String(read(node, labelAcc, node.id))
+      const shape = String(readField(node, shapeAcc, "rect")) as NodeShape
+      const label = String(readField(node, labelAcc, node.id))
       pos.set(node.id, { cx, cy, shape })
 
       // Transparent hit-rect for hover/selection (visuals live in the overlay).
@@ -278,7 +272,7 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
     const ny = Math.cos(ang) * aW
     const head = `${tx},${ty} ${bx + nx},${by + ny} ${bx - nx},${by - ny}`
 
-    const elabel = read(edge, edgeLabelAcc, undefined)
+    const elabel = readField(edge, edgeLabelAcc, undefined)
     const mx = (sx + tx) / 2
     const my = (sy + ty) / 2
 

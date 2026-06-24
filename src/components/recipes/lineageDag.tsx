@@ -7,10 +7,9 @@ import type {
   NetworkCircleNode,
   NetworkSceneEdge,
   NetworkCurvedEdge,
-  RealtimeNode,
-  RealtimeEdge,
 } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
+import { readField } from "./recipeUtils"
 
 /**
  * Level of detail for a node glyph.
@@ -124,15 +123,6 @@ const DEFAULT_EDGE_COLORS: Record<string, string> = {
   back: "var(--semiotic-danger, #e0556b)",
 }
 
-/** Read a field off the network-ingest wrapper (`node.data.<k>`) or the node itself. */
-function read(d: RealtimeNode | RealtimeEdge, key: string, fallback: unknown): unknown {
-  const wrapped = (d as { data?: Record<string, unknown> }).data
-  const fromData = wrapped ? wrapped[key] : undefined
-  if (fromData != null) return fromData
-  const own = (d as unknown as Record<string, unknown>)[key]
-  return own == null ? fallback : own
-}
-
 function normalizeStores(raw: unknown): LineageStoreSlot[] {
   if (!Array.isArray(raw)) return []
   return raw.map((s, i) =>
@@ -208,7 +198,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     let maxLayer = 0
     const rowsByLayer = new Map<number, number>()
     for (const n of ctx.nodes) {
-      const lx = Math.round(Number(read(n, layerAcc, 0)))
+      const lx = Math.round(Number(readField(n, layerAcc, 0)))
       maxLayer = Math.max(maxLayer, lx)
       rowsByLayer.set(lx, (rowsByLayer.get(lx) ?? 0) + 1)
     }
@@ -268,12 +258,12 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
 
   for (const node of ctx.nodes) {
     const id = node.id
-    const layer = Number(read(node, layerAcc, 0))
-    const row = Number(read(node, rowAcc, 0))
-    const partition = String(read(node, partAcc, "processor"))
-    const semantic = String(read(node, semAcc, "processor"))
-    const label = String(read(node, labelAcc, id))
-    const stores = normalizeStores(read(node, storesAcc, []))
+    const layer = Number(readField(node, layerAcc, 0))
+    const row = Number(readField(node, rowAcc, 0))
+    const partition = String(readField(node, partAcc, "processor"))
+    const semantic = String(readField(node, semAcc, "processor"))
+    const label = String(readField(node, labelAcc, id))
+    const stores = normalizeStores(readField(node, storesAcc, []))
     const rawDatum = (node.data ?? node) as Datum
 
     const cx = xPx(layer)
@@ -345,8 +335,8 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     const t = positions.get(tId)
     if (!s || !t) continue
 
-    const isBack = Boolean(read(edge, backAcc, false))
-    const edgeType = String(read(edge, edgeTypeAcc, "internal"))
+    const isBack = Boolean(readField(edge, backAcc, false))
+    const edgeType = String(readField(edge, edgeTypeAcc, "internal"))
     const dimmed = dimById.get(sId) || dimById.get(tId)
     const opacity = dimmed ? Math.min(edgeOpacity, dimOpacity * 1.4) : edgeOpacity
     const stroke = isBack ? edgeColors.back : edgeColors[edgeType] ?? edgeColors.internal

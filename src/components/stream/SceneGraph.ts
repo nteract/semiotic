@@ -3,13 +3,15 @@ import type {
   LineSceneNode,
   AreaSceneNode,
   PointSceneNode,
+  SymbolSceneNode,
   RectSceneNode,
   HeatcellSceneNode,
   Style,
   StreamScales,
-  
+
   CurveType
 } from "./types"
+import type { SymbolName } from "./symbolPath"
 import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Scene node builders ────────────────────────────────────────────────
@@ -283,6 +285,34 @@ export function buildPointNode(
     x: scales.x(xVal),
     y: scales.y(yVal),
     r,
+    style,
+    datum
+  }
+  if (pointId !== undefined) node.pointId = pointId
+  return node
+}
+
+/** Build a {@link SymbolSceneNode} — the glyph sibling of {@link buildPointNode}.
+ *  `size` is the d3-symbol area (px²); convert from a target radius with πr². */
+export function buildSymbolNode(
+  datum: Datum,
+  scales: StreamScales,
+  xGet: (d: Datum) => number,
+  yGet: (d: Datum) => number,
+  size: number,
+  symbolType: SymbolName,
+  style: Style,
+  pointId?: string
+): SymbolSceneNode | null {
+  const xVal = xGet(datum)
+  const yVal = yGet(datum)
+  if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) return null
+  const node: SymbolSceneNode = {
+    type: "symbol",
+    x: scales.x(xVal),
+    y: scales.y(yVal),
+    size,
+    symbolType,
     style,
     datum
   }

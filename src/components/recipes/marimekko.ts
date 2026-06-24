@@ -3,6 +3,7 @@ import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
 import { resolveAccessor, createSafeDatum } from "./recipeUtils"
+import { bandLabel } from "./recipeChrome"
 
 export interface MarimekkoConfig {
   /** Field (or function) yielding the category for each datum. Categories become x-axis bars. */
@@ -186,21 +187,21 @@ function renderCategoryLabels(
   yTop: number,
   fill: string
 ): import("react").ReactElement {
-  const elements = slots.map((slot, i) => {
-    // Approximate label width (≈ 6.5px per character at 12px font). If
-    // the bar is narrower than the label, skip it — better to hide than
-    // overlap neighbors.
-    const approxW = slot.cat.length * 6.5
-    if (approxW > slot.w - 4) return null
-    return React.createElement("text", {
-      key: `marimekko-label-${i}`,
+  // `bandLabel` owns the centered placement + overflow suppression (it hides a
+  // label wider than its slot, the dedup pattern this used to hand-roll).
+  const elements = slots.map((slot, i) =>
+    bandLabel({
+      keyId: `marimekko-label-${i}`,
+      text: slot.cat,
       x: slot.x + slot.w / 2,
       y: yTop + 12,
-      textAnchor: "middle",
+      anchor: "middle",
+      baseline: "auto",
+      maxWidth: slot.w - 4,
       fontSize: 12,
-      fill,
-    }, slot.cat)
-  })
+      color: fill,
+    })
+  )
   return React.createElement(React.Fragment, null, ...elements)
 }
 

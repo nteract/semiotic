@@ -199,6 +199,51 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.customLayoutOverlays).toBeNull()
   })
 
+  it("captures htmlMarks returned by customLayout", () => {
+    const content = { _sentinel: true } as unknown as React.ReactNode
+    const layout = (ctx: NetworkLayoutContext) => ({
+      sceneNodes: ctx.nodes.map<NetworkCircleNode>((n) => ({
+        type: "circle", cx: 0, cy: 0, r: 4, style: {}, datum: n, id: n.id,
+      })),
+      htmlMarks: ctx.nodes.map((n, i) => ({
+        id: n.id, x: i * 10, y: i * 20, width: 40, height: 24, content,
+      })),
+    })
+    const store = new NetworkPipelineStore(baseConfig({ customNetworkLayout: layout }))
+    store.ingestBounded([{ id: "a" }, { id: "b" }], [], [100, 100])
+    store.buildScene([100, 100])
+
+    expect(store.customLayoutHtmlMarks).toHaveLength(2)
+    expect(store.customLayoutHtmlMarks[0]).toMatchObject({ id: "a", x: 0, y: 0, width: 40, height: 24 })
+    expect(store.customLayoutHtmlMarks[1]).toMatchObject({ id: "b", x: 10, y: 20 })
+    expect(store.customLayoutHtmlMarks[0].content).toBe(content)
+  })
+
+  it("defaults htmlMarks to an empty array when the layout omits them", () => {
+    const layout = () => ({ sceneNodes: [], sceneEdges: [] })
+    const store = new NetworkPipelineStore(baseConfig({ customNetworkLayout: layout }))
+    store.ingestBounded([{ id: "a" }], [], [100, 100])
+    store.buildScene([100, 100])
+
+    expect(store.customLayoutHtmlMarks).toEqual([])
+  })
+
+  it("clears htmlMarks when customLayout is removed", () => {
+    const layout = () => ({
+      sceneNodes: [],
+      htmlMarks: [{ id: "a", x: 0, y: 0, width: 10, height: 10, content: null }],
+    })
+    const store = new NetworkPipelineStore(baseConfig({ customNetworkLayout: layout }))
+    store.ingestBounded([{ id: "a" }], [], [100, 100])
+    store.buildScene([100, 100])
+    expect(store.customLayoutHtmlMarks).toHaveLength(1)
+
+    // Reconfigure to a built-in chart type without customLayout
+    store.updateConfig({ ...baseConfig(), customNetworkLayout: undefined })
+    store.buildScene([100, 100])
+    expect(store.customLayoutHtmlMarks).toEqual([])
+  })
+
   it("renders empty scene when layout throws", () => {
     const layout = () => { throw new Error("boom") }
     const store = new NetworkPipelineStore(baseConfig({
@@ -210,6 +255,7 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.sceneNodes).toEqual([])
     expect(store.sceneEdges).toEqual([])
     expect(store.labels).toEqual([])
+    expect(store.customLayoutHtmlMarks).toEqual([])
   })
 
   it("wraps raw nodes in RealtimeNode with user data on `node.data`", () => {

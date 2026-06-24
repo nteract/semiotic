@@ -6,6 +6,7 @@ import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
+import type { SymbolName } from "../../stream/symbolPath"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
@@ -48,6 +49,14 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   sizeBy?: ChartAccessor<TDatum, number>
   /** Min and max radius for points @default [3, 15] */
   sizeRange?: [number, number]
+  /** Field name or function → glyph **shape**: each mark renders as a d3-shape
+   *  glyph instead of a circle (the per-datum shape channel). Pair with a
+   *  `symbolMap` for stable, legend-matchable shapes; unmapped categories
+   *  auto-assign. Size still tracks `sizeBy`/`pointRadius`. */
+  symbolBy?: ChartAccessor<TDatum, string>
+  /** Explicit `{category → shape}` map for `symbolBy` (e.g. `{ Civil: "star" }`);
+   *  unmapped categories auto-assign from the shape sequence. */
+  symbolMap?: Record<string, SymbolName>
   /** Default point radius when sizeBy is not specified @default 5 */
   pointRadius?: number
   /** Point opacity @default 0.8 */
@@ -182,6 +191,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     colorScheme,
     sizeBy,
     sizeRange = [3, 15],
+    symbolBy,
+    symbolMap,
     pointRadius = 5,
     pointOpacity = 0.8,
     tooltip,
@@ -434,6 +445,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     yScaleType,
     colorAccessor: colorBy || undefined,
     sizeAccessor: sizeBy || undefined,
+    ...(symbolBy && { symbolAccessor: symbolBy }),
+    ...(symbolMap && { symbolMap }),
     sizeRange,
     pointStyle,
     colorScheme,

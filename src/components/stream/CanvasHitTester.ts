@@ -1,7 +1,8 @@
-import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode } from "./types"
+import type { SceneNode, PointSceneNode, SymbolSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode } from "./types"
 import type { RingBuffer } from "../realtime/RingBuffer"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"
+import { symbolRadius } from "./symbolPath"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
@@ -91,6 +92,9 @@ export function findNearestNode(
         // Quadtree visit was authoritative — skip redundant linear scan.
         if (pointQuadtree) break
         result = hitTestPoint(node, px, py, maxDistance)
+        break
+      case "symbol":
+        result = hitTestSymbol(node, px, py, maxDistance)
         break
       case "line":
         result = hitTestLine(node, px, py, maxDistance)
@@ -218,6 +222,17 @@ function hitTestPoint(node: PointSceneNode, px: number, py: number, maxDistance:
   const dy = py - node.y
   const dist = Math.sqrt(dx * dx + dy * dy)
   const hitR = getHitRadius(node.r, maxDistance)
+  if (dist > hitR) return null
+  return { node, datum: node.datum, x: node.x, y: node.y, distance: dist }
+}
+
+/** Treat a glyph as a circle of its effective radius — the nearest mark within
+ *  tolerance wins, the natural read for a dense beeswarm. */
+function hitTestSymbol(node: SymbolSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {
+  const dx = px - node.x
+  const dy = py - node.y
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  const hitR = getHitRadius(symbolRadius(node.size), maxDistance)
   if (dist > hitR) return null
   return { node, datum: node.datum, x: node.x, y: node.y, distance: dist }
 }

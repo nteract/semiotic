@@ -5,8 +5,19 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-06-21T00:00:00Z</updated>
+  <updated>2026-06-23T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Multimodal response: chart as output channel</title>
+    <id>https://semiotic3.nteract.io/blog/multimodal-response</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/multimodal-response"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/multimodal-response.png"/>
+    <published>2026-06-23T00:00:00Z</published>
+    <updated>2026-06-23T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <summary type="text">Modern LLM assistants treat text as the only output channel. When the question is about a chart, charts give us a parallel surface — callouts, threshold lines, bands, selections — that&apos;s both more honest and easier to read. Drafted exploration of what multimodal response means in practice.</summary>
+  </entry>
   <entry>
     <title>Annotations That Make Room and Make Sense</title>
     <id>https://semiotic3.nteract.io/blog/annotations-that-make-room-and-make-sense</id>

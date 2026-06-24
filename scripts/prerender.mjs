@@ -59,6 +59,11 @@ const ROUTE_META = {
     description:
       "Temporary PR preview for rendering GoFish Frontend IR through Semiotic custom layouts; not a Semiotic release API contract.",
   },
+  "custom-charts": {
+    title: "Custom Charts — Semiotic",
+    description:
+      "Build bespoke chart geometry on Semiotic's escape-hatch HOCs: the custom-layout API, per-datum glyph marks, and the recipe chrome kit — recipes inherit hit-testing, accessibility, theming, and SSR from the frame.",
+  },
   annotations: {
     title: "Annotations — Semiotic",
     description:

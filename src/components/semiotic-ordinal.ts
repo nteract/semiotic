@@ -25,6 +25,8 @@ export { RidgelinePlot } from "./charts/ordinal/RidgelinePlot"
 export { FunnelChart } from "./charts/ordinal/FunnelChart"
 export { LikertChart } from "./charts/ordinal/LikertChart"
 export { OrdinalCustomChart } from "./charts/custom/OrdinalCustomChart"
+export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
+export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 
 // Utilities
 export { createHatchPattern } from "./charts/shared/hatchPattern"

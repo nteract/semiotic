@@ -18,7 +18,7 @@ import type {
   RealtimeEdge,
   RealtimeNode,
 } from "../stream/networkTypes"
-import { createSafeDatum, resolveAccessor } from "./recipeUtils"
+import { createSafeDatum, resolveAccessor, groupBy } from "./recipeUtils"
 import { getMax, getMinMax } from "../charts/shared/minMax"
 
 export type GofishGlyphMark =
@@ -1443,16 +1443,6 @@ export function packCirclesInRect<T>(
       r: Math.max(1, Math.min(cellW, gap * 2) * 0.42),
     }
   })
-}
-
-function groupBy<T>(rows: T[], key: (row: T) => string): Map<string, T[]> {
-  const out = new Map<string, T[]>()
-  for (const row of rows) {
-    const k = key(row)
-    if (!out.has(k)) out.set(k, [])
-    out.get(k)!.push(row)
-  }
-  return out
 }
 
 function sum<T>(rows: T[], value: (row: T) => number): number {

@@ -22,6 +22,8 @@ export { QuadrantChart } from "./charts/xy/QuadrantChart"
 export { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
 export { CandlestickChart } from "./charts/xy/CandlestickChart"
 export { XYCustomChart } from "./charts/custom/XYCustomChart"
+export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
+export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 
 // Stream Frame types
 export type {

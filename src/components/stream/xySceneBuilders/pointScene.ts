@@ -8,12 +8,13 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * Dependencies: SceneGraph (buildPointNode)
  * Consumed by: PipelineStore.buildSceneNodes (chartTypes "scatter", "bubble")
  */
-import type { PointSceneNode } from "../types"
-import { buildPointNode } from "../SceneGraph"
+import type { PointSceneNode, SymbolSceneNode } from "../types"
+import { buildPointNode, buildSymbolNode } from "../SceneGraph"
+import { SYMBOL_SEQUENCE, type SymbolName } from "../symbolPath"
 import type { XYSceneContext } from "./types"
 
-export function buildPointScene(ctx: XYSceneContext, data: Datum[]): PointSceneNode[] {
-  const nodes: PointSceneNode[] = []
+export function buildPointScene(ctx: XYSceneContext, data: Datum[]): (PointSceneNode | SymbolSceneNode)[] {
+  const nodes: (PointSceneNode | SymbolSceneNode)[] = []
   const defaultR = ctx.config.chartType === "bubble" ? 10 : 5
   const sizeRange = ctx.config.sizeRange || [3, 15]
 
@@ -44,6 +45,25 @@ export function buildPointScene(ctx: XYSceneContext, data: Datum[]): PointSceneN
   // per scene build so it isn't rebuilt for every datum.
   const themedDefaultFill = ctx.config.themeSemantic?.primary || "#4e79a7"
 
+  // Symbol (shape) channel: when a symbol accessor is set each mark renders as a
+  // glyph instead of a circle. Explicit `symbolMap` wins; unmapped categories
+  // auto-assign from SYMBOL_SEQUENCE in first-seen (deterministic) order.
+  const getSymbol = ctx.getSymbol
+  const symbolMapCfg = ctx.config.symbolMap
+  const symbolAssign = new Map<string, SymbolName>()
+  let symSeq = 0
+  const shapeFor = (cat: string): SymbolName => {
+    const explicit = symbolMapCfg?.[cat]
+    if (explicit) return explicit
+    let s = symbolAssign.get(cat)
+    if (!s) {
+      s = SYMBOL_SEQUENCE[symSeq % SYMBOL_SEQUENCE.length]
+      symSeq++
+      symbolAssign.set(cat, s)
+    }
+    return s
+  }
+
   for (const d of data) {
     let style = ctx.config.pointStyle ? ctx.config.pointStyle(d) : { fill: themedDefaultFill, opacity: 0.8 }
 
@@ -63,8 +83,16 @@ export function buildPointScene(ctx: XYSceneContext, data: Datum[]): PointSceneN
     }
 
     const pointId = ctx.getPointId ? String(ctx.getPointId(d)) : undefined
-    const node = buildPointNode(d, ctx.scales, ctx.getX, ctx.getY, r, style, pointId)
-    if (node) nodes.push(node)
+    if (getSymbol) {
+      // Encode the computed radius as d3-symbol area (πr²) so glyph size still
+      // tracks `sizeBy`/`pointRadius`.
+      const shape = shapeFor(String(getSymbol(d)))
+      const node = buildSymbolNode(d, ctx.scales, ctx.getX, ctx.getY, Math.PI * r * r, shape, style, pointId)
+      if (node) nodes.push(node)
+    } else {
+      const node = buildPointNode(d, ctx.scales, ctx.getX, ctx.getY, r, style, pointId)
+      if (node) nodes.push(node)
+    }
   }
 
   return nodes

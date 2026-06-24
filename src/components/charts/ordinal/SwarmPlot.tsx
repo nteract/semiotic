@@ -6,6 +6,7 @@ import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
+import type { SymbolName } from "../../stream/symbolPath"
 import { getSize } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
@@ -34,6 +35,12 @@ export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartP
   colorScheme?: string | string[]
   sizeBy?: ChartAccessor<TDatum, number>
   sizeRange?: [number, number]
+  /** Field name or function → glyph **shape**: each point renders as a d3-shape
+   *  glyph instead of a circle. Pair with `symbolMap` for stable, legend-matchable
+   *  shapes; unmapped categories auto-assign. Size still tracks `sizeBy`/`pointRadius`. */
+  symbolBy?: ChartAccessor<TDatum, string>
+  /** Explicit `{category → shape}` map for `symbolBy`; unmapped auto-assign. */
+  symbolMap?: Record<string, SymbolName>
   pointRadius?: number
   pointOpacity?: number
   categoryPadding?: number
@@ -119,7 +126,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "vertical", valueFormat,
     colorBy, colorScheme,
-    sizeBy, sizeRange = [3, 8], pointRadius = 4, pointOpacity = 0.7,
+    sizeBy, sizeRange = [3, 8], symbolBy, symbolMap, pointRadius = 4, pointOpacity = 0.7,
     categoryPadding = 20, tooltip, annotations, valueExtent,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
     frameProps = {}, selection, linkedHover,
@@ -221,6 +228,8 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
     ...(data != null && { data: safeData }),
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
+    ...(symbolBy && { symbolAccessor: symbolBy }),
+    ...(symbolMap && { symbolMap }),
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     pieceStyle,
     size: [width, height],

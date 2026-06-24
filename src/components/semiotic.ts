@@ -258,6 +258,11 @@ export {
   useFilteredData
 } from "./LinkedCharts"
 
+// Read the resolved selection inside a custom layout's overlays (restyle
+// without a relayout). Pairs with the layout result's `restyle` callback.
+export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
+export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
+
 export type {
   UseSelectionOptions,
   UseSelectionResult,

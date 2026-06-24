@@ -17,6 +17,7 @@ import type {
 import type { Datum } from "../charts/shared/datumTypes"
 import type { CoercibleNumber } from "./accessorUtils"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import type { SymbolName } from "./symbolPath"
 
 export type SceneDatum = Datum | null
 export type SeriesDatum = Datum[] | null
@@ -177,6 +178,7 @@ export type SceneNode =
   | LineSceneNode
   | AreaSceneNode
   | PointSceneNode
+  | SymbolSceneNode
   | RectSceneNode
   | HeatcellSceneNode
   | CandlestickSceneNode
@@ -281,6 +283,47 @@ export interface PointSceneNode {
   _targetOpacity?: number
   _decayOpacity?: number
   /** Stable identity key for transition tracking */
+  _transitionKey?: string
+}
+
+/**
+ * Symbol node — the per-datum **shape channel**, shared with the network and
+ * ordinal pipelines. A glyph drawn from a `d3-shape` symbol path (or a custom
+ * `path`), painted on canvas and in SVG/SSR via the shared `symbolPath` helpers,
+ * and hit-tested + keyboard-navigated as a unit. Emitted by custom XY layouts
+ * and by Scatterplot's `symbolBy` encoding. Uses `x`/`y` like its sibling
+ * `PointSceneNode` (the network variant uses `cx`/`cy`).
+ */
+export interface SymbolSceneNode {
+  type: "symbol"
+  x: number
+  y: number
+  /** d3-symbol area in px² — drives the glyph's drawn size. */
+  size: number
+  /** Named shape. Ignored when `path` is set. @default "circle" */
+  symbolType?: SymbolName
+  /** Pre-built SVG path string, origin-centered — overrides `symbolType`. */
+  path?: string
+  /** Rotation in radians about (x, y). */
+  rotation?: number
+  style: Style
+  datum: SceneDatum
+  /** Optional unique identifier for point-anchored annotations. */
+  pointId?: string
+  /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active). */
+  _pulseIntensity?: number
+  /** Pulse glow color. */
+  _pulseColor?: string
+  /** Pulse glow radius in px. */
+  _pulseGlowRadius?: number
+  /** Animation target fields (set during transitions). */
+  _targetX?: number
+  _targetY?: number
+  _targetR?: number
+  _targetOpacity?: number
+  /** Per-datum decay opacity (set by PipelineStore.applyDecay). */
+  _decayOpacity?: number
+  /** Stable identity key for transition tracking. */
   _transitionKey?: string
 }
 
@@ -560,6 +603,10 @@ export interface StreamXYFrameProps<T = Datum> {
   yAccessor?: string | ((d: T) => CoercibleNumber)
   colorAccessor?: string | ((d: T) => string)
   sizeAccessor?: string | ((d: T) => CoercibleNumber)
+  /** Categorical accessor → glyph shape (scatter/bubble). */
+  symbolAccessor?: string | ((d: T) => string)
+  /** Explicit `{category → shape}` map for `symbolAccessor`; unmapped auto-assign. */
+  symbolMap?: Record<string, SymbolName>
   groupAccessor?: string | ((d: T) => string)
 
   // ── Line/area specifics ──────────────────────────
@@ -838,6 +885,10 @@ export interface StreamXYFrameProps<T = Datum> {
    *  signature) flow through without casts; layouts narrow via their
    *  own `CustomLayout<TConfig>` parameterization. */
   layoutConfig?: object
+  /** Resolved shared selection projected into `LayoutContext.selection`. Kept off
+   *  the rebuild path — a change restyles (if the layout returned `restyle`) or
+   *  rebuilds, never re-ingests. */
+  layoutSelection?: import("./customLayoutSelection").CustomLayoutSelection | null
 }
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────

@@ -4,6 +4,8 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { ConnectorSceneNode, OrdinalSceneNode } from "../stream/ordinalTypes"
 import type { PointSceneNode } from "../stream/types"
 import { scaleLinear } from "d3-scale"
+import { dimFor } from "./recipeUtils"
+import { bandLabel } from "./recipeChrome"
 
 export interface ParallelCoordinatesConfig {
   /**
@@ -171,9 +173,14 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
   for (const d of ctx.data) {
     const stroke = getColor ? ctx.resolveColor(String(getColor(d))) : defaultStroke
     const isHighlighted = highlightFn ? highlightFn(d) : true
-    const rowOpacity = highlightFn
-      ? (isHighlighted ? Math.min(1, opacity + 0.4) : dimmedOpacity)
-      : opacity
+    // Matching rows keep their base opacity lifted by 0.4; the rest fall to
+    // `dimmedOpacity`. With no `highlightFn` the base opacity applies uniformly.
+    const rowOpacity = dimFor(d, {
+      predicate: highlightFn,
+      baseOpacity: opacity,
+      dimOpacity: dimmedOpacity,
+      brighten: 0.4,
+    })
     const target = isHighlighted ? highlightNodes : dimmedNodes
 
     // For each consecutive pair of fields, emit one connector segment.
@@ -250,15 +257,17 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
 
       // Field name above the axis.
       elements.push(
-        React.createElement("text", {
-          key: `pc-axis-label-${i}`,
+        bandLabel({
+          keyId: `pc-axis-label-${i}`,
+          text: f,
           x,
           y: plot.y + topPadding - 8,
-          textAnchor: "middle",
+          anchor: "middle",
+          baseline: "auto",
           fontSize: 12,
           fontWeight: 600,
-          fill: labelColor,
-        }, f)
+          color: labelColor,
+        })
       )
 
       // 5 ticks per axis spanning the field's domain.
@@ -275,13 +284,16 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
             stroke: axisColor,
             strokeWidth: 1,
           }),
-          React.createElement("text", {
-            key: `pc-ticktext-${i}-${t}`,
+          bandLabel({
+            keyId: `pc-ticktext-${i}-${t}`,
+            text: fmt(v),
             x: x + 6,
             y: ty + 3,
+            anchor: "start",
+            baseline: "auto",
             fontSize: 10,
-            fill: subtleColor,
-          }, fmt(v))
+            color: subtleColor,
+          })
         )
       }
     }

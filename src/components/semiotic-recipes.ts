@@ -25,6 +25,9 @@ export type { LineageDagConfig, LineageLod, LineageStoreSlot } from "./recipes/l
 export { mermaidDagLayout } from "./recipes/mermaidDag"
 export type { MermaidDagConfig } from "./recipes/mermaidDag"
 
+export { packedClusterMatrix } from "./recipes/packedClusterMatrix"
+export type { PackedClusterMatrixConfig } from "./recipes/packedClusterMatrix"
+
 // ── Ordinal recipes (use with OrdinalCustomChart's customLayout) ──
 export { marimekkoLayout } from "./recipes/marimekko"
 export type { MarimekkoConfig } from "./recipes/marimekko"
@@ -62,12 +65,41 @@ export type {
   NetworkCustomLayout,
   NetworkLayoutContext,
   NetworkLayoutResult,
+  NetworkHtmlMark,
 } from "./stream/networkCustomLayout"
 export type {
   OrdinalCustomLayout,
   OrdinalLayoutContext,
   OrdinalLayoutResult,
 } from "./stream/ordinalCustomLayout"
+
+// Glyph + color helpers for multi-channel custom layouts (and matching legends).
+export { shade, makeShade, readField, groupBy } from "./recipes/recipeUtils"
+// Interaction + caching helpers shared by custom-layout recipes.
+export { dimFor, matchesHighlight, signatureKey, LayoutCache } from "./recipes/recipeUtils"
+export type { DimOptions, HighlightMatch } from "./recipes/recipeUtils"
+export { symbolPathString, symbolRadius, symbolExtent, SYMBOL_SEQUENCE } from "./stream/symbolPath"
+export type { NetworkSymbolName } from "./stream/symbolPath"
+
+// Recipe chrome kit — group enclosures, band labels, and mark callouts that
+// custom-layout recipes draw in their `overlays` layer.
+export { roundedEnclosure, boundsOf, bandLabel, markCallout } from "./recipes/recipeChrome"
+export type {
+  RoundedEnclosureProps,
+  BandLabelProps,
+  MarkCalloutProps,
+  CalloutConnector,
+} from "./recipes/recipeChrome"
+
+// Legend builder — the LegendGroup[] a custom layout passes through frameProps.legend.
+export { legendGroupsFrom } from "./recipes/recipeLegend"
+export type { LegendGroupsInput } from "./recipes/recipeLegend"
+
+// Selection channel — read the chart's resolved selection from inside a custom
+// layout's `overlays` to restyle on hover/selection WITHOUT a relayout. Pair
+// with the layout result's `restyle` callback for canvas marks.
+export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
+export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 
 export {
   buildTooltipEntries,

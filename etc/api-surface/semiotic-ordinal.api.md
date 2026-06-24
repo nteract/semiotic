@@ -22,7 +22,9 @@ function SwarmPlot
 function SwimlaneChart
 function ViolinPlot
 function createHatchPattern
+function useCustomLayoutSelection
 interface BarChartProps
+interface CustomLayoutSelection
 interface DonutChartProps
 interface FunnelChartProps
 interface GaugeChartProps

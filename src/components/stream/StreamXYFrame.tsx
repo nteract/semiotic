@@ -26,6 +26,7 @@ import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { composeOverlays } from "./composeOverlays"
+import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
 import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
@@ -49,6 +50,7 @@ import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
+import { symbolCanvasRenderer } from "./renderers/symbolCanvasRenderer"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
@@ -99,8 +101,8 @@ const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
   line: [areaCanvasRenderer, lineCanvasRenderer, pointCanvasRenderer],
   area: [areaCanvasRenderer, pointCanvasRenderer],
   stackedarea: [areaCanvasRenderer, pointCanvasRenderer],
-  scatter: [pointCanvasRenderer],
-  bubble: [pointCanvasRenderer],
+  scatter: [pointCanvasRenderer, symbolCanvasRenderer],
+  bubble: [pointCanvasRenderer, symbolCanvasRenderer],
   heatmap: [heatmapCanvasRenderer],
   bar: [barCanvasRenderer],
   swarm: [swarmCanvasRenderer],
@@ -114,6 +116,7 @@ const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
     heatmapCanvasRenderer,
     lineCanvasRenderer,
     pointCanvasRenderer,
+    symbolCanvasRenderer,
     candlestickCanvasRenderer,
   ]
 }
@@ -371,6 +374,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       yAccessor,
       colorAccessor,
       sizeAccessor,
+      symbolAccessor,
+      symbolMap,
       groupAccessor,
       lineDataAccessor,
       curve,
@@ -472,7 +477,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       linkedCrosshairName,
       linkedCrosshairSourceId,
       customLayout,
-      layoutConfig
+      layoutConfig,
+      layoutSelection,
     } = props
 
     // Stable per-instance prefix for SVG ids that must be unique on the
@@ -640,6 +646,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       valueAccessor,
       colorAccessor,
       sizeAccessor,
+      symbolAccessor,
+      symbolMap,
       groupAccessor: groupAccessor || (lineDataAccessor ? "_lineGroup" : undefined),
       categoryAccessor,
       lineDataAccessor,
@@ -700,7 +708,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
       xScaleType, yScaleType,
-      colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
+      colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder,
       boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, lineGradient, areaGroups,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
@@ -748,6 +756,26 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       dirtyRef.current = true
       scheduleRender()
     }, [stablePipelineConfig, scheduleRender])
+
+    // Custom-layout selection channel — off the rebuild path. When the layout
+    // returned a `restyle`, a selection change re-applies styles + repaints (no
+    // relayout / quadtree rebuild); otherwise it rebuilds so `ctx.selection`
+    // reaches the layout. Overlays re-render via CustomLayoutSelectionProvider.
+    const lastLayoutSelectionRef = useRef<unknown>(null)
+    useEffect(() => {
+      const store = storeRef.current
+      if (!store) return
+      const sel = layoutSelection ?? null
+      if (lastLayoutSelectionRef.current === sel) return
+      lastLayoutSelectionRef.current = sel
+      store.setLayoutSelection(sel)
+      if (store.hasCustomRestyle) {
+        store.restyleScene(sel)
+      } else {
+        dirtyRef.current = true
+      }
+      scheduleRender()
+    }, [layoutSelection, scheduleRender])
 
     // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
     // is handled by useFrame above when themeDirtyRef is provided.
@@ -1559,7 +1587,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             legendPosition={legendPosition}
             legendLayout={legendLayout}
             foregroundGraphics={
-            composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
+            composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
           }
             marginalGraphics={marginalGraphics}
             xValues={[]}
@@ -1689,7 +1717,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           legendPosition={legendPosition}
           legendLayout={legendLayout}
           foregroundGraphics={
-            composeOverlays(resolvedForeground, storeRef.current?.customLayoutOverlays)
+            composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
           }
           marginalGraphics={marginalGraphics}
           xValues={marginalXValues}

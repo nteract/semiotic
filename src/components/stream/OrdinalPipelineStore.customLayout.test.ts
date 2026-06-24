@@ -200,3 +200,56 @@ describe("OrdinalPipelineStore customLayout", () => {
     expect(new Set(domain)).toEqual(new Set(["X", "Y", "Z"]))
   })
 })
+
+describe("OrdinalPipelineStore custom-layout restyle + selection channel", () => {
+  type Sel = { isActive: boolean; predicate: (d: { category?: string }) => boolean }
+  const dimRestyle = (node: { datum: unknown }, selection: Sel | null) =>
+    selection?.isActive && !selection.predicate(node.datum as { category?: string }) ? { opacity: 0.1 } : { opacity: 1 }
+
+  function makeStore(opts: { restyle?: typeof dimRestyle; layoutSelection?: Sel } = {}) {
+    let capturedSel: unknown
+    const layout = (ctx: OrdinalLayoutContext) => {
+      capturedSel = ctx.selection
+      return {
+        nodes: ctx.data.map((d, i) => ({
+          type: "point" as const, x: i * 10, y: 0, r: 4, style: { fill: "#abc", opacity: 1 }, datum: d,
+        })),
+        ...(opts.restyle && { restyle: opts.restyle }),
+      }
+    }
+    const store = new OrdinalPipelineStore(baseConfig({
+      customLayout: layout,
+      ...(opts.layoutSelection && { layoutSelection: opts.layoutSelection as never }),
+    }))
+    store.ingest({ inserts: [{ category: "A", value: 10 }, { category: "B", value: 20 }], bounded: true })
+    store.computeScene({ width: 200, height: 100 })
+    return { store, getCapturedSel: () => capturedSel }
+  }
+
+  it("threads ctx.selection into the layout", () => {
+    const sel: Sel = { isActive: true, predicate: (d) => d.category === "A" }
+    const { getCapturedSel } = makeStore({ layoutSelection: sel })
+    expect(getCapturedSel()).toEqual(sel)
+  })
+
+  it("flags hasCustomRestyle and restyleScene mutates styles off base", () => {
+    const { store } = makeStore({ restyle: dimRestyle })
+    expect(store.hasCustomRestyle).toBe(true)
+    store.restyleScene({ isActive: true, predicate: (d: { category?: string }) => d.category === "A" })
+    const byCat = new Map(store.scene.map((n) => [(n.datum as { category: string }).category, n]))
+    expect(byCat.get("A")!.style.opacity).toBe(1)
+    expect(byCat.get("B")!.style.opacity).toBe(0.1)
+    // Re-restyle off base, not compounded.
+    store.restyleScene({ isActive: true, predicate: (d: { category?: string }) => d.category === "B" })
+    expect(byCat.get("A")!.style.opacity).toBe(0.1)
+    expect(byCat.get("B")!.style.opacity).toBe(1)
+  })
+
+  it("hasCustomRestyle is false (restyleScene a no-op) without a restyle callback", () => {
+    const { store } = makeStore()
+    expect(store.hasCustomRestyle).toBe(false)
+    const before = store.scene[0].style.opacity
+    store.restyleScene({ isActive: true, predicate: () => false })
+    expect(store.scene[0].style.opacity).toBe(before)
+  })
+})

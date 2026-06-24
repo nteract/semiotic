@@ -326,11 +326,10 @@ export const allBlogEntriesMeta = [
     subtitle:
       "Text is half the answer. The other half — callouts, thresholds, bands, selections — lives on the chart, and LLMs already know how to ask for it.",
     author: "Elijah Meeks",
-    date: "2026-05-24",
+    date: "2026-06-23",
     tags: ["case-study"],
     excerpt:
       "Modern LLM assistants treat text as the only output channel. When the question is about a chart, charts give us a parallel surface — callouts, threshold lines, bands, selections — that's both more honest and easier to read. Drafted exploration of what multimodal response means in practice.",
-    draft: true,
   },
   {
     slug: "charts-that-know-what-theyre-for",

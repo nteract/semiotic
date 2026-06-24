@@ -130,7 +130,7 @@ registerIntent({
 
       <h2 id="register">Registering a custom chart</h2>
       <p>
-        Authoring a <Link to="/features/custom-charts">custom chart</Link>?
+        Authoring a <Link to="/custom-charts/overview">custom chart</Link>?
         Register its descriptor at runtime so it joins suggestions, the matrix,
         and repair alongside the built-ins.
       </p>
@@ -161,7 +161,7 @@ lineChartCapability.intentScores.trend         // 5 (or a fn of profile)`}</Code
         ·{" "}
         <Link to="/intelligence/capabilities">Capability Matrix</Link> ·{" "}
         <Link to="/intelligence/variant-discovery">Variant Discovery &amp; Repair</Link>{" "}
-        · <Link to="/features/custom-charts">Custom Charts</Link>
+        · <Link to="/custom-charts/overview">Custom Charts</Link>
       </p>
     </PageLayout>
   )

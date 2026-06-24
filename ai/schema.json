@@ -819,6 +819,17 @@
                 15
               ]
             },
+            "symbolBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field → glyph shape; each mark renders as a d3-shape glyph (circle/square/triangle/diamond/star/cross/wye/chevron) instead of a circle."
+            },
+            "symbolMap": {
+              "type": "object",
+              "description": "Explicit {category → shape} map for symbolBy; unmapped categories auto-assign."
+            },
             "pointRadius": {
               "type": "number",
               "description": "Fixed point radius",
@@ -2838,6 +2849,17 @@
                 3,
                 8
               ]
+            },
+            "symbolBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field → glyph shape; each point renders as a d3-shape glyph instead of a circle."
+            },
+            "symbolMap": {
+              "type": "object",
+              "description": "Explicit {category → shape} map for symbolBy; unmapped categories auto-assign."
             },
             "pointRadius": {
               "type": "number",

@@ -3,6 +3,7 @@ import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
 import { resolveAccessor, createSafeDatum } from "./recipeUtils"
+import { bandLabel } from "./recipeChrome"
 
 export interface BulletConfig {
   /** Field (or function) yielding the row label per datum. Each row is one bullet. */
@@ -267,16 +268,17 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     const rowMid = info.yTop + rowH / 2
     if (showLabels) {
       overlayChildren.push(
-        React.createElement("text", {
-          key: `bullet-label-${i}`,
+        bandLabel({
+          keyId: `bullet-label-${i}`,
+          text: info.label,
           x: plot.x + labelW - 8,
           y: rowMid,
-          textAnchor: "end",
-          dominantBaseline: "middle",
+          anchor: "end",
+          baseline: "middle",
           fontSize: 13,
           fontWeight: 500,
-          fill: labelColor,
-        }, info.label)
+          color: labelColor,
+        })
       )
     }
     if (showTicks) {
@@ -294,14 +296,16 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
             stroke: subtleColor,
             strokeWidth: 1,
           }),
-          React.createElement("text", {
-            key: `bullet-ticktext-${i}-${t}`,
+          bandLabel({
+            keyId: `bullet-ticktext-${i}-${t}`,
+            text: tickFormat(v),
             x,
             y: tickY + 12,
-            textAnchor: t === 0 ? "start" : t === tickCount - 1 ? "end" : "middle",
+            anchor: t === 0 ? "start" : t === tickCount - 1 ? "end" : "middle",
+            baseline: "auto",
             fontSize: 10,
-            fill: subtleColor,
-          }, tickFormat(v))
+            color: subtleColor,
+          })
         )
       }
     }

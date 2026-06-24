@@ -69,6 +69,54 @@ describe("xySceneNodeToSVG — point", () => {
 
 })
 
+describe("xySceneNodeToSVG — symbol", () => {
+  it("renders a translated glyph path (the cross-pipeline symbol mark)", () => {
+    const node: any = {
+      type: "symbol",
+      x: 42,
+      y: 84,
+      size: 120,
+      symbolType: "star",
+      style: { fill: "#7b52c9", opacity: 0.9 },
+    }
+    const html = markup(xySceneNodeToSVG(node, 0))
+    expect(html).toContain("<path")
+    expect(html).toContain("translate(42,84)")
+    expect(html).toContain('fill="#7b52c9"')
+    expect(html).toContain('d="M')
+  })
+
+  it("renders stroke-only glyphs unfilled (matches canvas)", () => {
+    const node: any = {
+      type: "symbol",
+      x: 1,
+      y: 2,
+      size: 80,
+      symbolType: "triangle",
+      style: { stroke: "#fff", strokeWidth: 1 },
+    }
+    const html = markup(xySceneNodeToSVG(node, 0))
+    expect(html).toContain('fill="none"')
+  })
+})
+
+describe("ordinalSceneNodeToSVG — symbol", () => {
+  it("renders a glyph path for ordinal symbolBy marks", () => {
+    const node: any = {
+      type: "symbol",
+      x: 10,
+      y: 20,
+      size: 100,
+      symbolType: "diamond",
+      style: { fill: "#abc" },
+    }
+    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    expect(html).toContain("<path")
+    expect(html).toContain("translate(10,20)")
+    expect(html).toContain('fill="#abc"')
+  })
+})
+
 describe("xySceneNodeToSVG — rect", () => {
   it("renders a rect with correct attributes", () => {
     const node: any = {

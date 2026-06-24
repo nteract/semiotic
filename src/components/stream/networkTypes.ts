@@ -6,6 +6,7 @@ import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import type { NetworkSymbolName } from "./symbolPath"
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -297,6 +298,34 @@ export interface NetworkArcNode {
   _pulseGlowRadius?: number
 }
 
+/**
+ * Symbol node — a glyph rendered from a `d3-shape` symbol path (or a custom
+ * path). The per-datum shape channel: recipes that encode a categorical field
+ * as marker shape (e.g. `packedClusterMatrix`) emit these. Hit-tests as a
+ * circle of the symbol's effective radius; renders on canvas and in SVG/SSR.
+ */
+export interface NetworkSymbolNode {
+  type: "symbol"
+  cx: number
+  cy: number
+  /** d3-symbol area in px² — drives the glyph's drawn size. */
+  size: number
+  /** Named shape. Ignored when `path` is set. @default "circle" */
+  symbolType?: NetworkSymbolName
+  /** Pre-built SVG path string, origin-centered — overrides `symbolType`. */
+  path?: string
+  /** Rotation in radians about (cx, cy). */
+  rotation?: number
+  style: Style
+  datum: SceneDatum
+  id?: string
+  label?: string
+  depth?: number
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
+}
+
 /** Line edge — used by force */
 export interface NetworkLineEdge {
   type: "line"
@@ -358,6 +387,7 @@ export type NetworkSceneNode =
   | NetworkCircleNode
   | NetworkRectNode
   | NetworkArcNode
+  | NetworkSymbolNode
 
 export type NetworkSceneEdge =
   | NetworkLineEdge

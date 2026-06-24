@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { MarginType } from "../types/marginType"
 import type { SceneNode, StreamScales, Style, ThemeSemanticColors } from "./types"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 
 /**
  * customLayout — escape hatch for bespoke chart geometry.
@@ -56,6 +57,14 @@ export interface LayoutContext<C extends object = Record<string, unknown>> {
   resolveColor: (group: string, datum?: Datum) => string
   /** User-supplied config blob threaded through `layoutConfig`. */
   config: C
+  /**
+   * Shared-selection projection (from `selection` / `linkedHover`). `null` when
+   * the chart isn't wired to a selection store. Dim/highlight by
+   * `selection.predicate(datum)`. For selection-driven styling that shouldn't
+   * pay a relayout, express it via {@link LayoutResult.restyle} (canvas) /
+   * `useCustomLayoutSelection` (overlays) instead of recomputing geometry here.
+   */
+  selection?: CustomLayoutSelection | null
 }
 
 export interface LayoutResult {
@@ -63,6 +72,17 @@ export interface LayoutResult {
   nodes?: SceneNode[]
   /** SVG overlays composited above the canvas (labels, annotations). */
   overlays?: ReactNode
+  /**
+   * **Per-frame restyle of canvas marks, without re-positioning.** When present,
+   * a selection/hover change re-applies styles to the existing scene nodes and
+   * repaints — it does NOT re-run the layout or rebuild the point quadtree.
+   * Return a style patch merged onto the node's *base* style; return nothing to
+   * leave it unchanged. Providing it opts the chart into the cheap selection
+   * path (hover stays O(nodes) paint, not O(nodes) relayout); omit it and
+   * selection changes re-run the layout. Pairs with `useCustomLayoutSelection`
+   * for the `overlays`.
+   */
+  restyle?: (node: SceneNode, selection: CustomLayoutSelection | null) => Partial<Style> | void
 }
 
 /**
