@@ -497,8 +497,10 @@ function collectHitNodes(
     const datum = normalizeDatum(firstDatumWithin(item))
     // Only data-bearing marks carrying provenance become Semiotic hit targets —
     // legend swatches, axis ticks, and other chrome carry no datum and stay
-    // overlay-only.
-    if (role !== "node" || !datum) continue
+    // overlay-only. `text` is excluded even when it carries a datum: GoFish tags
+    // a glyph's *label* (e.g. the bottle's stage name) as a data-bearing node, but
+    // the glyph it annotates is the real target — a label hit-rect is a duplicate.
+    if (role !== "node" || !datum || item.kind === "text") continue
     const localBox = boxOf(item)
     if (!localBox) continue
     const box = applyTransform(localBox, transform)
@@ -518,14 +520,16 @@ function collectHitNodes(
   }
 }
 
-/** Extract the `role:"node"` row data (for the chart's `nodes` prop). */
+/** Extract the `role:"node"` row data (for the chart's `nodes` prop). Mirrors
+ *  the hit-node rule, including the `text` exclusion, so `nodes` stays aligned to
+ *  interactive glyphs — one row per glyph, not one per glyph + its label. */
 function collectNodeRows(items: GofishDisplayItem[], out: Datum[]): void {
   for (const item of items) {
     if (item.kind === "group") {
       collectNodeRows(item.children, out)
       continue
     }
-    if ((item.role ?? "node") !== "node") continue
+    if ((item.role ?? "node") !== "node" || item.kind === "text") continue
     const datum = normalizeDatum(firstDatumWithin(item))
     if (datum) out.push(datum)
   }

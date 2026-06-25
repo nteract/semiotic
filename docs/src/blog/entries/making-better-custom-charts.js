@@ -1,26 +1,20 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useCallback, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { XYCustomChart } from "semiotic/xy"
 import { NetworkCustomChart } from "semiotic/network"
 import { lineageDagLayout } from "semiotic/recipes"
-import {
-  unstable_fromGofishIR,
-  unstable_gofishFlowerIR,
-} from "../../../../src/components/semiotic-experimental"
-
 // Entry metadata first so the sync check reads the canonical strings
 // before any UI-string literals.
 const META = {
   slug: "making-better-custom-charts",
   title: "Making Better Custom Charts",
   subtitle:
-    "The custom-chart escape hatch grows up: a scene-node/overlay contract, a real Kafka Streams lineage view that lets your pipeline own layout, and a GoFish IR interpreter that executes a foreign grammar instead of recognizing it.",
+    "The custom-chart escape hatch grows up: a scene-node/overlay contract, a real Kafka Streams lineage view that lets your pipeline own layout, and a GoFish adapter that renders another library's baked render IR instead of re-implementing its grammar.",
   author: "Elijah Meeks",
   date: "2026-06-20",
   tags: ["case-study", "network", "ai"],
   excerpt:
-    "Every charting library hits the wall where the catalog runs out. This is about what's on the other side of that wall in Semiotic: a custom-layout surface principled enough to host a domain pipeline's lineage DAG and to interpret another library's serialized grammar, escape hatches and all.",
+    "Every charting library hits the wall where the catalog runs out. This is about what's on the other side of that wall in Semiotic: a custom-layout surface principled enough to host a domain pipeline's lineage DAG and to render another library's baked render IR — even a hand-written one.",
 }
 
 const card = {
@@ -50,264 +44,6 @@ const pre = {
   borderRadius: 6,
   fontSize: 13,
   overflowX: "auto",
-}
-
-// ─── Flower encoding: one source of truth for the species order + colors ───
-//
-// The petals are filled by the interpreter in *first-seen species order*, so
-// passing this same array as `colorScheme` guarantees the chart's petals, the
-// hover tooltip swatches, and the HTML legend below all agree on which color
-// means which species. The stem is the literal green from the IR's stem rect.
-const STEM_COLOR = "#2f8f46"
-const SPECIES = ["Walleye", "Perch", "Trout"] // data/encounter order
-const SPECIES_COLORS = {
-  Walleye: "#4e79a7",
-  Perch: "#e1575a",
-  Trout: "#b07aa1",
-}
-const PETAL_SCHEME = SPECIES.map((s) => SPECIES_COLORS[s])
-
-// Aggregate the flat seafood rows into one record per lake: the stem total
-// (summed catch) plus each species' petal count. Drives both the tooltip and
-// the legend table.
-function aggregateByLake(rows) {
-  const m = new Map()
-  for (const r of rows) {
-    let e = m.get(r.lake)
-    if (!e) {
-      e = { lake: r.lake, total: 0, species: {} }
-      m.set(r.lake, e)
-    }
-    const n = Number(r.count) || 0
-    e.species[r.species] = (e.species[r.species] || 0) + n
-    e.total += n
-  }
-  return m
-}
-
-const keyRow = {
-  display: "flex",
-  alignItems: "center",
-  fontSize: 13,
-  lineHeight: 1.5,
-  margin: "3px 0",
-}
-
-// A short thick green line — the stem encoding.
-function StemSwatch() {
-  return (
-    <span
-      aria-hidden
-      style={{
-        position: "relative",
-        display: "inline-block",
-        width: 14,
-        height: 14,
-        marginRight: 8,
-        flex: "0 0 auto",
-      }}
-    >
-      <span
-        style={{
-          position: "absolute",
-          left: 6,
-          top: 0,
-          width: 3,
-          height: 14,
-          background: STEM_COLOR,
-          borderRadius: 2,
-        }}
-      />
-    </span>
-  )
-}
-
-// A filled area swatch — a petal encoding.
-function PetalSwatch({ color }) {
-  return (
-    <span
-      aria-hidden
-      style={{
-        display: "inline-block",
-        width: 14,
-        height: 14,
-        borderRadius: 3,
-        marginRight: 8,
-        flex: "0 0 auto",
-        background: color,
-        opacity: 0.85,
-      }}
-    />
-  )
-}
-
-// The complex hover tooltip: the lake's stem total + every petal value, each
-// next to the swatch that matches its mark on the chart.
-function FlowerTooltip({ entry }) {
-  return (
-    <div
-      style={{
-        background: "#ffffff",
-        border: "1px solid var(--surface-3, #ddd)",
-        borderRadius: 8,
-        boxShadow: "0 4px 14px rgba(0,0,0,0.16)",
-        padding: "10px 12px",
-        minWidth: 190,
-        color: "#1a1a1a",
-      }}
-    >
-      <div style={{ fontWeight: 700, marginBottom: 6 }}>{entry.lake}</div>
-      <div style={keyRow}>
-        <StemSwatch />
-        <span style={{ flex: 1 }}>Stem · total catch</span>
-        <strong style={{ marginLeft: 8 }}>{entry.total}</strong>
-      </div>
-      <div style={{ height: 1, background: "var(--surface-3, #eee)", margin: "6px 0" }} />
-      {SPECIES.map((s) => (
-        <div key={s} style={keyRow}>
-          <PetalSwatch color={SPECIES_COLORS[s]} />
-          <span style={{ flex: 1 }}>{s} petal</span>
-          <strong style={{ marginLeft: 8 }}>{entry.species[s] ?? 0}</strong>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-const thCell = {
-  textAlign: "left",
-  padding: "6px 10px",
-  borderBottom: "1px solid var(--surface-3)",
-  fontWeight: 600,
-  whiteSpace: "nowrap",
-}
-const tdCell = { padding: "6px 10px", borderBottom: "1px solid var(--surface-2)" }
-const tdNum = { ...tdCell, textAlign: "right", fontVariantNumeric: "tabular-nums" }
-
-// Recapitulation of the tooltip key as an HTML legend below the chart: the
-// encoding key (stem line + petal fills) followed by the per-lake values, so
-// the same color↔meaning mapping reads statically without hovering.
-function FlowerLegend({ lakes }) {
-  return (
-    <div style={card}>
-      <div style={{ fontWeight: 700, marginBottom: 10 }}>How to read a flower</div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 22px", marginBottom: 14 }}>
-        <span style={keyRow}>
-          <StemSwatch />
-          <span>Stem height · total catch</span>
-        </span>
-        {SPECIES.map((s) => (
-          <span key={s} style={keyRow}>
-            <PetalSwatch color={SPECIES_COLORS[s]} />
-            <span>{s} petal · count</span>
-          </span>
-        ))}
-      </div>
-      <table style={{ borderCollapse: "collapse", fontSize: 13, width: "100%" }}>
-        <thead>
-          <tr>
-            <th style={thCell}>Lake</th>
-            {SPECIES.map((s) => (
-              <th key={s} style={{ ...thCell, textAlign: "right" }}>
-                <PetalSwatch color={SPECIES_COLORS[s]} />
-                {s}
-              </th>
-            ))}
-            <th style={{ ...thCell, textAlign: "right" }}>
-              <StemSwatch />
-              Total
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {lakes.map((e) => (
-            <tr key={e.lake}>
-              <td style={tdCell}>{e.lake}</td>
-              {SPECIES.map((s) => (
-                <td key={s} style={tdNum}>
-                  {e.species[s] ?? 0}
-                </td>
-              ))}
-              <td style={{ ...tdNum, fontWeight: 700 }}>{e.total}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-// ─── Live demo: a flower chart INTERPRETED from a GoFish IR document ───────
-//
-// No flower-specific recipe runs here. `unstable_fromGofishIR` walks the spec and
-// executes its operators; XYCustomChart hosts the result.
-const FLOWER_IR_SNIPPET = `{
-  "ir": "gofish-frontend",
-  "root": {
-    "type": "chart",
-    "data": { "type": "inline", "rows": [ /* seafood catch by lake */ ] },
-    "operators": [{ "type": "scatter", "by": "lake", "x": { "type": "field", "name": "x" } }],
-    "mark": { "type": "layer", "__combinator": true, "children": [
-      { "type": "rect", "w": 5, "h": { "type": "field", "name": "count" }, "fill": "#2f8f46" },
-      { "type": "layer", "__combinator": true, "options": { "coord": { "type": "polar" } },
-        "children": [
-          { "type": "stack", "__combinator": true, "options": { "dir": "x", "by": "species" },
-            "children": [{ "type": "petal", "h": { "type": "field", "name": "count" },
-                          "fill": { "type": "field", "name": "species" } }] }
-        ] }
-    ] }
-  }
-}`
-
-function FlowerFromIR() {
-  const cfg = useMemo(() => {
-    // Local clone so only THIS blog example resizes — the exported
-    // flowerIR is shared with /features/gofish-layouts
-    // we're willing to do hacky stuff like this because this is not the final API
-    const ir =
-      typeof structuredClone === "function"
-        ? structuredClone(unstable_gofishFlowerIR)
-        : JSON.parse(JSON.stringify(unstable_gofishFlowerIR))
-    const polarLayer = ir.root.mark.children[1] // the { coord: { type: "polar" } } layer
-    polarLayer.options = { ...polarLayer.options, radiusFactor: 1.5 } // default is 0.2
-    return unstable_fromGofishIR(ir)
-  }, [])
-
-  // One lake → {total, species} record, shared by the tooltip and the legend.
-  const lakeMap = useMemo(() => aggregateByLake(cfg.data), [cfg.data])
-  const lakes = useMemo(() => Array.from(lakeMap.values()), [lakeMap])
-
-  // Custom-chart tooltips arrive wrapped — the hovered datum is on `d.data`.
-  // Any part of a flower (stem or petal) carries its `lake`, so we resolve the
-  // whole flower's breakdown from the lake regardless of which mark was hit.
-  const tooltip = useCallback(
-    (d) => {
-      const row = (d && d.data) || d
-      const lake = row && row.lake
-      const entry = lake && lakeMap.get(lake)
-      return entry ? <FlowerTooltip entry={entry} /> : null
-    },
-    [lakeMap],
-  )
-
-  return (
-    <>
-      <div style={chartFrame}>
-        <XYCustomChart
-          data={cfg.data}
-          layout={cfg.layout}
-          colorScheme={PETAL_SCHEME}
-          tooltip={tooltip}
-          width={680}
-          height={360}
-          responsiveWidth
-          margin={{ top: 24, right: 24, bottom: 24, left: 24 }}
-          frameProps={{ background: "#ffffff" }}
-        />
-      </div>
-      <FlowerLegend lakes={lakes} />
-    </>
-  )
 }
 
 // ─── Live demo: a tiny Kafka Streams lineage with zoom controls ─────────────
@@ -592,92 +328,57 @@ function Body() {
         a downstream-reachability hover preview, and snapshot morphing between topology versions.
       </p>
 
-      <h2>Interpreting a foreign grammar: GoFish IR</h2>
+      <h2>Rendering a foreign grammar: GoFish</h2>
+
+      <div style={card}>
+        <strong>Update.</strong> An earlier cut of this section described an <em>interpreter</em> that
+        re-executed GoFish's grammar — walking <code style={inlineCode}>data → operators → mark</code>{" "}
+        ourselves. That has been superseded. GoFish now exposes{" "}
+        <code style={inlineCode}>{"toDisplayList({ w, h })"}</code>, its post-layout{" "}
+        <strong>render IR</strong>, so the adapter consumes GoFish's own baked geometry instead of
+        re-deriving it: GoFish owns the layout solve, Semiotic renders. The live gallery and the
+        updated adapter now live at{" "}
+        <Link to="/interoperability/gofish">Interoperability → GoFish DisplayList</Link>.
+      </div>
 
       <p>
         The harder test came from the other direction. <a href="https://gofish.graphics/">GoFish</a>{" "}
-        is a research visualization grammar (MIT) that formalizes Gestalt relations like spacing,
-        containment and connection as composable operators. It attempts to reclaim charts that fall
-        outside the classic Grammar of Graphics: mosaics, waffles, ribbons, nested glyphs. It
-        serializes specs to a JSON <strong>intermediate representation</strong> (
-        <code style={inlineCode}>to_ir</code>). The question: can you export <em>anything</em> from
-        GoFish and render it in Semiotic?
+        is a research visualization grammar (MIT) that formalizes Gestalt relations — spacing,
+        containment, connection — as composable operators, reclaiming charts that fall outside the
+        classic Grammar of Graphics: mosaics, waffles, ribbons, nested glyphs. The question: can you
+        export <em>anything</em> from GoFish and render it in Semiotic?
       </p>
 
       <p>
-        <code style={inlineCode}>unstable_fromGofishIR</code> hands the spec to a small layout
-        engine that walks <code style={inlineCode}>data → operators → mark</code> and{" "}
-        <em>executes</em> the grammar: <code style={inlineCode}>group</code> /{" "}
-        <code style={inlineCode}>spread</code> / <code style={inlineCode}>stack</code> /{" "}
-        <code style={inlineCode}>scatter</code> / <code style={inlineCode}>treemap</code> /{" "}
-        <code style={inlineCode}>layer</code>, the <code style={inlineCode}>polar</code> coordinate
-        transform, mark channels through value scales, and <code style={inlineCode}>connect</code> /{" "}
-        <code style={inlineCode}>ref</code> relations. Any spec built from that grammar renders; it
-        is not limited to known charts.
+        The answer is yes, and the seam is GoFish's{" "}
+        <code style={inlineCode}>{"toDisplayList({ w, h })"}</code> — a flat, viewport-baked list of
+        positioned primitives in absolute pixels, the coordinate transforms already folded in, so a
+        polar petal arrives as a baked <code style={inlineCode}>path</code>. Each item carries a{" "}
+        <code style={inlineCode}>role</code> (<code style={inlineCode}>node</code> for data-bearing
+        marks, <code style={inlineCode}>overlay</code> for chrome) and an optional{" "}
+        <code style={inlineCode}>datum</code>. The adapter maps the list onto a custom layout by that
+        contract: data-bearing marks become scene nodes with a transparent hit-rect carrying their{" "}
+        <code style={inlineCode}>datum</code>; everything else renders verbatim as overlay. Nothing is
+        recognized or special-cased per chart type — a polar flower, a packed-circle treemap, and a
+        pictorial bottle all flow through one role-driven mapping and pick up Semiotic's hit-testing,
+        tooltips, selection, accessibility, and SSR for free.
       </p>
 
       <p>
-        The flower below is not produced by a flower recipe. It's the GoFish IR document on the
-        right, run through <code style={inlineCode}>unstable_fromGofishIR</code> and mounted on{" "}
-        <code style={inlineCode}>XYCustomChart</code>. A <code style={inlineCode}>scatter</code>{" "}
-        places one stem per lake at its x; each stem is a value-scaled{" "}
-        <code style={inlineCode}>rect</code>
-        bar; a <code style={inlineCode}>polar</code> layer stacks one{" "}
-        <code style={inlineCode}>petal</code> per species around the angle axis, anchored to the top
-        of the stem.
-      </p>
-
-      <FlowerFromIR />
-
-      <pre style={pre}>{FLOWER_IR_SNIPPET}</pre>
-
-      <h2>Escape hatches</h2>
-
-      <p>
-        A grammar can't express everything. GoFish has two sanctioned escape hatches:{" "}
-        <code style={inlineCode}>derive</code> (a data transform) and{" "}
-        <code style={inlineCode}>mark-fn</code> (a bespoke per-datum glyph). These serialize as a{" "}
-        <code style={inlineCode}>lambdaId</code> resolved through a bridge. The interpreter honors
-        that: a lambda registry resolves the id, and an <em>unregistered</em> id produces a warning,
-        not a crash.
+        The division of labor is the whole point: GoFish owns layout, scales, coordinate transforms,
+        and constraints; Semiotic owns the runtime around the baked shapes. Because the DisplayList is
+        produced by GoFish itself, the result is its real geometry — not a re-implementation that has
+        to stay bug-for-bug compatible. And because the render IR is just data, a host can also emit it
+        by hand: the bubble-tea menu in the gallery is a DisplayList written directly, with no GoFish
+        dependency at all — the same adapter renders it identically.
       </p>
 
       <p>
-        That's what made the bubble-tea menu (the sixth example, derived from Krist Wongsuphasawat's
-        "Boba Science" notebook) tractable on principle rather than by cheating. It's a row of
-        data-driven drinks: each cup's tea + tapioca + ice volumes (plus its cup-size parameters)
-        add up to a total volume that sets the drink height, so "Extra Boba" grows a taller pearl
-        bed and "Light Ice" reads as mostly tea. The cup, tea, straw, and lid are real{" "}
-        <code style={inlineCode}>polygon</code> / <code style={inlineCode}>line</code> marks; the
-        pearls and ice are real <code style={inlineCode}>circle</code> /{" "}
-        <code style={inlineCode}>rect</code> marks. The one genuinely non-grammar step is the
-        frustum-volume → drink-height solve and the tapioca/ice packing that lives in a single{" "}
-        <code style={inlineCode}>derive</code> lambda, which also emits a shared aspect box so an
-        aspect-preserving <code style={inlineCode}>unit</code> fit lets the cups share one scale and
-        a baseline. The spec follows the grammar as far as it reaches and escape-hatches only the
-        irreducible math.
-      </p>
-
-      <p>
-        Six examples ride this interpreter at{" "}
-        <Link to="/interoperability/gofish">/features/gofish-layouts</Link>, across three frames:
-        flower / bottle / polar-ribbon / circle-treemap on the XY frame, the boba cups on the
-        ordinal frame (one cup per category), and the Python Tutor memory diagram on the network
-        frame.
-      </p>
-
-      <h2>The boundary</h2>
-
-      <p>
-        The interpreter is a real layout engine, but it is <em>not</em> GoFish's. GoFish elaborates{" "}
-        <code style={inlineCode}>spread</code> into a constraint system over a linear-system
-        bounding box; we implement the deterministic allocation/accumulation model that the common,
-        acyclic specs reduce to. That covers every operator the examples use and the large majority
-        of gallery charts and it is forthright about the rest. Constructs outside the model (
-        <code style={inlineCode}>table</code>, <code style={inlineCode}>cut</code>, free-form{" "}
-        <code style={inlineCode}>.constrain</code>) record a warning and fall back rather than
-        silently mis-rendering. The interpreted charts render the grammar faithfully without being
-        pixel-equal to a bespoke recipe.
+        Six charts ride this adapter at{" "}
+        <Link to="/interoperability/gofish">Interoperability → GoFish DisplayList</Link>: a flower
+        meadow, a polar ribbon, a fare circle treemap, a bottle-fill, a hand-emitted boba, and a
+        Python Tutor memory diagram — each rendered from a baked DisplayList by the same unchanged
+        adapter.
       </p>
 
       <h2>When to reach for a custom chart</h2>
@@ -710,8 +411,8 @@ function Body() {
         quirk. It's the right shape any time positions come from somewhere authoritative: build/CI
         dependency graphs, supply-chain and logistics routes, org and reporting hierarchies, model
         and data lineage in ML pipelines, and call graphs in observability tooling. And the
-        "interpret a serialized spec" half generalizes to any design tool or grammar that emits an
-        IR. But, to be clear, the reason this is labeled as an{" "}
+        "render a serialized IR" half generalizes to any design tool or grammar that can bake one. But,
+        to be clear, the reason this is labeled as an{" "}
         <code style={inlineCode}>unstable</code> API is because this will change by the time it is
         released to ensure that it is the most effective compatibility layer with GoFish.
       </p>
@@ -728,8 +429,8 @@ function Body() {
           the linked detail + minimap views.
         </li>
         <li>
-          <Link to="/interoperability/gofish">Experimental GoFish Adapter</Link> — the six
-          interpreted examples and the live IR for each.
+          <Link to="/interoperability/gofish">Experimental GoFish Adapter</Link> — a live gallery of
+          GoFish charts rendered from their baked DisplayList, plus a hand-emitted one.
         </li>
       </ul>
     </article>

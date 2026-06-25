@@ -381,12 +381,6 @@ export default function GoFishLayoutsPage() {
           </thead>
           <tbody>
             <TargetRow
-              label="Stacked bars (with axes)"
-              href={exampleByKey.bars?.source}
-              primitives="rect (bars) + rect/text (axes + legend chrome)"
-              contract="Each bar is a rect node carrying its row; axis ticks, lines, titles, and legend swatches carry no datum and stay overlay-only — the adapter classifies all of it by the role+datum contract, never per chart type."
-            />
-            <TargetRow
               label="Flower meadow"
               href={exampleByKey.flower?.source}
               primitives="rect (stems) + path (polar petals) + rect/text (legend)"

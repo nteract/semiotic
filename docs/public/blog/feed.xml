@@ -5,8 +5,21 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-06-23T00:00:00Z</updated>
+  <updated>2026-06-25T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>The arc, the annotation, and the variant</title>
+    <id>https://semiotic3.nteract.io/blog/talk-track-intelligence</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/talk-track-intelligence"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/talk-track-intelligence.png"/>
+    <published>2026-06-25T00:00:00Z</published>
+    <updated>2026-06-25T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="ai"/>
+    <category term="roadmap"/>
+    <summary type="text">AI-assisted chart authoring is a session, not a single call. The spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers.</summary>
+  </entry>
   <entry>
     <title>Multimodal response: chart as output channel</title>
     <id>https://semiotic3.nteract.io/blog/multimodal-response</id>
