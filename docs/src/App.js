@@ -108,6 +108,7 @@ import CustomChartsOverviewPage from "./pages/custom-charts/CustomChartsOverview
 import CustomLayoutsPage from "./pages/custom-charts/CustomLayoutsPage"
 import GlyphMarksPage from "./pages/custom-charts/GlyphMarksPage"
 import RecipeKitPage from "./pages/custom-charts/RecipeKitPage"
+import CustomChartsExamplesPage from "./pages/custom-charts/CustomChartsExamplesPage"
 import GoFishLayoutsPage from "./pages/features/GoFishLayoutsPage"
 import CapabilitiesPage from "./pages/features/CapabilitiesPage"
 import InterrogationPage from "./pages/features/InterrogationPage"
@@ -461,6 +462,7 @@ export default function DocsApp() {
               <Route path="custom-layouts" element={<CustomLayoutsPage />} />
               <Route path="glyph-marks" element={<GlyphMarksPage />} />
               <Route path="recipe-kit" element={<RecipeKitPage />} />
+              <Route path="examples" element={<CustomChartsExamplesPage />} />
             </Route>
 
             {/* Accessibility — first-class category (before Intelligence).

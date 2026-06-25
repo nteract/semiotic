@@ -295,6 +295,26 @@ function composeTransform(parent: Transform, g: GofishGroupItem["transform"]): T
   }
 }
 
+/** The first `datum` anywhere within an item's subtree, used to give a composite
+ *  glyph its provenance. A `paint`/`mask` (e.g. GoFish's bottle-fill) bakes to a
+ *  `composite` whose *own* item carries no `datum` — the data-bound child marks
+ *  (the fill rect, the silhouette image) are nested in `source`/`dest` and each
+ *  carry the row. We treat the composite as one glyph and surface a single
+ *  representative datum so the whole silhouette stays one hit target. */
+function firstDatumWithin(item: GofishDisplayItem): GofishDisplayDatum | undefined {
+  if (item.datum != null) return item.datum
+  let children: GofishDisplayItem[] | undefined
+  if (item.kind === "group") children = item.children
+  else if (item.kind === "composite") children = [...item.source, ...item.dest]
+  else if (item.kind === "mask") children = [...item.mask, ...item.content]
+  if (!children) return undefined
+  for (const child of children) {
+    const found = firstDatumWithin(child)
+    if (found != null) return found
+  }
+  return undefined
+}
+
 /** A row object for a scene-node `datum`: a single source row, the array
  *  unwrapped when one-to-one, kept (with the array under `_rows`) for aggregates. */
 function normalizeDatum(datum: GofishDisplayDatum | undefined): Datum | null {
@@ -403,38 +423,57 @@ function renderComposite(item: GofishCompositeItem | GofishMaskItem, key: string
     )
   }
 
-  const filterId = `${uid}-filter`
-  const operator = item.operator
-  const blendMode = item.blendMode ?? "color"
+  // Robust blend/composite without `feImage` fragment references. GoFish's
+  // reference filter graph wires a composite through `feImage href="#g"` to pull
+  // in two sub-renders — but Chrome dropped local `feImage` element references
+  // and librsvg never implemented them, so that graph renders blank everywhere
+  // except Firefox (it was dead code here until a `paint`/`blendMode` spec like
+  // the bottle-fill first exercised it). We reproduce the same *visual* with CSS
+  // `mix-blend-mode` in an isolated group: the source supplies luminosity
+  // (desaturated), the dest blends its hue on top, and an alpha mask clips the
+  // result to the source silhouette for the coverage-limiting operators
+  // (`atop`/`in`) — so a fill rect reads as liquid rising *inside* the bottle.
   const { x, y, w, h } = item.bbox
-  const tail: ReactNode[] = []
-  if (operator === "in") {
-    tail.push(
-      createElement("feBlend", { key: "b", in: "compositeResult", in2: "graySource", mode: blendMode, result: "blendedIntersect" }),
-      createElement("feComposite", { key: "c", in: "blendedIntersect", in2: "compositeResult", operator: "in" }),
+  // A composite's `source`/`dest` children are baked in coordinates *local to
+  // the composite bbox* (the image at local 0,0; the fill rect at a local
+  // offset), so every sub-render is translated to the bbox origin to land in
+  // absolute viewport space alongside the rest of the list.
+  const translate = `translate(${x} ${y})`
+  const blendMode = item.blendMode
+  const clip = item.operator === "atop" || item.operator === "in"
+  const desatId = `${uid}-desat`
+  const maskId = `${uid}-cov`
+  const sourceBackdrop = item.source.map((c, i) => renderItem(c, `${uid}-s-${i}`, state))
+  const destFg = item.dest.map((c, i) => renderItem(c, `${uid}-d-${i}`, state))
+  const defs: ReactNode[] = []
+  if (blendMode) {
+    defs.push(
+      createElement("filter", { key: "desat", id: desatId }, createElement("feColorMatrix", { type: "saturate", values: "0" })),
     )
-  } else if (operator === "over" || operator === "atop") {
-    tail.push(createElement("feBlend", { key: "b", in: "compositeResult", in2: "graySource", mode: blendMode }))
+  }
+  if (clip) {
+    defs.push(
+      createElement(
+        "mask",
+        { key: "cov", id: maskId, maskUnits: "userSpaceOnUse", x, y, width: w, height: h, style: { maskType: "alpha" } },
+        createElement("g", { transform: translate }, item.source.map((c, i) => renderItem(c, `${uid}-m-${i}`, state))),
+      ),
+    )
   }
   return createElement(
     Fragment,
     { key },
+    defs.length ? createElement("defs", { key: "defs" }, defs) : null,
     createElement(
-      "defs",
-      null,
-      createElement("g", { id: sourceId }, item.source.map((c, i) => renderItem(c, `${uid}-s-${i}`, state))),
-      createElement("g", { id: destId }, item.dest.map((c, i) => renderItem(c, `${uid}-d-${i}`, state))),
+      "g",
+      { key: "g", ...(clip ? { mask: `url(#${maskId})` } : {}) },
       createElement(
-        "filter",
-        { id: filterId, x, y, width: w, height: h, filterUnits: "userSpaceOnUse", colorInterpolationFilters: "sRGB" },
-        createElement("feImage", { href: `#${sourceId}`, result: "sourceImage" }),
-        createElement("feColorMatrix", { in: "sourceImage", type: "saturate", values: "0", result: "graySource" }),
-        createElement("feImage", { href: `#${destId}`, result: "destination" }),
-        createElement("feComposite", { in: "destination", in2: "graySource", operator, result: "compositeResult" }),
-        ...tail,
+        "g",
+        { transform: translate, style: { isolation: "isolate" } },
+        createElement("g", blendMode ? { filter: `url(#${desatId})` } : null, sourceBackdrop),
+        createElement("g", blendMode ? { style: { mixBlendMode: blendMode } } : null, destFg),
       ),
     ),
-    createElement("rect", { x, y, width: w, height: h, fill: "transparent", filter: `url(#${filterId})` }),
   )
 }
 
@@ -452,7 +491,10 @@ function collectHitNodes(
       continue
     }
     const role = item.role ?? "node"
-    const datum = normalizeDatum(item.datum)
+    // `firstDatumWithin` returns the item's own datum for leaf marks, and a
+    // composite/mask glyph's representative child datum — so a bottle-fill
+    // composite gets one hit target over its silhouette instead of dropping out.
+    const datum = normalizeDatum(firstDatumWithin(item))
     // Only data-bearing marks carrying provenance become Semiotic hit targets —
     // legend swatches, axis ticks, and other chrome carry no datum and stay
     // overlay-only.
@@ -484,7 +526,7 @@ function collectNodeRows(items: GofishDisplayItem[], out: Datum[]): void {
       continue
     }
     if ((item.role ?? "node") !== "node") continue
-    const datum = normalizeDatum(item.datum)
+    const datum = normalizeDatum(firstDatumWithin(item))
     if (datum) out.push(datum)
   }
 }

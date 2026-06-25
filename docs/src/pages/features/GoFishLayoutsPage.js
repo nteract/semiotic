@@ -262,6 +262,13 @@ export default function GoFishLayoutsPage() {
           >
             <h3 style={{ marginTop: 0 }}>This baked frame</h3>
             <p style={{ marginTop: 0 }}>{example.blurb}</p>
+            {example.key === "boba" ? (
+              <p style={{ marginTop: 0, fontSize: 13 }}>
+                Compare the Semiotic-native version, built with a custom <code>layout</code> function
+                instead of a hand-emitted document, on the{" "}
+                <Link to="/custom-charts/examples">Custom Charts → Examples</Link> page.
+              </p>
+            ) : null}
             <p style={{ marginBottom: 6, fontSize: 13 }}>
               Viewport <code>{cfg.width} × {cfg.height}</code> · {doc.items.length} items ·{" "}
               {nodes} data nodes
@@ -307,8 +314,8 @@ export default function GoFishLayoutsPage() {
               </dl>
             ) : (
               <p style={{ marginBottom: 0 }}>
-                Hover a bar, petal, passenger circle, or bottle — the transparent hit-rect over each{" "}
-                <code>role: {"\"node\""}</code> item carries its source <code>datum</code>.
+                Hover a bar, flower stem, passenger circle, or bottle — the transparent hit-rect over
+                each <code>role: {"\"node\""}</code> item carries its source <code>datum</code>.
               </p>
             )}
           </div>
@@ -317,12 +324,22 @@ export default function GoFishLayoutsPage() {
 
       <section>
         <h2>The DisplayList driving this chart</h2>
-        <p>
-          This is not hand-wired. The JSON below is a GoFish DisplayList document — the post-layout
-          render IR. Every <code>item</code> is absolute pixels with its coordinate transform
-          already folded in; <code>role</code> is the mapping switch and <code>datum</code> is the
-          provenance Semiotic hit-tests against. (Items are abridged for display.)
-        </p>
+        {example.handWritten ? (
+          <p>
+            This one is <strong>hand-written</strong> — no <code>gofish-graphics</code>, no GoFish
+            layout solve. The JSON below is a DisplayList document emitted directly in plain code (the
+            stack geometry is just arithmetic), proving the render IR is an open format any host can
+            produce. <code>role</code> is still the mapping switch and <code>datum</code> the
+            provenance Semiotic hit-tests against. (Items are abridged for display.)
+          </p>
+        ) : (
+          <p>
+            This is not hand-wired. The JSON below is a GoFish DisplayList document — the post-layout
+            render IR. Every <code>item</code> is absolute pixels with its coordinate transform
+            already folded in; <code>role</code> is the mapping switch and <code>datum</code> is the
+            provenance Semiotic hit-tests against. (Items are abridged for display.)
+          </p>
+        )}
         {cfg.warnings && cfg.warnings.length > 0 ? (
           <p style={{ color: "var(--semiotic-warning, #b26a00)" }}>
             <strong>Adapter warnings:</strong> {cfg.warnings.join(" ")}
@@ -345,8 +362,9 @@ export default function GoFishLayoutsPage() {
             polar flower, and a packed circle treemap all flow through the same mapping.
           </li>
           <li>
-            <strong>Provenance survives the solve.</strong> Each primitive carries the source row(s)
-            it was elaborated from, so a hovered petal still answers “which lake and species?”.
+            <strong>Provenance survives the solve.</strong> Data-bearing primitives carry the source
+            row(s) they were elaborated from, so a hovered flower stem still answers “which lake, and
+            what was the catch?” — even though the petals atop it are baked geometry.
           </li>
         </ul>
       </section>
@@ -363,40 +381,46 @@ export default function GoFishLayoutsPage() {
           </thead>
           <tbody>
             <TargetRow
-              label="Grouped bars"
+              label="Stacked bars (with axes)"
               href={exampleByKey.bars?.source}
-              primitives="rect (bars) + rect/text (legend chrome)"
-              contract="Each bar is a rect node carrying its row; legend swatches carry no datum and stay overlay-only."
+              primitives="rect (bars) + rect/text (axes + legend chrome)"
+              contract="Each bar is a rect node carrying its row; axis ticks, lines, titles, and legend swatches carry no datum and stay overlay-only — the adapter classifies all of it by the role+datum contract, never per chart type."
             />
             <TargetRow
-              label="Polar petal flower"
+              label="Flower meadow"
               href={exampleByKey.flower?.source}
-              primitives="path (warped petals) + chrome"
-              contract="The polar transform is folded into absolute-pixel paths; each petal is a data node."
+              primitives="rect (stems) + path (polar petals) + rect/text (legend)"
+              contract="layer([stems, flowers]): each green stem is a data node carrying its lake's catch rows; the polar petals atop it are baked paths (chrome) with no per-row datum."
+            />
+            <TargetRow
+              label="Polar ribbon chart"
+              href={exampleByKey.polarribbon?.source}
+              primitives="path (clock-projected radial bars + bumped species ribbons) + rect/text (legend)"
+              contract="layer({ coord: clock() }, [bars, ribbons]): each radial bar is a data node; the per-species area ribbons that selectAll the bars are baked paths (chrome). Wrap, gap, and bumps are all in absolute-pixel paths."
             />
             <TargetRow
               label="Fare circle treemap"
               href={exampleByKey.treemap?.source}
-              primitives="ellipse (one inscribed circle per passenger)"
-              contract="Every fare-sized circle is a data node coloured by survival."
+              primitives="ellipse (one circle per passenger, faceted by class) + rect/text (facet + legend chrome)"
+              contract="facet by pclass (dir x) → squarify-circle treemap per class, fare-sized, sorted desc. Every circle is a data node coloured by survival; the three class blocks and legend are chrome."
             />
             <TargetRow
               label="Bottle fill pictorial"
               href={exampleByKey.bottle?.source}
-              primitives="image (silhouette) + rect (fill) + text (label)"
-              contract="A pictorial mark per stage; the fill rect is the data node, the silhouette is chrome."
+              primitives="composite (paint blendMode: silhouette image + fill rect) + text (label)"
+              contract="A paint composite per stage tints the fill inside the silhouette; the adapter harvests the composite's child datum so each bottle is one hit node."
             />
             <TargetRow
-              label="Boba volume cups"
+              label="Boba cups (hand-written)"
               href={exampleByKey.boba?.source}
-              primitives="rect (tapioca / tea / ice bands) + text (legend)"
-              contract="A spread + stack of volume bands per drink; each band is a data node carrying its drink and volume."
+              primitives="path (cup, tea/ice slabs, straw) + ellipse (pearls) + rect (ice cubes, lid) + text (labels)"
+              contract="Hand-emitted DisplayList — no gofish-graphics, no GoFish solve; all the cup geometry is plain arithmetic. Proof the render IR is an open, host-emittable format. The three volume bands per drink are data nodes carrying drink + volume; cup, straw, pearls, and labels are chrome."
             />
             <TargetRow
-              label="Python memory (linked heap)"
+              label="Python memory diagram"
               href={exampleByKey.python?.source}
-              primitives="rect + text (value cells) + path (pointer chain)"
-              contract="GoFish's connector stitches the cells into a linked list; the value cells are data nodes, the connector path is chrome."
+              primitives="rect + text (frame + tuple cells) + path/ellipse (pointer arrows)"
+              contract="Best-effort reconstruction from primitives (the real example needs unpublished GoFish helpers). Built from literal values, so no mark carries a datum — every item is chrome, zero hit targets. Bakes vertically flipped vs the live render (toDisplayList y-orientation, GoFish #143/#16)."
             />
           </tbody>
         </table>

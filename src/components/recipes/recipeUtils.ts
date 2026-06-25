@@ -207,3 +207,17 @@ export function makeShade(baseColor: string, strength = 0.72): (t: number) => st
 export function shade(baseColor: string, t: number, strength = 0.72): string {
   return makeShade(baseColor, strength)(t)
 }
+
+/** Build a scene-node `datum` from a flat field map (a thin wrapper over
+ *  {@link createSafeDatum}, used by recipes that synthesize per-glyph data). */
+export function datumFromFields(fields: Record<string, unknown>): Datum {
+  return createSafeDatum((set) => {
+    for (const [key, value] of Object.entries(fields)) set(key, value)
+  })
+}
+
+/** A stable, URL/key-safe id from an arbitrary label — for keyed overlays and
+ *  transition identity (`"Extra Boba" → "extra-boba"`). */
+export function stableGlyphId(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "item"
+}

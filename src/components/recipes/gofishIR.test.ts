@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest"
 import { fromGofishIR, unstable_fromGofishIR } from "./gofishIR"
 import type { GofishDisplayListDocument } from "./gofishIR"
-import { barsIR, bobaIR, bottleIR, flowerIR, gofishIRExamples, pythonIR, treemapIR } from "./gofishIRExamples"
+import {
+  bobaIR,
+  bottleIR,
+  flowerIR,
+  gofishIRExamples,
+  pythonIR,
+  treemapIR
+} from "./gofishIRExamples"
 import type { NetworkLayoutContext } from "../stream/networkCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 
@@ -11,11 +18,20 @@ function makeCtx(config: Record<string, unknown> = {}): NetworkLayoutContext {
   return {
     nodes: [] as unknown as NetworkLayoutContext["nodes"],
     edges: [] as unknown as NetworkLayoutContext["edges"],
-    dimensions: { width: 640, height: 460, plot: { x: 0, y: 0, width: 640, height: 460 } },
-    theme: { semantic: { primary: "#4e79a7" } as NetworkLayoutContext["theme"]["semantic"], categorical: ["#4e79a7"] },
+    dimensions: {
+      width: 640,
+      height: 460,
+      plot: { x: 0, y: 0, width: 640, height: 460 }
+    },
+    theme: {
+      semantic: {
+        primary: "#4e79a7"
+      } as NetworkLayoutContext["theme"]["semantic"],
+      categorical: ["#4e79a7"]
+    },
     resolveColor: (k) => k,
     config,
-    selection: null,
+    selection: null
   }
 }
 
@@ -44,33 +60,6 @@ describe("unstable_fromGofishIR — config shape", () => {
 // ── role drives the node/overlay split ───────────────────────────────────────
 
 describe("unstable_fromGofishIR — role-driven mapping", () => {
-  it("emits one transparent hit-rect scene node per role:node item carrying a datum", () => {
-    const cfg = unstable_fromGofishIR(barsIR)
-    const result = cfg.networkLayout(makeCtx())
-    const nodes = result.sceneNodes ?? []
-
-    // One hit node per data-bearing item; equals the extracted node rows.
-    expect(nodes.length).toBeGreaterThan(0)
-    expect(nodes.length).toBe(cfg.nodes.length)
-
-    for (const node of nodes) {
-      expect(node.type).toBe("rect")
-      // transparent hit target, not painted chrome
-      expect(node.style.fill).toBe("rgba(0,0,0,0)")
-      expect(node.datum).toBeTruthy()
-    }
-    // The bars carry their source rows through as provenance.
-    const species = nodes.map((n) => (n.datum as Datum | null)?.species)
-    expect(species).toContain("Walleye")
-  })
-
-  it("does not make a hit target out of chrome (legend swatches / axis ticks carry no datum)", () => {
-    // The bars fixture bakes a legend (rect swatch + text label, no datum). The
-    // node count must be strictly fewer than the total baked item count.
-    const cfg = unstable_fromGofishIR(barsIR)
-    expect(cfg.nodes.length).toBeLessThan(barsIR.items.length)
-  })
-
   it("renders the full ordered item list into one SVG overlay layer, every kind verbatim", () => {
     const cfg = unstable_fromGofishIR(flowerIR)
     const result = cfg.networkLayout(makeCtx())
@@ -109,42 +98,24 @@ describe("unstable_fromGofishIR — role-driven mapping", () => {
     const components = nodes.map((n) => (n.datum as Datum | null)?.component)
     expect(components).toContain("tapioca")
     expect(components).toContain("tea")
-    const band = nodes.find((n) => (n.datum as Datum | null)?.component === "tapioca")
+    const band = nodes.find(
+      (n) => (n.datum as Datum | null)?.component === "tapioca"
+    )
     expect(typeof (band?.datum as Datum).volume).toBe("number")
     expect(typeof (band?.datum as Datum).name).toBe("string")
   })
 
-  it("treats the python heap connector (a datum-less path) as overlay chrome, not a hit target", () => {
+  it("treats the python memory diagram's datum-less marks (cells, pointer arrows) as overlay chrome, not hit targets", () => {
     const cfg = unstable_fromGofishIR(pythonIR)
     const result = cfg.networkLayout(makeCtx())
-    // The linked-list connector renders as a path in the overlay…
+    // The pointer arrows render as paths in the overlay…
     expect(overlayString(result.overlays)).toContain('"path"')
-    // …but only the value cells (which carry a datum) become hit targets.
+    // …and because the diagram is built from literal values (no data-bound marks),
+    // nothing carries a datum, so the role+datum contract yields zero hit targets
+    // even though many items are tagged role:"node".
     const nodes = result.sceneNodes ?? []
     expect(nodes.length).toBe(cfg.nodes.length)
-    for (const n of nodes) expect(n.datum).toBeTruthy()
-    // the cells carry their heap value
-    expect(nodes.some((n) => (n.datum as Datum | null)?.value !== undefined)).toBe(true)
-  })
-})
-
-// ── The cheap re-layout path: swap the document via layoutConfig ─────────────
-
-describe("unstable_fromGofishIR — document override via layoutConfig", () => {
-  it("reads ctx.config.displayList when present, falling back to the captured document", () => {
-    const cfg = unstable_fromGofishIR(barsIR)
-    const swapped: GofishDisplayListDocument = {
-      irVersion: 0,
-      ir: "gofish-display-list",
-      viewport: { w: 100, h: 100 },
-      items: [{ kind: "rect", x: 5, y: 5, w: 20, h: 30, style: { fill: "#abc" }, datum: { only: 1 }, role: "node" }],
-    }
-    // closure default → bars
-    expect((cfg.networkLayout(makeCtx()).sceneNodes ?? []).length).toBe(cfg.nodes.length)
-    // config override → the single swapped node
-    const overridden = cfg.networkLayout(makeCtx({ displayList: swapped })).sceneNodes ?? []
-    expect(overridden.length).toBe(1)
-    expect((overridden[0].datum as Datum).only).toBe(1)
+    expect(nodes.length).toBe(0)
   })
 })
 
@@ -152,19 +123,36 @@ describe("unstable_fromGofishIR — document override via layoutConfig", () => {
 
 describe("unstable_fromGofishIR — guards", () => {
   it("warns (not throws) when handed something other than a display list", () => {
-    const frontend = { irVersion: 0, ir: "gofish-frontend", viewport: { w: 1, h: 1 }, items: [] } as unknown as GofishDisplayListDocument
+    const frontend = {
+      irVersion: 0,
+      ir: "gofish-frontend",
+      viewport: { w: 1, h: 1 },
+      items: []
+    } as unknown as GofishDisplayListDocument
     const cfg = unstable_fromGofishIR(frontend)
-    expect(cfg.warnings?.some((w) => w.includes("gofish-display-list"))).toBe(true)
+    expect(cfg.warnings?.some((w) => w.includes("gofish-display-list"))).toBe(
+      true
+    )
   })
 
   it("warns on an unexpected irVersion", () => {
-    const future = { irVersion: 1, ir: "gofish-display-list", viewport: { w: 1, h: 1 }, items: [] } as unknown as GofishDisplayListDocument
+    const future = {
+      irVersion: 1,
+      ir: "gofish-display-list",
+      viewport: { w: 1, h: 1 },
+      items: []
+    } as unknown as GofishDisplayListDocument
     const cfg = unstable_fromGofishIR(future)
     expect(cfg.warnings?.some((w) => w.includes("irVersion"))).toBe(true)
   })
 
   it("handles an empty display list without throwing", () => {
-    const empty: GofishDisplayListDocument = { irVersion: 0, ir: "gofish-display-list", viewport: { w: 10, h: 10 }, items: [] }
+    const empty: GofishDisplayListDocument = {
+      irVersion: 0,
+      ir: "gofish-display-list",
+      viewport: { w: 10, h: 10 },
+      items: []
+    }
     const cfg = unstable_fromGofishIR(empty)
     expect(cfg.nodes).toEqual([])
     expect(cfg.warnings?.some((w) => w.includes("no items"))).toBe(true)

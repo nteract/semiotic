@@ -14,22 +14,21 @@
 // the baked, viewport-locked output of `toDisplayList({ w, h })`.
 export {
   EXPERIMENTAL_GOFISH_ADAPTER_NAME,
-  unstable_fromGofishIR,
+  unstable_fromGofishIR
 } from "./recipes/gofishIR"
 export type {
   GofishDisplayListDocument as UnstableGofishDisplayListDocument,
   GofishDisplayItem as UnstableGofishDisplayItem,
   GofishChartConfig as UnstableGofishChartConfig,
-  FromGofishIROptions as UnstableFromGofishIROptions,
+  FromGofishIROptions as UnstableFromGofishIROptions
 } from "./recipes/gofishIR"
 export {
   gofishIRExamples as unstable_gofishIRExamples,
-  barsIR as unstable_gofishBarsIR,
   flowerIR as unstable_gofishFlowerIR,
   treemapIR as unstable_gofishTreemapIR,
   bottleIR as unstable_gofishBottleIR,
   bobaIR as unstable_gofishBobaIR,
-  pythonIR as unstable_gofishPythonIR,
+  pythonIR as unstable_gofishPythonIR
 } from "./recipes/gofishIRExamples"
 export type { GofishIRExample as UnstableGofishIRExample } from "./recipes/gofishIRExamples"
 
@@ -50,7 +49,7 @@ export {
   attachIDID as unstable_attachIDID,
   readIDID as unstable_readIDID,
   attachIDIDAnnotations as unstable_attachIDIDAnnotations,
-  readIDIDAnnotations as unstable_readIDIDAnnotations,
+  readIDIDAnnotations as unstable_readIDIDAnnotations
 } from "./data/portability"
 // Observable Plot → ChartConfig adapter (§5.1). A sibling to the stable
 // `fromVegaLite`, staged behind `unstable_` while the imperative-JS → declarative
@@ -67,14 +66,14 @@ export type {
   MermaidNode as UnstableMermaidNode,
   MermaidEdge as UnstableMermaidEdge,
   MermaidDirection as UnstableMermaidDirection,
-  MermaidNodeShape as UnstableMermaidNodeShape,
+  MermaidNodeShape as UnstableMermaidNodeShape
 } from "./data/fromMermaid"
 export type {
   ObservablePlotSpec as UnstableObservablePlotSpec,
   ObservablePlotMark as UnstableObservablePlotMark,
   ObservablePlotMarkOptions as UnstableObservablePlotMarkOptions,
   ObservablePlotScale as UnstableObservablePlotScale,
-  ObservablePlotChannel as UnstableObservablePlotChannel,
+  ObservablePlotChannel as UnstableObservablePlotChannel
 } from "./data/fromObservablePlot"
 
 export type {
@@ -90,5 +89,5 @@ export type {
   PortableAnnotationLifecycle as UnstablePortableAnnotationLifecycle,
   PortableAnnotated as UnstablePortableAnnotated,
   ValidationResult as UnstablePortabilityValidationResult,
-  IDIDVegaLiteMeta as UnstableIDIDVegaLiteMeta,
+  IDIDVegaLiteMeta as UnstableIDIDVegaLiteMeta
 } from "./data/portability"

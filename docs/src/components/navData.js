@@ -135,6 +135,7 @@ const navData = [
       { title: "Custom Layouts", path: "/custom-charts/custom-layouts" },
       { title: "Glyph Marks", path: "/custom-charts/glyph-marks" },
       { title: "Recipe Chrome Kit", path: "/custom-charts/recipe-kit" },
+      { title: "Examples", path: "/custom-charts/examples" },
     ],
   },
   {
