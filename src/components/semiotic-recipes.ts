@@ -38,6 +38,9 @@ export type { BulletConfig } from "./recipes/bullet"
 export { parallelCoordinatesLayout } from "./recipes/parallelCoordinates"
 export type { ParallelCoordinatesConfig } from "./recipes/parallelCoordinates"
 
+export { bobaLayout } from "./recipes/boba"
+export type { BobaConfig } from "./recipes/boba"
+
 export { annotationLayout } from "./recipes/annotationLayout"
 export type {
   AnnotationLayoutConfig,

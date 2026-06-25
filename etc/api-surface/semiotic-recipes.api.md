@@ -11,6 +11,7 @@ function annotationBudget
 function annotationDensity
 function annotationLayout
 function bandLabel
+function bobaLayout
 function boundsOf
 function buildTooltipEntries
 function bulletLayout
@@ -46,6 +47,7 @@ interface AnnotationDensityResult
 interface AnnotationLayoutConfig
 interface AnnotationLayoutOptions
 interface BandLabelProps
+interface BobaConfig
 interface BulletConfig
 interface CalendarConfig
 interface CustomLayoutSelection

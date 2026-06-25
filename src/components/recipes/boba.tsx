@@ -4,8 +4,7 @@ import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { OrdinalSceneNode } from "../stream/ordinalTypes"
 import type { RectSceneNode } from "../stream/types"
 import type { Datum } from "../charts/shared/datumTypes"
-import { resolveAccessor } from "./recipeUtils"
-import { datumFromFields, stableGlyphId } from "./gofish"
+import { resolveAccessor, datumFromFields, stableGlyphId } from "./recipeUtils"
 
 /**
  * Boba (bubble tea) cup glyphs — an OrdinalCustomLayout, one cup per category.
@@ -18,7 +17,7 @@ import { datumFromFields, stableGlyphId } from "./gofish"
  * math is ported here (deterministic — no `Math.random`, so SSR and
  * transitions are stable).
  *
- * Scene-node / overlay split, matching the other GoFish recipes: one
+ * Scene-node / overlay split, like the other custom-layout recipes: one
  * transparent hit-rect per cup carries the cup's datum (volumes, pearl/ice
  * counts) into the Semiotic scene graph for hover, selection, SSR evidence,
  * and transitions; the cup silhouette, tea, pearls, ice, lid, and straw are
@@ -36,7 +35,7 @@ const ICE_FILL = "#a5f2f3"
 const STRAW_FILL = "#4F91CB"
 const CUP_STROKE = "#222222"
 
-export interface GofishBobaConfig {
+export interface BobaConfig {
   /** Category — one cup per distinct value. @default "name" */
   categoryAccessor?: string | ((d: Datum) => string)
   /** Tea volume (cm³). @default field "teaVolume" → 450 */
@@ -205,7 +204,7 @@ function num(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? n : fallback
 }
 
-export const gofishBobaLayout: OrdinalCustomLayout<GofishBobaConfig> = (ctx) => {
+export const bobaLayout: OrdinalCustomLayout<BobaConfig> = (ctx) => {
   const cfg = ctx.config
   const { plot } = ctx.dimensions
   if (plot.width <= 0 || plot.height <= 0) return { nodes: [] }
@@ -371,7 +370,7 @@ export const gofishBobaLayout: OrdinalCustomLayout<GofishBobaConfig> = (ctx) => 
   return {
     nodes: nodes as OrdinalSceneNode[],
     overlays: (
-      <g className="semiotic-gofish-boba" style={{ pointerEvents: "none" }}>
+      <g className="semiotic-boba" style={{ pointerEvents: "none" }}>
         {overlays}
       </g>
     ),

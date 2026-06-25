@@ -56,7 +56,7 @@ const BUILDING_BLOCKS = [
 const WORKED_EXAMPLES = [
   { title: "Satellites in Space", path: "/recipes/satellites-in-space", what: "The packedClusterMatrix recipe — a matrix of packed beeswarm clusters with four-channel composite glyphs, banded rows, and callouts. Fully interactive controls." },
   { title: "Kafka Streams topology", path: "/recipes/kstreams", what: "The lineageDagLayout recipe — a layered DAG of composite node glyphs with reach-dimming and linked selection." },
-  { title: "GoFish layouts", path: "/interoperability/gofish", what: "GoFish's Frontend IR translated into Semiotic recipes — a second, independent grammar driving the same custom-layout substrate." },
+  { title: "GoFish layouts", path: "/interoperability/gofish", what: "GoFish's baked DisplayList render IR mapped onto a custom layout by role — GoFish owns the geometry, Semiotic owns interaction and accessibility." },
   { title: "Marimekko", path: "/cookbook/marimekko-chart", what: "Variable-width stacked bars via the marimekko ordinal recipe." },
 ]
 

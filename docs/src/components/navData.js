@@ -135,6 +135,7 @@ const navData = [
       { title: "Custom Layouts", path: "/custom-charts/custom-layouts" },
       { title: "Glyph Marks", path: "/custom-charts/glyph-marks" },
       { title: "Recipe Chrome Kit", path: "/custom-charts/recipe-kit" },
+      { title: "Examples", path: "/custom-charts/examples" },
     ],
   },
   {
@@ -186,7 +187,7 @@ const navData = [
       { title: "Vega-Lite", path: "/interoperability/vega-lite" },
       { title: "Observable Plot", path: "/interoperability/observable-plot" },
       { title: "Mermaid", path: "/interoperability/mermaid" },
-      { title: "GoFish IR", path: "/interoperability/gofish" },
+      { title: "GoFish DisplayList", path: "/interoperability/gofish" },
       { title: "Apache Arrow", path: "/interoperability/arrow" },
       { title: "Data-Truth Bridge", path: "/interoperability/data-quality-bridge" },
       { title: "Generative-UI Trust Layer", path: "/interoperability/generative-ui" },

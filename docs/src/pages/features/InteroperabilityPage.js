@@ -25,7 +25,7 @@ const GROUPS = [
       { title: "Vega-Lite", path: "/interoperability/vega-lite", what: "fromVegaLite — the dominant declarative grammar (stable)." },
       { title: "Observable Plot", path: "/interoperability/observable-plot", what: "fromObservablePlot — the notebook→production handoff." },
       { title: "Mermaid", path: "/interoperability/mermaid", what: "fromMermaid — text-to-graph, compiled to a layered, accessible DAG." },
-      { title: "GoFish IR", path: "/interoperability/gofish", what: "unstable_fromGofishIR — interprets a serialized foreign grammar through custom layouts." },
+      { title: "GoFish DisplayList", path: "/interoperability/gofish", what: "unstable_fromGofishIR — maps GoFish's baked render IR (toDisplayList) onto a custom layout by role." },
     ],
   },
   {

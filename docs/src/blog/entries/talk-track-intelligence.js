@@ -22,7 +22,7 @@ const META = {
   subtitle:
     "Three composable AI surfaces: conversation-arc telemetry, annotation provenance + lifecycle, and a variant discovery plug point. Two are runnable inline.",
   author: "Elijah Meeks",
-  date: "2026-05-27",
+  date: "2026-06-25",
   tags: ["case-study", "ai", "roadmap"],
   excerpt:
     "AI-assisted chart authoring is a session, not a single call. The spine for treating that session as a first-class thing — an event vocabulary for the arc itself, provenance + lifecycle on every annotation, and an extension surface for variant proposers.",
@@ -611,6 +611,5 @@ registerVariantDiscovery((component, capability, context) => {
 
 export default {
   ...META,
-  draft: true,
   component: Body,
 }
