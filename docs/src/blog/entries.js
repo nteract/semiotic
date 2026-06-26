@@ -81,6 +81,7 @@ import AnInteroperabilityLayer from "./entries/an-interoperability-layer.js"
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  FromSpecToRuntime,
   AnInteroperabilityLayer,
   NotebookToProduction,
   GenerationIsCheap,
@@ -102,7 +103,6 @@ export const allBlogEntries = [
   AuditingWhatYouCantSee,
   ScaleAwareSuggestions,
   Release360,
-  FromSpecToRuntime,
   TalkTrackIntelligence,
   LiveDashboard,
   AnchoredConversations,

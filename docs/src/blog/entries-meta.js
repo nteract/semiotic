@@ -20,6 +20,17 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "from-spec-to-runtime",
+    title: "From spec to runtime",
+    subtitle:
+      "Annotations that actually age, a conversation-arc hook with auto-instrumentation, and a shared classifier that ties the three age-as-encoding systems together.",
+    author: "Elijah Meeks",
+    date: "2026-06-26",
+    tags: ["case-study", "ai", "roadmap"],
+    excerpt:
+      "applyAnnotationLifecycle as a one-line opacity-and-dashing pass, useConversationArc as the React entry point, auto-instrumentation on the existing AI hooks so an arc captures itself, and the shared bandFromAge primitive that lets decay, staleness, and freshness compose instead of competing.",
+  },
+  {
     slug: "an-interoperability-layer",
     title: "An Interoperability Layer for Semiotic",
     subtitle:
@@ -272,18 +283,6 @@ export const allBlogEntriesMeta = [
     tags: ["release"],
     excerpt:
       "3.6.0 turns Semiotic's observation hooks, native annotations, and streaming runtime into an explicit AI-facing surface. Charts declare what they're for; datasets get profiled and ranked; audiences get calibrated; conversations anchor back to the chart instead of stopping at a chat bubble. Three case-study posts published alongside the release walk through what the new shape makes possible.",
-  },
-  {
-    slug: "from-spec-to-runtime",
-    title: "From spec to runtime",
-    subtitle:
-      "What landed after the M1 trio: annotations that actually age, a conversation-arc hook with auto-instrumentation, and a shared classifier that ties the three age-as-encoding systems together.",
-    author: "Elijah Meeks",
-    date: "2026-05-28",
-    tags: ["case-study", "ai", "roadmap"],
-    excerpt:
-      "The previous post introduced three AI-facing surfaces as types and stubs. This one is what shipped to make them real — applyAnnotationLifecycle as a one-line opacity-and-dashing pass, useConversationArc as the React entry point, auto-instrumentation on the existing AI hooks so an arc captures itself, and the shared bandFromAge primitive that lets decay, staleness, and freshness compose instead of competing.",
-    draft: true,
   },
   {
     slug: "talk-track-intelligence",

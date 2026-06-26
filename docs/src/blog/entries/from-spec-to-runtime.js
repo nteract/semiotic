@@ -19,12 +19,12 @@ const META = {
   slug: "from-spec-to-runtime",
   title: "From spec to runtime",
   subtitle:
-    "What landed after the M1 trio: annotations that actually age, a conversation-arc hook with auto-instrumentation, and a shared classifier that ties the three age-as-encoding systems together.",
+    "Annotations that actually age, a conversation-arc hook with auto-instrumentation, and a shared classifier that ties the three age-as-encoding systems together.",
   author: "Elijah Meeks",
-  date: "2026-05-28",
+  date: "2026-06-26",
   tags: ["case-study", "ai", "roadmap"],
   excerpt:
-    "The previous post introduced three AI-facing surfaces as types and stubs. This one is what shipped to make them real — applyAnnotationLifecycle as a one-line opacity-and-dashing pass, useConversationArc as the React entry point, auto-instrumentation on the existing AI hooks so an arc captures itself, and the shared bandFromAge primitive that lets decay, staleness, and freshness compose instead of competing.",
+    "applyAnnotationLifecycle as a one-line opacity-and-dashing pass, useConversationArc as the React entry point, auto-instrumentation on the existing AI hooks so an arc captures itself, and the shared bandFromAge primitive that lets decay, staleness, and freshness compose instead of competing.",
 }
 
 // ─── Shared chrome ─────────────────────────────────────────────────────────
@@ -41,17 +41,6 @@ const inlineCode = {
   fontFamily: "var(--semiotic-font-family-mono, ui-monospace, monospace)",
   fontSize: "0.9em",
 }
-
-const tag = (color) => ({
-  display: "inline-block",
-  background: color,
-  color: "white",
-  fontSize: 11,
-  fontWeight: 600,
-  padding: "2px 8px",
-  borderRadius: 999,
-  marginRight: 6,
-})
 
 // ─── Auto-instrument demo ─────────────────────────────────────────────────
 
@@ -307,10 +296,6 @@ function Body() {
   return (
     <article style={{ lineHeight: 1.65 }}>
       <p>
-        <span style={tag("#6a52d9")}>draft</span>
-      </p>
-
-      <p>
         <Link to="/blog/talk-track-intelligence">The previous post</Link> introduced three AI-facing
         surfaces — conversation-arc telemetry, annotation provenance + lifecycle, variant discovery
         — as M1 deliverables. M1 was the spec: types, contracts, stub implementations you could wire
@@ -500,8 +485,8 @@ const ann = withCurrentProvenance(
         <code style={inlineCode}>registerConversationArcSink</code>,{" "}
         <code style={inlineCode}>createLocalStorageConversationArcSink</code>,{" "}
         <code style={inlineCode}>createIndexedDBConversationArcSink</code>, and{" "}
-        <code style={inlineCode}>createWebhookConversationArcSink</code>. Replay stays separate
-        from recording through <code style={inlineCode}>loadConversationArc</code>, so a fixture can
+        <code style={inlineCode}>createWebhookConversationArcSink</code>. Replay stays separate from
+        recording through <code style={inlineCode}>loadConversationArc</code>, so a fixture can
         hydrate the inspector without duplicating analytics events.
       </p>
 
@@ -545,6 +530,5 @@ const ann = withCurrentProvenance(
 
 export default {
   ...META,
-  draft: true,
   component: Body,
 }
