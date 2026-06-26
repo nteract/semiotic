@@ -85,12 +85,13 @@ describe("LinkedCharts", () => {
     expect(container.textContent).toContain("Charts")
   })
 
-  it("seeds the configured resolution mode at construction", () => {
+  it("applies the configured resolution mode", () => {
     // Proves the resolution is actually applied (not just accepted): in
     // crossfilter mode a client's own clause is excluded from its own
     // predicate, so with no other clauses it matches everything — including a
     // row its own clause would otherwise filter out. Under the default "union"
-    // mode this would be false, so this distinguishes a live seed from a no-op.
+    // mode this would be false, so this distinguishes an applied resolution
+    // from a no-op.
     let predicate: (d: Datum) => boolean = () => true
     function CrossfilterConsumer() {
       const sel = useSelection({ name: "cf", fields: ["region"], clientId: "chart-1" })

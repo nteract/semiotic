@@ -136,6 +136,11 @@ export interface LinkedChartsProps {
 
 // ── Interactive unified legend ─────────────────────────────────────────────
 
+// Stable clientIds for the unified legend's own selection clauses. Module
+// scope so they're not reactive inputs to the legend's hooks.
+const ISOLATE_CLIENT = "__linked-legend-isolate__"
+const HIGHLIGHT_CLIENT = "__linked-legend-highlight__"
+
 /**
  * Inner component rendered inside SelectionProvider so it can use selection hooks.
  * Handles highlight (hover) and isolate (click) interactions on the unified legend,
@@ -175,9 +180,6 @@ function LinkedLegend({
   // React state and synced back with an effect. The legend's own swatch
   // emphasis is *derived* from the store below, so there is exactly one
   // place this state lives.
-  const ISOLATE_CLIENT = "__linked-legend-isolate__"
-  const HIGHLIGHT_CLIENT = "__linked-legend-highlight__"
-
   // Isolate mode: click toggles point selections.
   const { selectPoints: selectIsolate, clear: clearIsolate } = useSelection({
     name: selectionName,
