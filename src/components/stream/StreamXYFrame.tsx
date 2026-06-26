@@ -27,6 +27,7 @@ import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
+import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
 import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
@@ -749,33 +750,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onChange(categories)
     }, [])
 
-    // Update config when it changes — also schedule re-render since style
-    // callbacks (pointStyle, areaStyle, etc.) may have changed.
-    useEffect(() => {
-      storeRef.current?.updateConfig(stablePipelineConfig)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [stablePipelineConfig, scheduleRender])
+    useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
-    // Custom-layout selection channel — off the rebuild path. When the layout
-    // returned a `restyle`, a selection change re-applies styles + repaints (no
-    // relayout / quadtree rebuild); otherwise it rebuilds so `ctx.selection`
-    // reaches the layout. Overlays re-render via CustomLayoutSelectionProvider.
-    const lastLayoutSelectionRef = useRef<unknown>(null)
-    useEffect(() => {
-      const store = storeRef.current
-      if (!store) return
-      const sel = layoutSelection ?? null
-      if (lastLayoutSelectionRef.current === sel) return
-      lastLayoutSelectionRef.current = sel
-      store.setLayoutSelection(sel)
-      if (store.hasCustomRestyle) {
-        store.restyleScene(sel)
-      } else {
-        dirtyRef.current = true
-      }
-      scheduleRender()
-    }, [layoutSelection, scheduleRender])
+    // Bridge the resolved custom-layout selection into the scene store +
+    // repaint. See useLayoutSelectionSync for why this is a legitimate
+    // React→canvas sync (selection is React-assembled), not a store relay.
+    useLayoutSelectionSync(storeRef, layoutSelection, dirtyRef, scheduleRender)
 
     // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
     // is handled by useFrame above when themeDirtyRef is provided.

@@ -25,6 +25,7 @@ import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoPipelineConfig } from "./geoTypes"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import { useFrame } from "./useFrame"
+import { useConfigSync } from "./streamStoreSync"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
@@ -438,11 +439,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // ── Sync config ───────────────────────────────────────────────────
 
-    useEffect(() => {
-      storeRef.current?.updateConfig(stablePipelineConfig)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [stablePipelineConfig, scheduleRender])
+    useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
     // ── Sync bounded data ─────────────────────────────────────────────
 

@@ -26,6 +26,7 @@ import { DEFAULT_TENSION_CONFIG, DEFAULT_PARTICLE_STYLE } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
+import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
 import {
   extractNetworkNavPoints,
@@ -766,37 +767,15 @@ const StreamNetworkFrame = forwardRef<
   // So no separate React state / per-change setState is needed (and can't
   // compound with a per-frame morph into a "Maximum update depth" storm).
 
-  // Update config when props change. A render-only config change (e.g. the
-  // resolved selection predicate driving dim/highlight) flows through here
-  // too: updateConfig → dirty → render-loop buildScene re-emits the overlays
-  // → setAnnotationFrame re-render reads them.
-  useEffect(() => {
-    storeRef.current?.updateConfig(stablePipelineConfig)
-    dirtyRef.current = true
-    scheduleRender()
-  }, [stablePipelineConfig, scheduleRender])
+  // A render-only config change (e.g. the resolved selection predicate driving
+  // dim/highlight) flows through here too: updateConfig → dirty → render-loop
+  // buildScene re-emits the overlays → setAnnotationFrame re-render reads them.
+  useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
-  // Selection / hover channel for custom layouts — kept OFF the rebuild path.
-  // When the layout supplied `restyle`/`restyleEdge`, a selection change only
-  // re-applies styles to the existing scene + repaints (no relayout, no quadtree
-  // rebuild); otherwise it falls back to the rebuild path so `ctx.selection`
-  // reaches the layout. Either way the overlay subtree re-renders against the
-  // new selection via CustomLayoutSelectionProvider below.
-  const lastLayoutSelectionRef = useRef<unknown>(null)
-  useEffect(() => {
-    const store = storeRef.current
-    if (!store) return
-    const sel = layoutSelection ?? null
-    if (lastLayoutSelectionRef.current === sel) return
-    lastLayoutSelectionRef.current = sel
-    store.setLayoutSelection(sel)
-    if (store.hasCustomRestyle) {
-      store.restyleScene(sel)
-    } else {
-      dirtyRef.current = true
-    }
-    scheduleRender()
-  }, [layoutSelection, scheduleRender])
+  // Bridge the resolved custom-layout selection into the scene store +
+  // repaint. See useLayoutSelectionSync for why this is a legitimate
+  // React→canvas sync (selection is React-assembled), not a store relay.
+  useLayoutSelectionSync(storeRef, layoutSelection, dirtyRef, scheduleRender)
 
   // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
   // is handled by useFrame above when themeDirtyRef is provided. But there's

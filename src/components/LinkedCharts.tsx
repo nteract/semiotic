@@ -2,9 +2,9 @@
 import * as React from "react"
 import { createContext, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react"
 import { SelectionProvider, useSelectionSelector } from "./store/SelectionStore"
-import type { ResolutionMode, SelectionStoreState } from "./store/SelectionStore"
+import type { ResolutionMode, Selection, SelectionStoreState } from "./store/SelectionStore"
 import { ObservationProvider } from "./store/ObservationStore"
-import { useLinkedHover, useSelection } from "./store/useSelection"
+import { useSelection } from "./store/useSelection"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import { DEFAULT_COLORS } from "./charts/shared/colorUtils"
 import Legend from "./Legend"
@@ -134,23 +134,12 @@ export interface LinkedChartsProps {
   legendField?: string
 }
 
-// ── Resolution initializer ─────────────────────────────────────────────────
-
-function ResolutionInit({ selections }: { selections: Record<string, { resolution?: ResolutionMode }> }) {
-  const setResolution = useSelectionSelector((state: SelectionStoreState) => state.setResolution)
-
-  useEffect(() => {
-    for (const [name, config] of Object.entries(selections)) {
-      if (config.resolution) {
-        setResolution(name, config.resolution)
-      }
-    }
-  }, [selections, setResolution])
-
-  return null
-}
-
 // ── Interactive unified legend ─────────────────────────────────────────────
+
+// Stable clientIds for the unified legend's own selection clauses. Module
+// scope so they're not reactive inputs to the legend's hooks.
+const ISOLATE_CLIENT = "__linked-legend-isolate__"
+const HIGHLIGHT_CLIENT = "__linked-legend-highlight__"
 
 /**
  * Inner component rendered inside SelectionProvider so it can use selection hooks.
@@ -185,71 +174,77 @@ function LinkedLegend({
     label: ""
   }]
 
-  // Highlight mode: hover produces a linkedHover selection
-  const linkedHoverHook = useLinkedHover({
+  // The selection store is the single source of truth for both the
+  // highlight (hover) and isolate (click) interactions. Each writes its
+  // own clause directly from the event handler; nothing is mirrored into
+  // React state and synced back with an effect. The legend's own swatch
+  // emphasis is *derived* from the store below, so there is exactly one
+  // place this state lives.
+  // Isolate mode: click toggles point selections.
+  const { selectPoints: selectIsolate, clear: clearIsolate } = useSelection({
     name: selectionName,
     fields: [field],
+    clientId: ISOLATE_CLIENT,
   })
-
-  // Isolate mode: click toggles point selections
-  const selectionHook = useSelection({
+  // Highlight mode: hover produces a transient point selection.
+  const { selectPoints: selectHighlight, clear: clearHighlight } = useSelection({
     name: selectionName,
     fields: [field],
-    clientId: "__linked-legend-isolate__",
+    clientId: HIGHLIGHT_CLIENT,
   })
 
-  const [isolatedCategories, setIsolatedCategories] = useState<Set<string>>(new Set())
-  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null)
-
-  // Use refs for store methods to avoid infinite effect loops
-  // (selectPoints/clear change identity when selection state changes)
-  const selectPointsRef = useRef(selectionHook.selectPoints)
-  selectPointsRef.current = selectionHook.selectPoints
-  const clearRef = useRef(selectionHook.clear)
-  clearRef.current = selectionHook.clear
-
-  // Sync isolatedCategories → selection store via effect to avoid setState-during-render
-  useEffect(() => {
-    if (interaction !== "isolate") return
-    if (isolatedCategories.size > 0) {
-      selectPointsRef.current({ [field]: Array.from(isolatedCategories) })
-    } else {
-      clearRef.current()
+  // Read the legend's emphasis straight back from the store rather than
+  // keeping a parallel React-state copy. `selections.get` returns a stable
+  // reference until *this* selection changes, so the subscription only
+  // re-renders the legend on its own updates.
+  const selection = useSelectionSelector(
+    (state: SelectionStoreState) => state.selections.get(selectionName)
+  )
+  const { isolatedCategories, highlightedCategory } = useMemo(() => {
+    const isolated = new Set<string>()
+    let highlighted: string | null = null
+    const isolateField = selection?.clauses.get(ISOLATE_CLIENT)?.fields[field]
+    if (isolateField?.type === "point") {
+      for (const v of isolateField.values) isolated.add(String(v))
     }
-  }, [interaction, isolatedCategories, field])
+    const highlightField = selection?.clauses.get(HIGHLIGHT_CLIENT)?.fields[field]
+    if (highlightField?.type === "point") {
+      const first = highlightField.values.values().next().value
+      if (first != null) highlighted = String(first)
+    }
+    return { isolatedCategories: isolated, highlightedCategory: highlighted }
+  }, [selection, field])
 
   const handleHover = useCallback(
     (item: { label: string } | null) => {
       if (interaction !== "highlight") return
       if (item) {
-        setHighlightedCategory(item.label)
-        linkedHoverHook.onHover({ [field]: item.label })
+        selectHighlight({ [field]: [item.label] })
       } else {
-        setHighlightedCategory(null)
-        linkedHoverHook.onHover(null)
+        clearHighlight()
       }
     },
-    [interaction, field, linkedHoverHook]
+    [interaction, field, selectHighlight, clearHighlight]
   )
 
   const handleClick = useCallback(
     (item: { label: string }) => {
       if (interaction !== "isolate") return
-      setIsolatedCategories(prev => {
-        const next = new Set(prev)
-        if (next.has(item.label)) {
-          next.delete(item.label)
-        } else {
-          next.add(item.label)
-        }
-        // If all categories selected, reset (Carbon behavior)
-        if (next.size === allCategories.length) {
-          return new Set()
-        }
-        return next
-      })
+      const next = new Set(isolatedCategories)
+      if (next.has(item.label)) {
+        next.delete(item.label)
+      } else {
+        next.add(item.label)
+      }
+      // Empty, or all categories selected (Carbon behavior): clear the
+      // isolate clause so every category shows.
+      if (next.size === 0 || next.size === allCategories.length) {
+        clearIsolate()
+      } else {
+        selectIsolate({ [field]: Array.from(next) })
+      }
     },
-    [interaction, allCategories.length]
+    [interaction, field, isolatedCategories, allCategories.length, selectIsolate, clearIsolate]
   )
 
   // Measure the container's actual laid-out width so we can tell <Legend>
@@ -365,6 +360,22 @@ export function LinkedCharts({
   legendSelectionName = "legend",
   legendField = "category",
 }: LinkedChartsProps) {
+  // Seed configured resolution modes at store construction rather than
+  // mirroring them in with a mount effect — the resolution is initial
+  // config, so it belongs in `initialState`, not a synchronize-after-commit
+  // pass. createStore builds the source once with this, then ignores later
+  // identity changes (resolution isn't a runtime-dynamic input).
+  const initialSelectionState = useMemo(() => {
+    if (!selections) return undefined
+    const seeded = new Map<string, Selection>()
+    for (const [name, config] of Object.entries(selections)) {
+      if (config.resolution) {
+        seeded.set(name, { name, resolution: config.resolution, clauses: new Map() })
+      }
+    }
+    return seeded.size > 0 ? { selections: seeded } : undefined
+  }, [selections])
+
   const parentCategoryColors = useCategoryColors()
   const [registeredCategories, setRegisteredCategories] = useState<Record<string, string[]>>({})
   const generatedCategoryColorsRef = useRef<Record<string, string>>({})
@@ -427,9 +438,8 @@ export function LinkedCharts({
   const suppressChildLegends = shouldShowLegend && hasCategories
 
   return (
-    <SelectionProvider>
+    <SelectionProvider initialState={initialSelectionState}>
       <ObservationProvider>
-        {selections && <ResolutionInit selections={selections} />}
         <LinkedCategoryRegistryContext.Provider value={registry}>
           <CategoryColorProvider colors={categoryColors}>
             <LinkedLegendContext.Provider value={suppressChildLegends}>
