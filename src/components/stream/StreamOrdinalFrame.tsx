@@ -45,6 +45,7 @@ import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
+import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
@@ -512,32 +513,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       onChange(categories)
     }, [])
 
-    // Update config when it changes
-    useEffect(() => {
-      storeRef.current?.updateConfig(stablePipelineConfig)
-      dirtyRef.current = true
-      scheduleRender()
-    }, [stablePipelineConfig, scheduleRender])
+    useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
-    // Custom-layout selection channel — off the rebuild path. With a `restyle`
-    // callback a selection change re-applies styles + repaints (no relayout);
-    // otherwise it rebuilds so `ctx.selection` reaches the layout. Overlays
-    // re-render via CustomLayoutSelectionProvider below.
-    const lastLayoutSelectionRef = useRef<unknown>(null)
-    useEffect(() => {
-      const store = storeRef.current
-      if (!store) return
-      const sel = layoutSelection ?? null
-      if (lastLayoutSelectionRef.current === sel) return
-      lastLayoutSelectionRef.current = sel
-      store.setLayoutSelection(sel)
-      if (store.hasCustomRestyle) {
-        store.restyleScene(sel)
-      } else {
-        dirtyRef.current = true
-      }
-      scheduleRender()
-    }, [layoutSelection, scheduleRender])
+    // Bridge the resolved custom-layout selection into the scene store +
+    // repaint. See useLayoutSelectionSync for why this is a legitimate
+    // React→canvas sync (selection is React-assembled), not a store relay.
+    useLayoutSelectionSync(storeRef, layoutSelection, dirtyRef, scheduleRender)
 
     // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
     // is handled by useFrame above when themeDirtyRef is provided.
