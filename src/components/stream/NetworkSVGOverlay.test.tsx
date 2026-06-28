@@ -32,6 +32,32 @@ describe("NetworkSVGOverlay", () => {
     expect(Number(node!.getAttribute("data-dx"))).toBeLessThan(0)
   })
 
+  it("renders a pointId-anchored annotation via the default network rules (no svgAnnotationRules)", () => {
+    // Regression: NetworkSVGOverlay previously rendered nothing unless a custom
+    // svgAnnotationRules was supplied, so the documented pointId anchoring on
+    // network (incl. custom) charts silently failed. It now builds the default
+    // "network" rules like the XY/ordinal overlays do.
+    const { container, getByText } = render(
+      <NetworkSVGOverlay
+        width={200}
+        height={120}
+        totalWidth={240}
+        totalHeight={160}
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        labels={[]}
+        sceneNodes={[
+          { type: "circle", id: "perfecta", cx: 100, cy: 60, r: 10, datum: { id: "perfecta" } },
+        ]}
+        annotations={[
+          { type: "callout", pointId: "perfecta", label: "Healthful sign", dx: 20, dy: -18 },
+        ]}
+      />
+    )
+    expect(getByText("Healthful sign")).toBeTruthy()
+    // The note resolved to the node center rather than the origin.
+    expect(container.querySelector("svg")).not.toBeNull()
+  })
+
   it("hides density-deferred HTML widgets with the shared disclosure CSS", () => {
     const { container } = render(
       <NetworkSVGOverlay

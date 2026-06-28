@@ -12,6 +12,7 @@ export { ChoroplethMap } from "./charts/geo/ChoroplethMap"
 export { ProportionalSymbolMap } from "./charts/geo/ProportionalSymbolMap"
 export { FlowMap } from "./charts/geo/FlowMap"
 export { DistanceCartogram } from "./charts/geo/DistanceCartogram"
+export { GeoCustomChart } from "./charts/custom/GeoCustomChart"
 
 // Stream Frame types
 export type {
@@ -26,6 +27,11 @@ export type {
   DistanceCartogramConfig,
   GeoPipelineConfig
 } from "./stream/geoTypes"
+export type {
+  GeoCustomLayout,
+  GeoLayoutContext,
+  GeoLayoutResult
+} from "./stream/geoCustomLayout"
 
 // Particle types
 export type { GeoParticleStyle } from "./stream/GeoParticlePool"
@@ -41,3 +47,4 @@ export type { ChoroplethMapProps } from "./charts/geo/ChoroplethMap"
 export type { ProportionalSymbolMapProps } from "./charts/geo/ProportionalSymbolMap"
 export type { FlowMapProps } from "./charts/geo/FlowMap"
 export type { DistanceCartogramProps } from "./charts/geo/DistanceCartogram"
+export type { GeoCustomChartProps } from "./charts/custom/GeoCustomChart"

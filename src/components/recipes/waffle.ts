@@ -173,6 +173,90 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   return { nodes }
 }
 
+export interface CellWeight {
+  /** Stable identity for the category (used as the secondary sort tiebreak). */
+  key: string
+  /** Relative weight — cells are allocated proportional to this. */
+  weight: number
+}
+
+export interface AllocatedCells extends CellWeight {
+  /** The category's exact (fractional) share of `totalCells`. */
+  exact: number
+  /** The integer cells assigned to this category. */
+  cells: number
+  /** Fractional leftover (`exact - floor(exact)`), the largest-remainder key. */
+  remainder: number
+}
+
+export interface AllocateCellsOptions {
+  /** Cells guaranteed to every category with a positive weight, even when its
+   *  proportional share rounds below this. Over-allocation is then clawed back
+   *  from the largest categories. @default 0 */
+  minPerCategory?: number
+}
+
+/**
+ * Distribute `totalCells` across weighted categories so each gets a count
+ * proportional to its weight, using the **largest-remainder method** (every
+ * cell is assigned; no drift from rounding each share independently). The pure
+ * allocation math behind a feature-mix / proportional waffle: turn `{kind →
+ * count}` into `{kind → grid cells}`.
+ *
+ * With `minPerCategory` every present category keeps at least that many cells
+ * (so small-but-nonzero categories stay visible); the shortfall is reclaimed
+ * from the categories holding the most cells. Categories are returned in input
+ * order — sort the input first if you want a particular legend/fill order.
+ *
+ * @example
+ * ```ts
+ * const alloc = allocateCells(
+ *   [{ key: "monument", weight: 7 }, { key: "museum", weight: 2 }, { key: "park", weight: 1 }],
+ *   100,
+ *   { minPerCategory: 1 },
+ * )
+ * // → [{ key: "monument", cells: 70, … }, { key: "museum", cells: 20, … }, { key: "park", cells: 10, … }]
+ * ```
+ */
+export function allocateCells(
+  weights: readonly CellWeight[],
+  totalCells: number,
+  opts?: AllocateCellsOptions,
+): AllocatedCells[] {
+  const minPer = Math.max(0, Math.floor(opts?.minPerCategory ?? 0))
+  const total = weights.reduce((s, w) => s + Math.max(0, w.weight), 0)
+  if (totalCells <= 0 || total <= 0) {
+    return weights.map((w) => ({ ...w, exact: 0, cells: 0, remainder: 0 }))
+  }
+
+  const groups: AllocatedCells[] = weights.map((w) => {
+    const exact = (Math.max(0, w.weight) / total) * totalCells
+    return { ...w, exact, cells: Math.max(minPer, Math.floor(exact)), remainder: exact - Math.floor(exact) }
+  })
+
+  let assigned = groups.reduce((sum, g) => sum + g.cells, 0)
+  // Over-allocated (the per-category minimum overshot): claw back from the
+  // categories holding the most cells, breaking ties toward the smallest remainder.
+  while (assigned > totalCells) {
+    const reducible = groups
+      .filter((g) => g.cells > minPer)
+      .sort((a, b) => b.cells - a.cells || a.remainder - b.remainder || a.key.localeCompare(b.key))[0]
+    if (!reducible) break
+    reducible.cells--
+    assigned--
+  }
+  // Under-allocated: hand the leftover cells to the largest remainders.
+  for (let i = 0; assigned < totalCells; i = (i + 1) % groups.length) {
+    const ranked = [...groups].sort(
+      (a, b) => b.remainder - a.remainder || b.weight - a.weight || a.key.localeCompare(b.key),
+    )
+    ranked[i % ranked.length].cells++
+    assigned++
+  }
+
+  return groups
+}
+
 function resolveStringOrFn<T>(a: string | ((d: Datum) => T) | undefined): ((d: Datum) => T) | null {
   if (a == null) return null
   if (typeof a === "function") return a

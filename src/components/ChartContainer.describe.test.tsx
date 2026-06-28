@@ -84,4 +84,20 @@ describe("ChartContainer describe", () => {
     )
     expect(screen.queryByRole("tree")).toBeNull()
   })
+
+  it("keeps banner content visible while the chart body is loading", () => {
+    render(
+      <ChartContainer
+        title="Weather"
+        loading
+        banner={<div role="alert">This is taking longer than expected.</div>}
+      >
+        <div>weather chart</div>
+      </ChartContainer>
+    )
+
+    expect(screen.getByRole("alert")).toHaveTextContent("taking longer")
+    expect(screen.getByRole("status", { name: "Loading chart" })).toBeInTheDocument()
+    expect(screen.queryByText("weather chart")).toBeNull()
+  })
 })

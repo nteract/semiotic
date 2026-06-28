@@ -37,6 +37,14 @@ import { getMax } from "../charts/shared/minMax"
 import { computePulseIntensity, hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { GeoLayoutContext, GeoLayoutResult } from "./geoCustomLayout"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
+import {
+  buildResolveColor,
+  resolveCustomLayoutPalette,
+  STREAMING_PALETTE
+} from "./customLayoutPalette"
+import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 
 // ── Projection resolution ────────────────────────────────────────────
 
@@ -302,6 +310,12 @@ export class GeoPipelineStore {
   scene: GeoSceneNode[] = []
   scales: GeoScales | null = null
   version = 0
+  /** SVG overlays returned from the active custom layout. */
+  customLayoutOverlays: import("react").ReactNode = null
+  private _customLayoutDiagnosticsWarned = new Set<string>()
+  private _customRestyle: GeoLayoutResult["restyle"] = undefined
+  hasCustomRestyle = false
+  private _baseStyles = new WeakMap<object, Style>()
 
   // Spatial index for point hit testing (built when point count exceeds threshold)
   private static readonly QUADTREE_THRESHOLD = 500
@@ -513,7 +527,25 @@ export class GeoPipelineStore {
     this.prevPositions = null
     this._quadtree = null
     this._maxPointRadius = 0
+    this.customLayoutOverlays = null
+    this._customRestyle = undefined
+    this.hasCustomRestyle = false
+    this._baseStyles = new WeakMap()
     this.version++
+  }
+
+  setLayoutSelection(selection: CustomLayoutSelection | null): void {
+    this.config.layoutSelection = selection
+  }
+
+  restyleScene(selection: CustomLayoutSelection | null): void {
+    const fn = this._customRestyle
+    if (!fn) return
+    for (const node of this.scene) {
+      const base = this._baseStyles.get(node) ?? node.style
+      const patch = fn(node, selection)
+      node.style = patch ? { ...base, ...patch } : base
+    }
   }
 
   // ── Projection pipeline ──────────────────────────────────────────
@@ -863,12 +895,76 @@ export class GeoPipelineStore {
   }
 
   private buildSceneNodes(layout: StreamLayout): GeoSceneNode[] {
-    const nodes: GeoSceneNode[] = []
     const { config } = this
     const proj = this.projection!
     const path = this.geoPath!
     const xAcc = makeAccessor(config.xAccessor, "lon")
     const yAcc = makeAccessor(config.yAccessor, "lat")
+
+    if (config.customLayout && this.scales) {
+      const margin = config.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
+      const palette = resolveCustomLayoutPalette(
+        config.colorScheme,
+        config.themeCategorical,
+        STREAMING_PALETTE
+      )
+      const layoutContext: GeoLayoutContext = {
+        areas: this.areas.slice(),
+        points: this.getPoints().slice(),
+        lines: this.lineData.slice(),
+        scales: this.scales,
+        dimensions: {
+          width: layout.width,
+          height: layout.height,
+          margin,
+          plot: { x: 0, y: 0, width: layout.width, height: layout.height }
+        },
+        theme: {
+          semantic: config.themeSemantic ?? {},
+          categorical: [...palette]
+        },
+        resolveColor: buildResolveColor(palette),
+        config: (config.layoutConfig ?? {}) as Record<string, unknown>,
+        selection: config.layoutSelection ?? null
+      }
+
+      let result: GeoLayoutResult
+      try {
+        result = config.customLayout(layoutContext)
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[semiotic] geo customLayout threw:", err)
+        }
+        this.customLayoutOverlays = null
+        this._customRestyle = undefined
+        this.hasCustomRestyle = false
+        return []
+      }
+
+      const nodes = result.nodes ?? []
+      this.customLayoutOverlays = result.overlays ?? null
+      this._customRestyle = result.restyle
+      this.hasCustomRestyle = !!result.restyle
+      this._baseStyles = new WeakMap()
+      if (this.hasCustomRestyle) {
+        for (const node of nodes) this._baseStyles.set(node, node.style)
+        this.restyleScene(config.layoutSelection ?? null)
+      }
+      warnCustomLayoutDiagnostics({
+        label: "geo customLayout",
+        nodes,
+        overlays: this.customLayoutOverlays,
+        warned: this._customLayoutDiagnosticsWarned
+      })
+      return nodes
+    }
+
+    this.customLayoutOverlays = null
+    this._customRestyle = undefined
+    this.hasCustomRestyle = false
+    this._baseStyles = new WeakMap()
+
+    const nodes: GeoSceneNode[] = []
 
     // Resolve themed defaults once per scene build. Cheap to precompute,
     // expensive to rebuild per-feature for large GeoJSON inputs.

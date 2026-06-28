@@ -313,3 +313,30 @@ describe("SSR feature parity: foregroundGraphics", () => {
     expect(svg).toContain(FG_MARKER)
   })
 })
+
+describe("SSR feature parity: geo customLayout", () => {
+  it("serializes custom geo nodes and overlays", () => {
+    const svg = renderGeoToStaticSVG({
+      projection: "equirectangular",
+      points: [{ id: "paris", lon: 2.3522, lat: 48.8566 }],
+      xAccessor: "lon",
+      yAccessor: "lat",
+      size: [400, 300],
+      customLayout: (ctx) => ({
+        nodes: [{
+          type: "geoarea",
+          pathData: "M10,20L20,10L30,20L20,30Z",
+          centroid: [20, 20],
+          bounds: [[10, 10], [30, 30]],
+          screenArea: 200,
+          style: { fill: ctx.resolveColor("tile") },
+          datum: ctx.points[0],
+        }],
+        overlays: <text x="20" y="20" data-geo-custom-overlay="yes">Paris</text>,
+      }),
+    } as StaticGeoProps)
+
+    expect(svg).toContain("M10,20L20,10L30,20L20,30Z")
+    expect(svg).toContain("data-geo-custom-overlay")
+  })
+})

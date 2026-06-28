@@ -1656,6 +1656,8 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       opacity: { type: "number" },
       stroke: { type: "string" },
       strokeWidth: { type: "number" },
+      pointStyle: { type: "function", description: "Per-datum style callback. Overrides fill, stroke, strokeWidth, opacity, and radius via r.", omitFromSchema: true },
+      yScaleType: { type: "string", enum: ["linear", "log", "symlog"], description: "Value-axis scale. symlog preserves zero and negative values while compressing large magnitudes." },
       transition: { type: "object", description: "Transition config: { duration, easing }" },
     },
     capabilities: {

@@ -19,6 +19,11 @@ export { ProcessSankey } from "./charts/network/ProcessSankey"
 export { NetworkCustomChart } from "./charts/custom/NetworkCustomChart"
 export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
+// hitTarget — invisible, interaction-bearing scene node for custom network
+// layouts (keyboard nav + focus ring, pointId annotation anchoring,
+// onObservation, shared selection). See also semiotic/recipes.
+export { networkHitTarget, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
+export type { NetworkHitTargetCircleProps, NetworkHitTargetRectProps } from "./stream/hitTarget"
 
 // Stream Frame types
 export type {

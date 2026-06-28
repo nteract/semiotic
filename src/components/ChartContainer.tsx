@@ -66,6 +66,12 @@ export interface ChartContainerProps {
   navigable?: boolean | { visible?: boolean; maxLeaves?: number }
   /** Additional controls rendered in the toolbar after built-in actions */
   controls?: React.ReactNode
+  /**
+   * Persistent content rendered between the header and chart body. Useful for
+   * data-source notices, refresh actions, and other status banners that should
+   * remain visible while the chart is loading.
+   */
+  banner?: React.ReactNode
 
   /** Loading state — shows skeleton placeholder */
   loading?: boolean
@@ -203,6 +209,7 @@ export const ChartContainer = React.forwardRef<
     describe,
     navigable,
     controls,
+    banner,
     loading = false,
     error,
     errorBoundary = false,
@@ -366,10 +373,15 @@ export const ChartContainer = React.forwardRef<
               display: "flex",
               justifyContent: "space-between",
               alignItems: "flex-start",
+              flexWrap: "wrap",
+              gap: 8,
               borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
             }}
           >
-            <div className="semiotic-chart-title-area">
+            <div
+              className="semiotic-chart-title-area"
+              style={{ minWidth: 0, flex: "1 1 200px" }}
+            >
               {title && (
                 <div
                   className="semiotic-chart-title"
@@ -397,7 +409,12 @@ export const ChartContainer = React.forwardRef<
             </div>
             <div
               className="semiotic-chart-toolbar"
-              style={{ display: "flex", alignItems: "center", gap: 4 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                marginLeft: "auto",
+              }}
             >
               {controls}
               {showExport && (
@@ -504,6 +521,12 @@ export const ChartContainer = React.forwardRef<
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {banner && (
+          <div className="semiotic-chart-banner">
+            {banner}
           </div>
         )}
 

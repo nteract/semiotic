@@ -88,6 +88,21 @@ export default function RecipeKitPage() {
               <td>an editorial leader-line callout to a specific mark a layout emitted</td>
             </tr>
             <tr>
+              <td><code>linearAxis(props)</code></td>
+              <td>a <code>&lt;g&gt;</code> of ticks</td>
+              <td>a tick axis + gridlines from <em>any</em> scale — the bespoke-scale escape hatch when <code>showAxes</code> can&rsquo;t apply</td>
+            </tr>
+            <tr>
+              <td><code>legendSwatches(props)</code></td>
+              <td>a <code>&lt;g&gt;</code> of swatch rows</td>
+              <td>a portable SVG legend in <code>overlays</code> — fill / line / shape / hatch swatches (sibling to <code>legendGroupsFrom</code>, which feeds the frame legend)</td>
+            </tr>
+            <tr>
+              <td><code>hatchFill(opts)</code></td>
+              <td><code>{`{ def, fill }`}</code></td>
+              <td>an SVG <code>&lt;pattern&gt;</code> for percentile / uncertainty bands, shared by the chart band and its legend swatch (SVG analogue of <code>createHatchPattern</code>)</td>
+            </tr>
+            <tr>
               <td><code>readField(node, key, fallback)</code></td>
               <td>the value</td>
               <td>read <code>node.data.&lt;key&gt;</code> (the network ingest wrapper) or the node itself</td>
@@ -119,6 +134,97 @@ export default function RecipeKitPage() {
             </tr>
           </tbody>
         </table>
+      </section>
+
+      <section>
+        <h2>Scene nodes, geometry &amp; data helpers</h2>
+        <p>
+          Beyond overlay chrome, the kit ships the pure pieces a hand-built custom chart kept
+          re-deriving — so a layout assembles geometry from named, tested functions instead of
+          inlining trigonometry and bezier control points.
+        </p>
+        <table className="recipe-customization-table">
+          <thead>
+            <tr><th>Helper</th><th>Family</th><th>Use</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>hitTargetPoint</code> / <code>hitTargetRect</code> / <code>networkHitTarget</code></td>
+              <td>all</td>
+              <td>a transparent, hit-tested scene node so a layout that draws its marks in <code>overlays</code> still earns keyboard nav + focus ring (a11y), <code>pointId</code> annotation anchoring, <code>onObservation</code> + selection, and transition identity — from <code>{`{ x, y, (r | width,height), datum, id }`}</code></td>
+            </tr>
+            <tr>
+              <td><code>polarToXY</code> / <code>xyToAngle</code> / <code>angleScale</code> / <code>radiusScale</code> / <code>ringArcPath</code></td>
+              <td>radial</td>
+              <td>angle ⟂ radius for a two-continuous-channel radial chart (0 = up, clockwise); <code>ringArcPath</code> draws annular sectors, wedges, and full rings</td>
+            </tr>
+            <tr>
+              <td><code>curvedEdgePath</code> / <code>orthogonalEdgePath</code> / <code>boxEdgeAnchors</code> / <code>fanOutBend</code></td>
+              <td>network</td>
+              <td>edge SVG paths: S-curve (with side-bow) or elbow, box exit/entry points by direction, and a fan-out bend so parallel edges don&rsquo;t overlap</td>
+            </tr>
+            <tr>
+              <td><code>cubicPoint</code> / <code>cubicTangent</code> / <code>cubicPath</code></td>
+              <td>network</td>
+              <td>evaluate a cubic Bézier — sample a point or tangent along a <code>CubicCurve</code> to seat a mark on the curve (a node mid-edge, an arrowhead), or serialize it to an SVG path</td>
+            </tr>
+            <tr>
+              <td><code>addPoints</code> / <code>subtractPoints</code> / <code>scalePoint</code> / <code>pointMagnitude</code> / <code>normalizePoint</code></td>
+              <td>any</td>
+              <td>2D point/vector math — an edge offset normal to its tangent, a radial spoke, a leader line; composes with the radial + edge kits</td>
+            </tr>
+            <tr>
+              <td><code>allocateCells</code></td>
+              <td>any</td>
+              <td>largest-remainder grid allocation: <code>{`{key, weight}[]`}</code> + a cell count → integer cells with no rounding drift (<code>minPerCategory</code> keeps small categories visible) — the math behind a feature-mix waffle</td>
+            </tr>
+            <tr>
+              <td><code>clamp</code> / <code>mean</code> / <code>withAlpha</code></td>
+              <td>any</td>
+              <td>the numeric/color one-liners every layout re-declares; <code>withAlpha</code> turns a hex into <code>rgba()</code> so a hover-dim can ride a recipe&rsquo;s <code>resolveColor</code> callback</td>
+            </tr>
+            <tr>
+              <td><code>packIntervals</code> / <code>activeCountOverDomain</code></td>
+              <td>any</td>
+              <td>greedy Gantt sub-track packing + the concurrency step series that pairs with it</td>
+            </tr>
+            <tr>
+              <td><code>runs</code> / <code>runLengthEncode</code></td>
+              <td>any</td>
+              <td>collapse a per-step categorical/boolean series into drawable runs (condition strips, status timelines)</td>
+            </tr>
+            <tr>
+              <td><code>wrapValue</code> / <code>shortestArcDelta</code> / <code>cyclicRangeContains</code> / <code>selectCyclicRange</code></td>
+              <td>any</td>
+              <td>cyclical (wrap-around) math for periodic axes — day-of-year, hour, compass bearing</td>
+            </tr>
+            <tr>
+              <td><code>axisFixedForcePositions</code> / <code>rectCollide</code></td>
+              <td>network</td>
+              <td>pin one axis from a field, relax the other with attraction + rectangular (label-box) collision</td>
+            </tr>
+            <tr>
+              <td><code>unwrapDatum</code></td>
+              <td>any</td>
+              <td>the raw user datum from an <code>onObservation</code> handler — collapses the wrapped-vs-raw split</td>
+            </tr>
+          </tbody>
+        </table>
+        <CodeBlock language="jsx">{`import { hitTargetPoint, polarToXY, angleScale, radiusScale } from "semiotic/recipes"
+
+// A radial layout: draw the art-directed glyphs in overlays, emit a transparent
+// hit target per datum so the chart is keyboard-navigable + annotation-anchorable.
+function radialLayout(ctx) {
+  const angle = angleScale([0, 365])              // day-of-year → radians
+  const radius = radiusScale([-10, 110], [0, 180]) // temperature → px
+  return {
+    nodes: ctx.data.map((d) => {
+      const { x, y } = polarToXY(angle(d.day), radius(d.temp))
+      return hitTargetPoint({ x, y, datum: d, id: \`day-\${d.day}\` })
+    }),
+    overlays: <RadialGlyphs data={ctx.data} angle={angle} radius={radius} />,
+  }
+}`}</CodeBlock>
       </section>
 
       <section>
@@ -196,7 +302,7 @@ function myLayout(ctx) {
         <p style={{ fontSize: 13, color: "var(--text-2)" }}>
           Annotations can now anchor to a mark a custom layout emits: give the scene node an{" "}
           <code>id</code> and pass an annotation <code>{`{ pointId: "<id>" }`}</code> to the chart&rsquo;s{" "}
-          <code>annotations</code> prop (all three custom HOCs accept it). <code>markCallout</code> remains
+          <code>annotations</code> prop (all four custom HOCs accept it). <code>markCallout</code> remains
           for fully bespoke, recipe-drawn leader lines.
         </p>
       </section>

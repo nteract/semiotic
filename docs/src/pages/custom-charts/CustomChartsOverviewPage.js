@@ -33,13 +33,20 @@ const HOCS = [
     emits: "circle / rect / arc / symbol nodes, edges, labels + overlays",
     examples: "flextree, dagre, lineage DAG, packed-cluster matrix",
   },
+  {
+    name: "GeoCustomChart",
+    importPath: "semiotic/geo",
+    ctx: "areas, points, lines, GeoScales, dimensions, theme, resolveColor, config",
+    emits: "geographic area / point / line scene nodes + overlays",
+    examples: "isometric landmark atlas, hex territory board",
+  },
 ]
 
 const BUILDING_BLOCKS = [
   {
     title: "Custom Layouts",
     path: "/custom-charts/custom-layouts",
-    what: "The three escape-hatch HOCs, the layout-function contract, the scene primitives, and the full recipe gallery (waffle, calendar, flextree, dagre, marimekko, bullet, parallel coordinates).",
+    what: "The four escape-hatch HOCs, the layout-function contract, the scene primitives, and the full recipe gallery (waffle, calendar, flextree, dagre, marimekko, bullet, parallel coordinates, isometric landmarks).",
   },
   {
     title: "Glyph Marks",
@@ -74,7 +81,7 @@ export default function CustomChartsOverviewPage() {
       <section>
         <p>
           When the chart catalog doesn&rsquo;t fit, Semiotic gives you an <strong>escape hatch</strong>:
-          three HOCs that hand a <em>layout function</em> a typed context and let it emit scene
+          four HOCs that hand a <em>layout function</em> a typed context and let it emit scene
           primitives directly. The Stream Frame still owns the hard parts — scales, theme, canvas
           hit-testing, keyboard navigation, transitions, decay, SSR/PNG export — so your layout only
           has to compute geometry. A bespoke graphic lands as a reusable <em>recipe</em>, not a
@@ -87,7 +94,7 @@ import { packedClusterMatrix } from "semiotic/recipes"
       </section>
 
       <section>
-        <h2>The three escape-hatch HOCs</h2>
+        <h2>The four escape-hatch HOCs</h2>
         <p>
           Each wraps a Stream Frame and differs only in the context it hands the layout (which scales
           and data shape) and the scene primitives it can paint:

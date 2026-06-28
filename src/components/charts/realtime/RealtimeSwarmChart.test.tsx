@@ -46,6 +46,8 @@ describe("RealtimeSwarmChart", () => {
           opacity={0.8}
           stroke="#000"
           strokeWidth={1}
+          pointStyle={(d) => ({ fill: d.sensor === "sensor1" ? "#fff" : "#000", r: 5 })}
+          yScaleType="symlog"
           width={800}
           height={400}
           categoryAccessor="sensor"

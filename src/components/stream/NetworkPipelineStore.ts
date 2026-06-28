@@ -1431,6 +1431,19 @@ export class NetworkPipelineStore {
    * Duration: 2 seconds from lastTopologyChangeTime.
    */
   applyTopologyDiff(now: number): void {
+    const topologyPulseColor = "rgba(34, 197, 94, 0.7)"
+
+    // Pulse fields live on scene nodes between frames. Clear the prior
+    // topology pulse before deciding whether the two-second window is still
+    // active; otherwise the final painted intensity remains on transparent
+    // custom-layout hit targets indefinitely after animation scheduling stops.
+    for (const sceneNode of this.sceneNodes) {
+      if (sceneNode._pulseColor !== topologyPulseColor) continue
+      sceneNode._pulseIntensity = 0
+      sceneNode._pulseColor = undefined
+      sceneNode._pulseGlowRadius = undefined
+    }
+
     if (this.addedNodes.size === 0) return
 
     const age = now - this.lastTopologyChangeTime
@@ -1446,7 +1459,7 @@ export class NetworkPipelineStore {
         sceneNode._pulseIntensity ?? 0,
         intensity
       )
-      sceneNode._pulseColor = "rgba(34, 197, 94, 0.7)"
+      sceneNode._pulseColor = topologyPulseColor
       sceneNode._pulseGlowRadius = 8
     }
   }

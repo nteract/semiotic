@@ -33,10 +33,15 @@ export function buildSwarmScene(ctx: XYSceneContext, data: Datum[]): PointSceneN
       fill = ctx.config.barColors?.[cat] || fill
     }
 
+    // Reuse StreamXYFrame's per-datum point-style channel for advanced swarm
+    // encodings. The callback is the final layer: chart-level primitives and
+    // category colors remain useful defaults, while a datum can override fill,
+    // outline, opacity, or radius without dropping down to StreamXYFrame.
+    const datumStyle = ctx.config.pointStyle?.(d)
     const node: PointSceneNode = {
       type: "point",
-      x, y, r: radius,
-      style: { fill, opacity, stroke, strokeWidth },
+      x, y, r: datumStyle?.r ?? radius,
+      style: { fill, opacity, stroke, strokeWidth, ...datumStyle },
       datum: d
     }
     if (ctx.getPointId) node.pointId = String(ctx.getPointId(d))

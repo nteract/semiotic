@@ -25,7 +25,7 @@ import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoPipelineConfig } from "./geoTypes"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import { useFrame } from "./useFrame"
-import { useConfigSync } from "./streamStoreSync"
+import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
@@ -53,6 +53,8 @@ import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
 import type { HoverPointerCoords } from "./hoverUtils"
 import { resolveNodeColor } from "./sceneUtils"
+import { composeOverlays } from "./composeOverlays"
+import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -167,6 +169,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       areas,
       points,
       lines,
+      customLayout,
+      layoutConfig,
+      layoutSelection,
 
       // Accessors
       xAccessor,
@@ -214,6 +219,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       enableHover = true,
       hoverAnnotation,
       tooltipContent,
+      allowTooltipOverflow = false,
       customClickBehavior,
       customHoverBehavior,
       annotations,
@@ -324,6 +330,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       themeSemantic: resolveThemeSemanticColors(currentTheme),
       themeSequential: currentTheme?.colors?.sequential,
       themeDiverging: currentTheme?.colors?.diverging,
+      themeCategorical: currentTheme?.colors?.categorical,
       graticule,
       projectionTransform,
       decay,
@@ -332,11 +339,15 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       introAnimation: introEnabled,
       annotations,
       pointIdAccessor,
-      lineIdAccessor
+      lineIdAccessor,
+      customLayout,
+      layoutConfig,
+      layoutMargin: margin
     }), [
       projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
       lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
-      projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, lineIdAccessor, currentTheme
+      projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, lineIdAccessor, currentTheme,
+      customLayout, layoutConfig, margin
     ])
 
     // Stabilize the config reference so inline-object / inline-array
@@ -440,6 +451,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // ── Sync config ───────────────────────────────────────────────────
 
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
+    useLayoutSelectionSync(storeRef, layoutSelection, dirtyRef, scheduleRender)
 
     // ── Sync bounded data ─────────────────────────────────────────────
 
@@ -768,6 +780,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
 
       // Recompute scene when dirty
+      let computedSceneThisFrame = false
       if (dirtyRef.current && !transitionActive) {
         const layout = { width: adjustedWidth, height: adjustedHeight }
 
@@ -795,6 +808,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           store.applyZoomTransform(zt, layout)
         }
         dirtyRef.current = false
+        computedSceneThisFrame = true
 
         // Update canvas aria-label imperatively after scene changes
         canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, "Geographic chart"))
@@ -978,12 +992,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const annotationsChanged = annotations !== prevAnnotationsRef.current
       if (annotationsChanged) prevAnnotationsRef.current = annotations
       const wantsAnnotationFrame =
-        dirtyRef.current ||
+        computedSceneThisFrame ||
         annotationsChanged ||
         (isTransitioning && annotations && annotations.length > 0)
       if (
         wantsAnnotationFrame &&
-        (dirtyRef.current || annotationsChanged || now - lastAnnotationFrameTimeRef.current >= 33)
+        (computedSceneThisFrame || annotationsChanged || now - lastAnnotationFrameTimeRef.current >= 33)
       ) {
         setAnnotationFrame(f => f + 1)
         lastAnnotationFrameTimeRef.current = now
@@ -1296,7 +1310,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             legendClickBehavior={legendClickBehavior}
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
-            foregroundGraphics={resolvedForeground}
+            foregroundGraphics={composeOverlays(
+              resolvedForeground,
+              wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null)
+            )}
             annotations={annotations}
             autoPlaceAnnotations={autoPlaceAnnotations}
             annotationFrame={0}
@@ -1323,7 +1340,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           position: "relative",
           width: responsiveWidth ? "100%" : size[0],
           height: responsiveHeight ? "100%" : size[1],
-          overflow: "hidden",
+          overflow: allowTooltipOverflow ? "visible" : "hidden",
           ...(zoomable ? { touchAction: "none" } : {})
         }}
         onKeyDown={onKeyDown}
@@ -1387,7 +1404,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={resolvedForeground}
+          foregroundGraphics={composeOverlays(
+            resolvedForeground,
+            wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null)
+          )}
           annotations={annotations}
           autoPlaceAnnotations={autoPlaceAnnotations}
           annotationFrame={annotationFrame}

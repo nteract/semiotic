@@ -15,7 +15,8 @@ import type {
   PulseConfig,
   TransitionConfig,
   StalenessConfig,
-  ThemeSemanticColors
+  ThemeSemanticColors,
+  FrameGraphicsProp
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { GradientLegendConfig, LegendGroup, LegendLayout } from "../types/legendTypes"
@@ -506,8 +507,12 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   legendCategoryAccessor?: string | ((d: T) => string)
   /** Fires when the current legend category domain changes after scene rebuilds. */
   onCategoriesChange?: (categories: string[]) => void
-  backgroundGraphics?: ReactNode
-  foregroundGraphics?: ReactNode
+  /** SVG behind the canvas. Function form receives `{ size, margin, scales }`
+   *  with the frame's resolved `{o, r, projection}` scales (null pre-layout). */
+  backgroundGraphics?: FrameGraphicsProp<OrdinalScales>
+  /** SVG on top (in the overlay). Function form receives `{ size, margin, scales }`
+   *  with the frame's resolved `{o, r, projection}` scales (null pre-layout). */
+  foregroundGraphics?: FrameGraphicsProp<OrdinalScales>
   title?: string | ReactNode
   className?: string
   background?: string

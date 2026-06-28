@@ -122,6 +122,197 @@ export function bandLabel(p: BandLabelProps): ReactElement | null {
   )
 }
 
+// ── Hatch / pattern fill ───────────────────────────────────────────────────────
+
+export interface HatchFillOptions {
+  /** Unique pattern id, referenced by the returned `fill`. */
+  id: string
+  /** Line color. @default "currentColor" */
+  color?: string
+  /** Hatch angle in degrees. @default 45 */
+  angle?: number
+  /** Spacing between lines, px. @default 8 */
+  spacing?: number
+  /** Line width, px. @default 1 */
+  strokeWidth?: number
+  /** Line opacity. @default 0.5 */
+  opacity?: number
+}
+
+/**
+ * A diagonal-hatch SVG fill — for percentile envelopes, uncertainty bands, and
+ * "projected/estimated" regions. Returns a `<pattern>` `def` to drop in (any
+ * `<defs>`, or anywhere in the SVG tree) and a `fill` URL referencing it, so the
+ * chart band and a {@link legendSwatches} hatch swatch read identically instead
+ * of each hand-rolling a `<pattern>` (the per-example drift this removes).
+ *
+ * The SVG analogue of the canvas `createHatchPattern` (`semiotic/utils`); use
+ * this for SVG overlays / `foregroundGraphics`, that one for canvas pieceStyle.
+ *
+ * @example
+ * ```ts
+ * const hatch = hatchFill({ id: "envelope", color: "var(--semiotic-text-secondary)" })
+ * // <>{hatch.def}<path d={bandPath} fill={hatch.fill} /></>
+ * ```
+ */
+export function hatchFill(opts: HatchFillOptions): { def: ReactElement; fill: string } {
+  const spacing = opts.spacing ?? 8
+  const color = opts.color ?? "currentColor"
+  const def = (
+    <pattern
+      key={opts.id}
+      id={opts.id}
+      width={spacing}
+      height={spacing}
+      patternUnits="userSpaceOnUse"
+      patternTransform={`rotate(${opts.angle ?? 45})`}
+    >
+      <line
+        x1={0}
+        y1={0}
+        x2={0}
+        y2={spacing}
+        stroke={color}
+        strokeWidth={opts.strokeWidth ?? 1}
+        opacity={opts.opacity ?? 0.5}
+      />
+    </pattern>
+  )
+  return { def, fill: `url(#${opts.id})` }
+}
+
+// ── Linear tick axis ───────────────────────────────────────────────────────────
+
+export type AxisOrient = "bottom" | "top" | "left" | "right"
+
+export interface LinearAxisProps {
+  /** Value → pixel along the axis. Pass any scale function — a `radiusScale`,
+   *  a d3 scale, or an inline `(v) => (v - d0) / (d1 - d0) * width`. */
+  scale: (value: number) => number
+  /** The tick values to draw. */
+  ticks: number[]
+  /** Axis side. `bottom`/`top` run horizontally (ticks vary x); `left`/`right`
+   *  run vertically (ticks vary y). @default "bottom" */
+  orient?: AxisOrient
+  /** Cross-axis position of the axis line — the `y` for a horizontal axis, the
+   *  `x` for a vertical one. @default 0 */
+  offset?: number
+  /** Tick-mark length (px), drawn outward from the axis toward the labels.
+   *  `0` draws labels with no tick marks (the bare year-axis case). @default 6 */
+  tickLength?: number
+  /** Extend each tick *into* the plot as a gridline of this length (px). The
+   *  tick + gridline render as one continuous line. @default 0 */
+  gridLength?: number
+  /** Dash pattern for the gridline portion (e.g. `"3 5"`). */
+  gridDasharray?: string
+  /** Format a tick value for its label. @default `String` */
+  format?: (v: number) => string
+  /** @default 11 */
+  fontSize?: number
+  fontWeight?: number | string
+  /** Tick + label color. @default "var(--semiotic-text-secondary, #888)" */
+  color?: string
+  /** Gridline color, if different from `color`. */
+  gridColor?: string
+  /** Gap between a tick's end and its label (px). @default 4 */
+  labelGap?: number
+  /** Override label `text-anchor`. Defaults follow `orient`. */
+  labelAnchor?: "start" | "middle" | "end"
+  /** Anchor the first tick label `start` and the last `end` so edge labels stay
+   *  inside the plot (pairs with `axisExtent="exact"`). Horizontal axes only.
+   *  @default false */
+  edgeAnchor?: boolean
+  className?: string
+  keyId?: string | number
+}
+
+/**
+ * A linear tick axis drawn from *any* scale, for custom-layout `overlays` — the
+ * bespoke-scale escape hatch for axes (the built-in `showAxes` only works for
+ * layouts that respect the standard scale). Sibling to {@link bandLabel}: emits
+ * tick marks, optional gridlines, and labels as `pointerEvents: "none"` SVG.
+ *
+ * @example a top time-axis with gridlines running down the plot
+ * ```ts
+ * linearAxis({
+ *   scale: (year) => ((year - 1775) / (2015 - 1775)) * plot.width,
+ *   ticks: [1800, 1850, 1900, 1950, 2000],
+ *   orient: "top", gridLength: plot.height, gridDasharray: "3 5", edgeAnchor: true,
+ * })
+ * ```
+ */
+export function linearAxis(p: LinearAxisProps): ReactElement {
+  const orient = p.orient ?? "bottom"
+  const horizontal = orient === "bottom" || orient === "top"
+  const offset = p.offset ?? 0
+  const tickLength = p.tickLength ?? 6
+  const gridLength = p.gridLength ?? 0
+  const labelGap = p.labelGap ?? 4
+  const fontSize = p.fontSize ?? 11
+  const color = p.color ?? "var(--semiotic-text-secondary, #888)"
+  const gridColor = p.gridColor ?? color
+  const format = p.format ?? ((v: number) => String(v))
+  // Outward = toward the label; inward = into the plot (gridline).
+  const outward = orient === "top" || orient === "left" ? -1 : 1
+  const lastIndex = p.ticks.length - 1
+
+  const children: ReactElement[] = p.ticks.map((value, i) => {
+    const pos = p.scale(value)
+    const tickEnd = offset + outward * tickLength
+    const gridEnd = offset - outward * gridLength
+    const labelPos = tickEnd + outward * labelGap
+
+    let anchor: "start" | "middle" | "end"
+    if (p.labelAnchor) anchor = p.labelAnchor
+    else if (horizontal) {
+      anchor = p.edgeAnchor && i === 0 ? "start" : p.edgeAnchor && i === lastIndex ? "end" : "middle"
+    } else {
+      anchor = orient === "left" ? "end" : "start"
+    }
+
+    const lineProps = horizontal
+      ? { x1: pos, x2: pos, y1: tickEnd, y2: gridEnd }
+      : { x1: tickEnd, x2: gridEnd, y1: pos, y2: pos }
+    const baseline: "auto" | "hanging" | "middle" = horizontal
+      ? orient === "top"
+        ? "auto"
+        : "hanging"
+      : "middle"
+    const text = horizontal ? { x: pos, y: labelPos } : { x: labelPos, y: pos }
+
+    return (
+      <g key={`tick-${value}-${i}`}>
+        {(tickLength > 0 || gridLength > 0) && (
+          <line
+            {...lineProps}
+            stroke={gridLength > 0 ? gridColor : color}
+            strokeWidth={1}
+            strokeDasharray={gridLength > 0 ? p.gridDasharray : undefined}
+            opacity={gridLength > 0 ? 0.7 : 1}
+          />
+        )}
+        <text
+          x={text.x}
+          y={text.y}
+          textAnchor={anchor}
+          dominantBaseline={baseline}
+          fontSize={fontSize}
+          fontWeight={p.fontWeight}
+          fill={color}
+        >
+          {format(value)}
+        </text>
+      </g>
+    )
+  })
+
+  return (
+    <g key={p.keyId} className={p.className} style={{ pointerEvents: "none" }}>
+      {children}
+    </g>
+  )
+}
+
 // ── Leader-line callout to a mark ──────────────────────────────────────────────
 
 export type CalloutConnector = "straight" | "elbow" | "curve"

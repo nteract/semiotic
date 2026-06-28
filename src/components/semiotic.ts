@@ -31,6 +31,7 @@ import { ChartContainer } from "./ChartContainer"
 import { ChartGrid } from "./ChartGrid"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import { ContextLayout } from "./ContextLayout"
+import { CircularBrush } from "./CircularBrush"
 
 // ── Details panel ────────────────────────────────────────────────────
 import { DetailsPanel } from "./DetailsPanel"
@@ -120,6 +121,8 @@ export {
   CategoryColorProvider,
   useCategoryColors,
   ContextLayout,
+  // Cyclical range brush control
+  CircularBrush,
   // Details panel
   DetailsPanel,
   // Tooltip
@@ -249,6 +252,7 @@ export type {
 } from "./charts/shared/types"
 
 export type { LinkedChartsProps } from "./LinkedCharts"
+export type { CircularBrushProps, CircularBrushValue } from "./CircularBrush"
 
 export {
   useSelection,
