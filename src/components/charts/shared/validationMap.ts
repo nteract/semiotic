@@ -925,6 +925,8 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       opacity: { type: "number" },
       stroke: { type: "string" },
       strokeWidth: { type: "number" },
+      pointStyle: { type: "function" },
+      yScaleType: { type: "string", enum: ["linear", "log", "symlog"] },
       timeExtent: { type: "array" },
       valueExtent: { type: "array" },
       extentPadding: { type: "number" },

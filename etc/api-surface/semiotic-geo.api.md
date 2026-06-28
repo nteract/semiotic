@@ -7,6 +7,7 @@ _Edit dist/semiotic-geo.d.ts's sources, then re-run `npm run docs:api-surface` t
 function ChoroplethMap
 function DistanceCartogram
 function FlowMap
+function GeoCustomChart
 function ProportionalSymbolMap
 function StreamGeoFrame
 function mergeData
@@ -16,6 +17,9 @@ interface DistanceCartogramConfig
 interface DistanceCartogramProps
 interface FlowMapProps
 interface GeoAreaSceneNode
+interface GeoCustomChartProps
+interface GeoLayoutContext
+interface GeoLayoutResult
 interface GeoParticleStyle
 interface GeoPipelineConfig
 interface GeoScales
@@ -24,6 +28,7 @@ interface ProportionalSymbolMapProps
 interface StreamGeoFrameHandle
 interface StreamGeoFrameProps
 type AreasProp
+type GeoCustomLayout
 type GeoSceneNode
 type ProjectionName
 type ProjectionProp

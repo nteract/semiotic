@@ -27,6 +27,32 @@ export function readField(d: unknown, key: string, fallback: unknown): unknown {
 }
 
 /**
+ * Return the **raw user datum** from a value that may be a frame wrapper.
+ *
+ * Stream Frames and custom-layout scene nodes carry the user's object under
+ * `.data` (a `RealtimeNode` / `SceneDatum` wrapper), while HOC tooltips hand
+ * back the raw object — the wrapped-vs-raw split that bites every
+ * `onObservation` consumer. This collapses it: `unwrapDatum(observation.datum)`
+ * always yields the object you passed in, whether the frame wrapped it or not.
+ *
+ * Heuristic footgun: any value with a top-level `data` property is treated as a
+ * wrapper. If your *raw* datum legitimately has its own `data` field, this
+ * returns that field instead of the datum — rename the field or read it directly.
+ *
+ * @example
+ * ```ts
+ * onObservation={(o) => {
+ *   if (o.type === "hover") setActive(unwrapDatum(o.datum))
+ * }}
+ * ```
+ */
+export function unwrapDatum<T = Datum>(value: unknown): T | null {
+  if (value == null) return null
+  const wrapped = (value as { data?: unknown }).data
+  return (wrapped ?? value) as T
+}
+
+/**
  * Group items into a `Map` keyed by a derived string. Insertion order is
  * preserved both for keys and within each bucket — recipes rely on stable
  * ordering for deterministic layout. Several recipes re-declared this; it lives
@@ -220,4 +246,37 @@ export function datumFromFields(fields: Record<string, unknown>): Datum {
  *  transition identity (`"Extra Boba" → "extra-boba"`). */
 export function stableGlyphId(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "item"
+}
+
+/** Clamp `value` into `[min, max]`. The one-liner every layout re-declares to
+ *  keep a radius, opacity, or pixel position inside its valid range. */
+export function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
+}
+
+/** Arithmetic mean of a numeric list; `0` for an empty list (so it's safe to
+ *  feed an unfiltered slice). Recipes average angles, positions, and weights. */
+export function mean(values: readonly number[]): number {
+  if (values.length === 0) return 0
+  let sum = 0
+  for (const v of values) sum += v
+  return sum / values.length
+}
+
+/**
+ * Turn a hex color (`#rgb` or `#rrggbb`) into an `rgba(…)` string at `alpha`.
+ * The dimming-by-alpha helper a custom layout reaches for when it must express
+ * hover/selection fade as a *fill color* (e.g. inside a recipe's `resolveColor`
+ * callback, where the frame's opacity channel isn't available). Non-hex input
+ * is returned unchanged so it composes with CSS-var / `rgb()` colors.
+ */
+export function withAlpha(color: string, alpha: number): string {
+  const a = clamp(alpha, 0, 1)
+  const hex = color.trim().replace(/^#/, "")
+  const expand = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex
+  if (!/^[0-9a-fA-F]{6}$/.test(expand)) return color
+  const r = parseInt(expand.slice(0, 2), 16)
+  const g = parseInt(expand.slice(2, 4), 16)
+  const b = parseInt(expand.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${a})`
 }

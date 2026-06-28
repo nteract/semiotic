@@ -48,8 +48,18 @@ export default function CustomChartsExamplesPage() {
       <section>
         <p>
           The escape-hatch HOCs (<code>XYCustomChart</code>, <code>OrdinalCustomChart</code>,{" "}
-          <code>NetworkCustomChart</code>) are at their best on charts the catalog can't draw. This
+          <code>NetworkCustomChart</code>, <code>GeoCustomChart</code>) are at their best on charts the catalog can't draw. This
           page collects complete, copyable examples — a layout function plus the chart that hosts it.
+        </p>
+      </section>
+
+      <section>
+        <h2>Paris isometric landmarks</h2>
+        <p>
+          The full-bleed <Link to="/examples/paris-isometric-landmarks">Paris, Tile by Tile</Link>{" "}
+          example uses <code>GeoCustomChart</code> and <code>isometricLandmarkLayout</code> to turn
+          live geographic landmark candidates into a strategy-game board with replaceable pixel
+          sprites and a deterministic offline fallback.
         </p>
       </section>
 

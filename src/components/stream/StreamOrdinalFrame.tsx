@@ -41,6 +41,7 @@ import type {
   OrdinalLayout,
   HoverData
 } from "./ordinalTypes"
+import type { FrameGraphicsContext, FrameGraphicsProp } from "./types"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { composeOverlays } from "./composeOverlays"
@@ -345,8 +346,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       responsiveHeight,
       userMargin,
       marginDefault: DEFAULT_MARGIN,
-      foregroundGraphics,
-      backgroundGraphics,
+      // foreground/background are resolved in this frame's body so a function
+      // form can anchor to the resolved `{o, r, projection}` scales (below).
       animate,
       transitionProp,
       themeDirtyRef: dirtyRef,
@@ -358,8 +359,6 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       margin,
       adjustedWidth,
       adjustedHeight,
-      resolvedForeground,
-      resolvedBackground,
       currentTheme,
       transition,
       introEnabled,
@@ -399,6 +398,22 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [currentScales, setCurrentScales] = useState<OrdinalScales | null>(null)
+
+    // Resolve foreground/background graphics with the frame's resolved
+    // `{o, r, projection}` scales threaded into the callback, so a bespoke SVG
+    // overlay anchors to the same scales the chart drew (§ resolved scales in
+    // graphics callbacks). `currentScales` is null on first render (callback
+    // falls back to its own mapping) then populated after the first layout; the
+    // SSR branch re-resolves with its synchronous scales below.
+    const resolveFrameGraphics = (
+      graphics: FrameGraphicsProp<OrdinalScales>,
+      scales: OrdinalScales | null,
+    ): React.ReactNode =>
+      typeof graphics === "function"
+        ? (graphics as (ctx: FrameGraphicsContext<OrdinalScales>) => React.ReactNode)({ size, margin, scales })
+        : graphics
+    const resolvedForeground = resolveFrameGraphics(foregroundGraphics, currentScales)
+    const resolvedBackground = resolveFrameGraphics(backgroundGraphics, currentScales)
     const [annotationFrame, setAnnotationFrame] = useState(0)
     const lastAnnotationFrameTimeRef = useRef(0)
     const [isStale, setIsStale] = useState(false)
@@ -1017,6 +1032,10 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
       const scene = store?.scene ?? []
       const scales = store?.scales ?? null
+      // SSR has no `currentScales` state — re-resolve graphics with the scene's
+      // synchronously-computed scales so server overlays anchor correctly too.
+      const ssrForeground = resolveFrameGraphics(foregroundGraphics, scales)
+      const ssrBackground = resolveFrameGraphics(backgroundGraphics, scales)
       const isRadial = projection === "radial"
       const translateX = isRadial ? margin.left + adjustedWidth / 2 : margin.left
       const translateY = isRadial ? margin.top + adjustedHeight / 2 : margin.top
@@ -1043,9 +1062,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
           >
-            {resolvedBackground && (
+            {ssrBackground && (
               <g transform={`translate(${margin.left},${margin.top})`}>
-                {resolvedBackground}
+                {ssrBackground}
               </g>
             )}
             <g transform={`translate(${translateX},${translateY})`}>
@@ -1081,7 +1100,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
             legendPosition={legendPosition}
             legendLayout={legendLayout}
             foregroundGraphics={
-              composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
+              composeOverlays(ssrForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
             }
             annotations={annotations}
             autoPlaceAnnotations={autoPlaceAnnotations}

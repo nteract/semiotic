@@ -183,6 +183,78 @@ describe("GeoPipelineStore", () => {
     expect(store.scales).toBeNull()
   })
 
+  describe("customLayout", () => {
+    it("receives geo data, projection scales, config, and dimensions", () => {
+      let observed: import("./geoCustomLayout").GeoLayoutContext | null = null
+      const overlay = { kind: "overlay" } as unknown as React.ReactNode
+      const store = new GeoPipelineStore(makeConfig({
+        customLayout: (ctx) => {
+          observed = ctx
+          return {
+            nodes: [{
+              type: "geoarea",
+              pathData: "M0,10L10,0L20,10L10,20Z",
+              centroid: [10, 10],
+              bounds: [[0, 0], [20, 20]],
+              screenArea: 200,
+              style: { fill: ctx.resolveColor("tile") },
+              datum: ctx.points[0],
+            }],
+            overlays: overlay,
+          }
+        },
+        layoutConfig: { columns: 5 },
+        layoutMargin: { top: 1, right: 2, bottom: 3, left: 4 },
+      }))
+      store.setPoints(cities)
+      store.setAreas(usStates)
+      store.setLines(routes)
+      store.computeScene({ width: 320, height: 180 })
+
+      expect(store.scene).toHaveLength(1)
+      expect(store.customLayoutOverlays).toBe(overlay)
+      expect(observed).not.toBeNull()
+      expect(observed!.points).toEqual(cities)
+      expect(observed!.areas).toEqual(usStates)
+      expect(observed!.lines).toEqual(routes)
+      expect(observed!.config).toEqual({ columns: 5 })
+      expect(observed!.dimensions.plot).toEqual({ x: 0, y: 0, width: 320, height: 180 })
+      expect(observed!.dimensions.margin).toEqual({ top: 1, right: 2, bottom: 3, left: 4 })
+      expect(observed!.scales.projectedPoint).toBeTypeOf("function")
+    })
+
+    it("restyles emitted nodes without rebuilding the layout", () => {
+      let invocations = 0
+      const store = new GeoPipelineStore(makeConfig({
+        customLayout: () => {
+          invocations++
+          return {
+            nodes: [{
+              type: "point",
+              x: 20,
+              y: 20,
+              r: 5,
+              style: { fill: "#123456", opacity: 1 },
+              datum: cities[0],
+            }],
+            restyle: (_node, selection) => ({
+              opacity: selection?.isActive ? 0.2 : 1,
+            }),
+          }
+        },
+      }))
+      store.setPoints(cities)
+      store.computeScene({ width: 100, height: 100 })
+
+      store.setLayoutSelection({ isActive: true, predicate: () => false })
+      store.restyleScene({ isActive: true, predicate: () => false })
+
+      expect(invocations).toBe(1)
+      expect(store.scene[0].style.opacity).toBe(0.2)
+      expect(store.scene[0].style.fill).toBe("#123456")
+    })
+  })
+
   describe("distance cartogram", () => {
     it("repositions points by cost distance", () => {
       const costCities = [

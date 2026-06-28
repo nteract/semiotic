@@ -941,7 +941,7 @@ export default function Landing() {
             <Link to="/getting-started" style={styles.btnPrimary}>
               Get Started
             </Link>
-            <Link to="/cookbook" style={styles.btnSecondary}>
+            <Link to="/examples" style={styles.btnSecondary}>
               See Examples
             </Link>
             <Link to="/blog" style={styles.btnSecondary}>
@@ -1110,7 +1110,7 @@ export default function Landing() {
           <Link to="/getting-started" style={styles.btnPrimary}>
             Get Started
           </Link>
-          <Link to="/cookbook" style={styles.btnSecondary}>
+          <Link to="/examples" style={styles.btnSecondary}>
             See Examples
           </Link>
           <Link to="/blog" style={styles.btnSecondary}>

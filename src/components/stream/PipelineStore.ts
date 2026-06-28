@@ -17,7 +17,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  *
  * Consumed by: StreamXYFrame (sole consumer).
  */
-import { scaleLinear, scaleLog, scaleTime, type ScaleLinear } from "d3-scale"
+import { scaleLinear, scaleLog, scaleSymlog, scaleTime, type ScaleLinear } from "d3-scale"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
@@ -210,7 +210,7 @@ export interface PipelineConfig {
 
   // Scale types
   xScaleType?: "linear" | "log" | "time"
-  yScaleType?: "linear" | "log"
+  yScaleType?: "linear" | "log" | "symlog"
 
   // Fixed extents (partial: [min] or [min, undefined] to set only min)
   xExtent?: [number | undefined, number | undefined] | [number]
@@ -963,6 +963,26 @@ export class PipelineStore {
     // Clamp scalePadding to non-negative, no larger than half the smallest layout dimension
     const rawSp = config.scalePadding || 0
     const sp = Math.max(0, Math.min(rawSp, Math.min(layout.width, layout.height) / 2 - 1))
+    const makeScale = (
+      type: "linear" | "log" | "symlog" | "time" | undefined,
+      domain: [number, number],
+      range: [number, number],
+    ) => {
+      if (type === "log") {
+        const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
+        return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
+      }
+      if (type === "symlog") {
+        return scaleSymlog().domain(domain).range(range) as unknown as ScaleLinear<number, number>
+      }
+      if (type === "time") {
+        // Cast: scaleTime returns Date ticks at runtime, but typed as ScaleLinear for pipeline compat.
+        // Consumers should use valueOf() when comparing domain values (see StreamScales JSDoc).
+        return scaleTime().domain([new Date(domain[0]), new Date(domain[1])]).range(range) as unknown as ScaleLinear<number, number>
+      }
+      return scaleLinear().domain(domain).range(range)
+    }
+
     if (isStreaming) {
       const timeAxis = getTimeAxis(config.arrowOfTime)
       if (timeAxis === "x") {
@@ -971,30 +991,18 @@ export class PipelineStore {
           : [layout.width - sp, sp]
         this.scales = {
           x: scaleLinear().domain(xDomain).range(xRange),
-          y: scaleLinear().domain(yDomain).range([layout.height - sp, sp])
+          y: makeScale(config.yScaleType, yDomain, [layout.height - sp, sp])
         }
       } else {
         const yRange: [number, number] = config.arrowOfTime === "down"
           ? [sp, layout.height - sp]
           : [layout.height - sp, sp]
         this.scales = {
-          x: scaleLinear().domain(yDomain).range([sp, layout.width - sp]),
+          x: makeScale(config.yScaleType, yDomain, [sp, layout.width - sp]),
           y: scaleLinear().domain(xDomain).range(yRange)
         }
       }
     } else {
-      const makeScale = (type: "linear" | "log" | "time" | undefined, domain: [number, number], range: [number, number]) => {
-        if (type === "log") {
-          const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
-          return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
-        }
-        if (type === "time") {
-          // Cast: scaleTime returns Date ticks at runtime, but typed as ScaleLinear for pipeline compat.
-          // Consumers should use valueOf() when comparing domain values (see StreamScales JSDoc).
-          return scaleTime().domain([new Date(domain[0]), new Date(domain[1])]).range(range) as unknown as ScaleLinear<number, number>
-        }
-        return scaleLinear().domain(domain).range(range)
-      }
       this.scales = {
         x: makeScale(config.xScaleType, xDomain, [sp, layout.width - sp]),
         y: makeScale(config.yScaleType, yDomain, [layout.height - sp, sp])
@@ -1146,10 +1154,13 @@ export class PipelineStore {
     const yDomain = this.scales!.y.domain() as [number, number]
     const oldXRange = this.scales!.x.range() as [number, number]
     const oldYRange = this.scales!.y.range() as [number, number]
-    const remapScale = (type: "linear" | "log" | "time" | undefined, domain: [number, number], range: [number, number]) => {
+    const remapScale = (type: "linear" | "log" | "symlog" | "time" | undefined, domain: [number, number], range: [number, number]) => {
       if (type === "log") {
         const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
         return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
+      }
+      if (type === "symlog") {
+        return scaleSymlog().domain(domain).range(range) as unknown as ScaleLinear<number, number>
       }
       if (type === "time") {
         return scaleTime().domain([new Date(domain[0]), new Date(domain[1])]).range(range) as unknown as ScaleLinear<number, number>

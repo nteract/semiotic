@@ -5,6 +5,7 @@ import type {
   ArrowOfTime,
   WindowMode,
   SwarmStyle,
+  Style,
   HoverAnnotationConfig,
   HoverData,
   AnnotationContext,
@@ -53,6 +54,8 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   timeExtent?: [number, number]
   /** Fixed value domain */
   valueExtent?: [number, number]
+  /** Value-axis scale. "symlog" supports signed values while compressing large magnitudes. */
+  yScaleType?: "linear" | "log" | "symlog"
   /** Extent padding factor */
   extentPadding?: number
   /** Category accessor for color-coding dots */
@@ -69,6 +72,8 @@ export interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> {
   stroke?: string
   /** Dot stroke width */
   strokeWidth?: number
+  /** Per-datum dot style. Returned values override the top-level dot primitives and category color. */
+  pointStyle?: (datum: TDatum) => Style & { r?: number }
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -166,6 +171,7 @@ export const RealtimeSwarmChart = forwardRef(
       valueAccessor,
       timeExtent,
       valueExtent,
+      yScaleType,
       extentPadding,
       categoryAccessor,
       colors,
@@ -174,6 +180,7 @@ export const RealtimeSwarmChart = forwardRef(
       opacity,
       stroke,
       strokeWidth,
+      pointStyle,
       background,
       tooltipContent,
       tooltip,
@@ -240,6 +247,10 @@ export const RealtimeSwarmChart = forwardRef(
     if (opacity != null) swarmStyle.opacity = opacity
     if (stroke != null) swarmStyle.stroke = stroke
     if (strokeWidth != null) swarmStyle.strokeWidth = strokeWidth
+    // StreamXYFrame stores heterogeneous Datum rows internally. The wrapper's
+    // generic narrows that same row at its public boundary for caller
+    // autocomplete, so this variance bridge is type-only.
+    const resolvedPointStyle = pointStyle as ((datum: Datum) => Style & { r?: number }) | undefined
 
     const resolvedClassName = emphasis
       ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
@@ -267,10 +278,12 @@ export const RealtimeSwarmChart = forwardRef(
         valueAccessor={valueAccessor}
         xExtent={timeExtent}
         yExtent={valueExtent}
+        yScaleType={yScaleType}
         extentPadding={extentPadding}
         categoryAccessor={categoryAccessor}
         barColors={colors}
         swarmStyle={swarmStyle}
+        pointStyle={resolvedPointStyle}
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}

@@ -5944,6 +5944,15 @@
             "strokeWidth": {
               "type": "number"
             },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "symlog"
+              ],
+              "description": "Value-axis scale. symlog preserves zero and negative values while compressing large magnitudes."
+            },
             "transition": {
               "type": "object",
               "description": "Transition config: { duration, easing }"

@@ -25,6 +25,7 @@ function ChartContainer
 function ChartGrid
 function ChordDiagram
 function CirclePack
+function CircularBrush
 function ConnectedScatterplot
 function ContextLayout
 function DetailsPanel
@@ -128,6 +129,8 @@ interface ChartErrorBoundaryProps
 interface ChartGridProps
 interface ChordDiagramProps
 interface CirclePackProps
+interface CircularBrushProps
+interface CircularBrushValue
 interface ConnectedScatterplotProps
 interface ContextLayoutProps
 interface CrosshairStyle

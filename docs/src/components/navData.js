@@ -128,6 +128,19 @@ const navData = [
     ],
   },
   {
+    title: "Examples",
+    path: "/examples",
+    children: [
+      { title: "Point Climate Anomaly", path: "/examples/climate-anomaly" },
+      { title: "Point Climate Radial", path: "/examples/climate-radial-weather" },
+      { title: "U.S. War Timeline", path: "/examples/us-war-timeline" },
+      { title: "Art Movement Genealogy", path: "/examples/art-movement-genealogy" },
+      { title: "Isometric City Landmarks", path: "/examples/paris-isometric-landmarks" },
+      { title: "Wikipedia Realtime", path: "/examples/wikipedia-realtime" },
+      { title: "Local Government Explorer", path: "/examples/local-government-explorer" },
+    ],
+  },
+  {
     title: "Custom Charts",
     path: "/custom-charts",
     children: [

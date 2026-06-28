@@ -70,6 +70,7 @@ import {
 
 // Server-specific modules
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
+import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import {
   renderStaticLegend,
   renderStaticLegendGroups,
@@ -1509,6 +1510,11 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: Evi
     graticule: props.graticule,
     fitPadding: props.fitPadding,
     projectionTransform: props.projectionTransform,
+    customLayout: props.customLayout,
+    layoutConfig: props.layoutConfig,
+    layoutMargin: margin,
+    themeCategorical: theme.colors.categorical,
+    themeSemantic: resolveThemeSemanticColors(theme),
   }
 
   const store = new GeoPipelineStore(config)
@@ -1544,7 +1550,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: Evi
     // Even when the data scene is empty, bg/fg graphics and annotations are
     // valid surfaces a caller may have legitimately set. Pipe them through
     // so the empty-data path doesn't silently drop them.
-    const emptyContent = (props.backgroundGraphics || props.foregroundGraphics || props.annotations)
+    const emptyContent = (props.backgroundGraphics || props.foregroundGraphics || props.annotations || store.customLayoutOverlays)
       ? (
         <>
           {props.backgroundGraphics}
@@ -1561,6 +1567,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: Evi
             idPrefix: props._idPrefix,
           }) : null}
           {props.foregroundGraphics}
+          {store.customLayoutOverlays}
         </>
       )
       : null
@@ -1636,6 +1643,7 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: Evi
       {dataMarks}
       {annotationNodes}
       {props.foregroundGraphics}
+      {store.customLayoutOverlays}
     </>
   )
 

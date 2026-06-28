@@ -388,8 +388,9 @@ export default function CustomChartsPage() {
     >
       <section>
         <p>
-          When the catalog doesn't fit, the three custom-chart HOCs — <code>XYCustomChart</code>,{" "}
-          <code>OrdinalCustomChart</code>, and <code>NetworkCustomChart</code> — let you supply a
+          When the catalog doesn't fit, the four custom-chart HOCs — <code>XYCustomChart</code>,{" "}
+          <code>OrdinalCustomChart</code>, <code>NetworkCustomChart</code>, and{" "}
+          <code>GeoCustomChart</code> — let you supply a
           layout function that emits scene nodes directly. The frame still owns scales, theme, hit
           testing, transitions, decay, accessibility, and SSR — your layout owns the geometry. Most
           novel chart types (waffle, calendar, streamgraph, flextree, dagre) decompose into the same
@@ -399,6 +400,29 @@ export default function CustomChartsPage() {
           Layouts ship in <code>semiotic/recipes</code>. You can use them as-is or copy one and
           customize. Writing your own is ~30 lines.
         </p>
+      </section>
+
+      <section>
+        <h2>Isometric geographic board</h2>
+        <p>
+          <code>GeoCustomChart</code> receives the frame&rsquo;s fitted projection helpers plus raw
+          areas, points, and lines, then emits interactive geographic scene nodes. The{" "}
+          <Link to="/examples/paris-isometric-landmarks">Paris, Tile by Tile</Link> example
+          quantizes DBpedia landmarks into a five-by-five isometric board while GeoFrame retains
+          polygon hit-testing, accessibility, tooltips, selection, and SSR.
+        </p>
+        <CodeBlock language="jsx">{`import { GeoCustomChart } from "semiotic/geo"
+import { isometricLandmarkLayout } from "semiotic/recipes"
+
+<GeoCustomChart
+  points={landmarks}
+  layout={isometricLandmarkLayout}
+  layoutConfig={{
+    center: { lon: 2.3522, lat: 48.8566 },
+    centerId: "http://dbpedia.org/resource/Paris",
+    gridSize: 5
+  }}
+/>`}</CodeBlock>
       </section>
 
       <section>
@@ -1068,7 +1092,8 @@ const cardLayout: NetworkCustomLayout = (ctx) => {
           Each frame's escape-hatch HOC ships from its own sub-path: <code>XYCustomChart</code> from{" "}
           <code>semiotic/xy</code>, <code>NetworkCustomChart</code> from{" "}
           <code>semiotic/network</code>, <code>OrdinalCustomChart</code> from{" "}
-          <code>semiotic/ordinal</code>. Layout recipes live on <code>semiotic/recipes</code> as a
+          <code>semiotic/ordinal</code>, and <code>GeoCustomChart</code> from{" "}
+          <code>semiotic/geo</code>. Layout recipes live on <code>semiotic/recipes</code> as a
           separate sub-path so they only land in the bundle if you actually use them. BYO deps (
           <code>d3-flextree</code>, <code>dagre</code>) are imported by your code, not Semiotic —
           keeps the library small.
@@ -1076,10 +1101,12 @@ const cardLayout: NetworkCustomLayout = (ctx) => {
         <CodeBlock language="jsx">{`import { XYCustomChart } from "semiotic/xy"
 import { NetworkCustomChart } from "semiotic/network"
 import { OrdinalCustomChart } from "semiotic/ordinal"
+import { GeoCustomChart } from "semiotic/geo"
 import {
   waffleLayout, calendarLayout,
   flextreeLayout, dagreLayout,
   marimekkoLayout, bulletLayout, parallelCoordinatesLayout,
+  isometricLandmarkLayout,
   buildTooltipEntries,
 } from "semiotic/recipes"`}</CodeBlock>
       </section>

@@ -27,6 +27,11 @@ export { LikertChart } from "./charts/ordinal/LikertChart"
 export { OrdinalCustomChart } from "./charts/custom/OrdinalCustomChart"
 export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
+// hitTarget — invisible, interaction-bearing scene nodes for custom layouts
+// (keyboard nav + focus ring, pointId annotation anchoring, onObservation,
+// transition identity). See also semiotic/recipes.
+export { hitTargetPoint, hitTargetRect, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
+export type { HitTargetPointProps, HitTargetRectProps } from "./stream/hitTarget"
 
 // Utilities
 export { createHatchPattern } from "./charts/shared/hatchPattern"

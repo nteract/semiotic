@@ -19,6 +19,9 @@ import type {
 import type { GeoParticleStyle } from "./GeoParticlePool"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import type { MarginType } from "../types/marginType"
+import type { GeoCustomLayout } from "./geoCustomLayout"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 
 // ── Projection prop ──────────────────────────────────────────────────
 
@@ -152,6 +155,13 @@ export interface GeoPipelineConfig {
   pointIdAccessor?: string | ((d: Datum) => string)
   /** ID accessor on line data — required for `removeLine` by id. */
   lineIdAccessor?: string | ((d: Datum) => string)
+
+  // Custom layout
+  customLayout?: GeoCustomLayout
+  layoutConfig?: object
+  layoutMargin?: MarginType
+  layoutSelection?: CustomLayoutSelection | null
+  themeCategorical?: string[]
 }
 
 // ── Frame props ──────────────────────────────────────────────────────
@@ -167,6 +177,14 @@ export interface StreamGeoFrameProps<T = Datum> {
   areas?: GeoJSON.Feature[]
   points?: T[]
   lines?: T[]
+
+  // ── Custom layout ──
+  /** Replace built-in area/line/point scene construction with a custom layout. */
+  customLayout?: GeoCustomLayout
+  /** User configuration threaded to `GeoLayoutContext.config`. */
+  layoutConfig?: object
+  /** Shared-selection projection supplied by `GeoCustomChart`. */
+  layoutSelection?: CustomLayoutSelection | null
 
   // ── Accessors ──
   xAccessor?: string | ((d: T) => number)
@@ -236,6 +254,12 @@ export interface StreamGeoFrameProps<T = Datum> {
   enableHover?: boolean
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
+  /**
+   * Allow chart-local tooltips to extend beyond the frame bounds.
+   * Useful when a non-portal tooltip should overlap adjacent chart chrome.
+   * @default false
+   */
+  allowTooltipOverflow?: boolean
   customClickBehavior?: (d: HoverData | null) => void
   customHoverBehavior?: (d: HoverData | null) => void
   annotations?: Datum[]
