@@ -66,6 +66,14 @@ const examples = [
       "A live, filterable view of English Wikipedia edits with actor classification, signed change encodings, aggregation, and revision-level drilldown.",
     preview: "wikipedia",
   },
+  {
+    title: "Your Local Government Explorer",
+    path: "/examples/local-government-explorer",
+    eyebrow: "ZIP-driven civic data + networks",
+    description:
+      "Resolve any postal place into its county's federal disaster record and spending, live 311 service requests, LOCUS municipal law, and a network of bodies, sponsors, meetings, and active legislation.",
+    preview: "local-government",
+  },
 ]
 
 export default function ExamplesOverviewPage() {
@@ -97,6 +105,8 @@ export default function ExamplesOverviewPage() {
                   ? <MiniEriePreview />
                 : example.preview === "wikipedia"
                   ? <MiniWikipediaPreview />
+                : example.preview === "local-government"
+                  ? <MiniLocalGovernmentPreview />
                 : <MiniRadialPreview combined={example.preview === "combined"} />}
             <div style={styles.cardBody}>
               <div style={styles.eyebrow}>{example.eyebrow}</div>
@@ -312,6 +322,50 @@ function MiniWikipediaPreview() {
         strokeWidth="1.5"
       />
       <circle cx="234" cy="77" r="2.5" fill="#55c2e8" />
+    </svg>
+  )
+}
+
+function MiniLocalGovernmentPreview() {
+  const nodes = [
+    [121, 14, "#e7e1cf", 5],
+    [72, 35, "#4d83a8", 5],
+    [170, 35, "#6f9e7a", 5],
+    [34, 59, "#db9b55", 4],
+    [74, 64, "#d96b5f", 4],
+    [108, 53, "#9b7bc1", 4],
+    [150, 61, "#54a9a1", 4],
+    [194, 58, "#b7a66a", 4],
+    [48, 83, "#d96b5f", 3],
+    [94, 84, "#db9b55", 3],
+    [142, 82, "#b7a66a", 3],
+    [184, 84, "#b7a66a", 3],
+    [220, 78, "#b7a66a", 3],
+  ]
+  const edges = [
+    [0, 1], [0, 2], [1, 3], [1, 4], [1, 5], [2, 6], [2, 7],
+    [3, 4], [4, 6], [4, 8], [3, 9], [6, 10], [6, 11], [7, 12],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#101820" />
+      {edges.map(([source, target], index) => (
+        <line
+          key={index}
+          x1={nodes[source][0]}
+          y1={nodes[source][1]}
+          x2={nodes[target][0]}
+          y2={nodes[target][1]}
+          stroke={index === 8 || index === 9 ? "#f4bf4f" : "#617181"}
+          strokeWidth={index === 8 || index === 9 ? 1.5 : 0.8}
+          opacity="0.72"
+        />
+      ))}
+      {nodes.map(([x, y, fill, radius], index) => (
+        <circle key={index} cx={x} cy={y} r={radius} fill={fill} stroke="#17212b" />
+      ))}
+      <rect x="8" y="7" width="46" height="7" rx="3.5" fill="#54a9a1" opacity="0.8" />
+      <rect x="188" y="7" width="45" height="7" rx="3.5" fill="#33414d" />
     </svg>
   )
 }

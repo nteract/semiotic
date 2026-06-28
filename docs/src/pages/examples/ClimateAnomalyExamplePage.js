@@ -12,10 +12,7 @@ import { useDocsTheme } from "../../hooks/useDocsTheme"
 // One source of truth for the percentile-envelope hatch, reused by the chart
 // overlay and the legend swatch.
 const BAND_HATCH = hatchFill({ id: "climate-band-hatch", color: "var(--semiotic-text-secondary)", spacing: 8, opacity: 0.38 })
-import {
-  fetchOpenMeteoExampleData,
-  geocodeOpenMeteoPoint,
-} from "./openMeteoExampleData"
+import { fetchOpenMeteoExampleData } from "./openMeteoExampleData"
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const START_DATE = Date.UTC(2026, 0, 1)
@@ -86,7 +83,8 @@ const PRESET_PROFILES = [
 
 export default function ClimateAnomalyExamplePage() {
   const [profile, setProfile] = useState(PRESET_PROFILES[0])
-  const [query, setQuery] = useState("")
+  const [lat, setLat] = useState("")
+  const [lon, setLon] = useState("")
   const [liveData, setLiveData] = useState(null)
   const [view, setView] = useState({
     kind: "historical",
@@ -179,39 +177,26 @@ export default function ClimateAnomalyExamplePage() {
     }
   }
 
-  async function handleSubmit(event) {
+  function handleSubmit(event) {
     event.preventDefault()
-    const preset = presetFromQuery(query)
-    if (preset) {
-      showHistorical(preset)
+    const parsedLat = Number.parseFloat(lat)
+    const parsedLon = Number.parseFloat(lon)
+    if (
+      !Number.isFinite(parsedLat) ||
+      !Number.isFinite(parsedLon) ||
+      parsedLat < -90 ||
+      parsedLat > 90 ||
+      parsedLon < -180 ||
+      parsedLon > 180
+    ) {
+      setView({
+        kind: liveData ? "live" : "historical",
+        message: "Enter a latitude (-90 to 90) and longitude (-180 to 180).",
+      })
       return
     }
 
-    const controller = beginLoading("Finding that place and loading its climate…")
-    try {
-      const point = await geocodeOpenMeteoPoint(query, controller.signal)
-      if (requestRef.current !== controller) return
-      if (!point) {
-        if (!finishLoading(controller)) return
-        setView({
-          kind: liveData ? "live" : "historical",
-          message: "No matching place was found.",
-        })
-        return
-      }
-      await loadCurrentData(
-        { ...profileFromCoordinates(point.lat, point.lon), ...point },
-        controller
-      )
-    } catch (error) {
-      if (error.name === "AbortError" || !finishLoading(controller)) return
-      setProfile(profileFromQuery(query))
-      setLiveData(null)
-      setView({
-        kind: "historical",
-        message: "Geocoding is unavailable, so the local reference remains in view.",
-      })
-    }
+    loadCurrentData(profileFromCoordinates(parsedLat, parsedLon))
   }
 
   function useBrowserLocation() {
@@ -345,11 +330,28 @@ export default function ClimateAnomalyExamplePage() {
 
               <form onSubmit={handleSubmit} style={styles.searchForm}>
                 <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Type a point or place"
-                  aria-label="Point or place"
-                  style={styles.input}
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  min={-90}
+                  max={90}
+                  value={lat}
+                  onChange={(event) => setLat(event.target.value)}
+                  placeholder="Latitude"
+                  aria-label="Latitude"
+                  style={styles.coordInput}
+                />
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  min={-180}
+                  max={180}
+                  value={lon}
+                  onChange={(event) => setLon(event.target.value)}
+                  placeholder="Longitude"
+                  aria-label="Longitude"
+                  style={styles.coordInput}
                 />
                 <button type="submit" style={styles.actionButton}>Set point</button>
                 <button type="button" onClick={useBrowserLocation} style={styles.secondaryButton}>
@@ -413,8 +415,9 @@ export default function ClimateAnomalyExamplePage() {
       </p>
 
       <p>
-        The location controls use Open-Meteo's keyless geocoding, historical archive,
-        and forecast APIs in the browser. The example computes the daily historical
+        The location controls take a latitude/longitude directly (or your browser
+        location) and use Open-Meteo's keyless historical archive and forecast APIs
+        in the browser. The example computes the daily historical
         mean and percentile band from 1991-2020, then overlays available 2026
         observations and forecast values. A deterministic local profile remains as
         the offline fallback.
@@ -663,35 +666,6 @@ function pulse(day, center, magnitude, spread) {
   return magnitude * Math.exp(-Math.pow(day - center, 2) / (2 * spread * spread))
 }
 
-function profileFromQuery(rawQuery) {
-  const normalized = rawQuery.trim().toLowerCase()
-  const preset = presetFromQuery(rawQuery)
-  if (preset) return preset
-  if (!normalized) return PRESET_PROFILES[0]
-
-  let hash = 0
-  for (let i = 0; i < normalized.length; i++) {
-    hash = (hash * 31 + normalized.charCodeAt(i)) % 100000
-  }
-  const pseudoLat = ((hash % 14000) / 100) - 70
-  const pseudoLon = (((hash * 7) % 36000) / 100) - 180
-  return {
-    ...profileFromCoordinates(pseudoLat, pseudoLon),
-    id: `derived-${hash}`,
-    label: rawQuery.trim(),
-    derived: true,
-  }
-}
-
-function presetFromQuery(rawQuery) {
-  const normalized = rawQuery.trim().toLowerCase()
-  if (!normalized) return PRESET_PROFILES[0]
-  return PRESET_PROFILES.find((item) => {
-    const label = item.label.toLowerCase()
-    return label.includes(normalized) || normalized.includes(item.id)
-  })
-}
-
 function profileFromCoordinates(lat, lon) {
   const distanceFromEquator = Math.min(1, Math.abs(lat) / 70)
   const coastalOffset = Math.abs(Math.sin((lon * Math.PI) / 180)) * 0.8
@@ -789,6 +763,16 @@ const styles = {
   },
   input: {
     minWidth: "190px",
+    border: "1px solid var(--semiotic-border)",
+    borderRadius: "var(--semiotic-border-radius)",
+    background: "var(--semiotic-bg)",
+    color: "var(--semiotic-text)",
+    padding: "8px 10px",
+    font: "inherit",
+    fontSize: "13px",
+  },
+  coordInput: {
+    width: "100px",
     border: "1px solid var(--semiotic-border)",
     borderRadius: "var(--semiotic-border-radius)",
     background: "var(--semiotic-bg)",

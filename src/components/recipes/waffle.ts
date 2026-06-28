@@ -245,11 +245,12 @@ export function allocateCells(
     reducible.cells--
     assigned--
   }
-  // Under-allocated: hand the leftover cells to the largest remainders.
-  for (let i = 0; assigned < totalCells; i = (i + 1) % groups.length) {
-    const ranked = [...groups].sort(
-      (a, b) => b.remainder - a.remainder || b.weight - a.weight || a.key.localeCompare(b.key),
-    )
+  // Under-allocated: hand the leftover cells to the largest remainders. The sort
+  // keys (remainder/weight/key) don't change as we bump `.cells`, so rank once.
+  const ranked = [...groups].sort(
+    (a, b) => b.remainder - a.remainder || b.weight - a.weight || a.key.localeCompare(b.key),
+  )
+  for (let i = 0; assigned < totalCells; i++) {
     ranked[i % ranked.length].cells++
     assigned++
   }

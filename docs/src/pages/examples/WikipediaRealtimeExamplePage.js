@@ -218,6 +218,7 @@ export default function WikipediaRealtimeExamplePage() {
     <ExamplePageLayout
       title="Wikipedia, as it happens"
       prevPage={{ title: "The New York & Erie Railroad", path: "/examples/erie-railroad-organization" }}
+      nextPage={{ title: "Your Local Government Explorer", path: "/examples/local-government-explorer" }}
     >
       <p className="wiki-realtime-lede">
         Every dot is a live edit to English Wikipedia. Time moves left to right;

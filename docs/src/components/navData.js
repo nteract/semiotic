@@ -137,6 +137,7 @@ const navData = [
       { title: "Art Movement Genealogy", path: "/examples/art-movement-genealogy" },
       { title: "Isometric City Landmarks", path: "/examples/paris-isometric-landmarks" },
       { title: "Wikipedia Realtime", path: "/examples/wikipedia-realtime" },
+      { title: "Local Government Explorer", path: "/examples/local-government-explorer" },
     ],
   },
   {

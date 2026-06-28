@@ -25,7 +25,6 @@ import ExamplePageLayout from "./ExamplePageLayout"
 import {
   URINE_NODES,
   URINE_EDGES,
-  URINE_COLORS,
   URINE_DIAGNOSES,
   URINE_COLOR_COUNT,
 } from "./data/urineWheel"

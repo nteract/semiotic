@@ -35,6 +35,10 @@ export function readField(d: unknown, key: string, fallback: unknown): unknown {
  * `onObservation` consumer. This collapses it: `unwrapDatum(observation.datum)`
  * always yields the object you passed in, whether the frame wrapped it or not.
  *
+ * Heuristic footgun: any value with a top-level `data` property is treated as a
+ * wrapper. If your *raw* datum legitimately has its own `data` field, this
+ * returns that field instead of the datum — rename the field or read it directly.
+ *
  * @example
  * ```ts
  * onObservation={(o) => {

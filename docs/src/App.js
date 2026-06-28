@@ -150,6 +150,7 @@ import ParisIsometricLandmarksExamplePage from "./pages/examples/ParisIsometricL
 import UrineWheelExamplePage from "./pages/examples/UrineWheelExamplePage"
 import ErieRailroadOrganizationExamplePage from "./pages/examples/ErieRailroadOrganizationExamplePage"
 import WikipediaRealtimeExamplePage from "./pages/examples/WikipediaRealtimeExamplePage"
+import LocalGovernmentExplorerExamplePage from "./pages/examples/LocalGovernmentExplorerExamplePage"
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
@@ -281,6 +282,7 @@ export default function DocsApp() {
             <Route path="examples/urine-wheel" element={<UrineWheelExamplePage />} />
             <Route path="examples/erie-railroad-organization" element={<ErieRailroadOrganizationExamplePage />} />
             <Route path="examples/wikipedia-realtime" element={<WikipediaRealtimeExamplePage />} />
+            <Route path="examples/local-government-explorer" element={<LocalGovernmentExplorerExamplePage />} />
           </Routes>
         </ExamplesLayout>
       </div>

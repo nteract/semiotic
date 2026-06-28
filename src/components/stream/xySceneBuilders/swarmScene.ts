@@ -9,12 +9,16 @@ import type { Datum } from "../../charts/shared/datumTypes"
 import type { PointSceneNode } from "../types"
 import type { XYSceneContext } from "./types"
 
-export function buildSwarmScene(ctx: XYSceneContext, data: Datum[]): PointSceneNode[] {
+export function buildSwarmScene(
+  ctx: XYSceneContext,
+  data: Datum[]
+): PointSceneNode[] {
   const nodes: PointSceneNode[] = []
   const swarm = ctx.config.swarmStyle || {}
   const radius = swarm.radius ?? 3
   // Default swarm fill: user swarmStyle.fill > theme primary > hardcoded #007bff.
-  const defaultFill = swarm.fill ?? ctx.config.themeSemantic?.primary ?? "#007bff"
+  const defaultFill =
+    swarm.fill ?? ctx.config.themeSemantic?.primary ?? "#007bff"
   const opacity = swarm.opacity ?? 0.7
   const stroke = swarm.stroke
   const strokeWidth = swarm.strokeWidth
@@ -37,13 +41,16 @@ export function buildSwarmScene(ctx: XYSceneContext, data: Datum[]): PointSceneN
     // encodings. The callback is the final layer: chart-level primitives and
     // category colors remain useful defaults, while a datum can override fill,
     // outline, opacity, or radius without dropping down to StreamXYFrame.
-    const datumStyle = ctx.config.pointStyle?.(d)
+    const { r: styleR, ...restStyle } = ctx.config.pointStyle?.(d) ?? {}
     const node: PointSceneNode = {
       type: "point",
-      x, y, r: datumStyle?.r ?? radius,
-      style: { fill, opacity, stroke, strokeWidth, ...datumStyle },
+      x,
+      y,
+      r: styleR ?? radius,
+      style: { fill, opacity, stroke, strokeWidth, ...restStyle },
       datum: d
     }
+
     if (ctx.getPointId) node.pointId = String(ctx.getPointId(d))
     nodes.push(node)
   }
