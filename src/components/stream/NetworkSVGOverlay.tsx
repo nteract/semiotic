@@ -5,11 +5,11 @@ import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
+import { ANNOTATION_DISCLOSURE_REVEAL_CSS } from "../charts/shared/annotationHierarchy"
 import {
-  ANNOTATION_DISCLOSURE_REVEAL_CSS,
-  applyAnnotationEmphasis,
-  type AnnotationRenderPair,
-} from "../charts/shared/annotationHierarchy"
+  createDefaultAnnotationRules,
+  renderAnnotationPass,
+} from "../charts/shared/annotationRules"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { AnnotationContext } from "../realtime/types"
 import { symbolRadius } from "./symbolPath"
@@ -155,19 +155,23 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     })
   }, [annotations, autoPlaceAnnotations, annotationContext])
 
+  // Build the default network annotation rules once, then run the shared
+  // dispatch/filter/emphasis pass — the same path the XY and ordinal overlays
+  // use. This is what makes `pointId`-anchored annotations (callout, label,
+  // text, enclose, …) render out of the box on every network chart, including
+  // custom layouts; a user `svgAnnotationRules` still overrides per annotation.
+  const defaultAnnotationRules = React.useMemo(
+    () => createDefaultAnnotationRules("network"),
+    []
+  )
   const renderedSvgAnnotations = layoutAnnotations
-    ? applyAnnotationEmphasis(
-        layoutAnnotations.reduce<AnnotationRenderPair[]>((acc, annotation, i) => {
-          if (annotation.type === "widget" || !svgAnnotationRules) return acc
-          const element = svgAnnotationRules(annotation, i, annotationContext)
-          if (element) {
-            acc.push({
-              node: <React.Fragment key={`annotation-${i}`}>{element}</React.Fragment>,
-              annotation,
-            })
-          }
-          return acc
-        }, [])
+    ? renderAnnotationPass(
+        // Widget annotations render as HTML divs below (so they can overflow the
+        // SVG), so they're excluded from the SVG pass.
+        layoutAnnotations.filter((annotation) => annotation.type !== "widget"),
+        defaultAnnotationRules,
+        svgAnnotationRules,
+        annotationContext
       )
     : null
   const hasDeferredWidget = layoutAnnotations?.some(

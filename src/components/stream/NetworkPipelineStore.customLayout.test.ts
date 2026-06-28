@@ -144,6 +144,31 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.lastTopologyChangeTime).toBeGreaterThanOrEqual(firstChangeTime)
   })
 
+  it("clears the topology pulse after its animation window", () => {
+    const layout = (ctx: NetworkLayoutContext) => ({
+      sceneNodes: ctx.nodes.map<NetworkCircleNode>((node) => ({
+        type: "circle",
+        cx: 10,
+        cy: 10,
+        r: 8,
+        style: { fill: "rgba(0,0,0,0)", opacity: 0 },
+        datum: node,
+        id: node.id,
+      })),
+    })
+    const store = new NetworkPipelineStore(baseConfig({ customNetworkLayout: layout }))
+    store.ingestBounded([{ id: "hit-target" }], [], [100, 100])
+    store.buildScene([100, 100])
+
+    store.applyTopologyDiff(store.lastTopologyChangeTime + 1000)
+    expect(store.sceneNodes[0]._pulseIntensity).toBeGreaterThan(0)
+
+    store.applyTopologyDiff(store.lastTopologyChangeTime + 2001)
+    expect(store.sceneNodes[0]._pulseIntensity).toBe(0)
+    expect(store.sceneNodes[0]._pulseColor).toBeUndefined()
+    expect(store.sceneNodes[0]._pulseGlowRadius).toBeUndefined()
+  })
+
   it("captures overlays returned by customLayout", () => {
     const overlay = { _sentinel: true } as unknown as React.ReactNode
     const layout = () => ({

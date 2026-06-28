@@ -19,7 +19,8 @@ import type {
   HoverAnnotationConfig,
   SceneNode,
   PointSceneNode,
-  StreamScales
+  StreamScales,
+  FrameGraphicsContext
 } from "./types"
 import { XYBrushOverlay } from "./XYBrushOverlay"
 import { DataSourceAdapter } from "./DataSourceAdapter"
@@ -562,12 +563,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (marginalGraphics.right && m.right < MIN_MARGINAL) m.right = MIN_MARGINAL
       margin = m
     }
-    const resolvedForeground = typeof foregroundGraphics === "function"
-      ? (foregroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-      : foregroundGraphics
-    const resolvedBackground = typeof backgroundGraphics === "function"
-      ? (backgroundGraphics as (ctx: { size: number[]; margin: typeof margin }) => React.ReactNode)({ size, margin })
-      : backgroundGraphics
+    // foreground/background graphics are resolved *after* `currentScales` is
+    // declared (below), so a function form can anchor to the frame's resolved
+    // scales — see `resolveFrameGraphics`.
 
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
@@ -588,6 +586,22 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // Scales state: updated after each scene computation so SVGOverlay re-renders
     const [currentScales, setCurrentScales] = useState<StreamScales | null>(null)
+
+    // Resolve foreground/background graphics, threading the resolved scales into
+    // the callback so a bespoke SVG overlay anchors to the same x/y the chart
+    // drew (§ "resolved scales in graphics callbacks"). `currentScales` is null
+    // on the very first render (callback falls back to its own mapping) and is
+    // populated after the first layout, triggering a re-resolve. The SSR branch
+    // re-resolves with its synchronously-computed scales below.
+    const resolveFrameGraphics = (
+      graphics: typeof foregroundGraphics,
+      scales: StreamScales | null,
+    ): React.ReactNode =>
+      typeof graphics === "function"
+        ? (graphics as (ctx: FrameGraphicsContext) => React.ReactNode)({ size, margin, scales })
+        : graphics
+    const resolvedForeground = resolveFrameGraphics(foregroundGraphics, currentScales)
+    const resolvedBackground = resolveFrameGraphics(backgroundGraphics, currentScales)
 
     // Hover state: ref for canvas (sync), React state for tooltip (async)
     const hoverRef = useRef<HoverData | null>(null)
@@ -1492,6 +1506,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       const scene = store?.scene ?? []
       const scales = store?.scales ?? null
+      // SSR has no `currentScales` state — re-resolve graphics with the scene's
+      // synchronously-computed scales so server overlays anchor correctly too.
+      const ssrForeground = resolveFrameGraphics(foregroundGraphics, scales)
+      const ssrBackground = resolveFrameGraphics(backgroundGraphics, scales)
 
       // SSR: compute date format from SSR-computed scales (currentScales is null in SSR)
       const ssrXFormat: StreamXYFrameProps["xFormat"] = effectiveXFormat || ((): StreamXYFrameProps["xFormat"] => {
@@ -1530,7 +1548,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             style={{ position: "absolute", left: 0, top: 0 }}
           >
             <g transform={`translate(${margin.left},${margin.top})`}>
-              {resolvedBackground}
+              {ssrBackground}
             </g>
             <g transform={`translate(${margin.left},${margin.top})`}>
               {background && (
@@ -1567,7 +1585,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             legendPosition={legendPosition}
             legendLayout={legendLayout}
             foregroundGraphics={
-            composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
+            composeOverlays(ssrForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
           }
             marginalGraphics={marginalGraphics}
             xValues={[]}

@@ -140,6 +140,16 @@ import TimelineCookbookPage from "./pages/cookbook/TimelinePage"
 import RadarPlotPage from "./pages/cookbook/RadarPlotPage"
 import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
 // MatrixCookbookPage removed — matrix recipe no longer supported
+import ExamplesOverviewPage from "./pages/examples/ExamplesOverviewPage"
+import ClimateAnomalyExamplePage from "./pages/examples/ClimateAnomalyExamplePage"
+import ClimateRadialWeatherExamplePage from "./pages/examples/ClimateRadialWeatherExamplePage"
+import ExamplesLayout from "./pages/examples/ExamplesLayout"
+import USWarTimelineExamplePage from "./pages/examples/USWarTimelineExamplePage"
+import ArtMovementGenealogyExamplePage from "./pages/examples/ArtMovementGenealogyExamplePage"
+import ParisIsometricLandmarksExamplePage from "./pages/examples/ParisIsometricLandmarksExamplePage"
+import UrineWheelExamplePage from "./pages/examples/UrineWheelExamplePage"
+import ErieRailroadOrganizationExamplePage from "./pages/examples/ErieRailroadOrganizationExamplePage"
+import WikipediaRealtimeExamplePage from "./pages/examples/WikipediaRealtimeExamplePage"
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
@@ -243,6 +253,8 @@ export default function DocsApp() {
   // need.
   const location = useLocation()
   const isBlogRoute = location.pathname === "/blog" || location.pathname.startsWith("/blog/")
+  const isExamplesRoute =
+    location.pathname === "/examples" || location.pathname.startsWith("/examples/")
 
   if (isBlogRoute) {
     return (
@@ -251,6 +263,26 @@ export default function DocsApp() {
           <Route path="blog" element={<BlogIndexPage />} />
           <Route path="blog/:slug" element={<BlogEntryPage />} />
         </Routes>
+      </div>
+    )
+  }
+
+  if (isExamplesRoute) {
+    return (
+      <div className="App App--examples">
+        <ExamplesLayout>
+          <Routes>
+            <Route path="examples" element={<ExamplesOverviewPage />} />
+            <Route path="examples/climate-anomaly" element={<ClimateAnomalyExamplePage />} />
+            <Route path="examples/climate-radial-weather" element={<ClimateRadialWeatherExamplePage />} />
+            <Route path="examples/us-war-timeline" element={<USWarTimelineExamplePage />} />
+            <Route path="examples/art-movement-genealogy" element={<ArtMovementGenealogyExamplePage />} />
+            <Route path="examples/paris-isometric-landmarks" element={<ParisIsometricLandmarksExamplePage />} />
+            <Route path="examples/urine-wheel" element={<UrineWheelExamplePage />} />
+            <Route path="examples/erie-railroad-organization" element={<ErieRailroadOrganizationExamplePage />} />
+            <Route path="examples/wikipedia-realtime" element={<WikipediaRealtimeExamplePage />} />
+          </Routes>
+        </ExamplesLayout>
       </div>
     )
   }
@@ -319,6 +351,9 @@ export default function DocsApp() {
               path="features/theming"
               element={<Navigate to="/theming/theme-provider" replace />}
             />
+
+            {/* Example routes use the early-return branch above so they render
+                without the documentation sidebar or right-side table of contents. */}
 
             {/* Redirects for legacy v1/v2 API routes (SEO: prevent stale search results) */}
             <Route path="api/xyframe" element={<Navigate to="/frames/xy-frame" replace />} />

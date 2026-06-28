@@ -146,6 +146,7 @@
     "generate:ssr-gallery": "npx tsx scripts/ssr-gallery.tsx > docs/public/ssr-gallery.html 2>/dev/null",
     "generate:gofish-fixtures": "node --experimental-strip-types scripts/gen-gofish-fixtures.ts --write",
     "generate:demo-gifs": "node -e \"try{require.resolve('sharp');require.resolve('gifenc')}catch{console.log('Skipping GIF generation (sharp/gifenc not installed)');process.exit(0)}\" && npx tsx scripts/generate-demo-gifs.ts",
+    "generate:weather-baselines": "npx tsx scripts/generate-open-meteo-preset-baselines.mjs",
     "generate:blog-og-cards": "node scripts/generate-blog-og-cards.mjs",
     "generate:blog-rss": "node scripts/generate-blog-rss.mjs",
     "website:build": "npm run dist:prod && npm run docs:api:json && npm run docs:llms && npm run generate:ssr-gallery && npm run generate:demo-gifs && npm run check:blog-entries && npm run generate:blog-og-cards && npm run generate:blog-rss && parcel build --target website && node scripts/prerender.mjs && npm run check:docs-routes",

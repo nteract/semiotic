@@ -477,6 +477,27 @@ export interface StreamScales {
   y: ScaleLinear<number, number>
 }
 
+/**
+ * Context handed to a `foregroundGraphics` / `backgroundGraphics` callback. The
+ * function form receives the frame's **resolved scales** alongside `size` +
+ * `margin`, so bespoke SVG overlays anchor to the same scales the chart drew
+ * (instead of re-deriving them from extents by hand and risking drift). `scales`
+ * is `null` before the first layout pass — fall back to your own mapping then.
+ * This is the HOC analogue of what custom layouts get via `ctx.scales`.
+ *
+ * Generic over the scale shape: XY frames pass {@link StreamScales} (`{x, y}`),
+ * the ordinal frame passes its `{o, r, projection}` scales.
+ */
+export interface FrameGraphicsContext<S = StreamScales> {
+  size: number[]
+  margin: { top: number; right: number; bottom: number; left: number }
+  scales: S | null
+}
+
+/** A foreground/background graphics value: static SVG, or a function of the
+ *  frame's geometry + resolved scales. */
+export type FrameGraphicsProp<S = StreamScales> = ReactNode | ((ctx: FrameGraphicsContext<S>) => ReactNode)
+
 export interface StreamLayout {
   width: number
   height: number
@@ -705,7 +726,7 @@ export interface StreamXYFrameProps<T = Datum> {
 
   // ── Scale types ─────────────────────────────────
   xScaleType?: "linear" | "log" | "time"
-  yScaleType?: "linear" | "log"
+  yScaleType?: "linear" | "log" | "symlog"
 
   // ── Extents ──────────────────────────────────────
   xExtent?: [number | undefined, number | undefined] | [number]
@@ -814,9 +835,9 @@ export interface StreamXYFrameProps<T = Datum> {
 
   // ── Background / foreground graphics ───────────
   /** SVG elements rendered behind the canvas (in pixel space) */
-  backgroundGraphics?: ReactNode
+  backgroundGraphics?: FrameGraphicsProp
   /** SVG elements rendered on top of everything (in SVG overlay) */
-  foregroundGraphics?: ReactNode
+  foregroundGraphics?: FrameGraphicsProp
 
   // ── Custom canvas renderers ───────────────────
   /** Canvas renderers executed before the chart-type renderers (e.g. connecting lines under points) */

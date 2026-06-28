@@ -48,6 +48,7 @@ function themeToCSS
 function themeToTokens
 function toConfig
 function toURL
+function unwrapDatum
 function useHighContrast
 function useReducedMotion
 function useStreamStatus

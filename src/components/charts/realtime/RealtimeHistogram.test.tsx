@@ -103,6 +103,30 @@ describe("RealtimeHistogram", () => {
     expect(domain[1]).toBe(0)
   })
 
+  it("stacks bars by category — a bin's height is the sum of its categories", async () => {
+    const ref = React.createRef<any>()
+    render(
+      <TooltipProvider>
+        <RealtimeHistogram
+          ref={ref}
+          binSize={1000}
+          data={[
+            { time: 100, value: 5, type: "a" },
+            { time: 200, value: 7, type: "b" }, // same bin → stacks to 12
+            { time: 2100, value: 4, type: "a" },
+          ]}
+          timeAccessor="time"
+          valueAccessor="value"
+          categoryAccessor="type"
+          colors={{ a: "#dc3545", b: "#fd7e14" }}
+        />
+      </TooltipProvider>
+    )
+    await waitFor(() => expect(ref.current?.getScales()?.y).toBeTruthy())
+    // bin [0,1000): a(5) + b(7) = 12 → the value domain reaches at least the sum.
+    expect(ref.current.getScales().y.domain()[1]).toBeGreaterThanOrEqual(12)
+  })
+
   it("renders the static TemporalHistogram sibling with bounded data", () => {
     const { container } = render(
       <TooltipProvider>

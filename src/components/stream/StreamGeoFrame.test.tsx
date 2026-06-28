@@ -58,6 +58,20 @@ describe("StreamGeoFrame", () => {
         updateSpy.mockRestore()
       }
     })
+
+    it("allows a non-portal tooltip layer to overflow the frame when requested", () => {
+      const { container } = render(
+        <StreamGeoFrame
+          projection="equalEarth"
+          points={[]}
+          allowTooltipOverflow
+        />
+      )
+
+      expect(
+        (container.querySelector(".stream-geo-frame") as HTMLElement).style.overflow
+      ).toBe("visible")
+    })
   })
 })
 

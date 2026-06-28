@@ -1,0 +1,44 @@
+import { describe, it, expect, vi } from "vitest"
+import { render } from "@testing-library/react"
+import * as React from "react"
+import { NetworkCustomChart } from "./custom/NetworkCustomChart"
+import { networkHitTarget } from "../stream/hitTarget"
+
+const NODES = [{ id: "A" }, { id: "B" }, { id: "C" }]
+const EDGES = [{ id: "e0", source: "A", target: "B" }, { id: "e1", source: "B", target: "C" }]
+
+function layout(ctx: any) {
+  const pos = ctx.nodes.map((n: any, i: number) => ({ id: (n.data ?? n).id, x: 50 + i * 60, y: 50 + i * 40, width: 40, height: 24 }))
+  const byId = new Map(pos.map((p: any) => [p.id, p]))
+  return {
+    sceneNodes: pos.map((p: any) => networkHitTarget({ x: p.x - p.width / 2, y: p.y - p.height / 2, width: p.width, height: p.height, datum: p, id: p.id })),
+    sceneEdges: [],
+    overlays: (
+      <g pointerEvents="none">
+        <defs><marker id="m1" /></defs>
+        {ctx.edges.map((e: any) => {
+          const s = byId.get(e.source); const t = byId.get(e.target)
+          if (!s || !t) return null
+          return <path key={e.id} d={`M${s.x},${s.y}L${t.x},${t.y}`} />
+        })}
+        {pos.map((p: any) => (
+          <g key={p.id}>
+            <rect x={p.x} y={p.y} width={p.width} height={p.height} />
+            <text x={p.x} y={p.y}>{[p.id].map((l: string) => <tspan key={l}>{l}</tspan>)}</text>
+          </g>
+        ))}
+      </g>
+    ),
+  }
+}
+
+describe("key-warning repro", () => {
+  it("renders the art-style network layout without a missing-key warning", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {})
+    render(<NetworkCustomChart nodes={NODES} edges={EDGES} layout={layout} width={400} height={300} />)
+    const keyWarnings = spy.mock.calls.filter((c) => String(c[0]).toLowerCase().includes("key"))
+    keyWarnings.forEach((c) => console.log("KEY WARNING ARGS:", JSON.stringify(c)))
+    spy.mockRestore()
+    expect(keyWarnings.length).toBe(0)
+  })
+})

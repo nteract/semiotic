@@ -87,6 +87,11 @@ export type {
 // ── Hit testing ─────────────────────────────────────────────────────────
 export { getHitRadius } from "./stream/hitTestUtils"
 
+// ── Datum unwrapping ──────────────────────────────────────────────────────
+// Collapse the wrapped-vs-raw datum split that bites onObservation consumers:
+// always yields the raw user object whether the frame wrapped it or not.
+export { unwrapDatum } from "./recipes/recipeUtils"
+
 // ── Serialization ────────────────────────────────────────────────────────
 export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
 export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"

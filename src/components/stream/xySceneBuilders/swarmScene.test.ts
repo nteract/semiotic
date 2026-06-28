@@ -246,6 +246,39 @@ describe("buildSwarmScene", () => {
     expect(nodes[0].style.strokeWidth).toBe(1)
   })
 
+  it("lets pointStyle override category color, outline, opacity, and radius per datum", () => {
+    const data = [
+      { x: 10, y: 20, category: "A", direction: "add" },
+      { x: 30, y: 40, category: "A", direction: "remove" },
+    ]
+    const ctx = makeCtx({
+      config: {
+        swarmStyle: { radius: 5, opacity: 0.7, stroke: "#333", strokeWidth: 1 },
+        barColors: { A: "#category" },
+        pointStyle: (d) => d.direction === "add"
+          ? { fill: "#green", stroke: "#darkgreen", strokeWidth: 2, opacity: 0.9, r: 7 }
+          : { fill: "#red", stroke: "#darkred" },
+      },
+      getCategory: (d) => d.category,
+    })
+    const nodes = buildSwarmScene(ctx, data)
+
+    expect(nodes[0].r).toBe(7)
+    expect(nodes[0].style).toMatchObject({
+      fill: "#green",
+      stroke: "#darkgreen",
+      strokeWidth: 2,
+      opacity: 0.9,
+    })
+    expect(nodes[1].r).toBe(5)
+    expect(nodes[1].style).toMatchObject({
+      fill: "#red",
+      stroke: "#darkred",
+      strokeWidth: 1,
+      opacity: 0.7,
+    })
+  })
+
   // ── Theme-aware default fill (Phase A milestone 4) ────────────────────
 
   it("uses themeSemantic.primary as default fill when neither swarmStyle.fill nor barColors resolve", () => {

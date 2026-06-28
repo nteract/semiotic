@@ -1,8 +1,8 @@
 /**
  * useCustomChartScaffold / useCustomChartSetup — shared scaffolding for
- * the three custom-layout HOCs.
+ * the four custom-layout HOCs.
  *
- * `XYCustomChart`, `OrdinalCustomChart`, and `NetworkCustomChart` all
+ * `XYCustomChart`, `OrdinalCustomChart`, `NetworkCustomChart`, and `GeoCustomChart` all
  * repeat the same orchestration pipeline: bind the imperative ref, run
  * `useChartMode`, normalize the user margin shorthand, filter the
  * sparse data array, and (for the data-shaped HOCs) call
@@ -10,7 +10,7 @@
  *
  * The split:
  *   - `useCustomChartScaffold`  — chart-mode + margin + imperative
- *      handle. Used by all three HOCs (network calls this directly).
+ *      handle. Used by all four HOCs (network and geo call this directly).
  *   - `useCustomChartSetup`     — the scaffold *plus* `useChartSetup`
  *      wiring for the data-shaped HOCs (XYCustomChart, OrdinalCustomChart).
  *
@@ -44,7 +44,7 @@ interface ScaffoldOptions {
   /** Ref forwarded by the HOC. The hook binds the imperative handle internally. */
   imperativeRef: Ref<RealtimeFrameHandle> | undefined
   /** Which `useFrameImperativeHandle` variant to bind. XY/ordinal frames share "xy". */
-  imperativeVariant: "xy" | "network"
+  imperativeVariant: "xy" | "network" | "geo-points"
   /** Margin shorthand or sided form from the HOC's `margin` prop. */
   margin: PartialMargin | undefined
   // Common chart-mode inputs
@@ -69,7 +69,7 @@ interface ScaffoldResult<TFrameHandle> {
 }
 
 /**
- * Scaffold shared by all three custom-layout HOCs: imperative-handle
+ * Scaffold shared by all four custom-layout HOCs: imperative-handle
  * binding, chart-mode resolution, margin normalization. Network HOCs
  * stop here; data-shaped HOCs layer `useChartSetup` on top via
  * `useCustomChartSetup`.
