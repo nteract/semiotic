@@ -5,8 +5,20 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-06-26T00:00:00Z</updated>
+  <updated>2026-06-30T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Your sample lies about your data</title>
+    <id>https://semiotic3.nteract.io/blog/scale-aware-suggestions</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/scale-aware-suggestions"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/scale-aware-suggestions.png"/>
+    <published>2026-06-30T00:00:00Z</published>
+    <updated>2026-06-30T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="ai"/>
+    <summary type="text">Hand `suggestCharts()` a hundred rows and it&apos;ll pick the right chart for the hundred. The production dataset is a million rows and the choice is wrong. Scale-aware suggestions close the gap by accepting a declared `DataScaleProfile` — what scale the data actually has, not what the sample looked like. With the design decisions behind it: split scale from quality, breakpoints per-chart not global, and the single-value gap the work surfaced.</summary>
+  </entry>
   <entry>
     <title>From spec to runtime</title>
     <id>https://semiotic3.nteract.io/blog/from-spec-to-runtime</id>

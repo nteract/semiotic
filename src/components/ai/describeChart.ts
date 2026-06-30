@@ -566,9 +566,15 @@ export function describeChart(
   }
 
   // ── L3: trend (only meaningful over an ordered dimension) ────────────────
-  if (want.has("l3") && stats && (XY_FAMILY.has(component))) {
+  // Skip directional/extremal claims when the data is split into multiple
+  // series: `stats` pools every series end-to-end (row order), so a "rises
+  // from first to last" sentence would describe the concatenation, not any
+  // real trend — actively misleading next to, say, several rising lines.
+  // L1 still reports the split and L2 the pooled range; richer per-series
+  // trend narration is a future enhancement.
+  if (want.has("l3") && stats && !series && XY_FAMILY.has(component)) {
     levels.l3 = trendSentence(stats, measureName, fmtNum)
-  } else if (want.has("l3") && stats && BAR_FAMILY.has(component)) {
+  } else if (want.has("l3") && stats && !series && BAR_FAMILY.has(component)) {
     levels.l3 = `The highest ${dimensionName} is ${stats.maxLabel} and the lowest is ${stats.minLabel}.`
   }
 
@@ -580,7 +586,11 @@ export function describeChart(
       ? "alerting"
       : resolveCommunicativeAct(component, options.capability)
     if (act) {
-      levels.l4 = l4Sentence(act, component, props, stats, measureName, dimensionName, fmtNum, options.audience)
+      // Multi-series pools `stats` across series, so withhold the per-row
+      // directive (e.g. "rises from X to Y") and let l4Sentence fall back to
+      // its accurate generic phrasing ("read it for the overall direction").
+      const directiveStats = series ? null : stats
+      levels.l4 = l4Sentence(act, component, props, directiveStats, measureName, dimensionName, fmtNum, options.audience)
     }
   }
 

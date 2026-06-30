@@ -22,7 +22,9 @@ function bandBounds
 function bandFromAge
 function parseWindowDuration
 function statValue
+function syncPushBuffer
 function useStreamStatus
+function useSyncedPushData
 interface AggregateConfig
 interface AggregatedWindow
 interface AnnotationContext
@@ -47,6 +49,8 @@ interface StreamStatusResult
 interface StreamXYFrameHandle
 interface StreamXYFrameProps
 interface SwarmStyle
+interface SyncedPushDataOptions
+interface SyncedPushHandle
 interface TemporalHistogramProps
 interface WaterfallStyle
 interface WindowAccumulatorConfig
@@ -56,6 +60,7 @@ type ArrowOfTime
 type LatePolicy
 type LifecycleBand
 type NetworkChartType
+type PushIdAccessor
 type StreamChartType
 type StreamStatus
 type ThresholdType

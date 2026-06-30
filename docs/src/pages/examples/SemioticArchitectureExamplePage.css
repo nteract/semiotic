@@ -1,0 +1,623 @@
+.architecture-lede {
+  max-width: 850px;
+  margin: 0 0 34px;
+  color: var(--text-secondary);
+  font-size: clamp(1.05rem, 2vw, 1.32rem);
+  line-height: 1.65;
+}
+
+.architecture-controls {
+  padding: 24px;
+  border: 1px solid var(--surface-3);
+  border-radius: 14px 14px 0 0;
+  background: var(--surface-1);
+}
+
+.architecture-controls-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.architecture-controls-heading h2,
+.architecture-explanation h2 {
+  margin: 3px 0 0;
+  color: var(--text-primary);
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  letter-spacing: -0.025em;
+}
+
+.architecture-kicker {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.architecture-example-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.architecture-example-buttons button,
+.architecture-system-button {
+  appearance: none;
+  padding: 8px 11px;
+  border: 1px solid var(--surface-3);
+  border-radius: 999px;
+  background: var(--surface-0);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.architecture-example-buttons button:hover,
+.architecture-system-button:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.architecture-example-buttons button:focus-visible,
+.architecture-system-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.architecture-example-buttons button.is-active,
+.architecture-system-button.is-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--surface-0);
+}
+
+.architecture-figure {
+  --architecture-wood: #30261f;
+  --architecture-wood-light: #735239;
+  overflow: hidden;
+  border: 1px solid var(--surface-3);
+  border-top: 0;
+  border-radius: 0 0 14px 14px;
+  background:
+    radial-gradient(circle at 18% 8%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 28%),
+    linear-gradient(180deg, var(--surface-0), var(--surface-1));
+}
+
+.architecture-chart-scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+}
+
+.architecture-overlay text {
+  fill: var(--text-primary);
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 10.5px;
+  font-weight: 680;
+  text-anchor: middle;
+}
+
+.architecture-zone-label {
+  fill: var(--text-secondary) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.16em;
+  text-anchor: start !important;
+}
+
+.architecture-edge {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  transition:
+    opacity 200ms ease,
+    stroke-width 200ms ease;
+}
+
+.architecture-edge.is-structural {
+  stroke: var(--architecture-wood);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.architecture-edge.is-rhizome {
+  stroke: color-mix(in srgb, var(--semiotic-info, #4d8fa8) 68%, var(--text-secondary));
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+}
+
+.architecture-edge.is-dimmed {
+  opacity: 0.07;
+}
+
+.architecture-edge.is-active {
+  opacity: 0.94;
+}
+
+.architecture-overlay.is-overview .architecture-edge.is-rhizome {
+  opacity: 0.018;
+}
+
+.architecture-overlay.has-selection .architecture-edge.is-rhizome.is-active {
+  opacity: 0.24;
+}
+
+.architecture-tree-silhouette path {
+  fill: url("#architecture-trunk-fill");
+  stroke: var(--architecture-wood);
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.architecture-tree-silhouette .architecture-root-flare {
+  opacity: 0.96;
+}
+
+.architecture-tree-silhouette .architecture-trunk-grain {
+  fill: none;
+  stroke: color-mix(in srgb, var(--architecture-wood-light) 65%, transparent);
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.architecture-root-system path {
+  fill: none;
+  stroke: var(--architecture-wood);
+  stroke-linecap: round;
+  transition: opacity 220ms ease;
+}
+
+.architecture-root-system path.is-active {
+  opacity: 0.8;
+}
+
+.architecture-root-system path.is-dimmed {
+  opacity: 0.06;
+}
+
+.architecture-root-system path.is-weave {
+  stroke: color-mix(in srgb, var(--architecture-wood-light) 72%, var(--architecture-wood));
+  stroke-width: 2.2;
+}
+
+.architecture-node {
+  transition: opacity 220ms ease;
+}
+
+.architecture-node rect,
+.architecture-node path,
+.architecture-node circle {
+  vector-effect: non-scaling-stroke;
+  transition:
+    fill 200ms ease,
+    stroke 200ms ease,
+    stroke-width 200ms ease;
+}
+
+.architecture-node.is-dimmed {
+  opacity: 0.09;
+}
+
+.architecture-node.is-traced {
+  filter: url("#architecture-active-glow");
+}
+
+.architecture-node.is-leaf .architecture-leaf-body {
+  fill: color-mix(in srgb, var(--semiotic-success, #4f9362) 48%, var(--surface-0));
+  stroke: color-mix(in srgb, var(--semiotic-success, #4f9362) 76%, var(--architecture-wood));
+  stroke-width: 1.2;
+}
+
+.architecture-node.is-leaf-group .architecture-leaf-body {
+  fill: color-mix(in srgb, var(--semiotic-success, #4f9362) 18%, var(--surface-0));
+  stroke: color-mix(in srgb, var(--semiotic-success, #4f9362) 48%, var(--surface-3));
+  stroke-width: 1;
+}
+
+.architecture-leaf-vein {
+  fill: none;
+  stroke: color-mix(in srgb, var(--semiotic-success, #4f9362) 62%, var(--architecture-wood));
+  stroke-width: 0.8;
+}
+
+.architecture-node.is-leaf text,
+.architecture-node.is-leaf-group text {
+  paint-order: stroke;
+  stroke: var(--surface-0);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+}
+
+.architecture-node.is-frame .architecture-branch-badge {
+  fill: var(--architecture-wood);
+  stroke: color-mix(in srgb, var(--architecture-wood-light) 70%, var(--text-primary));
+  stroke-width: 1.6;
+}
+
+.architecture-node.is-frame text {
+  fill: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.architecture-node.is-trunk .architecture-branch-badge {
+  fill: color-mix(in srgb, var(--architecture-wood-light) 78%, var(--architecture-wood));
+  stroke: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 55%, var(--text-primary));
+  stroke-width: 2;
+}
+
+.architecture-node.is-trunk text {
+  fill: #fff;
+  font-size: 16px;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+}
+
+.architecture-node.is-input .architecture-branch-badge,
+.architecture-node.is-branch .architecture-branch-badge {
+  fill: color-mix(in srgb, var(--architecture-wood-light) 68%, var(--surface-0));
+  stroke: var(--architecture-wood-light);
+}
+
+.architecture-node.is-input text,
+.architecture-node.is-branch text {
+  font-weight: 760;
+}
+
+.architecture-node.is-fruit circle {
+  fill: var(--semiotic-warning, #d8a84e);
+  stroke: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 70%, var(--text-primary));
+}
+
+.architecture-node.is-fruit .architecture-fruit-shine {
+  fill: color-mix(in srgb, white 70%, var(--semiotic-warning, #d8a84e));
+  stroke: none;
+}
+
+.architecture-node.is-fruit text {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-anchor: start;
+}
+
+.architecture-node.is-root path {
+  fill: color-mix(in srgb, var(--architecture-wood) 82%, var(--surface-0));
+  stroke: color-mix(in srgb, var(--architecture-wood-light) 72%, var(--text-secondary));
+}
+
+.architecture-node.is-root text {
+  fill: #fff;
+  font-size: 11.5px;
+  font-weight: 760;
+}
+
+.architecture-node.is-root .architecture-root-index {
+  fill: color-mix(in srgb, #fff 64%, var(--architecture-wood-light));
+  font-size: 7.5px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.architecture-node.is-active.is-traced path,
+.architecture-node.is-active.is-traced circle {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.architecture-node.is-active.is-traced .architecture-leaf-vein {
+  stroke: color-mix(in srgb, var(--accent) 50%, var(--architecture-wood));
+  stroke-width: 0.9;
+}
+
+/* Vertical Sankey architecture */
+.architecture-sankey .architecture-ribbon {
+  stroke: none;
+  transition: opacity 220ms ease;
+}
+
+.architecture-sankey .architecture-ribbon.is-upper {
+  fill: url("#architecture-upper-ribbon");
+  opacity: 0.42;
+}
+
+.architecture-sankey .architecture-ribbon.is-side {
+  fill: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 62%, var(--semiotic-primary, #4f8fc7));
+  opacity: 0.5;
+}
+
+.architecture-sankey .architecture-ribbon.is-spine {
+  fill: url("#architecture-spine-ribbon");
+  opacity: 0.88;
+}
+
+.architecture-sankey .architecture-ribbon.is-lower {
+  fill: url("#architecture-lower-ribbon");
+  opacity: 0.34;
+}
+
+.architecture-sankey .architecture-ribbon.is-active {
+  opacity: 0.72;
+}
+
+.architecture-sankey .architecture-ribbon.is-dimmed {
+  opacity: 0.035;
+}
+
+.architecture-load-bearing-spine > g {
+  transition: opacity 220ms ease;
+}
+
+.architecture-load-bearing-spine > g.is-dimmed {
+  opacity: 0.07;
+}
+
+.architecture-load-bearing-spine > g.is-active {
+  opacity: 1;
+}
+
+.architecture-spine-label {
+  fill: #fff !important;
+  font-size: 8.5px !important;
+  font-weight: 780 !important;
+  letter-spacing: 0.02em;
+}
+
+.architecture-spine-tie {
+  fill: color-mix(in srgb, var(--surface-0) 36%, var(--semiotic-info, #4d8fa8));
+  stroke: color-mix(in srgb, var(--semiotic-info, #4d8fa8) 70%, var(--surface-3));
+  stroke-width: 1;
+}
+
+.architecture-capability-ring > path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 38%, var(--surface-3));
+  stroke-dasharray: 2 7;
+  stroke-width: 1;
+}
+
+.architecture-capability-star {
+  transition: opacity 220ms ease;
+}
+
+.architecture-capability-star > path {
+  fill: var(--semiotic-warning, #d8a84e);
+  stroke: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 65%, var(--text-primary));
+  stroke-width: 1;
+}
+
+.architecture-capability-star text {
+  fill: var(--text-secondary);
+  font-size: 8.5px;
+  font-weight: 760;
+}
+
+.architecture-capability-star.is-dimmed {
+  opacity: 0.08;
+}
+
+.architecture-capability-star.is-traced > path {
+  filter: url("#architecture-active-glow");
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.architecture-push-link {
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-dasharray: 3 4;
+  stroke-width: 1.2;
+  transition: opacity 220ms ease;
+}
+
+.architecture-push-link.is-active {
+  opacity: 0.6;
+}
+
+.architecture-push-link.is-dimmed {
+  opacity: 0.05;
+}
+
+.architecture-sankey .architecture-node rect {
+  fill: var(--surface-0);
+  stroke: var(--surface-3);
+  stroke-width: 1.2;
+}
+
+.architecture-sankey .architecture-node.is-leaf rect {
+  fill: color-mix(in srgb, var(--semiotic-success, #4f9362) 17%, var(--surface-0));
+  stroke: color-mix(in srgb, var(--semiotic-success, #4f9362) 68%, var(--surface-3));
+}
+
+.architecture-sankey .architecture-node.is-leaf-group rect {
+  fill: var(--surface-0);
+  stroke: color-mix(in srgb, var(--semiotic-success, #4f9362) 45%, var(--surface-3));
+  stroke-dasharray: 3 2;
+}
+
+.architecture-sankey .architecture-node.is-frame rect {
+  fill: color-mix(in srgb, var(--semiotic-primary, #4f8fc7) 28%, var(--surface-0));
+  stroke: var(--semiotic-primary, #4f8fc7);
+  stroke-width: 1.8;
+}
+
+.architecture-sankey .architecture-node.is-frame text {
+  fill: var(--text-primary);
+  font-size: 11.5px;
+}
+
+.architecture-sankey .architecture-node.is-trunk rect {
+  fill: var(--semiotic-primary, #4f8fc7);
+  stroke: color-mix(in srgb, var(--semiotic-primary, #4f8fc7) 55%, #fff);
+  stroke-width: 2;
+}
+
+.architecture-sankey .architecture-node.is-internal-core rect {
+  fill: var(--semiotic-info, #4d8fa8);
+  stroke: color-mix(in srgb, var(--semiotic-info, #4d8fa8) 55%, #fff);
+  stroke-width: 2;
+}
+
+.architecture-sankey .architecture-node.is-trunk text,
+.architecture-sankey .architecture-node.is-internal-core text {
+  fill: #fff;
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+}
+
+.architecture-sankey .architecture-node.is-root rect {
+  fill: color-mix(in srgb, var(--text-secondary) 14%, var(--surface-0));
+  stroke: color-mix(in srgb, var(--text-secondary) 58%, var(--surface-3));
+}
+
+.architecture-sankey .architecture-node.is-root text {
+  fill: var(--text-primary);
+  font-size: 10.5px;
+}
+
+.architecture-sankey .architecture-node.is-root .architecture-root-index {
+  fill: var(--text-secondary);
+  font-size: 7px;
+}
+
+.architecture-sankey .architecture-node.is-input rect,
+.architecture-sankey .architecture-node.is-branch rect {
+  fill: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 13%, var(--surface-0));
+  stroke: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 57%, var(--surface-3));
+}
+
+.architecture-sankey .architecture-node.is-active.is-traced rect {
+  filter: url("#architecture-active-glow");
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.architecture-readout {
+  min-height: 116px;
+  padding: 20px 24px 22px;
+  border-top: 1px solid var(--surface-3);
+  background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+  box-sizing: border-box;
+}
+
+.architecture-readout-kind {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.architecture-readout strong {
+  color: var(--text-primary);
+  font-size: 17px;
+}
+
+.architecture-readout p {
+  max-width: 820px;
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.architecture-profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 12px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.architecture-profile-meta a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.architecture-profile-meta a:hover {
+  text-decoration: underline;
+}
+
+.architecture-tooltip {
+  display: grid;
+  gap: 4px;
+  max-width: 260px;
+  padding: 9px 11px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--surface-3));
+  border-radius: var(--semiotic-tooltip-radius, 8px);
+  background: var(--semiotic-tooltip-bg, var(--surface-0));
+  color: var(--semiotic-tooltip-text, var(--text-primary));
+  box-shadow: var(--semiotic-tooltip-shadow, 0 8px 22px rgba(0, 0, 0, 0.18));
+}
+
+.architecture-tooltip strong {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.architecture-tooltip span {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.architecture-explanation {
+  margin: 76px 0 90px;
+}
+
+.architecture-explanation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 34px;
+  max-width: 900px;
+  margin-top: 22px;
+}
+
+.architecture-explanation-grid p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+@media (max-width: 720px) {
+  .architecture-controls {
+    padding: 18px;
+  }
+
+  .architecture-controls-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .architecture-explanation-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .architecture-example-buttons button,
+  .architecture-system-button,
+  .architecture-edge,
+  .architecture-node,
+  .architecture-node rect,
+  .architecture-node path,
+  .architecture-node circle {
+    transition: none;
+  }
+}

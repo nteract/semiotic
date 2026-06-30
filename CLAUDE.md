@@ -119,6 +119,7 @@ ref.current.getScales()                            // {o, r, projection} (ordina
 <Scatterplot ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
 ```
 ID accessor: `pointIdAccessor` (XY/realtime), `dataIdAccessor` (ordinal), `nodeIDAccessor`/`edgeIdAccessor` (network). `replace()` is ordinal-only — used by aggregator HOCs like LikertChart. Network HOC refs operate on nodes; for edges use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)` or `removeEdge(edgeId)`, `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`.
+**Controlled→push bridge**: `useSyncedPushData(ref, rows, { id, resetKey })` (from `semiotic` / `semiotic/realtime`) reconciles a controlled React array into the push buffer — diffs by id, issues the minimal push/update/remove, and clears + rebuilds on `resetKey` change. Reach for it instead of hand-rolling the mirror when rows live in React state; pass rows to the hook, not `data`. Pairs with `useStreamStatus` (live/stale badge). Pure core `syncPushBuffer` is exported for testing.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 ## Custom Charts (escape hatch)

@@ -382,6 +382,16 @@ export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmCha
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
 export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"
 
+// Mirror a controlled React array into any push-API chart's buffer. Lives in
+// the realtime barrel too; re-exported here since the push HOCs it drives
+// (realtime + ordinal + XY) are all importable from the root entry.
+export { useSyncedPushData, syncPushBuffer } from "./charts/shared/useSyncedPushData"
+export type {
+  SyncedPushHandle,
+  SyncedPushDataOptions,
+  PushIdAccessor,
+} from "./charts/shared/useSyncedPushData"
+
 // ── Annotation provenance + lifecycle (talk-readiness M1) ──────────────
 // Type surface re-exported from the main entry per the talk-readiness
 // roadmap. Runtime lifecycle helpers and semantic-anchor resolution live

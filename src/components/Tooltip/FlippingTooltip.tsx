@@ -22,21 +22,18 @@ interface FlippingTooltipProps {
 
 /**
  * True when the tooltip content's root element looks like the
- * consumer is handling chrome themselves. Three signals, any one of
+ * consumer is handling chrome themselves. Four signals, any one of
  * which is enough:
  *
- *   1. A non-empty `className`. Three real cases that all hit this:
- *      `.semiotic-tooltip` from the shared helpers; bespoke classes
- *      like `.tooltip-content` whose chrome lives in a CSS file the
- *      consumer ships alongside the chart; per-chart custom classes
- *      for theming. We can't inspect computed CSS to know for sure,
- *      but ANY className is a strong intent signal — the consumer
- *      reached for the class hook because they're styling it.
+ *   1. The standard `.semiotic-tooltip` className.
  *   2. An inline `background` declaration on `style`. Catches the
  *      Landing-page gallery pattern (`style={{ background: "white",
  *      ... }}` with no className).
  *   3. An inline `backgroundColor` declaration on `style`. Same
  *      intent as (2) just spelled differently.
+ *   4. `data-semiotic-tooltip-chrome`, for CSS-class-only tooltip
+ *      chrome where the actual background is defined outside the
+ *      React element.
  *
  * When none of these fire, `FlippingTooltip` paints
  * `defaultTooltipStyle` on its own wrapper so the tooltip can never
@@ -46,15 +43,11 @@ interface FlippingTooltipProps {
  * background, just sizing — producing transparent floating boxes
  * (the ProcessSankey and original-DifferenceChart regressions).
  *
- * The "any className" rule was originally narrower ("only the exact
- * `.semiotic-tooltip` word"), but that mis-fired on consumers using
- * CSS-class-only chrome — the `/cookbook/canvas-interaction` example
- * uses `className="tooltip-content"` with the actual chrome in a
- * sibling CSS file. The narrow rule was double-wrapping that. The
- * broader rule trusts the consumer's intent when they reached for
- * the class hook, at the cost of letting through a genuinely chrome-
- * less classed div — which is an acceptable trade for the recurring
- * "extra black box around the user's tooltip" regression.
+ * A class name alone is intentionally not enough. Classed custom
+ * content is commonly used for internal layout only, and treating
+ * every className as chrome ownership lets transparent tooltips leak
+ * through. CSS-class-only tooltip chrome should opt in with
+ * `data-semiotic-tooltip-chrome`.
  */
 function hasOwnChrome(node: React.ReactNode): boolean {
   if (!React.isValidElement(node)) return false
@@ -70,8 +63,18 @@ function hasOwnChrome(node: React.ReactNode): boolean {
   // React element.
   const type = node.type as { ownsChrome?: boolean } | string
   if (typeof type !== "string" && type && type.ownsChrome === true) return true
-  const props = node.props as { className?: unknown; style?: React.CSSProperties }
-  if (typeof props.className === "string" && props.className.trim().length > 0) return true
+  const props = node.props as {
+    className?: unknown
+    style?: React.CSSProperties
+  } & Record<string, unknown>
+  if (
+    typeof props.className === "string" &&
+    props.className.split(/\s+/).includes("semiotic-tooltip")
+  ) {
+    return true
+  }
+  if (props["data-semiotic-tooltip-chrome"] === true) return true
+  if (props["data-semiotic-tooltip-chrome"] === "true") return true
   const style = props.style
   if (style && typeof style === "object") {
     if (style.background != null && style.background !== "") return true
@@ -164,10 +167,10 @@ export function FlippingTooltip({
   }
 
   // Chrome auto-apply: if the rendered content's root already carries
-  // `.semiotic-tooltip`, the user/helper handled chrome — don't double
-  // up. Otherwise apply `defaultTooltipStyle` to the wrapper itself so
-  // the tooltip is never transparent. `width: max-content` overrides
-  // the chrome's `maxWidth` constraint to keep the existing flip math
+  // explicit chrome, the user/helper handled it — don't double up.
+  // Otherwise apply `defaultTooltipStyle` to the wrapper itself so the
+  // tooltip is never transparent. `width: max-content` overrides the
+  // chrome's `maxWidth` constraint to keep the existing flip math
   // working; the chrome's `wordWrap: break-word` still handles long
   // tokens. `pointerEvents` is set on the wrapper regardless.
   const ownsChrome = hasOwnChrome(children)

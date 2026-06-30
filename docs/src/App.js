@@ -151,6 +151,10 @@ import UrineWheelExamplePage from "./pages/examples/UrineWheelExamplePage"
 import ErieRailroadOrganizationExamplePage from "./pages/examples/ErieRailroadOrganizationExamplePage"
 import WikipediaRealtimeExamplePage from "./pages/examples/WikipediaRealtimeExamplePage"
 import LocalGovernmentExplorerExamplePage from "./pages/examples/LocalGovernmentExplorerExamplePage"
+import PortCongestionReplayExamplePage from "./pages/examples/PortCongestionReplayExamplePage"
+import ScrollYoureTellingExamplePage from "./pages/examples/ScrollYoureTellingExamplePage"
+import WhatTheMachineSeesExamplePage from "./pages/examples/WhatTheMachineSeesExamplePage"
+import SemioticArchitectureExamplePage from "./pages/examples/SemioticArchitectureExamplePage"
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
@@ -283,6 +287,10 @@ export default function DocsApp() {
             <Route path="examples/erie-railroad-organization" element={<ErieRailroadOrganizationExamplePage />} />
             <Route path="examples/wikipedia-realtime" element={<WikipediaRealtimeExamplePage />} />
             <Route path="examples/local-government-explorer" element={<LocalGovernmentExplorerExamplePage />} />
+            <Route path="examples/port-congestion-replay" element={<PortCongestionReplayExamplePage />} />
+            <Route path="examples/scroll-youre-telling" element={<ScrollYoureTellingExamplePage />} />
+            <Route path="examples/what-the-machine-sees" element={<WhatTheMachineSeesExamplePage />} />
+            <Route path="examples/semiotic-architecture" element={<SemioticArchitectureExamplePage />} />
           </Routes>
         </ExamplesLayout>
       </div>

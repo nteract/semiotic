@@ -138,6 +138,10 @@ const navData = [
       { title: "Isometric City Landmarks", path: "/examples/paris-isometric-landmarks" },
       { title: "Wikipedia Realtime", path: "/examples/wikipedia-realtime" },
       { title: "Local Government Explorer", path: "/examples/local-government-explorer" },
+      { title: "Where the Boxes Wait", path: "/examples/port-congestion-replay" },
+      { title: "The Scroll You're Telling", path: "/examples/scroll-youre-telling" },
+      { title: "What the Machine Sees", path: "/examples/what-the-machine-sees" },
+      { title: "The Living System of Semiotic", path: "/examples/semiotic-architecture" },
     ],
   },
   {
