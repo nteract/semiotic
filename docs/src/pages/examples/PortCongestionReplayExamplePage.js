@@ -497,7 +497,7 @@ export default function PortCongestionReplayExamplePage() {
             <h3>The longest hauls wait the least</h3>
             <p>
               Fifteen cohorts, frozen and measured four ways — the one panel
-              here with no clock. Read across the sea-days column: CO₂ climbs
+              here with no clock. Read down the sea-days column: CO₂ climbs
               with every extra day at sea, as the fuel burn demands. The wait
               runs the other way. The month-long haulers from Singapore and
               Mumbai meter in and berth almost on arrival, while the quick

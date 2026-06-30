@@ -1,22 +1,22 @@
 import { describe, it, expect } from "vitest"
 import { renderHook } from "@testing-library/react"
-import { syncPushBuffer, useSyncedPushData } from "./useSyncedPushData"
+import { syncPushBuffer, useSyncedPushData, type SyncedPushHandle } from "./useSyncedPushData"
 
 type Row = { id: string; v: number }
 
-function makeHandle(overrides: Record<string, unknown> = {}) {
+function makeHandle(overrides: Partial<SyncedPushHandle<Row>> = {}) {
   const calls = {
-    push: [] as unknown[],
-    pushMany: [] as unknown[][],
-    update: [] as Array<[string, (d: unknown) => unknown]>,
+    push: [] as Row[],
+    pushMany: [] as Row[][],
+    update: [] as Array<[string, (d: Row) => Row]>,
     remove: [] as Array<string | string[]>,
     clear: 0,
   }
-  const handle = {
-    push: (d: unknown) => calls.push.push(d),
-    pushMany: (ds: unknown[]) => calls.pushMany.push(ds),
-    update: (id: string, fn: (d: unknown) => unknown) => calls.update.push([id, fn]),
-    remove: (id: string | string[]) => calls.remove.push(id),
+  const handle: SyncedPushHandle<Row> = {
+    push: (d) => calls.push.push(d),
+    pushMany: (ds) => calls.pushMany.push(ds),
+    update: (id, fn) => calls.update.push([id, fn]),
+    remove: (id) => calls.remove.push(id),
     clear: () => {
       calls.clear += 1
     },
@@ -123,9 +123,9 @@ describe("useSyncedPushData", () => {
   })
 
   it("no-ops safely when the ref is not yet attached", () => {
-    const ref = { current: null } as React.RefObject<{ push?: unknown }>
+    const ref = { current: null } as React.RefObject<SyncedPushHandle<Row> | null>
     expect(() =>
-      renderHook(() => useSyncedPushData(ref as never, [{ id: "a", v: 1 }] as Row[], { id: "id" })),
+      renderHook(() => useSyncedPushData(ref, [{ id: "a", v: 1 }] as Row[], { id: "id" })),
     ).not.toThrow()
   })
 })
