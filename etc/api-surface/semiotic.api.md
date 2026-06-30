@@ -91,6 +91,7 @@ function resolveThemePreset
 function serializeSelections
 function smartTickFormat
 function smartTooltipEntries
+function syncPushBuffer
 function themeToCSS
 function themeToTokens
 function toConfig
@@ -104,6 +105,7 @@ function useLinkedHover
 function useNavigationSync
 function useSelection
 function useSelectionActions
+function useSyncedPushData
 function useTheme
 interface AccessibleNavTreeProps
 interface AnnotationContext
@@ -200,6 +202,8 @@ interface StreamXYFrameProps
 interface SwarmPlotProps
 interface SwarmStyle
 interface SwimlaneChartProps
+interface SyncedPushDataOptions
+interface SyncedPushHandle
 interface TemporalHistogramProps
 interface ThresholdAlertConfig
 interface ToConfigOptions
@@ -249,6 +253,7 @@ type NetworkSceneNode
 type OnObservationCallback
 type OrdinalChartType
 type OrdinalSceneNode
+type PushIdAccessor
 type QuadrantsConfigOverride
 type RealtimeTemporalHistogramProps
 type ResolutionMode
