@@ -127,17 +127,25 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
   })
 
-  it("respects any non-empty className as chrome ownership (CSS-class-styled tooltips)", () => {
-    // Regression: `/cookbook/canvas-interaction` uses
-    // `<div className="tooltip-content">` with chrome in a sibling
-    // CSS file (no inline style, no `.semiotic-tooltip` class). The
-    // narrow detection that only matched the canonical class double-
-    // wrapped these, producing the extra-black-box-offset-to-right
-    // symptom. Any non-empty className is now treated as "consumer is
-    // handling chrome".
+  it("does not treat className alone as chrome ownership", () => {
+    // Classed custom tooltip content is often just internal layout.
+    // Requiring explicit chrome ownership prevents transparent boxes
+    // when a callback returns a classed div without background styles.
     const { container } = render(
       <FlippingTooltip {...baseProps}>
-        <div className="tooltip-content">CSS-styled</div>
+        <div className="tooltip-content">Classed content</div>
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
+  })
+
+  it("respects explicit CSS-class chrome ownership", () => {
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <div className="tooltip-content" data-semiotic-tooltip-chrome>
+          CSS-styled
+        </div>
       </FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement

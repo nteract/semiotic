@@ -11,6 +11,7 @@ import {
   RealtimeLineChart,
   RealtimeSwarmChart,
   ThemeProvider,
+  useSyncedPushData,
 } from "semiotic"
 import CodeBlock from "../../components/CodeBlock"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
@@ -21,6 +22,7 @@ import "./WikipediaRealtimeExamplePage.css"
 const STREAM_URL = "https://stream.wikimedia.org/v2/stream/recentchange"
 const USERS_API = "https://en.wikipedia.org/w/api.php"
 const MAX_EVENTS = 600
+const CHART_BUFFER_SIZE = MAX_EVENTS * 2
 const MAGNITUDE_STEPS = [0, 10, 50, 250, 1000]
 const GROUPS = ["administrator", "registered", "bot", "anonymous"]
 
@@ -108,6 +110,8 @@ const implementationCode = `const stream = new EventSource(
   "https://stream.wikimedia.org/v2/stream/recentchange"
 )
 
+const swarmRef = useRef(null)
+
 stream.onmessage = ({ data }) => {
   const change = JSON.parse(data)
   if (change.server_name !== "en.wikipedia.org") return
@@ -123,10 +127,10 @@ stream.onmessage = ({ data }) => {
   }].slice(-600))
 }
 
-// pointStyle is evaluated per mark after category colors. Here it gives
-// each actor class its own outline while retaining one canvas draw pass.
+useSyncedPushData(swarmRef, visibleEdits, { id: "id" })
+
 <RealtimeSwarmChart
-  data={edits}
+  ref={swarmRef}
   timeAccessor="time"
   valueAccessor="delta"
   yScaleType="symlog"
@@ -144,6 +148,10 @@ stream.onmessage = ({ data }) => {
 export default function WikipediaRealtimeExamplePage() {
   const [paused, setPaused] = useState(false)
   const { edits, status, totalReceived } = useWikipediaEditStream(paused)
+  const mainSwarmRef = useRef(null)
+  const histogramRef = useRef(null)
+  const heatmapRef = useRef(null)
+  const lineRef = useRef(null)
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [activePreset, setActivePreset] = useState(null)
   const [hoveredEdit, setHoveredEdit] = useState(null)
@@ -179,6 +187,24 @@ export default function WikipediaRealtimeExamplePage() {
   const magnitudeExtent = useMemo(() => [0, maxMagnitude], [maxMagnitude])
   const signedExtent = useMemo(() => [-maxMagnitude, maxMagnitude], [maxMagnitude])
   const netFlow = useMemo(() => aggregateNetFlow(visibleEdits, timeExtent), [visibleEdits, timeExtent])
+  const outOfOrderEdits = useMemo(
+    () => visibleEdits.filter((edit) => edit.outOfOrder),
+    [visibleEdits],
+  )
+  const outOfOrderAnnotations = useMemo(() => {
+    const latest = outOfOrderEdits[outOfOrderEdits.length - 1]
+    if (!latest) return []
+    return [{
+      type: "callout",
+      pointId: latest.id,
+      label: `Out of order · ${formatDuration(latest.arrivalLagMs)} late`,
+      radius: 13,
+      dx: 46,
+      dy: -36,
+      color: "#ff4fd8",
+      connector: { end: "arrow" },
+    }]
+  }, [outOfOrderEdits])
   const groupData = useMemo(
     () => Object.fromEntries(GROUPS.map((group) => [
       group,
@@ -194,6 +220,11 @@ export default function WikipediaRealtimeExamplePage() {
   const mainChartWidth = chartWidth - 48
   const summaryChartWidth = groupChartWidth
   const filteredCount = Math.max(0, windowedEdits.length - visibleEdits.length)
+
+  useSyncedPushData(mainSwarmRef, visibleEdits, { id: "id" })
+  useSyncedPushData(histogramRef, visibleEdits, { id: "id" })
+  useSyncedPushData(heatmapRef, visibleEdits, { id: "id" })
+  useSyncedPushData(lineRef, netFlow, { id: "id" })
 
   const handleChartHover = useCallback((hover) => {
     setHoveredEdit(hover?.data || null)
@@ -235,6 +266,7 @@ export default function WikipediaRealtimeExamplePage() {
         <StatusCell value={stats.rate} label="edits / minute" />
         <StatusCell value={formatSigned(stats.netCharacters)} label="net characters in view" />
         <StatusCell value={stats.uniqueEditors} label="editors in view" />
+        <StatusCell value={outOfOrderEdits.length} label="out-of-order in view" />
         <StatusCell value={formatCompact(totalReceived)} label="received this session" />
       </div>
 
@@ -368,11 +400,12 @@ export default function WikipediaRealtimeExamplePage() {
                 note="Hover a dot to inspect it"
               />
               <RealtimeSwarmChart
-                data={visibleEdits}
+                ref={mainSwarmRef}
                 size={[mainChartWidth, 360]}
                 margin={{ top: 18, right: 18, bottom: 34, left: 58 }}
                 timeAccessor="time"
                 valueAccessor="delta"
+                windowSize={CHART_BUFFER_SIZE}
                 timeExtent={timeExtent}
                 valueExtent={signedExtent}
                 yScaleType="symlog"
@@ -383,6 +416,7 @@ export default function WikipediaRealtimeExamplePage() {
                 enableHover={{ crosshair: true }}
                 onHover={handleChartHover}
                 tooltipContent={renderEditTooltip}
+                annotations={outOfOrderAnnotations}
                 tickFormatTime={formatTime}
                 tickFormatValue={formatSigned}
                 emptyContent={false}
@@ -393,6 +427,7 @@ export default function WikipediaRealtimeExamplePage() {
                 active={filters.actor}
                 onSelect={(actor) => patchFilters({ actor: filters.actor === actor ? "all" : actor })}
               />
+              <OutOfOrderKey count={outOfOrderEdits.length} />
             </section>
 
             <section className="wiki-realtime-inspector" aria-live="polite">
@@ -429,14 +464,16 @@ export default function WikipediaRealtimeExamplePage() {
                   note="10-second bins · stacked by editor class"
                 >
                   <RealtimeHistogram
-                    data={visibleEdits}
+                    ref={histogramRef}
                     size={[summaryChartWidth, 240]}
                     margin={{ top: 12, right: 14, bottom: 34, left: 45 }}
                     binSize={10000}
                     timeAccessor="time"
                     valueAccessor={() => 1}
+                    windowSize={CHART_BUFFER_SIZE}
                     timeExtent={timeExtent}
                     categoryAccessor="group"
+                    pointIdAccessor="id"
                     colors={groupColors()}
                     gap={1}
                     opacity={0.88}
@@ -452,13 +489,15 @@ export default function WikipediaRealtimeExamplePage() {
                   note="Time × absolute character change · cell color is count"
                 >
                   <RealtimeHeatmap
-                    data={visibleEdits}
+                    ref={heatmapRef}
                     size={[summaryChartWidth, 240]}
                     margin={{ top: 12, right: 14, bottom: 34, left: 52 }}
                     timeAccessor="time"
                     valueAccessor="magnitude"
+                    windowSize={CHART_BUFFER_SIZE}
                     timeExtent={timeExtent}
                     valueExtent={magnitudeExtent}
+                    pointIdAccessor="id"
                     heatmapXBins={24}
                     heatmapYBins={12}
                     aggregation="count"
@@ -475,11 +514,13 @@ export default function WikipediaRealtimeExamplePage() {
                   note="Signed character change summed into 10-second intervals"
                 >
                   <RealtimeLineChart
-                    data={netFlow}
+                    ref={lineRef}
                     size={[mainChartWidth, 230]}
                     margin={{ top: 12, right: 18, bottom: 34, left: 58 }}
                     timeAccessor="time"
                     valueAccessor="value"
+                    windowSize={CHART_BUFFER_SIZE}
+                    pointIdAccessor="id"
                     timeExtent={timeExtent}
                     stroke="#55c2e8"
                     strokeWidth={2.5}
@@ -563,9 +604,11 @@ export default function WikipediaRealtimeExamplePage() {
           <span className="wiki-realtime-kicker">Core implementation</span>
           <h2>One event buffer, many coordinated views</h2>
           <p>
-            Every chart receives the same filtered event objects. Semiotic
-            handles temporal windows, canvas rendering, binning, heatmap
-            aggregation, axes, hover hit-testing, and per-datum swarm styles.
+            The EventSource keeps one React-side control buffer, then the charts
+            mirror the filtered window through Semiotic&apos;s imperative push,
+            update, and remove API. Semiotic handles temporal windows, canvas
+            rendering, binning, heatmap aggregation, axes, hover hit-testing,
+            and per-datum swarm styles.
           </p>
         </div>
         <CodeBlock code={implementationCode} language="jsx" />
@@ -594,6 +637,7 @@ function useWikipediaEditStream(paused) {
   const [totalReceived, setTotalReceived] = useState(0)
   const adminCacheRef = useRef(new Map())
   const pendingUsersRef = useRef(new Set())
+  const maxEventTimeRef = useRef(-Infinity)
 
   useEffect(() => {
     let disposed = false
@@ -674,8 +718,11 @@ function useWikipediaEditStream(paused) {
         if (raw.type !== "edit" && raw.type !== "new") return
         if (!raw.length || raw.length.new == null) return
 
-        const edit = normalizeEdit(raw, adminCacheRef.current)
+        const edit = normalizeEdit(raw, adminCacheRef.current, maxEventTimeRef.current)
         if (!edit) return
+        if (edit.time > maxEventTimeRef.current) {
+          maxEventTimeRef.current = edit.time
+        }
         if (edit.group === "registered" && !adminCacheRef.current.has(edit.user)) {
           pendingUsersRef.current.add(edit.user)
         }
@@ -693,7 +740,7 @@ function useWikipediaEditStream(paused) {
   return { edits, status, totalReceived }
 }
 
-function normalizeEdit(raw, adminCache) {
+function normalizeEdit(raw, adminCache, maxEventTime = -Infinity) {
   const oldLength = Number(raw.length?.old ?? 0)
   const newLength = Number(raw.length?.new ?? 0)
   const time = Date.parse(raw.meta?.dt) || Number(raw.timestamp) * 1000
@@ -702,6 +749,9 @@ function normalizeEdit(raw, adminCache) {
   }
 
   const delta = newLength - oldLength
+  const arrivalLagMs = Number.isFinite(maxEventTime)
+    ? Math.max(0, maxEventTime - time)
+    : 0
   const user = raw.user || "Unknown editor"
   const group = classifyEditor(raw, user, adminCache)
   const revisionNew = raw.revision?.new
@@ -718,6 +768,8 @@ function normalizeEdit(raw, adminCache) {
     group,
     delta,
     magnitude: Math.abs(delta),
+    outOfOrder: arrivalLagMs > 0,
+    arrivalLagMs,
     direction: delta > 0 ? "add" : delta < 0 ? "remove" : "neutral",
     namespace: Number(raw.namespace ?? -1),
     minor: Boolean(raw.minor),
@@ -788,23 +840,31 @@ function aggregateNetFlow(edits, timeExtent) {
   const end = Math.ceil(timeExtent[1] / binSize) * binSize
   const points = []
   for (let time = start; time <= end; time += binSize) {
-    points.push({ time: time + binSize / 2, value: bins.get(time) || 0 })
+    points.push({ id: `net-${time}`, time: time + binSize / 2, value: bins.get(time) || 0 })
   }
   return points
 }
 
 function actorPointStyle(edit) {
   const meta = GROUP_META[edit.group] || GROUP_META.other
+  const baseRadius = edit.magnitude >= 1000 ? 5.2 : edit.minor ? 3 : 4
   return {
     fill: meta.fill,
-    stroke: meta.stroke,
-    strokeWidth: meta.strokeWidth,
+    stroke: edit.outOfOrder ? "#ff4fd8" : meta.stroke,
+    strokeWidth: edit.outOfOrder ? Math.max(3, meta.strokeWidth + 1.2) : meta.strokeWidth,
     opacity: edit.minor ? 0.55 : 0.88,
-    r: edit.magnitude >= 1000 ? 5.2 : edit.minor ? 3 : 4,
+    r: edit.outOfOrder ? baseRadius + 1.6 : baseRadius,
   }
 }
 
 function directionPointStyle(edit) {
+  const orderStyle = edit.outOfOrder
+    ? {
+        stroke: "#ff4fd8",
+        strokeWidth: 3,
+        r: edit.magnitude >= 1000 ? 6.3 : 5,
+      }
+    : null
   if (edit.direction === "remove") {
     return {
       fill: "#ef665f",
@@ -812,6 +872,7 @@ function directionPointStyle(edit) {
       strokeWidth: 1.4,
       opacity: edit.minor ? 0.5 : 0.84,
       r: edit.magnitude >= 1000 ? 5 : 3.7,
+      ...(orderStyle || {}),
     }
   }
   if (edit.direction === "add") {
@@ -821,6 +882,7 @@ function directionPointStyle(edit) {
       strokeWidth: 1.4,
       opacity: edit.minor ? 0.5 : 0.84,
       r: edit.magnitude >= 1000 ? 5 : 3.7,
+      ...(orderStyle || {}),
     }
   }
   return {
@@ -829,6 +891,7 @@ function directionPointStyle(edit) {
     strokeWidth: 1,
     opacity: 0.65,
     r: 3.2,
+    ...(orderStyle || {}),
   }
 }
 
@@ -839,8 +902,12 @@ function groupColors() {
 }
 
 function SwarmCard({ group, data, width, timeExtent, valueExtent, onHover }) {
+  const chartRef = useRef(null)
   const meta = GROUP_META[group]
   const net = data.reduce((sum, edit) => sum + edit.delta, 0)
+
+  useSyncedPushData(chartRef, data, { id: "id" })
+
   return (
     <section className="wiki-realtime-swarm-card">
       <div className="wiki-realtime-swarm-card-heading">
@@ -854,11 +921,12 @@ function SwarmCard({ group, data, width, timeExtent, valueExtent, onHover }) {
         </div>
       </div>
       <RealtimeSwarmChart
-        data={data}
+        ref={chartRef}
         size={[width, 230]}
         margin={{ top: 12, right: 12, bottom: 32, left: 52 }}
         timeAccessor="time"
         valueAccessor="magnitude"
+        windowSize={CHART_BUFFER_SIZE}
         timeExtent={timeExtent}
         valueExtent={valueExtent}
         yScaleType="symlog"
@@ -875,6 +943,7 @@ function SwarmCard({ group, data, width, timeExtent, valueExtent, onHover }) {
       <div className="wiki-realtime-direction-key" aria-label="Edit direction legend">
         <span><i className="is-addition" /> text added</span>
         <span><i className="is-removal" /> text removed</span>
+        <span><i className="is-out-of-order" /> out of order</span>
       </div>
     </section>
   )
@@ -905,6 +974,15 @@ function ActorLegend({ counts, active, onSelect }) {
           </button>
         )
       })}
+    </div>
+  )
+}
+
+function OutOfOrderKey({ count }) {
+  return (
+    <div className="wiki-realtime-order-key">
+      <span><i /> Magenta rings mark records consumed after a newer event-time.</span>
+      <strong>{count} in the visible window</strong>
     </div>
   )
 }
@@ -943,7 +1021,11 @@ function Inspector({ edit }) {
         <span className={edit.delta >= 0 ? "is-addition" : "is-removal"}>
           {formatSigned(edit.delta)}
         </span>
-        <small>{edit.minor ? "minor edit" : "characters"}</small>
+        <small>
+          {edit.outOfOrder
+            ? `out of order by ${formatDuration(edit.arrivalLagMs)}`
+            : edit.minor ? "minor edit" : "characters"}
+        </small>
       </div>
       {edit.diffUrl && (
         <a href={edit.diffUrl} target="_blank" rel="noopener noreferrer">
@@ -965,7 +1047,10 @@ function renderEditTooltip(hover) {
         {meta.shortLabel} · {edit.user}
       </div>
       <strong>{edit.title}</strong>
-      <small>{formatSigned(edit.delta)} characters · {formatTime(edit.time)} UTC</small>
+      <small>
+        {formatSigned(edit.delta)} characters · {formatTime(edit.time)} UTC
+        {edit.outOfOrder ? ` · out of order by ${formatDuration(edit.arrivalLagMs)}` : ""}
+      </small>
     </div>
   )
 }
@@ -1056,6 +1141,13 @@ function formatMagnitude(value) {
   if (absolute >= 1000000) return `${(absolute / 1000000).toFixed(1)}m`
   if (absolute >= 1000) return `${(absolute / 1000).toFixed(absolute >= 10000 ? 0 : 1)}k`
   return String(Math.round(absolute))
+}
+
+function formatDuration(ms) {
+  if (!Number.isFinite(ms) || ms <= 0) return "0ms"
+  if (ms < 1000) return `${Math.round(ms)}ms`
+  if (ms < 60000) return `${Math.round(ms / 100) / 10}s`
+  return `${Math.round(ms / 6000) / 10}m`
 }
 
 function formatSigned(value) {

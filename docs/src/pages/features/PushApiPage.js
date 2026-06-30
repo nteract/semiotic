@@ -398,6 +398,35 @@ ref.current.update("API", d => ({ ...d, status: "degraded" }))
         </div>
       </div>
 
+      <h3>Bridge: a controlled array that drives the push buffer</h3>
+      <p>
+        Often you hold rows in React state — a filtered window, a replay cursor,
+        an aggregated slice — but still want the chart to ingest them{" "}
+        <em>incrementally</em> rather than re-initialize on every render.{" "}
+        <code>useSyncedPushData</code> is that reconciliation, done once: it diffs
+        your array by id and issues the minimal <code>push</code>/{" "}
+        <code>update</code>/<code>remove</code> calls, clearing and rebuilding when
+        a <code>resetKey</code> changes (a theme remount, a mode switch). Pass the
+        rows to the hook, not to the chart’s <code>data</code> prop.
+      </p>
+      <CodeBlock code={`import { useSyncedPushData } from "semiotic"
+
+const ref = useRef()
+const [rows, setRows] = useState([])         // your controlled window
+
+useSyncedPushData(ref, rows, { id: "id" })   // mirror rows → push buffer
+// clear + rebuild when something invalidates the whole series:
+useSyncedPushData(ref, rows, { id: "id", resetKey: theme })
+
+<RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" pointIdAccessor="id" />
+// no data prop — the hook owns ingestion`} language="jsx" />
+      <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+        It works on any push-capable HOC (realtime, ordinal, XY, network) and
+        pairs with <code>useStreamStatus</code> for a live/stale badge. The
+        realtime examples — Wikipedia, Where the Boxes Wait, and The Scroll
+        You’re Telling — all drive their charts through it.
+      </p>
+
       <h2>ID accessors by chart type</h2>
       <CodeBlock code={`// XY charts: pointIdAccessor
 <Scatterplot pointIdAccessor="id" />

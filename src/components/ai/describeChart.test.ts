@@ -15,6 +15,25 @@ describe("describeChart — L1 encoding", () => {
     expect(r.levels.l1).toContain("split by region")
   })
 
+  it("does not invent a pooled trend across multiple series", () => {
+    // `stats` pools every series end-to-end; a "rises from first to last"
+    // sentence would describe the concatenation, not a real trend.
+    const data = [
+      { year: 1, life: 70, country: "A" }, { year: 2, life: 78, country: "A" },
+      { year: 1, life: 50, country: "B" }, { year: 2, life: 58, country: "B" },
+    ]
+    const r = describeChart(
+      "LineChart",
+      { data, xAccessor: "year", yAccessor: "life", lineBy: "country" },
+      { capability: { family: "time-series", intentScores: { trend: 5 } } },
+    )
+    expect(r.levels.l1).toContain("split by country")
+    expect(r.levels.l2).toContain("ranges from") // pooled range is still fine
+    expect(r.levels.l3).toBeUndefined() // no false directional claim
+    expect(r.levels.l4).toContain("trend chart")
+    expect(r.levels.l4 || "").not.toMatch(/rises from|falls from|climbs to|drops to/)
+  })
+
   it("describes bar charts by value and category", () => {
     const r = describeChart("BarChart", { data: [{ category: "A", value: 1 }], categoryAccessor: "category", valueAccessor: "value" }, { levels: ["l1"] })
     expect(r.levels.l1).toBe("A bar chart of value by category.")

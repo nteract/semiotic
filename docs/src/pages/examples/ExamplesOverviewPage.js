@@ -74,6 +74,38 @@ const examples = [
       "Resolve any postal place into its county's federal disaster record and spending, live 311 service requests, LOCUS municipal law, and a network of bodies, sponsors, meetings, and active legislation.",
     preview: "local-government",
   },
+  {
+    title: "Where the Boxes Wait",
+    path: "/examples/port-congestion-replay",
+    eyebrow: "Four-frame logistics replay",
+    description:
+      "A night-shift port control room tracing container cohorts through five global maritime corridors, a temporal process flow, a push-driven backlog, and route comparison.",
+    preview: "port-replay",
+  },
+  {
+    title: "The Scroll You're Telling",
+    path: "/examples/scroll-youre-telling",
+    eyebrow: "Realtime reader telemetry",
+    description:
+      "A scrollytelling essay on the evolution of data journalism that records your own scroll, velocity, and dwell as a live stream and plots it back — the reader as the data source.",
+    preview: "scroll-tell",
+  },
+  {
+    title: "What the Machine Sees",
+    path: "/examples/what-the-machine-sees",
+    eyebrow: "The intelligence layer, end to end",
+    description:
+      "Watch Semiotic read real World Bank data with no model call: profile it, rank chart capabilities, then describe, audit, and lay out a navigable structure for the chart it chooses.",
+    preview: "machine",
+  },
+  {
+    title: "The Living System of Semiotic",
+    path: "/examples/semiotic-architecture",
+    eyebrow: "Interactive architecture map",
+    description:
+      "Trace each example from its visible charts and settings through the four frame models, data inputs, and the rhizomatic implementation beneath them.",
+    preview: "architecture",
+  },
 ]
 
 export default function ExamplesOverviewPage() {
@@ -107,6 +139,14 @@ export default function ExamplesOverviewPage() {
                   ? <MiniWikipediaPreview />
                 : example.preview === "local-government"
                   ? <MiniLocalGovernmentPreview />
+                : example.preview === "port-replay"
+                  ? <MiniPortReplayPreview />
+                : example.preview === "scroll-tell"
+                  ? <MiniScrollTellPreview />
+                : example.preview === "machine"
+                  ? <MiniMachinePreview />
+                : example.preview === "architecture"
+                  ? <MiniArchitecturePreview />
                 : <MiniRadialPreview combined={example.preview === "combined"} />}
             <div style={styles.cardBody}>
               <div style={styles.eyebrow}>{example.eyebrow}</div>
@@ -117,6 +157,151 @@ export default function ExamplesOverviewPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+function MiniPortReplayPreview() {
+  const routes = [
+    { y: 20, color: "#ff7043" },
+    { y: 30, color: "#36d6b3" },
+    { y: 40, color: "#ffd166" },
+    { y: 50, color: "#68a7ff" },
+    { y: 60, color: "#c996ff" },
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#07171d" />
+      <path d="M0 18H242M0 42H242M0 66H242M34 0V96M82 0V96M130 0V96M178 0V96M226 0V96" stroke="#19343b" strokeWidth="1" />
+      <rect x="14" y="12" width="48" height="8" fill="#ff7043" />
+      <text x="14" y="34" fill="#f5ecdc" fontSize="13" fontWeight="800" fontFamily="sans-serif">BOXES</text>
+      <text x="14" y="48" fill="#f5ecdc" fontSize="13" fontWeight="800" fontFamily="sans-serif">WAIT</text>
+      {routes.map((route, index) => (
+        <g key={route.color}>
+          <path
+            d={`M82 ${route.y} C126 ${route.y - 8}, 156 ${70 - index * 2}, 218 60`}
+            fill="none"
+            stroke={route.color}
+            strokeWidth={index === 0 ? 3 : 2}
+            opacity="0.9"
+          />
+          <circle cx="82" cy={route.y} r="2.5" fill={route.color} />
+        </g>
+      ))}
+      <rect x="196" y="54" width="30" height="19" fill="none" stroke="#ffd166" />
+      <path d="M197 80h29" stroke="#36d6b3" strokeWidth="5" />
+    </svg>
+  )
+}
+
+function MiniScrollTellPreview() {
+  const beats = [
+    [14, 70, "#5bd6c0"], [30, 67, "#5bd6c0"], [46, 65, "#5bd6c0"],
+    [62, 69, "#5bd6c0"], [80, 74, "#7f8ba0"], [98, 83, "#ff5fb0"],
+    [110, 85, "#ff5fb0"], [128, 69, "#5bd6c0"], [150, 65, "#5bd6c0"],
+    [172, 67, "#5bd6c0"], [196, 64, "#5bd6c0"], [220, 66, "#5bd6c0"],
+  ]
+  const trace = "M8,52 C40,46 58,20 84,22 C100,23 104,34 114,30 C150,14 196,10 234,7"
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#0e1620" />
+      {[20, 40].map((y) => (
+        <line key={y} x1="8" x2="234" y1={y} y2={y} stroke="#222e3a" strokeWidth="0.6" />
+      ))}
+      <line x1="8" x2="234" y1="76" y2="76" stroke="#2b3a44" strokeWidth="0.8" />
+      <path d={`${trace} L234,52 L8,52 Z`} fill="rgba(91,214,192,0.14)" />
+      <path d={trace} fill="none" stroke="#5bd6c0" strokeWidth="2.2" />
+      <circle cx="234" cy="7" r="3" fill="#5bd6c0" />
+      {beats.map(([x, y, color], index) => (
+        <circle
+          key={index}
+          cx={x}
+          cy={y}
+          r={color === "#ff5fb0" ? 3.2 : 2.6}
+          fill={color}
+          opacity={color === "#7f8ba0" ? 0.6 : 0.9}
+        />
+      ))}
+    </svg>
+  )
+}
+
+function MiniMachinePreview() {
+  const candidates = [
+    [34, "#7c6cf0", true],
+    [24, "#5a4fb0", false],
+    [18, "#5a4fb0", false],
+    [12, "#473f86", false],
+  ]
+  const dots = [[152, 70], [168, 56], [184, 60], [200, 44], [216, 50], [230, 33]]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#14121f" />
+      {candidates.map(([meter, color, highlight], index) => (
+        <g key={index} transform={`translate(12,${13 + index * 17})`}>
+          <rect
+            x="0"
+            y="0"
+            width="96"
+            height="12"
+            rx="3"
+            fill={highlight ? "rgba(124,108,240,0.18)" : "#1d1a2b"}
+            stroke={highlight ? "#7c6cf0" : "none"}
+            strokeWidth={highlight ? 1 : 0}
+          />
+          <rect x="7" y="4" width="38" height="4" rx="2" fill="#3a3550" />
+          <rect x="52" y="4" width={meter} height="4" rx="2" fill={color} />
+        </g>
+      ))}
+      <path d="M110,19 C126,19 126,42 140,44" fill="none" stroke="#7c6cf0" strokeWidth="1.2" strokeDasharray="2 2" />
+      <path d="M140,44 l-6,-3 l1,5 z" fill="#7c6cf0" />
+      <line x1="146" y1="78" x2="234" y2="78" stroke="#2a2740" strokeWidth="0.8" />
+      <line x1="146" y1="20" x2="146" y2="78" stroke="#2a2740" strokeWidth="0.8" />
+      {dots.map(([x, y], index) => (
+        <circle key={index} cx={x} cy={y} r="3" fill="#7c6cf0" opacity="0.92" />
+      ))}
+    </svg>
+  )
+}
+
+function MiniArchitecturePreview() {
+  const branchX = [38, 92, 150, 204]
+  const leaves = branchX.flatMap((x, group) =>
+    [0, 1, 2].map((row) => ({
+      x: x + (row % 2 === 0 ? -10 : 10),
+      y: 15 + row * 16 + (group % 2) * 2,
+      group,
+    }))
+  )
+  const roots = [
+    [42, 82], [82, 90], [122, 80], [162, 90], [202, 82],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#18251f" />
+      <path d="M0,68 C50,64 85,71 121,68 S192,64 242,68" fill="none" stroke="#756246" strokeWidth="1" />
+      {branchX.map((x, index) => (
+        <path
+          key={x}
+          d={`M121,61 C121,51 ${x},54 ${x},45`}
+          fill="none"
+          stroke={index === 1 ? "#dfb348" : "#6ca77b"}
+          strokeWidth={index === 1 ? "2.4" : "1.2"}
+        />
+      ))}
+      {leaves.map((leaf, index) => (
+        <g key={index}>
+          <path d={`M${branchX[leaf.group]},45 C${branchX[leaf.group]},34 ${leaf.x},34 ${leaf.x},${leaf.y + 5}`} fill="none" stroke="#6ca77b" strokeWidth=".7" opacity=".8" />
+          <rect x={leaf.x - 8} y={leaf.y} width="16" height="7" rx="3.5" fill={index % 5 === 0 ? "#dfb348" : "#6ca77b"} />
+        </g>
+      ))}
+      <rect x="107" y="52" width="28" height="15" rx="4" fill="#b57945" stroke="#dfb348" />
+      {roots.map(([x, y], index) => (
+        <g key={x}>
+          <path d={`M121,67 C121,75 ${x},72 ${x},${y}`} fill="none" stroke="#5191a2" strokeWidth=".7" strokeDasharray="2 2" />
+          <rect x={x - 13} y={y - 4} width="26" height="8" rx="3" fill="#243a3c" stroke="#5191a2" strokeWidth=".5" />
+        </g>
+      ))}
+    </svg>
   )
 }
 

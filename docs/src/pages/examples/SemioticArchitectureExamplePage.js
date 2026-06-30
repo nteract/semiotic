@@ -1,0 +1,719 @@
+import React, { useCallback, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
+import { NetworkCustomChart } from "semiotic"
+import { networkHitTarget, unwrapDatum } from "semiotic/recipes"
+import useResponsiveWidth from "../../hooks/useResponsiveWidth"
+import ExamplePageLayout from "./ExamplePageLayout"
+import {
+  SEMIOTIC_ARCHITECTURE_EDGES,
+  SEMIOTIC_ARCHITECTURE_NODES,
+  SEMIOTIC_EXAMPLE_PROFILES,
+  architectureHighlight,
+} from "./data/semioticArchitecture"
+import "./SemioticArchitectureExamplePage.css"
+
+const CHART_HEIGHT = 1050
+const MIN_CHART_WIDTH = 1100
+const SPINE_CONNECTOR_IDS = [
+  "feature-bough",
+  "input-static",
+  "root-scene",
+  "root-render",
+  "root-data",
+  "root-pipelines",
+]
+const SPINE_CONNECTOR_LABELS = {
+  "feature-bough": "Shared capabilities",
+  "input-static": "Data props",
+  "root-scene": "Scene graph",
+  "root-render": "Rendering engines",
+  "root-data": "Data ingestion",
+  "root-pipelines": "Pipeline stores",
+}
+const spineConnectorSet = new Set(SPINE_CONNECTOR_IDS)
+
+export default function SemioticArchitectureExamplePage() {
+  const [selectedId, setSelectedId] = useState(null)
+  const [hoveredNode, setHoveredNode] = useState(null)
+  const [chartWidth, hostRef] = useResponsiveWidth(MIN_CHART_WIDTH, 1160)
+
+  const selectedProfile = useMemo(
+    () => SEMIOTIC_EXAMPLE_PROFILES.find((profile) => profile.id === selectedId) ?? null,
+    [selectedId]
+  )
+  const highlighted = useMemo(
+    () => architectureHighlight(selectedProfile),
+    [selectedProfile]
+  )
+  const layoutConfig = useMemo(
+    () => ({
+      highlightedIds: selectedProfile ? [...highlighted] : null,
+    }),
+    [highlighted, selectedProfile]
+  )
+
+  const handleObservation = useCallback((observation) => {
+    if (observation.type === "hover" && observation.datum) {
+      setHoveredNode(unwrapDatum(observation.datum))
+    } else if (observation.type === "hover-end") {
+      setHoveredNode(null)
+    }
+  }, [])
+
+  const detailNode = hoveredNode?.id ? hoveredNode : null
+
+  return (
+    <ExamplePageLayout
+      title="The Living System of Semiotic"
+      prevPage={{
+        title: "What the Machine Sees",
+        path: "/examples/what-the-machine-sees",
+      }}
+    >
+      <p className="architecture-lede">
+        Semiotic presents a crown of charts and controls, but those visible forms
+        grow from four frame models, two ways of receiving data, and a
+        rhizomatic implementation beneath the surface. Choose an example to
+        trace the exact branch, settings, trunk, and roots it uses.
+      </p>
+
+      <section className="architecture-controls" aria-labelledby="architecture-example-heading">
+        <div className="architecture-controls-heading">
+          <div>
+            <span className="architecture-kicker">Trace a composition</span>
+            <h2 id="architecture-example-heading">Which parts does each example use?</h2>
+          </div>
+          <button
+            type="button"
+            className={`architecture-system-button ${selectedId == null ? "is-active" : ""}`}
+            aria-pressed={selectedId == null}
+            onClick={() => setSelectedId(null)}
+          >
+            Whole system
+          </button>
+        </div>
+        <div className="architecture-example-buttons" role="group" aria-label="Highlight an example">
+          {SEMIOTIC_EXAMPLE_PROFILES.map((profile) => (
+            <button
+              key={profile.id}
+              type="button"
+              className={profile.id === selectedId ? "is-active" : ""}
+              aria-pressed={profile.id === selectedId}
+              onClick={() =>
+                setSelectedId((current) => (current === profile.id ? null : profile.id))
+              }
+            >
+              {profile.shortLabel || profile.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="architecture-figure" aria-label="Semiotic architecture Sankey">
+        <div className="architecture-chart-scroller" ref={hostRef}>
+          <div style={{ width: chartWidth }}>
+            <NetworkCustomChart
+              nodes={SEMIOTIC_ARCHITECTURE_NODES}
+              edges={SEMIOTIC_ARCHITECTURE_EDGES}
+              layout={semioticArchitectureLayout}
+              layoutConfig={layoutConfig}
+              width={chartWidth}
+              height={CHART_HEIGHT}
+              margin={0}
+              enableHover
+              onObservation={handleObservation}
+              description="A vertical systems Sankey of Semiotic. Visible Semiotic fans upward through four frame models into chart HOCs, capability stars annotate the public surface, six load-bearing connections join it to Semiotic Internals, and private subsystems fan downward."
+              summary={
+                selectedProfile
+                  ? `${selectedProfile.label} uses ${selectedProfile.uses.length} directly configured architecture elements; its supporting branch and implementation roots are highlighted.`
+                  : `The map contains ${SEMIOTIC_ARCHITECTURE_NODES.length} architecture elements and ${SEMIOTIC_ARCHITECTURE_EDGES.length} structural or dependency relationships.`
+              }
+              accessibleTable
+              frameProps={{
+                background: "transparent",
+                tooltipContent: renderArchitectureTooltip,
+              }}
+            />
+          </div>
+        </div>
+
+        <ArchitectureReadout
+          node={detailNode}
+          profile={selectedProfile}
+          highlightedCount={highlighted.size}
+        />
+      </section>
+
+      <section className="architecture-explanation">
+        <div>
+          <span className="architecture-kicker">How to read it</span>
+          <h2>One system, two surfaces, six load-bearing connections</h2>
+        </div>
+        <div className="architecture-explanation-grid">
+          <p>
+            The upper Sankey fans from Visible Semiotic into XY, Ordinal,
+            Network, and Geo frames, then into exact HOCs and grouped chart
+            families. Shared settings and composition tools sit on the two
+            gold-star semicircles that frame this public surface.
+          </p>
+          <p>
+            Six central ribbons carry shared capabilities, data props, scene
+            graphs, rendering engines, data ingestion, and pipeline stores
+            between Visible Semiotic and Semiotic Internals. The lower Sankey
+            then fans into interaction, state, theming, streaming, annotation,
+            recipes, accessibility, and output machinery.
+          </p>
+        </div>
+      </section>
+    </ExamplePageLayout>
+  )
+}
+
+function ArchitectureReadout({ node, profile, highlightedCount }) {
+  if (node) {
+    return (
+      <aside className="architecture-readout" aria-live="polite">
+        <span className={`architecture-readout-kind is-${node.layer}`}>
+          {layerLabel(node.layer)}
+        </span>
+        <strong>{node.label}</strong>
+        <p>{node.detail}</p>
+      </aside>
+    )
+  }
+
+  if (profile) {
+    return (
+      <aside className="architecture-readout" aria-live="polite">
+        <span className="architecture-readout-kind is-example">Example path</span>
+        <strong>{profile.label}</strong>
+        <p>{profile.note}</p>
+        <div className="architecture-profile-meta">
+          <span>{profile.uses.length} direct choices</span>
+          <span>{highlightedCount} elements with supporting paths</span>
+          <Link to={profile.path}>Open example →</Link>
+        </div>
+      </aside>
+    )
+  }
+
+  return (
+    <aside className="architecture-readout" aria-live="polite">
+      <span className="architecture-readout-kind is-system">System view</span>
+      <strong>Hover any element to inspect it.</strong>
+      <p>
+        Ribbons widen toward the shared frame and runtime systems. Stars mark
+        cross-frame capabilities. Select an example above to dim everything
+        outside its implementation path.
+      </p>
+    </aside>
+  )
+}
+
+function semioticArchitectureLayout(ctx) {
+  const rawNodes = ctx.nodes.map((node) => node.data ?? node)
+  const positioned = positionArchitecture(rawNodes, ctx.dimensions.plot)
+  const positionedById = new Map(positioned.map((node) => [node.id, node]))
+  const activeIds = ctx.config.highlightedIds
+    ? new Set(ctx.config.highlightedIds)
+    : null
+
+  const sceneNodes = positioned.map((node) =>
+    networkHitTarget({
+      x: node.x - node.width / 2,
+      y: node.y - node.height / 2,
+      width: node.width,
+      height: node.height,
+      datum: node,
+      id: node.id,
+      label: `${node.label}. ${node.detail}`,
+    })
+  )
+
+  return {
+    sceneNodes,
+    overlays: (
+      <ArchitectureOverlay
+        nodes={positioned}
+        nodeById={positionedById}
+        activeIds={activeIds}
+        width={ctx.dimensions.plot.width}
+      />
+    ),
+  }
+}
+
+function ArchitectureOverlay({ nodes, nodeById, activeIds, width }) {
+  const isActive = (id) => !activeIds || activeIds.has(id)
+  const visible = nodeById.get("semiotic-core")
+  const internals = nodeById.get("semiotic-internals")
+  const frames = nodes.filter((node) => node.layer === "frame")
+  const leaves = nodes.filter(
+    (node) => node.layer === "leaf" || node.layer === "leaf-group"
+  )
+  const capabilities = nodes.filter((node) => node.layer === "fruit")
+  const internalRoots = nodes.filter(
+    (node) => node.layer === "root" && !spineConnectorSet.has(node.id)
+  )
+  const visibleNodes = nodes.filter(
+    (node) => node.layer !== "fruit" && !spineConnectorSet.has(node.id)
+  )
+
+  return (
+    <g
+      className={`architecture-overlay architecture-sankey ${activeIds ? "has-selection" : "is-overview"}`}
+      pointerEvents="none"
+    >
+      <defs>
+        <linearGradient id="architecture-upper-ribbon" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor="var(--semiotic-primary, #4f8fc7)" />
+          <stop offset="100%" stopColor="var(--semiotic-success, #4f9362)" />
+        </linearGradient>
+        <linearGradient id="architecture-spine-ribbon" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--semiotic-primary, #4f8fc7)" />
+          <stop offset="100%" stopColor="var(--semiotic-info, #4d8fa8)" />
+        </linearGradient>
+        <linearGradient id="architecture-lower-ribbon" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--semiotic-info, #4d8fa8)" />
+          <stop offset="100%" stopColor="var(--text-secondary)" />
+        </linearGradient>
+        <filter id="architecture-active-glow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="3.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <SankeyCanopy
+        visible={visible}
+        frames={frames}
+        leaves={leaves}
+        nodeById={nodeById}
+        isActive={isActive}
+      />
+      <CapabilityStars
+        capabilities={capabilities}
+        width={width}
+        isActive={isActive}
+        selectionActive={Boolean(activeIds)}
+      />
+      <LoadBearingSpine
+        visible={visible}
+        internals={internals}
+        nodeById={nodeById}
+        isActive={isActive}
+      />
+      <InternalSideBranch
+        internals={internals}
+        nodeById={nodeById}
+        isActive={isActive}
+      />
+      <InternalFan
+        internals={internals}
+        roots={internalRoots}
+        isActive={isActive}
+      />
+
+      {visibleNodes.map((node) => (
+        <ArchitectureNode
+          key={node.id}
+          node={node}
+          active={isActive(node.id)}
+          selectionActive={Boolean(activeIds)}
+        />
+      ))}
+    </g>
+  )
+}
+
+function SankeyCanopy({ visible, frames, leaves, nodeById, isActive }) {
+  const valueBranch = nodeById.get("value-components")
+  const bigNumber = nodeById.get("hoc-big-number")
+
+  return (
+    <g className="architecture-sankey-canopy">
+      {frames.map((frame) => (
+        <SankeyRibbon
+          key={`visible-${frame.id}`}
+          source={visible}
+          target={frame}
+          sourceWidth={34}
+          targetWidth={19}
+          active={isActive(visible.id) && isActive(frame.id)}
+          kind="upper"
+        />
+      ))}
+      {leaves
+        .filter((leaf) => leaf.cluster !== "value")
+        .map((leaf) => {
+          const frame = nodeById.get(leaf.parent)
+          return (
+            <SankeyRibbon
+              key={`${frame.id}-${leaf.id}`}
+              source={frame}
+              target={leaf}
+              sourceWidth={9}
+              targetWidth={3}
+              active={isActive(frame.id) && isActive(leaf.id)}
+              kind="upper"
+            />
+          )
+        })}
+      <SideRibbon
+        source={visible}
+        target={valueBranch}
+        sourceWidth={16}
+        targetWidth={10}
+        active={isActive(visible.id) && isActive(valueBranch.id)}
+      />
+      <SideRibbon
+        source={valueBranch}
+        target={bigNumber}
+        sourceWidth={7}
+        targetWidth={3}
+        active={isActive(valueBranch.id) && isActive(bigNumber.id)}
+      />
+    </g>
+  )
+}
+
+function SankeyRibbon({ source, target, sourceWidth, targetWidth, active, kind }) {
+  if (!source || !target) return null
+  return (
+    <path
+      d={verticalRibbonPath(source, target, sourceWidth, targetWidth)}
+      className={`architecture-ribbon is-${kind} ${active ? "is-active" : "is-dimmed"}`}
+    />
+  )
+}
+
+function SideRibbon({ source, target, sourceWidth, targetWidth, active }) {
+  if (!source || !target) return null
+  return (
+    <path
+      d={horizontalRibbonPath(source, target, sourceWidth, targetWidth)}
+      className={`architecture-ribbon is-side ${active ? "is-active" : "is-dimmed"}`}
+    />
+  )
+}
+
+function LoadBearingSpine({ visible, internals, nodeById, isActive }) {
+  const connectorWidth = 27
+  const gap = 7
+  const totalWidth =
+    SPINE_CONNECTOR_IDS.length * connectorWidth +
+    (SPINE_CONNECTOR_IDS.length - 1) * gap
+  const startX = visible.x - totalWidth / 2 + connectorWidth / 2
+  const midpointY = (visible.y + internals.y) / 2
+
+  return (
+    <g className="architecture-load-bearing-spine">
+      <rect
+        className="architecture-spine-tie"
+        x={visible.x - totalWidth / 2 - 7}
+        y={midpointY - 42}
+        width={totalWidth + 14}
+        height="7"
+        rx="3.5"
+      />
+      <rect
+        className="architecture-spine-tie"
+        x={visible.x - totalWidth / 2 - 7}
+        y={midpointY + 36}
+        width={totalWidth + 14}
+        height="7"
+        rx="3.5"
+      />
+      {SPINE_CONNECTOR_IDS.map((id, index) => {
+        const connector = nodeById.get(id)
+        const x = startX + index * (connectorWidth + gap)
+        const active = isActive(id)
+        return (
+          <g key={id} className={active ? "is-active" : "is-dimmed"}>
+            <path
+              d={spineRibbonPath(visible, internals, x, connectorWidth)}
+              className="architecture-ribbon is-spine"
+            />
+            <text
+              x={x}
+              y={midpointY}
+              transform={`rotate(-90 ${x} ${midpointY})`}
+              className="architecture-spine-label"
+            >
+              {SPINE_CONNECTOR_LABELS[id] || connector.label}
+            </text>
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
+function InternalFan({ internals, roots, isActive }) {
+  return (
+    <g className="architecture-internal-fan">
+      {roots.map((root) => (
+        <SankeyRibbon
+          key={`${internals.id}-${root.id}`}
+          source={internals}
+          target={root}
+          sourceWidth={18}
+          targetWidth={7}
+          active={isActive(internals.id) && isActive(root.id)}
+          kind="lower"
+        />
+      ))}
+    </g>
+  )
+}
+
+function InternalSideBranch({ internals, nodeById, isActive }) {
+  const pushApi = nodeById.get("input-push")
+
+  return (
+    <g className="architecture-internal-side-branch">
+      <SideRibbon
+        source={internals}
+        target={pushApi}
+        sourceWidth={14}
+        targetWidth={9}
+        active={isActive(internals.id) && isActive(pushApi.id)}
+      />
+    </g>
+  )
+}
+
+function CapabilityStars({ capabilities, width, isActive, selectionActive }) {
+  const centerX = width / 2
+  return (
+    <g className="architecture-capability-ring">
+      <path d={`M38,414 A${centerX - 38},365 0 0 1 ${width - 38},414`} />
+      <path d={`M118,414 A${centerX - 118},286 0 0 1 ${width - 118},414`} />
+      {capabilities.map((node) => {
+        const active = isActive(node.id)
+        const anchor =
+          node.x < centerX - 40 ? "start" : node.x > centerX + 40 ? "end" : "middle"
+        const labelX =
+          anchor === "start" ? node.x + 13 : anchor === "end" ? node.x - 13 : node.x
+        const labelY = anchor === "middle" ? node.y - 15 : node.y + 3
+        return (
+          <g
+            key={node.id}
+            className={[
+              "architecture-capability-star",
+              active ? "is-active" : "is-dimmed",
+              selectionActive && active ? "is-traced" : "",
+            ].join(" ")}
+          >
+            <path d={starPath(node.x, node.y, 10, 4.5)} />
+            <text x={labelX} y={labelY} textAnchor={anchor}>{node.label}</text>
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
+function ArchitectureNode({ node, active, selectionActive }) {
+  const className = [
+    "architecture-node",
+    `is-${node.layer}`,
+    active ? "is-active" : "is-dimmed",
+    selectionActive && active ? "is-traced" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
+  return (
+    <g className={className} transform={`translate(${node.x},${node.y})`}>
+      <rect
+        x={-node.width / 2}
+        y={-node.height / 2}
+        width={node.width}
+        height={node.height}
+        rx={
+          node.layer === "leaf" ||
+          node.layer === "leaf-group" ||
+          node.layer === "root"
+            ? node.height / 2
+            : 7
+        }
+      />
+      <text y={node.layer === "root" ? -2 : 4}>{node.label}</text>
+      {node.layer === "root" && (
+        <text y="13" className="architecture-root-index">
+          INTERNAL {String(node.internalOrder).padStart(2, "0")}
+        </text>
+      )}
+    </g>
+  )
+}
+
+function positionArchitecture(rawNodes, plot) {
+  const internalRoots = rawNodes.filter(
+    (node) => node.layer === "root" && !spineConnectorSet.has(node.id)
+  )
+  const rootIndex = new Map(internalRoots.map((node, index) => [node.id, index]))
+
+  return rawNodes.map((node) => {
+    const size = nodeSize(node)
+    const target = nodeTarget(node, plot.width, rootIndex)
+    const internalOrder = rootIndex.has(node.id)
+      ? rootIndex.get(node.id) + 1
+      : undefined
+    return { ...node, ...size, x: target.x, y: target.y, internalOrder }
+  })
+}
+
+function nodeTarget(node, width, rootIndex) {
+  const clusterCenter = {
+    xy: width * 0.14,
+    ordinal: width * 0.38,
+    network: width * 0.64,
+    geo: width * 0.86,
+  }
+
+  if (spineConnectorSet.has(node.id)) {
+    const index = SPINE_CONNECTOR_IDS.indexOf(node.id)
+    return {
+      x: width / 2 - 85 + index * 34,
+      y: 688,
+    }
+  }
+  if (node.layer === "fruit") return capabilityPosition(node.order, width)
+  if (node.layer === "leaf" || node.layer === "leaf-group") {
+    if (node.id === "hoc-big-number") return { x: width / 2 + 430, y: 555 }
+    const offsets = [
+      [-62, -70],
+      [62, -92],
+      [-91, -137],
+      [88, -165],
+      [-48, -213],
+      [57, -247],
+      [-92, -284],
+      [5, -323],
+      [94, -300],
+    ]
+    const [xOffset, yOffset] = offsets[node.order] ?? [0, -320]
+    return { x: clusterCenter[node.cluster] + xOffset, y: 455 + yOffset }
+  }
+  if (node.layer === "frame") return { x: clusterCenter[node.cluster], y: 455 }
+  if (node.id === "value-components") return { x: width / 2 + 260, y: 555 }
+  if (node.id === "semiotic-core") return { x: width / 2, y: 555 }
+  if (node.id === "semiotic-internals") return { x: width / 2, y: 820 }
+  if (node.id === "input-push") return { x: width / 2 - 260, y: 820 }
+  if (node.layer === "root") {
+    const index = rootIndex.get(node.id) ?? 0
+    const column = index % 4
+    const row = Math.floor(index / 4)
+    return {
+      x: 125 + column * ((width - 250) / 3),
+      y: 925 + row * 88,
+    }
+  }
+  return { x: width / 2, y: 640 }
+}
+
+function nodeSize(node) {
+  if (node.id === "semiotic-core" || node.id === "semiotic-internals") {
+    return { width: 282, height: 58 }
+  }
+  if (spineConnectorSet.has(node.id)) return { width: 28, height: 180 }
+  if (node.layer === "frame") return { width: 146, height: 40 }
+  if (node.id === "value-components") return { width: 146, height: 36 }
+  if (node.id === "input-push") return { width: 136, height: 34 }
+  if (node.layer === "fruit") return { width: 140, height: 28 }
+  if (node.layer === "root") return { width: 190, height: 46 }
+  return { width: 126, height: 30 }
+}
+
+function capabilityPosition(order, width) {
+  const outer = order % 2 === 0
+  const index = Math.floor(order / 2)
+  const count = outer ? 8 : 7
+  const angle = Math.PI + (index / (count - 1)) * Math.PI
+  const radiusX = outer ? width / 2 - 42 : width / 2 - 122
+  const radiusY = outer ? 365 : 286
+  return {
+    x: width / 2 + Math.cos(angle) * radiusX,
+    y: 414 + Math.sin(angle) * radiusY,
+  }
+}
+
+function verticalRibbonPath(source, target, sourceWidth, targetWidth) {
+  const upward = target.y < source.y
+  const sourceY = source.y + (upward ? -source.height / 2 : source.height / 2)
+  const targetY = target.y + (upward ? target.height / 2 : -target.height / 2)
+  const middleY = (sourceY + targetY) / 2
+  return `M${source.x - sourceWidth / 2},${sourceY}
+    C${source.x - sourceWidth / 2},${middleY}
+      ${target.x - targetWidth / 2},${middleY}
+      ${target.x - targetWidth / 2},${targetY}
+    L${target.x + targetWidth / 2},${targetY}
+    C${target.x + targetWidth / 2},${middleY}
+      ${source.x + sourceWidth / 2},${middleY}
+      ${source.x + sourceWidth / 2},${sourceY} Z`
+}
+
+function spineRibbonPath(visible, internals, x, ribbonWidth) {
+  const sourceY = visible.y + visible.height / 2
+  const targetY = internals.y - internals.height / 2
+  return `M${x - ribbonWidth / 2},${sourceY}
+    L${x - ribbonWidth / 2},${targetY}
+    L${x + ribbonWidth / 2},${targetY}
+    L${x + ribbonWidth / 2},${sourceY} Z`
+}
+
+function horizontalRibbonPath(source, target, sourceWidth, targetWidth) {
+  const targetIsRight = target.x >= source.x
+  const sourceX = source.x + (targetIsRight ? source.width / 2 : -source.width / 2)
+  const targetX = target.x + (targetIsRight ? -target.width / 2 : target.width / 2)
+  if (Math.abs(source.y - target.y) < 0.5) {
+    return `M${sourceX},${source.y - sourceWidth / 2}
+      L${targetX},${target.y - targetWidth / 2}
+      L${targetX},${target.y + targetWidth / 2}
+      L${sourceX},${source.y + sourceWidth / 2} Z`
+  }
+  const middleX = (sourceX + targetX) / 2
+  return `M${sourceX},${source.y - sourceWidth / 2}
+    C${middleX},${source.y - sourceWidth / 2}
+      ${middleX},${target.y - targetWidth / 2}
+      ${targetX},${target.y - targetWidth / 2}
+    L${targetX},${target.y + targetWidth / 2}
+    C${middleX},${target.y + targetWidth / 2}
+      ${middleX},${source.y + sourceWidth / 2}
+      ${sourceX},${source.y + sourceWidth / 2} Z`
+}
+
+function starPath(cx, cy, outerRadius, innerRadius) {
+  const points = []
+  for (let index = 0; index < 10; index += 1) {
+    const radius = index % 2 === 0 ? outerRadius : innerRadius
+    const angle = -Math.PI / 2 + (index * Math.PI) / 5
+    points.push(`${cx + Math.cos(angle) * radius},${cy + Math.sin(angle) * radius}`)
+  }
+  return `M${points.join("L")}Z`
+}
+
+function renderArchitectureTooltip(datum) {
+  const node = unwrapDatum(datum)
+  if (!node?.label) return null
+  return (
+    <div className="semiotic-tooltip architecture-tooltip">
+      <strong>{node.label}</strong>
+      <span>{node.detail}</span>
+    </div>
+  )
+}
+
+function layerLabel(layer) {
+  if (layer === "leaf" || layer === "leaf-group") return "Visible leaf"
+  if (layer === "fruit") return "Shared capability"
+  if (layer === "root") return "Implementation root"
+  if (layer === "frame") return "Frame model"
+  if (layer === "input") return "Data path"
+  if (layer === "internal-core") return "Runtime core"
+  return layer === "trunk" ? "Core trunk" : "Public branch"
+}

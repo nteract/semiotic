@@ -18,7 +18,7 @@
 
 .wiki-realtime-status-strip {
   display: grid;
-  grid-template-columns: 1.2fr repeat(4, 1fr);
+  grid-template-columns: 1.2fr repeat(5, 1fr);
   margin-bottom: 18px;
   overflow: hidden;
   border: 1px solid var(--surface-3);
@@ -507,6 +507,43 @@
 .wiki-realtime-direction-key i.is-removal {
   background: #ef665f;
   border: 1px solid #78251f;
+}
+
+.wiki-realtime-direction-key i.is-out-of-order {
+  background: transparent;
+  border: 2px solid #ff4fd8;
+  box-shadow: 0 0 0 2px rgba(255, 79, 216, 0.15);
+}
+
+.wiki-realtime-order-key {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--surface-3);
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.wiki-realtime-order-key span,
+.wiki-realtime-order-key strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.wiki-realtime-order-key strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.wiki-realtime-order-key i {
+  width: 9px;
+  height: 9px;
+  border: 2px solid #ff4fd8;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(255, 79, 216, 0.14);
 }
 
 .wiki-realtime-summary-section,

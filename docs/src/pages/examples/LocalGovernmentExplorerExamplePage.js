@@ -350,6 +350,7 @@ export default function LocalGovernmentExplorerExamplePage() {
     <ExamplePageLayout
       title="Your Local Government Explorer"
       prevPage={{ title: "Wikipedia, as it happens", path: "/examples/wikipedia-realtime" }}
+      nextPage={{ title: "Where the Boxes Wait", path: "/examples/port-congestion-replay" }}
     >
       <p className="local-gov-lede">
         A ZIP code is not a government boundary, but it is a useful place to

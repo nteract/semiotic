@@ -105,6 +105,16 @@ export type {
   StreamStatusResult,
 } from "./charts/shared/useStreamStatus"
 
+// Controlled-data companion to useStreamStatus — mirror a React array into a
+// push-API chart's buffer, issuing the minimal push/update/remove/clear calls.
+// Replaces the hand-rolled reconciliation every realtime example used to copy.
+export { useSyncedPushData, syncPushBuffer } from "./charts/shared/useSyncedPushData"
+export type {
+  SyncedPushHandle,
+  SyncedPushDataOptions,
+  PushIdAccessor,
+} from "./charts/shared/useSyncedPushData"
+
 // Shared lifecycle classifier — used by the annotation freshness
 // surface today, available to future banded-decay / banded-staleness
 // opt-ins without each system re-implementing the schedule.

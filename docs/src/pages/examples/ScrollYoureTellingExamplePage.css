@@ -1,0 +1,431 @@
+.scroll-tell-lede {
+  max-width: 880px;
+  margin: 0 0 14px;
+  color: var(--text-secondary);
+  font-size: clamp(18px, 2.3vw, 24px);
+  line-height: 1.55;
+}
+
+.scroll-tell-lede em {
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+.scroll-tell-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: #2fb3a0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* --- The scrollytelling region: prose steps + a pinned live panel ---------- */
+
+.scroll-tell-scrolly {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 38%, 480px);
+  align-items: start;
+  gap: 44px;
+  margin: 4px 0 24px;
+}
+
+.scroll-tell-steps {
+  display: grid;
+}
+
+.scroll-tell-step {
+  min-height: 76vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6vh 0 6vh 22px;
+  border-left: 2px solid var(--surface-3);
+  opacity: 0.5;
+  transition: opacity 0.45s ease, border-color 0.45s ease;
+}
+
+.scroll-tell-step.is-current {
+  opacity: 1;
+  border-left-color: var(--chapter-color);
+}
+
+.scroll-tell-step-rule {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.scroll-tell-step-era {
+  color: var(--chapter-color);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.scroll-tell-step-kicker {
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.scroll-tell-step h2 {
+  max-width: 18ch;
+  margin: 0 0 16px;
+  color: var(--text-primary);
+  font-size: clamp(25px, 3.3vw, 38px);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.scroll-tell-step p {
+  max-width: 46ch;
+  margin: 0 0 14px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.scroll-tell-step-measure {
+  margin-top: 6px !important;
+  padding-left: 12px;
+  border-left: 2px solid var(--chapter-color);
+  color: var(--chapter-color) !important;
+  font-size: 12px !important;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+/* --- The pinned panel ------------------------------------------------------ */
+
+.scroll-tell-panel-column {
+  height: 100%;
+}
+
+.scroll-tell-panel {
+  position: sticky;
+  top: 74px;
+  box-sizing: border-box;
+  padding: 18px;
+  border: 1px solid var(--surface-3);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(47, 179, 160, 0.07), transparent 36%),
+    var(--surface-1);
+}
+
+.scroll-tell-panel-body {
+  display: grid;
+  gap: 14px;
+}
+
+.scroll-tell-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.scroll-tell-panel-head h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.scroll-tell-live-dot {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.scroll-tell-live-dot i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+}
+
+.scroll-tell-live-dot.is-live i {
+  background: #5bd6c0;
+  box-shadow: 0 0 0 4px rgba(91, 214, 192, 0.16);
+  animation: scroll-tell-pulse 1.8s ease-out infinite;
+}
+
+.scroll-tell-live-dot.is-replay i {
+  background: #e8b04b;
+  box-shadow: 0 0 0 4px rgba(232, 176, 75, 0.16);
+}
+
+@keyframes scroll-tell-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(91, 214, 192, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(91, 214, 192, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(91, 214, 192, 0); }
+}
+
+.scroll-tell-readouts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  background: var(--surface-3);
+  gap: 1px;
+}
+
+.scroll-tell-readout {
+  display: grid;
+  align-content: center;
+  padding: 9px 11px;
+  background: var(--surface-0);
+}
+
+.scroll-tell-readout strong {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.scroll-tell-readout span {
+  margin-top: 3px;
+  color: var(--text-secondary);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.scroll-tell-chart {
+  margin: 0;
+}
+
+.scroll-tell-chart figcaption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.scroll-tell-chart figcaption span {
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.scroll-tell-chart figcaption small {
+  color: var(--text-secondary);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  text-align: right;
+}
+
+.scroll-tell-beat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+
+.scroll-tell-beat-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.scroll-tell-beat-legend i {
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border: 1px solid;
+  border-radius: 50%;
+}
+
+.scroll-tell-panel-actions {
+  display: grid;
+  gap: 7px;
+  padding-top: 12px;
+  border-top: 1px solid var(--surface-3);
+}
+
+.scroll-tell-primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #2fb3a0;
+  color: #042b26;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scroll-tell-primary-button:hover {
+  background: #38c6b1;
+}
+
+.scroll-tell-action-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* --- Tooltip --------------------------------------------------------------- */
+
+.scroll-tell-tooltip {
+  min-width: 168px;
+  max-width: 240px;
+  display: grid;
+  gap: 4px;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 5px;
+  background: rgba(12, 18, 24, 0.95);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 10px;
+}
+
+.scroll-tell-tooltip div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.scroll-tell-tooltip div span {
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border: 1px solid;
+  border-radius: 50%;
+}
+
+.scroll-tell-tooltip strong {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.scroll-tell-tooltip small {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+/* --- Editorial + code ------------------------------------------------------ */
+
+.scroll-tell-thesis {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 42px;
+  margin: 44px 0;
+}
+
+.scroll-tell-thesis-block h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.scroll-tell-thesis-block p {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.68;
+}
+
+.scroll-tell-code {
+  margin: 0 0 32px;
+  padding: 24px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+}
+
+.scroll-tell-section-heading {
+  max-width: 660px;
+  margin-bottom: 18px;
+}
+
+.scroll-tell-section-heading h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.scroll-tell-section-heading p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.scroll-tell-source-note {
+  max-width: 760px;
+  margin: 28px 0 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* --- Responsive ------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+  .scroll-tell-scrolly {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .scroll-tell-panel-column {
+    order: -1;
+    margin-bottom: 18px;
+  }
+
+  .scroll-tell-panel {
+    position: static;
+  }
+
+  .scroll-tell-step {
+    min-height: 0;
+    padding: 30px 0 30px 18px;
+    opacity: 1;
+  }
+
+  .scroll-tell-thesis {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-tell-live-dot.is-live i {
+    animation: none;
+  }
+
+  .scroll-tell-step {
+    transition: none;
+  }
+}
