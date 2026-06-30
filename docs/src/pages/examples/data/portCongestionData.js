@@ -324,6 +324,32 @@ export const PORT_ROUTE_SUMMARIES = PORT_ROUTES.map((route) => {
   }
 })
 
+// One row per container cohort (15 = 5 lanes × 3 departures), measured four
+// clock-free ways for the scatterplot matrix. Each value is derived from the
+// cohort's own timestamps so every cell is a real 15-point cloud rather than a
+// 5-route sketch. Ordered by lane so colorBy="route" maps each cohort to its
+// canonical lane color.
+export const PORT_COHORT_SUMMARIES = PORT_COHORTS.map((cohort) => {
+  const route = PORT_ROUTES.find((candidate) => candidate.id === cohort.routeId)
+  return {
+    id: cohort.id,
+    routeId: cohort.routeId,
+    route: route.shortLabel,
+    label: `${route.shortLabel} · cohort ${cohort.cohort}`,
+    carrier: cohort.carrier,
+    cohort: cohort.cohort,
+    color: route.color,
+    // Days from leaving the export berth to dropping anchor off Newark.
+    seaDays: Number(((cohort.arriveAt - cohort.departAt) / DAY).toFixed(1)),
+    // Hours spent in the anchorage queue before a berth opens.
+    anchorageHours: Math.round((cohort.berthAt - cohort.arriveAt) / HOUR),
+    // Lane-level emissions profile (tonnes CO₂) — a property of the corridor.
+    carbonTons: route.carbonTons,
+    // Containers in this cohort.
+    teu: cohort.teu,
+  }
+})
+
 const lastRelease = Math.max(...PORT_COHORTS.map((cohort) => cohort.releaseAt))
 
 export const PORT_REPLAY_DOMAIN = [

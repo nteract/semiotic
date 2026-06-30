@@ -1041,7 +1041,7 @@ function renderEditTooltip(hover) {
   if (!edit?.title) return null
   const meta = GROUP_META[edit.group] || GROUP_META.other
   return (
-    <div className="wiki-realtime-tooltip">
+    <div className="wiki-realtime-tooltip" data-semiotic-tooltip-chrome>
       <div>
         <span style={{ background: meta.fill, borderColor: meta.stroke }} />
         {meta.shortLabel} · {edit.user}

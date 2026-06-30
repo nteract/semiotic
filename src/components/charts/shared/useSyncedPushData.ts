@@ -27,7 +27,7 @@
  * // resetKey clear and rebuild.
  * useSyncedPushData(ref, points, { id: "id", resetKey: theme })
  *
- * <RealtimeLineChart ref={ref} xAccessor="t" yAccessor="v" pointIdAccessor="id" />
+ * <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" pointIdAccessor="id" />
  * ```
  */
 "use client"

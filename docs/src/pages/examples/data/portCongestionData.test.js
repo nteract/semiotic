@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  PORT_COHORT_SUMMARIES,
   PORT_COHORTS,
   PORT_LOCATIONS,
   PORT_PROCESS_EDGES,
@@ -68,6 +69,76 @@ describe("port congestion example data", () => {
     expect(flows.length).toBeGreaterThan(PORT_ROUTES.length * 3)
     expect(flows.every((flow) => flow.sourceName && flow.targetName)).toBe(true)
     expect(processEdgesAtTime(time)).toHaveLength(PORT_PROCESS_EDGES.length)
+  })
+
+  it("summarizes every cohort with the four matrix measures", () => {
+    // One row per cohort so the scatterplot matrix is a real cloud, not a
+    // 5-route sketch.
+    expect(PORT_COHORT_SUMMARIES.length).toBe(PORT_COHORTS.length)
+    expect(PORT_COHORT_SUMMARIES.length).toBe(15)
+
+    const routeIds = new Set(PORT_ROUTES.map((route) => route.id))
+    for (const summary of PORT_COHORT_SUMMARIES) {
+      expect(routeIds.has(summary.routeId)).toBe(true)
+      for (const field of ["seaDays", "anchorageHours", "carbonTons", "teu"]) {
+        expect(Number.isFinite(summary[field])).toBe(true)
+        expect(summary[field]).toBeGreaterThan(0)
+      }
+    }
+
+    // Rows are grouped by lane so colorBy="route" + ROUTE_COLORS assigns each
+    // cohort its canonical lane color (d3 ordinal domain follows first
+    // encounter). The first appearance of each lane must match PORT_ROUTES
+    // order.
+    const firstSeen = []
+    const seen = new Set()
+    for (const summary of PORT_COHORT_SUMMARIES) {
+      if (!seen.has(summary.route)) {
+        seen.add(summary.route)
+        firstSeen.push(summary.route)
+      }
+    }
+    expect(firstSeen).toEqual(PORT_ROUTES.map((route) => route.shortLabel))
+  })
+
+  it("keeps the matrix measure-key ranges honest", () => {
+    // These bounds are printed verbatim as the manifest's axis key, so guard
+    // them against future data tweaks.
+    const range = (field) => {
+      const values = PORT_COHORT_SUMMARIES.map((summary) => summary[field])
+      return [Math.min(...values), Math.max(...values)]
+    }
+    expect(range("seaDays")).toEqual([11, 33.3])
+    expect(range("anchorageHours")).toEqual([25, 82])
+    expect(range("carbonTons")).toEqual([34, 81])
+    expect(range("teu")).toEqual([374, 720])
+
+    // The headline claim: ranked by sea days, the two longest-haul lanes wait
+    // less than the two quickest, and Shanghai is the lone exception that
+    // tops the anchorage queue from mid-ocean.
+    const byLane = new Map()
+    for (const summary of PORT_COHORT_SUMMARIES) {
+      const lane = byLane.get(summary.route) || { sea: summary.seaDays, waits: [] }
+      lane.waits.push(summary.anchorageHours)
+      byLane.set(summary.route, lane)
+    }
+    const lanes = [...byLane.entries()]
+      .map(([route, { sea, waits }]) => ({
+        route,
+        sea,
+        meanWait: waits.reduce((sum, w) => sum + w, 0) / waits.length,
+        maxWait: Math.max(...waits),
+      }))
+      .sort((a, b) => a.sea - b.sea)
+
+    const quickest = lanes.slice(0, 2) // Rotterdam, Santos
+    const longest = lanes.slice(-2) // Mumbai, Singapore
+    const meanOf = (group) =>
+      group.reduce((sum, lane) => sum + lane.meanWait, 0) / group.length
+    expect(meanOf(longest)).toBeLessThan(meanOf(quickest))
+
+    const topWait = [...lanes].sort((a, b) => b.maxWait - a.maxWait)[0]
+    expect(topWait.route).toBe("Shanghai")
   })
 
   it("reduces raw signals into legible daily backlog changes", () => {

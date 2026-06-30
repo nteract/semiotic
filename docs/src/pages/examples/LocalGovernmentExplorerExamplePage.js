@@ -354,7 +354,7 @@ export default function LocalGovernmentExplorerExamplePage() {
     >
       <p className="local-gov-lede">
         A ZIP code is not a government boundary, but it is a useful place to
-        begin. This explorer resolves the postal place, reads your county's
+        begin. This explorer resolves the postal place, reads your county’s
         federal disaster record and the federal dollars spent there (both answer
         for any U.S. ZIP), pulls live 311 service requests where a city publishes
         them, finds matching municipal code in LOCUS, and layers in public
@@ -1294,7 +1294,7 @@ function renderGovernmentTooltip(hover) {
   const datum = unwrapChartDatum(hover?.data || hover)
   if (!datum?.id) return null
   return (
-    <div className="local-gov-tooltip">
+    <div className="local-gov-tooltip" data-semiotic-tooltip-chrome>
       <span>{datum.kind}</span>
       <strong>{datum.label || datum.title}</strong>
       <small>{truncate(inspectorDetail(datum), 140)}</small>

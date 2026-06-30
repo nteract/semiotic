@@ -18,11 +18,11 @@ import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import {
   PORT_AXIS_TICKS,
+  PORT_COHORT_SUMMARIES,
   PORT_LOCATIONS,
   PORT_PROCESS_NODES,
   PORT_REPLAY_DOMAIN,
   PORT_REPLAY_EVENTS,
-  PORT_ROUTE_SUMMARIES,
   PORT_ROUTES,
   aggregateBacklogEvents,
   backlogAtCursor,
@@ -96,9 +96,9 @@ waterfallRef.current.remove(event.id)
 />
 
 <ScatterplotMatrix
-  data={routeSummaries}
-  fields={["transitDays", "dwellHours", "costIndex", "carbonTons"]}
-  colorBy="carrier"
+  data={cohortSummaries}
+  fields={["seaDays", "anchorageHours", "carbonTons", "teu"]}
+  colorBy="route"
 />`
 
 export default function PortCongestionReplayExamplePage() {
@@ -494,43 +494,51 @@ export default function PortCongestionReplayExamplePage() {
         <section className="port-replay__manifest">
           <div className="port-replay__manifest-copy">
             <span>Manifest analysis / Form 04</span>
-            <h3>Which lanes buy speed at the cost of carbon?</h3>
+            <h3>The longest hauls wait the least</h3>
             <p>
-              The paper view holds route-level outcomes steady while the
-              operational replay moves above. Hover any point to trace the same
-              lane through every pair of measures.
+              Fifteen cohorts, frozen and measured four ways — the one panel
+              here with no clock. Read across the sea-days column: CO₂ climbs
+              with every extra day at sea, as the fuel burn demands. The wait
+              runs the other way. The month-long haulers from Singapore and
+              Mumbai meter in and berth almost on arrival, while the quick
+              Atlantic hops from Rotterdam and Santos pile into the anchorage.
+              One lane refuses the pattern — Shanghai sits mid-ocean yet waits
+              the longest of all. The queue at Newark doesn&rsquo;t care how
+              far a box came. Hover any dot to trace one cohort through all six
+              pairings.
             </p>
             <dl>
-              <div><dt>Rows</dt><dd>05 routes</dd></div>
-              <div><dt>Measures</dt><dd>04 fields</dd></div>
-              <div><dt>Mode</dt><dd>linked hover</dd></div>
+              <div><dt>Sea days</dt><dd>11 – 33</dd></div>
+              <div><dt>Anchorage wait</dt><dd>25 – 82 hrs</dd></div>
+              <div><dt>CO₂</dt><dd>34 – 81 t</dd></div>
+              <div><dt>Cohort size</dt><dd>374 – 720 TEU</dd></div>
             </dl>
           </div>
           <div className="port-replay__matrix">
             <ScatterplotMatrix
-              data={PORT_ROUTE_SUMMARIES}
-              fields={["transitDays", "dwellHours", "costIndex", "carbonTons"]}
+              data={PORT_COHORT_SUMMARIES}
+              fields={["seaDays", "anchorageHours", "carbonTons", "teu"]}
               fieldLabels={{
-                transitDays: "Transit days",
-                dwellHours: "Dwell hours",
-                costIndex: "Cost index",
+                seaDays: "Sea days",
+                anchorageHours: "Anchorage wait",
                 carbonTons: "CO₂ tonnes",
+                teu: "Cohort TEU",
               }}
-              colorBy="carrier"
+              colorBy="route"
               colorScheme={ROUTE_COLORS}
               cellSize={matrixCellSize}
               cellGap={3}
-              pointRadius={5}
-              pointOpacity={0.88}
+              pointRadius={4}
+              pointOpacity={0.82}
               diagonal="histogram"
-              histogramBins={5}
+              histogramBins={6}
               brushMode="crossfilter"
               hoverMode
               unselectedOpacity={0.12}
               showGrid
               tooltip
               showLegend
-              idAccessor="route"
+              idAccessor="label"
               onObservation={observeRoute}
               chartId="port-matrix"
               className="port-replay__matrix-chart"
@@ -553,9 +561,9 @@ export default function PortCongestionReplayExamplePage() {
         <p>
           ProcessSankey and FlowMap receive declaratively derived snapshots.
           RealtimeWaterfallChart is synchronized through its imperative
-          changeset API, while ScatterplotMatrix keeps the route-level
-          comparison stable. The shared route identifier coordinates
-          observation and selection across all four.
+          changeset API, while ScatterplotMatrix holds all fifteen cohorts
+          still for a clock-free, four-measure comparison. The shared route
+          identifier coordinates observation and selection across all four.
         </p>
         <CodeBlock code={implementationCode} language="jsx" />
       </section>

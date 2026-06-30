@@ -16,7 +16,6 @@ import {
   READING_CHAPTERS,
   SEED_SESSION,
   chapterForScroll,
-  classifyBeat,
   dwellByChapter,
   formatClock,
   makeSample,
@@ -520,7 +519,7 @@ function renderBeatTooltip(hover) {
   const meta = BEAT_KINDS[beat.kind] || BEAT_KINDS.idle
   const chapter = READING_CHAPTERS[beat.chapter] || READING_CHAPTERS[0]
   return (
-    <div className="scroll-tell-tooltip">
+    <div className="scroll-tell-tooltip" data-semiotic-tooltip-chrome>
       <div>
         <span style={{ background: meta.fill, borderColor: meta.stroke }} />
         {meta.label}
