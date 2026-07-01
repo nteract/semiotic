@@ -55,6 +55,23 @@ export function CategoryColorProvider({
     if (colors) return colors
 
     if (categories) {
+      // Object-map `colorScheme` → look each category up directly for exact
+      // per-category colors; categories absent from the map fall back to the
+      // default palette so every category still gets a distinct color.
+      if (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)) {
+        const explicit = colorScheme as Record<string, string>
+        const map: CategoryColorMap = {}
+        let fallbackIdx = 0
+        for (const category of categories) {
+          const mapped = explicit[category]
+          map[category] =
+            typeof mapped === "string" && mapped.length > 0
+              ? mapped
+              : DEFAULT_COLORS[fallbackIdx++ % DEFAULT_COLORS.length]
+        }
+        return map
+      }
+
       const palette = Array.isArray(colorScheme)
         ? colorScheme
         : (COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES] as readonly string[]) || DEFAULT_COLORS

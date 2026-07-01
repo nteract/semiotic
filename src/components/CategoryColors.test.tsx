@@ -93,6 +93,36 @@ describe("CategoryColorProvider with categories", () => {
     expect(result.current).toEqual({})
   })
 
+  it("uses an object-map colorScheme for exact per-category colors", () => {
+    const categories = ["North", "South"]
+    const { result } = renderHook(() => useCategoryColors(), {
+      wrapper: createWrapper({
+        categories,
+        colorScheme: { North: "#e41a1c", South: "#377eb8" },
+        children: null,
+      }),
+    })
+    const map = result.current!
+    expect(map["North"]).toBe("#e41a1c")
+    expect(map["South"]).toBe("#377eb8")
+  })
+
+  it("fills categories missing from an object-map colorScheme from the default palette", () => {
+    const categories = ["North", "West"]
+    const { result } = renderHook(() => useCategoryColors(), {
+      wrapper: createWrapper({
+        categories,
+        colorScheme: { North: "#e41a1c" }, // "West" unmapped
+        children: null,
+      }),
+    })
+    const map = result.current!
+    expect(map["North"]).toBe("#e41a1c")
+    // Unmapped category falls back to the default palette (first color).
+    expect(map["West"]).toBe(DEFAULT_COLORS[0])
+    expect(map["West"]).not.toBe(map["North"])
+  })
+
 })
 
 // ── CategoryColorProvider with no props ──────────────────────────────────

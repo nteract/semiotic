@@ -61,6 +61,10 @@ export default function OregonTrailExamplePage() {
 
   const onKeyDown = useCallback(
     (e) => {
+      // Only handle keys aimed at the container itself. The footer <button>
+      // inside handles Space/Enter natively; letting those bubble here would
+      // advance twice (native activation + this handler).
+      if (e.currentTarget !== e.target) return
       if (e.code === "Space" || e.key === " " || e.key === "Enter") {
         e.preventDefault()
         if (atFinish) reset()

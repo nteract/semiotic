@@ -41,6 +41,20 @@ describe("resolveCustomLayoutPalette", () => {
     const palette = resolveCustomLayoutPalette(undefined, [], schemeCategory10)
     expect(palette).toBe(schemeCategory10)
   })
+
+  it("uses an object map's values as the palette", () => {
+    const palette = resolveCustomLayoutPalette(
+      { North: "#f00", South: "#0f0" },
+      ["#abc"],
+      schemeCategory10
+    )
+    expect(palette).toEqual(["#f00", "#0f0"])
+  })
+
+  it("falls through an empty object map to themeCategorical", () => {
+    const palette = resolveCustomLayoutPalette({}, ["#abc"], schemeCategory10)
+    expect(palette).toEqual(["#abc"])
+  })
 })
 
 describe("buildResolveColor", () => {
@@ -65,6 +79,34 @@ describe("buildResolveColor", () => {
     const resolve = buildResolveColor([])
     expect(resolve("alpha")).toBe("#4e79a7")
     expect(resolve("alpha")).toBe(resolve("beta")) // constant
+  })
+
+  it("returns the exact mapped color for keys in an object map", () => {
+    const map = { North: "#f00", South: "#0f0" }
+    const palette = resolveCustomLayoutPalette(map, undefined, schemeCategory10)
+    const resolve = buildResolveColor(palette, map)
+    expect(resolve("North")).toBe("#f00")
+    expect(resolve("South")).toBe("#0f0")
+  })
+
+  it("hashes keys absent from the object map into the palette", () => {
+    const map = { North: "#f00", South: "#0f0" }
+    const palette = resolveCustomLayoutPalette(map, undefined, schemeCategory10)
+    const resolve = buildResolveColor(palette, map)
+    // "East" isn't in the map — it hashes into the map's own values.
+    expect(["#f00", "#0f0"]).toContain(resolve("East"))
+    expect(resolve("East")).toBe(resolve("East")) // stable
+  })
+
+  it("honors an object map even when the palette is empty", () => {
+    const resolve = buildResolveColor([], { North: "#f00" })
+    expect(resolve("North")).toBe("#f00")
+    expect(resolve("Unmapped")).toBe("#4e79a7")
+  })
+
+  it("ignores non-object colorScheme (array / string / undefined)", () => {
+    const resolve = buildResolveColor(["#f00", "#0f0"], "tableau10")
+    expect(["#f00", "#0f0"]).toContain(resolve("anything"))
   })
 })
 

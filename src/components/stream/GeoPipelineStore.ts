@@ -930,7 +930,7 @@ export class GeoPipelineStore {
           semantic: config.themeSemantic ?? {},
           categorical: [...palette]
         },
-        resolveColor: buildResolveColor(palette),
+        resolveColor: buildResolveColor(palette, config.colorScheme),
         config: (config.layoutConfig ?? {}) as Record<string, unknown>,
         selection: config.layoutSelection ?? null
       }

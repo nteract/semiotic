@@ -919,16 +919,21 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps, si
   if (config.customNetworkLayout) {
     // Reuse the same palette + resolver helpers NetworkPipelineStore
     // uses for the CSR custom-layout context, so a `colorScheme` named
-    // string (e.g. `"tableau10"`) resolves identically on both paths.
-    // Without this, SSR would silently fall through to
+    // string (e.g. `"tableau10"`) or object map resolves identically on
+    // both paths. Without this, SSR would silently fall through to
     // `theme.colors.categorical` whenever the caller passed a string
     // scheme — visible drift from CSR for any registered custom layout.
+    const customColorScheme = config.colorScheme as
+      | string
+      | string[]
+      | Record<string, string>
+      | undefined
     const palette = resolveCustomLayoutPalette(
-      config.colorScheme as string | string[] | undefined,
+      customColorScheme,
       theme.colors.categorical,
       schemeCategory10,
     )
-    const resolveColor = buildResolveColor(palette)
+    const resolveColor = buildResolveColor(palette, customColorScheme)
     // `dimensions` matches the CSR `NetworkPipelineStore.runLayout`
     // contract: width/height are the inner plot size, and plot.x/y
     // are 0 (the frame's <g transform="translate(margin.left,

@@ -766,7 +766,7 @@ export class NetworkPipelineStore {
           semantic: this.config.themeSemantic ?? {},
           categorical: [...palette]
         },
-        resolveColor: buildResolveColor(palette),
+        resolveColor: buildResolveColor(palette, this.config.colorScheme),
         config: (this.config.layoutConfig ?? {}) as Record<string, unknown>,
         selection: this.config.layoutSelection ?? null
       }
