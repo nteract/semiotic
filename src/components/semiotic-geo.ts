@@ -14,6 +14,10 @@ export { FlowMap } from "./charts/geo/FlowMap"
 export { DistanceCartogram } from "./charts/geo/DistanceCartogram"
 export { GeoCustomChart } from "./charts/custom/GeoCustomChart"
 
+// Custom-layout hit target — make overlay-drawn geographic marks navigable.
+export { geoHitTarget, hitTargetPoint, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
+export type { HitTargetPointProps } from "./stream/hitTarget"
+
 // Stream Frame types
 export type {
   StreamGeoFrameProps,

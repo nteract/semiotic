@@ -27,7 +27,7 @@ export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChart
   valueAccessor?: ChartAccessor<TNode, number>
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string | number>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   colorByDepth?: boolean
   edgeStyle?: "line" | "curve"
   nodeLabel?: ChartAccessor<TNode, string>

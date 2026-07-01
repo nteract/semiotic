@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
+import { smartTooltipEntries } from "../charts/shared/tooltipUtils"
 import * as React from "react"
 import {
   useRef,
@@ -242,6 +243,27 @@ function DefaultTooltip({ hover }: { hover: HoverData }) {
   const datum = (hover.data ?? {}) as Record<string, unknown>
   const yField = datum.y ?? datum.value
   const xField = datum.x ?? datum.time
+  // XYCustomChart and other bespoke data may carry neither x/y nor value/time.
+  // Rather than render blank, fall back to a smart title + de-noised rows.
+  if (yField === undefined && xField === undefined) {
+    const smart = smartTooltipEntries(datum as Datum)
+    if (smart.title != null || smart.entries.length > 0) {
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          {smart.title != null && (
+            <div style={{ fontWeight: 600, marginBottom: smart.entries.length ? 2 : 0 }}>
+              {String(smart.title)}
+            </div>
+          )}
+          {smart.entries.map((e) => (
+            <div key={e.key} style={{ opacity: 0.7, fontSize: 11 }}>
+              {e.key}: <span style={{ fontWeight: 600 }}>{fmt(e.value)}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+  }
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
       <div style={{ fontWeight: 600, marginBottom: 2 }}>{fmt(yField)}</div>

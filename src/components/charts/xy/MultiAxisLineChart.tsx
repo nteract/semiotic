@@ -51,7 +51,7 @@ export interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends B
    *  If not exactly 2, renders as a normal line chart with a console warning. */
   series: MultiAxisSeriesConfig<TDatum>[]
   /** Color scheme or custom colors array @default "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Enable hover annotations @default true */
   enableHover?: boolean
   /** Curve interpolation @default "monotoneX" */

@@ -35,7 +35,7 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
   /** Field to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme @default "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Geographic projection @default "equalEarth" */
   projection?: ProjectionProp
   /** Show graticule grid lines */

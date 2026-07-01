@@ -1,5 +1,6 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
+import { smartTooltipEntries, formatVal } from "../charts/shared/tooltipUtils"
 import * as React from "react"
 import {
   useRef,
@@ -137,16 +138,19 @@ function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
   // shows the user's actual datum fields, not "data: [object]".
   const source = data.data != null ? data.data : data
   if (!source || typeof source !== "object") return null
-  const entries = Object.entries(source as Record<string, unknown>)
-    .filter(([k]) => k !== "data" && !k.startsWith("__"))
-    .slice(0, 3)
-  if (entries.length === 0) return null
+  // Pick a human-meaningful title + de-noised rows rather than dumping fields.
+  const smart = smartTooltipEntries(source as Datum)
+  const title = smart.title != null ? String(smart.title) : null
+  if (title == null && smart.entries.length === 0) return null
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      {entries.map(([k, v]) => (
-        <div key={k}>
-          <span style={{ opacity: 0.7 }}>{k}: </span>
-          <span style={{ fontWeight: 600 }}>{String(v)}</span>
+      {title != null && (
+        <div style={{ fontWeight: 600, marginBottom: smart.entries.length ? 2 : 0 }}>{title}</div>
+      )}
+      {smart.entries.map((e) => (
+        <div key={e.key}>
+          <span style={{ opacity: 0.7 }}>{e.key}: </span>
+          <span style={{ fontWeight: 600 }}>{formatVal(e.value)}</span>
         </div>
       ))}
     </div>
@@ -693,7 +697,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // ── Keyboard navigation ───────────────────────────────────────────
 
     const kbFocusIndexRef = useRef(-1)
-    const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number } | null>(null)
+    const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number; pathData?: string } | null>(null)
 
     const onKeyDown = useCallback((e: React.KeyboardEvent) => {
       const store = storeRef.current
@@ -722,7 +726,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const idx = current < 0 ? 0 : next
       kbFocusIndexRef.current = idx
       const point = navPoints[idx]
-      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
+      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h, pathData: point.pathData }
       // Build the HoverData with the same shape the mouse-hover path
       // emits — flatten GeoJSON properties to the top level so custom
       // tooltips and `customHoverBehavior` consumers reading `d.name` /
@@ -1489,9 +1493,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           hoverPoint={hoverPoint}
           margin={margin}
           size={size}
-          shape={focusedNavPointRef.current?.shape as "circle" | "rect" | "wedge" | undefined}
+          shape={focusedNavPointRef.current?.shape as "circle" | "rect" | "wedge" | "geoarea" | undefined}
           width={focusedNavPointRef.current?.w}
           height={focusedNavPointRef.current?.h}
+          pathData={focusedNavPointRef.current?.pathData}
         />
         {tooltipElement}
         </div>{/* end role="img" */}

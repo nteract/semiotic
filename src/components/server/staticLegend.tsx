@@ -8,6 +8,7 @@
 import * as React from "react"
 import { scaleOrdinal } from "d3-scale"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
+import { resolveExplicitColor } from "../charts/shared/colorUtils"
 import type { SemioticTheme } from "../store/ThemeStore"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { GradientLegendConfig, LegendGroup, LegendItem, LegendLayout } from "../types/legendTypes"
@@ -52,7 +53,7 @@ export interface StaticLegendConfig {
   /** Category labels to show in legend */
   categories: string[]
   /** Color scheme — array of colors or d3-scale-chromatic name */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Theme for text/font colors */
   theme: SemioticTheme
   /** Legend position */
@@ -81,7 +82,12 @@ export interface StaticGradientLegendConfig extends Omit<StaticLegendConfig, "ca
 /**
  * Build a categorical color scale from categories and colorScheme.
  */
-function buildColorScale(categories: string[], colorScheme: string | string[] | undefined, theme: SemioticTheme): (category: string) => string {
+function buildColorScale(categories: string[], colorScheme: string | string[] | Record<string, string> | undefined, theme: SemioticTheme): (category: string) => string {
+  // Explicit { category: color } map → look up directly (mirrors createColorScale).
+  if (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)) {
+    const map = colorScheme as Record<string, unknown>
+    return (category: string) => resolveExplicitColor(map, category) ?? "#999"
+  }
   const colors = Array.isArray(colorScheme)
     ? colorScheme
     : theme.colors.categorical.length > 0

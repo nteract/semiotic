@@ -86,6 +86,28 @@ export function hitTargetPoint(props: HitTargetPointProps): PointSceneNode {
   }
 }
 
+/**
+ * A transparent, hit-testable point node for a custom **geo** layout whose
+ * visible marks (sprites, icons, forts) live in `overlays`. Project a lon/lat
+ * with `ctx.scales.projectedPoint(lon, lat)` first, then pass the resulting
+ * `x` / `y`. Functionally identical to {@link hitTargetPoint} — geo scenes use
+ * the same `PointSceneNode` — but named for discoverability: it makes
+ * overlay-drawn geographic marks keyboard-navigable, focus-ringed, and
+ * annotation-anchorable, exactly as {@link networkHitTarget} does for networks.
+ *
+ * @example
+ * ```ts
+ * // inside a GeoCustomChart layout
+ * nodes: pois.map((p) => {
+ *   const [x, y] = ctx.scales.projectedPoint(p.lon, p.lat)!
+ *   return geoHitTarget({ x, y, datum: p, id: p.id })
+ * })
+ * ```
+ */
+export function geoHitTarget(props: HitTargetPointProps): PointSceneNode {
+  return hitTargetPoint(props)
+}
+
 export interface HitTargetRectProps {
   /** Plot-relative x of the rect's top-left corner. */
   x: number

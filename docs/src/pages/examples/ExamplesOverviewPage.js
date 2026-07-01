@@ -3,14 +3,6 @@ import { Link } from "react-router-dom"
 
 const examples = [
   {
-    title: "Point Climate Anomaly",
-    path: "/examples/climate-anomaly",
-    eyebrow: "Difference chart + uncertainty band",
-    description:
-      "A polished climate readout comparing this year's daily temperature with an adjusted historical mean and the 5th-95th percentile range.",
-    preview: "climate",
-  },
-  {
     title: "Point Climate Radial",
     path: "/examples/climate-radial-weather",
     eyebrow: "Point controls + radial weather",
@@ -106,6 +98,38 @@ const examples = [
       "Trace each example from its visible charts and settings through the four frame models, data inputs, and the rhizomatic implementation beneath them.",
     preview: "architecture",
   },
+  {
+    title: "Point Climate Anomaly",
+    path: "/examples/climate-anomaly",
+    eyebrow: "Difference chart + uncertainty band",
+    description:
+      "A polished climate readout comparing this year's daily temperature with an adjusted historical mean and the 5th-95th percentile range.",
+    preview: "climate",
+  },
+  {
+    title: "The Gestalt of Data Visualization",
+    path: "/examples/gestalt-principles",
+    eyebrow: "Five chapters · perception → Semiotic",
+    description:
+      "A chapterized remake of the 2015 Gestalt Principles essays — similarity, common fate, proximity, figure/ground, continuity — each demonstrated on a live Semiotic chart, in a Bauhaus 'perception lab' look.",
+    preview: "gestalt",
+  },
+  {
+    title: "Drawing Networks",
+    path: "/examples/network-visualization",
+    eyebrow: "Eight chapters + an interactive toy",
+    description:
+      "A mid-century 'visual primer' that rebuilds a 2015 network-visualization workshop on Semiotic — arc diagrams, adjacency matrices, the force-directed hairball, edge and node encodings, communities, Sankey and chord — and ends with a hands-on network-analysis toy (pathfinding, centrality, ego networks, the spatial problem).",
+    preview: "networkviz",
+  },
+  {
+    title: "Map of the Oregon Trail",
+    path: "/examples/oregon-trail",
+    eyebrow: "Retro cartography · GeoCustomChart",
+    description:
+      "The 1985 Oregon Trail end-game map, rebuilt with GeoCustomChart over real Washington/Oregon/Idaho geography — gray land, CGA-blue rivers, caret mountains, forts, and a wagon you can drive from START to FINISH.",
+    preview: "oregontrail",
+  },
 ]
 
 export default function ExamplesOverviewPage() {
@@ -147,6 +171,12 @@ export default function ExamplesOverviewPage() {
                   ? <MiniMachinePreview />
                 : example.preview === "architecture"
                   ? <MiniArchitecturePreview />
+                : example.preview === "gestalt"
+                  ? <MiniGestaltPreview />
+                : example.preview === "networkviz"
+                  ? <MiniNetworkVizPreview />
+                : example.preview === "oregontrail"
+                  ? <MiniOregonTrailPreview />
                 : <MiniRadialPreview combined={example.preview === "combined"} />}
             <div style={styles.cardBody}>
               <div style={styles.eyebrow}>{example.eyebrow}</div>
@@ -157,6 +187,112 @@ export default function ExamplesOverviewPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+function MiniOregonTrailPreview() {
+  const carets = [[70, 30], [86, 26], [150, 34], [166, 30], [110, 60], [128, 66], [50, 44]]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#1a1ae0" />
+      <rect x="7" y="7" width="228" height="82" fill="#b9b9b9" />
+      {/* coastline on the left */}
+      <path d="M30,9 L26,24 L34,36 L24,50 L32,66 L22,82 L30,88" fill="none" stroke="#101010" strokeWidth="1.4" />
+      {/* a blue river */}
+      <path d="M210,20 Q150,26 138,44 Q128,58 70,60 Q48,62 40,74" fill="none" stroke="#2b3bff" strokeWidth="1.4" />
+      {/* mountains */}
+      {carets.map(([x, y], i) => (
+        <path key={i} d={`M${x - 5},${y + 3} L${x},${y - 4} L${x + 5},${y + 3}`} fill="none" stroke="#101010" strokeWidth="1.2" />
+      ))}
+      {/* the route */}
+      <path d="M206,64 L168,58 L138,54 L104,46 L70,44 L44,40" fill="none" stroke="#101010" strokeWidth="2" />
+      {/* forts */}
+      {[[168, 58], [104, 46]].map(([x, y], i) => (
+        <rect key={i} x={x - 4} y={y - 4} width="8" height="8" fill="#b9b9b9" stroke="#101010" strokeWidth="1.4" />
+      ))}
+      {/* START + FINISH */}
+      <rect x="206" y="58" width="30" height="13" fill="#c26a12" stroke="#101010" strokeWidth="1" />
+      <text x="221" y="68" textAnchor="middle" fontSize="8" fontWeight="700" fontFamily="monospace" fill="#101010">START</text>
+      <text x="44" y="34" textAnchor="middle" fontSize="8" fontWeight="700" fontFamily="monospace" fill="#101010">★</text>
+      <text x="121" y="20" textAnchor="middle" fontSize="10" fontWeight="700" fontFamily="monospace" fill="#f2f2f2" stroke="#101010" strokeWidth="2.4" paintOrder="stroke">OREGON TRAIL</text>
+    </svg>
+  )
+}
+
+function MiniNetworkVizPreview() {
+  const nodes = [
+    [42, 30, "#8a2b22"],
+    [78, 20, "#2f6d6a"],
+    [70, 56, "#2f6d6a"],
+    [110, 40, "#2f6d6a"],
+    [150, 26, "#caa53d"],
+    [158, 60, "#caa53d"],
+    [196, 44, "#3f5b86"],
+    [120, 72, "#6b7233"],
+  ]
+  const edges = [
+    [0, 1, true], [0, 2, true], [1, 3, false], [2, 3, false],
+    [3, 4, false], [4, 5, false], [5, 6, false], [2, 7, false], [3, 5, false],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f3ecda" />
+      <rect x="6" y="6" width="230" height="84" fill="none" stroke="#c8bb9c" />
+      {edges.map(([a, b, ego], index) => (
+        <line
+          key={index}
+          x1={nodes[a][0]}
+          y1={nodes[a][1]}
+          x2={nodes[b][0]}
+          y2={nodes[b][1]}
+          stroke={ego ? "#8a2b22" : "#2a241d"}
+          strokeWidth={ego ? 1.6 : 0.8}
+          opacity={ego ? 0.9 : 0.4}
+        />
+      ))}
+      {nodes.map(([x, y, fill], index) => (
+        <circle
+          key={index}
+          cx={x}
+          cy={y}
+          r={index === 0 ? 6 : 4.5}
+          fill={fill}
+          stroke={index === 0 ? "#8a2b22" : "#2a241d"}
+          strokeWidth={index === 0 ? 2 : 1}
+        />
+      ))}
+      {/* arc-diagram strip */}
+      {[0, 1, 2, 3, 4].map((i) => (
+        <circle key={`b${i}`} cx={150 + i * 18} cy={84} r="2.4" fill="#2a241d" />
+      ))}
+      <path d="M150,84 Q177,68 204,84 M168,84 Q186,72 204,84" fill="none" stroke="#8a2b22" strokeWidth="1" opacity="0.7" />
+    </svg>
+  )
+}
+
+function MiniGestaltPreview() {
+  const dots = []
+  for (let row = 0; row < 3; row += 1) {
+    for (let col = 0; col < 8; col += 1) {
+      dots.push([18 + col * 26, 24 + row * 24, col % 2 === 1])
+    }
+  }
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f1e7d2" />
+      <rect x="0" y="0" width="242" height="7" fill="#1a1610" />
+      <rect x="10" y="14" width="42" height="62" fill="none" stroke="#1a1610" strokeWidth="1.5" strokeDasharray="4 2" />
+      {dots.map(([x, y, active], index) =>
+        active ? (
+          <rect key={index} x={x - 5} y={y - 5} width="10" height="10" fill="#df2b1f" stroke="#1a1610" />
+        ) : (
+          <circle key={index} cx={x} cy={y} r="5" fill="#b1a78f" stroke="#1a1610" />
+        )
+      )}
+      <rect x="0" y="89" width="81" height="7" fill="#df2b1f" />
+      <rect x="81" y="89" width="80" height="7" fill="#2a4cad" />
+      <rect x="161" y="89" width="81" height="7" fill="#f3b724" />
+    </svg>
   )
 }
 

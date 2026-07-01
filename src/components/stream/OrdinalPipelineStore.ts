@@ -829,7 +829,7 @@ export class OrdinalPipelineStore {
         semantic: cfg.themeSemantic ?? {},
         categorical: [...palette],
       },
-      resolveColor: buildResolveColor(palette),
+      resolveColor: buildResolveColor(palette, cfg.colorScheme),
       config: (cfg.layoutConfig ?? {}) as Record<string, unknown>,
       selection: cfg.layoutSelection ?? null,
     }

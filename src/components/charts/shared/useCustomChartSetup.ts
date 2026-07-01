@@ -110,7 +110,7 @@ interface DataSetupOptions extends ScaffoldOptions {
   /** Whether the hover callback should unwrap the datum (ordinal/network = true, XY = false). */
   unwrapData: boolean
   /** Color scheme threaded into useChartSetup's color resolution. */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Pass-through chart-setup inputs. */
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp

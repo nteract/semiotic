@@ -43,7 +43,7 @@ export interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseCha
   /** Field or function for node color */
   colorBy?: string | ((d: Datum) => string)
   /** Color scheme @default "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Color by hierarchy depth instead of field @default false */
   colorByDepth?: boolean
   /**

@@ -1,0 +1,552 @@
+/* ===========================================================================
+   "The Gestalt of Data Visualization" — Perception Lab (Bauhaus) look.
+   A deliberately distinct surface: warm paper, primary color blocks, heavy
+   geometric sans, hard black rules, roman-numeral chapter tabs.
+   =========================================================================== */
+
+.gestalt-page {
+  /* Bauhaus palette */
+  --gz-paper: #f1e7d2;
+  --gz-paper-deep: #e7dabf;
+  --gz-ink: #1a1610;
+  --gz-red: #df2b1f;
+  --gz-blue: #2a4cad;
+  --gz-yellow: #f3b724;
+  --gz-gray: #b1a78f;
+  --gz-muted: #6b5f49;
+
+  /* Re-theme the Semiotic charts to the paper/ink world so canvas marks,
+     axes, and tick text track this surface (canvas reads CSS vars). */
+  --semiotic-bg: var(--gz-paper-deep);
+  --semiotic-text: var(--gz-ink);
+  --semiotic-text-secondary: var(--gz-muted);
+  --semiotic-grid: rgba(26, 22, 16, 0.12);
+  --semiotic-border: rgba(26, 22, 16, 0.4);
+  --semiotic-tick-font-family: "Courier New", monospace;
+  --semiotic-tick-font-size: 11px;
+  --semiotic-focus: var(--gz-red);
+
+  --gz-sans: "Futura", "Century Gothic", "Avenir Next", "Helvetica Neue", Arial,
+    sans-serif;
+  --gz-mono: "Courier New", ui-monospace, monospace;
+
+  margin: 28px 0 16px;
+  padding: clamp(20px, 4vw, 44px);
+  border: 3px solid var(--gz-ink);
+  background: var(--gz-paper);
+  color: var(--gz-ink);
+  font-family: var(--gz-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.gestalt-page *::selection {
+  background: var(--gz-yellow);
+  color: var(--gz-ink);
+}
+
+/* --- Hero ---------------------------------------------------------------- */
+.gz-hero {
+  padding-bottom: 22px;
+  border-bottom: 3px solid var(--gz-ink);
+  background: transparent;
+  color: var(--gz-ink);
+}
+
+.gz-kicker {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 4px 10px;
+  background: var(--gz-red);
+  color: var(--gz-paper);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.gz-lede {
+  max-width: 760px;
+  margin: 0;
+  color: var(--gz-ink);
+  font-family: var(--gz-sans);
+  font-size: clamp(18px, 2.3vw, 25px);
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.gz-lede em {
+  font-style: normal;
+  background: linear-gradient(transparent 62%, var(--gz-yellow) 62%);
+  padding: 0 2px;
+}
+
+/* --- Chapter tabs -------------------------------------------------------- */
+.gz-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  margin: 26px 0 8px;
+  border: 2px solid var(--gz-ink);
+}
+
+.gz-tab {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 76px;
+  padding: 12px 14px;
+  border: 0;
+  border-right: 2px solid var(--gz-ink);
+  background: var(--gz-paper);
+  color: var(--gz-ink);
+  font-family: var(--gz-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.gz-tab:last-child {
+  border-right: 0;
+}
+
+.gz-tab-roman {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--gz-paper);
+  background: var(--gz-ink);
+}
+
+.gz-tab:nth-child(1) .gz-tab-roman { background: var(--gz-red); }
+.gz-tab:nth-child(2) .gz-tab-roman { background: var(--gz-blue); }
+.gz-tab:nth-child(3) .gz-tab-roman { background: var(--gz-yellow); color: var(--gz-ink); }
+.gz-tab:nth-child(4) .gz-tab-roman { background: var(--gz-red); }
+.gz-tab:nth-child(5) .gz-tab-roman { background: var(--gz-blue); }
+
+.gz-tab-text {
+  display: grid;
+  min-width: 0;
+}
+
+.gz-tab-short {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.gz-tab-full {
+  font-size: 10px;
+  color: var(--gz-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gz-tab:hover {
+  background: var(--gz-paper-deep);
+}
+
+.gz-tab.is-active {
+  background: var(--gz-ink);
+  color: var(--gz-paper);
+}
+
+.gz-tab.is-active .gz-tab-full {
+  color: rgba(241, 231, 210, 0.7);
+}
+
+/* --- Chapter ------------------------------------------------------------- */
+.gz-chapter-wrap {
+  padding-top: 28px;
+}
+
+.gz-chapter-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 22px;
+  align-items: start;
+  margin-bottom: 30px;
+}
+
+.gz-roman {
+  font-size: clamp(3.4rem, 9vw, 6rem);
+  line-height: 0.8;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--gz-ink);
+  -webkit-text-stroke: 0;
+}
+
+.gz-chapter-title {
+  margin: 0 0 8px;
+  color: var(--gz-ink);
+  font-family: var(--gz-sans);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 3.6vw, 2.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.gz-chapter-intro {
+  max-width: 760px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--gz-muted);
+}
+
+/* --- Exhibit (text + stage) --------------------------------------------- */
+.gz-exhibit {
+  display: grid;
+  grid-template-columns: minmax(250px, 350px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: stretch;
+  margin-bottom: 26px;
+  padding-top: 26px;
+  border-top: 2px solid var(--gz-ink);
+}
+
+.gz-exhibit-side {
+  min-width: 0;
+}
+
+.gz-plate {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-family: var(--gz-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gz-red);
+}
+
+.gz-exhibit-title {
+  margin: 0 0 10px;
+  color: var(--gz-ink);
+  font-family: var(--gz-sans);
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.gz-exhibit-intro {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--gz-muted);
+}
+
+/* Stepper */
+.gz-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.gz-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px 7px 7px;
+  border: 2px solid var(--gz-ink);
+  background: var(--gz-paper);
+  color: var(--gz-ink);
+  font-family: var(--gz-sans);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gz-step-num {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  background: var(--gz-paper-deep);
+  font-family: var(--gz-mono);
+  font-size: 11px;
+}
+
+.gz-step.is-active {
+  background: var(--gz-ink);
+  color: var(--gz-paper);
+}
+
+.gz-step.is-active .gz-step-num {
+  background: var(--gz-yellow);
+  color: var(--gz-ink);
+}
+
+.gz-caption {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.gz-actions {
+  margin-top: 14px;
+}
+
+.gz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 2px solid var(--gz-ink);
+  background: var(--gz-yellow);
+  color: var(--gz-ink);
+  font-family: var(--gz-sans);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.gz-btn:hover {
+  background: var(--gz-ink);
+  color: var(--gz-paper);
+}
+
+.gz-btn:active {
+  transform: translateY(1px);
+}
+
+.gz-microcaption {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--gz-muted);
+}
+
+.gz-microcaption em {
+  font-style: italic;
+  color: var(--gz-ink);
+}
+
+/* Toggle */
+.gz-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gz-toggle-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gz-muted);
+}
+
+.gz-toggle {
+  display: inline-flex;
+  border: 2px solid var(--gz-ink);
+}
+
+.gz-toggle-btn {
+  padding: 6px 12px;
+  border: 0;
+  border-right: 2px solid var(--gz-ink);
+  background: var(--gz-paper);
+  color: var(--gz-ink);
+  font-family: var(--gz-sans);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gz-toggle-btn:last-child {
+  border-right: 0;
+}
+
+.gz-toggle-btn.is-active {
+  background: var(--gz-blue);
+  color: var(--gz-paper);
+}
+
+/* Stage (chart frame) */
+.gz-exhibit-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: 2px solid var(--gz-ink);
+  background: var(--gz-paper-deep);
+  box-shadow: 8px 8px 0 rgba(26, 22, 16, 0.12);
+  min-width: 0;
+}
+
+.gz-exhibit-stage > * {
+  max-width: 100%;
+}
+
+/* The measured inner box — its width drives the chart size, so it must fill
+   the stage column exactly (no padding of its own). */
+.gz-stage-inner {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.gz-mini .gz-stage-inner {
+  width: 100%;
+}
+
+/* Hide axes/ticks on the perceptual stages that aren't really "charts". */
+.gz-stage--bare .semiotic-axis,
+.gz-stage--bare .semiotic-axis-tick,
+.gz-stage--bare .semiotic-axis-label {
+  display: none;
+}
+
+/* Mini chart (crossing lines) */
+.gz-mini {
+  margin: 0 0 26px;
+  padding: 8px 10px;
+  border: 2px solid var(--gz-ink);
+  border-top: 0;
+  background: var(--gz-paper-deep);
+}
+
+/* Asides */
+.gz-aside {
+  max-width: 820px;
+  margin: 6px 0 0;
+  padding: 14px 18px;
+  border-left: 6px solid var(--gz-blue);
+  background: var(--gz-paper-deep);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.gz-aside strong {
+  font-weight: 800;
+}
+
+/* --- Closing synthesis --------------------------------------------------- */
+.gz-gaze {
+  margin: 40px 0 0;
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--gz-ink);
+  color: var(--gz-paper);
+}
+
+.gz-gaze .gz-kicker {
+  background: var(--gz-yellow);
+  color: var(--gz-ink);
+}
+
+.gz-gaze h2 {
+  max-width: 640px;
+  margin: 0 0 14px;
+  color: var(--gz-paper);
+  font-family: var(--gz-sans);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.gz-gaze p {
+  max-width: 720px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: rgba(241, 231, 210, 0.85);
+}
+
+/* --- Credits ------------------------------------------------------------- */
+.gz-credits {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 2px solid var(--gz-ink);
+}
+
+.gz-credits p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--gz-muted);
+}
+
+.gz-credits a {
+  color: var(--gz-red);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+
+.gz-credits em {
+  font-style: italic;
+  color: var(--gz-ink);
+}
+
+/* --- Responsive ---------------------------------------------------------- */
+@media (max-width: 900px) {
+  .gz-exhibit {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .gz-tabs {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .gz-tab {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 64px;
+    padding: 10px;
+  }
+
+  .gz-tab-full {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .gz-tabs {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .gz-tab {
+    align-items: center;
+    padding: 10px 4px;
+  }
+
+  .gz-tab-text {
+    display: none;
+  }
+
+  .gz-tab-roman {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .gz-chapter-head {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* Respect reduced-motion: charts already honor it; keep button motion calm. */
+@media (prefers-reduced-motion: reduce) {
+  .gz-btn:active {
+    transform: none;
+  }
+}

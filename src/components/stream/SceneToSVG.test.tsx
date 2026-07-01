@@ -606,7 +606,9 @@ describe("networkLabelToSVG", () => {
     const html = markup(networkLabelToSVG(label, 0))
     expect(html).toContain('text-anchor="middle"')
     expect(html).toContain('font-size="11"')
-    expect(html).toContain('fill="#333"')
+    // Labels default to the themeable CSS var (falls back to #333) so cascade
+    // theming (e.g. --semiotic-text on the container) reaches them.
+    expect(html).toContain('fill="var(--semiotic-text, #333)"')
   })
 })
 

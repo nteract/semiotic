@@ -4,6 +4,7 @@ import {
   createColorScale,
   getSize,
   DEFAULT_COLORS,
+  resolveExplicitColor,
   } from "./colorUtils"
 import type { Datum } from "./datumTypes"
 
@@ -183,6 +184,53 @@ describe("createColorScale", () => {
     const scale = createColorScale(categoricalData, "cat", "nonexistent")
     // Should still produce valid colors (using default palette)
     expect(typeof scale("A")).toBe("string")
+  })
+
+  it("uses an object-map scheme for exact per-category colors", () => {
+    const scale = createColorScale(categoricalData, "cat", { A: "#f00", B: "#0f0" })
+    expect(scale("A")).toBe("#f00")
+    expect(scale("B")).toBe("#0f0")
+    expect(scale("C")).toBe("#999") // unmapped
+  })
+
+  it("does not treat inherited keys as categories in an object-map scheme", () => {
+    const scale = createColorScale(categoricalData, "cat", { A: "#f00" })
+    // "toString"/"constructor" live on Object.prototype but are not own keys.
+    expect(scale("toString")).toBe("#999")
+    expect(scale("constructor")).toBe("#999")
+  })
+})
+
+// ── resolveExplicitColor ──────────────────────────────────────────────────
+
+describe("resolveExplicitColor", () => {
+  it("returns the mapped color for an own key", () => {
+    expect(resolveExplicitColor({ North: "#f00" }, "North")).toBe("#f00")
+  })
+
+  it("returns undefined for an unmapped key", () => {
+    expect(resolveExplicitColor({ North: "#f00" }, "South")).toBeUndefined()
+  })
+
+  it("returns undefined for null/undefined keys", () => {
+    expect(resolveExplicitColor({ North: "#f00" }, null)).toBeUndefined()
+    expect(resolveExplicitColor({ North: "#f00" }, undefined)).toBeUndefined()
+  })
+
+  it("ignores inherited prototype keys", () => {
+    // `"toString"` resolves to Object.prototype.toString via `in`, but is not
+    // an own property — it must not register as a mapped category.
+    expect(resolveExplicitColor({}, "toString")).toBeUndefined()
+    expect(resolveExplicitColor({}, "constructor")).toBeUndefined()
+  })
+
+  it("rejects non-string and empty-string values", () => {
+    const map = { a: 123, b: () => "#f00", c: {}, d: "", e: "#0f0" } as Record<string, unknown>
+    expect(resolveExplicitColor(map, "a")).toBeUndefined()
+    expect(resolveExplicitColor(map, "b")).toBeUndefined()
+    expect(resolveExplicitColor(map, "c")).toBeUndefined()
+    expect(resolveExplicitColor(map, "d")).toBeUndefined()
+    expect(resolveExplicitColor(map, "e")).toBe("#0f0")
   })
 })
 

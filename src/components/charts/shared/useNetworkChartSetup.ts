@@ -64,7 +64,7 @@ export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge exten
 
   // ── Color ────────────────────────────────────────────────────────
   colorBy?: Accessor<string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
 
   // ── Legend ───────────────────────────────────────────────────────
   /** `undefined` defaults to "auto" (on when colorBy is set). */

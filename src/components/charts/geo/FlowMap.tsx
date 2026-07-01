@@ -68,7 +68,7 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
   /** Line cap style for flow edges @default "round" */
   edgeLinecap?: "butt" | "round" | "square"
   /** Color scheme for edges @default "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Show animated particles along flow lines */
   showParticles?: boolean
   /** Particle appearance and behavior */

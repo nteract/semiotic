@@ -28,7 +28,7 @@ export interface BoxPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   valueLabel?: string
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   showOutliers?: boolean
   outlierRadius?: number
   categoryPadding?: number

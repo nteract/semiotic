@@ -129,6 +129,29 @@ export function getColor(
 }
 
 /**
+ * Look up a color for `key` in an explicit `{ category: color }` map.
+ *
+ * Guards against two hazards of a naive `key in map` lookup on a
+ * user-supplied object: inherited prototype keys (e.g. `"toString"`,
+ * `"constructor"`) must NOT register as mapped categories, and a mapped
+ * value that isn't a usable color string (a function, number, `""`) must
+ * not leak into a fill/stroke. Returns `undefined` when the key is unmapped
+ * or its value isn't a non-empty string, so callers apply their own default.
+ *
+ * Single source of truth for object-map `colorScheme` resolution across
+ * `createColorScale`, `resolveDefaultFill`, `buildResolveColor`,
+ * `buildColorScale`, and `CategoryColorProvider`.
+ */
+export function resolveExplicitColor(
+  map: Record<string, unknown>,
+  key: string | undefined | null
+): string | undefined {
+  if (key == null || !Object.prototype.hasOwnProperty.call(map, key)) return undefined
+  const value = map[key]
+  return typeof value === "string" && value.length > 0 ? value : undefined
+}
+
+/**
  * Creates a color scale function from data
  *
  * @param data - Array of data points
@@ -145,8 +168,15 @@ export function getColor(
 export function createColorScale(
   data: Array<Datum>,
   colorBy: string,
-  scheme: string | string[] = "category10"
+  scheme: string | string[] | Record<string, string> = "category10"
 ): (v: string) => string {
+  // An explicit `{ category: color }` map wins — look each value up directly,
+  // so callers get exact colors without ordering an array by first-appearance.
+  if (scheme && typeof scheme === "object" && !Array.isArray(scheme)) {
+    const map = scheme as Record<string, unknown>
+    return (v: string) => resolveExplicitColor(map, v) ?? "#999"
+  }
+
   // Get unique stringified values. d3 ordinal scales stringify domain
   // entries internally (it's how the lookup table is keyed), so we do
   // it explicitly here to thread a `string[]` through the typed

@@ -29,7 +29,7 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
   valueAccessor?: ChartAccessor<TEdge, number>
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   edgeColorBy?: "source" | "target" | ((d: Datum) => string)
   padAngle?: number
   groupWidth?: number

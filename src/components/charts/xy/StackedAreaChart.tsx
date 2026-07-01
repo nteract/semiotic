@@ -74,7 +74,7 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
    * Color scheme for categorical data or custom colors array
    * @default "category10"
    */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
 
   /**
    * Curve interpolation type

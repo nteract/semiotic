@@ -1,0 +1,303 @@
+/* ===========================================================================
+   "Map of the Oregon Trail" — a GeoCustomChart dressed as the 1985 MECC
+   end-game map. CGA/EGA palette, blue monitor bezel, scanlines, monospace.
+   =========================================================================== */
+
+.ot-intro {
+  max-width: 760px;
+  margin: 0 0 8px;
+  color: var(--text-secondary);
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.6;
+}
+
+.ot-intro em {
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+.ot-intro code,
+.ot-notes code {
+  font-family: var(--font-mono, "Courier New", monospace);
+  font-size: 0.9em;
+  background: var(--surface-2, rgba(128, 128, 128, 0.15));
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* --- The monitor -------------------------------------------------------- */
+.ot-screen {
+  /* Theme the Semiotic charts drawn inside onto the gray CRT with ink,
+     monospace labels (so they read in the docs' dark theme too). */
+  --semiotic-bg: transparent;
+  --semiotic-text: #101010;
+  --semiotic-text-secondary: #3a342c;
+  --semiotic-tick-font-family: "Courier New", ui-monospace, monospace;
+  --semiotic-tick-font-size: 10px;
+
+  width: 100%;
+  max-width: 640px;
+  margin: 22px auto 12px;
+  box-sizing: border-box;
+  padding: 0;
+  border: 12px solid #1a1ae0;
+  border-radius: 4px;
+  background: #000;
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 30px rgba(26, 26, 224, 0.35),
+    0 16px 40px rgba(0, 0, 0, 0.4);
+  outline: none;
+  cursor: pointer;
+}
+
+.ot-screen--wide {
+  max-width: 1000px;
+  margin-bottom: 0;
+  cursor: default;
+}
+
+/* Retro monospace + a light halo for the Sankey's SVG node labels so they read
+   over the ribbons. Color comes from --semiotic-text (set on .ot-screen) now
+   that network labels honor it — no fill override needed. */
+.ot-screen--wide svg text {
+  stroke: #ddd8c9;
+  stroke-width: 2.6px;
+  paint-order: stroke;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.ot-screen:focus-visible {
+  box-shadow:
+    0 0 0 3px #ffd000,
+    0 0 30px rgba(26, 26, 224, 0.35);
+}
+
+.ot-crt {
+  position: relative;
+  width: 100%;
+  background: #b9b9b9;
+  overflow: hidden;
+}
+
+.ot-crt canvas,
+.ot-crt svg {
+  display: block;
+}
+
+/* CRT scanlines + a soft vignette */
+.ot-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.16) 0,
+      rgba(0, 0, 0, 0.16) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(120% 120% at 50% 50%, transparent 62%, rgba(0, 0, 0, 0.22) 100%);
+}
+
+/* Retro name tooltip for a focused state / point of interest. */
+.ot-tooltip {
+  display: grid;
+  gap: 1px;
+  padding: 5px 9px;
+  background: #000;
+  border: 2px solid #1a1ae0;
+  font-family: "Courier New", ui-monospace, monospace;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.ot-tooltip strong {
+  color: #f2f2f2;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ot-tooltip span {
+  color: #9aa0ff;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* --- Footer bar (the "Press SPACE BAR" strip) --------------------------- */
+.ot-footer {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-top: 3px solid #1a1ae0;
+  background: #000;
+  color: #f2f2f2;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: clamp(12px, 2.4vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ot-footer:hover {
+  color: #ffd000;
+}
+
+/* --- Status line -------------------------------------------------------- */
+.ot-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 640px;
+  margin: 0 auto 26px;
+  color: var(--text-secondary);
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+}
+
+.ot-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #1a1ae0;
+  animation: ot-blink 1s steps(2, start) infinite;
+}
+
+.ot-status-dot[data-arrived="true"] {
+  background: #1a9a3a;
+  animation: none;
+}
+
+@keyframes ot-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* --- Sankey (the decision flow) ----------------------------------------- */
+.ot-sankey-section {
+  max-width: 1000px;
+  margin: 34px auto 0;
+}
+
+.ot-sankey-heading {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: clamp(20px, 2.6vw, 26px);
+}
+
+.ot-sankey-intro {
+  max-width: 760px;
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.ot-sankey-intro em {
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+.ot-sankey-intro strong {
+  color: #a2331f;
+}
+
+.ot-sankey-tally {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 16px;
+  border-top: 3px solid #1a1ae0;
+  background: #000;
+  color: #f2f2f2;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: clamp(11px, 2vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.ot-tally-arrived {
+  color: #4fd06a;
+}
+
+.ot-tally-perished {
+  color: #ff6a56;
+}
+
+.ot-sankey-caption {
+  max-width: 820px;
+  margin: 12px auto 0;
+  color: var(--text-secondary);
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.ot-sankey-caption code {
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+.ot-key {
+  display: inline-block;
+  width: 16px;
+  height: 8px;
+  vertical-align: middle;
+  border: 1px solid #101010;
+  margin-right: 4px;
+}
+
+.ot-key-route {
+  background: #2b3bff;
+}
+
+.ot-key-perished {
+  background: #a2331f;
+}
+
+/* --- Notes -------------------------------------------------------------- */
+.ot-notes {
+  max-width: 760px;
+  margin: 32px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--surface-3);
+}
+
+.ot-notes h2 {
+  margin: 0 0 10px;
+  color: var(--text-primary);
+  font-size: 20px;
+}
+
+.ot-notes p {
+  margin: 0 0 12px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.ot-colophon {
+  font-size: 13px !important;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.ot-colophon a {
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ot-status-dot {
+    animation: none;
+  }
+}

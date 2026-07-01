@@ -41,7 +41,7 @@ export interface OrdinalPieceStyleOptions {
   /** Theme categorical palette (from useThemeCategorical). */
   themeCategorical: string[] | undefined
   /** colorScheme prop — array or string scheme name. */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Stable category-index map for default-fill cycling. */
   categoryIndexMap: Map<string, number>
   /** User-supplied `frameProps.pieceStyle`. Accepts the looser

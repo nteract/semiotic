@@ -92,6 +92,7 @@ export {
   hitTargetPoint,
   hitTargetRect,
   networkHitTarget,
+  geoHitTarget,
   DEFAULT_HIT_RADIUS,
 } from "./stream/hitTarget"
 export type {
@@ -217,3 +218,44 @@ export type {
   CustomTooltipEntry,
   CustomTooltipEntryOptions,
 } from "./recipes/customTooltip"
+
+// ── Network analysis (pure graph algorithms: pathfinding, centrality, ego,
+//    clustering, and the "spatial problem" layout diagnostic). ──
+export {
+  buildAdjacency,
+  degree,
+  bfsDistances,
+  shortestPath,
+  egoNetwork,
+  betweenness,
+  closeness,
+  clustering,
+  normalizeScores,
+  proximityProblem,
+} from "./recipes/networkAnalysis"
+export type {
+  GraphNode,
+  GraphEdge,
+  ProximityProblemOptions,
+  ProximityProblemResult,
+} from "./recipes/networkAnalysis"
+
+// ── Seeded, deterministic force layout for NetworkCustomChart. ──
+export { forceLayout, mulberry32 } from "./recipes/forceLayout"
+export type { ForceLayoutOptions } from "./recipes/forceLayout"
+
+// ── Static network layouts (arc diagram / adjacency matrix / circular). ──
+export {
+  orderByGroupDegree,
+  arcLayout,
+  arcPath,
+  circularLayout,
+  adjacencyMatrix,
+} from "./recipes/networkLayouts"
+export type {
+  ArcLayoutOptions,
+  CircularLayoutOptions,
+  MatrixCell,
+  AdjacencyMatrix,
+  AdjacencyMatrixOptions,
+} from "./recipes/networkLayouts"

@@ -36,7 +36,7 @@ export interface ScatterplotMatrixProps<TDatum extends Datum = Datum> extends Ba
   /** Field or function to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme @default "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Size of each cell in pixels @default 150 */
   cellSize?: number
   /** Gap between cells in pixels @default 4 */

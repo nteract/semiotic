@@ -29,7 +29,7 @@ export interface StackedBarChartProps<TDatum extends Datum = Datum> extends Base
   valueLabel?: string
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   normalize?: boolean
   /** Category sort order. Default: `false` (data insertion order). `"asc"`/`"desc"` sorts by total stacked value. `"auto"` preserves insertion order while streaming and falls through to value-desc on static data. Custom comparators receive category keys. */
   sort?: boolean | "asc" | "desc" | "auto" | ((a: string, b: string) => number)

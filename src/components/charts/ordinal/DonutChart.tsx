@@ -26,7 +26,7 @@ export interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChart
   innerRadius?: number
   centerContent?: React.ReactNode
   colorBy?: ChartAccessor<TDatum, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   startAngle?: number
   /** Rounded corner radius on wedge arcs */
   cornerRadius?: number

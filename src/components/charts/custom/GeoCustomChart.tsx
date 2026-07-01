@@ -37,7 +37,7 @@ export interface GeoCustomChartProps<
   xAccessor?: StreamGeoFrameProps<TDatum>["xAccessor"]
   yAccessor?: StreamGeoFrameProps<TDatum>["yAccessor"]
   lineDataAccessor?: StreamGeoFrameProps<TDatum>["lineDataAccessor"]
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   enableHover?: boolean
   tooltip?: TooltipProp
   annotations?: Datum[]

@@ -1,0 +1,595 @@
+/* ===========================================================================
+   "Drawing Networks" — a mid-century textbook / primer look.
+   Cream paper, old-style serif body, a single oxblood accent, "Fig." plates,
+   a sticky Contents rail. Deliberately bookish; distinct from the Bauhaus
+   gestalt example.
+   =========================================================================== */
+
+.nv-book {
+  /* mid-century palette */
+  --nv-paper: #f3ecda;
+  --nv-paper-deep: #e9dfc6;
+  --nv-ink: #2a241d;
+  --nv-ink-soft: #6f6353;
+  --nv-oxblood: #8a2b22;
+  --nv-rule: #c8bb9c;
+
+  /* re-theme the Semiotic charts onto cream paper + ink */
+  --semiotic-bg: var(--nv-paper-deep);
+  --semiotic-text: var(--nv-ink);
+  --semiotic-text-secondary: var(--nv-ink-soft);
+  --semiotic-grid: rgba(42, 36, 29, 0.12);
+  --semiotic-border: rgba(42, 36, 29, 0.4);
+  --semiotic-tick-font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  --semiotic-tick-font-size: 11px;
+  --semiotic-focus: var(--nv-oxblood);
+
+  --nv-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+    Georgia, "Times New Roman", serif;
+  --nv-label: "Helvetica Neue", Arial, sans-serif;
+
+  margin: 26px 0 16px;
+  padding: clamp(22px, 4vw, 52px);
+  background: var(--nv-paper);
+  border: 1px solid var(--nv-rule);
+  box-shadow: 0 1px 0 var(--nv-rule), 0 18px 40px rgba(42, 36, 29, 0.08);
+  color: var(--nv-ink);
+  font-family: var(--nv-serif);
+}
+
+.nv-book *::selection {
+  background: rgba(138, 43, 34, 0.18);
+}
+
+/* --- Cover / blurb ------------------------------------------------------- */
+.nv-cover {
+  max-width: 720px;
+  padding-bottom: 22px;
+  margin-bottom: 8px;
+  border-bottom: 3px double var(--nv-ink);
+}
+
+.nv-imprint {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--nv-oxblood);
+  font-family: var(--nv-label);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.nv-blurb {
+  margin: 0;
+  color: var(--nv-ink);
+  font-family: var(--nv-serif);
+  font-size: clamp(17px, 2vw, 22px);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* --- Layout: contents rail + main column -------------------------------- */
+.nv-layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: start;
+  margin-top: 28px;
+}
+
+.nv-toc {
+  position: sticky;
+  top: 18px;
+  align-self: start;
+}
+
+.nv-toc-head {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--nv-rule);
+  font-family: var(--nv-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--nv-ink-soft);
+}
+
+.nv-toc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.nv-toc-link {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--nv-ink);
+  font-family: var(--nv-serif);
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.nv-toc-link:hover {
+  background: var(--nv-paper-deep);
+}
+
+.nv-toc-link.is-active {
+  color: var(--nv-oxblood);
+  font-weight: 700;
+}
+
+.nv-toc-num {
+  flex: 0 0 auto;
+  width: 18px;
+  font-family: var(--nv-label);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nv-ink-soft);
+}
+
+.nv-toc-link.is-active .nv-toc-num {
+  color: var(--nv-oxblood);
+}
+
+.nv-toc-aside {
+  display: block;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--nv-rule);
+  color: var(--nv-ink-soft);
+  font-size: 12.5px;
+  font-style: italic;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.nv-toc-aside:hover {
+  color: var(--nv-oxblood);
+}
+
+/* --- Main column -------------------------------------------------------- */
+.nv-main {
+  min-width: 0;
+  max-width: 760px;
+}
+
+.nv-chapter-head {
+  margin-bottom: 18px;
+}
+
+.nv-chapter-num {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--nv-oxblood);
+  font-family: var(--nv-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.nv-chapter-title {
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--nv-rule);
+  color: var(--nv-ink);
+  font-family: var(--nv-serif);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4.2vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.nv-chapter-head .nv-lead {
+  margin: 0 0 18px;
+  color: var(--nv-ink);
+  font-family: var(--nv-serif);
+  font-size: 18.5px;
+  line-height: 1.62;
+}
+
+/* drop cap on the lead paragraph */
+.nv-chapter-head .nv-lead::first-letter {
+  float: left;
+  margin: 6px 10px -4px 0;
+  color: var(--nv-oxblood);
+  font-size: 4.1em;
+  line-height: 0.72;
+  font-weight: 700;
+}
+
+.nv-chapter p {
+  color: var(--nv-ink);
+  font-family: var(--nv-serif);
+  font-size: 16.5px;
+  line-height: 1.66;
+}
+
+.nv-chapter p strong {
+  font-weight: 700;
+}
+
+/* --- Figure plates ------------------------------------------------------ */
+.nv-plate {
+  margin: 26px 0;
+}
+
+.nv-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: 12px;
+}
+
+.nv-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  background: var(--nv-paper-deep);
+  border: 1px solid var(--nv-ink);
+  outline: 4px solid var(--nv-paper-deep);
+  outline-offset: -7px;
+  box-shadow: inset 0 0 0 1px var(--nv-paper);
+}
+
+.nv-stage-inner {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.nv-plate figcaption {
+  margin-top: 10px;
+  padding-left: 2px;
+  color: var(--nv-ink-soft);
+  font-family: var(--nv-serif);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.55;
+  max-width: 640px;
+}
+
+.nv-fig {
+  font-family: var(--nv-label);
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nv-oxblood);
+}
+
+/* --- Controls: stepper / toggle / switch / button ----------------------- */
+.nv-stepper {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--nv-ink);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.nv-step {
+  padding: 6px 12px;
+  border: 0;
+  border-right: 1px solid var(--nv-rule);
+  background: var(--nv-paper);
+  color: var(--nv-ink);
+  font-family: var(--nv-label);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.nv-step:last-child {
+  border-right: 0;
+}
+
+.nv-step:hover {
+  background: var(--nv-paper-deep);
+}
+
+.nv-step.is-active {
+  background: var(--nv-oxblood);
+  color: var(--nv-paper);
+}
+
+.nv-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nv-toggle-label {
+  font-family: var(--nv-label);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nv-ink-soft);
+}
+
+.nv-toggle {
+  display: inline-flex;
+  border: 1px solid var(--nv-ink);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.nv-toggle-btn {
+  padding: 5px 11px;
+  border: 0;
+  border-right: 1px solid var(--nv-rule);
+  background: var(--nv-paper);
+  color: var(--nv-ink);
+  font-family: var(--nv-label);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.nv-toggle-btn:last-child {
+  border-right: 0;
+}
+
+.nv-toggle-btn.is-active {
+  background: var(--nv-ink);
+  color: var(--nv-paper);
+}
+
+.nv-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 8px;
+  border: 1px solid var(--nv-ink);
+  border-radius: 2px;
+  background: var(--nv-paper);
+  color: var(--nv-ink);
+  font-family: var(--nv-label);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.nv-switch i {
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--nv-ink);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.nv-switch.is-on {
+  background: var(--nv-paper-deep);
+}
+
+.nv-switch.is-on i {
+  background: var(--nv-oxblood);
+  border-color: var(--nv-oxblood);
+}
+
+.nv-btn {
+  padding: 6px 13px;
+  border: 1px solid var(--nv-ink);
+  border-radius: 2px;
+  background: var(--nv-ink);
+  color: var(--nv-paper);
+  font-family: var(--nv-label);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nv-btn:hover {
+  background: var(--nv-oxblood);
+  border-color: var(--nv-oxblood);
+}
+
+.nv-btn-quiet {
+  background: var(--nv-paper);
+  color: var(--nv-ink);
+}
+
+.nv-btn-quiet:hover {
+  background: var(--nv-paper-deep);
+  color: var(--nv-ink);
+}
+
+/* --- The Network Toy ---------------------------------------------------- */
+.nv-toy-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 6px 0 16px;
+  padding: 14px 16px;
+  background: var(--nv-paper-deep);
+  border: 1px solid var(--nv-rule);
+}
+
+.nv-toy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.nv-toy .nv-stage {
+  margin: 0;
+}
+
+.nv-toy-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--nv-paper-deep);
+  border: 1px solid var(--nv-ink);
+  font-family: var(--nv-label);
+}
+
+.nv-readout-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--nv-ink-soft);
+}
+
+.nv-readout-row strong {
+  color: var(--nv-ink);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nv-readout-divider {
+  height: 1px;
+  background: var(--nv-rule);
+  margin: 4px 0;
+}
+
+.nv-readout-focus {
+  font-family: var(--nv-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--nv-oxblood);
+}
+
+.nv-readout-hint {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--nv-ink-soft);
+  font-family: var(--nv-serif);
+}
+
+.nv-readout-path {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--nv-ink);
+  font-family: var(--nv-serif);
+}
+
+.nv-readout-path strong {
+  color: var(--nv-oxblood);
+}
+
+.nv-readout-route {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--nv-label);
+  font-size: 10.5px;
+  color: var(--nv-ink-soft);
+  word-break: break-word;
+}
+
+.nv-toy-note {
+  margin: 14px 0 0;
+  color: var(--nv-ink-soft);
+  font-style: italic;
+  font-size: 13.5px !important;
+  line-height: 1.55;
+}
+
+/* --- Pager + colophon --------------------------------------------------- */
+.nv-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--nv-rule);
+}
+
+.nv-pager-btn {
+  max-width: 48%;
+  padding: 8px 14px;
+  border: 1px solid var(--nv-ink);
+  border-radius: 2px;
+  background: var(--nv-paper);
+  color: var(--nv-ink);
+  font-family: var(--nv-serif);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nv-pager-next {
+  text-align: right;
+}
+
+.nv-pager-btn:hover:not(:disabled) {
+  background: var(--nv-paper-deep);
+}
+
+.nv-pager-btn:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nv-colophon {
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 3px double var(--nv-ink);
+}
+
+.nv-colophon p {
+  margin: 0;
+  color: var(--nv-ink-soft);
+  font-family: var(--nv-serif);
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.nv-colophon a {
+  color: var(--nv-oxblood);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(138, 43, 34, 0.4);
+}
+
+/* --- Responsive --------------------------------------------------------- */
+@media (max-width: 880px) {
+  .nv-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .nv-toc {
+    position: static;
+    border-bottom: 1px solid var(--nv-rule);
+    padding-bottom: 12px;
+  }
+
+  .nv-toc-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .nv-toc-link {
+    width: auto;
+  }
+
+  .nv-toc-aside {
+    border-top: 0;
+  }
+
+  .nv-toy {
+    grid-template-columns: 1fr;
+  }
+}

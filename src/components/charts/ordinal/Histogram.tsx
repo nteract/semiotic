@@ -81,7 +81,7 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
   valueLabel?: string
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean

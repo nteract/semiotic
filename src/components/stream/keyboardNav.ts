@@ -22,11 +22,14 @@ export interface NavPoint {
   y: number
   datum: Datum | null
   /** Shape hint for focus ring rendering */
-  shape?: "circle" | "rect" | "wedge"
+  shape?: "circle" | "rect" | "wedge" | "geoarea"
   /** Width of rect-shaped elements (bars, sankey nodes) */
   w?: number
   /** Height of rect-shaped elements */
   h?: number
+  /** SVG path (plot-relative) for a geoarea focus ring — the shape is
+   *  outlined instead of drawing a circle at the centroid. */
+  pathData?: string
   /** Group identifier for graph navigation (series name, category, node id) */
   group?: string
   /** Index in NavGraph.flat — set by buildNavGraph for O(1) lookup */
@@ -511,12 +514,19 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
   for (const node of scene) {
     if (node.type === "point" && node.x != null) {
       points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle" })
-    } else if (node.type === "geoarea" && node.centroid) {
+    } else if (node.type === "geoarea" && node.centroid && node.interactive !== false) {
+      // Skip non-interactive areas (e.g. the graticule, `datum: null`) so
+      // keyboard nav lands only on hit-testable shapes — mirrors the
+      // `interactive === false` skip in CanvasHitTester. Without this, the
+      // new geoarea focus ring would outline the whole graticule mesh.
+      // Navigate to the centroid (for the hover payload + label position) but
+      // carry the path so the focus ring outlines the whole area, not a dot.
       points.push({
         x: node.centroid[0],
         y: node.centroid[1],
         datum: node.datum,
-        shape: "circle"
+        shape: "geoarea",
+        pathData: node.pathData,
       })
     }
   }

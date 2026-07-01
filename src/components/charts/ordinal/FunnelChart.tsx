@@ -29,7 +29,7 @@ export interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChar
   /** Accessor for splitting into mirrored categories (e.g., "control" vs "treatment") */
   categoryAccessor?: ChartAccessor<TDatum, string>
   colorBy?: ChartAccessor<TDatum, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /**
    * Funnel orientation.
    *

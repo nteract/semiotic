@@ -29,7 +29,7 @@ export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   valueLabel?: string
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Category ordering. Default (`undefined`) resolves to `"auto"`, which
    *  preserves insertion order while streaming and falls through to
    *  value-desc on static data — the recommended choice when using the

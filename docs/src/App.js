@@ -155,6 +155,9 @@ import PortCongestionReplayExamplePage from "./pages/examples/PortCongestionRepl
 import ScrollYoureTellingExamplePage from "./pages/examples/ScrollYoureTellingExamplePage"
 import WhatTheMachineSeesExamplePage from "./pages/examples/WhatTheMachineSeesExamplePage"
 import SemioticArchitectureExamplePage from "./pages/examples/SemioticArchitectureExamplePage"
+import GestaltPrinciplesExamplePage from "./pages/examples/GestaltPrinciplesExamplePage"
+import NetworkVizExamplePage from "./pages/examples/NetworkVizExamplePage"
+import OregonTrailExamplePage from "./pages/examples/OregonTrailExamplePage"
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
@@ -291,6 +294,9 @@ export default function DocsApp() {
             <Route path="examples/scroll-youre-telling" element={<ScrollYoureTellingExamplePage />} />
             <Route path="examples/what-the-machine-sees" element={<WhatTheMachineSeesExamplePage />} />
             <Route path="examples/semiotic-architecture" element={<SemioticArchitectureExamplePage />} />
+            <Route path="examples/gestalt-principles" element={<GestaltPrinciplesExamplePage />} />
+            <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
+            <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
           </Routes>
         </ExamplesLayout>
       </div>

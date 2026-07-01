@@ -317,7 +317,7 @@ export interface OrdinalPipelineConfig {
   // Style
   pieceStyle?: (d: Datum, category?: string) => Style
   summaryStyle?: (d: Datum, category?: string) => Style
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   themeCategorical?: string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
@@ -456,7 +456,7 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   // Style
   pieceStyle?: (d: Datum, category?: string) => Style
   summaryStyle?: (d: Datum, category?: string) => Style
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   barColors?: Record<string, string>
 
   // Axes

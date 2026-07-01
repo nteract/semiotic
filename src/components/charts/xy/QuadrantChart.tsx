@@ -97,7 +97,7 @@ export interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseCh
   /** Field name or function to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for categorical data @default "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Field name or function to determine point size */
   sizeBy?: ChartAccessor<TDatum, number>
   /** Min and max radius for points @default [3, 15] */

@@ -11,6 +11,7 @@ import {
   nextNetworkIndex,
   type NavPoint
 } from "./keyboardNav"
+import type { GeoSceneNode } from "./geoTypes"
 
 describe("extractXYNavPoints", () => {
   it("extracts points from a scatter scene", () => {
@@ -432,13 +433,33 @@ describe("extractGeoNavPoints", () => {
     expect(result[1]).toMatchObject({ x: 100, y: 200, datum: { name: "city1" }, shape: "circle" })
   })
 
-  it("extracts geoarea nodes using centroid", () => {
+  it("extracts geoarea nodes at the centroid, carrying the path for a shape focus ring", () => {
     const scene = [
-      { type: "geoarea", centroid: [300, 200], datum: { properties: { name: "France" } } }
+      { type: "geoarea", centroid: [300, 200], pathData: "M0,0 L10,0 L10,10 Z", datum: { properties: { name: "France" } } }
     ]
     const result = extractGeoNavPoints(scene)
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({ x: 300, y: 200, datum: { properties: { name: "France" } }, shape: "circle" })
+    expect(result[0]).toMatchObject({
+      x: 300,
+      y: 200,
+      datum: { properties: { name: "France" } },
+      shape: "geoarea",
+      pathData: "M0,0 L10,0 L10,10 Z",
+    })
+  })
+
+  it("skips non-interactive geoareas (e.g. the graticule)", () => {
+    // Typed so the non-interactive graticule shape is unambiguous; the
+    // scene the frame emits carries these exact fields.
+    const scene: GeoSceneNode[] = [
+      // Graticule: emitted as a geoarea with interactive:false and datum:null.
+      { type: "geoarea", centroid: [400, 300], pathData: "M0,0 L800,600", bounds: [[0, 0], [800, 600]], screenArea: 0, style: {}, datum: null, interactive: false },
+      { type: "geoarea", centroid: [300, 200], pathData: "M0,0 L10,0 L10,10 Z", bounds: [[0, 0], [10, 10]], screenArea: 100, style: {}, datum: { properties: { name: "France" } }, interactive: true }
+    ]
+    const result = extractGeoNavPoints(scene)
+    // Only the interactive, data-backed area is navigable.
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({ shape: "geoarea", datum: { properties: { name: "France" } } })
   })
 
   it("returns empty array for empty scene", () => {

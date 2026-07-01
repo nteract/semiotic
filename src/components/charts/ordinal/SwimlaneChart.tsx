@@ -40,7 +40,7 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
   /** Color accessor — defaults to subcategoryAccessor */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for subcategories */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Padding between lanes in pixels */
   barPadding?: number
   /** Enable hover annotations */
