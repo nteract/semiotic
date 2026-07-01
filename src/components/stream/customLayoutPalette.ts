@@ -1,4 +1,4 @@
-import { COLOR_SCHEMES, STREAMING_PALETTE } from "../charts/shared/colorUtils"
+import { COLOR_SCHEMES, STREAMING_PALETTE, resolveExplicitColor } from "../charts/shared/colorUtils"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 
 /**
@@ -81,10 +81,13 @@ export function buildResolveColor(
   // map still wins even when the fallthrough palette is empty.
   if (palette.length === 0) {
     return (key: string): string =>
-      colorMap && typeof colorMap[key] === "string" ? colorMap[key] : "#4e79a7"
+      (colorMap && resolveExplicitColor(colorMap, key)) || "#4e79a7"
   }
   return (key: string): string => {
-    if (colorMap && typeof colorMap[key] === "string") return colorMap[key]
+    if (colorMap) {
+      const mapped = resolveExplicitColor(colorMap, key)
+      if (mapped) return mapped
+    }
     let hash = 0
     for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0
     return palette[Math.abs(hash) % palette.length] ?? "#4e79a7"

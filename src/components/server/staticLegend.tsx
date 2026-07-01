@@ -8,6 +8,7 @@
 import * as React from "react"
 import { scaleOrdinal } from "d3-scale"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
+import { resolveExplicitColor } from "../charts/shared/colorUtils"
 import type { SemioticTheme } from "../store/ThemeStore"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { GradientLegendConfig, LegendGroup, LegendItem, LegendLayout } from "../types/legendTypes"
@@ -84,8 +85,8 @@ export interface StaticGradientLegendConfig extends Omit<StaticLegendConfig, "ca
 function buildColorScale(categories: string[], colorScheme: string | string[] | Record<string, string> | undefined, theme: SemioticTheme): (category: string) => string {
   // Explicit { category: color } map → look up directly (mirrors createColorScale).
   if (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)) {
-    const map = colorScheme
-    return (category: string) => (category in map ? map[category] : "#999")
+    const map = colorScheme as Record<string, unknown>
+    return (category: string) => resolveExplicitColor(map, category) ?? "#999"
   }
   const colors = Array.isArray(colorScheme)
     ? colorScheme

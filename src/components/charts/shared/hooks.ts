@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useState, useId, useEffect } from "react"
 import { useCategoryColors } from "../../CategoryColors"
 import { useLinkedChartCategories, useLinkedChartCategoryRegistryActive, useLinkedLegendSuppression } from "../../LinkedCharts"
-import { createColorScale, getColor, COLOR_SCHEMES } from "./colorUtils"
+import { createColorScale, getColor, COLOR_SCHEMES, resolveExplicitColor } from "./colorUtils"
 import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
@@ -90,7 +90,8 @@ export function resolveDefaultFill(
 
   // An explicit { category: color } map wins for a mapped category.
   if (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)) {
-    if (category != null && category in colorScheme) return colorScheme[category]
+    const mapped = resolveExplicitColor(colorScheme as Record<string, unknown>, category)
+    if (mapped) return mapped
   }
 
   // Priority: color > explicit colorScheme array > theme categorical > named colorScheme > DEFAULT_COLOR
