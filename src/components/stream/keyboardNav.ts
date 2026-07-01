@@ -514,7 +514,11 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
   for (const node of scene) {
     if (node.type === "point" && node.x != null) {
       points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle" })
-    } else if (node.type === "geoarea" && node.centroid) {
+    } else if (node.type === "geoarea" && node.centroid && node.interactive !== false) {
+      // Skip non-interactive areas (e.g. the graticule, `datum: null`) so
+      // keyboard nav lands only on hit-testable shapes — mirrors the
+      // `interactive === false` skip in CanvasHitTester. Without this, the
+      // new geoarea focus ring would outline the whole graticule mesh.
       // Navigate to the centroid (for the hover payload + label position) but
       // carry the path so the focus ring outlines the whole area, not a dot.
       points.push({

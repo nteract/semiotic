@@ -447,6 +447,18 @@ describe("extractGeoNavPoints", () => {
     })
   })
 
+  it("skips non-interactive geoareas (e.g. the graticule)", () => {
+    const scene = [
+      // Graticule: emitted as a geoarea with interactive:false and datum:null.
+      { type: "geoarea", centroid: [400, 300], pathData: "M0,0 L800,600", datum: null, interactive: false },
+      { type: "geoarea", centroid: [300, 200], pathData: "M0,0 L10,0 L10,10 Z", datum: { properties: { name: "France" } }, interactive: true }
+    ]
+    const result = extractGeoNavPoints(scene)
+    // Only the interactive, data-backed area is navigable.
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({ shape: "geoarea", datum: { properties: { name: "France" } } })
+  })
+
   it("returns empty array for empty scene", () => {
     expect(extractGeoNavPoints([])).toEqual([])
   })
