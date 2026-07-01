@@ -21,7 +21,7 @@ export interface CategoryColorProviderProps {
    */
   categories?: string[]
   /** Color scheme to use for auto-assignment. Default: "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   children: React.ReactNode
 }
 

@@ -207,7 +207,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
             dominantBaseline={(label.baseline || "middle") as React.SVGAttributes<SVGTextElement>["dominantBaseline"]}
             fontSize={label.fontSize || 11}
             fontWeight={label.fontWeight}
-            fill={label.fill || "currentColor"}
+            fill={label.fill || "var(--semiotic-text, #333)"}
             stroke={label.stroke}
             strokeWidth={label.strokeWidth}
             paintOrder={label.paintOrder}

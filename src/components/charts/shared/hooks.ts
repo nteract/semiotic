@@ -81,12 +81,17 @@ export function useThemeDiverging(): string | undefined {
 export function resolveDefaultFill(
   color: string | undefined,
   themeCategorical: string[] | undefined,
-  colorScheme: string | string[] | undefined,
+  colorScheme: string | string[] | Record<string, string> | undefined,
   category: string | undefined,
   categoryIndexMap: Map<string, number>
 ): string {
   // Uniform color prop takes highest priority
   if (color) return color
+
+  // An explicit { category: color } map wins for a mapped category.
+  if (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)) {
+    if (category != null && category in colorScheme) return colorScheme[category]
+  }
 
   // Priority: color > explicit colorScheme array > theme categorical > named colorScheme > DEFAULT_COLOR
   // An explicit array colorScheme is a user override that takes precedence over the theme default.
@@ -134,7 +139,7 @@ export function resolveAccessor<T = any>(
 export function useColorScale(
   data: Array<Datum>,
   colorBy: string | ((d: any, i?: number) => any) | undefined,
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
 ): ((v: string) => string) | undefined {
   const categoryColors = useCategoryColors()
   const themeCategorical = useThemeCategorical()
@@ -142,7 +147,7 @@ export function useColorScale(
     if (!colorBy) return undefined
     const providerColors = categoryColors ?? undefined
     // Resolve effective scheme: explicit prop > theme categorical > "category10"
-    const effectiveScheme: string | string[] = colorScheme
+    const effectiveScheme: string | string[] | Record<string, string> = colorScheme
       ?? (themeCategorical && themeCategorical.length > 0 ? themeCategorical : undefined)
       ?? "category10"
     // When data is empty (push API mode), return undefined so the pipeline's

@@ -44,7 +44,7 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   /** Field name or function to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for categorical data or custom colors array @default "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Field name or function to determine point size */
   sizeBy?: ChartAccessor<TDatum, number>
   /** Min and max radius for points @default [3, 15] */

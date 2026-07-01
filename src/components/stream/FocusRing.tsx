@@ -19,16 +19,18 @@ export interface FocusRingProps {
   /** Total chart size */
   size: [number, number]
   /** Shape hint from the focused nav point */
-  shape?: "circle" | "rect" | "wedge"
+  shape?: "circle" | "rect" | "wedge" | "geoarea"
   /** Width of rect-shaped focus target */
   width?: number
   /** Height of rect-shaped focus target */
   height?: number
+  /** SVG path (plot-relative) outlined for a geoarea focus. */
+  pathData?: string
 }
 
 const FOCUS_STROKE = "var(--semiotic-focus, #005fcc)"
 
-export function FocusRing({ active, hoverPoint, margin, size, shape = "circle", width, height }: FocusRingProps) {
+export function FocusRing({ active, hoverPoint, margin, size, shape = "circle", width, height, pathData }: FocusRingProps) {
   if (!active || !hoverPoint) return null
 
   const cx = hoverPoint.x + margin.left
@@ -36,7 +38,21 @@ export function FocusRing({ active, hoverPoint, margin, size, shape = "circle", 
 
   let indicator: React.ReactNode
 
-  if (shape === "rect" && width != null && height != null) {
+  if (shape === "geoarea" && pathData) {
+    // Outline the whole area. Path coords are plot-relative, so translate by
+    // the margin (rather than centering on the centroid like the other shapes).
+    indicator = (
+      <g transform={`translate(${margin.left},${margin.top})`}>
+        <path
+          d={pathData}
+          fill="none"
+          stroke={FOCUS_STROKE}
+          strokeWidth={2.5}
+          strokeDasharray="6,3"
+        />
+      </g>
+    )
+  } else if (shape === "rect" && width != null && height != null) {
     // Clamp to minimum 4px so the ring is always visible
     const w = Math.max(width, 4)
     const h = Math.max(height, 4)

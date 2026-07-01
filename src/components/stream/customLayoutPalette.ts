@@ -21,7 +21,7 @@ import { schemeCategory10 } from "../charts/shared/colorPalettes"
  *                      `STREAMING_PALETTE`. Caller's choice.
  */
 export function resolveCustomLayoutPalette(
-  colorScheme: string | string[] | undefined,
+  colorScheme: string | string[] | Record<string, string> | undefined,
   themeCategorical: string[] | undefined,
   fallback: readonly string[]
 ): readonly string[] {

@@ -432,13 +432,19 @@ describe("extractGeoNavPoints", () => {
     expect(result[1]).toMatchObject({ x: 100, y: 200, datum: { name: "city1" }, shape: "circle" })
   })
 
-  it("extracts geoarea nodes using centroid", () => {
+  it("extracts geoarea nodes at the centroid, carrying the path for a shape focus ring", () => {
     const scene = [
-      { type: "geoarea", centroid: [300, 200], datum: { properties: { name: "France" } } }
+      { type: "geoarea", centroid: [300, 200], pathData: "M0,0 L10,0 L10,10 Z", datum: { properties: { name: "France" } } }
     ]
     const result = extractGeoNavPoints(scene)
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({ x: 300, y: 200, datum: { properties: { name: "France" } }, shape: "circle" })
+    expect(result[0]).toMatchObject({
+      x: 300,
+      y: 200,
+      datum: { properties: { name: "France" } },
+      shape: "geoarea",
+      pathData: "M0,0 L10,0 L10,10 Z",
+    })
   })
 
   it("returns empty array for empty scene", () => {

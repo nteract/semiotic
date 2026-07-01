@@ -55,7 +55,7 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
    * `"set2"`, etc.) or an explicit array of colors. Falls back to the
    * theme's categorical palette when omitted.
    */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /**
    * Rotation in **degrees** applied to the first wedge. `0` starts at 12
    * o'clock and proceeds clockwise; `90` starts at 3 o'clock, `180` at 6

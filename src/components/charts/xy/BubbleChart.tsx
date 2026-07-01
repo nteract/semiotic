@@ -79,7 +79,7 @@ export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChar
    * Color scheme for categorical data or custom colors array
    * @default "category10"
    */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
 
   /**
    * Bubble opacity

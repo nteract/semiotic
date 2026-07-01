@@ -79,7 +79,7 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
    */
   colorBy?: ChartAccessor<TNode, string>
   /** d3 scheme name or explicit color array; falls back to theme. */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /**
    * Constant pixel radius, or a function/field returning a numeric value
    * scaled into `nodeSizeRange`.

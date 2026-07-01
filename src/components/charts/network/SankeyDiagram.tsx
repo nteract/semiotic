@@ -30,7 +30,7 @@ export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends D
   valueAccessor?: ChartAccessor<TEdge, number>
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)
   orientation?: "horizontal" | "vertical"
   nodeAlign?: "justify" | "left" | "right" | "center"

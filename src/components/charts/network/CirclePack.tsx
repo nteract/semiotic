@@ -25,7 +25,7 @@ export interface CirclePackProps<TNode extends Datum = Datum> extends BaseChartP
   valueAccessor?: ChartAccessor<TNode, number>
   nodeIdAccessor?: ChartAccessor<TNode, string>
   colorBy?: ChartAccessor<TNode, string | number>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   colorByDepth?: boolean
   showLabels?: boolean
   nodeLabel?: ChartAccessor<TNode, string>

@@ -47,7 +47,7 @@ export interface ChartSetupInput {
   /** The color-by accessor (may be an "actual" colorBy derived from stackBy/groupBy/categoryAccessor) */
   colorBy: Accessor<string> | undefined
   /** Color scheme name or custom array — undefined lets useColorScale consult the theme */
-  colorScheme: string | string[] | undefined
+  colorScheme: string | string[] | Record<string, string> | undefined
   /** Legend interaction mode */
   legendInteraction: LegendInteractionMode | undefined
   /** Legend position override */

@@ -99,7 +99,7 @@ export interface ProcessSankeyProps<TNode extends Datum = Datum, TEdge extends D
 
   // Coloring
   colorBy?: ChartAccessor<TNode, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
   showLegend?: boolean
   /** Legend position. Default `"right"`. */

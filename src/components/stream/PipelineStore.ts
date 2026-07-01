@@ -260,7 +260,7 @@ export interface PipelineConfig {
   areaStyle?: (d: Datum) => Style
   swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
   waterfallStyle?: { positiveColor?: string; negativeColor?: string; connectorStroke?: string; connectorWidth?: number; gap?: number; stroke?: string; strokeWidth?: number }
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
   themeCategorical?: string[]
   /**

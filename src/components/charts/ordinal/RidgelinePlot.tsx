@@ -31,7 +31,7 @@ export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseCh
   valueLabel?: string
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean

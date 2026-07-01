@@ -57,7 +57,7 @@ export interface MinimapChartProps<TDatum extends Datum = Datum>
   colorBy?: ChartAccessor<TDatum, string>
 
   /** Color scheme (default: "category10") */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
 
   /** Curve type (default: "linear") */
   curve?: "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | "basis" | "cardinal" | "catmullRom"

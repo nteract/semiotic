@@ -47,7 +47,7 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
   /** Field to determine point color */
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme @default "category10" */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Point radius @default 5 */
   pointRadius?: number
   /** Tooltip */

@@ -35,7 +35,7 @@ export interface NetworkCustomChartProps<
   /** Field name for the edge target id. @default "target" */
   targetAccessor?: StreamNetworkFrameProps["targetAccessor"]
   /** Color scheme threaded into the layout's `resolveColor` helper. */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   enableHover?: boolean
   /**
    * Annotations rendered over the chart. A custom network layout's marks are

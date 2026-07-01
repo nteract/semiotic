@@ -65,7 +65,7 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
    * `"set2"`, etc.) or an explicit array of colors. Falls back to the
    * theme's categorical palette when omitted.
    */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Category ordering. `false` (default) = insertion order. `"asc"` /
    *  `"desc"` sorts by total value. `"auto"` preserves insertion order
    *  while streaming and falls through to value-desc on static data.

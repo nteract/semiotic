@@ -131,7 +131,6 @@ const navData = [
     title: "Examples",
     path: "/examples",
     children: [
-      { title: "Point Climate Anomaly", path: "/examples/climate-anomaly" },
       { title: "Point Climate Radial", path: "/examples/climate-radial-weather" },
       { title: "U.S. War Timeline", path: "/examples/us-war-timeline" },
       { title: "Art Movement Genealogy", path: "/examples/art-movement-genealogy" },
@@ -142,6 +141,10 @@ const navData = [
       { title: "The Scroll You're Telling", path: "/examples/scroll-youre-telling" },
       { title: "What the Machine Sees", path: "/examples/what-the-machine-sees" },
       { title: "The Living System of Semiotic", path: "/examples/semiotic-architecture" },
+      { title: "Point Climate Anomaly", path: "/examples/climate-anomaly" },
+      { title: "The Gestalt of Data Visualization", path: "/examples/gestalt-principles" },
+      { title: "Drawing Networks", path: "/examples/network-visualization" },
+      { title: "Map of the Oregon Trail", path: "/examples/oregon-trail" },
     ],
   },
   {

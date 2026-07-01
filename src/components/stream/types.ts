@@ -754,7 +754,7 @@ export interface StreamXYFrameProps<T = Datum> {
   waterfallStyle?: WaterfallStyle
   swarmStyle?: SwarmStyle
   barColors?: Record<string, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
 
   // ── Axes ─────────────────────────────────────────
   showAxes?: boolean

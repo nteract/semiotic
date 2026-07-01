@@ -38,7 +38,7 @@ export interface OrdinalCustomChartProps<
   /** Vertical / horizontal / radial. Default vertical. */
   projection?: StreamOrdinalFrameProps["projection"]
   /** Color scheme threaded into the layout's `resolveColor` helper. */
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   enableHover?: boolean
   showAxes?: boolean
   showGrid?: boolean

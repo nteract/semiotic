@@ -35,7 +35,7 @@ export interface XYCustomChartProps<
   enableHover?: boolean
   showLegend?: boolean
   annotations?: Datum[]
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   tooltip?: TooltipProp
   /** Additional StreamXYFrame props for advanced customization, excluding XYCustomChart-controlled fields. */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size" | "customLayout" | "layoutConfig">>

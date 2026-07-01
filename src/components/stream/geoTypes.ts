@@ -116,7 +116,12 @@ export interface GeoScales {
 export interface GeoPipelineConfig {
   projection: ProjectionProp
   projectionExtent?: [[number, number], [number, number]]
-  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
+  /**
+   * Auto-fit padding as a **fraction** of the plot (0–0.5), not pixels.
+   * `0.1` insets the fitted geography 10% from each edge. A value `>= 1` is
+   * almost always a pixel mistake and collapses the projection off-canvas.
+   * @default 0
+   */
   fitPadding?: number
 
   xAccessor?: string | ((d: Datum) => number)
@@ -129,7 +134,7 @@ export interface GeoPipelineConfig {
   areaStyle?: Style | ((d: Datum) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
   /** Theme sequential scheme name — fallback for ChoroplethMap when colorScheme is not set. */
@@ -170,7 +175,12 @@ export interface StreamGeoFrameProps<T = Datum> {
   // ── Projection ──
   projection: ProjectionProp
   projectionExtent?: [[number, number], [number, number]]
-  /** Padding fraction for auto-fit projection. 0.1 = 10% inset from edges. @default 0 */
+  /**
+   * Auto-fit padding as a **fraction** of the plot (0–0.5), not pixels.
+   * `0.1` insets the fitted geography 10% from each edge. A value `>= 1` is
+   * almost always a pixel mistake and collapses the projection off-canvas.
+   * @default 0
+   */
   fitPadding?: number
 
   // ── Data ──
@@ -239,7 +249,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   areaStyle?: Style | ((d: Datum) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /**
    * Categorical color field. For ChoroplethMap reads from area `properties`
    * (or top-level fallback); for ProportionalSymbolMap reads from each point.

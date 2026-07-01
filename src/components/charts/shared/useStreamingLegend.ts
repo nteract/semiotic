@@ -44,7 +44,7 @@ export function useStreamingLegend({
   /** The color-by accessor (may be derived from stackBy/groupBy/categoryAccessor) */
   colorBy: Accessor<string> | undefined
   /** Color scheme name or custom array — undefined lets useColorScale consult the theme */
-  colorScheme: string | string[] | undefined
+  colorScheme: string | string[] | Record<string, string> | undefined
   /** Whether legend is requested */
   showLegend: boolean | undefined
   /** Legend position */

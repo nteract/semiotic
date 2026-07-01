@@ -32,7 +32,7 @@ export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartP
   valueLabel?: string
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   sizeBy?: ChartAccessor<TDatum, number>
   sizeRange?: [number, number]
   /** Field name or function → glyph **shape**: each point renders as a d3-shape

@@ -51,7 +51,7 @@ export interface XYSceneContext {
 export interface XYSceneConfig {
   chartType?: string
   curve?: CurveType
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   normalize?: boolean
   /** Stacked area baseline. "zero" (default), "wiggle" (streamgraph), "silhouette" (centered). */
   baseline?: "zero" | "wiggle" | "silhouette"

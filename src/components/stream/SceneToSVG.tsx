@@ -513,7 +513,7 @@ export function networkLabelToSVG(label: NetworkLabel, i: number): React.ReactNo
       dominantBaseline={(label.baseline || "auto") as React.SVGAttributes<SVGTextElement>["dominantBaseline"]}
       fontSize={label.fontSize || 11}
       fontWeight={label.fontWeight}
-      fill={label.fill || "#333"}
+      fill={label.fill || "var(--semiotic-text, #333)"}
       stroke={label.stroke}
       strokeWidth={label.strokeWidth}
       paintOrder={label.paintOrder}

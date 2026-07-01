@@ -138,7 +138,7 @@ function reserveStaticLegendMargin(
   margin: { top: number; right: number; bottom: number; left: number },
   options: {
     categories: string[]
-    colorScheme?: string | string[]
+    colorScheme?: string | string[] | Record<string, string>
     theme: ReturnType<typeof resolveTheme>
     position?: "right" | "left" | "top" | "bottom"
     size: [number, number]

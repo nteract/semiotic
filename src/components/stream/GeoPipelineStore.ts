@@ -688,6 +688,13 @@ export class GeoPipelineStore {
         features: allFeatures
       }
       const pad = config.fitPadding ?? 0
+      if (pad >= 1 && typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[semiotic] fitPadding=${pad} looks like pixels, but it's a fraction of the plot (0–0.5). ` +
+            `A value >= 1 collapses the projection off-canvas — use e.g. 0.06.`
+        )
+      }
       const px = layout.width * pad
       const py = layout.height * pad
       proj.fitExtent(

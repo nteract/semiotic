@@ -216,7 +216,7 @@ export interface RealtimeNetworkFrameProps {
   showParticles?: boolean
   particleStyle?: ParticleStyle
   colorBy?: string | ((d: RealtimeNode) => string)
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   edgeColorBy?: "source" | "target" | ((d: RealtimeEdge) => string)
   edgeOpacity?: number
   nodeLabel?: string | ((d: RealtimeNode) => string)
@@ -536,7 +536,7 @@ export interface NetworkPipelineConfig {
 
   // ── Color ────────────────────────────────────────
   colorBy?: string | ((d: Datum) => string | number)
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
   themeCategorical?: string[]
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
@@ -659,7 +659,7 @@ export interface StreamNetworkFrameProps<T = Datum> {
   nodeStyle?: (d: Datum) => Datum
   edgeStyle?: (d: Datum) => Datum
   colorBy?: string | ((d: Datum) => string | number)
-  colorScheme?: string | string[]
+  colorScheme?: string | string[] | Record<string, string>
   edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)
   edgeOpacity?: number
   colorByDepth?: boolean

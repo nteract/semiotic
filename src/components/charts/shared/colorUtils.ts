@@ -145,8 +145,15 @@ export function getColor(
 export function createColorScale(
   data: Array<Datum>,
   colorBy: string,
-  scheme: string | string[] = "category10"
+  scheme: string | string[] | Record<string, string> = "category10"
 ): (v: string) => string {
+  // An explicit `{ category: color }` map wins — look each value up directly,
+  // so callers get exact colors without ordering an array by first-appearance.
+  if (scheme && typeof scheme === "object" && !Array.isArray(scheme)) {
+    const map = scheme as Record<string, string>
+    return (v: string) => (v in map ? map[v] : "#999")
+  }
+
   // Get unique stringified values. d3 ordinal scales stringify domain
   // entries internally (it's how the lookup table is keyed), so we do
   // it explicitly here to thread a `string[]` through the typed
