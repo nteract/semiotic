@@ -224,8 +224,6 @@ export default function WhatTheMachineSeesExamplePage() {
   return (
     <ExamplePageLayout
       title="What the Machine Sees"
-      prevPage={{ title: "The Scroll You're Telling", path: "/examples/scroll-youre-telling" }}
-      nextPage={{ title: "The Living System of Semiotic", path: "/examples/semiotic-architecture" }}
     >
       <p className="machine-lede">
         A moment ago, in <em>The Scroll You’re Telling</em>, a chart watched

@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react"
-import { ChartContainer, NetworkCustomChart } from "semiotic"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { ChartContainer, NetworkCustomChart, useSelectionActions } from "semiotic"
 // Custom-network kit: the hit-target node (accessibility + annotation anchoring),
 // the datum unwrapper, and the cubic-Bézier helpers that let us sample a point /
 // tangent along each authority trunk to seat station and crew nodes on the curve.
@@ -10,6 +10,7 @@ import {
   cubicTangent,
   cubicPath,
   normalizePoint,
+  useCustomLayoutSelection,
 } from "semiotic/recipes"
 import CodeBlock from "../../components/CodeBlock"
 import { StatStrip } from "../../components/StatStrip"
@@ -76,7 +77,8 @@ function railroadOrganizationLayout(ctx) {
   nodes={nodes}
   edges={edges}
   layout={railroadOrganizationLayout}
-  layoutConfig={{ view, activeId, employeeFilter }}
+  layoutConfig={{ view, employeeFilter }} // geometry-changing config only
+  selection={{ name: "erie-active" }}     // hover/lock restyles, no relayout
   annotations={editorialNotes}       // anchored to computed node positions
   enableHover
   onObservation={handleObservation}  // hover, click, keyboard focus
@@ -106,22 +108,28 @@ export default function ErieRailroadOrganizationExamplePage() {
     setLocked((current) => (current?.id === raw?.id ? null : raw))
   }, [])
 
+  // View + employee filter change the drawn geometry, so they relayout through
+  // layoutConfig. The active node (hover OR click-lock) is pure restyle: it
+  // goes through the shared selection store, and the overlay re-renders via
+  // the selection context without re-growing the plate.
   const layoutConfig = useMemo(
     () => ({
-      activeId: active?.id ?? null,
       employeeFilter,
       view,
     }),
-    [active, employeeFilter, view],
+    [employeeFilter, view],
   )
+  const { selectPoints, clear } = useSelectionActions("erie-active")
+  useEffect(() => {
+    if (active?.id) selectPoints({ id: [active.id] })
+    else clear()
+  }, [active, selectPoints, clear])
 
   const annotations = useMemo(() => (showNotes ? ERIE_NOTES : []), [showNotes])
 
   return (
     <ExamplePageLayout
       title="The New York & Erie Railroad"
-      prevPage={{ title: "The Wheel of Urines", path: "/examples/urine-wheel" }}
-      nextPage={{ title: "Wikipedia, as it happens", path: "/examples/wikipedia-realtime" }}
     >
       <style>{`
         @media (max-width: 720px) {
@@ -196,6 +204,7 @@ export default function ErieRailroadOrganizationExamplePage() {
                 edges={ERIE_EDGES}
                 layout={railroadOrganizationLayout}
                 layoutConfig={layoutConfig}
+                selection={{ name: "erie-active" }}
                 annotations={annotations}
                 width={chartWidth}
                 height={CHART_HEIGHT}
@@ -354,22 +363,7 @@ function railroadOrganizationLayout(ctx) {
     })
   })
 
-  const active = ctx.config.activeId ? byId.get(ctx.config.activeId) : null
-  const activeDivision = active?.division ?? null
   const { employeeFilter, view } = ctx.config
-
-  const isDimmed = (node) => {
-    if (activeDivision && node.division && node.division !== activeDivision) return true
-    if (
-      view === "workforce" &&
-      employeeFilter &&
-      node.kind === "crew" &&
-      node.employeeClass !== employeeFilter
-    ) {
-      return true
-    }
-    return false
-  }
 
   const sceneNodes = rawNodes
     .map((node) => {
@@ -388,7 +382,63 @@ function railroadOrganizationLayout(ctx) {
     })
     .filter(Boolean)
 
-  const overlays = (
+  return {
+    sceneNodes,
+    sceneEdges: [],
+    // The engraving is drawn entirely in the overlay; scene nodes are invisible
+    // hit targets. The no-op restyle opts into the style-only selection path:
+    // hover/lock changes swap the overlay's selection context without re-growing
+    // the trunks and crews or rebuilding the hit-test quadtree. View and
+    // employee-filter changes still relayout via layoutConfig (they change
+    // geometry emphasis), which is the intended split.
+    restyle: () => undefined,
+    overlays: (
+      <RailroadPlateOverlay
+        plot={plot}
+        centerX={centerX}
+        trunks={trunks}
+        stationBranches={stationBranches}
+        rawNodes={rawNodes}
+        position={position}
+        view={view}
+        employeeFilter={employeeFilter}
+      />
+    ),
+  }
+}
+
+function RailroadPlateOverlay({
+  plot,
+  centerX,
+  trunks,
+  stationBranches,
+  rawNodes,
+  position,
+  view,
+  employeeFilter,
+}) {
+  // The shared selection carries the active node id (hover OR click-lock,
+  // published by the page). Reading it here re-renders just this overlay.
+  const selection = useCustomLayoutSelection()
+  const active = selection.isActive
+    ? (rawNodes.find((node) => selection.predicate(node)) ?? null)
+    : null
+  const activeDivision = active?.division ?? null
+
+  const isDimmed = (node) => {
+    if (activeDivision && node.division && node.division !== activeDivision) return true
+    if (
+      view === "workforce" &&
+      employeeFilter &&
+      node.kind === "crew" &&
+      node.employeeClass !== employeeFilter
+    ) {
+      return true
+    }
+    return false
+  }
+
+  return (
     <g pointerEvents="none" fontFamily={SERIF}>
       <defs>
         <filter id="erie-soft-ink" x="-20%" y="-20%" width="140%" height="140%">
@@ -560,8 +610,6 @@ function railroadOrganizationLayout(ctx) {
       />
     </g>
   )
-
-  return { sceneNodes, sceneEdges: [], overlays }
 }
 
 function CrewCluster({ crew, point, direction, color, view, active }) {
@@ -895,7 +943,7 @@ function ToggleButton({ active, onClick, children }) {
 }
 
 function renderRailroadTooltip(hoverData) {
-  const datum = hoverData?.data ?? hoverData
+  const datum = unwrapDatum(hoverData)
   if (!datum?.kind) return null
   const employeeClass = CLASS_BY_ID.get(datum.employeeClass)
   return (

@@ -873,7 +873,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         return storeRef.current?.getData() ?? []
       },
       getScales: () => storeRef.current?.scales ?? null,
-      getExtents: () => storeRef.current?.getExtents() ?? null
+      getExtents: () => storeRef.current?.getExtents() ?? null,
+      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null
     }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────

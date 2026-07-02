@@ -105,11 +105,21 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
    */
   iterations?: number
   /**
-   * Magnitude of the repulsion force between nodes; higher values spread
-   * the graph more.
+   * Link-attraction multiplier. Lower values produce a looser, more
+   * spread-out graph; higher values pull connected nodes together.
    * @default 0.1
    */
   forceStrength?: number
+  /**
+   * Execute layout synchronously, in a Web Worker, or automatically choose
+   * based on estimated graph cost.
+   * @default "auto"
+   */
+  layoutExecution?: "auto" | "worker" | "sync"
+  /** Content rendered in the chart slot while worker layout is pending. */
+  layoutLoadingContent?: React.ReactNode | false
+  /** Called when internally-managed worker layout changes state. */
+  onLayoutStateChange?: (state: "pending" | "ready" | "error") => void
   /**
    * Render labels next to nodes. Uses `nodeLabel` accessor (defaulting to
    * `nodeIdAccessor`).
@@ -126,8 +136,8 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
 /**
  * ForceDirectedGraph - Visualize network relationships with a force-directed layout.
  *
- * Nodes are positioned by simulating attraction along edges and repulsion
- * between unconnected nodes; the layout settles after `iterations` ticks.
+ * Nodes are positioned by simulating degree-aware attraction and repulsion
+ * with radius-aware collision; the layout settles after `iterations` ticks.
  * Wraps {@link StreamNetworkFrame} (canvas-first rendering for large graphs).
  *
  * For ordered hierarchical data prefer {@link TreeDiagram}; for flow
@@ -216,6 +226,9 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
     edgeOpacity = 0.6,
     iterations = 300,
     forceStrength = 0.1,
+    layoutExecution = "auto",
+    layoutLoadingContent,
+    onLayoutStateChange,
     tooltip,
     frameProps = {},
     onObservation,
@@ -365,6 +378,9 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       targetAccessor={targetAccessor}
       iterations={iterations}
       forceStrength={forceStrength}
+      layoutExecution={layoutExecution}
+      layoutLoadingContent={layoutLoadingContent}
+      onLayoutStateChange={onLayoutStateChange}
       nodeStyle={nodeStyle}
       edgeStyle={edgeStyle}
       colorBy={colorBy}

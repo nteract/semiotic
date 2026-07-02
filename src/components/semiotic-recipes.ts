@@ -243,6 +243,8 @@ export type {
 // ── Seeded, deterministic force layout for NetworkCustomChart. ──
 export { forceLayout, mulberry32 } from "./recipes/forceLayout"
 export type { ForceLayoutOptions } from "./recipes/forceLayout"
+export { forceLayoutAsync } from "./recipes/forceLayoutAsync"
+export type { ForceLayoutAsyncOptions } from "./recipes/forceLayoutAsync"
 
 // ── Static network layouts (arc diagram / adjacency matrix / circular). ──
 export {

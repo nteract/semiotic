@@ -4,6 +4,7 @@ import { rollup } from "rollup"
 import resolve from "@rollup/plugin-node-resolve"
 import typescript from "@rollup/plugin-typescript"
 import terser from "@rollup/plugin-terser"
+import { minify as minifyCode } from "terser"
 import { visualizer } from "rollup-plugin-visualizer"
 import external from "rollup-plugin-auto-external"
 import { hasLeadingUseClientDirective } from "./lib/useClientDirective.mjs"
@@ -250,6 +251,50 @@ async function createBundlesWithConcurrency(bundles, concurrency) {
   await Promise.all(workers)
 }
 
+async function createForceLayoutWorkerBundle({ minify = false } = {}) {
+  const plugins = [
+    typescript({
+      tsconfig: "tsconfig.json",
+      declaration: false,
+      declarationMap: false,
+      target: "ES2020",
+      module: "ESNext",
+      outDir: "dist",
+      exclude: ["node_modules", "**/*.test.ts", "**/*.test.tsx", "**/*.test.js"]
+    }),
+    resolve({ extensions: [".ts", ".tsx", ".js", ".jsx"] })
+  ]
+  const bundle = await rollup({
+    input: "src/components/stream/layouts/forceLayoutWorker.js",
+    context: "self",
+    plugins,
+    treeshake: {
+      moduleSideEffects: false,
+      propertyReadSideEffects: false,
+      tryCatchDeoptimization: false
+    }
+  })
+  await bundle.write({
+    format: "esm",
+    file: "dist/forceLayoutWorker.js",
+    sourcemap: false,
+    inlineDynamicImports: true
+  })
+  await bundle.close()
+  if (minify) {
+    const path = "dist/forceLayoutWorker.js"
+    const result = await minifyCode(readFileSync(path, "utf8"), {
+      module: true,
+      format: { comments: false }
+    })
+    if (!result.code) {
+      throw new Error("Terser produced an empty force-layout worker bundle")
+    }
+    writeFileSync(path, result.code)
+  }
+  console.log(`✅ force-layout worker created${minify ? " (minified)" : ""}`)
+}
+
 function buildDeclarations() {
   try {
     execSync("npx tsc -p tsconfig.declarations.json", { stdio: "inherit" })
@@ -396,6 +441,7 @@ async function build() {
   // callers to opt into more parallelism.
   console.log(`Bundling ${bundles.length} entry points with concurrency ${bundleConcurrency}`)
   await createBundlesWithConcurrency(bundles, bundleConcurrency)
+  await createForceLayoutWorkerBundle({ minify })
 
   createLegacyAliases(bundles)
 

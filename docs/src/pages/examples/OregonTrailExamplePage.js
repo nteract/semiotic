@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { SankeyDiagram } from "semiotic"
 import { GeoCustomChart, geoHitTarget } from "semiotic/geo"
+import { useReducedMotion } from "semiotic/utils"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import * as OT from "./data/oregonTrail"
@@ -18,6 +19,7 @@ export default function OregonTrailExamplePage() {
   const [targetStop, setTargetStop] = useState(0)
   const [travelT, setTravelT] = useState(0)
   const travelRef = useRef(0)
+  const reducedMotion = useReducedMotion()
 
   // Which state or point of interest is currently focused (hover or keyboard).
   const [focus, setFocus] = useState(null)
@@ -32,6 +34,12 @@ export default function OregonTrailExamplePage() {
   }, [])
 
   useEffect(() => {
+    if (reducedMotion) {
+      // No rolling tween — the wagon appears at the destination stop.
+      travelRef.current = targetStop
+      setTravelT(targetStop)
+      return undefined
+    }
     let raf
     const step = () => {
       const diff = targetStop - travelRef.current
@@ -46,7 +54,7 @@ export default function OregonTrailExamplePage() {
     }
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
-  }, [targetStop])
+  }, [targetStop, reducedMotion])
 
   const lastIndex = OT.ROUTE_STOPS.length - 1
   const atFinish = targetStop >= lastIndex
@@ -81,7 +89,6 @@ export default function OregonTrailExamplePage() {
   return (
     <ExamplePageLayout
       title="Map of the Oregon Trail"
-      prevPage={{ title: "Drawing Networks", path: "/examples/network-visualization" }}
     >
       <p className="ot-intro">
         A closing bit of fun: the classic 1985 <em>Oregon Trail</em> end-game map,

@@ -64,6 +64,13 @@ import {
   computeNetworkAriaLabel
 } from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { renderLoadingState } from "../charts/shared/withChartWrapper"
+import {
+  canUseForceWorker,
+  createFrameForceWorkerRequest,
+  runForceLayoutWorker,
+  shouldUseForceWorker
+} from "./layouts/forceLayoutWorkerClient"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -248,6 +255,9 @@ const StreamNetworkFrame = forwardRef<
     nodeWidth = 15,
     iterations = 300,
     forceStrength = 0.1,
+    layoutExecution = "auto",
+    layoutLoadingContent,
+    onLayoutStateChange,
     padAngle = 0.01,
     groupWidth = 20,
     sortGroups,
@@ -611,6 +621,14 @@ const StreamNetworkFrame = forwardRef<
   const [_layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
   const [isStale, setIsStale] = useState(false)
+  const [layoutPending, setLayoutPending] = useState(false)
+  const layoutRequestRef = useRef(0)
+  const layoutAbortRef = useRef<AbortController | null>(null)
+  const hydrationLayoutHandledRef = useRef(false)
+  const onLayoutStateChangeRef = useRef(onLayoutStateChange)
+  onLayoutStateChangeRef.current = onLayoutStateChange
+  const pipelineConfigRef = useRef(stablePipelineConfig)
+  pipelineConfigRef.current = stablePipelineConfig
 
   const hoverRef = useRef<typeof hoverData>(null)
 
@@ -990,6 +1008,7 @@ const StreamNetworkFrame = forwardRef<
       clear: clearAll,
       getTopology: () =>
         storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] },
+      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
       getTopologyDiff: () => {
         const store = storeRef.current
         if (!store)
@@ -1038,11 +1057,18 @@ const StreamNetworkFrame = forwardRef<
   useEffect(() => {
     const store = storeRef.current
     if (!store) return
+    const requestId = ++layoutRequestRef.current
+    layoutAbortRef.current?.abort()
+    layoutAbortRef.current = null
 
     if (isHierarchical && hierarchyRoot) {
-      // Hierarchy data: single root object
+      // Hierarchy data: single root object. Emit "ready" like the other
+      // synchronous paths — a chart-type/data switch away from a pending
+      // worker layout must not leave consumers stuck on "pending".
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
       store.buildScene([adjustedWidth, adjustedHeight])
+      setLayoutPending(false)
+      onLayoutStateChangeRef.current?.("ready")
       dirtyRef.current = true
       scheduleRender()
     } else {
@@ -1050,10 +1076,118 @@ const StreamNetworkFrame = forwardRef<
       const rawNodes = safeNodes
       const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
 
-      if (rawNodes.length === 0 && rawEdges.length === 0) return
+      if (rawNodes.length === 0 && rawEdges.length === 0) {
+        // Nothing to lay out — the frame is no longer busy, so a consumer
+        // watching a previously-pending worker layout gets released.
+        setLayoutPending(false)
+        onLayoutStateChangeRef.current?.("ready")
+        return
+      }
 
-      store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
-      store.buildScene([adjustedWidth, adjustedHeight])
+      const size: [number, number] = [adjustedWidth, adjustedHeight]
+      const useWorker =
+        chartType === "force" &&
+        !customNetworkLayout &&
+        canUseForceWorker() &&
+        shouldUseForceWorker(
+          layoutExecution,
+          rawNodes.length,
+          rawEdges.length,
+          iterations
+        )
+
+      // The SSR/first-hydration branch above already produced deterministic
+      // geometry synchronously. Keep it instead of immediately replacing it
+      // with an equivalent worker request after hydration.
+      if (
+        useWorker &&
+        wasHydratingFromSSR &&
+        !hydrationLayoutHandledRef.current &&
+        store.sceneNodes.length > 0
+      ) {
+        hydrationLayoutHandledRef.current = true
+        setLayoutPending(false)
+        onLayoutStateChangeRef.current?.("ready")
+        dirtyRef.current = true
+        scheduleRender()
+        return
+      }
+
+      if (useWorker) {
+        const controller = new AbortController()
+        layoutAbortRef.current = controller
+        const previousPositions = store._lastPositionSnapshot
+
+        store.ingestBounded(rawNodes, rawEdges, size, { deferLayout: true })
+        const layoutData = store.getLayoutData()
+        const request = createFrameForceWorkerRequest(
+          layoutData.nodes,
+          layoutData.edges,
+          pipelineConfigRef.current,
+          size,
+          previousPositions
+        )
+
+        setLayoutPending(true)
+        onLayoutStateChangeRef.current?.("pending")
+        runForceLayoutWorker(request, controller.signal)
+          .then(({ positions }) => {
+            if (requestId !== layoutRequestRef.current) return
+            store.applyForceLayoutPositions(positions, size)
+            store.buildScene(size)
+
+            // Keep the hover/particle color cache in parity with the normal
+            // synchronous layout path. Scene fills are authoritative because
+            // they include nodeStyle, colorBy, and theme resolution.
+            for (const sceneNode of store.sceneNodes) {
+              if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
+                nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
+              }
+            }
+            const colors = Array.isArray(colorScheme)
+              ? colorScheme
+              : DEFAULT_COLORS
+            const layoutNodes = Array.from(store.nodes.values())
+            for (let i = 0; i < layoutNodes.length; i++) {
+              const node = layoutNodes[i]
+              if (!nodeColorMap.current.has(node.id)) {
+                nodeColorMap.current.set(node.id, colors[i % colors.length])
+              }
+            }
+            colorIndexRef.current = layoutNodes.length
+
+            setLayoutPending(false)
+            onLayoutStateChangeRef.current?.("ready")
+            setLayoutVersion(store.layoutVersion)
+            dirtyRef.current = true
+            scheduleRender()
+          })
+          .catch((error: Error) => {
+            if (error.name === "AbortError") return
+            if (requestId !== layoutRequestRef.current) return
+            // Worker construction/runtime failures retain correctness through
+            // the established synchronous plugin path.
+            store.runLayout(size)
+            store.buildScene(size)
+            for (const sceneNode of store.sceneNodes) {
+              if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
+                nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
+              }
+            }
+            setLayoutPending(false)
+            onLayoutStateChangeRef.current?.("error")
+            setLayoutVersion(store.layoutVersion)
+            dirtyRef.current = true
+            scheduleRender()
+          })
+
+        return () => controller.abort()
+      }
+
+      store.ingestBounded(rawNodes, rawEdges, size)
+      store.buildScene(size)
+      setLayoutPending(false)
+      onLayoutStateChangeRef.current?.("ready")
 
       // Sync nodeColorMap from actual scene fills so particle/hover colors
       // match the rendered node colors exactly (same logic as runLayout sync)
@@ -1091,6 +1225,11 @@ const StreamNetworkFrame = forwardRef<
     adjustedWidth,
     adjustedHeight,
     stableLayoutConfig,
+    layoutExecution,
+    iterations,
+    wasHydratingFromSSR,
+    chartType,
+    customNetworkLayout,
     scheduleRender,
     colorScheme
   ])
@@ -1531,8 +1670,9 @@ const StreamNetworkFrame = forwardRef<
     networkArcRenderer(ctx, store.sceneNodes)
     networkSymbolRenderer(ctx, store.sceneNodes)
 
-    // Render particles (sankey only) — stop entirely when stale
-    if (showParticles && store.particlePool && !currentlyStale) {
+    // Render particles (sankey only) — stop entirely when stale or when the
+    // user prefers reduced motion (particles are purely decorative movement).
+    if (showParticles && !reducedMotionRef.current && store.particlePool && !currentlyStale) {
       // Read-only consumer — reuse the store's per-frame cached array instead
       // of allocating a fresh one every animation frame.
       const edges = store.edgesArray
@@ -1839,6 +1979,7 @@ const StreamNetworkFrame = forwardRef<
         description || (typeof title === "string" ? title : "Network chart")
       }
       tabIndex={0}
+      aria-busy={layoutPending || undefined}
       style={{
         position: "relative",
         width: responsiveWidth ? "100%" : size[0],
@@ -1871,6 +2012,23 @@ const StreamNetworkFrame = forwardRef<
         onMouseLeave={enableHover ? onPointerLeave : undefined}
         onClick={customClickBehaviorProp || onObservation ? onClick : undefined}
       >
+        {layoutPending && layoutLoadingContent !== false && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 3,
+              background: "var(--semiotic-bg, #fff)"
+            }}
+          >
+            {renderLoadingState(
+              true,
+              size[0],
+              size[1],
+              layoutLoadingContent
+            )}
+          </div>
+        )}
         {resolvedBackground && (
           <svg
             overflow="visible"

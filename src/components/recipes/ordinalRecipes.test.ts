@@ -3,6 +3,7 @@ import { scaleBand, scaleLinear } from "d3-scale"
 import { marimekkoLayout } from "./marimekko"
 import { bulletLayout } from "./bullet"
 import { parallelCoordinatesLayout } from "./parallelCoordinates"
+import { intervalLanesLayout } from "./intervalLanes"
 import type { OrdinalLayoutContext } from "../stream/ordinalCustomLayout"
 import type { RectSceneNode } from "../stream/types"
 import type { ConnectorSceneNode } from "../stream/ordinalTypes"
@@ -37,6 +38,105 @@ function makeCtx<C extends object>(
     ...overrides,
   }
 }
+
+describe("intervalLanesLayout", () => {
+  const event = { id: "short", lane: "A", start: 50, end: 50 }
+
+  it("honors a custom minimum bar width for short intervals", () => {
+    const result = intervalLanesLayout(makeCtx({
+      laneAccessor: "lane",
+      startAccessor: "start",
+      endAccessor: "end",
+      idAccessor: "id",
+      domain: [0, 100],
+      lanes: ["A"],
+      minBarWidth: 5,
+      showAxis: false,
+    }, [event]))
+    const node = result.nodes?.[0] as RectSceneNode
+    expect(node.w).toBe(5)
+  })
+
+  it("retains the two-pixel default", () => {
+    const result = intervalLanesLayout(makeCtx({
+      laneAccessor: "lane",
+      startAccessor: "start",
+      endAccessor: "end",
+      domain: [0, 100],
+      lanes: ["A"],
+      showAxis: false,
+    }, [event]))
+    const node = result.nodes?.[0] as RectSceneNode
+    expect(node.w).toBe(2)
+  })
+
+  it("packs in pixel space so the unit extension can't overlap a same-track neighbour", () => {
+    // A ends the same unit B begins. Raw-year packing (end <= start) would reuse
+    // one sub-track, but `unit: 1` draws A past its end into B's start — the two
+    // rects would overlap. Pixel-space packing must split them onto two tracks.
+    const result = intervalLanesLayout(makeCtx({
+      laneAccessor: "lane",
+      startAccessor: "start",
+      endAccessor: "end",
+      domain: [0, 100],
+      lanes: ["A"],
+      unit: 1,
+      showAxis: false,
+    }, [
+      { id: "a", lane: "A", start: 10, end: 20 },
+      { id: "b", lane: "A", start: 20, end: 30 },
+    ]))
+    const [a, b] = result.nodes as RectSceneNode[]
+    expect(a.y).not.toBe(b.y) // distinct sub-tracks
+    // The rects overlap in x (A's unit extension reaches into B), so the only
+    // way they don't visually collide is by living on different rows.
+    const intersects =
+      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+    expect(intersects).toBe(false)
+  })
+
+  it("keeps exactly-abutting intervals on one sub-track with a visible seam", () => {
+    // B starts exactly where A's drawing ends (unit: 0 — no extension).
+    // Sub-tracks encode concurrency, so a purely sequential chain must stay on
+    // one track; A's right edge is shaved by 1px so the pair reads as two
+    // rects, not one fused bar.
+    const result = intervalLanesLayout(makeCtx({
+      laneAccessor: "lane",
+      startAccessor: "start",
+      endAccessor: "end",
+      domain: [0, 100],
+      lanes: ["A"],
+      unit: 0,
+      showAxis: false,
+    }, [
+      { id: "a", lane: "A", start: 10, end: 20 },
+      { id: "b", lane: "A", start: 20, end: 30 },
+    ]))
+    const [a, b] = result.nodes as RectSceneNode[]
+    expect(a.y).toBe(b.y) // same sub-track: a sequence, not concurrency
+    expect(b.x - (a.x + a.w)).toBe(1) // the shaved seam
+  })
+
+  it("keeps stacked sub-tracks inside the lane (no overflow into the next lane)", () => {
+    // Many mutually-overlapping intervals force a high sub-track count; bars must
+    // stay within the lane's slice rather than bleeding past `laneHeight`.
+    const events = Array.from({ length: 12 }, (_, i) => ({
+      id: `e${i}`, lane: "A", start: 0, end: 100, // all overlap → 12 tracks
+    }))
+    const result = intervalLanesLayout(makeCtx({
+      laneAccessor: "lane",
+      startAccessor: "start",
+      endAccessor: "end",
+      domain: [0, 100],
+      lanes: ["A", "B"],
+      showAxis: false,
+    }, events))
+    const laneHeight = 300 / 2 // plot.height / lanes.length
+    for (const n of result.nodes as RectSceneNode[]) {
+      expect(n.y + n.h).toBeLessThanOrEqual(laneHeight + 0.001)
+    }
+  })
+})
 
 describe("marimekkoLayout", () => {
   const data = [

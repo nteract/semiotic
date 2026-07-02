@@ -1,3 +1,5 @@
+import { unwrapDatum } from "semiotic/recipes"
+
 const LOCUS_FILTER_URL = "https://datasets-server.huggingface.co/filter"
 const LEGISTAR_URL = "https://webapi.legistar.com/v1"
 const FCC_AREA_URL = "https://geo.fcc.gov/api/census/area"
@@ -920,19 +922,22 @@ export function collectTopics(laws, matters) {
   ])].sort()
 }
 
+// Multi-level variant of the library's `unwrapDatum`: this page's network
+// observations can arrive as `{node: {data: raw}}`, so unwrap `.data`/`.datum`
+// (via the library helper) and the `.node` container, bounded.
 export function unwrapChartDatum(value) {
   let current = value
   for (let depth = 0; depth < 4; depth += 1) {
     if (!current || typeof current !== "object") return current
-    if (current.data && current.data !== current) {
-      current = current.data
-      continue
-    }
-    if (current.node && current.node !== current) {
-      current = current.node
-      continue
-    }
-    break
+    const unwrapped = unwrapDatum(current)
+    const next =
+      unwrapped !== current
+        ? unwrapped
+        : current.node && current.node !== current
+          ? current.node
+          : current
+    if (next === current) break
+    current = next
   }
   return current
 }

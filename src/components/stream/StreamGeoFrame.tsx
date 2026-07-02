@@ -537,6 +537,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       getProjection: () => storeRef.current?.scales?.projection ?? null,
       getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,
       getCartogramLayout: () => storeRef.current?.cartogramLayout ?? null,
+      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
       getZoom: () => zoomTransformRef.current.k,
       resetZoom: () => {
         const container = containerRef.current
@@ -884,8 +885,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       lineCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
       pointCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
 
-      // ── Geo particles ──
-      if (showParticles && particlePoolRef.current) {
+      // ── Geo particles ── (skipped under reduced motion: decorative movement)
+      if (showParticles && !reducedMotionRef.current && particlePoolRef.current) {
         const pool = particlePoolRef.current
         const lineNodes = scene.filter(
           (n): n is GeoLineSceneNode => n.type === "line"

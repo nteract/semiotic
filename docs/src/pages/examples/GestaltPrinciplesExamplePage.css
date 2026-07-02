@@ -82,11 +82,15 @@
 
 /* --- Chapter tabs -------------------------------------------------------- */
 .gz-tabs {
+  position: sticky;
+  top: 65px;
+  z-index: 240;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0;
   margin: 26px 0 8px;
   border: 2px solid var(--gz-ink);
+  background: var(--gz-paper);
 }
 
 .gz-tab {
@@ -399,6 +403,39 @@
   display: flex;
   justify-content: center;
   min-width: 0;
+}
+
+.gz-layout-loading {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--gz-muted);
+  font-family: var(--gz-sans);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gz-layout-loading span {
+  width: 10px;
+  height: 10px;
+  background: var(--gz-red);
+  animation: gz-layout-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes gz-layout-pulse {
+  to {
+    transform: rotate(45deg);
+    background: var(--gz-blue);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gz-layout-loading span {
+    animation: none;
+  }
 }
 
 .gz-mini .gz-stage-inner {

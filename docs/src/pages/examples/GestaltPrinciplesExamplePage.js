@@ -1,25 +1,68 @@
-import React, { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "react-router-dom"
+import { interpolateRgb } from "d3-interpolate"
 import { AreaChart, DifferenceChart, LineChart, Scatterplot } from "semiotic"
-import { NetworkCustomChart } from "semiotic/network"
+import { NetworkCustomChart, useForceLayout } from "semiotic/network"
 import { XYCustomChart } from "semiotic/xy"
 import { curvedEdgePath } from "semiotic/recipes"
+import { useReducedMotion } from "semiotic/utils"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import * as G from "./data/gestaltData"
 import "./GestaltPrinciplesExamplePage.css"
 
 const CHAPTERS = [
-  { roman: "I", short: "Similarity", tab: "Similarity, Proximity & Enclosure" },
-  { roman: "II", short: "Common Fate", tab: "Common Fate, Parallelism & Connectedness" },
-  { roman: "III", short: "Past Experience", tab: "Proximity & Past Experience" },
-  { roman: "IV", short: "Figure / Ground", tab: "Figure/Ground & Metastability" },
-  { roman: "V", short: "Continuity", tab: "Continuity & Closure" },
+  {
+    roman: "I",
+    slug: "similarity",
+    short: "Similarity",
+    tab: "Similarity, Proximity & Enclosure",
+  },
+  {
+    roman: "II",
+    slug: "common-fate",
+    short: "Common Fate",
+    tab: "Common Fate, Parallelism & Connectedness",
+  },
+  {
+    roman: "III",
+    slug: "past-experience",
+    short: "Past Experience",
+    tab: "Proximity & Past Experience",
+  },
+  {
+    roman: "IV",
+    slug: "figure-ground",
+    short: "Figure / Ground",
+    tab: "Figure/Ground & Metastability",
+  },
+  {
+    roman: "V",
+    slug: "continuity",
+    short: "Continuity",
+    tab: "Continuity & Closure",
+  },
 ]
 
 const STAGE_BG = { background: "transparent" }
+const EMPTY_NETWORK = []
 
 export default function GestaltPrinciplesExamplePage() {
-  const [active, setActive] = useState(0)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedChapter = CHAPTERS.findIndex(
+    (chapter) => chapter.slug === searchParams.get("chapter"),
+  )
+  const active = requestedChapter >= 0 ? requestedChapter : 0
+  const setActive = useCallback(
+    (index) => {
+      setSearchParams((current) => {
+        const next = new URLSearchParams(current)
+        next.set("chapter", CHAPTERS[index].slug)
+        return next
+      }, { replace: true, preventScrollReset: true })
+    },
+    [setSearchParams],
+  )
   const Chapter = [
     ChapterSimilarity,
     ChapterCommonFate,
@@ -31,7 +74,6 @@ export default function GestaltPrinciplesExamplePage() {
   return (
     <ExamplePageLayout
       title="The Gestalt of Data Visualization"
-      prevPage={{ title: "Point Climate Anomaly", path: "/examples/climate-anomaly" }}
     >
       <div className="gestalt-page">
         <div className="gz-hero">
@@ -143,6 +185,15 @@ function BareStage({ children }) {
   )
 }
 
+function GestaltLayoutLoading() {
+  return (
+    <div className="gz-layout-loading" role="status" aria-live="polite">
+      <span aria-hidden="true" />
+      Arranging network…
+    </div>
+  )
+}
+
 function ChapterHead({ roman, title, children }) {
   return (
     <div className="gz-chapter-head">
@@ -205,7 +256,7 @@ function ChapterSimilarity() {
             type: "rect-enclose",
             coordinates: [
               { x: 0, y: 0 },
-              { x: 1, y: G.GRID_ROWS - 1 },
+              { x: 2 + G.PROXIMITY_GAP, y: G.GRID_ROWS - 1 },
             ],
             color: G.INK,
             padding: 16,
@@ -214,7 +265,7 @@ function ChapterSimilarity() {
           {
             type: "rect-enclose",
             coordinates: [
-              { x: 2 + G.PROXIMITY_GAP, y: 0 },
+              { x: 3 + G.PROXIMITY_GAP, y: 0 },
               { x: G.GRID_COLS - 1 + G.PROXIMITY_GAP, y: G.GRID_ROWS - 1 },
             ],
             color: G.INK,
@@ -306,10 +357,18 @@ function ChapterSimilarity() {
 // CHAPTER II — Common Fate, Parallelism & Connectedness
 // ===========================================================================
 const FATE_STEPS = ["Common Fate", "Parallelism", "Slopegraph"]
+const SLOPE_TRANSITION_MS = 700
+const SLOPE_LABEL_FONT_SIZE = 11
+const PARALLELISM_RIGHT_MARGIN = 30
+const SLOPEGRAPH_RIGHT_MARGIN =
+  Math.max(...G.SLOPE_SERIES.map((series) => series.id.length)) *
+    SLOPE_LABEL_FONT_SIZE *
+    0.6 +
+  10
 const FATE_CAPTIONS = {
-  0: "Hit Animate. Three marks fall together, two rise together — and you instantly group them by shared motion. That is common fate.",
+  0: "Three marks fall together, two rise together — and you instantly group them by shared motion. That is common fate.",
   1: "Freeze the motion into paths and you get parallelism: lines with the same slope read as one group. Parallelism is fossilized common fate.",
-  2: "In a slopegraph that is exactly the point — shared slope is a shared trend. The trouble starts when lines stop meaning 'change over time.'",
+  2: "Add the axis and category labels and the parallel paths become a slopegraph: five measures changing from start to end.",
 }
 const LINK_STEPS = ["Dots", "Connected", "Curved edges"]
 const LINK_CAPTIONS = {
@@ -321,7 +380,73 @@ const LINK_CAPTIONS = {
 function ChapterCommonFate() {
   const [stepA, setStepA] = useState(0)
   const [phase, setPhase] = useState(0)
+  const [slopeProgress, setSlopeProgress] = useState(0)
   const [stepB, setStepB] = useState(0)
+  const reducedMotion = useReducedMotion()
+
+  const setFateStep = useCallback((nextStep) => {
+    if (nextStep !== 2) setSlopeProgress(0)
+    setStepA(nextStep)
+  }, [])
+
+  useEffect(() => {
+    if (stepA !== 0 || reducedMotion) return undefined
+    const timer = window.setInterval(() => {
+      setPhase((current) => (current ? 0 : 1))
+    }, 1700)
+    return () => window.clearInterval(timer)
+  }, [stepA, reducedMotion])
+
+  useEffect(() => {
+    if (stepA !== 2) return undefined
+    if (reducedMotion) {
+      // Skip the tween; land on the finished slopegraph immediately.
+      setSlopeProgress(1)
+      return undefined
+    }
+    const startedAt = performance.now()
+    let frame
+    const tick = (now) => {
+      const progress = Math.min(1, (now - startedAt) / SLOPE_TRANSITION_MS)
+      setSlopeProgress(progress)
+      if (progress < 1) frame = window.requestAnimationFrame(tick)
+    }
+    frame = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(frame)
+  }, [stepA, reducedMotion])
+
+  const slopeTransition =
+    slopeProgress < 0.5
+      ? 4 * slopeProgress ** 3
+      : 1 - (-2 * slopeProgress + 2) ** 3 / 2
+  const slopeColorScheme = useMemo(
+    () =>
+      Object.fromEntries(
+        G.SLOPE_SERIES.map((series) => [
+          series.id,
+          interpolateRgb(
+            G.SLOPE_DIR_COLORS[series.dir],
+            G.SLOPE_CATEGORY_COLORS[series.id],
+          )(slopeTransition),
+        ]),
+      ),
+    [slopeTransition],
+  )
+  const slopeAnnotations = useMemo(
+    () =>
+      G.SLOPE_SERIES.map((series) => ({
+        type: "text",
+        t: 1,
+        value: series.end,
+        label: series.id,
+        dx: 6,
+        dy: 0,
+        color: slopeColorScheme[series.id],
+        opacity: slopeTransition,
+        fontSize: SLOPE_LABEL_FONT_SIZE,
+      })),
+    [slopeColorScheme, slopeTransition],
+  )
 
   return (
     <section className="gz-chapter">
@@ -336,20 +461,9 @@ function ChapterCommonFate() {
         title="Motion becomes line"
         steps={FATE_STEPS}
         active={stepA}
-        onStep={setStepA}
+        onStep={setFateStep}
         caption={FATE_CAPTIONS[stepA]}
-        stageClass={stepA === 0 ? "gz-stage--bare" : undefined}
-        actions={
-          stepA === 0 ? (
-            <button
-              type="button"
-              className="gz-btn"
-              onClick={() => setPhase((p) => (p ? 0 : 1))}
-            >
-              {phase ? "Reset" : "Animate"} <span aria-hidden="true">▸</span>
-            </button>
-          ) : null
-        }
+        stageClass={stepA < 2 ? "gz-stage--bare" : undefined}
       >
         {(w) =>
           stepA === 0 ? (
@@ -361,7 +475,7 @@ function ChapterCommonFate() {
               width={w}
               height={320}
               margin={{ top: 18, right: 18, bottom: 18, left: 18 }}
-              xExtent={[-0.6, 4.6]}
+              xExtent={[-0.04, 1.04]}
               yExtent={[-0.3, 9]}
               colorBy="dir"
               colorScheme={[G.BLUE, G.RED]}
@@ -372,7 +486,7 @@ function ChapterCommonFate() {
               animate={{ duration: 1500 }}
               showLegend={false}
               enableHover={false}
-              frameProps={STAGE_BG}
+              frameProps={{ ...STAGE_BG, showAxes: false }}
             />
           ) : (
             <LineChart
@@ -380,11 +494,27 @@ function ChapterCommonFate() {
               xAccessor="t"
               yAccessor="value"
               lineBy="series"
-              colorBy="dir"
-              colorScheme={[G.BLUE, G.RED]}
+              colorBy={stepA === 2 ? "series" : "dir"}
+              colorScheme={
+                stepA === 2
+                  ? slopeColorScheme
+                  : [G.BLUE, G.RED]
+              }
               width={w}
               height={320}
-              margin={{ top: 18, right: 30, bottom: 34, left: 26 }}
+              margin={
+                stepA === 2
+                  ? {
+                      top: 18,
+                      right:
+                        PARALLELISM_RIGHT_MARGIN +
+                        (SLOPEGRAPH_RIGHT_MARGIN - PARALLELISM_RIGHT_MARGIN) *
+                          slopeTransition,
+                      bottom: 34,
+                      left: 26,
+                    }
+                  : { top: 18, right: 30, bottom: 34, left: 26 }
+              }
               xExtent={[-0.04, 1.04]}
               yExtent={[-0.3, 9]}
               lineWidth={3.5}
@@ -392,9 +522,25 @@ function ChapterCommonFate() {
               pointRadius={5}
               curve="linear"
               xFormat={(t) => (t < 0.5 ? "start" : "end")}
+              annotations={stepA === 2 ? slopeAnnotations : undefined}
               showLegend={false}
               enableHover={false}
-              frameProps={STAGE_BG}
+              frameProps={
+                stepA === 2
+                  ? {
+                      ...STAGE_BG,
+                      showAxes: true,
+                      axes: [
+                        { orient: "left" },
+                        {
+                          orient: "bottom",
+                          tickValues: [0, 1],
+                          tickFormat: (t) => (t === 0 ? "start" : "end"),
+                        },
+                      ],
+                    }
+                  : { ...STAGE_BG, showAxes: false }
+              }
             />
           )
         }
@@ -435,13 +581,15 @@ function ChapterPastExperience() {
   const [seed, setSeed] = useState(7)
   const [prevSeed, setPrevSeed] = useState(null)
 
-  const pos = useMemo(() => G.layoutGraph(G.NET_NODES, G.NET_EDGES, seed), [seed])
-  const prev = useMemo(
-    () => (prevSeed == null ? null : G.layoutGraph(G.NET_NODES, G.NET_EDGES, prevSeed)),
-    [prevSeed]
+  const { positions: pos } = useForceLayout(G.NET_NODES, G.NET_EDGES, { seed })
+  const { positions: prevPositions, status: prevStatus } = useForceLayout(
+    prevSeed == null ? EMPTY_NETWORK : G.NET_NODES,
+    prevSeed == null ? EMPTY_NETWORK : G.NET_EDGES,
+    { seed: prevSeed ?? seed },
   )
+  const prev = prevSeed != null && prevStatus === "ready" ? prevPositions : null
   const problem = useMemo(
-    () => G.findProximityProblem(G.NET_NODES, G.NET_EDGES, pos),
+    () => pos ? G.findProximityProblem(G.NET_NODES, G.NET_EDGES, pos) : null,
     [pos]
   )
 
@@ -453,9 +601,9 @@ function ChapterPastExperience() {
   const captions = {
     0: "A force-directed layout pushes unconnected nodes apart and pulls connected ones together — the same simulation Semiotic's ForceDirectedGraph runs. One disconnected node is held on screen only by gravity.",
     1: `Once it settles, mark the offenders red: nodes drawn within ${Math.round(
-      problem.threshold * 100
+      (problem?.threshold ?? 0) * 100
     )}% of the canvas of each other while sitting at least ${
-      problem.minHops
+      problem?.minHops ?? "several"
     } steps apart in the graph. Proximity is lying about similarity.`,
     2: prev
       ? "Same graph, same forces, new run. The gray ghost is the previous layout; arrows show how far each node jumped. Mirroring, rotation, and re-packing make the 'same' network look entirely different — and readers expect it to look the same."
@@ -485,7 +633,7 @@ function ChapterPastExperience() {
           </button>
         }
       >
-        {(w) => (
+        {(w) => pos && problem ? (
           <NetworkCustomChart
             nodes={G.NET_NODES}
             edges={G.NET_EDGES}
@@ -501,7 +649,7 @@ function ChapterPastExperience() {
             height={440}
             enableHover
           />
-        )}
+        ) : <GestaltLayoutLoading />}
       </Exhibit>
 
       <p className="gz-aside">

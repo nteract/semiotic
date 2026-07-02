@@ -927,6 +927,11 @@ export interface StreamXYFrameHandle<T = Datum> {
   getData(): T[]
   getScales(): StreamScales | null
   getExtents(): { x: [number, number]; y: [number, number] } | null
+  /** The most recent custom layout result (nodes/overlays as returned by the
+   *  `customLayout` function) — host readback so pages that need the computed
+   *  placement don't re-run the layout. Null before the first layout or when
+   *  no custom layout is configured. */
+  getCustomLayout(): import("./customLayout").LayoutResult | null
 }
 
 // ── Canvas renderer function type ──────────────────────────────────────

@@ -1,11 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { ChartContainer, ThemeProvider } from "semiotic"
 import CodeBlock from "../../components/CodeBlock"
 import ExamplePageLayout from "./ExamplePageLayout"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
-import {
-  fetchOpenMeteoExampleData,
-} from "./openMeteoExampleData"
+import { useOpenMeteoLoader } from "./useOpenMeteoLoader"
 import {
   RadialWeatherOrdinalChart,
   LinearDetail,
@@ -15,7 +13,12 @@ import {
   formatDateLabel,
 } from "./radialWeather"
 
-const TODAY_DAY = 176
+// Day-of-year of the baked fixture's "today" (2026-06-26 — keep in sync with
+// openMeteoExampleData's `todayDate`), derived rather than hardcoded so the
+// two Climate pages can't drift.
+const TODAY_DAY = Math.round(
+  (Date.UTC(2026, 5, 26) - Date.UTC(2026, 0, 1)) / (24 * 60 * 60 * 1000),
+)
 
 const PRESET_PROFILES = [
   {
@@ -77,18 +80,35 @@ const combinedCode = `<RadialWeatherOrdinalChart
 />`
 
 export default function ClimateRadialWeatherExamplePage() {
-  const [profile, setProfile] = useState(PRESET_PROFILES[0])
   const [brush, setBrush] = useState({ start: 352, end: 176 })
-  const [liveData, setLiveData] = useState(null)
-  const [view, setView] = useState({
-    kind: "historical",
-    message: "A local 1991–2020 reference is ready to explore.",
-  })
-  const [isSlow, setIsSlow] = useState(false)
-  const requestRef = useRef(null)
-  const slowTimerRef = useRef(null)
   const [docsTheme] = useDocsTheme()
   const carbonTheme = docsTheme === "dark" ? "carbon-dark" : "carbon"
+
+  // Shared Open-Meteo loading state machine (abort lifecycle, slow-request
+  // escalation, historical fallback, geolocation) — the page supplies its own
+  // fallback generator, coordinate→profile mapping, and status copy.
+  const {
+    profile,
+    liveData,
+    view,
+    isSlow,
+    isLoading,
+    showHistorical,
+    loadCurrentData,
+    requestBrowserLocation,
+  } = useOpenMeteoLoader({
+    initialProfile: PRESET_PROFILES[0],
+    buildFallback: buildWeatherData,
+    fallbackKey: "fallbackWeather",
+    profileFromCoordinates,
+    loadingMessage: "Loading current weather data…",
+    locationLoadingMessage: "Waiting for your location and loading its weather…",
+    liveMessage: (data) =>
+      data.hasLiveBaseline
+        ? `Updated from Open-Meteo with a ${data.baselineYears} baseline (${data.baselineSource}).`
+        : "Current observations and forecast are shown with the local historical reference.",
+    failureMessage: "Current weather is unavailable, so the historical reference remains in view.",
+  })
 
   const fallbackWeather = useMemo(() => buildWeatherData(profile), [profile])
   const weather = liveData?.weather || fallbackWeather
@@ -100,99 +120,6 @@ export default function ClimateRadialWeatherExamplePage() {
   const selectedLabel = `${formatDateLabel(selectedRows[0]?.day)} - ${formatDateLabel(selectedRows[selectedRows.length - 1]?.day)}`
   const today = weather.rows[TODAY_DAY]
   const title = profile.label.length > 23 ? `${profile.label.slice(0, 22)}...` : profile.label
-  const isLoading = view.kind === "loading"
-
-  useEffect(() => {
-    return () => {
-      requestRef.current?.abort()
-      if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-    }
-  }, [])
-
-  function beginLoading(message) {
-    requestRef.current?.abort()
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-
-    const controller = new AbortController()
-    requestRef.current = controller
-    setIsSlow(false)
-    setView({ kind: "loading", message })
-    slowTimerRef.current = window.setTimeout(() => {
-      if (requestRef.current === controller) setIsSlow(true)
-    }, 2500)
-    return controller
-  }
-
-  function finishLoading(controller) {
-    if (requestRef.current !== controller) return false
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-    slowTimerRef.current = null
-    requestRef.current = null
-    setIsSlow(false)
-    return true
-  }
-
-  function showHistorical(nextProfile, message = "A local 1991–2020 reference is ready to explore.") {
-    requestRef.current?.abort()
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-    requestRef.current = null
-    slowTimerRef.current = null
-    setIsSlow(false)
-    setProfile(nextProfile)
-    setLiveData(null)
-    setView({ kind: "historical", message })
-  }
-
-  async function loadCurrentData(nextProfile, controller = beginLoading("Loading current weather data…")) {
-    setProfile(nextProfile)
-    setLiveData(null)
-    try {
-      const data = await fetchOpenMeteoExampleData(nextProfile, {
-        signal: controller.signal,
-        fallbackWeather: buildWeatherData(nextProfile),
-      })
-      if (!finishLoading(controller)) return
-      setLiveData(data)
-      setView({
-        kind: "live",
-        message: data.hasLiveBaseline
-          ? `Updated from Open-Meteo with a ${data.baselineYears} baseline (${data.baselineSource}).`
-          : "Current observations and forecast are shown with the local historical reference.",
-      })
-    } catch (error) {
-      if (error.name === "AbortError" || !finishLoading(controller)) return
-      setView({
-        kind: "historical",
-        message: "Current weather is unavailable, so the historical reference remains in view.",
-      })
-    }
-  }
-
-  function useBrowserLocation() {
-    if (!navigator.geolocation) {
-      setView({
-        kind: liveData ? "live" : "historical",
-        message: "Browser geolocation is not available.",
-      })
-      return
-    }
-
-    const controller = beginLoading("Waiting for your location and loading its weather…")
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords
-        loadCurrentData(profileFromCoordinates(latitude, longitude), controller)
-      },
-      () => {
-        if (!finishLoading(controller)) return
-        setView({
-          kind: liveData ? "live" : "historical",
-          message: "Location permission was not granted. The previous data remains in view.",
-        })
-      },
-      { maximumAge: 60000, timeout: 6000 }
-    )
-  }
 
   const banner = isLoading && !isSlow ? null : (
     <div
@@ -249,8 +176,6 @@ export default function ClimateRadialWeatherExamplePage() {
   return (
     <ExamplePageLayout
       title="Point Climate Radial"
-      prevPage={{ title: "Point Climate Anomaly", path: "/examples/climate-anomaly" }}
-      nextPage={{ title: "All the Wars of the United States", path: "/examples/us-war-timeline" }}
     >
       <p style={styles.lede}>
         A combined information-art example: point controls displayed as a radial
@@ -298,7 +223,7 @@ export default function ClimateRadialWeatherExamplePage() {
                 ))}
               </div>
 
-              <button type="button" onClick={useBrowserLocation} style={styles.secondaryButton}>
+              <button type="button" onClick={requestBrowserLocation} style={styles.secondaryButton}>
                 Use my point
               </button>
             </div>

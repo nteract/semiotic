@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { area as d3Area, curveCatmullRom, line as d3Line } from "d3-shape"
 import { ChartContainer, DifferenceChart, ThemeProvider } from "semiotic"
 // hatchFill: the SVG hatch <pattern> helper (shared by the band + its legend
@@ -12,7 +12,7 @@ import { useDocsTheme } from "../../hooks/useDocsTheme"
 // One source of truth for the percentile-envelope hatch, reused by the chart
 // overlay and the legend swatch.
 const BAND_HATCH = hatchFill({ id: "climate-band-hatch", color: "var(--semiotic-text-secondary)", spacing: 8, opacity: 0.38 })
-import { fetchOpenMeteoExampleData } from "./openMeteoExampleData"
+import { useOpenMeteoLoader } from "./useOpenMeteoLoader"
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const START_DATE = Date.UTC(2026, 0, 1)
@@ -82,19 +82,37 @@ const PRESET_PROFILES = [
 ]
 
 export default function ClimateAnomalyExamplePage() {
-  const [profile, setProfile] = useState(PRESET_PROFILES[0])
   const [lat, setLat] = useState("")
   const [lon, setLon] = useState("")
-  const [liveData, setLiveData] = useState(null)
-  const [view, setView] = useState({
-    kind: "historical",
-    message: "A local 1991–2020 reference is ready to explore.",
-  })
-  const [isSlow, setIsSlow] = useState(false)
-  const requestRef = useRef(null)
-  const slowTimerRef = useRef(null)
   const [docsTheme] = useDocsTheme()
   const carbonTheme = docsTheme === "dark" ? "carbon-dark" : "carbon"
+
+  // Shared Open-Meteo loading state machine (abort lifecycle, slow-request
+  // escalation, historical fallback, geolocation) — the page supplies its own
+  // fallback generator, coordinate→profile mapping, and status copy.
+  const {
+    profile,
+    liveData,
+    view,
+    setView,
+    isSlow,
+    isLoading,
+    showHistorical,
+    loadCurrentData,
+    requestBrowserLocation,
+  } = useOpenMeteoLoader({
+    initialProfile: PRESET_PROFILES[0],
+    buildFallback: generateClimateRows,
+    fallbackKey: "fallbackClimateRows",
+    profileFromCoordinates,
+    loadingMessage: "Loading current Open-Meteo data…",
+    locationLoadingMessage: "Waiting for your location and loading its climate…",
+    liveMessage: (data) =>
+      data.hasLiveBaseline
+        ? `Live daily data with a ${data.baselineYears} historical baseline (${data.baselineSource}).`
+        : "Live observations and forecast; the historical reference is using the local fallback.",
+    failureMessage: "Open-Meteo is unavailable, so the local reference remains in view.",
+  })
 
   const fallbackRows = useMemo(() => generateClimateRows(profile), [profile])
   const rows = liveData?.climateRows || fallbackRows
@@ -109,73 +127,6 @@ export default function ClimateAnomalyExamplePage() {
       .filter((value) => typeof value === "number" && Number.isFinite(value))
     return [Math.floor(Math.min(...values) - 0.75), Math.ceil(Math.max(...values) + 0.75)]
   }, [rows])
-  const isLoading = view.kind === "loading"
-
-  useEffect(() => {
-    return () => {
-      requestRef.current?.abort()
-      if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-    }
-  }, [])
-
-  function beginLoading(message) {
-    requestRef.current?.abort()
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-
-    const controller = new AbortController()
-    requestRef.current = controller
-    setIsSlow(false)
-    setView({ kind: "loading", message })
-    slowTimerRef.current = window.setTimeout(() => {
-      if (requestRef.current === controller) setIsSlow(true)
-    }, 2500)
-    return controller
-  }
-
-  function finishLoading(controller) {
-    if (requestRef.current !== controller) return false
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-    slowTimerRef.current = null
-    requestRef.current = null
-    setIsSlow(false)
-    return true
-  }
-
-  function showHistorical(nextProfile, message = "A local 1991–2020 reference is ready to explore.") {
-    requestRef.current?.abort()
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-    requestRef.current = null
-    slowTimerRef.current = null
-    setIsSlow(false)
-    setProfile(nextProfile)
-    setLiveData(null)
-    setView({ kind: "historical", message })
-  }
-
-  async function loadCurrentData(nextProfile, controller = beginLoading("Loading current Open-Meteo data…")) {
-    setProfile(nextProfile)
-    setLiveData(null)
-    try {
-      const data = await fetchOpenMeteoExampleData(nextProfile, {
-        signal: controller.signal,
-        fallbackClimateRows: generateClimateRows(nextProfile),
-      })
-      if (!finishLoading(controller)) return
-      setLiveData(data)
-      setView({
-        kind: "live",
-        message: data.hasLiveBaseline
-          ? `Live daily data with a ${data.baselineYears} historical baseline (${data.baselineSource}).`
-          : "Live observations and forecast; the historical reference is using the local fallback.",
-      })
-    } catch (error) {
-      if (error.name === "AbortError" || !finishLoading(controller)) return
-      setView({
-        kind: "historical",
-        message: "Open-Meteo is unavailable, so the local reference remains in view.",
-      })
-    }
-  }
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -197,32 +148,6 @@ export default function ClimateAnomalyExamplePage() {
     }
 
     loadCurrentData(profileFromCoordinates(parsedLat, parsedLon))
-  }
-
-  function useBrowserLocation() {
-    if (!navigator.geolocation) {
-      setView({
-        kind: liveData ? "live" : "historical",
-        message: "Browser geolocation is not available.",
-      })
-      return
-    }
-
-    const controller = beginLoading("Waiting for your location and loading its climate…")
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords
-        loadCurrentData(profileFromCoordinates(latitude, longitude), controller)
-      },
-      () => {
-        if (!finishLoading(controller)) return
-        setView({
-          kind: liveData ? "live" : "historical",
-          message: "Location permission was not granted. The previous data remains in view.",
-        })
-      },
-      { maximumAge: 60_000, timeout: 6_000 }
-    )
   }
 
   const banner = isLoading && !isSlow ? null : (
@@ -280,7 +205,6 @@ export default function ClimateAnomalyExamplePage() {
   return (
     <ExamplePageLayout
       title="Point Climate Anomaly"
-      nextPage={{ title: "Point Climate Radial", path: "/examples/climate-radial-weather" }}
     >
       <p style={styles.lede}>
         A static-first recreation of a point climate comparison: current-year daily
@@ -354,7 +278,7 @@ export default function ClimateAnomalyExamplePage() {
                   style={styles.coordInput}
                 />
                 <button type="submit" style={styles.actionButton}>Set point</button>
-                <button type="button" onClick={useBrowserLocation} style={styles.secondaryButton}>
+                <button type="button" onClick={requestBrowserLocation} style={styles.secondaryButton}>
                   Use my point
                 </button>
               </form>
@@ -476,49 +400,52 @@ export default function ClimateAnomalyExamplePage() {
 }
 
 function ClimateOverlay({ rows, observedRows, yDomain, width, height, scales }) {
-  // Anchor to the chart's resolved scales when present (the foregroundGraphics
-  // callback now hands them in), so this overlay can never drift from the axes.
-  // Fall back to size + extent on the very first paint, before scales exist.
-  const xScale = scales ? (day) => scales.x(day) : (day) => (day / END_DAY) * width
-  const yScale = scales
-    ? (value) => scales.y(value)
-    : (value) => height - ((value - yDomain[0]) / (yDomain[1] - yDomain[0])) * height
+  // foregroundGraphics re-runs on every repaint (including hover with
+  // tooltip="multi"), so the four full-year d3 paths are memoized on their
+  // actual inputs rather than rebuilt per render.
+  const { bandPath, adjustedPath, actualPath, forecastAreas, todayX, todayY } = useMemo(() => {
+    // Anchor to the chart's resolved scales when present (the foregroundGraphics
+    // callback now hands them in), so this overlay can never drift from the axes.
+    // Fall back to size + extent on the very first paint, before scales exist.
+    const xScale = scales ? (day) => scales.x(day) : (day) => (day / END_DAY) * width
+    const yScale = scales
+      ? (value) => scales.y(value)
+      : (value) => height - ((value - yDomain[0]) / (yDomain[1] - yDomain[0])) * height
 
-  const bandPath = d3Area()
-    .x((row) => xScale(row.day))
-    .y0((row) => yScale(row.p05))
-    .y1((row) => yScale(row.p95))
-    .curve(curveCatmullRom.alpha(0.5))(rows)
-
-  const adjustedPath = d3Line()
-    .x((row) => xScale(row.day))
-    .y((row) => yScale(row.adjustedMean))
-    .curve(curveCatmullRom.alpha(0.5))(rows)
-
-  const actualPath = d3Line()
-    .defined((row) => row.actual != null)
-    .x((row) => xScale(row.day))
-    .y((row) => yScale(row.actual))
-    .curve(curveCatmullRom.alpha(0.5))(observedRows)
-
-  // API rows after TODAY_DAY are Open-Meteo forecasts. Preserve them in the
-  // DifferenceChart for hover/tooltip behavior, then replace their solid fill
-  // here with lighter hatches in the same above/below semantic colors.
-  const forecastRuns = differenceRuns(
-    observedRows.filter((row) => row.day >= TODAY_DAY),
-  )
-  const forecastAreas = forecastRuns.map((run) => ({
-    winner: run.winner,
-    path: d3Area()
-      .x((row) => xScale(row.day))
-      .y0((row) => yScale(row.adjustedMean))
-      .y1((row) => yScale(row.actual))
-      .curve(curveCatmullRom.alpha(0.5))(run.rows),
-  }))
-
-  const current = rows[TODAY_DAY] || observedRows[observedRows.length - 1]
-  const todayX = xScale(TODAY_DAY)
-  const todayY = yScale(current.actual)
+    // API rows after TODAY_DAY are Open-Meteo forecasts. Preserve them in the
+    // DifferenceChart for hover/tooltip behavior, then replace their solid fill
+    // here with lighter hatches in the same above/below semantic colors.
+    const forecastRuns = differenceRuns(
+      observedRows.filter((row) => row.day >= TODAY_DAY),
+    )
+    const current = rows[TODAY_DAY] || observedRows[observedRows.length - 1]
+    return {
+      bandPath: d3Area()
+        .x((row) => xScale(row.day))
+        .y0((row) => yScale(row.p05))
+        .y1((row) => yScale(row.p95))
+        .curve(curveCatmullRom.alpha(0.5))(rows),
+      adjustedPath: d3Line()
+        .x((row) => xScale(row.day))
+        .y((row) => yScale(row.adjustedMean))
+        .curve(curveCatmullRom.alpha(0.5))(rows),
+      actualPath: d3Line()
+        .defined((row) => row.actual != null)
+        .x((row) => xScale(row.day))
+        .y((row) => yScale(row.actual))
+        .curve(curveCatmullRom.alpha(0.5))(observedRows),
+      forecastAreas: forecastRuns.map((run) => ({
+        winner: run.winner,
+        path: d3Area()
+          .x((row) => xScale(row.day))
+          .y0((row) => yScale(row.adjustedMean))
+          .y1((row) => yScale(row.actual))
+          .curve(curveCatmullRom.alpha(0.5))(run.rows),
+      })),
+      todayX: xScale(TODAY_DAY),
+      todayY: yScale(current.actual),
+    }
+  }, [rows, observedRows, yDomain, width, height, scales])
 
   return (
     // The overlay anchors to the chart's own theme tokens (--semiotic-*), so it

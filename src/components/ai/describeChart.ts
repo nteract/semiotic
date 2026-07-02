@@ -296,7 +296,7 @@ export function resolveCommunicativeAct(
 // driven entirely by external metadata. The gate is provenance, not mere
 // presence: a hand-placed callout doesn't turn a report into an alert.
 
-const ALERT_ANNOTATION_TYPES = new Set(["y-threshold", "x-threshold", "band", "callout", "label"])
+const ALERT_ANNOTATION_TYPES = new Set(["y-threshold", "x-threshold", "band", "x-band", "callout", "label"])
 const GENERATED_AUTHOR_KINDS = new Set(["system", "agent", "watcher"])
 const GENERATED_SOURCES = new Set(["ai", "agent", "system", "computed", "dbt", "great-expectations"])
 const EVIDENCE_BASES = new Set(["rule", "statistical-test", "llm-inference", "computed"])
@@ -413,6 +413,7 @@ const ANNOTATION_KIND: Record<string, string> = {
   "y-threshold": "a threshold line",
   "x-threshold": "a threshold line",
   band: "a highlighted band",
+  "x-band": "a highlighted band",
   label: "a label",
   callout: "a callout",
   "callout-circle": "a callout",

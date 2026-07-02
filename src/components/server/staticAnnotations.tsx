@@ -271,6 +271,39 @@ function renderAnnotation(
       )
     }
 
+    case "x-band": {
+      const x0 = ann.x0 != null && scales.x ? scales.x(ann.x0) : null
+      const x1 = ann.x1 != null && scales.x ? scales.x(ann.x1) : null
+      if (x0 == null || x1 == null) return null
+      const left = Math.min(x0, x1)
+      const width = Math.abs(x1 - x0)
+      const fill = ann.fill || resolveAnnotationColor(ann, theme)
+      const fillOpacity = ann.fillOpacity ?? 0.1
+      return (
+        <g key={`ann-xband-${index}`} opacity={ann.opacity}>
+          <rect
+            x={left} y={0} width={width} height={layout.height}
+            fill={fill} fillOpacity={fillOpacity}
+          />
+          {ann.label && (
+            <text
+              x={left + 4} y={13}
+              textAnchor="start"
+              fontSize={theme.typography.tickSize}
+              fill={ann.color || resolveAnnotationColor(ann, theme)}
+              fontFamily={theme.typography.fontFamily}
+              fontWeight="bold"
+              stroke={theme.colors.background}
+              strokeWidth={3}
+              paintOrder="stroke"
+            >
+              {ann.label}
+            </text>
+          )}
+        </g>
+      )
+    }
+
     case "category-highlight": {
       if (!ann.category || !scales.o) return null
       const oVal = scales.o(ann.category)

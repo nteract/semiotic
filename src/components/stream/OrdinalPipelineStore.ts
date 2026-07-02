@@ -113,6 +113,9 @@ export class OrdinalPipelineStore {
   columns: Record<string, OrdinalColumn> = {}
   /** Overlays returned from customLayout (consumed by StreamOrdinalFrame). */
   customLayoutOverlays: import("react").ReactNode = null
+  /** Most recent custom layout result for host readback (`getCustomLayout()`).
+   *  Null before the first layout, after a throw, or without a custom layout. */
+  lastCustomLayoutResult: OrdinalLayoutResult | null = null
   private _customLayoutDiagnosticsWarned = new Set<string>()
   /** Per-frame restyle callback from the custom layout result (see OrdinalLayoutResult.restyle). */
   private _customRestyle: OrdinalLayoutResult["restyle"] = undefined
@@ -736,11 +739,13 @@ export class OrdinalPipelineStore {
           console.error("[semiotic] ordinal customLayout threw:", err)
         }
         this.customLayoutOverlays = null
+        this.lastCustomLayoutResult = null
         this._customRestyle = undefined
         this.hasCustomRestyle = false
         return []
       }
       this.customLayoutOverlays = result.overlays ?? null
+      this.lastCustomLayoutResult = result
       const nodes = result.nodes ?? []
       // Stash the restyle callback; snapshot base styles + apply once for the
       // current selection (these `nodes` become `this.scene`).

@@ -638,7 +638,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         adapterRef.current?.flush()
         return storeRef.current?.getData() ?? []
       },
-      getScales: () => storeRef.current?.scales ?? null
+      getScales: () => storeRef.current?.scales ?? null,
+      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null
     }), [pushPoint, pushManyPoints, replaceData, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────

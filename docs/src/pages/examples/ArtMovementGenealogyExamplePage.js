@@ -10,6 +10,7 @@ import {
   fanOutBend,
   networkHitTarget,
   unwrapDatum,
+  useCustomLayoutSelection,
 } from "semiotic/recipes"
 import CodeBlock from "../../components/CodeBlock"
 import { StatStrip } from "../../components/StatStrip"
@@ -89,8 +90,6 @@ export default function ArtMovementGenealogyExamplePage() {
   return (
     <ExamplePageLayout
       title="A Genealogy of Cubism and Abstract Art"
-      prevPage={{ title: "All the Wars of the United States", path: "/examples/us-war-timeline" }}
-      nextPage={{ title: "Cities, Tile by Tile", path: "/examples/paris-isometric-landmarks" }}
     >
       <p style={styles.lede}>
         An automatically laid-out influence diagram inspired by Alfred H.
@@ -135,7 +134,12 @@ export default function ArtMovementGenealogyExamplePage() {
               nodes={ART_MOVEMENT_NODES}
               edges={ART_MOVEMENT_EDGES}
               layout={chronologicalInfluenceLayout}
-              layoutConfig={{ activeId: activeNode?.id }}
+              chartId="art-genealogy"
+              // Hover rides the shared selection store; the overlay re-renders
+              // through the selection context while the force-settled geometry
+              // and hit-test quadtree stay untouched (no relayout per hover).
+              selection={{ name: "art-genealogy-hover" }}
+              linkedHover={{ name: "art-genealogy-hover", fields: ["id"] }}
               width={chartWidth}
               height={CHART_HEIGHT}
               margin={{ top: 26, right: 62, bottom: 18, left: 62 }}
@@ -212,17 +216,6 @@ function chronologicalInfluenceLayout(ctx) {
     size: (data) => geomById.get(data.id),
   }).positioned.map((p) => ({ ...p.data, ...p, lines: geomById.get(p.id).lines }))
 
-  const activeId = ctx.config.activeId
-  const nodeById = new Map(positioned.map((node) => [node.id, node]))
-  const connected = new Set()
-  if (activeId) {
-    connected.add(activeId)
-    ctx.edges.forEach((edge) => {
-      if (edge.source === activeId) connected.add(edge.target)
-      if (edge.target === activeId) connected.add(edge.source)
-    })
-  }
-
   // networkHitTarget: the transparent, keyboard-navigable, annotation-anchorable
   // hit node per movement (the visible box is the cover-styled overlay).
   const sceneNodes = positioned.map((node) =>
@@ -236,7 +229,45 @@ function chronologicalInfluenceLayout(ctx) {
     }),
   )
 
-  const overlays = (
+  return {
+    sceneNodes,
+    sceneEdges: [],
+    // All visible marks live in the overlay; the scene nodes are invisible hit
+    // targets. The no-op restyle opts the chart into the style-only selection
+    // path, so a hover change swaps the overlay's selection context without
+    // re-running the force settle or rebuilding the quadtree.
+    restyle: () => undefined,
+    overlays: (
+      <GenealogyOverlay
+        positioned={positioned}
+        edges={ctx.edges}
+        plotWidth={ctx.dimensions.plot.width}
+        plotHeight={ctx.dimensions.plot.height}
+      />
+    ),
+  }
+}
+
+function GenealogyOverlay({ positioned, edges, plotWidth, plotHeight }) {
+  // Reads the shared hover selection from context — this component re-renders
+  // on hover while the canvas scene (and the settled layout) stay put. The
+  // selection carries only the hovered id; the ego set expands here.
+  const selection = useCustomLayoutSelection()
+  const focusedId = selection.isActive
+    ? (positioned.find((node) => selection.predicate(node))?.id ?? null)
+    : null
+  const nodeById = new Map(positioned.map((node) => [node.id, node]))
+  const connected = new Set()
+  if (focusedId) {
+    connected.add(focusedId)
+    edges.forEach((edge) => {
+      const e = unwrapDatum(edge)
+      if (e.source === focusedId) connected.add(e.target)
+      if (e.target === focusedId) connected.add(e.source)
+    })
+  }
+
+  return (
     <g pointerEvents="none">
       <defs>
         <marker
@@ -263,14 +294,10 @@ function chronologicalInfluenceLayout(ctx) {
         </marker>
       </defs>
 
-      <YearAxis x={8} align="start" height={ctx.dimensions.plot.height} />
-      <YearAxis
-        x={ctx.dimensions.plot.width - 8}
-        align="end"
-        height={ctx.dimensions.plot.height}
-      />
+      <YearAxis x={8} align="start" height={plotHeight} />
+      <YearAxis x={plotWidth - 8} align="end" height={plotHeight} />
 
-      {ctx.edges.map((edge, index) => {
+      {edges.map((edge, index) => {
         // ctx.edges are RealtimeEdge wrappers — the raw {id, source, target, type}
         // live under .data, so unwrap before reading them (a bare edge.id is
         // undefined, which silently breaks both the React key and the dashed style).
@@ -279,7 +306,7 @@ function chronologicalInfluenceLayout(ctx) {
         const target = nodeById.get(e.target)
         if (!source || !target) return null
         const sourceIsRed = source.type === "red"
-        const isActive = !activeId || e.source === activeId || e.target === activeId
+        const isActive = !focusedId || e.source === focusedId || e.target === focusedId
         // boxEdgeAnchors resolves the box exit/entry points by direction;
         // curvedEdgePath draws the S-curve (with a side-bow for near-level
         // pairs); fanOutBend keeps parallel arcs from overlapping.
@@ -307,20 +334,18 @@ function chronologicalInfluenceLayout(ctx) {
       })}
 
       {positioned.map((node) => {
-        const isActive = !activeId || connected.has(node.id)
+        const isActive = !focusedId || connected.has(node.id)
         return (
           <ArtMovementNode
             key={node.id}
             node={node}
             opacity={isActive ? 1 : 0.18}
-            focused={activeId === node.id}
+            focused={focusedId === node.id}
           />
         )
       })}
     </g>
   )
-
-  return { sceneNodes, sceneEdges: [], overlays }
 }
 
 function ArtMovementNode({ node, opacity, focused }) {

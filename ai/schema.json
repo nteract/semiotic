@@ -4334,6 +4334,16 @@
               "type": "number",
               "default": 0.1
             },
+            "layoutExecution": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "worker",
+                "sync"
+              ],
+              "description": "Force layout execution: auto, worker, or sync",
+              "default": "auto"
+            },
             "showLabels": {
               "type": "boolean",
               "default": false

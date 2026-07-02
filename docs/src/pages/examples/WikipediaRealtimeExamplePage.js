@@ -248,8 +248,6 @@ export default function WikipediaRealtimeExamplePage() {
   return (
     <ExamplePageLayout
       title="Wikipedia, as it happens"
-      prevPage={{ title: "The New York & Erie Railroad", path: "/examples/erie-railroad-organization" }}
-      nextPage={{ title: "Your Local Government Explorer", path: "/examples/local-government-explorer" }}
     >
       <p className="wiki-realtime-lede">
         Every dot is a live edit to English Wikipedia. Time moves left to right;
@@ -421,6 +419,8 @@ export default function WikipediaRealtimeExamplePage() {
                 tickFormatValue={formatSigned}
                 emptyContent={false}
                 background="transparent"
+                description="Live swarm of Wikipedia edits: each point is one edit, placed by arrival time and signed character change, colored by editor class."
+                summary="Points above the midline added text; points below removed it. Out-of-order arrivals are ringed and annotated."
               />
               <ActorLegend
                 counts={actorCounts}
@@ -482,6 +482,7 @@ export default function WikipediaRealtimeExamplePage() {
                     tickFormatValue={(value) => String(Math.round(value))}
                     emptyContent={false}
                     background="transparent"
+                    description="Edit volume: counts of edits in ten-second bins, stacked by editor class."
                   />
                 </SummaryCard>
                 <SummaryCard
@@ -506,6 +507,7 @@ export default function WikipediaRealtimeExamplePage() {
                     tickFormatValue={formatMagnitude}
                     emptyContent={false}
                     background="transparent"
+                    description="Magnitude density: a heatmap of edits over time by absolute character change, where darker cells hold more edits."
                   />
                 </SummaryCard>
                 <SummaryCard
@@ -529,6 +531,7 @@ export default function WikipediaRealtimeExamplePage() {
                     tickFormatValue={formatSigned}
                     emptyContent={false}
                     background="transparent"
+                    description="Net character flow: signed character change summed into ten-second intervals — above zero the encyclopedia is growing, below it is shrinking."
                   />
                 </SummaryCard>
               </div>
@@ -866,10 +869,12 @@ function directionPointStyle(edit) {
       }
     : null
   if (edit.direction === "remove") {
+    // Removals are hollow (stroke-only) so direction never rides on hue alone —
+    // filled-vs-hollow stays legible for color-blind readers and in grayscale.
     return {
-      fill: "#ef665f",
-      stroke: "#78251f",
-      strokeWidth: 1.4,
+      fill: "rgba(239, 102, 95, 0.12)",
+      stroke: "#ef665f",
+      strokeWidth: 1.8,
       opacity: edit.minor ? 0.5 : 0.84,
       r: edit.magnitude >= 1000 ? 5 : 3.7,
       ...(orderStyle || {}),
@@ -939,6 +944,7 @@ function SwarmCard({ group, data, width, timeExtent, valueExtent, onHover }) {
         tickFormatValue={formatMagnitude}
         emptyContent={false}
         background="transparent"
+        description={`${meta.label} edits by magnitude of character change: filled points added text, hollow points removed it.`}
       />
       <div className="wiki-realtime-direction-key" aria-label="Edit direction legend">
         <span><i className="is-addition" /> text added</span>

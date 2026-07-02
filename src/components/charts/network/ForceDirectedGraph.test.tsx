@@ -280,6 +280,25 @@ describe("ForceDirectedGraph", () => {
     expect(lastNetworkFrameProps.forceStrength).toBe(0.2)
   })
 
+  it("forwards worker-layout controls", () => {
+    const loading = <span>Arranging</span>
+    const onState = vi.fn()
+    render(
+      <TooltipProvider>
+        <ForceDirectedGraph
+          nodes={sampleNodes}
+          edges={sampleEdges}
+          layoutExecution="worker"
+          layoutLoadingContent={loading}
+          onLayoutStateChange={onState}
+        />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps.layoutExecution).toBe("worker")
+    expect(lastNetworkFrameProps.layoutLoadingContent).toBe(loading)
+    expect(lastNetworkFrameProps.onLayoutStateChange).toBe(onState)
+  })
+
   it("enables hover by default", () => {
     render(
       <TooltipProvider>

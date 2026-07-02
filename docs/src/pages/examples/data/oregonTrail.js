@@ -5,6 +5,7 @@
 // and trail route are placed at their real longitude/latitude so the projected
 // map is genuinely geographic — then dressed in the CGA/EGA palette of the game.
 
+import { mulberry32 } from "semiotic/recipes"
 import { PNW_FEATURES } from "./pacificNorthwest"
 
 export { PNW_FEATURES }
@@ -90,16 +91,6 @@ const RANGES = [
   { lon: -115.3, lat: 46.6, spanLon: 1.2, spanLat: 0.9, count: 4 }, // N Idaho
   { lon: -122.6, lat: 42.3, spanLon: 1.2, spanLat: 0.4, count: 3 }, // Klamath / Siskiyou
 ]
-
-function mulberry32(seed) {
-  let a = seed >>> 0
-  return function next() {
-    a = (a + 0x6d2b79f5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 export function buildMountains() {
   const rand = mulberry32(7)

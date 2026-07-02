@@ -258,14 +258,6 @@ export default function ParisIsometricLandmarksExamplePage() {
   return (
     <ExamplePageLayout
       title={`${city.label}, Tile by Tile`}
-      prevPage={{
-        title: "A Genealogy of Cubism and Abstract Art",
-        path: "/examples/art-movement-genealogy",
-      }}
-      nextPage={{
-        title: "The Wheel of Urines",
-        path: "/examples/urine-wheel",
-      }}
     >
       <nav aria-label="Choose a center city" style={styles.cityPicker}>
         <span style={styles.cityPickerLabel}>Center city</span>

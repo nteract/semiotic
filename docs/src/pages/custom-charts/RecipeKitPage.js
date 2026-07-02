@@ -291,6 +291,24 @@ function myLayout(ctx) {
       </section>
 
       <section>
+        <h2>Reading the computed layout back out</h2>
+        <p>
+          A page often needs what the layout computed — placement stats for a readout, the set of
+          marks actually drawn for an inspector — and re-running the layout function host-side just
+          to summarize it duplicates work (and can drift). Every custom chart&rsquo;s ref exposes{" "}
+          <code>getCustomLayout()</code>: the most recent layout result exactly as your{" "}
+          <code>layout(ctx)</code> returned it (<code>nodes</code>/<code>sceneNodes</code>, overlays,
+          plus any extra fields you attached). It is <code>null</code> before the first layout runs,
+          and sits beside <code>getData()</code>/<code>getScales()</code> on the same handle.
+        </p>
+        <CodeBlock language="jsx">{`const ref = useRef()
+// after mount / layout:
+const layout = ref.current?.getCustomLayout()
+const placed = layout?.nodes ?? []   // summarize what was actually drawn
+<XYCustomChart ref={ref} layout={myLayout} data={rows} />`}</CodeBlock>
+      </section>
+
+      <section>
         <h2>Why a kit, not props on the frame</h2>
         <p>
           The frame deliberately owns interaction, accessibility, transitions, and SSR; recipes own

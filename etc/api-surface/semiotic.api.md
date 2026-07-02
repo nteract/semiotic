@@ -101,6 +101,7 @@ function useCategoryColors
 function useChartObserver
 function useCustomLayoutSelection
 function useFilteredData
+function useForceLayout
 function useLinkedHover
 function useNavigationSync
 function useSelection
@@ -215,6 +216,7 @@ interface UseBrushSelectionOptions
 interface UseBrushSelectionResult
 interface UseChartObserverOptions
 interface UseChartObserverResult
+interface UseForceLayoutResult
 interface UseLinkedHoverOptions
 interface UseLinkedHoverResult
 interface UseNavigationSyncOptions
@@ -244,6 +246,7 @@ type ChartMode
 type ChartObservation
 type CopyFormat
 type CurveType
+type ForceLayoutStatus
 type LinkedBrushProp
 type LinkedHoverProp
 type NavTreeRole

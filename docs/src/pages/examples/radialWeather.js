@@ -442,22 +442,31 @@ export function LinearDetail({ rows, conditions, textColor = colors.text }) {
       valueExtent: [0, Math.ceil(maxDistance / 5) * 5],
     }
   }, [rows])
-  const timeExtent = rows.length ? [0, Math.max(DAY_MS, rows.length * DAY_MS)] : [0, DAY_MS]
-  const histogramProps = {
-    binSize: DAY_MS,
-    timeAccessor: "time",
-    valueAccessor: "value",
-    width,
-    height: 42,
-    margin: { top: 0, right: 2, bottom: 0, left: 2 },
-    timeExtent,
-    valueExtent,
-    showAxes: false,
-    background: "transparent",
-    enableHover: true,
-    gap: 0,
-    emptyContent: false,
-  }
+  // Stable refs: these props spread into all six stacked TemporalHistogram
+  // layers, so fresh objects every render would re-diff each instance on every
+  // parent re-render (hover updates the readout above).
+  const timeExtent = useMemo(
+    () => (rows.length ? [0, Math.max(DAY_MS, rows.length * DAY_MS)] : [0, DAY_MS]),
+    [rows.length],
+  )
+  const histogramProps = useMemo(
+    () => ({
+      binSize: DAY_MS,
+      timeAccessor: "time",
+      valueAccessor: "value",
+      width,
+      height: 42,
+      margin: { top: 0, right: 2, bottom: 0, left: 2 },
+      timeExtent,
+      valueExtent,
+      showAxes: false,
+      background: "transparent",
+      enableHover: true,
+      gap: 0,
+      emptyContent: false,
+    }),
+    [width, timeExtent, valueExtent],
+  )
 
   return (
     <div style={styles.linearDetail}>

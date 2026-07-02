@@ -611,6 +611,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       edgeOpacity: { type: "number" },
       iterations: { type: "number" },
       forceStrength: { type: "number" },
+      layoutExecution: { type: "string", enum: ["auto", "worker", "sync"] },
       showLabels: { type: "boolean" },
     },
   },

@@ -252,6 +252,39 @@
   min-width: 0;
 }
 
+.nv-layout-loading {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: var(--nv-ink-soft);
+  font-family: var(--nv-label);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.nv-layout-loading span {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--nv-oxblood);
+  background: var(--nv-paper);
+  animation: nv-layout-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes nv-layout-pulse {
+  to {
+    background: var(--nv-oxblood);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-layout-loading span {
+    animation: none;
+    background: var(--nv-oxblood);
+  }
+}
+
 .nv-plate figcaption {
   margin-top: 10px;
   padding-left: 2px;
@@ -278,7 +311,7 @@
   display: inline-flex;
   flex-wrap: wrap;
   border: 1px solid var(--nv-ink);
-  border-radius: 2px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -286,6 +319,7 @@
   padding: 6px 12px;
   border: 0;
   border-right: 1px solid var(--nv-rule);
+  border-radius: 0;
   background: var(--nv-paper);
   color: var(--nv-ink);
   font-family: var(--nv-label);
@@ -325,7 +359,7 @@
 .nv-toggle {
   display: inline-flex;
   border: 1px solid var(--nv-ink);
-  border-radius: 2px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -333,6 +367,7 @@
   padding: 5px 11px;
   border: 0;
   border-right: 1px solid var(--nv-rule);
+  border-radius: 0;
   background: var(--nv-paper);
   color: var(--nv-ink);
   font-family: var(--nv-label);
@@ -344,8 +379,18 @@
   border-right: 0;
 }
 
+.nv-toggle-btn:hover {
+  background: var(--nv-paper-deep);
+  color: var(--nv-ink);
+}
+
 .nv-toggle-btn.is-active {
   background: var(--nv-ink);
+  color: var(--nv-paper);
+}
+
+.nv-toggle-btn.is-active:hover {
+  background: var(--nv-oxblood);
   color: var(--nv-paper);
 }
 
@@ -361,6 +406,11 @@
   font-family: var(--nv-label);
   font-size: 12px;
   cursor: pointer;
+}
+
+.nv-switch:hover {
+  background: var(--nv-paper-deep);
+  color: var(--nv-ink);
 }
 
 .nv-switch i {

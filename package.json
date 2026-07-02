@@ -103,6 +103,7 @@
     "dist/*-semiotic-*.js",
     "dist/*-statisticalOverlays-*.js",
     "dist/**/*.d.ts",
+    "dist/forceLayoutWorker.js",
     "ai/schema.json",
     "ai/system-prompt.md",
     "ai/examples.md",

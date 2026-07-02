@@ -7,6 +7,10 @@
 // and line tweens; here each principle is re-expressed through the Semiotic
 // chart or feature where it actually lives.
 
+import { mulberry32 } from "semiotic/recipes"
+
+export { mulberry32 }
+
 // ---------------------------------------------------------------------------
 // Bauhaus "Perception Lab" palette
 // ---------------------------------------------------------------------------
@@ -71,12 +75,20 @@ export const GRID_Y_EXTENT = [-0.7, GRID_ROWS - 0.3]
 // Parallelism / common fate: five series, three falling in lockstep and two
 // rising in lockstep — shared slopes group them, just like a slopegraph.
 export const SLOPE_SERIES = [
-  { id: "Alpha", dir: "falling", start: 8.6, end: 3.1 },
-  { id: "Beta", dir: "falling", start: 7.3, end: 1.9 },
-  { id: "Gamma", dir: "falling", start: 6.0, end: 0.7 },
-  { id: "Delta", dir: "rising", start: 2.1, end: 7.0 },
-  { id: "Epsilon", dir: "rising", start: 3.2, end: 7.9 },
+  { id: "Manufacturing", dir: "falling", start: 8.6, end: 3.1 },
+  { id: "Political Engagement", dir: "falling", start: 7.3, end: 1.9 },
+  { id: "Optimism", dir: "falling", start: 6.0, end: 0.7 },
+  { id: "Artificial Intelligence", dir: "rising", start: 2.1, end: 7.0 },
+  { id: "Social Media Use", dir: "rising", start: 3.2, end: 7.9 },
 ]
+
+export const SLOPE_CATEGORY_COLORS = {
+  Manufacturing: BLUE,
+  "Political Engagement": RED,
+  Optimism: YELLOW,
+  "Artificial Intelligence": "#27856f",
+  "Social Media Use": "#8b4aa0",
+}
 
 export function slopeLineData() {
   return SLOPE_SERIES.flatMap((s) => [
@@ -86,12 +98,12 @@ export function slopeLineData() {
 }
 
 // Each series as a single point for the "common fate" animation. `phase`
-// 0 → start, 1 → end. x is spread out so the two fates are visible as motion.
+// 0 → start, 1 → end, following the same trajectory drawn in the next step.
 export function commonFatePoints(phase) {
-  return SLOPE_SERIES.map((s, i) => ({
+  return SLOPE_SERIES.map((s) => ({
     id: s.id,
     dir: s.dir,
-    x: i,
+    x: phase,
     value: phase === 1 ? s.end : s.start,
   }))
 }
@@ -169,121 +181,6 @@ export const NET_EDGES = [
   { source: "g12", target: "g6" },
   // g15 is intentionally left disconnected — held on screen only by gravity
 ]
-
-// Deterministic PRNG so layouts are reproducible per seed.
-export function mulberry32(seed) {
-  let a = seed >>> 0
-  return function next() {
-    a |= 0
-    a = (a + 0x6d2b79f5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-// A compact force simulation in a virtual 1000×1000 space, normalized to
-// [0,1] at the end. Different seeds → different (mirrored / rotated /
-// re-packed) layouts of the very same graph — the "past experience" problem.
-const SIM_SIZE = 1000
-const REPULSION = 5200
-const LINK_DIST = 165
-const LINK_STRENGTH = 0.045
-const CENTER_STRENGTH = 0.018
-const DAMP = 0.84
-const SIM_ITERS = 260
-
-export function layoutGraph(nodes, edges, seed) {
-  const rand = mulberry32(seed)
-  const pos = {}
-  for (const n of nodes) {
-    pos[n.id] = {
-      x: 200 + rand() * 600,
-      y: 200 + rand() * 600,
-      vx: 0,
-      vy: 0,
-    }
-  }
-  const center = SIM_SIZE / 2
-  for (let it = 0; it < SIM_ITERS; it += 1) {
-    const alpha = 1 - it / SIM_ITERS
-    // repulsion between every pair
-    for (let i = 0; i < nodes.length; i += 1) {
-      for (let j = i + 1; j < nodes.length; j += 1) {
-        const a = pos[nodes[i].id]
-        const b = pos[nodes[j].id]
-        let dx = a.x - b.x
-        let dy = a.y - b.y
-        let d = Math.sqrt(dx * dx + dy * dy)
-        if (d < 1) {
-          d = 1
-          dx = rand() - 0.5
-          dy = rand() - 0.5
-        }
-        const rep = REPULSION / (d * d)
-        const fx = (dx / d) * rep
-        const fy = (dy / d) * rep
-        a.vx += fx
-        a.vy += fy
-        b.vx -= fx
-        b.vy -= fy
-      }
-    }
-    // link springs
-    for (const e of edges) {
-      const a = pos[e.source]
-      const b = pos[e.target]
-      let dx = b.x - a.x
-      let dy = b.y - a.y
-      let d = Math.sqrt(dx * dx + dy * dy) || 1
-      const f = (d - LINK_DIST) * LINK_STRENGTH
-      const fx = (dx / d) * f
-      const fy = (dy / d) * f
-      a.vx += fx
-      a.vy += fy
-      b.vx -= fx
-      b.vy -= fy
-    }
-    // gravity toward the center keeps disconnected pieces on screen
-    for (const n of nodes) {
-      const p = pos[n.id]
-      p.vx += (center - p.x) * CENTER_STRENGTH
-      p.vy += (center - p.y) * CENTER_STRENGTH
-    }
-    // integrate + cool
-    for (const n of nodes) {
-      const p = pos[n.id]
-      p.x += p.vx * alpha
-      p.y += p.vy * alpha
-      p.vx *= DAMP
-      p.vy *= DAMP
-    }
-  }
-  // normalize to [0,1] over the actual bounding box, with a small inset
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-  for (const n of nodes) {
-    const p = pos[n.id]
-    if (p.x < minX) minX = p.x
-    if (p.y < minY) minY = p.y
-    if (p.x > maxX) maxX = p.x
-    if (p.y > maxY) maxY = p.y
-  }
-  const spanX = maxX - minX || 1
-  const spanY = maxY - minY || 1
-  const inset = 0.06
-  const out = {}
-  for (const n of nodes) {
-    const p = pos[n.id]
-    out[n.id] = {
-      x: inset + ((p.x - minX) / spanX) * (1 - 2 * inset),
-      y: inset + ((p.y - minY) / spanY) * (1 - 2 * inset),
-    }
-  }
-  return out
-}
 
 function buildAdjacency(nodes, edges) {
   const adj = new Map(nodes.map((n) => [n.id, new Set()]))

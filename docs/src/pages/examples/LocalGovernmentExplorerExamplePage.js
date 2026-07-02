@@ -349,8 +349,6 @@ export default function LocalGovernmentExplorerExamplePage() {
   return (
     <ExamplePageLayout
       title="Your Local Government Explorer"
-      prevPage={{ title: "Wikipedia, as it happens", path: "/examples/wikipedia-realtime" }}
-      nextPage={{ title: "Where the Boxes Wait", path: "/examples/port-congestion-replay" }}
     >
       <p className="local-gov-lede">
         A ZIP code is not a government boundary, but it is a useful place to
@@ -1291,7 +1289,7 @@ function MethodItem({ number, title, children }) {
 }
 
 function renderGovernmentTooltip(hover) {
-  const datum = unwrapChartDatum(hover?.data || hover)
+  const datum = unwrapChartDatum(hover)
   if (!datum?.id) return null
   return (
     <div className="local-gov-tooltip" data-semiotic-tooltip-chrome>

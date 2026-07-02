@@ -153,14 +153,6 @@ export default function ScrollYoureTellingExamplePage() {
   return (
     <ExamplePageLayout
       title="The Scroll You're Telling"
-      prevPage={{
-        title: "Where the Boxes Wait",
-        path: "/examples/port-congestion-replay",
-      }}
-      nextPage={{
-        title: "What the Machine Sees",
-        path: "/examples/what-the-machine-sees",
-      }}
     >
       <p className="scroll-tell-lede">
         Every chart below is built from one stream: <em>you</em>, reading this.
