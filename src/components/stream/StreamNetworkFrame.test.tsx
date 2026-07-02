@@ -203,4 +203,65 @@ describe("StreamNetworkFrame", () => {
       expect(ref.current!.getTopology().edges.length).toBeGreaterThan(0)
     })
   })
+
+  // ── Controlled non-empty → empty must clear the previous scene ────────
+  // Regression: the empty-graph branch of the ingestion effect used to
+  // early-return without touching the store, so controlled consumers
+  // transitioning `nodes`/`edges` to empty arrays kept the stale topology
+  // (and its rendered marks) on screen.
+  describe("controlled non-empty → empty transition", () => {
+    it("clears the store when controlled nodes/edges props empty out", async () => {
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const props = {
+        chartType: "sankey" as const,
+        nodeIDAccessor: "id",
+        sourceAccessor: "source",
+        targetAccessor: "target",
+        valueAccessor: "value",
+      }
+      const { rerender } = render(
+        <StreamNetworkFrame
+          ref={ref}
+          {...props}
+          nodes={[{ id: "a" }, { id: "b" }]}
+          edges={[{ source: "a", target: "b", value: 1 }]}
+        />
+      )
+      expect(ref.current!.getTopology().nodes.length).toBeGreaterThan(0)
+
+      await act(async () => {
+        rerender(<StreamNetworkFrame ref={ref} {...props} nodes={[]} edges={[]} />)
+      })
+      const cleared = ref.current!.getTopology()
+      expect(cleared.nodes.length).toBe(0)
+      expect(cleared.edges.length).toBe(0)
+    })
+
+    it("preserves pushed data when props are omitted (push mode)", async () => {
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const props = {
+        chartType: "sankey" as const,
+        nodeIDAccessor: "id",
+        sourceAccessor: "source",
+        targetAccessor: "target",
+        valueAccessor: "value",
+      }
+      const { rerender } = render(
+        <StreamNetworkFrame ref={ref} {...props} size={[500, 400]} />
+      )
+      await act(async () => {
+        ref.current!.pushMany([{ source: "A", target: "B", value: 5 }])
+      })
+      expect(ref.current!.getTopology().edges.length).toBeGreaterThan(0)
+
+      // Re-run the ingestion effect via a dimension change — with omitted
+      // nodes/edges props the empty branch must NOT clear the push buffer.
+      await act(async () => {
+        rerender(<StreamNetworkFrame ref={ref} {...props} size={[600, 400]} />)
+      })
+      const after = ref.current!.getTopology()
+      expect(after.edges.length).toBeGreaterThan(0)
+      expect(after.nodes.length).toBeGreaterThan(0)
+    })
+  })
 })

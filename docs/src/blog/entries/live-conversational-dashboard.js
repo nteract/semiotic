@@ -623,10 +623,9 @@ export default {
   subtitle:
     "Streaming data + an AI watching alongside you + anchored annotations + a conversational follow-up surface. The class of product Semiotic's streaming-first runtime makes possible.",
   author: "Elijah Meeks",
-  date: "2026-05-31",
+  date: "2026-07-02",
   tags: ["case-study", "realtime"],
   excerpt:
-    "Static dashboards show the past; chat-with-chart makes the past interrogable. Live conversational dashboards add what's missing: an AI watching the stream as it arrives, narrating events anchored to the chart, with a chat surface for human follow-ups. Draft post on composing Semiotic's streaming runtime, interrogation hook, and annotation model into a single product.",
-  draft: true,
+    "Static dashboards show the past; chat-with-chart makes the past interrogable. Live conversational dashboards add what's missing: an AI watching the stream as it arrives, narrating events anchored to the chart, with a chat surface for human follow-ups. A case study on composing Semiotic's streaming runtime, interrogation hook, and annotation model into a single product.",
   component: Body,
 }

@@ -1077,6 +1077,17 @@ const StreamNetworkFrame = forwardRef<
       const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
 
       if (rawNodes.length === 0 && rawEdges.length === 0) {
+        // Controlled data went non-empty → empty: tear down the previous
+        // scene (topology, hover, color caches) so the frame renders empty
+        // instead of retaining stale marks. Gated on the props actually
+        // being provided — push mode omits them, and its store contents
+        // must survive this effect re-running on resize/palette changes.
+        if (
+          (nodesProp != null || edgesProp != null) &&
+          (store.nodes.size > 0 || store.edges.size > 0)
+        ) {
+          clearAll()
+        }
         // Nothing to lay out — the frame is no longer busy, so a consumer
         // watching a previously-pending worker layout gets released.
         setLayoutPending(false)
@@ -1219,6 +1230,8 @@ const StreamNetworkFrame = forwardRef<
   }, [
     safeNodes,
     safeEdges,
+    nodesProp,
+    edgesProp,
     dataProp,
     hierarchyRoot,
     isHierarchical,
@@ -1231,6 +1244,7 @@ const StreamNetworkFrame = forwardRef<
     chartType,
     customNetworkLayout,
     scheduleRender,
+    clearAll,
     colorScheme
   ])
 

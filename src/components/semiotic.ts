@@ -325,7 +325,12 @@ export type { UseNavigationSyncOptions, UseNavigationSyncResult } from "./ai/use
 
 // ── Chart container types ─────────────────────────────────────────────
 
-export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
+export type {
+  ChartContainerProps,
+  ChartContainerHandle,
+  ChartNotification,
+  ChartNotificationLevel,
+} from "./ChartContainer"
 export type { ChartGridProps } from "./ChartGrid"
 export type { CategoryColorMap, CategoryColorProviderProps } from "./CategoryColors"
 export type { ContextLayoutProps } from "./ContextLayout"

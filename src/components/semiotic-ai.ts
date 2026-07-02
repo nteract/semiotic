@@ -81,7 +81,9 @@ export { exportChart } from "./export/exportChart"
 export { ChartContainer } from "./ChartContainer"
 export type {
   ChartContainerProps,
-  ChartContainerHandle
+  ChartContainerHandle,
+  ChartNotification,
+  ChartNotificationLevel
 } from "./ChartContainer"
 
 // Layout

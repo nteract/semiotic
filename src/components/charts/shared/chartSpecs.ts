@@ -304,6 +304,9 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       // hand-curation oversight. Phase 3 can re-baseline schema with it
       // exposed; for now match the canonical surface.
       roundedTop: { type: "number", omitFromSchema: true },
+      // Same schema-baseline treatment as `roundedTop`. Most ordinal HOCs
+      // expose `valueExtent`; the rest still need registry entries.
+      valueExtent: { type: "array", omitFromSchema: true },
       regression: {
         type: ["boolean", "string", "object"],
         description: "Overlay a regression line through the bar tops. Accepts true (linear), a method ('linear' | 'polynomial' | 'loess'), or a full RegressionConfig. Pixels resolve through the band scale.",

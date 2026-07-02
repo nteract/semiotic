@@ -5,8 +5,20 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-06-30T00:00:00Z</updated>
+  <updated>2026-07-02T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Live conversational dashboards</title>
+    <id>https://semiotic3.nteract.io/blog/live-conversational-dashboard</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/live-conversational-dashboard"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/live-conversational-dashboard.png"/>
+    <published>2026-07-02T00:00:00Z</published>
+    <updated>2026-07-02T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="realtime"/>
+    <summary type="text">Static dashboards show the past; chat-with-chart makes the past interrogable. Live conversational dashboards add what&apos;s missing: an AI watching the stream as it arrives, narrating events anchored to the chart, with a chat surface for human follow-ups. A case study on composing Semiotic&apos;s streaming runtime, interrogation hook, and annotation model into a single product.</summary>
+  </entry>
   <entry>
     <title>Your sample lies about your data</title>
     <id>https://semiotic3.nteract.io/blog/scale-aware-suggestions</id>
