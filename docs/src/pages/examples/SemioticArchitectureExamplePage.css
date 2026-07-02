@@ -7,10 +7,120 @@
 }
 
 .architecture-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
   padding: 24px;
   border: 1px solid var(--surface-3);
   border-radius: 14px 14px 0 0;
   background: var(--surface-1);
+}
+
+.architecture-controls-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.architecture-minimap {
+  flex: 0 0 250px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 24px;
+  border-left: 1px solid var(--surface-3);
+}
+
+.architecture-minimap-caption {
+  margin: 0 0 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.architecture-minimap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.architecture-minimap-arc {
+  fill: none;
+  stroke: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 45%, transparent);
+  stroke-width: 0.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.architecture-minimap-edge {
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 0.6px;
+  opacity: 0.3;
+  vector-effect: non-scaling-stroke;
+  transition: opacity 180ms ease;
+}
+
+.architecture-minimap-edge.is-spine {
+  stroke: var(--semiotic-info, #4d8fa8);
+  stroke-width: 0.9px;
+  opacity: 0.4;
+}
+
+.architecture-minimap-lines.has-selection .architecture-minimap-edge.is-dimmed {
+  opacity: 0.06;
+}
+
+.architecture-minimap-lines.has-selection .architecture-minimap-edge.is-active {
+  stroke: var(--accent);
+  stroke-width: 1px;
+  opacity: 0.7;
+}
+
+.architecture-minimap-dot {
+  stroke-width: 0.6px;
+  vector-effect: non-scaling-stroke;
+  transition: opacity 180ms ease;
+}
+
+.architecture-minimap-dot.is-trunk {
+  fill: var(--semiotic-primary, #4f8fc7);
+  stroke: color-mix(in srgb, var(--semiotic-primary, #4f8fc7) 55%, #fff);
+}
+
+.architecture-minimap-dot.is-internal-core {
+  fill: var(--semiotic-info, #4d8fa8);
+  stroke: color-mix(in srgb, var(--semiotic-info, #4d8fa8) 55%, #fff);
+}
+
+.architecture-minimap-dot.is-frame {
+  fill: var(--semiotic-primary, #4f8fc7);
+}
+
+.architecture-minimap-dot.is-leaf,
+.architecture-minimap-dot.is-leaf-group {
+  fill: var(--semiotic-success, #4f9362);
+}
+
+.architecture-minimap-dot.is-fruit {
+  fill: var(--semiotic-warning, #d8a84e);
+}
+
+.architecture-minimap-dot.is-input,
+.architecture-minimap-dot.is-branch {
+  fill: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 75%, var(--surface-0));
+}
+
+.architecture-minimap-dot.is-root {
+  fill: var(--text-secondary);
+}
+
+.architecture-minimap-dot.is-dimmed {
+  opacity: 0.12;
+}
+
+.architecture-minimap-dot.is-active {
+  opacity: 1;
 }
 
 .architecture-controls-heading {
@@ -91,7 +201,11 @@
   border-top: 0;
   border-radius: 0 0 14px 14px;
   background:
-    radial-gradient(circle at 18% 8%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 28%),
+    radial-gradient(
+      circle at 18% 8%,
+      color-mix(in srgb, var(--accent) 7%, transparent),
+      transparent 28%
+    ),
     linear-gradient(180deg, var(--surface-0), var(--surface-1));
 }
 
@@ -103,7 +217,12 @@
 
 .architecture-overlay text {
   fill: var(--text-primary);
-  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   font-size: 10.5px;
   font-weight: 680;
   text-anchor: middle;
@@ -321,36 +440,36 @@
 }
 
 /* Vertical Sankey architecture */
-.architecture-sankey .architecture-ribbon {
+.architecture-diagram .architecture-ribbon {
   stroke: none;
   transition: opacity 220ms ease;
 }
 
-.architecture-sankey .architecture-ribbon.is-upper {
+.architecture-diagram .architecture-ribbon.is-upper {
   fill: url("#architecture-upper-ribbon");
   opacity: 0.42;
 }
 
-.architecture-sankey .architecture-ribbon.is-side {
+.architecture-diagram .architecture-ribbon.is-side {
   fill: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 62%, var(--semiotic-primary, #4f8fc7));
   opacity: 0.5;
 }
 
-.architecture-sankey .architecture-ribbon.is-spine {
+.architecture-diagram .architecture-ribbon.is-spine {
   fill: url("#architecture-spine-ribbon");
   opacity: 0.88;
 }
 
-.architecture-sankey .architecture-ribbon.is-lower {
+.architecture-diagram .architecture-ribbon.is-lower {
   fill: url("#architecture-lower-ribbon");
   opacity: 0.34;
 }
 
-.architecture-sankey .architecture-ribbon.is-active {
+.architecture-diagram .architecture-ribbon.is-active {
   opacity: 0.72;
 }
 
-.architecture-sankey .architecture-ribbon.is-dimmed {
+.architecture-diagram .architecture-ribbon.is-dimmed {
   opacity: 0.035;
 }
 
@@ -428,76 +547,76 @@
   opacity: 0.05;
 }
 
-.architecture-sankey .architecture-node rect {
+.architecture-diagram .architecture-node rect {
   fill: var(--surface-0);
   stroke: var(--surface-3);
   stroke-width: 1.2;
 }
 
-.architecture-sankey .architecture-node.is-leaf rect {
+.architecture-diagram .architecture-node.is-leaf rect {
   fill: color-mix(in srgb, var(--semiotic-success, #4f9362) 17%, var(--surface-0));
   stroke: color-mix(in srgb, var(--semiotic-success, #4f9362) 68%, var(--surface-3));
 }
 
-.architecture-sankey .architecture-node.is-leaf-group rect {
+.architecture-diagram .architecture-node.is-leaf-group rect {
   fill: var(--surface-0);
   stroke: color-mix(in srgb, var(--semiotic-success, #4f9362) 45%, var(--surface-3));
   stroke-dasharray: 3 2;
 }
 
-.architecture-sankey .architecture-node.is-frame rect {
+.architecture-diagram .architecture-node.is-frame rect {
   fill: color-mix(in srgb, var(--semiotic-primary, #4f8fc7) 28%, var(--surface-0));
   stroke: var(--semiotic-primary, #4f8fc7);
   stroke-width: 1.8;
 }
 
-.architecture-sankey .architecture-node.is-frame text {
+.architecture-diagram .architecture-node.is-frame text {
   fill: var(--text-primary);
   font-size: 11.5px;
 }
 
-.architecture-sankey .architecture-node.is-trunk rect {
+.architecture-diagram .architecture-node.is-trunk rect {
   fill: var(--semiotic-primary, #4f8fc7);
   stroke: color-mix(in srgb, var(--semiotic-primary, #4f8fc7) 55%, #fff);
   stroke-width: 2;
 }
 
-.architecture-sankey .architecture-node.is-internal-core rect {
+.architecture-diagram .architecture-node.is-internal-core rect {
   fill: var(--semiotic-info, #4d8fa8);
   stroke: color-mix(in srgb, var(--semiotic-info, #4d8fa8) 55%, #fff);
   stroke-width: 2;
 }
 
-.architecture-sankey .architecture-node.is-trunk text,
-.architecture-sankey .architecture-node.is-internal-core text {
+.architecture-diagram .architecture-node.is-trunk text,
+.architecture-diagram .architecture-node.is-internal-core text {
   fill: #fff;
   font-size: 15px;
   font-weight: 850;
   letter-spacing: 0.02em;
 }
 
-.architecture-sankey .architecture-node.is-root rect {
+.architecture-diagram .architecture-node.is-root rect {
   fill: color-mix(in srgb, var(--text-secondary) 14%, var(--surface-0));
   stroke: color-mix(in srgb, var(--text-secondary) 58%, var(--surface-3));
 }
 
-.architecture-sankey .architecture-node.is-root text {
+.architecture-diagram .architecture-node.is-root text {
   fill: var(--text-primary);
   font-size: 10.5px;
 }
 
-.architecture-sankey .architecture-node.is-root .architecture-root-index {
+.architecture-diagram .architecture-node.is-root .architecture-root-index {
   fill: var(--text-secondary);
   font-size: 7px;
 }
 
-.architecture-sankey .architecture-node.is-input rect,
-.architecture-sankey .architecture-node.is-branch rect {
+.architecture-diagram .architecture-node.is-input rect,
+.architecture-diagram .architecture-node.is-branch rect {
   fill: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 13%, var(--surface-0));
   stroke: color-mix(in srgb, var(--semiotic-warning, #d8a84e) 57%, var(--surface-3));
 }
 
-.architecture-sankey .architecture-node.is-active.is-traced rect {
+.architecture-diagram .architecture-node.is-active.is-traced rect {
   filter: url("#architecture-active-glow");
   stroke: var(--accent);
   stroke-width: 2;
@@ -594,6 +713,22 @@
   line-height: 1.75;
 }
 
+@media (max-width: 900px) {
+  .architecture-controls {
+    flex-direction: column;
+  }
+
+  .architecture-minimap {
+    flex-basis: auto;
+    width: 100%;
+    max-width: 360px;
+    padding-left: 0;
+    padding-top: 20px;
+    border-left: 0;
+    border-top: 1px solid var(--surface-3);
+  }
+}
+
 @media (max-width: 720px) {
   .architecture-controls {
     padding: 18px;
@@ -617,7 +752,9 @@
   .architecture-node,
   .architecture-node rect,
   .architecture-node path,
-  .architecture-node circle {
+  .architecture-node circle,
+  .architecture-minimap-dot,
+  .architecture-minimap-edge {
     transition: none;
   }
 }

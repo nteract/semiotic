@@ -16,11 +16,7 @@ import CodeBlock from "../../components/CodeBlock"
 import { StatStrip } from "../../components/StatStrip"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
-import {
-  ART_MOVEMENT_EDGES,
-  ART_MOVEMENT_NODES,
-  ART_YEAR_DOMAIN,
-} from "./data/artMovements"
+import { ART_MOVEMENT_EDGES, ART_MOVEMENT_NODES, ART_YEAR_DOMAIN } from "./data/artMovements"
 
 // Art-directed palette from Alfred Barr's 1936 dust jacket. This example sits at
 // the "override the theme" end of Semiotic's theming spectrum (the Climate
@@ -73,7 +69,7 @@ export default function ArtMovementGenealogyExamplePage() {
   const connectedCount = useMemo(() => {
     if (!activeNode) return 0
     return ART_MOVEMENT_EDGES.filter(
-      (edge) => edge.source === activeNode.id || edge.target === activeNode.id
+      (edge) => edge.source === activeNode.id || edge.target === activeNode.id,
     ).length
   }, [activeNode])
 
@@ -88,14 +84,11 @@ export default function ArtMovementGenealogyExamplePage() {
   }, [])
 
   return (
-    <ExamplePageLayout
-      title="A Genealogy of Cubism and Abstract Art"
-    >
+    <ExamplePageLayout title="A Genealogy of Cubism and Abstract Art">
       <p style={styles.lede}>
-        An automatically laid-out influence diagram inspired by Alfred H.
-        Barr Jr.&apos;s 1936 dust jacket. Time provides the vertical structure;
-        graph relationships and collision constraints determine the horizontal
-        arrangement.
+        A dynamic map of artistic influence inspired by the diagram from Alfred H. Barr Jr.&apos;s
+        1936 dust jacket. Time provides the vertical structure; graph relationships and collision
+        constraints determine the horizontal arrangement.
       </p>
 
       <StatStrip
@@ -114,7 +107,8 @@ export default function ArtMovementGenealogyExamplePage() {
               <>
                 <strong data-testid="active-art-node">{activeNode.id}</strong>
                 <span>
-                  {activeNode.qualifier || ""}{activeNode.year}
+                  {activeNode.qualifier || ""}
+                  {activeNode.year}
                   {activeNode.place ? ` · ${activeNode.place}` : ""}
                   {` · ${connectedCount} direct ${connectedCount === 1 ? "connection" : "connections"}`}
                 </span>
@@ -158,20 +152,18 @@ export default function ArtMovementGenealogyExamplePage() {
       <section style={styles.editorial}>
         <h2>Constraint, not tracing</h2>
         <p>
-          The year attached to each entity fixes only its vertical coordinate.
-          Horizontal coordinates begin from a deterministic spread, then settle
-          through repeated edge attraction, boundary pressure, and rectangular
-          collision resolution. The same layout can accept another node or
-          influence without adding a bespoke coordinate.
+          The year attached to each entity fixes only its vertical coordinate. Horizontal
+          coordinates begin from a deterministic spread, then settle through repeated edge
+          attraction, boundary pressure, and rectangular collision resolution. The same layout can
+          accept another node or influence without adding a bespoke coordinate.
         </p>
 
         <h2>Borrowing the cover&apos;s visual grammar</h2>
         <p>
-          Movement nodes receive the cover&apos;s curved underline treatment.
-          External sources and the machine aesthetic are boxed in red. Solid and
-          dashed arrows retain the source graph&apos;s distinction, while the
-          paired red year axes and paper-like ground make chronology part of the
-          composition rather than separate chart furniture.
+          Movement nodes receive the cover&apos;s curved underline treatment. External sources and
+          the machine aesthetic are boxed in red. Solid and dashed arrows retain the source
+          graph&apos;s distinction, while the paired red year axes and paper-like ground make
+          chronology part of the composition rather than separate chart furniture.
         </p>
 
         <CodeBlock language="jsx" showCopyButton code={implementationCode} />
@@ -185,9 +177,8 @@ export default function ArtMovementGenealogyExamplePage() {
           >
             Edge Routing Issue
           </a>{" "}
-          block. Visual direction follows the supplied cover of{" "}
-          <cite>Cubism and Abstract Art</cite>; dates are encoded as data and
-          positions are generated at render time.
+          block. Visual direction follows the supplied cover of <cite>Cubism and Abstract Art</cite>
+          ; dates are encoded as data and positions are generated at render time.
         </p>
       </section>
     </ExamplePageLayout>
@@ -457,9 +448,7 @@ function yearScale(height) {
   // y-positions line up exactly with these axis labels.
   const bottom = height - 16
   return (year) =>
-    top +
-    ((year - ART_YEAR_DOMAIN[0]) / (ART_YEAR_DOMAIN[1] - ART_YEAR_DOMAIN[0])) *
-      (bottom - top)
+    top + ((year - ART_YEAR_DOMAIN[0]) / (ART_YEAR_DOMAIN[1] - ART_YEAR_DOMAIN[0])) * (bottom - top)
 }
 
 function wrapMovementLabel(label) {

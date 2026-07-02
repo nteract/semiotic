@@ -79,23 +79,19 @@ export default function OregonTrailExamplePage() {
         else advance()
       }
     },
-    [advance, reset, atFinish]
+    [advance, reset, atFinish],
   )
 
-  const status = atFinish && settled
-    ? "You have arrived in the Willamette Valley."
-    : `Now at: ${currentStop.id}`
+  const status =
+    atFinish && settled ? "You have arrived in the Willamette Valley." : `Now at: ${currentStop.id}`
 
   return (
-    <ExamplePageLayout
-      title="Map of the Oregon Trail"
-    >
+    <ExamplePageLayout title="Map of the Oregon Trail">
       <p className="ot-intro">
-        A closing bit of fun: the classic 1985 <em>Oregon Trail</em> end-game map,
-        rebuilt with Semiotic's <code>GeoCustomChart</code>. The land is real —
-        Washington, Oregon, and Idaho, projected the same way any map is — and the
-        forts, rivers, mountains, and the trail itself sit at their true
-        coordinates. Only the palette is borrowed from an Apple II.
+        A closing bit of fun: the classic 1985 <em>Oregon Trail</em> end-game map, rebuilt with
+        Semiotic's <code>GeoCustomChart</code>. Washington, Oregon, and Idaho, along with the forts,
+        rivers, mountains, and the trail itself sit at their true coordinates. Only the palette is
+        borrowed from an Apple II.
       </p>
 
       <div
@@ -149,12 +145,11 @@ export default function OregonTrailExamplePage() {
       <section className="ot-sankey-section">
         <h2 className="ot-sankey-heading">Every fork in the trail</h2>
         <p className="ot-sankey-intro">
-          The map is a line, but the <em>game</em> is a series of decisions.
-          Reconstructing the branch points from the trail's logic — how you cross
-          each river, which way you turn at South Pass, and the last gamble at The
-          Dalles — gives a graph that splits and rejoins. Here a cohort of{" "}
-          {OT.SANKEY_START_COUNT} wagon parties flows west through those forks; a
-          ribbon bleeds off to <strong>Perished</strong> at the deadliest points.
+          The map is a line, but the <em>game</em> is a series of decisions. Reconstructing the
+          branch points from the trail's logic: how you cross each river, which way you turn at
+          South Pass, and the last gamble at The Dalles. Here a cohort of {OT.SANKEY_START_COUNT}{" "}
+          wagon parties flows west through those forks; a ribbon bleeds off to{" "}
+          <strong>Perished</strong> at the deadliest points.
         </p>
 
         <div className="ot-screen ot-screen--wide">
@@ -191,40 +186,35 @@ export default function OregonTrailExamplePage() {
 
         <p className="ot-sankey-caption">
           <span className="ot-key ot-key-route" /> the party&rsquo;s route &nbsp;
-          <span className="ot-key ot-key-perished" /> lost along the way. Each
-          crossing and route choice is a branch that rejoins at the next fort —
-          the whole trail as one <code>SankeyDiagram</code>.
+          <span className="ot-key ot-key-perished" /> lost along the way. Each crossing and route
+          choice is a branch that rejoins at the next fort as a <code>SankeyDiagram</code>.
         </p>
       </section>
 
       <section className="ot-notes">
         <h2>How it's drawn</h2>
         <p>
-          <code>GeoCustomChart</code> resolves and fits a Mercator projection to
-          the three state outlines, then hands the layout function{" "}
-          <code>scales.projectedPoint(lon, lat)</code> and a{" "}
-          <code>geoPath</code>. Everything you see is emitted from one layout: the
-          land as <code>geoarea</code> nodes (gray fill, black coastline), the
-          Columbia, Snake, and Willamette as <code>line</code> nodes in CGA blue,
-          the trail as a black route line — and the carets, forts, START/FINISH
-          plaques, title, and legend as SVG overlays anchored to real
-          coordinates. The wagon rolls along the route by interpolating between
-          the historic stops.
+          <code>GeoCustomChart</code> resolves and fits a Mercator projection to the three state
+          outlines, then hands the layout function <code>scales.projectedPoint(lon, lat)</code> and
+          a <code>geoPath</code>. Everything you see is emitted from one layout: the land as{" "}
+          <code>geoarea</code> nodes (gray fill, black coastline), the Columbia, Snake, and
+          Willamette as <code>line</code> nodes in CGA blue, the trail as a black route line.
+          Carets, forts, START/FINISH plaques, title, and legend as SVG overlays anchored to real
+          coordinates. The wagon rolls along the route by interpolating between the historic stops.
         </p>
         <p>
-          The flow diagram below the map is a plain <code>SankeyDiagram</code> fed
-          the trail's decision graph — forks (the river crossings, the South Pass
-          and Dalles route choices) fan out and rejoin at the next fort, and{" "}
-          <code>edgeColorBy</code> paints the doomed ribbons red. Same palette,
-          same screen.
+          The flow diagram below the map is a plain <code>SankeyDiagram</code> fed the trail's
+          decision graph: forks (the river crossings, the South Pass and Dalles route choices) fan
+          out and rejoin at the next fort, and <code>edgeColorBy</code> paints the doomed ribbons
+          red. Same palette, same screen.
         </p>
         <p className="ot-colophon">
           After the MECC <em>Oregon Trail</em> (1985) and Elijah Meeks's{" "}
           <a href="http://dhs.stanford.edu/dh/networks/" target="_blank" rel="noopener noreferrer">
             ORBIS
           </a>{" "}
-          work on historical geography. Land: US Census state outlines. Not a
-          navigational chart — you will not really ford any rivers here.
+          work on historical geography. Land: US Census state outlines. Not for use as a
+          navigational chart.
         </p>
       </section>
     </ExamplePageLayout>
@@ -336,7 +326,7 @@ function oregonTrailLayout(ctx) {
         r: 11,
         datum: { id: poi.id, label: poi.id, kind: "poi", lon: poi.lon, lat: poi.lat },
         id: poi.id,
-      })
+      }),
     )
   }
 
@@ -363,7 +353,9 @@ function oregonTrailLayout(ctx) {
     .map((l, i) => {
       const p = P(l.lon, l.lat)
       if (!p) return null
-      return <rect key={`l${i}`} x={p[0] - 2.6} y={p[1] - 2.6} width={5.2} height={5.2} fill={OT.INK} />
+      return (
+        <rect key={`l${i}`} x={p[0] - 2.6} y={p[1] - 2.6} width={5.2} height={5.2} fill={OT.INK} />
+      )
     })
     .filter(Boolean)
 
@@ -372,7 +364,16 @@ function oregonTrailLayout(ctx) {
       const p = P(f.lon, f.lat)
       if (!p) return null
       return (
-        <rect key={`f${i}`} x={p[0] - 5} y={p[1] - 5} width={10} height={10} fill={OT.LAND_GRAY} stroke={OT.INK} strokeWidth={1.7} />
+        <rect
+          key={`f${i}`}
+          x={p[0] - 5}
+          y={p[1] - 5}
+          width={10}
+          height={10}
+          fill={OT.LAND_GRAY}
+          stroke={OT.INK}
+          strokeWidth={1.7}
+        />
       )
     })
     .filter(Boolean)
@@ -395,15 +396,37 @@ function oregonTrailLayout(ctx) {
 
       {/* Highlight the focused point of interest (mouse or keyboard). */}
       {focusPoiXY && (
-        <circle cx={focusPoiXY[0]} cy={focusPoiXY[1]} r={12} fill="none" stroke={OT.START_ORANGE} strokeWidth={2.6} />
+        <circle
+          cx={focusPoiXY[0]}
+          cy={focusPoiXY[1]}
+          r={12}
+          fill="none"
+          stroke={OT.START_ORANGE}
+          strokeWidth={2.6}
+        />
       )}
 
       {/* START plaque (lifted above its marker so it clears the SE corner) */}
       {sp && (
         <g>
           <rect x={sp[0] - 4} y={sp[1] - 4} width={8} height={8} fill={OT.INK} />
-          <rect x={sp[0] - 58} y={sp[1] - 34} width={54} height={20} fill={OT.START_ORANGE} stroke={OT.INK} strokeWidth={1.5} />
-          <text x={sp[0] - 31} y={sp[1] - 20} textAnchor="middle" fontSize="12" fontWeight="700" fill={OT.INK}>
+          <rect
+            x={sp[0] - 58}
+            y={sp[1] - 34}
+            width={54}
+            height={20}
+            fill={OT.START_ORANGE}
+            stroke={OT.INK}
+            strokeWidth={1.5}
+          />
+          <text
+            x={sp[0] - 31}
+            y={sp[1] - 20}
+            textAnchor="middle"
+            fontSize="12"
+            fontWeight="700"
+            fill={OT.INK}
+          >
             START
           </text>
         </g>
@@ -415,8 +438,23 @@ function oregonTrailLayout(ctx) {
           <text x={fp[0]} y={fp[1] + 6} textAnchor="middle" fontSize="18" fill={OT.INK}>
             ★
           </text>
-          <rect x={fp[0] - 74} y={fp[1] - 10} width={64} height={20} fill={OT.PAPER_WHITE} stroke={OT.INK} strokeWidth={1.5} />
-          <text x={fp[0] - 42} y={fp[1] + 4} textAnchor="middle" fontSize="12" fontWeight="700" fill={OT.INK}>
+          <rect
+            x={fp[0] - 74}
+            y={fp[1] - 10}
+            width={64}
+            height={20}
+            fill={OT.PAPER_WHITE}
+            stroke={OT.INK}
+            strokeWidth={1.5}
+          />
+          <text
+            x={fp[0] - 42}
+            y={fp[1] + 4}
+            textAnchor="middle"
+            fontSize="12"
+            fontWeight="700"
+            fill={OT.INK}
+          >
             FINISH
           </text>
         </g>
@@ -425,7 +463,12 @@ function oregonTrailLayout(ctx) {
       {/* Wagon */}
       {wp && (
         <g transform={`translate(${wp[0]},${wp[1]})`}>
-          <path d="M-8,-5 Q0,-12 8,-5 L8,1 L-8,1 Z" fill={OT.PAPER_WHITE} stroke={OT.INK} strokeWidth={1.3} />
+          <path
+            d="M-8,-5 Q0,-12 8,-5 L8,1 L-8,1 Z"
+            fill={OT.PAPER_WHITE}
+            stroke={OT.INK}
+            strokeWidth={1.3}
+          />
           <circle cx={-4.5} cy={3.5} r={2.6} fill={OT.INK} />
           <circle cx={4.5} cy={3.5} r={2.6} fill={OT.INK} />
         </g>
@@ -433,27 +476,92 @@ function oregonTrailLayout(ctx) {
 
       {/* Title */}
       <g>
-        <text x={cx} y={plot.y + 28} textAnchor="middle" fontSize="21" fontWeight="700" fill={OT.PAPER_WHITE} stroke={OT.INK} strokeWidth={3.5} paintOrder="stroke" letterSpacing="1">
+        <text
+          x={cx}
+          y={plot.y + 28}
+          textAnchor="middle"
+          fontSize="21"
+          fontWeight="700"
+          fill={OT.PAPER_WHITE}
+          stroke={OT.INK}
+          strokeWidth={3.5}
+          paintOrder="stroke"
+          letterSpacing="1"
+        >
           Map of the
         </text>
-        <text x={cx} y={plot.y + 53} textAnchor="middle" fontSize="21" fontWeight="700" fill={OT.PAPER_WHITE} stroke={OT.INK} strokeWidth={3.5} paintOrder="stroke" letterSpacing="1">
+        <text
+          x={cx}
+          y={plot.y + 53}
+          textAnchor="middle"
+          fontSize="21"
+          fontWeight="700"
+          fill={OT.PAPER_WHITE}
+          stroke={OT.INK}
+          strokeWidth={3.5}
+          paintOrder="stroke"
+          letterSpacing="1"
+        >
           Oregon Trail
         </text>
       </g>
 
       {/* Legend */}
       <g fontSize="11" fontWeight="700" fill={OT.INK}>
-        <rect x={legendX - 12} y={legendY - 14} width={132} height={98} fill={OT.LAND_GRAY} stroke={OT.INK} strokeWidth={1.4} />
-        <rect x={legendX + 1} y={legendY} width={9} height={9} fill={OT.LAND_GRAY} stroke={OT.INK} strokeWidth={1.4} />
-        <text x={legendX + 18} y={legendY + 9}>Forts</text>
+        <rect
+          x={legendX - 12}
+          y={legendY - 14}
+          width={132}
+          height={98}
+          fill={OT.LAND_GRAY}
+          stroke={OT.INK}
+          strokeWidth={1.4}
+        />
+        <rect
+          x={legendX + 1}
+          y={legendY}
+          width={9}
+          height={9}
+          fill={OT.LAND_GRAY}
+          stroke={OT.INK}
+          strokeWidth={1.4}
+        />
+        <text x={legendX + 18} y={legendY + 9}>
+          Forts
+        </text>
         <rect x={legendX + 2.5} y={legendY + 17.5} width={6} height={6} fill={OT.INK} />
-        <text x={legendX + 18} y={legendY + 25}>Landmarks</text>
-        <line x1={legendX} y1={legendY + 37} x2={legendX + 12} y2={legendY + 37} stroke={OT.INK} strokeWidth={2.2} />
-        <text x={legendX + 18} y={legendY + 41}>Your route</text>
-        <path d={`M${legendX},${legendY + 55} q3,-5 6,0 t6,0`} fill="none" stroke={OT.RIVER_BLUE} strokeWidth={1.6} />
-        <text x={legendX + 18} y={legendY + 57}>Rivers</text>
-        <path d={`M${legendX},${legendY + 72} l6,-7 l6,7`} fill="none" stroke={OT.INK} strokeWidth={1.3} />
-        <text x={legendX + 18} y={legendY + 73}>Mountains</text>
+        <text x={legendX + 18} y={legendY + 25}>
+          Landmarks
+        </text>
+        <line
+          x1={legendX}
+          y1={legendY + 37}
+          x2={legendX + 12}
+          y2={legendY + 37}
+          stroke={OT.INK}
+          strokeWidth={2.2}
+        />
+        <text x={legendX + 18} y={legendY + 41}>
+          Your route
+        </text>
+        <path
+          d={`M${legendX},${legendY + 55} q3,-5 6,0 t6,0`}
+          fill="none"
+          stroke={OT.RIVER_BLUE}
+          strokeWidth={1.6}
+        />
+        <text x={legendX + 18} y={legendY + 57}>
+          Rivers
+        </text>
+        <path
+          d={`M${legendX},${legendY + 72} l6,-7 l6,7`}
+          fill="none"
+          stroke={OT.INK}
+          strokeWidth={1.3}
+        />
+        <text x={legendX + 18} y={legendY + 73}>
+          Mountains
+        </text>
       </g>
     </g>
   )

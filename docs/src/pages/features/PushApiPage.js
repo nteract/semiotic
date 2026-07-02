@@ -423,7 +423,7 @@ useSyncedPushData(ref, rows, { id: "id", resetKey: theme })
       <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
         It works on any push-capable HOC (realtime, ordinal, XY, network) and
         pairs with <code>useStreamStatus</code> for a live/stale badge. The
-        realtime examples — Wikipedia, Where the Boxes Wait, and The Scroll
+        realtime examples — Wikipedia, The Long Way Around, and The Scroll
         You’re Telling — all drive their charts through it.
       </p>
 

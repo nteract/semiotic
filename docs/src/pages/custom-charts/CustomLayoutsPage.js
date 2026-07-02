@@ -256,9 +256,7 @@ const htmlCardLayout = (ctx) => {
   const { hoveredId } = ctx.config
   const colW = plot.width / ctx.nodes.length
   const cy = plot.height / 2
-  const posById = new Map(
-    ctx.nodes.map((node, i) => [node.id, { cx: colW * (i + 0.5), cy }]),
-  )
+  const posById = new Map(ctx.nodes.map((node, i) => [node.id, { cx: colW * (i + 0.5), cy }]))
 
   // Transparent hit-rects: the visible card is an htmlMark; the rect only owns
   // hit-testing so canvas hover/onObservation stays authoritative.
@@ -390,11 +388,11 @@ export default function CustomChartsPage() {
         <p>
           When the catalog doesn't fit, the four custom-chart HOCs — <code>XYCustomChart</code>,{" "}
           <code>OrdinalCustomChart</code>, <code>NetworkCustomChart</code>, and{" "}
-          <code>GeoCustomChart</code> — let you supply a
-          layout function that emits scene nodes directly. The frame still owns scales, theme, hit
-          testing, transitions, decay, accessibility, and SSR — your layout owns the geometry. Most
-          novel chart types (waffle, calendar, streamgraph, flextree, dagre) decompose into the same
-          primitives the built-in HOCs use.
+          <code>GeoCustomChart</code> — let you supply a layout function that emits scene nodes
+          directly. The frame still owns scales, theme, hit testing, transitions, decay,
+          accessibility, and SSR — your layout owns the geometry. Most novel chart types (waffle,
+          calendar, streamgraph, flextree, dagre) decompose into the same primitives the built-in
+          HOCs use.
         </p>
         <p>
           Layouts ship in <code>semiotic/recipes</code>. You can use them as-is or copy one and
@@ -407,9 +405,9 @@ export default function CustomChartsPage() {
         <p>
           <code>GeoCustomChart</code> receives the frame&rsquo;s fitted projection helpers plus raw
           areas, points, and lines, then emits interactive geographic scene nodes. The{" "}
-          <Link to="/examples/paris-isometric-landmarks">Paris, Tile by Tile</Link> example
-          quantizes DBpedia landmarks into a five-by-five isometric board while GeoFrame retains
-          polygon hit-testing, accessibility, tooltips, selection, and SSR.
+          <Link to="/examples/paris-isometric-landmarks">Paris, Isometric City of Lights</Link>{" "}
+          example quantizes DBpedia landmarks into a five-by-five isometric board while GeoFrame
+          retains polygon hit-testing, accessibility, tooltips, selection, and SSR.
         </p>
         <CodeBlock language="jsx">{`import { GeoCustomChart } from "semiotic/geo"
 import { isometricLandmarkLayout } from "semiotic/recipes"
@@ -955,12 +953,13 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
         <ul>
           <li>
             <strong>Stable ids.</strong> Give each emitted node a stable identity such as{" "}
-            <code>_transitionKey</code>, <code>pointId</code>, or a recipe-specific id so transitions
-            can interpolate between solved states.
+            <code>_transitionKey</code>, <code>pointId</code>, or a recipe-specific id so
+            transitions can interpolate between solved states.
           </li>
           <li>
-            <strong>Transparent hit targets.</strong> Pictorial glyphs often need a simple scene node
-            underneath the visible overlay. Use a transparent rect or point with a useful datum.
+            <strong>Transparent hit targets.</strong> Pictorial glyphs often need a simple scene
+            node underneath the visible overlay. Use a transparent rect or point with a useful
+            datum.
           </li>
           <li>
             <strong>Tooltip payloads.</strong> Shape datums with user-facing keys, then use{" "}
@@ -1037,9 +1036,9 @@ ref.current.update("planning", (d) => ({
           renders into one real-DOM layer <strong>above the canvas and SVG overlays</strong> (stack
           order: canvas → <code>overlays</code> → <code>htmlMarks</code>). Each mark is{" "}
           <code>{"{ id, x, y, width, height, content }"}</code> in the <em>same plot space</em> as{" "}
-          <code>sceneNodes</code> — the framework owns the margin (and any future zoom/pan) transform,
-          so a mark at <code>(x, y)</code> lands exactly where a scene node at <code>(x, y)</code>{" "}
-          does.
+          <code>sceneNodes</code> — the framework owns the margin (and any future zoom/pan)
+          transform, so a mark at <code>(x, y)</code> lands exactly where a scene node at{" "}
+          <code>(x, y)</code> does.
         </p>
         <p>
           Reach for it over an SVG <code>&lt;foreignObject&gt;</code> when a node is{" "}
@@ -1079,10 +1078,11 @@ const cardLayout: NetworkCustomLayout = (ctx) => {
 <NetworkCustomChart nodes={nodes} edges={edges} layout={cardLayout} />`}</CodeBlock>
         <p>
           The card's <code>content</code> can call <code>useCustomLayoutSelection()</code> to read
-          the shared <Link to="/coordinated-views">selection</Link> and dim itself — that updates the
-          DOM layer <strong>without re-running the layout</strong>, so hover stays cheap even on big
-          graphs (the demo above drives the dim through <code>layoutConfig</code> for brevity, which
-          re-runs the layout each hover — fine at four nodes, but prefer the selection path at scale).
+          the shared <Link to="/coordinated-views">selection</Link> and dim itself — that updates
+          the DOM layer <strong>without re-running the layout</strong>, so hover stays cheap even on
+          big graphs (the demo above drives the dim through <code>layoutConfig</code> for brevity,
+          which re-runs the layout each hover — fine at four nodes, but prefer the selection path at
+          scale).
         </p>
       </section>
 

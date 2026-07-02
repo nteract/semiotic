@@ -131,6 +131,50 @@
   font-style: normal;
 }
 
+.port-replay__scenarios {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 22px 0 0;
+}
+
+.port-replay__scenarios button {
+  display: grid;
+  gap: 6px;
+  padding: 13px 14px 11px;
+  border-left: 4px solid var(--scenario-color, var(--port-line));
+  text-align: left;
+}
+
+.port-replay__scenarios button:hover,
+.port-replay__scenarios button:focus-visible,
+.port-replay__scenarios button.is-active {
+  border-color: var(--scenario-color, var(--port-yellow));
+  outline: none;
+  background: color-mix(in srgb, var(--scenario-color, #ffd166) 12%, transparent);
+}
+
+.port-replay__scenario-name {
+  color: var(--scenario-color, #f5ecdc);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.port-replay__scenario-dates {
+  color: #9ab1b5;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.port-replay__scenario-blurb {
+  max-width: 780px;
+  margin: 12px 0 20px;
+  color: #aec0c2;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .port-replay__sticky-controls {
   position: sticky;
   top: 76px;
@@ -504,6 +548,11 @@
   color: #17282b;
 }
 
+/* Scatter cells are clickable — each StreamXYFrame paints to a canvas. */
+.port-replay__matrix-chart canvas {
+  cursor: pointer;
+}
+
 .port-replay__matrix-chart .semiotic-tooltip {
   border: 1px solid #17282b;
   border-radius: 0;
@@ -558,6 +607,10 @@
   }
 
   .port-replay__itineraries {
+    grid-template-columns: 1fr;
+  }
+
+  .port-replay__scenarios {
     grid-template-columns: 1fr;
   }
 }

@@ -16,9 +16,7 @@ import {
 // Day-of-year of the baked fixture's "today" (2026-06-26 — keep in sync with
 // openMeteoExampleData's `todayDate`), derived rather than hardcoded so the
 // two Climate pages can't drift.
-const TODAY_DAY = Math.round(
-  (Date.UTC(2026, 5, 26) - Date.UTC(2026, 0, 1)) / (24 * 60 * 60 * 1000),
-)
+const TODAY_DAY = Math.round((Date.UTC(2026, 5, 26) - Date.UTC(2026, 0, 1)) / (24 * 60 * 60 * 1000))
 
 const PRESET_PROFILES = [
   {
@@ -113,74 +111,70 @@ export default function ClimateRadialWeatherExamplePage() {
   const fallbackWeather = useMemo(() => buildWeatherData(profile), [profile])
   const weather = liveData?.weather || fallbackWeather
   const selectedRows = useMemo(() => selectRows(weather.rows, brush), [weather, brush])
-  const selectedConditions = useMemo(
-    () => selectRows(weather.conditions, brush),
-    [weather, brush]
-  )
+  const selectedConditions = useMemo(() => selectRows(weather.conditions, brush), [weather, brush])
   const selectedLabel = `${formatDateLabel(selectedRows[0]?.day)} - ${formatDateLabel(selectedRows[selectedRows.length - 1]?.day)}`
   const today = weather.rows[TODAY_DAY]
   const title = profile.label.length > 23 ? `${profile.label.slice(0, 22)}...` : profile.label
 
-  const banner = isLoading && !isSlow ? null : (
-    <div
-      role={isSlow ? "alert" : "status"}
-      aria-live="polite"
-      style={{
-        ...styles.banner,
-        ...(isSlow ? styles.bannerSlow : {}),
-        ...(view.kind === "live" ? styles.bannerLive : {}),
-      }}
-    >
-      <div style={styles.bannerIcon} aria-hidden="true">
-        {isSlow ? "…" : view.kind === "live" ? "✓" : "i"}
-      </div>
-      <div style={styles.bannerCopy}>
-        <strong style={styles.bannerTitle}>
-          {isSlow
-            ? "This is taking longer than expected"
-            : view.kind === "live"
-              ? "Showing current data"
-              : "Showing historical data"}
-        </strong>
-        <span style={styles.bannerMessage}>
-          {isSlow
-            ? "Open-Meteo is still responding. Choose an example to view historical data now."
-            : view.message}
-        </span>
-      </div>
-      {isSlow ? (
-        <div style={styles.bannerActions} aria-label="Historical examples">
-          {PRESET_PROFILES.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              onClick={() => showHistorical(preset)}
-              style={styles.bannerSecondaryButton}
-            >
-              {preset.label.split(",")[0]}
-            </button>
-          ))}
+  const banner =
+    isLoading && !isSlow ? null : (
+      <div
+        role={isSlow ? "alert" : "status"}
+        aria-live="polite"
+        style={{
+          ...styles.banner,
+          ...(isSlow ? styles.bannerSlow : {}),
+          ...(view.kind === "live" ? styles.bannerLive : {}),
+        }}
+      >
+        <div style={styles.bannerIcon} aria-hidden="true">
+          {isSlow ? "…" : view.kind === "live" ? "✓" : "i"}
         </div>
-      ) : view.kind === "historical" ? (
-        <button
-          type="button"
-          onClick={() => loadCurrentData(profile)}
-          style={styles.bannerActionButton}
-        >
-          Update data
-        </button>
-      ) : null}
-    </div>
-  )
+        <div style={styles.bannerCopy}>
+          <strong style={styles.bannerTitle}>
+            {isSlow
+              ? "This is taking longer than expected"
+              : view.kind === "live"
+                ? "Showing current data"
+                : "Showing historical data"}
+          </strong>
+          <span style={styles.bannerMessage}>
+            {isSlow
+              ? "Open-Meteo is still responding. Choose an example to view historical data now."
+              : view.message}
+          </span>
+        </div>
+        {isSlow ? (
+          <div style={styles.bannerActions} aria-label="Historical examples">
+            {PRESET_PROFILES.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => showHistorical(preset)}
+                style={styles.bannerSecondaryButton}
+              >
+                {preset.label.split(",")[0]}
+              </button>
+            ))}
+          </div>
+        ) : view.kind === "historical" ? (
+          <button
+            type="button"
+            onClick={() => loadCurrentData(profile)}
+            style={styles.bannerActionButton}
+          >
+            Update data
+          </button>
+        ) : null}
+      </div>
+    )
 
   return (
-    <ExamplePageLayout
-      title="Point Climate Radial"
-    >
+    <ExamplePageLayout title="Brushable Weather Rings">
       <p style={styles.lede}>
-        A combined information-art example: point controls displayed as a radial
-        weather custom ordinal chart with a circular brush and stacked temporal
-        histogram detail.
+        Years are cycles, and weather patterns make more sense when you can see the cyclical nature
+        of weather patterns mapped to years. But it still helps to see it as a straight line, so
+        here's a radial brush to get that, too.
       </p>
 
       <ThemeProvider theme={carbonTheme}>
@@ -190,14 +184,16 @@ export default function ClimateRadialWeatherExamplePage() {
           height={620}
           loading={isLoading}
           banner={banner}
-          controls={!isLoading ? (
-            <div style={styles.temperatureReadout}>
-              <span style={styles.temperatureValue}>{formatF(today?.max)}</span>
-              <span style={styles.temperatureLabel}>
-                {view.kind === "live" ? "Jun 26 high" : "Historical Jun 26 high"}
-              </span>
-            </div>
-          ) : null}
+          controls={
+            !isLoading ? (
+              <div style={styles.temperatureReadout}>
+                <span style={styles.temperatureValue}>{formatF(today?.max)}</span>
+                <span style={styles.temperatureLabel}>
+                  {view.kind === "live" ? "Jun 26 high" : "Historical Jun 26 high"}
+                </span>
+              </div>
+            ) : null
+          }
           style={styles.visualPanel}
         >
           <section
@@ -231,10 +227,19 @@ export default function ClimateRadialWeatherExamplePage() {
             <section style={styles.figurePanel}>
               <div style={styles.figureGrid}>
                 <div style={styles.sidePanel}>
-                  <svg viewBox="0 0 330 344" style={styles.sideSvg} role="img" aria-label={`${profile.label} radial climate legend`}>
+                  <svg
+                    viewBox="0 0 330 344"
+                    style={styles.sideSvg}
+                    role="img"
+                    aria-label={`${profile.label} radial climate legend`}
+                  >
                     <WeatherLegend
                       title={title}
-                      subtitle={view.kind === "live" ? "Historical range and current weather" : "Historical weather reference"}
+                      subtitle={
+                        view.kind === "live"
+                          ? "Historical range and current weather"
+                          : "Historical weather reference"
+                      }
                       comparisonLabel={view.kind === "live" ? "Current year" : "Historical sample"}
                       textColor="var(--semiotic-text)"
                     />
@@ -258,27 +263,25 @@ export default function ClimateRadialWeatherExamplePage() {
         </ChartContainer>
       </ThemeProvider>
 
-      <h2>What This Combines</h2>
+      <h2>How it works</h2>
       <p>
-        The controls use browser geolocation and Open-Meteo&apos;s archive and
-        forecast APIs. The display is a radial/linear pair: an{" "}
-        <code>OrdinalCustomChart</code> in radial projection, an external circular
-        brush control, and two aligned <code>TemporalHistogram</code> detail
-        charts. The current-year marks and condition rings use available daily
-        observations and forecast values; the full-year reference uses a computed
-        1991-2020 baseline.
+        The controls use browser geolocation and Open-Meteo&apos;s archive and forecast APIs. The
+        display is a radial/linear pair: an <code>OrdinalCustomChart</code> in radial projection, an
+        external custom control (in this case a circular brush), and two aligned{" "}
+        <code>TemporalHistogram</code> detail charts. The current-year marks and condition rings use
+        available daily observations and forecast values; the full-year reference uses a computed
+        1991-2020 baseline. The orange marks show when temperature goes beyond the normal variation
+        of temperature during that time of year while still showing min and max for context.
       </p>
 
       <h2>Implementation Excerpt</h2>
       <CodeBlock language="jsx" showCopyButton code={combinedCode} />
 
       <p style={styles.sourceNote}>
-        Live data comes from Open-Meteo without an API key. Preset locations use
-        bundled 1991-2020 summaries; a browser-provided location computes and
-        caches its baseline locally. The deterministic generator remains
-        available when the network or service is unavailable.
+        Live data comes from Open-Meteo without an API key. Preset locations use bundled 1991-2020
+        summaries; a browser-provided location computes and caches its baseline locally. The
+        deterministic generator remains available when the network or service is unavailable.
       </p>
-
     </ExamplePageLayout>
   )
 }
@@ -292,7 +295,8 @@ function profileFromCoordinates(lat, lon) {
     lat,
     lon,
     baseShift: Math.round((20 - distanceFromEquator * 32 - coastalOffset * 4) * 10) / 10,
-    amplitudeScale: Math.round((0.25 + distanceFromEquator * 0.95 - coastalOffset * 0.12) * 100) / 100,
+    amplitudeScale:
+      Math.round((0.25 + distanceFromEquator * 0.95 - coastalOffset * 0.12) * 100) / 100,
     volatilityScale: Math.round((0.62 + distanceFromEquator * 0.58) * 100) / 100,
     warming: Math.round((0.55 + distanceFromEquator * 0.72) * 10) / 10,
     seed: Math.abs(lat * 0.17 + lon * 0.03) % 30,

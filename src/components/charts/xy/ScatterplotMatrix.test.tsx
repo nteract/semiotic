@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import { render } from "@testing-library/react"
 import { ScatterplotMatrix } from "./ScatterplotMatrix"
 import { TooltipProvider } from "../../store/TooltipStore"
@@ -162,6 +163,25 @@ describe("ScatterplotMatrix", () => {
     )
 
     expect(container.firstChild).toBeTruthy()
+  })
+
+  it("renders with an onClick handler without crashing", () => {
+    const onClick = vi.fn()
+    const { container } = render(
+      <TooltipProvider>
+        <ScatterplotMatrix
+          data={sampleData}
+          fields={["a", "b"]}
+          onClick={onClick}
+        />
+      </TooltipProvider>
+    )
+
+    // Scatterplot cells should still render; the click wiring is passed
+    // through to each cell's StreamXYFrame.
+    const streamFrames = container.querySelectorAll(".stream-xy-frame")
+    expect(streamFrames.length).toBe(2) // 2x2 - 2 diagonal = 2
+    expect(onClick).not.toHaveBeenCalled()
   })
 
   it("renders with single field", () => {

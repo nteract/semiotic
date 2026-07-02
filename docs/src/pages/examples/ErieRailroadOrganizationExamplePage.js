@@ -128,9 +128,7 @@ export default function ErieRailroadOrganizationExamplePage() {
   const annotations = useMemo(() => (showNotes ? ERIE_NOTES : []), [showNotes])
 
   return (
-    <ExamplePageLayout
-      title="The New York & Erie Railroad"
-    >
+    <ExamplePageLayout title="The New York & Erie Railroad">
       <style>{`
         @media (max-width: 720px) {
           .erie-toolbar { align-items: stretch !important; flex-direction: column !important; }
@@ -142,7 +140,7 @@ export default function ErieRailroadOrganizationExamplePage() {
         In 1855, Daniel McCallum and George Holt Henshaw turned a railroad into a tree. Authority
         rises from the directors at the roots, operating divisions fan out as tracks, and the
         workforce blooms around each station. This reconstruction keeps that visual argument but
-        makes the organization computable: every branch is generated from role, station, division,
+        makes the organization procedural: every branch is generated from role, station, division,
         and headcount data.
       </p>
 
@@ -238,18 +236,18 @@ export default function ErieRailroadOrganizationExamplePage() {
           system: power begins with the directors, concentrates in the president and general
           superintendent, then follows five operating lines to local stations. Choose{" "}
           <strong>Workforce</strong> and the same geometry becomes a distribution display. Leaf
-          color identifies work and leaf quantity reflects the representative crew count. The
-          chart does not swap components; <code>layoutConfig</code> cheaply re-runs one custom
-          layout against the same graph.
+          color identifies work and leaf quantity reflects the representative crew count. The chart
+          does not swap components; <code>layoutConfig</code> cheaply re-runs one custom layout
+          against the same graph.
         </p>
 
         <h2>Railroad geometry, botanical grammar</h2>
         <p>
           A generic tree layout would preserve the reporting hierarchy but erase the thing that
-          makes the original memorable. Here each division receives a computed cubic trunk.
-          Stations are sampled along it in route order; crew branches grow from the local tangent;
-          and employee dots settle into deterministic phyllotactic clusters. Add a station or
-          change a headcount and the branch re-grows without touching a coordinate.
+          makes the original memorable. Here each division receives a computed cubic trunk. Stations
+          are sampled along it in route order; crew branches grow from the local tangent; and
+          employee dots settle into deterministic phyllotactic clusters. Add a station or change a
+          headcount and the branch re-grows without touching a coordinate.
         </p>
 
         <CodeBlock language="jsx" showCopyButton code={implementationCode} />
@@ -258,18 +256,14 @@ export default function ErieRailroadOrganizationExamplePage() {
         <p>
           The visible plate is art-directed SVG, but a transparent <code>networkHitTarget</code>{" "}
           sits behind every meaningful office and crew. Semiotic supplies pointer and keyboard
-          observation, tooltips, focus geometry, click locking, the accessible data table,
-          point-id annotation anchoring, and export. The custom layout owns the unusual geometry;
-          the frame continues to own chart behavior.
+          observation, tooltips, focus geometry, click locking, the accessible data table, point-id
+          annotation anchoring, and export. The custom layout owns the unusual geometry; the frame
+          continues to own chart behavior.
         </p>
 
         <p style={styles.sourceNote}>
           Historical structure and wording are based on Daniel C. McCallum and G. H. Henshaw&apos;s{" "}
-          <a
-            href="https://www.loc.gov/item/2017586274/"
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a href="https://www.loc.gov/item/2017586274/" target="_blank" rel="noreferrer">
             1855 diagram in the Library of Congress
           </a>
           . The Library describes the straight branches as railroad trackage radiating from the
@@ -337,7 +331,10 @@ function railroadOrganizationLayout(ctx) {
       position.set(station.id, point)
 
       const crews = rawNodes.filter(
-        (node) => node.kind === "crew" && node.division === division.id && node.stationIndex === stationIndex,
+        (node) =>
+          node.kind === "crew" &&
+          node.division === division.id &&
+          node.stationIndex === stationIndex,
       )
       crews.forEach((crew) => {
         const pair = crew.crewIndex % 2
@@ -370,7 +367,13 @@ function railroadOrganizationLayout(ctx) {
       const p = position.get(node.id)
       if (!p) return null
       const radius =
-        node.kind === "authority" ? 27 : node.kind === "division" ? 18 : node.kind === "crew" ? 16 : 11
+        node.kind === "authority"
+          ? 27
+          : node.kind === "division"
+            ? 18
+            : node.kind === "crew"
+              ? 16
+              : 11
       return networkHitTarget({
         x: p.x,
         y: p.y,
@@ -523,9 +526,7 @@ function RailroadPlateOverlay({
         {stationBranches.map((branch) => {
           const dimmed = isDimmed(branch.crew)
           const color =
-            view === "workforce"
-              ? CLASS_BY_ID.get(branch.crew.employeeClass)?.color ?? INK
-              : INK
+            view === "workforce" ? (CLASS_BY_ID.get(branch.crew.employeeClass)?.color ?? INK) : INK
           const control = {
             x: branch.from.x + (branch.to.x - branch.from.x) * 0.62 + branch.tangent.x * 9,
             y: branch.from.y + (branch.to.y - branch.from.y) * 0.62 + branch.tangent.y * 9,
@@ -602,12 +603,7 @@ function RailroadPlateOverlay({
           )
         })}
 
-      <LeadershipRoots
-        position={position}
-        nodes={rawNodes}
-        activeId={active?.id}
-        view={view}
-      />
+      <LeadershipRoots position={position} nodes={rawNodes} activeId={active?.id} view={view} />
     </g>
   )
 }
@@ -729,8 +725,17 @@ function LeadershipRoots({ position, nodes, activeId, view }) {
           return (
             <g key={index}>
               <line x1={board.x} y1={board.y} x2={x} y2={y} stroke={INK_SOFT} strokeWidth="0.65" />
-              <circle cx={x} cy={y} r="9" fill="url(#erie-medallion)" stroke={INK} strokeWidth="0.75" />
-              <text x={x} y={y + 3} textAnchor="middle" fill={GOLD} fontSize="9">★</text>
+              <circle
+                cx={x}
+                cy={y}
+                r="9"
+                fill="url(#erie-medallion)"
+                stroke={INK}
+                strokeWidth="0.75"
+              />
+              <text x={x} y={y + 3} textAnchor="middle" fill={GOLD} fontSize="9">
+                ★
+              </text>
             </g>
           )
         })}
@@ -814,7 +819,14 @@ function Medallion({ x, y, radius, label, active }) {
         stroke={active ? RUST : INK}
         strokeWidth={active ? 2 : 0.9}
       />
-      <circle cx={x} cy={y} r={Math.max(2, radius - 3)} fill="none" stroke={INK_SOFT} strokeWidth="0.45" />
+      <circle
+        cx={x}
+        cy={y}
+        r={Math.max(2, radius - 3)}
+        fill="none"
+        stroke={INK_SOFT}
+        strokeWidth="0.45"
+      />
       {label && (
         <text
           x={x}
@@ -920,7 +932,11 @@ function ActiveReadout({ active, locked }) {
     <div style={styles.readout} aria-live="polite">
       <strong>{active.label}</strong>
       <span>
-        {[active.divisionLabel, active.station, active.count ? `${active.count} employees` : active.role]
+        {[
+          active.divisionLabel,
+          active.station,
+          active.count ? `${active.count} employees` : active.role,
+        ]
           .filter(Boolean)
           .join(" · ")}
         {locked?.id === active.id ? " · held" : ""}
@@ -1051,7 +1067,9 @@ const styles = {
     color: PAPER,
   },
   noteButton: {
-    border: "1px solid rgba(40,37,31,0.35)",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: "rgba(40,37,31,0.35)",
     borderRadius: "999px",
     background: "transparent",
     color: INK_SOFT,
@@ -1113,7 +1131,9 @@ const styles = {
     display: "inline-flex",
     alignItems: "center",
     gap: "6px",
-    border: "1px solid rgba(40,37,31,0.25)",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: "rgba(40,37,31,0.25)",
     borderRadius: "999px",
     background: "rgba(255,255,255,0.22)",
     color: INK,

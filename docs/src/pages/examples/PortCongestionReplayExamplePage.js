@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ProcessSankey,
   RealtimeWaterfallChart,
@@ -18,41 +12,46 @@ import { useDocsTheme } from "../../hooks/useDocsTheme"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import {
-  PORT_AXIS_TICKS,
-  PORT_COHORT_SUMMARIES,
+  PORT_CORRIDORS,
   PORT_LOCATIONS,
+  PORT_MATRIX_FIELDS,
+  PORT_MATRIX_FIELD_LABELS,
+  PORT_MATRIX_ROWS,
   PORT_PROCESS_NODES,
-  PORT_REPLAY_DOMAIN,
-  PORT_REPLAY_EVENTS,
-  PORT_ROUTES,
-  aggregateBacklogEvents,
-  backlogAtCursor,
+  PORT_SCENARIOS,
+  PORT_STAGE_COLOR_MAP,
+  PORTWATCH_ATTRIBUTION,
+  PORTWATCH_FETCHED_AT,
+  axisTicksFor,
+  cumulativeDeviation,
+  domainFor,
+  eventAnnotationsFor,
   flowsAtTime,
+  formatPortDay,
   formatPortTime,
+  gateForSelection,
+  gateName,
   processEdgesAtTime,
   replayTimeForCursor,
+  scenarioById,
+  scenarioDays,
+  transitsAt,
+  waterfallSeriesFor,
 } from "./data/portCongestionData"
 import "./PortCongestionReplayExamplePage.css"
 
-const ROUTE_COLORS = PORT_ROUTES.map((route) => route.color)
-const STAGE_COLORS = ["#ff7043", "#ffd166", "#36d6b3", "#68a7ff", "#c996ff"]
+const SCENARIO_PAPER_COLORS = PORT_SCENARIOS.map((scenario) => scenario.paperColor)
 const FLOW_MAP_FRAME_PROPS = {
   lineStyle: (flow) => ({
     stroke: flow.color || "#ff7043",
-    strokeWidth: Math.max(2, Math.min(5.5, 1.5 + (flow.value / 2500) * 4)),
+    strokeWidth: Math.max(1.6, Math.min(9.5, 1 + Math.sqrt(flow.value || 0) * 0.85)),
     strokeLinecap: "round",
-    opacity: 0.88,
+    opacity: 0.85,
     fillOpacity: 0,
   }),
   pointStyle: (point) => {
-    const originRoute = PORT_ROUTES.find((route) => route.origin === point.id)
-    if (originRoute) {
-      return {
-        fill: originRoute.color,
-        stroke: "#07171d",
-        strokeWidth: 1.2,
-        r: 5.5,
-      }
+    if (point.type === "origin") {
+      return { fill: "#f5ecdc", stroke: "#07171d", strokeWidth: 1.2, r: 5 }
     }
     if (point.type === "destination") {
       return { fill: "#f5ecdc", stroke: "#ff7043", strokeWidth: 2, r: 6 }
@@ -64,198 +63,265 @@ const FLOW_MAP_FRAME_PROPS = {
   },
 }
 
-const implementationCode = `const waterfallRef = useRef(null)
-const [cursor, setCursor] = useState(events.length)
-const currentTime = replayTimeForCursor(cursor)
+const implementationCode = `// Three real IMF PortWatch windows, one replay shell.
+const [scenarioId, setScenarioId] = useState("everGiven")
+const [cursor, setCursor] = useState(scenarioDays(scenarioId))
+const currentTime = replayTimeForCursor(scenarioId, cursor)
 
-// Static nodes + declaratively derived snapshots.
+// Declaratively derived snapshots of the selected scenario.
 <FlowMap
   nodes={locations}
-  flows={flowsAtTime(currentTime, selectedRoute)}
+  flows={flowsAtTime(scenarioId, currentTime, selectedCorridor)}
   areas="land-110m"
-  flowStyle="basic"
-  lineType="geo"
-  showParticles
 />
 
 <ProcessSankey
-  nodes={processNodes}
-  edges={processEdgesAtTime(currentTime, selectedRoute)}
-  domain={replayDomain}
+  nodes={gates}
+  edges={processEdgesAtTime(scenarioId, currentTime, selectedCorridor)}
+  domain={domainFor(scenarioId)}
   pairing="temporal"
 />
 
-// The backlog is mirrored through the imperative changeset API.
-waterfallRef.current.push(event)
-waterfallRef.current.remove(event.id)
+// Deviation-from-pace bars mirrored through the imperative changeset API.
+useSyncedPushData(waterfallRef, visibleDeviationRows, {
+  id: "id",
+  resetKey: \`\${scenarioId}:\${watchedGate}\`,
+})
 
-<RealtimeWaterfallChart
-  ref={waterfallRef}
-  pointIdAccessor="id"
-  timeAccessor="time"
-  valueAccessor="value"
-/>
-
+// The matrix holds every day of all three scenarios at once —
+// clicking any point jumps the replay to that scenario and date.
 <ScatterplotMatrix
-  data={cohortSummaries}
-  fields={["seaDays", "anchorageHours", "carbonTons", "teu"]}
-  colorBy="route"
+  data={PORT_MATRIX_ROWS}
+  fields={["suez", "babElMandeb", "capeOfGoodHope", "panama"]}
+  colorBy="scenario"
+  onClick={(row) => {
+    setScenarioId(row.scenarioId)
+    setCursor(row.dayIndex + 1)
+  }}
 />`
 
 export default function PortCongestionReplayExamplePage() {
-  const [cursor, setCursor] = useState(PORT_REPLAY_EVENTS.length)
+  const [scenarioId, setScenarioId] = useState("everGiven")
+  const [cursor, setCursor] = useState(() => scenarioDays("everGiven"))
   const [playing, setPlaying] = useState(false)
-  const [selectedRoute, setSelectedRoute] = useState(null)
-  const [hoveredRoute, setHoveredRoute] = useState(null)
+  const [selectedCorridor, setSelectedCorridor] = useState(null)
+  const [hoveredCorridor, setHoveredCorridor] = useState(null)
   const waterfallRef = useRef(null)
   const [chartWidth, chartHostRef] = useResponsiveWidth(320, 1132)
   const [docsTheme] = useDocsTheme()
 
-  const activeRouteId = selectedRoute || hoveredRoute
-  const activeRoute = PORT_ROUTES.find((route) => route.id === activeRouteId)
-  const currentTime = replayTimeForCursor(cursor)
+  const scenario = scenarioById(scenarioId)
+  const days = scenarioDays(scenarioId)
+  const activeCorridorId = selectedCorridor || hoveredCorridor
+  const activeCorridor = PORT_CORRIDORS.find((corridor) => corridor.id === activeCorridorId)
+  const currentTime = replayTimeForCursor(scenarioId, cursor)
+  const cursorDay = Math.max(0, cursor - 1)
+  const watchedGate = gateForSelection(scenarioId, activeCorridorId)
+
   const processEdges = useMemo(
-    () => processEdgesAtTime(currentTime, activeRouteId),
-    [currentTime, activeRouteId]
+    () => processEdgesAtTime(scenarioId, currentTime, activeCorridorId),
+    [scenarioId, currentTime, activeCorridorId],
   )
   const mapFlows = useMemo(
-    () => flowsAtTime(currentTime, activeRouteId),
-    [currentTime, activeRouteId]
+    () => flowsAtTime(scenarioId, currentTime, activeCorridorId),
+    [scenarioId, currentTime, activeCorridorId],
   )
   const mapNodes = useMemo(() => {
-    if (!activeRoute) return PORT_LOCATIONS
-    const routeNodeIds = new Set(activeRoute.waypoints)
-    return PORT_LOCATIONS.filter((location) => routeNodeIds.has(location.id))
-  }, [activeRoute])
-  const visibleEvents = useMemo(
-    () =>
-      PORT_REPLAY_EVENTS
-        .slice(0, cursor)
-        .filter((event) => !activeRouteId || event.routeId === activeRouteId),
-    [cursor, activeRouteId]
-  )
-  const backlogSeries = useMemo(
-    () => aggregateBacklogEvents(visibleEvents),
-    [visibleEvents]
+    if (!activeCorridor) return PORT_LOCATIONS
+    const corridorNodeIds = new Set(activeCorridor.legs.flatMap((leg) => [leg.source, leg.target]))
+    return PORT_LOCATIONS.filter((location) => corridorNodeIds.has(location.id))
+  }, [activeCorridor])
+  const deviationRows = useMemo(
+    () => waterfallSeriesFor(scenarioId, watchedGate).slice(0, cursor),
+    [scenarioId, watchedGate, cursor],
   )
 
-  const backlog = backlogAtCursor(cursor, activeRouteId)
-  const latestEvent = visibleEvents[visibleEvents.length - 1]
-  const activeLaneCount = new Set(mapFlows.map((flow) => flow.routeId)).size
-  const completedPercent = Math.round((cursor / PORT_REPLAY_EVENTS.length) * 100)
-  const outerInset =
-    chartWidth <= 560 ? 30 : Math.min(98, chartWidth * 0.08 + 2)
+  const transitsToday = transitsAt(scenarioId, watchedGate, cursorDay)
+  const counterGate = scenario.counterGate === watchedGate ? scenario.focal : scenario.counterGate
+  const counterToday = transitsAt(scenarioId, counterGate, cursorDay)
+  const paceDeviation = cumulativeDeviation(scenarioId, watchedGate, cursorDay)
+  const completedPercent = Math.round((cursor / days) * 100)
+  const outerInset = chartWidth <= 560 ? 30 : Math.min(98, chartWidth * 0.08 + 2)
   const contentWidth = chartWidth - outerInset
   const processWidth = Math.max(280, contentWidth - (chartWidth <= 560 ? 26 : 42))
   const panelWidth = processWidth
   const matrixCellSize = Math.max(70, Math.min(128, Math.floor((contentWidth - 112) / 4)))
-  const peakAnnotation = useMemo(() => {
-    let running = 0
-    let peak = null
-    for (const event of backlogSeries) {
-      running += event.value
-      if (!peak || running > peak.value) peak = { event, value: running }
-    }
-    if (!peak?.event || peak.value <= 0) return []
-    return [{
-      type: "callout",
-      time: peak.event.time,
-      value: peak.value,
-      label: `Peak queue · ${peak.value.toLocaleString()} TEU`,
-      color: "#ffd166",
-      dx: -46,
-      dy: -40,
-      connector: { end: "arrow" },
-    }]
-  }, [backlogSeries])
 
-  useSyncedPushData(waterfallRef, backlogSeries, {
+  const waterfallAnnotations = useMemo(() => {
+    const annotations = eventAnnotationsFor(scenarioId)
+    let running = 0
+    let trough = null
+    for (const row of deviationRows) {
+      running += row.value
+      if (!trough || running < trough.level) trough = { row, level: running }
+    }
+    if (trough && trough.level < -5) {
+      annotations.push({
+        type: "callout",
+        time: trough.row.time,
+        value: trough.level,
+        label: `${Math.abs(Math.round(trough.level))} transits behind pace`,
+        color: "#ffd166",
+        dx: -46,
+        dy: -36,
+        connector: { end: "arrow" },
+      })
+    }
+    return annotations
+  }, [scenarioId, deviationRows])
+
+  const matrixRanges = useMemo(
+    () =>
+      PORT_MATRIX_FIELDS.map((field) => {
+        const values = PORT_MATRIX_ROWS.map((row) => row[field])
+        return {
+          field,
+          label: PORT_MATRIX_FIELD_LABELS[field],
+          min: Math.min(...values),
+          max: Math.max(...values),
+        }
+      }),
+    [],
+  )
+
+  useSyncedPushData(waterfallRef, deviationRows, {
     id: "id",
-    resetKey: `${docsTheme}:${activeRouteId || "all-routes"}`,
+    resetKey: `${docsTheme}:${scenarioId}:${watchedGate}`,
   })
 
   useEffect(() => {
     if (!playing) return undefined
     const timer = window.setInterval(() => {
       setCursor((current) => {
-        if (current >= PORT_REPLAY_EVENTS.length) {
+        if (current >= days) {
           setPlaying(false)
           return current
         }
         return current + 1
       })
-    }, 320)
+    }, 300)
     return () => window.clearInterval(timer)
-  }, [playing])
+  }, [playing, days])
 
   const replay = useCallback(() => {
     setCursor(1)
     setPlaying(true)
   }, [])
 
-  const toggleRoute = useCallback((routeId) => {
-    setSelectedRoute((current) => (current === routeId ? null : routeId))
+  const selectScenario = useCallback((nextScenarioId) => {
+    setScenarioId(nextScenarioId)
+    setCursor(scenarioDays(nextScenarioId))
+    setPlaying(false)
   }, [])
 
-  const observeRoute = useCallback((observation) => {
+  const toggleCorridor = useCallback((corridorId) => {
+    setSelectedCorridor((current) => (current === corridorId ? null : corridorId))
+  }, [])
+
+  const observeCorridor = useCallback((observation) => {
     if (observation?.type === "hover") {
       const datum = unwrapDatum(observation.datum)
-      if (datum?.routeId) setHoveredRoute(datum.routeId)
+      if (datum?.corridorId) setHoveredCorridor(datum.corridorId)
     } else if (observation?.type === "hover-end") {
-      setHoveredRoute(null)
+      setHoveredCorridor(null)
     }
   }, [])
 
-  const clickDatum = useCallback((datum) => {
-    const routeId = findRouteId(datum)
-    if (routeId) toggleRoute(routeId)
-  }, [toggleRoute])
+  const clickDatum = useCallback(
+    (datum) => {
+      const corridorId = findCorridorId(datum)
+      if (corridorId) toggleCorridor(corridorId)
+    },
+    [toggleCorridor],
+  )
+
+  // Click any point in the matrix to jump the replay to that scenario and date.
+  const jumpToMatrixDay = useCallback((datum) => {
+    const row = unwrapDatum(datum)
+    if (!row?.scenarioId) return
+    setScenarioId(row.scenarioId)
+    setCursor(row.dayIndex + 1)
+    setPlaying(false)
+  }, [])
 
   return (
-    <ExamplePageLayout
-      title="Where the Boxes Wait"
-    >
+    <ExamplePageLayout title="The Long Way Around">
       <div className="port-replay" ref={chartHostRef}>
         <header className="port-replay__masthead">
           <div className="port-replay__mast-copy">
-            <div className="port-replay__kicker">Global cargo control / replay 09–10</div>
+            <div className="port-replay__kicker">
+              Global chokepoint monitor / IMF PortWatch replay
+            </div>
             <h2>
-              Where the
+              The long
               <br />
-              boxes wait
+              way around
             </h2>
             <p>
-              Fifteen container cohorts leave five ports across Asia, Europe,
-              and South America for Newark. Each follows a different maritime
-              corridor. The queue at the other end is shared.
+              A quiet spring, a canal sealed shut by a single ship, and a crisis that pushed a trade
+              lane around a continent. Every count below is an AIS-observed container-ship transit.
             </p>
           </div>
-          <div className="port-replay__clock" aria-label={`Replay time ${formatPortTime(currentTime)}`}>
-            <span>UTC replay clock</span>
+          <div
+            className="port-replay__clock"
+            aria-label={`Replay date ${formatPortTime(currentTime)}`}
+          >
+            <span>Replay date</span>
             <strong>{formatPortTime(currentTime)}</strong>
             <i>{String(completedPercent).padStart(3, "0")}%</i>
           </div>
         </header>
 
+        <nav className="port-replay__scenarios" aria-label="Select scenario">
+          {PORT_SCENARIOS.map((candidate) => (
+            <button
+              type="button"
+              key={candidate.id}
+              className={scenarioId === candidate.id ? "is-active" : ""}
+              style={{ "--scenario-color": candidate.color }}
+              onClick={() => selectScenario(candidate.id)}
+            >
+              <span className="port-replay__scenario-name">{candidate.label}</span>
+              <span className="port-replay__scenario-dates">{candidate.dateline}</span>
+            </button>
+          ))}
+        </nav>
+        <p className="port-replay__scenario-blurb">{scenario.blurb}</p>
+
         <div className="port-replay__sticky-controls">
           <section className="port-replay__controls" aria-label="Replay controls">
             <div className="port-replay__transport">
-              <button type="button" onClick={playing ? () => setPlaying(false) : cursor >= PORT_REPLAY_EVENTS.length ? replay : () => setPlaying(true)}>
-                {playing ? "Pause" : cursor >= PORT_REPLAY_EVENTS.length ? "Replay" : "Continue"}
+              <button
+                type="button"
+                onClick={
+                  playing
+                    ? () => setPlaying(false)
+                    : cursor >= days
+                      ? replay
+                      : () => setPlaying(true)
+                }
+              >
+                {playing ? "Pause" : cursor >= days ? "Replay" : "Continue"}
               </button>
-              <button type="button" className="port-replay__quiet-button" onClick={() => {
-                setPlaying(false)
-                setCursor(PORT_REPLAY_EVENTS.length)
-              }}>
+              <button
+                type="button"
+                className="port-replay__quiet-button"
+                onClick={() => {
+                  setPlaying(false)
+                  setCursor(days)
+                }}
+              >
                 End state
               </button>
             </div>
             <label className="port-replay__scrubber">
-              <span>Event {cursor} / {PORT_REPLAY_EVENTS.length}</span>
+              <span>
+                Day {cursor} / {days}
+              </span>
               <input
                 type="range"
-                min="0"
-                max={PORT_REPLAY_EVENTS.length}
+                min="1"
+                max={days}
                 value={cursor}
                 onChange={(event) => {
                   setPlaying(false)
@@ -265,62 +331,100 @@ export default function PortCongestionReplayExamplePage() {
             </label>
           </section>
 
-          <nav className="port-replay__routes" aria-label="Filter shipping lane">
-            <button
-              type="button"
-              className={!selectedRoute ? "is-active" : ""}
-              onClick={() => setSelectedRoute(null)}
-            >
-              All lanes
-            </button>
-            {PORT_ROUTES.map((route) => (
-              <button
-                type="button"
-                key={route.id}
-                className={selectedRoute === route.id ? "is-active" : ""}
-                style={{ "--route-color": route.color }}
-                onMouseEnter={() => setHoveredRoute(route.id)}
-                onMouseLeave={() => setHoveredRoute(null)}
-                onFocus={() => setHoveredRoute(route.id)}
-                onBlur={() => setHoveredRoute(null)}
-                onClick={() => toggleRoute(route.id)}
-              >
-                <span />
-                {route.shortLabel}
-              </button>
-            ))}
+          <nav className="port-replay__routes" aria-label="Filter corridor">
+            <div style={{ display: "flex", width: "100%", justifyContent: "space-between" }}>
+              <div>
+                <button
+                  type="button"
+                  className={!selectedCorridor ? "is-active" : ""}
+                  onClick={() => setSelectedCorridor(null)}
+                >
+                  All corridors
+                </button>
+                {PORT_CORRIDORS.map((corridor) => (
+                  <button
+                    type="button"
+                    key={corridor.id}
+                    className={selectedCorridor === corridor.id ? "is-active" : ""}
+                    style={{ "--route-color": corridor.color }}
+                    onMouseEnter={() => setHoveredCorridor(corridor.id)}
+                    onMouseLeave={() => setHoveredCorridor(null)}
+                    onFocus={() => setHoveredCorridor(corridor.id)}
+                    onBlur={() => setHoveredCorridor(null)}
+                    onClick={() => toggleCorridor(corridor.id)}
+                  >
+                    <span />
+                    {corridor.shortLabel}
+                  </button>
+                ))}
+              </div>
+              <div>
+                {PORT_SCENARIOS.map((candidate) => (
+                  <button
+                    type="button"
+                    key={candidate.id}
+                    className={scenarioId === candidate.id ? "is-active" : ""}
+                    style={{ "--scenario-color": candidate.color, width: 200 }}
+                    onClick={() => selectScenario(candidate.id)}
+                  >
+                    <span
+                      style={{ fontSize: "10px", width: 200, background: "none", height: "auto" }}
+                      className="port-replay__scenario-name"
+                    >
+                      {candidate.shortLabel}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </nav>
         </div>
 
         <div className="port-replay__readouts">
-          <Readout number="01" label="Delayed now" value={`${backlog.toLocaleString()} TEU`} />
-          <Readout number="02" label="Lanes in motion" value={String(activeLaneCount).padStart(2, "0")} />
-          <Readout number="03" label="Latest signal" value={latestEvent?.kind || "Awaiting arrivals"} />
-          <Readout number="04" label="Inspection" value={activeRoute?.shortLabel || "All ocean lanes"} />
+          <Readout
+            number="01"
+            label={`${gateName(watchedGate)} today`}
+            value={`${transitsToday} ships`}
+          />
+          <Readout
+            number="02"
+            label="Vs pre-event pace"
+            value={`${paceDeviation > 0 ? "+" : ""}${Math.round(paceDeviation).toLocaleString()} transits`}
+          />
+          <Readout
+            number="03"
+            label={`${gateName(counterGate)} today`}
+            value={`${counterToday} ships`}
+          />
+          <Readout
+            number="04"
+            label="Inspection"
+            value={activeCorridor?.label || "All corridors"}
+          />
         </div>
 
         <section className="port-replay__hero-panel">
           <PanelHeading
             number="A"
             eyebrow="Temporal process flow"
-            title="Cargo accumulates where time stretches"
-            note="Each ribbon is a container cohort. Hover or click a ribbon to isolate its shipping lane."
+            title="Traffic picks a lane, and the lanes trade places"
+            note="Each ribbon is three days of real container-ship transits recorded at the downstream gate. Hover or click a ribbon to isolate its corridor."
           />
           <div className="port-replay__chart port-replay__process-chart">
             <ProcessSankey
               nodes={PORT_PROCESS_NODES}
               edges={processEdges}
-              domain={PORT_REPLAY_DOMAIN}
-              axisTicks={PORT_AXIS_TICKS}
+              domain={domainFor(scenarioId)}
+              axisTicks={axisTicksFor(scenarioId)}
               width={processWidth}
               height={430}
               margin={
                 chartWidth <= 560
                   ? { top: 22, right: 18, bottom: 44, left: 70 }
-                  : { top: 22, right: 92, bottom: 44, left: 104 }
+                  : { top: 22, right: 132, bottom: 44, left: 104 }
               }
               colorBy="category"
-              colorScheme={STAGE_COLORS}
+              colorScheme={PORT_STAGE_COLOR_MAP}
               pairing="temporal"
               packing="off"
               laneOrder="crossing-min"
@@ -332,14 +436,14 @@ export default function PortCongestionReplayExamplePage() {
               edgeOpacity={0.72}
               showParticles={playing}
               tooltip
-              timeFormat={formatPortTime}
-              valueFormat={(value) => `${value.toLocaleString()} TEU`}
-              linkedHover={{ name: "port-route", fields: ["routeId"] }}
+              timeFormat={formatPortDay}
+              valueFormat={(value) => `${value.toLocaleString()} ships`}
+              linkedHover={{ name: "port-corridor", fields: ["corridorId"] }}
               onClick={clickDatum}
               chartId="port-process"
               accessibleTable
-              description="Container cohorts moving through seven logistics stages over time."
-              summary="The largest accumulations occur at anchorage and the terminal before cargo clears customs."
+              description="Container-ship transits flowing through the Suez, Cape of Good Hope, and Panama lanes over time."
+              summary={scenario.blurb}
             />
           </div>
         </section>
@@ -349,29 +453,29 @@ export default function PortCongestionReplayExamplePage() {
             <PanelHeading
               number="B"
               eyebrow="Geographic movement"
-              title="Five corridors, five different points of failure"
-              note="Each colored route is broken into real maritime legs. Cumulative departed volume sets width; particles indicate direction."
+              title="Three corridors, nine measured gates"
+              note="Leg width is the trailing 7-day average of real daily container transits at the gate each leg crosses; particles indicate direction."
             />
-            <div className="port-replay__itineraries" aria-label="Maritime route itineraries">
-              {PORT_ROUTES.map((route) => (
+            <div className="port-replay__itineraries" aria-label="Corridor itineraries">
+              {PORT_CORRIDORS.map((corridor) => (
                 <button
                   type="button"
-                  key={route.id}
+                  key={corridor.id}
                   className={
-                    selectedRoute === route.id
+                    selectedCorridor === corridor.id
                       ? "port-replay__itinerary is-active"
                       : "port-replay__itinerary"
                   }
-                  style={{ "--route-color": route.color }}
-                  onMouseEnter={() => setHoveredRoute(route.id)}
-                  onMouseLeave={() => setHoveredRoute(null)}
-                  onFocus={() => setHoveredRoute(route.id)}
-                  onBlur={() => setHoveredRoute(null)}
-                  onClick={() => toggleRoute(route.id)}
+                  style={{ "--route-color": corridor.color }}
+                  onMouseEnter={() => setHoveredCorridor(corridor.id)}
+                  onMouseLeave={() => setHoveredCorridor(null)}
+                  onFocus={() => setHoveredCorridor(corridor.id)}
+                  onBlur={() => setHoveredCorridor(null)}
+                  onClick={() => toggleCorridor(corridor.id)}
                 >
-                  <span className="port-replay__itinerary-origin">{route.shortLabel}</span>
+                  <span className="port-replay__itinerary-origin">{corridor.shortLabel}</span>
                   <span className="port-replay__itinerary-waypoints">
-                    {route.itinerary.join(" → ")}
+                    {corridor.itinerary.join(" → ")}
                   </span>
                 </button>
               ))}
@@ -405,19 +509,23 @@ export default function PortCongestionReplayExamplePage() {
                   if (!flow?.sourceName) return null
                   return (
                     <div className="semiotic-tooltip port-replay__route-tooltip">
-                      <strong style={{ color: flow.color }}>{flow.route}</strong>
-                      <span>{flow.sourceName} → {flow.targetName}</span>
-                      <small>Corridor: {flow.bottleneck}</small>
-                      <b>{flow.value.toLocaleString()} TEU departed</b>
+                      <strong style={{ color: flow.color }}>{flow.corridor}</strong>
+                      <span>
+                        {flow.sourceName} → {flow.targetName}
+                      </span>
+                      <small>Gate: {flow.gateName}</small>
+                      <b>
+                        {flow.today} today · {flow.value}/day past week
+                      </b>
                     </div>
                   )
                 }}
-                linkedHover={{ name: "port-route", fields: ["routeId"] }}
-                onObservation={observeRoute}
+                linkedHover={{ name: "port-corridor", fields: ["corridorId"] }}
+                onObservation={observeCorridor}
                 onClick={clickDatum}
                 chartId="port-map"
                 accessibleTable
-                description="Five global shipping corridors to Newark, segmented through named maritime waypoints and chokepoints."
+                description="Three global container corridors drawn through nine measured maritime chokepoints, with leg width showing real transit counts."
               />
             </div>
           </section>
@@ -426,8 +534,8 @@ export default function PortCongestionReplayExamplePage() {
             <PanelHeading
               number="C"
               eyebrow="Imperative event stream"
-              title="Every arrival adds pressure; every release removes it"
-              note="Daily net changes keep the cumulative queue readable. They arrive through push, update, and remove rather than a data prop."
+              title="Every lost transit is a ship waiting somewhere"
+              note="Daily bars are real transits minus this scenario's own pre-event pace at the watched gate, so the running level reads as accumulated shortfall. Selecting a corridor moves the gauge to its gate."
             />
             <div className="port-replay__chart">
               <RealtimeWaterfallChart
@@ -437,49 +545,41 @@ export default function PortCongestionReplayExamplePage() {
                 height={420}
                 timeAccessor="time"
                 valueAccessor="value"
-                timeExtent={PORT_REPLAY_DOMAIN}
+                timeExtent={domainFor(scenarioId)}
                 pointIdAccessor="id"
-                windowSize={40}
-                positiveColor="#ff7043"
-                negativeColor="#36d6b3"
+                windowSize={80}
+                positiveColor="#36d6b3"
+                negativeColor="#ff7043"
                 connectorStroke="#ffd166"
                 connectorWidth={1.8}
-                gap={3}
+                gap={2}
                 stroke="#d7cbae"
                 strokeWidth={0.5}
                 opacity={0.96}
                 background="#0a1d23"
                 showAxes
                 enableHover
-                annotations={peakAnnotation}
+                annotations={waterfallAnnotations}
                 tooltipContent={(hover) => {
-                  const event = unwrapDatum(hover)
-                  if (!event?.time) return null
+                  const row = unwrapDatum(hover)
+                  if (!row?.time) return null
                   return (
                     <div className="semiotic-tooltip port-replay__event-tooltip">
-                      <strong>{formatPortTime(event.time)}</strong>
+                      <strong>{formatPortTime(row.time)}</strong>
                       <span>
-                        {event.value >= 0 ? "+" : ""}
-                        {event.value.toLocaleString()} TEU
+                        {row.value >= 0 ? "+" : ""}
+                        {row.value.toLocaleString()} vs pace
                       </span>
                       <small>
-                        Net of {event.signalCount} operational {event.signalCount === 1 ? "signal" : "signals"}
+                        {row.actual} transits at {row.gateName} · typical {row.baseline}/day
                       </small>
                     </div>
                   )
                 }}
-                tickFormatTime={(value) =>
-                  new Intl.DateTimeFormat("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    timeZone: "UTC",
-                  }).format(value)
-                }
-                tickFormatValue={(value) => `${Math.round(value)} TEU`}
-                linkedHover={{ name: "port-route", fields: ["routeId"] }}
-                onObservation={observeRoute}
+                tickFormatTime={(value) => formatPortDay(value)}
+                tickFormatValue={(value) => `${Math.round(value)}`}
                 chartId="port-backlog"
-                description="Waterfall of daily net backlog change in TEU: arrivals push the cumulative queue up, releases pull it down, ending at zero when the backlog clears."
+                description={`Waterfall of daily container transits at ${gateName(watchedGate)} relative to its pre-event pace: shortfall bars pull the running level down, recovery pushes it back.`}
               />
             </div>
           </section>
@@ -487,45 +587,42 @@ export default function PortCongestionReplayExamplePage() {
 
         <section className="port-replay__manifest">
           <div className="port-replay__manifest-copy">
-            <span>Manifest analysis / Form 04</span>
-            <h3>The longest hauls wait the least</h3>
+            <span>Cross-scenario analysis / Form 04</span>
+            <h3>Three seasons in one square of days</h3>
             <p>
-              Fifteen cohorts, frozen and measured four ways — the one panel
-              here with no clock. Read down the sea-days column: CO₂ climbs
-              with every extra day at sea, as the fuel burn demands. The wait
-              runs the other way. The month-long haulers from Singapore and
-              Mumbai meter in and berth almost on arrival, while the quick
-              Atlantic hops from Rotterdam and Santos pile into the anchorage.
-              One lane refuses the pattern — Shanghai sits mid-ocean yet waits
-              the longest of all. The queue at Newark doesn&rsquo;t care how
-              far a box came. Hover any dot to trace one cohort through all six
-              pairings.
+              Every dot is a real day — {PORT_MATRIX_ROWS.length} of them across all three
+              scenarios, measured at four gates at once. The quiet spring is the tight cloud
+              everything else is judged against. The Ever Given stretches only the Suez axis: six
+              days slide toward zero and snap back, while the other three gates never notice — a
+              one-gate accident. The Red Sea winter is a system event: Bab el-Mandeb and the Cape
+              trade places along an anti-diagonal, the whole cloud walks away from normal and stays
+              there, and Panama drifts low under drought at the same time. Click any dot to jump the
+              replay to that scenario and day.
             </p>
             <dl>
-              <div><dt>Sea days</dt><dd>11 – 33</dd></div>
-              <div><dt>Anchorage wait</dt><dd>25 – 82 hrs</dd></div>
-              <div><dt>CO₂</dt><dd>34 – 81 t</dd></div>
-              <div><dt>Cohort size</dt><dd>374 – 720 TEU</dd></div>
+              {matrixRanges.map((range) => (
+                <div key={range.field}>
+                  <dt>{range.label}</dt>
+                  <dd>
+                    {range.min} – {range.max}
+                  </dd>
+                </div>
+              ))}
             </dl>
           </div>
           <div className="port-replay__matrix">
             <ScatterplotMatrix
-              data={PORT_COHORT_SUMMARIES}
-              fields={["seaDays", "anchorageHours", "carbonTons", "teu"]}
-              fieldLabels={{
-                seaDays: "Sea days",
-                anchorageHours: "Anchorage wait",
-                carbonTons: "CO₂ tonnes",
-                teu: "Cohort TEU",
-              }}
-              colorBy="route"
-              colorScheme={ROUTE_COLORS}
+              data={PORT_MATRIX_ROWS}
+              fields={PORT_MATRIX_FIELDS}
+              fieldLabels={PORT_MATRIX_FIELD_LABELS}
+              colorBy="scenario"
+              colorScheme={SCENARIO_PAPER_COLORS}
               cellSize={matrixCellSize}
               cellGap={3}
-              pointRadius={4}
-              pointOpacity={0.82}
+              pointRadius={3.4}
+              pointOpacity={0.72}
               diagonal="histogram"
-              histogramBins={6}
+              histogramBins={8}
               brushMode="crossfilter"
               hoverMode
               unselectedOpacity={0.12}
@@ -533,32 +630,32 @@ export default function PortCongestionReplayExamplePage() {
               tooltip
               showLegend
               idAccessor="label"
-              onObservation={observeRoute}
+              onClick={jumpToMatrixDay}
               chartId="port-matrix"
               className="port-replay__matrix-chart"
-              description="Scatterplot matrix of fifteen shipment cohorts comparing dwell time, delay, and backlog contribution, colored by route."
+              description="Scatterplot matrix of every replayed day across all three scenarios, comparing daily container transits at Suez, Bab el-Mandeb, the Cape of Good Hope, and Panama, colored by scenario."
             />
           </div>
         </section>
 
         <footer className="port-replay__footer">
-          <span>Seeded documentary simulation</span>
+          <span>Real AIS-derived data</span>
           <p>
-            The cohorts are synthetic and deterministic. They are designed to
-            expose the relationship between transit, dwell, backlog, cost, and
-            carbon without depending on a live commercial feed.
+            {PORTWATCH_ATTRIBUTION} Extract dated {PORTWATCH_FETCHED_AT}. Transit counts, dates, and
+            events are real; corridor geometry is an illustrative reduction of each lane to its
+            measured gates.
           </p>
         </footer>
       </div>
 
       <section className="port-replay__implementation">
-        <h2>One event model, four frame families</h2>
+        <h2>Four frame families</h2>
         <p>
-          ProcessSankey and FlowMap receive declaratively derived snapshots.
-          RealtimeWaterfallChart is synchronized through its imperative
-          changeset API, while ScatterplotMatrix holds all fifteen cohorts
-          still for a clock-free, four-measure comparison. The shared route
-          identifier coordinates observation and selection across all four.
+          ProcessSankey and FlowMap receive declaratively derived snapshots of the selected
+          scenario. RealtimeWaterfallChart is synchronized through its imperative changeset API,
+          while ScatterplotMatrix holds every day of all three scenarios at once for a clock-free
+          comparison and doubles as a navigation surface. A shared corridor identifier coordinates
+          observation and selection across the time-bound views.
         </p>
         <CodeBlock code={implementationCode} language="jsx" />
       </section>
@@ -589,13 +686,13 @@ function PanelHeading({ number, eyebrow, title, note }) {
   )
 }
 
-function findRouteId(datum) {
+function findCorridorId(datum) {
   const value = unwrapDatum(datum)
   return (
-    value?.routeId ||
-    value?.edge?.routeId ||
-    value?.source?.routeId ||
-    value?.target?.routeId ||
+    value?.corridorId ||
+    value?.edge?.corridorId ||
+    value?.source?.corridorId ||
+    value?.target?.corridorId ||
     null
   )
 }

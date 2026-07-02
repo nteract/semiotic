@@ -256,9 +256,7 @@ export default function ParisIsometricLandmarksExamplePage() {
   )
 
   return (
-    <ExamplePageLayout
-      title={`${city.label}, Tile by Tile`}
-    >
+    <ExamplePageLayout title={`Isometric ${city.label}`}>
       <nav aria-label="Choose a center city" style={styles.cityPicker}>
         <span style={styles.cityPickerLabel}>Center city</span>
         <div role="group" aria-label="Available cities" style={styles.cityOptions}>

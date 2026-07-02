@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest"
 import {
   READING_CHAPTERS,
   CHAPTER_COLORS,
+  BEAT_KINDS,
   SEED_SESSION,
   classifyBeat,
   chapterForScroll,
   dwellByChapter,
+  makeSample,
   rollingTimeExtent,
   summarizeReading,
   IDLE_VELOCITY,
@@ -26,6 +28,24 @@ describe("scroll telemetry example data", () => {
     expect(classifyBeat(IDLE_VELOCITY / 2)).toBe("idle")
     expect(classifyBeat(0.2)).toBe("forward")
     expect(classifyBeat(-0.2)).toBe("backward")
+  })
+
+  it("recolors a beat as highlight when a selection is active, overriding velocity", () => {
+    expect(BEAT_KINDS.highlight).toBeTruthy()
+    // A fast forward scroll would classify as "forward"...
+    expect(classifyBeat(0.4)).toBe("forward")
+    // ...but an active highlight takes precedence.
+    const beat = makeSample({ id: "b", t: 0, scroll: 0.5, velocity: 0.4, pointer: 3, chapter: 1, highlighting: true })
+    expect(beat.kind).toBe("highlight")
+    expect(beat.highlighting).toBe(true)
+    // Without a selection it falls back to velocity classification.
+    const plain = makeSample({ id: "c", t: 0, scroll: 0.5, velocity: 0.4, pointer: 3, chapter: 1 })
+    expect(plain.kind).toBe("forward")
+    expect(plain.highlighting).toBe(false)
+  })
+
+  it("seeds a highlight passage into the sample session", () => {
+    expect(SEED_SESSION.some((beat) => beat.kind === "highlight")).toBe(true)
   })
 
   it("maps scroll fraction into chapter bands without overflowing", () => {

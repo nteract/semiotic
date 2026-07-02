@@ -6,6 +6,7 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
+import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -109,6 +110,9 @@ const splomProps = [
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show grid lines inside each scatterplot cell." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function passed to each cell." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy)", description: "Show a color legend above the matrix. Defaults to true when colorBy is set." },
+  { name: "idAccessor", type: "string | function", required: false, default: null, description: "Field name or accessor to identify each row in tooltips. Defaults to \"Row {index}\"." },
+  { name: "onClick", type: "function", required: false, default: null, description: "Called when a point in any cell is clicked. Receives the clicked row datum and its grid-relative pixel position { x, y }. Fires in hover mode (the default); in brush mode the drag-select overlay captures pointer events, so clicks are not delivered." },
+  { name: "onObservation", type: "function", required: false, default: null, description: "Called with { type, datum, x, y, ... } on hover, hover-end, and click. x/y are grid-relative pixels (the same space as onClick) so a coordinated-view handler can position UI consistently across event types. Use to drive coordinated views from matrix interactions." },
   { name: "width", type: "number", required: false, default: null, description: "Overall width constraint. If not specified, the matrix sizes itself based on cellSize and field count." },
   { name: "height", type: "number", required: false, default: null, description: "Overall height constraint. If not specified, the matrix sizes itself based on cellSize and field count." },
   { name: "className", type: "string", required: false, default: null, description: "CSS class name applied to the outermost container." },
@@ -254,6 +258,27 @@ export default function ScatterplotMatrixPage() {
           unselectedOpacity: "0.08",
         }}
         hiddenProps={{}}
+      />
+
+      <h3 id="click-to-act">Click to Act</h3>
+      <p>
+        Pass an <code>onClick</code> handler to make the matrix a navigation
+        surface. Clicking any point in any cell fires the callback with the
+        clicked row datum and its grid-relative pixel position -- no container{" "}
+        <code>onClick</code> wrapper or hover tracking required. It fires in
+        hover mode (the default); in brush mode the drag-select overlay captures
+        pointer events. The{" "}
+        <Link to="/examples/port-congestion-replay">Long Way Around</Link>{" "}
+        example uses it to jump a time-series replay to the clicked day.
+      </p>
+      <CodeBlock
+        language="jsx"
+        code={`<ScatterplotMatrix
+  data={rows}
+  fields={["suez", "babElMandeb", "capeOfGoodHope", "panama"]}
+  colorBy="scenario"
+  onClick={(row) => jumpReplayTo(row.scenarioId, row.dayIndex)}
+/>`}
       />
 
       <h3 id="color-and-labels">Color & Labels</h3>
