@@ -128,9 +128,9 @@ interface Changeset
 interface ChartConfig
 interface ChartContainerHandle
 interface ChartContainerProps
-interface ChartNotification
 interface ChartErrorBoundaryProps
 interface ChartGridProps
+interface ChartNotification
 interface ChordDiagramProps
 interface CirclePackProps
 interface CircularBrushProps
