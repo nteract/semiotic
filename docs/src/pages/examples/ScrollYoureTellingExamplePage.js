@@ -339,9 +339,9 @@ export default function ScrollYoureTellingExamplePage() {
           <p>
             “You read {summary.percentRead || 80}% of this” is a number. It hides the reread, the
             stall, or the skim. That only exists if you watch the signal unfold. Realtime
-            visualization is not a chart that redraws quickly. It is a windows, signs, and order:
-            keeping only what fits in view, distinguishing forward from backward, and tolerating
-            beats that arrive late.
+            visualization is not a chart that redraws quickly. It is a commitment to windows, signs,
+            and order: keeping only what fits in view, distinguishing forward from backward, and
+            tolerating beats that arrive late.
           </p>
         </div>
         <div className="scroll-tell-thesis-block">

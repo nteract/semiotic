@@ -118,14 +118,14 @@ export default function USWarTimelineExamplePage() {
   return (
     <ExamplePageLayout title="All the Wars of the United States">
       <p style={styles.lede}>
-        Charts of war usually focus on casualties. But what does it mean when there are "only" a few
+        Charts of war usually focus on casualties. But what does it mean when there are &ldquo;only&rdquo; a few
         hundred casualties but it wipes out a culture? What does it mean when there are many
         low-level wars in different parts of the world? This timeline shows wars as described on
-        Wikipedia that the United States has taken part of during its existence and splits the
+        Wikipedia that the United States has taken part in during its existence and splits the
         periods using CKMeans revealing what seem to be very clear semantic periods: A revolutionary
         period focused on establishing the early United States, a period of conquest internally and
         with the beginnings of a colonial influence, a time of growing international influence and
-        the current Pax Americana which, like the Pax Romana, is rarely closes the doors of the
+        the current Pax Americana which, like the Pax Romana, rarely closes the doors of the
         Temple of Jupiter.
       </p>
 

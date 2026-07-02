@@ -585,7 +585,7 @@ export default function WikipediaRealtimeExamplePage() {
             The overview uses double encodings (fill plus outline) so actor classes survive dense
             overlap. The small multiples share the same time and magnitude extents, making activity
             and outliers comparable without asking color to do two jobs at once. That way you can
-            see clusters in across different wikipedia editor types while being able to see patterns
+            see clusters across different Wikipedia editor types while still seeing patterns
             specific to admins or anons.
           </p>
         </div>

@@ -65,8 +65,9 @@ export interface ScatterplotMatrixProps<TDatum extends Datum = Datum> extends Ba
   idAccessor?: string | ((d: TDatum) => string)
   /**
    * Called when a point in any cell is clicked. Receives the clicked row datum
-   * and its grid-relative pixel position `{ x, y }`. Works in both hover and
-   * brush modes.
+   * and its grid-relative pixel position `{ x, y }` — the same coordinate space
+   * as `onObservation`. Fires in hover mode (the default); in brush mode the
+   * drag-select overlay captures pointer events, so clicks are not delivered.
    */
   onClick?: (datum: TDatum, event: { x: number; y: number }) => void
 }
@@ -623,6 +624,17 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   const _n = fields.length
   const labelWidth = 40
 
+  // Translate a cell's local pixel offset into grid-relative coordinates so
+  // hover and click observations (and onClick) share one coordinate space.
+  const gridPoint = useCallback(
+    (col: number, row: number, px?: number, py?: number): [number, number] => {
+      const cellLeft = labelWidth + col * (cellSize + cellGap)
+      const cellTop = row * (cellSize + cellGap)
+      return [cellLeft + (px ?? 0), cellTop + (py ?? 0)]
+    },
+    [labelWidth, cellSize, cellGap]
+  )
+
   // Legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
   const legend = useMemo(() => {
@@ -747,7 +759,12 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                         py: py ?? 0
                       })
                       if (onObservation) {
-                        onObservation({ type: "hover", datum, x: px ?? 0, y: py ?? 0, timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
+                        // Emit grid-relative coordinates, matching click, so a
+                        // coordinated-view handler can position UI consistently
+                        // across event types. (The internal tooltip uses the
+                        // cell-local px/py stored in hoveredInfo instead.)
+                        const [gx, gy] = gridPoint(col, row, px, py)
+                        onObservation({ type: "hover", datum, x: gx, y: gy, timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
                       }
                     } else {
                       setHoveredInfo(null)
@@ -758,11 +775,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                   } : undefined}
                   onPointClick={(onClick || onObservation) ? (datum, px, py) => {
                     if (!datum) return
-                    // Translate cell-local pixels to grid-relative coordinates.
-                    const cellLeft = labelWidth + col * (cellSize + cellGap)
-                    const cellTop = row * (cellSize + cellGap)
-                    const gx = cellLeft + (px ?? 0)
-                    const gy = cellTop + (py ?? 0)
+                    const [gx, gy] = gridPoint(col, row, px, py)
                     if (onClick) onClick(datum as TDatum, { x: gx, y: gy })
                     if (onObservation) {
                       onObservation({ type: "click", datum, x: gx, y: gy, timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })

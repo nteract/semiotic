@@ -86,7 +86,7 @@ export default function ArtMovementGenealogyExamplePage() {
   return (
     <ExamplePageLayout title="A Genealogy of Cubism and Abstract Art">
       <p style={styles.lede}>
-        An dynamic map of artistic influence inspired by the diagram from Alfred H. Barr Jr.&apos;s
+        A dynamic map of artistic influence inspired by the diagram from Alfred H. Barr Jr.&apos;s
         1936 dust jacket. Time provides the vertical structure; graph relationships and collision
         constraints determine the horizontal arrangement.
       </p>
