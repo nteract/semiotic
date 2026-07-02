@@ -155,6 +155,49 @@ describe("ChartContainer notifications", () => {
     expect(container.querySelector(".semiotic-chart-notifications")).toBeNull()
   })
 
+  it("removes the whole header when a notifications-only container has every notice dismissed", () => {
+    // No title/subtitle/actions — the bell is the header's only content, so the
+    // header must unmount once it's dismissed rather than leave an empty toolbar.
+    const { container } = render(
+      <ChartContainer notifications={[NOTIFICATIONS[2]]}>
+        <div>chart</div>
+      </ChartContainer>
+    )
+    expect(container.querySelector(".semiotic-chart-header")).toBeTruthy()
+    fireEvent.click(getToggle())
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss notification" }))
+    expect(container.querySelector(".semiotic-chart-header")).toBeNull()
+  })
+
+  it("prunes dismissal state for notifications that leave the list, so a reused key can't stay hidden", () => {
+    const alpha: ChartNotification = { id: "a", title: "Alpha", message: "a" }
+    const bravo: ChartNotification = { id: "b", title: "Bravo", message: "b" }
+    const { rerender } = render(
+      <ChartContainer title="T" notifications={[alpha, bravo]}>
+        <div>chart</div>
+      </ChartContainer>
+    )
+    fireEvent.click(getToggle())
+    fireEvent.click(
+      screen.getByRole("button", { name: "Dismiss notification: Alpha" })
+    )
+    expect(screen.queryByText("Alpha")).toBeNull()
+
+    // "alpha" leaves the list — its key should be pruned from the dismissed set.
+    rerender(
+      <ChartContainer title="T" notifications={[bravo]}>
+        <div>chart</div>
+      </ChartContainer>
+    )
+    // It comes back — dismissal did not linger past its removal.
+    rerender(
+      <ChartContainer title="T" notifications={[alpha, bravo]}>
+        <div>chart</div>
+      </ChartContainer>
+    )
+    expect(screen.getByText("Alpha")).toBeTruthy()
+  })
+
   it("hides the dismiss button when dismissible is false", () => {
     renderContainer([
       { id: "pinned", title: "Pinned", message: "Cannot remove", dismissible: false },

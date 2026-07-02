@@ -186,7 +186,7 @@ const NOTIFICATION_LEVEL_COLORS: Record<ChartNotificationLevel, string> = {
   info: "var(--semiotic-info, #2563eb)",
   success: "var(--semiotic-success, #16a34a)",
   warning: "var(--semiotic-warning, #d97706)",
-  error: "var(--semiotic-danger, #dc2626)",
+  error: "var(--semiotic-error, var(--semiotic-danger, #dc2626))",
   neutral: "var(--semiotic-text-secondary, #6b7280)",
 }
 
@@ -342,40 +342,38 @@ function NotificationCard({
   )
 }
 
+/** A notification paired with the resolved key + level the bell renders with.
+ *  Computed once by the container so `hasHeader` and the bell agree on the
+ *  visible set (dismissal state lives in the container, above the bell). */
+interface VisibleNotification {
+  notification: ChartNotification
+  index: number
+  key: string
+  level: ChartNotificationLevel
+}
+
 /**
  * The notifications affordance: a compact toolbar bell carrying a count badge
  * and the icon + color of the most severe visible notification. Clicking it
  * opens a popover with the full notification cards — an overlay, so arriving or
  * dismissing notices never reflows the chart body (no layout swirl).
  *
- * Owns dismissal state internally, keyed by `notification.id` (array-index
- * fallback), so a re-render with the same list keeps dismissed entries
- * dismissed. Also renders a screen-reader-only live region that announces the
- * current count + most-severe level, so streamed notifications are still voiced
- * while the popover is collapsed.
+ * Presentational: the container owns dismissal state and passes the already-
+ * filtered `visible` set, so the header can hide itself once every notification
+ * has been dismissed. Also renders a screen-reader-only live region that
+ * announces the current count + most-severe level, so streamed notifications
+ * are still voiced while the popover is collapsed.
  */
 function ChartNotificationBell({
-  notifications,
+  visible,
   onDismiss,
 }: {
-  notifications: ChartNotification[]
-  onDismiss?: (notification: ChartNotification, index: number) => void
+  visible: VisibleNotification[]
+  onDismiss: (entry: VisibleNotification) => void
 }) {
-  const [dismissed, setDismissed] = React.useState<ReadonlySet<string>>(
-    () => new Set<string>()
-  )
   const [open, setOpen] = React.useState(false)
   const wrapperRef = React.useRef<HTMLDivElement>(null)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
-
-  const visible = notifications
-    .map((notification, index) => ({
-      notification,
-      index,
-      key: notification.id ?? String(index),
-      level: notification.level ?? "info",
-    }))
-    .filter(({ key }) => !dismissed.has(key))
 
   // Collapse the popover once nothing is left to show.
   React.useEffect(() => {
@@ -488,15 +486,12 @@ function ChartNotificationBell({
             boxShadow: "0 6px 24px rgba(0, 0, 0, 0.16)",
           }}
         >
-          {visible.map(({ notification, index, key, level }) => (
+          {visible.map((entry) => (
             <NotificationCard
-              key={key}
-              notification={notification}
-              level={level}
-              onDismiss={() => {
-                setDismissed((prev) => new Set(prev).add(key))
-                onDismiss?.(notification, index)
-              }}
+              key={entry.key}
+              notification={entry.notification}
+              level={entry.level}
+              onDismiss={() => onDismiss(entry)}
             />
           ))}
         </div>
@@ -594,6 +589,53 @@ export const ChartContainer = React.forwardRef<
   const chartBodyRef = React.useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = React.useState(false)
 
+  // Notification dismissal lives here (above the bell) so `hasHeader` can react
+  // to the visible count — an all-dismissed, notifications-only container must
+  // not render an empty toolbar. Keyed by `notification.id`, array-index
+  // fallback.
+  const [dismissedNotifications, setDismissedNotifications] = React.useState<
+    ReadonlySet<string>
+  >(() => new Set<string>())
+
+  // Prune keys that no longer exist in the current list so the set can't grow
+  // unboundedly while notifications stream, and a removed notification's key
+  // can't keep a fresh notification that later reuses it hidden.
+  React.useEffect(() => {
+    setDismissedNotifications((prev) => {
+      if (prev.size === 0) return prev
+      const currentKeys = new Set(
+        (notifications ?? []).map((n, i) => n.id ?? String(i))
+      )
+      let changed = false
+      const next = new Set<string>()
+      for (const key of prev) {
+        if (currentKeys.has(key)) next.add(key)
+        else changed = true
+      }
+      return changed ? next : prev
+    })
+  }, [notifications])
+
+  const visibleNotifications = React.useMemo<VisibleNotification[]>(() => {
+    if (!notifications) return []
+    return notifications
+      .map((notification, index) => ({
+        notification,
+        index,
+        key: notification.id ?? String(index),
+        level: notification.level ?? "info",
+      }))
+      .filter(({ key }) => !dismissedNotifications.has(key))
+  }, [notifications, dismissedNotifications])
+
+  const handleNotificationDismiss = React.useCallback(
+    (entry: VisibleNotification) => {
+      setDismissedNotifications((prev) => new Set(prev).add(entry.key))
+      onNotificationDismiss?.(entry.notification, entry.index)
+    },
+    [onNotificationDismiss]
+  )
+
   const showExport = actions?.export !== false && actions?.export !== undefined
   const showFullscreen =
     actions?.fullscreen !== false && actions?.fullscreen !== undefined
@@ -686,7 +728,7 @@ export const ChartContainer = React.forwardRef<
     [handleExport, toggleFullscreen, handleCopyConfig]
   )
 
-  const hasNotifications = !!(notifications && notifications.length > 0)
+  const hasNotifications = visibleNotifications.length > 0
   const hasHeader = title || subtitle || controls || showExport || showFullscreen || showCopyConfig || showDataSummary || status || hasNotifications
 
   const innerContent = loading ? (
@@ -790,8 +832,8 @@ export const ChartContainer = React.forwardRef<
               {controls}
               {hasNotifications && (
                 <ChartNotificationBell
-                  notifications={notifications!}
-                  onDismiss={onNotificationDismiss}
+                  visible={visibleNotifications}
+                  onDismiss={handleNotificationDismiss}
                 />
               )}
               {showExport && (
