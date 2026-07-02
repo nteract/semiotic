@@ -96,6 +96,13 @@ describe("forceLayout", () => {
     const c = forceLayout(NODES, EDGES, { seed: 2, iterations: 60 })
     expect(c).not.toEqual(a)
   })
+
+  it("centers a graph with a single node", () => {
+    expect(forceLayout([{ id: "only" }], [], { seed: 1 }).only).toEqual({
+      x: 0.5,
+      y: 0.5,
+    })
+  })
 })
 
 describe("static network layouts", () => {

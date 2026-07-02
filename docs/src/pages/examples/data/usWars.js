@@ -104,13 +104,22 @@ const sourceRows = `
 "Intervention in Haiti","01/01/1994","12/31/1995","Latin American","https://en.wikipedia.org/wiki/Operation_Uphold_Democracy"
 "Bosnian War","01/01/1994","12/31/1995","European","https://en.wikipedia.org/wiki/Bosnian_War"
 "Kosovo War","01/01/1998","12/31/1999","European","https://en.wikipedia.org/wiki/Kosovo_War"
-"War in Afghanistan","01/01/2001","12/31/2015","Colonial","https://en.wikipedia.org/wiki/War_in_Afghanistan_(2001%E2%80%9314)"
+"War in Afghanistan","01/01/2001","08/30/2021","Colonial","https://www.defense.gov/News/Releases/release/article/2759181/statement-by-secretary-of-defense-lloyd-austin-iii-on-the-end-of-the-american-w/"
 "Iraq War","01/01/2003","12/31/2011","Colonial","https://en.wikipedia.org/wiki/Iraq_War"
-"War in Pakistan","01/01/2004","12/31/2015","Colonial","https://en.wikipedia.org/wiki/War_in_North-West_Pakistan"
-"Operation Ocean Shield","01/01/2009","12/31/2015","Colonial","https://en.wikipedia.org/wiki/Operation_Ocean_Shield"
+"War in Pakistan","01/01/2004","12/31/2018","Colonial","https://www.armyupress.army.mil/Portals/7/military-review/Archives/English/JA-18/Lynch-Pakistan-US-Taliban.pdf"
+"U.S. intervention in Somalia","01/01/2007","Present","Colonial","https://www.africom.mil/press-releases/36254/us-forces-conduct-strike-targeting-al-shabaab"
+"Operation Ocean Shield","01/01/2009","12/15/2016","Colonial","https://www.nato.int/en/news-and-events/articles/news/2016/12/15/nato-concludes-successful-counter-piracy-mission"
 "Libyan Civil War","01/01/2011","12/31/2011","Colonial","https://en.wikipedia.org/wiki/2011_military_intervention_in_Libya"
-"War on ISIL","01/01/2014","12/31/2015","Colonial","https://en.wikipedia.org/wiki/Military_intervention_against_ISIL"
+"War on ISIL / Operation Inherent Resolve","01/01/2014","Present","Colonial","https://www.centcom.mil/MEDIA/PUBLIC-RELEASES/Article/4375251/us-partner-forces-strike-isis-targets-in-syria/"
+"Operation Odyssey Lightning","08/01/2016","12/19/2016","Colonial","https://www.africom.mil/pressrelease/28564/africom-concludes-operation-odyssey-lightning"
+"Shayrat missile strike","04/07/2017","04/07/2017","Colonial","https://www.defense.gov/News/News-Stories/Article/article/1144601/trump-orders-missile-attack-in-retaliation-for-syrian-chemical-strikes/"
+"2018 strikes against Syrian chemical weapons sites","04/14/2018","04/14/2018","Colonial","https://www.defense.gov/News/News-Stories/Article/Article/1498715/strikes-successful-against-syrian-chemical-weapons-dod-officials-say/"
+"U.S.–Houthi hostilities in Yemen","01/12/2024","05/06/2025","Colonial","https://www.centcom.mil/MEDIA/PUBLIC-RELEASES/Article/4121382/centcom-forces-launch-large-scale-operation-against-iran-backed-houthis-in-yemen/"
+"2025 Iran–Israel War / Operation Midnight Hammer","06/13/2025","06/24/2025","Colonial","https://www.defense.gov/News/News-Stories/Article/Article/4238339/hegseth-senior-officials-welcome-netanyahu-to-pentagon/"
+"2026 U.S.–Iran War / Operation Epic Fury","02/28/2026","04/08/2026","Colonial","https://www.whitehouse.gov/releases/2026/04/peace-through-strength-operation-epic-fury-crushes-iranian-threat-as-ceasefire-takes-hold/"
 `
+
+const DATASET_AS_OF = "07/01/2026"
 
 function parseDate(value) {
   const [month, day, year] = value.split("/").map(Number)
@@ -122,13 +131,16 @@ export const US_WARS = sourceRows
   .split("\n")
   .map((line, index) => {
     const [name, start, end, sphere, link] = line.slice(1, -1).split('","')
+    const ongoing = end === "Present"
+    const resolvedEnd = ongoing ? DATASET_AS_OF : end
     const startTime = parseDate(start)
-    const endTime = parseDate(end)
+    const endTime = parseDate(resolvedEnd)
     return {
       id: `war-${index}`,
       name,
       start,
-      end,
+      end: resolvedEnd,
+      ongoing,
       startTime,
       endTime,
       startYear: new Date(startTime).getUTCFullYear(),
@@ -139,17 +151,15 @@ export const US_WARS = sourceRows
     }
   })
 
-export const WAR_SPHERES = [
-  "European",
-  "Native",
-  "Colonial",
-  "Latin American",
-  "Internal",
-]
+export const WAR_SPHERES = ["European", "Native", "Colonial", "Latin American", "Internal"]
 
 export const WAR_COLORS = {
   European: "#8ea7ad",
-  Native: "#303846",
+  // Neutral slate — light enough to clear 3:1 against both carbon themes'
+  // backgrounds (the original #303846 sat at 1.5:1 on carbon-dark) while
+  // staying the most muted sphere and clearly grayer than Latin American's
+  // saturated blue.
+  Native: "#767c85",
   Colonial: "#ad8d9b",
   "Latin American": "#647795",
   Internal: "#8a6f55",
@@ -159,24 +169,21 @@ export const WAR_PERIODS = [
   { name: "Revolution", start: 1779, end: 1832 },
   { name: "Conquest", start: 1838, end: 1882 },
   { name: "Influence", start: 1890, end: 1943 },
-  { name: "Empire", start: 1952, end: 2014 },
+  { name: "Empire", start: 1952, end: 2026 },
 ]
 
-export const WAR_DOMAIN = [1770, 2015]
+export const WAR_DOMAIN = [1770, 2026]
 
-export const WAR_COUNTS_BY_YEAR = Array.from(
-  { length: WAR_DOMAIN[1] - 1776 + 1 },
-  (_, index) => {
-    const year = 1776 + index
-    return {
-      year,
-      count: US_WARS.filter(
-        (war) => war.startYear <= year && war.endYear >= year
-      ).length,
-    }
+// Peace years count from independence (1776), not the chart domain start.
+// (The page derives its concurrency line separately via activeCountOverDomain.)
+const warCountsSince1776 = Array.from({ length: WAR_DOMAIN[1] - 1776 + 1 }, (_, index) => {
+  const year = 1776 + index
+  return {
+    year,
+    count: US_WARS.filter((war) => war.startYear <= year && war.endYear >= year).length,
   }
-)
+})
 
-export const PEACE_YEARS = WAR_COUNTS_BY_YEAR
-  .filter((year) => year.count === 0)
-  .map((year) => year.year)
+export const PEACE_YEARS = warCountsSince1776.filter((year) => year.count === 0).map(
+  (year) => year.year,
+)

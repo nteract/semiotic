@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Worker-based force layout.** ForceDirectedGraph gains `layoutExecution`
+  (`"auto"` default | `"worker"` | `"sync"`), `layoutLoadingContent`, and
+  `onLayoutStateChange`; in `auto` mode, layouts whose estimated cost
+  (`iterations × (nodes + edges)`) exceeds a threshold settle in a short-lived
+  module Web Worker and fall back to the synchronous path when workers are
+  unavailable. New `forceLayoutAsync()` (Promise sibling of the `forceLayout`
+  recipe, identical deterministic output) and `useForceLayout()` (React wrapper;
+  SSR and first hydration stay synchronous for markup parity, and settled
+  positions are memoized by graph identity + options so remounts don't re-enter
+  a loading state). Ships a packaged `forceLayoutWorker.js` asset — CSP
+  deployments need `worker-src 'self'`.
+- **`x-band` annotation.** Full-height vertical shaded region (`x0`, `x1`,
+  `fill`, `fillOpacity`, `label`) for marking eras/phases, rendered by both the
+  canvas annotation rules and static SSR output; annotations with a missing
+  bound are skipped in both.
+- **`intervalLanesLayout` `minBarWidth`** (default 2): zero- and short-duration
+  intervals stay visible and hoverable on long domains.
+- **Custom-layout readback: `ref.current.getCustomLayout()`.** All four custom
+  chart HOCs (XY/Ordinal/Network/Geo) expose the most recent `layout(ctx)`
+  result on their ref, beside `getData()`/`getScales()` — hosts that need the
+  computed placement (stats readouts, inspectors, validation) no longer re-run
+  the layout function themselves. `null` before the first layout or on
+  built-in chart types.
+- **`unwrapDatum` also unwraps `.datum` nesting** (some interaction payloads
+  nest the raw object there rather than under `.data`), and is now documented
+  as the single unwrap path for both `onObservation` and
+  `frameProps.tooltipContent` values.
+
+### Changed
+
+- **Force layout model overhauled** (degree-aware charge, degree-normalized link
+  strength, radius-aware collision, weaker centering; the `forceLayout` recipe is
+  now backed by d3-force). Layouts settle to better-spread positions, but the
+  same seed produces *different* geometry than earlier 3.x betas — regenerate
+  position-pinned snapshots. `forceStrength` documentation was corrected to its
+  actual link-attraction semantics, and its response curve changed with the new
+  model, so hand-tuned values may need revisiting.
+- **`intervalLanesLayout` packs in rendered-pixel space**, so the `minBarWidth`
+  floor and inclusive `end + unit` extension can no longer overlap a same-track
+  neighbor (previously visible as darker doubled fills when one interval ended
+  the same unit the next began).
+
 ## [3.7.5] - 2026-06-24
 
 ### Fixed

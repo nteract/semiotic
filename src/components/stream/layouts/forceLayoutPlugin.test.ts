@@ -208,6 +208,54 @@ describe("forceLayoutPlugin", () => {
     }
   })
 
+  it("keeps large nodes separated after the static simulation settles", () => {
+    const nodes = Array.from({ length: 10 }, (_, i) => makeNode(`N${i}`))
+    const edges = Array.from({ length: 9 }, (_, i) => makeEdge("N0", `N${i + 1}`))
+    const config: NetworkPipelineConfig = {
+      chartType: "force",
+      iterations: 300,
+      nodeSize: 15
+    }
+
+    forceLayoutPlugin.computeLayout(nodes, edges, config, [500, 400])
+
+    let minimumDistance = Infinity
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        minimumDistance = Math.min(
+          minimumDistance,
+          Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y)
+        )
+      }
+    }
+
+    // Two 15px-radius nodes require 30px just to avoid overlap. The layout
+    // adds a small visual gutter and uses a soft collision constraint.
+    expect(minimumDistance).toBeGreaterThan(33)
+  })
+
+  it("produces deterministic cold-start positions", () => {
+    const makeGraph = () => {
+      const nodes = Array.from({ length: 8 }, (_, i) => makeNode(`N${i}`))
+      const edges = [
+        makeEdge("N0", "N1"), makeEdge("N0", "N2"), makeEdge("N0", "N3"),
+        makeEdge("N1", "N4"), makeEdge("N2", "N5"), makeEdge("N3", "N6"),
+        makeEdge("N4", "N7"), makeEdge("N5", "N7"), makeEdge("N6", "N7")
+      ]
+      return { nodes, edges }
+    }
+    const first = makeGraph()
+    const second = makeGraph()
+    const config: NetworkPipelineConfig = { chartType: "force", iterations: 200 }
+
+    forceLayoutPlugin.computeLayout(first.nodes, first.edges, config, [600, 400])
+    forceLayoutPlugin.computeLayout(second.nodes, second.edges, config, [600, 400])
+
+    expect(second.nodes.map((node) => [node.x, node.y])).toEqual(
+      first.nodes.map((node) => [node.x, node.y])
+    )
+  })
+
   it("centers nodes in the chart area", () => {
     const nodes = Array.from({ length: 10 }, (_, i) => makeNode(`N${i}`))
     const edges = Array.from({ length: 9 }, (_, i) => makeEdge(`N${i}`, `N${i + 1}`))

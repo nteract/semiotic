@@ -1174,6 +1174,7 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       edgeOpacity: { type: "number", default: 0.6 },
       iterations: { type: "number", default: 300, description: "Force simulation iterations" },
       forceStrength: { type: "number", default: 0.1 },
+      layoutExecution: { type: "string", enum: ["auto", "worker", "sync"] as const, default: "auto", description: "Force layout execution: auto, worker, or sync" },
       showLabels: { type: "boolean", default: false },
     },
     capabilities: {

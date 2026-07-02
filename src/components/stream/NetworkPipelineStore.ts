@@ -70,6 +70,9 @@ export class NetworkPipelineStore {
   labels: NetworkLabel[] = []
   /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
   customLayoutOverlays: import("react").ReactNode = null
+  /** Most recent custom layout result for host readback (`getCustomLayout()`).
+   *  Null before the first layout, after a throw, or without a custom layout. */
+  lastCustomLayoutResult: NetworkLayoutResult | null = null
   /** HTML marks returned from customNetworkLayout — positioned DOM nodes the
    *  frame renders in a layer above the canvas/overlays (consumed by
    *  StreamNetworkFrame). Empty for built-in chart types. */
@@ -266,7 +269,8 @@ export class NetworkPipelineStore {
   ingestBounded(
     rawNodes: any[],
     rawEdges: any[],
-    size: [number, number]
+    size: [number, number],
+    options?: { deferLayout?: boolean }
   ): void {
     const {
       nodeIDAccessor = "id",
@@ -383,8 +387,32 @@ export class NetworkPipelineStore {
       this.edges.set(key, edge)
     }
 
-    // Run layout
-    this.runLayout(size)
+    // Run layout unless a worker will provide the force positions.
+    if (!options?.deferLayout) this.runLayout(size)
+  }
+
+  /**
+   * Apply worker-computed force positions through the normal layout finalizer.
+   * The force plugin still resolves edge endpoints, clamps bounds, records
+   * topology diffs, snapshots positions, and prepares transitions; it only
+   * skips the expensive simulation itself.
+   */
+  applyForceLayoutPositions(
+    positions: Record<string, { x: number; y: number }>,
+    size: [number, number]
+  ): void {
+    for (const [id, position] of Object.entries(positions)) {
+      const node = this.nodes.get(id)
+      if (!node) continue
+      node.x = position.x
+      node.y = position.y
+    }
+    this.config.__skipForceSimulation = true
+    try {
+      this.runLayout(size)
+    } finally {
+      this.config.__skipForceSimulation = undefined
+    }
   }
 
   // ── Streaming data ingestion ──────────────────────────────────────────
@@ -782,6 +810,7 @@ export class NetworkPipelineStore {
         this.labels = []
         this.customLayoutOverlays = null
         this.customLayoutHtmlMarks = []
+        this.lastCustomLayoutResult = null
         return
       }
       this.sceneNodes = result.sceneNodes ?? []
@@ -789,6 +818,7 @@ export class NetworkPipelineStore {
       this.labels = result.labels ?? []
       this.customLayoutOverlays = result.overlays ?? null
       this.customLayoutHtmlMarks = result.htmlMarks ?? []
+      this.lastCustomLayoutResult = result
       // Stash per-frame restyle callbacks. Their presence opts the chart into
       // the cheap selection path: snapshot each mark's emitted (base) style, then
       // apply the restyle once for the current selection. `restyleScene()` later

@@ -1,33 +1,83 @@
-import React, { useCallback, useMemo, useState } from "react"
-import { Link } from "react-router-dom"
-import {
-  ChordDiagram,
-  ForceDirectedGraph,
-  SankeyDiagram,
-  TreeDiagram,
-} from "semiotic"
-import { NetworkCustomChart } from "semiotic/network"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Link, useSearchParams } from "react-router-dom"
+import { ChordDiagram, ForceDirectedGraph, SankeyDiagram, TreeDiagram } from "semiotic"
+import { NetworkCustomChart, useForceLayout } from "semiotic/network"
 import { networkHitTarget } from "semiotic/recipes"
+import { useReducedMotion } from "semiotic/utils"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import * as N from "./data/networkVizData"
 import "./NetworkVizExamplePage.css"
 
 const CHAPTERS = [
-  { num: "1", title: "What a Network Is", short: "What a network is" },
-  { num: "2", title: "Drawing Without Physics", short: "Static layouts" },
-  { num: "3", title: "The Hairball, and How It Lies", short: "The hairball" },
-  { num: "4", title: "Reading the Edges", short: "Reading edges" },
-  { num: "5", title: "Reading the Nodes", short: "Reading nodes" },
-  { num: "6", title: "Finding Structure", short: "Finding structure" },
-  { num: "7", title: "Beyond the Node-Link", short: "Beyond node-link" },
-  { num: "8", title: "The Network Toy", short: "The network toy" },
+  {
+    num: "1",
+    slug: "what-a-network-is",
+    title: "What a Network Is",
+    short: "What a network is",
+  },
+  {
+    num: "2",
+    slug: "static-layouts",
+    title: "Drawing Without Physics",
+    short: "Static layouts",
+  },
+  {
+    num: "3",
+    slug: "hairball",
+    title: "The Hairball, and How It Lies",
+    short: "The hairball",
+  },
+  {
+    num: "4",
+    slug: "reading-edges",
+    title: "Reading the Edges",
+    short: "Reading edges",
+  },
+  {
+    num: "5",
+    slug: "reading-nodes",
+    title: "Reading the Nodes",
+    short: "Reading nodes",
+  },
+  {
+    num: "6",
+    slug: "finding-structure",
+    title: "Finding Structure",
+    short: "Finding structure",
+  },
+  {
+    num: "7",
+    slug: "beyond-node-link",
+    title: "Beyond the Node-Link",
+    short: "Beyond node-link",
+  },
+  {
+    num: "8",
+    slug: "network-toy",
+    title: "The Network Toy",
+    short: "The network toy",
+  },
 ]
 
 const STAGE_BG = { background: "transparent" }
 
 export default function NetworkVizExamplePage() {
-  const [active, setActive] = useState(0)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedChapter = CHAPTERS.findIndex(
+    (chapter) => chapter.slug === searchParams.get("chapter"),
+  )
+  const active = requestedChapter >= 0 ? requestedChapter : 0
+  const setActive = useCallback(
+    (index) => {
+      setSearchParams((current) => {
+        const next = new URLSearchParams(current)
+        next.set("chapter", CHAPTERS[index].slug)
+        return next
+      }, { replace: true, preventScrollReset: true })
+    },
+    [setSearchParams],
+  )
   const Chapter = [
     ChapterWhat,
     ChapterStatic,
@@ -42,19 +92,15 @@ export default function NetworkVizExamplePage() {
   return (
     <ExamplePageLayout
       title="Drawing Networks"
-      prevPage={{
-        title: "The Gestalt of Data Visualization",
-        path: "/examples/gestalt-principles",
-      }}
     >
       <div className="nv-book">
         <div className="nv-cover">
           <span className="nv-imprint">A Visual Primer</span>
           <p className="nv-blurb">
-            A node-link diagram is the easiest network picture to make and the
-            hardest to read. This primer rebuilds a 2015 network-visualization
-            workshop on Semiotic — every technique as a working chart — and ends
-            with an interactive toy for thinking with a graph rather than at it.
+            A node-link diagram is the easiest network picture to make and the hardest to read. This
+            primer rebuilds a 2015 network-visualization workshop on Semiotic — every technique as a
+            working chart — and ends with an interactive toy for thinking with a graph rather than
+            at it.
           </p>
         </div>
 
@@ -88,7 +134,7 @@ export default function NetworkVizExamplePage() {
                 type="button"
                 className="nv-pager-btn"
                 disabled={active === 0}
-                onClick={() => setActive((a) => Math.max(0, a - 1))}
+                onClick={() => setActive(Math.max(0, active - 1))}
               >
                 ← {active > 0 ? CHAPTERS[active - 1].title : ""}
               </button>
@@ -96,7 +142,7 @@ export default function NetworkVizExamplePage() {
                 type="button"
                 className="nv-pager-btn nv-pager-next"
                 disabled={active === CHAPTERS.length - 1}
-                onClick={() => setActive((a) => Math.min(CHAPTERS.length - 1, a + 1))}
+                onClick={() => setActive(Math.min(CHAPTERS.length - 1, active + 1))}
               >
                 {active < CHAPTERS.length - 1 ? CHAPTERS[active + 1].title : ""} →
               </button>
@@ -200,6 +246,79 @@ function Switch({ label, value, onChange }) {
   )
 }
 
+function NetworkLayoutLoading() {
+  return (
+    <div className="nv-layout-loading" role="status" aria-live="polite">
+      <span aria-hidden="true" />
+      Arranging network…
+    </div>
+  )
+}
+
+function useAnimatedNetworkPositions(target, duration = 700) {
+  const reducedMotion = useReducedMotion()
+  const [positions, setPositions] = useState(target)
+  const positionsRef = useRef(target)
+
+  useEffect(() => {
+    // Keep the last usable layout visible if an asynchronous target is not
+    // ready yet. This avoids replacing a reader's mental map with a loader.
+    if (!target) return
+
+    const from = positionsRef.current
+    if (!from || reducedMotion) {
+      positionsRef.current = target
+      setPositions(target)
+      return
+    }
+
+    const ids = Object.keys(target)
+    const moved = ids.some((id) => {
+      const start = from[id]
+      const end = target[id]
+      return start && (start.x !== end.x || start.y !== end.y)
+    })
+    if (!moved) {
+      positionsRef.current = target
+      setPositions(target)
+      return
+    }
+
+    let frame = 0
+    const startedAt = performance.now()
+    const tick = (now) => {
+      const progress = Math.min(1, (now - startedAt) / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const next = {}
+      for (const id of ids) {
+        const end = target[id]
+        const start = from[id] || end
+        next[id] = {
+          x: start.x + (end.x - start.x) * eased,
+          y: start.y + (end.y - start.y) * eased,
+        }
+      }
+      positionsRef.current = next
+      setPositions(next)
+
+      if (progress < 1) {
+        frame = requestAnimationFrame(tick)
+      } else {
+        positionsRef.current = target
+        setPositions(target)
+      }
+    }
+
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [target, duration, reducedMotion])
+
+  return {
+    positions,
+    animating: !!target && !!positions && positions !== target,
+  }
+}
+
 // ===========================================================================
 // CHAPTER 1 — What a network is
 // ===========================================================================
@@ -225,10 +344,9 @@ function ChapterWhat() {
       <p>
         Networks also vary along three axes worth naming before you draw one:
         <strong> directionality</strong> (do edges point, or merely connect?),
-        <strong> multipart</strong> structure (is it one kind of node, or several
-        — people and places, say?), and <strong> edge complexity</strong> (weight,
-        parallel edges, even negative links). Every choice below is really a
-        choice about how to make one of those legible.
+        <strong> multipart</strong> structure (is it one kind of node, or several — people and
+        places, say?), and <strong> edge complexity</strong> (weight, parallel edges, even negative
+        links). Every choice below is really a choice about how to make one of those legible.
       </p>
 
       <Plate
@@ -367,16 +485,19 @@ function ChapterHairball() {
   const nodes = N.LESMIS_NODES
   const groupOf = useMemo(() => Object.fromEntries(nodes.map((n) => [n.id, n.group])), [nodes])
   const strong = useMemo(() => N.LESMIS_EDGES.filter((e) => e.value >= 3), [])
-  const posFull = useMemo(() => N.layoutGraph(nodes, N.LESMIS_EDGES, 11), [nodes])
-  const posStrong = useMemo(() => N.layoutGraph(nodes, strong, 11), [nodes, strong])
-  const problem = useMemo(() => N.findProximityProblem(nodes, N.LESMIS_EDGES, posFull), [nodes, posFull])
+  const { positions: posFull } = useForceLayout(nodes, N.LESMIS_EDGES, { seed: 11 })
+  const { positions: posStrong } = useForceLayout(nodes, strong, { seed: 11 })
+  const problem = useMemo(
+    () => (posFull ? N.findProximityProblem(nodes, N.LESMIS_EDGES, posFull) : null),
+    [nodes, posFull],
+  )
 
   const edges = step === 1 ? strong : N.LESMIS_EDGES
   const pos = step === 1 ? posStrong : posFull
   const captions = {
     0: `All ${N.LESMIS_NODES.length} characters and every co-appearance at once. Color marks the communities the algorithm found, but the picture is still a hairball — no amount of palette fixes an over-full node-link diagram.`,
     1: "Keep only the strong ties (three or more scenes together) and the cast falls into legible groups. Filtering, not styling, is usually what rescues a network.",
-    2: `The force layout also lies. The marks in red sit close together on screen yet are ${problem.minHops}+ steps apart in the graph — proximity pretending to be kinship. (More on this in the gestalt primer.)`,
+    2: `The force layout also lies. The marks in red sit close together on screen yet are ${problem?.minHops ?? "several"}+ steps apart in the graph — proximity pretending to be kinship. (More on this in the gestalt primer.)`,
   }
 
   return (
@@ -392,24 +513,31 @@ function ChapterHairball() {
         controls={<Stepper steps={HAIR_STEPS} active={step} onChange={setStep} />}
         caption={captions[step]}
       >
-        {(w) => (
-          <NetworkCustomChart
-            nodes={nodes}
-            edges={edges}
-            layout={nodeLinkLayout}
-            layoutConfig={{
-              pos,
-              edges,
-              colorMode: "group",
-              groupOf,
-              baseRadius: 6,
-              highlight: step === 2 ? { problem: problem.problemIds } : null,
-            }}
-            width={w}
-            height={420}
-            enableHover
-          />
-        )}
+        {(w) =>
+          pos ? (
+            <NetworkCustomChart
+              nodes={nodes}
+              edges={edges}
+              layout={nodeLinkLayout}
+              layoutConfig={{
+                pos,
+                edges,
+                colorMode: "group",
+                groupOf,
+                baseRadius: 6,
+                highlight:
+                  step === 2 && problem
+                    ? { problem: problem.problemIds, problemRestFill: N.RULE }
+                    : null,
+              }}
+              width={w}
+              height={420}
+              enableHover
+            />
+          ) : (
+            <NetworkLayoutLoading />
+          )
+        }
       </Plate>
     </section>
   )
@@ -473,12 +601,15 @@ function ChapterNodes() {
   const nodes = N.LESMIS_NODES
   const edges = N.LESMIS_EDGES
   const groupOf = useMemo(() => Object.fromEntries(nodes.map((n) => [n.id, n.group])), [nodes])
-  const pos = useMemo(() => N.layoutGraph(nodes, edges, 5), [nodes, edges])
+  const { positions: pos } = useForceLayout(nodes, edges, { seed: 5 })
   const sizeById = useMemo(
     () => (sizing === "none" ? null : N.centralityFor(sizing, nodes, edges)),
-    [sizing, nodes, edges]
+    [sizing, nodes, edges],
   )
-  const ego = useMemo(() => (hover ? N.egoIds(nodes, edges, hover, 1) : null), [hover, nodes, edges])
+  const ego = useMemo(
+    () => (hover ? N.egoIds(nodes, edges, hover, 1) : null),
+    [hover, nodes, edges],
+  )
 
   return (
     <section className="nv-chapter">
@@ -507,31 +638,35 @@ function ChapterNodes() {
         }
         caption="Hover any character to light up its ego network — itself and its immediate neighbours. It is the simplest, most orienting thing you can add to a graph. Size now encodes each node's centrality."
       >
-        {(w) => (
-          <NetworkCustomChart
-            nodes={nodes}
-            edges={edges}
-            layout={nodeLinkLayout}
-            layoutConfig={{
-              pos,
-              edges,
-              colorMode: "group",
-              groupOf,
-              baseRadius: 6,
-              sizeById,
-              labels,
-              highlight: ego ? { active: true, ego } : null,
-            }}
-            width={w}
-            height={420}
-            enableHover
-            onObservation={(obs) => {
-              if (!obs) return
-              if (obs.type === "hover") setHover(idOf(obs.datum))
-              else if (obs.type === "hover-end") setHover(null)
-            }}
-          />
-        )}
+        {(w) =>
+          pos ? (
+            <NetworkCustomChart
+              nodes={nodes}
+              edges={edges}
+              layout={nodeLinkLayout}
+              layoutConfig={{
+                pos,
+                edges,
+                colorMode: "group",
+                groupOf,
+                baseRadius: 6,
+                sizeById,
+                labels,
+                highlight: ego ? { active: true, ego } : null,
+              }}
+              width={w}
+              height={420}
+              enableHover
+              onObservation={(obs) => {
+                if (!obs) return
+                if (obs.type === "hover") setHover(idOf(obs.datum))
+                else if (obs.type === "hover-end") setHover(null)
+              }}
+            />
+          ) : (
+            <NetworkLayoutLoading />
+          )
+        }
       </Plate>
     </section>
   )
@@ -547,13 +682,18 @@ function ChapterStructure() {
   const nodes = N.LESMIS_NODES
   const edges = N.LESMIS_EDGES
   const groupOf = useMemo(() => Object.fromEntries(nodes.map((n) => [n.id, n.group])), [nodes])
-  const posForce = useMemo(() => N.layoutGraph(nodes, edges, 5), [nodes, edges])
+  const { positions: posForce } = useForceLayout(nodes, edges, { seed: 5 })
   const posGrid = useMemo(() => gridByGroup(nodes), [nodes])
-  const groups = useMemo(() => [...new Set(nodes.map((n) => n.group))].sort((a, b) => a - b), [nodes])
+  const targetPositions = step === 0 ? posForce : posGrid
+  const { positions: pos, animating } = useAnimatedNetworkPositions(targetPositions)
+  const groups = useMemo(
+    () => [...new Set(nodes.map((n) => n.group))].sort((a, b) => a - b),
+    [nodes],
+  )
 
   const captions = {
     0: "Community detection (here, the novel's own books) breaks the abstract whole into nameable chunks. Coloring by community is the single most useful thing you can do to a tangled graph.",
-    1: "Pull each community into its own cell and the structure becomes spatial, not just chromatic — small multiples of a single network, each readable on its own.",
+    1: "Pull each community into its own cell and the structure becomes spatial, not just chromatic. Intrapartition links are deemphasized while interpartition links retain their original emphasis, making the connections between communities easier to trace.",
   }
 
   return (
@@ -569,24 +709,29 @@ function ChapterStructure() {
         controls={<Stepper steps={STRUCT_STEPS} active={step} onChange={setStep} />}
         caption={captions[step]}
       >
-        {(w) => (
-          <NetworkCustomChart
-            nodes={nodes}
-            edges={edges}
-            layout={nodeLinkLayout}
-            layoutConfig={{
-              pos: step === 0 ? posForce : posGrid,
-              edges,
-              colorMode: "group",
-              groupOf,
-              baseRadius: 6,
-              groupLabels: step === 1 ? groups : null,
-            }}
-            width={w}
-            height={440}
-            enableHover
-          />
-        )}
+        {(w) =>
+          pos ? (
+            <NetworkCustomChart
+              nodes={nodes}
+              edges={edges}
+              layout={nodeLinkLayout}
+              layoutConfig={{
+                pos,
+                edges,
+                colorMode: "group",
+                groupOf,
+                baseRadius: 6,
+                groupLabels: step === 1 && !animating ? groups : null,
+                interGroupEdgeOpacity: step === 1 ? 0.1 : null,
+              }}
+              width={w}
+              height={440}
+              enableHover
+            />
+          ) : (
+            <NetworkLayoutLoading />
+          )
+        }
       </Plate>
     </section>
   )
@@ -614,11 +759,10 @@ function ChapterBeyond() {
         lead="The node-link diagram is one representation of a graph, not the only one. When the question is about flow or aggregate relationship rather than individual ties, abandon the dots entirely."
       />
       <p>
-        The same instinct powers Semiotic's advanced network work — Sankey
-        variants for non-tree flows, multimodal projections, canvas rendering
-        for graphs too large to draw as SVG, and constraint-based layouts that
-        make the force algorithm behave. The lesson is constant: match the
-        representation to the question, not to the data structure.
+        The same instinct powers Semiotic&apos;s advanced network work — Sankey variants for non-tree
+        flows, multimodal projections, canvas rendering for graphs too large to draw as SVG, and
+        constraint-based layouts that make the force algorithm behave. The lesson is constant: match
+        the representation to the question, not to the data structure.
       </p>
       <Plate
         fig="7.1"
@@ -687,19 +831,28 @@ function ChapterToy() {
     return { ...rawGraph, nodes, edges }
   }, [rawGraph, deleted])
 
-  const pos = useMemo(() => N.layoutGraph(graph.nodes, graph.edges, seed), [graph, seed])
-  const groupOf = useMemo(() => Object.fromEntries(graph.nodes.map((n) => [n.id, n.group])), [graph])
+  // Lay out the complete sample once. Deleting a node only filters the
+  // rendered topology, so every surviving node keeps its exact position and
+  // the reader's mental map is preserved.
+  const { positions: pos } = useForceLayout(rawGraph.nodes, rawGraph.edges, { seed })
+  const groupOf = useMemo(
+    () => Object.fromEntries(graph.nodes.map((n) => [n.id, n.group])),
+    [graph],
+  )
   const sizeById = useMemo(
     () => (sizing === "none" ? null : N.centralityFor(sizing, graph.nodes, graph.edges)),
-    [sizing, graph]
+    [sizing, graph],
   )
   const problem = useMemo(
-    () => (spatial ? N.findProximityProblem(graph.nodes, graph.edges, pos) : null),
-    [spatial, graph, pos]
+    () => (spatial && pos ? N.findProximityProblem(graph.nodes, graph.edges, pos) : null),
+    [spatial, graph, pos],
   )
   const pathList = useMemo(
-    () => (path.source && path.target ? N.shortestPath(graph.nodes, graph.edges, path.source, path.target) : []),
-    [path, graph]
+    () =>
+      path.source && path.target
+        ? N.shortestPath(graph.nodes, graph.edges, path.source, path.target)
+        : [],
+    [path, graph],
   )
 
   const highlight = useMemo(() => {
@@ -711,11 +864,21 @@ function ChapterToy() {
         edgeKeys.add(`${pathList[i]}|${pathList[i + 1]}`)
         edgeKeys.add(`${pathList[i + 1]}|${pathList[i]}`)
       }
-      return { active: true, path: ids, pathEdges: edgeKeys, sourceId: path.source, targetId: path.target }
+      return {
+        active: true,
+        path: ids,
+        pathEdges: edgeKeys,
+        sourceId: path.source,
+        targetId: path.target,
+      }
     }
     const focus = hover || path.source
     if (focus) {
-      return { active: true, ego: N.egoIds(graph.nodes, graph.edges, focus, 1), sourceId: path.source }
+      return {
+        active: true,
+        ego: N.egoIds(graph.nodes, graph.edges, focus, 1),
+        sourceId: path.source,
+      }
     }
     return null
   }, [spatial, problem, pathList, hover, path, graph])
@@ -805,32 +968,36 @@ function ChapterToy() {
 
       <div className="nv-toy">
         <Stage height={520} maxWidth={900}>
-          {(w) => (
-            <NetworkCustomChart
-              nodes={graph.nodes}
-              edges={graph.edges}
-              layout={nodeLinkLayout}
-              layoutConfig={{
-                pos,
-                edges: graph.edges,
-                colorMode: communities ? "group" : "uniform",
-                groupOf,
-                baseRadius: 6,
-                sizeById,
-                labels,
-                highlight,
-              }}
-              width={w}
-              height={500}
-              enableHover
-              onClick={onClick}
-              onObservation={(obs) => {
-                if (!obs) return
-                if (obs.type === "hover") setHover(idOf(obs.datum))
-                else if (obs.type === "hover-end") setHover(null)
-              }}
-            />
-          )}
+          {(w) =>
+            pos ? (
+              <NetworkCustomChart
+                nodes={graph.nodes}
+                edges={graph.edges}
+                layout={nodeLinkLayout}
+                layoutConfig={{
+                  pos,
+                  edges: graph.edges,
+                  colorMode: communities ? "group" : "uniform",
+                  groupOf,
+                  baseRadius: 6,
+                  sizeById,
+                  labels,
+                  highlight,
+                }}
+                width={w}
+                height={500}
+                enableHover
+                onClick={onClick}
+                onObservation={(obs) => {
+                  if (!obs) return
+                  if (obs.type === "hover") setHover(idOf(obs.datum))
+                  else if (obs.type === "hover-end") setHover(null)
+                }}
+              />
+            ) : (
+              <NetworkLayoutLoading />
+            )
+          }
         </Stage>
 
         <aside className="nv-toy-readout">
@@ -859,18 +1026,23 @@ function ChapterToy() {
             <p className="nv-readout-path">
               {pathList.length > 1 ? (
                 <>
-                  Shortest path <strong>{path.source} → {path.target}</strong>:{" "}
-                  {pathList.length - 1} step{pathList.length - 1 === 1 ? "" : "s"}
+                  Shortest path{" "}
+                  <strong>
+                    {path.source} → {path.target}
+                  </strong>
+                  : {pathList.length - 1} step{pathList.length - 1 === 1 ? "" : "s"}
                   <span className="nv-readout-route">{pathList.join(" → ")}</span>
                 </>
               ) : (
-                <>No path between {path.source} and {path.target}.</>
+                <>
+                  No path between {path.source} and {path.target}.
+                </>
               )}
             </p>
           ) : path.source ? (
             <p className="nv-readout-hint">
-              <strong>{path.source}</strong> selected — click another node to find
-              the shortest path.
+              <strong>{path.source}</strong> selected — click another node to find the shortest
+              path.
             </p>
           ) : (
             <p className="nv-readout-hint">Click two nodes to trace a path.</p>
@@ -878,9 +1050,9 @@ function ChapterToy() {
         </aside>
       </div>
       <p className="nv-toy-note">
-        Sizing runs Brandes betweenness and closeness in the browser; pathfinding
-        is a breadth-first search; the spatial-problem detector is the same one
-        behind the gestalt primer. Delete a node and every measure recomputes.
+        Sizing runs Brandes betweenness and closeness in the browser; pathfinding is a breadth-first
+        search; the spatial-problem detector is the same one behind the gestalt primer. Delete a
+        node and every measure recomputes.
       </p>
     </section>
   )
@@ -890,7 +1062,7 @@ function Colophon() {
   return (
     <div className="nv-colophon">
       <p>
-        After Elijah Meeks's 2015 workshop{" "}
+        After Elijah Meeks&apos;s 2015 workshop{" "}
         <a href="https://elijahmeeks.com/networkviz/" target="_blank" rel="noopener noreferrer">
           Creating Effective Network Data Visualization with D3
         </a>{" "}
@@ -898,8 +1070,8 @@ function Colophon() {
         <a href="http://dhs.stanford.edu/dh/networks/" target="_blank" rel="noopener noreferrer">
           Introduction to Networks
         </a>{" "}
-        toy — bespoke D3 then, Semiotic now. Network data: the Les Misérables
-        co-appearance graph (Knuth), the canonical force-layout test set.
+        toy — bespoke D3 then, Semiotic now. Network data: the Les Misérables co-appearance graph
+        (Knuth), the canonical force-layout test set.
       </p>
     </div>
   )
@@ -972,7 +1144,9 @@ function nodeLinkLayout(ctx) {
       if (!pa || !pb) return null
       const a = { x: mx(pa.x), y: my(pa.y) }
       const b = { x: mx(pb.x), y: my(pb.y) }
-      const inPath = hl?.pathEdges && (hl.pathEdges.has(`${e.source}|${e.target}`) || hl.pathEdges.has(`${e.target}|${e.source}`))
+      const inPath =
+        hl?.pathEdges &&
+        (hl.pathEdges.has(`${e.source}|${e.target}`) || hl.pathEdges.has(`${e.target}|${e.source}`))
       const inEgo = hl?.ego && hl.ego.has(e.source) && hl.ego.has(e.target)
       let stroke = N.INK
       if (cfg.reciprocalColor) stroke = e.reciprocal ? N.COMMUNITY_COLORS[1] : N.OXBLOOD
@@ -980,12 +1154,22 @@ function nodeLinkLayout(ctx) {
       let width = cfg.weightByValue ? 0.8 + (e.value / maxV) * 5 : 1.1
       if (inPath) width = 3
       let opacity = 0.42
+      const sourceGroup = cfg.groupOf?.[e.source]
+      const isInterGroup = sourceGroup == null || sourceGroup != cfg.groupOf[e.target]
+      if (isInterGroup && cfg.interGroupEdgeOpacity != null) {
+        opacity = cfg.interGroupEdgeOpacity
+      }
       if (dim) opacity = inPath || inEgo ? 0.9 : 0.05
       const style = { stroke, strokeWidth: width, opacity }
       if (cfg.edgeShape === "arc") {
         const cxm = (a.x + b.x) / 2
         const cym = a.y - Math.abs(b.x - a.x) * 0.55 - 8
-        return { type: "curved", pathD: `M${a.x},${a.y} Q${cxm},${cym} ${b.x},${b.y}`, style, datum: e }
+        return {
+          type: "curved",
+          pathD: `M${a.x},${a.y} Q${cxm},${cym} ${b.x},${b.y}`,
+          style,
+          datum: e,
+        }
       }
       return { type: "line", x1: a.x, y1: a.y, x2: b.x, y2: b.y, style, datum: e, _k: i }
     })
@@ -1005,7 +1189,9 @@ function nodeLinkLayout(ctx) {
       let stroke = N.INK
       let sw = 1
       let opacity = 1
-      if (hl?.problem && hl.problem.has(n.id)) fill = "#c0341d"
+      if (hl?.problem) {
+        fill = hl.problem.has(n.id) ? "#c0341d" : (hl.problemRestFill ?? fill)
+      }
       if (dim) {
         const on = (hl.ego && hl.ego.has(n.id)) || (hl.path && hl.path.has(n.id))
         if (!on) opacity = 0.16
@@ -1052,7 +1238,7 @@ function nodeLinkLayout(ctx) {
   if (cfg.groupLabels) {
     const labelPos = {}
     cfg.groupLabels.forEach((g) => {
-      const members = ctx.nodes.filter((n) => (cfg.groupOf?.[n.id]) === g)
+      const members = ctx.nodes.filter((n) => cfg.groupOf?.[n.id] === g)
       if (!members.length) return
       const xs = members.map((m) => pos[m.id]?.x).filter((v) => v != null)
       const ys = members.map((m) => pos[m.id]?.y).filter((v) => v != null)
@@ -1076,7 +1262,7 @@ function nodeLinkLayout(ctx) {
             >
               Community {g + 1}
             </text>
-          ) : null
+          ) : null,
         )}
       </g>
     )
@@ -1109,7 +1295,10 @@ function matrixLayout(ctx) {
         y: oy + i * cell,
         w: cell - 1.5,
         h: cell - 1.5,
-        style: { fill: N.groupColor(cfg.groupOf[ids[i]]), opacity: 0.3 + 0.65 * (v / cfg.maxValue) },
+        style: {
+          fill: N.groupColor(cfg.groupOf[ids[i]]),
+          opacity: 0.3 + 0.65 * (v / cfg.maxValue),
+        },
         datum: { a: ids[i], b: ids[j], value: v },
         id: `${ids[i]}-${ids[j]}`,
       })
@@ -1158,7 +1347,12 @@ function edgeEncodingLayout(ctx) {
     const dx = b.x - a.x
     const dy = b.y - a.y
     const d = Math.hypot(dx, dy) || 1
-    return { fx: a.x + (dx / d) * r, fy: a.y + (dy / d) * r, tx: b.x - (dx / d) * r, ty: b.y - (dy / d) * r }
+    return {
+      fx: a.x + (dx / d) * r,
+      fy: a.y + (dy / d) * r,
+      tx: b.x - (dx / d) * r,
+      ty: b.y - (dy / d) * r,
+    }
   }
 
   const edgeEls = cfg.edges
@@ -1217,7 +1411,14 @@ function edgeEncodingLayout(ctx) {
       const y = my(p.y)
       return (
         <g key={n.id}>
-          <circle cx={x} cy={y} r={R} fill={N.groupColor(n.data?.group ?? n.group)} stroke={N.INK} strokeWidth={1.2} />
+          <circle
+            cx={x}
+            cy={y}
+            r={R}
+            fill={N.groupColor(n.data?.group ?? n.group)}
+            stroke={N.INK}
+            strokeWidth={1.2}
+          />
           <text x={x} y={y + R + 13} textAnchor="middle" fontSize="11" fill={N.INK}>
             {n.id}
           </text>

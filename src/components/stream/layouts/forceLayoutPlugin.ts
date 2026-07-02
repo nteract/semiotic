@@ -4,7 +4,8 @@ import {
   forceX,
   forceY,
   forceLink,
-  forceManyBody
+  forceManyBody,
+  forceCollide
 } from "d3-force"
 import { scaleLinear } from "d3-scale"
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
@@ -143,7 +144,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       Math.min(300, Math.floor(300 - (nodeCount - 30) * 2))
     )
     // config.iterations=0 means "skip simulation" (pinned layout) regardless of warm/cold
-    const iterations = config.iterations === 0 ? 0
+    const iterations = config.__skipForceSimulation ? 0
+      : config.iterations === 0 ? 0
       : useWarmStart ? WARM_START_ITERATIONS
       : coldIterations
 
@@ -159,6 +161,23 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // d3-force's simulation.nodes() modifies positions during setup, so
     // we must avoid calling it when positions are pre-set.
     if (iterations > 0) {
+      // Degree-aware forces are substantially more stable around hubs than a
+      // uniform spring/charge model. This mirrors the useful parts of
+      // ForceAtlas2 (degree-dependent repulsion) and d3-force's own default
+      // link-strength heuristic without requiring a continuous worker layout.
+      const degreeById = new Map<string, number>()
+      const nodeById = new Map<string, RealtimeNode>()
+      for (const node of nodes) {
+        degreeById.set(node.id, 0)
+        nodeById.set(node.id, node)
+      }
+      for (const edge of edges) {
+        const sourceId = typeof edge.source === "string" ? edge.source : edge.source.id
+        const targetId = typeof edge.target === "string" ? edge.target : edge.target.id
+        degreeById.set(sourceId, (degreeById.get(sourceId) ?? 0) + 1)
+        degreeById.set(targetId, (degreeById.get(targetId) ?? 0) + 1)
+      }
+
       // Configure link force — parameterized on RealtimeNode + RealtimeEdge so
       // d3-force's internal typing knows the shape of source/target.
       // `weight` isn't in the RealtimeEdge interface but duck-typed input may
@@ -167,7 +186,32 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       const linkForce = forceLink<RealtimeNode, RealtimeEdge>()
         .strength((d) => {
           const weight = (d as RealtimeEdge & { weight?: number }).weight
-          return Math.min(2.5, weight ? weight * forceStrength : forceStrength)
+          const sourceId = typeof d.source === "string" ? d.source : d.source.id
+          const targetId = typeof d.target === "string" ? d.target : d.target.id
+          const endpointDegree = Math.max(
+            1,
+            Math.min(degreeById.get(sourceId) ?? 1, degreeById.get(targetId) ?? 1)
+          )
+          const weightFactor = weight && weight > 0 ? Math.sqrt(weight) : 1
+          return Math.min(
+            2.5,
+            (weightFactor * forceStrength) / (0.1 * endpointDegree)
+          )
+        })
+        .distance((d) => {
+          const source =
+            typeof d.source === "string"
+              ? nodeById.get(d.source)
+              : d.source
+          const target =
+            typeof d.target === "string"
+              ? nodeById.get(d.target)
+              : d.target
+          const endpointClearance =
+            (source ? nodeRadius(source) : 0) +
+            (target ? nodeRadius(target) : 0) +
+            12
+          return Math.max(40, endpointClearance)
         })
         .id((d) => d.id)
 
@@ -177,14 +221,28 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       const simulation = forceSimulation<RealtimeNode>()
         .force(
           "charge",
-          forceManyBody<RealtimeNode>().strength((d) => -25 * nodeRadius(d))
+          forceManyBody<RealtimeNode>().strength((d) => {
+            const degree = degreeById.get(d.id) ?? 0
+            return -15 * nodeRadius(d) * Math.sqrt(degree + 1)
+          })
+        )
+        // A static no-overlap pass is one of the main reasons Sigma/Graphology
+        // examples remain legible after ForceAtlas2 settles. Applying collision
+        // during the synchronous simulation gives Semiotic the same protection
+        // while preserving deterministic, non-interactive output.
+        .force(
+          "collide",
+          forceCollide<RealtimeNode>((d) => nodeRadius(d) + 3)
+            .strength(0.9)
+            .iterations(2)
         )
         // forceCenter shifts the center of mass to the target on every tick,
         // ensuring the graph as a whole stays centered in the chart area
         .force("center", forceCenter(cx, cy).strength(0.8))
-        // forceX/forceY pull individual nodes toward center, preventing outliers
-        .force("x", forceX<RealtimeNode>(cx).strength(0.15))
-        .force("y", forceY<RealtimeNode>(cy).strength(0.15))
+        // Keep components on screen without crushing community structure into
+        // the center. The previous 0.15 pull dominated sparse layouts.
+        .force("x", forceX<RealtimeNode>(cx).strength(0.06))
+        .force("y", forceY<RealtimeNode>(cy).strength(0.06))
 
       simulation.nodes(nodes)
 
@@ -428,11 +486,14 @@ function resolveLabelFn(
  * and scale the result to `nodeSizeRange`. If it is a function, call it.
  * Falls back to a default radius of 8.
  */
-function resolveNodeSizeFn(
+export function resolveNodeSizeFn(
   nodeSize: number | string | ((d: Datum) => number) | undefined,
   nodeSizeRange: [number, number] | undefined,
   allNodes: RealtimeNode[]
 ): (node: RealtimeNode) => number {
+  if (allNodes.some((node) => node.__forceRadius != null)) {
+    return (node: RealtimeNode) => node.__forceRadius ?? 8
+  }
   if (nodeSize == null) {
     return () => 8
   }

@@ -70,6 +70,9 @@ const forceDirectedGraphProps = [
   { name: "edgeOpacity", type: "number", required: false, default: "0.6", description: "Opacity applied to edges." },
   { name: "iterations", type: "number", required: false, default: "300", description: "Number of force simulation iterations. Higher values produce more stable layouts." },
   { name: "forceStrength", type: "number", required: false, default: "0.1", description: "Strength of the force simulation. Lower values create looser layouts." },
+  { name: "layoutExecution", type: '"auto" | "worker" | "sync"', required: false, default: '"auto"', description: "Run layout synchronously, in a Web Worker, or automatically choose based on estimated graph cost." },
+  { name: "layoutLoadingContent", type: "ReactNode | false", required: false, default: null, description: "Custom content shown in the chart slot while worker layout is pending." },
+  { name: "onLayoutStateChange", type: "function", required: false, default: null, description: "Called with pending, ready, or error when internally managed layout changes state." },
   { name: "showLabels", type: "boolean", required: false, default: "false", description: "Show text labels on each node." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on nodes." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy set)", description: "Show a legend. Defaults to true when colorBy is specified." },
@@ -306,6 +309,11 @@ export default function ForceDirectedGraphPage() {
         control the layout density. Lower force strength produces a looser,
         more spread-out graph.
       </p>
+      <p>
+        The layout uses degree-aware repulsion, degree-normalized link
+        attraction, and radius-aware collision. It produces a stable static
+        result without requiring a continuously running interactive simulation.
+      </p>
 
       <LiveExample
         frameProps={{
@@ -329,6 +337,35 @@ export default function ForceDirectedGraphPage() {
         }}
         hiddenProps={{}}
       />
+
+      <h3 id="layout-execution">Layout Execution and Loading</h3>
+      <p>
+        <code>layoutExecution=&quot;auto&quot;</code> keeps small graphs and server
+        rendering synchronous, but moves more expensive layouts to a Web
+        Worker. While a cold worker layout is pending, the chart reserves its
+        dimensions and displays a loading placeholder. Set{" "}
+        <code>layoutExecution=&quot;sync&quot;</code> for environments that cannot serve
+        the packaged worker asset, or <code>&quot;worker&quot;</code> to force the
+        asynchronous path.
+      </p>
+      <CodeBlock
+        code={`<ForceDirectedGraph
+  nodes={networkNodes}
+  edges={networkEdges}
+  layoutExecution="auto"
+  layoutLoadingContent={<NetworkSkeleton />}
+  onLayoutStateChange={(state) => setLayoutState(state)}
+/>`}
+        language="jsx"
+      />
+      <p>
+        Worker execution requires the package&apos;s{" "}
+        <code>forceLayoutWorker.js</code> asset to be emitted by your bundler.
+        Content Security Policy deployments should allow same-origin workers
+        with <code>worker-src &apos;self&apos;</code>. If worker construction
+        or execution fails, Semiotic still renders using the synchronous
+        layout path.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

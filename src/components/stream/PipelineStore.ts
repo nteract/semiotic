@@ -414,6 +414,11 @@ export class PipelineStore {
   version = 0
   /** Overlays returned from customLayout (consumed by StreamXYFrame for SVGOverlay). */
   customLayoutOverlays: import("react").ReactNode = null
+  /** The most recent custom layout result, exposed for host readback via the
+   *  frame handle's `getCustomLayout()` — so a page that needs the computed
+   *  placement (stats, inspectors) doesn't re-run the layout. Null before the
+   *  first layout, after a layout throw, or when no custom layout is set. */
+  lastCustomLayoutResult: LayoutResult | null = null
   private _customLayoutDiagnosticsWarned = new Set<string>()
   /** Per-frame restyle callback from the custom layout result (see LayoutResult.restyle). */
   private _customRestyle: LayoutResult["restyle"] = undefined
@@ -1241,11 +1246,13 @@ export class PipelineStore {
           console.error("[semiotic] customLayout threw:", err)
         }
         this.customLayoutOverlays = null
+        this.lastCustomLayoutResult = null
         this._customRestyle = undefined
         this.hasCustomRestyle = false
         return []
       }
       this.customLayoutOverlays = result.overlays ?? null
+      this.lastCustomLayoutResult = result
       const nodes = result.nodes ?? []
       // Stash the per-frame restyle callback; its presence opts into the cheap
       // selection path. Snapshot base styles and apply once for the current

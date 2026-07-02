@@ -312,6 +312,9 @@ export class GeoPipelineStore {
   version = 0
   /** SVG overlays returned from the active custom layout. */
   customLayoutOverlays: import("react").ReactNode = null
+  /** Most recent custom layout result for host readback (`getCustomLayout()`).
+   *  Null before the first layout, after a throw, or without a custom layout. */
+  lastCustomLayoutResult: GeoLayoutResult | null = null
   private _customLayoutDiagnosticsWarned = new Set<string>()
   private _customRestyle: GeoLayoutResult["restyle"] = undefined
   hasCustomRestyle = false
@@ -943,6 +946,7 @@ export class GeoPipelineStore {
           console.error("[semiotic] geo customLayout threw:", err)
         }
         this.customLayoutOverlays = null
+        this.lastCustomLayoutResult = null
         this._customRestyle = undefined
         this.hasCustomRestyle = false
         return []
@@ -950,6 +954,7 @@ export class GeoPipelineStore {
 
       const nodes = result.nodes ?? []
       this.customLayoutOverlays = result.overlays ?? null
+      this.lastCustomLayoutResult = result
       this._customRestyle = result.restyle
       this.hasCustomRestyle = !!result.restyle
       this._baseStyles = new WeakMap()

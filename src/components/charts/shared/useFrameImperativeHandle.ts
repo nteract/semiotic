@@ -34,6 +34,7 @@ interface XYOrdinalFrameLike {
   clear(): void
   getData(): Datum[]
   getScales(): unknown | null
+  getCustomLayout?(): unknown | null
 }
 
 /** Minimal shape the helper expects of a network frame ref. */
@@ -49,6 +50,7 @@ interface NetworkFrameLike {
   updateNode(id: string, updater: (d: Datum) => Datum): Datum | null
   clear(): void
   getTopology(): { nodes: Array<{ id: string; data?: Datum | null }> } | null
+  getCustomLayout?(): unknown | null
 }
 
 /** Minimal shape the helper expects of a geo (point-only) frame ref. */
@@ -58,6 +60,7 @@ interface GeoPointsFrameLike {
   removePoint(id: string | string[]): Datum[]
   clear(): void
   getData(): Datum[]
+  getCustomLayout?(): unknown | null
 }
 
 /** Minimal shape the helper expects of a geo (line/flow) frame ref. */
@@ -67,6 +70,7 @@ interface GeoLinesFrameLike {
   removeLine(id: string | string[]): Datum[]
   getLines(): Datum[]
   clear(): void
+  getCustomLayout?(): unknown | null
 }
 
 type FrameVariant = "xy" | "network" | "geo-points" | "geo-lines"
@@ -139,6 +143,7 @@ function makeVariantDefaults(
       clear: () => r.current?.clear(),
       getData: () => r.current?.getData() ?? [],
       getScales: () => r.current?.getScales() ?? null,
+      getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
     }
   }
   if (variant === "network") {
@@ -184,6 +189,7 @@ function makeVariantDefaults(
       // contract; consumers get the same runtime shape they had before.
       getData: () =>
         (r.current?.getTopology()?.nodes?.map((n) => n.data) as Datum[] | undefined) ?? [],
+      getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
     }
   }
   if (variant === "geo-points") {
@@ -205,6 +211,7 @@ function makeVariantDefaults(
       },
       clear: () => r.current?.clear(),
       getData: () => r.current?.getData() ?? [],
+      getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
     }
   }
   // variant === "geo-lines"
@@ -229,5 +236,6 @@ function makeVariantDefaults(
     },
     clear: () => r.current?.clear(),
     getData: () => r.current?.getLines() ?? [],
+    getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
   }
 }

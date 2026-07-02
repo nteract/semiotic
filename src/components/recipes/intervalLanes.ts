@@ -58,6 +58,9 @@ export interface IntervalLanesConfig<T = Datum> {
   unit?: number
   /** Vertical gap between stacked sub-tracks, px. @default 1.5 */
   barGap?: number
+  /** Minimum rendered interval width, px. Keeps zero- and short-duration
+   *  events visible and hoverable on long domains. @default 2 */
+  minBarWidth?: number
   /** @default 3.5 */
   minBarHeight?: number
   /** @default 10 */
@@ -87,6 +90,10 @@ function fn<T>(a: string | ((d: T) => unknown)): (d: T) => unknown {
   return typeof a === "function" ? a : (d: T) => (d as Record<string, unknown>)[a]
 }
 
+/** Horizontal gap (px) inserted between adjacent bars on the same sub-track so
+ *  back-to-back intervals read as two rects, not one. */
+const BAR_HGAP = 1
+
 export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ctx) => {
   const cfg = ctx.config
   const { plot } = ctx.dimensions
@@ -100,6 +107,7 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
   const getId = cfg.idAccessor ? (fn(cfg.idAccessor) as (d: Datum) => unknown) : null
   const unit = cfg.unit ?? 0
   const barGap = cfg.barGap ?? 1.5
+  const minBarWidth = Math.max(0, cfg.minBarWidth ?? 2)
   const minBar = cfg.minBarHeight ?? 3.5
   const maxBar = cfg.maxBarHeight ?? 10
   const lanePad = cfg.lanePadding ?? 7
@@ -122,20 +130,38 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
   const laneHeight = laneAreaH / Math.max(1, lanes.length)
 
   // ── Bars ───────────────────────────────────────────────────────────────────
+  // Pack in *rendered-pixel* space, not raw domain units. A bar is drawn from
+  // `xPx(start)` to `max(xPx(start) + minBarWidth, xPx(end + unit))`, so both the
+  // inclusive `end + unit` extension and the `minBarWidth` floor let a bar cover
+  // pixels its raw `[start, end]` interval doesn't. Packing on raw start/end then
+  // reuses a sub-track for a neighbour that starts under that overhang (e.g. a
+  // war ending the same year the next begins, or two short events a year apart),
+  // and the two rendered rects overlap — visible as darker, doubled fills. Pack
+  // on the drawn span instead, plus a 1px gap so touching bars stay distinct, so
+  // the packer's "already ended" test lives in the same space the bars do.
+  const startPx = (d: Datum) => xPx(getStart(d))
+  const drawEndPx = (d: Datum) => Math.max(startPx(d) + minBarWidth, xPx(getEnd(d) + unit))
+  const packEndPx = (d: Datum) => drawEndPx(d) + BAR_HGAP
+
   const nodes: RectSceneNode[] = []
   lanes.forEach((lane, laneIndex) => {
     const laneTop = plot.y + laneIndex * laneHeight
     const rows = ctx.data.filter((d) => getLane(d) === lane)
     if (rows.length === 0) return
     const { packed, trackCount } = packIntervals(rows, {
-      start: getStart,
-      end: getEnd,
+      start: startPx,
+      end: packEndPx,
     })
-    const barHeight = Math.max(minBar, Math.min(maxBar, (laneHeight - 2 * lanePad) / trackCount - barGap))
+    // Space sub-tracks by the exact slot height so bars can never overflow the
+    // lane (and bleed into a neighbouring lane) even when the sub-track count is
+    // high enough that the `minBarHeight` floor would otherwise force bars taller
+    // than their slot. `barHeight` is clamped to the slot and capped at `maxBar`.
+    const trackPitch = (laneHeight - 2 * lanePad) / trackCount
+    const barHeight = Math.min(maxBar, Math.max(Math.min(minBar, trackPitch), trackPitch - barGap))
     for (const { item, track } of packed) {
-      const x = xPx(getStart(item))
-      const w = Math.max(2, xPx(getEnd(item) + unit) - x)
-      const y = laneTop + lanePad + track * (barHeight + barGap)
+      const x = startPx(item)
+      const w = drawEndPx(item) - x
+      const y = laneTop + lanePad + track * trackPitch
       nodes.push({
         type: "rect",
         x,

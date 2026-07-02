@@ -265,6 +265,11 @@ export {
 // Read the resolved selection inside a custom layout's overlays (restyle
 // without a relayout). Pairs with the layout result's `restyle` callback.
 export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
+export { useForceLayout } from "./charts/network/useForceLayout"
+export type {
+  ForceLayoutStatus,
+  UseForceLayoutResult
+} from "./charts/network/useForceLayout"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 
 export type {

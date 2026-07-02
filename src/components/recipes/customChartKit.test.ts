@@ -356,6 +356,12 @@ describe("unwrapDatum", () => {
     expect(unwrapDatum({ a: 1 })).toEqual({ a: 1 })
     expect(unwrapDatum(null)).toBeNull()
   })
+
+  it("unwraps the .datum nesting some interaction payloads use", () => {
+    expect(unwrapDatum({ datum: { a: 2 } })).toEqual({ a: 2 })
+    // .data wins when both are present (frame wrappers put the user object there)
+    expect(unwrapDatum({ data: { a: 1 }, datum: { a: 2 } })).toEqual({ a: 1 })
+  })
 })
 
 describe("hitTarget helpers", () => {

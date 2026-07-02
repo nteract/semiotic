@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react"
-import { ChartContainer, NetworkCustomChart } from "semiotic"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { ChartContainer, NetworkCustomChart, useSelectionActions } from "semiotic"
 // Custom-network kit: the radial coordinate helpers (0 = up, clockwise), the
 // transparent hit-target node that earns the layout its accessibility +
 // annotation anchoring for free, and the datum unwrapper for onObservation.
@@ -17,6 +17,7 @@ import {
   mean,
   clamp,
   shortestArcDelta,
+  useCustomLayoutSelection,
 } from "semiotic/recipes"
 import CodeBlock from "../../components/CodeBlock"
 import { StatStrip } from "../../components/StatStrip"
@@ -79,8 +80,9 @@ function urineWheelLayout(ctx) {
 
 <NetworkCustomChart
   nodes={URINE_NODES} edges={URINE_EDGES} layout={urineWheelLayout}
-  layoutConfig={{ activeId, language, showTree }}   // cheap re-layout, no re-ingest
-  annotations={physiciansNotes}                     // pointId-anchored, with provenance
+  layoutConfig={{ language, showTree }}          // geometry-changing config only
+  selection={{ name: "urine-wheel-active" }}     // highlight restyles, no relayout
+  annotations={physiciansNotes}                  // pointId-anchored, with provenance
   description="A medieval uroscopy wheel…" accessibleTable
   frameProps={{ background: "transparent", tooltipContent: renderTooltip }}
 />`
@@ -105,24 +107,29 @@ export default function UrineWheelExamplePage() {
     }
   }, [])
 
+  // Language + tree toggles change what the layout draws, so they relayout via
+  // layoutConfig. The highlight (hover wins, else the locked coction filter) is
+  // pure restyle — it goes through the shared selection store and the overlay
+  // re-renders via the selection context without re-running the radial layout.
   const layoutConfig = useMemo(
     () => ({
-      activeId: active?.id ?? null,
-      activeKind: active?.kind ?? null,
-      lockedDiagnosis,
       language,
       showTree,
     }),
-    [active, lockedDiagnosis, language, showTree],
+    [language, showTree],
   )
+  const { selectPoints, clear } = useSelectionActions("urine-wheel-active")
+  useEffect(() => {
+    if (active?.id) selectPoints({ id: [active.id] })
+    else if (lockedDiagnosis) selectPoints({ id: [lockedDiagnosis] })
+    else clear()
+  }, [active, lockedDiagnosis, selectPoints, clear])
 
   const annotations = useMemo(() => (showNotes ? PHYSICIANS_NOTES : []), [showNotes])
 
   return (
     <ExamplePageLayout
       title="The Wheel of Urines"
-      prevPage={{ title: "Cities, Tile by Tile", path: "/examples/paris-isometric-landmarks" }}
-      nextPage={{ title: "The New York & Erie Railroad", path: "/examples/erie-railroad-organization" }}
     >
       <p style={styles.lede}>
         Before laboratories, a physician read disease from the color of urine. The medieval{" "}
@@ -179,6 +186,7 @@ export default function UrineWheelExamplePage() {
               edges={URINE_EDGES}
               layout={urineWheelLayout}
               layoutConfig={layoutConfig}
+              selection={{ name: "urine-wheel-active" }}
               annotations={annotations}
               width={chartWidth}
               height={CHART_HEIGHT}
@@ -242,8 +250,10 @@ export default function UrineWheelExamplePage() {
           layered description; the physician&apos;s notes are real <code>annotations</code> anchored
           to nodes by id and carrying provenance (a human gloss, not an inference); and the
           toolbar&apos;s export button writes the whole wheel to SVG or PNG. The Latin/English
-          toggle and the highlight interaction ride the cheap
-          <code>layoutConfig</code> path — the layout re-runs without re-ingesting the graph.
+          toggle rides the cheap <code>layoutConfig</code> path (the layout re-runs without
+          re-ingesting the graph), while the highlight interaction is cheaper still: it flows
+          through the shared selection store and the overlay restyles via{" "}
+          <code>useCustomLayoutSelection</code> — no relayout at all.
         </p>
 
         <p style={styles.sourceNote}>
@@ -268,7 +278,7 @@ function urineWheelLayout(ctx) {
   const flask = clamp(minDim * 0.05, 23, 36)
   const diagR = clamp(minDim * 0.058, 30, 45)
 
-  const { activeId, activeKind, lockedDiagnosis, language, showTree } = ctx.config
+  const { language, showTree } = ctx.config
 
   // Split raw data (ctx.nodes are RealtimeNode wrappers; the user object is .data)
   const colors = []
@@ -305,7 +315,68 @@ function urineWheelLayout(ctx) {
     diagById.set(d.id, { ...d, angle: meanAngle, ...polarToXY(meanAngle, rInner, { center }) })
   }
 
-  // Resolve highlight: hover wins while active, otherwise the locked filter.
+  // Transparent hit targets — the source of keyboard nav, the data table,
+  // annotation anchoring, and onObservation. The visible art is the overlay.
+  const sceneNodes = [
+    ...colors.map((c) => {
+      const p = colorById.get(c.id)
+      return networkHitTarget({ x: p.x, y: p.y, r: flask * 0.8, datum: c, id: c.id })
+    }),
+    ...diagnoses.map((d) => {
+      const p = diagById.get(d.id)
+      return networkHitTarget({ x: p.x, y: p.y, r: diagR, datum: d, id: d.id })
+    }),
+  ]
+
+  return {
+    sceneNodes,
+    sceneEdges: [],
+    // All visible art lives in the overlay; the scene nodes are invisible hit
+    // targets. The no-op restyle opts into the style-only selection path, so
+    // hover / locked-filter changes swap the overlay's selection context
+    // without re-running the radial layout or rebuilding the quadtree.
+    restyle: () => undefined,
+    overlays: (
+      <WheelOverlay
+        colors={colors}
+        diagnoses={diagnoses}
+        colorById={colorById}
+        diagById={diagById}
+        center={center}
+        rInner={rInner}
+        rOuter={rOuter}
+        flask={flask}
+        diagR={diagR}
+        language={language}
+        showTree={showTree}
+      />
+    ),
+  }
+}
+
+function WheelOverlay({
+  colors,
+  diagnoses,
+  colorById,
+  diagById,
+  center,
+  rInner,
+  rOuter,
+  flask,
+  diagR,
+  language,
+  showTree,
+}) {
+  // The shared selection carries one id — a hovered color/diagnosis, or the
+  // locked coction filter published by the page. The kind-aware expansion
+  // (a color lights its diagnosis; a diagnosis lights its member colors)
+  // happens here, so this overlay re-renders on highlight change while the
+  // canvas scene and layout stay untouched.
+  const selection = useCustomLayoutSelection()
+  const focusNode = selection.isActive
+    ? ([...colors, ...diagnoses].find((d) => selection.predicate(d)) ?? null)
+    : null
+
   const highlight = new Set()
   const activeEdges = new Set()
   const lightColor = (id) => {
@@ -325,25 +396,11 @@ function urineWheelLayout(ctx) {
       }
     }
   }
-  if (activeKind === "color") lightColor(activeId)
-  else if (activeKind === "diagnosis") lightDiagnosis(activeId)
-  else if (lockedDiagnosis) lightDiagnosis(lockedDiagnosis)
+  if (focusNode?.kind === "color") lightColor(focusNode.id)
+  else if (focusNode?.kind === "diagnosis") lightDiagnosis(focusNode.id)
   const focused = highlight.size > 0
 
-  // Transparent hit targets — the source of keyboard nav, the data table,
-  // annotation anchoring, and onObservation. The visible art is the overlay.
-  const sceneNodes = [
-    ...colors.map((c) => {
-      const p = colorById.get(c.id)
-      return networkHitTarget({ x: p.x, y: p.y, r: flask * 0.8, datum: c, id: c.id })
-    }),
-    ...diagnoses.map((d) => {
-      const p = diagById.get(d.id)
-      return networkHitTarget({ x: p.x, y: p.y, r: diagR, datum: d, id: d.id })
-    }),
-  ]
-
-  const overlays = (
+  return (
     <g pointerEvents="none" fontFamily={SERIF}>
       {showTree && <TreeOfHealth center={center} rInner={rInner} dim={focused} />}
 
@@ -441,8 +498,6 @@ function urineWheelLayout(ctx) {
       })}
     </g>
   )
-
-  return { sceneNodes, sceneEdges: [], overlays }
 }
 
 // ── The matula (uroscopy flask) ──────────────────────────────────────────────
@@ -618,7 +673,7 @@ const PHYSICIANS_NOTES = [
 // A custom renderer surfaces only the meaningful ones; the raw datum is at
 // hoverData.data. FlippingTooltip paints the chrome, so we return bare content.
 function renderWheelTooltip(hoverData) {
-  const d = hoverData?.data ?? hoverData
+  const d = unwrapDatum(hoverData)
   if (!d || !d.kind) return null
   if (d.kind === "diagnosis") {
     return (

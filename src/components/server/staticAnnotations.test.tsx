@@ -124,6 +124,34 @@ describe("renderStaticAnnotations", () => {
     })
   })
 
+  describe("x-band", () => {
+    it("renders a shaded vertical band using the x scale", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "x-band", x0: 20, x1: 60, color: "#7C5CFF" }],
+      })
+      expect(svg).toContain('<rect x="80" y="0" width="160" height="300"')
+      expect(svg).toContain('fill="#7C5CFF"')
+    })
+
+    it("normalizes reversed bounds and renders a label", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "x-band", x0: 70, x1: 30, label: "Phase" }],
+      })
+      expect(svg).toContain('<rect x="120" y="0" width="160" height="300"')
+      expect(svg).toContain("Phase")
+    })
+
+    it("skips when x0 or x1 is missing", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "x-band", x0: 30 }],
+      })
+      expect(svg).toBe("")
+    })
+  })
+
   describe("label / text", () => {
     it("renders text at data coordinates", () => {
       const svg = renderAnnotationsString({

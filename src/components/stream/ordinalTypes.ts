@@ -586,6 +586,10 @@ export interface StreamOrdinalFrameHandle<T = Datum> {
   clear(): void
   getData(): T[]
   getScales(): OrdinalScales | null
+  /** The most recent custom layout result — host readback so pages that need
+   *  the computed placement don't re-run the layout. Null before the first
+   *  layout or when no custom layout is configured. */
+  getCustomLayout(): import("./ordinalCustomLayout").OrdinalLayoutResult | null
 }
 
 // ── Layout ─────────────────────────────────────────────────────────────

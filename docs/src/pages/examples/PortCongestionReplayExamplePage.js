@@ -12,6 +12,7 @@ import {
   useSyncedPushData,
 } from "semiotic"
 import { FlowMap } from "semiotic/geo"
+import { unwrapDatum } from "semiotic/recipes"
 import CodeBlock from "../../components/CodeBlock"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
@@ -213,14 +214,6 @@ export default function PortCongestionReplayExamplePage() {
   return (
     <ExamplePageLayout
       title="Where the Boxes Wait"
-      prevPage={{
-        title: "Your Local Government Explorer",
-        path: "/examples/local-government-explorer",
-      }}
-      nextPage={{
-        title: "The Scroll You're Telling",
-        path: "/examples/scroll-youre-telling",
-      }}
     >
       <div className="port-replay" ref={chartHostRef}>
         <header className="port-replay__masthead">
@@ -486,6 +479,7 @@ export default function PortCongestionReplayExamplePage() {
                 linkedHover={{ name: "port-route", fields: ["routeId"] }}
                 onObservation={observeRoute}
                 chartId="port-backlog"
+                description="Waterfall of daily net backlog change in TEU: arrivals push the cumulative queue up, releases pull it down, ending at zero when the backlog clears."
               />
             </div>
           </section>
@@ -542,6 +536,7 @@ export default function PortCongestionReplayExamplePage() {
               onObservation={observeRoute}
               chartId="port-matrix"
               className="port-replay__matrix-chart"
+              description="Scatterplot matrix of fifteen shipment cohorts comparing dwell time, delay, and backlog contribution, colored by route."
             />
           </div>
         </section>
@@ -592,10 +587,6 @@ function PanelHeading({ number, eyebrow, title, note }) {
       </div>
     </header>
   )
-}
-
-function unwrapDatum(datum) {
-  return datum?.data || datum?.datum || datum
 }
 
 function findRouteId(datum) {

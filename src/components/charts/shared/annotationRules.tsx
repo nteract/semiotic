@@ -594,6 +594,41 @@ export function createDefaultAnnotationRules(
         )
       }
 
+      // ── Vertical band (shaded region between x0 and x1) ─────────────
+      case "x-band": {
+        const scaleX = context.scales?.x ?? context.scales?.time
+        const x0px = ann.x0 != null && scaleX ? scaleX(ann.x0) : null
+        const x1px = ann.x1 != null && scaleX ? scaleX(ann.x1) : null
+        if (x0px == null || x1px == null) return null
+        return (
+          <g key={`ann-${index}`} opacity={ann.opacity}>
+            <rect
+              x={Math.min(x0px, x1px)}
+              y={0}
+              width={Math.abs(x1px - x0px)}
+              height={context.height || 0}
+              fill={ann.fill || ann.color || "var(--semiotic-primary, #6366f1)"}
+              fillOpacity={ann.fillOpacity ?? 0.1}
+            />
+            {ann.label && (
+              <text
+                x={Math.min(x0px, x1px) + 4}
+                y={13}
+                textAnchor="start"
+                fill={ann.color || "var(--semiotic-primary, #6366f1)"}
+                fontSize={11}
+                fontWeight="bold"
+                stroke="var(--semiotic-bg, #ffffff)"
+                strokeWidth={3}
+                paintOrder="stroke"
+              >
+                {ann.label}
+              </text>
+            )}
+          </g>
+        )
+      }
+
       // ── Envelope (per-point upper/lower bounds polygon) ─────────────
       case "envelope": {
         const data = context.data || []

@@ -505,8 +505,9 @@
 }
 
 .wiki-realtime-direction-key i.is-removal {
-  background: #ef665f;
-  border: 1px solid #78251f;
+  /* Hollow, like the marks: direction is fill-mode + hue, not hue alone. */
+  background: rgba(239, 102, 95, 0.12);
+  border: 2px solid #ef665f;
 }
 
 .wiki-realtime-direction-key i.is-out-of-order {

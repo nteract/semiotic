@@ -9,6 +9,11 @@ export { StreamNetworkFrame }
 
 // Chart HOCs
 export { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"
+export { useForceLayout } from "./charts/network/useForceLayout"
+export type {
+  ForceLayoutStatus,
+  UseForceLayoutResult
+} from "./charts/network/useForceLayout"
 export { SankeyDiagram } from "./charts/network/SankeyDiagram"
 export { ChordDiagram } from "./charts/network/ChordDiagram"
 export { TreeDiagram } from "./charts/network/TreeDiagram"

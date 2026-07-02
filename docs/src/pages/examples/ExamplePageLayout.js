@@ -1,5 +1,6 @@
 import React from "react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
+import { EXAMPLES } from "./examplesManifest"
 
 export default function ExamplePageLayout({
   title,
@@ -7,6 +8,14 @@ export default function ExamplePageLayout({
   nextPage,
   children,
 }) {
+  // Prev/next derive from the examples manifest (the single source of the
+  // narrative order), keyed by the current route — reordering the section
+  // never requires touching individual pages. Explicit props still win for
+  // one-off overrides.
+  const { pathname } = useLocation()
+  const index = EXAMPLES.findIndex((example) => example.path === pathname)
+  const prev = prevPage ?? (index > 0 ? EXAMPLES[index - 1] : undefined)
+  const next = nextPage ?? (index >= 0 ? EXAMPLES[index + 1] : undefined)
   return (
     <article style={styles.page}>
       <style>{`
@@ -25,12 +34,12 @@ export default function ExamplePageLayout({
       `}</style>
       <nav className="example-page-nav" style={styles.nav} aria-label="Example navigation">
         <div style={styles.navSide}>
-          {prevPage && (
-            <Link to={prevPage.path} style={styles.navLink}>
+          {prev && (
+            <Link to={prev.path} style={styles.navLink}>
               <span aria-hidden="true">←</span>
               <span>
                 <span style={styles.navLabel}>Previous example</span>
-                <span className="example-nav-title" style={styles.navTitle}>{prevPage.title}</span>
+                <span className="example-nav-title" style={styles.navTitle}>{prev.title}</span>
               </span>
             </Link>
           )}
@@ -42,11 +51,11 @@ export default function ExamplePageLayout({
         </Link>
 
         <div style={{ ...styles.navSide, ...styles.navSideRight }}>
-          {nextPage && (
-            <Link to={nextPage.path} style={{ ...styles.navLink, ...styles.navLinkRight }}>
+          {next && (
+            <Link to={next.path} style={{ ...styles.navLink, ...styles.navLinkRight }}>
               <span>
                 <span style={styles.navLabel}>Next example</span>
-                <span className="example-nav-title" style={styles.navTitle}>{nextPage.title}</span>
+                <span className="example-nav-title" style={styles.navTitle}>{next.title}</span>
               </span>
               <span aria-hidden="true">→</span>
             </Link>

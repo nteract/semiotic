@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { NetworkCustomChart } from "semiotic"
-import { networkHitTarget, unwrapDatum } from "semiotic/recipes"
+import { NetworkCustomChart, useSelectionActions } from "semiotic"
+import { networkHitTarget, unwrapDatum, useCustomLayoutSelection } from "semiotic/recipes"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import {
@@ -45,12 +45,17 @@ export default function SemioticArchitectureExamplePage() {
     () => architectureHighlight(selectedProfile),
     [selectedProfile]
   )
-  const layoutConfig = useMemo(
-    () => ({
-      highlightedIds: selectedProfile ? [...highlighted] : null,
-    }),
-    [highlighted, selectedProfile]
-  )
+
+  // The example buttons publish the expanded highlight set into the shared
+  // selection store (write-only — this component doesn't re-render on selection
+  // changes). The chart consumes it via `selection`, and because the layout
+  // provides `restyle`, a button click restyles the existing scene + overlay
+  // instead of re-running positionArchitecture and rebuilding the quadtree.
+  const { selectPoints, clear } = useSelectionActions("architecture-highlight")
+  useEffect(() => {
+    if (selectedProfile) selectPoints({ id: [...highlighted] })
+    else clear()
+  }, [selectedProfile, highlighted, selectPoints, clear])
 
   const handleObservation = useCallback((observation) => {
     if (observation.type === "hover" && observation.datum) {
@@ -65,10 +70,6 @@ export default function SemioticArchitectureExamplePage() {
   return (
     <ExamplePageLayout
       title="The Living System of Semiotic"
-      prevPage={{
-        title: "What the Machine Sees",
-        path: "/examples/what-the-machine-sees",
-      }}
     >
       <p className="architecture-lede">
         Semiotic presents a crown of charts and controls, but those visible forms
@@ -116,7 +117,8 @@ export default function SemioticArchitectureExamplePage() {
               nodes={SEMIOTIC_ARCHITECTURE_NODES}
               edges={SEMIOTIC_ARCHITECTURE_EDGES}
               layout={semioticArchitectureLayout}
-              layoutConfig={layoutConfig}
+              chartId="semiotic-architecture"
+              selection={{ name: "architecture-highlight" }}
               width={chartWidth}
               height={CHART_HEIGHT}
               margin={0}
@@ -214,9 +216,6 @@ function semioticArchitectureLayout(ctx) {
   const rawNodes = ctx.nodes.map((node) => node.data ?? node)
   const positioned = positionArchitecture(rawNodes, ctx.dimensions.plot)
   const positionedById = new Map(positioned.map((node) => [node.id, node]))
-  const activeIds = ctx.config.highlightedIds
-    ? new Set(ctx.config.highlightedIds)
-    : null
 
   const sceneNodes = positioned.map((node) =>
     networkHitTarget({
@@ -232,19 +231,27 @@ function semioticArchitectureLayout(ctx) {
 
   return {
     sceneNodes,
+    // The visible marks all live in the overlay; the scene nodes are invisible
+    // hit targets with nothing to restyle. Providing a (no-op) restyle still
+    // matters: it opts the chart into the style-only selection path, so a
+    // highlight change swaps the overlay's selection context without re-running
+    // this layout or rebuilding the hit-test quadtree.
+    restyle: () => undefined,
     overlays: (
       <ArchitectureOverlay
         nodes={positioned}
         nodeById={positionedById}
-        activeIds={activeIds}
         width={ctx.dimensions.plot.width}
       />
     ),
   }
 }
 
-function ArchitectureOverlay({ nodes, nodeById, activeIds, width }) {
-  const isActive = (id) => !activeIds || activeIds.has(id)
+function ArchitectureOverlay({ nodes, nodeById, width }) {
+  // Re-renders on selection change via context; the canvas scene stays put.
+  const selection = useCustomLayoutSelection()
+  const hasSelection = selection.isActive
+  const isActive = (id) => !hasSelection || selection.predicate({ id })
   const visible = nodeById.get("semiotic-core")
   const internals = nodeById.get("semiotic-internals")
   const frames = nodes.filter((node) => node.layer === "frame")
@@ -261,7 +268,7 @@ function ArchitectureOverlay({ nodes, nodeById, activeIds, width }) {
 
   return (
     <g
-      className={`architecture-overlay architecture-sankey ${activeIds ? "has-selection" : "is-overview"}`}
+      className={`architecture-overlay architecture-sankey ${hasSelection ? "has-selection" : "is-overview"}`}
       pointerEvents="none"
     >
       <defs>
@@ -297,7 +304,7 @@ function ArchitectureOverlay({ nodes, nodeById, activeIds, width }) {
         capabilities={capabilities}
         width={width}
         isActive={isActive}
-        selectionActive={Boolean(activeIds)}
+        selectionActive={hasSelection}
       />
       <LoadBearingSpine
         visible={visible}
@@ -321,7 +328,7 @@ function ArchitectureOverlay({ nodes, nodeById, activeIds, width }) {
           key={node.id}
           node={node}
           active={isActive(node.id)}
-          selectionActive={Boolean(activeIds)}
+          selectionActive={hasSelection}
         />
       ))}
     </g>

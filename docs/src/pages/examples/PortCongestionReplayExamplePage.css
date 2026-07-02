@@ -13,7 +13,7 @@
   --port-heading-muted: #91a9ad;
   --port-heading-accent: #36d6b3;
   --port-heading-badge: #ffd166;
-  --semiotic-background: #0a1d23;
+  --semiotic-bg: #0a1d23;
   --semiotic-text: #f5ecdc;
   --semiotic-text-secondary: #9ab1b5;
   --semiotic-border: #31515a;
@@ -497,7 +497,7 @@
 }
 
 .port-replay__matrix-chart {
-  --semiotic-background: transparent;
+  --semiotic-bg: transparent;
   --semiotic-text: #17282b;
   --semiotic-text-secondary: #42575a;
   --semiotic-border: #8b897d;

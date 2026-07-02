@@ -33,7 +33,7 @@ All ordinal HOCs (except Pie/Donut) support `categoryFormat` — a function `(la
 - **OrbitDiagram** — animated radial/orbital hierarchy (use this, not TreeDiagram, for animated orbiting nodes). `childrenAccessor`, `nodeIdAccessor`, `orbitMode` ("flat"|"solar"|"atomic"|number[]), `speed`, `animated`. For static radial trees use `TreeDiagram layout="radial"`.
 
 ## Network Data (`nodes: object[]`, `edges: object[]`)
-- **ForceDirectedGraph** — **`nodes`**, **`edges`** (both required), `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`, `colorBy`, `nodeSize` (number|string|fn), `nodeSizeRange`, `edgeWidth`, `edgeOpacity`, `iterations`, `forceStrength`, `showLabels`, `nodeLabel`, `tooltip`, `showLegend`
+- **ForceDirectedGraph** — **`nodes`**, **`edges`** (both required), `nodeIDAccessor`, `sourceAccessor`, `targetAccessor`, `colorBy`, `nodeSize` (number|string|fn), `nodeSizeRange`, `edgeWidth`, `edgeOpacity`, `iterations`, `forceStrength`, `layoutExecution` (`auto`|`worker`|`sync`), `showLabels`, `nodeLabel`, `tooltip`, `showLegend`
 - **SankeyDiagram** — **`edges`** (required), `sourceAccessor`, `targetAccessor`, `valueAccessor`
 - **ChordDiagram** — **`edges`** (required), `sourceAccessor`, `targetAccessor`, `valueAccessor`
 

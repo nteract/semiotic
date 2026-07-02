@@ -311,6 +311,22 @@ describe("describeChart — author annotations", () => {
     expect(r.text).toBe(`${r.annotations} ${r.levels.l1}`)
   })
 
+  it("describes x-band annotations with the band vocabulary", () => {
+    const r = describeChart(
+      "LineChart",
+      {
+        data,
+        xAccessor: "month",
+        yAccessor: "sales",
+        annotations: [{ type: "x-band", x0: "Jan", x1: "Feb", label: "Launch window" }],
+      },
+      { levels: ["l1"] }
+    )
+    expect(r.annotations).toBe(
+      'The author has marked one feature on this chart: a highlighted band labeled "Launch window".'
+    )
+  })
+
   it("qualifies AI- and watcher-authored notes from their provenance", () => {
     const r = describeChart(
       "LineChart",

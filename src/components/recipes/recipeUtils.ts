@@ -30,14 +30,22 @@ export function readField(d: unknown, key: string, fallback: unknown): unknown {
  * Return the **raw user datum** from a value that may be a frame wrapper.
  *
  * Stream Frames and custom-layout scene nodes carry the user's object under
- * `.data` (a `RealtimeNode` / `SceneDatum` wrapper), while HOC tooltips hand
- * back the raw object — the wrapped-vs-raw split that bites every
- * `onObservation` consumer. This collapses it: `unwrapDatum(observation.datum)`
- * always yields the object you passed in, whether the frame wrapped it or not.
+ * `.data` (a `RealtimeNode` / `SceneDatum` wrapper), and some interaction
+ * payloads nest it under `.datum` (hit-test results, certain tooltip inputs) —
+ * the wrapped-vs-raw split that bites every `onObservation` consumer. This
+ * collapses all of it: `unwrapDatum(value)` always yields the object you
+ * passed in, whether the frame wrapped it (either way) or not.
  *
- * Heuristic footgun: any value with a top-level `data` property is treated as a
- * wrapper. If your *raw* datum legitimately has its own `data` field, this
- * returns that field instead of the datum — rename the field or read it directly.
+ * This is **the** unwrap path for both `onObservation` handlers and
+ * `frameProps.tooltipContent` renderers — call it once on the incoming value
+ * instead of hand-rolling `x.data ?? x` guards (and never pre-unwrap the
+ * argument yourself: `unwrapDatum(x?.data ?? x)` can double-unwrap a raw datum
+ * that legitimately carries a `data` field).
+ *
+ * Heuristic footgun: any value with a top-level `data` (or `datum`) property is
+ * treated as a wrapper. If your *raw* datum legitimately has its own such
+ * field, this returns that field instead of the datum — rename the field or
+ * read it directly.
  *
  * @example
  * ```ts
@@ -48,8 +56,8 @@ export function readField(d: unknown, key: string, fallback: unknown): unknown {
  */
 export function unwrapDatum<T = Datum>(value: unknown): T | null {
   if (value == null) return null
-  const wrapped = (value as { data?: unknown }).data
-  return (wrapped ?? value) as T
+  const container = value as { data?: unknown; datum?: unknown }
+  return (container.data ?? container.datum ?? value) as T
 }
 
 /**

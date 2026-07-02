@@ -65,6 +65,8 @@ export interface RealtimeNode {
   __hierarchyNode?: unknown
   /** @internal Circle-pack layout radius. Set by `hierarchyLayoutPlugin`. */
   __radius?: number
+  /** @internal Pre-resolved force-layout radius used by worker snapshots. */
+  __forceRadius?: number
   /**
    * @internal Chord-layout extension. Carries the start/end angles
    * for the arc segment representing this node, computed by
@@ -508,6 +510,8 @@ export interface NetworkPipelineConfig {
   // ── Force layout ─────────────────────────────────
   iterations?: number
   forceStrength?: number
+  /** @internal Skip simulation after worker-computed positions are applied. */
+  __skipForceSimulation?: boolean
 
   // ── Chord layout ─────────────────────────────────
   padAngle?: number
@@ -639,6 +643,12 @@ export interface StreamNetworkFrameProps<T = Datum> {
   nodeWidth?: number
   iterations?: number
   forceStrength?: number
+  /** Execute force layout synchronously, in a worker, or choose by graph cost. */
+  layoutExecution?: "auto" | "worker" | "sync"
+  /** Content displayed while an internally-managed worker layout is pending. */
+  layoutLoadingContent?: ReactNode | false
+  /** Receives internally-managed force-layout lifecycle changes. */
+  onLayoutStateChange?: (state: "pending" | "ready" | "error") => void
   padAngle?: number
   groupWidth?: number
   sortGroups?: (a: unknown, b: unknown) => number
@@ -773,6 +783,11 @@ export interface StreamNetworkFrameHandle {
   getTopologyDiff(): { addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[] }
   relayout(): void
   getTension(): number
+  /** The most recent custom layout result (sceneNodes/sceneEdges/overlays as
+   *  returned by `customNetworkLayout`) — host readback so pages that need the
+   *  computed placement don't re-run the layout. Null before the first layout
+   *  or when no custom layout is configured. */
+  getCustomLayout(): import("./networkCustomLayout").NetworkLayoutResult | null
 }
 
 // ── Canvas renderer function type ───────────────────────────────────

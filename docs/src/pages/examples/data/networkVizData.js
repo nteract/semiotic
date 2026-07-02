@@ -7,9 +7,9 @@
 // detector are reused from the gestalt example so the two pieces stay in sync.
 
 import { LESMIS_NODES, LESMIS_EDGES, CORE_IDS } from "./lesMiserables"
-import { layoutGraph, mulberry32, findProximityProblem } from "./gestaltData"
+import { mulberry32, findProximityProblem } from "./gestaltData"
 
-export { LESMIS_NODES, LESMIS_EDGES, CORE_IDS, layoutGraph, findProximityProblem }
+export { LESMIS_NODES, LESMIS_EDGES, CORE_IDS, findProximityProblem }
 
 // ---------------------------------------------------------------------------
 // Mid-century textbook palette

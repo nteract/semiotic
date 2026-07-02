@@ -199,6 +199,13 @@ export interface RealtimeFrameHandle {
    *  export a chart-specific handle (e.g. `LikertChartHandle`) that
    *  extends this interface and narrows `getScales()`. */
   getScales?(): unknown | null
+  /** The most recent custom layout result (as returned by the chart's
+   *  `layout(ctx)` function) — host readback so a page that needs the computed
+   *  placement (stats, inspectors) doesn't re-run the layout function itself.
+   *  Null before the first layout completes or when the chart has no custom
+   *  layout. Typed as `unknown` at this shared boundary; the family frame
+   *  handles narrow it to their `LayoutResult` shape. */
+  getCustomLayout?(): unknown | null
 }
 
 export interface RealtimeScales {

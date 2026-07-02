@@ -67,6 +67,33 @@ describe("PipelineStore customLayout integration", () => {
     expect(store.customLayoutOverlays).toBe(sentinel)
   })
 
+  it("stashes the layout result for host readback, and clears it on a throw", () => {
+    const result = { nodes: [], overlays: null }
+    const store = new PipelineStore({
+      chartType: "custom",
+      windowSize: 100,
+      windowMode: "sliding",
+      arrowOfTime: "right",
+      extentPadding: 0,
+      xAccessor: "x",
+      yAccessor: "y",
+      customLayout: () => result,
+    })
+    expect(store.lastCustomLayoutResult).toBeNull()
+    store.ingest({ inserts: [{ x: 1, y: 1 }], bounded: true })
+    store.computeScene({ width: 100, height: 100 })
+    expect(store.lastCustomLayoutResult).toBe(result)
+
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    store.updateConfig({
+      customLayout: () => {
+        throw new Error("boom")
+      },
+    })
+    store.computeScene({ width: 100, height: 100 })
+    expect(store.lastCustomLayoutResult).toBeNull()
+  })
+
   it("re-runs the layout (regenerating overlays) on a dimension-only change", () => {
     // Regression: a dimension-only change must NOT take computeScene's fast
     // remap path for custom layouts. remapScene only proportionally rescales
