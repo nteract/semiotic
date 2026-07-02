@@ -1062,10 +1062,13 @@ const StreamNetworkFrame = forwardRef<
     layoutAbortRef.current = null
 
     if (isHierarchical && hierarchyRoot) {
-      // Hierarchy data: single root object
+      // Hierarchy data: single root object. Emit "ready" like the other
+      // synchronous paths — a chart-type/data switch away from a pending
+      // worker layout must not leave consumers stuck on "pending".
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
       store.buildScene([adjustedWidth, adjustedHeight])
       setLayoutPending(false)
+      onLayoutStateChangeRef.current?.("ready")
       dirtyRef.current = true
       scheduleRender()
     } else {
@@ -1074,7 +1077,10 @@ const StreamNetworkFrame = forwardRef<
       const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
 
       if (rawNodes.length === 0 && rawEdges.length === 0) {
+        // Nothing to lay out — the frame is no longer busy, so a consumer
+        // watching a previously-pending worker layout gets released.
         setLayoutPending(false)
+        onLayoutStateChangeRef.current?.("ready")
         return
       }
 

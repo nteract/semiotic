@@ -71,6 +71,36 @@ describe("StreamNetworkFrame worker force layout", () => {
     expect(onState).toHaveBeenCalledWith("ready")
   })
 
+  it("releases a pending layout with 'ready' when the graph empties", async () => {
+    // The worker never resolves — the pending state can only be released by
+    // the empty-graph path emitting "ready" (a data clear must not leave
+    // consumers stuck on "pending").
+    runWorker.mockImplementation(() => new Promise(() => {}))
+    const onState = vi.fn()
+    const { rerender, container } = render(
+      <StreamNetworkFrame
+        chartType="force"
+        nodes={[{ id: "a" }, { id: "b" }]}
+        edges={[{ source: "a", target: "b" }]}
+        layoutExecution="worker"
+        onLayoutStateChange={onState}
+      />
+    )
+    await waitFor(() => expect(onState).toHaveBeenCalledWith("pending"))
+
+    rerender(
+      <StreamNetworkFrame
+        chartType="force"
+        nodes={[]}
+        edges={[]}
+        layoutExecution="worker"
+        onLayoutStateChange={onState}
+      />
+    )
+    await waitFor(() => expect(onState).toHaveBeenCalledWith("ready"))
+    expect(container.querySelector('[aria-busy="true"]')).toBeNull()
+  })
+
   it("ignores a stale worker response after graph replacement", async () => {
     const resolvers: Array<
       (value: { positions: Record<string, { x: number; y: number }> }) => void

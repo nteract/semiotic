@@ -91,7 +91,6 @@ export default function ClimateRadialWeatherExamplePage() {
     profile,
     liveData,
     view,
-    setView,
     isSlow,
     isLoading,
     showHistorical,
