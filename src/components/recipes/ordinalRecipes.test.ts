@@ -95,6 +95,28 @@ describe("intervalLanesLayout", () => {
     expect(intersects).toBe(false)
   })
 
+  it("keeps exactly-abutting intervals on one sub-track with a visible seam", () => {
+    // B starts exactly where A's drawing ends (unit: 0 — no extension).
+    // Sub-tracks encode concurrency, so a purely sequential chain must stay on
+    // one track; A's right edge is shaved by 1px so the pair reads as two
+    // rects, not one fused bar.
+    const result = intervalLanesLayout(makeCtx({
+      laneAccessor: "lane",
+      startAccessor: "start",
+      endAccessor: "end",
+      domain: [0, 100],
+      lanes: ["A"],
+      unit: 0,
+      showAxis: false,
+    }, [
+      { id: "a", lane: "A", start: 10, end: 20 },
+      { id: "b", lane: "A", start: 20, end: 30 },
+    ]))
+    const [a, b] = result.nodes as RectSceneNode[]
+    expect(a.y).toBe(b.y) // same sub-track: a sequence, not concurrency
+    expect(b.x - (a.x + a.w)).toBe(1) // the shaved seam
+  })
+
   it("keeps stacked sub-tracks inside the lane (no overflow into the next lane)", () => {
     // Many mutually-overlapping intervals force a high sub-track count; bars must
     // stay within the lane's slice rather than bleeding past `laneHeight`.

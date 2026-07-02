@@ -49,6 +49,7 @@ function extractTooltipDatum
 function fanOutBend
 function flextreeLayout
 function forceLayout
+function forceLayoutAsync
 function formatTooltipValue
 function geoHitTarget
 function groupBy
@@ -137,6 +138,7 @@ interface DagreConfig
 interface DimOptions
 interface FanOutBendOptions
 interface FlextreeConfig
+interface ForceLayoutAsyncOptions
 interface ForceLayoutOptions
 interface GraphEdge
 interface GraphNode

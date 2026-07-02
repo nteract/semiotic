@@ -137,11 +137,13 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
   // reuses a sub-track for a neighbour that starts under that overhang (e.g. a
   // war ending the same year the next begins, or two short events a year apart),
   // and the two rendered rects overlap — visible as darker, doubled fills. Pack
-  // on the drawn span instead, plus a 1px gap so touching bars stay distinct, so
-  // the packer's "already ended" test lives in the same space the bars do.
+  // on the drawn span instead, so the packer's "already ended" test lives in the
+  // same space the bars do. Sub-tracks encode *concurrency*, so a bar that
+  // starts exactly where its predecessor's drawing ends stays on the same
+  // track — the predecessor's right edge is shaved by `BAR_HGAP` below so the
+  // two rects read as a sequence, not one fused bar.
   const startPx = (d: Datum) => xPx(getStart(d))
   const drawEndPx = (d: Datum) => Math.max(startPx(d) + minBarWidth, xPx(getEnd(d) + unit))
-  const packEndPx = (d: Datum) => drawEndPx(d) + BAR_HGAP
 
   const nodes: RectSceneNode[] = []
   lanes.forEach((lane, laneIndex) => {
@@ -150,8 +152,24 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
     if (rows.length === 0) return
     const { packed, trackCount } = packIntervals(rows, {
       start: startPx,
-      end: packEndPx,
+      end: drawEndPx,
     })
+    // Where the next bar on the same sub-track abuts this one's drawn end,
+    // shave this bar's right edge so back-to-back intervals keep a visible
+    // seam. Only abutting bars change; everything else keeps its exact width.
+    const nextStartOnTrack = new Map<Datum, number>()
+    const trackItems = new Map<number, Datum[]>()
+    for (const { item, track } of packed) {
+      const items = trackItems.get(track)
+      if (items) items.push(item)
+      else trackItems.set(track, [item])
+    }
+    for (const items of trackItems.values()) {
+      items.sort((a, b) => startPx(a) - startPx(b))
+      for (let i = 0; i < items.length - 1; i++) {
+        nextStartOnTrack.set(items[i], startPx(items[i + 1]))
+      }
+    }
     // Space sub-tracks by the exact slot height so bars can never overflow the
     // lane (and bleed into a neighbouring lane) even when the sub-track count is
     // high enough that the `minBarHeight` floor would otherwise force bars taller
@@ -160,7 +178,12 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
     const barHeight = Math.min(maxBar, Math.max(Math.min(minBar, trackPitch), trackPitch - barGap))
     for (const { item, track } of packed) {
       const x = startPx(item)
-      const w = drawEndPx(item) - x
+      const nextStart = nextStartOnTrack.get(item)
+      const rawW = drawEndPx(item) - x
+      const w =
+        nextStart !== undefined && x + rawW > nextStart - BAR_HGAP
+          ? Math.max(1, nextStart - BAR_HGAP - x)
+          : rawW
       const y = laneTop + lanePad + track * trackPitch
       nodes.push({
         type: "rect",

@@ -18,6 +18,7 @@ function Treemap
 function formatProcessSankeyIssue
 function networkHitTarget
 function useCustomLayoutSelection
+function useForceLayout
 function validateProcessSankey
 interface ChordDiagramProps
 interface CirclePackProps
@@ -42,6 +43,8 @@ interface StreamNetworkFrameProps
 interface ThresholdAlertConfig
 interface TreeDiagramProps
 interface TreemapProps
+interface UseForceLayoutResult
+type ForceLayoutStatus
 type NetworkChartType
 type NetworkCustomLayout
 type NetworkSceneEdge
