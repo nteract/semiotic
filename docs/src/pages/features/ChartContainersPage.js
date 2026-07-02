@@ -127,6 +127,22 @@ const containerProps = [
     description: "Additional controls rendered in the toolbar before built-in action buttons.",
   },
   {
+    name: "notifications",
+    type: "ChartNotification[]",
+    required: false,
+    default: "undefined",
+    description:
+      "Chart-level notices surfaced as a severity-colored toolbar bell with a count badge; clicking it opens a popover with the dismissible cards (an overlay, so arriving/dismissing notices never reflow the plot). Each entry: { id?, level?, title?, message, source?, dismissible? }. Levels (info | success | warning | error | neutral) map to the theme's semantic role colors; the bell adopts the icon + color of the most severe visible notice, and an sr-only aria-live region announces the count + severity.",
+  },
+  {
+    name: "onNotificationDismiss",
+    type: "(notification, index) => void",
+    required: false,
+    default: "undefined",
+    description:
+      "Called when a notification's dismiss button is clicked. Dismissal is tracked internally (keyed by notification.id, falling back to array index) whether or not this is provided.",
+  },
+  {
     name: "loading",
     type: "boolean",
     required: false,
@@ -183,11 +199,37 @@ const containerProps = [
 // Component
 // ---------------------------------------------------------------------------
 
+const notificationDemoItems = [
+  {
+    id: "truncated-axis",
+    level: "error",
+    title: "Truncated axis",
+    message:
+      "Start the bar axis at zero, or switch to a point or line form that does not imply a zero baseline.",
+    source: "datapitfalls · Graphical Gaffes",
+  },
+  {
+    id: "stale-source",
+    level: "warning",
+    title: "Source data is 26 hours old",
+    message: "The nightly warehouse sync has not completed. Values may lag reality.",
+    source: "data platform",
+  },
+  {
+    id: "methodology",
+    level: "info",
+    message: "Q3 values are restated after the fiscal-calendar change.",
+    dismissible: false,
+  },
+]
+
 export default function ChartContainersPage() {
   const siteTheme = useSiteTheme()
   const [statusDemo, setStatusDemo] = useState("live")
   const [loadingDemo, setLoadingDemo] = useState(false)
   const [selectedYear, setSelectedYear] = useState("2024")
+  const [notificationDemoKey, setNotificationDemoKey] = useState(0)
+  const [lastDismissed, setLastDismissed] = useState(null)
   const chartRef = useRef(null)
 
   return (
@@ -378,6 +420,119 @@ const dataByYear = {
 // hidden button (accessibleTable={true} by default).`}
         language="jsx"
       />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Notifications */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="notifications">Notifications</h2>
+
+      <p>
+        The <code>notifications</code> prop surfaces <em>chart-level</em> notices
+        that have no single mark to anchor to — machine findings (a{" "}
+        <Link to="/intelligence/data-pitfalls">Data Pitfalls</Link> report entry
+        about the whole chart, an unplaceable{" "}
+        <Link to="/interoperability/data-quality-bridge">data-quality</Link>{" "}
+        result) and any custom user-authored notice. They collapse into a single
+        toolbar <strong>bell with a count badge</strong>: the bell adopts the icon
+        and color of the <em>most severe</em> visible notice, so severity reads at
+        a glance. Clicking the bell opens a <strong>popover</strong> with the full
+        dismissible cards — an overlay, so a notice arriving or being dismissed
+        never reflows the chart body. Levels map to the theme&rsquo;s semantic
+        role colors, and a screen-reader-only <code>aria-live=&quot;polite&quot;</code>{" "}
+        region announces the current count and most-severe level, so notices that
+        arrive while streaming are still voiced even with the popover collapsed.
+      </p>
+
+      <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+        <button
+          onClick={() => setNotificationDemoKey((k) => k + 1)}
+          style={{
+            padding: "4px 12px",
+            borderRadius: 4,
+            border: "1px solid var(--surface-3, #ccc)",
+            background: "transparent",
+            cursor: "pointer",
+            fontSize: 13,
+            color: "var(--text-primary, #333)",
+          }}
+        >
+          Restore dismissed notifications
+        </button>
+        {lastDismissed && (
+          <span style={{ fontSize: 12, color: "var(--text-secondary, #666)", alignSelf: "center" }}>
+            onNotificationDismiss → <code>{lastDismissed}</code>
+          </span>
+        )}
+      </div>
+
+      <div style={{ maxWidth: 620, marginBottom: 24 }}>
+        <ThemeProvider theme={siteTheme}>
+          <ChartContainer
+            key={notificationDemoKey}
+            title="Customer satisfaction"
+            subtitle="The error finding came back from a datapitfalls scan; the info note is pinned (dismissible: false)"
+            notifications={notificationDemoItems}
+            onNotificationDismiss={(notification) => setLastDismissed(notification.id)}
+            height={260}
+          >
+            <BarChart
+              data={barData}
+              categoryAccessor="category"
+              valueAccessor="value"
+              width={600}
+              height={260}
+            />
+          </ChartContainer>
+        </ThemeProvider>
+      </div>
+
+      <CodeBlock
+        code={`<ChartContainer
+  title="Customer satisfaction"
+  notifications={[
+    {
+      id: "truncated-axis",              // stable id — keys dismissal
+      level: "error",                    // "info" | "success" | "warning" | "error" | "neutral"
+      title: "Truncated axis",
+      message: "Start the bar axis at zero.",
+      source: "datapitfalls · Graphical Gaffes",  // small origin tag
+    },
+    {
+      id: "methodology",
+      level: "info",
+      message: "Q3 values are restated after the fiscal-calendar change.",
+      dismissible: false,                // pinned — no dismiss button
+    },
+  ]}
+  onNotificationDismiss={(notification, index) => track(notification.id)}
+>
+  <BarChart data={data} categoryAccessor="category" valueAccessor="value" />
+</ChartContainer>
+
+// Feeding machine findings straight in — e.g. chart-level entries from a
+// datapitfalls report (findings that name the whole chart, not one mark):
+const notifications = report.findings
+  .filter((finding) => !anchorable(finding))
+  .map((finding) => ({
+    id: finding.ruleId,
+    level: finding.severity,             // info | warning | error map 1:1
+    title: finding.name,
+    message: finding.remediation,
+    source: \`datapitfalls · \${finding.domain}\`,
+  }))`}
+        language="jsx"
+      />
+
+      <p>
+        Dismissal is tracked internally, keyed by <code>id</code> (falling back
+        to array index), so a re-render with the same list keeps dismissed
+        entries dismissed — pass <code>onNotificationDismiss</code> to sync your
+        own store or telemetry. Mark-level findings belong on the plot as{" "}
+        <Link to="/annotations/overview">annotations</Link>; notifications are
+        for everything that describes the chart as a whole. See the{" "}
+        <Link to="/examples/chart-clinic">Chart Clinic</Link> example for the
+        two surfaces working together on a real audit report.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Loading and Error states */}

@@ -128,6 +128,7 @@ interface Changeset
 interface ChartConfig
 interface ChartContainerHandle
 interface ChartContainerProps
+interface ChartNotification
 interface ChartErrorBoundaryProps
 interface ChartGridProps
 interface ChordDiagramProps
@@ -243,6 +244,7 @@ type CanvasRendererFn
 type CategoryColorMap
 type ChartAccessor
 type ChartMode
+type ChartNotificationLevel
 type ChartObservation
 type CopyFormat
 type CurveType

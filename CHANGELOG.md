@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **ChartContainer notifications.** New `notifications` prop surfaces
+  chart-level notices that have no single mark to anchor to (a data-pitfalls
+  or accessibility-audit finding about the whole chart, an unplaceable
+  data-quality result) and custom user-authored notes. They collapse into a
+  single severity-colored toolbar **bell with a count badge** — the bell
+  adopts the icon and color of the most severe visible notice — and clicking
+  it opens a **popover** with the dismissible cards, so a notice arriving or
+  being dismissed never reflows the chart body. Each `ChartNotification` is
+  `{ id?, level?, title?, message, source?, dismissible? }`; levels (`info` |
+  `success` | `warning` | `error` | `neutral`) resolve through the theme's
+  semantic role CSS variables, a screen-reader-only `aria-live="polite"`
+  region announces the current count + most-severe level so notices arriving
+  while streaming are still voiced with the popover collapsed, and dismissal
+  is tracked internally by `id` with an `onNotificationDismiss` callback for
+  host stores/telemetry. Semantic class hooks:
+  `semiotic-chart-notifications` (wrapper), `-toggle` (bell), `-badge`,
+  `-popover`, and `semiotic-chart-notification` + `--{level}` /
+  `-source`/`-title`/`-message`/`-dismiss` (cards). Types exported from
+  `semiotic` and `semiotic/ai`; demonstrated on the Chart Container feature
+  page and the Chart Clinic example.
+
 - **Worker-based force layout.** ForceDirectedGraph gains `layoutExecution`
   (`"auto"` default | `"worker"` | `"sync"`), `layoutLoadingContent`, and
   `onLayoutStateChange`; in `auto` mode, layouts whose estimated cost

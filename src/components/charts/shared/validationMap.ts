@@ -320,6 +320,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       sort: { type: ["boolean", "string", "function"] },
       barPadding: { type: "number" },
       roundedTop: { type: "number" },
+      valueExtent: { type: "array" },
       regression: { type: ["boolean", "string", "object"] },
     },
   },

@@ -266,8 +266,10 @@ function checkNonZeroBaseline(
 ): void {
   if (!BAR_AREA_COMPONENTS.has(component)) return
 
-  // Check if rExtent or yExtent explicitly sets a non-zero minimum
-  const extent = props.rExtent || props.yExtent
+  // Check if an explicit value-axis extent sets a non-zero minimum.
+  // Ordinal HOCs expose this as `valueExtent` (mapped to rExtent internally);
+  // frames and XY charts as `rExtent`/`yExtent`.
+  const extent = props.rExtent || props.yExtent || props.valueExtent
   if (extent && Array.isArray(extent) && extent.length >= 1 && extent[0] != null && extent[0] !== 0) {
     out.push({
       severity: "warning",

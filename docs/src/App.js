@@ -158,6 +158,7 @@ import SemioticArchitectureExamplePage from "./pages/examples/SemioticArchitectu
 import GestaltPrinciplesExamplePage from "./pages/examples/GestaltPrinciplesExamplePage"
 import NetworkVizExamplePage from "./pages/examples/NetworkVizExamplePage"
 import OregonTrailExamplePage from "./pages/examples/OregonTrailExamplePage"
+import ChartClinicExamplePage from "./pages/examples/ChartClinicExamplePage"
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
@@ -297,6 +298,7 @@ export default function DocsApp() {
             <Route path="examples/gestalt-principles" element={<GestaltPrinciplesExamplePage />} />
             <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
             <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
+            <Route path="examples/chart-clinic" element={<ChartClinicExamplePage />} />
           </Routes>
         </ExamplesLayout>
       </div>

@@ -240,6 +240,7 @@ interface ChartDataProfile
 interface ChartEditedEvent
 interface ChartExportedEvent
 interface ChartGridProps
+interface ChartNotification
 interface ChartReaderGrounding
 interface ChartReaderGroundingIntent
 interface ChartReaderGroundingOptions
@@ -385,6 +386,7 @@ type CardinalityBand
 type CategoryColorMap
 type ChartFamily
 type ChartImportPath
+type ChartNotificationLevel
 type ChartObservation
 type CommunicativeAct
 type ConversationArcEvent

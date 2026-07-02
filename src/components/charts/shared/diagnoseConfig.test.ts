@@ -143,6 +143,18 @@ describe("diagnoseConfig", () => {
     expect(diag.severity).toBe("warning")
   })
 
+  it("warns about non-zero baseline set through the ordinal valueExtent prop", () => {
+    const result = diagnoseConfig("BarChart", {
+      data: [{ category: "A", value: 94 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      valueExtent: [90, 98],
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("NON_ZERO_BASELINE")
+    expect(codes).not.toContain("VALIDATION")
+  })
+
   it("does not warn about non-zero baseline for LineChart", () => {
     const result = diagnoseConfig("LineChart", {
       data: [{ x: 1, y: 2 }],
