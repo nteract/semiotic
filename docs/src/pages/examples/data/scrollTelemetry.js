@@ -72,15 +72,18 @@ export const CHAPTER_COLORS = ["#e8b04b", "#5bd6c0", "#6aa9ff", "#c79bff"]
 export const BEAT_KINDS = {
   forward: { label: "Reading on", fill: "#5bd6c0", stroke: "#0c4d44" },
   backward: { label: "Rereading", fill: "#ff5fb0", stroke: "#73144f" },
+  highlight: { label: "Highlighting", fill: "#ffd54a", stroke: "#6b5210" },
   idle: { label: "Dwelling", fill: "#7f8ba0", stroke: "#2c3442" },
 }
 
 // One telemetry sample. `t` is ms since the reading began; `scroll` is the
 // fraction of the article read (0..1); `velocity` is signed fraction/second
 // (positive = down/forward, negative = up/rereading); `pointer` is the count of
-// pointer beats observed in the tick; `chapter` is the chapter index in view.
-export function makeSample({ id, t, scroll, velocity, pointer, chapter }) {
-  const kind = classifyBeat(velocity)
+// pointer beats observed in the tick; `chapter` is the chapter index in view;
+// `highlighting` is true when a text selection was active during the tick, which
+// takes precedence over velocity so the dot reads as a highlight beat.
+export function makeSample({ id, t, scroll, velocity, pointer, chapter, highlighting = false }) {
+  const kind = highlighting ? "highlight" : classifyBeat(velocity)
   return {
     id,
     t,
@@ -90,6 +93,7 @@ export function makeSample({ id, t, scroll, velocity, pointer, chapter }) {
     pace: Math.abs(velocity),
     pointer,
     chapter,
+    highlighting: Boolean(highlighting),
     kind,
   }
 }
@@ -227,6 +231,9 @@ function buildSeedSession() {
     [46, 0.9],
     [52, 1.0],
   ]
+  // While dwelling near 30s the reader highlights a passage — the beats in
+  // this window read as highlight rather than idle.
+  const highlightWindow = [30, 33.5]
   const hz = 8
   const samples = []
   const totalSeconds = keyframes[keyframes.length - 1][0]
@@ -237,8 +244,10 @@ function buildSeedSession() {
     const seconds = step / hz
     const scroll = interpolateKeyframes(keyframes, seconds)
     const velocity = (scroll - previousScroll) * hz
-    // A pointer flurry while moving, near silence while dwelling.
-    const pointer = Math.abs(velocity) > IDLE_VELOCITY
+    const highlighting = seconds >= highlightWindow[0] && seconds <= highlightWindow[1]
+    // A pointer flurry while moving or dragging a selection, near silence while
+    // dwelling.
+    const pointer = Math.abs(velocity) > IDLE_VELOCITY || highlighting
       ? 2 + Math.round(pseudoRandom(step) * 4)
       : Math.round(pseudoRandom(step) * 1)
     samples.push(
@@ -249,6 +258,7 @@ function buildSeedSession() {
         velocity,
         pointer,
         chapter: chapterForScroll(scroll),
+        highlighting,
       })
     )
     previousScroll = scroll

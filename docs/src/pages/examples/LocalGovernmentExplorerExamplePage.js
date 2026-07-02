@@ -1,17 +1,5 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
-import {
-  BarChart,
-  ChartContainer,
-  ForceDirectedGraph,
-  ThemeProvider,
-  TreeDiagram,
-} from "semiotic"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { BarChart, ChartContainer, ForceDirectedGraph, ThemeProvider, TreeDiagram } from "semiotic"
 import { BigNumber } from "semiotic/value"
 import CodeBlock from "../../components/CodeBlock"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
@@ -131,7 +119,14 @@ export default function LocalGovernmentExplorerExamplePage() {
     controllerRef.current = controller
 
     setSourceErrors({})
-    setSourceStatus({ zip: "loading", locus: "idle", legistar: "idle", fema: "idle", spending: "idle", civic: "idle" })
+    setSourceStatus({
+      zip: "loading",
+      locus: "idle",
+      legistar: "idle",
+      fema: "idle",
+      spending: "idle",
+      civic: "idle",
+    })
     setLaws([])
     setActivity(EMPTY_ACTIVITY)
     setCounty(null)
@@ -158,7 +153,14 @@ export default function LocalGovernmentExplorerExamplePage() {
     } catch (error) {
       if (error.name === "AbortError") return
       setLocation(null)
-      setSourceStatus({ zip: "error", locus: "idle", legistar: "idle", fema: "idle", spending: "idle", civic: "idle" })
+      setSourceStatus({
+        zip: "error",
+        locus: "idle",
+        legistar: "idle",
+        fema: "idle",
+        spending: "idle",
+        civic: "idle",
+      })
       setSourceErrors({ zip: error.message })
       return
     }
@@ -248,10 +250,7 @@ export default function LocalGovernmentExplorerExamplePage() {
     return () => controllerRef.current?.abort()
   }, [loadZip])
 
-  const topics = useMemo(
-    () => collectTopics(laws, activity.matters),
-    [laws, activity.matters],
-  )
+  const topics = useMemo(() => collectTopics(laws, activity.matters), [laws, activity.matters])
 
   useEffect(() => {
     if (topic !== "All" && !topics.includes(topic)) setTopic("All")
@@ -264,24 +263,24 @@ export default function LocalGovernmentExplorerExamplePage() {
       if (substantiveOnly && !law.substantive) return false
       if (topic !== "All" && lawTopic !== topic) return false
       if (
-        normalizedQuery
-        && !`${law.header} ${law.content} ${law.function} ${lawTopic}`.toLowerCase().includes(normalizedQuery)
-      ) return false
+        normalizedQuery &&
+        !`${law.header} ${law.content} ${law.function} ${lawTopic}`
+          .toLowerCase()
+          .includes(normalizedQuery)
+      )
+        return false
       return true
     })
   }, [laws, query, substantiveOnly, topic])
 
   const hierarchy = useMemo(
-    () => location
-      ? buildGovernmentHierarchy(location, visibleLaws, activity)
-      : emptyHierarchy(),
+    () => (location ? buildGovernmentHierarchy(location, visibleLaws, activity) : emptyHierarchy()),
     [location, visibleLaws, activity],
   )
 
   const completeNetwork = useMemo(
-    () => location
-      ? buildCivicNetwork(location, visibleLaws, activity)
-      : { nodes: [], edges: [] },
+    () =>
+      location ? buildCivicNetwork(location, visibleLaws, activity) : { nodes: [], edges: [] },
     [location, visibleLaws, activity],
   )
 
@@ -292,7 +291,7 @@ export default function LocalGovernmentExplorerExamplePage() {
 
   const active = hovered || locked
   const activeConnections = useMemo(
-    () => active ? connectionsFor(active.id, completeNetwork) : [],
+    () => (active ? connectionsFor(active.id, completeNetwork) : []),
     [active, completeNetwork],
   )
 
@@ -308,35 +307,44 @@ export default function LocalGovernmentExplorerExamplePage() {
   const handleClick = useCallback((datum) => {
     const raw = unwrapChartDatum(datum)
     if (!raw?.id) return
-    setLocked((current) => current?.id === raw.id ? null : raw)
+    setLocked((current) => (current?.id === raw.id ? null : raw))
   }, [])
 
-  const nodeStyle = useMemo(() => (node) => {
-    const raw = unwrapChartDatum(node)
-    const selected = active?.id === raw?.id
-    return {
-      fill: NODE_COLORS[raw?.kind] || NODE_COLORS.branch,
-      stroke: selected ? "#f7f2e4" : "#17212b",
-      strokeWidth: selected ? 3 : 1.2,
-      opacity: active && !selected ? 0.62 : 0.92,
-    }
-  }, [active])
+  const nodeStyle = useMemo(
+    () => (node) => {
+      const raw = unwrapChartDatum(node)
+      const selected = active?.id === raw?.id
+      return {
+        fill: NODE_COLORS[raw?.kind] || NODE_COLORS.branch,
+        stroke: selected ? "#f7f2e4" : "#17212b",
+        strokeWidth: selected ? 3 : 1.2,
+        opacity: active && !selected ? 0.62 : 0.92,
+      }
+    },
+    [active],
+  )
 
-  const edgeStyle = useMemo(() => (edge) => {
-    const raw = unwrapChartDatum(edge)
-    const connected = active && (raw?.source === active.id || raw?.target === active.id)
-    return {
-      stroke: connected ? "#f4bf4f" : "#667482",
-      strokeWidth: connected ? 2.4 : 0.8,
-      opacity: active ? (connected ? 0.95 : 0.16) : 0.4,
-      fill: "none",
-    }
-  }, [active])
+  const edgeStyle = useMemo(
+    () => (edge) => {
+      const raw = unwrapChartDatum(edge)
+      const connected = active && (raw?.source === active.id || raw?.target === active.id)
+      return {
+        stroke: connected ? "#f4bf4f" : "#667482",
+        strokeWidth: connected ? 2.4 : 0.8,
+        opacity: active ? (connected ? 0.95 : 0.16) : 0.4,
+        fill: "none",
+      }
+    },
+    [active],
+  )
 
-  const submitZip = useCallback((event) => {
-    event.preventDefault()
-    loadZip(zipInput)
-  }, [loadZip, zipInput])
+  const submitZip = useCallback(
+    (event) => {
+      event.preventDefault()
+      loadZip(zipInput)
+    },
+    [loadZip, zipInput],
+  )
 
   const coverage = location ? getLegistarCoverage(location) : null
   const isLocating = sourceStatus.zip === "loading"
@@ -347,17 +355,14 @@ export default function LocalGovernmentExplorerExamplePage() {
   ]).size
 
   return (
-    <ExamplePageLayout
-      title="Your Local Government Explorer"
-    >
+    <ExamplePageLayout title="Your Local Government Explorer">
       <p className="local-gov-lede">
-        A ZIP code is not a government boundary, but it is a useful place to
-        begin. This explorer resolves the postal place, reads your county’s
-        federal disaster record and the federal dollars spent there (both answer
-        for any U.S. ZIP), pulls live 311 service requests where a city publishes
-        them, finds matching municipal code in LOCUS, and layers in public
-        legislative activity — then turns the result into linked maps of
-        authority, law, people, meetings, and active matters.
+        A ZIP code is not a government boundary, but it is a good starting place. This explorer
+        resolves zip code to administrative region and then reads your county’s federal disaster
+        record, pulls live 311 service requests where a city publishes them, finds matching
+        municipal code in LOCUS, and layers in public legislative activity. Explore the authority,
+        law, people, meetings, and active matters (as long as the APIs return) of your local
+        government.
       </p>
 
       <section className="local-gov-search-panel">
@@ -365,8 +370,8 @@ export default function LocalGovernmentExplorerExamplePage() {
           <span className="local-gov-kicker">Start with a postal place</span>
           <h2>What is your local government doing?</h2>
           <p>
-            Enter a five-digit U.S. ZIP code. Results inherit the ambiguity of
-            ZIP-to-place matching and always identify their source coverage.
+            Enter a five-digit U.S. ZIP code. Results inherit the ambiguity of ZIP-to-place matching
+            and always identify their source coverage.
           </p>
         </div>
         <form onSubmit={submitZip} className="local-gov-search-form">
@@ -385,7 +390,9 @@ export default function LocalGovernmentExplorerExamplePage() {
               {isLocating ? "Locating…" : "Explore"}
             </button>
           </div>
-          <small id="local-government-zip-note">Postal geography is an approximation, not a jurisdiction lookup.</small>
+          <small id="local-government-zip-note">
+            Postal geography is an approximation, not a jurisdiction lookup.
+          </small>
         </form>
         <div className="local-gov-presets" aria-label="Example ZIP codes">
           {ZIP_PRESETS.map((preset) => (
@@ -415,21 +422,22 @@ export default function LocalGovernmentExplorerExamplePage() {
           <section className="local-gov-place-header">
             <div>
               <span className="local-gov-kicker">ZIP {location.zip} · postal place match</span>
-              <h2>{location.city}, {location.stateCode}</h2>
+              <h2>
+                {location.city}, {location.stateCode}
+              </h2>
               <p>
                 {location.latitude.toFixed(3)}, {location.longitude.toFixed(3)}
-                {location.alternatePlaces.length > 0 && ` · also associated with ${location.alternatePlaces.join(", ")}`}
+                {location.alternatePlaces.length > 0 &&
+                  ` · also associated with ${location.alternatePlaces.join(", ")}`}
               </p>
             </div>
-            <button type="button" onClick={() => loadZip(location.zip)}>Refresh sources</button>
+            <button type="button" onClick={() => loadZip(location.zip)}>
+              Refresh sources
+            </button>
           </section>
 
           <div className="local-gov-source-strip" aria-label="Data source status">
-            <SourceStatus
-              status={sourceStatus.zip}
-              title="Postal place"
-              detail={location.source}
-            />
+            <SourceStatus status={sourceStatus.zip} title="Postal place" detail={location.source} />
             <SourceStatus
               status={sourceStatus.locus}
               title="Codified law"
@@ -439,39 +447,39 @@ export default function LocalGovernmentExplorerExamplePage() {
               status={sourceStatus.legistar}
               title="Current activity"
               detail={
-                sourceErrors.legistar
-                || (activity.sourceMode === "snapshot"
+                sourceErrors.legistar ||
+                (activity.sourceMode === "snapshot"
                   ? `${coverage?.label} · snapshot ${formatDate(activity.capturedAt)}`
-                  : null)
-                || coverage?.label
-                || "No mapped public Legistar client"
+                  : null) ||
+                coverage?.label ||
+                "No mapped public Legistar client"
               }
             />
             <SourceStatus
               status={sourceStatus.fema}
               title="County disaster record"
               detail={
-                sourceErrors.fema
-                || (disasters ? `${disasters.total} federal declarations` : null)
-                || (county ? county.countyName : "FCC + OpenFEMA")
+                sourceErrors.fema ||
+                (disasters ? `${disasters.total} federal declarations` : null) ||
+                (county ? county.countyName : "FCC + OpenFEMA")
               }
             />
             <SourceStatus
               status={sourceStatus.spending}
               title="Federal spending"
               detail={
-                sourceErrors.spending
-                || (spending ? `${compactUSD(spending.total)} · FY ${spending.fy}` : null)
-                || "USAspending.gov"
+                sourceErrors.spending ||
+                (spending ? `${compactUSD(spending.total)} · FY ${spending.fy}` : null) ||
+                "USAspending.gov"
               }
             />
             <SourceStatus
               status={sourceStatus.civic}
               title="Local 311 signals"
               detail={
-                sourceErrors.civic
-                || (civic && civic.total ? `${civic.total} recent · ${civic.scope}` : null)
-                || (getCivicPortal(location) ? "City open-data portal" : "No open 311 feed")
+                sourceErrors.civic ||
+                (civic && civic.total ? `${civic.total} recent · ${civic.scope}` : null) ||
+                (getCivicPortal(location) ? "City open-data portal" : "No open 311 feed")
               }
             />
           </div>
@@ -515,7 +523,9 @@ export default function LocalGovernmentExplorerExamplePage() {
                 <span className="local-gov-kicker">Shape the graph</span>
                 <h2>Ask a narrower civic question</h2>
               </div>
-              <span>{network.nodes.length} nodes · {network.edges.length} relationships</span>
+              <span>
+                {network.nodes.length} nodes · {network.edges.length} relationships
+              </span>
             </div>
             <div className="local-gov-controls">
               <Control label="Network scope">
@@ -529,7 +539,9 @@ export default function LocalGovernmentExplorerExamplePage() {
               <Control label="Topic">
                 <select value={topic} onChange={(event) => setTopic(event.target.value)}>
                   <option>All</option>
-                  {topics.map((item) => <option key={item}>{item}</option>)}
+                  {topics.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
                 </select>
               </Control>
               <Control label="Search text">
@@ -660,9 +672,8 @@ export default function LocalGovernmentExplorerExamplePage() {
               <p>
                 {activity.sourceMode === "snapshot"
                   ? `Displayed records are a source-linked Legistar snapshot captured ${formatDate(activity.capturedAt)} because the public API does not permit direct browser requests.`
-                  : "These are live public records when this postal place maps to a browser-readable legislative feed."}
-                {" "}“Recent” means recently modified in that system, not
-                necessarily newly introduced.
+                  : "These are live public records when this postal place maps to a browser-readable legislative feed."}{" "}
+                “Recent” means recently modified in that system, not necessarily newly introduced.
               </p>
             </div>
             {activity.sourceMode === "live" || activity.sourceMode === "snapshot" ? (
@@ -675,7 +686,9 @@ export default function LocalGovernmentExplorerExamplePage() {
                       item={meeting}
                       eyebrow={`${formatDate(meeting.date)} · ${meeting.time || "time TBD"}`}
                       title={meeting.title}
-                      detail={[meeting.status, firstLine(meeting.location)].filter(Boolean).join(" · ")}
+                      detail={[meeting.status, firstLine(meeting.location)]
+                        .filter(Boolean)
+                        .join(" · ")}
                       onSelect={() => setLocked(meeting)}
                     />
                   ))}
@@ -708,10 +721,9 @@ export default function LocalGovernmentExplorerExamplePage() {
               <span className="local-gov-kicker">Codified municipal law</span>
               <h2>LOCUS provisions in this place match</h2>
               <p>
-                LOCUS labels each text chunk by legal function and marks Rules
-                and Enforcement as substantive. Topic labels apply only to
-                substantive provisions; other topic groupings shown here are
-                lightweight keyword inferences for navigation.
+                LOCUS labels each text chunk by legal function and marks Rules and Enforcement as
+                substantive. Topic labels apply only to substantive provisions; other topic
+                groupings shown here are lightweight keyword inferences for navigation.
               </p>
             </div>
             {visibleLaws.length > 0 ? (
@@ -730,7 +742,8 @@ export default function LocalGovernmentExplorerExamplePage() {
                         style={{ background: TOPIC_COLORS[lawTopic] || TOPIC_COLORS.Other }}
                       />
                       <span className="local-gov-law-meta">
-                        {law.function} · {lawTopic} · {law.substantive ? "substantive" : "context / process"}
+                        {law.function} · {lawTopic} ·{" "}
+                        {law.substantive ? "substantive" : "context / process"}
                       </span>
                       <strong>{cleanHeader(law.header) || "Untitled provision"}</strong>
                       <p>{truncate(law.content, 210)}</p>
@@ -741,8 +754,15 @@ export default function LocalGovernmentExplorerExamplePage() {
             ) : (
               <CoverageEmpty
                 status={sourceStatus.locus}
-                title={sourceStatus.locus === "loading" ? "LOCUS is indexing this query." : "No LOCUS rows are available for this place match."}
-                detail={sourceErrors.locus || "Coverage is incomplete and city names are normalized differently across source systems. Try another ZIP or broaden the current filters."}
+                title={
+                  sourceStatus.locus === "loading"
+                    ? "LOCUS is indexing this query."
+                    : "No LOCUS rows are available for this place match."
+                }
+                detail={
+                  sourceErrors.locus ||
+                  "Coverage is incomplete and city names are normalized differently across source systems. Try another ZIP or broaden the current filters."
+                }
               />
             )}
           </section>
@@ -750,27 +770,25 @@ export default function LocalGovernmentExplorerExamplePage() {
           <section className="local-gov-method">
             <div>
               <span className="local-gov-kicker">Coverage model</span>
-              <h2>What this explorer can—and cannot—claim</h2>
+              <h2>What this explorer does and does not claim</h2>
             </div>
             <div className="local-gov-method-grid">
               <MethodItem number="01" title="ZIP is a starting point">
-                ZIP codes are delivery routes, not municipal boundaries. The
-                returned postal place can differ from the incorporated place,
-                county, school district, or special district governing an address.
+                ZIP codes are delivery routes, not municipal boundaries. The returned postal place
+                can differ from the incorporated place, county, school district, or special district
+                governing an address.
               </MethodItem>
               <MethodItem number="02" title="LOCUS is a research corpus">
-                LOCUS contains roughly 2.21 million city and county law chunks,
-                but its authors explicitly say it is not a complete census, a
-                fully human-validated benchmark, legal advice, or a substitute
-                for reviewing official code.
+                LOCUS contains roughly 2.21 million city and county law chunks, but its authors
+                explicitly say it is not a complete census, a fully human-validated benchmark, legal
+                advice, or a substitute for reviewing official code.
               </MethodItem>
               <MethodItem number="03" title="Coverage is layered and labeled">
-                The county disaster record and federal spending (FCC + OpenFEMA
-                + USAspending) resolve for any U.S. ZIP. Live legislative
-                activity (Legistar) and 311 service requests (city open data)
-                exist only for a handful of cities; everywhere else those panels
-                say so. Nothing is synthesized, and each panel names the source
-                it actually reached.
+                The county disaster record and federal spending (FCC + OpenFEMA + USAspending)
+                resolve for any U.S. ZIP. Live legislative activity (Legistar) and 311 service
+                requests (city open data) exist only for a handful of cities; everywhere else those
+                panels say so. Nothing is synthesized, and each panel names the source it actually
+                reached.
               </MethodItem>
             </div>
           </section>
@@ -780,9 +798,9 @@ export default function LocalGovernmentExplorerExamplePage() {
               <span className="local-gov-kicker">Core implementation</span>
               <h2>Two source layers, two Semiotic network views</h2>
               <p>
-                The hierarchy and relationship graph share normalized IDs and a
-                single inspection state. Hover explores; click locks; controls
-                rebuild the visible topology without mutating source rows.
+                The hierarchy and relationship graph share normalized IDs and a single inspection
+                state. Hover explores; click locks; controls rebuild the visible topology without
+                mutating source rows.
               </p>
             </div>
             <CodeBlock code={implementationCode} language="jsx" />
@@ -790,21 +808,47 @@ export default function LocalGovernmentExplorerExamplePage() {
 
           <p className="local-gov-sources">
             Sources:{" "}
-            <a href="https://huggingface.co/datasets/LocalLaws/LOCUS-v1" target="_blank" rel="noopener noreferrer">LOCUS v1</a>
+            <a
+              href="https://huggingface.co/datasets/LocalLaws/LOCUS-v1"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              LOCUS v1
+            </a>
             {" · "}
-            <a href="https://webapi.legistar.com/Help" target="_blank" rel="noopener noreferrer">Legistar Web API</a>
+            <a href="https://webapi.legistar.com/Help" target="_blank" rel="noopener noreferrer">
+              Legistar Web API
+            </a>
             {" · "}
-            <a href="https://docs.zippopotam.us/docs/getting-started/" target="_blank" rel="noopener noreferrer">Zippopotam.us / GeoNames</a>
+            <a
+              href="https://docs.zippopotam.us/docs/getting-started/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Zippopotam.us / GeoNames
+            </a>
             {" · "}
-            <a href="https://www.fema.gov/about/openfema/api" target="_blank" rel="noopener noreferrer">OpenFEMA</a>
+            <a
+              href="https://www.fema.gov/about/openfema/api"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              OpenFEMA
+            </a>
             {" · "}
-            <a href="https://api.usaspending.gov/" target="_blank" rel="noopener noreferrer">USAspending.gov</a>
+            <a href="https://api.usaspending.gov/" target="_blank" rel="noopener noreferrer">
+              USAspending.gov
+            </a>
             {" · "}
-            <a href="https://geo.fcc.gov/api/census/" target="_blank" rel="noopener noreferrer">FCC Area API</a>
+            <a href="https://geo.fcc.gov/api/census/" target="_blank" rel="noopener noreferrer">
+              FCC Area API
+            </a>
             {" · "}
-            <a href="https://dev.socrata.com/" target="_blank" rel="noopener noreferrer">city open-data portals (Socrata)</a>.
-            Verify consequential information against the official municipal code,
-            clerk, election authority, or agenda portal.
+            <a href="https://dev.socrata.com/" target="_blank" rel="noopener noreferrer">
+              city open-data portals (Socrata)
+            </a>
+            . Verify consequential information against the official municipal code, clerk, election
+            authority, or agenda portal.
           </p>
         </>
       )}
@@ -820,10 +864,10 @@ function DisasterRecord({ status, disasters, county, error, theme }) {
         <span className="local-gov-kicker">Every ZIP, every county</span>
         <h2>The federal disaster record where you live</h2>
         <p>
-          Your coordinates resolve to a county through the FCC area service, and
-          the federal government keeps a public, browser-readable log of every
-          major-disaster, emergency, and fire-management declaration there since
-          1953. Unlike the feeds below, this layer answers for any U.S. ZIP.
+          Your coordinates resolve to a county through the FCC area service, and the federal
+          government keeps a public, browser-readable log of every major-disaster, emergency, and
+          fire-management declaration there since 1953. Unlike the feeds below, this layer answers
+          for any U.S. ZIP.
         </p>
       </div>
       {status === "loading" && !disasters && (
@@ -867,7 +911,9 @@ function DisasterRecord({ status, disasters, county, error, theme }) {
               </div>
               <div>
                 <dt>Brought direct resident aid</dt>
-                <dd>{disasters.iaCount} {disasters.iaCount === 1 ? "time" : "times"}</dd>
+                <dd>
+                  {disasters.iaCount} {disasters.iaCount === 1 ? "time" : "times"}
+                </dd>
               </div>
             </dl>
           </div>
@@ -906,7 +952,9 @@ function DisasterRecord({ status, disasters, county, error, theme }) {
                 </span>
                 <strong>{truncate(item.title, 92)}</strong>
                 <small>
-                  {item.type}{item.individualAssistance ? " · individual assistance" : ""} · {item.declarationString}
+                  {item.type}
+                  {item.individualAssistance ? " · individual assistance" : ""} ·{" "}
+                  {item.declarationString}
                 </small>
               </a>
             ))}
@@ -925,10 +973,9 @@ function CivicSignals({ status, civic, portal, error, location, theme }) {
         <span className="local-gov-kicker">On your block</span>
         <h2>What residents are reporting to the city right now</h2>
         <p>
-          Where a city publishes an open 311 service-request feed, this layer
-          pulls the most recent reports near your ZIP — potholes, graffiti,
-          encampments, noise, broken signals — straight from the municipal data
-          portal.{portal ? ` Source: ${portal.label}.` : ""}
+          Where a city publishes an open 311 service-request feed, this layer pulls the most recent
+          reports near your ZIP — potholes, graffiti, encampments, noise, broken signals — straight
+          from the municipal data portal.{portal ? ` Source: ${portal.label}.` : ""}
         </p>
       </div>
       {!portal && (
@@ -1007,9 +1054,13 @@ function CivicSignals({ status, civic, portal, error, location, theme }) {
           <div className="local-gov-record-rows">
             {civic.recent.map((item) => (
               <div key={item.id} className="local-gov-record-row is-static">
-                <span className="local-gov-activity-date">{formatDate(item.date)} · {item.status}</span>
+                <span className="local-gov-activity-date">
+                  {formatDate(item.date)} · {item.status}
+                </span>
                 <strong>{truncate(item.type, 76)}</strong>
-                <small>{[item.address, item.agency].filter(Boolean).join(" · ") || "Location withheld"}</small>
+                <small>
+                  {[item.address, item.agency].filter(Boolean).join(" · ") || "Location withheld"}
+                </small>
               </div>
             ))}
           </div>
@@ -1036,22 +1087,26 @@ function FederalSpending({ status, spending, county, error, theme }) {
         <h2>Federal dollars flowing into your county</h2>
         <p>
           Where federal money is actually spent — by place of performance — in{" "}
-          {spending?.fy ? `fiscal year ${spending.fy}` : "the latest complete fiscal year"},
-          from USAspending.gov. Like the disaster record, this resolves for any
-          U.S. ZIP; the bar ranks the largest named recipients.
+          {spending?.fy ? `fiscal year ${spending.fy}` : "the latest complete fiscal year"}, from
+          USAspending.gov. Like the disaster record, this resolves for any U.S. ZIP; the bar ranks
+          the largest named recipients.
         </p>
       </div>
       {status === "loading" && !spending && (
         <div className="local-gov-coverage-empty is-loading">
           <strong>Totaling federal awards in your county…</strong>
-          <p>Querying USAspending.gov by place of performance for the latest complete fiscal year.</p>
+          <p>
+            Querying USAspending.gov by place of performance for the latest complete fiscal year.
+          </p>
         </div>
       )}
       {status === "error" && (
         <CoverageEmpty
           status="error"
           title="The federal spending feed did not respond."
-          detail={error || "USAspending.gov may be briefly unavailable. Try refreshing the sources."}
+          detail={
+            error || "USAspending.gov may be briefly unavailable. Try refreshing the sources."
+          }
         />
       )}
       {spending && spending.total === 0 && status !== "loading" && (
@@ -1132,10 +1187,17 @@ function MiniSparkline({ series, valueKey }) {
     index * step,
     height - 2 - ((point[valueKey] || 0) / max) * (height - 4),
   ])
-  const line = points.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`).join(" ")
+  const line = points
+    .map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`)
+    .join(" ")
   const area = `${line} L${width},${height} L0,${height} Z`
   return (
-    <svg className="local-gov-sparkline" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
+    <svg
+      className="local-gov-sparkline"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
       <path className="local-gov-sparkline-fill" d={area} />
       <path className="local-gov-sparkline-line" d={line} fill="none" />
     </svg>
@@ -1159,7 +1221,10 @@ function SourceStatus({ status, title, detail }) {
   }
   return (
     <div className={`local-gov-source-status is-${status}`}>
-      <span><i aria-hidden="true" />{labels[status] || status}</span>
+      <span>
+        <i aria-hidden="true" />
+        {labels[status] || status}
+      </span>
       <strong>{title}</strong>
       <small title={detail}>{detail}</small>
     </div>
@@ -1187,7 +1252,11 @@ function Control({ label, children }) {
 function ChartHint({ active, locked }) {
   return (
     <span className="local-gov-chart-hint">
-      {locked ? `Held: ${truncate(locked.label || locked.title, 28)}` : active ? truncate(active.label || active.title, 30) : "Hover to trace · click to hold"}
+      {locked
+        ? `Held: ${truncate(locked.label || locked.title, 28)}`
+        : active
+          ? truncate(active.label || active.title, 30)
+          : "Hover to trace · click to hold"}
     </span>
   )
 }
@@ -1195,7 +1264,7 @@ function ChartHint({ active, locked }) {
 function Inspector({ active, connections, onRelease }) {
   if (!active) {
     return (
-      <section className="local-gov-inspector is-empty">
+      <section style={{ height: 120 }} className="local-gov-inspector is-empty">
         <div>
           <span className="local-gov-kicker">Shared inspector</span>
           <strong>Hover either chart to follow one civic object across the system.</strong>
@@ -1204,15 +1273,20 @@ function Inspector({ active, connections, onRelease }) {
       </section>
     )
   }
-  const topic = active.topic || (active.kind === "law" ? inferTopic(`${active.header} ${active.content}`) : null)
+  const topic =
+    active.topic ||
+    (active.kind === "law" ? inferTopic(`${active.header} ${active.content}`) : null)
   return (
-    <section className="local-gov-inspector">
+    <section style={{ height: 120 }} className="local-gov-inspector">
       <span
         className="local-gov-inspector-mark"
         style={{ background: NODE_COLORS[active.kind] || NODE_COLORS.branch }}
       />
       <div className="local-gov-inspector-copy">
-        <span className="local-gov-kicker">{active.kind}{topic ? ` · ${topic}` : ""}</span>
+        <span className="local-gov-kicker">
+          {active.kind}
+          {topic ? ` · ${topic}` : ""}
+        </span>
         <h3>{active.label || active.title}</h3>
         <p>{inspectorDetail(active)}</p>
       </div>
@@ -1226,9 +1300,13 @@ function Inspector({ active, connections, onRelease }) {
       </div>
       <div className="local-gov-inspector-actions">
         {active.sourceUrl && (
-          <a href={active.sourceUrl} target="_blank" rel="noopener noreferrer">Open source ↗</a>
+          <a href={active.sourceUrl} target="_blank" rel="noopener noreferrer">
+            Open source ↗
+          </a>
         )}
-        <button type="button" onClick={onRelease}>Release</button>
+        <button type="button" onClick={onRelease}>
+          Release
+        </button>
       </div>
     </section>
   )
@@ -1246,7 +1324,10 @@ function NodeLegend() {
   return (
     <div className="local-gov-node-legend" aria-label="Network node legend">
       {entries.map(([kind, label]) => (
-        <span key={kind}><i style={{ background: NODE_COLORS[kind] }} />{label}</span>
+        <span key={kind}>
+          <i style={{ background: NODE_COLORS[kind] }} />
+          {label}
+        </span>
       ))}
     </div>
   )

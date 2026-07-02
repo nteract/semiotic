@@ -48,15 +48,17 @@ export default function CustomChartsExamplesPage() {
       <section>
         <p>
           The escape-hatch HOCs (<code>XYCustomChart</code>, <code>OrdinalCustomChart</code>,{" "}
-          <code>NetworkCustomChart</code>, <code>GeoCustomChart</code>) are at their best on charts the catalog can't draw. This
-          page collects complete, copyable examples — a layout function plus the chart that hosts it.
+          <code>NetworkCustomChart</code>, <code>GeoCustomChart</code>) are at their best on charts
+          the catalog can't draw. This page collects complete, copyable examples — a layout function
+          plus the chart that hosts it.
         </p>
       </section>
 
       <section>
         <h2>Paris isometric landmarks</h2>
         <p>
-          The full-bleed <Link to="/examples/paris-isometric-landmarks">Paris, Tile by Tile</Link>{" "}
+          The full-bleed{" "}
+          <Link to="/examples/paris-isometric-landmarks">Paris, Isometric City of Lights</Link>{" "}
           example uses <code>GeoCustomChart</code> and <code>isometricLandmarkLayout</code> to turn
           live geographic landmark candidates into a strategy-game board with replaceable pixel
           sprites and a deterministic offline fallback.
@@ -70,11 +72,12 @@ export default function CustomChartsExamplesPage() {
           <a href="https://observablehq.com/@kristw/boba-science" target="_blank" rel="noreferrer">
             Boba Science
           </a>
-          . Each drink is one ordinal item on the band scale; its tea, tapioca, and ice volumes solve
-          a drink height inside a conical-frustum cup. <code>bobaLayout</code> emits a
-          transparent hit-rect per cup carrying the volumes and pearl/ice counts (so hover, tooltips,
-          selection, SSR evidence, and transitions all work), and draws the cup silhouette, tea fill,
-          tapioca pearls, ice cubes, lid, and straw as pointer-events-none SVG overlays keyed by drink.
+          . Each drink is one ordinal item on the band scale; its tea, tapioca, and ice volumes
+          solve a drink height inside a conical-frustum cup. <code>bobaLayout</code> emits a
+          transparent hit-rect per cup carrying the volumes and pearl/ice counts (so hover,
+          tooltips, selection, SSR evidence, and transitions all work), and draws the cup
+          silhouette, tea fill, tapioca pearls, ice cubes, lid, and straw as pointer-events-none SVG
+          overlays keyed by drink.
         </p>
         <div style={{ margin: "1.5rem 0" }}>
           <OrdinalCustomChart
@@ -97,19 +100,20 @@ export default function CustomChartsExamplesPage() {
           This boba chart also appears in the{" "}
           <Link to="/interoperability/gofish">GoFish DisplayList gallery</Link>, where it is{" "}
           <strong>hand-written as a DisplayList document</strong> — no Semiotic layout function at
-          all, just emitted render-IR primitives that the GoFish adapter maps onto the same custom-layout
-          surface. The two are worth comparing:
+          all, just emitted render-IR primitives that the GoFish adapter maps onto the same
+          custom-layout surface. The two are worth comparing:
         </p>
         <ul>
           <li>
-            <strong>Here (a Semiotic custom layout):</strong> you write a <code>layout(ctx)</code> that
-            reads <code>ctx.scales</code> / <code>ctx.dimensions</code> and returns scene nodes +
-            overlays. Semiotic owns the band scale, sizing, and re-layout; the cup geometry is yours.
+            <strong>Here (a Semiotic custom layout):</strong> you write a <code>layout(ctx)</code>{" "}
+            that reads <code>ctx.scales</code> / <code>ctx.dimensions</code> and returns scene nodes
+            + overlays. Semiotic owns the band scale, sizing, and re-layout; the cup geometry is
+            yours.
           </li>
           <li>
-            <strong>There (a hand-emitted DisplayList):</strong> you (or another tool) emit absolute-pixel
-            primitives directly and the adapter renders them. No layout callback, no Semiotic scales —
-            the document <em>is</em> the chart.
+            <strong>There (a hand-emitted DisplayList):</strong> you (or another tool) emit
+            absolute-pixel primitives directly and the adapter renders them. No layout callback, no
+            Semiotic scales — the document <em>is</em> the chart.
           </li>
         </ul>
         <p>

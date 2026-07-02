@@ -5,7 +5,7 @@
 // name each path; the check:docs-routes gate catches drift.)
 export const EXAMPLES = [
   {
-    title: "Point Climate Radial",
+    title: "Brushable Weather Rings",
     path: "/examples/climate-radial-weather",
     eyebrow: "Point controls + radial weather",
     description:
@@ -29,7 +29,7 @@ export const EXAMPLES = [
     preview: "art",
   },
   {
-    title: "Cities, Tile by Tile",
+    title: "Paris, Isometric City of Lights",
     path: "/examples/paris-isometric-landmarks",
     eyebrow: "Custom isometric GeoFrame",
     description:
@@ -69,11 +69,11 @@ export const EXAMPLES = [
     preview: "local-government",
   },
   {
-    title: "Where the Boxes Wait",
+    title: "The Long Way Around",
     path: "/examples/port-congestion-replay",
-    eyebrow: "Four-frame logistics replay",
+    eyebrow: "Real chokepoint data, four-frame replay",
     description:
-      "A night-shift port control room tracing container cohorts through five global maritime corridors, a temporal process flow, a push-driven backlog, and route comparison.",
+      "Real IMF PortWatch container transits replay three seasons of the global ocean — a quiet spring, the Ever Given blockage, and the Red Sea detour — across a flow map, a temporal process flow, a push-driven deviation waterfall, and a cross-scenario scatterplot matrix.",
     preview: "port-replay",
   },
   {

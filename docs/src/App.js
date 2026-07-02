@@ -158,7 +158,7 @@ import SemioticArchitectureExamplePage from "./pages/examples/SemioticArchitectu
 import GestaltPrinciplesExamplePage from "./pages/examples/GestaltPrinciplesExamplePage"
 import NetworkVizExamplePage from "./pages/examples/NetworkVizExamplePage"
 import OregonTrailExamplePage from "./pages/examples/OregonTrailExamplePage"
-import ChartClinicExamplePage from "./pages/examples/ChartClinicExamplePage"
+//import ChartClinicExamplePage from "./pages/examples/ChartClinicExamplePage"
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
@@ -283,22 +283,49 @@ export default function DocsApp() {
           <Routes>
             <Route path="examples" element={<ExamplesOverviewPage />} />
             <Route path="examples/climate-anomaly" element={<ClimateAnomalyExamplePage />} />
-            <Route path="examples/climate-radial-weather" element={<ClimateRadialWeatherExamplePage />} />
+            <Route
+              path="examples/climate-radial-weather"
+              element={<ClimateRadialWeatherExamplePage />}
+            />
             <Route path="examples/us-war-timeline" element={<USWarTimelineExamplePage />} />
-            <Route path="examples/art-movement-genealogy" element={<ArtMovementGenealogyExamplePage />} />
-            <Route path="examples/paris-isometric-landmarks" element={<ParisIsometricLandmarksExamplePage />} />
+            <Route
+              path="examples/art-movement-genealogy"
+              element={<ArtMovementGenealogyExamplePage />}
+            />
+            <Route
+              path="examples/paris-isometric-landmarks"
+              element={<ParisIsometricLandmarksExamplePage />}
+            />
             <Route path="examples/urine-wheel" element={<UrineWheelExamplePage />} />
-            <Route path="examples/erie-railroad-organization" element={<ErieRailroadOrganizationExamplePage />} />
+            <Route
+              path="examples/erie-railroad-organization"
+              element={<ErieRailroadOrganizationExamplePage />}
+            />
             <Route path="examples/wikipedia-realtime" element={<WikipediaRealtimeExamplePage />} />
-            <Route path="examples/local-government-explorer" element={<LocalGovernmentExplorerExamplePage />} />
-            <Route path="examples/port-congestion-replay" element={<PortCongestionReplayExamplePage />} />
-            <Route path="examples/scroll-youre-telling" element={<ScrollYoureTellingExamplePage />} />
-            <Route path="examples/what-the-machine-sees" element={<WhatTheMachineSeesExamplePage />} />
-            <Route path="examples/semiotic-architecture" element={<SemioticArchitectureExamplePage />} />
+            <Route
+              path="examples/local-government-explorer"
+              element={<LocalGovernmentExplorerExamplePage />}
+            />
+            <Route
+              path="examples/port-congestion-replay"
+              element={<PortCongestionReplayExamplePage />}
+            />
+            <Route
+              path="examples/scroll-youre-telling"
+              element={<ScrollYoureTellingExamplePage />}
+            />
+            <Route
+              path="examples/what-the-machine-sees"
+              element={<WhatTheMachineSeesExamplePage />}
+            />
+            <Route
+              path="examples/semiotic-architecture"
+              element={<SemioticArchitectureExamplePage />}
+            />
             <Route path="examples/gestalt-principles" element={<GestaltPrinciplesExamplePage />} />
             <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
             <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
-            <Route path="examples/chart-clinic" element={<ChartClinicExamplePage />} />
+            {/* <Route path="examples/chart-clinic" element={<ChartClinicExamplePage />} /> */}
           </Routes>
         </ExamplesLayout>
       </div>
@@ -503,8 +530,14 @@ export default function DocsApp() {
               <Route path="streaming-system-model" element={<StreamingSystemModelPage />} />
               <Route path="performance" element={<PerformancePage />} />
               <Route path="push-api" element={<PushApiPage />} />
-              <Route path="gofish-layouts" element={<Navigate to="/interoperability/gofish" replace />} />
-              <Route path="custom-charts" element={<Navigate to="/custom-charts/overview" replace />} />
+              <Route
+                path="gofish-layouts"
+                element={<Navigate to="/interoperability/gofish" replace />}
+              />
+              <Route
+                path="custom-charts"
+                element={<Navigate to="/custom-charts/overview" replace />}
+              />
             </Route>
 
             {/* Custom Charts — first-class section (the escape-hatch HOCs + recipe
@@ -556,11 +589,26 @@ export default function DocsApp() {
               <Route path="audience-profiles" element={<AudienceProfilesPage />} />
               <Route path="cli-mcp" element={<CliMcpPage />} />
               {/* Adapter/interop pages moved to /interoperability — redirects preserve old links. */}
-              <Route path="vega-lite" element={<Navigate to="/interoperability/vega-lite" replace />} />
-              <Route path="portability-spec" element={<Navigate to="/interoperability/portability-spec" replace />} />
-              <Route path="observable-plot" element={<Navigate to="/interoperability/observable-plot" replace />} />
-              <Route path="data-quality-bridge" element={<Navigate to="/interoperability/data-quality-bridge" replace />} />
-              <Route path="generative-ui" element={<Navigate to="/interoperability/generative-ui" replace />} />
+              <Route
+                path="vega-lite"
+                element={<Navigate to="/interoperability/vega-lite" replace />}
+              />
+              <Route
+                path="portability-spec"
+                element={<Navigate to="/interoperability/portability-spec" replace />}
+              />
+              <Route
+                path="observable-plot"
+                element={<Navigate to="/interoperability/observable-plot" replace />}
+              />
+              <Route
+                path="data-quality-bridge"
+                element={<Navigate to="/interoperability/data-quality-bridge" replace />}
+              />
+              <Route
+                path="generative-ui"
+                element={<Navigate to="/interoperability/generative-ui" replace />}
+              />
             </Route>
 
             {/* Interoperability — adapters + the portability schema, one coherent home. */}

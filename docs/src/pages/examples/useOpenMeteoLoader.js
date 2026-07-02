@@ -5,7 +5,7 @@ export const HISTORICAL_READY_MESSAGE = "A local 1991–2020 reference is ready 
 
 /**
  * The shared Open-Meteo loading state machine behind the two Climate example
- * pages (Point Climate Anomaly, Point Climate Radial): abortable request
+ * pages (Point Climate Anomaly, Brushable Weather Rings): abortable request
  * lifecycle, a slow-request escalation after 2.5s, the historical-fallback
  * path, and browser geolocation. The pages keep what genuinely differs —
  * their fallback generators, their coordinate→profile mappings, and their

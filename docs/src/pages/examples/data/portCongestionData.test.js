@@ -1,152 +1,231 @@
 import { describe, expect, it } from "vitest"
 import {
-  PORT_COHORT_SUMMARIES,
-  PORT_COHORTS,
+  PORT_CORRIDORS,
   PORT_LOCATIONS,
-  PORT_PROCESS_EDGES,
+  PORT_MATRIX_FIELDS,
+  PORT_MATRIX_ROWS,
   PORT_PROCESS_NODES,
-  PORT_REPLAY_EVENTS,
-  PORT_ROUTES,
-  aggregateBacklogEvents,
-  backlogAtCursor,
+  PORT_SCENARIOS,
+  PORT_STAGE_COLOR_MAP,
+  baselineFor,
+  cumulativeDeviation,
+  domainFor,
+  eventAnnotationsFor,
   flowsAtTime,
+  gateForSelection,
   processEdgesAtTime,
   replayTimeForCursor,
+  sankeyEdgesFor,
+  scenarioDays,
+  transitsAt,
+  waterfallSeriesFor,
 } from "./portCongestionData"
+import { PORTWATCH_WINDOWS } from "./portwatchChokepointDaily"
 
-describe("port congestion example data", () => {
+const DAY = 24 * 60 * 60 * 1000
+
+describe("port congestion scenario data", () => {
   it("has unique identifiers and valid references", () => {
     const locationIds = new Set(PORT_LOCATIONS.map((location) => location.id))
-    const routeIds = new Set(PORT_ROUTES.map((route) => route.id))
-    const stageIds = new Set(PORT_PROCESS_NODES.map((node) => node.id))
+    const nodeIds = new Set(PORT_PROCESS_NODES.map((node) => node.id))
 
     expect(locationIds.size).toBe(PORT_LOCATIONS.length)
-    expect(routeIds.size).toBe(PORT_ROUTES.length)
-    expect(new Set(PORT_COHORTS.map((cohort) => cohort.id)).size).toBe(PORT_COHORTS.length)
-    expect(new Set(PORT_PROCESS_EDGES.map((edge) => edge.id)).size).toBe(PORT_PROCESS_EDGES.length)
-    expect(new Set(PORT_REPLAY_EVENTS.map((event) => event.id)).size).toBe(PORT_REPLAY_EVENTS.length)
-
-    for (const route of PORT_ROUTES) {
-      expect(locationIds.has(route.origin)).toBe(true)
-      expect(locationIds.has(route.destination)).toBe(true)
-      expect(route.waypoints[0]).toBe(route.origin)
-      expect(route.waypoints[route.waypoints.length - 1]).toBe(route.destination)
-      expect(route.waypoints.length).toBeGreaterThanOrEqual(4)
-      route.waypoints.forEach((waypoint) => {
-        expect(locationIds.has(waypoint)).toBe(true)
-      })
-    }
-
-    expect(new Set(PORT_ROUTES.map((route) => route.bottleneck)).size).toBe(
-      PORT_ROUTES.length
+    expect(nodeIds.size).toBe(PORT_PROCESS_NODES.length)
+    expect(new Set(PORT_SCENARIOS.map((s) => s.id)).size).toBe(
+      PORT_SCENARIOS.length
+    )
+    expect(new Set(PORT_MATRIX_ROWS.map((row) => row.id)).size).toBe(
+      PORT_MATRIX_ROWS.length
     )
 
-    for (const edge of PORT_PROCESS_EDGES) {
-      expect(stageIds.has(edge.source)).toBe(true)
-      expect(stageIds.has(edge.target)).toBe(true)
-      expect(routeIds.has(edge.routeId)).toBe(true)
-      expect(edge.endTime).toBeGreaterThan(edge.startTime)
-    }
-  })
-
-  it("keeps the replay chronological and returns the backlog to zero", () => {
-    for (let index = 1; index < PORT_REPLAY_EVENTS.length; index += 1) {
-      expect(PORT_REPLAY_EVENTS[index].time).toBeGreaterThanOrEqual(
-        PORT_REPLAY_EVENTS[index - 1].time
-      )
-    }
-
-    expect(backlogAtCursor(PORT_REPLAY_EVENTS.length)).toBe(0)
-    for (const route of PORT_ROUTES) {
-      expect(backlogAtCursor(PORT_REPLAY_EVENTS.length, route.id)).toBe(0)
-    }
-  })
-
-  it("derives stable map and process snapshots from the replay clock", () => {
-    const time = replayTimeForCursor(PORT_REPLAY_EVENTS.length)
-    const flows = flowsAtTime(time)
-    expect(new Set(flows.map((flow) => flow.routeId)).size).toBe(PORT_ROUTES.length)
-    expect(flows.length).toBeGreaterThan(PORT_ROUTES.length * 3)
-    expect(flows.every((flow) => flow.sourceName && flow.targetName)).toBe(true)
-    expect(processEdgesAtTime(time)).toHaveLength(PORT_PROCESS_EDGES.length)
-  })
-
-  it("summarizes every cohort with the four matrix measures", () => {
-    // One row per cohort so the scatterplot matrix is a real cloud, not a
-    // 5-route sketch.
-    expect(PORT_COHORT_SUMMARIES.length).toBe(PORT_COHORTS.length)
-    expect(PORT_COHORT_SUMMARIES.length).toBe(15)
-
-    const routeIds = new Set(PORT_ROUTES.map((route) => route.id))
-    for (const summary of PORT_COHORT_SUMMARIES) {
-      expect(routeIds.has(summary.routeId)).toBe(true)
-      for (const field of ["seaDays", "anchorageHours", "carbonTons", "teu"]) {
-        expect(Number.isFinite(summary[field])).toBe(true)
-        expect(summary[field]).toBeGreaterThan(0)
+    for (const corridor of PORT_CORRIDORS) {
+      for (const leg of corridor.legs) {
+        expect(locationIds.has(leg.source)).toBe(true)
+        expect(locationIds.has(leg.target)).toBe(true)
+        expect(PORTWATCH_WINDOWS.steady.series[leg.gate]).toBeDefined()
+      }
+      // Legs chain head-to-tail so the corridor draws as one route.
+      for (let index = 1; index < corridor.legs.length; index += 1) {
+        expect(corridor.legs[index].source).toBe(
+          corridor.legs[index - 1].target
+        )
       }
     }
 
-    // Rows are grouped by lane so colorBy="route" + ROUTE_COLORS assigns each
-    // cohort its canonical lane color (d3 ordinal domain follows first
-    // encounter). The first appearance of each lane must match PORT_ROUTES
-    // order.
+    for (const node of PORT_PROCESS_NODES) {
+      expect(PORT_STAGE_COLOR_MAP[node.category]).toBeDefined()
+    }
+  })
+
+  it("bakes complete day-aligned PortWatch series for every scenario", () => {
+    for (const scenario of PORT_SCENARIOS) {
+      const window = PORTWATCH_WINDOWS[scenario.id]
+      expect(window).toBeDefined()
+      const totalDays = window.lead + window.days
+      for (const series of Object.values(window.series)) {
+        expect(series.transits).toHaveLength(totalDays)
+        expect(series.transits.every((v) => Number.isFinite(v) && v >= 0)).toBe(
+          true
+        )
+      }
+      expect(window.series[scenario.focal]).toBeDefined()
+      expect(window.series[scenario.counterGate]).toBeDefined()
+    }
+  })
+
+  it("keeps sankey edges chronological, bucketed, and inside the domain", () => {
+    for (const scenario of PORT_SCENARIOS) {
+      const [domainStart, domainEnd] = domainFor(scenario.id)
+      const edges = sankeyEdgesFor(scenario.id)
+      expect(new Set(edges.map((edge) => edge.id)).size).toBe(edges.length)
+
+      const nodeIds = new Set(PORT_PROCESS_NODES.map((node) => node.id))
+      let coveredDays = 0
+      for (const edge of edges) {
+        expect(nodeIds.has(edge.source)).toBe(true)
+        expect(nodeIds.has(edge.target)).toBe(true)
+        expect(edge.endTime).toBeGreaterThan(edge.startTime)
+        expect(edge.startTime).toBeGreaterThanOrEqual(domainStart)
+        expect(edge.endTime).toBeLessThanOrEqual(domainEnd)
+        expect(edge.value).toBeGreaterThanOrEqual(0)
+      }
+      // Four streams cover every replay day between them.
+      coveredDays = edges
+        .filter((edge) => edge.gate === "suez")
+        .reduce((sum, edge) => sum + edge.bucketDays, 0)
+      expect(coveredDays).toBe(scenarioDays(scenario.id))
+
+      // Clamping at the replay cursor never produces inverted intervals.
+      const midTime = replayTimeForCursor(
+        scenario.id,
+        Math.floor(scenarioDays(scenario.id) / 2)
+      )
+      for (const edge of processEdgesAtTime(scenario.id, midTime)) {
+        expect(edge.endTime).toBeGreaterThan(edge.startTime)
+        expect(edge.endTime).toBeLessThanOrEqual(midTime + DAY)
+      }
+    }
+  })
+
+  it("derives map flows from real trailing transit counts", () => {
+    for (const scenario of PORT_SCENARIOS) {
+      const endTime = replayTimeForCursor(
+        scenario.id,
+        scenarioDays(scenario.id)
+      )
+      const flows = flowsAtTime(scenario.id, endTime)
+      expect(new Set(flows.map((flow) => flow.corridorId)).size).toBe(
+        PORT_CORRIDORS.length
+      )
+      expect(
+        flows.every(
+          (flow) =>
+            flow.sourceName && flow.targetName && Number.isFinite(flow.value)
+        )
+      ).toBe(true)
+
+      // Before the window starts, nothing is drawn.
+      expect(flowsAtTime(scenario.id, replayTimeForCursor(scenario.id, 0))).toHaveLength(0)
+
+      // Corridor filtering narrows to that corridor's legs only.
+      const suezOnly = flowsAtTime(scenario.id, endTime, "suez")
+      expect(suezOnly.every((flow) => flow.corridorId === "suez")).toBe(true)
+      expect(suezOnly.length).toBeGreaterThan(0)
+    }
+  })
+
+  it("builds waterfall series as deviation from each scenario's own pace", () => {
+    for (const scenario of PORT_SCENARIOS) {
+      const gate = gateForSelection(scenario.id)
+      expect(gate).toBe(scenario.focal)
+      expect(gateForSelection(scenario.id, "cape")).toBe("capeOfGoodHope")
+
+      const series = waterfallSeriesFor(scenario.id, gate)
+      expect(series).toHaveLength(scenarioDays(scenario.id))
+      const baseline = baselineFor(scenario.id, gate)
+      for (const row of series) {
+        expect(row.value).toBeCloseTo(row.actual - baseline, 5)
+      }
+      for (let index = 1; index < series.length; index += 1) {
+        expect(series[index].time).toBeGreaterThan(series[index - 1].time)
+      }
+    }
+  })
+
+  it("gives the matrix one row per real day across all three scenarios", () => {
+    const expectedRows = PORT_SCENARIOS.reduce(
+      (sum, scenario) => sum + scenarioDays(scenario.id),
+      0
+    )
+    expect(PORT_MATRIX_ROWS).toHaveLength(expectedRows)
+
+    for (const row of PORT_MATRIX_ROWS) {
+      for (const field of PORT_MATRIX_FIELDS) {
+        expect(Number.isFinite(row[field])).toBe(true)
+        expect(row[field]).toBe(transitsAt(row.scenarioId, field, row.dayIndex))
+      }
+    }
+
+    // Rows are grouped in PORT_SCENARIOS order so colorBy assigns each
+    // scenario its canonical color (d3 ordinal domain follows first
+    // encounter).
     const firstSeen = []
     const seen = new Set()
-    for (const summary of PORT_COHORT_SUMMARIES) {
-      if (!seen.has(summary.route)) {
-        seen.add(summary.route)
-        firstSeen.push(summary.route)
+    for (const row of PORT_MATRIX_ROWS) {
+      if (!seen.has(row.scenario)) {
+        seen.add(row.scenario)
+        firstSeen.push(row.scenario)
       }
     }
-    expect(firstSeen).toEqual(PORT_ROUTES.map((route) => route.shortLabel))
+    expect(firstSeen).toEqual(PORT_SCENARIOS.map((s) => s.shortLabel))
   })
 
-  it("keeps the matrix measure-key ranges honest", () => {
-    // These bounds are printed verbatim as the manifest's axis key, so guard
-    // them against future data tweaks.
-    const range = (field) => {
-      const values = PORT_COHORT_SUMMARIES.map((summary) => summary[field])
-      return [Math.min(...values), Math.max(...values)]
+  it("shows the real stories: blockage, diversion, and calm", () => {
+    // Ever Given: Suez drops under 6 transits/day during the blockage and a
+    // backlog convoy of 30+ ships clears the day after refloating.
+    const blockageWeek = Array.from({ length: 6 }, (_, i) =>
+      transitsAt("everGiven", "suez", 16 + i)
+    )
+    expect(Math.min(...blockageWeek)).toBeLessThanOrEqual(5)
+    const recoveryWeek = Array.from({ length: 7 }, (_, i) =>
+      transitsAt("everGiven", "suez", 22 + i)
+    )
+    expect(Math.max(...recoveryWeek)).toBeGreaterThanOrEqual(30)
+
+    // Red Sea: Bab el-Mandeb collapses while the Cape of Good Hope more than
+    // doubles between the first and final two weeks of the window.
+    const meanOf = (scenarioId, gate, from, to) => {
+      let sum = 0
+      for (let day = from; day < to; day += 1) {
+        sum += transitsAt(scenarioId, gate, day)
+      }
+      return sum / (to - from)
     }
-    expect(range("seaDays")).toEqual([11, 33.3])
-    expect(range("anchorageHours")).toEqual([25, 82])
-    expect(range("carbonTons")).toEqual([34, 81])
-    expect(range("teu")).toEqual([374, 720])
+    const redSeaDays = scenarioDays("redSea")
+    expect(meanOf("redSea", "babElMandeb", redSeaDays - 14, redSeaDays)).toBeLessThan(
+      meanOf("redSea", "babElMandeb", 0, 14) / 2
+    )
+    expect(meanOf("redSea", "capeOfGoodHope", redSeaDays - 14, redSeaDays)).toBeGreaterThan(
+      meanOf("redSea", "capeOfGoodHope", 0, 14) * 2
+    )
 
-    // The headline claim: ranked by sea days, the two longest-haul lanes wait
-    // less than the two quickest, and Shanghai is the lone exception that
-    // tops the anchorage queue from mid-ocean.
-    const byLane = new Map()
-    for (const summary of PORT_COHORT_SUMMARIES) {
-      const lane = byLane.get(summary.route) || { sea: summary.seaDays, waits: [] }
-      lane.waits.push(summary.anchorageHours)
-      byLane.set(summary.route, lane)
+    // Quiet spring: Suez never strays far from its own pace — the cumulative
+    // deviation stays an order of magnitude below the Red Sea collapse.
+    const steadyDrift = Math.abs(
+      cumulativeDeviation("steady", "suez", scenarioDays("steady") - 1)
+    )
+    const redSeaDrift = Math.abs(
+      cumulativeDeviation("redSea", "babElMandeb", redSeaDays - 1)
+    )
+    expect(steadyDrift).toBeLessThan(redSeaDrift / 5)
+
+    // Real-dated event markers sit inside their scenario's domain.
+    for (const scenario of PORT_SCENARIOS) {
+      const [start, end] = domainFor(scenario.id)
+      for (const annotation of eventAnnotationsFor(scenario.id)) {
+        expect(annotation.value).toBeGreaterThanOrEqual(start)
+        expect(annotation.value).toBeLessThanOrEqual(end)
+      }
     }
-    const lanes = [...byLane.entries()]
-      .map(([route, { sea, waits }]) => ({
-        route,
-        sea,
-        meanWait: waits.reduce((sum, w) => sum + w, 0) / waits.length,
-        maxWait: Math.max(...waits),
-      }))
-      .sort((a, b) => a.sea - b.sea)
-
-    const quickest = lanes.slice(0, 2) // Rotterdam, Santos
-    const longest = lanes.slice(-2) // Mumbai, Singapore
-    const meanOf = (group) =>
-      group.reduce((sum, lane) => sum + lane.meanWait, 0) / group.length
-    expect(meanOf(longest)).toBeLessThan(meanOf(quickest))
-
-    const topWait = [...lanes].sort((a, b) => b.maxWait - a.maxWait)[0]
-    expect(topWait.route).toBe("Shanghai")
-  })
-
-  it("reduces raw signals into legible daily backlog changes", () => {
-    const daily = aggregateBacklogEvents(PORT_REPLAY_EVENTS)
-
-    expect(daily.length).toBeLessThan(PORT_REPLAY_EVENTS.length / 2)
-    expect(daily.reduce((sum, event) => sum + event.value, 0)).toBe(0)
-    expect(daily.every((event) => event.signalCount >= 0)).toBe(true)
-    expect(daily.some((event) => event.signalCount === 0)).toBe(true)
   })
 })

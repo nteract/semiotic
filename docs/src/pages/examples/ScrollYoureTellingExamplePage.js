@@ -1,11 +1,11 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
-import { BarChart, RealtimeLineChart, RealtimeSwarmChart, ThemeProvider, useSyncedPushData } from "semiotic"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  BarChart,
+  RealtimeLineChart,
+  RealtimeSwarmChart,
+  ThemeProvider,
+  useSyncedPushData,
+} from "semiotic"
 import CodeBlock from "../../components/CodeBlock"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
@@ -33,7 +33,7 @@ const REPLAY_TICK_MS = 70
 const MIN_LIVE_FOR_REPLAY = 24
 
 const beatColors = Object.fromEntries(
-  Object.entries(BEAT_KINDS).map(([kind, meta]) => [kind, meta.fill])
+  Object.entries(BEAT_KINDS).map(([kind, meta]) => [kind, meta.fill]),
 )
 
 const implementationCode = `// The reader is the stream. Sample scroll eight times a second.
@@ -42,7 +42,9 @@ const swarmRef = useRef(null)
 
 useReadingTelemetry((sample) => {
   setBeats(current => [...current, sample].slice(-3600))
-}) // { t, scroll, velocity, pointer, chapter, kind }
+}) // { t, scroll, velocity, pointer, chapter, highlighting, kind }
+// kind = highlighting ? "highlight" : signOf(velocity) — a live text
+// selection recolors the beat, so highlighting reads apart from scrolling.
 
 // One library hook reconciles the rolling buffer into each chart.
 useSyncedPushData(lineRef, windowedBeats, { id: "id" })
@@ -100,7 +102,7 @@ export default function ScrollYoureTellingExamplePage() {
   const dwellDisplay = useMemo(
     () => dwellRows.map((row) => ({ ...row, seconds: Math.round(row.seconds) })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dwellSignature]
+    [dwellSignature],
   )
 
   const latestBeat = displayed[displayed.length - 1] || null
@@ -147,19 +149,16 @@ export default function ScrollYoureTellingExamplePage() {
     setReplayIndex(0)
   }, [])
 
-  const replayComplete =
-    mode === "replay" && replayIndex >= replaySourceRef.current.length
+  const replayComplete = mode === "replay" && replayIndex >= replaySourceRef.current.length
 
   return (
-    <ExamplePageLayout
-      title="The Scroll You're Telling"
-    >
+    <ExamplePageLayout title="The Scroll You're Telling">
       <p className="scroll-tell-lede">
-        Every chart below is built from one stream: <em>you</em>, reading this.
-        The page samples your scroll position eight times a second and plots it
-        live — the same realtime machinery Semiotic points at a Wikipedia edit
-        firehose or a market’s order flow, turned around to watch the most
-        intimate stream there is. Scroll, and tell it something.
+        Every chart below is built from one stream: <em>you</em>, reading this. The page samples
+        your scroll position eight times a second and plots it live using the same realtime
+        machinery Semiotic points at a Wikipedia edit firehose or a market’s order flow, but in this
+        case turned around to watch the most intimate stream there is. Scroll, and tell it
+        something.
       </p>
 
       <ThemeProvider theme={carbonTheme}>
@@ -171,9 +170,7 @@ export default function ScrollYoureTellingExamplePage() {
                 ref={(element) => {
                   chapterRefs.current[index] = element
                 }}
-                className={`scroll-tell-step ${
-                  index === currentChapterIndex ? "is-current" : ""
-                }`}
+                className={`scroll-tell-step ${index === currentChapterIndex ? "is-current" : ""}`}
                 style={{ "--chapter-color": CHAPTER_COLORS[index] }}
                 aria-current={index === currentChapterIndex ? "true" : undefined}
               >
@@ -193,132 +190,142 @@ export default function ScrollYoureTellingExamplePage() {
           <div className="scroll-tell-panel-column">
             <div className="scroll-tell-panel">
               <div className="scroll-tell-panel-body" ref={panelHostRef}>
-              <div className="scroll-tell-panel-head">
-                <div>
-                  <span className="scroll-tell-kicker">
-                    {mode === "replay"
-                      ? replayingSeed
-                        ? "Replaying · a sample reading"
-                        : "Replaying · your reading"
-                      : "Recording · live"}
-                  </span>
-                  <h3>{mode === "replay" ? "The scroll you told" : "Your reading, as it happens"}</h3>
+                <div className="scroll-tell-panel-head">
+                  <div>
+                    <span className="scroll-tell-kicker">
+                      {mode === "replay"
+                        ? replayingSeed
+                          ? "Replaying · a sample reading"
+                          : "Replaying · your reading"
+                        : "Recording · live"}
+                    </span>
+                    <h3>
+                      {mode === "replay" ? "The scroll you told" : "Your reading, as it happens"}
+                    </h3>
+                  </div>
+                  <LiveDot mode={mode} replayComplete={replayComplete} />
                 </div>
-                <LiveDot mode={mode} replayComplete={replayComplete} />
-              </div>
 
-              <div className="scroll-tell-readouts">
-                <Readout label="Time on page" value={formatClock(summary.elapsedMs)} />
-                <Readout label="Read" value={`${summary.percentRead}%`} />
-                <Readout label="Backtracks" value={String(summary.backtracks)} />
-                <Readout label="≈ Pace" value={summary.wpm ? `${summary.wpm} wpm` : "—"} />
-              </div>
+                <div className="scroll-tell-readouts">
+                  <Readout label="Time on page" value={formatClock(summary.elapsedMs)} />
+                  <Readout label="Read" value={`${summary.percentRead}%`} />
+                  <Readout label="Backtracks" value={String(summary.backtracks)} />
+                  <Readout label="≈ Pace" value={summary.wpm ? `${summary.wpm} wpm` : "—"} />
+                </div>
 
-              <figure className="scroll-tell-chart">
-                <figcaption>
-                  <span>Reading position</span>
-                  <small>scroll depth over the last {Math.round(WINDOW_MS / 1000)}s</small>
-                </figcaption>
-                <RealtimeLineChart
-                  key={`line-${carbonTheme}-${mode}`}
-                  ref={lineRef}
-                  size={[panelWidth, 196]}
-                  margin={{ top: 14, right: 16, bottom: 26, left: 44 }}
-                  timeAccessor="t"
-                  valueAccessor="scroll"
-                  windowSize={CHART_BUFFER}
-                  timeExtent={timeExtent}
-                  valueExtent={[0, 1]}
-                  pointIdAccessor="id"
-                  stroke={CHAPTER_COLORS[currentChapterIndex]}
-                  strokeWidth={2.4}
-                  enableHover
-                  tickFormatTime={formatTickTime}
-                  tickFormatValue={(value) => `${Math.round(value * 100)}%`}
-                  tooltipContent={renderBeatTooltip}
-                  emptyContent={false}
-                  background="transparent"
-                />
-              </figure>
+                <figure className="scroll-tell-chart">
+                  <figcaption>
+                    <span>Reading position</span>
+                    <small>scroll depth over the last {Math.round(WINDOW_MS / 1000)}s</small>
+                  </figcaption>
+                  <RealtimeLineChart
+                    key={`line-${carbonTheme}-${mode}`}
+                    ref={lineRef}
+                    size={[panelWidth, 196]}
+                    margin={{ top: 14, right: 16, bottom: 26, left: 44 }}
+                    timeAccessor="t"
+                    valueAccessor="scroll"
+                    windowSize={CHART_BUFFER}
+                    timeExtent={timeExtent}
+                    valueExtent={[0, 1]}
+                    pointIdAccessor="id"
+                    stroke={CHAPTER_COLORS[currentChapterIndex]}
+                    strokeWidth={2.4}
+                    enableHover
+                    tickFormatTime={formatTickTime}
+                    tickFormatValue={(value) => `${Math.round(value * 100)}%`}
+                    tooltipContent={renderBeatTooltip}
+                    emptyContent={false}
+                    background="transparent"
+                  />
+                </figure>
 
-              <figure className="scroll-tell-chart">
-                <figcaption>
-                  <span>Reading pulse</span>
-                  <small>signed scroll velocity · each dot is one beat</small>
-                </figcaption>
-                <RealtimeSwarmChart
-                  key={`swarm-${carbonTheme}-${mode}`}
-                  ref={swarmRef}
-                  size={[panelWidth, 188]}
-                  margin={{ top: 14, right: 16, bottom: 26, left: 44 }}
-                  timeAccessor="t"
-                  valueAccessor="velocity"
-                  windowSize={CHART_BUFFER}
-                  timeExtent={timeExtent}
-                  valueExtent={velocityExtent}
-                  yScaleType="symlog"
-                  categoryAccessor="kind"
-                  colors={beatColors}
-                  pointStyle={beatPointStyle}
-                  pointIdAccessor="id"
-                  annotations={rereadCallout}
-                  enableHover
-                  tickFormatTime={formatTickTime}
-                  tickFormatValue={formatVelocity}
-                  tooltipContent={renderBeatTooltip}
-                  emptyContent={false}
-                  background="transparent"
-                />
-                <BeatLegend />
-              </figure>
+                <figure className="scroll-tell-chart">
+                  <figcaption>
+                    <span>Reading pulse</span>
+                    <small>signed scroll velocity · each dot is one beat</small>
+                  </figcaption>
+                  <RealtimeSwarmChart
+                    key={`swarm-${carbonTheme}-${mode}`}
+                    ref={swarmRef}
+                    size={[panelWidth, 188]}
+                    margin={{ top: 14, right: 16, bottom: 26, left: 44 }}
+                    timeAccessor="t"
+                    valueAccessor="velocity"
+                    windowSize={CHART_BUFFER}
+                    timeExtent={timeExtent}
+                    valueExtent={velocityExtent}
+                    yScaleType="symlog"
+                    categoryAccessor="kind"
+                    colors={beatColors}
+                    pointStyle={beatPointStyle}
+                    pointIdAccessor="id"
+                    annotations={rereadCallout}
+                    enableHover
+                    tickFormatTime={formatTickTime}
+                    tickFormatValue={formatVelocity}
+                    tooltipContent={renderBeatTooltip}
+                    emptyContent={false}
+                    background="transparent"
+                  />
+                  <BeatLegend />
+                </figure>
 
-              <figure className="scroll-tell-chart">
-                <figcaption>
-                  <span>Where your attention pooled</span>
-                  <small>seconds spent in each chapter · live</small>
-                </figcaption>
-                <BarChart
-                  data={dwellDisplay}
-                  width={panelWidth}
-                  height={176}
-                  margin={{ top: 8, right: 18, bottom: 26, left: 104 }}
-                  categoryAccessor="label"
-                  valueAccessor="seconds"
-                  orientation="horizontal"
-                  colorBy="id"
-                  colorScheme={CHAPTER_COLORS}
-                  sort={false}
-                  barPadding={14}
-                  roundedTop={3}
-                  showLegend={false}
-                  enableHover
-                  animate={{ duration: 220 }}
-                  valueFormat={(value) => `${value}s`}
-                  frameProps={{ background: "transparent" }}
-                />
-              </figure>
+                <figure className="scroll-tell-chart">
+                  <figcaption>
+                    <span>Where your attention pooled</span>
+                    <small>seconds spent in each chapter · live</small>
+                  </figcaption>
+                  <BarChart
+                    data={dwellDisplay}
+                    width={panelWidth}
+                    height={176}
+                    margin={{ top: 8, right: 18, bottom: 26, left: 104 }}
+                    categoryAccessor="label"
+                    valueAccessor="seconds"
+                    orientation="horizontal"
+                    colorBy="id"
+                    colorScheme={CHAPTER_COLORS}
+                    sort={false}
+                    barPadding={14}
+                    roundedTop={3}
+                    showLegend={false}
+                    enableHover
+                    animate={{ duration: 220 }}
+                    valueFormat={(value) => `${value}s`}
+                    frameProps={{ background: "transparent" }}
+                  />
+                </figure>
 
-              <div className="scroll-tell-panel-actions">
-                {mode === "live" ? (
-                  <button type="button" onClick={startReplay} className="scroll-tell-primary-button">
-                    Replay {canReplaySelf ? "your scroll" : "a sample scroll"}
-                    <span aria-hidden="true">↻</span>
-                  </button>
-                ) : (
-                  <button type="button" onClick={backToLive} className="scroll-tell-primary-button">
-                    Back to live recording
-                  </button>
-                )}
-                <p className="scroll-tell-action-note">
-                  {mode === "replay"
-                    ? replayComplete
-                      ? "That was the whole stream — windowed, signed, replayed."
-                      : "Re-streaming the recorded beats at speed."
-                    : canReplaySelf
-                      ? "Watch your own reading play back as a data story."
-                      : "Read a little more, then replay your own session."}
-                </p>
-              </div>
+                <div className="scroll-tell-panel-actions">
+                  {mode === "live" ? (
+                    <button
+                      type="button"
+                      onClick={startReplay}
+                      className="scroll-tell-primary-button"
+                    >
+                      Replay {canReplaySelf ? "your scroll" : "a sample scroll"}
+                      <span aria-hidden="true">↻</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={backToLive}
+                      className="scroll-tell-primary-button"
+                    >
+                      Back to live recording
+                    </button>
+                  )}
+                  <p className="scroll-tell-action-note">
+                    {mode === "replay"
+                      ? replayComplete
+                        ? "That was the whole stream — windowed, signed, replayed."
+                        : "Re-streaming the recorded beats at speed."
+                      : canReplaySelf
+                        ? "Watch your own reading play back as a data story."
+                        : "Read a little more, then replay your own session."}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -330,23 +337,21 @@ export default function ScrollYoureTellingExamplePage() {
           <span className="scroll-tell-kicker">Why this is the realtime case</span>
           <h2>A snapshot can’t hold the shape of a stream</h2>
           <p>
-            “You read {summary.percentRead || 80}% of this” is a number. It hides
-            the reread, the stall, the skim — the part that only exists if you
-            watch the signal unfold. Realtime visualization is not a chart that
-            redraws quickly. It is a commitment to windows, signs, and order:
-            keeping only what fits in view, distinguishing forward from backward,
-            and tolerating beats that arrive late.
+            “You read {summary.percentRead || 80}% of this” is a number. It hides the reread, the
+            stall, or the skim. That only exists if you watch the signal unfold. Realtime
+            visualization is not a chart that redraws quickly. It is a windows, signs, and order:
+            keeping only what fits in view, distinguishing forward from backward, and tolerating
+            beats that arrive late.
           </p>
         </div>
         <div className="scroll-tell-thesis-block">
           <span className="scroll-tell-kicker">Reader as data source</span>
           <h2>Scrollytelling reacts to you. This reads you.</h2>
           <p>
-            “Snow Fall” bound the story to your scrollbar, but the frames were
-            authored in advance — you were a trigger, not a subject. Point the
-            same streaming primitives at the reader and the relationship
-            inverts. There is nothing pre-baked here; the only content of these
-            charts is your behavior. The medium, finally, is the message.
+            “Snow Fall” bound the story to your scrollbar, but the frames were authored in advance
+            and you were simply a trigger, not a contributor. Point the same streaming primitives at
+            the reader and the relationship inverts. There is nothing pre-baked here; the only
+            content of these charts is your behavior.
           </p>
         </div>
       </section>
@@ -356,20 +361,19 @@ export default function ScrollYoureTellingExamplePage() {
           <span className="scroll-tell-kicker">Core implementation</span>
           <h2>One reader, three coordinated views</h2>
           <p>
-            A single rolling buffer of telemetry feeds a realtime line (position),
-            a realtime swarm (signed velocity), and an ordinal bar fed through{" "}
-            <code>replace()</code> (dwell per chapter). Semiotic owns the time
-            windows, canvas rendering, axes, hit-testing, and per-beat styling.
+            A single rolling buffer of telemetry feeds a realtime line (position), a realtime swarm
+            (signed velocity), and an ordinal bar fed through <code>replace()</code> (dwell per
+            chapter). Semiotic owns the time windows, canvas rendering, axes, hit-testing, and
+            per-beat styling.
           </p>
         </div>
         <CodeBlock code={implementationCode} language="jsx" />
       </section>
 
       <p className="scroll-tell-source-note">
-        No data leaves your browser. The “stream” is your own scroll, pointer,
-        and dwell, sampled locally and discarded when you go. The seeded sample
-        reading exists only so the replay has something to show before you’ve
-        scrolled.
+        No data leaves your browser. The “stream” is your own scroll, pointer, and dwell, sampled
+        locally and discarded when you go. The seeded sample reading exists only so the replay has
+        something to show before you’ve scrolled.
       </p>
     </ExamplePageLayout>
   )
@@ -384,6 +388,7 @@ function useReadingTelemetry(chapterRefs, running) {
   const pointerCountRef = useRef(0)
   const startRef = useRef(null)
   const lastScrollRef = useRef(0)
+  const lastSelectionRef = useRef("")
   const idRef = useRef(0)
 
   useEffect(() => {
@@ -420,6 +425,11 @@ function useReadingTelemetry(chapterRefs, running) {
       pointerCountRef.current = 0
       lastScrollRef.current = scroll
 
+      // Actively highlighting = a non-empty selection that grew since last tick.
+      const selectionText = currentSelectionText()
+      const highlighting = selectionText.length > 0 && selectionText !== lastSelectionRef.current
+      lastSelectionRef.current = selectionText
+
       const chapter = chapterInView(chapterRefs.current, scroll)
       const sample = makeSample({
         id: `beat-${idRef.current}`,
@@ -428,6 +438,7 @@ function useReadingTelemetry(chapterRefs, running) {
         velocity,
         pointer,
         chapter,
+        highlighting,
       })
       idRef.current += 1
       setBeats((current) => {
@@ -442,6 +453,17 @@ function useReadingTelemetry(chapterRefs, running) {
   }, [running, chapterRefs])
 
   return beats
+}
+
+// The reader's current text selection as a trimmed string ("" when nothing is
+// selected). Comparing it tick-to-tick tells us whether they are *actively*
+// highlighting — a selection that stops changing has been released, so later
+// beats stop reading as highlight even though the selection lingers on screen.
+function currentSelectionText() {
+  if (typeof window === "undefined" || !window.getSelection) return ""
+  const selection = window.getSelection()
+  if (!selection || selection.isCollapsed) return ""
+  return selection.toString().trim()
 }
 
 // Which chapter straddles the vertical center of the viewport right now.
@@ -495,12 +517,14 @@ function buildRereadCallout(windowed) {
 
 function beatPointStyle(beat) {
   const meta = BEAT_KINDS[beat.kind] || BEAT_KINDS.idle
-  const radius = beat.kind === "idle" ? 2.6 : 3.2 + Math.min(2.4, beat.pointer * 0.35)
+  let radius = 3.2 + Math.min(2.4, beat.pointer * 0.35)
+  if (beat.kind === "idle") radius = 2.6
+  else if (beat.kind === "highlight") radius = 4.6 // a highlight beat should pop
   return {
     fill: meta.fill,
     stroke: meta.stroke,
-    strokeWidth: beat.kind === "backward" ? 2 : 1.1,
-    opacity: beat.kind === "idle" ? 0.5 : 0.9,
+    strokeWidth: beat.kind === "backward" || beat.kind === "highlight" ? 2 : 1.1,
+    opacity: beat.kind === "idle" ? 0.5 : beat.kind === "highlight" ? 1 : 0.9,
     r: radius,
   }
 }

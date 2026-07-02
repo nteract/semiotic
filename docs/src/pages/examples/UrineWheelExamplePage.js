@@ -23,12 +23,7 @@ import CodeBlock from "../../components/CodeBlock"
 import { StatStrip } from "../../components/StatStrip"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
-import {
-  URINE_NODES,
-  URINE_EDGES,
-  URINE_DIAGNOSES,
-  URINE_COLOR_COUNT,
-} from "./data/urineWheel"
+import { URINE_NODES, URINE_EDGES, URINE_DIAGNOSES, URINE_COLOR_COUNT } from "./data/urineWheel"
 
 // Art-directed manuscript palette. Like the Art Movement example, this sits at
 // the "override the theme" end of Semiotic's theming spectrum: the frame is
@@ -128,9 +123,7 @@ export default function UrineWheelExamplePage() {
   const annotations = useMemo(() => (showNotes ? PHYSICIANS_NOTES : []), [showNotes])
 
   return (
-    <ExamplePageLayout
-      title="The Wheel of Urines"
-    >
+    <ExamplePageLayout title="The Wheel of Urines">
       <p style={styles.lede}>
         Before laboratories, a physician read disease from the color of urine. The medieval{" "}
         <em>rota urinarum</em> ringed twenty named colors around a chart and tied each to a stage of{" "}
@@ -220,7 +213,7 @@ export default function UrineWheelExamplePage() {
         <p>
           The colors are not arranged arbitrarily. They form a single spectrum that wraps the ring:
           the two pathological extremes — <em>Albus</em> (white, the raw, uncooked humor) and{" "}
-          <em>Niger</em> (black, the humor burnt to death) — meet at the bottom seam, while{" "}
+          <em>Niger</em> (black, the humor burnt to death) — meet at the bottom, while{" "}
           <em>Rufus</em> and the golds, the urines of perfect coction, crown the top. Read clockwise
           down the right side and the urine grows ever more &ldquo;cooked&rdquo;: gold, red,
           wine-dark, green, lead, black. Continue up the left side and it runs back from cold white

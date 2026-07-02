@@ -11,19 +11,22 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "semiotic-core",
     label: "Visible Semiotic",
-    detail: "The public React-facing system where data inputs, four frame models, shared capabilities, and value components meet.",
+    detail:
+      "The public React-facing system where data inputs, four frame models, shared capabilities, and value components meet.",
     layer: "trunk",
   },
   {
     id: "semiotic-internals",
     label: "Semiotic Internals",
-    detail: "The private runtime that coordinates pipelines, scenes, rendering, interaction, state, recipes, accessibility, streaming, and output.",
+    detail:
+      "The private runtime that coordinates pipelines, scenes, rendering, interaction, state, recipes, accessibility, streaming, and output.",
     layer: "internal-core",
   },
   {
     id: "input-static",
     label: "React data props",
-    detail: "Arrays and objects passed declaratively. Updated arrays can still represent live application data.",
+    detail:
+      "Arrays and objects passed declaratively. Updated arrays can still represent live application data.",
     layer: "input",
     parent: "semiotic-core",
     order: 0,
@@ -193,7 +196,8 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "hoc-ordinal-bars",
     label: "Categorical forms",
-    detail: "StackedBarChart, GroupedBarChart, LikertChart, DotPlot, FunnelChart, and SwimlaneChart.",
+    detail:
+      "StackedBarChart, GroupedBarChart, LikertChart, DotPlot, FunnelChart, and SwimlaneChart.",
     layer: "leaf-group",
     cluster: "ordinal",
     parent: "frame-ordinal",
@@ -322,7 +326,8 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "feature-accessors",
     label: "Accessors + extents",
-    detail: "Field names or functions resolve data into domains, series, categories, nodes, and edges.",
+    detail:
+      "Field names or functions resolve data into domains, series, categories, nodes, and edges.",
     layer: "fruit",
     parent: "feature-bough",
     order: 0,
@@ -370,7 +375,8 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "feature-custom-layout",
     label: "Custom layouts",
-    detail: "User-authored layout functions emit scene nodes, edges, labels, overlays, and HTML marks.",
+    detail:
+      "User-authored layout functions emit scene nodes, edges, labels, overlays, and HTML marks.",
     layer: "fruit",
     parent: "feature-bough",
     order: 6,
@@ -539,7 +545,8 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "root-accessibility",
     label: "Accessibility model",
-    detail: "AccessibleDataTable, navigation trees, descriptions, summaries, and reduced-motion behavior.",
+    detail:
+      "AccessibleDataTable, navigation trees, descriptions, summaries, and reduced-motion behavior.",
     layer: "root",
     order: 10,
     supports: ["feature-accessibility"],
@@ -554,50 +561,32 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   },
 ]
 
-const structuralEdges = SEMIOTIC_ARCHITECTURE_NODES
-  .filter((node) => node.parent)
-  .map((node) => ({
-    id: `${node.parent}--${node.id}`,
-    source: node.parent,
-    target: node.id,
-    kind: "structural",
-  }))
+const structuralEdges = SEMIOTIC_ARCHITECTURE_NODES.filter((node) => node.parent).map((node) => ({
+  id: `${node.parent}--${node.id}`,
+  source: node.parent,
+  target: node.id,
+  kind: "structural",
+}))
 
-const rhizomeEdges = SEMIOTIC_ARCHITECTURE_NODES
-  .filter((node) => node.supports)
-  .flatMap((node) =>
-    node.supports.map((target) => ({
-      id: `${node.id}~~${target}`,
-      source: node.id,
-      target,
-      kind: "rhizome",
-    }))
-  )
+const rhizomeEdges = SEMIOTIC_ARCHITECTURE_NODES.filter((node) => node.supports).flatMap((node) =>
+  node.supports.map((target) => ({
+    id: `${node.id}~~${target}`,
+    source: node.id,
+    target,
+    kind: "rhizome",
+  })),
+)
 
 export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 
+// Ordered to match the examples section's narrative order (see examplesManifest
+// EXAMPLES). The architecture example maps itself onto the tree too — a small,
+// deliberate recursion: tracing it highlights the very NetworkCustomChart,
+// custom layout, and shared-state machinery you are looking at.
 export const SEMIOTIC_EXAMPLE_PROFILES = [
   {
-    id: "climate-anomaly",
-    label: "Point Climate Anomaly",
-    path: "/examples/climate-anomaly",
-    note: "A themed DifferenceChart with exact extents, axes, multi-tooltip behavior, responsive sizing, and a custom uncertainty/forecast overlay.",
-    uses: [
-      "input-static",
-      "hoc-difference",
-      "feature-accessors",
-      "feature-axes",
-      "feature-tooltips",
-      "feature-custom-overlays",
-      "feature-responsive",
-      "feature-theme",
-      "feature-container",
-      "feature-canvas-svg",
-    ],
-  },
-  {
     id: "climate-radial-weather",
-    label: "Point Climate Radial",
+    label: "Brushable Weather Rings",
     path: "/examples/climate-radial-weather",
     note: "A radial OrdinalCustomChart, layered TemporalHistograms, and a first-class CircularBrush over shared static snapshots.",
     uses: [
@@ -652,7 +641,7 @@ export const SEMIOTIC_EXAMPLE_PROFILES = [
   },
   {
     id: "paris-isometric-landmarks",
-    label: "Cities, Tile by Tile",
+    label: "Paris, Isometric City of Lights",
     path: "/examples/paris-isometric-landmarks",
     note: "A GeoCustomChart that turns projected area nodes into an isometric tile layout with selection, tooltips, and accessible canvas hit testing.",
     uses: [
@@ -752,9 +741,9 @@ export const SEMIOTIC_EXAMPLE_PROFILES = [
   },
   {
     id: "port-congestion-replay",
-    label: "Where the Boxes Wait",
+    label: "The Long Way Around",
     path: "/examples/port-congestion-replay",
-    note: "A deterministic logistics replay combines geographic movement, temporal process flow, a push-driven backlog waterfall, and multivariate route comparison.",
+    note: "Real IMF PortWatch chokepoint transits replay three maritime seasons across geographic movement, temporal process flow, a push-driven deviation waterfall, and a cross-scenario scatterplot matrix.",
     uses: [
       "input-static",
       "input-push",
@@ -821,6 +810,109 @@ export const SEMIOTIC_EXAMPLE_PROFILES = [
       "feature-canvas-svg",
     ],
   },
+  {
+    id: "semiotic-architecture",
+    label: "The Living System of Semiotic",
+    shortLabel: "This Diagram (↻)",
+    path: "/examples/semiotic-architecture",
+    note: "The map you are reading is itself a NetworkCustomChart: a custom layout draws the Sankey overlay onto transparent hit targets, hover and shared-selection restyle it in place, and tooltips, descriptions, and a navigable table make it accessible. Tracing it highlights its own machinery.",
+    uses: [
+      "input-static",
+      "hoc-network-custom",
+      "feature-accessors",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-shared-state",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "climate-anomaly",
+    label: "Point Climate Anomaly",
+    path: "/examples/climate-anomaly",
+    note: "A themed DifferenceChart with exact extents, axes, multi-tooltip behavior, responsive sizing, and a custom uncertainty/forecast overlay.",
+    uses: [
+      "input-static",
+      "hoc-difference",
+      "feature-accessors",
+      "feature-axes",
+      "feature-tooltips",
+      "feature-custom-overlays",
+      "feature-responsive",
+      "feature-theme",
+      "feature-container",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "gestalt-principles",
+    label: "The Gestalt of Data Visualization",
+    shortLabel: "Gestalt Principles",
+    path: "/examples/gestalt-principles",
+    note: "Five perception chapters span the frame models — DifferenceChart, LineChart and AreaChart, Scatterplot, an XYCustomChart, and a seeded-force NetworkCustomChart — each art-directed with fixed extents, annotations, and click-driven interaction.",
+    uses: [
+      "input-static",
+      "hoc-difference",
+      "hoc-xy-lines",
+      "hoc-xy-points",
+      "hoc-xy-custom",
+      "hoc-network-custom",
+      "feature-accessors",
+      "feature-axes",
+      "feature-annotations",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "network-visualization",
+    label: "Drawing Networks",
+    shortLabel: "Drawing Networks",
+    path: "/examples/network-visualization",
+    note: "A network-visualization primer across the whole family — ForceDirectedGraph, TreeDiagram, ChordDiagram and SankeyDiagram, plus NetworkCustomChart arc/matrix/circular recipes — closing on an interactive analysis toy driven by observation and accessible hit targets.",
+    uses: [
+      "input-static",
+      "hoc-force",
+      "hoc-tree",
+      "hoc-network-flow",
+      "hoc-network-custom",
+      "feature-accessors",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "oregon-trail",
+    label: "Map of the Oregon Trail",
+    shortLabel: "Oregon Trail",
+    path: "/examples/oregon-trail",
+    note: "A GeoCustomChart draws the 1985 end-game map over real Pacific Northwest geography with custom sprites and accessible hit targets, paired with a SankeyDiagram, tooltips, and a wagon you drive through click and observation.",
+    uses: [
+      "input-static",
+      "hoc-geo-custom",
+      "hoc-network-flow",
+      "feature-accessors",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-canvas-svg",
+    ],
+  },
 ]
 
 const nodeById = new Map(SEMIOTIC_ARCHITECTURE_NODES.map((node) => [node.id, node]))
@@ -848,9 +940,7 @@ export function architectureHighlight(profile) {
     }
   }
 
-  if (
-    [...highlighted].some((id) => nodeById.get(id)?.layer === "root")
-  ) {
+  if ([...highlighted].some((id) => nodeById.get(id)?.layer === "root")) {
     highlighted.add("semiotic-internals")
   }
 

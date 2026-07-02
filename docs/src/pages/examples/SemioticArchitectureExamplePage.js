@@ -14,6 +14,9 @@ import "./SemioticArchitectureExamplePage.css"
 
 const CHART_HEIGHT = 1050
 const MIN_CHART_WIDTH = 1100
+// The minimap reuses positionArchitecture in a fixed coordinate space and lets
+// the SVG viewBox scale it down into the 250px side panel.
+const MINIMAP_LAYOUT_WIDTH = 1100
 const SPINE_CONNECTOR_IDS = [
   "feature-bough",
   "input-static",
@@ -39,12 +42,9 @@ export default function SemioticArchitectureExamplePage() {
 
   const selectedProfile = useMemo(
     () => SEMIOTIC_EXAMPLE_PROFILES.find((profile) => profile.id === selectedId) ?? null,
-    [selectedId]
+    [selectedId],
   )
-  const highlighted = useMemo(
-    () => architectureHighlight(selectedProfile),
-    [selectedProfile]
-  )
+  const highlighted = useMemo(() => architectureHighlight(selectedProfile), [selectedProfile])
 
   // The example buttons publish the expanded highlight set into the shared
   // selection store (write-only — this component doesn't re-render on selection
@@ -68,49 +68,59 @@ export default function SemioticArchitectureExamplePage() {
   const detailNode = hoveredNode?.id ? hoveredNode : null
 
   return (
-    <ExamplePageLayout
-      title="The Living System of Semiotic"
-    >
+    <ExamplePageLayout title="The Living System of Semiotic">
       <p className="architecture-lede">
-        Semiotic presents a crown of charts and controls, but those visible forms
-        grow from four frame models, two ways of receiving data, and a
-        rhizomatic implementation beneath the surface. Choose an example to
-        trace the exact branch, settings, trunk, and roots it uses.
+        Semiotic presents a crown of charts and controls, but those visible forms grow from four
+        frame models, two ways of receiving data, and a rhizomatic implementation beneath the
+        surface. Choose an example to trace the exact branch, settings, trunk, and roots it uses.
       </p>
 
       <section className="architecture-controls" aria-labelledby="architecture-example-heading">
-        <div className="architecture-controls-heading">
-          <div>
-            <span className="architecture-kicker">Trace a composition</span>
-            <h2 id="architecture-example-heading">Which parts does each example use?</h2>
-          </div>
-          <button
-            type="button"
-            className={`architecture-system-button ${selectedId == null ? "is-active" : ""}`}
-            aria-pressed={selectedId == null}
-            onClick={() => setSelectedId(null)}
-          >
-            Whole system
-          </button>
-        </div>
-        <div className="architecture-example-buttons" role="group" aria-label="Highlight an example">
-          {SEMIOTIC_EXAMPLE_PROFILES.map((profile) => (
+        <div className="architecture-controls-main">
+          <div className="architecture-controls-heading">
+            <div>
+              <span className="architecture-kicker">Trace a composition</span>
+              <h2 id="architecture-example-heading">Which parts does each example use?</h2>
+            </div>
             <button
-              key={profile.id}
               type="button"
-              className={profile.id === selectedId ? "is-active" : ""}
-              aria-pressed={profile.id === selectedId}
-              onClick={() =>
-                setSelectedId((current) => (current === profile.id ? null : profile.id))
-              }
+              className={`architecture-system-button ${selectedId == null ? "is-active" : ""}`}
+              aria-pressed={selectedId == null}
+              onClick={() => setSelectedId(null)}
             >
-              {profile.shortLabel || profile.label}
+              Whole system
             </button>
-          ))}
+          </div>
+          <div
+            className="architecture-example-buttons"
+            role="group"
+            aria-label="Highlight an example"
+          >
+            {SEMIOTIC_EXAMPLE_PROFILES.map((profile) => (
+              <button
+                key={profile.id}
+                type="button"
+                className={profile.id === selectedId ? "is-active" : ""}
+                aria-pressed={profile.id === selectedId}
+                onClick={() =>
+                  setSelectedId((current) => (current === profile.id ? null : profile.id))
+                }
+              >
+                {profile.shortLabel || profile.label}
+              </button>
+            ))}
+          </div>
         </div>
+        <ArchitectureMiniMap
+          highlighted={highlighted}
+          hasSelection={selectedProfile != null}
+          label={
+            selectedProfile ? selectedProfile.shortLabel || selectedProfile.label : "Whole system"
+          }
+        />
       </section>
 
-      <section className="architecture-figure" aria-label="Semiotic architecture Sankey">
+      <section className="architecture-figure" aria-label="Semiotic architecture Diagram">
         <div className="architecture-chart-scroller" ref={hostRef}>
           <div style={{ width: chartWidth }}>
             <NetworkCustomChart
@@ -124,7 +134,7 @@ export default function SemioticArchitectureExamplePage() {
               margin={0}
               enableHover
               onObservation={handleObservation}
-              description="A vertical systems Sankey of Semiotic. Visible Semiotic fans upward through four frame models into chart HOCs, capability stars annotate the public surface, six load-bearing connections join it to Semiotic Internals, and private subsystems fan downward."
+              description="A diagram of Semiotic's functionality organized by visibility and optional feature usage. Visible Semiotic fans upward through four frame models into chart HOCs, capability stars annotate the public surface, six internal systems join it to Semiotic Internals, and private subsystems fan downward."
               summary={
                 selectedProfile
                   ? `${selectedProfile.label} uses ${selectedProfile.uses.length} directly configured architecture elements; its supporting branch and implementation roots are highlighted.`
@@ -149,25 +159,187 @@ export default function SemioticArchitectureExamplePage() {
       <section className="architecture-explanation">
         <div>
           <span className="architecture-kicker">How to read it</span>
-          <h2>One system, two surfaces, six load-bearing connections</h2>
+          <h2>A diagram of diagrammatic functionality</h2>
         </div>
         <div className="architecture-explanation-grid">
           <p>
-            The upper Sankey fans from Visible Semiotic into XY, Ordinal,
-            Network, and Geo frames, then into exact HOCs and grouped chart
-            families. Shared settings and composition tools sit on the two
-            gold-star semicircles that frame this public surface.
+            The upper network diagram fans from Visible Semiotic into XY, Ordinal, Network, and Geo
+            frames, then into exact HOCs and grouped chart families. Shared settings and composition
+            tools sit on the two gold-star semicircles that frame this public surface.
           </p>
           <p>
-            Six central ribbons carry shared capabilities, data props, scene
-            graphs, rendering engines, data ingestion, and pipeline stores
-            between Visible Semiotic and Semiotic Internals. The lower Sankey
-            then fans into interaction, state, theming, streaming, annotation,
-            recipes, accessibility, and output machinery.
+            Six central ribbons carry shared capabilities, data props, scene graphs, rendering
+            engines, data ingestion, and pipeline stores between Visible Semiotic and Semiotic
+            Internals. The lower network then fans into interaction, state, theming, streaming,
+            annotation, recipes, accessibility, and output machinery.
           </p>
         </div>
       </section>
     </ExamplePageLayout>
+  )
+}
+
+// A simplified overview that keeps the full diagram's composition — the canopy
+// fan, the load-bearing spine, the internal fan, and the two capability rings —
+// but swaps filled ribbons for plain lines and stars/rects for circles, so the
+// whole shape fits in a 250px panel and the difference between examples is
+// legible at a glance as you click through.
+function minimapRadius(node) {
+  if (node.id === "semiotic-core" || node.id === "semiotic-internals") return 22
+  if (node.layer === "frame") return 15
+  if (node.layer === "root") return 13
+  if (node.layer === "input" || node.layer === "branch") return 12
+  return 8
+}
+
+// Build the minimap scene from the same positions the full chart uses, so the
+// two stay in sync. Mirrors the connection topology drawn by ArchitectureOverlay
+// (canopy / spine / internal fan / side branches) rather than the raw data edges
+// — the rhizome `supports` relationships are not drawn as lines in the diagram.
+function buildMinimapScene() {
+  const positioned = positionArchitecture(
+    SEMIOTIC_ARCHITECTURE_NODES.map((node) => node.data ?? node),
+    { width: MINIMAP_LAYOUT_WIDTH },
+  ).map((node) => ({ ...node, r: minimapRadius(node) }))
+  const byId = new Map(positioned.map((node) => [node.id, node]))
+  const core = byId.get("semiotic-core")
+  const internals = byId.get("semiotic-internals")
+
+  const line = (id, kind, source, target, endpoints) => ({
+    id,
+    kind,
+    endpoints,
+    x1: source.x,
+    y1: source.y,
+    x2: target.x,
+    y2: target.y,
+  })
+
+  const lines = []
+  // Canopy fan: core → frames → leaves, plus the value side-branch.
+  for (const frame of positioned.filter((n) => n.layer === "frame")) {
+    lines.push(line(`canopy-${frame.id}`, "canopy", core, frame, [core.id, frame.id]))
+  }
+  for (const leaf of positioned.filter(
+    (n) => (n.layer === "leaf" || n.layer === "leaf-group") && n.cluster !== "value",
+  )) {
+    const frame = byId.get(leaf.parent)
+    if (frame)
+      lines.push(line(`${frame.id}-${leaf.id}`, "canopy", frame, leaf, [frame.id, leaf.id]))
+  }
+  const value = byId.get("value-components")
+  const bigNumber = byId.get("hoc-big-number")
+  if (value) lines.push(line("core-value", "canopy", core, value, [core.id, value.id]))
+  if (value && bigNumber) {
+    lines.push(line("value-big", "canopy", value, bigNumber, [value.id, bigNumber.id]))
+  }
+
+  // Load-bearing spine: parallel lines from Visible Semiotic to Internals, one
+  // per connector, matching LoadBearingSpine's geometry.
+  const connectorWidth = 27
+  const gap = 7
+  const totalWidth =
+    SPINE_CONNECTOR_IDS.length * connectorWidth + (SPINE_CONNECTOR_IDS.length - 1) * gap
+  const spineStartX = core.x - totalWidth / 2 + connectorWidth / 2
+  SPINE_CONNECTOR_IDS.forEach((id, index) => {
+    const x = spineStartX + index * (connectorWidth + gap)
+    lines.push({
+      id: `spine-${id}`,
+      kind: "spine",
+      endpoints: [id],
+      x1: x,
+      y1: core.y + core.height / 2,
+      x2: x,
+      y2: internals.y - internals.height / 2,
+    })
+  })
+
+  // Internal fan: Internals → each implementation root, plus the push branch.
+  for (const root of positioned.filter((n) => n.layer === "root" && !spineConnectorSet.has(n.id))) {
+    lines.push(line(`fan-${root.id}`, "internal", internals, root, [internals.id, root.id]))
+  }
+  const push = byId.get("input-push")
+  if (push) lines.push(line("side-push", "internal", internals, push, [internals.id, push.id]))
+
+  // Node marks mirror the diagram: visible nodes + capabilities (as circles),
+  // never the spine connectors — those are the spine lines above.
+  const dots = positioned.filter((n) => !spineConnectorSet.has(n.id))
+
+  // The two capability rings the fruit sit on, as thin arcs (from CapabilityStars).
+  const centerX = MINIMAP_LAYOUT_WIDTH / 2
+  const arcs = [
+    `M38,414 A${centerX - 38},365 0 0 1 ${MINIMAP_LAYOUT_WIDTH - 38},414`,
+    `M118,414 A${centerX - 118},286 0 0 1 ${MINIMAP_LAYOUT_WIDTH - 118},414`,
+  ]
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const node of dots) {
+    minX = Math.min(minX, node.x - node.r)
+    minY = Math.min(minY, node.y - node.r)
+    maxX = Math.max(maxX, node.x + node.r)
+    maxY = Math.max(maxY, node.y + node.r)
+  }
+  const pad = 16
+  const viewBox = `${minX - pad} ${minY - pad} ${maxX - minX + pad * 2} ${maxY - minY + pad * 2}`
+
+  return { dots, lines, arcs, viewBox }
+}
+
+function ArchitectureMiniMap({ highlighted, hasSelection, label }) {
+  const { dots, lines, arcs, viewBox } = useMemo(buildMinimapScene, [])
+  const isActive = (id) => !hasSelection || highlighted.has(id)
+
+  return (
+    <aside className="architecture-minimap" aria-hidden="true">
+      <span className="architecture-kicker">Full map</span>
+      <p className="architecture-minimap-caption">{label}</p>
+      <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet">
+        <g className={`architecture-minimap-lines ${hasSelection ? "has-selection" : ""}`}>
+          {arcs.map((d, index) => (
+            <path key={`arc-${index}`} d={d} className="architecture-minimap-arc" />
+          ))}
+          {lines.map((edge) => {
+            const active = edge.endpoints.every(isActive)
+            return (
+              <line
+                key={edge.id}
+                x1={edge.x1}
+                y1={edge.y1}
+                x2={edge.x2}
+                y2={edge.y2}
+                className={[
+                  "architecture-minimap-edge",
+                  `is-${edge.kind}`,
+                  hasSelection ? (active ? "is-active" : "is-dimmed") : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              />
+            )
+          })}
+        </g>
+        <g className="architecture-minimap-dots">
+          {dots.map((node) => (
+            <circle
+              key={node.id}
+              cx={node.x}
+              cy={node.y}
+              r={node.r}
+              className={[
+                "architecture-minimap-dot",
+                `is-${node.layer}`,
+                hasSelection ? (isActive(node.id) ? "is-active" : "is-dimmed") : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            />
+          ))}
+        </g>
+      </svg>
+    </aside>
   )
 }
 
@@ -204,9 +376,8 @@ function ArchitectureReadout({ node, profile, highlightedCount }) {
       <span className="architecture-readout-kind is-system">System view</span>
       <strong>Hover any element to inspect it.</strong>
       <p>
-        Ribbons widen toward the shared frame and runtime systems. Stars mark
-        cross-frame capabilities. Select an example above to dim everything
-        outside its implementation path.
+        Ribbons widen toward the shared frame and runtime systems. Stars mark cross-frame
+        capabilities. Select an example above to dim everything outside its implementation path.
       </p>
     </aside>
   )
@@ -226,7 +397,7 @@ function semioticArchitectureLayout(ctx) {
       datum: node,
       id: node.id,
       label: `${node.label}. ${node.detail}`,
-    })
+    }),
   )
 
   return {
@@ -255,20 +426,18 @@ function ArchitectureOverlay({ nodes, nodeById, width }) {
   const visible = nodeById.get("semiotic-core")
   const internals = nodeById.get("semiotic-internals")
   const frames = nodes.filter((node) => node.layer === "frame")
-  const leaves = nodes.filter(
-    (node) => node.layer === "leaf" || node.layer === "leaf-group"
-  )
+  const leaves = nodes.filter((node) => node.layer === "leaf" || node.layer === "leaf-group")
   const capabilities = nodes.filter((node) => node.layer === "fruit")
   const internalRoots = nodes.filter(
-    (node) => node.layer === "root" && !spineConnectorSet.has(node.id)
+    (node) => node.layer === "root" && !spineConnectorSet.has(node.id),
   )
   const visibleNodes = nodes.filter(
-    (node) => node.layer !== "fruit" && !spineConnectorSet.has(node.id)
+    (node) => node.layer !== "fruit" && !spineConnectorSet.has(node.id),
   )
 
   return (
     <g
-      className={`architecture-overlay architecture-sankey ${hasSelection ? "has-selection" : "is-overview"}`}
+      className={`architecture-overlay architecture-diagram ${hasSelection ? "has-selection" : "is-overview"}`}
       pointerEvents="none"
     >
       <defs>
@@ -312,16 +481,8 @@ function ArchitectureOverlay({ nodes, nodeById, width }) {
         nodeById={nodeById}
         isActive={isActive}
       />
-      <InternalSideBranch
-        internals={internals}
-        nodeById={nodeById}
-        isActive={isActive}
-      />
-      <InternalFan
-        internals={internals}
-        roots={internalRoots}
-        isActive={isActive}
-      />
+      <InternalSideBranch internals={internals} nodeById={nodeById} isActive={isActive} />
+      <InternalFan internals={internals} roots={internalRoots} isActive={isActive} />
 
       {visibleNodes.map((node) => (
         <ArchitectureNode
@@ -340,7 +501,7 @@ function SankeyCanopy({ visible, frames, leaves, nodeById, isActive }) {
   const bigNumber = nodeById.get("hoc-big-number")
 
   return (
-    <g className="architecture-sankey-canopy">
+    <g className="architecture-diagram-canopy">
       {frames.map((frame) => (
         <SankeyRibbon
           key={`visible-${frame.id}`}
@@ -410,8 +571,7 @@ function LoadBearingSpine({ visible, internals, nodeById, isActive }) {
   const connectorWidth = 27
   const gap = 7
   const totalWidth =
-    SPINE_CONNECTOR_IDS.length * connectorWidth +
-    (SPINE_CONNECTOR_IDS.length - 1) * gap
+    SPINE_CONNECTOR_IDS.length * connectorWidth + (SPINE_CONNECTOR_IDS.length - 1) * gap
   const startX = visible.x - totalWidth / 2 + connectorWidth / 2
   const midpointY = (visible.y + internals.y) / 2
 
@@ -500,10 +660,8 @@ function CapabilityStars({ capabilities, width, isActive, selectionActive }) {
       <path d={`M118,414 A${centerX - 118},286 0 0 1 ${width - 118},414`} />
       {capabilities.map((node) => {
         const active = isActive(node.id)
-        const anchor =
-          node.x < centerX - 40 ? "start" : node.x > centerX + 40 ? "end" : "middle"
-        const labelX =
-          anchor === "start" ? node.x + 13 : anchor === "end" ? node.x - 13 : node.x
+        const anchor = node.x < centerX - 40 ? "start" : node.x > centerX + 40 ? "end" : "middle"
+        const labelX = anchor === "start" ? node.x + 13 : anchor === "end" ? node.x - 13 : node.x
         const labelY = anchor === "middle" ? node.y - 15 : node.y + 3
         return (
           <g
@@ -515,7 +673,9 @@ function CapabilityStars({ capabilities, width, isActive, selectionActive }) {
             ].join(" ")}
           >
             <path d={starPath(node.x, node.y, 10, 4.5)} />
-            <text x={labelX} y={labelY} textAnchor={anchor}>{node.label}</text>
+            <text x={labelX} y={labelY} textAnchor={anchor}>
+              {node.label}
+            </text>
           </g>
         )
       })}
@@ -541,9 +701,7 @@ function ArchitectureNode({ node, active, selectionActive }) {
         width={node.width}
         height={node.height}
         rx={
-          node.layer === "leaf" ||
-          node.layer === "leaf-group" ||
-          node.layer === "root"
+          node.layer === "leaf" || node.layer === "leaf-group" || node.layer === "root"
             ? node.height / 2
             : 7
         }
@@ -560,16 +718,14 @@ function ArchitectureNode({ node, active, selectionActive }) {
 
 function positionArchitecture(rawNodes, plot) {
   const internalRoots = rawNodes.filter(
-    (node) => node.layer === "root" && !spineConnectorSet.has(node.id)
+    (node) => node.layer === "root" && !spineConnectorSet.has(node.id),
   )
   const rootIndex = new Map(internalRoots.map((node, index) => [node.id, index]))
 
   return rawNodes.map((node) => {
     const size = nodeSize(node)
     const target = nodeTarget(node, plot.width, rootIndex)
-    const internalOrder = rootIndex.has(node.id)
-      ? rootIndex.get(node.id) + 1
-      : undefined
+    const internalOrder = rootIndex.has(node.id) ? rootIndex.get(node.id) + 1 : undefined
     return { ...node, ...size, x: target.x, y: target.y, internalOrder }
   })
 }

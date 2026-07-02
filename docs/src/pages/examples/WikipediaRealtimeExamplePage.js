@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   RealtimeHeatmap,
   RealtimeHistogram,
@@ -160,10 +154,7 @@ export default function WikipediaRealtimeExamplePage() {
   const [docsTheme] = useDocsTheme()
   const carbonTheme = docsTheme === "dark" ? "carbon-dark" : "carbon"
 
-  const windowedEdits = useMemo(
-    () => edits.slice(-filters.windowSize),
-    [edits, filters.windowSize],
-  )
+  const windowedEdits = useMemo(() => edits.slice(-filters.windowSize), [edits, filters.windowSize])
 
   const visibleEdits = useMemo(
     () => windowedEdits.filter((edit) => editMatchesFilters(edit, filters)),
@@ -186,7 +177,10 @@ export default function WikipediaRealtimeExamplePage() {
   )
   const magnitudeExtent = useMemo(() => [0, maxMagnitude], [maxMagnitude])
   const signedExtent = useMemo(() => [-maxMagnitude, maxMagnitude], [maxMagnitude])
-  const netFlow = useMemo(() => aggregateNetFlow(visibleEdits, timeExtent), [visibleEdits, timeExtent])
+  const netFlow = useMemo(
+    () => aggregateNetFlow(visibleEdits, timeExtent),
+    [visibleEdits, timeExtent],
+  )
   const outOfOrderEdits = useMemo(
     () => visibleEdits.filter((edit) => edit.outOfOrder),
     [visibleEdits],
@@ -194,22 +188,24 @@ export default function WikipediaRealtimeExamplePage() {
   const outOfOrderAnnotations = useMemo(() => {
     const latest = outOfOrderEdits[outOfOrderEdits.length - 1]
     if (!latest) return []
-    return [{
-      type: "callout",
-      pointId: latest.id,
-      label: `Out of order · ${formatDuration(latest.arrivalLagMs)} late`,
-      radius: 13,
-      dx: 46,
-      dy: -36,
-      color: "#ff4fd8",
-      connector: { end: "arrow" },
-    }]
+    return [
+      {
+        type: "callout",
+        pointId: latest.id,
+        label: `Out of order · ${formatDuration(latest.arrivalLagMs)} late`,
+        radius: 13,
+        dx: 46,
+        dy: -36,
+        color: "#ff4fd8",
+        connector: { end: "arrow" },
+      },
+    ]
   }, [outOfOrderEdits])
   const groupData = useMemo(
-    () => Object.fromEntries(GROUPS.map((group) => [
-      group,
-      visibleEdits.filter((edit) => edit.group === group),
-    ])),
+    () =>
+      Object.fromEntries(
+        GROUPS.map((group) => [group, visibleEdits.filter((edit) => edit.group === group)]),
+      ),
     [visibleEdits],
   )
 
@@ -246,14 +242,12 @@ export default function WikipediaRealtimeExamplePage() {
   }, [])
 
   return (
-    <ExamplePageLayout
-      title="Wikipedia, as it happens"
-    >
+    <ExamplePageLayout title="Wikipedia, as it happens">
       <p className="wiki-realtime-lede">
-        Every dot is a live edit to English Wikipedia. Time moves left to right;
-        the overview plots signed character change above and below zero. It keeps
-        editor identity in fill and outline, while the four small multiples use
-        absolute magnitude and recode direction: green adds text, red removes it.
+        Every dot is a live edit to English Wikipedia. Time moves left to right; the overview plots
+        signed character change above and below zero. It keeps editor identity in fill and outline,
+        while the four small multiples use absolute magnitude and recode direction: green adds text,
+        red removes it.
       </p>
 
       <div className="wiki-realtime-status-strip" aria-label="Live stream status">
@@ -354,7 +348,9 @@ export default function WikipediaRealtimeExamplePage() {
               <option value={480}>480 edits</option>
             </select>
           </Control>
-          <Control label={`Minimum change · ${formatMagnitude(MAGNITUDE_STEPS[filters.magnitudeStep])}`}>
+          <Control
+            label={`Minimum change · ${formatMagnitude(MAGNITUDE_STEPS[filters.magnitudeStep])}`}
+          >
             <input
               type="range"
               min="0"
@@ -425,7 +421,9 @@ export default function WikipediaRealtimeExamplePage() {
               <ActorLegend
                 counts={actorCounts}
                 active={filters.actor}
-                onSelect={(actor) => patchFilters({ actor: filters.actor === actor ? "all" : actor })}
+                onSelect={(actor) =>
+                  patchFilters({ actor: filters.actor === actor ? "all" : actor })
+                }
               />
               <OutOfOrderKey count={outOfOrderEdits.length} />
             </section>
@@ -453,16 +451,13 @@ export default function WikipediaRealtimeExamplePage() {
                 <span className="wiki-realtime-kicker">The same buffer, aggregated</span>
                 <h2>Shape of the current window</h2>
                 <p>
-                  Raw edits remain available for inspection while Semiotic derives
-                  temporal volume, magnitude density, and signed character flow.
+                  Raw edits remain available for inspection while Semiotic derives temporal volume,
+                  magnitude density, and signed character flow.
                 </p>
               </div>
 
               <div className="wiki-realtime-summary-grid">
-                <SummaryCard
-                  title="Edit volume"
-                  note="10-second bins · stacked by editor class"
-                >
+                <SummaryCard title="Edit volume" note="10-second bins · stacked by editor class">
                   <RealtimeHistogram
                     ref={histogramRef}
                     size={[summaryChartWidth, 240]}
@@ -544,28 +539,33 @@ export default function WikipediaRealtimeExamplePage() {
                 <p>Select a row to hold its detail above, or open the revision on Wikipedia.</p>
               </div>
               <div className="wiki-realtime-ledger-list">
-                {[...visibleEdits].slice(-12).reverse().map((edit) => (
-                  <button
-                    type="button"
-                    key={edit.id}
-                    className={selectedEdit?.id === edit.id ? "is-selected" : ""}
-                    onClick={() => setSelectedEdit((current) => current?.id === edit.id ? null : edit)}
-                  >
-                    <span
-                      className="wiki-realtime-ledger-dot"
-                      style={{
-                        background: GROUP_META[edit.group].fill,
-                        borderColor: GROUP_META[edit.group].stroke,
-                      }}
-                    />
-                    <span className="wiki-realtime-ledger-page">{edit.title}</span>
-                    <span className="wiki-realtime-ledger-user">{edit.user}</span>
-                    <span className={edit.delta >= 0 ? "is-addition" : "is-removal"}>
-                      {formatSigned(edit.delta)}
-                    </span>
-                    <span className="wiki-realtime-ledger-time">{formatTime(edit.time)}</span>
-                  </button>
-                ))}
+                {[...visibleEdits]
+                  .slice(-12)
+                  .reverse()
+                  .map((edit) => (
+                    <button
+                      type="button"
+                      key={edit.id}
+                      className={selectedEdit?.id === edit.id ? "is-selected" : ""}
+                      onClick={() =>
+                        setSelectedEdit((current) => (current?.id === edit.id ? null : edit))
+                      }
+                    >
+                      <span
+                        className="wiki-realtime-ledger-dot"
+                        style={{
+                          background: GROUP_META[edit.group].fill,
+                          borderColor: GROUP_META[edit.group].stroke,
+                        }}
+                      />
+                      <span className="wiki-realtime-ledger-page">{edit.title}</span>
+                      <span className="wiki-realtime-ledger-user">{edit.user}</span>
+                      <span className={edit.delta >= 0 ? "is-addition" : "is-removal"}>
+                        {formatSigned(edit.delta)}
+                      </span>
+                      <span className="wiki-realtime-ledger-time">{formatTime(edit.time)}</span>
+                    </button>
+                  ))}
                 {visibleEdits.length === 0 && (
                   <div className="wiki-realtime-no-results">
                     Waiting for an edit that matches the current question.
@@ -580,24 +580,23 @@ export default function WikipediaRealtimeExamplePage() {
       <section className="wiki-realtime-editorial">
         <div>
           <span className="wiki-realtime-kicker">Why five swarms?</span>
-          <h2>Overview first, then honest comparison</h2>
+          <h2>Overview and drilldown</h2>
           <p>
-            The overview uses redundant encodings—fill plus outline—so actor
-            classes survive dense overlap. The small multiples share the same
-            time and magnitude extents, making activity and outliers comparable
-            without asking color to do two jobs at once. Within each group,
-            direction becomes the question.
+            The overview uses double encodings (fill plus outline) so actor classes survive dense
+            overlap. The small multiples share the same time and magnitude extents, making activity
+            and outliers comparable without asking color to do two jobs at once. That way you can
+            see clusters in across different wikipedia editor types while being able to see patterns
+            specific to admins or anons.
           </p>
         </div>
         <div>
           <span className="wiki-realtime-kicker">Classification detail</span>
           <h2>Administrators need a second lookup</h2>
           <p>
-            Recent-change events identify bots and expose editor names, but do
-            not include local user groups. Registered names are therefore
-            resolved in cached batches against Wikipedia&apos;s users API;
-            members of the <code>sysop</code> group move into the administrator
-            series when that lookup returns.
+            Recent-change events identify bots and expose editor names, but do not include local
+            user groups. Registered names are therefore resolved in cached batches against
+            Wikipedia&apos;s users API; members of the <code>sysop</code> group move into the
+            administrator series when that lookup returns.
           </p>
         </div>
       </section>
@@ -605,13 +604,12 @@ export default function WikipediaRealtimeExamplePage() {
       <section className="wiki-realtime-code">
         <div className="wiki-realtime-section-heading">
           <span className="wiki-realtime-kicker">Core implementation</span>
-          <h2>One event buffer, many coordinated views</h2>
+          <h2>One event buffer</h2>
           <p>
-            The EventSource keeps one React-side control buffer, then the charts
-            mirror the filtered window through Semiotic&apos;s imperative push,
-            update, and remove API. Semiotic handles temporal windows, canvas
-            rendering, binning, heatmap aggregation, axes, hover hit-testing,
-            and per-datum swarm styles.
+            The EventSource keeps one React-side control buffer, then the charts mirror the filtered
+            window through Semiotic&apos;s imperative push, update, and remove API. Semiotic handles
+            temporal windows, canvas rendering, binning, heatmap aggregation, axes, hover
+            hit-testing, and per-datum swarm styles.
           </p>
         </div>
         <CodeBlock code={implementationCode} language="jsx" />
@@ -626,9 +624,9 @@ export default function WikipediaRealtimeExamplePage() {
         >
           Wikimedia EventStreams
         </a>
-        . This example filters the global recent-change stream to edit and new-page
-        events from <code>en.wikipedia.org</code>. Stream data may contain user-provided
-        page titles and edit summaries.
+        . This example filters the global recent-change stream to edit and new-page events from{" "}
+        <code>en.wikipedia.org</code>. Stream data may contain user-provided page titles and edit
+        summaries.
       </p>
     </ExamplePageLayout>
   )
@@ -676,10 +674,12 @@ function useWikipediaEditStream(paused) {
         }
 
         if (!disposed && resolved.size > 0) {
-          setEdits((current) => current.map((edit) => {
-            const group = resolved.get(edit.user)
-            return group && group !== edit.group ? { ...edit, group } : edit
-          }))
+          setEdits((current) =>
+            current.map((edit) => {
+              const group = resolved.get(edit.user)
+              return group && group !== edit.group ? { ...edit, group } : edit
+            }),
+          )
         }
       } catch (error) {
         if (error.name !== "AbortError") {
@@ -752,9 +752,7 @@ function normalizeEdit(raw, adminCache, maxEventTime = -Infinity) {
   }
 
   const delta = newLength - oldLength
-  const arrivalLagMs = Number.isFinite(maxEventTime)
-    ? Math.max(0, maxEventTime - time)
-    : 0
+  const arrivalLagMs = Number.isFinite(maxEventTime) ? Math.max(0, maxEventTime - time) : 0
   const user = raw.user || "Unknown editor"
   const group = classifyEditor(raw, user, adminCache)
   const revisionNew = raw.revision?.new
@@ -901,9 +899,7 @@ function directionPointStyle(edit) {
 }
 
 function groupColors() {
-  return Object.fromEntries(
-    Object.entries(GROUP_META).map(([group, meta]) => [group, meta.fill]),
-  )
+  return Object.fromEntries(Object.entries(GROUP_META).map(([group, meta]) => [group, meta.fill]))
 }
 
 function SwarmCard({ group, data, width, timeExtent, valueExtent, onHover }) {
@@ -947,9 +943,15 @@ function SwarmCard({ group, data, width, timeExtent, valueExtent, onHover }) {
         description={`${meta.label} edits by magnitude of character change: filled points added text, hollow points removed it.`}
       />
       <div className="wiki-realtime-direction-key" aria-label="Edit direction legend">
-        <span><i className="is-addition" /> text added</span>
-        <span><i className="is-removal" /> text removed</span>
-        <span><i className="is-out-of-order" /> out of order</span>
+        <span>
+          <i className="is-addition" /> text added
+        </span>
+        <span>
+          <i className="is-removal" /> text removed
+        </span>
+        <span>
+          <i className="is-out-of-order" /> out of order
+        </span>
       </div>
     </section>
   )
@@ -987,7 +989,9 @@ function ActorLegend({ counts, active, onSelect }) {
 function OutOfOrderKey({ count }) {
   return (
     <div className="wiki-realtime-order-key">
-      <span><i /> Magenta rings mark records consumed after a newer event-time.</span>
+      <span>
+        <i /> Magenta rings mark records consumed after a newer event-time.
+      </span>
       <strong>{count} in the visible window</strong>
     </div>
   )
@@ -1014,7 +1018,9 @@ function Inspector({ edit }) {
           }}
         />
         <div>
-          <small>{meta.label} · {formatTime(edit.time)} UTC</small>
+          <small>
+            {meta.label} · {formatTime(edit.time)} UTC
+          </small>
           <strong>{edit.user}</strong>
         </div>
       </div>
@@ -1030,7 +1036,9 @@ function Inspector({ edit }) {
         <small>
           {edit.outOfOrder
             ? `out of order by ${formatDuration(edit.arrivalLagMs)}`
-            : edit.minor ? "minor edit" : "characters"}
+            : edit.minor
+              ? "minor edit"
+              : "characters"}
         </small>
       </div>
       {edit.diffUrl && (

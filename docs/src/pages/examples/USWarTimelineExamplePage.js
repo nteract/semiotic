@@ -116,13 +116,17 @@ export default function USWarTimelineExamplePage() {
   }, [])
 
   return (
-    <ExamplePageLayout
-      title="All the Wars of the United States"
-    >
+    <ExamplePageLayout title="All the Wars of the United States">
       <p style={styles.lede}>
-        Duration, overlap, and geopolitical sphere tell a different story than casualty totals. This
-        custom ordinal layout treats every listed conflict as a single event and asks what changes
-        when wars are viewed as a continuous national pattern.
+        Charts of war usually focus on casualties. But what does it mean when there are "only" a few
+        hundred casualties but it wipes out a culture? What does it mean when there are many
+        low-level wars in different parts of the world? This timeline shows wars as described on
+        Wikipedia that the United States has taken part of during its existence and splits the
+        periods using CKMeans revealing what seem to be very clear semantic periods: A revolutionary
+        period focused on establishing the early United States, a period of conquest internally and
+        with the beginnings of a colonial influence, a time of growing international influence and
+        the current Pax Americana which, like the Pax Romana, is rarely closes the doors of the
+        Temple of Jupiter.
       </p>
 
       <StatStrip
@@ -214,12 +218,11 @@ export default function USWarTimelineExamplePage() {
       </ThemeProvider>
 
       <section style={styles.editorial}>
-        <h2>Four eras, one changing geography</h2>
+        <h2>Four eras of violence</h2>
         <p>
           The early conflicts center on sovereignty and survival. The long nineteenth-century middle
           is dominated by forced expansion across Native lands. Later periods shift toward overseas
-          intervention, regional influence, and finally sustained global military reach. The period
-          labels are interpretive boundaries, not official history.
+          intervention, regional influence, and finally sustained global military reach.
         </p>
 
         <h2>Concurrency makes continuity visible</h2>

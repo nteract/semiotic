@@ -63,6 +63,12 @@ export interface ScatterplotMatrixProps<TDatum extends Datum = Datum> extends Ba
   showLegend?: boolean
   /** Field or function to identify each data point in tooltips. Defaults to "Row {index}" */
   idAccessor?: string | ((d: TDatum) => string)
+  /**
+   * Called when a point in any cell is clicked. Receives the clicked row datum
+   * and its grid-relative pixel position `{ x, y }`. Works in both hover and
+   * brush modes.
+   */
+  onClick?: (datum: TDatum, event: { x: number; y: number }) => void
 }
 
 // ── Cell Brush Overlay ────────────────────────────────────────────────────
@@ -151,6 +157,8 @@ interface CellProps {
   mode: "brush" | "hover"
   /** Callback when a point is hovered (hover mode only). */
   onPointHover?: (datum: Datum | null, px?: number, py?: number) => void
+  /** Callback when a point is clicked. */
+  onPointClick?: (datum: Datum | null, px?: number, py?: number) => void
 }
 
 function ScatterplotCell({
@@ -169,7 +177,8 @@ function ScatterplotCell({
   showGrid: _showGrid,
   tooltip: _tooltip,
   mode,
-  onPointHover
+  onPointHover,
+  onPointClick
 }: CellProps) {
   const frameRef = useRef<StreamXYFrameHandle>(null)
   const clientId = `splom-${xField}-${yField}`
@@ -225,6 +234,20 @@ function ScatterplotCell({
     [hoverSelectPoints, onPointHover]
   )
 
+  const customClickBehavior = useCallback(
+    (hover: HoverData | null) => {
+      if (!hover) {
+        onPointClick?.(null)
+        return
+      }
+      const d = hover.data
+      if (d) {
+        onPointClick?.(d, hover.x + CELL_MARGIN.left, hover.y + CELL_MARGIN.top)
+      }
+    },
+    [onPointClick]
+  )
+
   const pointStyle = useCallback(
     (d: Datum) => {
       const style: Style & { r?: number } = {
@@ -275,6 +298,7 @@ function ScatterplotCell({
         showAxes={false}
         enableHover={mode === "hover"}
         customHoverBehavior={mode === "hover" ? customHoverBehavior : undefined}
+        customClickBehavior={onPointClick ? customClickBehavior : undefined}
         tooltipContent={mode === "hover" ? (() => null) : undefined}
       />
       {mode === "brush" && (
@@ -556,6 +580,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     height: _height,
     className,
     onObservation,
+    onClick,
     chartId
   } = props
 
@@ -729,6 +754,18 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                       if (onObservation) {
                         onObservation({ type: "hover-end", timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
                       }
+                    }
+                  } : undefined}
+                  onPointClick={(onClick || onObservation) ? (datum, px, py) => {
+                    if (!datum) return
+                    // Translate cell-local pixels to grid-relative coordinates.
+                    const cellLeft = labelWidth + col * (cellSize + cellGap)
+                    const cellTop = row * (cellSize + cellGap)
+                    const gx = cellLeft + (px ?? 0)
+                    const gy = cellTop + (py ?? 0)
+                    if (onClick) onClick(datum as TDatum, { x: gx, y: gy })
+                    if (onObservation) {
+                      onObservation({ type: "click", datum, x: gx, y: gy, timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
                     }
                   } : undefined}
                 />
