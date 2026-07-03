@@ -88,6 +88,12 @@ test("glyph scene nodes paint, hit-test, and hold a visual baseline", async ({ p
   // plot (80, 44 − 12) with a 20px margin — glyph nodes are hit-tested
   // over their drawn bounds, so the observation carries the row datum.
   const canvas = fixture.locator("canvas").first()
+  // page.mouse.move() uses viewport coordinates and does NOT auto-scroll, so a
+  // fixture below the fold (the flower fixture above it is taller under some
+  // platforms' font metrics) would leave the hover points off-viewport — the
+  // hover never fires and the observation never updates. Scroll it into view
+  // first so the computed coordinates land inside the viewport.
+  await canvas.scrollIntoViewIfNeeded()
   const box = await canvas.boundingBox()
   if (!box) throw new Error("glyph fixture canvas has no bounding box")
   await page.mouse.move(box.x + 20 + 80, box.y + 20 + 32)
