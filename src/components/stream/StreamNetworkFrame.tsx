@@ -80,6 +80,7 @@ import { networkRectRenderer } from "./renderers/networkRectRenderer"
 import { networkCircleRenderer } from "./renderers/networkCircleRenderer"
 import { networkArcRenderer } from "./renderers/networkArcRenderer"
 import { networkSymbolRenderer } from "./renderers/networkSymbolRenderer"
+import { networkGlyphRenderer } from "./renderers/glyphCanvasRenderer"
 import { networkEdgeRenderer } from "./renderers/networkEdgeRenderer"
 import {
   renderNetworkParticles,
@@ -1683,6 +1684,7 @@ const StreamNetworkFrame = forwardRef<
     networkCircleRenderer(ctx, store.sceneNodes)
     networkArcRenderer(ctx, store.sceneNodes)
     networkSymbolRenderer(ctx, store.sceneNodes)
+    networkGlyphRenderer(ctx, store.sceneNodes)
 
     // Render particles (sankey only) — stop entirely when stale or when the
     // user prefers reduced motion (particles are purely decorative movement).

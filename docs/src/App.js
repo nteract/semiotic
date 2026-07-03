@@ -143,6 +143,8 @@ import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
 import ExamplesOverviewPage from "./pages/examples/ExamplesOverviewPage"
 import ClimateAnomalyExamplePage from "./pages/examples/ClimateAnomalyExamplePage"
 import ClimateRadialWeatherExamplePage from "./pages/examples/ClimateRadialWeatherExamplePage"
+import LakeTravisIsotypeExamplePage from "./pages/examples/LakeTravisIsotypeExamplePage"
+import DataCentersIsotypeExamplePage from "./pages/examples/DataCentersIsotypeExamplePage"
 import ExamplesLayout from "./pages/examples/ExamplesLayout"
 import USWarTimelineExamplePage from "./pages/examples/USWarTimelineExamplePage"
 import ArtMovementGenealogyExamplePage from "./pages/examples/ArtMovementGenealogyExamplePage"
@@ -209,7 +211,7 @@ function NotFoundPage() {
     <div style={{ padding: "60px 20px", textAlign: "center" }}>
       <h1>404 — Page Not Found</h1>
       <p style={{ marginTop: "16px", color: "var(--text-secondary)" }}>
-        The page you're looking for doesn't exist.
+        The page you&apos;re looking for doesn&apos;t exist.
       </p>
       <p style={{ marginTop: "24px" }}>
         <Link to="/" style={{ color: "var(--accent)" }}>
@@ -286,6 +288,14 @@ export default function DocsApp() {
             <Route
               path="examples/climate-radial-weather"
               element={<ClimateRadialWeatherExamplePage />}
+            />
+            <Route
+              path="examples/lake-travis-isotype"
+              element={<LakeTravisIsotypeExamplePage />}
+            />
+            <Route
+              path="examples/data-centers-isotype"
+              element={<DataCentersIsotypeExamplePage />}
             />
             <Route path="examples/us-war-timeline" element={<USWarTimelineExamplePage />} />
             <Route

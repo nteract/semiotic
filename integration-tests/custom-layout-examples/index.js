@@ -1,4 +1,5 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
+import { unitize } from "../../dist/semiotic-recipes.module.js"
 import React, { useState } from "react"
 import { createRoot } from "react-dom/client"
 
@@ -152,11 +153,94 @@ function ResponsiveFlowerFixture() {
   )
 }
 
+// ── Glyph unit chart: composite-pictogram scene nodes fed by unitize ────────
+
+const SERVER_SIGN = {
+  viewBox: [40, 40],
+  anchor: [0.5, 1],
+  parts: [
+    { d: "M8 3h24v34H8z", fill: "color" },
+    { d: "M12 9h16v5H12zM12 18h16v5H12zM12 27h16v5H12z", fill: "accent" },
+  ],
+}
+
+const GLYPH_ROWS = [
+  { id: "alpha", label: "Alpha", value: 85 },
+  { id: "beta", label: "Beta", value: 50 },
+  { id: "gamma", label: "Gamma", value: 130 },
+]
+const GLYPH_COLORS = { alpha: "#d72f3f", beta: "#4f8999", gamma: "#d8ad43" }
+
+function glyphUnitLayout(ctx) {
+  const nodes = []
+  const labels = []
+  ctx.data.forEach((row, index) => {
+    const feetY = 44 + index * 52
+    labels.push(
+      React.createElement(
+        "text",
+        { key: row.id, x: 4, y: feetY - 8, fontSize: 12, fontWeight: 700, fill: "#333" },
+        row.label
+      )
+    )
+    // Every unit sign is an interactive glyph node: hit-tested, keyboard
+    // navigable, with the partial final sign riding fraction + ghostColor.
+    for (const unit of unitize(row.value, { unit: 25 }).units) {
+      nodes.push({
+        type: "glyph",
+        x: 80 + unit.index * 30,
+        y: feetY,
+        size: 24,
+        glyph: SERVER_SIGN,
+        color: GLYPH_COLORS[row.id],
+        accent: "#ffffff",
+        fraction: unit.fraction < 1 ? unit.fraction : undefined,
+        ghostColor: unit.fraction < 1 ? "#e6dfca" : undefined,
+        style: {},
+        datum: row,
+        pointId: `${row.id}-${unit.index}`,
+      })
+    }
+  })
+  return { nodes, overlays: React.createElement("g", null, labels) }
+}
+
+function GlyphUnitFixture() {
+  const [hovered, setHovered] = useState("none")
+
+  return React.createElement(
+    TestCase,
+    { title: "Glyph unit chart — composite pictograms from unitize", testId: "glyph-unit-chart" },
+    React.createElement(
+      "div",
+      { className: "controls" },
+      React.createElement("span", { "data-testid": "glyph-hover-label" }, hovered)
+    ),
+    React.createElement(XYCustomChart, {
+      data: GLYPH_ROWS,
+      layout: glyphUnitLayout,
+      width: 480,
+      height: 210,
+      margin: { top: 20, right: 20, bottom: 20, left: 20 },
+      enableHover: true,
+      accessibleTable: true,
+      animate: false,
+      onObservation: (observation) => {
+        if (observation.type === "hover" && observation.datum) {
+          setHovered(observation.datum.label ?? "none")
+        }
+      },
+      frameProps: { background: "transparent" },
+    })
+  )
+}
+
 function App() {
   return React.createElement(
     ThemeProvider,
     { theme: "light" },
-    React.createElement(ResponsiveFlowerFixture)
+    React.createElement(ResponsiveFlowerFixture),
+    React.createElement(GlyphUnitFixture)
   )
 }
 

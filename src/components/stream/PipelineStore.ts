@@ -1138,6 +1138,11 @@ export class PipelineStore {
         case "point":
           node.x *= wRatio; node.y *= hRatio
           break
+        case "glyph":
+          // Position tracks the resize; drawn size stays author-set (like
+          // a point's radius).
+          node.x *= wRatio; node.y *= hRatio
+          break
         case "rect":
           node.x *= wRatio; node.y *= hRatio
           node.w *= wRatio; node.h *= hRatio

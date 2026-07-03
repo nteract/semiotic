@@ -16,6 +16,8 @@ function StreamNetworkFrame
 function TreeDiagram
 function Treemap
 function formatProcessSankeyIssue
+function glyphExtent
+function glyphPlacement
 function networkHitTarget
 function useCustomLayoutSelection
 function useForceLayout
@@ -24,7 +26,10 @@ interface ChordDiagramProps
 interface CirclePackProps
 interface CustomLayoutSelection
 interface ForceDirectedGraphProps
+interface GlyphDef
+interface GlyphPart
 interface NetworkCustomChartProps
+interface NetworkGlyphNode
 interface NetworkHitTargetCircleProps
 interface NetworkHitTargetRectProps
 interface NetworkHtmlMark

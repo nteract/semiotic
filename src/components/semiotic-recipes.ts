@@ -7,6 +7,16 @@
  */
 
 export { waffleLayout, allocateCells } from "./recipes/waffle"
+// unitize: the pictogram/tally allocator — value → repeated unit signs with a
+// fractional final sign (allocateCells divides fixed cells; unitize counts).
+export { unitize, unitizeRange } from "./recipes/unitize"
+export type {
+  UnitSign,
+  RangeUnitSign,
+  UnitizeOptions,
+  UnitizeResult,
+  UnitizeRangeResult,
+} from "./recipes/unitize"
 export type { WaffleConfig, CellWeight, AllocatedCells, AllocateCellsOptions } from "./recipes/waffle"
 
 export { calendarLayout } from "./recipes/calendar"
@@ -185,6 +195,21 @@ export { clamp, mean, withAlpha } from "./recipes/recipeUtils"
 export type { DimOptions, HighlightMatch } from "./recipes/recipeUtils"
 export { symbolPathString, symbolRadius, symbolExtent, SYMBOL_SEQUENCE } from "./stream/symbolPath"
 export type { NetworkSymbolName } from "./stream/symbolPath"
+// Composite pictograms — the `glyph` scene node's definition format plus the
+// placement/extent math a layout needs to stack, pack, or label them. Pair
+// with `unitize` for ISOTYPE unit charts (fraction ↔ partial glyph fill).
+export {
+  glyphPlacement,
+  glyphExtent,
+  glyphFractionClipRect,
+  DEFAULT_GLYPH_VIEWBOX,
+  DEFAULT_GLYPH_ANCHOR,
+} from "./stream/glyphDef"
+export type { GlyphDef, GlyphPart, GlyphPlacement } from "./stream/glyphDef"
+// <Glyph> — the React face of the same GlyphDef, for overlays, legends,
+// recipe icon callbacks, and page chrome.
+export { Glyph } from "./recipes/recipeGlyph"
+export type { GlyphProps } from "./recipes/recipeGlyph"
 
 // Recipe chrome kit — group enclosures, band labels, and mark callouts that
 // custom-layout recipes draw in their `overlays` layer.

@@ -2,7 +2,18 @@ import React from "react"
 import { Link } from "react-router-dom"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
-import { symbolPathString, makeShade } from "semiotic/recipes"
+import { Glyph, symbolPathString, makeShade, unitize } from "semiotic/recipes"
+
+// A multi-part pictogram definition: parts declare role paints ("color" /
+// "accent") and every stamp supplies the actual inks.
+const FACTORY_SIGN = {
+  viewBox: [40, 40],
+  anchor: [0.5, 1],
+  parts: [
+    { d: "M7 4h6v16H7zM4 37V22l10-7v7l10-7v7l10-7v22z", fill: "color" },
+    { d: "M9 28h5v5H9zM19 28h5v5h-5z", fill: "accent" },
+  ],
+}
 
 const SHAPES = ["circle", "square", "triangle", "diamond", "star", "cross", "wye", "chevron"]
 const HUE = "#7b52c9"
@@ -136,6 +147,86 @@ sceneNodes.push({
           (not as a second scene node), so it never becomes a duplicate hit/nav target over its own
           base mark. See it driving ~3,000 satellites on the{" "}
           <Link to="/recipes/satellites-in-space">Satellites in Space</Link> recipe.
+        </p>
+      </section>
+
+      <section>
+        <h2>Composite pictograms — the <code>glyph</code> node</h2>
+        <p>
+          Named shapes are single paths. The <code>glyph</code> scene node goes a step further: a{" "}
+          <strong>multi-part vector pictogram</strong> — a <code>GlyphDef</code> of paths with{" "}
+          <strong>role-token paints</strong> (<code>&quot;color&quot;</code> /{" "}
+          <code>&quot;accent&quot;</code>), stamped per datum with each node&rsquo;s actual inks, the
+          way a classic pictogram plate reused one cut in many colors. Definitions carry an{" "}
+          <code>anchor</code> (feet-down signs stand on baselines and terrain) and a{" "}
+          <code>fraction</code>/<code>fractionStart</code> window for <strong>partial fills</strong>{" "}
+          with an optional <code>ghostColor</code> silhouette — the ISOTYPE partial-symbol
+          convention, fed directly by the <code>unitize</code> recipe&rsquo;s tallies.
+        </p>
+        <p>
+          It is a full citizen of the pipeline: canvas <em>and</em> SVG/SSR rendering, hit-testing
+          and keyboard navigation over the drawn bounds, annotation anchoring by{" "}
+          <code>pointId</code>/<code>id</code>, and enter/move/exit transition identity. All four
+          custom-layout families emit it (network uses <code>cx</code>/<code>cy</code>; XY, ordinal,
+          and geo use <code>x</code>/<code>y</code>), and the <code>&lt;Glyph&gt;</code> React
+          component renders the same definition in overlays, legends, recipe icon callbacks, and
+          page chrome — one definition, no drift.
+        </p>
+        <div style={{ margin: "12px 0" }}>
+          <svg width={230} height={52} aria-label="Three and six-tenths factory signs: three solid, one partial">
+            {unitize(3.6, { unit: 1 }).units.map((sign) => (
+              <Glyph
+                key={sign.index}
+                def={FACTORY_SIGN}
+                x={sign.index * 56}
+                y={4}
+                size={44}
+                color={HUE}
+                accent="#ffffff"
+                fraction={sign.fraction}
+                ghostColor={sign.fraction < 1 ? "rgba(123, 82, 201, 0.22)" : undefined}
+              />
+            ))}
+          </svg>
+          <div style={{ fontSize: 11, color: "var(--text-2)" }}>
+            <code>unitize(3.6, {`{ unit: 1 }`})</code> → three solid signs and a 60% sign with a
+            ghost silhouette. Symbols repeat; they do not grow.
+          </div>
+        </div>
+        <CodeBlock language="jsx">{`import { unitize } from "semiotic/recipes"
+
+const SERVER_SIGN = {
+  viewBox: [40, 40],
+  anchor: [0.5, 1],                      // feet land on (x, y)
+  parts: [
+    { d: "M8 3h24v34H8z", fill: "color" },
+    { d: "M12 9h16v5H12z…", fill: "accent" },
+  ],
+}
+
+// inside any custom layout: stamp one sign per unitize unit
+const tally = unitize(site.powerMW, { unit: 100 })
+nodes.push(
+  ...tally.units.map((unit) => ({
+    type: "glyph",
+    x, y: terrainY,                      // standing on the profile
+    size: 11,
+    glyph: SERVER_SIGN,
+    color: statusColor,                  // one cut, many inks
+    fraction: unit.fraction < 1 ? unit.fraction : undefined,
+    ghostColor: unit.fraction < 1 ? paperDeep : undefined,
+    style: {}, datum: site, pointId: \`\${site.id}-\${unit.index}\`,
+  })),
+)
+
+// the same definition, as React chrome (legends, overlays, prose):
+import { Glyph } from "semiotic/recipes"
+<Glyph def={SERVER_SIGN} size={14} color="#34383b" />`}</CodeBlock>
+        <p>
+          See the whole system at work on{" "}
+          <Link to="/examples/data-centers-isotype">The Buildings Behind AI</Link> and{" "}
+          <Link to="/examples/lake-travis-isotype">Lake Travis, in Signs</Link> — relief-section
+          maps, unit grids, and process pictures built from one shared sign set.
         </p>
       </section>
 

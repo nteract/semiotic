@@ -70,3 +70,38 @@ test("custom layout overlays stay aligned through responsive resize and transiti
   expect(pageErrors).toEqual([])
   expect(consoleErrors).toEqual([])
 })
+
+test("glyph scene nodes paint, hit-test, and hold a visual baseline", async ({ page }) => {
+  const pageErrors: string[] = []
+  page.on("pageerror", (err) => pageErrors.push(err.message))
+
+  await page.goto("/custom-layout-examples/")
+  const fixture = page.locator('[data-testid="glyph-unit-chart"]')
+  await expect(fixture).toBeVisible()
+  await page.waitForFunction(() => {
+    const root = document.querySelector('[data-testid="glyph-unit-chart"]')
+    return Boolean(root?.querySelector("canvas"))
+  })
+  await waitForRafs(page, 5)
+
+  // Hover the first Alpha sign: layout puts its feet-anchored center at
+  // plot (80, 44 − 12) with a 20px margin — glyph nodes are hit-tested
+  // over their drawn bounds, so the observation carries the row datum.
+  const canvas = fixture.locator("canvas").first()
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error("glyph fixture canvas has no bounding box")
+  await page.mouse.move(box.x + 20 + 80, box.y + 20 + 32)
+  await expect(page.getByTestId("glyph-hover-label")).toHaveText("Alpha")
+
+  // Gamma's row: 130 at unit 25 → six signs, the last a 20% partial.
+  await page.mouse.move(box.x + 20 + 80 + 5 * 30, box.y + 20 + 32 + 2 * 52)
+  await expect(page.getByTestId("glyph-hover-label")).toHaveText("Gamma")
+
+  await page.mouse.move(box.x - 10, box.y - 10)
+  await waitForRafs(page, 5)
+  await expect(fixture).toHaveScreenshot("glyph-unit-chart.png", {
+    maxDiffPixels: 300,
+  })
+
+  expect(pageErrors).toEqual([])
+})

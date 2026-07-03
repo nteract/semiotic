@@ -54,6 +54,9 @@ import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { symbolCanvasRenderer } from "./renderers/symbolCanvasRenderer"
+import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
+import { symbolRadius } from "./symbolPath"
+import { glyphHitGeometry } from "./glyphDef"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
@@ -120,8 +123,40 @@ const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
     lineCanvasRenderer,
     pointCanvasRenderer,
     symbolCanvasRenderer,
+    glyphCanvasRenderer,
     candlestickCanvasRenderer,
   ]
+}
+
+/**
+ * Harvest annotation anchors from the scene: every mark type that carries a
+ * `pointId` becomes a `{ pointId, x, y, r }` anchor record. Points anchor at
+ * their center; symbols at their center with their effective radius; glyphs
+ * at their drawn (anchor-offset) visual center. This is what lets a
+ * `{ pointId }` annotation resolve to a custom layout's mark regardless of
+ * which mark type the layout emitted.
+ */
+function collectAnnotationAnchors(
+  scene: SceneNode[] | undefined
+): { pointId?: string; x: number; y: number; r: number }[] | undefined {
+  if (!scene) return undefined
+  const anchors: { pointId?: string; x: number; y: number; r: number }[] = []
+  for (const n of scene) {
+    if (n.type === "point") {
+      anchors.push(n)
+    } else if (n.type === "symbol") {
+      anchors.push({ pointId: n.pointId, x: n.x, y: n.y, r: symbolRadius(n.size) })
+    } else if (n.type === "glyph") {
+      const geometry = glyphHitGeometry(n.glyph, n.size)
+      anchors.push({
+        pointId: n.pointId,
+        x: n.x + geometry.centerDx,
+        y: n.y + geometry.centerDy,
+        r: geometry.radius,
+      })
+    }
+  }
+  return anchors
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -1620,9 +1655,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             xAccessor={annXAccessor}
             yAccessor={annYAccessor}
             annotationData={enrichAnnotationData(store?.getData())}
-            pointNodes={store?.scene.filter(
-              (n): n is PointSceneNode => n.type === "point"
-            )}
+            pointNodes={collectAnnotationAnchors(store?.scene)}
             curve={typeof curve === "string" ? curve : undefined}
             linkedCrosshairName={linkedCrosshairName}
             linkedCrosshairSourceId={linkedCrosshairSourceId}
@@ -1750,9 +1783,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           xAccessor={annXAccessor}
           yAccessor={annYAccessor}
           annotationData={enrichAnnotationData(storeRef.current?.getData())}
-          pointNodes={storeRef.current?.scene.filter(
-            (n): n is PointSceneNode => n.type === "point"
-          )}
+          pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
           curve={typeof curve === "string" ? curve : undefined}
           underlayRendered
           // Mirror the canvas render-loop's `shouldPaintBg` predicate

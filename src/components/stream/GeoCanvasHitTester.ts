@@ -1,8 +1,9 @@
 import type { GeoAreaSceneNode, GeoLineSceneNode, GeoSceneNode } from "./geoTypes"
-import type { PointSceneNode } from "./types"
+import type { PointSceneNode, GlyphSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
 import { getHitRadius } from "./hitTestUtils"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
+import { glyphHitGeometry } from "./glyphDef"
 
 export interface GeoHitResult {
   node: GeoSceneNode
@@ -57,6 +58,29 @@ export function findNearestGeoNode(
     if (bestPoint) {
       return { node: bestPoint, distance: bestPointDist }
     }
+  }
+
+  // ── 1b. Glyph nodes (projected pictograms — above areas, like points) ──
+
+  let bestGlyph: GlyphSceneNode | null = null
+  let bestGlyphDist = maxDistance
+
+  for (const node of nodes) {
+    if (node.type !== "glyph") continue
+    if (node.datum == null) continue
+    const geometry = glyphHitGeometry(node.glyph, node.size)
+    const dx = node.x + geometry.centerDx - mouseX
+    const dy = node.y + geometry.centerDy - mouseY
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    const hitRadius = getHitRadius(geometry.radius, maxDistance)
+    if (dist <= hitRadius && dist < bestGlyphDist) {
+      bestGlyph = node
+      bestGlyphDist = dist
+    }
+  }
+
+  if (bestGlyph) {
+    return { node: bestGlyph, distance: bestGlyphDist }
   }
 
   // ── 2. Geo area nodes (reverse order = top layer wins) ─────────

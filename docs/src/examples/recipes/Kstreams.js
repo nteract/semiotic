@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { NetworkCustomChart } from "semiotic/network"
 import { LinkedCharts, useSelectionActions } from "semiotic"
-import { lineageDagLayout } from "semiotic/recipes"
+import { Glyph, lineageDagLayout } from "semiotic/recipes"
 import { useRafTween } from "../../components/useRafTween"
 import { topologyV1, topologyV2 } from "./data/kstreamsTopology"
 import { dagLayoutFromGraph, reachableFrom, subgraphFrom } from "./data/dagLayout"
@@ -33,46 +33,37 @@ const SEMANTIC_GLYPH = {
   processor: "∘",
 }
 
-function TopicIcon({ size }) {
-  const s = size
-  return (
-    <g>
-      <rect
-        x={s * 0.08}
-        y={s * 0.12}
-        width={s * 0.84}
-        height={s * 0.76}
-        rx={s * 0.16}
-        fill="rgba(255,255,255,0.16)"
-        stroke="rgba(255,255,255,0.55)"
-        strokeWidth={1}
-      />
-      {[0.34, 0.5, 0.66].map((f) => (
-        <line
-          key={f}
-          x1={s * 0.24}
-          y1={s * f}
-          x2={s * 0.76}
-          y2={s * f}
-          stroke="rgba(255,255,255,0.75)"
-          strokeWidth={1}
-          strokeLinecap="round"
-        />
-      ))}
-    </g>
-  )
+// The topic sign as a library GlyphDef: the colored card takes the node's
+// partition color through the "color" role; the log box + record lines are
+// fixed translucent inks. The same definition could be stamped as `glyph`
+// scene nodes — here the recipe's renderIcon contract wants React, so the
+// library's <Glyph> renders it.
+const TOPIC_SIGN = {
+  viewBox: [40, 40],
+  parts: [
+    {
+      d: "M5 0h30a5 5 0 0 1 5 5v30a5 5 0 0 1-5 5H5a5 5 0 0 1-5-5V5a5 5 0 0 1 5-5z",
+      fill: "color",
+    },
+    {
+      d: "M12.09 8.45h15.82a4.86 4.86 0 0 1 4.86 4.86v13.38a4.86 4.86 0 0 1-4.86 4.86H12.09a4.86 4.86 0 0 1-4.86-4.86V13.31a4.86 4.86 0 0 1 4.86-4.86z",
+      fill: "rgba(255,255,255,0.16)",
+      stroke: "rgba(255,255,255,0.55)",
+      strokeWidth: 1.4,
+    },
+    {
+      d: "M12.1 15.14h15.8M12.1 20h15.8M12.1 24.86h15.8",
+      fill: "none",
+      stroke: "rgba(255,255,255,0.75)",
+      strokeWidth: 1.4,
+      strokeLinecap: "round",
+    },
+  ],
 }
 
 function renderKstreamsIcon({ semantic, partition, size, color }) {
   if (partition && partition.startsWith("topic")) {
-    return (
-      <g>
-        <rect width={size} height={size} rx={5} fill={color} />
-        <g transform={`translate(${size * 0.12}, ${size * 0.12}) scale(${0.76})`}>
-          <TopicIcon size={size} />
-        </g>
-      </g>
-    )
+    return <Glyph def={TOPIC_SIGN} size={size} color={color} />
   }
   const glyph = SEMANTIC_GLYPH[semantic] || "∘"
   return (

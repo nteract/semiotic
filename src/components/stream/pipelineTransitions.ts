@@ -18,8 +18,10 @@ import type {
   RectSceneNode,
   HeatcellSceneNode,
   CandlestickSceneNode,
+  GlyphSceneNode,
   TransitionConfig
 } from "./types"
+import type { GlyphDef } from "./glyphDef"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -35,6 +37,9 @@ export type PrevPosition = {
   // so geometry interpolates (body top/bottom, wick top/bottom) during a
   // transition instead of snapping.
   openY?: number; closeY?: number; highY?: number; lowY?: number
+  // Glyph-only: the pictogram definition + paint, carried so an exiting
+  // glyph can fade out as itself (in a neutral ink) rather than vanish.
+  glyph?: GlyphDef
 }
 export type PrevPath = { topPath?: [number, number][]; bottomPath?: [number, number][]; path?: [number, number][]; opacity?: number }
 
@@ -74,6 +79,10 @@ export function getNodeIdentity(ctx: TransitionContext, node: SceneNode, index: 
       }
       return `p:${index}`
     }
+    case "glyph":
+      // Custom layouts set pointId (the hit/annotation identity); fall back
+      // to position in the tally so unkeyed unit charts still fade sanely.
+      return node.pointId ? `g:${node.pointId}` : `g:${index}`
     case "rect":
       return `r:${node.group || ""}:${node.datum?.binStart ?? node.datum?.category ?? index}`
     case "heatcell":
@@ -108,6 +117,15 @@ export function snapshotPositions(
     if (!key) continue
     if (node.type === "point") {
       prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r, opacity: node.style.opacity })
+    } else if (node.type === "glyph") {
+      // `r` carries the glyph's size so position AND scale interpolate.
+      prevPositionMap.set(key, {
+        x: node.x,
+        y: node.y,
+        r: node.size,
+        opacity: node.style.opacity,
+        glyph: node.glyph,
+      })
     } else if (node.type === "rect") {
       prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h, opacity: node.style.opacity })
     } else if (node.type === "heatcell") {
@@ -239,6 +257,25 @@ export function startTransition(
         node.style = { ...node.style, opacity: 0 }
         hasChanges = true
       }
+    } else if (node.type === "glyph") {
+      if (prev) {
+        matchedPrevKeys.add(key)
+        const target = { x: node.x, y: node.y, size: node.size }
+        node._targetOpacity = node.style.opacity ?? 1
+        if (prev.x !== target.x || prev.y !== target.y || prev.r !== target.size) {
+          node._targetX = target.x
+          node._targetY = target.y
+          node._targetR = target.size
+          node.x = prev.x
+          node.y = prev.y
+          node.size = prev.r ?? node.size
+          hasChanges = true
+        }
+      } else {
+        node._targetOpacity = node.style.opacity ?? 1
+        node.style = { ...node.style, opacity: 0 }
+        hasChanges = true
+      }
     } else if (node.type === "rect") {
       if (prev) {
         matchedPrevKeys.add(key)
@@ -350,6 +387,16 @@ export function startTransition(
         _targetOpacity: 0, _transitionKey: key
       }
       state.exitNodes.push(exitNode)
+    } else if (key.startsWith("g:") && prev.glyph) {
+      // Exiting glyph fades out as itself, in the neutral exit ink the
+      // other mark types use.
+      const exitNode: GlyphSceneNode = {
+        type: "glyph", x: prev.x, y: prev.y, size: prev.r ?? 12,
+        glyph: prev.glyph, color: "#999",
+        style: { opacity: prev.opacity ?? 1 }, datum: null,
+        _targetOpacity: 0, _transitionKey: key
+      }
+      state.exitNodes.push(exitNode)
     } else if (key.startsWith("r:")) {
       const exitNode: RectSceneNode = {
         type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
@@ -435,6 +482,21 @@ export function advanceTransition(
       node.y = lerp(prev.y, node._targetY!, t)
       if (node._targetR !== undefined && prev.r !== undefined) {
         node.r = lerp(prev.r, node._targetR, t)
+      }
+    } else if (node.type === "glyph") {
+      if (node._targetOpacity !== undefined) {
+        const prev = key ? prevPositionMap.get(key) : undefined
+        const startOpacity = prev ? (prev.opacity ?? 1) : 0
+        node.style.opacity = lerp(startOpacity, node._targetOpacity, t)
+      }
+      if (node._targetX === undefined) continue
+      if (!key) continue
+      const prev = prevPositionMap.get(key)
+      if (!prev) continue
+      node.x = lerp(prev.x, node._targetX, t)
+      node.y = lerp(prev.y, node._targetY!, t)
+      if (node._targetR !== undefined && prev.r !== undefined) {
+        node.size = lerp(prev.r, node._targetR, t)
       }
     } else if (node.type === "rect") {
       if (node._targetOpacity !== undefined) {

@@ -54,6 +54,32 @@ describe("Semiotic architecture example data", () => {
     expect(highlighted).not.toContain("input-static")
   })
 
+  it("maps the Lake Travis ISOTYPE example across every custom frame", () => {
+    const profile = SEMIOTIC_EXAMPLE_PROFILES.find(
+      (candidate) => candidate.id === "lake-travis-isotype"
+    )
+    const highlighted = architectureHighlight(profile)
+
+    expect(highlighted).toContain("frame-xy")
+    expect(highlighted).toContain("frame-ordinal")
+    expect(highlighted).toContain("frame-network")
+    expect(highlighted).toContain("frame-geo")
+    expect(highlighted).toContain("input-push")
+  })
+
+  it("maps the data-center ISOTYPE ledger across every custom frame", () => {
+    const profile = SEMIOTIC_EXAMPLE_PROFILES.find(
+      (candidate) => candidate.id === "data-centers-isotype"
+    )
+    const highlighted = architectureHighlight(profile)
+
+    expect(highlighted).toContain("frame-xy")
+    expect(highlighted).toContain("frame-ordinal")
+    expect(highlighted).toContain("frame-network")
+    expect(highlighted).toContain("frame-geo")
+    expect(highlighted).toContain("feature-accessibility")
+  })
+
   it("uses the port replay to connect four previously dark chart families", () => {
     const portReplay = SEMIOTIC_EXAMPLE_PROFILES.find(
       (profile) => profile.id === "port-congestion-replay"

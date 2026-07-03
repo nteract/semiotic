@@ -132,6 +132,8 @@ const navData = [
     path: "/examples",
     children: [
       { title: "Brushable Weather Rings", path: "/examples/climate-radial-weather" },
+      { title: "Lake Travis, in Signs", path: "/examples/lake-travis-isotype" },
+      { title: "The Buildings Behind AI", path: "/examples/data-centers-isotype" },
       { title: "U.S. War Timeline", path: "/examples/us-war-timeline" },
       { title: "Art Movement Genealogy", path: "/examples/art-movement-genealogy" },
       { title: "Isometric City Landmarks", path: "/examples/paris-isometric-landmarks" },

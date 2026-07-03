@@ -23,6 +23,8 @@ function SwarmPlot
 function SwimlaneChart
 function ViolinPlot
 function createHatchPattern
+function glyphExtent
+function glyphPlacement
 function hitTargetPoint
 function hitTargetRect
 function useCustomLayoutSelection
@@ -32,6 +34,9 @@ interface DonutChartProps
 interface FunnelChartProps
 interface GaugeChartProps
 interface GaugeThreshold
+interface GlyphDef
+interface GlyphPart
+interface GlyphSceneNode
 interface GroupedBarChartProps
 interface HatchPatternOptions
 interface HitTargetPointProps

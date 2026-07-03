@@ -179,6 +179,16 @@ export default function RecipeKitPage() {
               <td>largest-remainder grid allocation: <code>{`{key, weight}[]`}</code> + a cell count → integer cells with no rounding drift (<code>minPerCategory</code> keeps small categories visible) — the math behind a feature-mix waffle</td>
             </tr>
             <tr>
+              <td><code>unitize</code> / <code>unitizeRange</code></td>
+              <td>any</td>
+              <td>the pictogram/tally allocator — one value → repeated unit signs with a fractional final sign (ISOTYPE: symbols repeat, they never grow). <code>maxUnits</code> caps with an <code>overflow</code> flag, <code>minFraction</code> drops slivers honestly (<code>total</code> vs <code>shown</code>), and <code>unitizeRange</code> extends the tally to a projected/scenario endpoint, sharing a mid-sign boundary via <code>startFraction</code>. The counting sibling of <code>allocateCells</code>; feeds <code>glyph</code> node <code>fraction</code>s directly</td>
+            </tr>
+            <tr>
+              <td><code>Glyph</code> / <code>glyphPlacement</code> / <code>glyphExtent</code></td>
+              <td>any</td>
+              <td>the React face + geometry of the composite-pictogram <code>glyph</code> scene node: render a <code>GlyphDef</code> in overlays/legends/chrome with <code>&lt;Glyph&gt;</code>, and measure a definition&rsquo;s drawn box/anchor offsets for layout math — see <Link to="/custom-charts/glyph-marks">Glyph Marks</Link></td>
+            </tr>
+            <tr>
               <td><code>clamp</code> / <code>mean</code> / <code>withAlpha</code></td>
               <td>any</td>
               <td>the numeric/color one-liners every layout re-declares; <code>withAlpha</code> turns a hex into <code>rgba()</code> so a hover-dim can ride a recipe&rsquo;s <code>resolveColor</code> callback</td>

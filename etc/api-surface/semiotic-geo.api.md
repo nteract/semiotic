@@ -12,6 +12,8 @@ function GeoCustomChart
 function ProportionalSymbolMap
 function StreamGeoFrame
 function geoHitTarget
+function glyphExtent
+function glyphPlacement
 function hitTargetPoint
 function mergeData
 function resolveReferenceGeography
@@ -26,6 +28,9 @@ interface GeoLayoutResult
 interface GeoParticleStyle
 interface GeoPipelineConfig
 interface GeoScales
+interface GlyphDef
+interface GlyphPart
+interface GlyphSceneNode
 interface GraticuleConfig
 interface HitTargetPointProps
 interface ProportionalSymbolMapProps

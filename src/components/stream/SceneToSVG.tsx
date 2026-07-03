@@ -28,9 +28,11 @@ import type {
   AreaSceneNode,
   PointSceneNode,
   SymbolSceneNode,
+  GlyphSceneNode,
   RectSceneNode,
   HeatcellSceneNode,
-  CandlestickSceneNode
+  CandlestickSceneNode,
+  Style
 } from "./types"
 
 import type {
@@ -41,12 +43,15 @@ import type {
   NetworkRectNode,
   NetworkArcNode,
   NetworkSymbolNode,
+  NetworkGlyphNode,
   NetworkLineEdge,
   NetworkBezierEdge,
   NetworkRibbonEdge,
   NetworkCurvedEdge
 } from "./networkTypes"
 import { symbolPathString } from "./symbolPath"
+import { glyphFractionClipRect, glyphPlacement, resolveGlyphPaint } from "./glyphDef"
+import type { GlyphDef } from "./glyphDef"
 
 import { hasAnyCornerRadius, clampCornerRadii } from "./renderers/cornerRadii"
 import { annularSectorPath, buildGaugeGradientGeometry } from "./renderers/wedgePathBuilder"
@@ -109,6 +114,89 @@ function symbolSceneNodeToSVG(n: SymbolSceneNode, i: number, idPrefix?: string):
       stroke={n.style.stroke}
       strokeWidth={n.style.strokeWidth}
     />
+  )
+}
+
+/**
+ * Shared SVG serializer for glyph nodes across all four pipelines — the
+ * composite-pictogram sibling of `symbolSceneNodeToSVG`. Callers pass the
+ * node's position explicitly (`x`/`y` for XY/ordinal/geo, `cx`/`cy` for
+ * network) so one implementation matches `glyphCanvasRenderer` exactly:
+ * anchor + scale transform, role-token paints, optional ghost silhouette,
+ * and a deterministic `clipPath` for partial fills.
+ */
+function glyphNodeToSVG(
+  g: {
+    size: number
+    glyph: GlyphDef
+    color?: string
+    accent?: string
+    fraction?: number
+    fractionStart?: number
+    fractionDirection?: "horizontal" | "vertical"
+    ghostColor?: string
+    rotation?: number
+    style: Style
+    pointId?: string
+    _decayOpacity?: number
+  },
+  x: number,
+  y: number,
+  key: string
+): React.ReactNode {
+  const def = g.glyph
+  if (!def?.parts?.length || g.size <= 0) return null
+  const placement = glyphPlacement(def, g.size)
+  if (placement.scale <= 0) return null
+  const rotate = g.rotation ? ` rotate(${(g.rotation * 180) / Math.PI})` : ""
+  const transform = `translate(${x},${y})${rotate} translate(${placement.offsetX},${placement.offsetY}) scale(${placement.scale})`
+  const color = g.color ?? (typeof g.style.fill === "string" ? g.style.fill : undefined)
+  const clip = glyphFractionClipRect(
+    def,
+    g.fraction ?? 1,
+    g.fractionStart ?? 0,
+    g.fractionDirection ?? "horizontal"
+  )
+  const clipId = clip ? safeSvgId(`${key}-clip`) : undefined
+  const opacity = (g.style.opacity ?? 1) * (g._decayOpacity ?? 1)
+
+  const parts = (paintOverride?: string) =>
+    def.parts.map((part, partIndex) => {
+      const fill = paintOverride
+        ? part.fill === "none"
+          ? undefined
+          : paintOverride
+        : resolveGlyphPaint(part.fill, color, g.accent)
+      const stroke = paintOverride
+        ? part.stroke && part.stroke !== "none"
+          ? paintOverride
+          : undefined
+        : resolveGlyphPaint(part.stroke ?? "none", color, g.accent)
+      if (!fill && !stroke) return null
+      return (
+        <path
+          key={partIndex}
+          d={part.d}
+          fill={fill ?? "none"}
+          stroke={stroke}
+          strokeWidth={stroke ? part.strokeWidth ?? 1 : undefined}
+          strokeLinecap={part.strokeLinecap}
+          strokeLinejoin={part.strokeLinejoin}
+          opacity={part.opacity}
+        />
+      )
+    })
+
+  return (
+    <g key={key} transform={transform} opacity={opacity === 1 ? undefined : opacity}>
+      {clip && clipId && (
+        <clipPath id={clipId}>
+          <rect x={clip.x} y={clip.y} width={clip.width} height={clip.height} />
+        </clipPath>
+      )}
+      {clip && g.ghostColor ? <g>{parts(g.ghostColor)}</g> : null}
+      {clip && clipId ? <g clipPath={`url(#${clipId})`}>{parts()}</g> : parts()}
+    </g>
   )
 }
 
@@ -285,6 +373,10 @@ export function xySceneNodeToSVG(node: SceneNode, i: number, idPrefix?: string):
     }
     case "symbol":
       return symbolSceneNodeToSVG(node as SymbolSceneNode, i)
+    case "glyph": {
+      const n = node as GlyphSceneNode
+      return glyphNodeToSVG(n, n.x, n.y, `${idPrefix ?? ""}glyph-${n.pointId ?? i}`)
+    }
     case "rect": {
       const n = node as RectSceneNode
       return (
@@ -433,6 +525,10 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
           opacity={n.style.opacity}
         />
       )
+    }
+    case "glyph": {
+      const n = node as NetworkGlyphNode
+      return glyphNodeToSVG(n, n.cx, n.cy, `net-glyph-${n.id ?? i}`)
     }
     default:
       return null
@@ -621,6 +717,10 @@ export function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number, idPrefi
     }
     case "symbol":
       return symbolSceneNodeToSVG(node as SymbolSceneNode, i, idPrefix)
+    case "glyph": {
+      const n = node as GlyphSceneNode
+      return glyphNodeToSVG(n, n.x, n.y, `${idPrefix ?? ""}ord-glyph-${n.pointId ?? i}`)
+    }
     case "wedge": {
       const n = node as WedgeSceneNode
       // Scene stores angles in canvas convention (0 = 3 o'clock).
@@ -879,6 +979,10 @@ export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNod
           opacity={n.style.opacity ?? 1}
         />
       )
+    }
+    case "glyph": {
+      const n = node as GlyphSceneNode
+      return glyphNodeToSVG(n, n.x, n.y, `geo-glyph-${n.pointId ?? i}`)
     }
     default:
       return null

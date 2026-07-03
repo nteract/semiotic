@@ -1,8 +1,9 @@
 import type { OrdinalSceneNode, WedgeSceneNode, BoxplotSceneNode, ViolinSceneNode } from "./ordinalTypes"
-import type { PointSceneNode, RectSceneNode, SymbolSceneNode } from "./types"
+import type { PointSceneNode, RectSceneNode, SymbolSceneNode, GlyphSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
+import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 
 export interface OrdinalHitResult {
@@ -60,6 +61,9 @@ export function findNearestOrdinalNode(
         break
       case "symbol":
         result = hitTestSymbol(node, px, py, maxDistance)
+        break
+      case "glyph":
+        result = hitTestGlyph(node, px, py, maxDistance)
         break
       case "wedge":
         if (node.datum === null) break
@@ -121,6 +125,22 @@ function hitTestSymbol(node: SymbolSceneNode, px: number, py: number, maxDistanc
   const hitR = getHitRadius(symbolRadius(node.size), maxDistance)
   if (dist <= hitR) {
     return { datum: node.datum, x: node.x, y: node.y, distance: dist }
+  }
+  return null
+}
+
+/** Composite-glyph hit-test as a circle over the drawn (anchor-offset) bounds. */
+function hitTestGlyph(node: GlyphSceneNode, px: number, py: number, maxDistance: number = 30): OrdinalHitResult | null {
+  if (node.datum == null) return null
+  const geometry = glyphHitGeometry(node.glyph, node.size)
+  const cx = node.x + geometry.centerDx
+  const cy = node.y + geometry.centerDy
+  const dx = px - cx
+  const dy = py - cy
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  const hitR = getHitRadius(geometry.radius, maxDistance)
+  if (dist <= hitR) {
+    return { datum: node.datum, x: cx, y: cy, distance: dist }
   }
   return null
 }

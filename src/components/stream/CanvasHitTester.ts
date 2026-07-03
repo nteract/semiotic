@@ -1,8 +1,9 @@
-import type { SceneNode, PointSceneNode, SymbolSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode } from "./types"
+import type { SceneNode, PointSceneNode, SymbolSceneNode, GlyphSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode } from "./types"
 import type { RingBuffer } from "../realtime/RingBuffer"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
+import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
@@ -95,6 +96,9 @@ export function findNearestNode(
         break
       case "symbol":
         result = hitTestSymbol(node, px, py, maxDistance)
+        break
+      case "glyph":
+        result = hitTestGlyph(node, px, py, maxDistance)
         break
       case "line":
         result = hitTestLine(node, px, py, maxDistance)
@@ -235,6 +239,22 @@ function hitTestSymbol(node: SymbolSceneNode, px: number, py: number, maxDistanc
   const hitR = getHitRadius(symbolRadius(node.size), maxDistance)
   if (dist > hitR) return null
   return { node, datum: node.datum, x: node.x, y: node.y, distance: dist }
+}
+
+/** A composite glyph hit-tests as a circle over its drawn bounds — centered on
+ *  the visual box (which the anchor may offset from the node's x/y), so a
+ *  feet-anchored pictogram is grabbable across its whole body. */
+function hitTestGlyph(node: GlyphSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {
+  if (node.datum == null) return null
+  const geometry = glyphHitGeometry(node.glyph, node.size)
+  const cx = node.x + geometry.centerDx
+  const cy = node.y + geometry.centerDy
+  const dx = px - cx
+  const dy = py - cy
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  const hitR = getHitRadius(geometry.radius, maxDistance)
+  if (dist > hitR) return null
+  return { node, datum: node.datum, x: cx, y: cy, distance: dist }
 }
 
 function hitTestLine(node: LineSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {

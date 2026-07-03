@@ -7,6 +7,7 @@ import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { NetworkSymbolName } from "./symbolPath"
+import type { GlyphDef } from "./glyphDef"
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -328,6 +329,44 @@ export interface NetworkSymbolNode {
   _pulseGlowRadius?: number
 }
 
+/**
+ * Glyph node — the composite-pictogram channel for network scenes: a
+ * multi-part `GlyphDef` stamped at (cx, cy) with per-node `color`/`accent`
+ * paints and optional partial fill. The network sibling of the XY/ordinal/geo
+ * `GlyphSceneNode`.
+ */
+export interface NetworkGlyphNode {
+  type: "glyph"
+  cx: number
+  cy: number
+  /** Rendered height in px — width follows the definition's viewBox aspect. */
+  size: number
+  /** The multi-part pictogram definition to stamp. */
+  glyph: GlyphDef
+  /** Primary paint for parts declaring `"color"`. Falls back to `style.fill`. */
+  color?: string
+  /** Accent paint for parts declaring `"accent"`. */
+  accent?: string
+  /** Partial fill 0–1. @default 1 */
+  fraction?: number
+  /** Where the partial fill begins, 0–1. @default 0 */
+  fractionStart?: number
+  /** Partial-fill axis. @default "horizontal" */
+  fractionDirection?: "horizontal" | "vertical"
+  /** Ghost paint drawn at full extent beneath a partial fill. */
+  ghostColor?: string
+  /** Rotation in radians about (cx, cy). */
+  rotation?: number
+  style: Style
+  datum: SceneDatum
+  id?: string
+  label?: string
+  depth?: number
+  _pulseIntensity?: number
+  _pulseColor?: string
+  _pulseGlowRadius?: number
+}
+
 /** Line edge — used by force */
 export interface NetworkLineEdge {
   type: "line"
@@ -390,6 +429,7 @@ export type NetworkSceneNode =
   | NetworkRectNode
   | NetworkArcNode
   | NetworkSymbolNode
+  | NetworkGlyphNode
 
 export type NetworkSceneEdge =
   | NetworkLineEdge

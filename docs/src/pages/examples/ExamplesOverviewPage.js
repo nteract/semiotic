@@ -20,6 +20,10 @@ export default function ExamplesOverviewPage() {
           <Link key={example.path} to={example.path} style={styles.card}>
             {example.preview === "climate"
               ? <MiniClimatePreview />
+              : example.preview === "lake-isotype"
+                ? <MiniLakeIsotypePreview />
+              : example.preview === "data-centers-isotype"
+                ? <MiniDataCentersIsotypePreview />
               : example.preview === "isometric"
                 ? <MiniIsometricPreview />
               : example.preview === "wars"
@@ -58,6 +62,64 @@ export default function ExamplesOverviewPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+function MiniDataCentersIsotypePreview() {
+  const racks = Array.from({ length: 24 })
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f2eedf" />
+      <text x="12" y="18" fill="#34383b" fontSize="12" fontWeight="900" fontFamily="sans-serif">
+        THE BUILDINGS BEHIND AI
+      </text>
+      <path
+        d="M18 30L38 25 65 29 92 25 123 30 155 27 190 34 215 46 207 66 180 73 145 69 111 74 80 67 50 70 25 58Z"
+        fill="#e6dfca"
+        stroke="#34383b"
+        strokeWidth="1"
+      />
+      {[
+        [42, 45, "#34383b"], [67, 55, "#34383b"], [112, 49, "#4f8999"],
+        [135, 60, "#d72f3f"], [158, 47, "#d72f3f"], [184, 55, "#d8ad43"],
+      ].map(([x, y, fill], index) => (
+        <rect key={index} x={x} y={y} width="7" height="11" fill={fill} />
+      ))}
+      {racks.map((_, index) => (
+        <rect
+          key={index}
+          x={12 + index * 9}
+          y="82"
+          width="6"
+          height="10"
+          fill={index < 13 ? "#d72f3f" : index < 17 ? "#4f8999" : "#34383b"}
+        />
+      ))}
+    </svg>
+  )
+}
+
+function MiniLakeIsotypePreview() {
+  const dams = Array.from({ length: 10 })
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f2eedf" />
+      <rect x="0" y="0" width="242" height="7" fill="#34383b" />
+      <text x="12" y="25" fill="#34383b" fontSize="13" fontWeight="900" fontFamily="sans-serif">
+        LAKE TRAVIS
+      </text>
+      <text x="12" y="39" fill="#d72f3f" fontSize="8" fontWeight="900" fontFamily="sans-serif">
+        THE WATER, IN SIGNS
+      </text>
+      {dams.map((_, index) => (
+        <g key={index} transform={`translate(${13 + index * 22} 48)`}>
+          <path d="M2 0h15l-2 25H4z" fill={index < 8 ? "#4f8999" : "#d6cfbc"} />
+          <circle cx="9.5" cy="10" r="4" fill="#f2eedf" />
+          <circle cx="9.5" cy="10" r="1.6" fill={index < 8 ? "#4f8999" : "#d6cfbc"} />
+        </g>
+      ))}
+      <path d="M12 85 C44 78 65 86 92 76 S142 83 166 70 S208 75 230 61" fill="none" stroke="#d72f3f" strokeWidth="3" />
+    </svg>
   )
 }
 

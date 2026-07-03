@@ -20,6 +20,8 @@ function ScatterplotMatrix
 function StackedAreaChart
 function StreamXYFrame
 function XYCustomChart
+function glyphExtent
+function glyphPlacement
 function hitTargetPoint
 function hitTargetRect
 function useCustomLayoutSelection
@@ -30,6 +32,9 @@ interface CenterlineStyle
 interface ConnectedScatterplotProps
 interface CustomLayoutSelection
 interface DifferenceChartProps
+interface GlyphDef
+interface GlyphPart
+interface GlyphSceneNode
 interface HeatmapProps
 interface HitTargetPointProps
 interface HitTargetRectProps

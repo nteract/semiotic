@@ -49,6 +49,7 @@ import { select, type Selection } from "d3-selection"
 import { geoCanvasRenderer } from "./renderers/geoCanvasRenderer"
 import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
+import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
@@ -884,6 +885,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       geoCanvasRenderer(ctx, scene, scales, layout)
       lineCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
       pointCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+      glyphCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
 
       // ── Geo particles ── (skipped under reduced motion: decorative movement)
       if (showParticles && !reducedMotionRef.current && particlePoolRef.current) {
