@@ -13,7 +13,8 @@ import {
   type PrevPosition,
   type PrevPath,
 } from "./pipelineTransitions"
-import type { CandlestickSceneNode, PointSceneNode, RectSceneNode, SceneNode, TransitionConfig } from "./types"
+import type { CandlestickSceneNode, GlyphSceneNode, PointSceneNode, RectSceneNode, SceneNode, TransitionConfig } from "./types"
+import type { GlyphDef } from "./glyphDef"
 
 const ctx: TransitionContext = {
   runtimeMode: "streaming",
@@ -346,6 +347,123 @@ describe("pipelineTransitions — rect", () => {
     expect(moved.y).toBe(20)
     expect(moved.h).toBe(110)
     expect(moved._targetH).toBeUndefined()
+    expect(state.activeTransition).toBeNull()
+  })
+})
+
+const GLYPH_DEF: GlyphDef = {
+  viewBox: [40, 40],
+  parts: [
+    { d: "M0 0 H40 V40 H0 Z", fill: "color" },
+    { d: "M10 10 H30 V30 H10 Z", fill: "accent" },
+  ],
+}
+
+function makeGlyph(overrides: Partial<GlyphSceneNode> = {}): GlyphSceneNode {
+  return {
+    type: "glyph",
+    x: 100,
+    y: 50,
+    size: 24,
+    glyph: GLYPH_DEF,
+    color: "#333",
+    accent: "#c62828",
+    style: { opacity: 1 },
+    datum: { x: 5, y: 40 },
+    ...overrides,
+  }
+}
+
+describe("pipelineTransitions — glyph", () => {
+  it("snapshotPositions records x/y, size (as r), opacity, and the glyph def", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeGlyph({ x: 100, y: 50, size: 24 })], prevPos, prevPath)
+    const [prev] = [...prevPos.values()]
+    expect(prev.x).toBe(100)
+    expect(prev.y).toBe(50)
+    expect(prev.r).toBe(24) // size carried as r so scale interpolates
+    expect(prev.opacity).toBe(1)
+    expect(prev.glyph).toBe(GLYPH_DEF)
+  })
+
+  it("startTransition on a moved/resized glyph seeds targets and rolls back", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeGlyph({ pointId: "g1", x: 100, y: 50, size: 24 })], prevPos, prevPath)
+
+    const moved = makeGlyph({ pointId: "g1", x: 200, y: 90, size: 40 })
+    const state = { scene: [moved as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    expect(moved._targetX).toBe(200)
+    expect(moved._targetY).toBe(90)
+    expect(moved._targetR).toBe(40)
+    // Rolled back so advanceTransition lerps forward.
+    expect(moved.x).toBe(100)
+    expect(moved.y).toBe(50)
+    expect(moved.size).toBe(24)
+    expect(state.activeTransition).not.toBeNull()
+  })
+
+  it("entering glyph fades in from opacity 0", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeGlyph({ pointId: "g1" })], prevPos, prevPath)
+
+    const kept = makeGlyph({ pointId: "g1" })
+    const entering = makeGlyph({ pointId: "g2", x: 300, y: 70 })
+    const state = { scene: [kept as SceneNode, entering as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    expect(entering.style?.opacity).toBe(0)
+    expect(entering._targetOpacity).toBe(1)
+  })
+
+  it("exiting glyph fades out as itself in neutral ink for both color and accent", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeGlyph({ pointId: "g1", x: 120, y: 60, size: 30 })], prevPos, prevPath)
+
+    // New scene omits g1 entirely → it should be scheduled as an exit node.
+    const state = { scene: [] as SceneNode[], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    const exit = state.exitNodes.find((n) => n.type === "glyph") as GlyphSceneNode | undefined
+    expect(exit).toBeDefined()
+    expect(exit!.x).toBe(120)
+    expect(exit!.y).toBe(60)
+    expect(exit!.size).toBe(30)
+    expect(exit!.glyph).toBe(GLYPH_DEF)
+    // Both role paints neutral so accent parts fade too rather than vanishing.
+    expect(exit!.color).toBe("#999")
+    expect(exit!.accent).toBe("#999")
+    expect(exit!._targetOpacity).toBe(0)
+  })
+
+  it("advanceTransition lerps x/y/size toward target, then snaps and clears at t=1", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeGlyph({ pointId: "g1", x: 100, y: 50, size: 24 })], prevPos, prevPath)
+
+    const moved = makeGlyph({ pointId: "g1", x: 200, y: 90, size: 40 })
+    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+      scene: [moved as SceneNode], exitNodes: [], activeTransition: null,
+    }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+    const startTime = state.activeTransition.startTime
+
+    advanceTransition(startTime + 150, transition, state, prevPos, prevPath)
+    expect(moved.x).toBeGreaterThan(100)
+    expect(moved.x).toBeLessThan(200)
+    expect(moved.size).toBeGreaterThan(24)
+    expect(moved.size).toBeLessThan(40)
+
+    advanceTransition(startTime + 400, transition, state, prevPos, prevPath)
+    expect(moved.x).toBe(200)
+    expect(moved.y).toBe(90)
+    expect(moved.size).toBe(40)
+    expect(moved._targetX).toBeUndefined()
     expect(state.activeTransition).toBeNull()
   })
 })

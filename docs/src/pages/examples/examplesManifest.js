@@ -13,6 +13,22 @@ export const EXAMPLES = [
     preview: "combined",
   },
   {
+    title: "Lake Travis, in Signs",
+    path: "/examples/lake-travis-isotype",
+    eyebrow: "Four custom frames · ISOTYPE",
+    description:
+      "A lake-level and weather dashboard rebuilt with repeated pictograms across streaming XY, ordinal, network, and geographic custom layouts.",
+    preview: "lake-isotype",
+  },
+  {
+    title: "The Buildings Behind AI",
+    path: "/examples/data-centers-isotype",
+    eyebrow: "Altitude sections · evidence ledger",
+    description:
+      "An ISOTYPE account of the AI build-out: relief sections carry data centers across the U.S. map, arrow units trace power and water, unit grids count capacity and compute—and every claim keeps its denominator and source.",
+    preview: "data-centers-isotype",
+  },
+  {
     title: "All the Wars of the United States",
     path: "/examples/us-war-timeline",
     eyebrow: "Custom ordinal timeline",

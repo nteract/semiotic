@@ -18,6 +18,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { CoercibleNumber } from "./accessorUtils"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { SymbolName } from "./symbolPath"
+import type { GlyphDef } from "./glyphDef"
 
 export type SceneDatum = Datum | null
 export type SeriesDatum = Datum[] | null
@@ -179,6 +180,7 @@ export type SceneNode =
   | AreaSceneNode
   | PointSceneNode
   | SymbolSceneNode
+  | GlyphSceneNode
   | RectSceneNode
   | HeatcellSceneNode
   | CandlestickSceneNode
@@ -304,6 +306,61 @@ export interface SymbolSceneNode {
   symbolType?: SymbolName
   /** Pre-built SVG path string, origin-centered — overrides `symbolType`. */
   path?: string
+  /** Rotation in radians about (x, y). */
+  rotation?: number
+  style: Style
+  datum: SceneDatum
+  /** Optional unique identifier for point-anchored annotations. */
+  pointId?: string
+  /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active). */
+  _pulseIntensity?: number
+  /** Pulse glow color. */
+  _pulseColor?: string
+  /** Pulse glow radius in px. */
+  _pulseGlowRadius?: number
+  /** Animation target fields (set during transitions). */
+  _targetX?: number
+  _targetY?: number
+  _targetR?: number
+  _targetOpacity?: number
+  /** Per-datum decay opacity (set by PipelineStore.applyDecay). */
+  _decayOpacity?: number
+  /** Stable identity key for transition tracking. */
+  _transitionKey?: string
+}
+
+/**
+ * Glyph node — the composite-pictogram channel. Where `symbol` stamps one
+ * `d3-shape` path, `glyph` stamps a small multi-part vector pictogram (a
+ * `GlyphDef`: an ISOTYPE server sign, a factory, a worker) with per-node
+ * `color`/`accent` paints resolved against the definition's role tokens, and
+ * an optional partial fill (`fraction`/`fractionStart`) for unit-chart final
+ * signs — pair with the `unitize` recipe. Painted on canvas and in SVG/SSR
+ * via the shared `glyphDef` helpers, hit-tested and keyboard-navigated by its
+ * drawn bounds, and transition-tracked like a point. Uses `x`/`y` in XY,
+ * ordinal, and geo scenes (the network variant uses `cx`/`cy`).
+ */
+export interface GlyphSceneNode {
+  type: "glyph"
+  x: number
+  y: number
+  /** Rendered height in px — width follows the definition's viewBox aspect. */
+  size: number
+  /** The multi-part pictogram definition to stamp. */
+  glyph: GlyphDef
+  /** Primary paint for parts declaring `"color"`. Falls back to `style.fill`. */
+  color?: string
+  /** Accent paint for parts declaring `"accent"`. */
+  accent?: string
+  /** Partial fill 0–1 — how much of the sign is painted. @default 1 */
+  fraction?: number
+  /** Where the partial fill begins, 0–1 (range boundary signs). @default 0 */
+  fractionStart?: number
+  /** Partial-fill axis: horizontal fills left→right, vertical bottom→up. @default "horizontal" */
+  fractionDirection?: "horizontal" | "vertical"
+  /** Ghost paint drawn at full extent beneath a partial fill so the whole
+   *  sign stays countable (the ISOTYPE partial-symbol convention). */
+  ghostColor?: string
   /** Rotation in radians about (x, y). */
   rotation?: number
   style: Style

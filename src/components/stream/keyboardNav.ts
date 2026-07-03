@@ -16,6 +16,7 @@ import type { NetworkSceneEdge, NetworkSceneNode } from "./networkTypes"
 import type { SceneNode } from "./types"
 import type { OrdinalSceneNode } from "./ordinalTypes"
 import type { GeoSceneNode } from "./geoTypes"
+import { glyphHitGeometry } from "./glyphDef"
 
 export interface NavPoint {
   x: number
@@ -241,6 +242,22 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
         break
 
+      case "glyph": {
+        if (node.size <= 0 || node.datum == null) break
+        // Focus ring hugs the drawn pictogram bounds (anchor-aware).
+        const geometry = glyphHitGeometry(node.glyph, node.size)
+        points.push({
+          x: node.x + geometry.centerDx,
+          y: node.y + geometry.centerDy,
+          datum: node.datum,
+          shape: "rect",
+          w: geometry.halfWidth * 2,
+          h: geometry.halfHeight * 2,
+          group: "_default"
+        })
+        break
+      }
+
       case "line": {
         const line = node
         const data = Array.isArray(line.datum) ? line.datum : []
@@ -323,6 +340,18 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
     } else if (node.type === "symbol") {
       if (node.size <= 0) continue
       points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
+    } else if (node.type === "glyph") {
+      if (node.size <= 0 || node.datum == null) continue
+      const geometry = glyphHitGeometry(node.glyph, node.size)
+      points.push({
+        x: node.x + geometry.centerDx,
+        y: node.y + geometry.centerDy,
+        datum: node.datum,
+        shape: "rect",
+        w: geometry.halfWidth * 2,
+        h: geometry.halfHeight * 2,
+        group: "_default"
+      })
     } else if (node.type === "wedge" && node.cx != null) {
       if (node.datum === null) continue
       const midAngle = ((node.startAngle || 0) + (node.endAngle || 0)) / 2
@@ -375,6 +404,18 @@ export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
     } else if (node.type === "symbol" && node.cx != null) {
       if (node.size <= 0) continue
       points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum?.id ?? "_default" })
+    } else if (node.type === "glyph" && node.cx != null) {
+      if (node.size <= 0 || node.datum == null) continue
+      const geometry = glyphHitGeometry(node.glyph, node.size)
+      points.push({
+        x: node.cx + geometry.centerDx,
+        y: node.cy + geometry.centerDy,
+        datum: node.datum,
+        shape: "rect",
+        w: geometry.halfWidth * 2,
+        h: geometry.halfHeight * 2,
+        group: node.datum?.id ?? "_default"
+      })
     }
   }
 
@@ -514,6 +555,17 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
   for (const node of scene) {
     if (node.type === "point" && node.x != null) {
       points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle" })
+    } else if (node.type === "glyph") {
+      if (node.size <= 0 || node.datum == null) continue
+      const geometry = glyphHitGeometry(node.glyph, node.size)
+      points.push({
+        x: node.x + geometry.centerDx,
+        y: node.y + geometry.centerDy,
+        datum: node.datum,
+        shape: "rect",
+        w: geometry.halfWidth * 2,
+        h: geometry.halfHeight * 2,
+      })
     } else if (node.type === "geoarea" && node.centroid && node.interactive !== false) {
       // Skip non-interactive areas (e.g. the graticule, `datum: null`) so
       // keyboard nav lands only on hit-testable shapes — mirrors the

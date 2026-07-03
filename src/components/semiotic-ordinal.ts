@@ -32,6 +32,10 @@ export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 // transition identity). See also semiotic/recipes.
 export { hitTargetPoint, hitTargetRect, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
 export type { HitTargetPointProps, HitTargetRectProps } from "./stream/hitTarget"
+// glyph — the composite-pictogram scene node for custom layouts.
+export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
+export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
+export type { GlyphSceneNode } from "./stream/types"
 
 // Utilities
 export { createHatchPattern } from "./charts/shared/hatchPattern"

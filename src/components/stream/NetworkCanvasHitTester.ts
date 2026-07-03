@@ -5,10 +5,12 @@ import type {
   NetworkRectNode,
   NetworkArcNode,
   NetworkSymbolNode,
+  NetworkGlyphNode,
   NetworkBezierEdge
 } from "./networkTypes"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
+import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import type { Quadtree } from "d3-quadtree"
 
@@ -109,9 +111,33 @@ function hitTestNode(
       return hitTestArc(node, px, py)
     case "symbol":
       return hitTestSymbol(node, px, py, maxDistance)
+    case "glyph":
+      return hitTestGlyph(node, px, py, maxDistance)
     default:
       return null
   }
+}
+
+function hitTestGlyph(
+  node: NetworkGlyphNode,
+  px: number,
+  py: number,
+  maxDistance: number = 30
+): NetworkHitResult | null {
+  // A composite glyph hit-tests as a circle over its drawn bounds — centered
+  // on the visual box (which the anchor may offset from cx/cy).
+  if (node.datum == null) return null
+  const geometry = glyphHitGeometry(node.glyph, node.size)
+  const cx = node.cx + geometry.centerDx
+  const cy = node.cy + geometry.centerDy
+  const dx = px - cx
+  const dy = py - cy
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  const tolerance = getHitRadius(geometry.radius, maxDistance)
+  if (dist <= tolerance) {
+    return { type: "node", datum: node.datum, x: cx, y: cy, distance: dist }
+  }
+  return null
 }
 
 function hitTestSymbol(

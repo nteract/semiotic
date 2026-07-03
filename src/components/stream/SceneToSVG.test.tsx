@@ -117,6 +117,102 @@ describe("ordinalSceneNodeToSVG — symbol", () => {
   })
 })
 
+// ── glyph (composite pictogram) ───────────────────────────────────────
+
+const SERVER_SIGN: any = {
+  viewBox: [40, 40],
+  anchor: [0.5, 1],
+  parts: [
+    { d: "M8 3h24v34H8z", fill: "color" },
+    { d: "M12 9h16v5H12z", fill: "accent" },
+  ],
+}
+
+describe("glyph scene nodes — all four converters", () => {
+  it("renders parts with role paints, anchor offset, and scale (XY)", () => {
+    const node: any = {
+      type: "glyph",
+      x: 100,
+      y: 200,
+      size: 20, // scale 0.5, feet-anchored: offset (-10, -20)
+      glyph: SERVER_SIGN,
+      color: "#d72f3f",
+      accent: "#fffdf4",
+      style: {},
+    }
+    const html = markup(xySceneNodeToSVG(node, 0))
+    expect(html).toContain("translate(100,200) translate(-10,-20) scale(0.5)")
+    expect(html).toContain('fill="#d72f3f"')
+    expect(html).toContain('fill="#fffdf4"')
+    expect(html).toContain('d="M8 3h24v34H8z"')
+  })
+
+  it("clips a partial fill and paints the ghost silhouette underneath", () => {
+    const node: any = {
+      type: "glyph",
+      x: 0,
+      y: 0,
+      size: 40,
+      glyph: SERVER_SIGN,
+      color: "#4f8999",
+      ghostColor: "#e6dfca",
+      fraction: 0.5,
+      style: {},
+      pointId: "sign-3",
+    }
+    const html = markup(xySceneNodeToSVG(node, 3))
+    expect(html).toContain("<clipPath")
+    expect(html).toContain('width="20"') // 0.5 × 40 viewBox units
+    expect(html).toContain('fill="#e6dfca"') // ghost pass
+    expect(html).toContain("clip-path=")
+  })
+
+  it("supports a fraction window for range boundary signs", () => {
+    const node: any = {
+      type: "glyph",
+      x: 0,
+      y: 0,
+      size: 40,
+      glyph: SERVER_SIGN,
+      color: "#d8ad43",
+      fraction: 1,
+      fractionStart: 0.56,
+      style: {},
+    }
+    const html = markup(xySceneNodeToSVG(node, 0))
+    expect(html).toContain('x="22.400000000000002"') // 0.56 × 40
+  })
+
+  it("renders network glyphs at cx/cy", () => {
+    const node: any = {
+      type: "glyph",
+      cx: 30,
+      cy: 60,
+      size: 20,
+      glyph: SERVER_SIGN,
+      color: "#34383b",
+      style: {},
+      id: "plant",
+    }
+    const html = markup(networkSceneNodeToSVG(node, 0))
+    expect(html).toContain("translate(30,60)")
+    expect(html).toContain('fill="#34383b"')
+  })
+
+  it("falls back to style.fill when no color is set, and skips size<=0", () => {
+    const node: any = {
+      type: "glyph",
+      x: 0,
+      y: 0,
+      size: 20,
+      glyph: SERVER_SIGN,
+      style: { fill: "#123456" },
+    }
+    expect(markup(xySceneNodeToSVG(node, 0))).toContain('fill="#123456"')
+    expect(xySceneNodeToSVG({ ...node, size: 0 }, 0)).toBeNull()
+  })
+})
+
 describe("xySceneNodeToSVG — rect", () => {
   it("renders a rect with correct attributes", () => {
     const node: any = {

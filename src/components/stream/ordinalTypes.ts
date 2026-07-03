@@ -193,13 +193,14 @@ export interface TrapezoidSceneNode {
 }
 
 // Re-export scene node types from XY that we reuse
-export type { Style, PointSceneNode, RectSceneNode, SymbolSceneNode } from "./types"
-import type { PointSceneNode, RectSceneNode, SymbolSceneNode } from "./types"
+export type { Style, PointSceneNode, RectSceneNode, SymbolSceneNode, GlyphSceneNode } from "./types"
+import type { PointSceneNode, RectSceneNode, SymbolSceneNode, GlyphSceneNode } from "./types"
 
 export type OrdinalSceneNode =
   | RectSceneNode
   | PointSceneNode
   | SymbolSceneNode
+  | GlyphSceneNode
   | WedgeSceneNode
   | BoxplotSceneNode
   | ViolinSceneNode

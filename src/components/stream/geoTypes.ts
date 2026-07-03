@@ -9,6 +9,7 @@ import type {
   StalenessConfig,
   SceneDatum,
   PointSceneNode,
+  GlyphSceneNode,
   ThemeSemanticColors
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
@@ -96,10 +97,12 @@ export interface GeoLineSceneNode {
   group?: string
 }
 
-/** Union of all scene node types that GeoFrame produces */
+/** Union of all scene node types that GeoFrame produces. `GlyphSceneNode`
+ *  joins for custom geo layouts — projected pictograms standing on the map. */
 export type GeoSceneNode =
   | GeoAreaSceneNode
   | PointSceneNode
+  | GlyphSceneNode
   | GeoLineSceneNode
 
 // ── Scales ───────────────────────────────────────────────────────────

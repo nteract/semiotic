@@ -70,6 +70,7 @@ import { getDevicePixelRatio } from "./canvasSetup"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { symbolCanvasRenderer } from "./renderers/symbolCanvasRenderer"
+import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
@@ -110,6 +111,7 @@ const RENDERERS: Record<OrdinalChartType, AnyRendererFn[]> = {
     barCanvasRenderer,
     pointCanvasRenderer,
     symbolCanvasRenderer,
+    glyphCanvasRenderer,
     wedgeCanvasRenderer,
     boxplotCanvasRenderer,
     violinCanvasRenderer,

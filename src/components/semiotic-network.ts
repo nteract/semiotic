@@ -29,6 +29,10 @@ export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 // onObservation, shared selection). See also semiotic/recipes.
 export { networkHitTarget, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
 export type { NetworkHitTargetCircleProps, NetworkHitTargetRectProps } from "./stream/hitTarget"
+// glyph — the composite-pictogram scene node for custom network layouts.
+export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
+export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
+export type { NetworkGlyphNode } from "./stream/networkTypes"
 
 // Stream Frame types
 export type {

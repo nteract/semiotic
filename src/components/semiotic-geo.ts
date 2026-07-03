@@ -17,6 +17,10 @@ export { GeoCustomChart } from "./charts/custom/GeoCustomChart"
 // Custom-layout hit target — make overlay-drawn geographic marks navigable.
 export { geoHitTarget, hitTargetPoint, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
 export type { HitTargetPointProps } from "./stream/hitTarget"
+// glyph — projected composite pictograms standing on the map.
+export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
+export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
+export type { GlyphSceneNode } from "./stream/types"
 
 // Stream Frame types
 export type {

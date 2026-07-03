@@ -6,10 +6,13 @@ _Edit dist/semiotic-recipes.d.ts's sources, then re-run `npm run docs:api-surfac
 ```
 class LayoutCache
 const DEFAULT_AREA_PER_ANNOTATION
+const DEFAULT_GLYPH_ANCHOR
+const DEFAULT_GLYPH_VIEWBOX
 const DEFAULT_HIT_RADIUS
 const DEFAULT_ISOMETRIC_SPRITE_SIZES
 const SYMBOL_SEQUENCE
 const TAU
+function Glyph
 function activeCountOverDomain
 function addPoints
 function adjacencyMatrix
@@ -52,6 +55,9 @@ function forceLayout
 function forceLayoutAsync
 function formatTooltipValue
 function geoHitTarget
+function glyphExtent
+function glyphFractionClipRect
+function glyphPlacement
 function groupBy
 function hatchFill
 function hitTargetPoint
@@ -98,6 +104,8 @@ function subtractPoints
 function symbolExtent
 function symbolPathString
 function symbolRadius
+function unitize
+function unitizeRange
 function unwrapDatum
 function useCustomLayoutSelection
 function waffleLayout
@@ -140,6 +148,10 @@ interface FanOutBendOptions
 interface FlextreeConfig
 interface ForceLayoutAsyncOptions
 interface ForceLayoutOptions
+interface GlyphDef
+interface GlyphPart
+interface GlyphPlacement
+interface GlyphProps
 interface GraphEdge
 interface GraphNode
 interface HatchFillOptions
@@ -178,10 +190,15 @@ interface PolarOptions
 interface PositionedNode
 interface ProximityProblemOptions
 interface ProximityProblemResult
+interface RangeUnitSign
 interface RectCollideOptions
 interface RoundedEnclosureProps
 interface Run
 interface RunOptions
+interface UnitSign
+interface UnitizeOptions
+interface UnitizeRangeResult
+interface UnitizeResult
 interface WaffleConfig
 type AnnotationCohesion
 type AutoPlaceAnnotations

@@ -1,6 +1,31 @@
 import { describe, expect, it } from "vitest"
 import { render } from "@testing-library/react"
-import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
+import { NetworkSVGOverlay, nodeCenter } from "./NetworkSVGOverlay"
+import { glyphHitGeometry } from "./glyphDef"
+import { symbolRadius } from "./symbolPath"
+
+describe("nodeCenter — glyph anchoring", () => {
+  const glyph = {
+    viewBox: [40, 40] as [number, number],
+    anchor: [0.5, 1] as [number, number], // feet-anchored → center offset from cy
+    parts: [{ d: "M0 0 H40 V40 H0 Z" }],
+  }
+
+  it("uses the glyph's drawn-bounds center and hit radius, not symbolRadius(size)", () => {
+    const center = nodeCenter({ type: "glyph", cx: 100, cy: 200, size: 30, glyph, datum: { id: "g1" } })
+    const geometry = glyphHitGeometry(glyph, 30)
+    expect(center).not.toBeNull()
+    expect(center!.x).toBe(100 + geometry.centerDx)
+    expect(center!.y).toBe(200 + geometry.centerDy)
+    expect(center!.r).toBe(Math.max(1, geometry.radius))
+    // The old code treated size as a d3-symbol area — this must NOT match.
+    expect(center!.r).not.toBe(Math.max(1, symbolRadius(30)))
+  })
+
+  it("returns null when a glyph node lacks a resolvable center", () => {
+    expect(nodeCenter({ type: "glyph", size: 30, glyph, datum: null })).toBeNull()
+  })
+})
 
 describe("NetworkSVGOverlay", () => {
   it("auto-places annotations before custom svgAnnotationRules run", () => {

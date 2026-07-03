@@ -13,6 +13,7 @@ import {
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { AnnotationContext } from "../realtime/types"
 import { symbolRadius } from "./symbolPath"
+import { glyphHitGeometry, type GlyphDef } from "./glyphDef"
 
 type AnnotationAnchorNode = {
   type: string
@@ -28,8 +29,10 @@ type AnnotationAnchorNode = {
   r?: number
   /** Arc nodes (chord, radial) carry an outer radius. */
   outerR?: number
-  /** Symbol nodes (the per-datum glyph channel) carry a d3-symbol area. */
+  /** Symbol nodes carry a d3-symbol area; glyph nodes reuse `size` as rendered height. */
   size?: number
+  /** Glyph nodes (the composite-pictogram channel) carry a definition. */
+  glyph?: GlyphDef
 }
 
 type NetworkAnnotationContext = AnnotationContext & { sceneNodes?: AnnotationAnchorNode[] }
@@ -44,6 +47,17 @@ export function nodeAnchorId(node: AnnotationAnchorNode): string | undefined {
 /** Center + effective radius of a scene node for annotation anchoring. Exported
  *  for tests. */
 export function nodeCenter(node: AnnotationAnchorNode): { x: number; y: number; r: number } | null {
+  // Composite glyph: reuse the shared hit geometry so the anchor sits on the
+  // drawn-bounds center (the anchor may offset it from cx/cy) with a radius that
+  // matches the pictogram — not symbolRadius(size), which reads size as a
+  // d3-symbol area.
+  if (node.type === "glyph" && node.glyph && typeof node.size === "number") {
+    const cx = node.cx ?? node.x
+    const cy = node.cy ?? node.y
+    if (typeof cx !== "number" || typeof cy !== "number") return null
+    const geometry = glyphHitGeometry(node.glyph, node.size)
+    return { x: cx + geometry.centerDx, y: cy + geometry.centerDy, r: Math.max(1, geometry.radius) }
+  }
   const x = node.cx ?? (node.x != null && node.w != null ? node.x + node.w / 2 : node.x)
   const y = node.cy ?? (node.y != null && node.h != null ? node.y + node.h / 2 : node.y)
   if (typeof x !== "number" || typeof y !== "number") return null

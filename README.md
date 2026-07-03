@@ -346,19 +346,19 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **98 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **79 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **83 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
-| `semiotic/geo` | **60 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **106 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/server` | **134 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/xy` | **100 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **80 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **85 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/geo` | **62 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
+| `semiotic/realtime` | **109 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/server` | **136 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/utils` | **39 KB** | ThemeProvider, validators, serialization — no chart components |
-| `semiotic/recipes` | **33 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes` | **35 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **6 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **4 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/ai` | **271 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
-| `semiotic` | **222 KB** | Everything below (full bundle) |
+| `semiotic/ai` | **275 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic` | **226 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 
