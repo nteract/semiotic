@@ -158,7 +158,10 @@ function glyphNodeToSVG(
     g.fractionDirection ?? "horizontal"
   )
   const clipId = clip ? safeSvgId(`${key}-clip`) : undefined
-  const opacity = (g.style.opacity ?? 1) * (g._decayOpacity ?? 1)
+  // Mirror glyphCanvasRenderer, which folds fillOpacity into the node alpha —
+  // otherwise SSR/SVG output is more opaque than canvas when fillOpacity is set.
+  const opacity =
+    (g.style.opacity ?? 1) * (g._decayOpacity ?? 1) * (g.style.fillOpacity ?? 1)
 
   const parts = (paintOverride?: string) =>
     def.parts.map((part, partIndex) => {

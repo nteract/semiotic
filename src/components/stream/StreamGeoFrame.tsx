@@ -20,7 +20,8 @@ import type {
   ProjectionName,
   ProjectionProp
 } from "./geoTypes"
-import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
+import type { GlyphSceneNode, PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
+import { glyphHitGeometry } from "./glyphDef"
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoPipelineConfig } from "./geoTypes"
@@ -57,6 +58,33 @@ import type { HoverPointerCoords } from "./hoverUtils"
 import { resolveNodeColor } from "./sceneUtils"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
+
+// ── Annotation anchors ───────────────────────────────────────────────────
+// Map the scene's anchorable marks into the `{ pointId, x, y, r }` shape the
+// SVG overlay uses to resolve `pointId`-anchored annotations. Point marks pass
+// through; glyph marks contribute their drawn-bounds center + radius (via the
+// shared hit geometry) so annotations resolve against pictograms too.
+function collectGeoAnnotationAnchors(
+  scene: (GeoSceneNode | SceneNode)[] | undefined
+): { pointId?: string; x: number; y: number; r: number }[] | undefined {
+  if (!scene) return undefined
+  const anchors: { pointId?: string; x: number; y: number; r: number }[] = []
+  for (const n of scene) {
+    if (n.type === "point") {
+      anchors.push(n as PointSceneNode)
+    } else if (n.type === "glyph") {
+      const g = n as GlyphSceneNode
+      const geometry = glyphHitGeometry(g.glyph, g.size)
+      anchors.push({
+        pointId: g.pointId,
+        x: g.x + geometry.centerDx,
+        y: g.y + geometry.centerDy,
+        r: geometry.radius,
+      })
+    }
+  }
+  return anchors
+}
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -1326,9 +1354,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             annotationFrame={0}
             xValues={[]}
             yValues={[]}
-            pointNodes={scene.filter(
-              (n): n is PointSceneNode => n.type === "point"
-            )}
+            pointNodes={collectGeoAnnotationAnchors(scene)}
           />
         </div>
       )
@@ -1420,9 +1446,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           annotationFrame={annotationFrame}
           xValues={[]}
           yValues={[]}
-          pointNodes={storeRef.current?.scene.filter(
-            (n): n is PointSceneNode => n.type === "point"
-          )}
+          pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
         />
         {staleness?.showBadge && (
           <StalenessBadge isStale={isStale} position={staleness.badgePosition} />

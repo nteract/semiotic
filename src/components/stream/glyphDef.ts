@@ -168,7 +168,10 @@ export function glyphHitGeometry(
     centerDy: placement.offsetY + placement.height / 2,
     halfWidth: placement.width / 2,
     halfHeight: placement.height / 2,
-    radius: Math.max(placement.width, placement.height) / 2,
+    // Circumscribed circle (half the diagonal) so the whole drawn box — corners
+    // included — is grabbable; the inscribed `max(w,h)/2` would drop the corners
+    // of non-square or rotated glyphs.
+    radius: Math.hypot(placement.width, placement.height) / 2,
   }
 }
 

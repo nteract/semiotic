@@ -392,7 +392,9 @@ export function startTransition(
       // other mark types use.
       const exitNode: GlyphSceneNode = {
         type: "glyph", x: prev.x, y: prev.y, size: prev.r ?? 12,
-        glyph: prev.glyph, color: "#999",
+        // Neutral ink for both role paints so accent parts fade out too rather
+        // than vanishing (an undefined accent resolves to transparent).
+        glyph: prev.glyph, color: "#999", accent: "#999",
         style: { opacity: prev.opacity ?? 1 }, datum: null,
         _targetOpacity: 0, _transitionKey: key
       }
@@ -603,6 +605,15 @@ export function advanceTransition(
         node.x = node._targetX
         node.y = node._targetY!
         if (node._targetR !== undefined) node.r = node._targetR
+        node._targetX = undefined
+        node._targetY = undefined
+        node._targetR = undefined
+      } else if (node.type === "glyph") {
+        if (node._targetX === undefined) continue
+        node.x = node._targetX
+        node.y = node._targetY!
+        // `_targetR` carries the glyph's target size (see snapshotPositions).
+        if (node._targetR !== undefined) node.size = node._targetR
         node._targetX = undefined
         node._targetY = undefined
         node._targetR = undefined

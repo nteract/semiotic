@@ -3,7 +3,6 @@ import {
   Glyph,
   hatchFill,
   hitTargetRect,
-  unitize,
   unitizeRange,
 } from "semiotic/recipes"
 
