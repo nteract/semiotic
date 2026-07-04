@@ -295,6 +295,18 @@ function readTextAtVersion(version: string, path: string): string {
   return gitShow([`${version}:${path}`])
 }
 
+function readTextAtVersionFallback(version: string, paths: string[]): string {
+  let lastError: unknown
+  for (const path of paths) {
+    try {
+      return readTextAtVersion(version, path)
+    } catch (error) {
+      lastError = error
+    }
+  }
+  throw lastError
+}
+
 function tagDate(tag: string): string {
   return gitShow(["-s", "--format=%cs", tag]).trim()
 }
@@ -474,7 +486,7 @@ function docsCategoryForRoute(fullPath: string, component: string): string | nul
 }
 
 function routeEntriesForVersion(version: string): Array<{ category: string; component: string }> {
-  const text = readTextAtVersion(version, "docs/src/App.js")
+  const text = readTextAtVersionFallback(version, ["docs/src/App.jsx", "docs/src/App.js"])
   const entries: Array<{ category: string; component: string }> = []
   const stack: string[] = []
   const seen = new Set<string>()

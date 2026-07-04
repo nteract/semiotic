@@ -35,7 +35,7 @@ const chartsDir = join(repoRoot, "docs/src/pages/charts")
 const errors: string[] = []
 const note = (m: string) => errors.push(m)
 
-// Charts documented somewhere other than a dedicated <Name>Page.js — kept in
+// Charts documented somewhere other than a dedicated <Name>Page.jsx — kept in
 // sync with check-docs-coverage's DOCS_PAGE_BURN_DOWN.
 const NO_PAGE = new Set(["RidgelinePlot", "TemporalHistogram", "MinimapChart"])
 
@@ -116,9 +116,9 @@ function documentedPropNames(source: string): Set<string> {
 // ── Run ────────────────────────────────────────────────────────────────────
 
 const pageFiles = existsSync(chartsDir)
-  ? readdirSync(chartsDir).filter((f) => f.endsWith("Page.js"))
+  ? readdirSync(chartsDir).filter((f) => f.endsWith("Page.jsx"))
   : []
-const pageCharts = new Set(pageFiles.map((f) => f.replace(/Page\.js$/, "")))
+const pageCharts = new Set(pageFiles.map((f) => f.replace(/Page\.jsx$/, "")))
 
 let checked = 0
 const completenessGaps: string[] = []
@@ -130,16 +130,16 @@ for (const [name, spec] of Object.entries(CHART_SPECS)) {
     }
     continue
   }
-  const source = readFileSync(join(chartsDir, `${name}Page.js`), "utf8")
+  const source = readFileSync(join(chartsDir, `${name}Page.jsx`), "utf8")
   let documented: Set<string>
   try {
     documented = documentedPropNames(source)
   } catch (e) {
-    note(`${name}Page.js: could not parse to verify prop table (${(e as Error).message.split("\n")[0]}).`)
+    note(`${name}Page.jsx: could not parse to verify prop table (${(e as Error).message.split("\n")[0]}).`)
     continue
   }
   if (documented.size === 0) {
-    note(`${name}Page.js: no prop-table array detected (expected an array of { name, type, … } rows).`)
+    note(`${name}Page.jsx: no prop-table array detected (expected an array of { name, type, … } rows).`)
     continue
   }
   checked++

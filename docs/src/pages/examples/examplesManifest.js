@@ -1,7 +1,7 @@
 // Single source of truth for the examples section: narrative order, titles,
 // paths, and overview-card copy. The overview grid renders from it and
 // ExamplePageLayout derives every page's prev/next from it — reordering the
-// section means editing this file only. (App.js route registrations still
+// section means editing this file only. (App.jsx route registrations still
 // name each path; the check:docs-routes gate catches drift.)
 export const EXAMPLES = [
   {

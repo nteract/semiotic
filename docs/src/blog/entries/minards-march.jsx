@@ -1,7 +1,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
-import MinardsMarch from "../../examples/recipes/MinardsMarch.js"
-import MinardsMarchStreaming from "../../examples/recipes/MinardsMarchStreaming.js"
+import MinardsMarch from "../../examples/recipes/MinardsMarch.jsx"
+import MinardsMarchStreaming from "../../examples/recipes/MinardsMarchStreaming.jsx"
 
 const chartFrame = {
   background: "var(--surface-1)",

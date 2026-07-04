@@ -2,11 +2,10 @@ import * as Semiotic from "../../dist/semiotic.module.min.js"
 import * as SemioticGeo from "../../dist/geo.module.min.js"
 import React from "react"
 import { createRoot } from "react-dom/client"
-import ssrParityFixtures from "../ssr-parity-fixtures.js"
+import { makeSsrParityCases } from "../ssr-parity-fixtures.js"
 
 const { ThemeProvider } = Semiotic
 const COMPONENTS = { ...Semiotic, ...SemioticGeo }
-const { makeSsrParityCases } = ssrParityFixtures
 
 const TestCase = ({ title, testId, children }) =>
   React.createElement(

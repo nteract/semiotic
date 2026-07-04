@@ -199,9 +199,9 @@ describe("docs prerender helpers", () => {
     expect(html.match(/"@type":"SoftwareApplication"/g)).toHaveLength(2)
   })
 
-  // Regression: Parcel's HTML minifier strips the implicit </head>
+  // Regression: HTML minifiers can strip the implicit </head>
   // closing tag, so the prerender's meta injection has to anchor on
-  // <body (which Parcel preserves) instead. The fixture below
+  // <body instead. The fixture below
   // deliberately omits </head> to mirror that minified shape and
   // assert the page-specific tags still land in the output.
   it("injects blog-entry meta tags into a minified shell with no </head>", () => {

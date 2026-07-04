@@ -159,7 +159,7 @@ export async function waitForAllChartsReady(
   options: { timeout?: number } = {}
 ): Promise<void> {
   const timeout = options.timeout ?? 15_000
-  // We *don't* wait for `networkidle` — some example pages keep a parcel
+  // We *don't* wait for `networkidle` — the example dev server keeps its
   // HMR socket / dev-server poll open in CI, which delays networkidle past
   // the timeout on firefox even though every chart is fully painted. The
   // canvas-content poll below is the actual readiness signal.

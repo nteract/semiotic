@@ -1,7 +1,7 @@
 import React from "react"
-import BlogLayout from "./components/BlogLayout.js"
-import BlogEntryView from "./components/BlogEntryView.js"
-import BlogEntryCard from "./components/BlogEntryCard.js"
+import BlogLayout from "./components/BlogLayout.jsx"
+import BlogEntryView from "./components/BlogEntryView.jsx"
+import BlogEntryCard from "./components/BlogEntryCard.jsx"
 import { entriesByDateDesc } from "./entries.js"
 
 /**

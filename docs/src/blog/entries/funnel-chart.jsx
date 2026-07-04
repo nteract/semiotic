@@ -1,7 +1,7 @@
 import React, { useRef } from "react"
 import { Link } from "react-router-dom"
 import { FunnelChart, ThemeProvider } from "semiotic"
-import BlogPushDemo from "../components/BlogPushDemo.js"
+import BlogPushDemo from "../components/BlogPushDemo.jsx"
 
 // Classic SaaS signup funnel. Each step shrinks, the drop-off
 // rate is what the chart is meant to surface.

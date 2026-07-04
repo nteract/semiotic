@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React from "react"
-import BlogFigure from "../components/BlogFigure.js"
+import BlogFigure from "../components/BlogFigure.jsx"
 
 const prReviewGif = new URL("../images/pr_review.gif", import.meta.url).href
 
@@ -103,7 +103,7 @@ function Body() {
         The full docs build runs after merge through the docs deployment workflow:
         build production bundles, generate TypeDoc JSON, generate{" "}
         <code>llms.txt</code>, generate SSR gallery and demo GIFs, check blog
-        metadata, render OG cards and RSS, build the Parcel website, prerender
+        metadata, render OG cards and RSS, build the Vite website, prerender
         routes, and smoke-check the generated docs. Then it copies the AI-readable
         docs into the published site: <code>CLAUDE.md</code>,{" "}
         <code>llms-full.txt</code>, <code>schema.json</code>,{" "}

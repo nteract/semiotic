@@ -9,7 +9,7 @@
  * Two locks:
  *
  *   1. **Coverage** — every chart in `chartSpecs.ts` has a
- *      `docs/src/pages/charts/<Name>Page.js`. Charts intentionally documented
+ *      `docs/src/pages/charts/<Name>Page.jsx`. Charts intentionally documented
  *      elsewhere (cookbook, a sibling's page) live in DOCS_PAGE_BURN_DOWN with
  *      a reason; that map is one-way and meant to shrink.
  *
@@ -41,7 +41,7 @@ const note = (m) => errors.push(m)
 // ── Burn-down maps (one-way; intended to shrink) ───────────────────────
 
 // Charts in chartSpecs that intentionally do NOT have a dedicated
-// `<Name>Page.js`. Each entry must say where the chart IS documented.
+// `<Name>Page.jsx`. Each entry must say where the chart IS documented.
 const DOCS_PAGE_BURN_DOWN = new Map([
   ["RidgelinePlot", "documented in the Cookbook (/cookbook/ridgeline-plot), not a dedicated chart page"],
   ["TemporalHistogram", "static sibling documented on the RealtimeHistogram page"],
@@ -57,9 +57,9 @@ const QUALITY_BURN_DOWN = new Map([])
 const specNames = new Set(parseCapabilityMatrix().map((e) => e.name))
 
 const pageFiles = existsSync(chartsDir)
-  ? readdirSync(chartsDir).filter((f) => f.endsWith("Page.js"))
+  ? readdirSync(chartsDir).filter((f) => f.endsWith("Page.jsx"))
   : []
-const pageCharts = new Set(pageFiles.map((f) => f.replace(/Page\.js$/, "")))
+const pageCharts = new Set(pageFiles.map((f) => f.replace(/Page\.jsx$/, "")))
 
 if (pageFiles.length === 0) {
   note(`No chart page files found under docs/src/pages/charts — is the path correct?`)
@@ -71,7 +71,7 @@ for (const chart of [...specNames].sort()) {
   if (pageCharts.has(chart)) continue
   if (DOCS_PAGE_BURN_DOWN.has(chart)) continue
   note(
-    `${chart}: in chartSpecs.ts but has no docs/src/pages/charts/${chart}Page.js. ` +
+    `${chart}: in chartSpecs.ts but has no docs/src/pages/charts/${chart}Page.jsx. ` +
       `Add a chart page, or add an explicit DOCS_PAGE_BURN_DOWN entry with where it is documented.`,
   )
 }
@@ -119,7 +119,7 @@ const SIGNAL_LABEL = {
 const usedQualityBurnDown = new Set()
 
 for (const chart of [...pageCharts].sort()) {
-  const src = readFileSync(join(chartsDir, `${chart}Page.js`), "utf8")
+  const src = readFileSync(join(chartsDir, `${chart}Page.jsx`), "utf8")
   for (const [signal, test] of Object.entries(SIGNALS)) {
     if (test(src, chart)) continue
     const key = `${chart}:${signal}`
@@ -127,7 +127,7 @@ for (const chart of [...pageCharts].sort()) {
       usedQualityBurnDown.add(key)
       continue
     }
-    note(`${chart}Page.js is missing ${SIGNAL_LABEL[signal]}. Add it, or add a QUALITY_BURN_DOWN entry "${key}".`)
+    note(`${chart}Page.jsx is missing ${SIGNAL_LABEL[signal]}. Add it, or add a QUALITY_BURN_DOWN entry "${key}".`)
   }
 }
 
@@ -137,7 +137,7 @@ for (const key of QUALITY_BURN_DOWN.keys()) {
   if (!pageCharts.has(chart)) {
     note(`QUALITY_BURN_DOWN is stale: ${chart} has no page file — remove "${key}".`)
   } else if (!usedQualityBurnDown.has(key)) {
-    const src = readFileSync(join(chartsDir, `${chart}Page.js`), "utf8")
+    const src = readFileSync(join(chartsDir, `${chart}Page.jsx`), "utf8")
     if (SIGNALS[signal]?.(src, chart)) {
       note(`QUALITY_BURN_DOWN is stale: ${chart} now satisfies "${signal}" — remove "${key}".`)
     }
