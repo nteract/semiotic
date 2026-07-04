@@ -1,15 +1,15 @@
 import React, { useRef } from "react"
 import { Link } from "react-router-dom"
 import { DifferenceChart, ThemeProvider } from "semiotic"
-import BlogPushDemo from "../components/BlogPushDemo.js"
-import BlogFigure from "../components/BlogFigure.js"
+import BlogPushDemo from "../components/BlogPushDemo.jsx"
+import BlogFigure from "../components/BlogFigure.jsx"
 
 // Blog images live under `docs/src/blog/images/`. The `new URL(path,
-// import.meta.url)` pattern is the one Parcel's served by default in
+// import.meta.url)` pattern is served by the docs dev server in
 // this project (the docs chart-index thumbnails go through the same
-// path — see `docs/src/IndexPages.js`); Parcel hashes the file and
+// path — see `docs/src/IndexPages.js`); Vite hashes the file and
 // rewrites the URL into the bundle. Plain `import ... from "*.jpg"`
-// does not get bundled by this project's Parcel config and produces
+// does not get bundled by this project's docs config and produces
 // a broken link in dev/build.
 const playfairDifference = new URL("../images/playfair-difference.jpg", import.meta.url).href
 

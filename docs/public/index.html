@@ -16,7 +16,7 @@
     <meta name="twitter:image" content="https://semiotic3.nteract.io/assets/img/semiotic-social.png" />
     <link rel="canonical" href="https://semiotic3.nteract.io" />
     <!-- Atom feed <link rel="alternate" href="/blog/feed.xml"> is injected by scripts/prerender.mjs.
-         Keeping it out of the source HTML avoids Parcel's HTML packager trying to resolve the
+         Keeping it out of the source HTML avoids bundler-specific handling of the
          absolute path during build — the same pattern the script uses for /llms.txt. -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
     <link href="./prism.css" rel="stylesheet" />
@@ -28,6 +28,6 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script src="./prism.js"></script>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../src/index.jsx"></script>
   </body>
 </html>

@@ -1,9 +1,9 @@
 /* eslint-disable react/no-unescaped-entities */
 import React from "react"
 import { Link } from "react-router-dom"
-import WaterCycleFlow from "../../examples/recipes/WaterCycleFlow.js"
-import PatientJourneys from "../../examples/recipes/PatientJourneys.js"
-import AnscombesSankey from "../../examples/recipes/AnscombesSankey.js"
+import WaterCycleFlow from "../../examples/recipes/WaterCycleFlow.jsx"
+import PatientJourneys from "../../examples/recipes/PatientJourneys.jsx"
+import AnscombesSankey from "../../examples/recipes/AnscombesSankey.jsx"
 
 // Embedded charts go in opaque framing divs so they don't fight the
 // blog's reading-width container. The 16-px padding + surface-1

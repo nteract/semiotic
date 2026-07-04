@@ -1,7 +1,7 @@
 import React from "react"
 import { useParams, Navigate, Link } from "react-router-dom"
-import BlogLayout from "./components/BlogLayout.js"
-import BlogEntryView from "./components/BlogEntryView.js"
+import BlogLayout from "./components/BlogLayout.jsx"
+import BlogEntryView from "./components/BlogEntryView.jsx"
 import { getEntry, entriesByDateDesc } from "./entries.js"
 
 /**

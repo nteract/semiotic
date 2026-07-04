@@ -17,7 +17,7 @@ export default {
     screenshot: "on",
     baseURL: "http://localhost:1234"
   },
-  // The visual suite is canvas-heavy and served through one Parcel instance.
+  // The visual suite is canvas-heavy and served through one Vite instance.
   // Higher worker counts can starve first-paint rAF callbacks under Chromium,
   // leaving axes/legends mounted while the data canvas is still blank.
   workers: 3,

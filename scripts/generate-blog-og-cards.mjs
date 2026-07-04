@@ -15,7 +15,7 @@
  * Run after `npm run dist:prod` so `dist/server.module.min.js` is
  * available for the chart-side render. The hook in `package.json`
  * runs us inside `npm run website:build`, after `dist:prod` and
- * before `parcel build`.
+ * before the docs build.
  *
  * Default behavior is append-only: existing PNGs are preserved so
  * hand-repaired social cards do not get clobbered by a normal docs

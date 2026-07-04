@@ -11,11 +11,11 @@ import React from "react"
  *   Drop the image file under `docs/src/blog/images/` and resolve it
  *   with `new URL("../images/<file>", import.meta.url).href` — that's
  *   the same pattern the chart-index thumbnails use (see
- *   `docs/src/IndexPages.js`). Parcel processes the URL, hashes the
+ *   `docs/src/IndexPages.js`). Vite processes the URL, hashes the
  *   file, copies it into the build, and rewrites the reference to
  *   the bundled URL. A plain `<img src="/blog/images/foo.jpg">` will
  *   NOT work — files under `docs/public/` are not auto-served as
- *   static by Parcel's dev server in this project; only assets that
+ *   static by the docs dev server in this project; only assets that
  *   appear in the module graph (via `new URL(...)` or `import`) make
  *   it into the build.
  *

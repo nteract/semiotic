@@ -1,7 +1,7 @@
 import React, { useRef } from "react"
 import { Link } from "react-router-dom"
 import { QuadrantChart, ThemeProvider } from "semiotic"
-import BlogPushDemo from "../components/BlogPushDemo.js"
+import BlogPushDemo from "../components/BlogPushDemo.jsx"
 
 // Effort × impact for a 16-feature roadmap. Each item carries a
 // short name so the dots are not just dots. The eye recognizes

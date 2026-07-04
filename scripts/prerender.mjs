@@ -1,7 +1,7 @@
 /**
  * Static site generation for the docs site.
  *
- * After `parcel build` produces docs/build/index.html (SPA shell),
+ * After the docs build produces docs/build/index.html (SPA shell),
  * this script creates an HTML file for each route with:
  * - Correct <title> for SEO
  * - <noscript> fallback with page title, navigation, and links to
@@ -21,7 +21,7 @@ import { JSDOM } from "jsdom"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BUILD_DIR = resolve(__dirname, "../docs/build")
-const APP_SRC = resolve(__dirname, "../docs/src/App.js")
+const APP_SRC = resolve(__dirname, "../docs/src/App.jsx")
 const PUBLIC_API_DIR = resolve(__dirname, "../docs/public/api")
 const PUBLIC_BLOG_OG_DIR = resolve(__dirname, "../docs/public/blog/og")
 const PUBLIC_EXAMPLE_OG_DIR = resolve(__dirname, "../docs/public/examples/og")
@@ -31,7 +31,7 @@ const DEFAULT_OG_IMAGE = `${SITE_URL}/assets/img/semiotic-social.png`
 const ROUTE_DOCS_MANIFEST = "llms-routes.json"
 
 // Per-route SEO metadata. Keys are route paths exactly as extracted from
-// App.js (no leading slash, "" for the landing page). Routes not listed
+// App.jsx (no leading slash, "" for the landing page). Routes not listed
 // here inherit the shell's generic description/og tags. Listing top-level
 // sections meaningfully helps indexing — every chart page should not ship
 // the same description as the landing page.
@@ -158,7 +158,7 @@ const ROUTE_META = {
   },
 }
 
-// ── Extract routes from App.js ──────────────────────────────────────────
+// ── Extract routes from App.jsx ─────────────────────────────────────────
 
 function collectRouteOpeningTags(source) {
   const tags = []
@@ -208,8 +208,9 @@ function collectRouteOpeningTags(source) {
 export function extractRoutesFromSource(source) {
   const paths = new Set([""])
   const parentStack = []
+  const routeSource = source.replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, "")
 
-  for (const { tag, indent } of collectRouteOpeningTags(source)) {
+  for (const { tag, indent } of collectRouteOpeningTags(routeSource)) {
     const match = tag.match(/\bpath\s*=\s*["']([^"']+)["']/)
     if (!match) continue
 
@@ -262,7 +263,7 @@ export function copyDocsApiAssets(publicApiDir = PUBLIC_API_DIR, buildDir = BUIL
 }
 
 // Copy the rendered blog OG cards (docs/public/blog/og/*.png) into the
-// static build. Parcel only bundles files referenced by the HTML/JS at
+// static build. Vite only bundles files referenced by the HTML/JS at
 // build time, so these per-entry images otherwise never make it into
 // dist — and the og:image meta tags would 404.
 export function copyBlogOgCards(publicOgDir = PUBLIC_BLOG_OG_DIR, buildDir = BUILD_DIR) {
@@ -282,7 +283,7 @@ export function copyBlogOgCards(publicOgDir = PUBLIC_BLOG_OG_DIR, buildDir = BUI
 }
 
 // Copy the example OG cards (docs/public/examples/og/*.png) into the
-// static build, for the same reason as the blog cards above — Parcel
+// static build, for the same reason as the blog cards above — Vite
 // only bundles referenced files, so these per-example images would
 // otherwise 404 under the og:image meta tags.
 export function copyExampleOgCards(publicOgDir = PUBLIC_EXAMPLE_OG_DIR, buildDir = BUILD_DIR) {
@@ -358,7 +359,7 @@ async function loadBlogEntries() {
 
 // ── Static route content renderer ──────────────────────────────────────────
 //
-// Parcel gives us the interactive SPA bundle. For machine readers, we also
+// Vite gives us the interactive SPA bundle. For machine readers, we also
 // render the matching React route in Node, strip visual/interactive chrome, and
 // embed the remaining semantic content in each route's <noscript> fallback.
 // This keeps the docs app interactive for browsers while making fetched HTML
@@ -366,7 +367,8 @@ async function loadBlogEntries() {
 
 const RENDERER_ENTRY = `
 import React from "react"
-import { renderToStaticMarkup } from "react-dom/server"
+import { PassThrough } from "stream"
+import { renderToPipeableStream } from "react-dom/server"
 import { StaticRouter } from "react-router"
 
 const storage = {
@@ -462,7 +464,7 @@ globalThis.IntersectionObserver = globalThis.IntersectionObserver || class Inter
   disconnect() {}
 }
 
-const { default: App } = await import("../docs/src/App.js")
+const { default: App } = await import("../docs/src/App.jsx")
 
 const muteStaticRenderWarning = (args) => {
   const message = String(args[0] || "")
@@ -472,7 +474,43 @@ const muteStaticRenderWarning = (args) => {
   )
 }
 
-export function renderRoute(routePath) {
+function renderToStaticMarkupAsync(element) {
+  return new Promise((resolve, reject) => {
+    let html = ""
+    let firstError = null
+    let settled = false
+    const stream = new PassThrough()
+    const timeout = setTimeout(() => {
+      settled = true
+      abort()
+      reject(new Error("timed out waiting for route Suspense boundaries"))
+    }, 10000)
+    const finish = (fn, value) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
+      fn(value)
+    }
+    const { pipe, abort } = renderToPipeableStream(element, {
+      onAllReady() {
+        pipe(stream)
+      },
+      onError(error) {
+        firstError = firstError || error
+      },
+    })
+    stream.on("data", (chunk) => {
+      html += chunk.toString()
+    })
+    stream.on("end", () => {
+      if (firstError) finish(reject, firstError)
+      else finish(resolve, html)
+    })
+    stream.on("error", (error) => finish(reject, error))
+  })
+}
+
+export async function renderRoute(routePath) {
   const pathname = routePath ? "/" + routePath.replace(/^\\/+/, "") : "/"
   globalThis.window.location = { pathname, search: "", hash: "" }
   const warn = console.warn
@@ -484,7 +522,7 @@ export function renderRoute(routePath) {
     if (!muteStaticRenderWarning(args)) error(...args)
   }
   try {
-    return renderToStaticMarkup(
+    return await renderToStaticMarkupAsync(
       React.createElement(
         StaticRouter,
         { location: pathname },
@@ -498,7 +536,7 @@ export function renderRoute(routePath) {
 }
 `
 
-async function createStaticRouteRenderer() {
+export async function createStaticRouteRenderer() {
   const { build: esbuild } = await import("esbuild")
   const tempDir = mkdtempSync(resolve(tmpdir(), "semiotic-docs-route-renderer-"))
   const outfile = resolve(tempDir, "renderer.mjs")
@@ -543,10 +581,16 @@ export function sanitizeRouteHtml(renderedHtml, routePath) {
 
   const dom = new JSDOM(`<body>${renderedHtml}</body>`)
   const doc = dom.window.document
+  const sources = [
+    doc.querySelector(".App--blog article"),
+    doc.querySelector(".container"),
+    ...Array.from(doc.querySelectorAll("div[hidden][id^='S:']")),
+    doc.querySelector(".App"),
+    doc.body,
+  ].filter(Boolean)
   const source =
-    doc.querySelector(".App--blog article") ||
-    doc.querySelector(".container") ||
-    doc.querySelector(".App") ||
+    sources.find((candidate) => normalizeText(readableText(candidate))) ||
+    sources[0] ||
     doc.body
   const root = source.cloneNode(true)
 
@@ -738,9 +782,9 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
       <p><a href="https://github.com/nteract/semiotic">View on GitHub</a> \u00b7 <code>npx semiotic-ai</code> for CLI access</p>
     </nav>${renderMachineReadableFallback(machineDoc)}`
 
-  // JSON-LD injected here (not in source HTML) to avoid Parcel's jsonld transformer
+  // JSON-LD injected here (not in source HTML) so bundlers do not parse it as an asset
   const llmsAlternate = '<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable documentation index" />'
-  // Atom feed alternate — injected here (not in source HTML) so Parcel's
+  // Atom feed alternate — injected here (not in source HTML) so the bundler's
   // HTML packager doesn't try to resolve the absolute `/blog/feed.xml`
   // path during build. Same pattern as the llms.txt alternate above.
   // Absolute path matters so prerendered nested routes (e.g.
@@ -771,7 +815,7 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
   // twitter / JSON-LD markup.
   //
   // Anchor the injection at `<body` (case-insensitive) rather than
-  // `</head>` — Parcel's HTML minifier strips the implicit `</head>`
+  // `</head>` — HTML minifiers can strip the implicit `</head>`
   // closing tag, so a `</head>`-anchored regex silently no-ops on the
   // built shell. `<body>` is always emitted.
   if (blogMeta || routeMeta) {
@@ -858,10 +902,10 @@ export async function prerender() {
   }
 
   const routeDocs = []
-  const machineDocForRoute = (route) => {
+  const machineDocForRoute = async (route) => {
     if (!renderRoute) return null
     try {
-      const doc = sanitizeRouteHtml(renderRoute(route), route)
+      const doc = sanitizeRouteHtml(await renderRoute(route), route)
       const scriptDoc = routeDocForScript(doc)
       if (scriptDoc) routeDocs.push(scriptDoc)
       return doc
@@ -873,13 +917,13 @@ export async function prerender() {
 
   console.log(`Pre-rendering ${routes.length} routes (+ ${blogEntries.length} blog entries)...`)
 
-  writeFileSync(shellPath, generatePage(shellHtml, "", null, machineDocForRoute("")))
+  writeFileSync(shellPath, generatePage(shellHtml, "", null, await machineDocForRoute("")))
   let created = 1
   for (const route of routes) {
     if (route === "/" || route === "" || route === "*" || route.includes(":")) continue
     const dir = resolve(BUILD_DIR, route)
     mkdirSync(dir, { recursive: true })
-    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, null, machineDocForRoute(route)))
+    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, null, await machineDocForRoute(route)))
     created++
   }
 
@@ -890,7 +934,7 @@ export async function prerender() {
     const route = `blog/${entry.slug}`
     const dir = resolve(BUILD_DIR, route)
     mkdirSync(dir, { recursive: true })
-    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, entry, machineDocForRoute(route)))
+    writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, entry, await machineDocForRoute(route)))
     created++
   }
 

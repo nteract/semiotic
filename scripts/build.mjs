@@ -1,57 +1,33 @@
 import { execSync } from "child_process"
 import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "fs"
-import { rollup } from "rollup"
-import resolve from "@rollup/plugin-node-resolve"
-import typescript from "@rollup/plugin-typescript"
-import terser from "@rollup/plugin-terser"
-import { minify as minifyCode } from "terser"
-import { visualizer } from "rollup-plugin-visualizer"
-import external from "rollup-plugin-auto-external"
-import { hasLeadingUseClientDirective } from "./lib/useClientDirective.mjs"
+import { build as tsupBuild } from "tsup"
 
 const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
 const isAnalyze = args.includes("--analyze")
 
-function useClientPlugin({ serverOnly = false, clientOnly = false } = {}) {
-  const clientModules = new Set()
+const pkg = JSON.parse(readFileSync("package.json", "utf8"))
+const optionalDependencyNames = Object.keys(pkg.optionalDependencies ?? {})
+const explicitExternals = [
+  ...optionalDependencyNames,
+  /^world-atlas\//,
+  "react-dom/server",
+  "react/jsx-runtime",
+  "react/jsx-dev-runtime",
+]
+
+function useClientDirectivePlugin({ clientOnly = false } = {}) {
   return {
-    name: "use-client",
-    transform(code, id) {
-      if (hasLeadingUseClientDirective(code)) {
-        clientModules.add(id)
+    name: "use-client-directive",
+    buildEnd({ writtenFiles }) {
+      if (!clientOnly) return
+      for (const file of writtenFiles) {
+        if (!file.name.endsWith(".js")) continue
+        const code = readFileSync(file.name, "utf8")
+        if (/^["']use client["'];/.test(code)) continue
+        writeFileSync(file.name, `"use client";\n${code}`)
       }
-      return null
     },
-    renderChunk(code, chunk) {
-      // Server-only bundles (e.g. `semiotic/server`) must never carry
-      // the `"use client"` directive — Next.js routes that import from
-      // a server-only entry expect to call its functions from a Server
-      // Component, but the directive flips every export into a client
-      // boundary, throwing at runtime: "Attempted to call X() from the
-      // server but X is on the client." A few transitive client-only
-      // modules (Stream Frame source files, the React store
-      // primitives) are pulled into the server bundle for the SSR-SVG
-      // path, so the heuristic of "any client-tagged module in the
-      // chunk → tag the chunk" produces a false positive here.
-      // Server bundles set this flag to opt out unconditionally.
-      if (serverOnly) return null
-      // ESM code-splitting can emit the public entry file as a facade
-      // chunk whose only content is `export { ... } from "./shared.js"`.
-      // In that shape, `chunk.modules` does not include the client-tagged
-      // source modules, so the transitive-module heuristic below never
-      // fires even though the public entry is client-only. Tag the entry
-      // facade explicitly for bundles marked `clientOnly`.
-      if (clientOnly && chunk.isEntry) {
-        return { code: `"use client";\n${code}`, map: null }
-      }
-      for (const id of Object.keys(chunk.modules)) {
-        if (clientModules.has(id)) {
-          return { code: `"use client";\n${code}`, map: null }
-        }
-      }
-      return null
-    }
   }
 }
 
@@ -65,177 +41,65 @@ async function createBundle(options = {}) {
     clientOnly = false,
   } = options
 
-  // The `useClientPlugin` is split across two hook phases: `transform`
-  // scans each module as it's parsed (recording which ones open with
-  // `"use client"`), and `renderChunk` prepends the directive on the
-  // final chunk output. The `transform` order doesn't matter — every
-  // plugin's transform runs on every module — but `renderChunk` order
-  // does. Terser's renderChunk parses the bundled chunk and re-emits
-  // it through its compressor, which silently drops top-level string
-  // expressions like `"use client";` even with default settings (the
-  // statement isn't preserved through terser's parser → compress →
-  // emit pipeline the way `"use strict"` is).
-  //
-  // Fix: append `useClientPlugin` AFTER terser so its `renderChunk`
-  // is the LAST thing to run, prepending `"use client";` onto the
-  // already-minified output. Terser never sees the directive, so it
-  // can't strip it.
-  const useClient = useClientPlugin({ serverOnly, clientOnly })
-
-  const plugins = [
-    external({
-      dependencies: true,
-      peerDependencies: true
-    }),
-
-    typescript({
-      tsconfig: "tsconfig.json",
-      declaration: false,
-      declarationMap: false,
-      target: "ES2015",
-      module: "ESNext",
-      outDir: "dist",
-      exclude: ["node_modules", "**/*.test.ts", "**/*.test.tsx", "**/*.test.js"]
-    }),
-
-    resolve({
-      extensions: [".ts", ".tsx", ".js", ".jsx"]
-    })
-  ]
-
-  if (minify) {
-    plugins.push(
-      terser({
-        compress: {
-          pure_getters: true,
-          unsafe: true,
-          unsafe_comps: true,
-          warnings: false,
-          drop_console: false,
-          pure_funcs: ['console.log', 'console.debug'],
-          drop_debugger: true,
-          passes: 2
-        },
-        mangle: {
-          properties: false
-        },
-        format: {
-          comments: false
-        }
-      })
-    )
-  }
-
-  if (analyze && name === "semiotic") {
-    plugins.push(
-      visualizer({
-        filename: "bundle-analysis.html",
-        open: false,
-        gzipSize: true,
-        brotliSize: true,
-        template: "treemap"
-      })
-    )
-  }
-
-  // Append last so `useClient.renderChunk` runs after `terser.renderChunk`.
-  plugins.push(useClient)
-
-  const bundle = await rollup({
-    input,
-    context: "window",
-    plugins,
-    // Mark world-atlas JSON subpath imports as external so they stay as
-    // dynamic imports in the output bundle. The consumer's bundler (webpack,
-    // vite, etc.) handles the JSON resolution at app build time.
-    //
-    // react-dom/server, react/jsx-runtime, and react/jsx-dev-runtime are all
-    // subpaths of their host packages (react-dom / react), which auto-external
-    // marks external only at the package-root level. Without these explicit
-    // rules, rollup fails to resolve the subpath in the browser, tree-shakes
-    // the namespace binding, and emits `(void 0)(...)` calls wherever
-    // `ReactDOMServer.renderToStaticMarkup` or a JSX factory was invoked.
-    // jsx-runtime entered the picture when tsconfig flipped to the automatic
-    // JSX transform (`"jsx": "react-jsx"`) — every .tsx file now imports from
-    // `react/jsx-runtime` instead of compiling JSX to `React.createElement`.
-    external: (id) =>
-      id.startsWith("world-atlas/")
-      || id === "react-dom/server"
-      || id === "react/jsx-runtime"
-      || id === "react/jsx-dev-runtime",
-    onLog(level, log, handler) {
-      if (log.message && typeof log.message === 'string') {
-        const d3Patterns = ["d3-", "internmap", "delaunator"]
-        if (d3Patterns.some(pattern => log.message.includes(pattern))) {
-          return
-        }
-      }
-      handler(level, log)
-    },
-    onwarn(warning, warn) {
-      if (warning.code === "THIS_IS_UNDEFINED") return
-
-      if (warning.code === "UNRESOLVED_IMPORT") {
-        const d3Modules = ["d3-", "internmap", "delaunator"]
-        if (d3Modules.some(mod => warning.source?.includes(mod))) {
-          return
-        }
-      }
-
-      if (warning.code === "CIRCULAR_DEPENDENCY") {
-        if (!warning.message.includes("d3-")) {
-          console.warn(`\u26a0\ufe0f  Circular: ${warning.ids?.join(" -> ") || warning.message}`)
-        }
-        return
-      }
-      if (warning.code === "UNUSED_EXTERNAL_IMPORT") return
-      if (warning.code === "MODULE_LEVEL_DIRECTIVE" && warning.message?.includes('"use client"')) return
-      warn(warning)
-    },
-    treeshake: {
-      moduleSideEffects: false,
-      propertyReadSideEffects: false,
-      tryCatchDeoptimization: false
-    }
-  })
-
-  const outputOptions = {
-    exports: "named",
+  const commonOptions = {
+    entry: { [name]: input },
+    outDir: "dist",
+    target: "es2015",
+    platform: serverOnly ? "node" : "neutral",
+    dts: false,
+    bundle: true,
+    clean: false,
     sourcemap: !minify,
-    preserveModules: false,
-    interop: "auto",
-    generatedCode: {
-      constBindings: true
-    }
+    minify: minify ? "terser" : false,
+    terserOptions: {
+      compress: {
+        pure_getters: true,
+        unsafe: true,
+        unsafe_comps: true,
+        drop_console: false,
+        pure_funcs: ["console.log", "console.debug"],
+        drop_debugger: true,
+        passes: 2,
+      },
+      mangle: {
+        properties: false,
+      },
+      format: {
+        comments: false,
+      },
+    },
+    external: explicitExternals,
+    pure: ["console.log", "console.debug"],
+    plugins: [useClientDirectivePlugin({ clientOnly })],
+    esbuildOptions(esbuildOptions) {
+      esbuildOptions.chunkNames = `${name}-[name]-[hash]`
+      esbuildOptions.conditions = ["module", "import", "default"]
+    },
+    silent: true,
   }
 
-  // Always use .min suffix so filenames match package.json exports map
-  // (terser only runs for --production builds, but the filename stays consistent)
-  const suffix = ".min"
-
-  // CJS: must inline dynamic imports (no code-splitting support)
-  await bundle.write({
-    ...outputOptions,
+  // CJS: single-file fallback for Node/CommonJS consumers.
+  await tsupBuild({
+    ...commonOptions,
+    name: `${name}:cjs`,
     format: "cjs",
-    file: `dist/${name}${suffix}.js`,
-    inlineDynamicImports: true
+    splitting: false,
+    outExtension: () => ({ js: ".min.js" }),
   })
 
-  // ESM: preserve dynamic imports for lazy loading / code-splitting
-  await bundle.write({
-    ...outputOptions,
+  // ESM: preserve dynamic imports for lazy loading / code-splitting.
+  await tsupBuild({
+    ...commonOptions,
+    name: `${name}:esm`,
     format: "esm",
-    dir: "dist",
-    entryFileNames: `${name}.module${suffix}.js`,
-    chunkFileNames: `${name}-[name]-[hash].js`,
-    inlineDynamicImports: false
+    splitting: true,
+    metafile: analyze && name === "semiotic",
+    outExtension: () => ({ js: ".module.min.js" }),
   })
-
-  await bundle.close()
 
   console.log(`\u2705 ${name} bundle created${minify ? " (minified)" : ""}`)
   if (analyze && name === "semiotic") {
-    console.log("\ud83d\udcca Bundle analysis saved to: bundle-analysis.html")
+    console.log("\ud83d\udcca Bundle metafile saved to: dist/metafile-esm.json")
   }
 }
 
@@ -252,46 +116,22 @@ async function createBundlesWithConcurrency(bundles, concurrency) {
 }
 
 async function createForceLayoutWorkerBundle({ minify = false } = {}) {
-  const plugins = [
-    typescript({
-      tsconfig: "tsconfig.json",
-      declaration: false,
-      declarationMap: false,
-      target: "ES2020",
-      module: "ESNext",
-      outDir: "dist",
-      exclude: ["node_modules", "**/*.test.ts", "**/*.test.tsx", "**/*.test.js"]
-    }),
-    resolve({ extensions: [".ts", ".tsx", ".js", ".jsx"] })
-  ]
-  const bundle = await rollup({
-    input: "src/components/stream/layouts/forceLayoutWorker.js",
-    context: "self",
-    plugins,
-    treeshake: {
-      moduleSideEffects: false,
-      propertyReadSideEffects: false,
-      tryCatchDeoptimization: false
-    }
-  })
-  await bundle.write({
+  await tsupBuild({
+    entry: { forceLayoutWorker: "src/components/stream/layouts/forceLayoutWorker.js" },
+    outDir: "dist",
+    target: "es2020",
+    platform: "browser",
     format: "esm",
-    file: "dist/forceLayoutWorker.js",
+    splitting: false,
+    bundle: true,
+    clean: false,
+    dts: false,
     sourcemap: false,
-    inlineDynamicImports: true
+    minify: minify ? "terser" : false,
+    outExtension: () => ({ js: ".js" }),
+    external: explicitExternals,
+    silent: true,
   })
-  await bundle.close()
-  if (minify) {
-    const path = "dist/forceLayoutWorker.js"
-    const result = await minifyCode(readFileSync(path, "utf8"), {
-      module: true,
-      format: { comments: false }
-    })
-    if (!result.code) {
-      throw new Error("Terser produced an empty force-layout worker bundle")
-    }
-    writeFileSync(path, result.code)
-  }
   console.log(`✅ force-layout worker created${minify ? " (minified)" : ""}`)
 }
 
@@ -441,9 +281,9 @@ async function build() {
 
   buildDeclarations()
 
-  // Rollup keeps a full module graph per active bundle. Starting every entry
-  // point at once can push CI over the 8GB Node heap when a temporary preview
-  // bundle is added, so keep peak memory bounded while still allowing local
+  // Each tsup build keeps an esbuild graph plus post-processing state. Starting
+  // every entry point at once can still spike CI memory when a temporary
+  // preview bundle is added, so keep peak memory bounded while allowing local
   // callers to opt into more parallelism.
   console.log(`Bundling ${bundles.length} entry points with concurrency ${bundleConcurrency}`)
   await createBundlesWithConcurrency(bundles, bundleConcurrency)
@@ -512,7 +352,11 @@ function assertDirectivePlacement(bundles) {
   process.exit(1)
 }
 
-build().catch(err => {
-  console.error(err)
-  process.exit(1)
-})
+build()
+  .then(() => {
+    process.exit(0)
+  })
+  .catch(err => {
+    console.error(err)
+    process.exit(1)
+  })

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 // Write the JSON report to a file rather than stdout. Playwright pipes the
-// `webServer` (Parcel) output and any test `console.log` to the same stdout
+// `webServer` output and any test `console.log` to the same stdout
 // the JSON reporter would use, so capturing stdout and `JSON.parse`-ing it is
 // unreliable — the interleaved logs make it invalid JSON, which previously
 // dropped this script into its fallback path and surfaced a raw exit code 1

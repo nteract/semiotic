@@ -148,7 +148,7 @@ export {
 
 export type { LegendLayout } from "./types/legendTypes"
 
-export {
+export type {
   ScatterplotProps,
   ConnectedScatterplotProps,
   LineChartProps,
