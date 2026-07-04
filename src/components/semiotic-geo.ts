@@ -20,7 +20,7 @@ export type { HitTargetPointProps } from "./stream/hitTarget"
 // glyph — projected composite pictograms standing on the map.
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
-export type { GlyphSceneNode } from "./stream/types"
+export type { GlyphSceneNode, SceneAccessibilityMetadata } from "./stream/types"
 
 // Stream Frame types
 export type {

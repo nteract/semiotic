@@ -23,7 +23,7 @@ import { useMemo, useRef } from "react"
 import type { Ref, RefObject, ReactElement, ReactNode } from "react"
 import { useChartMode } from "./hooks"
 import { useChartSetup, type ChartSetupResult } from "./useChartSetup"
-import type { ChartMode, SelectionConfig, LinkedHoverProp } from "./types"
+import type { Accessor, ChartMode, SelectionConfig, LinkedHoverProp } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { normalizePartialMargin, type PartialMargin, type MarginType } from "../../types/marginType"
 import type { Datum } from "./datumTypes"
@@ -111,11 +111,13 @@ interface DataSetupOptions extends ScaffoldOptions {
   unwrapData: boolean
   /** Color scheme threaded into useChartSetup's color resolution. */
   colorScheme?: string | string[] | Record<string, string>
+  /** Semantic color accessor for legend, linked-hover series mode, and frame color config. */
+  colorBy?: Accessor<string>
   /** Pass-through chart-setup inputs. */
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
   onObservation?: OnObservationCallback
-  onClick?: (datum: any, ev: { x: number; y: number }) => void
+  onClick?: (datum: Datum, ev: { x: number; y: number }) => void
   chartId?: string
   loading?: boolean
   loadingContent?: ReactNode | false
@@ -152,12 +154,12 @@ export function useCustomChartSetup<TFrameHandle>(
   const setup = useChartSetup({
     data: options.data ?? [],
     rawData: options.data,
-    colorBy: undefined,
+    colorBy: options.colorBy,
     colorScheme: options.colorScheme,
     legendInteraction: undefined,
     selection: options.selection,
     linkedHover: options.linkedHover,
-    fallbackFields: [],
+    fallbackFields: typeof options.colorBy === "string" ? [options.colorBy] : [],
     unwrapData: options.unwrapData,
     onObservation: options.onObservation,
     onClick: options.onClick,

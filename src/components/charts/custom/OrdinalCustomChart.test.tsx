@@ -16,6 +16,7 @@ let lastOrdinalFrameProps: {
   chartType?: string
   oAccessor?: unknown
   rAccessor?: unknown
+  colorAccessor?: unknown
 } | null = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
@@ -26,6 +27,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
       chartType?: string
       oAccessor?: unknown
       rAccessor?: unknown
+      colorAccessor?: unknown
     }, _ref: unknown) => {
       lastOrdinalFrameProps = props
       return <div className="stream-ordinal-frame"><canvas /><svg /></div>
@@ -96,5 +98,18 @@ describe("OrdinalCustomChart", () => {
     )
     expect(lastOrdinalFrameProps?.oAccessor).toBe("region")
     expect(lastOrdinalFrameProps?.rAccessor).toBe("total")
+  })
+
+  it("maps colorBy to the frame colorAccessor", () => {
+    render(
+      <TooltipProvider>
+        <OrdinalCustomChart
+          data={[{ region: "EU", total: 12, segment: "growth" }]}
+          layout={trivialLayout}
+          colorBy="segment"
+        />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps?.colorAccessor).toBe("segment")
   })
 })

@@ -81,7 +81,86 @@ function buildReasons(
   if (profile.seriesCount && profile.seriesCount > 1) {
     reasons.push(`${profile.seriesCount} series detected on field "${profile.primary.series ?? "series"}"`)
   }
+  if (capability.candidateKind === "recipe") {
+    for (const rationale of capability.positiveRationale?.slice(0, 2) ?? []) {
+      reasons.push(rationale)
+    }
+    if (capability.whyCustom?.reason) {
+      reasons.push(`Why leave the catalog: ${capability.whyCustom.reason}`)
+    }
+  }
   return reasons
+}
+
+interface RecipeScoreAdjustment {
+  delta: number
+  reasons: string[]
+  caveats: string[]
+  excluded?: string
+}
+
+function recipeScoreAdjustment(
+  capability: ChartCapability,
+  options: Pick<
+    SuggestChartsOptions,
+    "audience" | "portability" | "riskTolerance" | "receptionChannel"
+  >,
+): RecipeScoreAdjustment {
+  if (capability.candidateKind !== "recipe" || !capability.recipe) {
+    return { delta: 0, reasons: [], caveats: [] }
+  }
+  const recipe = capability.recipe
+  if (options.portability && recipe.portability !== options.portability) {
+    return {
+      delta: 0,
+      reasons: [],
+      caveats: [],
+      excluded: `requires a ${options.portability} recipe`,
+    }
+  }
+
+  let delta = 0
+  const reasons: string[] = []
+  const caveats: string[] = []
+  const audienceName = options.audience?.name?.trim().toLowerCase()
+  if (audienceName) {
+    const fit = recipe.audienceFit?.find(
+      (entry) => entry.audience.trim().toLowerCase() === audienceName,
+    )
+    if (fit) {
+      const fitDelta = { strong: 0.75, moderate: 0.25, weak: -0.5, avoid: -2 }[fit.fit]
+      delta += fitDelta
+      reasons.push(
+        fit.rationale ?? `${fit.fit} fit for ${options.audience?.name ?? fit.audience}`,
+      )
+    }
+  }
+
+  const channel =
+    options.receptionChannel ?? options.audience?.receptionModality ?? "visual"
+  if (recipe.reception?.channels?.includes(channel)) {
+    delta += 0.25
+    reasons.push(`Designed for ${channel} reception`)
+  } else if (recipe.reception?.channels?.length) {
+    delta -= 1
+    caveats.push(`Recipe does not declare support for the ${channel} reception channel.`)
+  }
+
+  const risks = recipe.reception?.risks ?? []
+  if (options.riskTolerance === "low" && risks.length > 0) {
+    delta -= Math.min(1.5, risks.length * 0.35)
+    caveats.push(...risks)
+  } else if (options.riskTolerance === "medium" && risks.length > 2) {
+    delta -= 0.25
+  }
+
+  if (recipe.portability === "local") {
+    caveats.push("Local-only recipe: cannot be rendered remotely by CLI or MCP.")
+  } else {
+    reasons.push("Portable registered recipe")
+  }
+
+  return { delta, reasons, caveats }
 }
 
 function compositeScore(
@@ -135,6 +214,12 @@ export interface SuggestChartsOptions extends ProfileDataOptions {
    * `dataScaleProfile.ts`.
    */
   quality?: DataQualityProfile
+  /** Restrict recipe candidates by portability tier. Built-ins are unaffected. */
+  portability?: "portable" | "local"
+  /** Controls how strongly declared recipe reception risks affect ranking. */
+  riskTolerance?: "low" | "medium" | "high"
+  /** Explicit reception channel when no full AudienceProfile is available. */
+  receptionChannel?: ReceptionModality
 }
 
 /**
@@ -242,13 +327,16 @@ export function suggestCharts(
         options.quality,
       )
       if (scaleBias.excluded) continue
-      const finalScore = biased.score + scaleBias.delta
+      const recipeBias = recipeScoreAdjustment(capability, options)
+      if (recipeBias.excluded) continue
+      const finalScore = biased.score + scaleBias.delta + recipeBias.delta
       if (finalScore < minScore) continue
 
       const reasons = buildReasons(capability, scaledProfile, intentScores, rankingIntents)
       if (biased.appliedReason) reasons.push(biased.appliedReason)
       if (biased.receivabilityReason) reasons.push(biased.receivabilityReason)
       for (const r of scaleBias.reasons) reasons.push(r)
+      reasons.push(...recipeBias.reasons)
       const caveats = [
         ...baseCaveats,
         ...(variant?.caveats ?? []),
@@ -257,6 +345,7 @@ export function suggestCharts(
         // penalty, in the same array as the perceptual ones — one caveat
         // channel, not two. Capped so they don't drown the descriptor's.
         ...(receivability?.caveats.slice(0, 3) ?? []),
+        ...recipeBias.caveats,
       ]
 
       const scaleRange: SuggestionScaleRange = {
@@ -268,6 +357,9 @@ export function suggestCharts(
 
       out.push({
         component: capability.component,
+        displayName: capability.displayName ?? capability.component,
+        candidateKind: capability.candidateKind ?? "built-in",
+        ...(capability.recipe ? { recipeId: capability.recipe.id } : {}),
         family: capability.family,
         importPath: capability.importPath,
         variant,
@@ -277,6 +369,7 @@ export function suggestCharts(
         reasons,
         caveats,
         props,
+        ...(capability.whyCustom ? { whyCustom: capability.whyCustom } : {}),
         scaleRange,
       })
     }
@@ -384,7 +477,15 @@ export function explainCapabilityFit(
 export function scoreChart(
   component: string,
   data: ReadonlyArray<Datum> | null | undefined,
-  options: { intent?: IntentId | IntentId[]; variantKey?: string; profile?: ChartDataProfile } = {}
+  options: {
+    intent?: IntentId | IntentId[]
+    variantKey?: string
+    profile?: ChartDataProfile
+    audience?: AudienceProfile
+    portability?: "portable" | "local"
+    riskTolerance?: "low" | "medium" | "high"
+    receptionChannel?: ReceptionModality
+  } = {}
 ): Suggestion | { reason: string } {
   const capabilities = getCapabilities()
   const capability = capabilities.find((c) => c.component === component)
@@ -409,22 +510,30 @@ export function scoreChart(
   const composite = compositeScore(intentScores, intents)
   const rubric = applyVariantToRubric(capability.rubric, variant)
   const reasons = buildReasons(capability, profile, intentScores, intents)
+  const recipeBias = recipeScoreAdjustment(capability, options)
+  if (recipeBias.excluded) return { reason: recipeBias.excluded }
+  reasons.push(...recipeBias.reasons)
   const caveats = [
     ...(capability.caveats ? capability.caveats(profile) : []),
     ...(variant?.caveats ?? []),
+    ...recipeBias.caveats,
   ]
 
   return {
     component: capability.component,
+    displayName: capability.displayName ?? capability.component,
+    candidateKind: capability.candidateKind ?? "built-in",
+    ...(capability.recipe ? { recipeId: capability.recipe.id } : {}),
     family: capability.family,
     importPath: capability.importPath,
     variant,
-    score: composite,
+    score: composite + recipeBias.delta,
     intentScores,
     rubric,
     reasons,
     caveats,
     props: capability.buildProps(profile, variant),
+    ...(capability.whyCustom ? { whyCustom: capability.whyCustom } : {}),
   }
 }
 

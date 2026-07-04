@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { DataSummary } from "../data/DataSummarizer"
 import type { IntentId } from "./intents"
+import type { ChartRecipe, ChartRecipeFrameFamily } from "./chartRecipes"
 import type {
   ScaleFitFn,
   QualityFitFn,
@@ -37,6 +38,14 @@ export type ChartImportPath =
   | "semiotic/value"
   | "semiotic/ai"
   | "semiotic"
+
+export type ChartCandidateKind = "built-in" | "recipe"
+
+export interface WhyCustomExplanation {
+  defaultAlternative?: string
+  reason: string
+  tradeoff?: string
+}
 
 /**
  * Familiarity/accuracy/precision rubric (1-5 each).
@@ -191,7 +200,13 @@ export type FitResult = null | string
  */
 export interface ChartCapability {
   component: string
+  /** Human-facing name. `component` remains the stable lookup id. */
+  displayName?: string
+  /** Omitted descriptors are treated as built-ins for backward compatibility. */
+  candidateKind?: ChartCandidateKind
   family: ChartFamily
+  /** The frame/runtime substrate behind a registered recipe. */
+  renderingFamily?: ChartRecipeFrameFamily
   importPath: ChartImportPath
   /** Base rubric, before variant/profile adjustments. */
   rubric: ChartRubric
@@ -235,6 +250,12 @@ export interface ChartCapability {
    * low completeness on the primary y field.
    */
   qualityFit?: QualityFitFn
+  /** Present only on recipe-derived capabilities. */
+  recipe?: ChartRecipe
+  /** Positive reception/design rationale appended to suggestion explanations. */
+  positiveRationale?: ReadonlyArray<string>
+  /** Why this candidate justifies leaving the built-in catalog. */
+  whyCustom?: WhyCustomExplanation
 }
 
 /**
@@ -259,6 +280,9 @@ export interface SuggestionScaleRange {
  */
 export interface Suggestion {
   component: string
+  displayName: string
+  candidateKind: ChartCandidateKind
+  recipeId?: string
   family: ChartFamily
   importPath: ChartImportPath
   variant?: ChartVariant
@@ -274,6 +298,7 @@ export interface Suggestion {
   caveats: ReadonlyArray<string>
   /** Ready-to-spread props. */
   props: Record<string, unknown>
+  whyCustom?: WhyCustomExplanation
   /**
    * Scale tag — present when scale/quality information is available, either
    * through declared `DataScaleProfile` or through the measured profile.

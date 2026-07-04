@@ -210,6 +210,7 @@ export type {
   StreamChartType,
   RuntimeMode,
   SceneNode,
+  SceneAccessibilityMetadata,
   Changeset,
   StreamScales,
   StreamLayout,
@@ -320,6 +321,10 @@ export { AccessibleNavTree } from "./AccessibleNavTree"
 export type { AccessibleNavTreeProps } from "./AccessibleNavTree"
 export { buildNavigationTree } from "./ai/navigationTree"
 export type { NavTreeNode, NavTreeRole, BuildNavigationTreeOptions } from "./ai/navigationTree"
+export { IntentMark } from "./ai/IntentMark"
+export type { IntentMarkProps } from "./ai/IntentMark"
+export { intentManifestFromRecipe, summarizeIntentManifest } from "./ai/intentManifest"
+export type { IntentManifest, IntentManifestFromRecipeOptions } from "./ai/intentManifest"
 export { useNavigationSync } from "./ai/useNavigationSync"
 export type { UseNavigationSyncOptions, UseNavigationSyncResult } from "./ai/useNavigationSync"
 

@@ -98,6 +98,12 @@ export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartCon
 export { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
 export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
 export { exportChart } from "./export/exportChart"
+export { auditObservedScene } from "./ai/observedSceneAudit"
+export type {
+  AuditObservedSceneInput,
+  ObservedAuditFinding,
+  ObservedSceneAuditResult
+} from "./ai/observedSceneAudit"
 
 // ── Vega-Lite translator ─────────────────────────────────────────────────
 export { fromVegaLite } from "./data/fromVegaLite"

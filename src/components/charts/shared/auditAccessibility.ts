@@ -27,6 +27,7 @@ import type { Datum } from "./datumTypes"
 import { VALIDATION_MAP } from "./validateProps"
 import { contrastRatio } from "./diagnoseConfig"
 import { annotationDrawsConnector, annotationType, isNoteAnnotation } from "./annotationTypes"
+import { getChartRecipe } from "../../ai/chartRecipeRegistry"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -260,7 +261,8 @@ export function auditAccessibility(
   options: AuditAccessibilityOptions = {}
 ): AccessibilityAuditResult {
   const f: A11yFinding[] = []
-  const known = !!VALIDATION_MAP[component]
+  const recipe = getChartRecipe(component)
+  const known = !!VALIDATION_MAP[component] || !!recipe
   const inContainer = options.inChartContainer === true
   const describes = options.describe === true
   const navigable = options.navigable === true
@@ -773,6 +775,53 @@ if (annotations.length > 1) {
           ? { status: "pass" as A11yStatus, message: "Geo chart is zoomable/pannable." }
           : { status: "manual" as A11yStatus, message: "Fixed width/height — verify the chart survives browser zoom and reflow without clipping or loss of function.", fix: "Use responsiveWidth/responsiveHeight so the chart reflows to its container." }),
     })
+  }
+
+  if (recipe) {
+    const colorOnly = recipe.encodings?.some(
+      (encoding) =>
+        encoding.channel === "color" &&
+        (!encoding.redundantWith || encoding.redundantWith.length === 0),
+    )
+    if (colorOnly) {
+      f.push({
+        id: "perceivable.recipe-color-alone",
+        principle: "perceivable",
+        heuristic: "Color is used alone to communicate meaning",
+        critical: false,
+        status: "warn",
+        message: `${recipe.name} declares a color encoding without a redundant cue.`,
+        fix: "Add shape, label, position, texture, or a textual category summary to the recipe encoding.",
+      })
+    }
+    if (
+      recipe.accessibility.description === "required" &&
+      !isNonEmptyString(props.description)
+    ) {
+      f.push({
+        id: "understandable.recipe-description",
+        principle: "understandable",
+        heuristic: "Features are not described",
+        critical: false,
+        status: "fail",
+        message: `${recipe.name} requires a recipe-aware description, but none is attached.`,
+        fix: "Call describeChart with recipeId/recipe metadata and attach the returned text as description.",
+      })
+    }
+    if (
+      recipe.accessibility.fallbackTable &&
+      props.accessibleTable === false
+    ) {
+      f.push({
+        id: "compromising.recipe-fallback",
+        principle: "compromising",
+        heuristic: "No data table is provided",
+        critical: true,
+        status: "fail",
+        message: `${recipe.name} requires a fallback table, but accessibleTable is disabled.`,
+        fix: "Enable accessibleTable and preserve recipe-declared table fields on scene nodes.",
+      })
+    }
   }
 
   // ── Tally ──────────────────────────────────────────────────────────────

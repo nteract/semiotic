@@ -43,6 +43,7 @@ interface ProcessSankeyTick
 interface ProcessSankeyValidatorEdge
 interface ProcessSankeyValidatorNode
 interface SankeyDiagramProps
+interface SceneAccessibilityMetadata
 interface StreamNetworkFrameHandle
 interface StreamNetworkFrameProps
 interface ThresholdAlertConfig

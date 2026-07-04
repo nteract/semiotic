@@ -8,9 +8,10 @@ import type {
   StreamGeoFrameProps,
 } from "../../stream/geoTypes"
 import type { GeoCustomLayout } from "../../stream/geoCustomLayout"
+import type { ChartRecipe } from "../../ai/chartRecipes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { Datum } from "../shared/datumTypes"
-import type { BaseChartProps } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { SafeRender } from "../shared/withChartWrapper"
 import { filterSparseArray } from "../shared/sparseArray"
 import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
@@ -32,11 +33,15 @@ export interface GeoCustomChartProps<
   layout: GeoCustomLayout<TConfig>
   /** User configuration threaded to `GeoLayoutContext.config`. */
   layoutConfig?: TConfig
+  recipe?: ChartRecipe<TDatum, TConfig>
+  recipeId?: string
   /** Projection resolved before the custom layout runs. @default "equirectangular" */
   projection?: ProjectionProp
   xAccessor?: StreamGeoFrameProps<TDatum>["xAccessor"]
   yAccessor?: StreamGeoFrameProps<TDatum>["yAccessor"]
   lineDataAccessor?: StreamGeoFrameProps<TDatum>["lineDataAccessor"]
+  /** Field or function that declares the semantic category used for custom-layout color. */
+  colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
   enableHover?: boolean
   tooltip?: TooltipProp
@@ -82,6 +87,7 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
     xAccessor = "lon",
     yAccessor = "lat",
     lineDataAccessor,
+    colorBy,
     colorScheme,
     tooltip,
     annotations,
@@ -122,12 +128,12 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
   const setup = useChartSetup({
     data: setupData,
     rawData: hasBoundedInput ? setupData : undefined,
-    colorBy: undefined,
+    colorBy,
     colorScheme,
     legendInteraction: undefined,
     selection,
     linkedHover,
-    fallbackFields: [],
+    fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
     unwrapData: false,
     onObservation,
     onClick,
@@ -178,6 +184,7 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
     customLayout: layout as unknown as GeoCustomLayout,
     layoutConfig,
     layoutSelection,
+    colorBy: colorBy as StreamGeoFrameProps["colorBy"],
     colorScheme,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,

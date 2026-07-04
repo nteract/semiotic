@@ -2,6 +2,11 @@ import { describe, it, expect } from "vitest"
 import { toConfig, fromConfig, toURL, fromURL, configToJSX } from "./chartConfig"
 import type { ChartConfig } from "./chartConfig"
 import type { Datum } from "../charts/shared/datumTypes"
+import { defineChartRecipe } from "../ai/chartRecipes"
+import {
+  registerChartRecipe,
+  unregisterChartRecipe,
+} from "../ai/chartRecipeRegistry"
 
 // ── toConfig ───────────────────────────────────────────────────────────
 
@@ -92,6 +97,81 @@ describe("toConfig", () => {
 
   it("throws for unknown component", () => {
     expect(() => toConfig("FakeChart", {})).toThrow("Unknown component")
+    expect(() =>
+      toConfig("XYCustomChart", { layout: () => ({ nodes: [] }) }),
+    ).toThrow("Unknown component")
+  })
+
+  it("serializes and round-trips a registered portable recipe by id", () => {
+    const recipe = defineChartRecipe({
+      id: "semiotic.recipe.serialization-portable",
+      name: "Portable recipe",
+      frameFamily: "XYCustomChart",
+      portability: "portable",
+      layout: { id: "semiotic.layout.portable" },
+      layoutConfigSchema: { type: "object", properties: {} },
+      dataRoles: [{ role: "value", field: "value", semanticType: "quantitative" }],
+      intents: ["explanation"],
+      designContract: { whyCustom: "Portable fixture." },
+      accessibility: {},
+    })
+    registerChartRecipe(recipe)
+    try {
+      const config = toConfig(recipe.id, {
+        data: [{ value: 4 }],
+        layoutConfig: { columns: 10 },
+      })
+      expect(config).toMatchObject({
+        component: "ChartRecipe",
+        recipeId: recipe.id,
+        portable: true,
+        props: {
+          data: [{ value: 4 }],
+          layoutConfig: { columns: 10 },
+        },
+      })
+      const roundTrip = fromConfig(config)
+      expect(roundTrip.componentName).toBe("ChartRecipe")
+      expect(roundTrip.props.recipeId).toBe(recipe.id)
+      expect(roundTrip.props.layoutConfig).toEqual({ columns: 10 })
+      expect(() =>
+        toConfig(recipe.id, {
+          layoutConfig: { columns: 10, label: () => "A" },
+        }),
+      ).toThrow(/not JSON-safe/)
+    } finally {
+      unregisterChartRecipe(recipe.id)
+    }
+  })
+
+  it("exports a local recipe manifest with an explicit portability warning", () => {
+    const recipe = defineChartRecipe({
+      id: "local.recipe.serialization",
+      name: "Local swarm",
+      frameFamily: "XYCustomChart",
+      portability: "local",
+      dataRoles: [{ role: "value", field: "value", semanticType: "quantitative" }],
+      intents: ["monitoring"],
+      designContract: { whyCustom: "Event identity matters." },
+      accessibility: {},
+    })
+    registerChartRecipe(recipe)
+    try {
+      const config = toConfig(recipe.id, {
+        data: [{ value: 4 }],
+        layout: () => ({ nodes: [] }),
+      })
+      expect(config.component).toBe("LocalChartRecipe")
+      expect(config.portable).toBe(false)
+      expect(config.reason).toMatch(/non-serializable/)
+      expect(config.manifest).toMatchObject({
+        name: "Local swarm",
+        intents: ["monitoring"],
+      })
+      expect(config.props.layout).toBeUndefined()
+    } finally {
+      unregisterChartRecipe(recipe.id)
+    }
   })
 })
 

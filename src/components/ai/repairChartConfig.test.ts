@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { repairChartConfig } from "./repairChartConfig"
+import { defineChartRecipe } from "./chartRecipes"
+import {
+  registerChartRecipe,
+  unregisterChartRecipe,
+} from "./chartRecipeRegistry"
 
 const productSales = [
   { product: "Widget", units: 480 },
@@ -75,6 +80,46 @@ describe("repairChartConfig", () => {
       const top = result.alternatives[0]
       expect(top.props).toBeDefined()
       expect(top.props.data).toBeDefined()
+    }
+  })
+
+  it("returns IDID-specific repairs for a local recipe", () => {
+    const recipe = defineChartRecipe({
+      id: "local.recipe.repair-test",
+      name: "Custom swarm",
+      frameFamily: "XYCustomChart",
+      portability: "local",
+      dataRoles: [
+        { role: "category", semanticType: "nominal", required: true },
+        { role: "value", semanticType: "quantitative", required: true },
+      ],
+      encodings: [
+        { channel: "color", role: "category", meaning: "Color identifies group." },
+      ],
+      intents: ["monitoring"],
+      reception: {
+        channels: ["visual", "interactive"],
+        risks: ["unfamiliar"],
+        scaffolds: [],
+      },
+      designContract: { whyCustom: "Event identity matters." },
+      accessibility: {
+        description: "required",
+      },
+    })
+    registerChartRecipe(recipe)
+    try {
+      const result = repairChartConfig(recipe.id, productSales.slice(0, 5))
+      expect(result.status).toBe("ok")
+      expect(result.repairs).toEqual(expect.arrayContaining([
+        "This custom recipe needs a generated or authored description.",
+        "This recipe is unfamiliar; add an orienting legend, annotation, or summary.",
+        "This recipe is color-dependent; add a shape, position, texture, or label cue.",
+        "This interactive recipe needs a static data fallback.",
+        "This recipe is local-only and cannot be exported to MCP or CLI rendering.",
+      ]))
+    } finally {
+      unregisterChartRecipe(recipe.id)
     }
   })
 })

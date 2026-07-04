@@ -105,6 +105,7 @@ import StreamingSystemModelPage from "./pages/features/StreamingSystemModelPage"
 import PerformancePage from "./pages/features/PerformancePage"
 import PushApiPage from "./pages/features/PushApiPage"
 import CustomChartsOverviewPage from "./pages/custom-charts/CustomChartsOverviewPage"
+import CustomChartsIntelligencePage from "./pages/custom-charts/CustomChartsIntelligencePage"
 import CustomLayoutsPage from "./pages/custom-charts/CustomLayoutsPage"
 import GlyphMarksPage from "./pages/custom-charts/GlyphMarksPage"
 import RecipeKitPage from "./pages/custom-charts/RecipeKitPage"
@@ -555,6 +556,7 @@ export default function DocsApp() {
             <Route path="custom-charts" element={<Outlet />}>
               <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<CustomChartsOverviewPage />} />
+              <Route path="intelligence" element={<CustomChartsIntelligencePage />} />
               <Route path="custom-layouts" element={<CustomLayoutsPage />} />
               <Route path="glyph-marks" element={<GlyphMarksPage />} />
               <Route path="recipe-kit" element={<RecipeKitPage />} />

@@ -11,6 +11,7 @@ export const EXAMPLES = [
     description:
       "Combines point climate controls with a radial custom ordinal chart and stacked temporal detail.",
     preview: "combined",
+    badges: ["Custom chart", "Accessible navigation"],
   },
   {
     title: "Lake Travis, in Signs",
@@ -19,6 +20,7 @@ export const EXAMPLES = [
     description:
       "A lake-level and weather dashboard rebuilt with repeated pictograms across streaming XY, ordinal, network, and geographic custom layouts.",
     preview: "lake-isotype",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
   },
   {
     title: "The Buildings Behind AI",
@@ -27,6 +29,7 @@ export const EXAMPLES = [
     description:
       "An ISOTYPE account of the AI build-out: relief sections carry data centers across the U.S. map, arrow units trace power and water, unit grids count capacity and compute—and every claim keeps its denominator and source.",
     preview: "data-centers-isotype",
+    badges: ["Custom chart", "Local", "Agent-readable"],
   },
   {
     title: "All the Wars of the United States",
@@ -35,6 +38,7 @@ export const EXAMPLES = [
     description:
       "A layered timeline of conflicts, geopolitical spheres, historical periods, concurrency, and the comparatively rare years of peace.",
     preview: "wars",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
   },
   {
     title: "A Genealogy of Cubism and Abstract Art",
@@ -43,6 +47,7 @@ export const EXAMPLES = [
     description:
       "A constraint-laid influence graph styled after Alfred H. Barr Jr.'s iconic 1936 Cubism and Abstract Art cover.",
     preview: "art",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
   },
   {
     title: "Paris, Isometric City of Lights",
@@ -51,6 +56,7 @@ export const EXAMPLES = [
     description:
       "Five-by-five strategy-game views of Paris, Austin, San Francisco, and Tokyo, populated from DBpedia landmarks with resilient local snapshots.",
     preview: "isometric",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
   },
   {
     title: "The Wheel of Urines",
@@ -59,6 +65,7 @@ export const EXAMPLES = [
     description:
       "A medieval uroscopy diagnostic redrawn as a node-link diagram in a ring — twenty named urine colors, each spoked to the stage of digestion it signifies.",
     preview: "urine",
+    badges: ["Custom recipe", "Local", "Intent-aware", "Accessible navigation", "Agent-readable"],
   },
   {
     title: "The New York & Erie Railroad",
@@ -67,6 +74,7 @@ export const EXAMPLES = [
     description:
       "McCallum and Henshaw's landmark 1855 organization diagram rebuilt as computed railroad trunks, workforce boughs, and navigable roles.",
     preview: "erie",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
   },
   {
     title: "Wikipedia, as it happens",
@@ -75,6 +83,7 @@ export const EXAMPLES = [
     description:
       "A live, filterable view of English Wikipedia edits with actor classification, signed change encodings, aggregation, and revision-level drilldown.",
     preview: "wikipedia",
+    badges: ["Custom chart", "Local", "Intent-aware"],
   },
   {
     title: "Your Local Government Explorer",
@@ -99,6 +108,7 @@ export const EXAMPLES = [
     description:
       "A scrollytelling essay on the evolution of data journalism that records your own scroll, velocity, and dwell as a live stream and plots it back — the reader as the data source.",
     preview: "scroll-tell",
+    badges: ["Custom chart", "Local", "Intent-aware"],
   },
   {
     title: "What the Machine Sees",
@@ -107,6 +117,7 @@ export const EXAMPLES = [
     description:
       "Watch Semiotic read real World Bank data with no model call: profile it, rank chart capabilities, then describe, audit, and lay out a navigable structure for the chart it chooses.",
     preview: "machine",
+    badges: ["Custom recipe", "Portable", "Intent-aware", "Scene-audited", "Accessible navigation", "Agent-readable"],
   },
   {
     title: "The Living System of Semiotic",
@@ -147,5 +158,6 @@ export const EXAMPLES = [
     description:
       "The 1985 Oregon Trail end-game map, rebuilt with GeoCustomChart over real Washington/Oregon/Idaho geography — gray land, CGA-blue rivers, caret mountains, forts, and a wagon you can drive from START to FINISH.",
     preview: "oregontrail",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
   },
 ]

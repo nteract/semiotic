@@ -4,6 +4,8 @@ import { profileData } from "./profileData"
 import { suggestCharts } from "./suggestCharts"
 import type { ChartDataProfile, Suggestion } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
+import type { ObservedSceneAuditResult } from "./observedSceneAudit"
+import type { ChartRecipe } from "./chartRecipes"
 
 /**
  * Repair result when the chosen chart fits the data — nothing to fix.
@@ -13,6 +15,8 @@ export interface RepairOkResult {
   component: string
   /** The same data profile that was evaluated. */
   profile: ChartDataProfile
+  /** Recipe-specific reception/accessibility repairs, even when data shape fits. */
+  repairs?: string[]
 }
 
 /**
@@ -29,6 +33,7 @@ export interface RepairAlternativeResult {
   /** Whether the caller intended one of the alternatives anyway. */
   alternatives: Suggestion[]
   profile: ChartDataProfile
+  repairs?: string[]
 }
 
 /**
@@ -40,6 +45,7 @@ export interface RepairUnknownResult {
   /** Closest matches by family/intent — best effort. */
   alternatives: Suggestion[]
   profile: ChartDataProfile
+  repairs?: string[]
 }
 
 export type RepairResult = RepairOkResult | RepairAlternativeResult | RepairUnknownResult
@@ -53,6 +59,61 @@ export interface RepairOptions {
   maxAlternatives?: number
   /** Pre-computed profile, avoids recomputation. */
   profile?: ChartDataProfile
+  /** Current rendered props, used for recipe-specific repair guidance. */
+  props?: Datum
+  /** Optional observed-scene evidence from auditObservedScene(). */
+  observedSceneAudit?: ObservedSceneAuditResult
+}
+
+function recipeRepairs(
+  recipe: ChartRecipe,
+  options: RepairOptions,
+): string[] {
+  const props = options.props ?? {}
+  const repairs: string[] = []
+  if (
+    recipe.accessibility.description === "required" &&
+    typeof props.description !== "string"
+  ) {
+    repairs.push("This custom recipe needs a generated or authored description.")
+  }
+  if (
+    recipe.reception?.risks?.some((risk) => /unfamiliar/i.test(risk)) &&
+    !(recipe.reception.scaffolds ?? []).some((scaffold) =>
+      ["legend", "annotation", "summary", "description"].includes(scaffold),
+    )
+  ) {
+    repairs.push("This recipe is unfamiliar; add an orienting legend, annotation, or summary.")
+  }
+  const colorOnly = recipe.encodings?.some(
+    (encoding) =>
+      encoding.channel === "color" &&
+      (!encoding.redundantWith || encoding.redundantWith.length === 0),
+  )
+  if (colorOnly) {
+    repairs.push("This recipe is color-dependent; add a shape, position, texture, or label cue.")
+  }
+  if (
+    recipe.reception?.channels.includes("interactive") &&
+    !recipe.accessibility.fallbackTable &&
+    recipe.accessibility.accessibleTable !== "required"
+  ) {
+    repairs.push("This interactive recipe needs a static data fallback.")
+  }
+  if (recipe.portability === "local") {
+    repairs.push("This recipe is local-only and cannot be exported to MCP or CLI rendering.")
+  }
+  for (const finding of options.observedSceneAudit?.observedSceneEvidence ?? []) {
+    if (finding.status !== "fail" && finding.status !== "warn") continue
+    if (finding.id === "interaction.hit-targets") {
+      repairs.push("Scene audit found data-bearing marks without hit targets.")
+    } else if (finding.id === "accessibility.table-fields") {
+      repairs.push("Scene audit found accessible-table field loss.")
+    } else if (finding.id === "accessibility.navigation-depth") {
+      repairs.push("The recipe navigation tree is root-only; expose groups and reachable data marks.")
+    }
+  }
+  return [...new Set(repairs)]
 }
 
 /**
@@ -87,6 +148,9 @@ export function repairChartConfig(
   const profile = options.profile ?? profileData(data ?? [], { rawInput: options.rawInput })
   const capability = getCapability(component)
   const maxAlternatives = options.maxAlternatives ?? 3
+  const repairs = capability?.recipe
+    ? recipeRepairs(capability.recipe, options)
+    : []
 
   if (!capability) {
     // Unknown component — return top suggestions as best-effort fallbacks
@@ -101,7 +165,12 @@ export function repairChartConfig(
 
   const fitReason = capability.fits(profile)
   if (fitReason === null) {
-    return { status: "ok", component, profile }
+    return {
+      status: "ok",
+      component,
+      profile,
+      ...(repairs.length ? { repairs } : {}),
+    }
   }
 
   const alternatives = suggestCharts(data, {
@@ -118,5 +187,6 @@ export function repairChartConfig(
     reason: fitReason,
     alternatives,
     profile,
+    ...(repairs.length ? { repairs } : {}),
   }
 }

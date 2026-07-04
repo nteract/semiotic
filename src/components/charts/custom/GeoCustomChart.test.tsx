@@ -75,4 +75,18 @@ describe("GeoCustomChart", () => {
     expect(lastGeoFrameProps?.xAccessor).toBe("longitude")
     expect(lastGeoFrameProps?.yAccessor).toBe("latitude")
   })
+
+  it("forwards colorBy to the geo frame", () => {
+    render(
+      <TooltipProvider>
+        <GeoCustomChart
+          points={[{ id: "paris", lon: 2.35, lat: 48.86, group: "west" }]}
+          layout={layout}
+          colorBy="group"
+        />
+      </TooltipProvider>
+    )
+
+    expect(lastGeoFrameProps?.colorBy).toBe("group")
+  })
 })

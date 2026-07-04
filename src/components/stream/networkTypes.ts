@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import type { HoverData, AnnotationContext } from "../realtime/types"
 import type { LegendGroup, LegendLayout } from "../types/legendTypes"
-import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum } from "./types"
+import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum, SceneAccessibilityMetadata } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
@@ -255,6 +255,8 @@ export interface NetworkCircleNode {
   r: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   id?: string
   label?: string
   depth?: number
@@ -272,6 +274,8 @@ export interface NetworkRectNode {
   h: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   id?: string
   label?: string
   depth?: number
@@ -294,6 +298,8 @@ export interface NetworkArcNode {
   endAngle: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   id?: string
   label?: string
   _pulseIntensity?: number
@@ -321,6 +327,8 @@ export interface NetworkSymbolNode {
   rotation?: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   id?: string
   label?: string
   depth?: number
@@ -359,6 +367,8 @@ export interface NetworkGlyphNode {
   rotation?: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   id?: string
   label?: string
   depth?: number

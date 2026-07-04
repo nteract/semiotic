@@ -57,6 +57,13 @@ export default function ExamplesOverviewPage() {
               <div style={styles.eyebrow}>{example.eyebrow}</div>
               <h2 style={styles.cardTitle}>{example.title}</h2>
               <p style={styles.cardDescription}>{example.description}</p>
+              {example.badges?.length > 0 && (
+                <div style={styles.badges} aria-label="Example capabilities">
+                  {example.badges.map((badge) => (
+                    <span key={badge} style={styles.badge}>{badge}</span>
+                  ))}
+                </div>
+              )}
             </div>
           </Link>
         ))}
@@ -830,5 +837,22 @@ const styles = {
     color: "var(--text-secondary)",
     margin: 0,
     fontWeight: 400,
+  },
+  badges: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "5px",
+    marginTop: "12px",
+  },
+  badge: {
+    padding: "3px 6px",
+    border: "1px solid var(--surface-3)",
+    borderRadius: "999px",
+    color: "var(--text-secondary)",
+    background: "var(--surface-0)",
+    fontSize: "9px",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
   },
 }

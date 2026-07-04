@@ -637,6 +637,19 @@ export function modelComputeLayout(ctx) {
 export const ARROW_UNIT_TWH = 25
 export const ARROW_UNIT_BGAL = 25
 
+// The IEA puts 70–80% of data-center heat within reach of a heat pump where a
+// heat network exists; 0.75 is the mid-point we draw solid, the rest ghosted.
+export const RECOVERABLE_HEAT_FRACTION = 0.75
+
+// The cooling-design trade-off is directional, not a measured ratio: an
+// evaporative tower spends water to save compressor energy; a dry/air-cooled
+// closed loop spends energy to save water. These illustrative counts encode
+// the DIRECTION the two resources move, and are labeled as such.
+const COOLING_MODES = [
+  { id: "evaporative", label: "EVAPORATIVE TOWER", water: 5, energy: 1, note: "less energy · more water" },
+  { id: "dry", label: "DRY / AIR-COOLED", water: 1, energy: 5, note: "more energy · less water" },
+]
+
 // Arrow-per-unit allocation: the library's unitize with sliver-dropping —
 // 176 TWh is seven arrows, not seven arrows and a 4% stub.
 export function arrowUnits(value, unit, minFraction = 0.08) {
@@ -723,24 +736,35 @@ export function resourceFlowLayout(ctx) {
 
   const plantX = width * (compact ? 0.13 : 0.15)
   const centersX = width * 0.58
-  const figureY = height * 0.19
-  const glyphSize = compact ? 36 : 44
+  const figureY = height * 0.075
+  const glyphSize = compact ? 34 : 42
   const arrowThickness = compact ? 5 : 6
   const arrowGap = compact ? 2.5 : 3.5
 
   const electricity = arrowUnits(NATIONAL_RESOURCES.electricityTWh, ARROW_UNIT_TWH)
   const heat = electricity // rejected heat ≈ input power, arrow for arrow
+  const recoverableArrows = heat.length * RECOVERABLE_HEAT_FRACTION
   const indirect = arrowUnits(NATIONAL_RESOURCES.indirectWaterBillionGallons, ARROW_UNIT_BGAL)
   const direct = arrowUnits(NATIONAL_RESOURCES.directWaterBillionGallons, ARROW_UNIT_BGAL)
 
+  const laneY = figureY + glyphSize / 2
   const elecX0 = plantX + glyphSize / 2 + 8
   const elecX1 = centersX - glyphSize / 2 - 8
   const heatX0 = centersX + glyphSize / 2 + 8
   const heatX1 = width * 0.97
-  const bundleTop = (count) => figureY - (count * (arrowThickness + arrowGap) - arrowGap) / 2
+  const bundleTop = (count) => laneY - (count * (arrowThickness + arrowGap) - arrowGap) / 2
+  const heatBottom = bundleTop(heat.length) + heat.length * (arrowThickness + arrowGap)
 
-  const waterBaseY = height * 0.86
-  const waterLength = height * 0.235
+  // Band two — the cooling trade-off. Illustrative direction, not a ratio.
+  const coolTop = height * 0.4
+  const coolRowH = compact ? 26 : 30
+  const coolLabelW = compact ? 96 : 118
+  const coolGlyph = compact ? 12 : 15
+  const coolStep = coolGlyph + (compact ? 2 : 3)
+
+  // Band three — the two water numbers, one baseline.
+  const waterBaseY = height * 0.94
+  const waterLength = height * 0.26
   const waterStep = arrowThickness + (compact ? 3.5 : 4.5)
   const indirectX0 = plantX - ((indirect.length - 1) * waterStep) / 2
   const labelBoxWidth = compact ? 120 : 148
@@ -776,6 +800,39 @@ export function resourceFlowLayout(ctx) {
     },
   ]
 
+  const coolingRow = (mode, rowIndex) => {
+    const rowY = coolTop + rowIndex * coolRowH
+    const iconY = rowY - coolGlyph + 2
+    const glyphs = []
+    let gx = coolLabelW
+    for (let i = 0; i < mode.water; i += 1) {
+      glyphs.push(
+        <IsotypeGlyph key={`w-${i}`} kind="water" x={gx} y={iconY} size={coolGlyph} color={ISOTYPE.blue} />,
+      )
+      gx += coolStep
+    }
+    gx += coolStep * 0.4
+    for (let i = 0; i < mode.energy; i += 1) {
+      glyphs.push(
+        <IsotypeGlyph key={`e-${i}`} kind="bolt" x={gx} y={iconY} size={coolGlyph} color={ISOTYPE.yellow} />,
+      )
+      gx += coolStep
+    }
+    return (
+      <g key={mode.id}>
+        <text x="0" y={rowY - 2} fill={ISOTYPE.ink} fontSize={compact ? 7.5 : 8.5} fontWeight="900">
+          {mode.label}
+        </text>
+        {glyphs}
+        {!compact && (
+          <text x={gx + 6} y={rowY - 3} fill={ISOTYPE.muted} fontSize="8" fontWeight="800">
+            {mode.note}
+          </text>
+        )}
+      </g>
+    )
+  }
+
   return {
     sceneNodes: [
       // The two figures ARE interactive glyph nodes — canvas-painted,
@@ -783,7 +840,7 @@ export function resourceFlowLayout(ctx) {
       {
         type: "glyph",
         cx: plantX,
-        cy: figureY + glyphSize / 2,
+        cy: laneY,
         size: glyphSize,
         glyph: isotypeGlyphDef("plant"),
         color: ISOTYPE.ink,
@@ -796,7 +853,7 @@ export function resourceFlowLayout(ctx) {
       {
         type: "glyph",
         cx: centersX,
-        cy: figureY + glyphSize / 2,
+        cy: laneY,
         size: glyphSize,
         glyph: isotypeGlyphDef("server"),
         color: ISOTYPE.ink,
@@ -822,7 +879,8 @@ export function resourceFlowLayout(ctx) {
     ],
     overlays: (
       <g>
-        {/* Lane one: generation → computation → heat. */}
+        {/* ── Band one: generation → computation → heat, and how much of that
+              heat can be recovered. ─────────────────────────────────────── */}
         {electricity.map((unit, index) => (
           <path
             key={`elec-${index}`}
@@ -831,18 +889,28 @@ export function resourceFlowLayout(ctx) {
             fill={ISOTYPE.yellow}
           />
         ))}
-        {heat.map((unit, index) => (
-          <path
-            key={`heat-${index}`}
-            transform={`translate(${heatX0} ${bundleTop(heat.length) + index * (arrowThickness + arrowGap) + arrowThickness / 2})`}
-            d={arrowRightPath((heatX1 - heatX0) * unit.fraction, arrowThickness)}
-            fill={ISOTYPE.red}
-          />
-        ))}
-        <text x={plantX} y={figureY + glyphSize / 2 + 15} fill={ISOTYPE.ink} fontSize={compact ? 9 : 10} fontWeight="900" textAnchor="middle">
+        {/* Every heat arrow is drawn ghosted (all electricity leaves as heat);
+            the recoverable ~75% is over-painted solid from the base. */}
+        {heat.map((unit, index) => {
+          const fullLen = (heatX1 - heatX0) * unit.fraction
+          const solidFrac = Math.max(0, Math.min(1, recoverableArrows - index))
+          const ty = bundleTop(heat.length) + index * (arrowThickness + arrowGap) + arrowThickness / 2
+          return (
+            <g key={`heat-${index}`} transform={`translate(${heatX0} ${ty})`}>
+              {/* Full heat arrow, ghosted (all electricity leaves as heat)… */}
+              <path d={arrowRightPath(fullLen, arrowThickness)} fill={ISOTYPE.red} opacity={0.28} />
+              {/* …with the recoverable share over-painted as a solid arrow, so
+                  a fully-recoverable arrow reads as a solid arrow, head and all. */}
+              {solidFrac > 0 && (
+                <path d={arrowRightPath(fullLen * solidFrac, arrowThickness)} fill={ISOTYPE.red} />
+              )}
+            </g>
+          )
+        })}
+        <text x={plantX} y={heatBottom + 14} fill={ISOTYPE.ink} fontSize={compact ? 9 : 10} fontWeight="900" textAnchor="middle">
           POWER PLANTS
         </text>
-        <text x={centersX} y={figureY + glyphSize / 2 + 15} fill={ISOTYPE.ink} fontSize={compact ? 9 : 10} fontWeight="900" textAnchor="middle">
+        <text x={centersX} y={heatBottom + 14} fill={ISOTYPE.ink} fontSize={compact ? 9 : 10} fontWeight="900" textAnchor="middle">
           DATA CENTERS
         </text>
         <text x={(elecX0 + elecX1) / 2} y={bundleTop(electricity.length) - 7} fill={ISOTYPE.yellow} fontSize="9.5" fontWeight="900" textAnchor="middle">
@@ -851,16 +919,20 @@ export function resourceFlowLayout(ctx) {
         <text x={heatX1} y={bundleTop(heat.length) - 7} fill={ISOTYPE.red} fontSize="9.5" fontWeight="900" textAnchor="end">
           ≈ ALL OF IT, AS HEAT
         </text>
+        <text x={heatX1} y={heatBottom + 30} fill={ISOTYPE.red} fontSize={compact ? 7.5 : 8.5} fontWeight="900" textAnchor="end">
+          SOLID ≈ 75% RECOVERABLE (IEA 70–80%)
+        </text>
 
-        {/* Accelerated-server aside. */}
-        <g transform={`translate(${(elecX0 + elecX1) / 2 - (compact ? 92 : 104)} ${height * 0.4})`}>
-          <IsotypeGlyph kind="chip" size={14} color={ISOTYPE.blue} />
-          <text x="19" y="11" fill={ISOTYPE.ink} fontSize={compact ? 7.5 : 8.5} fontWeight="900">
-            ACCELERATED SERVERS USED &gt;40 OF THOSE 176 TWH
-          </text>
-        </g>
+        {/* ── Band two: cooling design trades water for energy. ─────────────── */}
+        <text x="0" y={coolTop - coolRowH + 2} fill={ISOTYPE.ink} fontSize={compact ? 8.5 : 10} fontWeight="900">
+          COOLING DESIGN SETS THE ON-SITE WATER
+        </text>
+        {COOLING_MODES.map((mode, index) => coolingRow(mode, index))}
+        <text x="0" y={coolTop + COOLING_MODES.length * coolRowH + 2} fill={ISOTYPE.muted} fontSize={compact ? 7 : 7.5} fontWeight="800">
+          {compact ? "SCHEMATIC DIRECTION, NOT A RATIO" : "BLUE = WATER · YELLOW = ENERGY · SCHEMATIC DIRECTION, NOT A MEASURED RATIO"}
+        </text>
 
-        {/* Lane two: the two water numbers, same unit, same baseline. */}
+        {/* ── Band three: the two water numbers, one unit, one baseline. ────── */}
         <line
           x1={indirectX0 - waterStep}
           x2={centersX + waterStep * 1.6}

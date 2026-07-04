@@ -210,6 +210,17 @@ export type { GlyphDef, GlyphPart, GlyphPlacement } from "./stream/glyphDef"
 // recipe icon callbacks, and page chrome.
 export { Glyph } from "./recipes/recipeGlyph"
 export type { GlyphProps } from "./recipes/recipeGlyph"
+export {
+  isotypeInk,
+  isotypePaper,
+  isotypeGhost,
+  isotypeServerGlyph,
+  isotypeChipGlyph,
+  isotypeBoltGlyph,
+  isotypePersonPath,
+  isotypePersonGlyph,
+  isotypeNetworkGlyphs,
+} from "./recipes/isotypeGlyphs"
 
 // Recipe chrome kit — group enclosures, band labels, and mark callouts that
 // custom-layout recipes draw in their `overlays` layer.

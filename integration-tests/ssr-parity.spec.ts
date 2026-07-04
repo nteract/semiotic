@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { createRequire } from "node:module"
 import * as React from "react"
 import { waitForChartReady } from "./helpers"
 
@@ -36,24 +37,70 @@ interface ParityCase {
   theme?: string
 }
 
-const { makeSsrParityCases } = require("./ssr-parity-fixtures.js") as {
+interface RenderEvidence {
+  frameType: "xy" | "ordinal" | "network" | "geo"
+  status: "ok" | "empty"
+  empty: boolean
+  markCount: number
+  markCountByType: Record<string, number>
+  nodeCount?: number
+  edgeCount?: number
+}
+
+const cjsRequire = createRequire(__filename)
+
+const { makeSsrParityCases } = cjsRequire("./ssr-parity-fixtures.js") as {
   makeSsrParityCases: (ReactModule: typeof React) => ParityCase[]
 }
 const cases = makeSsrParityCases(React)
 
-// Lazy-load `renderChart` from the built server bundle via the CJS
+// Lazy-load `renderChartWithEvidence` from the built server bundle via the CJS
 // variant. Playwright's TS loader runs spec files as CJS, and the
 // dist/ folder has no `type: "module"` package.json — so Node refuses
 // to load the `.module.min.js` ESM bundle from a CJS context. The
-// CJS variant (`.min.js`) loads cleanly via `require`. Cached after
+// CJS variant (`.min.js`) loads cleanly via a local createRequire loader. Cached after
 // first load to keep the per-test cost down.
-let renderChart: ((component: string, props: Record<string, unknown>) => string) | null = null
-function getRenderChart() {
-  if (renderChart) return renderChart
-  const server = require("../dist/server.min.js") as { renderChart?: typeof renderChart }
-  renderChart = server.renderChart ?? null
-  if (!renderChart) throw new Error("renderChart not found on semiotic/server")
-  return renderChart
+let renderChartWithEvidence:
+  | ((component: string, props: Record<string, unknown>) => { svg: string; evidence: RenderEvidence })
+  | null = null
+function getRenderChartWithEvidence() {
+  if (renderChartWithEvidence) return renderChartWithEvidence
+  const server = cjsRequire("../dist/server.min.js") as {
+    renderChartWithEvidence?: typeof renderChartWithEvidence
+  }
+  renderChartWithEvidence = server.renderChartWithEvidence ?? null
+  if (!renderChartWithEvidence) {
+    throw new Error("renderChartWithEvidence not found on semiotic/server")
+  }
+  return renderChartWithEvidence
+}
+
+function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: string) {
+  if (id === "xy-custom-waffle") {
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.markCountByType.rect).toBeGreaterThanOrEqual(100)
+    expect(svg).toContain("Custom waffle layout")
+  }
+  if (id === "ordinal-custom-isotype-glyphs") {
+    expect(evidence.frameType).toBe("ordinal")
+    expect(evidence.markCountByType.glyph).toBeGreaterThan(0)
+    expect(evidence.markCountByType.rect).toBeGreaterThanOrEqual(3)
+    expect(svg).toContain("PARTIAL SIGNS USE GLYPH FRACTION")
+    expect(svg).toContain("<clipPath")
+  }
+  if (id === "network-custom-glyph-layout") {
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.markCountByType["node:glyph"]).toBeGreaterThanOrEqual(4)
+    expect(evidence.markCountByType["edge:curved"]).toBeGreaterThan(0)
+    expect(svg).toContain("stroke-dasharray")
+    expect(svg).toContain("M-7 -5 L5 0 L-7 5")
+  }
+  if (id === "geo-custom-isotype-glyphs") {
+    expect(evidence.frameType).toBe("geo")
+    expect(evidence.markCountByType.glyph).toBeGreaterThanOrEqual(4)
+    expect(svg).toContain("Projected geo glyphs")
+    expect(svg).toContain("<clipPath")
+  }
 }
 
 test.describe("SSR / CSR parity", () => {
@@ -66,9 +113,9 @@ test.describe("SSR / CSR parity", () => {
     })
 
     test(`SSR baseline — ${c.id}`, async ({ page }) => {
-      const render = getRenderChart()
       const ssrProps = c.theme ? { ...c.props, theme: c.theme } : c.props
-      const ssrSvg = render(c.component, ssrProps)
+      const { svg: ssrSvg, evidence } = getRenderChartWithEvidence()(c.component, ssrProps)
+      assertCustomRenderEvidence(c.id, evidence, ssrSvg)
       // Inject directly. White background + tight padding match the
       // CSR fixture so the screenshots are framed comparably even
       // though we don't pixel-compare them directly.

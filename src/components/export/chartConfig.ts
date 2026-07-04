@@ -1,6 +1,12 @@
 import { VALIDATION_MAP } from "../charts/shared/validateProps"
 import type { SerializedSelections } from "./selectionSerializer"
 import type { Datum } from "../charts/shared/datumTypes"
+import {
+  getChartRecipe,
+  resolveChartRecipe,
+} from "../ai/chartRecipeRegistry"
+import { isJsonSafe } from "../ai/chartRecipes"
+import { recipeIntentId } from "../ai/recipeSemantics"
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -17,6 +23,17 @@ export interface ChartConfig {
   createdAt: string
   /** Optional serialized selection/brush state */
   selections?: SerializedSelections
+  /** Present for portable/local recipe configs. */
+  recipeId?: string
+  portable?: boolean
+  reason?: string
+  warnings?: string[]
+  manifest?: {
+    name: string
+    intents: string[]
+    audience?: string[]
+    frameFamily: string
+  }
 }
 
 export interface ToConfigOptions {
@@ -39,7 +56,7 @@ const ALWAYS_EXCLUDE = new Set([
   "pieceStyle", "summaryStyle", "nodeStyle", "edgeStyle",
   "customHoverBehavior", "customClickBehavior", "customDoubleClickBehavior",
   "onBrush", "onTopologyChange", "backgroundGraphics", "foregroundGraphics",
-  "legend"
+  "legend", "recipe", "layout"
 ])
 
 /** Data props excluded when includeData is false */
@@ -56,6 +73,14 @@ export function toConfig(
   props: Datum,
   options?: ToConfigOptions
 ): ChartConfig {
+  const recipe =
+    getChartRecipe(componentName) ??
+    resolveChartRecipe(props.recipe) ??
+    resolveChartRecipe(props.recipeId)
+  if (recipe) {
+    return recipeToConfig(recipe, props, options)
+  }
+
   const spec = VALIDATION_MAP[componentName]
   if (!spec) {
     throw new Error(`Unknown component "${componentName}". Known components: ${Object.keys(VALIDATION_MAP).join(", ")}`)
@@ -83,6 +108,90 @@ export function toConfig(
   }
 }
 
+function serializableProps(
+  props: Datum,
+  includeData: boolean,
+  strict: boolean,
+): Datum {
+  const serialized: Datum = {}
+  for (const [key, value] of Object.entries(props)) {
+    if (value === undefined || value === null) continue
+    if (ALWAYS_EXCLUDE.has(key) || key === "recipeId") continue
+    if (!includeData && DATA_PROPS.has(key)) continue
+    if (typeof value === "function" || value?.$$typeof) {
+      if (strict) {
+        throw new Error(`Portable recipe prop "${key}" is not JSON-safe.`)
+      }
+      continue
+    }
+    if (!isJsonSafe(value)) {
+      if (strict) {
+        throw new Error(`Portable recipe prop "${key}" is not JSON-safe.`)
+      }
+      continue
+    }
+    serialized[key] = deepClone(value)
+  }
+  return serialized
+}
+
+function recipeToConfig(
+  recipe: NonNullable<ReturnType<typeof resolveChartRecipe>>,
+  props: Datum,
+  options?: ToConfigOptions,
+): ChartConfig {
+  const includeData = options?.includeData !== false
+  const serializedProps = serializableProps(
+    props,
+    includeData,
+    recipe.portability === "portable",
+  )
+  const intents = recipe.intents
+    .map(recipeIntentId)
+    .filter((id): id is string => !!id)
+  const manifest = {
+    name: recipe.name,
+    intents,
+    ...(recipe.audience?.primary
+      ? { audience: [recipe.audience.primary] }
+      : {}),
+    frameFamily: recipe.frameFamily,
+  }
+
+  if (recipe.portability === "portable") {
+    if (!isJsonSafe(serializedProps)) {
+      throw new Error(
+        `Portable recipe "${recipe.id}" contains non-JSON-safe props or layoutConfig.`,
+      )
+    }
+    return {
+      component: "ChartRecipe",
+      recipeId: recipe.id,
+      portable: true,
+      props: serializedProps,
+      manifest,
+      version: CONFIG_VERSION,
+      createdAt: new Date().toISOString(),
+      ...(options?.selections ? { selections: options.selections } : {}),
+    }
+  }
+
+  return {
+    component: "LocalChartRecipe",
+    recipeId: recipe.id,
+    portable: false,
+    reason: "Recipe contains or may depend on non-serializable local layout callbacks.",
+    warnings: [
+      "This config is inspectable but cannot be rendered remotely by CLI or MCP.",
+    ],
+    props: serializedProps,
+    manifest,
+    version: CONFIG_VERSION,
+    createdAt: new Date().toISOString(),
+    ...(options?.selections ? { selections: options.selections } : {}),
+  }
+}
+
 // ── fromConfig ──────────────────────────────────────────────────────────
 
 export function fromConfig(config: ChartConfig): {
@@ -91,6 +200,28 @@ export function fromConfig(config: ChartConfig): {
 } {
   if (!config.component || !config.props) {
     throw new Error("Invalid chart config: missing component or props")
+  }
+
+  if (config.component === "ChartRecipe" || config.component === "LocalChartRecipe") {
+    if (!config.recipeId) {
+      throw new Error("Invalid chart recipe config: missing recipeId")
+    }
+    const recipe = getChartRecipe(config.recipeId)
+    if (!recipe) {
+      throw new Error(
+        `Unknown chart recipe "${config.recipeId}". Register it before deserializing this config.`,
+      )
+    }
+    if (config.component === "ChartRecipe" && recipe.portability !== "portable") {
+      throw new Error(`Chart recipe "${config.recipeId}" is registered as local, not portable.`)
+    }
+    return {
+      componentName: config.component,
+      props: {
+        ...deepClone(config.props),
+        recipeId: config.recipeId,
+      },
+    }
   }
 
   const spec = VALIDATION_MAP[config.component]
@@ -150,6 +281,10 @@ export async function copyConfig(
 export function configToJSX(config: ChartConfig): string {
   const { component, props } = config
   const lines: string[] = [`<${component}`]
+
+  if (config.recipeId) {
+    lines.push(`  recipeId="${config.recipeId}"`)
+  }
 
   for (const [key, value] of Object.entries(props)) {
     if (typeof value === "string") {

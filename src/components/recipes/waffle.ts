@@ -130,6 +130,7 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
       // on `data.category` / `data.value` regardless of accessor names.
       set("category", cat)
       set("value", totals.get(cat) ?? 0)
+      set("share", (totals.get(cat) ?? 0) / grandTotal)
       // User-accessor names (when string-form) so a chart configured
       // with `categoryAccessor: "region"` reads `data.region` in custom
       // tooltips and tickFormats. Skip when the canonical key already
@@ -165,6 +166,7 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
         style: { fill: color, stroke: "none" },
         datum: buildCellDatum(slot.cat, cellIndex, slot.count),
         group: slot.cat,
+        _transitionKey: `waffle-${slot.cat}-${n}`,
       })
       cellIndex++
     }

@@ -47,6 +47,7 @@ interface OrdinalLayoutContext
 interface OrdinalLayoutResult
 interface OrdinalScales
 interface PieChartProps
+interface SceneAccessibilityMetadata
 interface StackedBarChartProps
 interface StreamOrdinalFrameHandle
 interface StreamOrdinalFrameProps

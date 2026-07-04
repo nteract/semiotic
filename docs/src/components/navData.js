@@ -154,6 +154,7 @@ const navData = [
     path: "/custom-charts",
     children: [
       { title: "Overview", path: "/custom-charts/overview" },
+      { title: "Intelligence", path: "/custom-charts/intelligence" },
       { title: "Custom Layouts", path: "/custom-charts/custom-layouts" },
       { title: "Glyph Marks", path: "/custom-charts/glyph-marks" },
       { title: "Recipe Chrome Kit", path: "/custom-charts/recipe-kit" },
