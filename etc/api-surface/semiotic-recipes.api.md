@@ -12,6 +12,15 @@ const DEFAULT_HIT_RADIUS
 const DEFAULT_ISOMETRIC_SPRITE_SIZES
 const SYMBOL_SEQUENCE
 const TAU
+const isotypeBoltGlyph
+const isotypeChipGlyph
+const isotypeGhost
+const isotypeInk
+const isotypeNetworkGlyphs
+const isotypePaper
+const isotypePersonGlyph
+const isotypePersonPath
+const isotypeServerGlyph
 function Glyph
 function activeCountOverDomain
 function addPoints

@@ -11,6 +11,16 @@ export type AccessibleSceneNode = {
   name?: unknown
   properties?: unknown
   tableFields?: unknown
+  x?: unknown
+  y?: unknown
+  w?: unknown
+  h?: unknown
+  path?: unknown
+  topPath?: unknown
+  openY?: unknown
+  closeY?: unknown
+  highY?: unknown
+  lowY?: unknown
 }
 
 export interface DataRow {
