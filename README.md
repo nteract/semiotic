@@ -352,13 +352,13 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/geo` | **62 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
 | `semiotic/realtime` | **109 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
 | `semiotic/server` | **136 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/utils` | **39 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/utils` | **47 KB** | ThemeProvider, validators, serialization — no chart components |
 | `semiotic/recipes` | **35 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **6 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **4 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/ai` | **275 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
-| `semiotic` | **226 KB** | Everything below (full bundle) |
+| `semiotic/ai` | **303 KB** | All 47 schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic` | **230 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 

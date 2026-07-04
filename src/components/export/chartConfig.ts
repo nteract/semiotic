@@ -59,8 +59,24 @@ const ALWAYS_EXCLUDE = new Set([
   "legend", "recipe", "layout"
 ])
 
-/** Data props excluded when includeData is false */
-const DATA_PROPS = new Set(["data", "nodes", "edges"])
+/** Public row/feature collections excluded when includeData is false. */
+const DATA_PROPS = new Set([
+  "data",
+  "nodes",
+  "edges",
+  "points",
+  "areas",
+  "lines",
+  "flows",
+])
+
+function shouldExcludeDataProp(key: string, value: unknown): boolean {
+  if (!DATA_PROPS.has(key)) return false
+  // `areas` can be a reference geography id (e.g. "world-110m"), which is
+  // lightweight config rather than raw GeoJSON features.
+  if (key === "areas" && typeof value === "string") return false
+  return true
+}
 
 const deepClone = typeof structuredClone === "function"
   ? structuredClone
@@ -92,7 +108,7 @@ export function toConfig(
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === null) continue
     if (ALWAYS_EXCLUDE.has(key)) continue
-    if (!includeData && DATA_PROPS.has(key)) continue
+    if (!includeData && shouldExcludeDataProp(key, value)) continue
     if (typeof value === "function") continue
     if (value?.$$typeof) continue // React element
 
@@ -117,7 +133,7 @@ function serializableProps(
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === null) continue
     if (ALWAYS_EXCLUDE.has(key) || key === "recipeId") continue
-    if (!includeData && DATA_PROPS.has(key)) continue
+    if (!includeData && shouldExcludeDataProp(key, value)) continue
     if (typeof value === "function" || value?.$$typeof) {
       if (strict) {
         throw new Error(`Portable recipe prop "${key}" is not JSON-safe.`)
@@ -177,7 +193,7 @@ function recipeToConfig(
   }
 
   return {
-    component: "LocalChartRecipe",
+    component: "ChartRecipe",
     recipeId: recipe.id,
     portable: false,
     reason: "Recipe contains or may depend on non-serializable local layout callbacks.",
@@ -212,11 +228,13 @@ export function fromConfig(config: ChartConfig): {
         `Unknown chart recipe "${config.recipeId}". Register it before deserializing this config.`,
       )
     }
-    if (config.component === "ChartRecipe" && recipe.portability !== "portable") {
+    const legacyLocalRecipe = config.component === "LocalChartRecipe"
+    const expectsPortableRecipe = !legacyLocalRecipe && config.portable !== false
+    if (expectsPortableRecipe && recipe.portability !== "portable") {
       throw new Error(`Chart recipe "${config.recipeId}" is registered as local, not portable.`)
     }
     return {
-      componentName: config.component,
+      componentName: "ChartRecipe",
       props: {
         ...deepClone(config.props),
         recipeId: config.recipeId,
@@ -279,7 +297,10 @@ export async function copyConfig(
 // ── configToJSX ─────────────────────────────────────────────────────────
 
 export function configToJSX(config: ChartConfig): string {
-  const { component, props } = config
+  const { props } = config
+  const component = config.component === "LocalChartRecipe"
+    ? "ChartRecipe"
+    : config.component
   const lines: string[] = [`<${component}`]
 
   if (config.recipeId) {
