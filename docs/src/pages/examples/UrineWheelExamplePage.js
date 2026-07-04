@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { ChartContainer, NetworkCustomChart, useSelectionActions } from "semiotic"
+import { IntentMark } from "../../../../src/components/ai/IntentMark"
+import { intentManifestFromRecipe } from "../../../../src/components/ai/intentManifest"
 // Custom-network kit: the radial coordinate helpers (0 = up, clockwise), the
 // transparent hit-target node that earns the layout its accessibility +
 // annotation anchoring for free, and the datum unwrapper for onObservation.
@@ -24,6 +26,7 @@ import { StatStrip } from "../../components/StatStrip"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import { URINE_NODES, URINE_EDGES, URINE_DIAGNOSES, URINE_COLOR_COUNT } from "./data/urineWheel"
+import { urineWheelRecipeManifest } from "./urineWheelRecipeManifest"
 
 // Art-directed manuscript palette. Like the Art Movement example, this sits at
 // the "override the theme" end of Semiotic's theming spectrum: the frame is
@@ -131,6 +134,21 @@ export default function UrineWheelExamplePage() {
         terms, a node-link diagram in a circle, so Semiotic draws it as one: a custom radial network
         layout, every flask and roundel a real, navigable mark.
       </p>
+      <p style={styles.recipeContract}>
+        Inspectable recipe contract: <code>{urineWheelRecipeManifest.id}</code>. This is a{" "}
+        <strong>situated explanatory chart</strong>, not a comparison chart wearing a historical
+        theme: the wheel preserves the worldview that organized colors into diagnoses.
+      </p>
+      <IntentMark
+        manifest={intentManifestFromRecipe(urineWheelRecipeManifest, {
+          chartId: "urine-wheel",
+          description: urineWheelRecipeManifest.description({
+            data: URINE_NODES,
+            config: {},
+          }).text,
+          reviewStatus: "historical interpretation reviewed in docs",
+        })}
+      />
 
       <StatStrip
         items={[
@@ -177,6 +195,8 @@ export default function UrineWheelExamplePage() {
               chartId="urine-wheel"
               nodes={URINE_NODES}
               edges={URINE_EDGES}
+              recipe={urineWheelRecipeManifest}
+              recipeId={urineWheelRecipeManifest.id}
               layout={urineWheelLayout}
               layoutConfig={layoutConfig}
               selection={{ name: "urine-wheel-active" }}
@@ -783,10 +803,20 @@ function ToggleButton({ active, onClick, children }) {
 const styles = {
   lede: {
     maxWidth: "820px",
-    margin: "0 0 30px",
+    margin: "0 0 12px",
     color: "var(--text-secondary)",
     fontSize: "19px",
     lineHeight: 1.6,
+  },
+  recipeContract: {
+    maxWidth: "820px",
+    margin: "0 0 30px",
+    padding: "10px 12px",
+    borderLeft: `3px solid ${GOLD}`,
+    color: "var(--text-secondary)",
+    background: "var(--surface-1)",
+    fontSize: "13px",
+    lineHeight: 1.55,
   },
   // Parchment chrome regardless of docs theme — set the semantic CSS vars the
   // ChartContainer reads, so its header/title/border render as aged paper.

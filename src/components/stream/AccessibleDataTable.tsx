@@ -1,9 +1,14 @@
 "use client"
 import * as React from "react"
 import { useDataSummary } from "../DataSummaryContext"
+import {
+  extractAllRows,
+  type AccessibleSceneNode as AnySceneNode,
+  type DataRow,
+} from "./accessibleDataRows"
 
-/** Scene node type used by the accessible data table — accepts any frame's scene nodes */
-type AnySceneNode = { type?: string; [key: string]: any }
+export { extractAllRows } from "./accessibleDataRows"
+export type { DataRow } from "./accessibleDataRows"
 
 const SR_ONLY_STYLE: React.CSSProperties = {
   position: "absolute",
@@ -97,134 +102,6 @@ const fmt = (v: number | undefined | null): string => {
   const n = Math.round(v * 100) / 100
   if (Number.isNaN(n)) return ""
   return String(n)
-}
-
-// ── Data extraction from scene nodes ────────────────────────────────────
-
-interface DataRow {
-  label: string
-  values: Record<string, string | number>
-}
-
-/** Pull primitive, user-facing fields from a raw datum into a display row.
- *  Skips synthetic/internal keys (leading underscore) and non-primitive
- *  values. This surfaces the original data (e.g. `month`, `sales`) rather
- *  than the pixel coordinates the scene node carries for rendering. */
-function datumToValues(datum: unknown): Record<string, string | number> {
-  const values: Record<string, string | number> = {}
-  if (datum == null || typeof datum !== "object") return values
-  for (const [k, v] of Object.entries(datum as Record<string, unknown>)) {
-    if (k.startsWith("_")) continue // synthetic/internal keys
-    if (v == null || v === "") continue
-    if (typeof v === "number") {
-      if (Number.isFinite(v)) values[k] = v
-    } else if (typeof v === "string") {
-      values[k] = v
-    } else if (typeof v === "boolean") {
-      values[k] = String(v)
-    } else if (v instanceof Date) {
-      values[k] = v.toISOString().slice(0, 10)
-    }
-    // nested objects / functions are not meaningful in a flat table — skip
-  }
-  return values
-}
-
-/** Extract a flat list of typed rows from scene nodes, surfacing the raw datum
- *  fields (not pixel coordinates). Defensively handles missing/malformed data —
- *  never throws. Exported for direct testing. */
-export function extractAllRows(scene: AnySceneNode[]): DataRow[] {
-  const rows: DataRow[] = []
-  if (!Array.isArray(scene)) return rows
-
-  // When a chart draws line/area series, each series node already carries its
-  // full datum array — the standalone point nodes (emitted only when
-  // `showPoints` is on) are decorative duplicates of the same data. Extract
-  // the series rows and skip the redundant points. Scatterplots have points
-  // and no series, so they still flow through the "point" case below.
-  const hasSeriesNodes = scene.some(
-    (n) => n && (n.type === "line" || n.type === "area")
-  )
-
-  for (const node of scene) {
-    if (!node || typeof node !== "object") continue
-    if (node.datum === null) continue
-    try {
-      switch (node.type) {
-        case "point": {
-          if (hasSeriesNodes) break
-          rows.push({ label: "Point", values: datumToValues(node.datum) })
-          break
-        }
-        case "line":
-        case "area": {
-          const data = Array.isArray(node.datum) ? node.datum : []
-          const label = node.type === "line" ? "Line point" : "Area point"
-          for (const d of data) {
-            rows.push({ label, values: datumToValues(d) })
-          }
-          break
-        }
-        case "rect": {
-          const datum =
-            node.datum != null && typeof node.datum === "object"
-              ? node.datum
-              : {}
-          const category = datum.category ?? node.group ?? ""
-          const rawValue = datum.value ?? datum.__aggregateValue ?? datum.total
-          rows.push({
-            label: "Bar",
-            values: { category, value: rawValue ?? "" }
-          })
-          break
-        }
-        case "heatcell": {
-          const values = datumToValues(node.datum)
-          // Fall back to the rendered cell value when datum omits it
-          if (
-            values.value == null &&
-            typeof node.value === "number" &&
-            Number.isFinite(node.value)
-          ) {
-            values.value = node.value
-          }
-          rows.push({ label: "Cell", values })
-          break
-        }
-        case "wedge":
-          rows.push({
-            label: "Wedge",
-            values: {
-              category: node.datum?.category ?? node.datum?.label ?? "",
-              value: node.datum?.value ?? ""
-            }
-          })
-          break
-        case "circle":
-          rows.push({ label: "Node", values: datumToValues(node.datum) })
-          break
-        case "arc":
-          rows.push({ label: "Arc", values: datumToValues(node.datum) })
-          break
-        case "candlestick":
-          rows.push({ label: "Candlestick", values: datumToValues(node.datum) })
-          break
-        case "geoarea":
-          rows.push({
-            label: "Region",
-            values: {
-              name: node.datum?.properties?.name ?? node.datum?.name ?? "",
-              value: node.datum?.value ?? ""
-            }
-          })
-          break
-        // Unknown types are silently skipped
-      }
-    } catch {
-      // Malformed node — skip rather than crash the panel
-    }
-  }
-  return rows
 }
 
 // ── Statistical summary ─────────────────────────────────────────────────

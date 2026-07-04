@@ -46,6 +46,7 @@ interface QuadrantChartProps
 interface QuadrantConfig
 interface QuadrantsConfig
 interface ScatterplotProps
+interface SceneAccessibilityMetadata
 interface SemanticGradientStop
 interface StackedAreaChartProps
 interface StreamXYFrameHandle

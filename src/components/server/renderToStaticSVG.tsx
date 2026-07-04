@@ -547,6 +547,12 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps, sink?:
     waterfallStyle: props.waterfallStyle,
     swarmStyle: props.swarmStyle,
     colorScheme: effectiveColorScheme,
+    themeCategorical: theme.colors.categorical,
+    themeSemantic: resolveThemeSemanticColors(theme),
+    customLayout: props.customLayout,
+    layoutConfig: props.layoutConfig,
+    layoutMargin: margin,
+    layoutSelection: props.layoutSelection,
     barColors: props.barColors
   }
 
@@ -672,6 +678,7 @@ function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps, sink?:
       {axes}
       {annotationNodes}
       {props.foregroundGraphics}
+      {store.customLayoutOverlays}
     </>
   )
 
@@ -794,7 +801,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps, si
   const innerHeight = size[1] - margin.top - margin.bottom
 
   const plugin = getLayoutPlugin(chartType)
-  if (!plugin) {
+  if (!plugin && !props.customNetworkLayout) {
     throw new Error(
       `No layout plugin found for chart type: "${chartType}". ` +
       `Supported types: force, sankey, chord, tree, cluster, treemap, circlepack, partition.`
@@ -964,7 +971,7 @@ function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps, si
     sceneEdges = result.sceneEdges ?? []
     labels = result.labels ?? []
     customLayoutOverlays = result.overlays ?? null
-  } else {
+  } else if (plugin) {
     plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
     const built = plugin.buildScene(nodes, edges, config, [innerWidth, innerHeight])
     sceneNodes = built.sceneNodes
@@ -1283,6 +1290,12 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps, si
     pieceStyle: props.pieceStyle,
     summaryStyle: props.summaryStyle,
     colorScheme: effectiveColorScheme,
+    themeCategorical: theme.colors.categorical,
+    themeSemantic: resolveThemeSemanticColors(theme),
+    customLayout: props.customLayout,
+    layoutConfig: props.layoutConfig,
+    layoutMargin: margin,
+    layoutSelection: props.layoutSelection,
     barColors: props.barColors
   }
 
@@ -1433,6 +1446,7 @@ function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps, si
       {axes}
       {annotationNodes}
       {props.foregroundGraphics}
+      {store.customLayoutOverlays}
     </>
   )
 

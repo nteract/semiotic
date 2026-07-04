@@ -38,6 +38,7 @@ function GaugeChart
 function GroupedBarChart
 function Heatmap
 function Histogram
+function IntentMark
 function LikertChart
 function LineChart
 function LinkedCharts
@@ -85,12 +86,14 @@ function exportChart
 function fromConfig
 function fromURL
 function fromVegaLite
+function intentManifestFromRecipe
 function lightenColor
 function normalizeTooltip
 function resolveThemePreset
 function serializeSelections
 function smartTickFormat
 function smartTooltipEntries
+function summarizeIntentManifest
 function syncPushBuffer
 function themeToCSS
 function themeToTokens
@@ -153,6 +156,9 @@ interface HeatmapProps
 interface HistogramProps
 interface HoverAnnotationConfig
 interface HoverData
+interface IntentManifest
+interface IntentManifestFromRecipeOptions
+interface IntentMarkProps
 interface LegendLayout
 interface LikertChartProps
 interface LineChartProps
@@ -183,6 +189,7 @@ interface RidgelinePlotProps
 interface SankeyDiagramProps
 interface ScatterplotMatrixProps
 interface ScatterplotProps
+interface SceneAccessibilityMetadata
 interface Selection
 interface SelectionClause
 interface SelectionConfig

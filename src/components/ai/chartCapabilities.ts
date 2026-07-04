@@ -1,4 +1,8 @@
 import type { ChartCapability } from "./chartCapabilityTypes"
+import {
+  getRegisteredRecipeCapabilities,
+  hasRegisteredRecipeCapabilities,
+} from "./chartRecipeRegistry"
 
 // XY family
 import { LineChartCapability } from "../charts/xy/LineChart.capability"
@@ -59,7 +63,9 @@ import { BigNumberCapability } from "../charts/value/BigNumber.capability"
  *   • Realtime variants (RealtimeLineChart, RealtimeHistogram, ...) — they're for
  *     streaming data, while `suggestCharts` operates on static datasets.
  *   • Custom-layout charts (XYCustomChart, OrdinalCustomChart, NetworkCustomChart) —
- *     they require a layout function and are escape-hatches by design.
+ *     they require an unknown layout function and are escape-hatches by design.
+ *     Named recipes register separate recipe-id capabilities through
+ *     `registerChartRecipe()` and do participate.
  *   • LinkedCharts and ScatterplotMatrix — multi-chart compositions whose data
  *     shape is a tuple, not a single dataset.
  *
@@ -135,9 +141,13 @@ export function unregisterChartCapability(component: string): void {
  * overriding built-ins by component name.
  */
 export function getCapabilities(): ReadonlyArray<ChartCapability> {
-  if (userCapabilities.size === 0) return BUILT_IN_CAPABILITIES
+  if (userCapabilities.size === 0 && !hasRegisteredRecipeCapabilities()) {
+    return BUILT_IN_CAPABILITIES
+  }
+
   const merged = new Map<string, ChartCapability>()
   for (const c of BUILT_IN_CAPABILITIES) merged.set(c.component, c)
+  for (const c of getRegisteredRecipeCapabilities()) merged.set(c.component, c)
   for (const [name, c] of userCapabilities) merged.set(name, c)
   return Array.from(merged.values())
 }

@@ -9,10 +9,11 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { OrdinalCustomLayout } from "../../stream/ordinalCustomLayout"
 import type { Datum } from "../shared/datumTypes"
-import type { BaseChartProps } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { SafeRender } from "../shared/withChartWrapper"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useCustomChartSetup } from "../shared/useCustomChartSetup"
+import type { ChartRecipe } from "../../ai/chartRecipes"
 
 export interface OrdinalCustomChartProps<
   TDatum extends Datum = Datum,
@@ -24,6 +25,8 @@ export interface OrdinalCustomChartProps<
   layout: OrdinalCustomLayout<TConfig>
   /** Config blob threaded through to OrdinalLayoutContext.config. */
   layoutConfig?: TConfig
+  recipe?: ChartRecipe<TDatum, TConfig>
+  recipeId?: string
   /** Field name (or function) for the category. The frame builds the o-scale from these. */
   categoryAccessor?: StreamOrdinalFrameProps["categoryAccessor"]
   /** Field name (or function) for the value. The frame builds the r-scale from these. */
@@ -38,6 +41,7 @@ export interface OrdinalCustomChartProps<
   /** Vertical / horizontal / radial. Default vertical. */
   projection?: StreamOrdinalFrameProps["projection"]
   /** Color scheme threaded into the layout's `resolveColor` helper. */
+  colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
   enableHover?: boolean
   showAxes?: boolean
@@ -96,6 +100,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     projection = "vertical",
     margin: userMargin,
     className,
+    colorBy,
     colorScheme,
     showAxes = false,
     annotations,
@@ -123,6 +128,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     chartTypeLabel: "OrdinalCustomChart",
     unwrapData: true,
     data,
+    colorBy,
     colorScheme,
     selection,
     linkedHover,
@@ -168,6 +174,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     oExtent,
     rExtent,
     projection,
+    colorAccessor: colorBy as StreamOrdinalFrameProps["colorAccessor"],
     colorScheme,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,

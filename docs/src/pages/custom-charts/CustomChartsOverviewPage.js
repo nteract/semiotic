@@ -2,6 +2,9 @@ import React from "react"
 import { Link } from "react-router-dom"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import { IntentMark } from "../../../../src/components/ai/IntentMark"
+import { intentManifestFromRecipe } from "../../../../src/components/ai/intentManifest"
+import { waffleRecipeManifest } from "./waffleRecipeManifest"
 
 const panelStyle = {
   border: "1px solid var(--surface-3)",
@@ -76,7 +79,7 @@ export default function CustomChartsOverviewPage() {
         { label: "Custom Charts", path: "/custom-charts/overview" },
         { label: "Overview", path: "/custom-charts/overview" },
       ]}
-      nextPage={{ title: "Custom Layouts", path: "/custom-charts/custom-layouts" }}
+      nextPage={{ title: "Intelligence", path: "/custom-charts/intelligence" }}
     >
       <section>
         <p>
@@ -87,10 +90,21 @@ export default function CustomChartsOverviewPage() {
           has to compute geometry. A bespoke graphic lands as a reusable <em>recipe</em>, not a
           one-off D3 script, and inherits the whole engineering substrate for free.
         </p>
+        <p>
+          The frame gives custom geometry Semiotic&rsquo;s runtime affordances. The recipe gives
+          that geometry meaning. See{" "}
+          <Link to="/custom-charts/intelligence">Custom Charts as Reception Strategies</Link>.
+        </p>
         <CodeBlock language="jsx">{`import { NetworkCustomChart } from "semiotic/network"
 import { packedClusterMatrix } from "semiotic/recipes"
 
 <NetworkCustomChart nodes={data} layout={packedClusterMatrix} layoutConfig={{ /* ... */ }} />`}</CodeBlock>
+        <IntentMark
+          manifest={intentManifestFromRecipe(waffleRecipeManifest, {
+            chartId: "custom-charts-overview-waffle",
+            reviewStatus: "docs example",
+          })}
+        />
       </section>
 
       <section>

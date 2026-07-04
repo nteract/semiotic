@@ -16,7 +16,8 @@ import type {
   TransitionConfig,
   StalenessConfig,
   ThemeSemanticColors,
-  FrameGraphicsProp
+  FrameGraphicsProp,
+  SceneAccessibilityMetadata
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { GradientLegendConfig, LegendGroup, LegendLayout } from "../types/legendTypes"
@@ -93,6 +94,8 @@ export interface WedgeSceneNode {
   _gradientBand?: { colors: string[] }
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   category?: string
   _pulseIntensity?: number
   _pulseColor?: string

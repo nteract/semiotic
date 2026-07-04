@@ -448,6 +448,7 @@ export {
 } from "./ai/chartCapabilities"
 export type {
   ChartCapability,
+  ChartCandidateKind,
   ChartDataProfile,
   ChartFamily,
   ChartImportPath,
@@ -459,8 +460,78 @@ export type {
   IntentScorer,
   ScaledSuggestionGroups,
   Suggestion,
-  SuggestionScaleRange
+  SuggestionScaleRange,
+  WhyCustomExplanation
 } from "./ai/chartCapabilityTypes"
+export {
+  defineChartRecipe,
+  validateChartRecipe,
+  isJsonSafe,
+  isRegisteredRecipeLayout
+} from "./ai/chartRecipes"
+export type {
+  AccessibilityTableField,
+  AccessibilityExpectations,
+  AudienceFitDefinition,
+  ChartRecipe as ChartRecipeDefinition,
+  ChartRecipeFrameFamily,
+  ChartRecipePortability,
+  CustomLayoutFunction,
+  DataRoleDefinition,
+  DataSemanticType,
+  DescriptionStrategy,
+  DesignContractDefinition,
+  EncodingChannel,
+  EncodingDefinition,
+  IntentDefinition,
+  LiteracyTargetDefinition,
+  NavigationStrategy,
+  PortableNavigationStrategy,
+  RecipeAudienceDefinition,
+  RecipeAuditExpectations,
+  RecipeDescription,
+  RecipeExample,
+  RecipeStrategyContext,
+  RecipePortabilityConfig,
+  ReceptionDefinition,
+  RegisteredRecipeLayout,
+  SerializableSchema
+} from "./ai/chartRecipes"
+export {
+  registerChartRecipe,
+  unregisterChartRecipe,
+  getChartRecipe,
+  listChartRecipes,
+  resolveChartRecipe,
+  registerRecipeLayout,
+  unregisterRecipeLayout,
+  getRecipeLayout
+} from "./ai/chartRecipeRegistry"
+export { ChartRecipe } from "./ai/ChartRecipe"
+export type { ChartRecipeProps } from "./ai/ChartRecipe"
+export { recipeToChartCapability, resolveRecipeRoleField } from "./ai/recipeCapability"
+export { describeRecipeChart } from "./ai/describeRecipeChart"
+export type { DescribeRecipeChartOptions } from "./ai/describeRecipeChart"
+export { buildRecipeNavigationTree } from "./ai/recipeNavigation"
+export type { RecipeNavigationOptions } from "./ai/recipeNavigation"
+export { auditObservedScene } from "./ai/observedSceneAudit"
+export type {
+  AuditObservedSceneInput,
+  DeclaredRecipeSemantics,
+  ObservedAuditFinding,
+  ObservedAuditStatus,
+  ObservedSceneAuditResult
+} from "./ai/observedSceneAudit"
+export { IntentMark } from "./ai/IntentMark"
+export type { IntentMarkProps } from "./ai/IntentMark"
+export {
+  summarizeIntentManifest,
+  intentManifestFromRecipe
+} from "./ai/intentManifest"
+export type {
+  IntentManifest,
+  IntentManifestFromRecipeOptions
+} from "./ai/intentManifest"
 export {
   listIntents,
   getIntent,

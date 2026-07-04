@@ -5,8 +5,19 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-07-02T00:00:00Z</updated>
+  <updated>2026-07-03T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>What an Annotation Should Carry</title>
+    <id>https://semiotic3.nteract.io/blog/what-an-annotation-should-carry</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/what-an-annotation-should-carry"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/what-an-annotation-should-carry.png"/>
+    <published>2026-07-03T00:00:00Z</published>
+    <updated>2026-07-03T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <summary type="text">Once a chart is a surface that agents, watchers, and humans all write to, the annotation becomes the unit of the conversation. This is the release that gives annotations what that role requires: emphasis hierarchy, swoopy connectors, and provenance + lifecycle metadata aligned with the IDID conversational substrate.</summary>
+  </entry>
   <entry>
     <title>Live conversational dashboards</title>
     <id>https://semiotic3.nteract.io/blog/live-conversational-dashboard</id>

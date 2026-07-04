@@ -89,6 +89,22 @@ const SERVER_CONFIG_ONLY = new Map([
     "Sparkline",
     "compact server-rendered line used by renderChart(); not a HOC chartSpecs entry",
   ],
+  [
+    "XYCustomChart",
+    "custom-layout escape hatch; named recipes register capability entries instead",
+  ],
+  [
+    "OrdinalCustomChart",
+    "custom-layout escape hatch; named recipes register capability entries instead",
+  ],
+  [
+    "NetworkCustomChart",
+    "custom-layout escape hatch; named recipes register capability entries instead",
+  ],
+  [
+    "GeoCustomChart",
+    "custom-layout escape hatch; named recipes register capability entries instead",
+  ],
 ])
 
 // ── Index HOC source files for the push-API gate ───────────────────

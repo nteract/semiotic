@@ -8,11 +8,21 @@ import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
 // Mock StreamXYFrame to inspect the props XYCustomChart forwards.
-let lastXYFrameProps: { customLayout?: CustomLayout; layoutConfig?: Record<string, unknown>; chartType?: string } | null = null
+let lastXYFrameProps: {
+  customLayout?: CustomLayout
+  layoutConfig?: Record<string, unknown>
+  chartType?: string
+  colorAccessor?: unknown
+} | null = null
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: { customLayout?: CustomLayout; layoutConfig?: Record<string, unknown>; chartType?: string }, _ref: unknown) => {
+    default: React.forwardRef((props: {
+      customLayout?: CustomLayout
+      layoutConfig?: Record<string, unknown>
+      chartType?: string
+      colorAccessor?: unknown
+    }, _ref: unknown) => {
       lastXYFrameProps = props
       return <div className="stream-xy-frame"><canvas /><svg /></div>
     })
@@ -66,5 +76,18 @@ describe("XYCustomChart", () => {
       </TooltipProvider>
     )
     expect(lastXYFrameProps?.layoutConfig).toEqual({ rows: 5, columns: 5 })
+  })
+
+  it("maps colorBy to the frame colorAccessor", () => {
+    render(
+      <TooltipProvider>
+        <XYCustomChart
+          data={[{ value: 1, category: "alpha" }]}
+          layout={trivialLayout}
+          colorBy="category"
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps?.colorAccessor).toBe("category")
   })
 })

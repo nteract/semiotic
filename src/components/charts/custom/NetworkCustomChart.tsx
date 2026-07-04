@@ -9,11 +9,12 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { NetworkCustomLayout, NetworkLayoutSelection } from "../../stream/networkCustomLayout"
 import type { Datum } from "../shared/datumTypes"
-import type { BaseChartProps } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { SafeRender } from "../shared/withChartWrapper"
 import { useChartSelection } from "../shared/hooks"
 import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { filterSparseArray } from "../shared/sparseArray"
+import type { ChartRecipe } from "../../ai/chartRecipes"
 
 export interface NetworkCustomChartProps<
   TNode extends Datum = Datum,
@@ -28,6 +29,8 @@ export interface NetworkCustomChartProps<
   layout: NetworkCustomLayout<TConfig>
   /** Config blob threaded through to NetworkLayoutContext.config. */
   layoutConfig?: TConfig
+  recipe?: ChartRecipe<TNode, TConfig>
+  recipeId?: string
   /** Field name (or function) for the node id. @default "id" */
   nodeIDAccessor?: StreamNetworkFrameProps["nodeIDAccessor"]
   /** Field name for the edge source id. @default "source" */
@@ -35,6 +38,7 @@ export interface NetworkCustomChartProps<
   /** Field name for the edge target id. @default "target" */
   targetAccessor?: StreamNetworkFrameProps["targetAccessor"]
   /** Color scheme threaded into the layout's `resolveColor` helper. */
+  colorBy?: ChartAccessor<TNode, string | number>
   colorScheme?: string | string[] | Record<string, string>
   enableHover?: boolean
   /**
@@ -104,6 +108,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     targetAccessor = "target",
     margin: userMargin,
     className,
+    colorBy,
     colorScheme,
     selection,
     linkedHover,
@@ -137,11 +142,12 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
   const { customHoverBehavior, customClickBehavior, activeSelectionHook } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: [],
+    fallbackFields: typeof colorBy === "string" ? [colorBy] : [],
     onObservation,
     onClick,
     chartType: "NetworkCustomChart",
     chartId,
+    colorByField: typeof colorBy === "string" ? colorBy : undefined,
   })
 
   // Project the shared selection into the layout context so a custom
@@ -169,6 +175,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     nodeIDAccessor,
     sourceAccessor,
     targetAccessor,
+    colorBy: colorBy as StreamNetworkFrameProps["colorBy"],
     colorScheme,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,

@@ -64,6 +64,27 @@ const SSR_COMPONENT_RE = /component:\s*"([^"]+)"/g
 const ssrParityCharts = sortedSet(
   [...ssrParityFixtureSource.matchAll(SSR_COMPONENT_RE)].map((match) => match[1])
 )
+const SSR_PARITY_NON_REGISTRY_CHARTS = new Map([
+  [
+    "XYCustomChart",
+    "custom-layout escape hatch; SSR parity is valid, but chartSpecs tracks named recipes instead",
+  ],
+  [
+    "OrdinalCustomChart",
+    "custom-layout escape hatch; SSR parity is valid, but chartSpecs tracks named recipes instead",
+  ],
+  [
+    "NetworkCustomChart",
+    "custom-layout escape hatch; SSR parity is valid, but chartSpecs tracks named recipes instead",
+  ],
+  [
+    "GeoCustomChart",
+    "custom-layout escape hatch; SSR parity is valid, but chartSpecs tracks named recipes instead",
+  ],
+])
+const ssrParityRegistryCharts = sortedSet(
+  [...ssrParityCharts].filter((chart) => !SSR_PARITY_NON_REGISTRY_CHARTS.has(chart))
+)
 
 if (!/toHaveScreenshot\(`csr-\$\{c\.id\}\.png`/.test(ssrParitySource)) {
   note(`${ssrParitySpecPath} no longer appears to snapshot CSR parity cases.`)
@@ -73,6 +94,7 @@ if (!/toHaveScreenshot\(`ssr-\$\{c\.id\}\.png`/.test(ssrParitySource)) {
 }
 
 for (const chart of ssrParityCharts) {
+  if (SSR_PARITY_NON_REGISTRY_CHARTS.has(chart)) continue
   if (!chartNames.has(chart)) {
     note(`${ssrParityFixturePath} has an SSR parity case for unknown chart ${chart}.`)
   }
@@ -89,9 +111,9 @@ const SSR_PARITY_BURN_DOWN = new Map([
 ])
 
 const ssrBurnDownCharts = new Set(SSR_PARITY_BURN_DOWN.keys())
-const missingSsrCoverage = setDiff(ssrCharts, new Set([...ssrParityCharts, ...ssrBurnDownCharts]))
+const missingSsrCoverage = setDiff(ssrCharts, new Set([...ssrParityRegistryCharts, ...ssrBurnDownCharts]))
 const staleSsrBurnDown = [...ssrBurnDownCharts]
-  .filter((chart) => !ssrCharts.has(chart) || ssrParityCharts.has(chart))
+  .filter((chart) => !ssrCharts.has(chart) || ssrParityRegistryCharts.has(chart))
   .sort()
 
 if (missingSsrCoverage.length) {
@@ -232,7 +254,8 @@ if (errors.length) {
 
 console.log(
   "✓ visual baseline capability coverage clean: " +
-    `${ssrParityCharts.size}/${ssrCharts.size} SSR-capable chart(s) have SSR/CSR parity cases ` +
+    `${ssrParityRegistryCharts.size}/${ssrCharts.size} SSR-capable chart(s) have SSR/CSR parity cases ` +
+    `(+ ${SSR_PARITY_NON_REGISTRY_CHARTS.size} custom-HOC parity cases), ` +
     `(${SSR_PARITY_BURN_DOWN.size} burn-down), ` +
     `${linkedHoverCoveredCharts.size}/${linkedHoverCharts.size} linked-hover chart(s) have interaction evidence ` +
     `(${LINKED_HOVER_BURN_DOWN.size} burn-down).`

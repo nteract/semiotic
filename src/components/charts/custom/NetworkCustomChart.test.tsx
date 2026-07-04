@@ -22,6 +22,7 @@ let lastNetworkFrameProps: {
   nodeIDAccessor?: unknown
   sourceAccessor?: unknown
   targetAccessor?: unknown
+  colorBy?: unknown
   annotations?: unknown
   autoPlaceAnnotations?: unknown
 } | null = null
@@ -34,6 +35,7 @@ vi.mock("../../stream/StreamNetworkFrame", () => {
       chartType?: string
       nodes?: unknown[]
       edges?: unknown[]
+      colorBy?: unknown
     }, _ref: unknown) => {
       lastNetworkFrameProps = props
       return <div className="stream-network-frame"><canvas /><svg /></div>
@@ -98,6 +100,20 @@ describe("NetworkCustomChart", () => {
     expect(lastNetworkFrameProps?.nodeIDAccessor).toBe("key")
     expect(lastNetworkFrameProps?.sourceAccessor).toBe("from")
     expect(lastNetworkFrameProps?.targetAccessor).toBe("to")
+  })
+
+  it("forwards colorBy to the network frame", () => {
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart
+          nodes={[{ id: "a", group: "alpha" }]}
+          edges={[]}
+          layout={trivialLayout}
+          colorBy="group"
+        />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps?.colorBy).toBe("group")
   })
 
   it("filters sparse rows out of nodes and edges", () => {

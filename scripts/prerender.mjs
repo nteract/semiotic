@@ -24,6 +24,8 @@ const BUILD_DIR = resolve(__dirname, "../docs/build")
 const APP_SRC = resolve(__dirname, "../docs/src/App.js")
 const PUBLIC_API_DIR = resolve(__dirname, "../docs/public/api")
 const PUBLIC_BLOG_OG_DIR = resolve(__dirname, "../docs/public/blog/og")
+const PUBLIC_EXAMPLE_OG_DIR = resolve(__dirname, "../docs/public/examples/og")
+const EXAMPLES_MANIFEST = resolve(__dirname, "../docs/src/pages/examples/examplesManifest.js")
 const SITE_URL = "https://semiotic3.nteract.io"
 const DEFAULT_OG_IMAGE = `${SITE_URL}/assets/img/semiotic-social.png`
 const ROUTE_DOCS_MANIFEST = "llms-routes.json"
@@ -277,6 +279,61 @@ export function copyBlogOgCards(publicOgDir = PUBLIC_BLOG_OG_DIR, buildDir = BUI
   }
 
   return copied
+}
+
+// Copy the example OG cards (docs/public/examples/og/*.png) into the
+// static build, for the same reason as the blog cards above — Parcel
+// only bundles referenced files, so these per-example images would
+// otherwise 404 under the og:image meta tags.
+export function copyExampleOgCards(publicOgDir = PUBLIC_EXAMPLE_OG_DIR, buildDir = BUILD_DIR) {
+  if (!existsSync(publicOgDir)) return []
+
+  const outDir = resolve(buildDir, "examples", "og")
+  mkdirSync(outDir, { recursive: true })
+
+  const copied = []
+  for (const fileName of readdirSync(publicOgDir).sort()) {
+    if (!fileName.endsWith(".png")) continue
+    copyFileSync(resolve(publicOgDir, fileName), resolve(outDir, fileName))
+    copied.push(`examples/og/${fileName}`)
+  }
+
+  return copied
+}
+
+// ── Examples metadata loader ───────────────────────────────────────────
+//
+// The examples manifest is the single source of truth for each example's
+// name and blurb. It's pure ESM data (no JSX), so — unlike the blog's
+// entries.js — it imports directly here through a data URL. We fold each
+// entry into ROUTE_META so /examples/<slug> pages emit the example's
+// name (og:title) and its generated preview card (og:image), reusing the
+// same per-section meta path everything else in ROUTE_META uses.
+export async function registerExampleRouteMeta() {
+  try {
+    if (!existsSync(EXAMPLES_MANIFEST)) return 0
+    const source = readFileSync(EXAMPLES_MANIFEST, "utf8")
+    const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
+    const examples = mod.EXAMPLES || []
+    let registered = 0
+    for (const entry of examples) {
+      const routePath = String(entry.path).replace(/^\//, "")
+      const slug = routePath.split("/").filter(Boolean).pop()
+      if (!routePath || !slug) continue
+      // Don't clobber a hand-curated ROUTE_META entry if one ever exists.
+      if (Object.prototype.hasOwnProperty.call(ROUTE_META, routePath)) continue
+      ROUTE_META[routePath] = {
+        title: `${entry.title} — Semiotic`,
+        description: entry.description || entry.eyebrow || "",
+        ogImage: `${SITE_URL}/examples/og/${slug}.png`,
+      }
+      registered++
+    }
+    return registered
+  } catch (err) {
+    console.warn("[prerender] could not load examples manifest:", err.message)
+    return 0
+  }
 }
 
 // ── Blog metadata loader ───────────────────────────────────────────────
@@ -791,6 +848,7 @@ export async function prerender() {
 
   const shellHtml = readFileSync(shellPath, "utf-8")
   const routes = extractRoutes()
+  const exampleMetaCount = await registerExampleRouteMeta()
   const blogEntries = await loadBlogEntries()
   let renderRoute = null
   try {
@@ -880,6 +938,7 @@ export async function prerender() {
 
   const copiedApiAssets = copyDocsApiAssets()
   const copiedOgCards = copyBlogOgCards()
+  const copiedExampleOgCards = copyExampleOgCards()
   writeFileSync(
     resolve(BUILD_DIR, ROUTE_DOCS_MANIFEST),
     JSON.stringify({
@@ -897,6 +956,12 @@ export async function prerender() {
   }
   if (copiedOgCards.length > 0) {
     console.log(`\u2705 copied ${copiedOgCards.length} blog OG cards`)
+  }
+  if (copiedExampleOgCards.length > 0) {
+    console.log(`\u2705 copied ${copiedExampleOgCards.length} example OG cards`)
+  }
+  if (exampleMetaCount > 0) {
+    console.log(`\u2705 registered social meta for ${exampleMetaCount} example pages`)
   }
 }
 

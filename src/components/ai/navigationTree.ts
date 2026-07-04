@@ -3,6 +3,9 @@ import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
 import { describeChart, chartValueFormatter, annotationPhrase } from "./describeChart"
 import { XY_FAMILY, BAR_FAMILY, PART_TO_WHOLE, DISTRIBUTION, roles, seriesField, fmtDim } from "./chartRoles"
 import { filterAnnotationsByStatus } from "./annotationProvenance"
+import type { ChartRecipe } from "./chartRecipes"
+import { buildRecipeNavigationTree } from "./recipeNavigation"
+import { resolveRecipeForChart } from "./recipeSemantics"
 /**
  * buildNavigationTree — turn a chart config into a structured, labeled
  * navigation tree (chart → axes/series → data points), following the Olli /
@@ -41,6 +44,8 @@ export interface BuildNavigationTreeOptions {
   /** Cap leaves per branch (keeps a 50k-row chart from building a giant tree). Default 200. */
   maxLeaves?: number
   locale?: string
+  /** Explicit recipe; otherwise props/registry dispatch is used. */
+  recipe?: ChartRecipe
 }
 
 // Families + role resolution (XY_FAMILY/BAR_FAMILY/PART_TO_WHOLE/DISTRIBUTION,
@@ -115,6 +120,11 @@ export function buildNavigationTree(
   const locale = options.locale ?? "en"
   const maxLeaves = Math.max(1, options.maxLeaves ?? 200)
   const fmtNum = chartValueFormatter(locale)
+
+  const recipe = resolveRecipeForChart(component, props, options.recipe)
+  if (recipe) {
+    return buildRecipeNavigationTree(recipe, props, { maxLeaves, locale })
+  }
 
   const rootLabel = describeChart(component, props, { locale }).text || "Chart."
   const root: NavTreeNode = { id: "root", role: "chart", label: rootLabel, level: 1, children: [] }

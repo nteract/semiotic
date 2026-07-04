@@ -33,6 +33,7 @@ export type { NetworkHitTargetCircleProps, NetworkHitTargetRectProps } from "./s
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
 export type { NetworkGlyphNode } from "./stream/networkTypes"
+export type { SceneAccessibilityMetadata } from "./stream/types"
 
 // Stream Frame types
 export type {

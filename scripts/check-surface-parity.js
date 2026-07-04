@@ -25,7 +25,16 @@ const files = {
   chartsDir: path.join(ROOT, "src/components/charts"),
 }
 
-const SERVER_ONLY = new Set(["Sparkline"])
+const SERVER_ONLY = new Set([
+  "Sparkline",
+  // Custom-layout escape hatches are server-renderable HOCs, but they are
+  // intentionally absent from the AI/MCP chart-spec registry because their
+  // required layout functions are recipe-defined rather than schema-defined.
+  "XYCustomChart",
+  "OrdinalCustomChart",
+  "NetworkCustomChart",
+  "GeoCustomChart",
+])
 
 const SERVER_CONFIG_EXCLUDED = new Map([
   ["MultiAxisLineChart", "composite dual-axis HOC; renderable through the HOC SSR path, not serverChartConfigs"],

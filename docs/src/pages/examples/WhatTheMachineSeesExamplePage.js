@@ -15,13 +15,25 @@ import {
   SwarmPlot,
   PieChart,
   DonutChart,
+  describeChart,
+  auditAccessibility,
+  AccessibleNavTree,
+  buildNavigationTree,
+  useNavigationSync,
+  ThemeProvider,
+  ChartRecipe,
 } from "semiotic/ai"
-import { describeChart, auditAccessibility } from "semiotic/utils"
-import { AccessibleNavTree, buildNavigationTree, useNavigationSync, ThemeProvider } from "semiotic"
+import { IntentMark } from "../../../../src/components/ai/IntentMark"
+import { auditObservedScene } from "../../../../src/components/ai/observedSceneAudit"
+import { XYCustomChart } from "semiotic/xy"
+import { waffleLayout } from "semiotic/recipes"
+import { Link } from "react-router-dom"
 import CodeBlock from "../../components/CodeBlock"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
+import { waffleRecipeManifest } from "../custom-charts/waffleRecipeManifest"
 import ExamplePageLayout from "./ExamplePageLayout"
+import { urineWheelRecipeManifest } from "./urineWheelRecipeManifest"
 import {
   WORLD_COUNTRIES,
   WORLD_DATA_RETRIEVED,
@@ -52,9 +64,19 @@ const COMPONENT_MAP = {
   SwarmPlot,
   PieChart,
   DonutChart,
+  [waffleRecipeManifest.id]: ChartRecipe,
 }
 
 const CHART_ID = "machine-sees-chart"
+const WAFFLE_CHART_ID = "machine-sees-waffle"
+const WAFFLE_COLORS = ["#4e79a7", "#f28e2c", "#59a14f", "#e15759", "#b07aa1"]
+const WAFFLE_CONFIG = {
+  rows: 10,
+  columns: 10,
+  gutter: 3,
+  categoryAccessor: "income",
+  valueAccessor: "population",
+}
 
 const QUESTIONS = [
   {
@@ -210,11 +232,39 @@ export default function WhatTheMachineSeesExamplePage() {
     }
   }, [active])
 
+  const activeIntentManifest = useMemo(
+    () => active
+      ? intentManifestForCandidate(active, question, description)
+      : null,
+    [active, description, question],
+  )
+
   const sync = useNavigationSync({
     tree,
     chartId: CHART_ID,
     matchFields: question.matchField ? [question.matchField] : undefined,
   })
+
+  const customRecipeData = useMemo(() => shareByGroup("income", "population"), [])
+  const customRecipeWidth = Math.min(chartWidth, 520)
+  const customDescription = useMemo(
+    () => waffleRecipeManifest.description({
+      data: customRecipeData,
+      config: WAFFLE_CONFIG,
+    }),
+    [customRecipeData],
+  )
+  const customNavigation = useMemo(
+    () => waffleRecipeManifest.navigation({
+      data: customRecipeData,
+      config: WAFFLE_CONFIG,
+    }),
+    [customRecipeData],
+  )
+  const observedWaffle = useMemo(
+    () => observeWaffleScene(customRecipeData, WAFFLE_CONFIG, customRecipeWidth, 300),
+    [customRecipeData, customRecipeWidth],
+  )
 
   const selectQuestion = useCallback((id) => {
     setQuestionId(id)
@@ -284,7 +334,7 @@ export default function WhatTheMachineSeesExamplePage() {
               <h2>What it weighed</h2>
             </div>
             <p className="machine-panel-note">
-              Every chart’s capability, scored against this shape and the{" "}
+              Built-in charts and registered recipes, scored against this shape and the{" "}
               <strong>{question.intent}</strong> intent. Click any candidate to
               overrule the engine.
             </p>
@@ -302,10 +352,13 @@ export default function WhatTheMachineSeesExamplePage() {
                   >
                     <div className="machine-suggestion-head">
                       <strong>
-                        {s.component}
+                        {s.displayName || s.component}
                         {s.variant ? <span className="machine-variant"> · {s.variant.label}</span> : null}
                       </strong>
-                      <span className="machine-score">{s.score.toFixed(1)}</span>
+                      <span>
+                        <small className="machine-candidate-kind">{s.candidateKind}</small>
+                        <span className="machine-score">{s.score.toFixed(1)}</span>
+                      </span>
                     </div>
                     <Rubric rubric={s.rubric} />
                     {s.reasons.length > 0 && (
@@ -331,11 +384,17 @@ export default function WhatTheMachineSeesExamplePage() {
               <h2>What it chose</h2>
               {active && (
                 <span className="machine-chosen-tag">
-                  {isOverride ? "your pick" : "engine's pick"} · {active.component}
+                  {isOverride ? "your pick" : "engine's pick"} · {active.displayName || active.component}
                   {active.variant ? ` · ${active.variant.label}` : ""}
                 </span>
               )}
             </div>
+            {activeIntentManifest && (
+              <IntentMark
+                manifest={activeIntentManifest}
+                className="machine-intent-mark"
+              />
+            )}
             <div className="machine-chart-host" ref={chartHostRef}>
               {Component && enrichedProps ? (
                 <ThemeProvider theme={carbonTheme}>
@@ -420,6 +479,145 @@ export default function WhatTheMachineSeesExamplePage() {
           </div>
         </section>
       </div>
+
+      <section className="machine-custom-recipe">
+        <div className="machine-section-heading machine-section-heading--custom">
+          <span className="machine-kicker">Custom recipe contract · v0</span>
+          <h2>This is not just a custom chart. It has an inspectable intent contract.</h2>
+          <p>
+            The frame knows how to render rectangles. The recipe manifest states that they mean
+            repeated units, that the analytical intent is part-to-whole, and that readers should
+            navigate category summaries rather than one hundred undifferentiated cells.
+          </p>
+        </div>
+
+        <div className="machine-custom-hero">
+          <div className="machine-custom-chart">
+            <div className="machine-panel-title">
+              <span className="machine-step">A</span>
+              <h2>{waffleRecipeManifest.name}</h2>
+              <span className="machine-chosen-tag">clean proof</span>
+            </div>
+            <ThemeProvider theme={carbonTheme}>
+              <XYCustomChart
+                data={customRecipeData}
+                recipe={waffleRecipeManifest}
+                recipeId={waffleRecipeManifest.id}
+                layout={waffleLayout}
+                layoutConfig={WAFFLE_CONFIG}
+                colorScheme={WAFFLE_COLORS}
+                chartId={WAFFLE_CHART_ID}
+                width={customRecipeWidth}
+                height={300}
+                margin={12}
+                enableHover
+                accessibleTable
+                title="Population by World Bank income group"
+                description={customDescription.text}
+                summary="One hundred cells normalize the total population represented in the sample; navigation and text aggregate those cells back into meaningful income groups."
+              />
+            </ThemeProvider>
+            <WaffleLegend categories={observedWaffle.categories} />
+          </div>
+
+          <aside className="machine-custom-contract">
+            <span className="machine-kicker">Why leave the catalog?</span>
+            <h3>{waffleRecipeManifest.designContract.whyCustom}</h3>
+            <p>{waffleRecipeManifest.designContract.whyNotDefault}</p>
+            <dl>
+              <div>
+                <dt>Primary intent</dt>
+                <dd>part-to-whole</dd>
+              </div>
+              <div>
+                <dt>Semantic unit</dt>
+                <dd>category, not cell</dd>
+              </div>
+              <div>
+                <dt>Reception strength</dt>
+                <dd>memorable + explainable</dd>
+              </div>
+            </dl>
+            <div className="machine-flagship-note">
+              <strong>Recipe B · high flavor</strong>
+              <Link to="/examples/urine-wheel">{urineWheelRecipeManifest.name}</Link>
+              <p>
+                A bar chart would erase the historical spectrum, the color-to-diagnosis
+                relationships, and the situated act of reading the wheel.
+              </p>
+              <code>{urineWheelRecipeManifest.id}</code>
+            </div>
+            <IntentMark
+              manifest={intentManifestForRecipe(
+                waffleRecipeManifest,
+                customDescription,
+                "machine-sees-waffle",
+              )}
+              className="machine-intent-mark"
+            />
+          </aside>
+        </div>
+
+        <div className="machine-custom-grid">
+          <section className="machine-panel machine-custom-panel">
+            <div className="machine-panel-title">
+              <span className="machine-step">01</span>
+              <h2>Recipe manifest</h2>
+            </div>
+            <p className="machine-panel-note">
+              Meaning that cannot be recovered from rectangles alone.
+            </p>
+            <pre className="machine-manifest-json">
+              {JSON.stringify(manifestForDisplay(waffleRecipeManifest, WAFFLE_CONFIG), null, 2)}
+            </pre>
+          </section>
+
+          <section className="machine-panel machine-custom-panel">
+            <div className="machine-panel-title">
+              <span className="machine-step">02</span>
+              <h2>Generated L1–L4 description</h2>
+            </div>
+            <div className="machine-narration">
+              {LEVELS.map(({ key, tag, name }) => (
+                <div key={key} className={`machine-level is-${key}`}>
+                  <span className="machine-level-tag">
+                    {tag} <i>{name}</i>
+                  </span>
+                  <span className="machine-level-text">{customDescription.levels[key]}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="machine-panel machine-custom-panel">
+            <div className="machine-panel-title">
+              <span className="machine-step">03</span>
+              <h2>Navigation tree</h2>
+            </div>
+            <p className="machine-panel-note">
+              Four category nodes summarize the 100-cell visual surface.
+            </p>
+            <div className="machine-navtree machine-custom-navtree">
+              <AccessibleNavTree
+                tree={customNavigation}
+                label="Waffle recipe — category navigation"
+                visible
+              />
+            </div>
+          </section>
+
+          <section className="machine-panel machine-custom-panel">
+            <div className="machine-panel-title">
+              <span className="machine-step">04</span>
+              <h2>Observed-scene audit</h2>
+            </div>
+            <p className="machine-panel-note">
+              The actual Waffle layout is run at this viewport and checked against its manifest.
+            </p>
+            <ObservedRecipeAudit audit={observedWaffle} />
+          </section>
+        </div>
+      </section>
 
       <section className="machine-thesis">
         <div className="machine-thesis-block">
@@ -561,4 +759,247 @@ function Badge({ status, count }) {
       {meta.label}
     </span>
   )
+}
+
+function manifestForDisplay(recipe, config = {}) {
+  return {
+    id: recipe.id,
+    name: recipe.name,
+    frameFamily: recipe.frameFamily,
+    portability: recipe.portability,
+    dataRoles: recipe.dataRoles.map((role) => ({
+      ...role,
+      field: role.accessor && config[role.accessor] ? config[role.accessor] : role.field,
+    })),
+    encodings: recipe.encodings,
+    intents: recipe.intents,
+    reception: recipe.reception,
+    designContract: recipe.designContract,
+    accessibility: recipe.accessibility,
+  }
+}
+
+function observeWaffleScene(data, config, width, height) {
+  const margin = { top: 12, right: 12, bottom: 12, left: 12 }
+  const plot = {
+    x: 0,
+    y: 0,
+    width: Math.max(0, width - margin.left - margin.right),
+    height: Math.max(0, height - margin.top - margin.bottom),
+  }
+  const colorByCategory = new Map()
+  const resolveColor = (category) => {
+    if (!colorByCategory.has(category)) {
+      colorByCategory.set(
+        category,
+        WAFFLE_COLORS[colorByCategory.size % WAFFLE_COLORS.length],
+      )
+    }
+    return colorByCategory.get(category)
+  }
+  const result = waffleLayout({
+    data,
+    scales: {},
+    dimensions: {
+      width: plot.width,
+      height: plot.height,
+      margin,
+      plot,
+    },
+    theme: {
+      semantic: {},
+      categorical: WAFFLE_COLORS,
+    },
+    resolveColor,
+    config,
+  })
+  const nodes = result.nodes || []
+  const categories = new Map()
+
+  for (const node of nodes) {
+    const category = String(node.datum?.category ?? "Uncategorized")
+    const existing = categories.get(category)
+    if (existing) {
+      existing.units += 1
+    } else {
+      categories.set(category, {
+        category,
+        value: Number(node.datum?.value) || 0,
+        units: 1,
+        color: node.style?.fill,
+      })
+    }
+  }
+
+  const navigationTree = waffleRecipeManifest.navigation({
+    data,
+    config,
+  })
+  const audit = auditObservedScene({
+    recipe: waffleRecipeManifest,
+    scene: result,
+    inputData: data,
+    dimensions: { width, height, plot },
+    theme: { background: "#ffffff", categorical: WAFFLE_COLORS },
+    layoutConfig: config,
+    chart: {
+      title: "Population by World Bank income group",
+      summary: "One hundred cells normalize the represented population.",
+      description: waffleRecipeManifest.description({ data, config }).text,
+      accessibleTable: true,
+      navigationTree,
+    },
+  })
+
+  return {
+    categories: [...categories.values()],
+    ...audit,
+  }
+}
+
+function WaffleLegend({ categories }) {
+  return (
+    <div className="machine-waffle-legend" aria-label="Income group unit counts">
+      {categories.map((category) => (
+        <span key={category.category}>
+          <i style={{ background: category.color }} aria-hidden="true" />
+          <strong>{category.category}</strong>
+          <small>{category.units} cells</small>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function ObservedRecipeAudit({ audit }) {
+  const icons = { pass: "✓", warn: "⚠", fail: "✗", manual: "○" }
+  return (
+    <div className="machine-recipe-audit">
+      <div className={`machine-audit-verdict ${audit.ok ? "is-ok" : "is-blocked"}`}>
+        <strong>{audit.summary.passes} observed checks pass</strong>
+        <span>{audit.summary.marks} scene nodes inspected</span>
+      </div>
+      <h3>Declared semantics</h3>
+      <p>
+        Roles: {audit.declaredSemantics.dataRoles.join(", ")} · intents:{" "}
+        {audit.declaredSemantics.intents.join(", ")} · fallback:{" "}
+        {audit.declaredSemantics.fallbackDeclared ? "declared" : "missing"}
+      </p>
+      <h3>Observed evidence</h3>
+      <ul>
+        {audit.observedSceneEvidence.map((finding) => (
+          <li key={finding.id} className={`is-${finding.status}`}>
+            <span aria-hidden="true">{icons[finding.status]}</span>
+            <span>
+              <code>{finding.id}</code>
+              <small>{finding.message}</small>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <h3>Manual AT and reception checks</h3>
+      <ul>
+        {audit.manualATChecks.map((finding) => (
+          <li key={finding.id} className="is-manual">
+            <span aria-hidden="true">{icons.manual}</span>
+            <span>
+              <code>{finding.id}</code>
+              <small>{finding.message}</small>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function intentManifestForRecipe(recipe, description, chartId) {
+  const primaryIntent = recipe.intents.find(
+    (intent) => typeof intent === "object" && intent.strength === "primary",
+  )
+  const primary =
+    typeof primaryIntent === "string"
+      ? primaryIntent
+      : primaryIntent?.id || primaryIntent?.name ||
+        (typeof recipe.intents[0] === "string"
+          ? recipe.intents[0]
+          : recipe.intents[0]?.id || recipe.intents[0]?.name)
+  return {
+    ididVersion: "0.1",
+    chartId,
+    title: recipe.name,
+    intent: {
+      primary: primary || "explanation",
+      secondary: recipe.intents
+        .map((intent) => typeof intent === "string" ? intent : intent.id || intent.name)
+        .filter((intent) => intent && intent !== primary),
+      communicativeAct: description?.levels?.l4,
+    },
+    audience: {
+      primary: recipe.audience?.primary,
+      familiarityAssumptions: recipe.audience?.familiarity,
+      literacyTargets: recipe.audience?.literacyTargets?.map((target) => ({
+        feature: target.concept,
+        rationale: target.rationale,
+      })),
+    },
+    reception: recipe.reception,
+    designContract: {
+      chartFamily: recipe.frameFamily,
+      whyThisForm: recipe.designContract.whyThisForm || recipe.designContract.whyCustom,
+      whyNotDefault: recipe.designContract.whyNotDefault,
+      risks: recipe.reception?.risks,
+      misuse: recipe.designContract.misuse,
+    },
+    accessibility: {
+      description: description?.text,
+      navigation: true,
+      dataFallback: recipe.accessibility.fallbackTable,
+      manualChecks: [
+        "screen-reader behavior",
+        "keyboard order quality",
+        "metaphor comprehension",
+      ],
+    },
+    provenance: {
+      dataSources: ["World Bank, World Development Indicators"],
+      reviewStatus: "docs demo",
+      generatedBy: "Semiotic recipe intelligence",
+    },
+  }
+}
+
+function intentManifestForCandidate(candidate, question, description) {
+  if (candidate.recipeId === waffleRecipeManifest.id) {
+    return intentManifestForRecipe(
+      waffleRecipeManifest,
+      description,
+      CHART_ID,
+    )
+  }
+  return {
+    ididVersion: "0.1",
+    chartId: CHART_ID,
+    title: question.question,
+    intent: {
+      primary: question.intent,
+      communicativeAct: description?.levels?.l4,
+    },
+    reception: {
+      channels: ["visual", "interactive", "screen-reader", "agent"],
+      strengths: ["familiar", "deterministic", "agent-readable"],
+      scaffolds: ["description", "accessible table", "navigation tree"],
+    },
+    designContract: {
+      chartFamily: candidate.family,
+      whyThisForm: candidate.reasons[0],
+      risks: candidate.caveats,
+    },
+    accessibility: {
+      description: description?.text,
+      navigation: true,
+      dataFallback: true,
+      manualChecks: ["screen-reader behavior", "keyboard order quality"],
+    },
+  }
 }

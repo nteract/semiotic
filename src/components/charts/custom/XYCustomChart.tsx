@@ -6,11 +6,12 @@ import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CustomLayout } from "../../stream/customLayout"
 import type { Datum } from "../shared/datumTypes"
-import type { BaseChartProps, AxisConfig } from "../shared/types"
+import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { SafeRender } from "../shared/withChartWrapper"
 import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
+import type { ChartRecipe } from "../../ai/chartRecipes"
 
 export interface XYCustomChartProps<
   TDatum extends Datum = Datum,
@@ -22,6 +23,10 @@ export interface XYCustomChartProps<
   layout: CustomLayout<TConfig>
   /** Config blob threaded through to LayoutContext.config. */
   layoutConfig?: TConfig
+  /** Optional meaning/intelligence contract for description, navigation, and audit surfaces. */
+  recipe?: ChartRecipe<TDatum, TConfig>
+  /** Registered recipe id; portable alternative to embedding the manifest object. */
+  recipeId?: string
   /**
    * Optional fixed extents — flow into scale construction *before* the layout
    * runs, so scales reflect the layout's intended domain. Layouts that don't
@@ -35,6 +40,8 @@ export interface XYCustomChartProps<
   enableHover?: boolean
   showLegend?: boolean
   annotations?: Datum[]
+  /** Field or function that declares the semantic category used for custom-layout color. */
+  colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
   tooltip?: TooltipProp
   /** Additional StreamXYFrame props for advanced customization, excluding XYCustomChart-controlled fields. */
@@ -86,6 +93,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     loading,
     loadingContent,
     emptyContent,
+    colorBy,
     colorScheme,
     frameProps = {},
   } = props
@@ -96,6 +104,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     chartTypeLabel: "XYCustomChart",
     unwrapData: false,
     data,
+    colorBy,
     colorScheme,
     selection,
     linkedHover,
@@ -140,6 +149,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     ...(layoutSelection && { layoutSelection }),
     xExtent,
     yExtent,
+    colorAccessor: colorBy as StreamXYFrameProps["colorAccessor"],
     colorScheme,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,

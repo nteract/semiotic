@@ -2,6 +2,11 @@ import { describe, it, expect } from "vitest"
 import { toConfig, fromConfig, toURL, fromURL, configToJSX } from "./chartConfig"
 import type { ChartConfig } from "./chartConfig"
 import type { Datum } from "../charts/shared/datumTypes"
+import { defineChartRecipe } from "../ai/chartRecipes"
+import {
+  registerChartRecipe,
+  unregisterChartRecipe,
+} from "../ai/chartRecipeRegistry"
 
 // ── toConfig ───────────────────────────────────────────────────────────
 
@@ -71,6 +76,52 @@ describe("toConfig", () => {
     expect(config.props.xAccessor).toBe("x")
   })
 
+  it("excludes all public data collections when includeData is false", () => {
+    const config = toConfig("FlowMap", {
+      data: [{ id: "raw" }],
+      nodes: [{ id: "sf" }],
+      edges: [{ source: "sf", target: "nyc" }],
+      points: [{ lon: -122.4, lat: 37.8 }],
+      areas: [{ id: "west" }],
+      lines: [{ coordinates: [[-122.4, 37.8], [-74, 40.7]] }],
+      flows: [{ source: "sf", target: "nyc", value: 10 }],
+      valueAccessor: "value",
+    }, { includeData: false })
+
+    expect(config.props).toMatchObject({ valueAccessor: "value" })
+    for (const key of ["data", "nodes", "edges", "points", "areas", "lines", "flows"]) {
+      expect(config.props[key]).toBeUndefined()
+    }
+  })
+
+  it("keeps configuration arrays when includeData is false", () => {
+    const config = toConfig("ScatterplotMatrix", {
+      data: [{ a: 1, b: 2 }],
+      fields: ["a", "b"],
+      size: [600, 400],
+    }, { includeData: false })
+
+    expect(config.props.data).toBeUndefined()
+    expect(config.props.fields).toEqual(["a", "b"])
+    expect(config.props.size).toEqual([600, 400])
+  })
+
+  it("keeps non-row geo and series configuration when includeData is false", () => {
+    const choropleth = toConfig("ChoroplethMap", {
+      areas: "world-110m",
+      valueAccessor: "population",
+    }, { includeData: false })
+    const multiAxis = toConfig("MultiAxisLineChart", {
+      data: [{ x: 1, a: 2, b: 3 }],
+      xAccessor: "x",
+      series: [{ yAccessor: "a" }, { yAccessor: "b" }],
+    }, { includeData: false })
+
+    expect(choropleth.props.areas).toBe("world-110m")
+    expect(multiAxis.props.data).toBeUndefined()
+    expect(multiAxis.props.series).toEqual([{ yAccessor: "a" }, { yAccessor: "b" }])
+  })
+
   it("includes data by default", () => {
     const data = [{ x: 1, y: 2 }]
     const config = toConfig("LineChart", { data, xAccessor: "x" })
@@ -92,6 +143,116 @@ describe("toConfig", () => {
 
   it("throws for unknown component", () => {
     expect(() => toConfig("FakeChart", {})).toThrow("Unknown component")
+    expect(() =>
+      toConfig("XYCustomChart", { layout: () => ({ nodes: [] }) }),
+    ).toThrow("Unknown component")
+  })
+
+  it("serializes and round-trips a registered portable recipe by id", () => {
+    const recipe = defineChartRecipe({
+      id: "semiotic.recipe.serialization-portable",
+      name: "Portable recipe",
+      frameFamily: "XYCustomChart",
+      portability: "portable",
+      layout: { id: "semiotic.layout.portable" },
+      layoutConfigSchema: { type: "object", properties: {} },
+      dataRoles: [{ role: "value", field: "value", semanticType: "quantitative" }],
+      intents: ["explanation"],
+      designContract: { whyCustom: "Portable fixture." },
+      accessibility: {},
+    })
+    registerChartRecipe(recipe)
+    try {
+      const config = toConfig(recipe.id, {
+        data: [{ value: 4 }],
+        layoutConfig: { columns: 10 },
+      })
+      expect(config).toMatchObject({
+        component: "ChartRecipe",
+        recipeId: recipe.id,
+        portable: true,
+        props: {
+          data: [{ value: 4 }],
+          layoutConfig: { columns: 10 },
+        },
+      })
+      const roundTrip = fromConfig(config)
+      expect(roundTrip.componentName).toBe("ChartRecipe")
+      expect(roundTrip.props.recipeId).toBe(recipe.id)
+      expect(roundTrip.props.layoutConfig).toEqual({ columns: 10 })
+      expect(() =>
+        toConfig(recipe.id, {
+          layoutConfig: { columns: 10, label: () => "A" },
+        }),
+      ).toThrow(/not JSON-safe/)
+    } finally {
+      unregisterChartRecipe(recipe.id)
+    }
+  })
+
+  it("exports a local recipe manifest with an explicit portability warning", () => {
+    const recipe = defineChartRecipe({
+      id: "local.recipe.serialization",
+      name: "Local swarm",
+      frameFamily: "XYCustomChart",
+      portability: "local",
+      dataRoles: [{ role: "value", field: "value", semanticType: "quantitative" }],
+      intents: ["monitoring"],
+      designContract: { whyCustom: "Event identity matters." },
+      accessibility: {},
+    })
+    registerChartRecipe(recipe)
+    try {
+      const config = toConfig(recipe.id, {
+        data: [{ value: 4 }],
+        layout: () => ({ nodes: [] }),
+      })
+      expect(config.component).toBe("ChartRecipe")
+      expect(config.portable).toBe(false)
+      expect(config.reason).toMatch(/non-serializable/)
+      expect(config.manifest).toMatchObject({
+        name: "Local swarm",
+        intents: ["monitoring"],
+      })
+      expect(config.props.layout).toBeUndefined()
+      const roundTrip = fromConfig(config)
+      expect(roundTrip.componentName).toBe("ChartRecipe")
+      expect(roundTrip.props.recipeId).toBe(recipe.id)
+    } finally {
+      unregisterChartRecipe(recipe.id)
+    }
+  })
+
+  it("excludes recipe data collections when includeData is false", () => {
+    const recipe = defineChartRecipe({
+      id: "semiotic.recipe.serialization-include-data",
+      name: "Portable recipe includeData",
+      frameFamily: "GeoCustomChart",
+      portability: "portable",
+      layout: { id: "semiotic.layout.portable" },
+      layoutConfigSchema: { type: "object", properties: {} },
+      dataRoles: [{ role: "location", field: "id", semanticType: "nominal" }],
+      intents: ["explanation"],
+      designContract: { whyCustom: "Portable fixture." },
+      accessibility: {},
+    })
+    registerChartRecipe(recipe)
+    try {
+      const config = toConfig(recipe.id, {
+        points: [{ id: "sf" }],
+        areas: [{ id: "west" }],
+        lines: [{ id: "route" }],
+        flows: [{ source: "sf", target: "nyc" }],
+        layoutConfig: { projection: "mercator" },
+      }, { includeData: false })
+
+      expect(config.props.layoutConfig).toEqual({ projection: "mercator" })
+      for (const key of ["points", "areas", "lines", "flows"]) {
+        expect(config.props[key]).toBeUndefined()
+      }
+    } finally {
+      unregisterChartRecipe(recipe.id)
+    }
   })
 })
 
@@ -237,5 +398,20 @@ describe("configToJSX", () => {
       version: "1", createdAt: ""
     })
     expect(jsx).toContain("size={[600,400]}")
+  })
+
+  it("normalizes legacy LocalChartRecipe configs to renderable ChartRecipe JSX", () => {
+    const jsx = configToJSX({
+      component: "LocalChartRecipe",
+      recipeId: "local.recipe",
+      portable: false,
+      props: { layoutConfig: { columns: 10 } },
+      version: "1",
+      createdAt: "",
+    })
+
+    expect(jsx).toContain("<ChartRecipe")
+    expect(jsx).not.toContain("<LocalChartRecipe")
+    expect(jsx).toContain('recipeId="local.recipe"')
   })
 })

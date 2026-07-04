@@ -5,6 +5,9 @@ import type { IntentId } from "./intents"
 import type { AudienceProfile } from "./audienceProfile"
 import { XY_FAMILY, BAR_FAMILY, PART_TO_WHOLE, DISTRIBUTION, roles, seriesField, fmtDim } from "./chartRoles"
 import { filterAnnotationsByStatus } from "./annotationProvenance"
+import type { ChartRecipe } from "./chartRecipes"
+import { describeRecipeChart } from "./describeRecipeChart"
+import { resolveRecipeForChart } from "./recipeSemantics"
 /**
  * describeChart — generate a layered natural-language description of a chart
  * from its `(component, props)` config, following Lundgard & Satyanarayan's
@@ -83,6 +86,8 @@ export interface DescribeChartResult {
    * an AI- or watcher-authored note is qualified as such.
    */
   annotations?: string
+  /** Optional recipe risks/misuse guidance, included only when requested. */
+  caveats?: string[]
 }
 
 export interface DescribeChartOptions {
@@ -108,6 +113,10 @@ export interface DescribeChartOptions {
    * an unfamiliar reader leans on the description.
    */
   audience?: AudienceProfile
+  /** Explicit recipe; otherwise `props.recipe`, `props.recipeId`, then registry are checked. */
+  recipe?: ChartRecipe
+  /** Include declared recipe risks/caveats in the structured result. */
+  includeCaveats?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -501,6 +510,30 @@ export function describeChart(
   // wasn't pinned, so "pass a capability → get L4" is ergonomic without
   // changing the default L1–L3 output every existing caller relies on.
   if (!explicitLevels && (options.capability || hasGeneratedAlertAnnotation(props))) want.add("l4")
+
+  const recipe = resolveRecipeForChart(component, props, options.recipe)
+  if (recipe) {
+    const requested = (["l1", "l2", "l3", "l4"] as DescribeLevel[]).filter(
+      (level) => want.has(level),
+    )
+    // Recipes carry their own L4 contract, so the default recipe path includes
+    // all four layers even when no separate capability object was supplied.
+    if (!explicitLevels && !requested.includes("l4")) requested.push("l4")
+    const described = describeRecipeChart(recipe, props, {
+      levels: requested,
+      locale: options.locale,
+      audience: options.audience,
+      includeCaveats: options.includeCaveats,
+    })
+    const annotations = annotationSentence(props)
+    return {
+      ...described,
+      text: annotations
+        ? `${annotations} ${described.text}`.trim()
+        : described.text,
+      ...(annotations ? { annotations } : {}),
+    }
+  }
 
   const fmtNum = chartValueFormatter(options.locale ?? "en")
   const kind = kindPhrase(component)

@@ -270,6 +270,19 @@
   font-variant-numeric: tabular-nums;
 }
 
+.machine-candidate-kind {
+  margin-right: 6px;
+  color: var(--text-secondary);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.machine-intent-mark {
+  margin: 8px 0 12px;
+}
+
 .machine-rubric {
   display: flex;
   gap: 10px;
@@ -497,6 +510,244 @@
   font-size: 12.5px;
 }
 
+/* --- Custom recipe contract ------------------------------------------------ */
+
+.machine-custom-recipe {
+  margin-top: 44px;
+  padding: 28px;
+  border: 1px solid rgba(124, 108, 240, 0.35);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(124, 108, 240, 0.11), transparent 36%),
+    var(--surface-1);
+}
+
+.machine-section-heading--custom {
+  max-width: 780px;
+}
+
+.machine-custom-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+  gap: 18px;
+  align-items: stretch;
+  margin: 22px 0 18px;
+}
+
+.machine-custom-chart,
+.machine-custom-contract {
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--surface-3);
+  border-radius: 10px;
+  background: var(--surface-0);
+}
+
+.machine-custom-chart {
+  overflow-x: auto;
+}
+
+.machine-custom-contract {
+  display: flex;
+  flex-direction: column;
+}
+
+.machine-custom-contract h3 {
+  margin: 2px 0 8px;
+  color: var(--text-primary);
+  font-size: 19px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.machine-custom-contract > p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.machine-custom-contract dl {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  margin: 16px 0;
+  border: 1px solid var(--surface-3);
+  border-radius: 7px;
+  background: var(--surface-3);
+}
+
+.machine-custom-contract dl > div {
+  display: grid;
+  grid-template-columns: 104px 1fr;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--surface-1);
+  font-size: 11px;
+}
+
+.machine-custom-contract dt {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.machine-custom-contract dd {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.machine-flagship-note {
+  display: grid;
+  gap: 5px;
+  margin-top: auto;
+  padding: 12px;
+  border-left: 3px solid #bc4c00;
+  background: rgba(188, 76, 0, 0.07);
+}
+
+.machine-flagship-note strong {
+  color: #bc4c00;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.machine-flagship-note a {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.machine-flagship-note p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.machine-flagship-note code {
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.machine-waffle-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 12px;
+  margin-top: 8px;
+}
+
+.machine-waffle-legend > span {
+  display: grid;
+  grid-template-columns: 9px auto;
+  column-gap: 5px;
+  align-items: center;
+}
+
+.machine-waffle-legend i {
+  width: 9px;
+  height: 9px;
+  grid-row: 1 / span 2;
+  border-radius: 2px;
+}
+
+.machine-waffle-legend strong {
+  color: var(--text-primary);
+  font-size: 10px;
+}
+
+.machine-waffle-legend small {
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+
+.machine-custom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.machine-custom-panel {
+  min-width: 0;
+  background: var(--surface-0);
+}
+
+.machine-manifest-json {
+  max-height: 360px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  color: var(--text-primary);
+  background: var(--surface-1);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.machine-custom-navtree {
+  max-height: 360px;
+}
+
+.machine-recipe-audit ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.machine-recipe-audit h3 {
+  margin: 14px 0 6px;
+  color: var(--text-primary);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.machine-recipe-audit > p {
+  margin: 0 0 8px;
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.machine-recipe-audit li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 7px;
+  padding: 8px 9px;
+  border-radius: 6px;
+  background: var(--surface-1);
+}
+
+.machine-recipe-audit li > span:first-child {
+  font-weight: 800;
+}
+
+.machine-recipe-audit li.is-pass > span:first-child { color: #1a7f37; }
+.machine-recipe-audit li.is-warn > span:first-child { color: #9a6700; }
+.machine-recipe-audit li.is-fail > span:first-child { color: #cf222e; }
+.machine-recipe-audit li.is-manual > span:first-child { color: #0969da; }
+
+.machine-recipe-audit li code {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text-primary);
+  font-size: 10.5px;
+}
+
+.machine-recipe-audit li small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
 /* --- Editorial + code ------------------------------------------------------ */
 
 .machine-thesis {
@@ -584,10 +835,19 @@
     grid-template-columns: 1fr;
     gap: 28px;
   }
+
+  .machine-custom-hero,
+  .machine-custom-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 560px) {
   .machine-question-grid {
     grid-template-columns: 1fr;
+  }
+
+  .machine-custom-recipe {
+    padding: 18px 14px;
   }
 }

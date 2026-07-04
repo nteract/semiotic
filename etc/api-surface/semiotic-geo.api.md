@@ -34,6 +34,7 @@ interface GlyphSceneNode
 interface GraticuleConfig
 interface HitTargetPointProps
 interface ProportionalSymbolMapProps
+interface SceneAccessibilityMetadata
 interface StreamGeoFrameHandle
 interface StreamGeoFrameProps
 type AreasProp

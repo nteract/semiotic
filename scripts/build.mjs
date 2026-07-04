@@ -1,5 +1,5 @@
 import { execSync } from "child_process"
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from "fs"
+import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "fs"
 import { rollup } from "rollup"
 import resolve from "@rollup/plugin-node-resolve"
 import typescript from "@rollup/plugin-typescript"
@@ -360,6 +360,11 @@ function syncAIInstructions() {
   console.log("\u2705 AI instruction files synced from CLAUDE.md")
 }
 
+function cleanDist() {
+  rmSync("dist", { recursive: true, force: true })
+  console.log("\u2705 dist cleaned")
+}
+
 /** Copy .min.js → .js for backwards compatibility with consumers that
  *  reference the old (pre-.min) filenames (e.g. webpack aliases). */
 function createLegacyAliases(bundles) {
@@ -379,6 +384,7 @@ function createLegacyAliases(bundles) {
 
 async function build() {
   syncAIInstructions()
+  cleanDist()
 
   const minify = isProduction
   const analyze = isAnalyze

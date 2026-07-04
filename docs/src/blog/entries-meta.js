@@ -217,12 +217,11 @@ export const allBlogEntriesMeta = [
     subtitle:
       "Annotations become first-class objects: a hierarchy token, curved connectors, and — the real change — provenance and a two-axis lifecycle so a note records who made it, on what basis, and whether it still holds.",
     author: "Elijah Meeks",
-    date: "2026-06-02",
+    date: "2026-07-03",
     tags: ["case-study"],
     excerpt:
       "Once a chart is a surface that agents, watchers, and humans all write to, the annotation becomes the unit of the conversation. This is the release that gives annotations what that role requires: emphasis hierarchy, swoopy connectors, and provenance + lifecycle metadata aligned with the IDID conversational substrate.",
     ogChart: { component: "Scatterplot" },
-    draft: true,
   },
   {
     slug: "navigating-a-chart-you-cant-see",

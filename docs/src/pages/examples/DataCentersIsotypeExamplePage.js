@@ -281,34 +281,118 @@ export default function DataCentersIsotypeExamplePage() {
           <section className="dc-isotype__panel">
             <PanelHeading
               number="03"
-              eyebrow="POWER, WATER, HEAT"
-              title="The national account has two water numbers"
-              note="Every arrow is 25 TWh of electricity or 25 billion gallons of water. Direct water is consumed on site; indirect water is consumed by the electricity system. Both water bundles rise from one baseline so the gap cannot hide."
+              eyebrow="ENERGY, HEAT, WATER"
+              title="One system, three linked concerns"
+              note="Nearly all electricity leaves as low-grade heat—of which the IEA puts 70–80% within reach of heat pumps. The cooling design then decides whether that heat is shed with water or with more electricity. Every arrow is 25 TWh or 25 billion gallons; both water bundles rise from one baseline so the gap cannot hide."
             />
             <NetworkCustomChart
               nodes={RESOURCE_NODES}
               edges={RESOURCE_EDGES}
               layout={resourceFlowLayout}
               width={halfChartWidth}
-              height={390}
+              height={470}
               margin={{ top: 10, right: 8, bottom: 28, left: 8 }}
               enableHover
               accessibleTable
               onObservation={inspectResource}
-              description="An arrow-unit process picture: power plants send seven electricity arrows to data centers, which reject the same energy as heat, while two water bundles—17 billion gallons on site and 211 billion gallons at the plants—rise from one shared baseline."
-              summary="U.S. data centers used 176 TWh of electricity, about 17 billion gallons of water directly, and about 211 billion gallons indirectly in 2023."
+              description="An arrow-unit process picture in three bands: power plants send seven electricity arrows to data centers, which reject the same energy as heat with roughly three-quarters recoverable by heat pumps; a schematic shows evaporative cooling spending water while dry cooling spends energy; and two water bundles—17 billion gallons on site and 211 billion gallons at the plants—rise from one shared baseline."
+              summary="U.S. data centers used 176 TWh of electricity in 2023, nearly all of it leaving as heat with about 70–80% recoverable, and consumed about 17 billion gallons of water directly and 211 billion gallons indirectly. Cooling design trades on-site water against energy use."
               frameProps={{ background: "transparent" }}
             />
-            <p className="dc-isotype__method-note">
-              Nearly all data-center electricity becomes low-temperature heat; the IEA estimates
-              70–80% can be recovered with heat pumps where a nearby heat network exists.
-            </p>
           </section>
         </div>
 
-        <section className="dc-isotype__jobs">
+        <section className="dc-isotype__scale">
           <PanelHeading
             number="04"
+            eyebrow="THE ON-SITE WATER, IN SCALE"
+            title="A familiar amount, on a steep curve"
+            note="The 17 billion gallons consumed on site in 2023 is small against how the country already moves water—and it is projected to roughly double to quadruple by the end of the decade. Each drop below is 5 billion gallons; hatched drops span the projected range."
+          />
+          <div className="dc-isotype__scale-body">
+            <div className="dc-isotype__scale-context">
+              <h4>17 BILLION GALLONS IS…</h4>
+
+              <div className="dc-isotype__scale-item">
+                <WaterHundredGrid />
+                <p>
+                  <strong>≈ 1%</strong> of the water Americans pour on their lawns each year—one
+                  filled drop in a hundred.
+                </p>
+              </div>
+
+              <div className="dc-isotype__scale-item">
+                <div className="dc-isotype__scale-row">
+                  <IsotypeUnitRow
+                    value={155000}
+                    unit={10000}
+                    maxIcons={16}
+                    kind="city"
+                    color={ISOTYPE.blue}
+                    emptyColor={ISOTYPE.paperDeep}
+                    iconSize={26}
+                    gap={4}
+                    idPrefix="dc-scale-homes"
+                    label="About 155,000 homes supplied for a year; each sign is 10,000 homes"
+                  />
+                </div>
+                <p>
+                  <strong>≈ a city of 155,000 homes</strong>, supplied for a full year at the U.S.
+                  average of 300 gallons a household each day. Each sign is 10,000 homes.
+                </p>
+              </div>
+
+              <p className="dc-isotype__scale-foot">
+                …and about 3% of the <strong>531 billion gallons</strong> U.S. golf courses use
+                annually.
+              </p>
+            </div>
+
+            <div className="dc-isotype__scale-projection">
+              <h4>DIRECT COOLING WATER, PER YEAR</h4>
+              <div className="dc-isotype__scale-row">
+                <span>2023 · 17B GALLONS</span>
+                <IsotypeUnitRow
+                  value={17}
+                  unit={5}
+                  maxIcons={15}
+                  kind="water"
+                  color={ISOTYPE.blue}
+                  emptyColor={ISOTYPE.paperDeep}
+                  iconSize={26}
+                  gap={4}
+                  idPrefix="dc-scale-water-2023"
+                  label="2023: about 17 billion gallons of direct cooling water"
+                />
+              </div>
+              <div className="dc-isotype__scale-row">
+                <span>PROJECTED · 33–73B GALLONS</span>
+                <IsotypeUnitRow
+                  value={33}
+                  rangeValue={73}
+                  unit={5}
+                  maxIcons={15}
+                  kind="water"
+                  color={ISOTYPE.blue}
+                  rangeColor={ISOTYPE.blue}
+                  emptyColor={ISOTYPE.paperDeep}
+                  iconSize={26}
+                  gap={4}
+                  idPrefix="dc-scale-water-proj"
+                  label="Projected: 33 to 73 billion gallons of direct cooling water; solid drops reach the low projection, hatched drops the high one"
+                />
+              </div>
+              <p className="dc-isotype__scale-key">
+                EACH DROP = 5 BILLION GALLONS · SOLID DROPS REACH THE LOW PROJECTION, HATCHED DROPS
+                THE HIGH ONE
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="dc-isotype__jobs">
+          <PanelHeading
+            number="05"
             eyebrow="CONSTRUCTION JOBS ARE NOT PERMANENT JOBS"
             title="A large build; a smaller operating staff"
             note="Company disclosures use different definitions and time windows. These two rows preserve those definitions instead of summing them."
@@ -336,7 +420,7 @@ export default function DataCentersIsotypeExamplePage() {
 
         <section className="dc-isotype__compute">
           <PanelHeading
-            number="05"
+            number="06"
             eyebrow="WHY THE NEW BUILDINGS?"
             title="Training compute rose faster than benchmark scores"
             note="One chip sign equals the entire compute used to train GPT-3—count them. Yellow bolts encode five MMLU points each, with partial bolts preserving the reported score. This juxtaposes scale and one benchmark; it does not claim compute alone caused the score."
@@ -425,8 +509,11 @@ export default function DataCentersIsotypeExamplePage() {
             >
               International Energy Agency
             </a>
-            . Facility claims link directly from the disclosure ledger. Operator claims describe
-            operator commitments; they are not independent audits.
+            . The projected 33–73 billion gallon range and the lawn, golf, and household figures are
+            order-of-magnitude national comparisons for scale (U.S. household average ≈ 300 gallons a
+            day); they contextualize the sourced 2023 figure rather than extend it. Facility claims
+            link directly from the disclosure ledger. Operator claims describe operator commitments;
+            they are not independent audits.
           </p>
         </footer>
       </div>
@@ -451,6 +538,35 @@ function StaticGlyph({ kind, size, color }) {
   return (
     <svg viewBox="0 0 40 40" width={size} height={size} aria-hidden="true">
       <IsotypeGlyph kind={kind} size={40} color={color} />
+    </svg>
+  )
+}
+
+// A 10×10 field of drops — one filled, ninety-nine ghosted — the ISOTYPE
+// "one in a hundred" idiom for the lawn comparison (17B gal ≈ 1% of U.S.
+// lawn watering). The single blue drop is the data-center share.
+function WaterHundredGrid() {
+  const cols = 10
+  const size = 14
+  const gap = 3
+  const extent = cols * (size + gap) - gap
+  return (
+    <svg
+      viewBox={`0 0 ${extent} ${extent}`}
+      className="dc-isotype__hundred"
+      role="img"
+      aria-label="One hundred drops; one filled drop is data-center cooling water, the ninety-nine faint drops are lawn watering."
+    >
+      {Array.from({ length: 100 }, (_, index) => (
+        <IsotypeGlyph
+          key={index}
+          kind="water"
+          x={(index % cols) * (size + gap)}
+          y={Math.floor(index / cols) * (size + gap)}
+          size={size}
+          color={index === 0 ? ISOTYPE.blue : ISOTYPE.paperDeep}
+        />
+      ))}
     </svg>
   )
 }

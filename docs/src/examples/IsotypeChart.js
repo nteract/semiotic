@@ -1,6 +1,7 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { StreamOrdinalFrame } from "semiotic"
+import { OrdinalCustomChart } from "semiotic"
+import { hitTargetRect, isotypePersonGlyph } from "semiotic/recipes"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -47,10 +48,6 @@ const vizzers = [
   { type: "viz", writeviz: -0.95, number: 1 }
 ]
 
-// Person silhouette SVG path (viewbox ~0,0 to 18,40)
-const personPath =
-  "M 9.12,3.34 C 8.28,3.29 7.44,3.40 6.64,3.69 4.17,3.63 1.97,5.37 0.91,7.51 -1.32,11.80 2.55,17.76 8.19,16.55 11.62,16.13 15.55,14.04 16.17,10.33 16.38,6.53 12.77,3.52 9.12,3.34 Z M 9.35,19.86 C 8.89,19.84 8.41,19.92 7.92,20.11 5.12,21.55 3.72,24.68 2.79,27.54 2.32,29.86 0.87,32.04 1.36,34.49 1.63,37.60 8.04,38.95 8.04,38.95 8.04,38.95 14.67,39.65 16.50,36.33 17.16,31.95 16.34,27.23 14.01,23.42 13.07,21.69 11.36,19.92 9.35,19.86 Z"
-
 const colorHash = {
   journalist: theme[2],
   viz: theme[1]
@@ -62,77 +59,84 @@ const sortedData = [...vizzers].sort((a, b) => a.writeviz - b.writeviz)
 // Deduplicated bin labels in sorted order
 const allBins = [...new Set(sortedData.map(d => d.writeviz.toFixed(2)))]
 
-// Expand to one row per person, with unique stack keys so each person
-// gets its own bar segment. Also build a lookup for icon rendering.
-const expandedData = []
 const binPersons = {} // bin → [{type}...] for icon rendering
-let personCounter = 0
 for (const d of sortedData) {
   const bin = d.writeviz.toFixed(2)
   if (!binPersons[bin]) binPersons[bin] = []
   if (d.type === "none" || d.number === 0) continue
   for (let i = 0; i < d.number; i++) {
-    const id = `p${personCounter++}`
-    expandedData.push({ bin, type: d.type, count: 1, personId: id })
     binPersons[bin].push({ type: d.type })
   }
 }
 
 const maxCount = Math.max(...Object.values(binPersons).map(arr => arr.length), 0)
 
-// Build person icons as foregroundGraphics (SVG overlay)
-// The function form receives { size, margin } from StreamOrdinalFrame
-function buildIcons({ size, margin }) {
-  const chartWidth = size[0] - margin.left - margin.right
-  const chartHeight = size[1] - margin.top - margin.bottom
-  const numCols = allBins.length
-  const bandWidth = chartWidth / numCols
-
-  // Each bar segment is 1 unit tall on the r-scale.
-  // The r-scale maps [0, maxCount] → [chartHeight, 0] (bottom to top).
-  // So 1 unit = chartHeight / maxCount pixels.
-  const unitHeight = chartHeight / maxCount
-
-  // Scale person path (native 18×40) to fit within one unit cell.
-  // Leave a small vertical gap (2px) between icons.
-  const gap = 2
-  const availH = unitHeight - gap
-  const availW = bandWidth * 0.8
-  // Scale uniformly to fit both width and height constraints
-  const scaleByH = availH / 40
-  const scaleByW = availW / 18
-  const iconScale = Math.min(scaleByH, scaleByW)
-  const iconW = 18 * iconScale
-  const iconH = 40 * iconScale
-
-  const icons = []
-  for (let bi = 0; bi < numCols; bi++) {
-    const bin = allBins[bi]
-    const persons = binPersons[bin] || []
-    const cx = bi * bandWidth + bandWidth / 2
-
-    for (let pi = 0; pi < persons.length; pi++) {
-      const color = colorHash[persons[pi].type]
-      if (!color) continue
-      // Position: bottom of this unit cell, centered in the band.
-      // Unit pi occupies y range: [chartHeight - (pi+1)*unitHeight, chartHeight - pi*unitHeight]
-      // Place the icon at the bottom of the cell, vertically centered with the gap.
-      const cellTop = chartHeight - (pi + 1) * unitHeight
-      const iy = cellTop + (unitHeight - iconH) / 2
-      const ix = cx - iconW / 2
-      icons.push(
-        <g
-          key={`icon-${bi}-${pi}`}
-          transform={`translate(${ix},${iy}) scale(${iconScale})`}
-        >
-          <path d={personPath} fill={color} stroke={color} strokeWidth={1.5} />
-        </g>
-      )
-    }
+const columnData = allBins.map((bin) => {
+  const writeviz = Number(bin)
+  const persons = binPersons[bin] || []
+  const journalistCount = persons.filter((person) => person.type === "journalist").length
+  const vizCount = persons.filter((person) => person.type === "viz").length
+  return {
+    bin,
+    writeviz,
+    people: persons,
+    count: persons.length,
+    journalistCount,
+    vizCount,
+    label: `${persons.length} respondent${persons.length === 1 ? "" : "s"} at ${bin}`,
   }
+})
+
+function isotypeGlyphLayout(ctx) {
+  const chartWidth = ctx.dimensions.width
+  const chartHeight = ctx.dimensions.height
+  const unitHeight = Math.abs(ctx.scales.r(0) - ctx.scales.r(1))
+  const gap = 2
+  const glyphSize = Math.max(
+    1,
+    Math.min(unitHeight - gap, ctx.scales.o.bandwidth() * 0.8 * (40 / 18)),
+  )
+
+  const hitTargets = ctx.data.map((column) => {
+    const x = ctx.scales.o(column.bin) || 0
+    return hitTargetRect({
+      x,
+      y: 0,
+      width: ctx.scales.o.bandwidth(),
+      height: chartHeight,
+      datum: column,
+      id: column.bin,
+      group: "writeviz-bin",
+    })
+  })
+
+  const glyphs = []
+  ctx.data.forEach((column) => {
+    const x0 = ctx.scales.o(column.bin) || 0
+    const centerX = x0 + ctx.scales.o.bandwidth() / 2
+    column.people.forEach((person, personIndex) => {
+      const color = colorHash[person.type]
+      if (!color) return
+      const cellTop = ctx.scales.r(personIndex + 1)
+      const y = cellTop + (unitHeight - glyphSize) / 2 + glyphSize
+      glyphs.push({
+        type: "glyph",
+        x: centerX,
+        y,
+        size: glyphSize,
+        glyph: isotypePersonGlyph,
+        color,
+        accent: "#ffffff",
+        style: {},
+        // Hover/focus should resolve to the column hit target, not the unit.
+        datum: null,
+        pointId: `${column.bin}-${personIndex}`,
+      })
+    })
+  })
 
   // Category labels
-  icons.push(
+  const labels = [
     <g key="label-viz" transform="translate(10,105)">
       <rect fill={theme[1]} x={-10} y={-10} width={93} height={55} />
       <text fontWeight="700" fill="white" x={5} y={15} style={{ fontSize: "13px" }}>
@@ -141,19 +145,13 @@ function buildIcons({ size, margin }) {
       <text fontWeight="700" fill="white" x={5} y={30} style={{ fontSize: "13px" }}>
         EXPERTS
       </text>
-    </g>
-  )
-  icons.push(
+    </g>,
     <g key="label-journalist" transform={`translate(${chartWidth - 115},-50)`}>
       <rect fill={theme[2]} x={-10} y={-10} width={123} height={40} />
       <text fontWeight="700" fill="white" x={5} y={15} style={{ fontSize: "13px" }}>
         JOURNALISTS
       </text>
-    </g>
-  )
-
-  // Bottom axis labels
-  icons.push(
+    </g>,
     <g key="label-bottom-left" fill="darkgray" transform={`translate(-5,${chartHeight + 5})`}>
       <text fontWeight="700" x={5} y={15} style={{ fontSize: "12px" }}>
         CREATE MORE
@@ -161,9 +159,7 @@ function buildIcons({ size, margin }) {
       <text fontWeight="700" x={5} y={30} style={{ fontSize: "12px" }}>
         DATA VIZ EACH DAY
       </text>
-    </g>
-  )
-  icons.push(
+    </g>,
     <g
       key="label-bottom-right"
       fill="darkgray"
@@ -176,11 +172,7 @@ function buildIcons({ size, margin }) {
       <text fontWeight="700" x={5} y={30} style={{ fontSize: "12px" }}>
         EACH DAY
       </text>
-    </g>
-  )
-
-  // Baseline
-  icons.push(
+    </g>,
     <line
       key="baseline"
       x1={0}
@@ -189,50 +181,60 @@ function buildIcons({ size, margin }) {
       y2={chartHeight}
       stroke="darkgray"
       strokeWidth={2}
-    />
-  )
+    />,
+  ]
 
-  return <g>{icons}</g>
+  return {
+    nodes: [...hitTargets, ...glyphs],
+    overlays: <g pointerEvents="none">{labels}</g>,
+  }
 }
 
 const frameProps = {
-  size: [700, 370],
-  data: expandedData,
-  oAccessor: "bin",
-  rAccessor: "count",
+  width: 700,
+  height: 370,
+  data: columnData,
+  layout: isotypeGlyphLayout,
+  categoryAccessor: "bin",
+  valueAccessor: "count",
   rExtent: [0, maxCount],
   oExtent: allBins,
   margin: { top: 60, bottom: 70, left: 10, right: 80 },
-  chartType: "bar",
-  stackBy: "personId",
-  barPadding: 0,
-  pieceStyle: () => ({ opacity: 0 }),
   showAxes: false,
-  foregroundGraphics: buildIcons
+  enableHover: true,
+  title: "Survey respondents by daily writing-vs-visualization balance",
+  description:
+    "An isotype chart where each column is a writing-versus-visualization balance bin and each person glyph represents one respondent.",
 }
 
 const overrideProps = {
-  foregroundGraphics: `function({ size, margin }) {
-    // Renders person silhouette icons at computed
-    // positions, using the OrdinalFrame's layout
-    // to determine column spacing and chart bounds.
-    // Each icon is colored by respondent type.
-    return <g>{/* person icons + labels */}</g>
-  }`
+  layout: `function isotypeGlyphLayout(ctx) {
+    // Emits one transparent hit target per column plus
+    // datum-less glyph scene nodes for each visible person.
+    return { nodes: [...columnHitTargets, ...personGlyphs], overlays }
+  }`,
 }
+
+const pre = `import { hitTargetRect, isotypePersonGlyph } from "semiotic/recipes"
+
+// The layout emits:
+// { type: "glyph", glyph: isotypePersonGlyph, datum: null }
+// plus one hitTargetRect(...) per column for grouped hover/focus.`
 
 export default function IsotypeChart() {
   return (
     <div>
       <MarkdownText
         text={`
-Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). This isotype chart uses StreamOrdinalFrame with stacked bars — each person is a separate bar segment rendered as a silhouette icon via foregroundGraphics.
+Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). This isotype chart uses \`OrdinalCustomChart\`: each visible person is a reusable Semiotic glyph scene node, while each column has one transparent hit target so hover and keyboard focus read the bin as a whole.
 `}
       />
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={StreamOrdinalFrame}
+        type={OrdinalCustomChart}
+        pre={pre}
+        hiddenProps={{ description: true }}
         useExpanded
       />
     </div>

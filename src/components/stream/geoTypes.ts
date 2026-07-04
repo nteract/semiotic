@@ -10,7 +10,8 @@ import type {
   SceneDatum,
   PointSceneNode,
   GlyphSceneNode,
-  ThemeSemanticColors
+  ThemeSemanticColors,
+  SceneAccessibilityMetadata
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
@@ -80,6 +81,8 @@ export interface GeoAreaSceneNode {
   screenArea: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   group?: string
   interactive?: boolean
   /** Lazily-cached Path2D parsed from pathData (avoids re-parsing on every hit test) */
@@ -94,6 +97,8 @@ export interface GeoLineSceneNode {
   path: [number, number][]
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   group?: string
 }
 

@@ -12,6 +12,9 @@ import { parallelCoordinatesLayout } from "../../../../src/components/recipes/pa
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
+import { waffleRecipeManifest } from "./waffleRecipeManifest"
+import { IntentMark } from "../../../../src/components/ai/IntentMark"
+import { intentManifestFromRecipe } from "../../../../src/components/ai/intentManifest"
 
 // ── Demo data ────────────────────────────────────────────────────────────
 
@@ -381,7 +384,7 @@ export default function CustomChartsPage() {
         { label: "Custom Charts", path: "/custom-charts/overview" },
         { label: "Custom Layouts", path: "/custom-charts/custom-layouts" },
       ]}
-      prevPage={{ title: "Overview", path: "/custom-charts/overview" }}
+      prevPage={{ title: "Intelligence", path: "/custom-charts/intelligence" }}
       nextPage={{ title: "Glyph Marks", path: "/custom-charts/glyph-marks" }}
     >
       <section>
@@ -424,13 +427,33 @@ import { isometricLandmarkLayout } from "semiotic/recipes"
       </section>
 
       <section>
-        <h2>Waffle chart</h2>
+        <h2 id="waffle-chart">Waffle chart</h2>
         <p>
           A grid of cells where each cell represents one share of the total. Categories fill
           row-major, allocated proportionally with the largest-remainder method. The whole layout is
           ~40 lines and emits <code>RectSceneNode</code>s — every theme, hover, and selection
           feature works without extra wiring.
         </p>
+        <p style={{ fontSize: 12, color: "var(--text-2)" }}>
+          Recipe contract: <code>{waffleRecipeManifest.id}</code> · intent{" "}
+          <code>part-to-whole</code> · semantic navigation by category, not by
+          individual cell.
+        </p>
+        <IntentMark
+          manifest={intentManifestFromRecipe(waffleRecipeManifest, {
+            chartId: "custom-layouts-waffle",
+            description: waffleRecipeManifest.description({
+              data: waffleData,
+              config: {
+                rows: 10,
+                columns: 10,
+                categoryAccessor: "region",
+                valueAccessor: "share",
+              },
+            }).text,
+            reviewStatus: "docs example",
+          })}
+        />
         <div
           style={{
             background: "var(--surface-2, #f8f8f8)",
@@ -441,6 +464,8 @@ import { isometricLandmarkLayout } from "semiotic/recipes"
         >
           <XYCustomChart
             data={waffleData}
+            recipe={waffleRecipeManifest}
+            recipeId={waffleRecipeManifest.id}
             layout={waffleLayout}
             layoutConfig={{
               rows: 10,

@@ -175,6 +175,19 @@ export interface Style {
   _edgeFade?: boolean
 }
 
+/**
+ * Optional semantic payload carried beside render geometry. `accessibleDatum`
+ * preserves the full row; `tableFields` lets a recipe expose a curated,
+ * user-facing table projection without reducing the scene datum itself.
+ */
+export interface SceneAccessibilityMetadata {
+  accessibleDatum?: SceneDatum | Datum[]
+  accessibility?: {
+    label?: string
+    tableFields?: SceneDatum | Datum[]
+  }
+}
+
 export type SceneNode =
   | LineSceneNode
   | AreaSceneNode
@@ -200,6 +213,8 @@ export interface LineSceneNode {
   colorThresholds?: LineColorThreshold[]
   style: Style
   datum: SeriesDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   group?: string
   /** Horizontal gradient for the line stroke */
   strokeGradient?: { colorStops: Array<{ offset: number; color: string }> }
@@ -227,6 +242,8 @@ export interface AreaSceneNode {
   bottomPath: [number, number][]
   style: Style
   datum: SeriesDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   group?: string
   /** Clip the area to this rect (in plot-relative pixels). Used by horizon
    *  charts to band a single series into N slices. */
@@ -270,6 +287,8 @@ export interface PointSceneNode {
   r: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   /** Optional unique identifier for point-anchored annotations */
   pointId?: string
   /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active) */
@@ -310,6 +329,8 @@ export interface SymbolSceneNode {
   rotation?: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   /** Optional unique identifier for point-anchored annotations. */
   pointId?: string
   /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active). */
@@ -365,6 +386,8 @@ export interface GlyphSceneNode {
   rotation?: number
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   /** Optional unique identifier for point-anchored annotations. */
   pointId?: string
   /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active). */
@@ -411,6 +434,8 @@ export interface RectSceneNode {
   fillGradient?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
   style: Style
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   group?: string
   _pulseIntensity?: number
   _pulseColor?: string
@@ -434,6 +459,8 @@ export interface HeatcellSceneNode {
   h: number
   fill: string
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   /** Optional style object (used for decay/transition opacity on heatmap cells) */
   style?: Style
   /** Numeric cell value (for canvas text rendering when showValues is enabled) */
@@ -472,6 +499,8 @@ export interface CandlestickSceneNode {
   /** Range/dumbbell mode — no body, endpoint dots instead */
   isRange?: boolean
   datum: SceneDatum
+  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
+  accessibility?: SceneAccessibilityMetadata["accessibility"]
   /** Optional style object (used during transition opacity animations) */
   style?: Style
   _pulseIntensity?: number

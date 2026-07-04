@@ -286,6 +286,36 @@ describe("extractAllRows — surfaces raw data, not pixels", () => {
     expect(rows[0].values).toEqual({ row: "A", col: "B", value: 42 })
   })
 
+  it("preserves rich rect fields and honors an explicit accessible table projection", () => {
+    const rich = extractAllRows([
+      {
+        type: "rect",
+        datum: { category: "A", value: 42, share: 0.42, label: "Alpha" },
+      },
+    ])
+    expect(rich[0].values).toEqual({
+      category: "A",
+      value: 42,
+      share: 0.42,
+      label: "Alpha",
+    })
+
+    const projected = extractAllRows([
+      {
+        type: "rect",
+        datum: { category: "A", value: 42, internal: "omit" },
+        accessibility: {
+          tableFields: { category: "A", value: 42, share: 0.42 },
+        },
+      },
+    ])
+    expect(projected[0].values).toEqual({
+      category: "A",
+      value: 42,
+      share: 0.42,
+    })
+  })
+
   it("skips synthetic underscore-prefixed keys", () => {
     const rows = extractAllRows([
       { type: "point", x: 1, y: 2, datum: { month: 1, _transitionKey: "k", _decayOpacity: 0.5 } },

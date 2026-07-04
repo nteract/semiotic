@@ -18,6 +18,7 @@ function ThemeProvider
 function accessibilityCaveats
 function adaptiveTimeTicks
 function auditAccessibility
+function auditObservedScene
 function buildNavigationTree
 function buildReaderGrounding
 function communicativeActForIntent
@@ -59,6 +60,7 @@ interface A11yFinding
 interface AccessibilityAuditResult
 interface ArcBoundingBox
 interface AuditAccessibilityOptions
+interface AuditObservedSceneInput
 interface BuildNavigationTreeOptions
 interface ChartConfig
 interface ChartReaderGrounding
@@ -69,6 +71,8 @@ interface DescribeChartOptions
 interface DescribeChartResult
 interface HatchPatternOptions
 interface NavTreeNode
+interface ObservedAuditFinding
+interface ObservedSceneAuditResult
 interface SemioticTheme
 interface SerializedSelection
 interface StreamStatusOptions
