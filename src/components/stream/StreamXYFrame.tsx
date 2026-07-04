@@ -19,7 +19,6 @@ import type {
   HoverData,
   HoverAnnotationConfig,
   SceneNode,
-  PointSceneNode,
   StreamScales,
   FrameGraphicsContext
 } from "./types"
