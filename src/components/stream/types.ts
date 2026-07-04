@@ -184,7 +184,7 @@ export interface SceneAccessibilityMetadata {
   accessibleDatum?: SceneDatum | Datum[]
   accessibility?: {
     label?: string
-    tableFields?: SceneDatum
+    tableFields?: SceneDatum | Datum[]
   }
 }
 

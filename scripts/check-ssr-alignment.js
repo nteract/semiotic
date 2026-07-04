@@ -40,7 +40,7 @@ const VALIDATION_MAP = path.join(ROOT, "src/components/charts/shared/validationM
 
 // ── 1. Discover HOC chart names ────────────────────────────────────────
 
-const HOC_DIRS = ["xy", "ordinal", "network", "geo"]
+const HOC_DIRS = ["xy", "ordinal", "network", "geo", "custom"]
 const hocsOnDisk = new Set()
 
 for (const dir of HOC_DIRS) {
@@ -93,6 +93,14 @@ const SSR_EXCLUDED = new Set([
   "FlowMap", "DistanceCartogram",
 ])
 
+const VALIDATION_EXCLUDED = new Set([
+  // Custom-layout escape hatches are public HOCs with SSR configs, but they
+  // are intentionally not in CHART_SPECS / validationMap because their
+  // required `layout` function and recipe-specific `layoutConfig` are not
+  // statically describable by the chart-spec registry.
+  "XYCustomChart", "OrdinalCustomChart", "NetworkCustomChart", "GeoCustomChart",
+])
+
 // ── 5. Check alignment ────────────────────────────────────────────────
 
 const errors = []
@@ -115,6 +123,7 @@ for (const name of ssrNames) {
 
 // Validation map missing entries for HOCs
 for (const hoc of hocsOnDisk) {
+  if (VALIDATION_EXCLUDED.has(hoc)) continue
   if (!validationNames.has(hoc)) {
     errors.push(`HOC "${hoc}" missing from validationMap.ts (validateProps won't recognize it)`)
   }

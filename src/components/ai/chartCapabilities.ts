@@ -1,5 +1,8 @@
 import type { ChartCapability } from "./chartCapabilityTypes"
-import { getRegisteredRecipeCapabilities } from "./chartRecipeRegistry"
+import {
+  getRegisteredRecipeCapabilities,
+  hasRegisteredRecipeCapabilities,
+} from "./chartRecipeRegistry"
 
 // XY family
 import { LineChartCapability } from "../charts/xy/LineChart.capability"
@@ -138,6 +141,10 @@ export function unregisterChartCapability(component: string): void {
  * overriding built-ins by component name.
  */
 export function getCapabilities(): ReadonlyArray<ChartCapability> {
+  if (userCapabilities.size === 0 && !hasRegisteredRecipeCapabilities()) {
+    return BUILT_IN_CAPABILITIES
+  }
+
   const merged = new Map<string, ChartCapability>()
   for (const c of BUILT_IN_CAPABILITIES) merged.set(c.component, c)
   for (const c of getRegisteredRecipeCapabilities()) merged.set(c.component, c)

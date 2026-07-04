@@ -49,6 +49,10 @@ export function getRegisteredRecipeCapabilities(): ReadonlyArray<ChartCapability
   return Array.from(store().capabilities.values())
 }
 
+export function hasRegisteredRecipeCapabilities(): boolean {
+  return store().capabilities.size > 0
+}
+
 /** Register a known runtime implementation used by portable recipe manifests. */
 export function registerRecipeLayout(
   layoutId: string,

@@ -71,6 +71,10 @@ afterEach(() => {
 })
 
 describe("recipeToChartCapability", () => {
+  it("returns a stable built-in capability list when nothing is registered", () => {
+    expect(getCapabilities()).toBe(getCapabilities())
+  })
+
   it("preserves recipe identity, intent score, rationale, and caveats", () => {
     const capability = recipeToChartCapability(recipe)
     expect(capability.component).toBe(recipe.id)
