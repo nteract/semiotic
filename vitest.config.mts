@@ -18,6 +18,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text-summary'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'integration-tests/**',
+        'codemod/**',
+      ],
       thresholds: {
         // Global floors raised toward the measured aggregate (~78/68/81/80) so
         // the gate bites a real regression instead of leaving ~16 points of

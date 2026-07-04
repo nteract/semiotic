@@ -3,12 +3,20 @@ import {
   validateProcessSankey,
   computeProcessSankeyLayout,
   buildEdgeIndex,
+  assignSides,
+  computeNode,
+  clampTime,
+  clampSamples,
+  attachmentYRange,
+  buildBandPath,
+  buildBandCutoutsForNode,
   countCrossings,
   totalEdgeLength,
   formatProcessSankeyIssue,
   type ProcessSankeyNode,
   type ProcessSankeyEdge,
   type ProcessSankeyOptions,
+  type ProcessSankeyAttachment,
 } from "./algorithm"
 
 const T = (n: number): number => n // ms — tests use small integers, no Date conversion needed
@@ -93,6 +101,15 @@ describe("validateProcessSankey", () => {
     expect(out).toMatch(/backward-edge|ends before/i)
   })
 
+  it("formats each known issue kind and falls back to the raw kind", () => {
+    expect(formatProcessSankeyIssue({ kind: "invalid-node-time", id: "n" })).toContain("node n")
+    expect(formatProcessSankeyIssue({ kind: "invalid-edge-time", id: "e" })).toContain("edge e")
+    expect(formatProcessSankeyIssue({ kind: "invalid-domain" })).toContain("time domain")
+    expect(formatProcessSankeyIssue({ kind: "invalid-value", id: "e" })).toContain("positive finite")
+    expect(formatProcessSankeyIssue({ kind: "missing-node", id: "e", endpoint: "target", nodeId: "Z" })).toContain("missing target node")
+    expect(formatProcessSankeyIssue({ kind: "unknown-kind" })).toBe("unknown-kind")
+  })
+
   it("flags malformed/inverted domains", () => {
     const cases: unknown[] = [
       [],                  // wrong shape
@@ -125,6 +142,109 @@ describe("buildEdgeIndex", () => {
     expect(idx.outgoing.C).toEqual([])
     expect(idx.incoming.A).toEqual([])
     expect(idx.incoming.C.map((e) => e.id)).toEqual(["bc"])
+  })
+})
+
+describe("side assignment and node mass walks", () => {
+  it("assigns alternating source/target sides by grouped value", () => {
+    const nodes: ProcessSankeyNode[] = [
+      { id: "A" },
+      { id: "B" },
+      { id: "C" },
+      { id: "D" },
+    ]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "ab1", source: "A", target: "B", value: 10, startTime: 1, endTime: 2 },
+      { id: "ab2", source: "A", target: "B", value: 1, startTime: 3, endTime: 4 },
+      { id: "ac", source: "A", target: "C", value: 5, startTime: 2, endTime: 3 },
+      { id: "bd", source: "B", target: "D", value: 4, startTime: 5, endTime: 6 },
+      { id: "cd", source: "C", target: "D", value: 7, startTime: 6, endTime: 7 },
+    ]
+    const sides = assignSides(nodes, edges, buildEdgeIndex(nodes, edges), "value")
+
+    expect(sides.get("ab1")?.sourceSide).toBe("top")
+    expect(sides.get("ab2")?.sourceSide).toBe("top")
+    expect(sides.get("ac")?.sourceSide).toBe("bot")
+    expect(sides.get("ab1")?.targetSide).toBe("top")
+    expect(sides.get("bd")?.sourceSide).toBe("top")
+    expect(sides.get("cd")?.sourceSide).toBe("top")
+    expect(sides.get("bd")?.targetSide).toBe("bot")
+    expect(sides.get("cd")?.targetSide).toBe("top")
+  })
+
+  it("synthesizes creates and transfers so outs never make a side negative", () => {
+    const nodes: ProcessSankeyNode[] = [{ id: "A", xExtent: [0, 10] }, { id: "B" }, { id: "C" }]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "ab", source: "A", target: "B", value: 5, startTime: 10, endTime: 20 },
+      { id: "ac", source: "A", target: "C", value: 3, startTime: 12, endTime: 22 },
+    ]
+    const idx = buildEdgeIndex(nodes, edges)
+    const sides = new Map([
+      ["ab", { sourceSide: "top" as const }],
+      ["ac", { sourceSide: "bot" as const }],
+    ])
+    const data = computeNode(nodes[0], idx, sides)
+
+    expect(data.peak).toBe(8)
+    expect(data.localAttachments.get("ab")).toMatchObject({ kind: "out", side: "top", value: 5 })
+    expect(data.localAttachments.get("ac")).toMatchObject({ kind: "out", side: "bot", value: 3 })
+    expect(data.samples[0].t).toBe(-1)
+    expect(data.samples.every((s) => s.topMass >= 0 && s.botMass >= 0)).toBe(true)
+  })
+})
+
+describe("band geometry helpers", () => {
+  const xScale = (t: number) => t * 10
+
+  it("clamps times and samples to an optional domain", () => {
+    expect(clampTime(-5, [0, 10])).toBe(0)
+    expect(clampTime(15, [0, 10])).toBe(10)
+    expect(clampTime(6, undefined)).toBe(6)
+    expect(clampSamples([{ t: -5, topMass: 1, botMass: 2 }], [0, 10])).toEqual([
+      { t: 0, topMass: 1, botMass: 2 },
+    ])
+  })
+
+  it("returns the correct y range for every attachment side/kind", () => {
+    const base = { time: 0, sideMassBefore: 4, sideMassAfter: 6, value: 2 }
+    expect(attachmentYRange({ ...base, kind: "out", side: "top" } as ProcessSankeyAttachment, 100, 10)).toEqual([60, 80])
+    expect(attachmentYRange({ ...base, kind: "out", side: "bot" } as ProcessSankeyAttachment, 100, 10)).toEqual([120, 140])
+    expect(attachmentYRange({ ...base, kind: "in", side: "top" } as ProcessSankeyAttachment, 100, 10)).toEqual([40, 60])
+    expect(attachmentYRange({ ...base, kind: "in", side: "bot" } as ProcessSankeyAttachment, 100, 10)).toEqual([140, 160])
+  })
+
+  it("builds closed band paths and returns null for empty samples", () => {
+    expect(buildBandPath([], 100, 10, xScale, [0, 10])).toBeNull()
+    const path = buildBandPath([
+      { t: -1, topMass: 1, botMass: 0 },
+      { t: 5, topMass: 2, botMass: 3 },
+      { t: 12, topMass: 1, botMass: 1 },
+    ], 100, 10, xScale, [0, 10])
+    expect(path).toBe("M0,90 L50,80 L100,90 L100,110 L50,130 L0,100 Z")
+  })
+
+  it("builds system-in and system-out gradient cutouts clipped to the band", () => {
+    const nodes: ProcessSankeyNode[] = [{ id: "A" }, { id: "B" }]
+    const edges: ProcessSankeyEdge[] = [
+      { id: "ab", source: "A", target: "B", value: 2, startTime: 10, endTime: 20, systemInTime: 5, systemOutTime: 30 },
+    ]
+    const layout = computeProcessSankeyLayout(nodes, edges, {
+      plotH: 200,
+      pairing: "temporal",
+      packing: "reuse",
+      laneOrder: "insertion",
+      lifetimeMode: "full",
+    })
+
+    const sourceStubs = buildBandCutoutsForNode("A", edges, layout, xScale, [0, 40])
+    const targetStubs = buildBandCutoutsForNode("B", edges, layout, xScale, [0, 40])
+    expect(sourceStubs).toHaveLength(1)
+    expect(sourceStubs[0]).toMatchObject({ x0: 30, x1: 50, from: 0, to: 1 })
+    expect(sourceStubs[0].pathD).toContain("L100")
+    expect(targetStubs).toHaveLength(1)
+    expect(targetStubs[0]).toMatchObject({ x0: 300, x1: 320, from: 1, to: 0 })
+    expect(targetStubs[0].pathD).toContain("M200")
+    expect(buildBandCutoutsForNode("missing", edges, layout, xScale, [0, 40])).toEqual([])
   })
 })
 
@@ -381,5 +501,31 @@ describe("computeProcessSankeyLayout — laneOrder variants", () => {
         expect(layout.crossingsAfter).toBeLessThanOrEqual(layout.crossingsBefore)
       }
     }
+  })
+
+  it("uses the scalable crossing-min reorder path for graphs larger than brute force", () => {
+    const largeNodes: ProcessSankeyNode[] = []
+    const largeEdges: ProcessSankeyEdge[] = []
+    for (let i = 0; i < 9; i++) {
+      largeNodes.push({ id: `S${i}`, xExtent: [0, 0] }, { id: `T${i}` })
+      largeEdges.push({
+        id: `e${i}`,
+        source: `S${i}`,
+        target: `T${8 - i}`,
+        value: i + 1,
+        startTime: 10,
+        endTime: 20,
+      })
+    }
+    const layout = computeProcessSankeyLayout(largeNodes, largeEdges, {
+      ...base,
+      packing: "off",
+      laneOrder: "crossing-min",
+    })
+
+    expect(layout.slots.length).toBe(18)
+    expect(layout.crossingsBefore).not.toBeNull()
+    expect(layout.crossingsAfter).not.toBeNull()
+    expect(layout.lengthAfter).not.toBeNull()
   })
 })

@@ -72,6 +72,24 @@ describe("StreamGeoFrame", () => {
         (container.querySelector(".stream-geo-frame") as HTMLElement).style.overflow
       ).toBe("visible")
     })
+
+    it("renders optional tile and zoom chrome when enabled", () => {
+      const { container, getByRole, getByText } = render(
+        <StreamGeoFrame
+          projection="mercator"
+          points={[]}
+          tileURL="https://tiles.example/{z}/{x}/{y}.png"
+          tileAttribution="Example tiles"
+          zoomable
+        />
+      )
+
+      expect(container.querySelector(".stream-geo-zoom-controls")).toBeTruthy()
+      expect(getByRole("button", { name: "Zoom in" })).toBeTruthy()
+      expect(getByRole("button", { name: "Zoom out" })).toBeTruthy()
+      expect(getByText("Example tiles")).toBeTruthy()
+      expect(container.querySelectorAll("canvas").length).toBeGreaterThanOrEqual(3)
+    })
   })
 })
 
