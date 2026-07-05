@@ -33295,12 +33295,39 @@ async function suggestChartsHandler(args) {
     structuredContent: { suggestions }
   };
 }
+var ALLOWED_TOKEN_TASK_INTENTS = [
+  "precise-comparison",
+  "frequency-reasoning",
+  "probability-estimation",
+  "risk-communication",
+  "memory",
+  "editorial-engagement",
+  "public-explanation",
+  "support-decision",
+  "measure",
+  "estimate probability",
+  "understand risk",
+  "remember",
+  "decide"
+];
+function isTokenTaskIntent(value) {
+  return ALLOWED_TOKEN_TASK_INTENTS.includes(value);
+}
 async function suggestTokenEncodingHandler(args) {
   if (!args.taskIntent) {
     return {
       content: [{
         type: "text",
         text: "Missing 'taskIntent'. Provide a token task such as 'estimate probability', 'understand risk', 'remember', 'measure', or 'decide'."
+      }],
+      isError: true
+    };
+  }
+  if (!isTokenTaskIntent(args.taskIntent)) {
+    return {
+      content: [{
+        type: "text",
+        text: `Invalid 'taskIntent': "${args.taskIntent}". Expected one of: ${ALLOWED_TOKEN_TASK_INTENTS.join(", ")}.`
       }],
       isError: true
     };

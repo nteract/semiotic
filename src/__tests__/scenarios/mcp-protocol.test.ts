@@ -620,6 +620,19 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(result.result.structuredContent.capabilityIntents).toContain("part-to-whole")
   })
 
+  it("suggestTokenEncoding rejects unknown task intents", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "suggestTokenEncoding",
+      arguments: {
+        taskIntent: "make it cute",
+        dataType: "category",
+      },
+    }, "token-suggest-invalid")
+
+    expect(result.result.isError).toBe(true)
+    expect(result.result.content[0].text).toContain("Invalid 'taskIntent'")
+  })
+
   it("proposeChartVariants returns ranked variant proposals", async () => {
     const result = await sendRequest(proc, "tools/call", {
       name: "proposeChartVariants",

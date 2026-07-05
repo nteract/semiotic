@@ -667,6 +667,27 @@ function isTokenEncodingLike(value: unknown): value is Datum {
   )
 }
 
+function numericTokenBudget(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : undefined
+}
+
+function estimateVisibleTokens(props: Datum, encoding: Datum): number | undefined {
+  const explicit = numericTokenBudget(props.visibleTokens)
+  if (explicit != null) return explicit
+
+  const denominator = numericTokenBudget(encoding.denominator)
+  if (encoding.countStrategy === "fixed-denominator" && denominator != null) {
+    return denominator
+  }
+
+  const tokenCount = numericTokenBudget(encoding.tokenCount)
+  const maxTokens = numericTokenBudget(encoding.maxTokens)
+  if (tokenCount != null && maxTokens != null) return Math.min(tokenCount, maxTokens)
+  return tokenCount ?? denominator ?? maxTokens
+}
+
 function checkTokenEncodingDiagnostics(
   _component: string,
   props: Datum,
@@ -678,14 +699,7 @@ function checkTokenEncodingDiagnostics(
   ].filter(isTokenEncodingLike)
 
   for (const encoding of candidates) {
-    const visibleTokens =
-      typeof props.visibleTokens === "number"
-        ? props.visibleTokens
-        : typeof encoding.tokenCount === "number"
-          ? encoding.tokenCount
-          : typeof encoding.denominator === "number"
-            ? encoding.denominator
-            : undefined
+    const visibleTokens = estimateVisibleTokens(props, encoding)
     for (const diagnostic of diagnoseTokenEncoding(encoding, { visibleTokens })) {
       out.push({
         severity: "warning",

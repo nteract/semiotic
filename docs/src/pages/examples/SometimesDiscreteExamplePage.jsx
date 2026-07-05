@@ -18,15 +18,12 @@ import ExamplePageLayout from "./ExamplePageLayout"
 import "./SometimesDiscreteExamplePage.css"
 
 const INK = "#1d2730"
-const PAPER = "#f6f7f1"
 const PANEL = "#ffffff"
 const MUTED = "#6c7480"
 const BLUE = "#236d99"
 const BLUE_PALE = "#d8edf7"
 const RED = "#c93d3d"
-const RED_PALE = "#f6d8d6"
 const GREEN = "#287f68"
-const YELLOW = "#d7a93b"
 const RAIL = "#d9dee5"
 
 const DEFAULT_THRESHOLD = 10

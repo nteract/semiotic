@@ -1113,6 +1113,26 @@ async function suggestChartsHandler(args: {
   }
 }
 
+const ALLOWED_TOKEN_TASK_INTENTS: readonly TokenTaskIntent[] = [
+  "precise-comparison",
+  "frequency-reasoning",
+  "probability-estimation",
+  "risk-communication",
+  "memory",
+  "editorial-engagement",
+  "public-explanation",
+  "support-decision",
+  "measure",
+  "estimate probability",
+  "understand risk",
+  "remember",
+  "decide",
+]
+
+function isTokenTaskIntent(value: string): value is TokenTaskIntent {
+  return (ALLOWED_TOKEN_TASK_INTENTS as readonly string[]).includes(value)
+}
+
 async function suggestTokenEncodingHandler(args: {
   taskIntent?: string
   dataType?: "count" | "measure" | "distribution" | "probability" | "risk" | "category"
@@ -1130,8 +1150,17 @@ async function suggestTokenEncodingHandler(args: {
       isError: true,
     }
   }
+  if (!isTokenTaskIntent(args.taskIntent)) {
+    return {
+      content: [{
+        type: "text",
+        text: `Invalid 'taskIntent': "${args.taskIntent}". Expected one of: ${ALLOWED_TOKEN_TASK_INTENTS.join(", ")}.`,
+      }],
+      isError: true,
+    }
+  }
 
-  const taskIntent = args.taskIntent as TokenTaskIntent
+  const taskIntent = args.taskIntent
   const suggestion = suggestTokenEncoding({
     taskIntent,
     dataType: args.dataType,

@@ -141,6 +141,25 @@ describe("diagnoseConfig", () => {
     expect(result.ok).toBe(true)
   })
 
+  it("uses maxTokens as a visible token estimate for capped token encodings", () => {
+    const result = diagnoseConfig("BarChart", {
+      data: [{ category: "A", value: 3 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      title: "Token chart",
+      tokenEncoding: {
+        tokenType: "glyph",
+        tokenSemantics: "unitized-measure",
+        countStrategy: "unitized",
+        unitValue: 1,
+        unitMeaning: "one sign = one unit",
+        maxTokens: 120,
+      },
+    })
+
+    expect(result.diagnoses.map(d => d.code)).toContain("TOKEN_TOO_MANY_VISIBLE_TOKENS")
+  })
+
   it("includes validation errors from validateProps", () => {
     const result = diagnoseConfig("FakeComponent", { data: [] })
     expect(result.ok).toBe(false)

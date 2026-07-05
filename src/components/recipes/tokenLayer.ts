@@ -275,7 +275,7 @@ function positionTokens<D>(
   if (layout === "bar-segment" && options.valueToX) return positionBarSegment(tokens, options)
   if (layout === "beeswarm" || layout === "small-multiple") {
     throw new Error(
-      `tokenLayer layout "${layout}" is not implemented yet; use grid, dotplot, quantile-strip, or positionToken.`
+      `tokenLayer layout "${layout}" is not implemented yet; use row, column, stack, grid, waffle, dotplot, quantile-strip, bar-segment with valueToX, or positionToken.`
     )
   }
 
