@@ -4,6 +4,8 @@ import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 import type { Datum } from "./datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
+import type { ResponsiveRule } from "./responsiveRules"
+import type { MobileVisualizationContract } from "./auditMobileVisualization"
 
 /**
  * Selection consumption config — makes this chart react to a named selection
@@ -48,7 +50,7 @@ export type LinkedBrushProp =
  * Chart display mode — controls default chrome, size, and interaction.
  * User-provided props always override mode defaults.
  */
-export type ChartMode = "primary" | "context" | "sparkline"
+export type ChartMode = "primary" | "context" | "sparkline" | "mobile"
 
 /**
  * Hover highlighting mode.
@@ -57,6 +59,57 @@ export type ChartMode = "primary" | "context" | "sparkline"
  * more explicit per-series mode.
  */
 export type HoverHighlightMode = boolean | "series"
+
+export type MobileClearSelectionBehavior = "backgroundTap" | "none"
+
+export type MobileSnapBehavior = "nearestDatum" | "none"
+
+export type MobileStandardControlKind = "brush" | "zoom" | "legend"
+
+export type MobileStandardControlsMode =
+  | boolean
+  | "all"
+  | MobileStandardControlKind
+  | MobileStandardControlKind[]
+
+/**
+ * Touch-first interaction policy for phone-sized chart slots.
+ *
+ * This is intentionally shared by built-in charts, custom charts, audits, and
+ * generated/interoperable chart manifests so mobile behavior is not a
+ * second-class per-component escape hatch.
+ */
+export interface MobileInteractionConfig {
+  /** Explicitly enable or disable mobile interaction for an object config. */
+  enabled?: boolean
+  /** Convert tap/click on a datum into a persistent selection when possible. */
+  tapToSelect?: boolean
+  /** Convert hover-linked detail into a tap-lockable state on touch devices. */
+  tapToLockTooltip?: boolean
+  /** Clear the mobile interaction state when the frame reports a background tap. */
+  clearSelection?: MobileClearSelectionBehavior
+  /** Comfortable touch target in CSS pixels. Defaults to 44 when mobile is active. */
+  targetSize?: number
+  /** Hit-testing strategy for imprecise touch input. */
+  snap?: MobileSnapBehavior
+  /** Preferred brush handle size in CSS pixels for mobile brush affordances. */
+  brushHandleSize?: number
+  /** Signals that a brush/zoom/legend gesture has a standard-control alternative. */
+  standardControls?: MobileStandardControlsMode
+}
+
+export type MobileInteractionProp = boolean | MobileInteractionConfig
+
+export interface ResolvedMobileInteractionConfig {
+  enabled: boolean
+  tapToSelect: boolean
+  tapToLockTooltip: boolean
+  clearSelection: MobileClearSelectionBehavior
+  targetSize: number
+  snap: MobileSnapBehavior
+  brushHandleSize: number
+  standardControls: MobileStandardControlsMode
+}
 
 /**
  * Base props shared across all chart components
@@ -78,6 +131,12 @@ export interface BaseChartProps {
   responsiveWidth?: boolean
   /** Auto-match height to parent container (requires parent with explicit height). Default: false */
   responsiveHeight?: boolean
+  /** Semantic responsive transformations keyed by measured chart slot, not CSS alone. */
+  responsiveRules?: ResponsiveRule[]
+  /** Phone/mobile contract consumed by audits, recipes, adapters, and agents. */
+  mobileSemantics?: MobileVisualizationContract
+  /** Touch-first interaction policy for phone-sized chart slots. */
+  mobileInteraction?: MobileInteractionProp
   /** CSS class name for the chart container */
   className?: string
   /** Chart title displayed at the top */

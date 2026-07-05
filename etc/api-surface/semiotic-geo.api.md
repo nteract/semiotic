@@ -17,6 +17,8 @@ function glyphPlacement
 function hitTargetPoint
 function mergeData
 function resolveReferenceGeography
+function resolveResponsiveRules
+function responsiveRuleMatches
 interface ChoroplethMapProps
 interface DistanceCartogramConfig
 interface DistanceCartogramProps
@@ -34,6 +36,11 @@ interface GlyphSceneNode
 interface GraticuleConfig
 interface HitTargetPointProps
 interface ProportionalSymbolMapProps
+interface ResponsiveRule
+interface ResponsiveRuleCondition
+interface ResponsiveRuleContext
+interface ResponsiveRuleMatch
+interface ResponsiveRuleResult
 interface SceneAccessibilityMetadata
 interface StreamGeoFrameHandle
 interface StreamGeoFrameProps
@@ -43,4 +50,5 @@ type GeoSceneNode
 type ProjectionName
 type ProjectionProp
 type ReferenceGeography
+type ResponsiveOrientation
 ```

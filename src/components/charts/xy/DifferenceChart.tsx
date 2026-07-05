@@ -407,7 +407,10 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     title: props.title,
     xLabel: props.xLabel,
     yLabel: props.yLabel,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const {
     data,
@@ -598,6 +601,8 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "DifferenceChart",
     chartId,
     showLegend,
@@ -778,7 +783,8 @@ export const DifferenceChart = forwardRef(function DifferenceChart<TDatum extend
     tooltipContent,
     ...(multiTooltip && { tooltipMode: "multi" as const }),
     ...buildCustomBehaviorProps({
-      linkedHover, onObservation, onClick, hoverHighlight,
+      linkedHover, selection, onObservation, onClick, hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),

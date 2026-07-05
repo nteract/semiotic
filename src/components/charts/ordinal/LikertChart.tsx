@@ -14,6 +14,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useStreamingLegend } from "../shared/useStreamingLegend"
 import {
   useLikertAggregation,
@@ -198,7 +199,10 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     valueLabel: props.valueLabel,
     showCategoryTicks: props.showCategoryTicks,
     orientation: props.orientation,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
@@ -313,6 +317,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "LikertChart",
     chartId,
     showLegend,
@@ -513,8 +519,16 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
       : tooltip === true
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(valueExtent && { rExtent: valueExtent }),
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent

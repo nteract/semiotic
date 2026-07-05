@@ -28,7 +28,15 @@
 import { useMemo } from "react"
 import type { ReactNode, ReactElement } from "react"
 import type { Datum } from "./datumTypes"
-import type { Accessor, ChartAccessor, SelectionConfig, LinkedHoverProp } from "./types"
+import type {
+  Accessor,
+  ChartAccessor,
+  SelectionConfig,
+  LinkedHoverProp,
+  MobileInteractionProp,
+  ResolvedMobileInteractionConfig,
+} from "./types"
+import type { MobileVisualizationContract } from "./auditMobileVisualization"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { PartialMargin, MarginType } from "../../types/marginType"
 import {
@@ -37,6 +45,7 @@ import {
   useChartLegendAndMargin,
   useLegendInteraction,
   useThemeCategorical,
+  resolveMobileInteraction,
 } from "./hooks"
 import type { LegendInteractionMode, LegendPosition, LegendInteractionState } from "./hooks"
 import { COLOR_SCHEMES, DEFAULT_COLORS } from "./colorUtils"
@@ -77,6 +86,8 @@ export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge exten
   linkedHover?: LinkedHoverProp
   onObservation?: OnObservationCallback
   onClick?: (datum: Datum, event: { x: number; y: number }) => void
+  mobileInteraction?: MobileInteractionProp
+  mobileSemantics?: MobileVisualizationContract
   /** Used by useChartSelection for chart-type-stamped observation events. */
   chartType: string
   chartId?: string
@@ -147,6 +158,7 @@ export interface NetworkChartSetupResult {
   legendPosition: LegendPosition
 
   // ── Interaction ──────────────────────────────────────────────────
+  mobileInteraction: ResolvedMobileInteractionConfig
   customHoverBehavior: ReturnType<typeof useChartSelection>["customHoverBehavior"]
   customClickBehavior: ReturnType<typeof useChartSelection>["customClickBehavior"]
   /**
@@ -221,6 +233,8 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     linkedHover,
     onObservation,
     onClick,
+    mobileInteraction,
+    mobileSemantics,
     chartType,
     chartId,
     marginDefaults,
@@ -308,6 +322,10 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     defaults: marginDefaults,
     categories: allCategories,
   })
+  const resolvedMobileInteraction = useMemo(
+    () => resolveMobileInteraction(mobileInteraction, { width, mobileSemantics }),
+    [mobileInteraction, width, mobileSemantics],
+  )
 
   // ── Selection / linked hover ────────────────────────────────────
   // Pass the full selection result through; hierarchy charts read
@@ -321,6 +339,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     unwrapData: true,           // deprecated / no-op since hooks.ts:207, kept for clarity
     onObservation,
     onClick,
+    mobileInteraction: resolvedMobileInteraction,
     chartType,
     chartId,
   })
@@ -337,6 +356,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     legend,
     margin,
     legendPosition,
+    mobileInteraction: resolvedMobileInteraction,
     customHoverBehavior,
     customClickBehavior,
     activeSelectionHook,

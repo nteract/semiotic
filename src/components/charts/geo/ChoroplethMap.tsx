@@ -19,6 +19,7 @@ import { scaleSequential } from "d3-scale"
 import { getSequentialInterpolator } from "../shared/colorPalettes"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 /**
  * ChoroplethMap component props
@@ -165,7 +166,10 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   // Color scheme resolution priority:
   //   explicit `colorScheme` prop > ambient theme's `colors.sequential` > "blues"
@@ -255,7 +259,8 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     onObservation,
     onClick,
     chartType: "ChoroplethMap",
-    chartId
+    chartId,
+    mobileInteraction: resolved.mobileInteraction,
   })
 
   const resolvedSelection = useResolvedSelection(selection)
@@ -341,8 +346,16 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     ...(tileURL && { tileURL }),
     ...(tileAttribution && { tileAttribution }),
     ...(tileCacheSize && { tileCacheSize }),
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      mobileInteraction: resolved.mobileInteraction,
+      customHoverBehavior,
+      customClickBehavior,
+      linkedHoverInClickPredicate: false,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...(resolved.title && { title: resolved.title }),

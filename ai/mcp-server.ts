@@ -1,7 +1,7 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes sixteen tools, six resources, and two prompts:
+ * Exposes seventeen tools, six resources, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — legacy sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
@@ -15,9 +15,10 @@
  *   11. groundChart — agent-reader grounding payload (description + intent + structure)
  *   12. diagnoseConfig — anti-pattern detector for chart configurations
  *   13. auditAccessibility — Chartability accessibility audit
- *   14. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
- *   15. applyTheme — returns usage guidance for theme presets
- *   16. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
+ *   14. auditMobileVisualization — mobile visualization audit
+ *   15. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
+ *   16. applyTheme — returns usage guidance for theme presets
+ *   17. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -47,6 +48,8 @@ import {
   diagnoseConfig,
   auditAccessibility,
   formatAccessibilityAudit,
+  auditMobileVisualization,
+  formatMobileVisualizationAudit,
   summarizeData,
   suggestCharts as suggestChartsFromCapabilities,
   repairChartConfig as repairChartConfigFromCapabilities,
@@ -812,6 +815,29 @@ async function auditAccessibilityHandler(args: { component?: string; props?: Rec
   }
 }
 
+async function auditMobileVisualizationHandler(args: { component?: string; props?: Record<string, any>; viewportWidth?: number; targetSize?: number; inChartContainer?: boolean }): Promise<ToolResult> {
+  const component = args.component
+  const props: Record<string, any> = args.props ?? {}
+
+  if (!component) {
+    return {
+      content: [{ type: "text" as const, text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... } }." }],
+      isError: true,
+    }
+  }
+
+  const result = auditMobileVisualization(component, props, {
+    viewportWidth: typeof args.viewportWidth === "number" ? args.viewportWidth : undefined,
+    targetSize: typeof args.targetSize === "number" ? args.targetSize : undefined,
+    inChartContainer: args.inChartContainer === true,
+  })
+  return {
+    content: [{ type: "text" as const, text: formatMobileVisualizationAudit(result) }],
+    // Block only on high-risk mobile issues; medium/low warnings remain advisory.
+    isError: !result.ok,
+  }
+}
+
 async function reportIssueHandler(args: { title?: string; body?: string; labels?: string[] | string }): Promise<ToolResult> {
   const title = args.title
   const body = args.body
@@ -1565,6 +1591,20 @@ function createServer(): McpServer {
   )
 
   srv.tool(
+    "auditMobileVisualization",
+    "Audit a Semiotic chart configuration for mobile visualization risks. Use before generating phone-sized charts or when adapting a desktop chart to mobile. Flags fixed desktop widths, rough mark-density overload, hover-only detail, small touch targets, complex gestures without controls, legend dependence, annotation overload, and missing mobile transformation hints. Static analysis only: still verify rendered charts at phone widths.",
+    {
+      component: z.string().describe("Chart component name, e.g. 'LineChart', 'Scatterplot', or 'BarChart'."),
+      props: z.record(z.string(), z.unknown()).optional().describe("Chart props/config to audit."),
+      viewportWidth: z.number().int().min(240).max(1600).optional().describe("Mobile viewport width in CSS pixels. Defaults to 390."),
+      targetSize: z.number().int().min(24).max(80).optional().describe("Desired comfortable touch target size in CSS pixels. Defaults to 44."),
+      inChartContainer: z.boolean().optional().describe("Whether the chart is wrapped in ChartContainer or an equivalent summary/control surface."),
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    auditMobileVisualizationHandler
+  )
+
+  srv.tool(
     "reportIssue",
     "Generate a GitHub issue URL for Semiotic bug reports or feature requests. Returns a URL the user can open to submit. For rendering bugs, include the component name, props summary, and any diagnoseConfig output in the body.",
     {
@@ -1948,7 +1988,7 @@ async function main() {
 
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
-      console.error("Tools: getSchema, suggestChart, suggestCharts, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme")
+      console.error("Tools: getSchema, suggestChart, suggestCharts, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme")
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html")
     })
   } else {

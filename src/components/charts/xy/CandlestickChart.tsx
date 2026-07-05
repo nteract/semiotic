@@ -105,6 +105,9 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     description: props.description,
     summary: props.summary,
     accessibleTable: props.accessibleTable,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
   })
 
   const {
@@ -160,6 +163,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
   const { customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection, linkedHover,
     onObservation, onClick, chartType: "CandlestickChart", chartId,
+    mobileInteraction: resolved.mobileInteraction,
   })
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
@@ -245,7 +249,8 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     ...buildCustomBehaviorProps({
       // CandlestickChart has no `hoverHighlight` prop, but the click
       // predicate still includes `linkedHover` (cross-chart click-to-lock).
-      linkedHover, onObservation, onClick,
+      linkedHover, selection, onObservation, onClick,
+      mobileInteraction: resolved.mobileInteraction,
       customHoverBehavior, customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),

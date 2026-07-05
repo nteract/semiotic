@@ -210,6 +210,9 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     valueLabel: props.valueLabel,
     showCategoryTicks: props.showCategoryTicks,
     orientation: props.orientation,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
   })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
@@ -272,6 +275,8 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "BarChart",
     chartId,
     showLegend,
@@ -384,7 +389,8 @@ export const BarChart = forwardRef(function BarChart<TDatum extends Datum = Datu
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
-      linkedHover, onObservation, onClick, hoverHighlight,
+      linkedHover, selection, onObservation, onClick, hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),

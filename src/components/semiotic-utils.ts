@@ -45,6 +45,15 @@ export {
   accessibilityCaveats
 } from "./charts/shared/auditAccessibility"
 export {
+  auditMobileVisualization,
+  formatMobileVisualizationAudit,
+  mobileVisualizationCaveats
+} from "./charts/shared/auditMobileVisualization"
+export {
+  responsiveRuleMatches,
+  resolveResponsiveRules
+} from "./charts/shared/responsiveRules"
+export {
   describeChart,
   resolveCommunicativeAct,
   communicativeActForIntent
@@ -83,6 +92,26 @@ export type {
   AccessibilityAuditResult,
   AuditAccessibilityOptions
 } from "./charts/shared/auditAccessibility"
+export type {
+  MobileAuditStatus,
+  MobileAuditCategory,
+  MobileAuditImpact,
+  MobileVisualizationInteractionContract,
+  MobileVisualizationLabelContract,
+  MobileVisualizationCustomContract,
+  MobileVisualizationContract,
+  MobileVisualizationFinding,
+  MobileVisualizationAuditResult,
+  AuditMobileVisualizationOptions
+} from "./charts/shared/auditMobileVisualization"
+export type {
+  ResponsiveOrientation,
+  ResponsiveRuleCondition,
+  ResponsiveRuleContext,
+  ResponsiveRule,
+  ResponsiveRuleMatch,
+  ResponsiveRuleResult
+} from "./charts/shared/responsiveRules"
 
 // ── Hit testing ─────────────────────────────────────────────────────────
 export { getHitRadius } from "./stream/hitTestUtils"

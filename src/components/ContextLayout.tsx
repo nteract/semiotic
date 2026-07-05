@@ -10,6 +10,10 @@ export interface ContextLayoutProps {
   position?: "right" | "left" | "bottom" | "top"
   /** Size of the context panel in pixels. Default: 250 */
   contextSize?: number
+  /** Mobile context placement. Default: "bottom" */
+  mobilePosition?: "top" | "bottom" | "preserve"
+  /** Mobile breakpoint used by generated CSS. Default 480. */
+  mobileBreakpoint?: number
   /** Gap between primary and context panels in pixels. Default: 12 */
   gap?: number
   /** CSS class for the layout container */
@@ -40,10 +44,14 @@ export function ContextLayout({
   context,
   position = "right",
   contextSize = 250,
+  mobilePosition = "bottom",
+  mobileBreakpoint = 480,
   gap = 12,
   className,
   style,
 }: ContextLayoutProps) {
+  const instanceId = React.useId().replace(/[^a-zA-Z0-9_-]/g, "")
+  const responsiveClassName = `semiotic-context-layout-${instanceId}`
   const isHorizontal = position === "left" || position === "right"
   const isReversed = position === "left" || position === "top"
 
@@ -66,13 +74,32 @@ export function ContextLayout({
     : { flex: `0 0 ${contextSize}px`, height: contextSize, minWidth: 0 }
 
   return (
-    <div
-      className={`semiotic-context-layout${className ? ` ${className}` : ""}`}
-      style={containerStyle}
-    >
-      <div style={primaryStyle}>{children}</div>
-      <div style={contextStyle}>{context}</div>
-    </div>
+    <>
+      <style>{`
+        @media (max-width: ${mobileBreakpoint}px) {
+          .${responsiveClassName}[data-mobile-position="bottom"] {
+            flex-direction: column !important;
+          }
+          .${responsiveClassName}[data-mobile-position="top"] {
+            flex-direction: column-reverse !important;
+          }
+          .${responsiveClassName}[data-mobile-position="bottom"] > .semiotic-context-panel,
+          .${responsiveClassName}[data-mobile-position="top"] > .semiotic-context-panel {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+        }
+      `}</style>
+      <div
+        className={["semiotic-context-layout", responsiveClassName, className].filter(Boolean).join(" ")}
+        data-mobile-position={mobilePosition}
+        style={containerStyle}
+      >
+        <div className="semiotic-context-primary" style={primaryStyle}>{children}</div>
+        <div className="semiotic-context-panel" style={contextStyle}>{context}</div>
+      </div>
+    </>
   )
 }
 

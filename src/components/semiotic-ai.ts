@@ -22,10 +22,13 @@ export { CandlestickChart } from "./charts/xy/CandlestickChart"
 export { LinkedCharts } from "./LinkedCharts"
 export {
   useSelection,
+  useSelectionActions,
   useLinkedHover,
   useBrushSelection,
-  useFilteredData
+  useFilteredData,
+  useLinkedChartsActive
 } from "./LinkedCharts"
+export type { LinkedChartsProps, LegendInteractionMode } from "./LinkedCharts"
 
 // Ordinal Charts
 export { BarChart } from "./charts/ordinal/BarChart"
@@ -79,12 +82,45 @@ export { exportChart } from "./export/exportChart"
 
 // Chart container
 export { ChartContainer } from "./ChartContainer"
+export { MobileChartContainer } from "./MobileChartContainer"
+export { SmallMultipleChart } from "./SmallMultipleChart"
+export { MobileStandardControls } from "./MobileStandardControls"
+export {
+  clampMobileRange,
+  useMobileRangeControls,
+  zoomMobileRange,
+} from "./MobileStandardControls"
 export type {
   ChartContainerProps,
   ChartContainerHandle,
+  ChartContainerMobileOptions,
   ChartNotification,
   ChartNotificationLevel
 } from "./ChartContainer"
+export type {
+  MobileChartChip,
+  MobileChartContainerProps,
+  MobileChartDetailMode
+} from "./MobileChartContainer"
+export type {
+  MobileStandardBrushControls,
+  MobileStandardControlKind,
+  MobileStandardControlLegendItem,
+  MobileStandardControlRequest,
+  MobileStandardControlsMode,
+  MobileStandardControlsProps,
+  MobileStandardLegendControls,
+  MobileStandardZoomControls,
+  UseMobileRangeControlsOptions,
+  UseMobileRangeControlsResult,
+} from "./MobileStandardControls"
+export type {
+  SmallMultipleChartProps,
+  SmallMultipleExtent,
+  SmallMultipleItem,
+  SmallMultipleRenderContext,
+  SmallMultipleSharedExtent
+} from "./SmallMultipleChart"
 
 // Layout
 export { ChartGrid } from "./ChartGrid"
@@ -119,6 +155,15 @@ export {
   formatAccessibilityAudit,
   accessibilityCaveats
 } from "./charts/shared/auditAccessibility"
+export {
+  auditMobileVisualization,
+  formatMobileVisualizationAudit,
+  mobileVisualizationCaveats
+} from "./charts/shared/auditMobileVisualization"
+export {
+  responsiveRuleMatches,
+  resolveResponsiveRules
+} from "./charts/shared/responsiveRules"
 export type {
   A11yPrinciple,
   A11yStatus,
@@ -126,6 +171,33 @@ export type {
   AccessibilityAuditResult,
   AuditAccessibilityOptions
 } from "./charts/shared/auditAccessibility"
+export type {
+  MobileAuditStatus,
+  MobileAuditCategory,
+  MobileAuditImpact,
+  MobileVisualizationInteractionContract,
+  MobileVisualizationLabelContract,
+  MobileVisualizationCustomContract,
+  MobileVisualizationContract,
+  MobileVisualizationFinding,
+  MobileVisualizationAuditResult,
+  AuditMobileVisualizationOptions
+} from "./charts/shared/auditMobileVisualization"
+export type {
+  MobileClearSelectionBehavior,
+  MobileSnapBehavior,
+  MobileInteractionConfig,
+  MobileInteractionProp,
+  ResolvedMobileInteractionConfig
+} from "./charts/shared/types"
+export type {
+  ResponsiveOrientation,
+  ResponsiveRuleCondition,
+  ResponsiveRuleContext,
+  ResponsiveRule,
+  ResponsiveRuleMatch,
+  ResponsiveRuleResult
+} from "./charts/shared/responsiveRules"
 
 // Statistical overlay types
 export type {
@@ -674,3 +746,6 @@ export type {
   ClickObservation,
   ClickEndObservation
 } from "./store/ObservationStore"
+
+export { MobileAnnotationCalloutList } from "./MobileAnnotationCalloutList"
+export type { MobileAnnotationCalloutListProps } from "./MobileAnnotationCalloutList"

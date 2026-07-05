@@ -102,6 +102,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -328,6 +343,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -553,6 +583,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -752,6 +797,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -959,6 +1019,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -1177,6 +1252,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -1338,6 +1428,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -1529,6 +1634,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -1724,6 +1844,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -1914,6 +2049,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -2112,6 +2262,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -2285,6 +2450,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -2450,6 +2630,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -2631,6 +2826,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -2791,6 +3001,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -2978,6 +3203,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -3140,6 +3380,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -3294,6 +3549,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -3463,6 +3733,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -3612,6 +3897,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -3787,6 +4087,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -3923,6 +4238,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -4072,6 +4402,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -4243,6 +4588,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -4454,6 +4814,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -4659,6 +5034,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -4841,6 +5231,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -5029,6 +5434,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -5181,6 +5601,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -5338,6 +5773,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -5558,6 +6008,21 @@
               ],
               "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "decay": {
               "type": "object",
               "description": "Decay config: { type, halfLife, minOpacity }"
@@ -5713,6 +6178,21 @@
                 "object"
               ],
               "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "decay": {
               "type": "object",
@@ -5918,6 +6398,21 @@
               ],
               "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "decay": {
               "type": "object",
               "description": "Decay config: { type, halfLife, minOpacity }"
@@ -6098,6 +6593,21 @@
               ],
               "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "decay": {
               "type": "object",
               "description": "Decay config: { type, halfLife, minOpacity }"
@@ -6266,6 +6776,21 @@
               ],
               "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "decay": {
               "type": "object",
               "description": "Decay config: { type, halfLife, minOpacity }"
@@ -6394,6 +6919,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -6575,6 +7115,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -6775,6 +7330,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -6896,6 +7466,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -7011,6 +7596,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -7142,6 +7742,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -7286,6 +7901,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -7418,6 +8048,21 @@
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
             },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
             "axisExtent": {
               "type": "string",
               "enum": [
@@ -7543,6 +8188,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -7804,6 +8464,21 @@
               ],
               "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
               "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "axisExtent": {
               "type": "string",
@@ -8089,6 +8764,21 @@
                 "object"
               ],
               "description": "Opt-in annotation placement pass for note-like annotations without manual offsets."
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
             },
             "fill": {
               "type": "string"

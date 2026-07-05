@@ -17,6 +17,7 @@ import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 /**
  * Treemap component props
@@ -99,7 +100,10 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     accessibleTable: props.accessibleTable,
     summary: props.summary,
     linkedHover: props.linkedHover,
-  }, { width: 600, height: 600 })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+}, { width: 600, height: 600 })
 
   const {
     data,
@@ -159,6 +163,8 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     linkedHover,
     onObservation,
     onClick,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "Treemap",
     chartId,
     marginDefaults: resolved.marginDefaults,
@@ -286,8 +292,16 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       labelMode={labelMode}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      {...((linkedHover || onObservation || onClick) && { customHoverBehavior })}
-      {...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior })}
+      {...buildCustomBehaviorProps({
+        linkedHover,
+        selection,
+        onObservation,
+        onClick,
+        mobileInteraction: setup.mobileInteraction,
+        customHoverBehavior,
+        customClickBehavior: setup.customClickBehavior,
+        linkedHoverInClickPredicate: false,
+      })}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

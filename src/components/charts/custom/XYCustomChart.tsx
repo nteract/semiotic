@@ -122,6 +122,9 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     showLegend: props.showLegend,
     title: props.title,
     mode: props.mode,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
     xLabel: props.xLabel,
     yLabel: props.yLabel,
   })
@@ -165,9 +168,11 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     ...(props.tooltip != null && { tooltipContent: props.tooltip as StreamXYFrameProps["tooltipContent"] }),
     ...buildCustomBehaviorProps({
       linkedHover,
+      selection,
       onObservation,
       onClick,
       hoverHighlight: false,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),

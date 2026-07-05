@@ -83,6 +83,16 @@ function markCallout
 function matchesHighlight
 function mean
 function mermaidDagLayout
+function mobileAnnotationStrategy
+function mobileAreaChartRecipe
+function mobileBrushAlternatives
+function mobileChartFamilyRecipe
+function mobileGeoChartRecipe
+function mobileLineChartRecipe
+function mobileNetworkChartRecipe
+function mobileOrdinalChartRecipe
+function mobileScatterplotRecipe
+function mobileSmallMultipleRecipe
 function mulberry32
 function networkHitTarget
 function normalizePoint
@@ -134,6 +144,7 @@ interface AnnotationDensityOptions
 interface AnnotationDensityResult
 interface AnnotationLayoutConfig
 interface AnnotationLayoutOptions
+interface AnnotationMobileConfig
 interface ArcLayoutOptions
 interface AxisFixedForceConfig
 interface AxisFixedForceResult
@@ -182,6 +193,12 @@ interface MarimekkoConfig
 interface MarkCalloutProps
 interface MatrixCell
 interface MermaidDagConfig
+interface MobileAnnotationCalloutItem
+interface MobileAnnotationStrategyConfig
+interface MobileAnnotationStrategyResult
+interface MobileBrushAlternativeOptions
+interface MobileChartFamilyRecipe
+interface MobileChartFamilyRecipeOptions
 interface NetworkHitTargetCircleProps
 interface NetworkHitTargetRectProps
 interface NetworkHtmlMark
@@ -220,6 +237,8 @@ type HighlightMatch
 type IsometricTerrainKind
 type LandmarkKind
 type LineageLod
+type MobileAnnotationStrategyMode
+type MobileChartFamily
 type NetworkCustomLayout
 type NetworkSymbolName
 type OrdinalCustomLayout

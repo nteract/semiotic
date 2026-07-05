@@ -7,7 +7,7 @@ These schemas describe three pieces of metadata that make a chart *legible to an
 
 | Primitive | Schema | Answers |
 |---|---|---|
-| **Chart Capability** | [`v0.1/chart-capability.schema.json`](./v0.1/chart-capability.schema.json) | *What is this chart good at?* — declaratively, so a heuristic or an LLM can rank it against a dataset and a goal without running a chart library. |
+| **Chart Capability** | [`v0.1/chart-capability.schema.json`](./v0.1/chart-capability.schema.json) | *What is this chart good at, and how does it survive mobile?* — declaratively, so a heuristic or an LLM can rank it against a dataset, goal, audience, and phone viewport without running a chart library. |
 | **Audience Profile** | [`v0.1/audience-profile.schema.json`](./v0.1/audience-profile.schema.json) | *Who is reading, and what is the org trying to grow?* — so a suggestion is calibrated to a real audience, not a generic baseline. |
 | **Annotation Provenance & Lifecycle** | [`v0.1/annotation-provenance.schema.json`](./v0.1/annotation-provenance.schema.json) | *Where did this note come from, how much do we trust it, and how does it age?* — so a claim *on* a chart carries its own evidence and expiry. |
 
@@ -46,6 +46,11 @@ Open string unions in the source types (e.g. `provenance.source`, which recogniz
 faithful to the runtime contract — recognized values are documented, but a consumer may pass its
 own label and it is preserved. Genuinely closed unions (`lifecycle.freshness`, `lifecycle.status`,
 `lifecycle.anchor`) use a strict `enum`.
+
+Chart capabilities may also include a `mobile` block. This is intentionally part of capability,
+not rendering props: it lets a custom chart, Vega-Lite binding, or recipe adapter state its mobile
+strategy, breakpoints, mark budget, touch target, label plan, and custom scene semantics without
+requiring the receiving library to execute the renderer.
 
 ## Versioning
 

@@ -8,6 +8,16 @@ import { DataSummaryProvider, useDataSummaryToggle } from "./DataSummaryContext"
 import { describeChart, type DescribeLevel } from "./ai/describeChart"
 import { buildNavigationTree } from "./ai/navigationTree"
 import { AccessibleNavTree } from "./AccessibleNavTree"
+import type { ChartMode, MobileInteractionProp } from "./charts/shared/types"
+import {
+  MobileStandardControls,
+  type MobileStandardControlRequest,
+  type MobileStandardControlsProps,
+} from "./MobileStandardControls"
+import {
+  auditMobileVisualization,
+  type MobileVisualizationContract,
+} from "./charts/shared/auditMobileVisualization"
 
 const SR_ONLY: React.CSSProperties = {
   position: "absolute", width: 1, height: 1, overflow: "hidden",
@@ -41,6 +51,73 @@ export interface ChartNotification {
   source?: string
   /** Default true. Set false for must-see notices that can't be dismissed. */
   dismissible?: boolean
+}
+
+export interface ChartContainerMobileOptions {
+  /** Width at or below which the container applies mobile CSS affordances. Default 480. */
+  breakpoint?: number
+  /** Semantic mobile contract passed to child charts that do not already declare one. */
+  semantics?: MobileVisualizationContract
+  /** Default chart mode to inject into a single child chart when it has no mode. Pass false to disable. */
+  chartMode?: ChartMode | false
+  /** Touch-first interaction policy passed to child charts that do not already declare one. */
+  mobileInteraction?: MobileInteractionProp
+  /**
+   * Render touch-sized fallback controls for complex mobile gestures. Pass a
+   * control request ("brush", "zoom", "legend", "all", true, or an array) or
+   * a full MobileStandardControls config with callbacks and state.
+   */
+  standardControls?: MobileStandardControlRequest | MobileStandardControlsProps
+  /** Mobile-only summary rendered between header and chart body. */
+  summary?: React.ReactNode
+  /** Let a non-transformed chart scroll horizontally rather than clip. Prefer responsiveRules when possible. */
+  allowHorizontalScroll?: boolean
+  /** Hide toolbar controls behind CSS at phone width. Default false. */
+  hideToolbar?: boolean
+}
+
+export interface ChartContainerMobileAuditOptions {
+  /** Phone viewport used for the authoring audit. Default 390. */
+  viewportWidth?: number
+  /** Expected touch target size in CSS pixels. Default 44. */
+  targetSize?: number
+  /** Render a visible warning banner in addition to console warnings. */
+  visible?: boolean
+}
+
+export type ChartContainerMobileAudit =
+  | boolean
+  | "warn"
+  | ChartContainerMobileAuditOptions
+
+function isMobileStandardControlsProps(
+  value: ChartContainerMobileOptions["standardControls"]
+): value is MobileStandardControlsProps {
+  return !!value && typeof value === "object" && !Array.isArray(value)
+}
+
+function standardControlsFromInteraction(
+  mobileInteraction: MobileInteractionProp | undefined
+): MobileStandardControlRequest | undefined {
+  return mobileInteraction && typeof mobileInteraction === "object"
+    ? mobileInteraction.standardControls
+    : undefined
+}
+
+function targetSizeFromInteraction(
+  mobileInteraction: MobileInteractionProp | undefined
+): number | undefined {
+  return mobileInteraction &&
+    typeof mobileInteraction === "object" &&
+    typeof mobileInteraction.targetSize === "number"
+    ? mobileInteraction.targetSize
+    : undefined
+}
+
+function hasStandardControlsRequest(
+  request: MobileStandardControlRequest | undefined
+): request is MobileStandardControlRequest {
+  return Array.isArray(request) ? request.length > 0 : !!request
 }
 
 export interface ChartContainerProps {
@@ -130,6 +207,21 @@ export interface ChartContainerProps {
 
   /** Details panel rendered alongside the chart (e.g. DetailsPanel component) */
   detailsPanel?: React.ReactNode
+
+  /**
+   * Mobile container affordances. Does not resize the chart by itself; it
+   * provides mobile semantics, optional child `mode`, summary placement, and
+   * narrow-viewport CSS so ChartContainer participates in the same mobile
+   * contract as chart HOCs, custom recipes, and audits.
+   */
+  mobile?: boolean | ChartContainerMobileOptions
+
+  /**
+   * Optional authoring-time mobile audit. Requires `chartConfig`; `"warn"` logs
+   * mobile findings to the console, while `{ visible: true }` also renders a
+   * compact warning banner in the container.
+   */
+  mobileAudit?: ChartContainerMobileAudit
 
   /** CSS class for the outer container */
   className?: string
@@ -580,6 +672,8 @@ export const ChartContainer = React.forwardRef<
     errorBoundary = false,
     status,
     detailsPanel,
+    mobile,
+    mobileAudit,
     className,
     style,
   },
@@ -728,17 +822,144 @@ export const ChartContainer = React.forwardRef<
     [handleExport, toggleFullscreen, handleCopyConfig]
   )
 
+  const mobileOptions: ChartContainerMobileOptions | null =
+    mobile === true ? {} : mobile && typeof mobile === "object" ? mobile : null
+  const mobileEnabled = !!mobile
+  const mobileBreakpoint = mobileOptions?.breakpoint ?? 480
+  const mobileChartMode = mobileOptions?.chartMode === undefined ? "mobile" : mobileOptions.chartMode
+  const mobileSemantics = mobileOptions?.semantics
+  const mobileInteractionSource = mobileOptions?.mobileInteraction ?? (mobileEnabled ? true : undefined)
+  const mobileStandardControlsOption = mobileOptions?.standardControls
+  const mobileStandardControlsConfig = isMobileStandardControlsProps(mobileStandardControlsOption)
+    ? mobileStandardControlsOption
+    : null
+  const mobileStandardControlsRequest =
+    mobileStandardControlsConfig?.controls ??
+    (!isMobileStandardControlsProps(mobileStandardControlsOption)
+      ? mobileStandardControlsOption
+      : undefined) ??
+    standardControlsFromInteraction(mobileInteractionSource)
+  const mobileInteraction =
+    hasStandardControlsRequest(mobileStandardControlsRequest)
+      ? mobileInteractionSource && typeof mobileInteractionSource === "object"
+        ? {
+            ...mobileInteractionSource,
+            standardControls: mobileStandardControlsRequest,
+          }
+        : mobileInteractionSource === false || mobileInteractionSource == null
+          ? mobileInteractionSource
+          : {
+              standardControls: mobileStandardControlsRequest,
+            }
+      : mobileInteractionSource
+  const mobileStandardControls =
+    mobileEnabled && hasStandardControlsRequest(mobileStandardControlsRequest) ? (
+      <MobileStandardControls
+        controls={mobileStandardControlsRequest}
+        targetSize={
+          mobileStandardControlsConfig?.targetSize ??
+          targetSizeFromInteraction(mobileInteractionSource) ??
+          44
+        }
+        compact={mobileStandardControlsConfig?.compact ?? true}
+        className={mobileStandardControlsConfig?.className}
+        style={mobileStandardControlsConfig?.style}
+        ariaLabel={mobileStandardControlsConfig?.ariaLabel}
+        brush={mobileStandardControlsConfig?.brush}
+        zoom={mobileStandardControlsConfig?.zoom}
+        legend={mobileStandardControlsConfig?.legend}
+      />
+    ) : null
+  const mobileSummary = mobileOptions?.summary
+  const mobileAllowScroll = mobileOptions?.allowHorizontalScroll === true
+  const mobileHideToolbar = mobileOptions?.hideToolbar === true
+
+  const mobileAuditResult = React.useMemo(() => {
+    if (!mobileAudit || !chartConfig?.component || !chartConfig?.props) return null
+    const options = typeof mobileAudit === "object" ? mobileAudit : {}
+    const chartProps = chartConfig.props as Record<string, unknown>
+    try {
+      return auditMobileVisualization(
+        chartConfig.component,
+        {
+          ...chartProps,
+          mobileSemantics: chartProps.mobileSemantics ?? mobileSemantics,
+          mobileInteraction: chartProps.mobileInteraction ?? mobileInteraction,
+        },
+        {
+          viewportWidth: options.viewportWidth ?? 390,
+          targetSize: options.targetSize ?? 44,
+          inChartContainer: true,
+        }
+      )
+    } catch {
+      return null
+    }
+  }, [mobileAudit, chartConfig, mobileSemantics, mobileInteraction])
+
+  React.useEffect(() => {
+    if (!mobileAuditResult || mobileAuditResult.ok) return
+    const findings = mobileAuditResult.findings
+      .filter((finding) => finding.status !== "pass")
+      .slice(0, 5)
+    console.warn(
+      `[Semiotic mobile audit] ${chartConfig?.component}: ${mobileAuditResult.summary.highRisk} high-risk mobile finding(s), ${mobileAuditResult.summary.warnings} warning(s).`,
+      findings
+    )
+  }, [mobileAuditResult, chartConfig?.component])
+
+  const showMobileAuditBanner =
+    !!mobileAuditResult &&
+    !mobileAuditResult.ok &&
+    typeof mobileAudit === "object" &&
+    mobileAudit.visible === true
+  const mobileAuditBanner = showMobileAuditBanner ? (
+    <div
+      className="semiotic-chart-mobile-audit"
+      role="status"
+      style={{
+        padding: "8px 12px",
+        fontSize: 12,
+        lineHeight: 1.45,
+        color: "var(--semiotic-warning, #6b3f00)",
+        background: "color-mix(in srgb, var(--semiotic-warning, #d97706) 14%, var(--semiotic-bg, #fff))",
+        borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
+      }}
+    >
+      Mobile audit: {mobileAuditResult.summary.highRisk} high-risk finding
+      {mobileAuditResult.summary.highRisk === 1 ? "" : "s"} and{" "}
+      {mobileAuditResult.summary.warnings} warning
+      {mobileAuditResult.summary.warnings === 1 ? "" : "s"} at{" "}
+      {(typeof mobileAudit === "object" ? mobileAudit.viewportWidth : undefined) ?? 390}px.
+    </div>
+  ) : null
+
   const hasNotifications = visibleNotifications.length > 0
   const hasHeader = title || subtitle || controls || showExport || showFullscreen || showCopyConfig || showDataSummary || status || hasNotifications
+
+  const childrenWithMobileProps = React.useMemo(() => {
+    if (!mobileEnabled || !React.isValidElement(children)) return children
+    const childProps = children.props as Record<string, unknown>
+    const injected: Record<string, unknown> = {}
+    if (mobileChartMode && childProps.mode == null) injected.mode = mobileChartMode
+    if (mobileSemantics && childProps.mobileSemantics == null) injected.mobileSemantics = mobileSemantics
+    if (mobileInteraction !== undefined && childProps.mobileInteraction == null) injected.mobileInteraction = mobileInteraction
+    return Object.keys(injected).length > 0
+      ? React.cloneElement(
+          children as React.ReactElement<Record<string, unknown>>,
+          injected
+        )
+      : children
+  }, [children, mobileEnabled, mobileChartMode, mobileSemantics, mobileInteraction])
 
   const innerContent = loading ? (
     <Skeleton height={height} />
   ) : error ? (
     <ErrorDisplay error={error} />
   ) : errorBoundary ? (
-    <ChartErrorBoundary>{children}</ChartErrorBoundary>
+    <ChartErrorBoundary>{childrenWithMobileProps}</ChartErrorBoundary>
   ) : (
-    children
+    childrenWithMobileProps
   )
 
   const wrapper = (node: React.ReactNode) =>
@@ -751,6 +972,40 @@ export const ChartContainer = React.forwardRef<
           __html: `@keyframes semiotic-skeleton-pulse {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+@media (max-width: ${mobileBreakpoint}px) {
+  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-header {
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-title-area {
+    flex-basis: 100% !important;
+  }
+  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-toolbar {
+    width: 100% !important;
+    margin-left: 0 !important;
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .semiotic-chart-container[data-semiotic-mobile="true"][data-semiotic-mobile-hide-toolbar="true"] .semiotic-chart-toolbar {
+    display: none !important;
+  }
+  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-action {
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-mobile-summary {
+    display: block !important;
+  }
+  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-mobile-standard-controls {
+    display: block !important;
+  }
+  .semiotic-chart-container[data-semiotic-mobile="true"][data-semiotic-mobile-scroll="true"] .semiotic-chart-body {
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+    -webkit-overflow-scrolling: touch;
+  }
 }`,
         }}
       />
@@ -759,6 +1014,9 @@ export const ChartContainer = React.forwardRef<
         className={
           "semiotic-chart-container" + (className ? ` ${className}` : "")
         }
+        data-semiotic-mobile={mobileEnabled ? "true" : undefined}
+        data-semiotic-mobile-scroll={mobileAllowScroll ? "true" : undefined}
+        data-semiotic-mobile-hide-toolbar={mobileHideToolbar ? "true" : undefined}
         style={{
           width,
           border: "1px solid var(--semiotic-border, #e0e0e0)",
@@ -946,6 +1204,38 @@ export const ChartContainer = React.forwardRef<
         {banner && (
           <div className="semiotic-chart-banner">
             {banner}
+          </div>
+        )}
+
+        {mobileAuditBanner}
+
+        {mobileSummary && (
+          <div
+            className="semiotic-chart-mobile-summary"
+            style={{
+              display: "none",
+              padding: "8px 12px",
+              fontSize: 12,
+              lineHeight: 1.45,
+              color: "var(--semiotic-text-secondary, #666)",
+              borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
+            }}
+          >
+            {mobileSummary}
+          </div>
+        )}
+
+        {mobileStandardControls && (
+          <div
+            className="semiotic-chart-mobile-standard-controls"
+            style={{
+              display: "none",
+              padding: "10px 12px",
+              borderBottom: "1px solid var(--semiotic-border, #e0e0e0)",
+              background: "var(--semiotic-surface, var(--semiotic-bg, #f6f8fa))",
+            }}
+          >
+            {mobileStandardControls}
           </div>
         )}
 

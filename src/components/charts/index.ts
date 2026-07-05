@@ -177,7 +177,28 @@ export type { RealtimeHeatmapProps } from "./realtime/RealtimeHeatmap"
 // ============================================================================
 
 // Re-export shared types for convenience
-export type { BaseChartProps, AxisConfig, Accessor, ChartAccessor, ChartMode } from "./shared/types"
+export type {
+  BaseChartProps,
+  AxisConfig,
+  Accessor,
+  ChartAccessor,
+  ChartMode,
+  MobileClearSelectionBehavior,
+  MobileSnapBehavior,
+  MobileInteractionConfig,
+  MobileInteractionProp,
+  MobileStandardControlsMode,
+  ResolvedMobileInteractionConfig,
+} from "./shared/types"
+export { responsiveRuleMatches, resolveResponsiveRules } from "./shared/responsiveRules"
+export type {
+  ResponsiveOrientation,
+  ResponsiveRuleCondition,
+  ResponsiveRuleContext,
+  ResponsiveRule,
+  ResponsiveRuleMatch,
+  ResponsiveRuleResult,
+} from "./shared/responsiveRules"
 
 // Shared hooks for building custom chart wrappers
 export { useColorScale, useSortedData, DEFAULT_COLOR } from "./shared/hooks"

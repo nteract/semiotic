@@ -49,6 +49,7 @@ Usage:
   npx semiotic-ai --examples   Print ai/examples.md (copy-paste examples)
   npx semiotic-ai --doctor     Validate { component, props, usageMode? } JSON from stdin
   npx semiotic-ai --audit-a11y Audit { component, props, inChartContainer?, describe?, navigable? }
+  npx semiotic-ai --audit-mobile Audit { component, props, viewportWidth?, targetSize?, inChartContainer? }
                                 JSON against Chartability (POUR-CAF) accessibility heuristics
   npx semiotic-ai --help       Show this help message
 `.trim()
@@ -390,6 +391,47 @@ if (flag === "--audit-a11y") {
 
     const result = auditAccessibility(component, props, { inChartContainer: inChartContainer === true, describe: describe === true, navigable: navigable === true })
     console.log(formatAccessibilityAudit(result))
+    process.exit(result.ok ? 0 : 1)
+  } catch (err) {
+    console.error(`Failed to parse input: ${errorMessage(err)}`)
+    process.exit(1)
+  }
+}
+
+// --audit-mobile: grade component + props for mobile visualization risks
+if (flag === "--audit-mobile") {
+  const input = readJSONInput("Usage: npx semiotic-ai --audit-mobile '{\"component\":\"LineChart\",\"props\":{\"data\":[...],\"xAccessor\":\"x\",\"yAccessor\":\"y\"},\"viewportWidth\":390}'\n       echo '{\"component\":\"Scatterplot\",\"props\":{...},\"targetSize\":44}' | npx semiotic-ai --audit-mobile")
+
+  try {
+    const { component, props, viewportWidth, targetSize, inChartContainer } = JSON.parse(input)
+    if (!component || !props) {
+      console.error("Input must be JSON with { component, props } fields.")
+      process.exit(1)
+    }
+
+    const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
+    let auditMobileVisualization, formatMobileVisualizationAudit
+    try {
+      if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
+        const mod = require(distPath)
+        auditMobileVisualization = mod.auditMobileVisualization
+        formatMobileVisualizationAudit = mod.formatMobileVisualizationAudit
+      }
+    } catch (e) {
+      // Dist unavailable.
+    }
+
+    if (!auditMobileVisualization || !formatMobileVisualizationAudit) {
+      console.error("Mobile visualization audit requires the built library. Run `npm run dist` first, or use the MCP `auditMobileVisualization` tool.")
+      process.exit(2)
+    }
+
+    const result = auditMobileVisualization(component, props, {
+      viewportWidth: typeof viewportWidth === "number" ? viewportWidth : undefined,
+      targetSize: typeof targetSize === "number" ? targetSize : undefined,
+      inChartContainer: inChartContainer === true,
+    })
+    console.log(formatMobileVisualizationAudit(result))
     process.exit(result.ok ? 0 : 1)
   } catch (err) {
     console.error(`Failed to parse input: ${errorMessage(err)}`)

@@ -16,6 +16,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
@@ -182,7 +183,10 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     title: props.title,
     xLabel: props.xLabel,
     yLabel: props.yLabel,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const {
     data,
@@ -253,6 +257,8 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "QuadrantChart",
     chartId,
     showLegend,
@@ -617,8 +623,16 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
       : (tooltip === true || tooltip === undefined)
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     canvasPreRenderers: mergedPreRenderers,

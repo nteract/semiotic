@@ -25,7 +25,7 @@ import type { ReactNode } from "react"
 import type { Datum } from "./datumTypes"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import type { HoverData } from "../../realtime/types"
-import type { HoverHighlightMode, LinkedHoverProp, SelectionConfig } from "./types"
+import type { HoverHighlightMode, LinkedHoverProp, SelectionConfig, ResolvedMobileInteractionConfig } from "./types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
@@ -109,17 +109,26 @@ export function buildBaseMetadataProps(input: BaseMetadataProps): BaseMetadataPr
  *   - `customClickBehavior` mirrors the click-driving subset
  *     (`onObservation`, `onClick`, `linkedHover` for cross-chart
  *     selection lock).
+ *   - `forceHoverBehavior` / `forceClickBehavior` let composed or
+ *     adapter charts (realtime, matrix cells, custom payload mappers)
+ *     keep their chart-specific callback shape while sharing the same
+ *     mobile predicates and touch-radius plumbing.
  *
  * Returning the props as a spreadable object means HOCs that don't
  * need either get an empty merge that adds nothing.
  */
 export function buildCustomBehaviorProps(input: {
   linkedHover?: LinkedHoverProp
+  selection?: SelectionConfig
   onObservation?: OnObservationCallback
   onClick?: ((datum: Datum, position: { x: number; y: number }) => void) | undefined
+  hoverRadius?: number
   hoverHighlight?: HoverHighlightMode
+  forceHoverBehavior?: boolean
+  forceClickBehavior?: boolean
+  mobileInteraction?: ResolvedMobileInteractionConfig
   customHoverBehavior: (d: Datum | null) => void
-  customClickBehavior: (d: Datum | null) => void
+  customClickBehavior?: (d: Datum | null) => void
   /**
    * Whether `linkedHover` participates in the click predicate. Most
    * XY / ordinal HOCs say yes — `linkedHover` cross-chart selection
@@ -132,12 +141,18 @@ export function buildCustomBehaviorProps(input: {
 }): {
   customHoverBehavior?: (d: Datum | null) => void
   customClickBehavior?: (d: Datum | null) => void
+  hoverRadius?: number
 } {
   const {
     linkedHover,
+    selection,
     onObservation,
     onClick,
+    hoverRadius,
     hoverHighlight,
+    forceHoverBehavior,
+    forceClickBehavior,
+    mobileInteraction,
     customHoverBehavior,
     customClickBehavior,
     linkedHoverInClickPredicate = true,
@@ -145,15 +160,30 @@ export function buildCustomBehaviorProps(input: {
   const out: {
     customHoverBehavior?: (d: Datum | null) => void
     customClickBehavior?: (d: Datum | null) => void
+    hoverRadius?: number
   } = {}
-  if (linkedHover || onObservation || onClick || hoverHighlight) {
+  const mobileHoverRadius = mobileInteraction?.enabled
+    ? Math.max(
+        hoverRadius ?? 30,
+        Math.ceil((mobileInteraction.targetSize || 44) / 2),
+        24
+      )
+    : hoverRadius
+  if (forceHoverBehavior || linkedHover || onObservation || onClick || hoverHighlight) {
     out.customHoverBehavior = customHoverBehavior
   }
   const clickPredicate = linkedHoverInClickPredicate
     ? (onObservation || onClick || linkedHover)
     : (onObservation || onClick)
-  if (clickPredicate) {
+  const mobileClickPredicate =
+    mobileInteraction?.enabled &&
+    (mobileInteraction.tapToSelect || mobileInteraction.tapToLockTooltip) &&
+    (linkedHover || hoverHighlight || selection)
+  if (customClickBehavior && (forceClickBehavior || clickPredicate || mobileClickPredicate)) {
     out.customClickBehavior = customClickBehavior
+  }
+  if (mobileHoverRadius != null) {
+    out.hoverRadius = mobileHoverRadius
   }
   return out
 }

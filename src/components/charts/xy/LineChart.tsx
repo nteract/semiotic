@@ -18,6 +18,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlays"
 import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
@@ -359,6 +360,9 @@ export const LineChart = forwardRef(
     accessibleTable: props.accessibleTable,
     xLabel: props.xLabel,
     yLabel: props.yLabel,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
   })
 
   const {
@@ -714,6 +718,8 @@ export const LineChart = forwardRef(
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "LineChart",
     chartId,
     showLegend: effectiveShowLegend,
@@ -925,7 +931,6 @@ export const LineChart = forwardRef(
     chartType,
     ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
     ...(lineGradient && { lineGradient }),
-    ...(hoverRadius != null && { hoverRadius }),
     ...(data != null && { data: flattenedData }),
     xAccessor,
     yAccessor,
@@ -978,8 +983,17 @@ export const LineChart = forwardRef(
         ? MultiPointTooltip()
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
     ...(tooltip === "multi" && { tooltipMode: "multi" as const }),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      hoverRadius,
+      hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior,
+      customClickBehavior,
+    }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {
       annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],

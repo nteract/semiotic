@@ -138,7 +138,10 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     accessibleTable: props.accessibleTable,
     summary: props.summary,
     showCategoryTicks: props.showCategoryTicks,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
@@ -177,6 +180,8 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "PieChart",
     chartId,
     showLegend,
@@ -259,7 +264,8 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
-      linkedHover, onObservation, onClick, hoverHighlight,
+      linkedHover, selection, onObservation, onClick, hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),

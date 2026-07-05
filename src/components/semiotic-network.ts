@@ -22,6 +22,15 @@ export { CirclePack } from "./charts/network/CirclePack"
 export { OrbitDiagram } from "./charts/network/OrbitDiagram"
 export { ProcessSankey } from "./charts/network/ProcessSankey"
 export { NetworkCustomChart } from "./charts/custom/NetworkCustomChart"
+export { responsiveRuleMatches, resolveResponsiveRules } from "./charts/shared/responsiveRules"
+export type {
+  ResponsiveOrientation,
+  ResponsiveRuleCondition,
+  ResponsiveRuleContext,
+  ResponsiveRule,
+  ResponsiveRuleMatch,
+  ResponsiveRuleResult,
+} from "./charts/shared/responsiveRules"
 export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 // hitTarget — invisible, interaction-bearing scene node for custom network

@@ -95,6 +95,9 @@ const StreamingAggregationPage = lazy(() => import("./pages/features/StreamingAg
 const ChartContainersPage = lazy(() => import("./pages/features/ChartContainersPage"))
 const ChartStatesPage = lazy(() => import("./pages/features/ChartStatesPage"))
 const ChartModesPage = lazy(() => import("./pages/features/ChartModesPage"))
+const MobileVisualizationPage = lazy(() => import("./pages/features/MobileVisualizationPage"))
+const MobileControlsPage = lazy(() => import("./pages/features/mobile/MobileControlsPage"))
+const MobileRecipesPage = lazy(() => import("./pages/features/mobile/MobileRecipesPage"))
 const ObservationHooksPage = lazy(() => import("./pages/features/ObservationHooksPage"))
 const SerializationPage = lazy(() => import("./pages/features/SerializationPage"))
 const VegaLiteTranslatorPage = lazy(() => import("./pages/features/VegaLiteTranslatorPage"))
@@ -202,6 +205,9 @@ const OctopusMetaphorExamplePage = lazy(
 )
 const GestaltPrinciplesExamplePage = lazy(
   () => import("./pages/examples/GestaltPrinciplesExamplePage"),
+)
+const MobileDataVisualizationExamplePage = lazy(
+  () => import("./pages/examples/MobileDataVisualizationExamplePage"),
 )
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
@@ -409,6 +415,10 @@ export default function DocsApp() {
               <Route
                 path="examples/gestalt-principles"
                 element={<GestaltPrinciplesExamplePage />}
+              />
+              <Route
+                path="examples/mobile-data-visualization"
+                element={<MobileDataVisualizationExamplePage />}
               />
               <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
               <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
@@ -619,6 +629,12 @@ export default function DocsApp() {
                 <Route path="chart-container" element={<ChartContainersPage />} />
                 <Route path="chart-states" element={<ChartStatesPage />} />
                 <Route path="chart-modes" element={<ChartModesPage />} />
+                <Route path="mobile-visualization" element={<MobileVisualizationPage />} />
+                <Route path="mobile" element={<Outlet />}>
+                  <Route index element={<Navigate to="/features/mobile-visualization" replace />} />
+                  <Route path="controls" element={<MobileControlsPage />} />
+                  <Route path="recipes" element={<MobileRecipesPage />} />
+                </Route>
                 <Route path="streaming-system-model" element={<StreamingSystemModelPage />} />
                 <Route path="performance" element={<PerformancePage />} />
                 <Route path="push-api" element={<PushApiPage />} />

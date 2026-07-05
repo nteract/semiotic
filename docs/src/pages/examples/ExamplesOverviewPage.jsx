@@ -56,6 +56,8 @@ export default function ExamplesOverviewPage() {
                   ? <MiniOctopusPreview />
                 : example.preview === "gestalt"
                   ? <MiniGestaltPreview />
+                : example.preview === "mobilevis"
+                  ? <MiniMobileVisPreview />
                 : example.preview === "networkviz"
                   ? <MiniNetworkVizPreview />
                 : example.preview === "oregontrail"
@@ -240,6 +242,48 @@ function MiniGestaltPreview() {
       <rect x="0" y="89" width="81" height="7" fill="#df2b1f" />
       <rect x="81" y="89" width="80" height="7" fill="#2a4cad" />
       <rect x="161" y="89" width="81" height="7" fill="#f3b724" />
+    </svg>
+  )
+}
+
+function MiniMobileVisPreview() {
+  const bars = [46, 68, 35, 82, 55]
+  const dots = [
+    [30, 28, "#f25f3a"], [54, 38, "#f25f3a"], [78, 24, "#f25f3a"],
+    [122, 62, "#1f8a70"], [148, 48, "#1f8a70"], [174, 58, "#1f8a70"],
+    [202, 36, "#26334a"],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f7efe0" />
+      <rect x="8" y="8" width="66" height="80" rx="10" fill="#19231f" />
+      <rect x="15" y="18" width="52" height="60" rx="4" fill="#f7efe0" />
+      {bars.map((h, index) => (
+        <rect
+          key={index}
+          x={20 + index * 9}
+          y={72 - h * 0.46}
+          width="6"
+          height={h * 0.46}
+          fill={index === 3 ? "#f25f3a" : "#1f8a70"}
+        />
+      ))}
+      <path
+        d="M94 76 C112 32 132 54 150 30 S184 62 218 24"
+        fill="none"
+        stroke="#f25f3a"
+        strokeWidth="3"
+      />
+      {dots.map(([x, y, fill], index) => (
+        <circle key={index} cx={x} cy={y} r={index === 6 ? 6 : 4} fill={fill} />
+      ))}
+      <rect x="92" y="70" width="132" height="12" rx="6" fill="#26334a" opacity="0.9" />
+      <rect x="100" y="73" width="35" height="6" rx="3" fill="#f7efe0" />
+      <rect x="142" y="73" width="29" height="6" rx="3" fill="#f25f3a" />
+      <rect x="178" y="73" width="37" height="6" rx="3" fill="#1f8a70" />
+      <text x="92" y="18" fill="#19231f" fontSize="10" fontWeight="900" fontFamily="sans-serif">
+        MOBILE FIRST
+      </text>
     </svg>
   )
 }

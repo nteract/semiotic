@@ -605,6 +605,8 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
     linkedHover: undefined,
     onObservation,
     onClick,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
     chartType: "ProcessSankey",
     chartId,
     marginDefaults: { top: 30, right: 80, bottom: 40, left: 80 },
@@ -1085,12 +1087,14 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       legend={legendNode}
       legendPosition={legendPosition}
       onObservation={onObservation}
-      customClickBehavior={onClick ? (h) => {
-        if (!h || !h.data) return
-        const payload = h.data
-        if (!isProcessSankeyScenePayload(payload)) return
-        onClick(payload.data, { x: h.x, y: h.y })
-      } : undefined}
+      {...(onClick && {
+        customClickBehavior: (h: Datum | null) => {
+          if (!h || !h.data || !onClick) return
+          const payload = h.data
+          if (!isProcessSankeyScenePayload(payload)) return
+          onClick(payload.data, { x: h.x, y: h.y })
+        },
+      })}
       chartId={chartId}
       colorScheme={Array.isArray(colorScheme) ? colorScheme : undefined}
       {...frameProps}

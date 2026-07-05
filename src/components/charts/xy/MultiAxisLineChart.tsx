@@ -16,6 +16,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
 
 // ── Internal field names ────────────────────────────────────────────────
@@ -226,7 +227,10 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     title: props.title,
     xLabel: props.xLabel,
     accessibleTable: props.accessibleTable,
-  }, { width: 800, height: 400 })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+}, { width: 800, height: 400 })
 
   const {
     data,
@@ -402,6 +406,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "MultiAxisLineChart",
     chartId,
     showLegend,
@@ -536,8 +542,16 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     tooltipContent: tooltipFn,
     ...(annotations && { annotations }),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...setup.crosshairProps,
     ...frameProps
   }

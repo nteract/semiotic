@@ -302,6 +302,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       hoverAnnotation,
       tooltipContent,
       customHoverBehavior,
+      customClickBehavior,
       annotations,
       autoPlaceAnnotations,
       svgAnnotationRules,
@@ -724,6 +725,66 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         scheduleRender()
       }
     }
+
+    const onClick = useCallback((e: React.MouseEvent) => {
+      if (!customClickBehavior) return
+      const canvas = canvasRef.current
+      if (!canvas) {
+        customClickBehavior(null)
+        dirtyRef.current = true
+        scheduleRender()
+        return
+      }
+      const rect = canvas.getBoundingClientRect()
+      const chartX = e.clientX - rect.left - margin.left
+      const chartY = e.clientY - rect.top - margin.top
+      if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
+        customClickBehavior(null)
+        dirtyRef.current = true
+        scheduleRender()
+        return
+      }
+
+      const store = storeRef.current
+      if (!store || store.scene.length === 0) {
+        customClickBehavior(null)
+        dirtyRef.current = true
+        scheduleRender()
+        return
+      }
+
+      const isRadialMode = projection === "radial"
+      const hitX = isRadialMode ? chartX - adjustedWidth / 2 : chartX
+      const hitY = isRadialMode ? chartY - adjustedHeight / 2 : chartY
+      const hit = findNearestOrdinalNode(store.scene, hitX, hitY, 30, store.pointQuadtree, store.maxPointRadius)
+      if (!hit) {
+        customClickBehavior(null)
+        dirtyRef.current = true
+        scheduleRender()
+        return
+      }
+
+      const rawDatum = hit.datum || {}
+      customClickBehavior(buildHoverData(rawDatum, hit.x, hit.y, {
+        ...(hit.stats && { stats: hit.stats }),
+        ...(hit.category && { category: hit.category }),
+        __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
+        __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
+        __chartType: chartType
+      }))
+      dirtyRef.current = true
+      scheduleRender()
+    }, [
+      adjustedHeight,
+      adjustedWidth,
+      chartType,
+      customClickBehavior,
+      margin,
+      oAccessor,
+      projection,
+      rAccessor,
+      scheduleRender,
+    ])
 
     // pointermove coalescing (rAF-bounded hit testing) + onMouseLeave
     // come from useFrame above. Frame still owns the hoverHandlerRef
@@ -1162,6 +1223,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           style={{ position: "relative", width: "100%", height: "100%" }}
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
           onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
+          onClick={customClickBehavior ? onClick : undefined}
         >
         {resolvedBackground && (
           <svg

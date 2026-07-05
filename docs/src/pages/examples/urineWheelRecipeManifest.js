@@ -197,6 +197,26 @@ export const urineWheelRecipeManifest = defineChartRecipe({
       "flattening the wheel into decorative radial placement",
     ],
   },
+  mobile: {
+    strategy: "guided-exploration",
+    supportsResponsiveLayout: true,
+    breakpoints: [320, 390, 768],
+    maxMarks: 44,
+    maxAnnotations: 2,
+    minimumHitTarget: 44,
+    summary: true,
+    interaction: {
+      primary: "tap",
+      alternatives: ["group navigation", "details panel"],
+      hoverFallback: "tap-to-lock",
+    },
+    labels: { strategy: "external", minFontSize: 12 },
+    custom: {
+      dataBearingSceneNodes: true,
+      stableIds: true,
+      navigationGranularity: "group",
+    },
+  },
   description: describeUrineWheel,
   navigation: navigateUrineWheel,
   accessibility: {

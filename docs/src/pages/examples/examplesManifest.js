@@ -180,6 +180,15 @@ export const EXAMPLES = [
     preview: "gestalt",
   },
   {
+    title: "Mobile Data Visualization That Works",
+    path: "/examples/mobile-data-visualization",
+    eyebrow: "Mobile-first review · Semiotic demos",
+    description:
+      "A research-backed field guide for phone-sized visualization: density budgets, small multiples, touch-first controls, constraint breakpoints, and source-led design choices built as live Semiotic demos.",
+    preview: "mobilevis",
+    badges: ["Responsive", "Research-backed", "Touch-first"],
+  },
+  {
     title: "Drawing Networks",
     path: "/examples/network-visualization",
     eyebrow: "Eight chapters + an interactive toy",

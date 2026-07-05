@@ -27,6 +27,8 @@ function glyphExtent
 function glyphPlacement
 function hitTargetPoint
 function hitTargetRect
+function resolveResponsiveRules
+function responsiveRuleMatches
 function useCustomLayoutSelection
 interface BarChartProps
 interface CustomLayoutSelection
@@ -47,6 +49,11 @@ interface OrdinalLayoutContext
 interface OrdinalLayoutResult
 interface OrdinalScales
 interface PieChartProps
+interface ResponsiveRule
+interface ResponsiveRuleCondition
+interface ResponsiveRuleContext
+interface ResponsiveRuleMatch
+interface ResponsiveRuleResult
 interface SceneAccessibilityMetadata
 interface StackedBarChartProps
 interface StreamOrdinalFrameHandle
@@ -55,4 +62,5 @@ interface SwimlaneChartProps
 type OrdinalChartType
 type OrdinalCustomLayout
 type OrdinalSceneNode
+type ResponsiveOrientation
 ```

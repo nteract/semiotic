@@ -8,7 +8,7 @@ import type { Datum } from "../../components/charts/shared/datumTypes"
  *
  * These tests validate:
  *   - Server responds to `initialize` with capabilities
- *   - `tools/list` returns all 6 registered tools
+ *   - `tools/list` returns all registered tools
  *   - `resources/list` and `prompts/list` expose AI context surfaces
  *   - Each tool responds to `tools/call` with correct result shape
  *   - Error cases return `isError: true`
@@ -397,6 +397,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(toolNames).toEqual([
       "applyTheme",
       "auditAccessibility",
+      "auditMobileVisualization",
       "diagnoseConfig",
       "getSchema",
       "groundChart",

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import * as React from "react"
 import {
+  resolveMobileInteraction,
   resolveAccessor,
   useColorScale,
   useSortedData,
@@ -317,10 +318,37 @@ describe("useChartSelection", () => {
     expect(obs.datum).toEqual({ id: 1 })
   })
 
-  it("calls onObservation with click-end when clicking with null", () => {
+  it("does not call onObservation with click-end for desktop null clicks", () => {
     const onObservation = vi.fn()
     const { result } = renderHook(
       () => useChartSelection({ onObservation }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior(null)
+    })
+
+    expect(onObservation).not.toHaveBeenCalled()
+  })
+
+  it("calls onObservation with click-end for mobile background-clear null clicks", () => {
+    const onObservation = vi.fn()
+    const { result } = renderHook(
+      () =>
+        useChartSelection({
+          onObservation,
+          mobileInteraction: {
+            enabled: true,
+            tapToSelect: true,
+            tapToLockTooltip: true,
+            clearSelection: "backgroundTap",
+            targetSize: 44,
+            snap: "nearestDatum",
+            brushHandleSize: 44,
+            standardControls: false,
+          },
+        }),
       { wrapper: createWrapper() }
     )
 
@@ -638,6 +666,39 @@ describe("useChartMode", () => {
     const result = useChartMode("sparkline", {}, { width: 800, height: 500 })
     expect(result.width).toBe(120)
     expect(result.height).toBe(24)
+  })
+
+  it("applies matching responsiveRules before mode defaults", () => {
+    const result = useChartMode("primary", {
+      width: 390,
+      responsiveRules: [
+        {
+          when: { maxWidth: 430 },
+          transform: {
+            mode: "mobile",
+            showAxes: false,
+            showLegend: false,
+            mobileInteraction: { targetSize: 48 },
+            mobileSemantics: { minimumHitTarget: 48 },
+          },
+        },
+      ],
+    })
+    expect(result.width).toBe(390)
+    expect(result.showAxes).toBe(false)
+    expect(result.showLegend).toBe(false)
+    expect(result.showLabels).toBe(true)
+    expect(result.marginDefaults).toEqual({ top: 28, bottom: 42, left: 44, right: 16 })
+    expect(result.mobileInteraction.targetSize).toBe(48)
+    expect(result.mobileSemantics?.minimumHitTarget).toBe(48)
+  })
+
+  it("keeps explicitly disabled mobile interaction disabled when re-resolved", () => {
+    const disabled = resolveMobileInteraction(false)
+    const result = resolveMobileInteraction(disabled, { width: 390 })
+
+    expect(result.enabled).toBe(false)
+    expect(result.targetSize).toBe(44)
   })
 })
 

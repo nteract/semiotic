@@ -91,7 +91,10 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     summary: props.summary,
     linkedHover: props.linkedHover,
     showCategoryTicks: props.showCategoryTicks,
-  }, { width: 400, height: 400 })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+}, { width: 400, height: 400 })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
@@ -131,6 +134,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "DonutChart",
     chartId,
     showLegend,
@@ -222,7 +227,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
-      linkedHover, onObservation, onClick, hoverHighlight,
+      linkedHover, selection, onObservation, onClick, hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),

@@ -186,6 +186,7 @@
     "check:docs-coverage": "node scripts/check-docs-coverage.mjs",
     "check:docs-prop-tables": "npx tsx scripts/check-docs-prop-tables.ts",
     "check:docs-playground-controls": "npx tsx scripts/check-docs-playground-controls.ts",
+    "check:mobile-visualization": "npm run dist && playwright test integration-tests/mobile-visualization-harness.spec.ts --project=chromium",
     "docs:llms": "npx tsx scripts/generate-llms-txt.mjs",
     "check:llms": "npx tsx scripts/generate-llms-txt.mjs --check",
     "check:blog-entries": "node scripts/check-blog-entry-sync.mjs",

@@ -158,6 +158,12 @@ function recipeProps(
   } else {
     base.data = profile.data
   }
+  const mobile = recipe.mobile ?? (
+    typeof recipe.accessibility.minimumHitTarget === "number"
+      ? { minimumHitTarget: recipe.accessibility.minimumHitTarget }
+      : undefined
+  )
+  if (mobile) base.mobileSemantics = mobile
   return base
 }
 
@@ -203,6 +209,11 @@ export function recipeToChartCapability(recipe: ChartRecipe): ChartCapability {
     intentScores,
     caveats: () => [...risks, ...misuse, ...caveats],
     buildProps: (profile) => recipeProps(recipe, profile),
+    mobile: recipe.mobile ?? (
+      typeof recipe.accessibility.minimumHitTarget === "number"
+        ? { minimumHitTarget: recipe.accessibility.minimumHitTarget }
+        : undefined
+    ),
     recipe,
     positiveRationale,
     whyCustom: {

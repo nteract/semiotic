@@ -72,6 +72,7 @@ export type {
   AutoPlaceAnnotationsConfig,
   AnnotationCohesion,
   AnnotationAudience,
+  AnnotationMobileConfig,
 } from "./recipes/annotationLayout"
 
 export { annotationDensity, annotationBudget, DEFAULT_AREA_PER_ANNOTATION } from "./recipes/annotationDensity"
@@ -297,3 +298,33 @@ export type {
   AdjacencyMatrix,
   AdjacencyMatrixOptions,
 } from "./recipes/networkLayouts"
+
+export {
+  mobileAnnotationStrategy
+} from "./recipes/mobileAnnotationStrategy"
+export type {
+  MobileAnnotationCalloutItem,
+  MobileAnnotationStrategyConfig,
+  MobileAnnotationStrategyMode,
+  MobileAnnotationStrategyResult
+} from "./recipes/mobileAnnotationStrategy"
+
+export {
+  mobileAreaChartRecipe,
+  mobileChartFamilyRecipe,
+  mobileGeoChartRecipe,
+  mobileLineChartRecipe,
+  mobileNetworkChartRecipe,
+  mobileOrdinalChartRecipe,
+  mobileScatterplotRecipe,
+  mobileSmallMultipleRecipe
+} from "./recipes/mobileChartFamilyRecipes"
+export type {
+  MobileChartFamily,
+  MobileChartFamilyRecipe,
+  MobileChartFamilyRecipeOptions
+} from "./recipes/mobileChartFamilyRecipes"
+export {
+  mobileBrushAlternatives,
+  type MobileBrushAlternativeOptions,
+} from "./recipes/mobileChartFamilyRecipes"

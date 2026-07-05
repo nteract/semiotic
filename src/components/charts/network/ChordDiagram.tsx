@@ -17,6 +17,7 @@ import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 /**
  * ChordDiagram component props
@@ -105,7 +106,10 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  }, { width: 600, height: 600 })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+}, { width: 600, height: 600 })
 
   const {
     nodes,
@@ -162,6 +166,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     linkedHover,
     onObservation,
     onClick,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "ChordDiagram",
     chartId,
     marginDefaults: resolved.marginDefaults,
@@ -272,8 +278,16 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation || onClick) ? setup.customHoverBehavior : undefined}
-      customClickBehavior={(onObservation || onClick) ? setup.customClickBehavior : undefined}
+      {...buildCustomBehaviorProps({
+        linkedHover,
+        selection,
+        onObservation,
+        onClick,
+        mobileInteraction: setup.mobileInteraction,
+        customHoverBehavior: setup.customHoverBehavior,
+        customClickBehavior: setup.customClickBehavior,
+        linkedHoverInClickPredicate: false,
+      })}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

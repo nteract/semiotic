@@ -56,6 +56,11 @@
       "items": { "type": "string" },
       "x-idid-status": "shipped"
     },
+    "mobile": {
+      "$ref": "#/$defs/mobile",
+      "description": "Phone-specific design contract for mobile audits and responsive adapters. This lets custom charts and interoperability-generated charts declare how they preserve the task at small widths.",
+      "x-idid-status": "shipped"
+    },
     "tags": {
       "type": "array",
       "description": "Free-form classification tags consumers can filter on.",
@@ -107,6 +112,52 @@
           "type": "object",
           "description": "Implementation-specific props the host merges to realize this variant. Opaque to the spec; a non-Semiotic host may ignore it.",
           "x-idid-status": "shipped"
+        }
+      }
+    },
+    "mobile": {
+      "type": "object",
+      "title": "Mobile Capability",
+      "additionalProperties": true,
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "description": "Overall mobile design strategy, e.g. responsive, small-multiples, summary-cards, direct-labels, fixed-artboard."
+        },
+        "responsive": { "type": "boolean" },
+        "supportsResponsiveLayout": { "type": "boolean" },
+        "breakpoints": { "type": "array", "items": { "type": "number" } },
+        "minViewportWidth": { "type": "number", "minimum": 0 },
+        "maxMarks": { "type": "number", "minimum": 0 },
+        "maxAnnotations": { "type": "number", "minimum": 0 },
+        "minimumHitTarget": { "type": "number", "minimum": 0 },
+        "summary": { "oneOf": [{ "type": "boolean" }, { "type": "string" }] },
+        "interaction": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "primary": { "type": "string" },
+            "alternatives": { "type": "array", "items": { "type": "string" } },
+            "hoverFallback": { "type": "string" },
+            "targetSize": { "type": "number", "minimum": 0 }
+          }
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "strategy": { "type": "string" },
+            "minFontSize": { "type": "number", "minimum": 0 }
+          }
+        },
+        "custom": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "dataBearingSceneNodes": { "type": "boolean" },
+            "stableIds": { "type": "boolean" },
+            "navigationGranularity": { "type": "string" }
+          }
         }
       }
     },

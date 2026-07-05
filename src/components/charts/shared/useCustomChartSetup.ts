@@ -23,7 +23,9 @@ import { useMemo, useRef } from "react"
 import type { Ref, RefObject, ReactElement, ReactNode } from "react"
 import { useChartMode } from "./hooks"
 import { useChartSetup, type ChartSetupResult } from "./useChartSetup"
-import type { Accessor, ChartMode, SelectionConfig, LinkedHoverProp } from "./types"
+import type { Accessor, ChartMode, SelectionConfig, LinkedHoverProp, MobileInteractionProp } from "./types"
+import type { MobileVisualizationContract } from "./auditMobileVisualization"
+import type { ResponsiveRule } from "./responsiveRules"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { normalizePartialMargin, type PartialMargin, type MarginType } from "../../types/marginType"
 import type { Datum } from "./datumTypes"
@@ -54,6 +56,9 @@ interface ScaffoldOptions {
   enableHover?: boolean
   showLegend?: boolean
   title?: string
+  mobileInteraction?: MobileInteractionProp
+  mobileSemantics?: MobileVisualizationContract
+  responsiveRules?: ResponsiveRule[]
   mode?: ChartMode
   xLabel?: string
   yLabel?: string
@@ -92,6 +97,9 @@ export function useCustomChartScaffold<TFrameHandle>(
     title: options.title,
     xLabel: options.xLabel,
     yLabel: options.yLabel,
+    mobileInteraction: options.mobileInteraction,
+    mobileSemantics: options.mobileSemantics,
+    responsiveRules: options.responsiveRules,
   })
 
   const normalizedMargin = useMemo(
@@ -118,6 +126,8 @@ interface DataSetupOptions extends ScaffoldOptions {
   linkedHover?: LinkedHoverProp
   onObservation?: OnObservationCallback
   onClick?: (datum: Datum, ev: { x: number; y: number }) => void
+  mobileInteraction?: MobileInteractionProp
+  mobileSemantics?: MobileVisualizationContract
   chartId?: string
   loading?: boolean
   loadingContent?: ReactNode | false
@@ -163,6 +173,8 @@ export function useCustomChartSetup<TFrameHandle>(
     unwrapData: options.unwrapData,
     onObservation: options.onObservation,
     onClick: options.onClick,
+    mobileInteraction: options.mobileInteraction,
+    mobileSemantics: options.mobileSemantics,
     chartType: options.chartTypeLabel,
     chartId: options.chartId,
     showLegend: resolved.showLegend,

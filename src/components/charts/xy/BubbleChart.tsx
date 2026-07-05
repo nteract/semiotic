@@ -243,7 +243,10 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     title: props.title,
     xLabel: props.xLabel,
     yLabel: props.yLabel,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const {
     data,
@@ -306,6 +309,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "BubbleChart",
     chartId,
     showLegend,
@@ -474,7 +479,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
-      linkedHover, onObservation, onClick, hoverHighlight,
+      linkedHover, selection, onObservation, onClick, hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),
