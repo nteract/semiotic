@@ -158,6 +158,22 @@ describe("tokenLayer", () => {
     expect(layer.positionedTokens.map((token) => token.y)).toEqual([25, 25])
   })
 
+  it("requires valueToX for bar-segment placement", () => {
+    expect(() =>
+      tokenLayer({
+        input: 4,
+        encoding: {
+          tokenType: "icon",
+          icon: "server",
+          tokenSemantics: "unitized-measure",
+          countStrategy: "unitized",
+          unitValue: 2,
+          layout: "bar-segment",
+        },
+      })
+    ).toThrow(/requires valueToX/)
+  })
+
   it("renders projected range tokens only when includeRange is enabled", () => {
     const layer = tokenLayer({
       input: { value: 1.5, rangeValue: 3 },

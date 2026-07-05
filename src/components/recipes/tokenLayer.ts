@@ -272,7 +272,14 @@ function positionTokens<D>(
   const layout = options.layout ?? tokenSet.encoding.layout ?? "grid"
   if (layout === "quantile-strip") return positionQuantileStrip(tokens, options)
   if (layout === "dotplot") return positionDotplot(tokens, options)
-  if (layout === "bar-segment" && options.valueToX) return positionBarSegment(tokens, options)
+  if (layout === "bar-segment") {
+    if (!options.valueToX) {
+      throw new Error(
+        'tokenLayer layout "bar-segment" requires valueToX and optionally valueToY.'
+      )
+    }
+    return positionBarSegment(tokens, options)
+  }
   if (layout === "beeswarm" || layout === "small-multiple") {
     throw new Error(
       `tokenLayer layout "${layout}" is not implemented yet; use row, column, stack, grid, waffle, dotplot, quantile-strip, bar-segment with valueToX, or positionToken.`
@@ -284,7 +291,7 @@ function positionTokens<D>(
   const cellWidth = options.cellWidth ?? tokenSize ?? 12
   const cellHeight = options.cellHeight ?? tokenSize ?? cellWidth
   const columns =
-    layout === "row" || layout === "bar-segment"
+    layout === "row"
       ? Math.max(1, tokens.length)
       : layout === "column" || layout === "stack"
         ? 1

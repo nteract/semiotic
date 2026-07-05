@@ -693,12 +693,15 @@ function checkTokenEncodingDiagnostics(
   props: Datum,
   out: Diagnosis[]
 ): void {
-  const candidates = [
-    props.tokenEncoding,
-    props.encoding,
-  ].filter(isTokenEncodingLike)
+  const candidates: Array<{ source: "tokenEncoding" | "encoding"; encoding: Datum }> = []
+  if (isTokenEncodingLike(props.tokenEncoding)) {
+    candidates.push({ source: "tokenEncoding", encoding: props.tokenEncoding })
+  }
+  if (isTokenEncodingLike(props.encoding)) {
+    candidates.push({ source: "encoding", encoding: props.encoding })
+  }
 
-  for (const encoding of candidates) {
+  for (const { source, encoding } of candidates) {
     const visibleTokens = estimateVisibleTokens(props, encoding)
     for (const diagnostic of diagnoseTokenEncoding(encoding, { visibleTokens })) {
       out.push({
@@ -707,14 +710,14 @@ function checkTokenEncodingDiagnostics(
         message: diagnostic.message,
         fix:
           diagnostic.code === "MISSING_UNIT_VALUE"
-            ? "Set tokenEncoding.unitValue to the value represented by one full token."
+            ? `Set ${source}.unitValue to the value represented by one full token.`
             : diagnostic.code === "MISSING_UNIT_MEANING"
-              ? "Set tokenEncoding.unitMeaning so readers know what one full token represents."
+              ? `Set ${source}.unitMeaning so readers know what one full token represents.`
               : diagnostic.code === "MISSING_COUNT_STRATEGY"
-                ? "Set tokenEncoding.countStrategy to actual, unitized, fixed-denominator, quantile, sample, posterior-sample, or random-sample."
+                ? `Set ${source}.countStrategy to actual, unitized, fixed-denominator, quantile, sample, posterior-sample, or random-sample.`
                 : diagnostic.code === "TOKEN_SEMANTICS_UNCLEAR"
-                  ? "Set tokenEncoding.tokenSemantics to observed-unit, unitized-measure, risk-case, possible-outcome, posterior-sample, hypothetical-case, topic-anchor, or decorative."
-                  : "Adjust the tokenEncoding so its semantics, strategy, labels, and visible token count match the task.",
+                  ? `Set ${source}.tokenSemantics to observed-unit, unitized-measure, risk-case, possible-outcome, posterior-sample, hypothetical-case, topic-anchor, or decorative.`
+                  : `Adjust ${source} so its semantics, strategy, labels, and visible token count match the task.`,
       })
     }
   }
