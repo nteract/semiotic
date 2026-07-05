@@ -31,13 +31,17 @@ function copyDocsPublicAssets() {
 
 function docsDevEntrypoint() {
   const entryUrl = `/@fs/${resolve(repoRoot, "docs/src/index.jsx")}`
+  const docsEntrypointRE = /^\/src\/index\.(?:js|jsx|ts|tsx)$/
   const rewriteHtml = (html) =>
     html
       .replace('href="./prism.css"', 'href="/prism.css"')
       .replace('href="./semiotic.css"', 'href="/semiotic.css"')
       .replace('href="./assets/img/favicon.png"', 'href="/assets/img/favicon.png"')
       .replace('src="./prism.js"', 'src="/prism.js"')
-      .replace(/src=(["'])(?:\.\.\/src\/index\.jsx|\/src\/index\.jsx)\1/g, `src="${entryUrl}"`)
+      .replace(
+        /src=(["'])(?:\.\.\/src\/index\.jsx|\/src\/index\.jsx|\/src\/index\.tsx|\/src\/index\.ts|\/src\/index\.js)\1/g,
+        `src="${entryUrl}"`,
+      )
 
   return {
     name: "docs-dev-entrypoint",
@@ -45,6 +49,9 @@ function docsDevEntrypoint() {
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         const pathname = req.url?.split("?")[0]
+        if (pathname && docsEntrypointRE.test(pathname)) {
+          req.url = `${entryUrl}${req.url?.slice(pathname.length)}`
+        }
         const acceptsHtml = req.headers.accept?.includes("text/html")
         if (req.method === "GET" && acceptsHtml && pathname && !pathname.includes(".")) {
           req.url = "/index.html"
