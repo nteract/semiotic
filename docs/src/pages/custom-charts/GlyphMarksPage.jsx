@@ -2,7 +2,7 @@ import React from "react"
 import { Link } from "react-router-dom"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
-import { Glyph, symbolPathString, makeShade, unitize } from "semiotic/recipes"
+import { Glyph, symbolPathString, makeShade, generateTokens } from "semiotic/recipes"
 
 // A multi-part pictogram definition: parts declare role paints ("color" /
 // "accent") and every stamp supplies the actual inks.
@@ -57,11 +57,27 @@ function CompositeSwatch({ icon, cell = 44 }) {
   )
 }
 
-const swatchCol = { display: "flex", flexDirection: "column", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-2)", width: 64, textAlign: "center" }
+const swatchCol = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 4,
+  fontSize: 11,
+  color: "var(--text-2)",
+  width: 64,
+  textAlign: "center",
+}
 
 export default function GlyphMarksPage() {
   const shader = makeShade(HUE, 0.72)
   const ramp = [0, 0.25, 0.5, 0.75, 1]
+  const factoryTokens = generateTokens(3.6, {
+    tokenType: "glyph",
+    tokenSemantics: "unitized-measure",
+    countStrategy: "unitized",
+    unitValue: 1,
+    unitMeaning: "one sign = one factory",
+  })
   return (
     <PageLayout
       title="Glyph Marks"
@@ -75,20 +91,21 @@ export default function GlyphMarksPage() {
     >
       <section>
         <p>
-          Stream marks were circles only. The <code>symbol</code> scene-node adds a <strong>per-datum
-          shape channel</strong>: a glyph drawn from a <code>d3-shape</code> symbol path (or a custom
-          path), painted on canvas <em>and</em> in SSR/SVG, and hit-tested + keyboard-navigated as a
-          unit like any other mark. The path generator is exported so legends can match the marks
-          exactly.
+          Stream marks were circles only. The <code>symbol</code> scene-node adds a{" "}
+          <strong>per-datum shape channel</strong>: a glyph drawn from a <code>d3-shape</code>{" "}
+          symbol path (or a custom path), painted on canvas <em>and</em> in SSR/SVG, and hit-tested
+          + keyboard-navigated as a unit like any other mark. The path generator is exported so
+          legends can match the marks exactly.
         </p>
         <p>
           It&rsquo;s a <strong>cross-pipeline primitive</strong>: network, XY, and ordinal custom
-          layouts all emit it (one shared <code>symbolPath</code> implementation backs canvas, SVG, and
-          hit-testing across every chart family), and <Link to="/charts/scatterplot">Scatterplot</Link>{" "}
-          + <Link to="/charts/swarm-plot">SwarmPlot</Link> expose it as the <code>symbolBy</code>{" "}
+          layouts all emit it (one shared <code>symbolPath</code> implementation backs canvas, SVG,
+          and hit-testing across every chart family), and{" "}
+          <Link to="/charts/scatterplot">Scatterplot</Link> +{" "}
+          <Link to="/charts/swarm-plot">SwarmPlot</Link> expose it as the <code>symbolBy</code>{" "}
           encoding — each mark becomes a glyph, with size still tracking <code>sizeBy</code>/
-          <code>pointRadius</code>. Network layouts emit <code>{`{ cx, cy }`}</code>; XY/ordinal emit{" "}
-          <code>{`{ x, y }`}</code>.
+          <code>pointRadius</code>. Network layouts emit <code>{`{ cx, cy }`}</code>; XY/ordinal
+          emit <code>{`{ x, y }`}</code>.
         </p>
       </section>
 
@@ -96,9 +113,9 @@ export default function GlyphMarksPage() {
         <h2>Named shapes</h2>
         <p>
           Eight named glyphs ship today (seven from <code>d3-shape</code> plus a custom{" "}
-          <code>chevron</code>). <code>symbolPathString(name, size)</code> returns an origin-centered
-          SVG path for any of them; <code>symbolExtent</code> gives its true radius (used by packing
-          so pointy shapes don&rsquo;t overlap).
+          <code>chevron</code>). <code>symbolPathString(name, size)</code> returns an
+          origin-centered SVG path for any of them; <code>symbolExtent</code> gives its true radius
+          (used by packing so pointy shapes don&rsquo;t overlap).
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, margin: "12px 0" }}>
           {SHAPES.map((s) => (
@@ -124,14 +141,14 @@ sceneNodes.push({
         <ul>
           <li>
             <strong>Shape replaces the mark</strong> (<code>symbolAccessor</code> /{" "}
-            <code>symbolMap</code>): the whole mark <em>is</em> the shape. Use when shape is a primary
-            encoding and every datum should read as one of a few categories.
+            <code>symbolMap</code>): the whole mark <em>is</em> the shape. Use when shape is a
+            primary encoding and every datum should read as one of a few categories.
           </li>
           <li>
             <strong>Composite glyph</strong> (<code>iconAccessor</code> / <code>iconMap</code>): the
             base mark stays a filled circle and only mapped values get a stroked icon drawn inside.
-            Use when most marks are alike and a minority are flagged — the &ldquo;mostly plain circles,
-            a few are marked&rdquo; pattern.
+            Use when most marks are alike and a minority are flagged — the &ldquo;mostly plain
+            circles, a few are marked&rdquo; pattern.
           </li>
         </ul>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, margin: "12px 0" }}>
@@ -151,17 +168,19 @@ sceneNodes.push({
       </section>
 
       <section>
-        <h2>Composite pictograms — the <code>glyph</code> node</h2>
+        <h2>
+          Composite pictograms — the <code>glyph</code> node
+        </h2>
         <p>
           Named shapes are single paths. The <code>glyph</code> scene node goes a step further: a{" "}
           <strong>multi-part vector pictogram</strong> — a <code>GlyphDef</code> of paths with{" "}
           <strong>role-token paints</strong> (<code>&quot;color&quot;</code> /{" "}
-          <code>&quot;accent&quot;</code>), stamped per datum with each node&rsquo;s actual inks, the
-          way a classic pictogram plate reused one cut in many colors. Definitions carry an{" "}
+          <code>&quot;accent&quot;</code>), stamped per datum with each node&rsquo;s actual inks,
+          the way a classic pictogram plate reused one cut in many colors. Definitions carry an{" "}
           <code>anchor</code> (feet-down signs stand on baselines and terrain) and a{" "}
           <code>fraction</code>/<code>fractionStart</code> window for <strong>partial fills</strong>{" "}
           with an optional <code>ghostColor</code> silhouette — the ISOTYPE partial-symbol
-          convention, fed directly by the <code>unitize</code> recipe&rsquo;s tallies.
+          convention used by unitized token records.
         </p>
         <p>
           It is a full citizen of the pipeline: canvas <em>and</em> SVG/SSR rendering, hit-testing
@@ -172,9 +191,19 @@ sceneNodes.push({
           component renders the same definition in overlays, legends, recipe icon callbacks, and
           page chrome — one definition, no drift.
         </p>
+        <p>
+          For higher-level isotype and icon-array work, <code>tokenLayer</code> adds the semantic
+          contract above the tallying math: a token says whether it is an observed unit, a unitized
+          measure, a possible outcome, or a risk case, then the layer places and stamps dots, icons,
+          or <code>glyph</code> scene nodes.
+        </p>
         <div style={{ margin: "12px 0" }}>
-          <svg width={230} height={52} aria-label="Three and six-tenths factory signs: three solid, one partial">
-            {unitize(3.6, { unit: 1 }).units.map((sign) => (
+          <svg
+            width={230}
+            height={52}
+            aria-label="Three and six-tenths factory signs: three solid, one partial"
+          >
+            {factoryTokens.tokens.map((sign) => (
               <Glyph
                 key={sign.index}
                 def={FACTORY_SIGN}
@@ -189,11 +218,12 @@ sceneNodes.push({
             ))}
           </svg>
           <div style={{ fontSize: 11, color: "var(--text-2)" }}>
-            <code>unitize(3.6, {`{ unit: 1 }`})</code> → three solid signs and a 60% sign with a
-            ghost silhouette. Symbols repeat; they do not grow.
+            <code>generateTokens(3.6, {`{ countStrategy: "unitized", unitValue: 1 }`})</code> →
+            three solid signs and a 60% sign with a ghost silhouette. Symbols repeat; they do not
+            grow.
           </div>
         </div>
-        <CodeBlock language="jsx">{`import { unitize } from "semiotic/recipes"
+        <CodeBlock language="jsx">{`import { tokenLayer } from "semiotic/recipes"
 
 const SERVER_SIGN = {
   viewBox: [40, 40],
@@ -204,19 +234,29 @@ const SERVER_SIGN = {
   ],
 }
 
-// inside any custom layout: stamp one sign per unitize unit
-const tally = unitize(site.powerMW, { unit: 100 })
-nodes.push(
-  ...tally.units.map((unit) => ({
-    type: "glyph",
-    x, y: terrainY,                      // standing on the profile
-    size: 11,
+// inside any custom layout: describe the token semantics, then stamp glyphs
+const serverLayer = tokenLayer({
+  input: site.powerMW,
+  encoding: {
+    tokenType: "glyph",
+    tokenSemantics: "unitized-measure",
+    countStrategy: "unitized",
+    unitValue: 100,
+    unitMeaning: "one server sign = 100 MW",
+  },
+  options: {
+    x, y: terrainY - 40, columns: 4, cellWidth: 12, cellHeight: 12, anchor: [0.5, 1],
+    tokenSize: 11,
     glyph: SERVER_SIGN,
-    color: statusColor,                  // one cut, many inks
-    fraction: unit.fraction < 1 ? unit.fraction : undefined,
-    ghostColor: unit.fraction < 1 ? paperDeep : undefined,
-    style: {}, datum: site, pointId: \`\${site.id}-\${unit.index}\`,
-  })),
+    color: statusColor,
+    accent: "#fff",
+    ghostColor: paperDeep,
+    datum: site,
+    idPrefix: site.id,
+  },
+})
+nodes.push(
+  ...serverLayer.nodes,
 )
 
 // the same definition, as React chrome (legends, overlays, prose):
@@ -233,13 +273,27 @@ import { Glyph } from "semiotic/recipes"
       <section>
         <h2>Shade — a continuous channel on a hue</h2>
         <p>
-          Pair shape with <code>shade</code> / <code>makeShade</code>, which interpolate a hue&rsquo;s
-          lightness in <strong>CIELAB</strong> so the hue stays put while only lightness moves — a
-          categorical color can then carry a second continuous channel (age, recency, magnitude):
+          Pair shape with <code>shade</code> / <code>makeShade</code>, which interpolate a
+          hue&rsquo;s lightness in <strong>CIELAB</strong> so the hue stays put while only lightness
+          moves — a categorical color can then carry a second continuous channel (age, recency,
+          magnitude):
         </p>
-        <div style={{ display: "flex", gap: 0, margin: "12px 0", borderRadius: 6, overflow: "hidden", width: "fit-content" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 0,
+            margin: "12px 0",
+            borderRadius: 6,
+            overflow: "hidden",
+            width: "fit-content",
+          }}
+        >
           {ramp.map((t) => (
-            <div key={t} style={{ width: 56, height: 28, background: shader(t) }} title={`t=${t}`} />
+            <div
+              key={t}
+              style={{ width: 56, height: 28, background: shader(t) }}
+              title={`t=${t}`}
+            />
           ))}
         </div>
         <CodeBlock language="jsx">{`import { makeShade } from "semiotic/recipes"

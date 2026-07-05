@@ -24,6 +24,8 @@ export default function ExamplesOverviewPage() {
                 ? <MiniLakeIsotypePreview />
               : example.preview === "data-centers-isotype"
                 ? <MiniDataCentersIsotypePreview />
+              : example.preview === "discrete"
+                ? <MiniDiscretePreview />
               : example.preview === "isometric"
                 ? <MiniIsometricPreview />
               : example.preview === "wars"
@@ -111,6 +113,53 @@ function MiniDataCentersIsotypePreview() {
           height="10"
           fill={index < 13 ? "#d72f3f" : index < 17 ? "#4f8999" : "#34383b"}
         />
+      ))}
+    </svg>
+  )
+}
+
+function MiniDiscretePreview() {
+  const dots = Array.from({ length: 50 }, (_, index) => ({
+    x: 20 + (index % 10) * 20 + Math.floor(index / 10) * 1.6,
+    y: 24 + Math.floor(index / 10) * 10,
+    late: index > 37,
+  }))
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f6f7f1" />
+      <path
+        d="M6 70 C28 62 42 26 70 28 C94 30 105 52 126 54 C150 56 157 34 184 38 C207 41 222 59 236 64"
+        fill="none"
+        stroke="#1d2730"
+        strokeWidth="2.4"
+      />
+      <path
+        d="M6 70 C28 62 42 26 70 28 C94 30 105 52 126 54 L126 70 Z"
+        fill="#d8edf7"
+        opacity="0.95"
+      />
+      <line x1="126" x2="126" y1="14" y2="76" stroke="#c93d3d" strokeWidth="2" strokeDasharray="5 4" />
+      {dots.map((dot, index) => (
+        <circle
+          key={index}
+          cx={dot.x}
+          cy={dot.y + 34}
+          r="2.7"
+          fill={dot.late ? "#c93d3d" : "#236d99"}
+          opacity="0.92"
+        />
+      ))}
+      {[0, 1, 2, 3].map((index) => (
+        <g key={index} transform={`translate(${153 + index * 18} 29)`}>
+          <rect x="-8" y="-8" width="16" height="12" rx="2" fill={index === 3 ? "#c93d3d" : "#287f68"} />
+          <rect x="-5" y="-5" width="10" height="4" fill="#ffffff" opacity="0.9" />
+          <circle cx="-4" cy="5" r="2.2" fill={index === 3 ? "#c93d3d" : "#287f68"} stroke="#ffffff" strokeWidth="1" />
+          <circle cx="5" cy="5" r="2.2" fill={index === 3 ? "#c93d3d" : "#287f68"} stroke="#ffffff" strokeWidth="1" />
+        </g>
+      ))}
+      <rect x="148" y="72" width="68" height="8" fill="#cfe7df" />
+      {[0, 1, 2, 3].map((index) => (
+        <rect key={index} x={150 + index * 16} y="68" width="10" height="12" fill="#287f68" />
       ))}
     </svg>
   )

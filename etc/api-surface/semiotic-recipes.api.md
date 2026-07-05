@@ -13,6 +13,7 @@ const DEFAULT_ISOMETRIC_SPRITE_SIZES
 const SYMBOL_SEQUENCE
 const TAU
 const isotypeBoltGlyph
+const isotypeBusGlyph
 const isotypeChipGlyph
 const isotypeGhost
 const isotypeInk
@@ -55,6 +56,7 @@ function curvedEdgePath
 function cyclicRangeContains
 function dagreLayout
 function degree
+function diagnoseTokenEncoding
 function dimFor
 function egoNetwork
 function extractTooltipDatum
@@ -63,6 +65,7 @@ function flextreeLayout
 function forceLayout
 function forceLayoutAsync
 function formatTooltipValue
+function generateTokens
 function geoHitTarget
 function glyphExtent
 function glyphFractionClipRect
@@ -73,6 +76,7 @@ function hitTargetPoint
 function hitTargetRect
 function intervalLanesLayout
 function isometricLandmarkLayout
+function layoutTokenGrid
 function legendGroupsFrom
 function legendSwatches
 function lineageDagLayout
@@ -95,8 +99,10 @@ function mobileScatterplotRecipe
 function mobileSmallMultipleRecipe
 function mulberry32
 function networkHitTarget
+function nonNegativeFinite
 function normalizePoint
 function normalizeScores
+function normalizeTokenEncoding
 function orderByGroupDegree
 function orthogonalEdgePath
 function packIntervals
@@ -120,9 +126,12 @@ function shortestArcDelta
 function shortestPath
 function signatureKey
 function subtractPoints
+function suggestTokenEncoding
 function symbolExtent
 function symbolPathString
 function symbolRadius
+function tokenLayer
+function tokenTaskIntentToCapabilityIntents
 function unitize
 function unitizeRange
 function unwrapDatum
@@ -214,6 +223,7 @@ interface ParallelCoordinatesConfig
 interface Point
 interface PolarOptions
 interface PositionedNode
+interface PositionedToken
 interface ProximityProblemOptions
 interface ProximityProblemResult
 interface RangeUnitSign
@@ -221,10 +231,23 @@ interface RectCollideOptions
 interface RoundedEnclosureProps
 interface Run
 interface RunOptions
+interface SuggestTokenEncodingInput
+interface TokenDiagnostic
+interface TokenDiagnosticsContext
+interface TokenEncoding
+interface TokenEncodingSuggestion
+interface TokenGeneratorInput
+interface TokenGridOptions
+interface TokenLayerConfig
+interface TokenLayerOptions
+interface TokenLayerResult
+interface TokenPosition
+interface TokenSet
 interface UnitSign
 interface UnitizeOptions
 interface UnitizeRangeResult
 interface UnitizeResult
+interface VisualToken
 interface WaffleConfig
 type AnnotationCohesion
 type AutoPlaceAnnotations
@@ -243,4 +266,14 @@ type NetworkCustomLayout
 type NetworkSymbolName
 type OrdinalCustomLayout
 type RingArcOptions
+type TokenCapabilityIntent
+type TokenCountStrategy
+type TokenDiagnosticCode
+type TokenLabelPolicy
+type TokenLayerInput
+type TokenLayerValue
+type TokenLayout
+type TokenSemantics
+type TokenTaskIntent
+type TokenType
 ```

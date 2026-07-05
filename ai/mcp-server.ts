@@ -1,7 +1,7 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes seventeen tools, six resources, and two prompts:
+ * Exposes eighteen tools, six resources, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — legacy sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
@@ -19,6 +19,7 @@
  *   15. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
  *   16. applyTheme — returns usage guidance for theme presets
  *   17. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
+ *   18. suggestTokenEncoding — semantic token / ISOTYPE encoding recommender
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -62,8 +63,10 @@ import {
   profileData,
   proposeVariant,
   evaluateVariantProposal,
+  suggestTokenEncoding,
+  tokenTaskIntentToCapabilityIntents,
 } from "semiotic/ai"
-import type { IntentId, StreamSchema, AudienceProfile, ChartDataProfile, VariantProposal } from "semiotic/ai"
+import type { IntentId, StreamSchema, AudienceProfile, ChartDataProfile, VariantProposal, TokenTaskIntent } from "semiotic/ai"
 // Sibling .cjs modules (authored as CommonJS, also consumed by the CLI/doctor).
 // esModuleInterop maps each module.exports object to the default import.
 import componentMetadataModule from "./componentMetadata.cjs"
@@ -1110,6 +1113,86 @@ async function suggestChartsHandler(args: {
   }
 }
 
+const ALLOWED_TOKEN_TASK_INTENTS: readonly TokenTaskIntent[] = [
+  "precise-comparison",
+  "frequency-reasoning",
+  "probability-estimation",
+  "risk-communication",
+  "memory",
+  "editorial-engagement",
+  "public-explanation",
+  "support-decision",
+  "measure",
+  "estimate probability",
+  "understand risk",
+  "remember",
+  "decide",
+]
+
+function isTokenTaskIntent(value: string): value is TokenTaskIntent {
+  return (ALLOWED_TOKEN_TASK_INTENTS as readonly string[]).includes(value)
+}
+
+async function suggestTokenEncodingHandler(args: {
+  taskIntent?: string
+  dataType?: "count" | "measure" | "distribution" | "probability" | "risk" | "category"
+  audience?: "expert" | "general-public" | "internal"
+  precisionNeed?: "low" | "medium" | "high"
+  availableSpace?: "small" | "medium" | "large"
+  concreteEntity?: string
+}): Promise<ToolResult> {
+  if (!args.taskIntent) {
+    return {
+      content: [{
+        type: "text",
+        text: "Missing 'taskIntent'. Provide a token task such as 'estimate probability', 'understand risk', 'remember', 'measure', or 'decide'.",
+      }],
+      isError: true,
+    }
+  }
+  if (!isTokenTaskIntent(args.taskIntent)) {
+    return {
+      content: [{
+        type: "text",
+        text: `Invalid 'taskIntent': "${args.taskIntent}". Expected one of: ${ALLOWED_TOKEN_TASK_INTENTS.join(", ")}.`,
+      }],
+      isError: true,
+    }
+  }
+
+  const taskIntent = args.taskIntent
+  const suggestion = suggestTokenEncoding({
+    taskIntent,
+    dataType: args.dataType,
+    audience: args.audience,
+    precisionNeed: args.precisionNeed,
+    availableSpace: args.availableSpace,
+    concreteEntity: args.concreteEntity,
+  })
+  const capabilityIntents = tokenTaskIntentToCapabilityIntents(taskIntent)
+  const warnings = suggestion.warnings.length
+    ? `\nWarnings:\n${suggestion.warnings.map((warning) => `- [${warning.code}] ${warning.message}`).join("\n")}`
+    : ""
+  const encoding = suggestion.tokenEncoding
+    ? `\nEncoding:\n${JSON.stringify(suggestion.tokenEncoding, null, 2)}`
+    : ""
+
+  return {
+    content: [{
+      type: "text",
+      text: [
+        `Recommended token encoding: ${suggestion.recommendedEncoding}`,
+        `Rationale: ${suggestion.rationale}`,
+        `Capability intents: ${capabilityIntents.join(", ")}`,
+        encoding.trim(),
+        warnings.trim(),
+        `Alternatives: ${suggestion.alternatives.join(", ")}`,
+      ].filter(Boolean).join("\n\n"),
+    }],
+    structuredContent: { suggestion, capabilityIntents },
+  }
+}
+
 async function suggestStreamChartsHandler(args: {
   schema: StreamSchema
   intent?: string | string[]
@@ -1690,6 +1773,21 @@ function createServer(): McpServer {
   )
 
   srv.tool(
+    "suggestTokenEncoding",
+    "Recommend a semantic token / ISOTYPE encoding for a reader task. Use before drawing repeated dots, icons, glyphs, natural-frequency grids, quantile dotplots, or hybrid bar-token views. Returns the recommended tokenEncoding, warnings, alternatives, and matching suggestCharts capability intents. Accepts canonical token intents (precise-comparison, probability-estimation, risk-communication, memory, support-decision, etc.) and friendly aliases (measure, estimate probability, understand risk, remember, decide).",
+    {
+      taskIntent: z.string().describe("Reader task intent, e.g. 'estimate probability', 'understand risk', 'remember', 'measure', 'decide', or canonical token intents like 'probability-estimation'."),
+      dataType: z.enum(["count", "measure", "distribution", "probability", "risk", "category"]).optional().describe("Data shape or meaning behind the tokenized view."),
+      audience: z.enum(["expert", "general-public", "internal"]).optional().describe("Audience for the recommendation."),
+      precisionNeed: z.enum(["low", "medium", "high"]).optional().describe("How much exact magnitude reading matters."),
+      availableSpace: z.enum(["small", "medium", "large"]).optional().describe("Space budget for visible tokens."),
+      concreteEntity: z.string().optional().describe("Concrete icon/glyph concept, e.g. person, bus, server. Becomes tokenEncoding.icon when useful."),
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    suggestTokenEncodingHandler
+  )
+
+  srv.tool(
     "suggestStretchCharts",
     "Recommend literacy-growth chart picks for a dataset given an AudienceProfile. Returns charts the data supports but the audience is unfamiliar with (familiarity ≤ 3, or ≤ 4 at exposureLevel 2), each paired with the familiar chart it could substitute for and a rationale. Use when the consumer wants to gently expose users to less familiar but more analytically appropriate visualizations.",
     {
@@ -1988,7 +2086,7 @@ async function main() {
 
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
-      console.error("Tools: getSchema, suggestChart, suggestCharts, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme")
+      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme")
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html")
     })
   } else {

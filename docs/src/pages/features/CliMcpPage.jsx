@@ -73,7 +73,7 @@ npx semiotic-ai --help`}</CodeBlock>
       <p>
         Pipe <code>{`{ component, props, usageMode? }`}</code> to <code>--doctor</code> to validate
         a proposed chart before rendering. It reports errors, warnings (with fixes), and the
-        behavior contracts that apply. Pass <code>usageMode: "push"</code> when validating ref-based
+        behavior contracts that apply. Pass <code>usageMode: &quot;push&quot;</code> when validating ref-based
         streaming code that omits <code>data</code>.
       </p>
       <CodeBlock language="bash">{`echo '{"component":"BarChart","props":{"data":[{"region":"AMER","value":42}],"categoryAccessor":"region","valueAccessor":"value"}}' \\
@@ -87,7 +87,7 @@ npx semiotic-ai --help`}</CodeBlock>
         (<code>DUAL_AXIS_UNLABELED</code>), trend windows cropped to a
         favorable slice (<code>CHERRY_PICKED_WINDOW</code>), negative values in
         part-to-whole encodings (<code>PART_TO_WHOLE_NEGATIVE</code>),
-        B-spline curves that don't pass through the data points
+        B-spline curves that don&rsquo;t pass through the data points
         (<code>NON_PASSING_CURVE</code>), slope-distorting aspect ratios
         (<code>EXTREME_ASPECT_RATIO</code>), and over-sliced pies
         (<code>PIE_TOO_MANY_SLICES</code>) — alongside the long-standing
@@ -108,7 +108,7 @@ npx semiotic-ai --help`}</CodeBlock>
       <h2 id="semiotic-mcp">semiotic-mcp (MCP server)</h2>
       <p>
         <code>npx semiotic-mcp</code> starts a Model Context Protocol server over stdio. Point an
-        MCP-aware assistant at it and the model can call Semiotic's capabilities directly rather
+        MCP-aware assistant at it and the model can call Semiotic&rsquo;s capabilities directly rather
         than guessing at the API.
       </p>
       <p>The server exposes these tools:</p>
@@ -132,10 +132,15 @@ npx semiotic-ai --help`}</CodeBlock>
           <Link to="/intelligence/suggestions">Chart Suggestions</Link>).
         </li>
         <li>
-          <code>diagnoseConfig</code> — flag anti-patterns in a proposed config.
+          <code>suggestTokenEncoding</code> — recommend semantic token encodings for ISOTYPE,
+          natural-frequency grids, quantile dotplots, and hybrid bar-token views.
         </li>
         <li>
-          <code>interrogateChart</code> — answer a natural-language question about a chart's data
+          <code>diagnoseConfig</code> — flag anti-patterns in a proposed config, including{" "}
+          <code>tokenEncoding</code> warnings when a chart declares token semantics.
+        </li>
+        <li>
+          <code>interrogateChart</code> — answer a natural-language question about a chart&rsquo;s data
           (see <Link to="/intelligence/interrogation">Interrogation</Link>).
         </li>
         <li>
@@ -156,7 +161,7 @@ npx semiotic-ai --help`}</CodeBlock>
 
       <h3 id="agent-setup">Agent setup</h3>
       <p>
-        Register the server in your assistant's MCP configuration. For example, in a Claude / Cursor
+        Register the server in your assistant&rsquo;s MCP configuration. For example, in a Claude / Cursor
         style <code>mcpServers</code> block:
       </p>
       <CodeBlock language="json">{`{

@@ -412,6 +412,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
       "suggestDashboard",
       "suggestStreamCharts",
       "suggestStretchCharts",
+      "suggestTokenEncoding",
     ])
   })
 
@@ -595,6 +596,41 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
 
     expect(result.result.isError).toBeFalsy()
     expect(result.result.structuredContent.ok).toBe(true)
+  })
+
+  it("suggestTokenEncoding returns semantic token recommendations", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "suggestTokenEncoding",
+      arguments: {
+        taskIntent: "understand risk",
+        dataType: "risk",
+        concreteEntity: "person",
+      },
+    }, "token-suggest")
+
+    expect(result.result.isError).toBeFalsy()
+    expect(result.result.structuredContent.suggestion.recommendedEncoding)
+      .toBe("fixed-denominator-icon-array")
+    expect(result.result.structuredContent.suggestion.tokenEncoding).toMatchObject({
+      tokenSemantics: "risk-case",
+      countStrategy: "fixed-denominator",
+      denominator: 100,
+      icon: "person",
+    })
+    expect(result.result.structuredContent.capabilityIntents).toContain("part-to-whole")
+  })
+
+  it("suggestTokenEncoding rejects unknown task intents", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "suggestTokenEncoding",
+      arguments: {
+        taskIntent: "make it cute",
+        dataType: "category",
+      },
+    }, "token-suggest-invalid")
+
+    expect(result.result.isError).toBe(true)
+    expect(result.result.content[0].text).toContain("Invalid 'taskIntent'")
   })
 
   it("proposeChartVariants returns ranked variant proposals", async () => {

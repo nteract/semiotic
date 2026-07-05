@@ -148,6 +148,7 @@ function describeChart
 function describeRecipeChart
 function deserializeSelections
 function diagnoseConfig
+function diagnoseTokenEncoding
 function diffProfile
 function disableConversationArc
 function effectiveFamiliarity
@@ -180,6 +181,7 @@ function listChartRecipes
 function listIntents
 function loadConversationArc
 function mobileVisualizationCaveats
+function normalizeTokenEncoding
 function prepareChart
 function profileData
 function proposeVariant
@@ -214,6 +216,7 @@ function suggestChartsGrouped
 function suggestDashboard
 function suggestStreamCharts
 function suggestStretchCharts
+function suggestTokenEncoding
 function summarizeArc
 function summarizeData
 function summarizeIntentManifest
@@ -222,6 +225,7 @@ function toConfig
 function toDataPitfallsChain
 function toOpenAITool
 function toURL
+function tokenTaskIntentToCapabilityIntents
 function unregisterChartCapability
 function unregisterChartRecipe
 function unregisterRecipeLayout
@@ -385,6 +389,7 @@ interface ObservedSceneAuditResult
 interface PerCapabilityScore
 interface PerFixtureScore
 interface PortableNavigationStrategy
+interface PositionedToken
 interface PrepareChartInput
 interface PrepareChartOptions
 interface PrepareChartResult
@@ -435,12 +440,20 @@ interface SuggestChartsOptions
 interface SuggestDashboardOptions
 interface SuggestStreamChartsOptions
 interface SuggestStretchChartsOptions
+interface SuggestTokenEncodingInput
 interface Suggestion
 interface SuggestionChosenEvent
 interface SuggestionScaleRange
 interface SuggestionShownEvent
 interface SummarizeOptions
 interface ToConfigOptions
+interface TokenDiagnostic
+interface TokenDiagnosticsContext
+interface TokenEncoding
+interface TokenEncodingSuggestion
+interface TokenGeneratorInput
+interface TokenGridOptions
+interface TokenSet
 interface UnknownFieldSummary
 interface UnplacedDataQualityResult
 interface UseChartFocusOptions
@@ -462,6 +475,7 @@ interface VariantProposal
 interface VariantScore
 interface VegaLiteEncoding
 interface VegaLiteSpec
+interface VisualToken
 interface WebhookConversationArcSinkOptions
 interface WhyCustomExplanation
 type A11yPrinciple
@@ -541,6 +555,14 @@ type SerializedSelections
 type SmallMultipleExtent
 type StreamFieldKind
 type StreamIntentScorer
+type TokenCapabilityIntent
+type TokenCountStrategy
+type TokenDiagnosticCode
+type TokenLabelPolicy
+type TokenLayout
+type TokenSemantics
+type TokenTaskIntent
+type TokenType
 type VariantProposalSource
 type VariantRejectionReason
 ```

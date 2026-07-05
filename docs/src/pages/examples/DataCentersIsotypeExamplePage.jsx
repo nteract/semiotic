@@ -35,11 +35,11 @@ import "./DataCentersIsotypeExamplePage.css"
 const STATUS_ORDER = ["legacy", "new", "construction", "planned"]
 
 const implementationCode = `import { GeoCustomChart } from "semiotic/geo"
-import { geoHitTarget, hatchFill, unitize } from "semiotic/recipes"
+import { geoHitTarget, hatchFill, tokenLayer } from "semiotic/recipes"
 
-// Each site's capacity becomes a unitize tally, and each unit becomes a
-// feet-anchored glyph scene node standing on the relief — canvas-painted,
-// with the partial final sign riding the node's own fraction + ghostColor.
+// Each site's capacity becomes an explicit tokenized measure, and each token
+// becomes a feet-anchored glyph scene node standing on the relief — canvas-
+// painted, with the partial final sign riding the node's fraction + ghostColor.
 // One geoHitTarget per site keeps the stack a single keyboard/hover mark.
 function dataCenterMapLayout(ctx) {
   const placed = sites.map((site) => {
@@ -55,16 +55,27 @@ function dataCenterMapLayout(ctx) {
     nodes: [
       ...placed.map(({ site, x, y }) => geoHitTarget({ x, y, r: 14, datum: site, id: site.id })),
       ...placed.flatMap(({ site, x, y }) =>
-        unitize(site.powerMW, { unit: 100 }).units.map((unit) => ({
-          type: "glyph",
-          x: x + unit.index * 12, y,               // standing on the terrain
-          size: 11,
-          glyph: SERVER_SIGN,                       // a multi-part GlyphDef
-          color: STATUS_META[site.status].color,    // one cut, many inks
-          fraction: unit.fraction < 1 ? unit.fraction : undefined,
-          ghostColor: unit.fraction < 1 ? PAPER_DEEP : undefined,
-          style: {}, datum: null,
-        })),
+        tokenLayer({
+          input: site.powerMW,
+          encoding: {
+            tokenType: "glyph",
+            tokenSemantics: "unitized-measure",
+            countStrategy: "unitized",
+            unitValue: 100,
+            unitMeaning: "one server sign = 100 MW",
+          },
+          options: {
+            tokenSize: 11,
+            glyph: SERVER_SIGN,                       // a multi-part GlyphDef
+            color: STATUS_META[site.status].color,    // one cut, many inks
+            ghostColor: PAPER_DEEP,
+            datum: null,
+            positionToken: (unit) => ({
+              x: x + unit.index * 12,
+              y,                                      // standing on the terrain
+            }),
+          },
+        }).nodes,
       ),
     ],
     overlays: <ReliefSectionsAndLabels water={hatchFill({ id: "sea", angle: 90 })} />,
@@ -523,8 +534,8 @@ export default function DataCentersIsotypeExamplePage() {
         <p>
           The shared ISOTYPE signs are deliberately simple; the data contract is not. Each map
           record carries status, date language, denominator, source, and caveat. Every repeated
-          sign is a <code>glyph</code> scene node allocated by the <code>unitize</code> recipe —
-          canvas-painted pictograms whose partial fills preserve the reported amounts — so the
+          sign is a <code>glyph</code> scene node allocated by <code>tokenLayer</code> as a{" "}
+          <code>unitized-measure</code> — canvas-painted pictograms whose partial fills preserve the reported amounts — so the
           rich poster stays observable, keyboard-navigable, and accessible without a parallel
           bookkeeping layer.
         </p>
