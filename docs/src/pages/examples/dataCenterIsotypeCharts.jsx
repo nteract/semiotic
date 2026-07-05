@@ -1,10 +1,10 @@
 import React from "react"
 import {
+  generateTokens,
   geoHitTarget,
   hatchFill,
   hitTargetRect,
   networkHitTarget,
-  unitize,
 } from "semiotic/recipes"
 import {
   ISOTYPE,
@@ -28,12 +28,24 @@ import {
 // After the 1943 ISOTYPE spread "Altitude and Vegetation, United States":
 // a ghost map with hatched water, five west-to-east relief sections drawn as
 // dark silhouettes at their latitudes, and the buildings standing on the
-// terrain as `glyph` scene nodes — canvas-painted pictograms with partial
-// fills straight from the unitize tally.
+// terrain as `glyph` scene nodes — canvas-painted pictograms with explicit
+// tokenized-measure records for partial fills.
 
 const PROFILE_MAX_PX = 34
 const SIGN_SIZE = 11
 const SIGN_ROW = 6
+
+function measureTokens(value, unitValue, unitMeaning, options = {}) {
+  return generateTokens(value ?? 0, {
+    tokenType: "glyph",
+    tokenSemantics: "unitized-measure",
+    countStrategy: "unitized",
+    unitValue,
+    unitMeaning,
+    maxTokens: options.maxTokens,
+    minFraction: options.minFraction,
+  }).tokens
+}
 
 // Which relief section each site stands on, plus hand-set collision nudges
 // (px along the section) and label placement — this is a poster, and posters
@@ -420,7 +432,9 @@ export function hyperscaleCapacityLayout(ctx) {
   // Variable row heights: the United States wraps to three rows of signs.
   let cursorY = 4
   const regions = rows.map((row) => {
-    const units = unitize(row.share, { unit: HYPERSCALE_UNIT, maxUnits: 40 }).units
+    const units = measureTokens(row.share, HYPERSCALE_UNIT, "one server sign = 2% of hyperscale capacity", {
+      maxTokens: 40,
+    })
     const signRows = Math.max(1, Math.ceil(units.length / HYPERSCALE_PER_ROW))
     const blockHeight = signRows * (iconSize + rowGapY) + 18
     const region = { row, units, y: cursorY, blockHeight }
@@ -545,7 +559,9 @@ export function modelComputeLayout(ctx) {
       ...rows.flatMap((row, rowIndex) => {
         const y = rowIndex * rowHeight
         const chips = Math.max(1, Math.round(row.relative))
-        const bolts = unitize(row.mmlu, { unit: MMLU_UNIT, maxUnits: 20 }).units
+        const bolts = measureTokens(row.mmlu, MMLU_UNIT, `one bolt = ${MMLU_UNIT} MMLU points`, {
+          maxTokens: 20,
+        })
         const color = row.era === "after" ? ISOTYPE.red : ISOTYPE.ink
         const boltSize = compact ? 9 : 13
         const perScoreRow = compact ? 5 : 10
@@ -581,7 +597,9 @@ export function modelComputeLayout(ctx) {
       <g>
         {rows.map((row, rowIndex) => {
           const y = rowIndex * rowHeight
-          const bolts = unitize(row.mmlu, { unit: MMLU_UNIT, maxUnits: 20 }).units
+          const bolts = measureTokens(row.mmlu, MMLU_UNIT, `one bolt = ${MMLU_UNIT} MMLU points`, {
+            maxTokens: 20,
+          })
           const color = row.era === "after" ? ISOTYPE.red : ISOTYPE.ink
           const boltSize = compact ? 9 : 13
           const perScoreRow = compact ? 5 : 10
@@ -650,10 +668,10 @@ const COOLING_MODES = [
   { id: "dry", label: "DRY / AIR-COOLED", water: 1, energy: 5, note: "more energy · less water" },
 ]
 
-// Arrow-per-unit allocation: the library's unitize with sliver-dropping —
+// Arrow-per-unit allocation with explicit token semantics and sliver-dropping:
 // 176 TWh is seven arrows, not seven arrows and a 4% stub.
 export function arrowUnits(value, unit, minFraction = 0.08) {
-  return unitize(value, { unit, minFraction }).units
+  return measureTokens(value, unit, `one arrow = ${unit} units`, { minFraction })
 }
 
 function arrowRightPath(length, thickness) {

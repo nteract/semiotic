@@ -17,6 +17,43 @@ export type {
   UnitizeResult,
   UnitizeRangeResult,
 } from "./recipes/unitize"
+export {
+  generateTokens,
+  layoutTokenGrid,
+  normalizeTokenEncoding,
+  diagnoseTokenEncoding,
+  suggestTokenEncoding,
+  tokenTaskIntentToCapabilityIntents,
+} from "./recipes/tokenEncoding"
+export type {
+  TokenType,
+  TokenSemantics,
+  TokenCountStrategy,
+  TokenLayout,
+  TokenLabelPolicy,
+  TokenTaskIntent,
+  TokenCapabilityIntent,
+  TokenEncoding,
+  TokenGeneratorInput,
+  VisualToken,
+  TokenDiagnosticCode,
+  TokenDiagnostic,
+  TokenDiagnosticsContext,
+  TokenSet,
+  TokenGridOptions,
+  PositionedToken,
+  TokenEncodingSuggestion,
+  SuggestTokenEncodingInput,
+} from "./recipes/tokenEncoding"
+export { tokenLayer } from "./recipes/tokenLayer"
+export type {
+  TokenLayerOptions,
+  TokenLayerConfig,
+  TokenLayerResult,
+  TokenLayerInput,
+  TokenLayerValue,
+  TokenPosition,
+} from "./recipes/tokenLayer"
 export type { WaffleConfig, CellWeight, AllocatedCells, AllocateCellsOptions } from "./recipes/waffle"
 
 export { calendarLayout } from "./recipes/calendar"
@@ -192,7 +229,7 @@ export { shade, makeShade, readField, groupBy } from "./recipes/recipeUtils"
 // Interaction + caching helpers shared by custom-layout recipes.
 export { dimFor, matchesHighlight, signatureKey, LayoutCache } from "./recipes/recipeUtils"
 // Small numeric/color utilities every hand-built layout re-declares.
-export { clamp, mean, withAlpha } from "./recipes/recipeUtils"
+export { clamp, mean, nonNegativeFinite, withAlpha } from "./recipes/recipeUtils"
 export type { DimOptions, HighlightMatch } from "./recipes/recipeUtils"
 export { symbolPathString, symbolRadius, symbolExtent, SYMBOL_SEQUENCE } from "./stream/symbolPath"
 export type { NetworkSymbolName } from "./stream/symbolPath"
@@ -218,6 +255,7 @@ export {
   isotypeServerGlyph,
   isotypeChipGlyph,
   isotypeBoltGlyph,
+  isotypeBusGlyph,
   isotypePersonPath,
   isotypePersonGlyph,
   isotypeNetworkGlyphs,

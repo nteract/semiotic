@@ -123,6 +123,24 @@ describe("diagnoseConfig", () => {
     expect(warnings.length).toBeGreaterThan(0)
   })
 
+  it("includes tokenEncoding diagnostics when a config declares semantic tokens", () => {
+    const result = diagnoseConfig("BarChart", {
+      data: [{ category: "A", value: 3 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      tokenEncoding: {
+        tokenType: "glyph",
+        tokenSemantics: "unitized-measure",
+        countStrategy: "unitized",
+      },
+    })
+
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("TOKEN_MISSING_UNIT_VALUE")
+    expect(codes).toContain("TOKEN_MISSING_UNIT_MEANING")
+    expect(result.ok).toBe(true)
+  })
+
   it("includes validation errors from validateProps", () => {
     const result = diagnoseConfig("FakeComponent", { data: [] })
     expect(result.ok).toBe(false)

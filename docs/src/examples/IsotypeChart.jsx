@@ -1,7 +1,7 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
 import { OrdinalCustomChart } from "semiotic"
-import { hitTargetRect, isotypePersonGlyph } from "semiotic/recipes"
+import { hitTargetRect, tokenLayer } from "semiotic/recipes"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -113,26 +113,36 @@ function isotypeGlyphLayout(ctx) {
   const glyphs = []
   ctx.data.forEach((column) => {
     const x0 = ctx.scales.o(column.bin) || 0
-    const centerX = x0 + ctx.scales.o.bandwidth() / 2
-    column.people.forEach((person, personIndex) => {
-      const color = colorHash[person.type]
-      if (!color) return
-      const cellTop = ctx.scales.r(personIndex + 1)
-      const y = cellTop + (unitHeight - glyphSize) / 2 + glyphSize
-      glyphs.push({
-        type: "glyph",
-        x: centerX,
-        y,
-        size: glyphSize,
-        glyph: isotypePersonGlyph,
-        color,
+    const personLayer = tokenLayer({
+      input: { data: column.people },
+      encoding: {
+        tokenType: "glyph",
+        tokenSemantics: "observed-unit",
+        countStrategy: "actual",
+        icon: "person",
+        labelPolicy: "text-plus-token",
+      },
+      options: {
+        tokenSize: glyphSize,
+        color: (unit) => colorHash[unit.datum.type],
         accent: "#ffffff",
         style: {},
         // Hover/focus should resolve to the column hit target, not the unit.
         datum: null,
-        pointId: `${column.bin}-${personIndex}`,
-      })
+        include: (unit) => Boolean(colorHash[unit.datum.type]),
+        pointId: (unit) => `${column.bin}-${unit.index}`,
+        positionToken: (unit) => {
+          const cellTop = ctx.scales.r(unit.index + 1)
+          return {
+            x: x0 + ctx.scales.o.bandwidth() / 2,
+            y: cellTop + (unitHeight - glyphSize) / 2 + glyphSize,
+            row: unit.index,
+            column: 0,
+          }
+        },
+      },
     })
+    glyphs.push(...personLayer.nodes)
   })
 
   // Category labels
@@ -210,15 +220,17 @@ const frameProps = {
 const overrideProps = {
   layout: `function isotypeGlyphLayout(ctx) {
     // Emits one transparent hit target per column plus
-    // datum-less glyph scene nodes for each visible person.
+    // tokenLayer({ tokenSemantics: "observed-unit", icon: "person" })
+    // as datum-less glyph scene nodes.
     return { nodes: [...columnHitTargets, ...personGlyphs], overlays }
   }`,
 }
 
-const pre = `import { hitTargetRect, isotypePersonGlyph } from "semiotic/recipes"
+const pre = `import { hitTargetRect, tokenLayer } from "semiotic/recipes"
 
 // The layout emits:
-// { type: "glyph", glyph: isotypePersonGlyph, datum: null }
+// tokenLayer({ icon: "person", tokenSemantics: "observed-unit" })
+// as datum-less glyph scene nodes for the visible signs
 // plus one hitTargetRect(...) per column for grouped hover/focus.`
 
 export default function IsotypeChart() {
@@ -226,7 +238,7 @@ export default function IsotypeChart() {
     <div>
       <MarkdownText
         text={`
-Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). This isotype chart uses \`OrdinalCustomChart\`: each visible person is a reusable Semiotic glyph scene node, while each column has one transparent hit target so hover and keyboard focus read the bin as a whole.
+Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). This isotype chart uses \`OrdinalCustomChart\`: \`tokenLayer\` marks each visible person as an \`observed-unit\` and turns those tokens into reusable Semiotic glyph scene nodes, while each column has one transparent hit target so hover and keyboard focus read the bin as a whole.
 `}
       />
       <DocumentFrame

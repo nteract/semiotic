@@ -32,6 +32,15 @@ export const EXAMPLES = [
     badges: ["Custom chart", "Local", "Agent-readable"],
   },
   {
+    title: "Sometimes it's better to be discrete",
+    path: "/examples/sometimes-better-discrete",
+    eyebrow: "TokenLayer · task-aware ISOTYPE",
+    description:
+      "A bus-waiting decision rebuilt across density, quantile dots, bus pictograms, natural-frequency risk, and a hybrid expected-wait bar, with IDID recommending the encoding for the reader's task.",
+    preview: "discrete",
+    badges: ["TokenLayer", "Custom chart", "Intent-aware", "Accessible navigation"],
+  },
+  {
     title: "All the Wars of the United States",
     path: "/examples/us-war-timeline",
     eyebrow: "Custom ordinal timeline",

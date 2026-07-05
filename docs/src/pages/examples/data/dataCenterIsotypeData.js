@@ -1,4 +1,4 @@
-import { unitize } from "semiotic/recipes"
+import { generateTokens } from "semiotic/recipes"
 
 export const DATA_CENTER_AS_OF = "2026-07-03"
 export const CHATGPT_RELEASE = "2022-11-30"
@@ -472,10 +472,16 @@ export function profileElevationAt(profile, t) {
   return profile[profile.length - 1][1]
 }
 
-// One server sign per 100 disclosed megawatts, with a fractional final sign
-// — the library's unitize tally, at this dataset's unit.
+// One server sign per 100 disclosed megawatts, with a fractional final sign.
+// The returned records keep the token semantics explicit for the glyph layout.
 export function powerIconUnits(powerMW, unitMW = 100) {
-  return unitize(powerMW ?? 0, { unit: unitMW }).units
+  return generateTokens(powerMW ?? 0, {
+    tokenType: "glyph",
+    tokenSemantics: "unitized-measure",
+    countStrategy: "unitized",
+    unitValue: unitMW,
+    unitMeaning: `one server sign = ${unitMW} MW`,
+  }).tokens
 }
 
 export function sitesByStatus(statuses) {

@@ -8,6 +8,7 @@ import type { Datum } from "./datumTypes"
 
 import { VALIDATION_MAP, validateProps } from "./validateProps"
 import { annotationBudget } from "../../recipes/annotationDensity"
+import { diagnoseTokenEncoding } from "../../recipes/tokenEncoding"
 import {
   annotationDrawsConnector,
   annotationType,
@@ -654,6 +655,67 @@ function checkGeoParticlesMobile(
   }
 }
 
+function isTokenEncodingLike(value: unknown): value is Datum {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    ("tokenType" in value ||
+      "tokenSemantics" in value ||
+      "countStrategy" in value ||
+      "unitValue" in value ||
+      "unit" in value)
+  )
+}
+
+function checkTokenEncodingDiagnostics(
+  _component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  const candidates = [
+    props.tokenEncoding,
+    props.encoding,
+  ].filter(isTokenEncodingLike)
+
+  for (const encoding of candidates) {
+    const visibleTokens =
+      typeof props.visibleTokens === "number"
+        ? props.visibleTokens
+        : typeof encoding.tokenCount === "number"
+          ? encoding.tokenCount
+          : typeof encoding.denominator === "number"
+            ? encoding.denominator
+            : undefined
+    for (const diagnostic of diagnoseTokenEncoding(encoding, { visibleTokens })) {
+      out.push({
+        severity: "warning",
+        code: `TOKEN_${diagnostic.code}`,
+        message: diagnostic.message,
+        fix:
+          diagnostic.code === "MISSING_UNIT_VALUE"
+            ? "Set tokenEncoding.unitValue to the value represented by one full token."
+            : diagnostic.code === "MISSING_UNIT_MEANING"
+              ? "Set tokenEncoding.unitMeaning so readers know what one full token represents."
+              : diagnostic.code === "MISSING_COUNT_STRATEGY"
+                ? "Set tokenEncoding.countStrategy to actual, unitized, fixed-denominator, quantile, sample, posterior-sample, or random-sample."
+                : diagnostic.code === "TOKEN_SEMANTICS_UNCLEAR"
+                  ? "Set tokenEncoding.tokenSemantics to observed-unit, unitized-measure, risk-case, possible-outcome, posterior-sample, hypothetical-case, topic-anchor, or decorative."
+                  : "Adjust the tokenEncoding so its semantics, strategy, labels, and visible token count match the task.",
+      })
+    }
+  }
+}
+
+function propsForValidation(props: Datum): Datum {
+  const validationProps = { ...props }
+  delete validationProps.tokenEncoding
+  delete validationProps.visibleTokens
+  if (isTokenEncodingLike(validationProps.encoding)) {
+    delete validationProps.encoding
+  }
+  return validationProps
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -963,7 +1025,7 @@ export function diagnoseConfig(
   const diagnoses: Diagnosis[] = []
 
   // Run validateProps first
-  const validation = validateProps(componentName, props)
+  const validation = validateProps(componentName, propsForValidation(props))
   for (const err of validation.errors) {
     diagnoses.push({
       severity: "error",
@@ -1002,6 +1064,7 @@ export function diagnoseConfig(
   checkMobileHitRadius(componentName, props, diagnoses)
   checkResponsiveMobileLayout(componentName, props, diagnoses)
   checkGeoParticlesMobile(componentName, props, diagnoses)
+  checkTokenEncodingDiagnostics(componentName, props, diagnoses)
   checkAnnotationConnectors(componentName, props, diagnoses)
   checkAnnotationDensity(componentName, props, diagnoses)
 

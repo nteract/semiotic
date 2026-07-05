@@ -80,6 +80,18 @@ describe("Semiotic architecture example data", () => {
     expect(highlighted).toContain("feature-accessibility")
   })
 
+  it("maps the discrete tokenization example through custom XY layouts", () => {
+    const profile = SEMIOTIC_EXAMPLE_PROFILES.find(
+      (candidate) => candidate.id === "sometimes-better-discrete"
+    )
+    const highlighted = architectureHighlight(profile)
+
+    expect(highlighted).toContain("frame-xy")
+    expect(highlighted).toContain("hoc-xy-custom")
+    expect(highlighted).toContain("feature-custom-layout")
+    expect(highlighted).toContain("feature-accessibility")
+  })
+
   it("uses the port replay to connect four previously dark chart families", () => {
     const portReplay = SEMIOTIC_EXAMPLE_PROFILES.find(
       (profile) => profile.id === "port-congestion-replay"

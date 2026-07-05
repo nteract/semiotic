@@ -262,6 +262,13 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
 
+/** Coerce to a finite non-negative number. Shared by tally/token helpers so
+ *  non-finite inputs fail closed instead of leaking NaN into geometry. */
+export function nonNegativeFinite(value: number | undefined): number {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? Math.max(0, numeric) : 0
+}
+
 /** Arithmetic mean of a numeric list; `0` for an empty list (so it's safe to
  *  feed an unfiltered slice). Recipes average angles, positions, and weights. */
 export function mean(values: readonly number[]): number {

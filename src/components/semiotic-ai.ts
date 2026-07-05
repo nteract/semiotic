@@ -148,6 +148,32 @@ export type { ValidationResult } from "./charts/shared/validateProps"
 // Anti-pattern diagnostics
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
 export type { Diagnosis, DiagnosisResult } from "./charts/shared/diagnoseConfig"
+export {
+  diagnoseTokenEncoding,
+  normalizeTokenEncoding,
+  suggestTokenEncoding,
+  tokenTaskIntentToCapabilityIntents,
+} from "./recipes/tokenEncoding"
+export type {
+  PositionedToken,
+  SuggestTokenEncodingInput,
+  TokenCapabilityIntent,
+  TokenCountStrategy,
+  TokenDiagnostic,
+  TokenDiagnosticCode,
+  TokenDiagnosticsContext,
+  TokenEncoding,
+  TokenEncodingSuggestion,
+  TokenGeneratorInput,
+  TokenGridOptions,
+  TokenLabelPolicy,
+  TokenLayout,
+  TokenSemantics,
+  TokenSet,
+  TokenTaskIntent,
+  TokenType,
+  VisualToken,
+} from "./recipes/tokenEncoding"
 
 // Accessibility audit — Chartability (POUR-CAF) heuristics over a chart config
 export {

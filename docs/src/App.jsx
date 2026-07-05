@@ -161,6 +161,9 @@ const LakeTravisIsotypeExamplePage = lazy(
 const DataCentersIsotypeExamplePage = lazy(
   () => import("./pages/examples/DataCentersIsotypeExamplePage"),
 )
+const SometimesDiscreteExamplePage = lazy(
+  () => import("./pages/examples/SometimesDiscreteExamplePage"),
+)
 const ExamplesLayout = lazy(() => import("./pages/examples/ExamplesLayout"))
 const USWarTimelineExamplePage = lazy(() => import("./pages/examples/USWarTimelineExamplePage"))
 const ArtMovementGenealogyExamplePage = lazy(
@@ -357,6 +360,10 @@ export default function DocsApp() {
               <Route
                 path="examples/data-centers-isotype"
                 element={<DataCentersIsotypeExamplePage />}
+              />
+              <Route
+                path="examples/sometimes-better-discrete"
+                element={<SometimesDiscreteExamplePage />}
               />
               <Route path="examples/us-war-timeline" element={<USWarTimelineExamplePage />} />
               <Route
