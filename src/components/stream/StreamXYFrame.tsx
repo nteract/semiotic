@@ -1221,6 +1221,13 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onPointerMove(e)
     }, [onPointerMove])
 
+    const onMouseMoveFallback = useCallback((e: React.MouseEvent) => {
+      lastPointerTypeRef.current = "mouse"
+      kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
+      onPointerMove({ clientX: e.clientX, clientY: e.clientY, pointerType: "mouse" })
+    }, [onPointerMove])
+
     const onPointerDown = useCallback((e: React.PointerEvent) => {
       lastPointerTypeRef.current = e.pointerType
     }, [])
@@ -1710,7 +1717,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           aria-label={description || (typeof title === "string" ? title : "XY chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
           onPointerMove={effectiveHoverAnnotation ? onPointerMoveWrapped : undefined}
+          onMouseMove={effectiveHoverAnnotation ? onMouseMoveFallback : undefined}
           onPointerLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
+          onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
           onPointerDown={effectiveHoverAnnotation || customClickBehavior ? onPointerDown : undefined}
           onClick={customClickBehavior ? onClick : undefined}
         >
