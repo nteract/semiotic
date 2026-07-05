@@ -1,0 +1,217 @@
+.octo-hero {
+  max-width: 860px;
+  margin: 0 0 34px;
+  color: var(--text-secondary);
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.62;
+}
+
+.octo-hero p {
+  margin: 0 0 16px;
+}
+
+.octo-hero a,
+.octo-source-note a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.octo-section {
+  max-width: 1160px;
+  margin: 42px 0 64px;
+}
+
+.octo-section-copy {
+  max-width: 840px;
+  margin-bottom: 18px;
+}
+
+.octo-kicker {
+  display: block;
+  margin: 0 0 6px;
+  color: #b24732;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.octo-section h2 {
+  margin: 0 0 10px;
+  color: var(--text-primary);
+  font-size: clamp(23px, 3vw, 34px);
+  line-height: 1.1;
+}
+
+.octo-section-copy p {
+  margin: 0 0 12px;
+  color: var(--text-secondary);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+.octo-section-copy code {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--surface-2, rgba(128, 128, 128, 0.14));
+  color: var(--text-primary);
+  font-size: 0.9em;
+}
+
+.octo-source-note {
+  font-size: 14px;
+}
+
+.octo-figure {
+  width: 100%;
+  margin: 0;
+}
+
+.octo-figure figcaption {
+  max-width: 880px;
+  margin: 12px auto 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.octo-chart-shell,
+.octo-world-frame,
+.octo-semiotic-frame {
+  --semiotic-bg: transparent;
+  --semiotic-text: #191512;
+  --semiotic-text-secondary: #4f4438;
+  --semiotic-tick-font-family: Georgia, "Times New Roman", serif;
+
+  overflow: hidden;
+  border: 1px solid rgba(25, 21, 18, 0.55);
+  border-radius: 4px;
+  background: #f4eddb;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+}
+
+.octo-chart-shell canvas,
+.octo-chart-shell svg,
+.octo-world-frame canvas,
+.octo-world-frame svg,
+.octo-semiotic-frame canvas,
+.octo-semiotic-frame svg {
+  display: block;
+}
+
+.octo-figure--waste .octo-chart-shell {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.octo-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 0 8px;
+}
+
+.octo-world-frame,
+.octo-semiotic-frame {
+  margin: 0 auto;
+}
+
+.octo-world-frame {
+  background: #eee5cc;
+}
+
+.octo-semiotic-frame {
+  background: #f2f0e7;
+}
+
+.octo-map-loading {
+  display: grid;
+  min-height: 464px;
+  place-items: center;
+  color: #4f4438;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 800;
+}
+
+.octo-imperial-timeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px 22px;
+  max-width: 1050px;
+  margin: 14px auto 0;
+  padding: 12px 18px;
+  border: 1px solid rgba(25, 21, 18, 0.55);
+  border-radius: 4px;
+  background: #f4eddb;
+  color: #191512;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.octo-imperial-timeline div {
+  display: grid;
+  gap: 3px;
+}
+
+.octo-imperial-timeline span {
+  white-space: nowrap;
+}
+
+.octo-imperial-timeline strong {
+  display: inline-block;
+  min-width: 36px;
+  font-style: italic;
+}
+
+.octo-tooltip {
+  display: grid;
+  gap: 3px;
+  max-width: 260px;
+  padding: 7px 10px;
+  border: 1px solid #191512;
+  background: #f7f0dc;
+  color: #191512;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.25;
+}
+
+.octo-tooltip strong {
+  font-size: 14px;
+}
+
+.octo-tooltip span {
+  color: #4f4438;
+  font-size: 12px;
+}
+
+.octo-tooltip--map {
+  border-color: #9f2a24;
+}
+
+@media (max-width: 760px) {
+  .octo-section {
+    margin: 34px 0 52px;
+  }
+
+  .octo-imperial-timeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 520px) {
+  .octo-hero {
+    font-size: 16px;
+  }
+
+  .octo-imperial-timeline {
+    grid-template-columns: 1fr;
+  }
+
+  .octo-imperial-timeline span {
+    white-space: normal;
+  }
+}

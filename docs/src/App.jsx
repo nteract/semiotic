@@ -182,11 +182,23 @@ const PortCongestionReplayExamplePage = lazy(
 const ScrollYoureTellingExamplePage = lazy(
   () => import("./pages/examples/ScrollYoureTellingExamplePage"),
 )
+const DatavizPeopleExamplePage = lazy(
+  () => import("./pages/examples/DatavizPeopleExamplePage"),
+)
+const DistantReadingExamplePage = lazy(
+  () => import("./pages/examples/DistantReadingExamplePage"),
+)
+const WorldOfFunnelsExamplePage = lazy(
+  () => import("./pages/examples/WorldOfFunnelsExamplePage"),
+)
 const WhatTheMachineSeesExamplePage = lazy(
   () => import("./pages/examples/WhatTheMachineSeesExamplePage"),
 )
 const SemioticArchitectureExamplePage = lazy(
   () => import("./pages/examples/SemioticArchitectureExamplePage"),
+)
+const OctopusMetaphorExamplePage = lazy(
+  () => import("./pages/examples/OctopusMetaphorExamplePage"),
 )
 const GestaltPrinciplesExamplePage = lazy(
   () => import("./pages/examples/GestaltPrinciplesExamplePage"),
@@ -371,12 +383,28 @@ export default function DocsApp() {
                 element={<ScrollYoureTellingExamplePage />}
               />
               <Route
+                path="examples/dataviz-people"
+                element={<DatavizPeopleExamplePage />}
+              />
+              <Route
+                path="examples/distant-reading"
+                element={<DistantReadingExamplePage />}
+              />
+              <Route
+                path="examples/world-of-funnels"
+                element={<WorldOfFunnelsExamplePage />}
+              />
+              <Route
                 path="examples/what-the-machine-sees"
                 element={<WhatTheMachineSeesExamplePage />}
               />
               <Route
                 path="examples/semiotic-architecture"
                 element={<SemioticArchitectureExamplePage />}
+              />
+              <Route
+                path="examples/octopus-metaphor"
+                element={<OctopusMetaphorExamplePage />}
               />
               <Route
                 path="examples/gestalt-principles"

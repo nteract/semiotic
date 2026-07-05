@@ -1,0 +1,604 @@
+.dv7-page {
+  --dv7-ink: #151515;
+  --dv7-paper: #fff8dd;
+  --dv7-paper-deep: #f2e7c3;
+  --dv7-blue: #2f6f88;
+  --dv7-red: #d95f43;
+  --dv7-gold: #e0a92f;
+  --dv7-green: #3b8f6a;
+  --dv7-purple: #8f5cbf;
+  --dv7-rose: #ce4257;
+  display: grid;
+  gap: 28px;
+  color: var(--dv7-ink);
+}
+
+.dv7-page *,
+.dv7-page *::before,
+.dv7-page *::after {
+  box-sizing: border-box;
+}
+
+.dv7-page a {
+  color: var(--dv7-blue);
+  font-weight: 800;
+}
+
+.dv7-hero,
+.dv7-picker button,
+.dv7-workbench,
+.dv7-roster,
+.dv7-matrix-section,
+.dv7-code-section {
+  border: 3px solid var(--dv7-ink);
+  border-radius: 8px;
+  background: var(--dv7-paper);
+  box-shadow: 7px 7px 0 var(--dv7-ink);
+}
+
+.dv7-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 28px;
+  align-items: stretch;
+  overflow: hidden;
+  padding: 28px;
+  background:
+    linear-gradient(90deg, rgba(47, 111, 136, 0.12) 0 18px, transparent 18px 36px),
+    linear-gradient(0deg, rgba(224, 169, 47, 0.18) 0 12px, transparent 12px 28px),
+    var(--dv7-paper);
+}
+
+.dv7-hero::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 42%;
+  height: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--dv7-blue),
+    var(--dv7-red),
+    var(--dv7-gold),
+    var(--dv7-green),
+    var(--dv7-purple),
+    var(--dv7-rose)
+  );
+  content: "";
+}
+
+.dv7-hero-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  max-width: 720px;
+}
+
+.dv7-kicker,
+.dv7-source-note,
+.dv7-dossier-head p,
+.dv7-briefs span,
+.dv7-stage-head span,
+.dv7-section-head span {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.dv7-kicker {
+  color: var(--dv7-active);
+}
+
+.dv7-lede {
+  max-width: 720px;
+  margin: 0;
+  font-size: 23px;
+  font-weight: 850;
+  line-height: 1.24;
+}
+
+.dv7-source-note {
+  max-width: 720px;
+  color: rgba(21, 21, 21, 0.72);
+  line-height: 1.45;
+  text-transform: none;
+}
+
+.dv7-constellation {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-items: center;
+  min-height: 250px;
+}
+
+.dv7-constellation svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid var(--dv7-ink);
+  border-radius: 8px;
+  background: var(--dv7-paper);
+}
+
+.dv7-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 12px;
+}
+
+.dv7-picker button {
+  display: grid;
+  min-height: 168px;
+  align-content: start;
+  justify-items: center;
+  gap: 7px;
+  padding: 12px 8px 14px;
+  color: var(--dv7-ink);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--dv7-ink);
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.dv7-picker button:hover,
+.dv7-picker button:focus-visible {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--dv7-ink);
+}
+
+.dv7-picker button.is-active {
+  background:
+    radial-gradient(circle, rgba(21, 21, 21, 0.16) 1px, transparent 1.6px),
+    var(--persona-color);
+  background-size: 9px 9px;
+  color: var(--dv7-paper);
+}
+
+.dv7-picker button > span {
+  display: block;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.dv7-picker button strong {
+  display: block;
+  max-width: 12ch;
+  font-size: 16px;
+  line-height: 1.05;
+  text-align: center;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.dv7-badge {
+  display: block;
+  width: 72px;
+  height: 72px;
+}
+
+.dv7-workbench {
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.dv7-dossier {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  padding: 22px;
+  border-right: 3px solid var(--dv7-ink);
+  background:
+    linear-gradient(135deg, rgba(21, 21, 21, 0.06) 25%, transparent 25%) 0 0 / 18px 18px,
+    var(--dv7-paper-deep);
+}
+
+.dv7-dossier-head {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.dv7-dossier-head > span {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 3px solid var(--dv7-ink);
+  border-radius: 8px;
+  background: var(--dv7-active);
+  color: var(--dv7-paper);
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.dv7-dossier-head h2,
+.dv7-stage-head h2,
+.dv7-section-head h2 {
+  margin: 2px 0 0;
+  color: var(--dv7-ink);
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.dv7-dossier blockquote {
+  margin: 0;
+  padding: 16px 0;
+  border-block: 3px solid var(--dv7-ink);
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.dv7-briefs {
+  display: grid;
+  gap: 14px;
+}
+
+.dv7-briefs div {
+  display: grid;
+  gap: 5px;
+}
+
+.dv7-briefs p,
+.dv7-section-head p {
+  margin: 0;
+  color: rgba(21, 21, 21, 0.76);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.dv7-profile-chart {
+  min-height: 284px;
+  min-width: 0;
+}
+
+.dv7-stage {
+  display: grid;
+  grid-template-rows: auto minmax(390px, 1fr);
+  min-width: 0;
+  background:
+    linear-gradient(90deg, rgba(21, 21, 21, 0.055) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(0deg, rgba(21, 21, 21, 0.055) 1px, transparent 1px) 0 0 / 28px 28px,
+    #fffaf0;
+}
+
+.dv7-stage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px;
+  border-bottom: 3px solid var(--dv7-ink);
+  background: var(--dv7-paper);
+}
+
+.dv7-stage-head strong {
+  display: inline-grid;
+  place-items: center;
+  min-width: 96px;
+  max-width: 180px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 3px solid var(--dv7-ink);
+  border-radius: 999px;
+  background: var(--dv7-accent);
+  font-size: 13px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.dv7-chart-host {
+  min-width: 0;
+  min-height: 390px;
+  padding: 18px;
+}
+
+.dv7-chart-host svg,
+.dv7-profile-chart svg {
+  max-width: 100%;
+}
+
+.dv7-custom-chart {
+  display: block;
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+.dv7-terminal-chart {
+  overflow: hidden;
+  border: 3px solid #151515;
+  border-radius: 8px;
+  background: #07100d;
+  color: #d8ffd2;
+}
+
+.dv7-terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-bottom: 2px solid rgba(216, 255, 210, 0.2);
+  background: #0d1814;
+}
+
+.dv7-terminal-bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ce4257;
+}
+
+.dv7-terminal-bar span:nth-child(2) {
+  background: #e0a92f;
+}
+
+.dv7-terminal-bar span:nth-child(3) {
+  background: #3b8f6a;
+}
+
+.dv7-terminal-bar code {
+  margin-left: 6px;
+  color: #d8ffd2;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.dv7-terminal-chart pre {
+  margin: 0;
+  padding: 10px 14px 0;
+  color: #d8ffd2;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.dv7-roster,
+.dv7-matrix-section,
+.dv7-code-section {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.dv7-section-head {
+  display: grid;
+  gap: 8px;
+  max-width: 760px;
+}
+
+.dv7-section-head span {
+  color: var(--dv7-active);
+}
+
+.dv7-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 10px;
+}
+
+.dv7-roster-grid button {
+  display: grid;
+  gap: 8px;
+  min-height: 136px;
+  align-content: start;
+  padding: 12px;
+  border: 3px solid var(--dv7-ink);
+  border-radius: 8px;
+  background: #fffaf0;
+  color: var(--dv7-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dv7-roster-grid button.is-active {
+  background: var(--persona-color);
+  color: var(--dv7-paper);
+}
+
+.dv7-roster-grid span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 28px;
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.dv7-roster-grid strong {
+  font-size: 15px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.dv7-roster-grid small {
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.dv7-matrix {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.05fr) repeat(5, minmax(84px, 1fr));
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.dv7-matrix-head,
+.dv7-matrix-label,
+.dv7-matrix-name,
+.dv7-matrix-cell {
+  min-height: 38px;
+  border: 2px solid var(--dv7-ink);
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.dv7-matrix-label {
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  background: var(--dv7-ink);
+  color: var(--dv7-paper);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.dv7-matrix-name {
+  display: flex;
+  align-items: center;
+  min-width: 120px;
+  padding: 8px 10px;
+  color: var(--dv7-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dv7-matrix-name.is-active {
+  background: var(--persona-color);
+  color: var(--dv7-paper);
+}
+
+.dv7-matrix-cell {
+  display: flex;
+  align-items: center;
+  min-width: 84px;
+  padding: 7px;
+}
+
+.dv7-matrix-cell i {
+  display: block;
+  width: calc(var(--metric-value) * 1%);
+  min-width: 6px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--metric-color);
+}
+
+.dv7-code-section {
+  overflow: hidden;
+}
+
+@media (max-width: 980px) {
+  .dv7-hero,
+  .dv7-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .dv7-dossier {
+    border-right: 0;
+    border-bottom: 3px solid var(--dv7-ink);
+  }
+
+  .dv7-picker,
+  .dv7-roster-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .dv7-page {
+    gap: 20px;
+  }
+
+  .dv7-hero,
+  .dv7-roster,
+  .dv7-matrix-section,
+  .dv7-code-section {
+    padding: 18px;
+  }
+
+  .dv7-lede {
+    font-size: 19px;
+  }
+
+  .dv7-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dv7-picker button {
+    min-height: 144px;
+  }
+
+  .dv7-badge {
+    width: 58px;
+    height: 58px;
+  }
+
+  .dv7-stage-head {
+    display: grid;
+  }
+
+  .dv7-stage-head strong {
+    max-width: none;
+  }
+
+  .dv7-dossier,
+  .dv7-chart-host {
+    padding: 16px;
+  }
+
+  .dv7-dossier-head h2,
+  .dv7-stage-head h2,
+  .dv7-section-head h2 {
+    font-size: 23px;
+  }
+
+  .dv7-roster-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dv7-matrix {
+    grid-template-columns: minmax(78px, 1.2fr) repeat(5, minmax(34px, 1fr));
+    gap: 5px;
+    overflow-x: visible;
+  }
+
+  .dv7-matrix-head,
+  .dv7-matrix-label,
+  .dv7-matrix-name,
+  .dv7-matrix-cell {
+    min-height: 30px;
+  }
+
+  .dv7-matrix-label {
+    padding: 4px 2px;
+    font-size: 9px;
+  }
+
+  .dv7-matrix-name {
+    min-width: 0;
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+
+  .dv7-matrix-cell {
+    min-width: 0;
+    padding: 5px;
+  }
+
+  .dv7-matrix-cell i {
+    height: 12px;
+  }
+}

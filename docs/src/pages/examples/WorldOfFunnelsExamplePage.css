@@ -1,0 +1,781 @@
+.wof-page {
+  --wof-ink: #101014;
+  --wof-paper: #fff7d6;
+  --wof-pink: #ff4fa3;
+  --wof-yellow: #ffd84d;
+  --wof-cyan: #14c7ff;
+  --wof-green: #42d66b;
+  --wof-red: #ff4d42;
+  --wof-purple: #8b5cf6;
+  display: grid;
+  gap: 30px;
+  color: var(--wof-ink);
+}
+
+.wof-page *,
+.wof-page *::before,
+.wof-page *::after {
+  box-sizing: border-box;
+}
+
+.wof-hero,
+.wof-panel,
+.wof-close,
+.wof-metric,
+.wof-case-selector button,
+.wof-argument-ribbon > div {
+  border: 4px solid var(--wof-ink);
+  background-color: var(--wof-paper);
+  box-shadow: 8px 8px 0 var(--wof-ink);
+}
+
+.wof-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  overflow: hidden;
+  padding: 28px;
+  background-image:
+    linear-gradient(90deg, rgba(255, 216, 77, 0.88) 0 18px, transparent 18px 36px),
+    radial-gradient(circle, rgba(16, 16, 20, 0.24) 1px, transparent 1.5px),
+    linear-gradient(135deg, var(--wof-yellow), var(--wof-pink));
+  background-position: 0 0, 0 0, 0 0;
+  background-size: 36px 100%, 10px 10px, 100% 100%;
+}
+
+.wof-hero::after {
+  position: absolute;
+  right: -52px;
+  bottom: -48px;
+  width: 190px;
+  height: 190px;
+  border: 4px solid var(--wof-ink);
+  background:
+    repeating-conic-gradient(
+      from 18deg,
+      rgba(255, 255, 255, 0.4) 0 12deg,
+      rgba(16, 16, 20, 0.12) 12deg 24deg
+    ),
+    var(--wof-cyan);
+  content: "";
+  transform: rotate(10deg);
+}
+
+.wof-burst {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  border: 4px solid var(--wof-ink);
+  background: var(--wof-cyan);
+  clip-path: polygon(
+    50% 0,
+    60% 30%,
+    92% 10%,
+    72% 42%,
+    100% 50%,
+    72% 58%,
+    92% 90%,
+    60% 70%,
+    50% 100%,
+    40% 70%,
+    8% 90%,
+    28% 58%,
+    0 50%,
+    28% 42%,
+    8% 10%,
+    40% 30%
+  );
+  font-size: 42px;
+  font-weight: 950;
+  letter-spacing: 0;
+  transform: rotate(-8deg);
+  animation: wof-burst-wobble 5s ease-in-out infinite;
+}
+
+.wof-kicker {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wof-lede {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.wof-hero-strip {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 4px solid var(--wof-ink);
+  background: var(--wof-ink);
+  gap: 4px;
+}
+
+.wof-hero-strip span {
+  min-height: 38px;
+  display: grid;
+  place-items: center;
+  background: var(--wof-paper);
+  font-size: 12px;
+  font-weight: 950;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.wof-hero-strip span:nth-child(1) {
+  background: var(--wof-yellow);
+}
+
+.wof-hero-strip span:nth-child(2) {
+  background: var(--wof-cyan);
+}
+
+.wof-hero-strip span:nth-child(3) {
+  background: var(--wof-green);
+}
+
+.wof-hero-strip span:nth-child(4) {
+  background: var(--wof-pink);
+}
+
+.wof-case-selector {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.wof-case-selector button {
+  position: relative;
+  display: grid;
+  min-height: 176px;
+  align-content: start;
+  gap: 9px;
+  padding: 18px 18px 20px;
+  color: var(--wof-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.wof-case-selector button::after {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--wof-ink);
+  background: var(--wof-yellow);
+  content: "";
+  clip-path: polygon(50% 0, 62% 34%, 98% 35%, 69% 56%, 79% 92%, 50% 70%, 21% 92%, 31% 56%, 2% 35%, 38% 34%);
+}
+
+.wof-case-selector button:nth-child(2)::after {
+  background: var(--wof-cyan);
+}
+
+.wof-case-selector button:nth-child(3)::after {
+  background: var(--wof-green);
+}
+
+.wof-case-selector button:hover,
+.wof-case-selector button:focus-visible {
+  box-shadow: 4px 4px 0 var(--wof-ink);
+  transform: translate(4px, 4px);
+}
+
+.wof-case-selector button.is-active {
+  background:
+    radial-gradient(circle, rgba(16, 16, 20, 0.18) 1px, transparent 1.5px),
+    var(--wof-cyan);
+  background-size: 9px 9px;
+  box-shadow: 4px 4px 0 var(--wof-pink);
+  transform: translate(4px, 4px);
+}
+
+.wof-case-selector span,
+.wof-metric span {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wof-case-selector strong {
+  display: block;
+  max-width: 12ch;
+  font-size: 31px;
+  font-weight: 950;
+  line-height: 0.95;
+}
+
+.wof-case-selector em,
+.wof-case-selector b {
+  display: block;
+  max-width: 27ch;
+  font-style: normal;
+  line-height: 1.3;
+}
+
+.wof-case-selector em {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.wof-case-selector b {
+  color: var(--wof-pink);
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.wof-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.wof-metric {
+  min-height: 118px;
+  padding: 18px;
+}
+
+.wof-metric strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--wof-pink);
+  font-size: 34px;
+  font-weight: 950;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.wof-metric em {
+  display: block;
+  margin-top: 8px;
+  max-width: 22ch;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.wof-control-row {
+  position: sticky;
+  top: 92px;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 10px 10px 12px;
+  border: 4px solid var(--wof-ink);
+  background:
+    radial-gradient(circle, rgba(16, 16, 20, 0.18) 1px, transparent 1.5px),
+    var(--wof-yellow);
+  background-size: 9px 9px;
+  box-shadow: 8px 8px 0 var(--wof-ink);
+  scrollbar-width: thin;
+}
+
+.wof-control-row p {
+  flex: 0 0 380px;
+  max-width: 380px;
+  margin: 0;
+  color: var(--wof-ink);
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.wof-toggle,
+.wof-compact-cases,
+.wof-motif-controls {
+  flex: 0 0 auto;
+  display: inline-flex;
+  width: fit-content;
+  border: 4px solid var(--wof-ink);
+  background: var(--wof-ink);
+  box-shadow: 6px 6px 0 var(--wof-pink);
+}
+
+.wof-toggle button,
+.wof-compact-cases button,
+.wof-motif-controls button {
+  border: 0;
+  background: var(--wof-paper);
+  color: var(--wof-ink);
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.wof-toggle button {
+  min-width: 120px;
+}
+
+.wof-compact-cases button {
+  min-width: 96px;
+  padding-right: 12px;
+  padding-left: 12px;
+  font-size: 12px;
+}
+
+.wof-toggle button + button,
+.wof-compact-cases button + button,
+.wof-motif-controls button + button {
+  border-left: 4px solid var(--wof-ink);
+}
+
+.wof-toggle button.is-active,
+.wof-compact-cases button.is-active,
+.wof-motif-controls button.is-active {
+  background: var(--wof-cyan);
+}
+
+.wof-compact-cases button.is-active {
+  background: var(--wof-green);
+}
+
+.wof-argument-ribbon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.wof-argument-ribbon > div {
+  min-height: 104px;
+  padding: 18px;
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.wof-argument-ribbon > div.is-active {
+  background: var(--wof-yellow);
+  transform: rotate(-1deg);
+}
+
+.wof-argument-ribbon span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wof-argument-ribbon strong {
+  display: block;
+  max-width: 48ch;
+  font-size: 18px;
+  line-height: 1.22;
+}
+
+.wof-argument-ribbon .wof-ribbon-vs {
+  display: grid;
+  min-height: 74px;
+  place-items: center;
+  padding: 0;
+  background: var(--wof-red);
+  color: var(--wof-paper);
+  font-size: 26px;
+  font-weight: 950;
+  transform: rotate(7deg);
+  clip-path: polygon(
+    50% 0,
+    62% 26%,
+    90% 10%,
+    74% 38%,
+    100% 50%,
+    74% 62%,
+    90% 90%,
+    62% 74%,
+    50% 100%,
+    38% 74%,
+    10% 90%,
+    26% 62%,
+    0 50%,
+    26% 38%,
+    10% 10%,
+    38% 26%
+  );
+}
+
+.wof-chart-host {
+  display: grid;
+  gap: 30px;
+  min-width: 0;
+}
+
+.wof-panel {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  padding: 26px;
+  overflow-x: auto;
+}
+
+.wof-panel:nth-child(even) {
+  background:
+    linear-gradient(90deg, rgba(255, 216, 77, 0.42), rgba(20, 199, 255, 0.28)),
+    var(--wof-paper);
+}
+
+.wof-panel--lead {
+  background:
+    radial-gradient(circle, rgba(16, 16, 20, 0.16) 1px, transparent 1.5px),
+    linear-gradient(135deg, rgba(20, 199, 255, 0.24), rgba(255, 247, 214, 0.9));
+  background-size: 10px 10px, 100% 100%;
+}
+
+.wof-panel--accurate {
+  background:
+    linear-gradient(135deg, rgba(66, 214, 107, 0.35), rgba(139, 92, 246, 0.16)),
+    var(--wof-paper);
+}
+
+.wof-panel-label {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-left: 4px solid var(--wof-ink);
+  border-bottom: 4px solid var(--wof-ink);
+  background: var(--wof-yellow);
+  padding: 8px 12px;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.wof-panel h2 {
+  max-width: 860px;
+  margin: 0;
+  padding-right: 56px;
+  color: var(--wof-ink);
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.wof-panel p,
+.wof-close p {
+  max-width: 840px;
+  margin: 0;
+  color: var(--wof-ink);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.wof-mode-note {
+  display: grid;
+  grid-template-columns: minmax(112px, auto) minmax(0, 1fr);
+  align-items: stretch;
+  width: min(100%, 860px);
+  border: 4px solid var(--wof-ink);
+  background: var(--wof-ink);
+  box-shadow: 5px 5px 0 var(--wof-pink);
+  gap: 4px;
+}
+
+.wof-mode-note span,
+.wof-mode-note strong {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 12px;
+}
+
+.wof-mode-note span {
+  background: var(--wof-yellow);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wof-mode-note strong {
+  background: var(--wof-paper);
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.wof-mode-note--accurate span {
+  background: var(--wof-green);
+}
+
+.wof-mode-note--accurate {
+  box-shadow: 5px 5px 0 var(--wof-purple);
+}
+
+.wof-stage-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(132px, 1fr));
+  gap: 4px;
+  margin: 4px 0;
+  padding: 4px;
+  border: 4px solid var(--wof-ink);
+  background: var(--wof-ink);
+  list-style: none;
+}
+
+.wof-stage-strip li {
+  position: relative;
+  min-height: 94px;
+  overflow: hidden;
+  padding: 11px;
+  background: var(--wof-paper);
+}
+
+.wof-stage-strip i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--stage-share);
+  height: 12px;
+  background: var(--wof-pink);
+}
+
+.wof-stage-strip span,
+.wof-stage-strip em {
+  display: block;
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.wof-stage-strip strong {
+  display: block;
+  position: relative;
+  z-index: 1;
+  margin: 6px 0;
+  font-size: 17px;
+  font-weight: 950;
+  line-height: 1.02;
+}
+
+.wof-leak-tape {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 4px solid var(--wof-ink);
+  border-bottom: 4px solid var(--wof-ink);
+  background: rgba(16, 16, 20, 0.08);
+}
+
+.wof-leak-tape div {
+  min-height: 74px;
+  padding: 12px 14px;
+}
+
+.wof-leak-tape div + div {
+  border-left: 4px solid var(--wof-ink);
+}
+
+.wof-leak-tape span,
+.wof-leak-tape em {
+  display: block;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.wof-leak-tape strong {
+  display: block;
+  margin: 3px 0;
+  color: var(--wof-red);
+  font-size: 26px;
+  font-weight: 950;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.wof-findings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wof-findings li {
+  min-height: 82px;
+  padding: 12px 12px 12px 16px;
+  border-left: 6px solid var(--wof-purple);
+  background: rgba(255, 255, 255, 0.42);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.wof-motif-controls {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.wof-panel .semiotic-visualization,
+.wof-panel svg {
+  overflow: visible;
+}
+
+.wof-close {
+  padding: 26px;
+  background:
+    radial-gradient(circle, rgba(16, 16, 20, 0.2) 1px, transparent 1.5px),
+    var(--wof-green);
+  background-size: 9px 9px;
+}
+
+.App--examples[data-theme="dark"] .wof-page,
+[data-theme="dark"] .wof-page {
+  color: var(--wof-ink);
+}
+
+@keyframes wof-burst-wobble {
+  0%,
+  100% {
+    transform: rotate(-8deg) scale(1);
+  }
+
+  45% {
+    transform: rotate(-3deg) scale(1.04);
+  }
+
+  70% {
+    transform: rotate(-10deg) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wof-burst {
+    animation: none;
+  }
+
+  .wof-case-selector button,
+  .wof-argument-ribbon > div {
+    transition: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .wof-case-selector,
+  .wof-metrics,
+  .wof-findings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wof-argument-ribbon {
+    grid-template-columns: 1fr;
+  }
+
+  .wof-argument-ribbon .wof-ribbon-vs {
+    justify-self: center;
+    width: 74px;
+  }
+
+  .wof-stage-strip {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .wof-page {
+    gap: 24px;
+  }
+
+  .wof-hero {
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+
+  .wof-burst {
+    min-height: 120px;
+  }
+
+  .wof-lede {
+    font-size: 18px;
+  }
+
+  .wof-hero-strip,
+  .wof-case-selector,
+  .wof-metrics,
+  .wof-stage-strip,
+  .wof-leak-tape,
+  .wof-findings {
+    grid-template-columns: 1fr;
+  }
+
+  .wof-control-row {
+    align-items: stretch;
+    padding: 8px;
+  }
+
+  .wof-motif-controls {
+    width: 100%;
+  }
+
+  .wof-motif-controls button {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .wof-toggle button,
+  .wof-compact-cases button {
+    min-width: max-content;
+  }
+
+  .wof-control-row p {
+    flex-basis: 260px;
+    font-size: 12px;
+  }
+
+  .wof-motif-controls button {
+    flex-basis: 50%;
+  }
+
+  .wof-mode-note {
+    grid-template-columns: 1fr;
+  }
+
+  .wof-panel {
+    padding: 22px 16px;
+  }
+
+  .wof-panel h2 {
+    font-size: 24px;
+  }
+
+  .wof-leak-tape div + div {
+    border-top: 4px solid var(--wof-ink);
+    border-left: 0;
+  }
+}
