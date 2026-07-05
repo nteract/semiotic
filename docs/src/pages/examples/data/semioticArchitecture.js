@@ -530,7 +530,8 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "root-recipes",
     label: "Geometry + recipes",
-    detail: "Reusable layout, token, vector, routing, radial, legend, and custom-chart authoring helpers.",
+    detail:
+      "Reusable layout, token, vector, routing, radial, legend, and custom-chart authoring helpers.",
     layer: "root",
     order: 9,
     supports: [
@@ -651,7 +652,7 @@ export const SEMIOTIC_EXAMPLE_PROFILES = [
     label: "Sometimes it's better to be discrete",
     shortLabel: "Discrete Tokens",
     path: "/examples/sometimes-better-discrete",
-    note: "A tokenization strategy example using XYCustomChart layouts, tokenLayer-generated quantile dots and glyphs, natural-frequency risk icons, and IDID task recommendations.",
+    note: "A tokenization strategy example using XYCustomChart layouts, tokenLayer-generated quantile dotplots and glyphs, an animated hypothetical-outcome plot, natural-frequency risk icons, IDID task recommendations, and a live diagnoseTokenEncoding design critic.",
     uses: [
       "input-static",
       "hoc-xy-custom",

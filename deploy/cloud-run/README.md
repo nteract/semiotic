@@ -113,4 +113,4 @@ ChatGPT: add it as a connector / app using the `/mcp` URL.
 ## Updating
 
 When a new `semiotic` is published, re-run the same `gcloud run deploy` command — the
-build does a fresh `npm install` and picks up the latest `^3.7.5`-compatible release.
+build does a fresh `npm install` and picks up the latest `^3.8.0`-compatible release.

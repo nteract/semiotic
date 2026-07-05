@@ -20,6 +20,28 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "release-3-8-0",
+    title: "Semiotic 3.8.0",
+    subtitle:
+      "Chart-level notifications, worker-backed force layouts, x-band annotations, sturdier interval lanes, custom-layout readback, and explicit experimental boundaries for DataPitfalls and GoFish adapters.",
+    author: "AI-Generated",
+    date: "2026-07-05",
+    tags: ["release"],
+    excerpt:
+      "3.8.0 adds ChartContainer notifications for whole-chart findings, moves expensive ForceDirectedGraph layouts into a worker path, improves interval and x-band annotation handling, exposes custom-layout readback, and keeps the DataPitfalls and GoFish adapters on the unstable experimental endpoint.",
+  },
+  {
+    slug: "release-gates-for-fast-prs",
+    title: "How Semiotic Keeps Fast PRs Clean",
+    subtitle:
+      "The CI and release gate behind Semiotic's current PR pace: registry drift checks, docs freshness, AI-facing contracts, visual diffs, performance comparison, pack smoke tests, and publish verification.",
+    author: "Elijah Meeks",
+    date: "2026-07-05",
+    tags: ["case-study", "release", "process"],
+    excerpt:
+      "Semiotic can move through a high volume of PRs because review is backed by a stack of specific gates: builds, types, registry drift checks, docs and AI freshness, visual baselines, performance comparison, package smoke tests, and release verification. Humans review the rendered changes and the code that actually needs judgment.",
+  },
+  {
     slug: "from-spec-to-runtime",
     title: "From spec to runtime",
     subtitle:
@@ -150,18 +172,6 @@ export const allBlogEntriesMeta = [
     tags: ["release"],
     excerpt:
       "3.7.0 makes Semiotic's AI and annotation work receivable: charts can describe themselves, expose structured navigation, carry annotation provenance, persist authoring context, repair or vary agent proposals, and render focal values through the new BigNumber entry point.",
-  },
-  {
-    slug: "release-gates-for-fast-prs",
-    title: "How Semiotic Keeps Fast PRs Clean",
-    subtitle:
-      "The CI and release gate behind Semiotic's current PR pace: registry drift checks, docs freshness, AI-facing contracts, visual diffs, performance comparison, pack smoke tests, and publish verification.",
-    author: "Elijah Meeks",
-    date: "2026-06-08",
-    tags: ["case-study", "release", "process"],
-    excerpt:
-      "Semiotic can move through a high volume of PRs because review is backed by a stack of specific gates: builds, types, registry drift checks, docs and AI freshness, visual baselines, performance comparison, package smoke tests, and release verification. Humans review the rendered changes and the code that actually needs judgment.",
-    draft: true,
   },
   {
     slug: "annotations-that-get-contested-and-heard",
