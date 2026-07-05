@@ -488,6 +488,7 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
   customHoverBehavior?: (d: HoverData | null) => void
+  customClickBehavior?: (d: HoverData | null) => void
 
   // Annotations
   annotations?: Datum[]

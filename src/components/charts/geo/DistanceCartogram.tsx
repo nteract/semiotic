@@ -17,6 +17,7 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { Style } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
@@ -146,7 +147,10 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const {
     points,
@@ -215,6 +219,8 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
     unwrapData: false,
     onObservation,
     onClick,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "DistanceCartogram",
     chartId,
     showLegend: resolved.showLegend,
@@ -453,8 +459,16 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
     ...setup.legendBehaviorProps,
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+      linkedHoverInClickPredicate: false,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...(resolved.title && { title: resolved.title }),

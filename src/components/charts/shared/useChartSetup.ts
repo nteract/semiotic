@@ -19,11 +19,19 @@
 import type { Datum } from "./datumTypes"
 
 import { useCallback, useMemo, useState } from "react"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, useThemeCategorical, DEFAULT_COLOR, getCrosshairProps } from "./hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useLegendInteraction, useThemeCategorical, DEFAULT_COLOR, getCrosshairProps, resolveMobileInteraction } from "./hooks"
 import type { LegendInteractionMode, LegendPosition } from "./hooks"
 import { useCategoryColors } from "../../CategoryColors"
 import { createColorScale, STREAMING_PALETTE } from "./colorUtils"
-import type { Accessor, SelectionConfig, LinkedHoverProp, HoverHighlightMode } from "./types"
+import type {
+  Accessor,
+  SelectionConfig,
+  LinkedHoverProp,
+  HoverHighlightMode,
+  MobileInteractionProp,
+  ResolvedMobileInteractionConfig,
+} from "./types"
+import type { MobileVisualizationContract } from "./auditMobileVisualization"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { PartialMargin } from "../../types/marginType"
 import type { SelectionHookResult } from "./selectionUtils"
@@ -76,6 +84,10 @@ export interface ChartSetupInput {
   onClick?: (datum: any, event: { x: number; y: number }) => void
   /** Dim non-hovered series on data mark hover */
   hoverHighlight?: HoverHighlightMode
+  /** Touch-first interaction policy for phone-sized chart slots */
+  mobileInteraction?: MobileInteractionProp
+  /** Mobile semantic contract for generated/audited/mobile-aware chart behavior */
+  mobileSemantics?: MobileVisualizationContract
   /** Loading state */
   loading: boolean | undefined
   /** Custom content rendered in place of the default skeleton while `loading` is true. */
@@ -114,6 +126,8 @@ export interface ChartSetupResult {
   customHoverBehavior: (d: Datum | null) => void
   /** Custom click behavior callback for the frame */
   customClickBehavior: (d: Datum | null) => void
+  /** Resolved touch-first policy for chart wrappers and stream-prop helpers */
+  mobileInteraction: ResolvedMobileInteractionConfig
   /** Legend config (or undefined if no legend) */
   legend: ReturnType<typeof useChartLegendAndMargin>["legend"]
   /** Computed margin with legend-aware adjustments */
@@ -171,6 +185,8 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     marginDefaults,
     onClick,
     hoverHighlight,
+    mobileInteraction,
+    mobileSemantics,
     loading,
     loadingContent,
     emptyContent,
@@ -212,6 +228,10 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
 
   // ── Selection hooks (always called) ────────────────────────────────────
   const colorByField = typeof input.colorBy === "string" ? input.colorBy : undefined
+  const resolvedMobileInteraction = useMemo(
+    () => resolveMobileInteraction(mobileInteraction, { width, mobileSemantics }),
+    [mobileInteraction, width, mobileSemantics],
+  )
   const { activeSelectionHook, hoverSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection,
     linkedHover,
@@ -223,6 +243,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     onClick,
     hoverHighlight,
     colorByField,
+    mobileInteraction: resolvedMobileInteraction,
   })
 
   // ── Linked crosshair (x-position mode) ────────────────────────────────
@@ -342,6 +363,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     activeSelectionHook,
     customHoverBehavior,
     customClickBehavior,
+    mobileInteraction: resolvedMobileInteraction,
     legend,
     margin,
     legendPosition,

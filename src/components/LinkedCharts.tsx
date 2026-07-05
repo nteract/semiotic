@@ -11,7 +11,7 @@ import Legend from "./Legend"
 import type { LegendGroup } from "./types/legendTypes"
 import { useResponsiveSize } from "./stream/useResponsiveSize"
 
-type LegendInteractionMode = "highlight" | "isolate" | "none"
+export type LegendInteractionMode = "highlight" | "isolate" | "none"
 
 // Re-export hooks for convenience
 export { useSelection, useSelectionActions, useLinkedHover, useBrushSelection, useFilteredData } from "./store/useSelection"
@@ -36,10 +36,16 @@ export type { UseChartObserverOptions, UseChartObserverResult } from "./store/us
  * This context signals that suppression.
  */
 const LinkedLegendContext = createContext<boolean>(false)
+const LinkedChartsActiveContext = createContext<boolean>(false)
 
 /** Hook: returns true when a parent LinkedCharts is handling the legend. */
 export function useLinkedLegendSuppression(): boolean {
   return useContext(LinkedLegendContext)
+}
+
+/** Hook: returns true when descendants are already inside a LinkedCharts provider. */
+export function useLinkedChartsActive(): boolean {
+  return useContext(LinkedChartsActiveContext)
 }
 
 interface LinkedCategoryRegistry {
@@ -440,29 +446,31 @@ export function LinkedCharts({
   return (
     <SelectionProvider initialState={initialSelectionState}>
       <ObservationProvider>
-        <LinkedCategoryRegistryContext.Provider value={registry}>
-          <CategoryColorProvider colors={categoryColors}>
-            <LinkedLegendContext.Provider value={suppressChildLegends}>
-              {shouldShowLegend && legendPosition === "top" && (
-                <LinkedLegend
-                  categoryColors={categoryColors}
-                  interaction={legendInteraction}
-                  selectionName={legendSelectionName}
-                  field={legendField}
-                />
-              )}
-              {children}
-              {shouldShowLegend && legendPosition === "bottom" && (
-                <LinkedLegend
-                  categoryColors={categoryColors}
-                  interaction={legendInteraction}
-                  selectionName={legendSelectionName}
-                  field={legendField}
-                />
-              )}
-            </LinkedLegendContext.Provider>
-          </CategoryColorProvider>
-        </LinkedCategoryRegistryContext.Provider>
+        <LinkedChartsActiveContext.Provider value={true}>
+          <LinkedCategoryRegistryContext.Provider value={registry}>
+            <CategoryColorProvider colors={categoryColors}>
+              <LinkedLegendContext.Provider value={suppressChildLegends}>
+                {shouldShowLegend && legendPosition === "top" && (
+                  <LinkedLegend
+                    categoryColors={categoryColors}
+                    interaction={legendInteraction}
+                    selectionName={legendSelectionName}
+                    field={legendField}
+                  />
+                )}
+                {children}
+                {shouldShowLegend && legendPosition === "bottom" && (
+                  <LinkedLegend
+                    categoryColors={categoryColors}
+                    interaction={legendInteraction}
+                    selectionName={legendSelectionName}
+                    field={legendField}
+                  />
+                )}
+              </LinkedLegendContext.Provider>
+            </CategoryColorProvider>
+          </LinkedCategoryRegistryContext.Provider>
+        </LinkedChartsActiveContext.Provider>
       </ObservationProvider>
     </SelectionProvider>
   )

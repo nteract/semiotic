@@ -30,6 +30,26 @@ export const waffle = defineChartRecipe({
     whyNotDefault: "A bar is more precise but less compositionally memorable.",
   },
   accessibility: { accessibleTable: "required", navigationGranularity: "category" },
+  mobile: {
+    strategy: "summary-cards",
+    supportsResponsiveLayout: true,
+    breakpoints: [320, 390, 768],
+    maxMarks: 100,
+    maxAnnotations: 2,
+    minimumHitTarget: 44,
+    summary: true,
+    interaction: {
+      primary: "tap",
+      alternatives: ["category chips", "details panel"],
+      hoverFallback: "tap-to-lock",
+    },
+    labels: { strategy: "direct", minFontSize: 12 },
+    custom: {
+      dataBearingSceneNodes: true,
+      stableIds: true,
+      navigationGranularity: "category",
+    },
+  },
 })
 
 registerChartRecipe(waffle)`
@@ -61,6 +81,7 @@ const intentManifest = {
     dataFallback: true,
     manualChecks: ["screen-reader behavior", "metaphor comprehension", "animation distraction"],
   },
+  mobile: waffleRecipeManifest.mobile,
 }
 
 export default function CustomChartsIntelligencePage() {
@@ -121,6 +142,18 @@ export default function CustomChartsIntelligencePage() {
           Roles say what the input means; encodings say what emitted marks mean. Together they let
           the same capability machinery test data compatibility, generate description layers, and
           detect when an accessible table or scene loses semantic fields.
+        </p>
+      </section>
+
+      <section>
+        <h2>Mobile semantics</h2>
+        <p>
+          Custom layouts are opaque until the recipe says how they behave on a phone. The{" "}
+          <code>mobile</code> contract records the responsive strategy, breakpoints, mark budget,
+          annotation budget, touch target size, label plan, and whether emitted scene nodes retain
+          data semantics. <code>recipeToChartCapability()</code> carries that into suggestions,
+          generated props expose it as <code>mobileSemantics</code>, and the mobile audit reads the
+          same block that portability adapters carry under IDID <code>capability.mobile</code>.
         </p>
       </section>
 

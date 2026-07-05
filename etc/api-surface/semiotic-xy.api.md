@@ -24,6 +24,8 @@ function glyphExtent
 function glyphPlacement
 function hitTargetPoint
 function hitTargetRect
+function resolveResponsiveRules
+function responsiveRuleMatches
 function useCustomLayoutSelection
 interface AreaChartProps
 interface BubbleChartProps
@@ -45,6 +47,11 @@ interface MultiAxisLineChartProps
 interface QuadrantChartProps
 interface QuadrantConfig
 interface QuadrantsConfig
+interface ResponsiveRule
+interface ResponsiveRuleCondition
+interface ResponsiveRuleContext
+interface ResponsiveRuleMatch
+interface ResponsiveRuleResult
 interface ScatterplotProps
 interface SceneAccessibilityMetadata
 interface SemanticGradientStop
@@ -54,4 +61,5 @@ interface StreamXYFrameProps
 interface XYCustomChartProps
 type CustomLayout
 type QuadrantsConfigOverride
+type ResponsiveOrientation
 ```

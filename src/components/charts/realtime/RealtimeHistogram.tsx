@@ -18,7 +18,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
+import type { ChartMode, ChartAccessor, SelectionConfig, MobileInteractionProp } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { buildHistogramTooltip } from "./defaultRealtimeTooltip"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
@@ -27,6 +27,9 @@ import { useBrushSelection } from "../../store/useSelection"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
+import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
+import type { ResponsiveRule } from "../shared/responsiveRules"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 export type RealtimeHistogramDirection = "up" | "down"
 
@@ -92,6 +95,12 @@ function resolveDownwardHistogramExtent<TDatum extends Datum>({
 export interface RealtimeHistogramProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
+  /** Semantic responsive transformations applied before chart-mode defaults. */
+  responsiveRules?: ResponsiveRule[]
+  /** Phone/mobile contract consumed by audits, recipes, adapters, and agents. */
+  mobileSemantics?: MobileVisualizationContract
+  /** Touch-first interaction policy for phone-sized chart slots. */
+  mobileInteraction?: MobileInteractionProp
   /** Time interval for binning */
   binSize: number
   /** Chart dimensions as [width, height] */
@@ -264,7 +273,10 @@ export const RealtimeHistogram = forwardRef(
       showAxes: props.showAxes,
       enableHover: props.enableHover != null ? !!props.enableHover : undefined,
       linkedHover: props.linkedHover,
-    })
+          mobileInteraction: props.mobileInteraction,
+      mobileSemantics: props.mobileSemantics,
+      responsiveRules: props.responsiveRules,
+})
 
     const {
       binSize,
@@ -477,7 +489,14 @@ export const RealtimeHistogram = forwardRef(
         background={background}
         hoverAnnotation={enableHover}
         tooltipContent={resolvedTooltip}
-        customHoverBehavior={combinedHoverBehavior}
+        {...buildCustomBehaviorProps({
+          linkedHover,
+          selection,
+          onObservation,
+          forceHoverBehavior: true,
+          mobileInteraction: resolved.mobileInteraction,
+          customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        })}
         annotations={annotations}
         autoPlaceAnnotations={autoPlaceAnnotations}
         svgAnnotationRules={svgAnnotationRules}

@@ -1,7 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { DataSummary } from "../data/DataSummarizer"
 import type { IntentId } from "./intents"
-import type { ChartRecipe, ChartRecipeFrameFamily } from "./chartRecipes"
+import type { ChartRecipe, ChartRecipeFrameFamily, MobileDesignDefinition } from "./chartRecipes"
 import type {
   ScaleFitFn,
   QualityFitFn,
@@ -250,6 +250,8 @@ export interface ChartCapability {
    * low completeness on the primary y field.
    */
   qualityFit?: QualityFitFn
+  /** Mobile design contract for custom recipes and advanced built-ins. */
+  mobile?: MobileDesignDefinition
   /** Present only on recipe-derived capabilities. */
   recipe?: ChartRecipe
   /** Positive reception/design rationale appended to suggestion explanations. */

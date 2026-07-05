@@ -53,6 +53,13 @@ export interface AnnotationLayoutConfig {
    */
   responsive?: boolean | { minWidth?: number }
   /**
+   * Mobile annotation policy. This composes the existing responsive + density +
+   * progressive-disclosure passes into a phone-friendly default: keep the core
+   * notes persistent, collapse secondary notes, and prefer short/mobile copy
+   * when provided. Off by default.
+   */
+  mobile?: boolean | AnnotationMobileConfig
+  /**
    * M5 — cohesion mode (Rahman et al.'s "Cohesion"). `"blended"` lets notes
    * adopt the chart's visual language (mark colors / chart typography — the
    * default look); `"layer"` presents them as a distinct editorial layer
@@ -71,6 +78,27 @@ export interface AnnotationLayoutConfig {
 }
 
 export type AnnotationCohesion = "blended" | "layer"
+
+export interface AnnotationMobileConfig {
+  /** Width at or below which mobile behavior activates. Default 480px. */
+  breakpoint?: number
+  /** Plot-only, callout-list, or hybrid mobile note behavior. */
+  strategy?: "plot" | "callout-list" | "hybrid"
+  /** Max persistent notes at phone width. Default 2. */
+  maxAnnotations?: number
+  /** Maximum notes expected to move into an external mobile callout list. */
+  maxCalloutItems?: number
+  /** Minimum notes kept regardless of budget. Default 1. */
+  minVisible?: number
+  /** Keep shed notes hidden/revealable rather than dropping them. Default true. */
+  progressiveDisclosure?: boolean
+  /** Responsive breakpoint override. Defaults to `breakpoint`. */
+  responsive?: boolean | { minWidth?: number }
+  /** Annotation cohesion to apply at phone width. */
+  cohesion?: AnnotationCohesion
+  /** Prefer annotation.mobileText / shortText for label text. Default true. */
+  preferShortText?: boolean
+}
 
 /** Structural subset of `AudienceProfile` the annotation layer reads — anything
  *  with a per-chart `familiarity` map satisfies it, so a real `AudienceProfile`
@@ -187,6 +215,16 @@ function applyCohesion(annotations: Datum[], cohesion: AnnotationCohesion): Datu
     return { ...a, cohesion }
   })
   return changed ? next : annotations
+}
+
+function applyMobileAnnotationCopy(a: Datum): Datum {
+  if (!isPlaceableAnnotation(a)) return a
+  const mobileText = typeof a.mobileText === "string" ? a.mobileText : undefined
+  const shortText = typeof a.shortText === "string" ? a.shortText : undefined
+  const replacement = mobileText ?? shortText
+  if (!replacement) return a
+  if (typeof a.label === "string" || a.label == null) return { ...a, label: replacement }
+  return a
 }
 
 /** A colored `text` note offset from its anchor ties to its target by color
@@ -373,7 +411,7 @@ function resolveAnchor(a: Datum, index: number, context: AnnotationContext): { x
  */
 export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
   const {
-    annotations,
+    annotations: inputAnnotations,
     context,
     defaultOffset = DEFAULT_OFFSET,
     notePadding = DEFAULT_NOTE_PADDING,
@@ -386,12 +424,33 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     progressiveDisclosure = false,
     redundantCues = false,
     responsive,
+    mobile,
     cohesion,
     audience,
   } = options
 
   const width = context.width || 0
   const height = context.height || 0
+  const mobileConfig = typeof mobile === "object" ? mobile : {}
+  const mobileBreakpoint = mobileConfig.breakpoint ?? DEFAULT_RESPONSIVE_MIN_WIDTH
+  const mobileActive = !!mobile && width <= mobileBreakpoint
+  const annotations =
+    mobileActive && mobileConfig.preferShortText !== false
+      ? inputAnnotations.map(applyMobileAnnotationCopy)
+      : inputAnnotations
+  const effectiveDensity = mobileActive && !density
+    ? {
+        maxAnnotations: mobileConfig.maxAnnotations ?? (mobileConfig.strategy === "callout-list" ? 1 : 2),
+        minVisible: mobileConfig.minVisible ?? 1,
+      }
+    : density
+  const effectiveProgressiveDisclosure =
+    progressiveDisclosure ||
+    (mobileActive && (mobileConfig.progressiveDisclosure !== false || mobileConfig.strategy === "callout-list"))
+  const effectiveResponsive = mobileActive && !responsive
+    ? (mobileConfig.responsive ?? { minWidth: mobileBreakpoint })
+    : responsive
+  const effectiveCohesion = mobileActive && !cohesion ? mobileConfig.cohesion : cohesion
   if (annotations.length === 0 || width <= 0 || height <= 0) return annotations.slice()
 
   const placedBoxes: Box[] = []
@@ -487,8 +546,8 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
   // verdicts into one shed set so a note shed by either is handled once.
   const toShed = new Set<Datum>()
 
-  if (density) {
-    const densityConfig = typeof density === "object" ? density : {}
+  if (effectiveDensity) {
+    const densityConfig = typeof effectiveDensity === "object" ? effectiveDensity : {}
     // M6 — audience biases amount by scaling the budget: a low-familiarity
     // audience keeps more orienting notes, an expert audience fewer.
     const factor = audienceBudgetFactor(audience)
@@ -511,10 +570,10 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
   // M5 — responsive: once the plot narrows past the breakpoint, shed the
   // lower-importance tier — every `secondary`-emphasis note — while keeping
   // `primary` and unmarked notes.
-  if (responsive) {
+  if (effectiveResponsive) {
     const minWidth =
-      typeof responsive === "object" && typeof responsive.minWidth === "number"
-        ? responsive.minWidth
+      typeof effectiveResponsive === "object" && typeof effectiveResponsive.minWidth === "number"
+        ? effectiveResponsive.minWidth
         : DEFAULT_RESPONSIVE_MIN_WIDTH
     if (width <= minWidth) {
       for (const a of placed) {
@@ -537,7 +596,7 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
   let result: Datum[]
   if (toShed.size === 0) {
     result = placed
-  } else if (progressiveDisclosure) {
+  } else if (effectiveProgressiveDisclosure) {
     // Keep shed notes tagged so the SVG overlay hides them until hover/focus —
     // the kept set is the floor a non-hover reader still receives.
     result = placed.map((a) => (toShed.has(a) ? { ...a, _annotationDeferred: true } : a))
@@ -545,5 +604,5 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     result = placed.filter((a) => !toShed.has(a))
   }
 
-  return cohesion ? applyCohesion(result, cohesion) : result
+  return effectiveCohesion ? applyCohesion(result, effectiveCohesion) : result
 }

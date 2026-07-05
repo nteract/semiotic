@@ -18,6 +18,7 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { getMinMax } from "../shared/minMax"
 
@@ -142,7 +143,10 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const {
     points,
@@ -212,6 +216,8 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
     unwrapData: false,
     onObservation,
     onClick,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "ProportionalSymbolMap",
     chartId,
     showLegend: resolved.showLegend,
@@ -323,8 +329,16 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
     ...setup.legendBehaviorProps,
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+      linkedHoverInClickPredicate: false,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...(resolved.title && { title: resolved.title }),

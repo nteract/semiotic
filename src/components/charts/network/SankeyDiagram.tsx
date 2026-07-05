@@ -18,6 +18,7 @@ import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 /**
  * SankeyDiagram component props
@@ -129,7 +130,10 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  }, { width: 800, height: 600 })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+}, { width: 800, height: 600 })
 
   const {
     nodes,
@@ -189,6 +193,8 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     linkedHover,
     onObservation,
     onClick,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "SankeyDiagram",
     chartId,
     marginDefaults: resolved.marginDefaults,
@@ -294,8 +300,16 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
-      customHoverBehavior={(linkedHover || onObservation || onClick) ? setup.customHoverBehavior : undefined}
-      customClickBehavior={(onObservation || onClick) ? setup.customClickBehavior : undefined}
+      {...buildCustomBehaviorProps({
+        linkedHover,
+        selection,
+        onObservation,
+        onClick,
+        mobileInteraction: setup.mobileInteraction,
+        customHoverBehavior: setup.customHoverBehavior,
+        customClickBehavior: setup.customClickBehavior,
+        linkedHoverInClickPredicate: false,
+      })}
       legend={setup.legend}
       legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {

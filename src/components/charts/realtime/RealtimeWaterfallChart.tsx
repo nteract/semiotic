@@ -14,17 +14,26 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
-import type { ChartMode, ChartAccessor, SelectionConfig } from "../shared/types"
+import type { ChartMode, ChartAccessor, SelectionConfig, MobileInteractionProp } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import { buildWaterfallTooltip } from "./defaultRealtimeTooltip"
 import { renderLoadingState, renderEmptyState } from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
+import type { MobileVisualizationContract } from "../shared/auditMobileVisualization"
+import type { ResponsiveRule } from "../shared/responsiveRules"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 export interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
+  /** Semantic responsive transformations applied before chart-mode defaults. */
+  responsiveRules?: ResponsiveRule[]
+  /** Phone/mobile contract consumed by audits, recipes, adapters, and agents. */
+  mobileSemantics?: MobileVisualizationContract
+  /** Touch-first interaction policy for phone-sized chart slots. */
+  mobileInteraction?: MobileInteractionProp
   /** Chart dimensions as [width, height] */
   size?: [number, number]
   /** Chart width (alternative to size) */
@@ -153,7 +162,10 @@ export const RealtimeWaterfallChart = forwardRef(
       width: props.size?.[0] ?? props.width,
       height: props.size?.[1] ?? props.height,
       enableHover: props.enableHover != null ? !!props.enableHover : undefined,
-    })
+          mobileInteraction: props.mobileInteraction,
+      mobileSemantics: props.mobileSemantics,
+      responsiveRules: props.responsiveRules,
+})
 
     const {
       size,
@@ -283,7 +295,14 @@ export const RealtimeWaterfallChart = forwardRef(
         background={background}
         hoverAnnotation={enableHover}
         tooltipContent={resolvedTooltip}
-        customHoverBehavior={combinedHoverBehavior}
+        {...buildCustomBehaviorProps({
+          linkedHover,
+          selection,
+          onObservation,
+          forceHoverBehavior: true,
+          mobileInteraction: resolved.mobileInteraction,
+          customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        })}
         annotations={annotations}
         autoPlaceAnnotations={autoPlaceAnnotations}
         svgAnnotationRules={svgAnnotationRules}

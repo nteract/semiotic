@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  testing:
+  testing-matrix:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -148,6 +148,19 @@ jobs:
             exit 1
           fi
           echo "All canvas methods are stubbed"
+
+  testing:
+    name: testing
+    runs-on: ubuntu-latest
+    needs: testing-matrix
+    if: always()
+    steps:
+      - name: Aggregate matrix result
+        run: |
+          if [[ "${{ needs['testing-matrix'].result }}" != "success" ]]; then
+            echo "testing-matrix result: ${{ needs['testing-matrix'].result }}"
+            exit 1
+          fi
 
   bench:
     name: Performance regression

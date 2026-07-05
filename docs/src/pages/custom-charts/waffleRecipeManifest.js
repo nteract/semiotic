@@ -219,6 +219,26 @@ export const waffleRecipeManifest = defineChartRecipe({
     tradeoff: "A bar chart supports more precise comparison; the waffle favors composition and memorability.",
     misuse: ["too many categories", "too many units", "false precision", "treating each cell as a separate semantic datum"],
   },
+  mobile: {
+    strategy: "summary-cards",
+    supportsResponsiveLayout: true,
+    breakpoints: [320, 390, 768],
+    maxMarks: 100,
+    maxAnnotations: 2,
+    minimumHitTarget: 44,
+    summary: true,
+    interaction: {
+      primary: "tap",
+      alternatives: ["category chips", "details panel"],
+      hoverFallback: "tap-to-lock",
+    },
+    labels: { strategy: "direct", minFontSize: 12 },
+    custom: {
+      dataBearingSceneNodes: true,
+      stableIds: true,
+      navigationGranularity: "category",
+    },
+  },
   description: describeWaffle,
   navigation: navigateWaffle,
   accessibility: {

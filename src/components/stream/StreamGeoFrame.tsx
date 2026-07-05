@@ -719,11 +719,23 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const onClick = useCallback((e: React.MouseEvent) => {
       if (!customClickBehavior) return
       const store = storeRef.current
-      if (!store || !store.scene.length) return
+      if (!store || !store.scene.length) {
+        customClickBehavior(null)
+        return
+      }
 
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
       const chartX = e.clientX - rect.left - margin.left
       const chartY = e.clientY - rect.top - margin.top
+      if (
+        chartX < 0 ||
+        chartX > adjustedWidth ||
+        chartY < 0 ||
+        chartY > adjustedHeight
+      ) {
+        customClickBehavior(null)
+        return
+      }
 
       if (!hitCanvasRef.current) {
         if (typeof OffscreenCanvas !== "undefined") {
@@ -733,7 +745,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         }
       }
       const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
-      if (!hitCtx) return
+      if (!hitCtx) {
+        customClickBehavior(null)
+        return
+      }
 
       const hitRadius = getPointerHitRadius(DEFAULT_GEO_HOVER_RADIUS, lastPointerTypeRef.current)
       const lineHitRadius = getPointerHitRadius(6, lastPointerTypeRef.current)
@@ -754,8 +769,10 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           time: chartX,
           value: chartY,
         })
+        return
       }
-    }, [customClickBehavior, margin])
+      customClickBehavior(null)
+    }, [adjustedHeight, adjustedWidth, customClickBehavior, margin])
 
     // ── Keyboard navigation ───────────────────────────────────────────
 

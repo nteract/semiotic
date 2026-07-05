@@ -8,12 +8,13 @@ import { brush as d3Brush } from "d3-brush"
 import { select as d3Select } from "d3-selection"
 import { getColor } from "../shared/colorUtils"
 import { getMax, getMinMax } from "../shared/minMax"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, ResolvedMobileInteractionConfig } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, DEFAULT_COLOR, resolveMobileInteraction } from "../shared/hooks"
 import { LinkedCharts } from "../../LinkedCharts"
 import { useSelection, useBrushSelection } from "../../store/useSelection"
 import { useSelectionSelector } from "../../store/SelectionStore"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 // Internal field used to identify datums across cells
 const SPLOM_IDX = "__splomIdx"
@@ -154,6 +155,7 @@ interface CellProps {
   unselectedOpacity: number
   showGrid: boolean
   tooltip?: TooltipProp
+  mobileInteraction?: ResolvedMobileInteractionConfig
   /** "brush" or "hover" — mutually exclusive */
   mode: "brush" | "hover"
   /** Callback when a point is hovered (hover mode only). */
@@ -177,6 +179,7 @@ function ScatterplotCell({
   unselectedOpacity,
   showGrid: _showGrid,
   tooltip: _tooltip,
+  mobileInteraction,
   mode,
   onPointHover,
   onPointClick
@@ -298,8 +301,13 @@ function ScatterplotCell({
         margin={CELL_MARGIN}
         showAxes={false}
         enableHover={mode === "hover"}
-        customHoverBehavior={mode === "hover" ? customHoverBehavior : undefined}
-        customClickBehavior={onPointClick ? customClickBehavior : undefined}
+        {...buildCustomBehaviorProps({
+          forceHoverBehavior: mode === "hover",
+          forceClickBehavior: !!onPointClick,
+          mobileInteraction,
+          customHoverBehavior: customHoverBehavior as (d: Datum | null) => void,
+          customClickBehavior: customClickBehavior as (d: Datum | null) => void,
+        })}
         tooltipContent={mode === "hover" ? (() => null) : undefined}
       />
       {mode === "brush" && (
@@ -587,6 +595,11 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
 
   const brushSelectionName = "splom"
   const hoverSelectionName = "splom-hover"
+  const mobileInteraction = resolveMobileInteraction(props.mobileInteraction, {
+    mode: props.mode,
+    width: _width ?? fields.length * cellSize,
+    mobileSemantics: props.mobileSemantics,
+  })
 
   // Brush and hover are mutually exclusive: hover wins when enabled
   const cellMode: "brush" | "hover" = hoverMode ? "hover" : (brushMode ? "brush" : "hover")
@@ -746,6 +759,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                   unselectedOpacity={unselectedOpacity}
                   showGrid={showGrid}
                   tooltip={tooltip}
+                  mobileInteraction={mobileInteraction}
                   mode={cellMode}
                   onPointHover={cellMode === "hover" ? (datum, px, py) => {
                     if (datum) {

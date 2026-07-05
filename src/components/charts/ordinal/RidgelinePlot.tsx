@@ -96,7 +96,10 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
     valueLabel: props.valueLabel,
     showCategoryTicks: props.showCategoryTicks,
     orientation: props.orientation,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -138,6 +141,8 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "RidgelinePlot",
     chartId,
     showLegend,
@@ -211,7 +216,8 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
-      linkedHover, onObservation, onClick, hoverHighlight,
+      linkedHover, selection, onObservation, onClick, hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),

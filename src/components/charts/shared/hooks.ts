@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useId, useEffect } from "react"
+import { useMemo, useCallback, useState, useId, useEffect, useRef } from "react"
 import { useCategoryColors } from "../../CategoryColors"
 import { useLinkedChartCategories, useLinkedChartCategoryRegistryActive, useLinkedLegendSuppression } from "../../LinkedCharts"
 import { createColorScale, getColor, COLOR_SCHEMES, resolveExplicitColor } from "./colorUtils"
@@ -9,11 +9,22 @@ import { useSelection, useLinkedHover } from "../../store/useSelection"
 import { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlockCrosshair } from "../../store/LinkedCrosshairStore"
 import { useObservationSelector } from "../../store/ObservationStore"
 import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
-import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode, HoverHighlightMode } from "./types"
+import type {
+  Accessor,
+  SelectionConfig,
+  LinkedHoverProp,
+  ChartMode,
+  HoverHighlightMode,
+  MobileInteractionProp,
+  ResolvedMobileInteractionConfig,
+} from "./types"
 import type { MarginType, PartialMargin } from "../../types/marginType"
 import type { TransitionConfig } from "../../stream/types"
 import { useTheme } from "../../ThemeProvider"
 import type { Datum } from "./datumTypes"
+import type { MobileVisualizationContract } from "./auditMobileVisualization"
+import { resolveResponsiveRules } from "./responsiveRules"
+import type { ResponsiveRule } from "./responsiveRules"
 
 /**
  * Default fill color used when no colorBy is specified
@@ -42,6 +53,65 @@ function hasOwnEnumerableKey(value: object | undefined | null): boolean {
     if (Object.prototype.hasOwnProperty.call(value, key)) return true
   }
   return false
+}
+
+export const MOBILE_INTERACTION_TARGET_SIZE = 44
+export const MOBILE_INTERACTION_MIN_HIT_RADIUS = 24
+
+export const MOBILE_INTERACTION_DEFAULTS: ResolvedMobileInteractionConfig = {
+  enabled: true,
+  tapToSelect: true,
+  tapToLockTooltip: true,
+  clearSelection: "backgroundTap",
+  targetSize: MOBILE_INTERACTION_TARGET_SIZE,
+  snap: "nearestDatum",
+  brushHandleSize: MOBILE_INTERACTION_TARGET_SIZE,
+  standardControls: false,
+}
+
+export const DISABLED_MOBILE_INTERACTION: ResolvedMobileInteractionConfig = {
+  ...MOBILE_INTERACTION_DEFAULTS,
+  enabled: false,
+  tapToSelect: false,
+  tapToLockTooltip: false,
+}
+
+export function resolveMobileInteraction(
+  input: MobileInteractionProp | undefined,
+  context: {
+    mode?: ChartMode
+    width?: number
+    mobileSemantics?: MobileVisualizationContract
+  } = {}
+): ResolvedMobileInteractionConfig {
+  const semanticInteraction = context.mobileSemantics?.interaction
+  const semanticTarget =
+    typeof semanticInteraction?.targetSize === "number"
+      ? semanticInteraction.targetSize
+      : typeof context.mobileSemantics?.minimumHitTarget === "number"
+        ? context.mobileSemantics.minimumHitTarget
+        : undefined
+  const inferredMobile = context.mode === "mobile" || (typeof context.width === "number" && context.width <= 480)
+  const hasSemanticInteraction = !!semanticInteraction || semanticTarget !== undefined
+  const config = input && typeof input === "object" ? input : undefined
+  const enabled =
+    input !== false &&
+    config?.enabled !== false &&
+    (input !== undefined || inferredMobile || hasSemanticInteraction)
+
+  if (!enabled) return DISABLED_MOBILE_INTERACTION
+
+  const mobileConfig = config ?? {}
+  return {
+    enabled: true,
+    tapToSelect: mobileConfig.tapToSelect ?? true,
+    tapToLockTooltip: mobileConfig.tapToLockTooltip ?? true,
+    clearSelection: mobileConfig.clearSelection ?? "backgroundTap",
+    targetSize: mobileConfig.targetSize ?? semanticTarget ?? MOBILE_INTERACTION_TARGET_SIZE,
+    snap: mobileConfig.snap ?? "nearestDatum",
+    brushHandleSize: mobileConfig.brushHandleSize ?? MOBILE_INTERACTION_TARGET_SIZE,
+    standardControls: mobileConfig.standardControls ?? false,
+  }
 }
 
 /**
@@ -233,6 +303,7 @@ export function useChartSelection({
   onClick,
   hoverHighlight,
   colorByField,
+  mobileInteraction,
 }: {
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
@@ -244,6 +315,7 @@ export function useChartSelection({
   onClick?: (datum: any, event: { x: number; y: number }) => void
   hoverHighlight?: HoverHighlightMode
   colorByField?: string
+  mobileInteraction?: ResolvedMobileInteractionConfig
 }): {
   activeSelectionHook: SelectionHookResult | null
   hoverSelectionHook: SelectionHookResult | null
@@ -285,6 +357,7 @@ export function useChartSelection({
 
   // ── Hover highlight: track hovered series key for sibling dimming ──────
   const [hoveredSeriesKey, setHoveredSeriesKey] = useState<string | null>(null)
+  const mobileHoverLockRef = useRef(false)
   const seriesField = colorByField || fallbackFields[0]
 
   const hoverSelectionHook: SelectionHookResult | null = useMemo(() => {
@@ -302,6 +375,12 @@ export function useChartSelection({
 
   const customHoverBehavior = useCallback(
     (d: Datum | null) => {
+      const preserveMobileLock =
+        !d &&
+        mobileHoverLockRef.current &&
+        !!mobileInteraction?.enabled &&
+        mobileInteraction.tapToLockTooltip
+
       // Linked hover: produce selection on hover, clear on hover-end
       if (linkedHover) {
         if (d) {
@@ -322,10 +401,10 @@ export function useChartSelection({
           }
         } else {
           // Clear on hover-end
-          if (hoverConfig?.mode === "x-position") {
+          if (hoverConfig?.mode === "x-position" && !preserveMobileLock) {
             clearCrosshairPosition(hoverConfig.name || "hover", crosshairSourceId)
           }
-          if (hoverConfig?.mode !== "x-position") {
+          if (hoverConfig?.mode !== "x-position" && !preserveMobileLock) {
             linkedHoverHook.onHover(null)
           }
         }
@@ -338,7 +417,7 @@ export function useChartSelection({
           if (Array.isArray(datum)) datum = datum[0]
           const key = datum?.[seriesField]
           setHoveredSeriesKey(key != null ? String(key) : null)
-        } else {
+        } else if (!preserveMobileLock) {
           setHoveredSeriesKey(null)
         }
       }
@@ -366,11 +445,47 @@ export function useChartSelection({
         }
       }
     },
-    [linkedHover, linkedHoverHook, hoverConfig, crosshairSourceId, onObservation, chartType, chartId, pushObservation, hoverHighlight, seriesField]
+    [linkedHover, linkedHoverHook, hoverConfig, crosshairSourceId, onObservation, chartType, chartId, pushObservation, hoverHighlight, seriesField, mobileInteraction]
+  )
+
+  const clearMobileLock = useCallback(
+    (updateLocalState = true) => {
+      mobileHoverLockRef.current = false
+      if (linkedHover && hoverConfig?.mode !== "x-position") {
+        linkedHoverHook.onHover(null)
+      }
+      if (selection && mobileInteraction?.tapToSelect) {
+        selectionHook.clear()
+      }
+      if (updateLocalState && hoverHighlight) {
+        setHoveredSeriesKey(null)
+      }
+      if (hoverConfig?.mode === "x-position") {
+        unlockCrosshair(hoverConfig.name || "hover", crosshairSourceId)
+        clearCrosshairPosition(hoverConfig.name || "hover", crosshairSourceId)
+      }
+    },
+    [
+      linkedHover,
+      hoverConfig,
+      linkedHoverHook,
+      selection,
+      mobileInteraction,
+      selectionHook,
+      hoverHighlight,
+      crosshairSourceId,
+    ]
   )
 
   const customClickBehavior = useCallback(
     (d: Datum | null) => {
+      const tapLocksHover =
+        !!mobileInteraction?.enabled &&
+        (mobileInteraction.tapToLockTooltip || mobileInteraction.tapToSelect)
+      const shouldClearOnBackground =
+        !!mobileInteraction?.enabled &&
+        mobileInteraction.clearSelection === "backgroundTap"
+
       // Click-to-lock crosshair (x-position mode)
       if (hoverConfig?.mode === "x-position" && hoverConfig.xField && d) {
         let datum = d.data || d.datum || d
@@ -380,6 +495,37 @@ export function useChartSelection({
           toggleCrosshairLock(hoverConfig.name || "hover", xVal, crosshairSourceId)
         }
       }
+
+      if (tapLocksHover) {
+        if (d) {
+          mobileHoverLockRef.current = true
+          const datum = observationDatum(d)
+
+          if (linkedHover && hoverConfig?.mode !== "x-position") {
+            linkedHoverHook.onHover(datum)
+          }
+
+          if (selection && mobileInteraction?.tapToSelect && linkFields.length > 0) {
+            const fieldValues: Record<string, unknown[]> = {}
+            for (const field of linkFields) {
+              const value = datum[field]
+              if (value !== undefined) fieldValues[field] = [value]
+            }
+            if (hasOwnEnumerableKey(fieldValues)) {
+              selectionHook.selectPoints(fieldValues)
+            }
+          }
+
+          if (hoverHighlight && seriesField) {
+            const key = datum?.[seriesField]
+            setHoveredSeriesKey(key != null ? String(key) : null)
+          }
+        } else if (shouldClearOnBackground) {
+          clearMobileLock()
+        }
+      }
+
+      if (!d && !shouldClearOnBackground) return
 
       if (d && onClick) {
         let datum = d.data || d.datum || d
@@ -409,8 +555,44 @@ export function useChartSelection({
         }
       }
     },
-    [onClick, onObservation, pushObservation, chartType, chartId, hoverConfig, crosshairSourceId]
+    [
+      onClick,
+      onObservation,
+      pushObservation,
+      chartType,
+      chartId,
+      hoverConfig,
+      crosshairSourceId,
+      mobileInteraction,
+      linkedHover,
+      linkedHoverHook,
+      selection,
+      selectionHook,
+      linkFields,
+      hoverHighlight,
+      seriesField,
+      clearMobileLock,
+    ]
   )
+
+  useEffect(() => {
+    if (!mobileInteraction?.enabled || typeof document === "undefined") return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && mobileHoverLockRef.current) {
+        clearMobileLock()
+      }
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [mobileInteraction?.enabled, clearMobileLock])
+
+  useEffect(() => {
+    return () => {
+      if (mobileHoverLockRef.current) {
+        clearMobileLock(false)
+      }
+    }
+  }, [clearMobileLock])
 
   // Clean up crosshair on unmount or config change to prevent stale entries
   // when the source chart is conditionally rendered or navigated away from
@@ -661,6 +843,13 @@ const MODE_DEFAULTS = {
     showLabels: false as boolean | undefined,
     marginDefaults: { top: 2, bottom: 2, left: 0, right: 0 },
   },
+  mobile: {
+    width: 390, height: 300,
+    showAxes: true, showGrid: false, enableHover: true,
+    showLegend: false as boolean | undefined,
+    showLabels: true as boolean | undefined,
+    marginDefaults: { top: 28, bottom: 42, left: 44, right: 16 },
+  },
 }
 
 interface ChartModeInput {
@@ -684,6 +873,12 @@ interface ChartModeInput {
   valueLabel?: string
   /** When truthy, enableHover is forced true regardless of mode (LinkedCharts needs hover) */
   linkedHover?: any
+  /** Optional mobile interaction policy surfaced through useChartMode for custom wrappers. */
+  mobileInteraction?: MobileInteractionProp
+  /** Optional mobile semantic contract surfaced through useChartMode for custom wrappers. */
+  mobileSemantics?: MobileVisualizationContract
+  /** Semantic responsive transformations resolved before mode defaults. */
+  responsiveRules?: ResponsiveRule[]
 }
 
 interface ChartModeResult {
@@ -705,6 +900,10 @@ interface ChartModeResult {
   marginDefaults: { top: number; bottom: number; left: number; right: number }
   /** True when mode is context or sparkline — the "hide interactive chrome" union. */
   compactMode: boolean
+  /** Resolved touch-first behavior for mobile-capable wrappers. */
+  mobileInteraction: ResolvedMobileInteractionConfig
+  /** Mobile semantic contract after matching responsive rules are applied. */
+  mobileSemantics: MobileVisualizationContract | undefined
 }
 
 /**
@@ -716,28 +915,44 @@ export function useChartMode(
   userProps: ChartModeInput,
   primaryDefaults?: { width?: number; height?: number }
 ): ChartModeResult {
-  const m = MODE_DEFAULTS[mode || "primary"]
-  const suppressLabels = mode === "context" || mode === "sparkline"
-  const defaultWidth = (!mode || mode === "primary") && primaryDefaults?.width ? primaryDefaults.width : m.width
-  const defaultHeight = (!mode || mode === "primary") && primaryDefaults?.height ? primaryDefaults.height : m.height
+  const baseMode = mode || "primary"
+  const baseDefaults = MODE_DEFAULTS[baseMode]
+  const baseWidth = (!mode || mode === "primary") && primaryDefaults?.width ? primaryDefaults.width : baseDefaults.width
+  const baseHeight = (!mode || mode === "primary") && primaryDefaults?.height ? primaryDefaults.height : baseDefaults.height
+  const responsiveBase = { ...userProps, mode } as ChartModeInput & Record<string, unknown>
+  const responsiveProps = resolveResponsiveRules(responsiveBase, {
+    width: userProps.width ?? baseWidth,
+    height: userProps.height ?? baseHeight,
+  }).props as ChartModeInput & { mode?: ChartMode }
+  const resolvedMode = responsiveProps.mode || mode
+  const m = MODE_DEFAULTS[resolvedMode || "primary"]
+  const suppressLabels = resolvedMode === "context" || resolvedMode === "sparkline"
+  const defaultWidth = (!resolvedMode || resolvedMode === "primary") && primaryDefaults?.width ? primaryDefaults.width : m.width
+  const defaultHeight = (!resolvedMode || resolvedMode === "primary") && primaryDefaults?.height ? primaryDefaults.height : m.height
   return {
-    width: userProps.width ?? defaultWidth,
-    height: userProps.height ?? defaultHeight,
-    showAxes: userProps.showAxes ?? m.showAxes,
-    showGrid: userProps.showGrid ?? m.showGrid,
-    enableHover: userProps.enableHover ?? (userProps.linkedHover ? true : m.enableHover),
-    showLegend: userProps.showLegend ?? m.showLegend,
-    showLabels: userProps.showLabels ?? m.showLabels,
-    title: suppressLabels ? undefined : userProps.title,
-    description: userProps.description,
-    summary: userProps.summary,
-    accessibleTable: userProps.accessibleTable,
-    xLabel: suppressLabels ? undefined : userProps.xLabel,
-    yLabel: suppressLabels ? undefined : userProps.yLabel,
-    categoryLabel: suppressLabels ? undefined : userProps.categoryLabel,
-    valueLabel: suppressLabels ? undefined : userProps.valueLabel,
-    marginDefaults: adjustMarginsForCategoryTicks(m.marginDefaults, userProps.showCategoryTicks, userProps.orientation),
+    width: responsiveProps.width ?? defaultWidth,
+    height: responsiveProps.height ?? defaultHeight,
+    showAxes: responsiveProps.showAxes ?? m.showAxes,
+    showGrid: responsiveProps.showGrid ?? m.showGrid,
+    enableHover: responsiveProps.enableHover ?? (responsiveProps.linkedHover ? true : m.enableHover),
+    showLegend: responsiveProps.showLegend ?? m.showLegend,
+    showLabels: responsiveProps.showLabels ?? m.showLabels,
+    title: suppressLabels ? undefined : responsiveProps.title,
+    description: responsiveProps.description,
+    summary: responsiveProps.summary,
+    accessibleTable: responsiveProps.accessibleTable,
+    xLabel: suppressLabels ? undefined : responsiveProps.xLabel,
+    yLabel: suppressLabels ? undefined : responsiveProps.yLabel,
+    categoryLabel: suppressLabels ? undefined : responsiveProps.categoryLabel,
+    valueLabel: suppressLabels ? undefined : responsiveProps.valueLabel,
+    marginDefaults: adjustMarginsForCategoryTicks(m.marginDefaults, responsiveProps.showCategoryTicks, responsiveProps.orientation),
     compactMode: suppressLabels,
+    mobileInteraction: resolveMobileInteraction(responsiveProps.mobileInteraction, {
+      mode: resolvedMode,
+      width: responsiveProps.width ?? defaultWidth,
+      mobileSemantics: responsiveProps.mobileSemantics,
+    }),
+    mobileSemantics: responsiveProps.mobileSemantics,
   }
 }
 

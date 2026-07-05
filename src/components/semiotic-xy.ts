@@ -22,6 +22,15 @@ export { QuadrantChart } from "./charts/xy/QuadrantChart"
 export { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
 export { CandlestickChart } from "./charts/xy/CandlestickChart"
 export { XYCustomChart } from "./charts/custom/XYCustomChart"
+export { responsiveRuleMatches, resolveResponsiveRules } from "./charts/shared/responsiveRules"
+export type {
+  ResponsiveOrientation,
+  ResponsiveRuleCondition,
+  ResponsiveRuleContext,
+  ResponsiveRule,
+  ResponsiveRuleMatch,
+  ResponsiveRuleResult,
+} from "./charts/shared/responsiveRules"
 export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 // hitTarget — invisible, interaction-bearing scene nodes for custom layouts

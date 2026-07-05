@@ -1,7 +1,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { getCapability, profileData } from "semiotic/ai"
-import { buildReaderGrounding, auditAccessibility } from "semiotic/utils"
+import { buildReaderGrounding, auditAccessibility, auditMobileVisualization } from "semiotic/utils"
 import chartGroundingFixtures from "./chartGroundingFixtures"
 
 /**
@@ -15,6 +15,8 @@ import chartGroundingFixtures from "./chartGroundingFixtures"
  *   • What the chart type asks of / hides from the reader (capability caveats).
  *   • A live accessibility read (auditAccessibility) — audited with describe:true
  *     because this panel itself provides the description.
+ *   • A live mobile-readiness read (auditMobileVisualization) at a 390px phone
+ *     viewport — the common "will this survive a phone?" authoring check.
  *
  * Everything is computed from `component` + `props` via the shipped intelligence
  * APIs, so the page can't drift from the library. The whole thing is wrapped in
@@ -27,6 +29,7 @@ export default function ChartGrounding({ component, props }) {
   const resolvedProps = props ?? chartGroundingFixtures[component] ?? {}
   let grounding
   let audit
+  let mobileAudit
   let caveats = []
   try {
     const capability = getCapability(component)
@@ -34,8 +37,14 @@ export default function ChartGrounding({ component, props }) {
     const auditProps = {
       ...resolvedProps,
       description: resolvedProps.description ?? grounding.description.text,
+      mobileSemantics: resolvedProps.mobileSemantics ?? capability?.mobile,
     }
     audit = auditAccessibility(component, auditProps, { describe: true })
+    mobileAudit = auditMobileVisualization(component, auditProps, {
+      viewportWidth: 390,
+      targetSize: 44,
+      inChartContainer: true,
+    })
     if (capability?.caveats) {
       // Pass both the row array AND a rawInput so structure detection can
       // populate profile.network / profile.hierarchy for network, hierarchy,
@@ -69,6 +78,19 @@ export default function ChartGrounding({ component, props }) {
       ? { tone: "ok", text: advisories === 0 ? "Passes accessibility" : `Passes a11y · ${advisoryText}` }
       : { tone: "warn", text: `${audit.summary.fails} to fix · ${advisoryText}` }
     : null
+  const mobile = mobileAudit
+    ? mobileAudit.ok
+      ? {
+          tone: "ok",
+          text: mobileAudit.summary.warnings === 0
+            ? "Mobile-ready"
+            : `Mobile ok · ${mobileAudit.summary.warnings} advisor${mobileAudit.summary.warnings === 1 ? "y" : "ies"}`,
+        }
+      : {
+          tone: "warn",
+          text: `${mobileAudit.summary.highRisk} mobile risk${mobileAudit.summary.highRisk === 1 ? "" : "s"}`,
+        }
+    : null
 
   // Tooltip: the specific findings behind the badge count, so hovering tells
   // you *what* the warnings are. Click still goes to the full audit page.
@@ -83,6 +105,17 @@ export default function ChartGrounding({ component, props }) {
         .join("\n") +
       (a11yFindings.length > 10 ? `\n…and ${a11yFindings.length - 10} more` : "")
     : "No accessibility issues found — click for the full audit."
+  const mobileFindings = mobileAudit
+    ? mobileAudit.findings.filter((f) => f.status === "warn" || f.status === "manual")
+    : []
+  const mobileTitle = mobileFindings.length
+    ? "Mobile visualization audit at 390px — hover for findings, click for guidance:\n" +
+      mobileFindings
+        .slice(0, 10)
+        .map((f) => `${f.status === "warn" ? "⚠" : "○"} ${f.id}`)
+        .join("\n") +
+      (mobileFindings.length > 10 ? `\n…and ${mobileFindings.length - 10} more` : "")
+    : "No mobile visualization issues found at 390px — click for mobile guidance."
 
   return (
     <aside className="chart-grounding" style={styles.panel} aria-label={`${component} at a glance`}>
@@ -95,6 +128,15 @@ export default function ChartGrounding({ component, props }) {
             style={{ ...styles.badge, ...(a11y.tone === "ok" ? styles.badgeOk : styles.badgeWarn) }}
           >
             ♿ {a11y.text}
+          </Link>
+        )}
+        {mobile && (
+          <Link
+            to="/examples/mobile-data-visualization"
+            title={mobileTitle}
+            style={{ ...styles.badge, ...(mobile.tone === "ok" ? styles.badgeOk : styles.badgeWarn) }}
+          >
+            Mobile: {mobile.text}
           </Link>
         )}
       </div>
@@ -116,7 +158,7 @@ export default function ChartGrounding({ component, props }) {
       )}
 
       <p style={styles.footer}>
-        Generated live via <code>describeChart</code> + <code>auditAccessibility</code>.
+        Generated live via <code>describeChart</code>, <code>auditAccessibility</code>, and <code>auditMobileVisualization</code>.
         {" "}Not sure this is the right chart? <Link to="/choose">Choose a Chart</Link>.
       </p>
     </aside>
@@ -132,7 +174,7 @@ const styles = {
     padding: "12px 16px",
     margin: "16px 0 24px",
   },
-  headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" },
   kicker: { fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-secondary)" },
   badge: { fontSize: 12, fontWeight: 600, textDecoration: "none", padding: "2px 8px", borderRadius: 12 },
   badgeOk: { background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" },

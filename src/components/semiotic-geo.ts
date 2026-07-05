@@ -13,6 +13,15 @@ export { ProportionalSymbolMap } from "./charts/geo/ProportionalSymbolMap"
 export { FlowMap } from "./charts/geo/FlowMap"
 export { DistanceCartogram } from "./charts/geo/DistanceCartogram"
 export { GeoCustomChart } from "./charts/custom/GeoCustomChart"
+export { responsiveRuleMatches, resolveResponsiveRules } from "./charts/shared/responsiveRules"
+export type {
+  ResponsiveOrientation,
+  ResponsiveRuleCondition,
+  ResponsiveRuleContext,
+  ResponsiveRule,
+  ResponsiveRuleMatch,
+  ResponsiveRuleResult,
+} from "./charts/shared/responsiveRules"
 
 // Custom-layout hit target — make overlay-drawn geographic marks navigable.
 export { geoHitTarget, hitTargetPoint, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"

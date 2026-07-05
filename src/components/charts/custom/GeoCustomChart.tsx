@@ -114,6 +114,9 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
       enableHover: props.enableHover,
       title: props.title,
       mode: props.mode,
+      mobileInteraction: props.mobileInteraction,
+      mobileSemantics: props.mobileSemantics,
+      responsiveRules: props.responsiveRules,
     })
 
   const safePoints = useMemo(() => filterSparseArray(points), [points])
@@ -137,6 +140,8 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
     unwrapData: false,
     onObservation,
     onClick,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
     chartType: "GeoCustomChart",
     chartId,
     showLegend: false,
@@ -207,9 +212,11 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
         : {}),
     ...buildCustomBehaviorProps({
       linkedHover,
+      selection,
       onObservation,
       onClick,
       hoverHighlight: false,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
       linkedHoverInClickPredicate: false,

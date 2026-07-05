@@ -15,6 +15,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
 /**
@@ -117,7 +118,10 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     accessibleTable: props.accessibleTable,
     summary: props.summary,
     showCategoryTicks: false,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -186,6 +190,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     onObservation,
     onClick,
     hoverHighlight,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "FunnelChart",
     chartId,
     showLegend,
@@ -302,8 +308,16 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
       : tooltip === true || tooltip == null
         ? defaultTooltipContent
         : (normalizeTooltip(tooltip) || defaultTooltipContent),
-    ...((linkedHover || onObservation || onClick || hoverHighlight) && { customHoverBehavior: setup.customHoverBehavior }),
-    ...((onObservation || onClick || linkedHover) && { customClickBehavior: setup.customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      hoverHighlight,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior: setup.customHoverBehavior,
+      customClickBehavior: setup.customClickBehavior,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.

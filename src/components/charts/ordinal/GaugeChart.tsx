@@ -153,7 +153,10 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  }, { width: 300, height: 250 })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+}, { width: 300, height: 250 })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 

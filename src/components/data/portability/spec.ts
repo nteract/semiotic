@@ -62,6 +62,39 @@ export interface PortableChartVariant {
   props?: Record<string, unknown>
 }
 
+export interface PortableMobileInteractionCapability {
+  primary?: string
+  alternatives?: ReadonlyArray<string>
+  hoverFallback?: string
+  targetSize?: number
+}
+
+export interface PortableMobileLabelCapability {
+  strategy?: string
+  minFontSize?: number
+}
+
+export interface PortableMobileCustomCapability {
+  dataBearingSceneNodes?: boolean
+  stableIds?: boolean
+  navigationGranularity?: string
+}
+
+export interface PortableMobileCapability {
+  strategy?: string
+  responsive?: boolean
+  supportsResponsiveLayout?: boolean
+  breakpoints?: ReadonlyArray<number>
+  minViewportWidth?: number
+  maxMarks?: number
+  maxAnnotations?: number
+  minimumHitTarget?: number
+  summary?: boolean | string
+  interaction?: PortableMobileInteractionCapability
+  labels?: PortableMobileLabelCapability
+  custom?: PortableMobileCustomCapability
+}
+
 export interface PortableChartCapability {
   /** Stable chart name (e.g. "BarChart"). */
   component: string
@@ -75,6 +108,8 @@ export interface PortableChartCapability {
   variants?: ReadonlyArray<PortableChartVariant>
   /** Static, audience-independent caveats. */
   caveats?: ReadonlyArray<string>
+  /** Phone-specific design contract for mobile audits and responsive adapters. */
+  mobile?: PortableMobileCapability
   tags?: ReadonlyArray<string>
 }
 
@@ -217,6 +252,39 @@ export function validatePortableCapability(value: unknown): ValidationResult {
         if (typeof variant.key !== "string") errors.push(`variants[${i}].key is required`)
         if (typeof variant.label !== "string") errors.push(`variants[${i}].label is required`)
       })
+    }
+  }
+  if (value.mobile !== undefined) {
+    if (!isPlainObject(value.mobile)) {
+      errors.push("mobile must be an object")
+    } else {
+      const mobile = value.mobile
+      for (const key of ["minViewportWidth", "maxMarks", "maxAnnotations", "minimumHitTarget"]) {
+        const v = mobile[key]
+        if (v !== undefined && (typeof v !== "number" || !Number.isFinite(v))) {
+          errors.push(`mobile.${key} must be a number`)
+        }
+      }
+      if (mobile.breakpoints !== undefined) {
+        if (!Array.isArray(mobile.breakpoints)) {
+          errors.push("mobile.breakpoints must be an array")
+        } else {
+          mobile.breakpoints.forEach((v, i) => {
+            if (typeof v !== "number" || !Number.isFinite(v)) {
+              errors.push(`mobile.breakpoints[${i}] must be a number`)
+            }
+          })
+        }
+      }
+      if (mobile.interaction !== undefined && !isPlainObject(mobile.interaction)) {
+        errors.push("mobile.interaction must be an object")
+      }
+      if (mobile.labels !== undefined && !isPlainObject(mobile.labels)) {
+        errors.push("mobile.labels must be an object")
+      }
+      if (mobile.custom !== undefined && !isPlainObject(mobile.custom)) {
+        errors.push("mobile.custom must be an object")
+      }
     }
   }
   return { valid: errors.length === 0, errors }

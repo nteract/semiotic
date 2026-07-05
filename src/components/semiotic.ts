@@ -4,7 +4,7 @@ import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
 // ── Chart HOCs ─────────────────────────────────────────────────────────
-import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, DifferenceChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart, XYCustomChart, NetworkCustomChart, OrdinalCustomChart } from "./charts"
+import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, DifferenceChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart, XYCustomChart, NetworkCustomChart, OrdinalCustomChart, responsiveRuleMatches, resolveResponsiveRules } from "./charts"
 
 // ── Coordinated views ──────────────────────────────────────────────────
 import { LinkedCharts } from "./LinkedCharts"
@@ -28,6 +28,14 @@ import { ChartErrorBoundary } from "./ChartErrorBoundary"
 
 // ── Chart container ───────────────────────────────────────────────────
 import { ChartContainer } from "./ChartContainer"
+import { MobileChartContainer } from "./MobileChartContainer"
+import { SmallMultipleChart } from "./SmallMultipleChart"
+import {
+  MobileStandardControls,
+  clampMobileRange,
+  useMobileRangeControls,
+  zoomMobileRange,
+} from "./MobileStandardControls"
 import { ChartGrid } from "./ChartGrid"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import { ContextLayout } from "./ContextLayout"
@@ -117,6 +125,12 @@ export {
   ChartErrorBoundary,
   // Chart container
   ChartContainer,
+  MobileChartContainer,
+  SmallMultipleChart,
+  MobileStandardControls,
+  clampMobileRange,
+  useMobileRangeControls,
+  zoomMobileRange,
   ChartGrid,
   CategoryColorProvider,
   useCategoryColors,
@@ -141,7 +155,10 @@ export {
   RealtimeWaterfallChart,
   RealtimeHeatmap,
   // Pattern fills
-  createHatchPattern
+  createHatchPattern,
+  // Responsive visualization rules
+  responsiveRuleMatches,
+  resolveResponsiveRules
 }
 
 // ── Chart HOC prop types ───────────────────────────────────────────────
@@ -199,7 +216,18 @@ export type {
   AxisConfig,
   Accessor,
   ChartAccessor,
-  ChartMode
+  ChartMode,
+  MobileClearSelectionBehavior,
+  MobileSnapBehavior,
+  MobileInteractionConfig,
+  MobileInteractionProp,
+  ResolvedMobileInteractionConfig,
+  ResponsiveOrientation,
+  ResponsiveRuleCondition,
+  ResponsiveRuleContext,
+  ResponsiveRule,
+  ResponsiveRuleMatch,
+  ResponsiveRuleResult
 } from "./charts"
 
 // ── StreamXYFrame types ────────────────────────────────────────────────
@@ -252,7 +280,7 @@ export type {
   LinkedBrushProp
 } from "./charts/shared/types"
 
-export type { LinkedChartsProps } from "./LinkedCharts"
+export type { LinkedChartsProps, LegendInteractionMode } from "./LinkedCharts"
 export type { CircularBrushProps, CircularBrushValue } from "./CircularBrush"
 
 export {
@@ -260,7 +288,8 @@ export {
   useSelectionActions,
   useLinkedHover,
   useBrushSelection,
-  useFilteredData
+  useFilteredData,
+  useLinkedChartsActive
 } from "./LinkedCharts"
 
 // Read the resolved selection inside a custom layout's overlays (restyle
@@ -333,9 +362,35 @@ export type { UseNavigationSyncOptions, UseNavigationSyncResult } from "./ai/use
 export type {
   ChartContainerProps,
   ChartContainerHandle,
+  ChartContainerMobileOptions,
   ChartNotification,
   ChartNotificationLevel,
 } from "./ChartContainer"
+export type {
+  MobileChartChip,
+  MobileChartContainerProps,
+  MobileChartDetailMode,
+} from "./MobileChartContainer"
+export type {
+  MobileStandardBrushControls,
+  MobileStandardControlKind,
+  MobileStandardControlLegendItem,
+  MobileStandardControlRequest,
+  MobileStandardControlsMode,
+  MobileStandardControlsProps,
+  MobileStandardLegendControls,
+  MobileStandardZoomControls,
+  UseMobileRangeControlsOptions,
+  UseMobileRangeControlsResult,
+} from "./MobileStandardControls"
+export type { MobileVisualizationContract } from "./charts/shared/auditMobileVisualization"
+export type {
+  SmallMultipleChartProps,
+  SmallMultipleExtent,
+  SmallMultipleItem,
+  SmallMultipleRenderContext,
+  SmallMultipleSharedExtent,
+} from "./SmallMultipleChart"
 export type { ChartGridProps } from "./ChartGrid"
 export type { CategoryColorMap, CategoryColorProviderProps } from "./CategoryColors"
 export type { ContextLayoutProps } from "./ContextLayout"
@@ -422,3 +477,6 @@ export type {
   AnnotationAnchor,
   Annotated,
 } from "./ai/annotationProvenance"
+
+export { MobileAnnotationCalloutList } from "./MobileAnnotationCalloutList"
+export type { MobileAnnotationCalloutListProps } from "./MobileAnnotationCalloutList"

@@ -30,6 +30,7 @@ import { useObservationSelector } from "../../store/ObservationStore"
 import type { ChartObservation } from "../../store/ObservationStore"
 import type { Style } from "../../stream/types"
 import { useChartSetup } from "../shared/useChartSetup"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { GeoParticleStyle } from "../../stream/GeoParticlePool"
 import { scaleLinear } from "d3-scale"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
@@ -176,7 +177,10 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+})
 
   const {
     flows,
@@ -262,6 +266,8 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     unwrapData: false,
     onObservation,
     onClick,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "FlowMap",
     chartId,
     showLegend: resolved.showLegend,
@@ -594,8 +600,16 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
       ? () => null
       : (normalizeTooltip(tooltip) || defaultTooltip),
     ...setup.legendBehaviorProps,
-    ...((linkedHover || onObservation || onClick) && { customHoverBehavior }),
-    ...((onObservation || onClick) && { customClickBehavior }),
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      mobileInteraction: setup.mobileInteraction,
+      customHoverBehavior,
+      customClickBehavior,
+      linkedHoverInClickPredicate: false,
+    }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...(resolved.title && { title: resolved.title }),

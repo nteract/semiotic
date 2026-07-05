@@ -145,6 +145,9 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     enableHover: props.enableHover,
     title: props.title,
     mode: props.mode,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
   })
 
   // Project the resolved shared selection into the layout (ctx.selection) + the
@@ -190,9 +193,11 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     // exist on StreamOrdinalFrameProps.
     ...buildCustomBehaviorProps({
       linkedHover,
+      selection,
       onObservation,
       onClick,
       hoverHighlight: false,
+      mobileInteraction: setup.mobileInteraction,
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),

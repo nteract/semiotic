@@ -14,6 +14,7 @@ import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 // ── Orbit layout types (kept for API compatibility) ──────────────────
 
@@ -147,7 +148,10 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-  }, { width: 600, height: 600 })
+      mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
+}, { width: 600, height: 600 })
 
   const {
     data,
@@ -207,6 +211,8 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     linkedHover,
     onObservation,
     onClick,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
     chartType: "OrbitDiagram",
     chartId,
     marginDefaults: { top: 10, right: 10, bottom: 10, left: 10 },
@@ -264,7 +270,6 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
   // Unwrap RealtimeNode wrapper — StreamNetworkFrame's hover payload has
   // data: RealtimeNode, and the user's raw datum is on RealtimeNode.data
   const wrappedHoverBehavior = useMemo(() => {
-    if (!customHoverBehavior) return undefined
     return (hover: Datum | null) => {
       if (hover && hover.data && hover.data.data !== undefined) {
         customHoverBehavior({ ...hover, data: hover.data.data })
@@ -275,7 +280,6 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
   }, [customHoverBehavior])
 
   const wrappedClickBehavior = useMemo(() => {
-    if (!customClickBehavior) return undefined
     return (click: Datum | null) => {
       if (click && click.data && click.data.data !== undefined) {
         customClickBehavior({ ...click, data: click.data.data })
@@ -313,8 +317,16 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
         showLabels={showLabels}
         enableHover={animated ? false : enableHover}
         tooltipContent={!animated ? (tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)) : undefined}
-        customHoverBehavior={(linkedHover || onObservation || onClick) ? wrappedHoverBehavior : undefined}
-        customClickBehavior={(onObservation || onClick) ? wrappedClickBehavior : undefined}
+        {...buildCustomBehaviorProps({
+          linkedHover,
+          selection,
+          onObservation,
+          onClick,
+          mobileInteraction: setup.mobileInteraction,
+          customHoverBehavior: wrappedHoverBehavior,
+          customClickBehavior: wrappedClickBehavior,
+          linkedHoverInClickPredicate: false,
+        })}
         foregroundGraphics={foregroundGraphics}
         annotations={annotations}
         className={className}

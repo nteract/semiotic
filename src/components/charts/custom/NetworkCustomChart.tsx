@@ -11,9 +11,10 @@ import type { NetworkCustomLayout, NetworkLayoutSelection } from "../../stream/n
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { SafeRender } from "../shared/withChartWrapper"
-import { useChartSelection } from "../shared/hooks"
+import { useChartSelection, resolveMobileInteraction } from "../shared/hooks"
 import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { filterSparseArray } from "../shared/sparseArray"
+import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { ChartRecipe } from "../../ai/chartRecipes"
 
 export interface NetworkCustomChartProps<
@@ -129,10 +130,18 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     enableHover: props.enableHover,
     title: props.title,
     mode: props.mode,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
   })
 
   const safeNodes = useMemo(() => filterSparseArray(nodes ?? []), [nodes])
   const safeEdges = useMemo(() => filterSparseArray(edges ?? []), [edges])
+  const resolvedMobileInteraction = resolveMobileInteraction(props.mobileInteraction, {
+    mode: props.mode,
+    width: resolved.width,
+    mobileSemantics: props.mobileSemantics,
+  })
 
   // Selection / linked-hover wiring — the custom-chart scaffold is the
   // light variant (no useChartSetup), so call useChartSelection directly,
@@ -148,6 +157,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     chartType: "NetworkCustomChart",
     chartId,
     colorByField: typeof colorBy === "string" ? colorBy : undefined,
+    mobileInteraction: resolvedMobileInteraction,
   })
 
   // Project the shared selection into the layout context so a custom
@@ -189,9 +199,18 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     enableHover,
     // Emit hover/click into the shared selection store (and fire
     // onObservation/onClick) only when something consumes them — mirrors
-    // the built-in network HOC gating.
-    customHoverBehavior: (linkedHover || onObservation || onClick) ? customHoverBehavior : undefined,
-    customClickBehavior: (onObservation || onClick) ? customClickBehavior : undefined,
+    // the built-in network HOC gating while still honoring mobile
+    // tap-to-select / tap-to-lock predicates.
+    ...buildCustomBehaviorProps({
+      linkedHover,
+      selection,
+      onObservation,
+      onClick,
+      mobileInteraction: resolvedMobileInteraction,
+      customHoverBehavior,
+      customClickBehavior,
+      linkedHoverInClickPredicate: false,
+    }),
     // Consume side: the resolved predicate the layout reads as ctx.selection.
     layoutSelection,
     // Annotations anchor to emitted marks by `pointId` (the scene node's id);

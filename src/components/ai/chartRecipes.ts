@@ -234,6 +234,57 @@ export interface AccessibilityExpectations {
   tableRoles?: string[]
 }
 
+export interface MobileInteractionDefinition {
+  /** Primary phone interaction, e.g. "tap", "button", "drag", "none". */
+  primary?: string
+  /** Standard non-hover alternatives available to the reader. */
+  alternatives?: string[]
+  /** How hover detail is recovered on touch devices, e.g. "tap-to-lock". */
+  hoverFallback?: string
+  /** Comfortable pointer target in CSS pixels. */
+  targetSize?: number
+}
+
+export interface MobileLabelDefinition {
+  /** Label strategy at phone width, e.g. "direct", "inline", "external", "legend". */
+  strategy?: string
+  /** Minimum resolved label font size in CSS pixels. */
+  minFontSize?: number
+}
+
+export interface MobileCustomSemanticsDefinition {
+  /** Whether emitted scene nodes retain data semantics for audit/grounding. */
+  dataBearingSceneNodes?: boolean
+  /** Whether emitted scene nodes use stable ids across renders. */
+  stableIds?: boolean
+  /** Semantic unit readers should traverse on a phone. */
+  navigationGranularity?: string
+}
+
+export interface MobileDesignDefinition {
+  /** Overall mobile design strategy, e.g. "responsive", "small-multiples", "summary-cards". */
+  strategy?: string
+  /** True when the layout intentionally recomputes for narrow viewports. */
+  responsive?: boolean
+  /** Alias for responsive, friendlier in portable manifests. */
+  supportsResponsiveLayout?: boolean
+  /** Widths this recipe/adapter has designed variants for. */
+  breakpoints?: number[]
+  /** Minimum CSS viewport width the authored design supports. */
+  minViewportWidth?: number
+  /** Mobile mark budget before aggregation/faceting/progressive disclosure. */
+  maxMarks?: number
+  /** Mobile annotation budget before collapsing notes out of the plot. */
+  maxAnnotations?: number
+  /** Minimum pointer target the recipe/adapter provides. */
+  minimumHitTarget?: number
+  /** Whether the mobile view provides a title/summary/card before the visual. */
+  summary?: boolean | string
+  interaction?: MobileInteractionDefinition
+  labels?: MobileLabelDefinition
+  custom?: MobileCustomSemanticsDefinition
+}
+
 export interface RecipeAuditExpectations {
   maxCategories?: number
   maxMarks?: number
@@ -286,6 +337,8 @@ export interface ChartRecipe<
 
   designContract: DesignContractDefinition
   accessibility: AccessibilityExpectations
+  /** Phone-specific contract consumed by audits, agents, and portable adapters. */
+  mobile?: MobileDesignDefinition
 
   description?: DescriptionStrategy<TDatum, TConfig>
   navigation?: NavigationStrategy<TDatum, TConfig> | PortableNavigationStrategy

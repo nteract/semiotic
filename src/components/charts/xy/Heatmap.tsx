@@ -235,6 +235,9 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     title: props.title,
     xLabel: props.xLabel,
     yLabel: props.yLabel,
+    mobileInteraction: props.mobileInteraction,
+    mobileSemantics: props.mobileSemantics,
+    responsiveRules: props.responsiveRules,
   })
 
   const {
@@ -314,6 +317,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     onObservation, onClick, chartType: "Heatmap", chartId,
     hoverHighlight,
     colorByField: undefined,
+    mobileInteraction: resolved.mobileInteraction,
   })
 
   // `useResolvedSelection` is still called so the selection store subscribes
@@ -413,7 +417,8 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...buildTooltipProps({ tooltip, defaultTooltipContent }),
     ...buildCustomBehaviorProps({
-      linkedHover, onObservation, onClick, hoverHighlight,
+      linkedHover, selection, onObservation, onClick, hoverHighlight,
+      mobileInteraction: resolved.mobileInteraction,
       customHoverBehavior, customClickBehavior,
     }),
     ...(annotations && annotations.length > 0 && { annotations }),

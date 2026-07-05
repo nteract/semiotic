@@ -19,6 +19,8 @@ function formatProcessSankeyIssue
 function glyphExtent
 function glyphPlacement
 function networkHitTarget
+function resolveResponsiveRules
+function responsiveRuleMatches
 function useCustomLayoutSelection
 function useForceLayout
 function validateProcessSankey
@@ -42,6 +44,11 @@ interface ProcessSankeyProps
 interface ProcessSankeyTick
 interface ProcessSankeyValidatorEdge
 interface ProcessSankeyValidatorNode
+interface ResponsiveRule
+interface ResponsiveRuleCondition
+interface ResponsiveRuleContext
+interface ResponsiveRuleMatch
+interface ResponsiveRuleResult
 interface SankeyDiagramProps
 interface SceneAccessibilityMetadata
 interface StreamNetworkFrameHandle
@@ -55,4 +62,5 @@ type NetworkChartType
 type NetworkCustomLayout
 type NetworkSceneEdge
 type NetworkSceneNode
+type ResponsiveOrientation
 ```
