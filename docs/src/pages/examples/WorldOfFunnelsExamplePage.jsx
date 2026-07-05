@@ -65,7 +65,7 @@ const scenarioCases = [
       { id: "Checkout", type: "Step" },
       { id: "Support", type: "Loop" },
       { id: "Bought", type: "Good" },
-      { id: "Returned shoes", type: "Bad" },
+      { id: "Returned candy", type: "Bad" },
     ],
     edges: [
       { source: "Arrive", target: "Product", value: 5800 },
@@ -80,7 +80,7 @@ const scenarioCases = [
       { source: "Checkout", target: "Bought", value: 1380 },
       { source: "Checkout", target: "Support", value: 360, detour: true },
       { source: "Support", target: "Checkout", value: 190, detour: true },
-      { source: "Checkout", target: "Returned shoes", value: 120, detour: true },
+      { source: "Checkout", target: "Returned candy", value: 120, detour: true },
     ],
     findings: [
       "Search is not just discovery. It is also repair after Product fails.",
