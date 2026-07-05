@@ -79,8 +79,8 @@ describe("NetworkSVGOverlay", () => {
       />
     )
     expect(getByText("Healthful sign")).toBeTruthy()
-    // The note resolved to the node center rather than the origin.
-    expect(container.querySelector("svg")).not.toBeNull()
+    // The note is rendered into the SVG annotation layer, not just mounted as an empty shell.
+    expect(container.querySelector('[role="img"]')?.textContent).toContain("Healthful sign")
   })
 
   it("hides density-deferred HTML widgets with the shared disclosure CSS", () => {
