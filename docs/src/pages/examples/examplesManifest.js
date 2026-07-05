@@ -111,6 +111,33 @@ export const EXAMPLES = [
     badges: ["Custom chart", "Local", "Intent-aware"],
   },
   {
+    title: "The 12 Kinds of Data Visualization People",
+    path: "/examples/dataviz-people",
+    eyebrow: "Twelve personas · twelve chart grammars",
+    description:
+      "An expanded remake of the Nightingale essay: Excel brute forcers, Tableau zen masters, Accurat-style studios, news orgs, scientists, industry oracles, fun freelancers, procedural artists, finance annotators, DevOps terminal wizards, workshop nomads, and academic dissectors each get a chart body.",
+    preview: "dataviz-people",
+    badges: ["Custom chart", "Sankey", "Candlestick", "Local"],
+  },
+  {
+    title: "Can You Know a Book Better Without Reading It?",
+    path: "/examples/distant-reading",
+    eyebrow: "Distant reading · literary signals",
+    description:
+      "A rich remake of the Nightingale essay as an interactive distant-reading room: chapter signal fields, phase summaries, corpus fingerprints, and narrative-flow Sankeys for four public-domain novels.",
+    preview: "distant-reading",
+    badges: ["LineChart", "BarChart", "Sankey", "Local"],
+  },
+  {
+    title: "We Live in a World of Funnels",
+    path: "/examples/world-of-funnels",
+    eyebrow: "Funnel analysis · Pop Art flows",
+    description:
+      "An interactive remake of the funnel essay: classic conversion funnels, A/B testing, branching Sankey paths, and temporal path motifs argue through precision and accuracy.",
+    preview: "funnels",
+    badges: ["FunnelChart", "Sankey", "ProcessSankey"],
+  },
+  {
     title: "What the Machine Sees",
     path: "/examples/what-the-machine-sees",
     eyebrow: "The intelligence layer, end to end",
@@ -126,6 +153,15 @@ export const EXAMPLES = [
     description:
       "Trace each example from its visible charts and settings through the four frame models, data inputs, and the rhizomatic implementation beneath them.",
     preview: "architecture",
+  },
+  {
+    title: "The Octopus: It has its tentacles in everything",
+    path: "/examples/octopus-metaphor",
+    eyebrow: "Network + GeoCustomChart metaphor",
+    description:
+      "A history of the octopus as an information-visualization metaphor: moral networks, imperial octopus maps, and a final Semiotic-as-octopus frame diagram.",
+    preview: "octopus",
+    badges: ["Custom chart", "GeoCustomChart", "NetworkCustomChart"],
   },
   {
     title: "Point Climate Anomaly",

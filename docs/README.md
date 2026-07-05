@@ -16,6 +16,12 @@ Start the docs site:
 npm run docs:dev
 ```
 
+You can verify the docs entry is healthy after config changes with:
+
+```bash
+npm run check:docs-entry
+```
+
 Build the production site:
 
 ```bash
