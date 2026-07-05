@@ -729,7 +729,12 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const onClick = useCallback((e: React.MouseEvent) => {
       if (!customClickBehavior) return
       const canvas = canvasRef.current
-      if (!canvas) return
+      if (!canvas) {
+        customClickBehavior(null)
+        dirtyRef.current = true
+        scheduleRender()
+        return
+      }
       const rect = canvas.getBoundingClientRect()
       const chartX = e.clientX - rect.left - margin.left
       const chartY = e.clientY - rect.top - margin.top

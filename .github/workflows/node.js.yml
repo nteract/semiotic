@@ -8,6 +8,7 @@ on:
 
 jobs:
   testing-matrix:
+    name: Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -158,7 +159,14 @@ jobs:
       - name: Aggregate matrix result
         run: |
           if [[ "${{ needs['testing-matrix'].result }}" != "success" ]]; then
-            echo "testing-matrix result: ${{ needs['testing-matrix'].result }}"
+            {
+              echo "## Testing matrix failed"
+              echo ""
+              echo "One or more Node.js matrix jobs failed. Open the failed \`Node <version>\` job above and expand the failing step for the concrete test, build, or validation error."
+              echo ""
+              echo "Matrix result: \`${{ needs['testing-matrix'].result }}\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Testing matrix failed::One or more Node.js matrix jobs failed. Open the failed 'Node <version>' job above and expand the failing step for the concrete error. Matrix result: ${{ needs['testing-matrix'].result }}"
             exit 1
           fi
 

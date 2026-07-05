@@ -33053,6 +33053,26 @@ async function auditAccessibilityHandler(args) {
     isError: !result.ok
   };
 }
+async function auditMobileVisualizationHandler(args) {
+  const component = args.component;
+  const props = args.props ?? {};
+  if (!component) {
+    return {
+      content: [{ type: "text", text: "Missing 'component' field. Provide { component: 'LineChart', props: { ... } }." }],
+      isError: true
+    };
+  }
+  const result = (0, import_ai3.auditMobileVisualization)(component, props, {
+    viewportWidth: typeof args.viewportWidth === "number" ? args.viewportWidth : void 0,
+    targetSize: typeof args.targetSize === "number" ? args.targetSize : void 0,
+    inChartContainer: args.inChartContainer === true
+  });
+  return {
+    content: [{ type: "text", text: (0, import_ai3.formatMobileVisualizationAudit)(result) }],
+    // Block only on high-risk mobile issues; medium/low warnings remain advisory.
+    isError: !result.ok
+  };
+}
 async function reportIssueHandler(args) {
   const title = args.title;
   const body = args.body;
@@ -33680,6 +33700,19 @@ function createServer2() {
     auditAccessibilityHandler
   );
   srv.tool(
+    "auditMobileVisualization",
+    "Audit a Semiotic chart configuration for mobile visualization risks. Use before generating phone-sized charts or when adapting a desktop chart to mobile. Flags fixed desktop widths, rough mark-density overload, hover-only detail, small touch targets, complex gestures without controls, legend dependence, annotation overload, and missing mobile transformation hints. Static analysis only: still verify rendered charts at phone widths.",
+    {
+      component: external_exports3.string().describe("Chart component name, e.g. 'LineChart', 'Scatterplot', or 'BarChart'."),
+      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props/config to audit."),
+      viewportWidth: external_exports3.number().int().min(240).max(1600).optional().describe("Mobile viewport width in CSS pixels. Defaults to 390."),
+      targetSize: external_exports3.number().int().min(24).max(80).optional().describe("Desired comfortable touch target size in CSS pixels. Defaults to 44."),
+      inChartContainer: external_exports3.boolean().optional().describe("Whether the chart is wrapped in ChartContainer or an equivalent summary/control surface.")
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    auditMobileVisualizationHandler
+  );
+  srv.tool(
     "reportIssue",
     "Generate a GitHub issue URL for Semiotic bug reports or feature requests. Returns a URL the user can open to submit. For rendering bugs, include the component name, props summary, and any diagnoseConfig output in the body.",
     {
@@ -33949,7 +33982,7 @@ async function main() {
     });
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
-      console.error("Tools: getSchema, suggestChart, suggestCharts, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, reportIssue, applyTheme");
+      console.error("Tools: getSchema, suggestChart, suggestCharts, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme");
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html");
     });
   } else {
