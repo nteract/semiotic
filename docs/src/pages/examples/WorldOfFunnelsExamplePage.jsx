@@ -568,6 +568,13 @@ export default function WorldOfFunnelsExamplePage() {
     const best = cohortFunnel.find(
       (row) => row.step === "Bought candy" && row.cohort === "Bigger buttons",
     )
+    const original = cohortFunnel.find(
+      (row) => row.step === "Bought candy" && row.cohort === "Original",
+    )
+    const lift =
+      best && original
+        ? Math.round(((best.value - original.value) / original.value) * 100)
+        : 0
 
     return [
       {
@@ -587,7 +594,7 @@ export default function WorldOfFunnelsExamplePage() {
       },
       {
         label: "Best A/B lift",
-        value: `+${Math.round(((best.value - 920) / 920) * 100)}%`,
+        value: `+${lift}%`,
         note: "bigger buttons vs. original",
       },
     ]
