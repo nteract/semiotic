@@ -90,8 +90,10 @@ function collectGeoAnnotationAnchors(
 
 const DEFAULT_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
 const DEFAULT_GEO_HOVER_RADIUS = 30
+let geoParticleConservationCache: boolean | null = null
 
 function shouldConserveGeoParticles(): boolean {
+  if (geoParticleConservationCache !== null) return geoParticleConservationCache
   if (typeof window === "undefined") return false
   const coarsePointer =
     typeof window.matchMedia === "function" &&
@@ -104,7 +106,8 @@ function shouldConserveGeoParticles(): boolean {
     typeof navigator !== "undefined" &&
     typeof (navigator as Navigator & { deviceMemory?: number }).deviceMemory === "number" &&
     (navigator as Navigator & { deviceMemory?: number }).deviceMemory! <= 4
-  return coarsePointer || lowCoreCount || lowMemory
+  geoParticleConservationCache = coarsePointer || lowCoreCount || lowMemory
+  return geoParticleConservationCache
 }
 
 function defaultGeoParticleMaxPerLine(): number {

@@ -44,6 +44,8 @@ export function prepareCanvas(
 
   const newWidth = Math.round(size[0] * dpr)
   const newHeight = Math.round(size[1] * dpr)
+  const effectiveDprX = newWidth / size[0]
+  const effectiveDprY = newHeight / size[1]
 
   // Only set canvas.width/height when dimensions actually change.
   // Setting these properties — even to the same value — implicitly clears
@@ -59,7 +61,7 @@ export function prepareCanvas(
     canvas.height = newHeight
   }
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  ctx.setTransform(effectiveDprX, 0, 0, effectiveDprY, 0, 0)
   ctx.translate(margin.left, margin.top)
   return ctx
 }

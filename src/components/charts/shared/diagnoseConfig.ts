@@ -644,7 +644,7 @@ function checkGeoParticlesMobile(
   const style = props.particleStyle && typeof props.particleStyle === "object" ? props.particleStyle : {}
   const maxPerLine = typeof style.maxPerLine === "number" ? style.maxPerLine : undefined
   const spawnRate = typeof style.spawnRate === "number" ? style.spawnRate : undefined
-  if (maxPerLine == null || maxPerLine > 20 || spawnRate == null || spawnRate > 0.08) {
+  if ((typeof maxPerLine === "number" && maxPerLine > 20) || (typeof spawnRate === "number" && spawnRate > 0.08)) {
     out.push({
       severity: "warning",
       code: "GEO_PARTICLE_MOBILE_COST",

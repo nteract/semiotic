@@ -207,7 +207,7 @@ const styles = {
   },
   closeButton: {
     minWidth: "44px",
-    minHeight: "36px",
+    minHeight: "44px",
     padding: "6px 10px",
     fontSize: "12px",
     fontWeight: 700,
