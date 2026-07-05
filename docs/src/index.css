@@ -601,7 +601,357 @@ div.page-image img {
 }
 
 /* --------------------------------------------------------------------------
-   20. Recipe Components
+   20. Mobile Documentation Experience
+   -------------------------------------------------------------------------- */
+
+.page-content,
+.live-example,
+.playground-chart-container,
+.playground-controls,
+.code-block {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-content img,
+.page-content video,
+.examples-main img,
+.examples-main video {
+  max-width: 100%;
+  height: auto;
+}
+
+.code-block-scroll,
+.live-example-viz,
+.playground-chart-container {
+  max-width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.live-example-viz,
+.playground-chart-container {
+  touch-action: pan-x pan-y !important;
+}
+
+.code-block-scroll {
+  scrollbar-gutter: stable;
+}
+
+.playground-chart-container {
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 20px 0 24px;
+}
+
+.playground-dataset-picker,
+.playground-share-toolbar,
+.playground-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.playground-dataset-picker {
+  margin: 16px 0 12px;
+}
+
+.playground-controls {
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 0 0 28px;
+}
+
+.playground-group-header {
+  margin: 16px 0 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.playground-controls > div:first-child .playground-group-header {
+  margin-top: 0;
+}
+
+.playground-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 16px;
+}
+
+.playground-control-row {
+  min-width: 0;
+}
+
+.playground-control-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.playground-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 10px;
+  align-items: center;
+}
+
+.playground-range input[type="range"] {
+  width: 100%;
+}
+
+.playground-select,
+.playground-text-input,
+.playground-number-input,
+.playground-toggle,
+.playground-reset-button,
+.playground-share-button {
+  min-height: 40px;
+}
+
+.playground-select,
+.playground-text-input,
+.playground-number-input {
+  width: 100%;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.playground-toggle.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.playground-color-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playground-color-input {
+  width: 44px;
+  height: 40px;
+}
+
+.playground-color-value {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+@media (min-width: 769px) {
+  .sidebar-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+
+  header {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  header .logo,
+  header .logo img,
+  .logo img {
+    max-width: 142px;
+    width: 142px;
+  }
+
+  header .github-links {
+    display: none;
+  }
+
+  .sidebar-toggle {
+    display: inline-flex !important;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .container {
+    width: 100%;
+    padding: 20px 14px 36px;
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .page-header h1 {
+    font-size: clamp(1.55rem, 8vw, 2rem) !important;
+    line-height: 1.12 !important;
+  }
+
+  .page-body {
+    display: block !important;
+  }
+
+  .page-breadcrumbs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    white-space: nowrap;
+    margin-inline: -14px;
+    padding-inline: 14px;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .page-content h2 {
+    font-size: 1.35rem;
+  }
+
+  .page-content h3 {
+    font-size: 1.05rem;
+  }
+
+  .page-nav {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .page-nav a {
+    width: 100%;
+    max-width: 100% !important;
+    min-height: 56px;
+  }
+
+  .live-example-viz,
+  .playground-chart-container {
+    margin-inline: -4px;
+    padding: 12px !important;
+  }
+
+  .live-example-side-by-side {
+    flex-direction: column !important;
+  }
+
+  .live-example-side-left,
+  .live-example-side-right {
+    width: 100%;
+    flex: 1 1 auto !important;
+  }
+
+  .live-example-toolbar {
+    gap: 6px !important;
+  }
+
+  .live-example-toolbar button,
+  .code-block button,
+  .playground-share-toolbar button,
+  .playground-toolbar button {
+    min-height: 44px;
+  }
+
+  .live-example-code pre,
+  .code-block pre,
+  .code-block code {
+    font-size: 12.5px !important;
+    line-height: 1.55 !important;
+  }
+
+  .code-block table {
+    width: max-content !important;
+    min-width: 100%;
+  }
+
+  .playground-controls {
+    padding: 12px !important;
+  }
+
+  .playground-controls-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .playground-range {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 72px !important;
+  }
+
+  .playground-select,
+  .playground-text-input,
+  .playground-number-input,
+  .playground-toggle,
+  .playground-reset-button,
+  .playground-share-button {
+    min-height: 44px;
+  }
+
+  .playground-share-toolbar {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .playground-share-hint {
+    align-self: stretch !important;
+  }
+
+  div.subpages {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)) !important;
+    gap: 14px !important;
+  }
+
+  div.subpages > div:not(.sub-header) {
+    width: auto;
+    margin: 0;
+  }
+
+  div.subpages .sub-header {
+    grid-column: 1 / -1;
+    margin-top: 12px;
+  }
+
+  div.page-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+
+  .examples-top-bar {
+    padding: 14px !important;
+    gap: 10px !important;
+    flex-wrap: wrap;
+  }
+
+  .examples-top-bar-right {
+    width: 100%;
+    margin-left: 0 !important;
+    justify-content: space-between;
+    gap: 10px !important;
+  }
+
+  .examples-footer-inner {
+    padding: 18px 14px !important;
+    flex-direction: column;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   21. Recipe Components
    -------------------------------------------------------------------------- */
 
 /* Recipe badge */

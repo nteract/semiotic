@@ -48,6 +48,7 @@ export default function CodeBlock({
           )
         )
       : lines.map(escapeHtml)
+  const wrapperClassName = ["code-block", className].filter(Boolean).join(" ")
 
   const styles = {
     wrapper: {
@@ -142,7 +143,7 @@ export default function CodeBlock({
   }
 
   return (
-    <div style={styles.wrapper} className={className}>
+    <div style={styles.wrapper} className={wrapperClassName}>
       <div style={styles.header}>
         <span style={styles.languageBadge}>{language.toUpperCase()}</span>
         {showCopyButton && (
@@ -155,7 +156,7 @@ export default function CodeBlock({
           </button>
         )}
       </div>
-      <div style={styles.codeArea}>
+      <div style={styles.codeArea} className="code-block-scroll">
         {showLineNumbers ? (
           <pre style={styles.pre}>
             <table style={styles.table}>

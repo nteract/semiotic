@@ -595,8 +595,61 @@ function checkFunctionAccessors(
     out.push({
       severity: "warning",
       code: "FUNCTION_ACCESSOR",
-      message: `Function accessor${fnAccessors.length > 1 ? "s" : ""} detected: ${fnAccessors.join(", ")}. If defined inline (e.g. \`xAccessor={d => d.value}\`), every parent re-render creates a new reference which may trigger unnecessary scene rebuilds.`,
+      message: `Function accessor${fnAccessors.length > 1 ? "s" : ""} detected: ${fnAccessors.join(", ")}. If defined inline (e.g. \`xAccessor={d => d.value}\`), every parent re-render creates a new reference; closures over changing values can force unnecessary scene rebuilds on resize/rotation.`,
       fix: `Use string accessors when possible (e.g. xAccessor="value"), or memoize with useCallback / define outside the component.`,
+    })
+  }
+}
+
+function checkMobileHitRadius(
+  _component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  const radius = props.hoverRadius
+  const hoverConfigured =
+    props.enableHover !== false &&
+    (props.hoverAnnotation !== false || props.tooltip || props.customHoverBehavior || props.customClickBehavior || props.onClick)
+  if (typeof radius === "number" && radius > 0 && radius < 24 && hoverConfigured) {
+    out.push({
+      severity: "warning",
+      code: "TOUCH_TARGET_SMALL",
+      message: `hoverRadius=${radius}px is below the ~24px radius needed for reliable 48px touch targets on mobile screens.`,
+      fix: `Use hoverRadius={24} or larger for touch-heavy views. Semiotic floors touch pointer hit testing to 24px, but explicit desktop-only radii should be documented.`,
+    })
+  }
+}
+
+function checkResponsiveMobileLayout(
+  _component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  if (props.responsiveWidth === true && props.responsiveHeight === true) {
+    out.push({
+      severity: "warning",
+      code: "RESPONSIVE_BOTH_AXES",
+      message: `responsiveWidth and responsiveHeight are both true. On mobile this can create resize feedback loops when the parent height depends on chart content.`,
+      fix: `Prefer responsiveWidth={true} with a fixed parent height or size={[width, fixedHeight]}; use a ResizeObserver outside the chart if the height must follow aspect ratio.`,
+    })
+  }
+}
+
+function checkGeoParticlesMobile(
+  _component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  if (props.showParticles !== true) return
+  const style = props.particleStyle && typeof props.particleStyle === "object" ? props.particleStyle : {}
+  const maxPerLine = typeof style.maxPerLine === "number" ? style.maxPerLine : undefined
+  const spawnRate = typeof style.spawnRate === "number" ? style.spawnRate : undefined
+  if (maxPerLine == null || maxPerLine > 20 || spawnRate == null || spawnRate > 0.08) {
+    out.push({
+      severity: "warning",
+      code: "GEO_PARTICLE_MOBILE_COST",
+      message: `Animated geo particles run a continuous canvas loop that can drain battery and trigger thermal throttling on mobile GPUs.`,
+      fix: `Set particleStyle={{ maxPerLine: 12, spawnRate: 0.06 }} for mobile-heavy views, or disable showParticles when reduced-motion or low-power modes are active.`,
     })
   }
 }
@@ -946,6 +999,9 @@ export function diagnoseConfig(
   checkUnknownColorScheme(componentName, props, diagnoses)
   checkMissingDescription(componentName, props, diagnoses)
   checkFunctionAccessors(componentName, props, diagnoses)
+  checkMobileHitRadius(componentName, props, diagnoses)
+  checkResponsiveMobileLayout(componentName, props, diagnoses)
+  checkGeoParticlesMobile(componentName, props, diagnoses)
   checkAnnotationConnectors(componentName, props, diagnoses)
   checkAnnotationDensity(componentName, props, diagnoses)
 

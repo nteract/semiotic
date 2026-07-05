@@ -19,6 +19,13 @@ import type { HoverData } from "../realtime/types"
 export interface HoverPointerCoords {
   clientX: number
   clientY: number
+  pointerType?: string
+}
+
+export const TOUCH_HIT_RADIUS = 24
+
+export function getPointerHitRadius(baseRadius: number, pointerType?: string): number {
+  return pointerType === "touch" ? Math.max(baseRadius, TOUCH_HIT_RADIUS) : baseRadius
 }
 
 export function normalizeHoverDatum(rawDatum: any): any {

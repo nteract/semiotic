@@ -54,7 +54,7 @@ import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
-import type { HoverPointerCoords } from "./hoverUtils"
+import { getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
 import { resolveNodeColor } from "./sceneUtils"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
@@ -89,6 +89,31 @@ function collectGeoAnnotationAnchors(
 // ── Defaults ───────────────────────────────────────────────────────────
 
 const DEFAULT_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
+const DEFAULT_GEO_HOVER_RADIUS = 30
+
+function shouldConserveGeoParticles(): boolean {
+  if (typeof window === "undefined") return false
+  const coarsePointer =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches
+  const lowCoreCount =
+    typeof navigator !== "undefined" &&
+    typeof navigator.hardwareConcurrency === "number" &&
+    navigator.hardwareConcurrency <= 4
+  const lowMemory =
+    typeof navigator !== "undefined" &&
+    typeof (navigator as Navigator & { deviceMemory?: number }).deviceMemory === "number" &&
+    (navigator as Navigator & { deviceMemory?: number }).deviceMemory! <= 4
+  return coarsePointer || lowCoreCount || lowMemory
+}
+
+function defaultGeoParticleMaxPerLine(): number {
+  return shouldConserveGeoParticles() ? 12 : 30
+}
+
+function defaultGeoParticleSpawnRate(): number {
+  return shouldConserveGeoParticles() ? 0.06 : 0.15
+}
 
 // ── Tooltip ────────────────────────────────────────────────────────────
 
@@ -438,13 +463,14 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     const particlePoolRef = useRef<GeoParticlePool | null>(null)
     const lastParticleTimeRef = useRef(0)
     if (showParticles && !particlePoolRef.current) {
-      const maxPerLine = particleStyle?.maxPerLine ?? 30
+      const maxPerLine = particleStyle?.maxPerLine ?? defaultGeoParticleMaxPerLine()
       particlePoolRef.current = new GeoParticlePool(maxPerLine * 50)
     }
 
     // Hover state
     const hoverRef = useRef<HoverData | null>(null)
     const hoveredNodeRef = useRef<GeoSceneNode | null>(null)
+    const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
     const lastAnnotationFrameTimeRef = useRef(0)
@@ -624,7 +650,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
         if (!hitCtx) return
 
-        const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx, store.quadtree, store.maxPointRadius)
+        const hitRadius = getPointerHitRadius(DEFAULT_GEO_HOVER_RADIUS, e.pointerType)
+        const lineHitRadius = getPointerHitRadius(6, e.pointerType)
+        const hit = findNearestGeoNode(store.scene, chartX, chartY, hitRadius, hitCtx, store.quadtree, store.maxPointRadius, lineHitRadius)
 
         if (hit) {
           const node = hit.node
@@ -704,7 +732,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
       if (!hitCtx) return
 
-      const hit = findNearestGeoNode(store.scene, chartX, chartY, 30, hitCtx, store.quadtree, store.maxPointRadius)
+      const hitRadius = getPointerHitRadius(DEFAULT_GEO_HOVER_RADIUS, lastPointerTypeRef.current)
+      const lineHitRadius = getPointerHitRadius(6, lastPointerTypeRef.current)
+      const hit = findNearestGeoNode(store.scene, chartX, chartY, hitRadius, hitCtx, store.quadtree, store.maxPointRadius, lineHitRadius)
       if (hit) {
         const datum = hit.node.datum
         const rawData = Array.isArray(datum)
@@ -782,11 +812,16 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
     // Clear keyboard focus on mouse interaction; reuses useFrame's
     // rAF-coalesced pointermove path.
-    const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+    const onPointerMoveWrapped = useCallback((e: React.PointerEvent) => {
+      lastPointerTypeRef.current = e.pointerType
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove(e)
     }, [onPointerMove])
+
+    const onPointerDown = useCallback((e: React.PointerEvent) => {
+      lastPointerTypeRef.current = e.pointerType
+    }, [])
 
     // ── Main render function ──────────────────────────────────────────
 
@@ -925,8 +960,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
         if (lineNodes.length > 0) {
           const pStyle = particleStyle || {}
           const speed = (pStyle.speedMultiplier ?? 1) * 0.3
-          const maxPerLine = pStyle.maxPerLine ?? 30
-          const spawnRate = pStyle.spawnRate ?? 0.15
+          const maxPerLine = pStyle.maxPerLine ?? defaultGeoParticleMaxPerLine()
+          const spawnRate = pStyle.spawnRate ?? defaultGeoParticleSpawnRate()
           const radius = pStyle.radius ?? 2
           const opacity = pStyle.opacity ?? 0.7
 
@@ -1388,8 +1423,9 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
-          onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
-          onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
+          onPointerMove={effectiveHoverAnnotation ? onPointerMoveWrapped : undefined}
+          onPointerLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
+          onPointerDown={effectiveHoverAnnotation || customClickBehavior ? onPointerDown : undefined}
           onClick={customClickBehavior ? onClick : undefined}
         >
         {resolvedBackground && (

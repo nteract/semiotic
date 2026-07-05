@@ -205,7 +205,7 @@ export interface UseFrameResult {
   hoverLeaveRef: React.MutableRefObject<() => void>
   /** Stable callback to attach to canvas's onPointerMove (or onMouseMove).
    *  Captures the coords and queues a single rAF to drain into hoverHandlerRef. */
-  onPointerMove: (e: { clientX: number; clientY: number }) => void
+  onPointerMove: (e: { clientX: number; clientY: number; pointerType?: string }) => void
   /** Stable callback to attach to canvas's onPointerLeave (or onMouseLeave).
    *  Cancels any pending hover rAF and invokes hoverLeaveRef. */
   onPointerLeave: () => void
@@ -296,8 +296,8 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     pendingMoveCoordsRef.current = null
     if (coords) hoverHandlerRef.current(coords)
   }, [])
-  const onPointerMove = useCallback((e: { clientX: number; clientY: number }) => {
-    pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY }
+  const onPointerMove = useCallback((e: { clientX: number; clientY: number; pointerType?: string }) => {
+    pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType }
     if (moveRafRef.current === 0) {
       moveRafRef.current = requestAnimationFrame(flushPendingMove)
     }
