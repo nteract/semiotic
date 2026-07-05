@@ -16,8 +16,8 @@ export default function ExamplesLayout({ children }) {
   const [theme, toggleTheme] = useDocsTheme()
 
   return (
-    <div style={styles.shell}>
-      <header style={styles.topBar}>
+    <div style={styles.shell} className="examples-shell">
+      <header style={styles.topBar} className="examples-top-bar">
         <Link to="/" style={styles.logoLink} aria-label="Semiotic home">
           <img
             src={theme === "dark" ? semioticLogoDark : semioticLogo}
@@ -26,7 +26,7 @@ export default function ExamplesLayout({ children }) {
           />
         </Link>
         <Link to="/examples" style={styles.sectionLink}>Examples</Link>
-        <div style={styles.topBarRight}>
+        <div style={styles.topBarRight} className="examples-top-bar-right">
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
           <Link to="/getting-started" style={styles.utilityLink}>Docs</Link>
           <a
@@ -40,10 +40,10 @@ export default function ExamplesLayout({ children }) {
         </div>
       </header>
 
-      <main style={styles.main}>{children}</main>
+      <main style={styles.main} className="examples-main">{children}</main>
 
       <footer style={styles.footer}>
-        <div style={styles.footerInner}>
+        <div style={styles.footerInner} className="examples-footer-inner">
           <Link to="/examples" style={styles.footerLink}>All examples</Link>
           <span style={styles.footerNote}>Built with Semiotic</span>
         </div>

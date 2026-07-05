@@ -28,7 +28,8 @@ export function findNearestGeoNode(
   maxDistance: number,
   hitCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   pointQuadtree?: Quadtree<PointSceneNode> | null,
-  maxPointRadius = 0
+  maxPointRadius = 0,
+  lineMaxDistance = maxDistance
 ): GeoHitResult | null {
   // ── 1. Point nodes ──────────────────────────────────────────────
 
@@ -107,13 +108,13 @@ export function findNearestGeoNode(
   // ── 3. Line nodes ──────────────────────────────────────────────
 
   let bestLine: GeoLineSceneNode | null = null
-  let bestLineDist = maxDistance
+  let bestLineDist = lineMaxDistance
 
   for (const node of nodes) {
     if (node.type !== "line") continue
     const line = node as GeoLineSceneNode
     const { path } = line
-    const hitWidth = Math.max((line.style.strokeWidth || 2) + 4, 5)
+    const hitWidth = Math.max((line.style.strokeWidth || 2) + 4, 5, lineMaxDistance)
     for (let j = 0; j < path.length - 1; j++) {
       const [ax, ay] = path[j]
       const [bx, by] = path[j + 1]

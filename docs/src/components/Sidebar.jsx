@@ -62,8 +62,8 @@ const styles = {
     top: 0,
     left: 0,
     bottom: 0,
-    width: "var(--sidebar-width, 280px)",
-    minWidth: "var(--sidebar-width, 280px)",
+    width: "min(86vw, var(--sidebar-width, 280px))",
+    minWidth: "min(86vw, var(--sidebar-width, 280px))",
     height: "100vh",
     zIndex: 100,
     transform: "translateX(-100%)",
@@ -188,6 +188,31 @@ const styles = {
     borderLeftColor: "var(--accent, #6366f1)",
     color: "var(--accent, #6366f1)",
     backgroundColor: "var(--surface-2, #f3f4f6)",
+  },
+  mobileHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "12px",
+    padding: "4px 16px 14px",
+    marginBottom: "8px",
+    borderBottom: "1px solid var(--surface-3, #e5e7eb)",
+  },
+  mobileTitle: {
+    fontSize: "13px",
+    fontWeight: 700,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: "var(--text-secondary, #6b7280)",
+  },
+  closeButton: {
+    minWidth: "44px",
+    minHeight: "44px",
+    padding: "6px 10px",
+    fontSize: "12px",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
   },
 }
 
@@ -515,12 +540,20 @@ export default function Sidebar({ isOpen, onClose }) {
       )}
       {/* Sidebar panel */}
       <aside
+        className="docs-sidebar-panel"
+        aria-label="Documentation navigation"
         style={{
           ...styles.sidebar,
           ...styles.sidebarMobile,
           ...(isOpen ? styles.sidebarMobileOpen : {}),
         }}
       >
+        <div className="docs-mobile-sidebar-header" style={styles.mobileHeader}>
+          <span style={styles.mobileTitle}>Navigation</span>
+          <button type="button" onClick={onClose} style={styles.closeButton}>
+            Close
+          </button>
+        </div>
         {sidebarContent}
       </aside>
     </>

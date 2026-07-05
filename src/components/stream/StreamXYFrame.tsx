@@ -57,7 +57,7 @@ import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
 import { symbolRadius } from "./symbolPath"
 import { glyphHitGeometry } from "./glyphDef"
 import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
-import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
+import { buildHoverData, getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
@@ -71,6 +71,13 @@ import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotati
 // ── Auto-date tick formatting ─────────────────────────────────────────
 
 const DATE_MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+function brushTouchAction(brush: StreamXYFrameProps["brush"]): React.CSSProperties["touchAction"] | undefined {
+  if (!brush) return undefined
+  if (brush.dimension === "x") return "pan-y"
+  if (brush.dimension === "y") return "pan-x"
+  return "none"
+}
 
 function makeDateTickFormatter(domain: [number, number]): (v: number) => string {
   const span = domain[1] - domain[0]
@@ -662,6 +669,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Hover state: ref for canvas (sync), React state for tooltip (async)
     const hoverRef = useRef<HoverData | null>(null)
     const hoveredNodeRef = useRef<SceneNode | null>(null)
+    const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
 
     // Cached theme primary — updated by the render loop (which already calls
@@ -976,7 +984,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (!store || store.scene.length === 0) return
 
       // Hit test against scene graph — use quadtree for O(log n) point lookup when available
-      const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree, store.maxPointRadius)
+      const hitRadius = getPointerHitRadius(hoverRadius, e.pointerType)
+      const hit = findNearestNode(store.scene, chartX, chartY, hitRadius, store.quadtree, store.maxPointRadius)
       const isMulti = tooltipMode === "multi"
 
       const clearHover = () => {
@@ -1027,7 +1036,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // CanvasHitTester so padded/explicit xExtent space outside the rendered
       // path does not clamp to the first/last point.
       if (isMulti && store.scene.length > 0 && store.scales) {
-        const allHits = findAllNodesAtX(store.scene, posX, Math.max(hoverRadius, adjustedWidth))
+        const allHits = findAllNodesAtX(store.scene, posX, Math.max(hitRadius, adjustedWidth))
         if (allHits.length > 0) {
           const yInvert = store.scales.y.invert
           // Read the cached theme primary (updated from the render loop) so
@@ -1112,7 +1121,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
       const store = storeRef.current
       if (!store || store.scene.length === 0) { customClickBehavior(null); return }
-      const hit = findNearestNode(store.scene, chartX, chartY, hoverRadius, store.quadtree, store.maxPointRadius)
+      const hitRadius = getPointerHitRadius(hoverRadius, lastPointerTypeRef.current)
+      const hit = findNearestNode(store.scene, chartX, chartY, hitRadius, store.quadtree, store.maxPointRadius)
       if (!hit) { customClickBehavior(null); return }
       const rawDatum = hit.datum || {}
       const xInvert = store.scales?.x?.invert
@@ -1204,11 +1214,23 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced
     // hover path so the per-frame work cap still applies.
-    const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
+    const onPointerMoveWrapped = useCallback((e: React.PointerEvent) => {
+      lastPointerTypeRef.current = e.pointerType
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       onPointerMove(e)
     }, [onPointerMove])
+
+    const onMouseMoveFallback = useCallback((e: React.MouseEvent) => {
+      lastPointerTypeRef.current = "mouse"
+      kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
+      onPointerMove({ clientX: e.clientX, clientY: e.clientY, pointerType: "mouse" })
+    }, [onPointerMove])
+
+    const onPointerDown = useCallback((e: React.PointerEvent) => {
+      lastPointerTypeRef.current = e.pointerType
+    }, [])
 
     // ── Render function ──────────────────────────────────────────────────
 
@@ -1679,6 +1701,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           width: responsiveWidth ? "100%" : size[0],
           height: responsiveHeight ? "100%" : size[1],
           overflow: "visible",
+          touchAction: brushTouchAction(brush),
         }}
         onKeyDown={onKeyDown}
       >
@@ -1693,8 +1716,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           role="img"
           aria-label={description || (typeof title === "string" ? title : "XY chart")}
           style={{ position: "relative", width: "100%", height: "100%" }}
-          onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
+          onPointerMove={effectiveHoverAnnotation ? onPointerMoveWrapped : undefined}
+          onMouseMove={effectiveHoverAnnotation ? onMouseMoveFallback : undefined}
+          onPointerLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
           onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
+          onPointerDown={effectiveHoverAnnotation || customClickBehavior ? onPointerDown : undefined}
           onClick={customClickBehavior ? onClick : undefined}
         >
         {resolvedBackground && (

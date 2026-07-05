@@ -1045,7 +1045,7 @@ export class PipelineStore {
       this.startTransition()
     }
 
-    // Build quadtree spatial index for scatter/bubble with many points
+    // Build quadtree spatial index for dense point scenes
     this.rebuildQuadtree()
 
     this.needsFullRebuild = false
@@ -1055,11 +1055,11 @@ export class PipelineStore {
 
   /**
    * Build or clear the quadtree spatial index for point scene nodes.
-   * Only built for scatter/bubble charts with >QUADTREE_THRESHOLD points.
+   * Only built for scatter/bubble/custom charts with >QUADTREE_THRESHOLD points.
    */
   private rebuildQuadtree(): void {
     const ct = this.config.chartType
-    if (ct !== "scatter" && ct !== "bubble") {
+    if (ct !== "scatter" && ct !== "bubble" && ct !== "custom") {
       this._quadtree = null
       this._maxPointRadius = 0
       return

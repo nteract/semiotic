@@ -175,7 +175,7 @@ export default function LiveExample({
 
   // Visualization element — render with fallback size if container hasn't been measured yet
   const visualization = (
-    <div ref={vizContainerRef} style={styles.vizContainer}>
+    <div ref={vizContainerRef} style={styles.vizContainer} className="live-example-viz">
       {containerWidth
         ? <Frame key={docsTheme} {...responsiveFrameProps} />
         : <Frame key={docsTheme} {...frameProps} />
@@ -185,7 +185,7 @@ export default function LiveExample({
 
   // Code element
   const codeBlock = (
-    <div style={getCodeContainerStyle()} ref={codeRef}>
+    <div style={getCodeContainerStyle()} ref={codeRef} className="live-example-code">
       <pre
         className="language-jsx"
         style={styles.pre}
@@ -207,7 +207,7 @@ export default function LiveExample({
 
   // Toolbar buttons
   const toolbar = (
-    <div style={styles.toolbar}>
+    <div style={styles.toolbar} className="live-example-toolbar">
       {codeState === "hidden" ? (
         <button onClick={showCode} style={styles.button}>
           Show Code
@@ -240,11 +240,11 @@ export default function LiveExample({
   // Side-by-side layout
   if (sideBySide && codeState !== "hidden") {
     return (
-      <div style={styles.wrapper}>
+      <div style={styles.wrapper} className="live-example">
         {title && <h3 style={styles.title}>{title}</h3>}
-        <div style={styles.sideBySideContainer}>
-          <div style={styles.sideBySideLeft}>{visualization}</div>
-          <div style={styles.sideBySideRight}>{codeBlock}</div>
+        <div style={styles.sideBySideContainer} className="live-example-side-by-side">
+          <div style={styles.sideBySideLeft} className="live-example-side-left">{visualization}</div>
+          <div style={styles.sideBySideRight} className="live-example-side-right">{codeBlock}</div>
         </div>
         {toolbar}
       </div>
@@ -253,7 +253,7 @@ export default function LiveExample({
 
   // Stacked layout (default)
   return (
-    <div style={styles.wrapper}>
+    <div style={styles.wrapper} className="live-example">
       {title && <h3 style={styles.title}>{title}</h3>}
       {visualization}
       {toolbar}
@@ -285,7 +285,11 @@ const styles = {
     borderRadius: "8px",
     padding: "16px",
     border: "1px solid var(--surface-3)",
-    overflow: "hidden",
+    overflowX: "auto",
+    overflowY: "hidden",
+    maxWidth: "100%",
+    WebkitOverflowScrolling: "touch",
+    touchAction: "pan-x pan-y",
   },
 
   toolbar: {
@@ -293,6 +297,7 @@ const styles = {
     gap: "8px",
     marginTop: "8px",
     alignItems: "center",
+    flexWrap: "wrap",
   },
 
   button: {
@@ -315,6 +320,7 @@ const styles = {
     overflow: "hidden",
     marginTop: "8px",
     border: "1px solid var(--surface-3)",
+    maxWidth: "100%",
   },
 
   pre: {
