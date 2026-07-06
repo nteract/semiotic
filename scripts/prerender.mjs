@@ -752,6 +752,12 @@ function machineDocScript(doc) {
 const escHtml = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
+export function normalizeShellAssetUrls(html) {
+  return html
+    .replace(/\b(src|href)=(["'])\.\/assets\//g, "$1=$2/assets/")
+    .replace(/\b(src|href)=(["'])\.\/(prism\.(?:js|css)|semiotic\.css)\2/g, "$1=$2/$3$2")
+}
+
 export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc = null) {
   const slugTitle = routePath
     .split("/")
@@ -793,7 +799,7 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
   const blogFeedAlternate = '<link rel="alternate" type="application/atom+xml" title="Semiotic Blog" href="/blog/feed.xml" />'
   const jsonLd = '<script type="application/ld+json" data-jsonld="semiotic">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic3.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
   const canonicalUrl = routePath ? `${SITE_URL}/${routePath}` : SITE_URL
-  let normalizedShell = shellHtml
+  let normalizedShell = normalizeShellAssetUrls(shellHtml)
   let previousShell
   do {
     previousShell = normalizedShell

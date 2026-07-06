@@ -39,6 +39,16 @@ export const REQUIRED_DOCS_ROUTES = [
     title: "TypeDoc \u2014 Semiotic API Reference",
     canonicalUrl: `${SITE_URL}/api/typedoc`,
   },
+  {
+    routePath: "examples",
+    title: "Examples \u2014 Semiotic",
+    canonicalUrl: `${SITE_URL}/examples`,
+  },
+  {
+    routePath: "custom-charts/intelligence",
+    title: "Custom Charts \u2014 Intelligence \u2014 Semiotic",
+    canonicalUrl: `${SITE_URL}/custom-charts/intelligence`,
+  },
 ]
 
 export const REQUIRED_API_ASSETS = [
@@ -99,6 +109,7 @@ export function validateDocsBuild({
     expectIncludes(failures, html, 'rel="alternate" type="text/plain" href="/llms.txt"', route.routePath, "LLM alternate")
     expectIncludes(failures, html, 'data-jsonld="semiotic"', route.routePath, "Semiotic JSON-LD")
     expectIncludes(failures, html, "AI / Machine-readable docs", route.routePath, "noscript AI docs fallback")
+    expectRootRelativeShellAssets(failures, html, route.routePath)
   }
 
   const manifestPath = resolve(buildDir, "llms-routes.json")
@@ -184,6 +195,15 @@ export function validateDocsBuild({
 function expectIncludes(failures, text, expected, routePath, label) {
   if (!text.includes(expected)) {
     failures.push(`Missing ${label} for ${routePath || "/"}: ${expected}`)
+  }
+}
+
+function expectRootRelativeShellAssets(failures, html, routePath) {
+  const brokenRefs = html.match(/\b(?:src|href)=["']\.\/(?:assets\/|prism\.(?:js|css)|semiotic\.css)/g) || []
+  if (brokenRefs.length > 0) {
+    failures.push(
+      `Route ${routePath || "/"} has relative shell asset references that break deep links: ${[...new Set(brokenRefs)].join(", ")}`
+    )
   }
 }
 

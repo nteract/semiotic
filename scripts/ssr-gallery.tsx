@@ -131,10 +131,17 @@ const pieData = [
 
 const boxData: { group: string; value: number }[] = []
 const groups = ["A", "B", "C", "D"]
-for (const g of groups) {
+
+function boxOffset(groupIndex: number, sampleIndex: number): number {
+  const wave = Math.sin((groupIndex + 1) * (sampleIndex + 1) * 1.731)
+  const shoulder = Math.cos((sampleIndex + 3) * 0.617 + groupIndex * 0.41)
+  return (wave * 0.7 + shoulder * 0.3) * 20
+}
+
+for (const [groupIndex, g] of groups.entries()) {
   const center = g === "A" ? 50 : g === "B" ? 65 : g === "C" ? 45 : 70
   for (let i = 0; i < 20; i++) {
-    boxData.push({ group: g, value: center + (Math.random() - 0.5) * 40 })
+    boxData.push({ group: g, value: center + boxOffset(groupIndex, i) })
   }
 }
 
