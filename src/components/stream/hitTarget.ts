@@ -21,8 +21,9 @@ import type { NetworkCircleNode, NetworkRectNode } from "./networkTypes"
  *   - **AI / observation** — hover, click, and focus emit `onObservation` /
  *     `onClick` carrying the node's `datum`, and feed the shared selection store
  *     for linked/coordinated views.
- *   - **Chart modes** — `id` is also the transition key, so the mark keeps its
- *     identity (and its enter/exit/move transition + decay) across re-layouts.
+ *   - **Chart modes** — for helpers that accept an `id`, that id is also the
+ *     transition key, so the mark keeps its identity (and its enter/exit/move
+ *     transition + decay) across re-layouts.
  *
  * These helpers remove the `rgba(0,0,0,0)` + `opacity: 0` boilerplate every
  * custom example re-derived and standardize the keyboard-nav + interaction

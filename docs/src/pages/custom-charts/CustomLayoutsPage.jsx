@@ -984,8 +984,8 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
           <li>
             <strong>Transparent hit targets.</strong> Pictorial glyphs often need a simple scene
             node underneath the visible overlay. Use <code>hitTargetPoint</code>,{" "}
-            <code>hitTargetRect</code>, <code>networkHitTarget</code>, or{" "}
-            <code>geoAreaHitTarget</code> with a useful datum.
+            <code>hitTargetRect</code>, <code>networkHitTarget</code>,{" "}
+            <code>geoHitTarget</code>, or <code>geoAreaHitTarget</code> with a useful datum.
           </li>
           <li>
             <strong>Tooltip payloads.</strong> Shape datums with user-facing keys, then use{" "}

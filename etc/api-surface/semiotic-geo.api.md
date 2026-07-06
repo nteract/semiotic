@@ -11,6 +11,7 @@ function FlowMap
 function GeoCustomChart
 function ProportionalSymbolMap
 function StreamGeoFrame
+function geoAreaHitTarget
 function geoHitTarget
 function glyphExtent
 function glyphPlacement
@@ -23,6 +24,7 @@ interface ChoroplethMapProps
 interface DistanceCartogramConfig
 interface DistanceCartogramProps
 interface FlowMapProps
+interface GeoAreaHitTargetProps
 interface GeoAreaSceneNode
 interface GeoCustomChartProps
 interface GeoLayoutContext

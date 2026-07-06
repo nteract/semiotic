@@ -265,15 +265,34 @@ export default function RecipeKitPage() {
           <tbody>
             <tr>
               <td>
-                <code>hitTargetPoint</code> / <code>hitTargetRect</code> /{" "}
-                <code>networkHitTarget</code> / <code>geoAreaHitTarget</code>
+                <code>hitTargetPoint</code> / <code>hitTargetRect</code>
               </td>
-              <td>all</td>
+              <td>xy / ordinal</td>
               <td>
                 a transparent, hit-tested scene node so a layout that draws its marks in{" "}
                 <code>overlays</code> still earns keyboard nav + focus ring (a11y),{" "}
                 <code>onObservation</code> + selection, and transition identity; point-like
                 helpers also provide <code>pointId</code> annotation anchoring
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <code>geoHitTarget</code> / <code>geoAreaHitTarget</code>
+              </td>
+              <td>geo</td>
+              <td>
+                transparent point or polygon scene nodes for custom GeoFrame overlays, preserving
+                hover, keyboard focus, tooltips, accessible rows, and observation callbacks
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <code>networkHitTarget</code>
+              </td>
+              <td>network</td>
+              <td>
+                transparent circle or rect scene nodes for network custom overlays, with stable
+                node identity for annotation anchoring and linked interaction
               </td>
             </tr>
             <tr>
