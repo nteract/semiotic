@@ -1,7 +1,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { LineChart } from "semiotic/xy"
-import { buildDataPitfallsBridge } from "semiotic/ai"
+import { unstable_buildDataPitfallsBridge } from "semiotic/experimental"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 
@@ -460,16 +460,20 @@ function BridgeDemo() {
   const [includeNarrative, setIncludeNarrative] = React.useState(true)
   const [selectedIndex, setSelectedIndex] = React.useState(0)
 
-  const bridge = React.useMemo(() => buildDataPitfallsBridge("LineChart", CHART_PROPS, {
-    context: includeContext ? CONTEXT : undefined,
-    narrative: includeNarrative ? NARRATIVE : undefined,
-    rendered: includeRendered
-      ? { svg: RENDERED_SVG, evidence: RENDER_EVIDENCE }
-      : undefined,
-    config: { includeData },
-    grounding: { includeStructure: false },
-    accessibility: { inChartContainer: true, describe: true, navigable: true },
-  }), [includeContext, includeData, includeNarrative, includeRendered])
+  const bridge = React.useMemo(
+    () =>
+      unstable_buildDataPitfallsBridge("LineChart", CHART_PROPS, {
+        context: includeContext ? CONTEXT : undefined,
+        narrative: includeNarrative ? NARRATIVE : undefined,
+        rendered: includeRendered
+          ? { svg: RENDERED_SVG, evidence: RENDER_EVIDENCE }
+          : undefined,
+        config: { includeData },
+        grounding: { includeStructure: false },
+        accessibility: { inChartContainer: true, describe: true, navigable: true },
+      }),
+    [includeContext, includeData, includeNarrative, includeRendered]
+  )
 
   React.useEffect(() => {
     if (selectedIndex >= bridge.input.stages.length) {
@@ -574,17 +578,17 @@ function BridgeDemo() {
 export default function DataPitfallsBridgePage() {
   return (
     <PageLayout
-      title="Data Pitfalls Bridge"
+      title="Experimental Data Pitfalls Bridge"
       breadcrumbs={[
         { label: "Intelligence", path: "/intelligence" },
-        { label: "Data Pitfalls Bridge", path: "/intelligence/data-pitfalls" },
+        { label: "Experimental Data Pitfalls Bridge", path: "/intelligence/data-pitfalls" },
       ]}
       prevPage={{ title: "Agent-Reader Grounding", path: "/intelligence/reader-grounding" }}
       nextPage={{ title: "Conversation Arc", path: "/intelligence/conversation-arc" }}
     >
       <p>
-        <code>toDataPitfallsChain()</code> packages a Semiotic chart into the chain input expected
-        by{" "}
+        <code>unstable_toDataPitfallsChain()</code> packages a Semiotic chart into the experimental
+        chain input expected by{" "}
         <a href="https://github.com/bjonesdataliteracy/datapitfalls" target="_blank" rel="noreferrer">
           datapitfalls
         </a>
@@ -610,13 +614,13 @@ export default function DataPitfallsBridgePage() {
         resulting chain into Data Pitfalls.
       </p>
 
-      <CodeBlock language="ts">{`import { toDataPitfallsChain } from "semiotic/ai"
+      <CodeBlock language="ts">{`import { unstable_toDataPitfallsChain } from "semiotic/experimental"
 import { renderChartWithEvidence } from "semiotic/server"
 import { detectPitfalls, formatReport, hasBlockingFindings } from "datapitfalls"
 
 const { svg, evidence } = renderChartWithEvidence("LineChart", props)
 
-const input = toDataPitfallsChain("LineChart", props, {
+const input = unstable_toDataPitfallsChain("LineChart", props, {
   context: "Question: did monthly revenue improve enough to justify adding capacity?",
   narrative: "Monthly revenue is accelerating sharply.",
   rendered: { svg, evidence },
@@ -656,7 +660,7 @@ if (hasBlockingFindings(report)) process.exit(1)`}
       </ul>
 
       <h2 id="options">Bridge options</h2>
-      <CodeBlock language="ts">{`toDataPitfallsChain(component, props, {
+      <CodeBlock language="ts">{`unstable_toDataPitfallsChain(component, props, {
   includeConfig: true,
   includeJSX: true,
   includeGrounding: true,

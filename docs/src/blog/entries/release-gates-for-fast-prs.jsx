@@ -96,8 +96,7 @@ function Body() {
         a metadata-only registry so build scripts can read post metadata without
         importing JSX. <code>check:blog-entries</code> keeps those two files in
         lockstep. Draft posts stay routable for preview but stay out of the index,
-        RSS feed, and SEO prerender metadata until <code>draft: true</code> is
-        removed.
+        RSS feed, and SEO prerender metadata until their draft flag is removed.
       </p>
       <p>
         The full docs build runs after merge through the docs deployment workflow:
@@ -243,10 +242,9 @@ export default {
   subtitle:
     "The CI and release gate behind Semiotic's current PR pace: registry drift checks, docs freshness, AI-facing contracts, visual diffs, performance comparison, pack smoke tests, and publish verification.",
   author: "Elijah Meeks",
-  date: "2026-06-08",
+  date: "2026-07-05",
   tags: ["case-study", "release", "process"],
   excerpt:
     "Semiotic can move through a high volume of PRs because review is backed by a stack of specific gates: builds, types, registry drift checks, docs and AI freshness, visual baselines, performance comparison, package smoke tests, and release verification. Humans review the rendered changes and the code that actually needs judgment.",
   component: Body,
-  draft: true,
 }

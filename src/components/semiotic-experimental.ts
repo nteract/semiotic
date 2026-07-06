@@ -32,6 +32,30 @@ export {
 } from "./recipes/gofishIRExamples"
 export type { GofishIRExample as UnstableGofishIRExample } from "./recipes/gofishIRExamples"
 
+// DataPitfalls bridge (§8.x). This packages Semiotic config, JSX, reader
+// grounding, diagnostics, accessibility audit output, and optional render
+// evidence into the chain input consumed by the external `datapitfalls`
+// package. Kept experimental while that package's input contract settles.
+export {
+  buildDataPitfallsBridge as unstable_buildDataPitfallsBridge,
+  toDataPitfallsChain as unstable_toDataPitfallsChain
+} from "./ai/dataPitfallsBridge"
+export type {
+  DataPitfallsBridgeOptions as UnstableDataPitfallsBridgeOptions,
+  DataPitfallsBridgeResult as UnstableDataPitfallsBridgeResult,
+  DataPitfallsChainInput as UnstableDataPitfallsChainInput,
+  DataPitfallsChainStage as UnstableDataPitfallsChainStage,
+  DataPitfallsDocumentInput as UnstableDataPitfallsDocumentInput,
+  DataPitfallsImageInput as UnstableDataPitfallsImageInput,
+  DataPitfallsImageMediaType as UnstableDataPitfallsImageMediaType,
+  DataPitfallsImageSource as UnstableDataPitfallsImageSource,
+  DataPitfallsRenderedChart as UnstableDataPitfallsRenderedChart,
+  DataPitfallsSlideContent as UnstableDataPitfallsSlideContent,
+  DataPitfallsSlidesInput as UnstableDataPitfallsSlidesInput,
+  DataPitfallsSingleArtifactInput as UnstableDataPitfallsSingleArtifactInput,
+  DataPitfallsTextInput as UnstableDataPitfallsTextInput
+} from "./ai/dataPitfallsBridge"
+
 // ── IDID portability spec (v0.1) ────────────────────────────────────────────
 // The library-neutral schema surface that carries the IDID primitives —
 // chart capability, audience profile, annotation provenance/lifecycle — into

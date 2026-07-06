@@ -36,9 +36,9 @@ export const EXAMPLES = [
     path: "/examples/sometimes-better-discrete",
     eyebrow: "TokenLayer · task-aware ISOTYPE",
     description:
-      "A bus-waiting decision rebuilt across density, quantile dots, bus pictograms, natural-frequency risk, and a hybrid expected-wait bar, with IDID recommending the encoding for the reader's task.",
+      "Guess the area, then count the buses: a bus-waiting decision rebuilt as a density curve, a Kay/Hullman quantile dotplot, animated hypothetical outcomes, a 100-commuter risk array, and a hybrid tokenized bar — with IDID recommending the encoding for the reader's task and a live design critic flagging sabotaged versions.",
     preview: "discrete",
-    badges: ["TokenLayer", "Custom chart", "Intent-aware", "Accessible navigation"],
+    badges: ["TokenLayer", "Quantile dotplot", "HOPs", "Design critic"],
   },
   {
     title: "All the Wars of the United States",
@@ -153,7 +153,14 @@ export const EXAMPLES = [
     description:
       "Watch Semiotic read real World Bank data with no model call: profile it, rank chart capabilities, then describe, audit, and lay out a navigable structure for the chart it chooses.",
     preview: "machine",
-    badges: ["Custom recipe", "Portable", "Intent-aware", "Scene-audited", "Accessible navigation", "Agent-readable"],
+    badges: [
+      "Custom recipe",
+      "Portable",
+      "Intent-aware",
+      "Scene-audited",
+      "Accessible navigation",
+      "Agent-readable",
+    ],
   },
   {
     title: "The Living System of Semiotic",

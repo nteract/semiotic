@@ -16,15 +16,16 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.7.5
+## What's New in 3.8.0
 
-3.7.5 is a chart-correctness and responsive-layout patch release:
+3.8.0 makes chart status, layout, and review workflows more explicit:
 
-- ForceDirectedGraph string `edgeWidth` accessors now read the underlying edge data, and server
-  rendering handles `edgeWidth`, `edgeColor`, and `edgeOpacity` for SSR parity.
-- Crowded ordinal category axes now thin tick labels to avoid overlapping temporal-histogram bins.
-- XY custom-layout overlays now re-run on responsive size changes, keeping SVG chrome aligned with
-  canvas scene nodes after first measurement.
+- `ChartContainer` notifications add a non-intrusive bell/popover for chart-level findings.
+- ForceDirectedGraph can run expensive layouts in a Web Worker with synchronous SSR/hydration parity.
+- `x-band` annotations, minimum-width interval lanes, and custom-layout readback make dense,
+  time-oriented charts easier to inspect.
+- The DataPitfalls bridge and GoFish DisplayList adapter remain experimental and are exposed from
+  `semiotic/experimental` with `unstable_` names.
 
 ```jsx
 import { LineChart } from "semiotic/xy"
@@ -109,16 +110,16 @@ Charts serialize to JSON and back: `toConfig`, `fromConfig`, `toURL`,
 translates them to Semiotic configs — works with `configToJSX()` for
 full round-trip from notebooks and AI-generated specs.
 
-Need an external pitfall review? `toDataPitfallsChain()` builds a
+Need an external pitfall review? The experimental `unstable_toDataPitfallsChain()` builds a
 dependency-free chain input for [`datapitfalls`](https://github.com/bjonesdataliteracy/datapitfalls),
 combining the Semiotic config, JSX, reader grounding, diagnostics,
 accessibility audit, and optional rendered SVG/image evidence:
 
 ```ts
-import { toDataPitfallsChain } from "semiotic/ai"
+import { unstable_toDataPitfallsChain } from "semiotic/experimental"
 import { detectPitfalls } from "datapitfalls"
 
-const input = toDataPitfallsChain("LineChart", props, {
+const input = unstable_toDataPitfallsChain("LineChart", props, {
   narrative: "Monthly sales are accelerating.",
   rendered: { svg, evidence },
 })

@@ -1327,7 +1327,7 @@ export default function ConversationArcPage() {
         { label: "Intelligence", path: "/intelligence" },
         { label: "Conversation Arc", path: "/intelligence/conversation-arc" },
       ]}
-      prevPage={{ title: "Data Pitfalls Bridge", path: "/intelligence/data-pitfalls" }}
+      prevPage={{ title: "Experimental Data Pitfalls Bridge", path: "/intelligence/data-pitfalls" }}
       nextPage={{ title: "Temporal Lifecycle", path: "/intelligence/temporal-lifecycle" }}
     >
       <p>

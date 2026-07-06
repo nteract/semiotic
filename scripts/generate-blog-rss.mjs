@@ -65,7 +65,12 @@ function newestDate(entries) {
 }
 
 function buildAtom(entries) {
-  const sorted = [...entries].sort((a, b) => (a.date < b.date ? 1 : -1))
+  const sorted = [...entries].sort((a, b) => {
+    const ad = a.date ?? ""
+    const bd = b.date ?? ""
+    if (ad !== bd) return ad < bd ? 1 : -1
+    return (a.slug ?? "").localeCompare(b.slug ?? "")
+  })
   const updated = toRfc3339(newestDate(sorted) || new Date().toISOString().slice(0, 10))
 
   const items = sorted

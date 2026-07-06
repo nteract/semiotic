@@ -308,7 +308,7 @@ const annotations = applyAnnotationLifecycle(
           treatments it composes with.
         </li>
         <li>
-          <Link to="/intelligence/data-pitfalls">Data Pitfalls Bridge</Link> — the
+          <Link to="/intelligence/data-pitfalls">Experimental Data Pitfalls Bridge</Link> — the
           sibling adapter that turns data-viz pitfalls into a reasoning chain.
         </li>
         <li>

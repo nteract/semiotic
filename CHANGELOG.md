@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.8.0] - 2026-07-05
+
 ### Added
 
 - **ChartContainer notifications.** New `notifications` prop surfaces
@@ -71,6 +73,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   floor and inclusive `end + unit` extension can no longer overlap a same-track
   neighbor (previously visible as darker doubled fills when one interval ended
   the same unit the next began).
+- **DataPitfalls and GoFish adapters remain experimental.** The DataPitfalls
+  bridge is exposed from `semiotic/experimental` as
+  `unstable_toDataPitfallsChain` / `unstable_buildDataPitfallsBridge`, and the
+  GoFish DisplayList adapter remains `unstable_fromGofishIR` on the same
+  endpoint. Neither adapter is part of the stable API surface yet.
 
 ## [3.7.5] - 2026-06-24
 

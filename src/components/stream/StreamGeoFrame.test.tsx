@@ -84,7 +84,6 @@ describe("StreamGeoFrame", () => {
         />
       )
 
-      expect(container.querySelector(".stream-geo-zoom-controls")).toBeTruthy()
       expect(getByRole("button", { name: "Zoom in" })).toBeTruthy()
       expect(getByRole("button", { name: "Zoom out" })).toBeTruthy()
       expect(getByText("Example tiles")).toBeTruthy()

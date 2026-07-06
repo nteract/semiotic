@@ -120,7 +120,6 @@ function auditAccessibility
 function auditMobileVisualization
 function auditObservedScene
 function bandFromAge
-function buildDataPitfallsBridge
 function buildNavigationTree
 function buildReaderGrounding
 function buildRecipeNavigationTree
@@ -222,7 +221,6 @@ function summarizeData
 function summarizeIntentManifest
 function toAnthropicTool
 function toConfig
-function toDataPitfallsChain
 function toOpenAITool
 function toURL
 function tokenTaskIntentToCapabilityIntents
@@ -308,17 +306,6 @@ interface ConversationArcStore
 interface ConversationArcSummary
 interface DashboardPanel
 interface DashboardSuggestion
-interface DataPitfallsBridgeOptions
-interface DataPitfallsBridgeResult
-interface DataPitfallsChainInput
-interface DataPitfallsChainStage
-interface DataPitfallsDocumentInput
-interface DataPitfallsImageInput
-interface DataPitfallsImageSource
-interface DataPitfallsRenderedChart
-interface DataPitfallsSlideContent
-interface DataPitfallsSlidesInput
-interface DataPitfallsTextInput
 interface DataQualityAnnotationOptions
 interface DataQualityAnnotationsResult
 interface DataQualityProfile
@@ -506,8 +493,6 @@ type ConversationArcListener
 type ConversationArcWebhookFetch
 type CopyFormat
 type CustomLayoutFunction
-type DataPitfallsImageMediaType
-type DataPitfallsSingleArtifactInput
 type DataQualityCheckKind
 type DataQualityStatus
 type DataSemanticType
