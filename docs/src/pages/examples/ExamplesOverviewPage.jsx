@@ -24,6 +24,8 @@ export default function ExamplesOverviewPage() {
                 ? <MiniLakeIsotypePreview />
               : example.preview === "data-centers-isotype"
                 ? <MiniDataCentersIsotypePreview />
+              : example.preview === "creative-contours"
+                ? <MiniCreativeContoursPreview />
               : example.preview === "discrete"
                 ? <MiniDiscretePreview />
               : example.preview === "isometric"
@@ -114,6 +116,67 @@ function MiniDataCentersIsotypePreview() {
           fill={index < 13 ? "#d72f3f" : index < 17 ? "#4f8999" : "#34383b"}
         />
       ))}
+    </svg>
+  )
+}
+
+function MiniCreativeContoursPreview() {
+  const cells = [
+    [122, 26, "#214d62", 0], [101, 36, "#2d788d", 1], [123, 38, "#53a5a0", 1],
+    [145, 36, "#bad263", 2], [80, 48, "#40846a", 1], [102, 48, "#82a95f", 2],
+    [124, 50, "#d6bd55", 4], [146, 48, "#dd7644", 3], [168, 48, "#c64667", 2],
+    [59, 59, "#1f594e", 0], [81, 60, "#40846a", 1], [103, 62, "#82a95f", 3],
+    [125, 63, "#d6bd55", 5], [147, 62, "#dd7644", 4], [169, 60, "#c64667", 3],
+    [191, 59, "#6f4aa8", 2], [82, 72, "#244f51", 0], [104, 74, "#427b5c", 1],
+    [126, 75, "#83a05a", 2], [148, 74, "#d5b653", 2], [170, 72, "#ef8b44", 1],
+  ]
+  const diamond = (x, y) => `M${x},${y - 8}L${x + 16},${y}L${x},${y + 8}L${x - 16},${y}Z`
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#f4f0e4" />
+      <path
+        d="M22 62L42 46 65 42 93 31 123 22 152 29 181 39 218 48 207 65 175 72 140 76 104 74 66 70Z"
+        fill="#d9cfb4"
+        opacity="0.65"
+      />
+      <g>
+        {cells.map(([x, y, fill, lift], index) => (
+          <g key={index}>
+            <path d={diamond(x, y + 7)} fill="#233329" opacity="0.16" />
+            <path d={`M${x - 16},${y}L${x},${y + 8}L${x},${y + 8 + lift}L${x - 16},${y + lift}Z`} fill="#2c3c31" opacity="0.42" />
+            <path d={`M${x + 16},${y}L${x},${y + 8}L${x},${y + 8 + lift}L${x + 16},${y + lift}Z`} fill="#43513b" opacity="0.32" />
+            <path d={diamond(x, y - lift)} fill={fill} stroke="rgba(32,34,27,0.28)" strokeWidth="0.7" />
+          </g>
+        ))}
+      </g>
+      <path
+        d="M43,57 C72,40 100,40 121,52 C142,64 161,45 202,52"
+        fill="none"
+        stroke="#fff6d6"
+        strokeWidth="2"
+        opacity="0.9"
+      />
+      <path
+        d="M70,67 C105,52 129,83 168,61"
+        fill="none"
+        stroke="#fff6d6"
+        strokeWidth="1.4"
+        opacity="0.74"
+      />
+      {[[76, 48], [125, 46], [171, 51], [146, 69]].map(([x, y], index) => (
+        <circle
+          key={index}
+          cx={x}
+          cy={y}
+          r={index === 1 ? 4.6 : 3.4}
+          fill={index === 1 ? "#c64667" : "#d6bd55"}
+          stroke="#fff6d6"
+          strokeWidth="1.2"
+        />
+      ))}
+      <text x="14" y="18" fill="#20221b" fontSize="10" fontWeight="900" fontFamily="sans-serif">
+        CREATIVE GRAVITY
+      </text>
     </svg>
   )
 }

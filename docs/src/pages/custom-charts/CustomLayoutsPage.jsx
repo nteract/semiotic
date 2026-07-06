@@ -35,7 +35,7 @@ function buildCalendarYear(year, seed = 7) {
   const start = Date.UTC(year, 0, 1)
   const days = []
   for (let i = 0; i < 365; i++) {
-    const day = new Date(start + i * 86_400_000)
+    const day = new Date(start + i * 86400000)
     const dow = day.getUTCDay()
     // Weekends quieter; weekly bursts every ~10 days.
     const base = dow === 0 || dow === 6 ? 0.8 : 2.4
@@ -983,8 +983,9 @@ export const myLayout: CustomLayout<MyConfig> = (ctx) => {
           </li>
           <li>
             <strong>Transparent hit targets.</strong> Pictorial glyphs often need a simple scene
-            node underneath the visible overlay. Use a transparent rect or point with a useful
-            datum.
+            node underneath the visible overlay. Use <code>hitTargetPoint</code>,{" "}
+            <code>hitTargetRect</code>, <code>networkHitTarget</code>,{" "}
+            <code>geoHitTarget</code>, or <code>geoAreaHitTarget</code> with a useful datum.
           </li>
           <li>
             <strong>Tooltip payloads.</strong> Shape datums with user-facing keys, then use{" "}

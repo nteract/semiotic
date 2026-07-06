@@ -161,6 +161,9 @@ const LakeTravisIsotypeExamplePage = lazy(
 const DataCentersIsotypeExamplePage = lazy(
   () => import("./pages/examples/DataCentersIsotypeExamplePage"),
 )
+const CreativeContoursExamplePage = lazy(
+  () => import("./pages/examples/CreativeContoursExamplePage"),
+)
 const SometimesDiscreteExamplePage = lazy(
   () => import("./pages/examples/SometimesDiscreteExamplePage"),
 )
@@ -360,6 +363,10 @@ export default function DocsApp() {
               <Route
                 path="examples/data-centers-isotype"
                 element={<DataCentersIsotypeExamplePage />}
+              />
+              <Route
+                path="examples/creative-contours"
+                element={<CreativeContoursExamplePage />}
               />
               <Route
                 path="examples/sometimes-better-discrete"

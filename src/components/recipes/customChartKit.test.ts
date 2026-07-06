@@ -22,7 +22,7 @@ import {
 import { rectCollide, axisFixedForcePositions } from "./axisFixedForce"
 import { unwrapDatum, clamp, mean, withAlpha } from "./recipeUtils"
 import { allocateCells } from "./waffle"
-import { hitTargetPoint, hitTargetRect, networkHitTarget } from "../stream/hitTarget"
+import { hitTargetPoint, hitTargetRect, networkHitTarget, geoAreaHitTarget } from "../stream/hitTarget"
 import { linearAxis, hatchFill } from "./recipeChrome"
 import { legendSwatches } from "./recipeLegend"
 
@@ -389,6 +389,26 @@ describe("hitTarget helpers", () => {
     expect(circle).toMatchObject({ type: "circle", cx: 0, cy: 0, r: 12, id: "c" })
     const rect = networkHitTarget({ x: 1, y: 2, width: 8, height: 6, datum: {}, id: "r" })
     expect(rect).toMatchObject({ type: "rect", x: 1, y: 2, w: 8, h: 6, id: "r" })
+  })
+
+  it("geoAreaHitTarget emits a transparent interactive geoarea node", () => {
+    const n = geoAreaHitTarget({
+      pathData: "M0,0L10,0L10,5Z",
+      centroid: [5, 2.5],
+      bounds: [[0, 0], [10, 5]],
+      datum: { id: "area-1" },
+      group: "areas",
+    })
+    expect(n).toMatchObject({
+      type: "geoarea",
+      pathData: "M0,0L10,0L10,5Z",
+      centroid: [5, 2.5],
+      bounds: [[0, 0], [10, 5]],
+      screenArea: 50,
+      group: "areas",
+      interactive: true,
+    })
+    expect(n.style.opacity).toBe(0)
   })
 })
 

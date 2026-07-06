@@ -66,6 +66,7 @@ function forceLayout
 function forceLayoutAsync
 function formatTooltipValue
 function generateTokens
+function geoAreaHitTarget
 function geoHitTarget
 function glyphExtent
 function glyphFractionClipRect
@@ -177,6 +178,7 @@ interface FanOutBendOptions
 interface FlextreeConfig
 interface ForceLayoutAsyncOptions
 interface ForceLayoutOptions
+interface GeoAreaHitTargetProps
 interface GlyphDef
 interface GlyphPart
 interface GlyphPlacement
