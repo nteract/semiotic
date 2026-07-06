@@ -51,7 +51,8 @@ export interface TokenLayerOptions<D = unknown> extends TokenGridOptions {
   width?: number
   /** Plot-space height used to normalize quantile strips. */
   height?: number
-  /** Rendered glyph height / symbol diameter / dot diameter. @default 12 */
+  /** Rendered glyph height / symbol diameter / dot diameter. @default 12
+   *  For user-facing ISOTYPE/icon arrays, prefer 16px+ in the final layout. */
   tokenSize?: TokenLayerValue<number, D>
   /** Dot radius. Defaults to half tokenSize. */
   radius?: TokenLayerValue<number, D>

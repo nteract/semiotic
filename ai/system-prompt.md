@@ -94,6 +94,11 @@ Callback receiving `ChartObservation`: `{ type: "hover"|"click"|"brush"|"selecti
 - `autoPlaceAnnotations={{ density: true, progressiveDisclosure: true, redundantCues: true }}` — opt-in placement, clutter management, and non-color association support
 - Annotation metadata: `emphasis`, `defensive`, `provenance`, and `lifecycle`; use `applyAnnotationLifecycle`, `applyAnnotationStatus`, and `filterAnnotationsByStatus` from `semiotic/ai`
 
+## ISOTYPE & Icon Size Guidance
+- Repeated pictograms, semantic icons, and glyph tokens should be visibly legible in the final rendered layout. Treat 16px as the minimum intended rendered icon dimension for ISOTYPE/icon-array designs.
+- This is design guidance, not a Semiotic-enforced minimum. Low-level helpers may default smaller for dense or sparkline-like contexts, so set `tokenSize`, glyph `size`, SVG slots, or wrapping explicitly when producing AI-authored examples.
+- If the available width would shrink icons below that visual floor, wrap the tokens into multiple rows/columns, reduce the number of visible tokens, change the unit value, or choose a non-icon encoding instead of shipping tiny pictograms.
+
 ## Theming & Brand Styling
 All charts respond to CSS custom properties on any ancestor:
 ```css

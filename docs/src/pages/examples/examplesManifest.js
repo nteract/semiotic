@@ -23,6 +23,15 @@ export const EXAMPLES = [
     badges: ["Custom chart", "Local", "Accessible navigation"],
   },
   {
+    title: "Nathan's Hot Dog Contest, Four Ways",
+    path: "/examples/hot-dog-contest-variations",
+    eyebrow: "TemporalHistogram · ISOTYPE · source audit",
+    description:
+      "A source-audited remake of the classic Nathan's winning-count chart as a streaming temporal histogram, annual ISOTYPE ledger, event-banded line chart, and duration-normalized pace mirror.",
+    preview: "hotdog-variations",
+    badges: ["TemporalHistogram", "ISOTYPE", "Source-audited"],
+  },
+  {
     title: "The Buildings Behind AI",
     path: "/examples/data-centers-isotype",
     eyebrow: "Altitude sections · evidence ledger",

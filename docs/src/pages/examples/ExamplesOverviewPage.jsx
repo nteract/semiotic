@@ -22,6 +22,8 @@ export default function ExamplesOverviewPage() {
               ? <MiniClimatePreview />
               : example.preview === "lake-isotype"
                 ? <MiniLakeIsotypePreview />
+              : example.preview === "hotdog-variations"
+                ? <MiniHotDogPreview />
               : example.preview === "data-centers-isotype"
                 ? <MiniDataCentersIsotypePreview />
               : example.preview === "creative-contours"
@@ -83,6 +85,51 @@ export default function ExamplesOverviewPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+function MiniHotDogPreview() {
+  const bars = [14, 9, 10, 11, 16, 21, 24, 25, 50, 54, 66, 59, 68, 54]
+  const line = bars
+    .map((value, index) => {
+      const x = 14 + index * 16.3
+      const y = 78 - (value / 70) * 54
+      return `${index === 0 ? "M" : "L"}${x},${y}`
+    })
+    .join(" ")
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#fbf4e4" />
+      <rect x="0" y="0" width="242" height="9" fill="#1f292b" />
+      <text x="12" y="25" fill="#1f292b" fontSize="12" fontWeight="900" fontFamily="sans-serif">
+        NATHAN&apos;S FOUR WAYS
+      </text>
+      {[18, 34, 50, 66].map((y) => (
+        <line key={y} x1="12" x2="230" y1={y} y2={y} stroke="#d7c59d" strokeWidth="1" />
+      ))}
+      <path
+        d="M129 14v68M201 14v68"
+        stroke="#c74733"
+        strokeWidth="5"
+        opacity="0.18"
+      />
+      <path d={line} fill="none" stroke="#d7a02f" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      {[0, 1, 2, 3, 4, 5].map((row) =>
+        [0, 1, 2, 3, 4, 5, 6].map((col) => (
+          <g key={`${row}-${col}`} transform={`translate(${16 + col * 10} ${44 + row * 6}) scale(.42 .42)`}>
+            <path d="M1.2 7.2C1.2 4.6 3.4 2.6 6.1 2.6h5.8c2.7 0 4.9 2 4.9 4.6s-2.2 4.6-4.9 4.6H6.1c-2.7 0-4.9-2-4.9-4.6Z" fill="#f0c987" />
+            <path d="M2.7 6.4C2.7 4.8 4 3.7 5.7 3.7h6.6c1.7 0 3 1.1 3 2.7s-1.3 2.7-3 2.7H5.7c-1.7 0-3-1.1-3-2.7Z" fill={row === 1 && col === 0 ? "#c94f6f" : "#c74733"} />
+          </g>
+        )),
+      )}
+      <rect x="151" y="66" width="8" height="18" fill="#377f91" />
+      <rect x="164" y="54" width="8" height="30" fill="#377f91" />
+      <rect x="177" y="34" width="8" height="50" fill="#2d7669" />
+      <rect x="190" y="27" width="8" height="57" fill="#2d7669" />
+      <text x="213" y="76" fill="#c74733" fontSize="13" fontWeight="900" fontFamily="sans-serif">
+        54
+      </text>
+    </svg>
   )
 }
 
