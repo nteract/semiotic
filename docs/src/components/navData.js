@@ -137,6 +137,7 @@ const navData = [
       { title: "Brushable Weather Rings", path: "/examples/climate-radial-weather" },
       { title: "Lake Travis, in Signs", path: "/examples/lake-travis-isotype" },
       { title: "The Buildings Behind AI", path: "/examples/data-centers-isotype" },
+      { title: "Creative Gravity of America", path: "/examples/creative-contours" },
       { title: "Sometimes it's better to be discrete", path: "/examples/sometimes-better-discrete" },
       { title: "U.S. War Timeline", path: "/examples/us-war-timeline" },
       { title: "Art Movement Genealogy", path: "/examples/art-movement-genealogy" },

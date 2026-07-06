@@ -23,9 +23,9 @@ export type {
   ResponsiveRuleResult,
 } from "./charts/shared/responsiveRules"
 
-// Custom-layout hit target — make overlay-drawn geographic marks navigable.
-export { geoHitTarget, hitTargetPoint, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
-export type { HitTargetPointProps } from "./stream/hitTarget"
+// Custom-layout hit targets — make overlay-drawn geographic marks navigable.
+export { geoHitTarget, geoAreaHitTarget, hitTargetPoint, DEFAULT_HIT_RADIUS } from "./stream/hitTarget"
+export type { GeoAreaHitTargetProps, HitTargetPointProps } from "./stream/hitTarget"
 // glyph — projected composite pictograms standing on the map.
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"

@@ -141,9 +141,11 @@ export {
   hitTargetRect,
   networkHitTarget,
   geoHitTarget,
+  geoAreaHitTarget,
   DEFAULT_HIT_RADIUS,
 } from "./stream/hitTarget"
 export type {
+  GeoAreaHitTargetProps,
   HitTargetPointProps,
   HitTargetRectProps,
   NetworkHitTargetCircleProps,

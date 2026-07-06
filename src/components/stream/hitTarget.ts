@@ -1,4 +1,5 @@
 import type { PointSceneNode, RectSceneNode, SceneDatum } from "./types"
+import type { GeoAreaSceneNode } from "./geoTypes"
 import type { NetworkCircleNode, NetworkRectNode } from "./networkTypes"
 
 /**
@@ -14,18 +15,19 @@ import type { NetworkCircleNode, NetworkRectNode } from "./networkTypes"
  *     Home/End), draws the shape-adaptive focus ring on focus, and surfaces in
  *     the sr-only data table and the structured navigation tree. The mark is
  *     invisible; the focus ring is not.
- *   - **Annotations** — `id` becomes the node's `pointId`, so an annotation
- *     `{ pointId: id, … }` anchors to the mark a layout placed at runtime (the
- *     custom-layout analogue of data-coordinate anchoring).
+ *   - **Annotations** — point-like helpers set `id` as the node's `pointId`, so
+ *     an annotation `{ pointId: id, … }` anchors to the mark a layout placed at
+ *     runtime (the custom-layout analogue of data-coordinate anchoring).
  *   - **AI / observation** — hover, click, and focus emit `onObservation` /
  *     `onClick` carrying the node's `datum`, and feed the shared selection store
  *     for linked/coordinated views.
  *   - **Chart modes** — `id` is also the transition key, so the mark keeps its
  *     identity (and its enter/exit/move transition + decay) across re-layouts.
  *
- * These helpers remove the `rgba(0,0,0,0)` + `opacity: 0` + duplicated
- * `pointId`/`_transitionKey` boilerplate every custom example re-derived, and
- * standardize the keyboard-nav + anchoring contract in one place.
+ * These helpers remove the `rgba(0,0,0,0)` + `opacity: 0` boilerplate every
+ * custom example re-derived and standardize the keyboard-nav + interaction
+ * contract in one place. Point-like helpers also centralize duplicated
+ * `pointId`/`_transitionKey` identity.
  *
  * The frame hit-tests by geometry, not paint, so an `opacity: 0` node is fully
  * interactive while drawing nothing. Give it a hit radius (`r`) sized for the
@@ -106,6 +108,55 @@ export function hitTargetPoint(props: HitTargetPointProps): PointSceneNode {
  */
 export function geoHitTarget(props: HitTargetPointProps): PointSceneNode {
   return hitTargetPoint(props)
+}
+
+export interface GeoAreaHitTargetProps {
+  /** SVG path string in plot-relative screen coordinates. */
+  pathData: string
+  /** Screen-space centroid for tooltip and focus positioning. */
+  centroid: [number, number]
+  /** Screen-space bounds as [[x0, y0], [x1, y1]]. */
+  bounds: [[number, number], [number, number]]
+  /** The raw user datum to surface on hover/click/focus and in the data table. */
+  datum: SceneDatum
+  /** Optional series/category key for grouped selection + legend interaction. */
+  group?: string
+  /** Screen-space area in px^2. Defaults to the bounding-box area. */
+  screenArea?: number
+}
+
+/**
+ * A transparent, hit-testable **area** node for a custom geo layout whose
+ * visible polygons live in `overlays`. Use this when the semantic mark is not
+ * point-like: isometric tiles, schematic regions, hex/cell maps, contour bands,
+ * or any hand-built path that should retain GeoFrame hover, keyboard focus,
+ * tooltips, accessible rows, and shape-aware canvas hit testing.
+ *
+ * @example
+ * ```ts
+ * return geoAreaHitTarget({
+ *   pathData: diamondPath(x, y, tileWidth, tileHeight),
+ *   centroid: [x, y],
+ *   bounds: [[x - tileWidth / 2, y - tileHeight / 2], [x + tileWidth / 2, y + tileHeight / 2]],
+ *   screenArea: (tileWidth * tileHeight) / 2,
+ *   datum: tile,
+ *   group: tile.kind,
+ * })
+ * ```
+ */
+export function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode {
+  const [[x0, y0], [x1, y1]] = props.bounds
+  return {
+    type: "geoarea",
+    pathData: props.pathData,
+    centroid: props.centroid,
+    bounds: props.bounds,
+    screenArea: props.screenArea ?? Math.abs((x1 - x0) * (y1 - y0)),
+    style: { ...TRANSPARENT_STYLE },
+    datum: props.datum,
+    group: props.group,
+    interactive: true,
+  }
 }
 
 export interface HitTargetRectProps {

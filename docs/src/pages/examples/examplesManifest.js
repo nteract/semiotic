@@ -32,6 +32,15 @@ export const EXAMPLES = [
     badges: ["Custom chart", "Local", "Agent-readable"],
   },
   {
+    title: "Creative Gravity of America",
+    path: "/examples/creative-contours",
+    eyebrow: "Isometric GeoCustomChart - contours",
+    description:
+      "Metro creative-industry signals become contour shelves on a stacked isometric view of the United States: screen, sound, games, design, and research are sampled into a non-topographic terrain.",
+    preview: "creative-contours",
+    badges: ["GeoCustomChart", "Contours", "Isometric", "Custom layout"],
+  },
+  {
     title: "Sometimes it's better to be discrete",
     path: "/examples/sometimes-better-discrete",
     eyebrow: "TokenLayer · task-aware ISOTYPE",

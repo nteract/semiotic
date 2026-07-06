@@ -266,15 +266,14 @@ export default function RecipeKitPage() {
             <tr>
               <td>
                 <code>hitTargetPoint</code> / <code>hitTargetRect</code> /{" "}
-                <code>networkHitTarget</code>
+                <code>networkHitTarget</code> / <code>geoAreaHitTarget</code>
               </td>
               <td>all</td>
               <td>
                 a transparent, hit-tested scene node so a layout that draws its marks in{" "}
                 <code>overlays</code> still earns keyboard nav + focus ring (a11y),{" "}
-                <code>pointId</code> annotation anchoring, <code>onObservation</code> + selection,
-                and transition identity — from{" "}
-                <code>{`{ x, y, (r | width,height), datum, id }`}</code>
+                <code>onObservation</code> + selection, and transition identity; point-like
+                helpers also provide <code>pointId</code> annotation anchoring
               </td>
             </tr>
             <tr>
