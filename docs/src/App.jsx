@@ -158,6 +158,9 @@ const ClimateRadialWeatherExamplePage = lazy(
 const LakeTravisIsotypeExamplePage = lazy(
   () => import("./pages/examples/LakeTravisIsotypeExamplePage"),
 )
+const HotDogContestVariationsExamplePage = lazy(
+  () => import("./pages/examples/HotDogContestVariationsExamplePage"),
+)
 const DataCentersIsotypeExamplePage = lazy(
   () => import("./pages/examples/DataCentersIsotypeExamplePage"),
 )
@@ -359,6 +362,10 @@ export default function DocsApp() {
               <Route
                 path="examples/lake-travis-isotype"
                 element={<LakeTravisIsotypeExamplePage />}
+              />
+              <Route
+                path="examples/hot-dog-contest-variations"
+                element={<HotDogContestVariationsExamplePage />}
               />
               <Route
                 path="examples/data-centers-isotype"

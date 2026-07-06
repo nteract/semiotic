@@ -136,6 +136,7 @@ const navData = [
     children: [
       { title: "Brushable Weather Rings", path: "/examples/climate-radial-weather" },
       { title: "Lake Travis, in Signs", path: "/examples/lake-travis-isotype" },
+      { title: "Nathan's Hot Dog Contest, Four Ways", path: "/examples/hot-dog-contest-variations" },
       { title: "The Buildings Behind AI", path: "/examples/data-centers-isotype" },
       { title: "Creative Gravity of America", path: "/examples/creative-contours" },
       { title: "Sometimes it's better to be discrete", path: "/examples/sometimes-better-discrete" },

@@ -239,6 +239,10 @@ Serialization: `themeToCSS(theme, selector)`, `themeToTokens(theme)`, `resolveTh
 
 **Scoped CSS cascade override** (per-subtree, no ThemeProvider needed): wrap a subtree in `<div style={{ "--semiotic-danger": "#4b0082" }}>` — canvas scene builders read CSS vars via `getComputedStyle` on the canvas DOM ancestor, so cascade rules apply even though rendering is canvas. CSS vars for single-role overrides; nested `ThemeProvider` for array/scale overrides (categorical palette, sequential/diverging scheme).
 
+## AI Design Guidance
+
+- **ISOTYPE/icon arrays**: Repeated pictograms, semantic icons, and glyph tokens should be legible in the final rendered layout. Treat 16px as the minimum intended rendered icon dimension for ISOTYPE/icon-array designs. This is design guidance, not a Semiotic-enforced minimum: low-level helpers may default smaller for dense/sparkline contexts, so set `tokenSize`, glyph `size`, SVG slots, or wrapping explicitly. If available width would shrink icons below that visual floor, wrap tokens into multiple rows/columns, reduce visible token count, change the unit value, or choose a non-icon encoding.
+
 ## AI Features
 
 Surface APIs: `onObservation`/`useChartObserver`, `toConfig`/`fromConfig`/`toURL`/`fromURL`/`copyConfig`/`configToJSX`, `validateProps`, `diagnoseConfig` (includes `tokenEncoding` warnings when present), `suggestTokenEncoding`/`diagnoseTokenEncoding`, `auditAccessibility`/`accessibilityCaveats` + `describeChart` + `buildNavigationTree`/`AccessibleNavTree`/`useNavigationSync` + `buildReaderGrounding` (a11y audit + descriptions + structured navigation + bidirectional sync + agent-reader grounding — see Accessibility), `exportChart(div, { format })`, `npx semiotic-ai --doctor`/`--audit-a11y`.
