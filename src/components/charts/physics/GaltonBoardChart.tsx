@@ -70,6 +70,16 @@ export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
   >
 }
 
+function normalizeValueExtent(
+  extent: GaltonBoardChartProps["valueExtent"]
+): [number, number] | undefined {
+  if (!extent) return undefined
+  const a = Number(extent[0])
+  const b = Number(extent[1])
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return undefined
+  return a <= b ? [a, b] : [b, a]
+}
+
 function galtonBoardOverlay(
   rows: ProjectionRow[],
   bins: number,
@@ -280,7 +290,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     () =>
       mode === "mechanical"
         ? ([0, resolvedPegRows] as [number, number])
-        : valueExtent,
+        : normalizeValueExtent(valueExtent),
     [mode, resolvedPegRows, valueExtent]
   )
   const chartData = useMemo(

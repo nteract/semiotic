@@ -10,6 +10,8 @@ import CodeBlock from "../../components/CodeBlock"
 import { EXAMPLES } from "./examplesManifest"
 import { getExampleSourceLoader } from "./exampleSourceMap"
 
+const SOURCE_LOAD_ERROR = "Failed to load source."
+
 export default function ExamplePageLayout({
   title,
   prevPage,
@@ -42,9 +44,13 @@ export default function ExamplePageLayout({
     setSourceCode("")
     if (!sourceLoader) return undefined
 
-    sourceLoader().then((source) => {
-      if (!cancelled) setSourceCode(source)
-    })
+    sourceLoader()
+      .then((source) => {
+        if (!cancelled) setSourceCode(source)
+      })
+      .catch(() => {
+        if (!cancelled) setSourceCode(SOURCE_LOAD_ERROR)
+      })
 
     return () => {
       cancelled = true

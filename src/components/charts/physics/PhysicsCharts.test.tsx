@@ -57,6 +57,31 @@ describe("physics chart builders", () => {
     })
   })
 
+  it("normalizes Galton valueExtent before binning", () => {
+    const reversed = buildGaltonBoardPhysics({
+      data: [{ id: "mid", value: 5 }],
+      valueAccessor: "value",
+      bins: 10,
+      ballRadius: 4,
+      seed: 1,
+      size: [300, 180],
+      valueExtent: [10, 0]
+    })
+    const invalid = buildGaltonBoardPhysics({
+      data: [{ id: "mid", value: 5 }],
+      valueAccessor: "value",
+      bins: 10,
+      ballRadius: 4,
+      seed: 1,
+      size: [300, 180],
+      valueExtent: [Number.POSITIVE_INFINITY, 0]
+    })
+
+    expect(reversed.initialSpawns[0].datum).toMatchObject({ bin: 5 })
+    expect(reversed.metadata).toMatchObject({ valueExtent: [0, 10] })
+    expect(invalid.metadata).toMatchObject({ valueExtent: [5, 5] })
+  })
+
   it("generates deterministic mechanical Galton samples from branch probability", () => {
     const balanced = generateGaltonMechanicalSamples({
       bins: 9,
@@ -433,7 +458,7 @@ describe("physics chart HOCs", () => {
         ref={ref}
         data={[{ id: "a", value: 1 }]}
         valueAccessor="value"
-        valueExtent={[0, 10]}
+        valueExtent={[10, 0]}
         referenceLines={{ value: 5, label: "threshold" }}
         size={[240, 160]}
       />
@@ -441,7 +466,9 @@ describe("physics chart HOCs", () => {
 
     expect(container.querySelector(".stream-physics-frame canvas")).not.toBeNull()
     expect(getByTestId("galton-board-structure-overlay")).not.toBeNull()
-    expect(getByTestId("galton-board-reference-line")).not.toBeNull()
+    expect(
+      getByTestId("galton-board-reference-line").querySelector("line")?.getAttribute("x1")
+    ).toBe("120")
     expect(getByText("threshold")).toBeTruthy()
     expect(getAllByTestId("galton-board-bin-wall").length).toBeGreaterThan(0)
     ref.current?.push({ id: "b", value: 2 })
