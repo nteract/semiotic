@@ -9245,7 +9245,11 @@
                 "object",
                 "function"
               ],
-              "description": "Watermark config: { delay } or a function of latest event time."
+              "description": "Watermark config: { delay }, { value }, or a function of latest event time."
+            },
+            "timeExtent": {
+              "type": "array",
+              "description": "Optional stable event-time extent [min, max] for the window layout."
             },
             "timeScale": {
               "type": "number",
