@@ -177,7 +177,10 @@ export type { RealtimeHeatmapProps } from "./realtime/RealtimeHeatmap"
 // ============================================================================
 
 export { GaltonBoardChart } from "./physics/GaltonBoardChart"
-export type { GaltonBoardChartProps } from "./physics/GaltonBoardChart"
+export type {
+  GaltonBoardChartProps,
+  GaltonBoardReferenceLine
+} from "./physics/GaltonBoardChart"
 
 export { EventDropChart } from "./physics/EventDropChart"
 export type { EventDropChartProps } from "./physics/EventDropChart"

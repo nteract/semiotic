@@ -28,6 +28,7 @@ const galtonData = (() => {
 const galtonBoardChartProps = [
   { name: "data", type: "array", required: false, default: null, description: "Rows to drop through the board. Optional when mode is mechanical." },
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Numeric field used to assign rows to bins." },
+  { name: "valueExtent", type: "array", required: false, default: null, description: "Stable numeric [min, max] domain for binning and reference-line placement." },
   { name: "bins", type: "number", required: false, default: "21", description: "Number of landing bins." },
   { name: "mode", type: '"sample" | "mechanical"', required: false, default: '"sample"', description: "Use data values or a deterministic no-data demonstration." },
   { name: "pegRows", type: "number", required: false, default: "bins - 1", description: "Number of branch rows used by mechanical mode." },
@@ -35,8 +36,9 @@ const galtonBoardChartProps = [
   { name: "branchProbability", type: "number", required: false, default: "0.5", description: "Probability that a generated body branches right at each peg." },
   { name: "ballRadius", type: "number", required: false, default: "4", description: "Radius for each simulated body." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Categorical field used to color bodies." },
+  { name: "referenceLines", type: "object | array", required: false, default: null, description: "One or more value markers drawn over the board: { value, label, color, strokeWidth, strokeDasharray, labelPosition }." },
   { name: "seed", type: "number", required: false, default: "1", description: "Deterministic simulation seed." },
-  { name: "showProjection", type: "boolean", required: false, default: "true", description: "Draw the peg, bin, floor, and settled-count scaffold over the moving bodies." },
+  { name: "showProjection", type: "boolean", required: false, default: "true", description: "Draw the bin, floor, and settled-count scaffold over the moving bodies." },
   { name: "size", type: "array", required: false, default: "[700, 420]", description: "[width, height] in pixels." },
   { name: "width", type: "number", required: false, default: "700", description: "Width alias used when size is omitted." },
   { name: "height", type: "number", required: false, default: "420", description: "Height alias used when size is omitted." },

@@ -70,6 +70,13 @@ export interface GaltonBoardPhysicsOptions<TDatum extends Datum = Datum> {
   valueExtent?: [number, number]
 }
 
+export interface GaltonBoardProjectionMetadata {
+  kind: "galton-board"
+  bins: number
+  plot: PhysicsChartArea["plot"]
+  valueExtent: [number, number]
+}
+
 export interface GaltonMechanicalSampleOptions {
   bins: number
   count?: number
@@ -260,6 +267,16 @@ function clampNumber(value: number, min: number, max: number): number {
 function positiveNumber(value: unknown, fallback: number): number {
   const number = finiteNumber(value)
   return number != null && number > 0 ? number : fallback
+}
+
+function normalizedFiniteExtent(
+  extent: readonly [unknown, unknown] | undefined
+): [number, number] | undefined {
+  if (!extent) return undefined
+  const a = finiteNumber(extent[0])
+  const b = finiteNumber(extent[1])
+  if (a == null || b == null) return undefined
+  return a <= b ? [a, b] : [b, a]
 }
 
 function safeIdPart(value: unknown): string {
@@ -548,10 +565,9 @@ export function buildGaltonBoardPhysics<TDatum extends Datum>(
   const values = data
     .map((datum, index) => finiteNumber(readAccessor(datum, index, valueAccessor)))
     .filter((value): value is number => value != null)
-  const extentMin = valueExtent ? finiteNumber(valueExtent[0]) : null
-  const extentMax = valueExtent ? finiteNumber(valueExtent[1]) : null
-  const min = extentMin ?? (values.length ? Math.min(...values) : 0)
-  const max = extentMax ?? (values.length ? Math.max(...values) : 1)
+  const normalizedExtent = normalizedFiniteExtent(valueExtent)
+  const min = normalizedExtent?.[0] ?? (values.length ? Math.min(...values) : 0)
+  const max = normalizedExtent?.[1] ?? (values.length ? Math.max(...values) : 1)
   const span = max === min ? 1 : max - min
   const xScale = scaleLinear()
     .domain([0, bins])
@@ -614,7 +630,13 @@ export function buildGaltonBoardPhysics<TDatum extends Datum>(
     projectionRows: binCounts.map((value, index) => ({
       label: String(index + 1),
       value
-    }))
+    })),
+    metadata: {
+      kind: "galton-board",
+      bins,
+      plot: area.plot,
+      valueExtent: [min, max]
+    } satisfies GaltonBoardProjectionMetadata
   }
 }
 

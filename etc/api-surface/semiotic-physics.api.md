@@ -39,6 +39,8 @@ interface EventDropPhysicsOptions
 interface EventDropWindowOptions
 interface GaltonBoardChartProps
 interface GaltonBoardPhysicsOptions
+interface GaltonBoardProjectionMetadata
+interface GaltonBoardReferenceLine
 interface GaltonPegsOptions
 interface NetworkHOPsChartProps
 interface NetworkHOPsModel
