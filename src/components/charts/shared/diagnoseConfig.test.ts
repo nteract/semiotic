@@ -23,6 +23,29 @@ describe("diagnoseConfig", () => {
     expect(result.ok).toBe(false)
   })
 
+  it("allows mechanical PhysicsPileChart without data", () => {
+    const result = diagnoseConfig("PhysicsPileChart", {
+      mode: "mechanical",
+      mechanicalCount: 48,
+      mechanicalCategories: ["Backlog", "Active", "Done"],
+      title: "Mechanical pile",
+    })
+    expect(result.ok).toBe(true)
+    expect(result.diagnoses).toHaveLength(0)
+  })
+
+  it("rejects unusable mechanical PhysicsPileChart settings", () => {
+    const result = diagnoseConfig("PhysicsPileChart", {
+      mode: "mechanical",
+      mechanicalCount: 0,
+      mechanicalCategories: [],
+    })
+    const codes = result.diagnoses.map(d => d.code)
+    expect(codes).toContain("PHYSICS_BAD_MECHANICAL_COUNT")
+    expect(codes).toContain("PHYSICS_EMPTY_MECHANICAL_CATEGORIES")
+    expect(result.ok).toBe(false)
+  })
+
   it("flags missing data for accessor-only charts not listing data in required (C2)", () => {
     // CandlestickChart lists highAccessor/lowAccessor (not "data") in required,
     // so a dataless static config used to pass as OK and render blank.
@@ -349,6 +372,98 @@ describe("diagnoseConfig", () => {
     })
     const codes = result.diagnoses.map(d => d.code)
     expect(codes).not.toContain("FUNCTION_ACCESSOR")
+  })
+
+  it("diagnoses invalid physics chart parameters", () => {
+    const galton = diagnoseConfig("GaltonBoardChart", {
+      data: [{ value: 1 }],
+      valueAccessor: "value",
+      bins: 1,
+      branchProbability: 1.2,
+      mechanicalCount: 0,
+    })
+    expect(galton.diagnoses.map(d => d.code)).toEqual(
+      expect.arrayContaining([
+        "PHYSICS_BAD_BINS",
+        "PHYSICS_BAD_BRANCH_PROBABILITY",
+        "PHYSICS_BAD_MECHANICAL_COUNT",
+      ])
+    )
+
+    const eventDrop = diagnoseConfig("EventDropChart", {
+      data: [{ time: 1, arrivalTime: 1 }],
+      timeAccessor: "time",
+      arrivalAccessor: "arrivalTime",
+      windows: { size: 0 },
+      timeScale: 0,
+    })
+    expect(eventDrop.diagnoses.map(d => d.code)).toEqual(
+      expect.arrayContaining([
+        "PHYSICS_BAD_WINDOW_SIZE",
+        "PHYSICS_BAD_TIME_SCALE",
+        "PHYSICS_EVENTDROP_NO_ARRIVAL_SPREAD",
+      ])
+    )
+  })
+
+  it("warns when physics piles exceed the live body budget", () => {
+    const result = diagnoseConfig("PhysicsPileChart", {
+      data: [{ category: "A", value: 1800 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      unitValue: 1,
+    })
+    expect(result.diagnoses.map(d => d.code)).toContain("PHYSICS_BODY_BUDGET")
+  })
+
+  it("diagnoses invalid collision swarm parameters", () => {
+    const result = diagnoseConfig("CollisionSwarmChart", {
+      data: Array.from({ length: 13 }, (_, index) => ({
+        id: index,
+        x: index,
+        group: `group-${index}`,
+      })),
+      xAccessor: "x",
+      groupAccessor: "group",
+      pointRadius: 0,
+      collisionIterations: 0,
+      xExtent: ["low"],
+    })
+
+    expect(result.diagnoses.map(d => d.code)).toEqual(
+      expect.arrayContaining([
+        "PHYSICS_BAD_POINT_RADIUS",
+        "PHYSICS_BAD_COLLISION_ITERATIONS",
+        "PHYSICS_BAD_X_EXTENT",
+        "PHYSICS_TOO_MANY_SWARM_LANES",
+      ])
+    )
+  })
+
+  it("diagnoses invalid NetworkHOPsChart parameters", () => {
+    const missing = diagnoseConfig("NetworkHOPsChart", {
+      title: "Missing topology",
+    })
+    expect(missing.diagnoses.map(d => d.code)).toContain("NETWORK_HOPS_MISSING_TOPOLOGY")
+
+    const invalid = diagnoseConfig("NetworkHOPsChart", {
+      nodes: [{ id: "A" }, { id: "B" }],
+      edges: [{ source: "A", target: "B", p: 1.2 }],
+      sampleRate: 0,
+      title: "Bad HOPs",
+    })
+    expect(invalid.diagnoses.map(d => d.code)).toEqual(
+      expect.arrayContaining([
+        "NETWORK_HOPS_BAD_SAMPLE_RATE",
+        "NETWORK_HOPS_BAD_PROBABILITY",
+      ])
+    )
+
+    const badSample = diagnoseConfig("NetworkHOPsChart", {
+      samples: [{ id: "s1" }],
+      title: "Bad samples",
+    })
+    expect(badSample.diagnoses.map(d => d.code)).toContain("NETWORK_HOPS_BAD_SAMPLE")
   })
 
   it("warns about a single function accessor among strings", () => {

@@ -19,7 +19,7 @@ export interface FocusRingProps {
   /** Total chart size */
   size: [number, number]
   /** Shape hint from the focused nav point */
-  shape?: "circle" | "rect" | "wedge" | "geoarea"
+  shape?: "circle" | "rect" | "wedge" | "geoarea" | "path"
   /** Width of rect-shaped focus target */
   width?: number
   /** Height of rect-shaped focus target */
@@ -38,7 +38,7 @@ export function FocusRing({ active, hoverPoint, margin, size, shape = "circle", 
 
   let indicator: React.ReactNode
 
-  if (shape === "geoarea" && pathData) {
+  if ((shape === "geoarea" || shape === "path") && pathData) {
     // Outline the whole area. Path coords are plot-relative, so translate by
     // the margin (rather than centering on the centroid like the other shapes).
     indicator = (

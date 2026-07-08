@@ -18,8 +18,26 @@ import { emitProcessSankeyScenes } from "../charts/network/processSankey/streami
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
 import { inferNodesFromEdges } from "../charts/network/../shared/networkUtils"
 import { computeDifferenceSegments } from "../charts/xy/DifferenceChart"
+import {
+  buildCollisionSwarmPhysics,
+  buildEventDropPhysics,
+  buildGaltonBoardPhysics,
+  buildPhysicalFlowPhysics,
+  buildPhysicsPile,
+  generateGaltonMechanicalSamples,
+  generatePhysicsPileMechanicalSamples,
+  styleFromColorAccessor
+} from "../charts/physics/physicsChartUtils"
+import { resolveCustomLayout } from "../charts/physics/PhysicsCustomChart"
+import {
+  buildNetworkHOPsModel,
+  networkHOPsEdgeId,
+  NETWORK_HOPS_EDGE_ID,
+  NETWORK_HOPS_PROBABILITY
+} from "../charts/physics/networkHopsUtils"
+import { LIGHT_THEME, resolveThemeSemanticColors } from "../store/ThemeStore"
 
-type FrameType = "xy" | "ordinal" | "network" | "geo"
+type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
 
 interface ChartConfig {
   frameType: FrameType
@@ -1287,6 +1305,301 @@ const geoCustomChart: ChartConfig = {
   }),
 }
 
+// ── Physics Charts ─────────────────────────────────────────────────────
+
+function allAtOnce(spawns: any[]): any[] {
+  return spawns.map((spawn) => ({ ...spawn, spawnAt: undefined }))
+}
+
+const galtonBoardChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, _colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [600, 400]
+    const bins = rest.bins ?? 21
+    const seed = rest.seed ?? 1
+    const pegRows = Math.max(1, Math.round(rest.pegRows ?? bins - 1))
+    const isMechanical = rest.mode === "mechanical"
+    const rows = isMechanical
+      ? generateGaltonMechanicalSamples({
+          bins,
+          branchProbability: rest.branchProbability,
+          count: rest.mechanicalCount,
+          pegRows,
+          seed
+        })
+      : Array.isArray(data) ? data : []
+    const layout = buildGaltonBoardPhysics({
+      data: rows,
+      valueAccessor: rest.valueAccessor || "value",
+      bins,
+      ballRadius: rest.ballRadius ?? 4,
+      seed,
+      size,
+      valueExtent: isMechanical ? [0, pegRows] : undefined
+    })
+    return {
+      ...common,
+      config: layout.config,
+      initialSpawns: allAtOnce(layout.initialSpawns),
+      projectionRows: layout.projectionRows,
+      bodyStyle: styleFromColorAccessor(
+        colorBy || rest.colorBy || (isMechanical ? "side" : undefined)
+      )
+    }
+  },
+}
+
+const eventDropChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, _colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [600, 400]
+    const layout = buildEventDropPhysics({
+      data: Array.isArray(data) ? data : [],
+      timeAccessor: rest.timeAccessor || "time",
+      arrivalAccessor: rest.arrivalAccessor || "arrivalTime",
+      windows: rest.windows || { size: 10 },
+      watermark: rest.watermark,
+      ballRadius: rest.ballRadius ?? 5,
+      seed: rest.seed ?? 1,
+      size,
+      timeExtent: rest.timeExtent,
+      timeScale: rest.timeScale ?? 1
+    })
+    return {
+      ...common,
+      config: layout.config,
+      initialSpawns: allAtOnce(layout.initialSpawns),
+      projectionRows: layout.projectionRows,
+      bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy)
+    }
+  },
+}
+
+const physicsPileChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, _colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [600, 400]
+    const isMechanical = rest.mode === "mechanical"
+    const rows = isMechanical
+      ? generatePhysicsPileMechanicalSamples({
+          categories: rest.mechanicalCategories,
+          count: rest.mechanicalCount,
+          seed: rest.seed ?? 1,
+          unitValue: rest.unitValue ?? 1
+        })
+      : Array.isArray(data) ? data : []
+    const layout = buildPhysicsPile({
+      data: rows,
+      categoryAccessor: rest.categoryAccessor || "category",
+      valueAccessor: rest.valueAccessor || (isMechanical ? "value" : undefined),
+      unitValue: rest.unitValue ?? 1,
+      ballRadius: rest.ballRadius ?? 5,
+      seed: rest.seed ?? 1,
+      size
+    })
+    return {
+      ...common,
+      config: layout.config,
+      initialSpawns: allAtOnce(layout.initialSpawns),
+      projectionRows: layout.projectionRows,
+      bodyStyle: styleFromColorAccessor(
+        colorBy || rest.colorBy || (isMechanical ? "category" : undefined)
+      )
+    }
+  },
+}
+
+const collisionSwarmChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, _colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [600, 360]
+    const layout = buildCollisionSwarmPhysics({
+      data: Array.isArray(data) ? data : [],
+      xAccessor: rest.xAccessor || "x",
+      groupAccessor: rest.groupAccessor,
+      radiusAccessor: rest.radiusAccessor,
+      pointRadius: rest.pointRadius ?? 5,
+      seed: rest.seed ?? 1,
+      size,
+      xExtent: rest.xExtent,
+      collisionIterations: rest.collisionIterations,
+      settle: rest.settle
+    })
+    return {
+      ...common,
+      config: layout.config,
+      initialSpawns: allAtOnce(layout.initialSpawns),
+      projectionRows: layout.projectionRows,
+      bodyStyle: styleFromColorAccessor(
+        colorBy || rest.colorBy || rest.groupAccessor
+      )
+    }
+  },
+}
+
+function networkHOPsPositiveNumber(value: unknown, fallback: number): number {
+  const number = typeof value === "number" ? value : Number(value)
+  return Number.isFinite(number) && number > 0 ? number : fallback
+}
+
+function networkHOPsEdgeWidth(edge: Datum, edgeWidth: unknown): number {
+  if (typeof edgeWidth === "number") return edgeWidth
+  if (typeof edgeWidth === "function") {
+    return networkHOPsPositiveNumber(edgeWidth(edge), 2)
+  }
+  if (typeof edgeWidth === "string") {
+    return networkHOPsPositiveNumber(edge[edgeWidth], 2)
+  }
+  return 2
+}
+
+const networkHOPsChart: ChartConfig = {
+  frameType: "network",
+  buildProps: (_data, colorBy, colorScheme, common, rest) => {
+    const sourceAccessor = rest.sourceAccessor || "source"
+    const targetAccessor = rest.targetAccessor || "target"
+    const nodeIdAccessor = rest.nodeIdAccessor || rest.nodeIDAccessor || "id"
+    const model = buildNetworkHOPsModel({
+      nodes: rest.nodes,
+      edges: rest.edges,
+      samples: rest.samples,
+      nodeIdAccessor,
+      sourceAccessor,
+      targetAccessor,
+      edgeProbabilityAccessor: rest.edgeProbabilityAccessor || "p",
+      sampleIndex: rest.sampleIndex ?? 0,
+      seed: rest.seed ?? 1
+    })
+    const userEdgeStyle = rest.frameProps?.edgeStyle || rest.edgeStyle
+    const showAggregate = rest.showAggregate !== false
+    return {
+      chartType: "force",
+      nodes: model.nodes,
+      edges: model.aggregateEdges,
+      nodeIDAccessor: nodeIdAccessor,
+      sourceAccessor,
+      targetAccessor,
+      colorBy,
+      colorScheme,
+      iterations: rest.iterations ?? 300,
+      forceStrength: rest.anchoringStrength ?? rest.forceStrength ?? 0.14,
+      showLabels: rest.showLabels,
+      nodeLabel: rest.nodeLabel,
+      nodeSize: rest.nodeSize,
+      nodeSizeRange: rest.nodeSizeRange,
+      nodeStyle: rest.nodeStyle,
+      edgeStyle: (edgeDatum: Datum) => {
+        const edge = ((edgeDatum?.data as Datum | undefined) ?? edgeDatum) as Datum
+        const id = String(
+          edge[NETWORK_HOPS_EDGE_ID] ??
+            networkHOPsEdgeId(edge, 0, sourceAccessor, targetAccessor)
+        )
+        const active = model.activeEdgeIds.has(id)
+        const probability = networkHOPsPositiveNumber(
+          edge[NETWORK_HOPS_PROBABILITY],
+          0
+        )
+        const base =
+          typeof userEdgeStyle === "function" ? userEdgeStyle(edgeDatum) : {}
+        return {
+          ...base,
+          stroke: active
+            ? rest.activeEdgeColor ?? rest.edgeColor ?? "#2563eb"
+            : rest.aggregateEdgeColor ?? "#94a3b8",
+          strokeWidth: active
+            ? networkHOPsEdgeWidth(edge, rest.edgeWidth)
+            : rest.aggregateEdgeWidth ?? 1,
+          opacity: active
+            ? rest.activeEdgeOpacity ?? 0.88
+            : showAggregate
+              ? Math.max(0.025, (rest.aggregateEdgeOpacity ?? 0.18) * probability)
+              : 0
+        }
+      },
+      ...common,
+    }
+  },
+}
+
+const physicalFlowChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, _colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [760, 420]
+    const layout = buildPhysicalFlowPhysics({
+      nodes: Array.isArray(rest.nodes) ? rest.nodes : [],
+      links: Array.isArray(rest.links)
+        ? rest.links
+        : Array.isArray(rest.edges)
+          ? rest.edges
+          : Array.isArray(data)
+            ? data
+            : [],
+      nodeIdAccessor: rest.nodeIdAccessor || "id",
+      nodeXAccessor: rest.nodeXAccessor || "x",
+      nodeYAccessor: rest.nodeYAccessor || "y",
+      sourceAccessor: rest.sourceAccessor || "source",
+      targetAccessor: rest.targetAccessor || "target",
+      throughputAccessor: rest.throughputAccessor || "value",
+      pathAccessor: rest.pathAccessor || "path",
+      coordinateMode: rest.coordinateMode || "auto",
+      particleRate: rest.particleRate ?? 0.16,
+      maxParticles: rest.maxParticles ?? 180,
+      particleRadius: rest.particleRadius ?? 4,
+      flowSpeed: rest.flowSpeed ?? 90,
+      pathConstraint: rest.pathConstraint || "path",
+      reducedMotion: true,
+      seed: rest.seed ?? 1,
+      size
+    })
+    return {
+      ...common,
+      config: layout.config,
+      initialSpawns: allAtOnce(layout.initialSpawns),
+      projectionRows: layout.projectionRows,
+      bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy || "source")
+    }
+  },
+}
+
+// PhysicsCustomChart's `layout(ctx)` is a pure function of a synchronous
+// context (same contract the XY/ordinal/network/geo customLayout escape
+// hatches use), so it can run once here exactly like the client HOC does via
+// the shared `resolveCustomLayout`. There is no live theme in static
+// rendering, so the context falls back to `LIGHT_THEME` — the same default
+// the component uses before a ThemeProvider resolves. Note this bridges only
+// bodies/colliders/config through the settled-scene renderer; unlike the
+// SceneNode-based custom charts, `renderPhysicsSettledSVG` has no overlay
+// slot yet, so a layout's `overlays`/`backgroundOverlays` render on canvas
+// but are silently absent from SSR output.
+const physicsCustomChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [700, 380]
+    const resolved = resolveCustomLayout({
+      chartId: rest.chartId,
+      colorScheme,
+      config: rest.config,
+      data: Array.isArray(data) ? data : [],
+      layout: rest.layout,
+      layoutConfig: rest.layoutConfig,
+      semantic: resolveThemeSemanticColors(LIGHT_THEME) ?? {},
+      size,
+      themeCategorical: LIGHT_THEME.colors.categorical,
+      xExtent: rest.xExtent,
+      yExtent: rest.yExtent
+    })
+    return {
+      ...common,
+      config: resolved.config,
+      initialSpawns: allAtOnce(resolved.initialSpawns),
+      projectionRows: [],
+      bodyStyle:
+        resolved.result.bodyStyle ??
+        styleFromColorAccessor(colorBy || rest.colorBy)
+    }
+  },
+}
+
 // ── Registry ───────────────────────────────────────────────────────────
 
 // `satisfies` (not `: Record<string, ChartConfig>`) so TypeScript preserves
@@ -1347,4 +1660,11 @@ export const CHART_CONFIGS = {
   ProportionalSymbolMap: proportionalSymbolMap,
   FlowMap: flowMap,
   GeoCustomChart: geoCustomChart,
+  GaltonBoardChart: galtonBoardChart,
+  EventDropChart: eventDropChart,
+  PhysicsPileChart: physicsPileChart,
+  CollisionSwarmChart: collisionSwarmChart,
+  NetworkHOPsChart: networkHOPsChart,
+  PhysicalFlowChart: physicalFlowChart,
+  PhysicsCustomChart: physicsCustomChart,
 } satisfies Record<string, ChartConfig>

@@ -1184,6 +1184,148 @@ Key props: `y-threshold` works on vertical ordinal charts. `category-highlight` 
 
 ---
 
+## Physics Charts — Motion With A Settled Projection
+
+### GaltonBoardChart (distribution drop)
+
+```jsx
+import { GaltonBoardChart } from "semiotic/physics"
+
+<GaltonBoardChart
+  data={[
+    { id: "a", score: 42, cohort: "observed" },
+    { id: "b", score: 57, cohort: "forecast" },
+    { id: "c", score: 68, cohort: "observed" },
+    { id: "d", score: 75, cohort: "forecast" },
+  ]}
+  valueAccessor="score"
+  colorBy="cohort"
+  bins={8}
+  size={[640, 320]}
+/>
+```
+
+Key props: `valueAccessor` maps rows to bins, `bins` controls the settled projection, and `seed` keeps the simulation deterministic. Use when the falling motion explains sampling/distribution; use Histogram when exact bin counts are the task.
+
+### EventDropChart (arrival replay + watermark)
+
+```jsx
+import { EventDropChart } from "semiotic/physics"
+
+<EventDropChart
+  data={[
+    { id: "e0", time: 2, arrivalTime: 3, source: "api" },
+    { id: "e1", time: 8, arrivalTime: 11, source: "api" },
+    { id: "e2", time: 4, arrivalTime: 33, source: "late" },
+  ]}
+  timeAccessor="time"
+  arrivalAccessor="arrivalTime"
+  windows={{ size: 10 }}
+  watermark={{ delay: 8 }}
+  colorBy="source"
+  timeScale={0.05}
+  size={[640, 320]}
+/>
+```
+
+Key props: `timeAccessor` assigns the event-time window, `arrivalAccessor` controls arrival replay, `windows.size` creates barriers, and `watermark.delay` sends late events to the late path.
+
+### PhysicsPileChart (unitized category piles)
+
+```jsx
+import { PhysicsPileChart } from "semiotic/physics"
+
+<PhysicsPileChart
+  data={[
+    { category: "Orders", value: 18 },
+    { category: "Queued", value: 11 },
+    { category: "Done", value: 24 },
+  ]}
+  categoryAccessor="category"
+  valueAccessor="value"
+  unitValue={1}
+  colorBy="category"
+  size={[640, 320]}
+/>
+```
+
+Key props: `unitValue` controls how many simulated bodies appear. Increase it for large values so the settled piles remain readable and the frame budget stays bounded.
+
+### CollisionSwarmChart (axis-preserving collision layout)
+
+```jsx
+import { CollisionSwarmChart } from "semiotic/physics"
+
+<CollisionSwarmChart
+  data={[
+    { id: "a", latency: 42, service: "api", weight: 4 },
+    { id: "b", latency: 45, service: "api", weight: 6 },
+    { id: "c", latency: 63, service: "worker", weight: 5 },
+    { id: "d", latency: 68, service: "worker", weight: 7 },
+  ]}
+  xAccessor="latency"
+  groupAccessor="service"
+  radiusAccessor="weight"
+  colorBy="service"
+  settle
+  size={[640, 320]}
+/>
+```
+
+Key props: `xAccessor` preserves the quantitative position, `groupAccessor` creates lanes, and collision settings separate overlapping records without losing the axis.
+
+### NetworkHOPsChart (probabilistic network replay)
+
+```jsx
+import { NetworkHOPsChart } from "semiotic/physics"
+
+<NetworkHOPsChart
+  nodes={[
+    { id: "Gateway", x: 0.2, y: 0.5 },
+    { id: "Auth", x: 0.5, y: 0.25 },
+    { id: "Payments", x: 0.78, y: 0.55 },
+  ]}
+  edges={[
+    { source: "Gateway", target: "Auth", p: 0.86 },
+    { source: "Auth", target: "Payments", p: 0.42 },
+  ]}
+  edgeProbabilityAccessor="p"
+  sampleRate={0.3}
+  showAggregate
+  showSampleReadout
+  size={[640, 360]}
+/>
+```
+
+Key props: `edgeProbabilityAccessor` reads per-edge probabilities, `sampleRate` controls replay density, and `showAggregate` keeps the stable topology visible behind sampled hops.
+
+### PhysicalFlowChart (packet flow over routes)
+
+```jsx
+import { PhysicalFlowChart } from "semiotic/physics"
+
+<PhysicalFlowChart
+  nodes={[
+    { id: "Inbound", x: 0.08, y: 0.5 },
+    { id: "Queue", x: 0.45, y: 0.32 },
+    { id: "Shipped", x: 0.88, y: 0.58 },
+  ]}
+  links={[
+    { source: "Inbound", target: "Queue", value: 40 },
+    { source: "Queue", target: "Shipped", value: 28 },
+  ]}
+  coordinateMode="normalized"
+  throughputAccessor="value"
+  maxParticles={90}
+  showStaticFlow
+  size={[700, 360]}
+/>
+```
+
+Key props: `nodes` provide route geometry, `links`/`edges` provide throughput, and `showStaticFlow` keeps the route quantities readable while packet bodies move.
+
+---
+
 ## Value Charts — One Number Is The Visualization
 
 ### BigNumber (KPI tile — comparison + target + threshold zones)

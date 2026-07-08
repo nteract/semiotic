@@ -67,6 +67,15 @@ export { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 export { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
 export { RealtimeHeatmap } from "./charts/realtime/RealtimeHeatmap"
 
+// Physics Charts
+export { GaltonBoardChart } from "./charts/physics/GaltonBoardChart"
+export { EventDropChart } from "./charts/physics/EventDropChart"
+export { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
+export { PhysicsPileChart } from "./charts/physics/PhysicsPileChart"
+export { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
+export { NetworkHOPsChart } from "./charts/physics/NetworkHOPsChart"
+export { PhysicalFlowChart } from "./charts/physics/PhysicalFlowChart"
+
 // Value Charts
 export { BigNumber } from "./charts/value/BigNumber"
 
@@ -291,7 +300,14 @@ export { buildReaderGrounding } from "./ai/readerGrounding"
 export type {
   ChartReaderGrounding,
   ChartReaderGroundingOptions,
-  ChartReaderGroundingIntent
+  ChartReaderGroundingIntent,
+  PhysicsReaderGrounding,
+  PhysicsReaderGroundingAggregate,
+  PhysicsReaderGroundingAggregates,
+  PhysicsReaderGroundingGeometry,
+  PhysicsReaderGroundingInput,
+  PhysicsReaderGroundingSediment,
+  PhysicsReaderGroundingSimulation
 } from "./ai/readerGrounding"
 export {
   dataQualityToAnnotations,

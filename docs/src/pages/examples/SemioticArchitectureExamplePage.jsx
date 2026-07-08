@@ -70,7 +70,7 @@ export default function SemioticArchitectureExamplePage() {
   return (
     <ExamplePageLayout title="The Living System of Semiotic">
       <p className="architecture-lede">
-        Semiotic presents a crown of charts and controls, but those visible forms grow from four
+        Semiotic presents a crown of charts and controls, but those visible forms grow from five
         frame models, two ways of receiving data, and a rhizomatic implementation beneath the
         surface. Choose an example to trace the exact branch, settings, trunk, and roots it uses.
       </p>
@@ -134,7 +134,7 @@ export default function SemioticArchitectureExamplePage() {
               margin={0}
               enableHover
               onObservation={handleObservation}
-              description="A diagram of Semiotic's functionality organized by visibility and optional feature usage. Visible Semiotic fans upward through four frame models into chart HOCs, capability stars annotate the public surface, six internal systems join it to Semiotic Internals, and private subsystems fan downward."
+              description="A diagram of Semiotic's functionality organized by visibility and optional feature usage. Visible Semiotic fans upward through five frame models into chart HOCs, capability stars annotate the public surface, six internal systems join it to Semiotic Internals, and private subsystems fan downward."
               summary={
                 selectedProfile
                   ? `${selectedProfile.label} uses ${selectedProfile.uses.length} directly configured architecture elements; its supporting branch and implementation roots are highlighted.`
@@ -163,9 +163,10 @@ export default function SemioticArchitectureExamplePage() {
         </div>
         <div className="architecture-explanation-grid">
           <p>
-            The upper network diagram fans from Visible Semiotic into XY, Ordinal, Network, and Geo
-            frames, then into exact HOCs and grouped chart families. Shared settings and composition
-            tools sit on the two gold-star semicircles that frame this public surface.
+            The upper network diagram fans from Visible Semiotic into XY, Ordinal, Network, Geo,
+            and Physics frames, then into exact HOCs and grouped chart families. Shared settings
+            and composition tools sit on the two gold-star semicircles that frame this public
+            surface.
           </p>
           <p>
             Six central ribbons carry shared capabilities, data props, scene graphs, rendering
@@ -732,10 +733,11 @@ function positionArchitecture(rawNodes, plot) {
 
 function nodeTarget(node, width, rootIndex) {
   const clusterCenter = {
-    xy: width * 0.14,
-    ordinal: width * 0.38,
-    network: width * 0.64,
-    geo: width * 0.86,
+    xy: width * 0.16,
+    ordinal: width * 0.34,
+    network: width * 0.5,
+    geo: width * 0.66,
+    physics: width * 0.84,
   }
 
   if (spineConnectorSet.has(node.id)) {
@@ -769,10 +771,11 @@ function nodeTarget(node, width, rootIndex) {
   if (node.id === "input-push") return { x: width / 2 - 260, y: 820 }
   if (node.layer === "root") {
     const index = rootIndex.get(node.id) ?? 0
-    const column = index % 4
-    const row = Math.floor(index / 4)
+    const columnCount = 5
+    const column = index % columnCount
+    const row = Math.floor(index / columnCount)
     return {
-      x: 125 + column * ((width - 250) / 3),
+      x: 100 + column * ((width - 200) / (columnCount - 1)),
       y: 925 + row * 88,
     }
   }
@@ -795,7 +798,7 @@ function nodeSize(node) {
 function capabilityPosition(order, width) {
   const outer = order % 2 === 0
   const index = Math.floor(order / 2)
-  const count = outer ? 8 : 7
+  const count = 8
   const angle = Math.PI + (index / (count - 1)) * Math.PI
   const radiusX = outer ? width / 2 - 42 : width / 2 - 122
   const radiusY = outer ? 365 : 286

@@ -85,7 +85,7 @@ for (const chart of DELIBERATELY_EXCLUDED.keys()) {
 
 // 6. Capability files that aren't imported (orphans)
 const colocatedFiles = []
-const chartDirs = ["xy", "ordinal", "network", "geo"]
+const chartDirs = ["xy", "ordinal", "network", "geo", "physics"]
 for (const dir of chartDirs) {
   const dirPath = path.join(repoRoot, "src", "components", "charts", dir)
   if (!fs.existsSync(dirPath)) continue

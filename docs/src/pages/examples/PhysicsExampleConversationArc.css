@@ -1,0 +1,77 @@
+.physics-arc-status {
+  display: grid;
+  gap: 10px;
+  min-width: 220px;
+  padding: 12px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+  color: var(--text-secondary);
+}
+
+.physics-arc-status__topline,
+.physics-arc-status__counts,
+.physics-arc-status__latest {
+  display: flex;
+  align-items: center;
+}
+
+.physics-arc-status__topline {
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.physics-arc-status__topline button {
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.physics-arc-status__counts {
+  gap: 10px;
+}
+
+.physics-arc-status__counts div {
+  display: grid;
+  gap: 2px;
+  min-width: 54px;
+}
+
+.physics-arc-status__counts strong {
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.physics-arc-status__counts span,
+.physics-arc-status__latest span {
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.physics-arc-status__latest {
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--surface-3);
+}
+
+.physics-arc-status__latest strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  text-align: right;
+}

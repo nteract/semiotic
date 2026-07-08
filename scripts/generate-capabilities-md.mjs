@@ -53,6 +53,8 @@ const CATEGORY_DISPLAY_LABEL = {
   network: "Network",
   geo: "Geo",
   realtime: "Realtime",
+  physics: "Physics",
+  value: "Value",
 }
 
 let lastCategory = null

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global console, process */
 /**
  * Capability-driven visual baseline coverage gate.
  *
@@ -108,6 +109,12 @@ for (const chart of ssrParityCharts) {
 // Known SSR-capable charts that still need chart-specific SSR/CSR parity
 // cases. Do not add to this map casually; the intended direction is down.
 const SSR_PARITY_BURN_DOWN = new Map([
+  ["CollisionSwarmChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
+  ["EventDropChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
+  ["NetworkHOPsChart", "physics/network uncertainty HOC SSR/CSR parity needs a deterministic sample fixture"],
+  ["PhysicalFlowChart", "experimental route-flow physics HOC SSR/CSR parity needs a deterministic path fixture"],
+  ["GaltonBoardChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
+  ["PhysicsPileChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
 ])
 
 const ssrBurnDownCharts = new Set(SSR_PARITY_BURN_DOWN.keys())

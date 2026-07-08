@@ -70,7 +70,7 @@ export function parseCapabilityMatrix() {
 
   // Sort by category then alphabetical within category — same order
   // both md/json consumers expect.
-  const ORDER = ["xy", "ordinal", "network", "geo", "realtime"]
+  const ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"]
   entries.sort((a, b) => {
     const ai = ORDER.indexOf(a.category)
     const bi = ORDER.indexOf(b.category)
@@ -82,4 +82,4 @@ export function parseCapabilityMatrix() {
 }
 
 /** Category sort order used by the matrix output. */
-export const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime"]
+export const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"]

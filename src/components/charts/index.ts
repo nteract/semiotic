@@ -173,6 +173,41 @@ export { RealtimeHeatmap } from "./realtime/RealtimeHeatmap"
 export type { RealtimeHeatmapProps } from "./realtime/RealtimeHeatmap"
 
 // ============================================================================
+// Physics Charts
+// ============================================================================
+
+export { GaltonBoardChart } from "./physics/GaltonBoardChart"
+export type { GaltonBoardChartProps } from "./physics/GaltonBoardChart"
+
+export { EventDropChart } from "./physics/EventDropChart"
+export type { EventDropChartProps } from "./physics/EventDropChart"
+
+export { PhysicsPileChart } from "./physics/PhysicsPileChart"
+export type { PhysicsPileChartProps } from "./physics/PhysicsPileChart"
+
+export { CollisionSwarmChart } from "./physics/CollisionSwarmChart"
+export type { CollisionSwarmChartProps } from "./physics/CollisionSwarmChart"
+
+export { NetworkHOPsChart } from "./physics/NetworkHOPsChart"
+export type {
+  NetworkHOPsChartProps,
+  NetworkHOPsModel,
+  NetworkHOPsSample
+} from "./physics/NetworkHOPsChart"
+
+export { PhysicalFlowChart } from "./physics/PhysicalFlowChart"
+export type { PhysicalFlowChartProps } from "./physics/PhysicalFlowChart"
+
+export { PhysicsCustomChart } from "./physics/PhysicsCustomChart"
+export type {
+  PhysicsCustomChartProps,
+  PhysicsCustomLayout,
+  PhysicsCustomLayoutContext,
+  PhysicsCustomLayoutResult,
+  PhysicsCustomSpawnDatumResult
+} from "./physics/PhysicsCustomChart"
+
+// ============================================================================
 // Shared Utilities
 // ============================================================================
 

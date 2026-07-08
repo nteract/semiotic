@@ -19,7 +19,7 @@
 export interface RenderEvidence {
   /** HOC component name as passed to renderChart. */
   component: string
-  frameType: "xy" | "ordinal" | "network" | "geo"
+  frameType: "xy" | "ordinal" | "network" | "geo" | "physics"
   /** "ok" when the scene produced data marks; "empty" when it did not. */
   status: "ok" | "empty"
   /** True when zero data marks rendered. */

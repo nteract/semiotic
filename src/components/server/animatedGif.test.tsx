@@ -2,7 +2,13 @@
 import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
-import { generateFrameSVGs, generateFrameSequence, renderToAnimatedGif } from "./animatedGif"
+import {
+  generateFrameSVGs,
+  generateFrameSequence,
+  generatePhysicsFrameSVGs,
+  renderPhysicsToAnimatedGif,
+  renderToAnimatedGif
+} from "./animatedGif"
 
 // ── Test data ────────────────────────────────────────────────────────
 
@@ -20,6 +26,36 @@ const scatterData = Array.from({ length: 30 }, (_, i) => ({
   x: i * 3,
   y: 20 + Math.random() * 60,
 }))
+
+const physicsProps = {
+  width: 220,
+  height: 160,
+  background: "#ffffff",
+  config: {
+    fixedDt: 1 / 60,
+    maxSubsteps: 1,
+    kernel: {
+      gravity: { x: 0, y: 180 },
+      velocityDamping: 1,
+      sleepAfter: 999,
+    },
+  },
+  initialSpawns: [
+    {
+      id: "ball",
+      x: 88,
+      y: 24,
+      mass: 1,
+      shape: { type: "circle" as const, radius: 5 },
+      datum: { id: "ball" },
+    },
+  ],
+}
+
+function firstCircleY(svg: string): number {
+  const match = svg.match(/<circle[^>]+cy="([^"]+)"/)
+  return match ? Number(match[1]) : NaN
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // generateFrameSVGs — Phase 1: Sliding window
@@ -336,6 +372,44 @@ describe("generateFrameSequence", () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════
+// generatePhysicsFrameSVGs — sim-stepped physics animation
+// ═══════════════════════════════════════════════════════════════════════
+
+describe("generatePhysicsFrameSVGs", () => {
+  it("steps physics time instead of slicing data", () => {
+    const frames = generatePhysicsFrameSVGs(physicsProps, {
+      frameCount: 5,
+      stepsPerFrame: 3,
+      stepDt: 1 / 60,
+      fps: 12,
+    })
+
+    expect(frames).toHaveLength(5)
+    frames.forEach((frame) => {
+      expect(frame).toContain("<svg")
+      expect(frame).toContain("<circle")
+      expect(frame).toContain("#ffffff")
+    })
+    expect(firstCircleY(frames[4])).toBeGreaterThan(firstCircleY(frames[0]))
+  })
+
+  it("is deterministic for identical config, spawns, and step options", () => {
+    const a = generatePhysicsFrameSVGs(physicsProps, {
+      frameCount: 4,
+      stepsPerFrame: 2,
+      stepDt: 1 / 60,
+    })
+    const b = generatePhysicsFrameSVGs(physicsProps, {
+      frameCount: 4,
+      stepsPerFrame: 2,
+      stepDt: 1 / 60,
+    })
+
+    expect(a).toEqual(b)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
 // renderToAnimatedGif — integration (requires sharp + gifenc)
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -410,5 +484,20 @@ describe("renderToAnimatedGif", () => {
 
     // 2x should produce a larger file
     expect(gif2x.length).toBeGreaterThan(gif1x.length)
+  })
+
+  it("produces a GIF buffer from sim-stepped physics frames", async () => {
+    const gif = await renderPhysicsToAnimatedGif(physicsProps, {
+      frameCount: 4,
+      stepsPerFrame: 2,
+      stepDt: 1 / 60,
+      fps: 6,
+    })
+
+    expect(gif).toBeInstanceOf(Buffer)
+    expect(gif.length).toBeGreaterThan(100)
+    expect(gif[0]).toBe(0x47)
+    expect(gif[1]).toBe(0x49)
+    expect(gif[2]).toBe(0x46)
   })
 })

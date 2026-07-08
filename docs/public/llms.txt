@@ -75,6 +75,15 @@
 - [RealtimeWaterfallChart](/charts/realtime-waterfall-chart): Streaming waterfall chart with positive/negative bars and connectors.
 - [RealtimeHeatmap](/charts/realtime-heatmap): Streaming 2D heatmap with binned time and value aggregation.
 
+## Charts — Physics
+
+- [GaltonBoardChart](/charts/galton-board-chart): Physics-backed Galton board / Plinko-style dot distribution. _(act: characterizing)_
+- [EventDropChart](/charts/event-drop-chart): Physics-backed event-time drop chart for arrival replay, window barriers, and late/watermark handling. _(act: alerting)_
+- [PhysicsPileChart](/charts/physics-pile-chart): Physics-backed unit pile chart. _(act: comparing)_
+- [CollisionSwarmChart](/charts/collision-swarm-chart): Physics-backed swarm / dot-strip chart. _(act: characterizing)_
+- [NetworkHOPsChart](/charts/network-hops-chart): Network hypothetical outcome plot. _(act: tracing)_
+- [PhysicalFlowChart](/charts/physical-flow-chart): Experimental physics-backed flow chart. _(act: tracing)_
+
 ## Intelligence (AI surface)
 
 - [Chart Suggestions](/intelligence/suggestions): suggestCharts — rank charts for a dataset and intent

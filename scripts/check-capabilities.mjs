@@ -105,6 +105,10 @@ const SERVER_CONFIG_ONLY = new Map([
     "GeoCustomChart",
     "custom-layout escape hatch; named recipes register capability entries instead",
   ],
+  [
+    "PhysicsCustomChart",
+    "custom-layout escape hatch; named recipes register capability entries instead",
+  ],
 ])
 
 // ── Index HOC source files for the push-API gate ───────────────────
@@ -112,7 +116,7 @@ const SERVER_CONFIG_ONLY = new Map([
 // `supportsPush: true` charts must import the shared
 // `useFrameImperativeHandle` hook. Read each HOC's source and grep
 // for the import; charts claiming push without the hook fail.
-const HOC_DIRS = ["xy", "ordinal", "network", "geo", "realtime"]
+const HOC_DIRS = ["xy", "ordinal", "network", "geo", "realtime", "physics"]
 const hocSources = new Map()
 for (const dir of HOC_DIRS) {
   const fullDir = path.join(CHARTS_DIR, dir)
@@ -178,6 +182,8 @@ for (const e of specEntries) {
   //     bespoke bridges for composite charts (ScatterplotMatrix,
   //     MinimapChart) and aggregators that pre-process via a
   //     specialized hook (LikertChart via useLikertAggregation).
+  //   - `usePhysicsHocHandle` — the StreamPhysicsFrame row-level
+  //     bridge used by physics HOCs.
   // The first two are preferred; the raw call is the fallback for
   // charts whose ref API legitimately needs custom plumbing. All
   // three signal that the chart exposes a working `ref.current.push`.
@@ -190,6 +196,7 @@ for (const e of specEntries) {
     const importsPushHook =
       /\buseFrameImperativeHandle\b/.test(source) ||
       /\buseOrdinalStreaming\b/.test(source) ||
+      /\busePhysicsHocHandle\b/.test(source) ||
       /\buseImperativeHandle\(/.test(source)
     if (!importsPushHook) {
       errors.push(
@@ -271,7 +278,7 @@ if (fs.existsSync(CAPABILITIES_JSON_PATH)) {
     }
   }
   // Sort keys to match the generator's output (category-then-name).
-  const ORDER = ["xy", "ordinal", "network", "geo", "realtime"]
+  const ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"]
   const sortedNames = Object.keys(expected).sort((a, b) => {
     const ai = ORDER.indexOf(expected[a].category)
     const bi = ORDER.indexOf(expected[b].category)

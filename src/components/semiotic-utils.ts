@@ -83,7 +83,14 @@ export { buildReaderGrounding } from "./ai/readerGrounding"
 export type {
   ChartReaderGrounding,
   ChartReaderGroundingOptions,
-  ChartReaderGroundingIntent
+  ChartReaderGroundingIntent,
+  PhysicsReaderGrounding,
+  PhysicsReaderGroundingAggregate,
+  PhysicsReaderGroundingAggregates,
+  PhysicsReaderGroundingGeometry,
+  PhysicsReaderGroundingInput,
+  PhysicsReaderGroundingSediment,
+  PhysicsReaderGroundingSimulation
 } from "./ai/readerGrounding"
 export type {
   A11yPrinciple,

@@ -50,6 +50,11 @@ import type {
 
 import { GeoPipelineStore } from "../stream/GeoPipelineStore"
 import type { GeoPipelineConfig, StreamGeoFrameProps } from "../stream/geoTypes"
+import { PhysicsPipelineStore } from "../stream/physics/PhysicsPipelineStore"
+import {
+  renderPhysicsSettledSVG,
+  type PhysicsSettledSVGOptions
+} from "../stream/physics/PhysicsSettledSVG"
 
 import {
   buildEvidence,
@@ -86,9 +91,9 @@ import { CHART_CONFIGS } from "./serverChartConfigs"
 import type { SemioticTheme } from "../store/ThemeStore"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
-type FrameType = "xy" | "ordinal" | "network" | "geo"
+type FrameType = RenderEvidence["frameType"]
 type StaticFrameProps =
-  (StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps | StreamGeoFrameProps) &
+  (StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps | StreamGeoFrameProps | StaticPhysicsFrameProps) &
   ThemeAwareProps
 type CategoricalAccessor = string | ((d: Datum) => string)
 type EdgeEndpoint = RealtimeEdge["source"] | RealtimeEdge["target"] | null | undefined
@@ -1679,6 +1684,43 @@ function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: Evi
   )
 }
 
+type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
+  config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]
+  initialSpawns?: Array<Record<string, unknown>>
+  projectionRows?: PhysicsSettledSVGOptions["projectionRows"]
+  size?: [number, number]
+  _idPrefix?: string
+}
+
+function renderPhysicsFrame(props: StaticPhysicsFrameProps, sink?: EvidenceSink): string {
+  const size = props.size ?? [props.width ?? 600, props.height ?? 400]
+  const store = new PhysicsPipelineStore(props.config)
+  if (Array.isArray(props.initialSpawns) && props.initialSpawns.length > 0) {
+    store.enqueue(
+      props.initialSpawns.map((spawn) => ({ ...spawn, spawnAt: undefined })) as any
+    )
+  }
+  const result = renderPhysicsSettledSVG(store, {
+    ...props,
+    width: size[0],
+    height: size[1],
+    idPrefix: props.idPrefix ?? props._idPrefix ?? "physics"
+  })
+  if (sink) {
+    sink.evidence = buildEvidence({
+      frameType: "physics",
+      width: size[0],
+      height: size[1],
+      marks: result.scene.sceneNodes,
+      title: props.title,
+      description: props.description,
+      annotations: [],
+      extraWarnings: result.scene.sceneNodes.length === 0 ? ["PHYSICS_EMPTY_SCENE"] : []
+    })
+  }
+  return result.svg
+}
+
 // ── Public API ──────────────────────────────────────────────────────────
 
 export function renderToStaticSVG(
@@ -1694,9 +1736,11 @@ export function renderToStaticSVG(
       return renderNetworkFrame(props as StreamNetworkFrameProps & ThemeAwareProps)
     case "geo":
       return renderGeoFrame(props as StreamGeoFrameProps & ThemeAwareProps)
+    case "physics":
+      return renderPhysicsFrame(props as StaticPhysicsFrameProps & ThemeAwareProps)
     default:
       throw new Error(
-        `Unknown frame type: ${frameType}. Must be "xy", "ordinal", "network", or "geo".`
+        `Unknown frame type: ${frameType}. Must be "xy", "ordinal", "network", "geo", or "physics".`
       )
   }
 }
@@ -1881,6 +1925,7 @@ function renderChartInternal(
     ordinal: renderOrdinalFrame,
     network: renderNetworkFrame,
     geo: renderGeoFrame,
+    physics: renderPhysicsFrame,
   }
   const renderFn = renderers[config.frameType]
   let svg = renderFn(frameProps2, sink)
@@ -1960,7 +2005,7 @@ export async function renderToImage(
 
   // Generate SVG
   let svg: string
-  const frameTypes = ["xy", "ordinal", "network", "geo"]
+  const frameTypes = ["xy", "ordinal", "network", "geo", "physics"]
   if (frameTypes.includes(frameTypeOrComponent)) {
     svg = renderToStaticSVG(frameTypeOrComponent as FrameType, props as StaticFrameProps)
   } else {

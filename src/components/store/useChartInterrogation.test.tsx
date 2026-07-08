@@ -51,6 +51,55 @@ describe("useChartInterrogation", () => {
     expect(ctx.data).toBe(data)
   })
 
+  it("forwards reader grounding to onQuery when requested", async () => {
+    const onQuery = vi.fn().mockResolvedValue({ answer: "ok" })
+    const { result } = renderHook(() =>
+      useChartInterrogation({
+        data,
+        onQuery,
+        componentName: "PhysicsCustomChart",
+        props: {
+          projectionRows: [
+            { id: "triage", label: "Triage lane", count: 1 },
+            { id: "review", label: "Review lane", count: 2 },
+          ],
+          physics: {
+            snapshot: {
+              simulationState: "active",
+              queue: [{ id: "queued" }],
+              config: {
+                fixedDt: 1 / 120,
+                kernel: { seed: 12, gravity: { x: 0, y: 700 } },
+              },
+              world: {
+                bodies: [{ id: "a", sleeping: false }],
+                colliders: [{ id: "sensor-review", sensor: true }],
+              },
+            },
+          },
+        },
+        includeGrounding: true,
+      })
+    )
+
+    await act(async () => {
+      await result.current.ask("what is happening?")
+    })
+
+    const ctx = onQuery.mock.calls[0][1]
+    expect(ctx.grounding?.component).toBe("PhysicsCustomChart")
+    expect(ctx.grounding?.physics?.simulation).toMatchObject({
+      state: "active",
+      seed: 12,
+      liveBodies: 1,
+      queued: 1,
+    })
+    expect(ctx.grounding?.physics?.aggregates?.leader).toMatchObject({
+      label: "Review lane",
+      count: 2,
+    })
+  })
+
   it("merges initial and AI annotations", async () => {
     const onQuery: InterrogationQuery = async () => ({
       answer: "marking peak",

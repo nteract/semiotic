@@ -9039,6 +9039,1028 @@
           "required": []
         }
       }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GaltonBoardChart",
+        "description": "Physics-backed Galton board / Plinko-style dot distribution. Values enter deterministic bins and settle into a readable histogram-like projection; mechanical mode can generate a seeded no-data demonstration.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of source records. Each record becomes one or more simulated bodies."
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field or accessor used to color simulated bodies."
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic simulation seed.",
+              "default": 1
+            },
+            "ballRadius": {
+              "type": "number",
+              "description": "Radius of each simulated circular body in pixels."
+            },
+            "hoverRadius": {
+              "type": "number",
+              "description": "Pixel hit radius for body hover tooltips."
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause the simulation at mount or on prop update."
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+            },
+            "valueAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Numeric field used to assign bodies to Galton bins.",
+              "default": "value"
+            },
+            "bins": {
+              "type": "number",
+              "description": "Number of landing bins / histogram columns.",
+              "default": 21
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "sample",
+                "mechanical"
+              ],
+              "description": "sample uses data values; mechanical emits a deterministic demonstration when no data is supplied.",
+              "default": "sample"
+            },
+            "pegRows": {
+              "type": "number",
+              "description": "Number of Bernoulli branch rows used by mechanical mode."
+            },
+            "mechanicalCount": {
+              "type": "number",
+              "description": "Number of generated bodies in mechanical mode."
+            },
+            "branchProbability": {
+              "type": "number",
+              "description": "Probability that each mechanical sample branches right at a peg.",
+              "default": 0.5
+            },
+            "showProjection": {
+              "type": "boolean",
+              "description": "Whether companion docs or wrappers should show the settled projection."
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "EventDropChart",
+        "description": "Physics-backed event-time drop chart for arrival replay, window barriers, and late/watermark handling.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of source records. Each record becomes one or more simulated bodies."
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field or accessor used to color simulated bodies."
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic simulation seed.",
+              "default": 1
+            },
+            "ballRadius": {
+              "type": "number",
+              "description": "Radius of each simulated circular body in pixels."
+            },
+            "hoverRadius": {
+              "type": "number",
+              "description": "Pixel hit radius for body hover tooltips."
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause the simulation at mount or on prop update."
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+            },
+            "timeAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Event-time field used to assign drops to windows.",
+              "default": "time"
+            },
+            "arrivalAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Arrival-time field used to pace event ingestion.",
+              "default": "arrivalTime"
+            },
+            "windows": {
+              "type": "object",
+              "description": "Windowing config, currently { size, gapPolicy? }."
+            },
+            "watermark": {
+              "type": [
+                "object",
+                "function"
+              ],
+              "description": "Watermark config: { delay }, { value }, or a function of latest event time."
+            },
+            "timeExtent": {
+              "type": "array",
+              "description": "Optional stable event-time extent [min, max] for the window layout."
+            },
+            "timeScale": {
+              "type": "number",
+              "description": "Playback speed for event-arrival pacing; higher is faster (1 = real event-time).",
+              "default": 1
+            }
+          },
+          "required": [
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "PhysicsPileChart",
+        "description": "Physics-backed unit pile chart. Numeric values are unitized into repeated bodies that settle into category piles.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of source records. Each record becomes one or more simulated bodies."
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field or accessor used to color simulated bodies."
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic simulation seed.",
+              "default": 1
+            },
+            "ballRadius": {
+              "type": "number",
+              "description": "Radius of each simulated circular body in pixels."
+            },
+            "hoverRadius": {
+              "type": "number",
+              "description": "Pixel hit radius for body hover tooltips."
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause the simulation at mount or on prop update."
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+            },
+            "categoryAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field that chooses the pile / bin.",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Numeric field converted into repeated unit bodies.",
+              "default": "value"
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "sample",
+                "mechanical"
+              ],
+              "description": "sample uses data values; mechanical emits a deterministic no-data unit pile for design sketches.",
+              "default": "sample"
+            },
+            "mechanicalCount": {
+              "type": "number",
+              "description": "Number of generated unit bodies in mechanical mode."
+            },
+            "mechanicalCategories": {
+              "type": "array",
+              "description": "Category labels generated by mechanical mode."
+            },
+            "unitValue": {
+              "type": "number",
+              "description": "Value represented by one simulated body.",
+              "default": 1
+            },
+            "showProjection": {
+              "type": "boolean",
+              "description": "Draw an exact settled-projection overlay behind the moving units so category totals remain readable.",
+              "default": true
+            },
+            "sediment": {
+              "type": "boolean",
+              "description": "Reserved for future sediment/aggregation mode."
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CollisionSwarmChart",
+        "description": "Physics-backed swarm / dot-strip chart. Quantitative records spring toward an x-position while collisions separate overlapping dots into a readable distribution.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of source records. Each record becomes one or more simulated bodies."
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field or accessor used to color simulated bodies."
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic simulation seed.",
+              "default": 1
+            },
+            "ballRadius": {
+              "type": "number",
+              "description": "Radius of each simulated circular body in pixels."
+            },
+            "hoverRadius": {
+              "type": "number",
+              "description": "Pixel hit radius for body hover tooltips."
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause the simulation at mount or on prop update."
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+            },
+            "xAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Quantitative field that anchors each body along the x-axis.",
+              "default": "x"
+            },
+            "groupAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Optional categorical field that creates separate swarm lanes."
+            },
+            "radiusAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Optional numeric field used as per-body radius in pixels."
+            },
+            "pointRadius": {
+              "type": "number",
+              "description": "Fallback radius for each simulated body.",
+              "default": 5
+            },
+            "xExtent": {
+              "type": "array",
+              "description": "Optional [min, max] domain for the quantitative axis."
+            },
+            "collisionIterations": {
+              "type": "number",
+              "description": "Collision solver iterations per fixed physics step.",
+              "default": 6
+            },
+            "settle": {
+              "type": "boolean",
+              "description": "Start bodies near their target positions for a calmer first paint or reduced-motion demo."
+            },
+            "showProjection": {
+              "type": "boolean",
+              "description": "Draw x-axis and group-lane guides behind the moving bodies.",
+              "default": true
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "NetworkHOPsChart",
+        "description": "Network hypothetical outcome plot. Animates sampled realizations of uncertain or probabilistic graphs while node positions stay anchored to the aggregate topology.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ]
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ]
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "nodes": {
+              "type": "array",
+              "description": "Array of node objects. Optional when samples include nodes or edges can infer endpoint ids."
+            },
+            "edges": {
+              "type": "array",
+              "description": "Probabilistic edge list. Each edge should include source, target, and a probability field such as p."
+            },
+            "samples": {
+              "type": "array",
+              "description": "Explicit graph realizations: [{ id?, label?, nodes?, edges }]. Used instead of probabilistic edges when available."
+            },
+            "nodeIdAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for node unique identifier.",
+              "default": "id"
+            },
+            "nodeIDAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Legacy alias for nodeIdAccessor.",
+              "default": "id"
+            },
+            "sourceAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for edge source node ID.",
+              "default": "source"
+            },
+            "targetAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for edge target node ID.",
+              "default": "target"
+            },
+            "edgeProbabilityAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Probability field used when edges are probabilistic rather than explicit samples.",
+              "default": "p"
+            },
+            "sampleIndex": {
+              "type": "number",
+              "description": "Controlled realization index. Omit to animate through samples."
+            },
+            "sampleRate": {
+              "type": "number",
+              "description": "Realizations per second when sampleIndex is uncontrolled.",
+              "default": 1
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause animated sample cycling.",
+              "default": false
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic seed for probabilistic edge sampling.",
+              "default": 1
+            },
+            "anchoringStrength": {
+              "type": "number",
+              "description": "Force-directed link strength used for the stable aggregate layout.",
+              "default": 0.14
+            },
+            "showAggregate": {
+              "type": "boolean",
+              "description": "Draw inactive aggregate edges faintly behind the active sample.",
+              "default": true
+            },
+            "showSampleReadout": {
+              "type": "boolean",
+              "description": "Show active-edge and aggregate summary overlay.",
+              "default": true
+            },
+            "activeEdgeColor": {
+              "type": "string",
+              "description": "Stroke color for edges present in the active realization."
+            },
+            "activeEdgeOpacity": {
+              "type": "number",
+              "default": 0.88
+            },
+            "aggregateEdgeColor": {
+              "type": "string",
+              "default": "#94a3b8"
+            },
+            "aggregateEdgeOpacity": {
+              "type": "number",
+              "default": 0.18
+            },
+            "aggregateEdgeWidth": {
+              "type": "number",
+              "default": 1
+            },
+            "edgeWidth": {
+              "type": [
+                "number",
+                "string",
+                "function"
+              ],
+              "description": "Width for active sampled edges.",
+              "default": 2
+            },
+            "edgeColor": {
+              "type": "string",
+              "default": "#2563eb"
+            },
+            "iterations": {
+              "type": "number",
+              "description": "Force simulation iterations for aggregate node layout.",
+              "default": 300
+            },
+            "nodeLabel": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key or accessor for node labels."
+            },
+            "nodeSize": {
+              "type": [
+                "number",
+                "string",
+                "function"
+              ],
+              "default": 8
+            },
+            "nodeSizeRange": {
+              "type": "array",
+              "default": [
+                5,
+                20
+              ]
+            },
+            "showLabels": {
+              "type": "boolean",
+              "default": false
+            },
+            "layoutExecution": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "worker",
+                "sync"
+              ],
+              "default": "auto"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "PhysicalFlowChart",
+        "description": "Experimental physics-backed flow chart. Packets move along authored node coordinates or link paths while a static throughput layer keeps the route quantities readable.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": "object",
+              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ]
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "default": "category10"
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ]
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "nodes": {
+              "type": "array",
+              "description": "Route nodes with explicit x/y geometry. x/y may be normalized 0-1 coordinates or chart pixels."
+            },
+            "links": {
+              "type": "array",
+              "description": "Flow links with source, target, throughput, and optional path geometry."
+            },
+            "edges": {
+              "type": "array",
+              "description": "Alias for links, for network-shaped inputs."
+            },
+            "data": {
+              "type": "array",
+              "description": "Alias for links when using chart-generator style data props."
+            },
+            "nodeIdAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Key for node unique identifier.",
+              "default": "id"
+            },
+            "nodeXAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Node x-coordinate. Use 0-1 normalized values by default.",
+              "default": "x"
+            },
+            "nodeYAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Node y-coordinate. Use 0-1 normalized values by default.",
+              "default": "y"
+            },
+            "sourceAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Link source node id.",
+              "default": "source"
+            },
+            "targetAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Link target node id.",
+              "default": "target"
+            },
+            "throughputAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Numeric throughput field that controls pipe width and packet count.",
+              "default": "value"
+            },
+            "pathAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Optional link path as [{x,y}, ...] or [[x,y], ...].",
+              "default": "path"
+            },
+            "coordinateMode": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "normalized",
+                "pixels"
+              ],
+              "description": "How node and path coordinates are mapped into the plot area.",
+              "default": "auto"
+            },
+            "particleRate": {
+              "type": "number",
+              "description": "Packets generated per throughput unit before maxParticles downsampling.",
+              "default": 0.16
+            },
+            "maxParticles": {
+              "type": "number",
+              "description": "Maximum live packets generated for the initial flow scene.",
+              "default": 180
+            },
+            "particleRadius": {
+              "type": "number",
+              "description": "Packet body radius in pixels.",
+              "default": 4
+            },
+            "flowSpeed": {
+              "type": "number",
+              "description": "Initial packet velocity along each authored route.",
+              "default": 90
+            },
+            "pathConstraint": {
+              "type": "string",
+              "enum": [
+                "path",
+                "none"
+              ],
+              "description": "Whether live packets are steered along authored route paths.",
+              "default": "path"
+            },
+            "reducedMotion": {
+              "type": "boolean",
+              "description": "Start packets on their route positions and pause the simulation.",
+              "default": false
+            },
+            "showStaticFlow": {
+              "type": "boolean",
+              "description": "Draw the route/pipe throughput layer behind animated packets.",
+              "default": true
+            },
+            "showNodeLabels": {
+              "type": "boolean",
+              "default": true
+            },
+            "showSensors": {
+              "type": "boolean",
+              "description": "Draw destination/node proximity sensors used for observation events.",
+              "default": false
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause the physics simulation.",
+              "default": false
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic seed for packet jitter and initial flow.",
+              "default": 1
+            }
+          },
+          "required": []
+        }
+      }
     }
   ]
 }

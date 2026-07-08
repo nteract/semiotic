@@ -41,6 +41,7 @@ const FAMILY_ORDER = [
   ["geo", "Geo"],
   ["value", "Value"],
   ["realtime", "Realtime"],
+  ["physics", "Physics"],
 ]
 
 function chartCatalog() {

@@ -1,0 +1,391 @@
+.plinko-example__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.plinko-example__intro p,
+.plinko-example__section-heading p,
+.plinko-example__board-header p,
+.plinko-example__inspection p {
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.plinko-example__intro p {
+  max-width: 780px;
+  margin: 8px 0 0;
+  font-size: 18px;
+}
+
+.plinko-example__eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.plinko-example__status {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+  gap: 7px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.plinko-example__status-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.plinko-example__status strong {
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.plinko-example__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+}
+
+.plinko-example__controls label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.plinko-example__controls select,
+.plinko-example__controls input[type="range"] {
+  min-height: 34px;
+}
+
+.plinko-example__controls select {
+  min-width: 190px;
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  padding: 6px 9px;
+}
+
+.plinko-example__segmented {
+  display: inline-flex;
+  min-height: 34px;
+  border: 1px solid var(--surface-3);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.plinko-example__segmented button,
+.plinko-example__button {
+  min-height: 34px;
+  border: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.plinko-example__segmented button {
+  width: 50px;
+  border-right: 1px solid var(--surface-3);
+}
+
+.plinko-example__segmented button:last-child {
+  border-right: 0;
+}
+
+.plinko-example__segmented button.is-active {
+  background: #233846;
+  color: #f7faf8;
+}
+
+.plinko-example__button {
+  min-width: 82px;
+  border: 1px solid var(--surface-3);
+  border-radius: 7px;
+  padding: 0 13px;
+}
+
+.plinko-example__range {
+  min-width: 210px;
+}
+
+.plinko-example__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.plinko-example__metric {
+  min-height: 84px;
+  padding: 14px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+}
+
+.plinko-example__metric span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.plinko-example__metric strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-primary);
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  line-height: 1.05;
+}
+
+.plinko-example__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.plinko-example__board,
+.plinko-example__inspection,
+.plinko-example__dotplot-section,
+.plinko-example__implementation {
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+}
+
+.plinko-example__board {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.plinko-example__board-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+  padding: 16px 16px 6px;
+}
+
+.plinko-example__board-header h2,
+.plinko-example__inspection h2,
+.plinko-example__section-heading h2,
+.plinko-example__implementation h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.plinko-example__board-header p {
+  margin: 6px 0 0;
+}
+
+.plinko-example__clock {
+  padding: 6px 9px;
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.plinko-example__chart-shell {
+  position: relative;
+  min-width: 640px;
+  padding: 0 10px 10px;
+}
+
+.plinko-example__chart-shell canvas,
+.plinko-example__chart-shell svg:not(.plinko-example__board-overlay) {
+  position: relative;
+  z-index: 1;
+}
+
+.plinko-example__board-overlay {
+  position: absolute;
+  inset: 0 auto auto 10px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.plinko-example__plot-bg {
+  fill: none;
+  stroke: #334b57;
+}
+
+.plinko-example__peg {
+  fill: #b7c9ca;
+  opacity: 0.42;
+}
+
+.plinko-example__threshold {
+  stroke: #b0454c;
+  stroke-width: 2.5;
+  stroke-dasharray: 7 5;
+}
+
+.plinko-example__threshold-label,
+.plinko-example__interval-label,
+.plinko-example__axis-label {
+  fill: var(--text-secondary);
+  font-family: sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.plinko-example__threshold-label {
+  fill: #8f3038;
+}
+
+.plinko-example__bin-line {
+  stroke: #b4c3c2;
+  stroke-width: 1;
+  opacity: 0.34;
+}
+
+.plinko-example__inspection {
+  padding: 16px;
+}
+
+.plinko-example__inspection dl {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.plinko-example__inspection dl div {
+  display: grid;
+  gap: 4px;
+}
+
+.plinko-example__inspection dt {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.plinko-example__inspection dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.plinko-example__dotplot-section,
+.plinko-example__implementation {
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.plinko-example__section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+
+.plinko-example__section-heading p {
+  max-width: 560px;
+  margin: 0;
+}
+
+.plinko-example__dotplot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.plinko-example__dotplot-bg {
+  fill: #f7f8f4;
+}
+
+.plinko-example__interval {
+  fill: #76b7b2;
+  opacity: 0.18;
+}
+
+.plinko-example__axis {
+  stroke: #667579;
+  stroke-width: 1;
+}
+
+.plinko-example__implementation h2 {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+  .plinko-example__intro,
+  .plinko-example__main,
+  .plinko-example__section-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .plinko-example__main {
+    display: grid;
+  }
+
+  .plinko-example__section-heading {
+    display: grid;
+  }
+
+  .plinko-example__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .plinko-example__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .plinko-example__status {
+    white-space: normal;
+  }
+
+  .plinko-example__controls {
+    align-items: stretch;
+  }
+
+  .plinko-example__controls label,
+  .plinko-example__range,
+  .plinko-example__button {
+    width: 100%;
+  }
+
+  .plinko-example__segmented {
+    width: 100%;
+  }
+
+  .plinko-example__segmented button {
+    flex: 1;
+  }
+}

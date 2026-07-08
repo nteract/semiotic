@@ -146,9 +146,12 @@ export const getCodeBlock = (
   pre,
   functionsString,
   framePropsString,
-  overrideRender
+  overrideRender,
+  importStatement
 ) => {
   const importTheme = `const theme = ${JSON.stringify(theme)}`
+  const resolvedImport =
+    importStatement || `import { ${frameName} } from "semiotic"`
 
   let render =
     overrideRender ||
@@ -156,7 +159,7 @@ export const getCodeBlock = (
   return <${frameName} {...frameProps} />
 }`
 
-  let codeblock = `import { ${frameName} } from "semiotic"
+  let codeblock = `${resolvedImport}
 ${pre || ""}${(pre && "\n") || ""}${importTheme}
 ${functionsString}${framePropsString}
 

@@ -26,6 +26,16 @@ import type { OrdinalSceneNode } from "../stream/ordinalTypes"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import type { SemioticTheme } from "../store/ThemeStore"
 import { renderChart } from "./renderToStaticSVG"
+import {
+  PhysicsPipelineStore,
+  type PhysicsPipelineConfig,
+  type PhysicsQueuedSpawn,
+  type PhysicsSpawnPacingOptions
+} from "../stream/physics/PhysicsPipelineStore"
+import {
+  physicsBodiesToXYSceneNodes,
+  type PhysicsSettledSceneOptions
+} from "../stream/physics/PhysicsSettledScene"
 
  
 // ReactDOMServer imported at top of file via ESM
@@ -66,6 +76,34 @@ export interface AnimatedGifFrameConfig {
   height: number
   /** Theme for styling */
   theme: SemioticTheme
+}
+
+export interface PhysicsGifFrameProps
+  extends Pick<PhysicsSettledSceneOptions, "bodyStyle" | "getBodyLabel"> {
+  config?: PhysicsPipelineConfig
+  initialSpawns?: PhysicsQueuedSpawn[]
+  initialSpawnPacing?: PhysicsSpawnPacingOptions
+  width?: number
+  height?: number
+  size?: [number, number]
+  theme?: SemioticTheme | string
+  title?: string
+  description?: string
+  background?: string
+  className?: string
+  idPrefix?: string
+}
+
+export interface PhysicsGifOptions
+  extends Pick<AnimatedGifOptions, "fps" | "frameCount" | "loop" | "scale" | "background"> {
+  /** Total simulated seconds to render. Used when `frameCount` is omitted. */
+  durationSeconds?: number
+  /** Fixed simulation steps advanced between rendered frames. Defaults to about `1 / fps`. */
+  stepsPerFrame?: number
+  /** Fixed timestep used for each simulation step. Defaults to `config.fixedDt` or 1/120. */
+  stepDt?: number
+  /** Include a frame after spawning at t=0 before advancing the simulation. */
+  includeInitialFrame?: boolean
 }
 
 // ── Frame generation ─────────────────────────────────────────────────
@@ -248,6 +286,101 @@ export function generateFrameSequence(
   })
 }
 
+function renderPhysicsFrameSVG(
+  store: PhysicsPipelineStore,
+  props: PhysicsGifFrameProps,
+  frameIndex: number
+): string {
+  const size = props.size ?? [props.width ?? 600, props.height ?? 400]
+  const theme = resolveTheme(props.theme)
+  const s = themeStyles(theme)
+  const bg = props.background || theme.colors.background
+  const idPrefix = props.idPrefix ?? "physics-gif"
+  const titleId = props.title ? `${idPrefix}-title-${frameIndex}` : undefined
+  const descId = props.description ? `${idPrefix}-desc-${frameIndex}` : undefined
+  const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
+  const sceneNodes = physicsBodiesToXYSceneNodes(store.readBodies(), {
+    bodyStyle: props.bodyStyle,
+    getBodyLabel: props.getBodyLabel
+  })
+
+  const svgEl = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className={props.className ?? "stream-physics-frame"}
+      width={size[0]}
+      height={size[1]}
+      viewBox={`0 0 ${size[0]} ${size[1]}`}
+      role="img"
+      aria-labelledby={labelledBy}
+      style={{ fontFamily: s.fontFamily }}
+    >
+      {props.title && <title id={titleId}>{props.title}</title>}
+      {props.description && <desc id={descId}>{props.description}</desc>}
+      {bg && bg !== "transparent" ? (
+        <rect x={0} y={0} width={size[0]} height={size[1]} fill={bg} />
+      ) : null}
+      <g id={`${idPrefix}-frame-${frameIndex}`}>
+        {sceneNodes.map((node, index) =>
+          xySceneNodeToSVG(node, index, `${idPrefix}-${frameIndex}`)
+        )}
+      </g>
+    </svg>
+  )
+
+  return ReactDOMServer.renderToStaticMarkup(svgEl)
+}
+
+/**
+ * Generate SVG frames by stepping a `PhysicsPipelineStore`.
+ *
+ * Unlike `generateFrameSVGs`, this does not slice data. It enqueues the supplied
+ * physics bodies once, advances the deterministic fixed-step simulation, and
+ * serializes each live snapshot. Use this for Galton boards, event-drop replay,
+ * piles, and custom physics scenes where sim time is the animation axis.
+ */
+export function generatePhysicsFrameSVGs(
+  props: PhysicsGifFrameProps,
+  options: PhysicsGifOptions = {}
+): string[] {
+  const {
+    fps = 12,
+    frameCount: frameCountProp,
+    durationSeconds = 2,
+    includeInitialFrame = true,
+    stepDt: stepDtProp,
+    stepsPerFrame: stepsPerFrameProp,
+    background
+  } = options
+  const fixedDt = Math.max(1 / 1000, stepDtProp ?? props.config?.fixedDt ?? 1 / 120)
+  const stepsPerFrame =
+    stepsPerFrameProp ??
+    Math.max(1, Math.round((1 / Math.max(1, fps)) / fixedDt))
+  const frameCount =
+    frameCountProp ?? Math.max(1, Math.ceil(durationSeconds * Math.max(1, fps)))
+  const frameProps = background ? { ...props, background } : props
+  const store = new PhysicsPipelineStore(props.config)
+
+  if (props.initialSpawns?.length) {
+    store.enqueue(props.initialSpawns, props.initialSpawnPacing)
+  }
+
+  const frames: string[] = []
+  if (includeInitialFrame) {
+    store.tick(0)
+    frames.push(renderPhysicsFrameSVG(store, frameProps, 0))
+  }
+
+  while (frames.length < frameCount) {
+    for (let step = 0; step < stepsPerFrame; step += 1) {
+      store.tick(fixedDt)
+    }
+    frames.push(renderPhysicsFrameSVG(store, frameProps, frames.length))
+  }
+
+  return frames
+}
+
 // ── SVG frame renderers ──────────────────────────────────────────────
 
 /** Resolve the effective background color — always concrete, never CSS vars */
@@ -419,8 +552,6 @@ export async function renderToAnimatedGif(
   const { fps = 12, loop = true, scale = 1, background } = options
   const width = props.width || 600
   const height = props.height || 400
-  const scaledW = Math.round(width * scale)
-  const scaledH = Math.round(height * scale)
 
   // Pass background through to frame renderers so it's a real <rect>, not CSS
   const propsWithBg = background ? { ...props, background } : props
@@ -430,6 +561,33 @@ export async function renderToAnimatedGif(
   if (svgFrames.length === 0) {
     throw new Error("No frames generated — check that data is not empty")
   }
+
+  return encodeSvgFramesToGif(svgFrames, width, height, { fps, loop, scale })
+}
+
+export async function renderPhysicsToAnimatedGif(
+  props: PhysicsGifFrameProps,
+  options: PhysicsGifOptions = {}
+): Promise<Buffer> {
+  const { fps = 12, loop = true, scale = 1 } = options
+  const size = props.size ?? [props.width ?? 600, props.height ?? 400]
+  const svgFrames = generatePhysicsFrameSVGs(props, options)
+  if (svgFrames.length === 0) {
+    throw new Error("No physics frames generated")
+  }
+
+  return encodeSvgFramesToGif(svgFrames, size[0], size[1], { fps, loop, scale })
+}
+
+async function encodeSvgFramesToGif(
+  svgFrames: string[],
+  width: number,
+  height: number,
+  options: Pick<AnimatedGifOptions, "fps" | "loop" | "scale"> = {}
+): Promise<Buffer> {
+  const { fps = 12, loop = true, scale = 1 } = options
+  const scaledW = Math.round(width * scale)
+  const scaledH = Math.round(height * scale)
 
   // Load optional deps dynamically at call time. The variable specifiers
   // defeat static bundler resolution so these Node-only raster/encoding

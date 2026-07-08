@@ -16,6 +16,7 @@ import {
   renderDashboard,
 } from "./renderToStaticSVG"
 import { renderToAnimatedGif, generateFrameSVGs, generateFrameSequence } from "./animatedGif"
+import { buildGaltonBoardPhysics } from "../charts/physics/physicsChartUtils"
 
 // ── Test data ────────────────────────────────────────────────────────
 
@@ -114,10 +115,28 @@ describe("SVG generation (end-to-end)", () => {
     const xy = renderToStaticSVG("xy", { chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y", size: [300, 200] } as StaticFrameProps)
     const ordinal = renderToStaticSVG("ordinal", { chartType: "bar", data: barData, oAccessor: "category", rAccessor: "value", size: [300, 200] } as StaticFrameProps)
     const network = renderToStaticSVG("network", { chartType: "force", edges: networkEdges, size: [300, 200] } as StaticFrameProps)
+    const physicsLayout = buildGaltonBoardPhysics({
+      data: [
+        { id: "p1", value: 1 },
+        { id: "p2", value: 2 }
+      ],
+      valueAccessor: "value",
+      bins: 2,
+      ballRadius: 4,
+      seed: 1,
+      size: [300, 200]
+    })
+    const physics = renderToStaticSVG("physics", {
+      config: physicsLayout.config,
+      initialSpawns: physicsLayout.initialSpawns,
+      projectionRows: physicsLayout.projectionRows,
+      size: [300, 200]
+    } as unknown as StaticFrameProps)
 
     expect(isValidSVG(xy)).toBe(true)
     expect(isValidSVG(ordinal)).toBe(true)
     expect(isValidSVG(network)).toBe(true)
+    expect(isValidSVG(physics)).toBe(true)
   })
 
   it("SVG includes accessibility attributes when title/description provided", () => {

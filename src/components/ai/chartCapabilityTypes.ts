@@ -35,6 +35,7 @@ export type ChartImportPath =
   | "semiotic/network"
   | "semiotic/geo"
   | "semiotic/realtime"
+  | "semiotic/physics"
   | "semiotic/value"
   | "semiotic/ai"
   | "semiotic"

@@ -20,8 +20,14 @@ export type {
 } from "./server/renderToStaticSVG"
 export type { LegendLayout } from "./types/legendTypes"
 
-export { renderToAnimatedGif, generateFrameSVGs, generateFrameSequence } from "./server/animatedGif"
-export type { AnimatedGifOptions } from "./server/animatedGif"
+export {
+  renderToAnimatedGif,
+  renderPhysicsToAnimatedGif,
+  generateFrameSVGs,
+  generatePhysicsFrameSVGs,
+  generateFrameSequence
+} from "./server/animatedGif"
+export type { AnimatedGifOptions, PhysicsGifFrameProps, PhysicsGifOptions } from "./server/animatedGif"
 
 export { resolveTheme, themeStyles } from "./server/themeResolver"
 export type { ThemeInput } from "./server/themeResolver"

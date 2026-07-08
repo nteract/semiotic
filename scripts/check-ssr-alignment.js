@@ -40,7 +40,7 @@ const VALIDATION_MAP = path.join(ROOT, "src/components/charts/shared/validationM
 
 // ── 1. Discover HOC chart names ────────────────────────────────────────
 
-const HOC_DIRS = ["xy", "ordinal", "network", "geo", "custom"]
+const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom"]
 const hocsOnDisk = new Set()
 
 for (const dir of HOC_DIRS) {
@@ -51,6 +51,10 @@ for (const dir of HOC_DIRS) {
     if (file === "index.ts" || file === "index.tsx") continue
     if (!file.endsWith(".tsx")) continue
     const name = file.replace(".tsx", "")
+    // Chart components are PascalCase by convention; camelCase `.tsx` files
+    // sitting alongside them (e.g. shared JSX helpers like physicsHocUtils)
+    // are not chart HOCs and shouldn't be scanned for SSR/validation entries.
+    if (!/^[A-Z]/.test(name)) continue
     hocsOnDisk.add(name)
   }
 }
@@ -99,6 +103,7 @@ const VALIDATION_EXCLUDED = new Set([
   // required `layout` function and recipe-specific `layoutConfig` are not
   // statically describable by the chart-spec registry.
   "XYCustomChart", "OrdinalCustomChart", "NetworkCustomChart", "GeoCustomChart",
+  "PhysicsCustomChart",
 ])
 
 // ── 5. Check alignment ────────────────────────────────────────────────

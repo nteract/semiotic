@@ -56,6 +56,7 @@ import Release371 from "./entries/release-3-7-1.jsx"
 import Release370 from "./entries/release-3-7-0.jsx"
 import Release380 from "./entries/release-3-8-0.jsx"
 import ReleaseGatesForFastPrs from "./entries/release-gates-for-fast-prs.jsx"
+import PhysicsThatSettlesIntoCharts from "./entries/physics-that-settles-into-charts.jsx"
 import Release360 from "./entries/release-3-6-0.jsx"
 import TalkTrackIntelligence from "./entries/talk-track-intelligence.jsx"
 import FromSpecToRuntime from "./entries/from-spec-to-runtime.jsx"
@@ -82,6 +83,7 @@ import AnInteroperabilityLayer from "./entries/an-interoperability-layer.jsx"
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  PhysicsThatSettlesIntoCharts,
   Release380,
   ReleaseGatesForFastPrs,
   FromSpecToRuntime,

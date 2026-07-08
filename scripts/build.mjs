@@ -135,6 +135,26 @@ async function createForceLayoutWorkerBundle({ minify = false } = {}) {
   console.log(`✅ force-layout worker created${minify ? " (minified)" : ""}`)
 }
 
+async function createPhysicsWorkerBundle({ minify = false } = {}) {
+  await tsupBuild({
+    entry: { physicsWorker: "src/components/stream/physics/physicsWorker.js" },
+    outDir: "dist",
+    target: "es2020",
+    platform: "browser",
+    format: "esm",
+    splitting: false,
+    bundle: true,
+    clean: false,
+    dts: false,
+    sourcemap: false,
+    minify: minify ? "terser" : false,
+    outExtension: () => ({ js: ".js" }),
+    external: explicitExternals,
+    silent: true,
+  })
+  console.log(`✅ physics worker created${minify ? " (minified)" : ""}`)
+}
+
 function buildDeclarations() {
   try {
     execSync("npx tsc -p tsconfig.declarations.json", { stdio: "inherit" })
@@ -153,7 +173,7 @@ function buildDeclarations() {
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
     "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
-    "semiotic-geo", "semiotic-themes", "semiotic-utils", "semiotic-recipes",
+    "semiotic-geo", "semiotic-physics", "semiotic-physics-matter", "semiotic-physics-rapier", "semiotic-themes", "semiotic-utils", "semiotic-recipes",
     "semiotic-experimental", "semiotic-value"
   ]
   for (const name of entryPoints) {
@@ -245,6 +265,9 @@ async function build() {
     { input: "src/components/semiotic-ordinal.ts", name: "ordinal", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-physics.ts", name: "physics", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-physics-matter.ts", name: "physics-matter", analyze: false, minify },
+    { input: "src/components/semiotic-physics-rapier.ts", name: "physics-rapier", analyze: false, minify },
     // `serverOnly: true` keeps the `"use client"` directive off the
     // server bundle. Without this, transitive imports of client-tagged
     // Stream Frame source files leak the directive into a Node-only
@@ -288,6 +311,7 @@ async function build() {
   console.log(`Bundling ${bundles.length} entry points with concurrency ${bundleConcurrency}`)
   await createBundlesWithConcurrency(bundles, bundleConcurrency)
   await createForceLayoutWorkerBundle({ minify })
+  await createPhysicsWorkerBundle({ minify })
 
   createLegacyAliases(bundles)
 

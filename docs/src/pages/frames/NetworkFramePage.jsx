@@ -108,7 +108,7 @@ export default function NetworkFramePage() {
         { label: "StreamNetworkFrame", path: "/frames/network-frame" },
       ]}
       prevPage={{ title: "StreamOrdinalFrame", path: "/frames/ordinal-frame" }}
-      nextPage={null}
+      nextPage={{ title: "StreamGeoFrame", path: "/frames/geo-frame" }}
     >
       <ComponentMeta
         componentName="StreamNetworkFrame"
@@ -176,7 +176,7 @@ export default function NetworkFramePage() {
 
       <h3 id="sankey">Sankey Diagram</h3>
       <p>
-        Use <code>chartType="sankey"</code> with weighted edges. The frame
+        Use <code>{'chartType="sankey"'}</code> with weighted edges. The frame
         computes the flow layout automatically.
       </p>
 
@@ -206,7 +206,7 @@ export default function NetworkFramePage() {
 
       <h3 id="tree">Tree Diagram</h3>
       <p>
-        Use <code>chartType="tree"</code> with a hierarchy root object
+        Use <code>{'chartType="tree"'}</code> with a hierarchy root object
         passed as <code>edges</code>. The frame lays out the tree automatically.
       </p>
 

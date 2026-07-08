@@ -254,7 +254,7 @@ export default function GeoFramePage() {
         { label: "StreamGeoFrame", path: "/frames/geo-frame" },
       ]}
       prevPage={{ title: "StreamNetworkFrame", path: "/frames/network-frame" }}
-      nextPage={null}
+      nextPage={{ title: "StreamPhysicsFrame", path: "/frames/physics-frame" }}
     >
       <ComponentMeta
         componentName="StreamGeoFrame"
@@ -272,13 +272,13 @@ export default function GeoFramePage() {
         StreamGeoFrame is the foundational frame for all geographic
         visualization. It renders GeoJSON areas, projected points, and
         connecting lines on canvas with d3-geo projections. Use it when the
-        HOC charts (ChoroplethMap, FlowMap, etc.) don't expose the control
+        HOC charts (ChoroplethMap, FlowMap, etc.) do not expose the control
         you need — custom area styling, mixed data layers, streaming geo
         data, or projection transforms.
       </p>
 
       <p>
-        Use <code>resolveReferenceGeography("world-110m")</code> to load
+        Use <code>{'resolveReferenceGeography("world-110m")'}</code> to load
         built-in world map basemaps asynchronously. The data comes from
         Natural Earth via the <code>world-atlas</code> package and is
         cached after first load.
@@ -351,7 +351,7 @@ export default function GeoFramePage() {
       <h2 id="push-api">Push API (Streaming)</h2>
 
       <p>
-        Set <code>runtimeMode="streaming"</code> and use the ref to push data
+        Set <code>{'runtimeMode="streaming"'}</code> and use the ref to push data
         incrementally. Combine with <code>decay</code> and <code>pulse</code>{" "}
         for realtime geographic visualization. The streaming demo above
         simulates earthquake events along real tectonic plate boundaries.
@@ -426,10 +426,10 @@ function StreamingMap() {
       </p>
 
       <ul>
-        <li><code>"world-110m"</code> — 110m resolution world countries (~108KB)</li>
-        <li><code>"world-50m"</code> — 50m resolution world countries (~540KB)</li>
-        <li><code>"land-110m"</code> — 110m land mass (no country boundaries)</li>
-        <li><code>"land-50m"</code> — 50m land mass</li>
+        <li><code>{"world-110m"}</code> — 110m resolution world countries (~108KB)</li>
+        <li><code>{"world-50m"}</code> — 50m resolution world countries (~540KB)</li>
+        <li><code>{"land-110m"}</code> — 110m land mass (no country boundaries)</li>
+        <li><code>{"land-50m"}</code> — 50m land mass</li>
       </ul>
 
       <CodeBlock

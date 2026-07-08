@@ -50,6 +50,13 @@ const RealtimeHistogramPage = lazy(() => import("./pages/charts/RealtimeHistogra
 const RealtimeSwarmChartPage = lazy(() => import("./pages/charts/RealtimeSwarmChartPage"))
 const RealtimeWaterfallChartPage = lazy(() => import("./pages/charts/RealtimeWaterfallChartPage"))
 const RealtimeHeatmapPage = lazy(() => import("./pages/charts/RealtimeHeatmapPage"))
+const GaltonBoardChartPage = lazy(() => import("./pages/charts/GaltonBoardChartPage"))
+const EventDropChartPage = lazy(() => import("./pages/charts/EventDropChartPage"))
+const PhysicsPileChartPage = lazy(() => import("./pages/charts/PhysicsPileChartPage"))
+const CollisionSwarmChartPage = lazy(() => import("./pages/charts/CollisionSwarmChartPage"))
+const NetworkHOPsChartPage = lazy(() => import("./pages/charts/NetworkHOPsChartPage"))
+const PhysicalFlowChartPage = lazy(() => import("./pages/charts/PhysicalFlowChartPage"))
+const PhysicsCustomChartPage = lazy(() => import("./pages/charts/PhysicsCustomChartPage"))
 const PieChartPage = lazy(() => import("./pages/charts/PieChartPage"))
 const DonutChartPage = lazy(() => import("./pages/charts/DonutChartPage"))
 const GaugeChartPage = lazy(() => import("./pages/charts/GaugeChartPage"))
@@ -71,6 +78,7 @@ const StreamXYFramePage = lazy(() => import("./pages/frames/XYFramePage"))
 const StreamOrdinalFramePage = lazy(() => import("./pages/frames/OrdinalFramePage"))
 const StreamNetworkFramePage = lazy(() => import("./pages/frames/NetworkFramePage"))
 const StreamGeoFramePage = lazy(() => import("./pages/frames/GeoFramePage"))
+const StreamPhysicsFramePage = lazy(() => import("./pages/frames/PhysicsFramePage"))
 const AxesPage = lazy(() => import("./pages/features/AxesPage"))
 const AnnotationsPage = lazy(() => import("./pages/features/AnnotationsPage"))
 const AnnotationDesignPage = lazy(() => import("./pages/features/AnnotationDesignPage"))
@@ -108,6 +116,7 @@ const CliMcpPage = lazy(() => import("./pages/features/CliMcpPage"))
 const StreamingSystemModelPage = lazy(() => import("./pages/features/StreamingSystemModelPage"))
 const PerformancePage = lazy(() => import("./pages/features/PerformancePage"))
 const PushApiPage = lazy(() => import("./pages/features/PushApiPage"))
+const WhenPhysicsPage = lazy(() => import("./pages/features/WhenPhysicsPage"))
 const CustomChartsOverviewPage = lazy(
   () => import("./pages/custom-charts/CustomChartsOverviewPage"),
 )
@@ -152,6 +161,10 @@ const RadarPlotPage = lazy(() => import("./pages/cookbook/RadarPlotPage"))
 const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
 const ClimateAnomalyExamplePage = lazy(() => import("./pages/examples/ClimateAnomalyExamplePage"))
+const WatermarksExamplePage = lazy(() => import("./pages/examples/WatermarksExamplePage"))
+const PlinkoQuantileDotplotExamplePage = lazy(
+  () => import("./pages/examples/PlinkoQuantileDotplotExamplePage"),
+)
 const ClimateRadialWeatherExamplePage = lazy(
   () => import("./pages/examples/ClimateRadialWeatherExamplePage"),
 )
@@ -271,6 +284,7 @@ const DistanceCartogramPlayground = lazy(
   () => import("./pages/playground/DistanceCartogramPlayground"),
 )
 const AnimationPlayground = lazy(() => import("./pages/playground/AnimationPlayground"))
+const PhysicsFrameSandboxPage = lazy(() => import("./pages/dev/PhysicsFrameSandboxPage"))
 
 const semioticLogo = new URL("../public/assets/img/semiotic.png", import.meta.url).href
 const semioticLogoDark = new URL("../public/assets/img/semiotic-darkmode.png", import.meta.url).href
@@ -354,6 +368,11 @@ export default function DocsApp() {
           <ExamplesLayout>
             <Routes>
               <Route path="examples" element={<ExamplesOverviewPage />} />
+              <Route path="examples/watermarks" element={<WatermarksExamplePage />} />
+              <Route
+                path="examples/plinko-quantile-dotplot"
+                element={<PlinkoQuantileDotplotExamplePage />}
+              />
               <Route path="examples/climate-anomaly" element={<ClimateAnomalyExamplePage />} />
               <Route
                 path="examples/climate-radial-weather"
@@ -590,6 +609,9 @@ export default function DocsApp() {
               {/* Blog routes are registered in the early-return branch above
                 (`isBlogRoute`) so the docs chrome is stripped. */}
 
+              {/* Internal development sandboxes. These are intentionally not in navData. */}
+              <Route path="dev/physics-frame" element={<PhysicsFrameSandboxPage />} />
+
               {/* Playground routes */}
               <Route path="playground" element={<Outlet />}>
                 <Route
@@ -632,6 +654,7 @@ export default function DocsApp() {
                 <Route path="ordinal-frame" element={<StreamOrdinalFramePage />} />
                 <Route path="network-frame" element={<StreamNetworkFramePage />} />
                 <Route path="geo-frame" element={<StreamGeoFramePage />} />
+                <Route path="physics-frame" element={<StreamPhysicsFramePage />} />
                 {/* StreamXYFrame page removed — content merged into chart pages */}
               </Route>
 
@@ -659,6 +682,7 @@ export default function DocsApp() {
                 <Route path="streaming-system-model" element={<StreamingSystemModelPage />} />
                 <Route path="performance" element={<PerformancePage />} />
                 <Route path="push-api" element={<PushApiPage />} />
+                <Route path="when-physics" element={<WhenPhysicsPage />} />
                 <Route
                   path="gofish-layouts"
                   element={<Navigate to="/interoperability/gofish" replace />}
@@ -821,6 +845,14 @@ export default function DocsApp() {
                 <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
                 <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
                 <Route path="realtime-heatmap" element={<RealtimeHeatmapPage />} />
+                {/* Physics Charts */}
+                <Route path="galton-board-chart" element={<GaltonBoardChartPage />} />
+                <Route path="event-drop-chart" element={<EventDropChartPage />} />
+                <Route path="physics-pile-chart" element={<PhysicsPileChartPage />} />
+                <Route path="collision-swarm-chart" element={<CollisionSwarmChartPage />} />
+                <Route path="network-hops-chart" element={<NetworkHOPsChartPage />} />
+                <Route path="physical-flow-chart" element={<PhysicalFlowChartPage />} />
+                <Route path="physics-custom-chart" element={<PhysicsCustomChartPage />} />
                 {/* Categorical Charts */}
                 <Route path="bar-chart" element={<BarChartPage />} />
                 <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />

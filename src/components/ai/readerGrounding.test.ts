@@ -78,4 +78,108 @@ describe("buildReaderGrounding", () => {
     expect(g.description.annotations).toBeUndefined()
     expect(g.description.text.startsWith("The author has marked")).toBe(false)
   })
+
+  it("adds physics simulation parameters and aggregate state to physics grounding", () => {
+    const g = buildReaderGrounding("PhysicsCustomChart", {
+      projectionRows: [
+        { id: "triage", label: "Triage lane", count: 3 },
+        { id: "review", label: "Review lane", count: 5 },
+      ],
+      physics: {
+        snapshot: {
+          simulationState: "settled",
+          elapsedSeconds: 2.5,
+          paused: false,
+          visible: true,
+          queue: [],
+          liveBodyOrder: ["a", "b", "c", "d", "e"],
+          activeSensorPairs: ["sensor-review::a"],
+          config: {
+            bodyLimit: 100,
+            eviction: "oldest",
+            fixedDt: 1 / 120,
+            maxSubsteps: 8,
+            timeScale: 1,
+            kernel: {
+              seed: 42,
+              gravity: { x: 0, y: 820 },
+            },
+          },
+          sediment: [
+            { id: "older", label: "Older packets", count: 2, total: 6 },
+          ],
+          world: {
+            bodies: [
+              { id: "a", sleeping: true },
+              { id: "b", sleeping: true },
+              { id: "c", sleeping: true },
+              { id: "d", sleeping: true },
+              { id: "e", sleeping: true },
+            ],
+            colliders: [
+              { id: "floor" },
+              { id: "sensor-triage", sensor: true },
+              { id: "sensor-review", sensor: true },
+            ],
+            springs: [],
+            activeSensors: ["sensor-review"],
+          },
+        },
+        evidence: {
+          settled: true,
+          stepsRun: 240,
+        },
+      },
+    })
+
+    expect(g.physics?.simulation).toMatchObject({
+      state: "settled",
+      settled: true,
+      seed: 42,
+      liveBodies: 5,
+      sleepingBodies: 5,
+      queued: 0,
+    })
+    expect(g.physics?.simulation.gravity).toEqual({ x: 0, y: 820 })
+    expect(g.physics?.geometry).toMatchObject({
+      colliders: 3,
+      sensors: 2,
+      springs: 0,
+      activeSensorPairs: 1,
+    })
+    expect(g.physics?.aggregates).toMatchObject({
+      totalCount: 8,
+      populatedCount: 2,
+      leader: { label: "Review lane", count: 5 },
+    })
+    expect(g.physics?.sediment).toMatchObject({
+      bins: 1,
+      count: 2,
+      total: 6,
+      leader: { label: "Older packets", count: 2, total: 6 },
+    })
+    expect(g.description.text).toContain("8 bodies")
+    expect(g.text).toContain("Physics simulation: settled")
+    expect(g.text).toContain("seed 42")
+    expect(g.text).toContain("Largest is Review lane with 5")
+  })
+
+  it("can omit physics grounding for token-budget mode", () => {
+    const g = buildReaderGrounding(
+      "PhysicsPileChart",
+      {
+        projectionRows: [{ id: "a", label: "A", count: 2 }],
+        physics: { snapshot: { simulationState: "settled" } },
+      },
+      { physics: false }
+    )
+    expect(g.physics).toBeUndefined()
+    expect(g.text).not.toContain("Physics simulation:")
+  })
+
+  it("does not invent a physics runtime block without runtime evidence", () => {
+    const g = buildReaderGrounding("PhysicsPileChart", {})
+    expect(g.physics).toBeUndefined()
+    expect(g.text).not.toContain("Physics simulation:")
+  })
 })

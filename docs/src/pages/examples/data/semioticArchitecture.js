@@ -12,7 +12,7 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     id: "semiotic-core",
     label: "Visible Semiotic",
     detail:
-      "The public React-facing system where data inputs, four frame models, shared capabilities, and value components meet.",
+      "The public React-facing system where data inputs, five frame models, shared capabilities, and value components meet.",
     layer: "trunk",
   },
   {
@@ -70,6 +70,15 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     detail: "Projected areas, symbols, flows, cartograms, and custom geographic layouts.",
     layer: "frame",
     cluster: "geo",
+    parent: "semiotic-core",
+  },
+  {
+    id: "frame-physics",
+    label: "Physics Frame",
+    detail:
+      "Process-driven bodies, colliders, sensors, observation events, and settled physics scenes.",
+    layer: "frame",
+    cluster: "physics",
     parent: "semiotic-core",
   },
 
@@ -298,6 +307,73 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     order: 2,
   },
 
+  // Physics crown
+  {
+    id: "hoc-galton-board",
+    label: "GaltonBoardChart",
+    detail: "Falling samples settle into binned distributions with pegs, bounds, and counts.",
+    layer: "leaf",
+    cluster: "physics",
+    parent: "frame-physics",
+    order: 0,
+  },
+  {
+    id: "hoc-event-drop",
+    label: "EventDropChart",
+    detail: "Arrival windows, watermarks, late-event signals, and paced falling events.",
+    layer: "leaf",
+    cluster: "physics",
+    parent: "frame-physics",
+    order: 1,
+  },
+  {
+    id: "hoc-physics-pile",
+    label: "PhysicsPileChart",
+    detail: "Categorical piles where bodies settle into bounded category regions.",
+    layer: "leaf",
+    cluster: "physics",
+    parent: "frame-physics",
+    order: 2,
+  },
+  {
+    id: "hoc-collision-swarm",
+    label: "CollisionSwarmChart",
+    detail: "Collision-resolved swarms over continuous or grouped positions.",
+    layer: "leaf",
+    cluster: "physics",
+    parent: "frame-physics",
+    order: 3,
+  },
+  {
+    id: "hoc-physical-flow",
+    label: "PhysicalFlowChart",
+    detail:
+      "Packets move along route paths with sensors, accessible flow regions, and optional fluid envelopes.",
+    layer: "leaf",
+    cluster: "physics",
+    parent: "frame-physics",
+    order: 4,
+  },
+  {
+    id: "hoc-network-hops",
+    label: "NetworkHOPsChart",
+    detail: "Hops through network paths presented as a physics-adjacent process chart.",
+    layer: "leaf",
+    cluster: "physics",
+    parent: "frame-physics",
+    order: 5,
+  },
+  {
+    id: "hoc-physics-custom",
+    label: "PhysicsCustomChart",
+    detail:
+      "Custom physics layouts that keep the StreamPhysicsFrame accessibility and observation surface.",
+    layer: "leaf",
+    cluster: "physics",
+    parent: "frame-physics",
+    order: 6,
+  },
+
   {
     id: "value-components",
     label: "Value components",
@@ -445,6 +521,15 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     parent: "feature-bough",
     order: 14,
   },
+  {
+    id: "feature-physics-sensors",
+    label: "Physics + sensors",
+    detail:
+      "Bodies, colliders, barriers, proximity sensors, observations, and settled-state summaries.",
+    layer: "fruit",
+    parent: "feature-bough",
+    order: 15,
+  },
 
   // Hidden implementation roots. `supports` becomes dashed rhizome edges.
   {
@@ -458,10 +543,10 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "root-pipelines",
     label: "Pipeline stores",
-    detail: "XY, ordinal, network, and geo stores incrementally derive layout-ready state.",
+    detail: "XY, ordinal, network, geo, and physics stores incrementally derive layout-ready state.",
     layer: "root",
     order: 1,
-    supports: ["frame-xy", "frame-ordinal", "frame-network", "frame-geo"],
+    supports: ["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics"],
   },
   {
     id: "root-scene",
@@ -469,7 +554,14 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     detail: "Stable scene primitives separate data processing, layout, paint, and interaction.",
     layer: "root",
     order: 2,
-    supports: ["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "feature-custom-layout"],
+    supports: [
+      "frame-xy",
+      "frame-ordinal",
+      "frame-network",
+      "frame-geo",
+      "frame-physics",
+      "feature-custom-layout",
+    ],
   },
   {
     id: "root-render",
@@ -482,10 +574,16 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "root-hit",
     label: "Hit testing + focus",
-    detail: "Quadtrees, frame-specific canvas hit testers, keyboard navigation, and focus rings.",
+    detail:
+      "Quadtrees, body hit testing, frame-specific canvas hit testers, keyboard navigation, and focus rings.",
     layer: "root",
     order: 4,
-    supports: ["feature-tooltips", "feature-observation", "feature-accessibility"],
+    supports: [
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-physics-sensors",
+    ],
   },
   {
     id: "root-state",
@@ -517,6 +615,7 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
       "hoc-realtime-histogram",
       "hoc-realtime-swarm",
       "hoc-realtime-waterfall",
+      "hoc-event-drop",
     ],
   },
   {
@@ -541,6 +640,7 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
       "hoc-ordinal-custom",
       "hoc-network-custom",
       "hoc-geo-custom",
+      "hoc-physics-custom",
     ],
   },
   {
@@ -559,6 +659,25 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     layer: "root",
     order: 11,
     supports: ["feature-container", "feature-canvas-svg"],
+  },
+  {
+    id: "root-physics",
+    label: "Physics engine",
+    detail:
+      "Built-in physics kernel, worker execution, body budgets, sediment, sensors, and external engine adapters.",
+    layer: "root",
+    order: 12,
+    supports: [
+      "frame-physics",
+      "feature-physics-sensors",
+      "hoc-galton-board",
+      "hoc-event-drop",
+      "hoc-physics-pile",
+      "hoc-collision-swarm",
+      "hoc-physical-flow",
+      "hoc-network-hops",
+      "hoc-physics-custom",
+    ],
   },
 ]
 
@@ -585,6 +704,49 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // deliberate recursion: tracing it highlights the very NetworkCustomChart,
 // custom layout, and shared-state machinery you are looking at.
 export const SEMIOTIC_EXAMPLE_PROFILES = [
+  {
+    id: "watermarks",
+    label: "Watermarks, Made Physical",
+    shortLabel: "Watermarks",
+    path: "/examples/watermarks",
+    note:
+      "A physics-backed EventDropChart turns event-time windows into bounded bins: the watermark closes old windows, late arrivals collect in a gutter, and observation/status copy keeps the process readable.",
+    uses: [
+      "input-static",
+      "hoc-event-drop",
+      "feature-accessors",
+      "feature-custom-overlays",
+      "feature-stream-windows",
+      "feature-physics-sensors",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "plinko-quantile-dotplot",
+    label: "Plinko Quantile Dotplot",
+    shortLabel: "Plinko Quantiles",
+    path: "/examples/plinko-quantile-dotplot",
+    note:
+      "Posterior draws become semantic tokens, fall through a GaltonBoardChart process, and settle into a quantile dotplot with physics structure, hover, accessibility, and generated status narration.",
+    uses: [
+      "input-static",
+      "hoc-galton-board",
+      "feature-accessors",
+      "feature-custom-overlays",
+      "feature-physics-sensors",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
   {
     id: "climate-radial-weather",
     label: "Brushable Weather Rings",
@@ -915,7 +1077,7 @@ export const SEMIOTIC_EXAMPLE_PROFILES = [
     label: "The Octopus: It has its tentacles in everything",
     shortLabel: "The Octopus",
     path: "/examples/octopus-metaphor",
-    note: "A history of the octopus as a system metaphor, rebuilt as a NetworkCustomChart, a GeoCustomChart, and a final NetworkCustomChart that maps Semiotic's four frame families to their HOCs.",
+    note: "A history of the octopus as a system metaphor, rebuilt as a NetworkCustomChart, a GeoCustomChart, and a final NetworkCustomChart that maps Semiotic's five frame families, including physics, to their HOCs.",
     uses: [
       "input-static",
       "hoc-network-custom",

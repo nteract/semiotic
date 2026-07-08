@@ -10,6 +10,7 @@ import {
   renderNetworkToStaticSVG,
   renderGeoToStaticSVG
 } from "./renderToStaticSVG"
+import { buildGaltonBoardPhysics } from "../charts/physics/physicsChartUtils"
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -359,6 +360,32 @@ describe("renderToStaticSVG dispatch", () => {
     expect(countMatches(svg, /<rect /g)).toBeGreaterThanOrEqual(2)
   })
 
+  it("dispatches physics frame type correctly", () => {
+    const layout = buildGaltonBoardPhysics({
+      data: [
+        { id: "a", value: 1 },
+        { id: "b", value: 2 },
+        { id: "c", value: 3 }
+      ],
+      valueAccessor: "value",
+      bins: 3,
+      ballRadius: 4,
+      seed: 1,
+      size: [300, 180]
+    })
+
+    const svg = renderToStaticSVG("physics", {
+      config: layout.config,
+      initialSpawns: layout.initialSpawns,
+      projectionRows: layout.projectionRows,
+      size: [300, 180],
+      title: "Physics distribution"
+    } as unknown as StaticFrameProps)
+
+    expect(svg).toContain("stream-physics-frame")
+    expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(3)
+  })
+
   it("throws for unknown frame type", () => {
     expect(() => renderToStaticSVG("unknown" as StaticFrameType, {} as StaticFrameProps)).toThrow(
       /Unknown frame type/
@@ -480,7 +507,7 @@ describe("renderGeoToStaticSVG - reference string error", () => {
       renderGeoToStaticSVG({
         areas: "world-110m",
         size: [600, 400]
-      } as StaticGeoProps)
+      } as unknown as StaticGeoProps)
     ).toThrow(/resolveReferenceGeography/)
   })
 
@@ -489,7 +516,7 @@ describe("renderGeoToStaticSVG - reference string error", () => {
       renderGeoToStaticSVG({
         areas: "world-50m",
         size: [600, 400]
-      } as StaticGeoProps)
+      } as unknown as StaticGeoProps)
     ).toThrow(/world-50m/)
   })
 })

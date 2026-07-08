@@ -100,6 +100,157 @@ export type {
   ObservablePlotChannel as UnstableObservablePlotChannel
 } from "./data/fromObservablePlot"
 
+// StreamPhysicsFrame M1 substrate. These are intentionally low-level and
+// unstable while the frame/HOC contract is proven in the internal sandbox.
+export {
+  DEFAULT_PHYSICS_CANVAS_THEME as unstable_DEFAULT_PHYSICS_CANVAS_THEME,
+  physicsCanvasColorWithAlpha as unstable_physicsCanvasColorWithAlpha,
+  resolvePhysicsCanvasTheme as unstable_resolvePhysicsCanvasTheme
+} from "./stream/physics/PhysicsCanvasTheme"
+export {
+  buildPhysicsSettledEvidence as unstable_buildPhysicsSettledEvidence
+} from "./stream/physics/PhysicsEvidence"
+export {
+  buildPhysicsSettledScene as unstable_buildPhysicsSettledScene,
+  physicsBodiesToXYSceneNodes as unstable_physicsBodiesToXYSceneNodes,
+  physicsBodyToXYSceneNode as unstable_physicsBodyToXYSceneNode
+} from "./stream/physics/PhysicsSettledScene"
+export {
+  renderPhysicsSettledSVG as unstable_renderPhysicsSettledSVG
+} from "./stream/physics/PhysicsSettledSVG"
+export {
+  collidersFromPhysicsAnnotations as unstable_collidersFromPhysicsAnnotations,
+  resolvePhysicsBodyAnnotations as unstable_resolvePhysicsBodyAnnotations,
+  summarizePhysicsAnnotations as unstable_summarizePhysicsAnnotations
+} from "./stream/physics/PhysicsAnnotations"
+export {
+  BuiltInPhysicsEngineAdapter as unstable_BuiltInPhysicsEngineAdapter,
+  createDefaultPhysicsEngineAdapter as unstable_createDefaultPhysicsEngineAdapter
+} from "./stream/physics/PhysicsEngineAdapter"
+export {
+  PhysicsPipelineStore as unstable_PhysicsPipelineStore,
+  collidersFromPlotBounds as unstable_collidersFromPlotBounds,
+  collidersFromXScaleBins as unstable_collidersFromXScaleBins,
+  schedulePhysicsSpawns as unstable_schedulePhysicsSpawns
+} from "./stream/physics/PhysicsPipelineStore"
+export {
+  evaluatePhysicsBodyBudget as unstable_evaluatePhysicsBodyBudget
+} from "./stream/physics/PhysicsBodyBudget"
+export {
+  PhysicsSedimentAccumulator as unstable_PhysicsSedimentAccumulator,
+  sedimentHeightfield as unstable_sedimentHeightfield
+} from "./stream/physics/PhysicsSediment"
+export {
+  StreamPhysicsFrame as unstable_StreamPhysicsFrame
+} from "./stream/physics/StreamPhysicsFrame"
+export {
+  PhysicsCustomChart as unstable_PhysicsCustomChart
+} from "./charts/physics/PhysicsCustomChart"
+export {
+  buildPhysicsNavigationTree as unstable_buildPhysicsNavigationTree,
+  buildPhysicsSettledProjection as unstable_buildPhysicsSettledProjection,
+  physicsObservationAnnouncement as unstable_physicsObservationAnnouncement
+} from "./stream/physics/PhysicsAccessibility"
+export type {
+  PhysicsBoundsColliderOptions as UnstablePhysicsBoundsColliderOptions,
+  PhysicsObservationEvent as UnstablePhysicsObservationEvent,
+  PhysicsObservationEventType as UnstablePhysicsObservationEventType,
+  PhysicsObservationRecord as UnstablePhysicsObservationRecord,
+  PhysicsPipelineConfig as UnstablePhysicsPipelineConfig,
+  PhysicsPipelineControlSurface as UnstablePhysicsPipelineControlSurface,
+  PhysicsPipelineObservationOptions as UnstablePhysicsPipelineObservationOptions,
+  PhysicsPipelineQueuedSpawnSnapshot as UnstablePhysicsPipelineQueuedSpawnSnapshot,
+  PhysicsPipelineSnapshot as UnstablePhysicsPipelineSnapshot,
+  PhysicsPipelineTickResult as UnstablePhysicsPipelineTickResult,
+  PhysicsPlotBounds as UnstablePhysicsPlotBounds,
+  PhysicsQueuedSpawn as UnstablePhysicsQueuedSpawn,
+  PhysicsSensorObservationConfig as UnstablePhysicsSensorObservationConfig,
+  PhysicsSimulationState as UnstablePhysicsSimulationState,
+  PhysicsSpawnPacing as UnstablePhysicsSpawnPacing,
+  PhysicsSpawnPacingOptions as UnstablePhysicsSpawnPacingOptions,
+  PhysicsSpawnSpringSpec as UnstablePhysicsSpawnSpringSpec,
+  PhysicsSpawnTimeAccessor as UnstablePhysicsSpawnTimeAccessor,
+  PhysicsXBinColliderOptions as UnstablePhysicsXBinColliderOptions
+} from "./stream/physics/PhysicsPipelineStore"
+export type {
+  PhysicsBodyBudgetAction as UnstablePhysicsBodyBudgetAction,
+  PhysicsBodyBudgetDecision as UnstablePhysicsBodyBudgetDecision,
+  PhysicsBodyBudgetInput as UnstablePhysicsBodyBudgetInput,
+  PhysicsBodyBudgetOptions as UnstablePhysicsBodyBudgetOptions,
+  PhysicsBodyBudgetState as UnstablePhysicsBodyBudgetState
+} from "./stream/physics/PhysicsBodyBudget"
+export type {
+  PhysicsSedimentAccessor as UnstablePhysicsSedimentAccessor,
+  PhysicsSedimentBinSnapshot as UnstablePhysicsSedimentBinSnapshot,
+  PhysicsSedimentColumn as UnstablePhysicsSedimentColumn,
+  PhysicsSedimentConfig as UnstablePhysicsSedimentConfig,
+  PhysicsSedimentHeightfieldOptions as UnstablePhysicsSedimentHeightfieldOptions,
+  PhysicsSedimentTotals as UnstablePhysicsSedimentTotals,
+  PhysicsSedimentValueAccessor as UnstablePhysicsSedimentValueAccessor,
+  RunningStatsSnapshot as UnstableRunningStatsSnapshot
+} from "./stream/physics/PhysicsSediment"
+export type {
+  PhysicsEngineAdapter as UnstablePhysicsEngineAdapter,
+  PhysicsEngineAdapterFactory as UnstablePhysicsEngineAdapterFactory,
+  PhysicsEngineAdapterInput as UnstablePhysicsEngineAdapterInput,
+  PhysicsEngineCapabilities as UnstablePhysicsEngineCapabilities,
+  PhysicsEngineDeterminism as UnstablePhysicsEngineDeterminism
+} from "./stream/physics/PhysicsEngineAdapter"
+export type {
+  PhysicsColliderShape as UnstablePhysicsColliderShape,
+  PhysicsColliderSpec as UnstablePhysicsColliderSpec
+} from "./stream/physics/PhysicsKernel"
+export type {
+  PhysicsCanvasTheme as UnstablePhysicsCanvasTheme
+} from "./stream/physics/PhysicsCanvasTheme"
+export type {
+  PhysicsBodySelection as UnstablePhysicsBodySelection,
+  PhysicsBodyStyleContext as UnstablePhysicsBodyStyleContext,
+  StreamPhysicsExecutionState as UnstableStreamPhysicsExecutionState,
+  StreamPhysicsFrameHandle as UnstableStreamPhysicsFrameHandle,
+  StreamPhysicsFrameProps as UnstableStreamPhysicsFrameProps
+} from "./stream/physics/StreamPhysicsFrame"
+export type {
+  PhysicsCustomChartProps as UnstablePhysicsCustomChartProps,
+  PhysicsCustomLayout as UnstablePhysicsCustomLayout,
+  PhysicsCustomLayoutContext as UnstablePhysicsCustomLayoutContext,
+  PhysicsCustomLayoutResult as UnstablePhysicsCustomLayoutResult,
+  PhysicsCustomSpawnDatumResult as UnstablePhysicsCustomSpawnDatumResult
+} from "./charts/physics/PhysicsCustomChart"
+export type {
+  PhysicsExecution as UnstablePhysicsExecution
+} from "./stream/physics/PhysicsWorkerProtocol"
+export type {
+  PhysicsAnnotationAxis as UnstablePhysicsAnnotationAxis,
+  PhysicsAnnotationColliderOptions as UnstablePhysicsAnnotationColliderOptions,
+  PhysicsAnnotationRole as UnstablePhysicsAnnotationRole,
+  PhysicsAnnotationSummary as UnstablePhysicsAnnotationSummary,
+  PhysicsBodyAnnotation as UnstablePhysicsBodyAnnotation,
+  PhysicsResolvedBodyAnnotation as UnstablePhysicsResolvedBodyAnnotation,
+  PhysicsStaticAnnotation as UnstablePhysicsStaticAnnotation
+} from "./stream/physics/PhysicsAnnotations"
+export type {
+  PhysicsEvidenceBinCount as UnstablePhysicsEvidenceBinCount,
+  PhysicsSettledEvidence as UnstablePhysicsSettledEvidence,
+  PhysicsSettledEvidenceOptions as UnstablePhysicsSettledEvidenceOptions
+} from "./stream/physics/PhysicsEvidence"
+export type {
+  PhysicsSettledScene as UnstablePhysicsSettledScene,
+  PhysicsSettledSceneOptions as UnstablePhysicsSettledSceneOptions
+} from "./stream/physics/PhysicsSettledScene"
+export type {
+  PhysicsSettledSVGOptions as UnstablePhysicsSettledSVGOptions,
+  PhysicsSettledSVGRender as UnstablePhysicsSettledSVGRender
+} from "./stream/physics/PhysicsSettledSVG"
+export type {
+  PhysicsNavigationTreeOptions as UnstablePhysicsNavigationTreeOptions,
+  PhysicsObservationAnnouncementOptions as UnstablePhysicsObservationAnnouncementOptions,
+  PhysicsProjectionBodySummary as UnstablePhysicsProjectionBodySummary,
+  PhysicsProjectionContainerSpec as UnstablePhysicsProjectionContainerSpec,
+  PhysicsSettledProjectionOptions as UnstablePhysicsSettledProjectionOptions,
+  PhysicsSettledProjectionRow as UnstablePhysicsSettledProjectionRow
+} from "./stream/physics/PhysicsAccessibility"
+
 export type {
   BuiltInIntentId as UnstableBuiltInIntentId,
   PortableIntentId as UnstablePortableIntentId,

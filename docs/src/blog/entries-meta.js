@@ -20,6 +20,17 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "physics-that-settles-into-charts",
+    title: "Physics that settles into charts",
+    subtitle:
+      "Semiotic's physics frame adds motion only where movement carries the data claim: posterior samples fall into a quantile dotplot, event-time watermarks close real windows, and every animation still has a static projection, accessible readout, server export, and conversation-arc trace.",
+    author: "Elijah Meeks",
+    date: "2026-07-07",
+    tags: ["case-study", "physics", "realtime"],
+    excerpt:
+      "The physics frame is not a particle-effect feature. It is a chart frame for cases where motion is the mechanism: sampling, lateness, queueing, routing, collision, and accumulation. The guardrail is simple: every physics chart must settle into a readable chart, expose the same state to readers and agents, and be exportable without asking the browser to perform the story live.",
+  },
+  {
     slug: "release-3-8-0",
     title: "Semiotic 3.8.0",
     subtitle:

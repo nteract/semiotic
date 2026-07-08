@@ -140,17 +140,165 @@ const KIND_PHRASE: Record<string, string> = {
   ChoroplethMap: "choropleth map", ProportionalSymbolMap: "proportional-symbol map",
   FlowMap: "flow map", DistanceCartogram: "distance cartogram",
   BigNumber: "single value",
+  StreamPhysicsFrame: "physics stream frame", EventDropChart: "event-drop physics chart",
+  GaltonBoardChart: "Galton board chart", PhysicsPileChart: "physics pile chart",
+  CollisionSwarmChart: "collision swarm chart",
+  NetworkHOPsChart: "network hypothetical outcome plot",
+  PhysicalFlowChart: "physical flow chart",
+  PhysicsCustomChart: "custom physics chart",
 }
 
 // XY_FAMILY / BAR_FAMILY / PART_TO_WHOLE / DISTRIBUTION + roles/seriesField/fmtDim
 // are shared with navigationTree via ./chartRoles. NETWORK is description-only.
 const NETWORK = new Set(["ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram"])
+const PHYSICS = new Set(["StreamPhysicsFrame", "EventDropChart", "GaltonBoardChart", "PhysicsPileChart", "CollisionSwarmChart", "NetworkHOPsChart", "PhysicalFlowChart", "PhysicsCustomChart"])
+
+interface PhysicsProjectionRow {
+  label: string
+  count: number
+  secondary?: number
+  secondaryLabel?: string
+  observed?: number
+}
 
 function humanizeComponent(name: string): string {
   return name.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()
 }
 function kindPhrase(component: string): string {
   return KIND_PHRASE[component] || `${humanizeComponent(component)} chart`
+}
+
+function finiteNumber(value: unknown): number | undefined {
+  const n = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN
+  return Number.isFinite(n) ? n : undefined
+}
+
+function physicsProjectionRows(props: Datum, fmtNum: (n: number) => string): PhysicsProjectionRow[] | null {
+  const physics = props.physics && typeof props.physics === "object" ? (props.physics as Datum) : null
+  const settled = props.settledProjection && typeof props.settledProjection === "object"
+    ? (props.settledProjection as Datum)
+    : null
+  const candidates = [
+    props.settledProjectionRows,
+    props.projectionRows,
+    settled?.rows,
+    physics?.settledProjectionRows,
+    physics?.projectionRows,
+    physics?.settledProjection && typeof physics.settledProjection === "object"
+      ? (physics.settledProjection as Datum).rows
+      : undefined,
+  ]
+  const rawRows = candidates.find((candidate) => Array.isArray(candidate))
+  if (!Array.isArray(rawRows)) return null
+
+  return rawRows
+    .map((row, index): PhysicsProjectionRow | null => {
+      if (!row || typeof row !== "object") return null
+      const d = row as Datum
+      const count = finiteNumber(d.count ?? d.value ?? d.total ?? d.bodies ?? d.events)
+      if (count == null) return null
+      const rawLabel = d.label ?? d.id ?? d.name ?? `container ${index + 1}`
+      const secondary = finiteNumber(d.secondary ?? d.secondaryCount)
+      const observed = finiteNumber(d.observed ?? d.observedCount)
+      return {
+        label: fmtDim(rawLabel, fmtNum),
+        count,
+        ...(secondary != null ? { secondary } : {}),
+        ...(typeof d.secondaryLabel === "string" && d.secondaryLabel ? { secondaryLabel: d.secondaryLabel } : {}),
+        ...(observed != null ? { observed } : {}),
+      }
+    })
+    .filter((row): row is PhysicsProjectionRow => row != null)
+}
+
+function physicsRowNoun(component: string): string {
+  if (component === "EventDropChart") return "time window"
+  if (component === "GaltonBoardChart") return "bin"
+  if (component === "CollisionSwarmChart") return "group lane"
+  if (component === "NetworkHOPsChart") return "sample summary"
+  if (component === "PhysicalFlowChart") return "flow node"
+  return "container"
+}
+
+function physicsUnitNoun(component: string): string {
+  if (component === "EventDropChart") return "event"
+  if (component === "GaltonBoardChart") return "sample"
+  if (component === "CollisionSwarmChart") return "point"
+  if (component === "NetworkHOPsChart") return "edge"
+  if (component === "PhysicalFlowChart") return "packet"
+  return "body"
+}
+
+function physicsL1Sentence(component: string, kind: string): string {
+  if (component === "EventDropChart") {
+    return "An event-drop physics chart that collapses moving events into a settled projection by event-time window."
+  }
+  if (component === "GaltonBoardChart") {
+    return "A Galton board chart that collapses falling samples into a settled histogram projection."
+  }
+  if (component === "PhysicsPileChart") {
+    return "A physics pile chart that collapses moving bodies into a settled bar-style projection by container."
+  }
+  if (component === "CollisionSwarmChart") {
+    return "A collision swarm chart that separates overlapping points while preserving their quantitative axis position."
+  }
+  if (component === "NetworkHOPsChart") {
+    return "A network hypothetical outcome plot that keeps node positions anchored while sampled edges switch between possible graph realizations."
+  }
+  if (component === "PhysicalFlowChart") {
+    return "A physical flow chart that keeps authored routes visible while packet bodies show throughput and proximity events."
+  }
+  return `A ${kind} whose accessible reading is the settled projection rather than individual trajectories.`
+}
+
+function formatPercent(part: number, total: number): string {
+  if (!(total > 0)) return "0%"
+  const pct = (part / total) * 100
+  return `${pct >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10}%`
+}
+
+function applyPhysicsLevels(
+  component: string,
+  kind: string,
+  rows: PhysicsProjectionRow[] | null,
+  levels: { l1?: string; l2?: string; l3?: string; l4?: string },
+  want: Set<DescribeLevel>,
+  fmtNum: (n: number) => string
+): void {
+  const rowNoun = physicsRowNoun(component)
+  const unitNoun = physicsUnitNoun(component)
+  if (want.has("l1")) levels.l1 = physicsL1Sentence(component, kind)
+  if (!want.has("l2") && !want.has("l3")) return
+  if (!rows || rows.length === 0) {
+    if (want.has("l2")) levels.l2 = "No settled projection is loaded yet."
+    return
+  }
+
+  const total = rows.reduce((sum, row) => sum + row.count, 0)
+  const populated = rows.filter((row) => row.count > 0).sort((a, b) => b.count - a.count)
+  const leader = populated[0] ?? rows.slice().sort((a, b) => b.count - a.count)[0]
+  if (!leader) return
+  const secondaryTotal = rows.reduce((sum, row) => sum + (row.secondary ?? 0), 0)
+  const secondaryLabel = rows.find((row) => row.secondaryLabel)?.secondaryLabel ?? "secondary"
+
+  if (want.has("l2")) {
+    if (populated.length === 0) {
+      levels.l2 = `The settled projection contains ${fmtNum(total)} ${plural(total, unitNoun)} across ${rows.length} ${plural(rows.length, rowNoun)}; no ${plural(2, rowNoun)} are non-empty yet.`
+    } else {
+      const secondarySentence = secondaryTotal > 0
+        ? ` ${fmtNum(secondaryTotal)} ${plural(secondaryTotal, unitNoun)} ${secondaryTotal === 1 ? "is" : "are"} marked ${secondaryLabel}.`
+        : ""
+      levels.l2 = `The settled projection contains ${fmtNum(total)} ${plural(total, unitNoun)} across ${rows.length} ${plural(rows.length, rowNoun)}; ${populated.length} ${plural(populated.length, rowNoun)} ${populated.length === 1 ? "is" : "are"} non-empty. The largest ${rowNoun} is ${leader.label} with ${fmtNum(leader.count)} ${plural(leader.count, unitNoun)}.${secondarySentence}`
+    }
+  }
+
+  if (want.has("l3") && total > 0 && populated.length > 0) {
+    const runnerUp = populated.find((row) => row !== leader)
+    const share = formatPercent(leader.count, total)
+    levels.l3 = runnerUp
+      ? `The settled projection is most concentrated in ${leader.label}, which holds ${fmtNum(leader.count)} ${plural(leader.count, unitNoun)} (${share}); ${runnerUp.label} follows with ${fmtNum(runnerUp.count)} ${plural(runnerUp.count, unitNoun)}.`
+      : `The settled projection is concentrated in ${leader.label}, which holds all ${fmtNum(leader.count)} ${plural(leader.count, unitNoun)}.`
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -539,6 +687,7 @@ export function describeChart(
   const kind = kindPhrase(component)
   const data = Array.isArray(props.data) ? (props.data as Datum[]) : null
   const series = seriesField(props)
+  const physicsProjection = PHYSICS.has(component) ? physicsProjectionRows(props, fmtNum) : null
 
   const { measure, measureFallback, dimension, dimensionFallback } = roles(component, props)
   // Only string accessors are human-readable labels. Function accessors (common
@@ -549,9 +698,12 @@ export function describeChart(
   const dimensionName = typeof dimension === "string" && dimension ? dimension : dimensionFallback
 
   const levels: { l1?: string; l2?: string; l3?: string; l4?: string } = {}
+  if (PHYSICS.has(component)) {
+    applyPhysicsLevels(component, kind, physicsProjection, levels, want, fmtNum)
+  }
 
   // ── L1: encoding ───────────────────────────────────────────────────────
-  if (want.has("l1")) {
+  if (want.has("l1") && !PHYSICS.has(component)) {
     if (XY_FAMILY.has(component) || BAR_FAMILY.has(component)) {
       levels.l1 = `A ${kind} of ${measureName} by ${dimensionName}` + (series ? `, split by ${series}.` : ".")
     } else if (PART_TO_WHOLE.has(component)) {
@@ -840,5 +992,6 @@ function capitalize(s: string): string {
 
 /** Pluralize a count noun for user-facing text ("1 edge", "2 edges"). */
 function plural(n: number, noun: string): string {
+  if (n !== 1 && noun === "body") return "bodies"
   return n === 1 ? noun : `${noun}s`
 }

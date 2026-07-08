@@ -52,6 +52,11 @@ const BUILDING_BLOCKS = [
     what: "The four escape-hatch HOCs, the layout-function contract, the scene primitives, and the full recipe gallery (waffle, calendar, flextree, dagre, marimekko, bullet, parallel coordinates, isometric landmarks).",
   },
   {
+    title: "PhysicsCustomChart",
+    path: "/charts/physics-custom-chart",
+    what: "The physics escape hatch: a layout function returns bodies, barriers, proximity sensors, overlays, and observation metadata while the chart still exposes data-oriented props and realtime push methods.",
+  },
+  {
     title: "Glyph Marks",
     path: "/custom-charts/glyph-marks",
     what: "The per-datum shape channel: the symbol scene-node, d3-shape glyphs, and the composite-glyph model (a filled base mark + an optional stroked inner icon).",

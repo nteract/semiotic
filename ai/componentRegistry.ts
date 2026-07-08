@@ -11,7 +11,8 @@ import {
   Histogram, ViolinPlot, RidgelinePlot,
   PieChart, DonutChart, GaugeChart, FunnelChart, LikertChart, SwimlaneChart,
   ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram,
-  TemporalHistogram
+  TemporalHistogram,
+  EventDropChart, GaltonBoardChart, PhysicsPileChart, CollisionSwarmChart, NetworkHOPsChart, PhysicalFlowChart
 } from "semiotic/ai"
 
 import {
@@ -20,7 +21,7 @@ import {
 
 export interface RegistryEntry {
   component: ComponentType<any>
-  category: "xy" | "ordinal" | "network" | "geo"
+  category: "xy" | "ordinal" | "network" | "geo" | "physics"
 }
 
 export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
@@ -68,4 +69,11 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   ProportionalSymbolMap: { component: ProportionalSymbolMap, category: "geo" },
   FlowMap: { component: FlowMap, category: "geo" },
   DistanceCartogram: { component: DistanceCartogram, category: "geo" },
+
+  GaltonBoardChart: { component: GaltonBoardChart, category: "physics" },
+  EventDropChart: { component: EventDropChart, category: "physics" },
+  PhysicsPileChart: { component: PhysicsPileChart, category: "physics" },
+  CollisionSwarmChart: { component: CollisionSwarmChart, category: "physics" },
+  NetworkHOPsChart: { component: NetworkHOPsChart, category: "physics" },
+  PhysicalFlowChart: { component: PhysicalFlowChart, category: "physics" },
 }
