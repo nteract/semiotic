@@ -51,6 +51,10 @@ describe("physics chart builders", () => {
     expect(
       layout.projectionRows.reduce((sum, row) => sum + row.value, 0)
     ).toBe(3)
+    expect(layout.metadata).toMatchObject({
+      kind: "galton-board",
+      valueExtent: [1, 3]
+    })
   })
 
   it("generates deterministic mechanical Galton samples from branch probability", () => {
@@ -424,17 +428,21 @@ describe("physics chart HOCs", () => {
 
   it("renders GaltonBoardChart and exposes row push", () => {
     const ref = React.createRef<RealtimeFrameHandle>()
-    const { container, getAllByTestId, getByTestId } = render(
+    const { container, getAllByTestId, getByTestId, getByText } = render(
       <GaltonBoardChart
         ref={ref}
         data={[{ id: "a", value: 1 }]}
         valueAccessor="value"
+        valueExtent={[0, 10]}
+        referenceLines={{ value: 5, label: "threshold" }}
         size={[240, 160]}
       />
     )
 
     expect(container.querySelector(".stream-physics-frame canvas")).not.toBeNull()
     expect(getByTestId("galton-board-structure-overlay")).not.toBeNull()
+    expect(getByTestId("galton-board-reference-line")).not.toBeNull()
+    expect(getByText("threshold")).toBeTruthy()
     expect(getAllByTestId("galton-board-bin-wall").length).toBeGreaterThan(0)
     ref.current?.push({ id: "b", value: 2 })
     expect(ref.current?.getData().some((datum) => datum.id === "b")).toBe(true)

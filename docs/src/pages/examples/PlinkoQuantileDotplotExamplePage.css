@@ -222,26 +222,9 @@
 }
 
 .plinko-example__chart-shell canvas,
-.plinko-example__chart-shell svg:not(.plinko-example__board-overlay) {
+.plinko-example__chart-shell svg {
   position: relative;
   z-index: 1;
-}
-
-.plinko-example__board-overlay {
-  position: absolute;
-  inset: 0 auto auto 10px;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.plinko-example__plot-bg {
-  fill: none;
-  stroke: #334b57;
-}
-
-.plinko-example__peg {
-  fill: #b7c9ca;
-  opacity: 0.42;
 }
 
 .plinko-example__threshold {
@@ -261,12 +244,6 @@
 
 .plinko-example__threshold-label {
   fill: #8f3038;
-}
-
-.plinko-example__bin-line {
-  stroke: #b4c3c2;
-  stroke-width: 1;
-  opacity: 0.34;
 }
 
 .plinko-example__inspection {

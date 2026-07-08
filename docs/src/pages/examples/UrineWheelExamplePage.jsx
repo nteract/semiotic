@@ -328,8 +328,9 @@ function urineWheelLayout(ctx) {
     diagById.set(d.id, { ...d, angle: meanAngle, ...polarToXY(meanAngle, rInner, { center }) })
   }
 
-  // Transparent hit targets — the source of keyboard nav, the data table,
-  // annotation anchoring, and onObservation. The visible art is the overlay.
+  // Semantic overlay pattern: transparent scene nodes carry keyboard nav,
+  // accessible rows, annotation anchors, and observations; the manuscript
+  // art stays in overlays where it can be fully bespoke.
   const sceneNodes = [
     ...colors.map((c) => {
       const p = colorById.get(c.id)
@@ -344,10 +345,9 @@ function urineWheelLayout(ctx) {
   return {
     sceneNodes,
     sceneEdges: [],
-    // All visible art lives in the overlay; the scene nodes are invisible hit
-    // targets. The no-op restyle opts into the style-only selection path, so
-    // hover / locked-filter changes swap the overlay's selection context
-    // without re-running the radial layout or rebuilding the quadtree.
+    // A style-only restyle keeps hover / locked-filter changes in the shared
+    // selection context. The overlay re-renders from that context without
+    // re-running the radial layout or rebuilding the quadtree.
     restyle: () => undefined,
     overlays: (
       <WheelOverlay

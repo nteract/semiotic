@@ -3,10 +3,7 @@ import { EventDropChart, buildEventDropPhysics } from "semiotic/physics"
 import CodeBlock from "../../components/CodeBlock"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
-import {
-  PhysicsArcStatus,
-  usePhysicsExampleConversationArc,
-} from "./PhysicsExampleConversationArc"
+import { PhysicsArcStatus, usePhysicsExampleConversationArc } from "./PhysicsExampleConversationArc"
 import "./WatermarksExamplePage.css"
 
 const CHART_HEIGHT = 400
@@ -34,7 +31,8 @@ const SCENARIOS = [
     id: "calm",
     label: "Calm stream",
     seed: 31,
-    description: "mostly ordered arrivals with a few old events still visible as the watermark advances",
+    description:
+      "mostly ordered arrivals with a few old events still visible as the watermark advances",
     events: [
       { id: "calm-01", eventTime: 3, arrivalTime: 2, source: "frontend", value: 1 },
       { id: "calm-02", eventTime: 8, arrivalTime: 7, source: "api", value: 1 },
@@ -72,7 +70,8 @@ const SCENARIOS = [
     id: "skew",
     label: "Sensor skew",
     seed: 59,
-    description: "one source reports old event times while the rest of the stream keeps progressing",
+    description:
+      "one source reports old event times while the rest of the stream keeps progressing",
     events: [
       { id: "skew-01", eventTime: 4, arrivalTime: 4, source: "edge-a", value: 1 },
       { id: "skew-02", eventTime: 18, arrivalTime: 17, source: "edge-b", value: 1 },
@@ -128,9 +127,7 @@ function randomBetween(min, max) {
 }
 
 function extentFor(events, accessor, fallback = [0, 1]) {
-  const values = events
-    .map((event) => Number(event?.[accessor]))
-    .filter(Number.isFinite)
+  const values = events.map((event) => Number(event?.[accessor])).filter(Number.isFinite)
   if (!values.length) return fallback
   return [Math.min(...values), Math.max(...values)]
 }
@@ -156,7 +153,15 @@ function chartArea(width, height) {
   }
 }
 
-function buildModel(events, arrivedEvents, windowSize, currentTime, watermarkStrategy, chartSize, seed) {
+function buildModel(
+  events,
+  arrivedEvents,
+  windowSize,
+  currentTime,
+  watermarkStrategy,
+  chartSize,
+  seed,
+) {
   const eventTimeExtent = extentFor(events, "eventTime", [0, windowSize])
   const closureFrontier = currentTime - watermarkStrategy
   const colliderWatermark = closureFrontier - WATERMARK_EPSILON
@@ -172,7 +177,8 @@ function buildModel(events, arrivedEvents, windowSize, currentTime, watermarkStr
     timeExtent: eventTimeExtent,
   })
   const metadata = layout.metadata ?? {}
-  const windowStart = metadata.windowStart ?? Math.floor(eventTimeExtent[0] / windowSize) * windowSize
+  const windowStart =
+    metadata.windowStart ?? Math.floor(eventTimeExtent[0] / windowSize) * windowSize
   const countsByWindow = arrivedEvents.reduce((counts, event) => {
     const eventTime = Number(event?.eventTime)
     if (!Number.isFinite(eventTime)) return counts
@@ -219,7 +225,12 @@ function WatermarkOverlay({ width, height, model }) {
   const plot = chartArea(width, height)
   const metadata = model.metadata ?? {}
   const layoutPlot = metadata.plot ?? plot
-  const gutter = metadata.gutter ?? { x: layoutPlot.x, y: layoutPlot.y, width: 0, height: layoutPlot.height }
+  const gutter = metadata.gutter ?? {
+    x: layoutPlot.x,
+    y: layoutPlot.y,
+    width: 0,
+    height: layoutPlot.height,
+  }
   const windowPlot = metadata.windowPlot ?? layoutPlot
   const rowWidth = windowPlot.width / Math.max(1, model.windowCount)
   const bandTop = plot.y + plot.height * 0.14
@@ -291,29 +302,25 @@ function WatermarkOverlay({ width, height, model }) {
               y={bandTop}
               width={rowWidth}
               height={floorY - bandTop}
-              className={closed ? "watermarks-example__window is-closed" : "watermarks-example__window"}
+              className={
+                closed ? "watermarks-example__window is-closed" : "watermarks-example__window"
+              }
             />
-            <line
-              x1={x}
-              x2={x}
-              y1={bandTop}
-              y2={floorY}
-              className="watermarks-example__divider"
-            />
-            {closed ? (
-              (metadata.lidSegments ?? [])
-                .filter((segment) => segment.windowIndex === index)
-                .map((segment) => (
-                  <line
-                    key={segment.id}
-                    x1={segment.x1}
-                    x2={segment.x2}
-                    y1={segment.y1}
-                    y2={segment.y2}
-                    className="watermarks-example__lid"
-                  />
-                ))
-            ) : null}
+            <line x1={x} x2={x} y1={bandTop} y2={floorY} className="watermarks-example__divider" />
+            {closed
+              ? (metadata.lidSegments ?? [])
+                  .filter((segment) => segment.windowIndex === index)
+                  .map((segment) => (
+                    <line
+                      key={segment.id}
+                      x1={segment.x1}
+                      x2={segment.x2}
+                      y1={segment.y1}
+                      y2={segment.y2}
+                      className="watermarks-example__lid"
+                    />
+                  ))
+              : null}
             <text
               x={x + rowWidth / 2}
               y={bandTop + 18}
@@ -334,7 +341,11 @@ function WatermarkOverlay({ width, height, model }) {
               x={x + rowWidth / 2}
               y={floorY + 30}
               textAnchor="middle"
-              className={closed ? "watermarks-example__axis-label is-closed" : "watermarks-example__axis-label is-open"}
+              className={
+                closed
+                  ? "watermarks-example__axis-label is-closed"
+                  : "watermarks-example__axis-label is-open"
+              }
             >
               {closed ? "closed" : "open"}
             </text>
@@ -381,11 +392,7 @@ function WatermarkOverlay({ width, height, model }) {
       >
         current {seconds(model.currentTime)}
       </text>
-      <text
-        x={windowPlot.x + 8}
-        y={layoutPlot.y - 7}
-        className="watermarks-example__rule-label"
-      >
+      <text x={windowPlot.x + 8} y={layoutPlot.y - 7} className="watermarks-example__rule-label">
         {ruleLabel}
       </text>
     </svg>
@@ -467,10 +474,7 @@ export default function WatermarksExamplePage() {
   const chartWidth = Math.max(360, Math.min(1060, hostWidth))
   const chartSize = useMemo(() => [chartWidth, CHART_HEIGHT], [chartWidth])
   const scenario = SCENARIOS.find((item) => item.id === scenarioId) ?? SCENARIOS[0]
-  const events = useMemo(
-    () => [...scenario.events, ...injectedEvents],
-    [scenario, injectedEvents],
-  )
+  const events = useMemo(() => [...scenario.events, ...injectedEvents], [scenario, injectedEvents])
   const timeline = useMemo(() => timelineFor(events), [events])
   const arrivedEvents = useMemo(
     () => events.filter((event) => event.arrivalTime <= currentTime),
@@ -487,7 +491,15 @@ export default function WatermarksExamplePage() {
         chartSize,
         scenario.seed,
       ),
-    [arrivedEvents, chartSize, committed.window, currentTime, events, scenario.seed, watermarkStrategy],
+    [
+      arrivedEvents,
+      chartSize,
+      committed.window,
+      currentTime,
+      events,
+      scenario.seed,
+      watermarkStrategy,
+    ],
   )
   // The board rebuilds when the time controls change because lids are physical
   // colliders, not just a live color classification.
@@ -501,8 +513,7 @@ export default function WatermarksExamplePage() {
     committed.window,
     committed.speed,
   ].join(":")
-  const pendingChanges =
-    pendingSpeed !== committed.speed || pendingWindow !== committed.window
+  const pendingChanges = pendingSpeed !== committed.speed || pendingWindow !== committed.window
   const arc = usePhysicsExampleConversationArc({
     sessionId: "physics-watermarks-example",
     arcId: "physics-watermarks",
@@ -520,9 +531,7 @@ export default function WatermarksExamplePage() {
       if (datum?.timeliness === "late") return LATE_KEY
       if (datum?.timeliness === "current") return ONTIME_KEY
       const eventTime = Number(datum?.eventTime)
-      return Number.isFinite(eventTime) && eventTime < model.currentTime
-        ? LATE_KEY
-        : ONTIME_KEY
+      return Number.isFinite(eventTime) && eventTime < model.currentTime ? LATE_KEY : ONTIME_KEY
     },
     [model.currentTime],
   )
@@ -571,14 +580,14 @@ export default function WatermarksExamplePage() {
 
   const replay = useCallback(() => {
     recordArcEdit(["simulation"], { action: "replay", scenarioId })
-      const nextTimeline = timelineFor(scenario.events)
-      const nextCurrentTime = clamp(currentTime, nextTimeline.arrivalMin, nextTimeline.arrivalMax)
-      setCommitted({ speed: pendingSpeed, window: pendingWindow })
-      setInjectedEvents([])
-      setCurrentTime(nextCurrentTime)
-      setSelectedEvent(null)
-      setPaused(false)
-      setReplayNonce((current) => current + 1)
+    const nextTimeline = timelineFor(scenario.events)
+    const nextCurrentTime = clamp(currentTime, nextTimeline.arrivalMin, nextTimeline.arrivalMax)
+    setCommitted({ speed: pendingSpeed, window: pendingWindow })
+    setInjectedEvents([])
+    setCurrentTime(nextCurrentTime)
+    setSelectedEvent(null)
+    setPaused(false)
+    setReplayNonce((current) => current + 1)
   }, [currentTime, pendingSpeed, pendingWindow, recordArcEdit, scenario.events, scenarioId])
 
   const changeScenario = useCallback(
@@ -632,7 +641,15 @@ export default function WatermarksExamplePage() {
       count: burst.length,
       scenarioId,
     })
-  }, [committed.window, currentTime, injectedEvents, model.watermarkFrontier, recordArcEdit, scenario.events, scenarioId])
+  }, [
+    committed.window,
+    currentTime,
+    injectedEvents,
+    model.watermarkFrontier,
+    recordArcEdit,
+    scenario.events,
+    scenarioId,
+  ])
 
   const injectOnTimeArrival = useCallback(() => {
     const [minTime, maxTime] = model.eventTimeExtent
@@ -691,9 +708,53 @@ export default function WatermarksExamplePage() {
   const selected = selectedEvent ?? arrivedEvents[arrivedEvents.length - 1]
   const selectedClass = selected ? classify(selected) : ONTIME_KEY
 
-  const foregroundGraphics = useMemo(
+  const watermarkForegroundGraphics = useMemo(
     () => <WatermarkOverlay width={chartSize[0]} height={chartSize[1]} model={model} />,
     [chartSize, model],
+  )
+  const eventDropFrameProps = useMemo(
+    () => ({
+      // The EventDropChart owns placement, colliders, settled rows, and
+      // accessibility. This foreground layer only explains the window state
+      // with SVG chrome anchored to the same physics geometry.
+      foregroundGraphics: watermarkForegroundGraphics,
+      onTick: handleTick,
+      onBodyPointerDown: (body) => {
+        const datum = body?.datum ?? null
+        recordArcEdit(["selectedEvent"], {
+          eventId: datum?.id ?? null,
+          source: datum?.source,
+        })
+        setSelectedEvent(datum)
+      },
+      suspendWhenHidden: false,
+    }),
+    [handleTick, recordArcEdit, watermarkForegroundGraphics],
+  )
+
+  const renderEventDropChart = ({ attachRefs = false } = {}) => (
+    <div className="watermarks-example__chart-shell" ref={attachRefs ? shellRef : undefined}>
+      <EventDropChart
+        key={chartKey}
+        ref={attachRefs ? chartRef : undefined}
+        data={arrivedEvents}
+        timeAccessor="eventTime"
+        arrivalAccessor="arrivalTime"
+        colorBy={classify}
+        windows={{ size: committed.window }}
+        watermark={{ value: model.watermark }}
+        timeExtent={model.eventTimeExtent}
+        timeScale={committed.speed}
+        ballRadius={BALL_RADIUS}
+        seed={scenario.seed}
+        size={chartSize}
+        paused={paused}
+        showProjection={false}
+        title="Watermark replay"
+        description={`Event-drop watermark replay: ${model.onTime} on time, ${model.late} late with a ${seconds(model.watermarkStrategy)} watermark strategy`}
+        frameProps={eventDropFrameProps}
+      />
+    </div>
   )
 
   return (
@@ -823,8 +884,12 @@ export default function WatermarksExamplePage() {
             <button type="button" onClick={replay}>
               {pendingChanges ? "Replay (apply settings)" : "Replay"}
             </button>
-            <button type="button" onClick={injectOnTimeArrival}>Inject on-time arrival</button>
-            <button type="button" onClick={injectLateBurst}>Inject late burst</button>
+            <button type="button" onClick={injectOnTimeArrival}>
+              Inject on-time arrival
+            </button>
+            <button type="button" onClick={injectLateBurst}>
+              Inject late burst
+            </button>
             <button type="button" onClick={clearInjected} disabled={injectedEvents.length === 0}>
               Clear injected
             </button>
@@ -833,50 +898,20 @@ export default function WatermarksExamplePage() {
           <PhysicsArcStatus arc={arc} />
 
           <p className="watermarks-example__scenario-note">
-            <span className="watermarks-example__swatch watermarks-example__swatch--ontime" /> current event
-            <span className="watermarks-example__swatch watermarks-example__swatch--late" /> late event
-            &mdash; {scenario.label}: {scenario.description}.
+            <span className="watermarks-example__swatch watermarks-example__swatch--ontime" />{" "}
+            current event
+            <span className="watermarks-example__swatch watermarks-example__swatch--late" /> late
+            event &mdash; {scenario.label}: {scenario.description}.
           </p>
 
-          <div className="watermarks-example__chart-shell" ref={shellRef}>
-            <EventDropChart
-              key={chartKey}
-              ref={chartRef}
-              data={arrivedEvents}
-              timeAccessor="eventTime"
-              arrivalAccessor="arrivalTime"
-              colorBy={classify}
-              windows={{ size: committed.window }}
-              watermark={{ value: model.watermark }}
-              timeExtent={model.eventTimeExtent}
-              timeScale={committed.speed}
-              ballRadius={BALL_RADIUS}
-              seed={scenario.seed}
-              size={chartSize}
-              paused={paused}
-              showProjection={false}
-              title="Watermark replay"
-              description={`Event-drop watermark replay: ${model.onTime} on time, ${model.late} late with a ${seconds(model.watermarkStrategy)} watermark strategy`}
-              frameProps={{
-                foregroundGraphics,
-                onTick: handleTick,
-                onBodyPointerDown: (body) => {
-                  const datum = body?.datum ?? null
-                  recordArcEdit(["selectedEvent"], {
-                    eventId: datum?.id ?? null,
-                    source: datum?.source,
-                  })
-                  setSelectedEvent(datum)
-                },
-                suspendWhenHidden: false,
-              }}
-            />
-          </div>
+          {renderEventDropChart({ attachRefs: true })}
         </section>
 
         <section className="watermarks-example__readouts">
           <div className="watermarks-example__metric">
-            <strong>{arrivedEvents.length}/{events.length}</strong>
+            <strong>
+              {arrivedEvents.length}/{events.length}
+            </strong>
             <span>arrived / total</span>
           </div>
           <div className="watermarks-example__metric">
@@ -896,7 +931,9 @@ export default function WatermarksExamplePage() {
             <span>current event time</span>
           </div>
           <div className="watermarks-example__metric">
-            <strong>{runtime.live}/{runtime.queued}</strong>
+            <strong>
+              {runtime.live}/{runtime.queued}
+            </strong>
             <span>live / queued</span>
           </div>
           <div className="watermarks-example__metric">
@@ -947,8 +984,9 @@ export default function WatermarksExamplePage() {
             <p>
               Data rows carry an event time and an arrival time. Current event time and the
               watermark strategy decide which windows have lids; bodies drop over their event-time
-              x-position, and closed windows add angled physics colliders. The runtime state comes from{" "}
-              <code>frameProps.onTick</code> &mdash; the same numbers an agent or test would read.
+              x-position, and closed windows add angled physics colliders. The runtime state comes
+              from <code>frameProps.onTick</code> &mdash; the same numbers an agent or test would
+              read.
             </p>
           </div>
           <CodeBlock language="jsx">{implementationCode}</CodeBlock>

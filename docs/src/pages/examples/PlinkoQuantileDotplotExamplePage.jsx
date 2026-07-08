@@ -78,10 +78,13 @@ const colorByOutcome = (d) => (d.value >= threshold ? "win" : "loss")
   key={\`\${scenario.id}-\${tokenCount}-\${runId}\`}
   data={drops}
   valueAccessor="value"
+  valueExtent={posteriorDomain}
   colorBy={colorByOutcome}
   bins={13}
   ballRadius={8}
   seed={scenario.seed}
+  referenceLines={{ value: threshold, label: \`\${threshold.toFixed(1)}%\` }}
+  frameProps={{ onTick, onBodyPointerDown }}
 />`
 
 function clamp(value, min, max) {
@@ -330,7 +333,7 @@ export default function PlinkoQuantileDotplotExamplePage() {
     tokenSet.shown,
   ])
 
-  const frameProps = useMemo(
+  const physicsRuntimeFrameProps = useMemo(
     () => ({
       workerBodyThreshold: 90,
       onTick,
@@ -476,21 +479,23 @@ export default function PlinkoQuantileDotplotExamplePage() {
               key={boardKey}
               data={drops}
               valueAccessor="value"
+              valueExtent={posteriorDomain}
               colorBy={colorByOutcome}
               bins={13}
               ballRadius={8}
               seed={scenario.seed + runId}
               paused={paused}
+              referenceLines={{
+                value: threshold,
+                label: formatPercent(threshold),
+                color: "#b0454c",
+                strokeDasharray: "7 5",
+                strokeWidth: 2.5,
+              }}
               size={boardSize}
               title={`${scenario.label} posterior Plinko`}
               description={`Posterior Plinko: ${Math.round(summary.probability * 100)}% of draws clear the ${formatPercent(threshold)} threshold`}
-              frameProps={frameProps}
-            />
-            <BoardOverlay
-              width={chartWidth}
-              height={BOARD_HEIGHT}
-              threshold={threshold}
-              domain={posteriorDomain}
+              frameProps={physicsRuntimeFrameProps}
             />
           </div>
         </div>
@@ -551,71 +556,6 @@ function Metric({ label, value }) {
     </div>
   )
 }
-
-const BoardOverlay = React.memo(function BoardOverlay({ width, height, threshold, domain }) {
-  const plot = {
-    x: 32,
-    y: 24,
-    width: Math.max(80, width - 64),
-    height: Math.max(80, height - 58),
-  }
-  const span = domain[1] === domain[0] ? 1 : domain[1] - domain[0]
-  const thresholdX =
-    plot.x + plot.width * clamp((threshold - domain[0]) / span, 0, 1)
-  const pegs = []
-  for (let row = 0; row < 7; row += 1) {
-    const count = row + 6
-    const y = plot.y + 58 + row * 29
-    for (let column = 0; column < count; column += 1) {
-      const x = plot.x + plot.width * ((column + 0.5) / count)
-      pegs.push([x, y])
-    }
-  }
-  return (
-    <svg
-      className="plinko-example__board-overlay"
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      aria-hidden="true"
-    >
-      <rect
-        x={plot.x}
-        y={plot.y}
-        width={plot.width}
-        height={plot.height}
-        rx="8"
-        className="plinko-example__plot-bg"
-      />
-      {pegs.map(([x, y], index) => (
-        <circle key={index} cx={x} cy={y} r="2.4" className="plinko-example__peg" />
-      ))}
-      <line
-        x1={thresholdX}
-        x2={thresholdX}
-        y1={plot.y + 16}
-        y2={plot.y + plot.height - 10}
-        className="plinko-example__threshold"
-      />
-      <text x={thresholdX + 7} y={plot.y + 30} className="plinko-example__threshold-label">
-        {formatPercent(threshold)}
-      </text>
-      {Array.from({ length: 13 }, (_, index) => {
-        const x = plot.x + (plot.width / 13) * index
-        return (
-          <line
-            key={index}
-            x1={x}
-            x2={x}
-            y1={plot.y + plot.height * 0.55}
-            y2={plot.y + plot.height}
-            className="plinko-example__bin-line"
-          />
-        )
-      })}
-    </svg>
-  )
-})
 
 const QuantileDotplot = React.memo(function QuantileDotplot({ tokens, threshold, summary, width, height }) {
   const margin = { top: 24, right: 22, bottom: 42, left: 44 }

@@ -305,6 +305,26 @@ function NotFoundPage() {
   )
 }
 
+function ExamplesRouteFallback() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      style={{
+        width: "100%",
+        maxWidth: 1180,
+        minHeight: "60vh",
+        margin: "0 auto",
+        padding: "72px 28px",
+        boxSizing: "border-box",
+        color: "var(--text-secondary)",
+      }}
+    >
+      Loading example...
+    </div>
+  )
+}
+
 // Inject JSON-LD structured data dynamically so the HTML build does not parse it as an asset.
 function useJsonLd() {
   useEffect(() => {
@@ -366,7 +386,8 @@ export default function DocsApp() {
       <div className="App App--examples">
         <Suspense fallback={null}>
           <ExamplesLayout>
-            <Routes>
+            <Suspense key={location.pathname} fallback={<ExamplesRouteFallback />}>
+              <Routes>
               <Route path="examples" element={<ExamplesOverviewPage />} />
               <Route path="examples/watermarks" element={<WatermarksExamplePage />} />
               <Route
@@ -463,7 +484,8 @@ export default function DocsApp() {
               <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
               <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
               {/* <Route path="examples/chart-clinic" element={<ChartClinicExamplePage />} /> */}
-            </Routes>
+              </Routes>
+            </Suspense>
           </ExamplesLayout>
         </Suspense>
       </div>

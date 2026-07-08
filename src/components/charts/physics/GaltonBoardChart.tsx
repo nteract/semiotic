@@ -13,6 +13,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
   buildGaltonBoardPhysics,
   generateGaltonMechanicalSamples,
+  type GaltonBoardProjectionMetadata,
   physicsChartArea,
   projectionRowsToSemanticItems,
   styleFromColorAccessor
@@ -33,11 +34,22 @@ type ProjectionRow = {
   value: number
 }
 
+export interface GaltonBoardReferenceLine {
+  value: number
+  label?: React.ReactNode
+  color?: string
+  className?: string
+  strokeDasharray?: string
+  strokeWidth?: number
+  labelPosition?: "top" | "bottom"
+}
+
 export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
   extends Omit<BaseChartProps, "margin" | "mode"> {
   data?: TDatum[]
   size?: [number, number]
   valueAccessor?: ChartAccessor<TDatum, number>
+  valueExtent?: [number, number]
   bins?: number
   mode?: "sample" | "mechanical"
   pegRows?: number
@@ -45,6 +57,7 @@ export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
   branchProbability?: number
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
+  referenceLines?: GaltonBoardReferenceLine | GaltonBoardReferenceLine[]
   seed?: number
   showProjection?: boolean
   tooltip?: TooltipProp
@@ -60,9 +73,16 @@ export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
 function galtonBoardOverlay(
   rows: ProjectionRow[],
   bins: number,
-  enabled: boolean | undefined
+  enabled: boolean | undefined,
+  metadata: GaltonBoardProjectionMetadata | undefined,
+  referenceLines: GaltonBoardChartProps["referenceLines"]
 ): StreamPhysicsFrameProps["foregroundGraphics"] | undefined {
-  if (enabled === false) return undefined
+  const referenceLineArray = Array.isArray(referenceLines)
+    ? referenceLines
+    : referenceLines
+      ? [referenceLines]
+      : []
+  if (enabled === false && referenceLineArray.length === 0) return undefined
   return ({ size }) => {
     const resolvedSize: [number, number] = [
       Number(size[0]) || 700,
@@ -73,6 +93,9 @@ function galtonBoardOverlay(
     const laneWidth = area.plot.width / resolvedBins
     const yBottom = area.plot.y + area.plot.height
     const maxValue = Math.max(1, ...rows.map((row) => row.value))
+    const showScaffold = enabled !== false
+    const [domainStart, domainEnd] = metadata?.valueExtent ?? [0, resolvedBins]
+    const domainSpan = domainEnd === domainStart ? 1 : domainEnd - domainStart
     // The ghost curve traces the exact settled count per bin — the "truth
     // layer" the physical pile of units assembles itself into as it falls.
     const curve = rows
@@ -92,54 +115,97 @@ function galtonBoardOverlay(
         viewBox={`0 0 ${resolvedSize[0]} ${resolvedSize[1]}`}
         style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       >
-        {Array.from({ length: resolvedBins + 1 }, (_, index) => {
-          const x = area.plot.x + index * laneWidth
-          return (
+        {showScaffold ? (
+          <>
+            {Array.from({ length: resolvedBins + 1 }, (_, index) => {
+              const x = area.plot.x + index * laneWidth
+              return (
+                <line
+                  key={`bin-wall-${index}`}
+                  data-testid="galton-board-bin-wall"
+                  x1={x}
+                  x2={x}
+                  y1={area.plot.y}
+                  y2={yBottom}
+                  stroke="var(--semiotic-border, #d1d5db)"
+                  strokeOpacity={0.28}
+                  strokeWidth={1}
+                />
+              )
+            })}
             <line
-              key={`bin-wall-${index}`}
-              data-testid="galton-board-bin-wall"
-              x1={x}
-              x2={x}
-              y1={area.plot.y}
+              x1={area.plot.x}
+              x2={area.plot.x + area.plot.width}
+              y1={yBottom}
               y2={yBottom}
               stroke="var(--semiotic-border, #d1d5db)"
-              strokeOpacity={0.28}
-              strokeWidth={1}
+              strokeWidth={1.5}
             />
-          )
-        })}
-        <line
-          x1={area.plot.x}
-          x2={area.plot.x + area.plot.width}
-          y1={yBottom}
-          y2={yBottom}
-          stroke="var(--semiotic-border, #d1d5db)"
-          strokeWidth={1.5}
-        />
-        <path
-          d={curve}
-          fill="none"
-          stroke="var(--semiotic-accent, #4e79a7)"
-          strokeOpacity={0.7}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        {rows.map((row, index) => {
-          if (row.value <= 0) return null
-          const x = area.plot.x + (index + 0.5) * laneWidth
-          const y = yBottom - (row.value / maxValue) * area.plot.height * 0.9
+            <path
+              d={curve}
+              fill="none"
+              stroke="var(--semiotic-accent, #4e79a7)"
+              strokeOpacity={0.7}
+              strokeWidth={2}
+              strokeLinejoin="round"
+            />
+            {rows.map((row, index) => {
+              if (row.value <= 0) return null
+              const x = area.plot.x + (index + 0.5) * laneWidth
+              const y = yBottom - (row.value / maxValue) * area.plot.height * 0.9
+              return (
+                <text
+                  key={`${row.label}-${index}`}
+                  x={x}
+                  y={Math.max(area.plot.y + 10, y - 6)}
+                  textAnchor="middle"
+                  fill="var(--semiotic-text-secondary, #555)"
+                  fontSize={10}
+                  fontWeight={700}
+                >
+                  {row.value}
+                </text>
+              )
+            })}
+          </>
+        ) : null}
+        {referenceLineArray.map((line, index) => {
+          const value = Number(line.value)
+          if (!Number.isFinite(value)) return null
+          const ratio = Math.max(0, Math.min(1, (value - domainStart) / domainSpan))
+          const x = area.plot.x + ratio * area.plot.width
+          const color = line.color ?? "var(--semiotic-warning, #f28e2b)"
+          const labelY =
+            line.labelPosition === "bottom"
+              ? Math.min(resolvedSize[1] - 8, yBottom + 16)
+              : area.plot.y + 16
           return (
-            <text
-              key={`${row.label}-${index}`}
-              x={x}
-              y={Math.max(area.plot.y + 10, y - 6)}
-              textAnchor="middle"
-              fill="var(--semiotic-text-secondary, #555)"
-              fontSize={10}
-              fontWeight={700}
+            <g
+              key={`galton-reference-${index}-${value}`}
+              className={line.className}
+              data-testid="galton-board-reference-line"
             >
-              {row.value}
-            </text>
+              <line
+                x1={x}
+                x2={x}
+                y1={area.plot.y + 8}
+                y2={yBottom - 4}
+                stroke={color}
+                strokeDasharray={line.strokeDasharray ?? "6 5"}
+                strokeWidth={line.strokeWidth ?? 2}
+              />
+              {line.label == null ? null : (
+                <text
+                  x={Math.min(area.plot.x + area.plot.width - 4, x + 6)}
+                  y={labelY}
+                  fill={color}
+                  fontSize={10}
+                  fontWeight={700}
+                >
+                  {line.label}
+                </text>
+              )}
+            </g>
           )
         })}
       </svg>
@@ -190,11 +256,13 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     mode = "sample",
     paused,
     pegRows,
+    referenceLines,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
     showProjection = true,
     size,
+    valueExtent,
     width
   } = props
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
@@ -208,6 +276,13 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     [height, sizeHeight, sizeWidth, width]
   )
   const resolvedPegRows = Math.max(1, Math.round(pegRows ?? bins - 1))
+  const resolvedValueExtent = useMemo(
+    () =>
+      mode === "mechanical"
+        ? ([0, resolvedPegRows] as [number, number])
+        : valueExtent,
+    [mode, resolvedPegRows, valueExtent]
+  )
   const chartData = useMemo(
     () =>
       mode === "mechanical"
@@ -230,9 +305,9 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         ballRadius,
         seed,
         size: chartSize,
-        valueExtent: mode === "mechanical" ? [0, resolvedPegRows] : undefined
+        valueExtent: resolvedValueExtent
       }),
-    [ballRadius, bins, chartData, chartSize, mode, resolvedPegRows, seed, valueAccessor]
+    [ballRadius, bins, chartData, chartSize, resolvedValueExtent, seed, valueAccessor]
   )
 
   const spawnDatum = useCallback(
@@ -244,7 +319,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         ballRadius,
         seed: seed + index + 1,
         size: chartSize,
-        valueExtent: mode === "mechanical" ? [0, resolvedPegRows] : undefined
+        valueExtent: resolvedValueExtent
       })
       const spawn = single.initialSpawns[0] ?? {
         id: String(datum.id ?? `galton-push-${index}`),
@@ -259,7 +334,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
         spawns: [spawn as PhysicsQueuedSpawn]
       }
     },
-    [ballRadius, bins, chartSize, mode, resolvedPegRows, seed, valueAccessor]
+    [ballRadius, bins, chartSize, resolvedValueExtent, seed, valueAccessor]
   )
   usePhysicsHocHandle(ref, { frameRef, spawnDatum })
   const resolvedColorBy =
@@ -286,7 +361,9 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
   const structureOverlay = galtonBoardOverlay(
     layout.projectionRows,
     bins,
-    showProjection
+    showProjection,
+    layout.metadata as GaltonBoardProjectionMetadata | undefined,
+    referenceLines
   )
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
   const sharedFrameProps = resolvePhysicsFrameSharedProps(

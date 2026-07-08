@@ -70,6 +70,13 @@ export interface GaltonBoardPhysicsOptions<TDatum extends Datum = Datum> {
   valueExtent?: [number, number]
 }
 
+export interface GaltonBoardProjectionMetadata {
+  kind: "galton-board"
+  bins: number
+  plot: PhysicsChartArea["plot"]
+  valueExtent: [number, number]
+}
+
 export interface GaltonMechanicalSampleOptions {
   bins: number
   count?: number
@@ -614,7 +621,13 @@ export function buildGaltonBoardPhysics<TDatum extends Datum>(
     projectionRows: binCounts.map((value, index) => ({
       label: String(index + 1),
       value
-    }))
+    })),
+    metadata: {
+      kind: "galton-board",
+      bins,
+      plot: area.plot,
+      valueExtent: [min, max]
+    } satisfies GaltonBoardProjectionMetadata
   }
 }
 

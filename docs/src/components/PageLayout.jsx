@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
+import {
+  BLOCKS_VIEW_STYLES,
+  BlocksViewProvider,
+  BlocksViewToggle,
+  useBlocksViewState,
+} from "./BlocksView"
 
 /**
  * Generates a URL-friendly id from heading text content.
@@ -26,17 +32,19 @@ function slugify(text) {
  *   nextPage    (object, optional) - { title, path } for next page link
  *   children    (React node)       - Page content
  */
-export default function PageLayout({
-  title,
-  tier,
-  breadcrumbs,
-  prevPage,
-  nextPage,
-  children,
-}) {
+export default function PageLayout({ title, tier, breadcrumbs, prevPage, nextPage, children }) {
   const contentRef = useRef(null)
   const [tocItems, setTocItems] = useState([])
   const [activeId, setActiveId] = useState(null)
+  const blocksView = useBlocksViewState()
+  const { blockCount, blocksMode, setBlocksMode } = blocksView
+  const layoutClassName = [
+    "page-layout",
+    blocksMode ? "blocks-view-mode" : "",
+    blockCount > 0 ? "blocks-view-has-blocks" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
 
   // Scan the rendered content for h2 and h3 headings and build the TOC
   useEffect(() => {
@@ -94,7 +102,7 @@ export default function PageLayout({
         // Offset from top to account for sticky header
         rootMargin: "-80px 0px -60% 0px",
         threshold: 0,
-      }
+      },
     )
 
     const headings = contentEl.querySelectorAll("h2, h3")
@@ -106,105 +114,108 @@ export default function PageLayout({
   }, [tocItems])
 
   return (
-    <div className="page-layout" style={styles.layout}>
-      {/* Breadcrumbs */}
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <div className="page-breadcrumbs" style={styles.breadcrumbs}>
-          {breadcrumbs.map((crumb, index) => {
-            const isLast = index === breadcrumbs.length - 1
-            return (
-              <span key={index} style={styles.breadcrumbItem}>
-                {isLast ? (
-                  <span style={styles.breadcrumbCurrent}>{crumb.label}</span>
-                ) : (
-                  <>
-                    <Link to={crumb.path} style={styles.breadcrumbLink}>
-                      {crumb.label}
-                    </Link>
-                    <span style={styles.breadcrumbSeparator}>{"\u203A"}</span>
-                  </>
-                )}
-              </span>
-            )
-          })}
-        </div>
-      )}
+    <BlocksViewProvider value={blocksView}>
+      <div className={layoutClassName} style={styles.layout}>
+        <style>{BLOCKS_VIEW_STYLES}</style>
+        {/* Breadcrumbs */}
+        {breadcrumbs && breadcrumbs.length > 0 && (
+          <div className="page-breadcrumbs" style={styles.breadcrumbs}>
+            {breadcrumbs.map((crumb, index) => {
+              const isLast = index === breadcrumbs.length - 1
+              return (
+                <span key={index} style={styles.breadcrumbItem}>
+                  {isLast ? (
+                    <span style={styles.breadcrumbCurrent}>{crumb.label}</span>
+                  ) : (
+                    <>
+                      <Link to={crumb.path} style={styles.breadcrumbLink}>
+                        {crumb.label}
+                      </Link>
+                      <span style={styles.breadcrumbSeparator}>{"\u203A"}</span>
+                    </>
+                  )}
+                </span>
+              )
+            })}
+          </div>
+        )}
 
-      {/* Page header with title and optional tier badge */}
-      <div className="page-header" style={styles.header}>
-        <h1 style={styles.title}>{title}</h1>
-        {tier && (
-          <span className={`tier-badge ${tier}`} style={styles.tierBadge}>
-            {tier}
-          </span>
+        {/* Page header with title and optional tier badge */}
+        <div className="page-header" style={styles.header}>
+          <h1 style={styles.title}>{title}</h1>
+          {tier && (
+            <span className={`tier-badge ${tier}`} style={styles.tierBadge}>
+              {tier}
+            </span>
+          )}
+          <div className="blocks-view-actions">
+            <BlocksViewToggle
+              blockCount={blockCount}
+              blocksMode={blocksMode}
+              setBlocksMode={setBlocksMode}
+            />
+          </div>
+        </div>
+
+        {/* Main body: content + TOC sidebar */}
+        <div className="page-body" style={styles.body}>
+          <div className="page-content" ref={contentRef} style={styles.content}>
+            {children}
+          </div>
+
+          {/* Right-side table of contents, visible on wide screens */}
+          {tocItems.length > 0 && (
+            <aside className="page-toc" style={styles.toc}>
+              <h4 style={styles.tocTitle}>On this page</h4>
+              <ul style={styles.tocList}>
+                {tocItems.map((item) => (
+                  <li key={item.key ?? item.id} style={styles.tocListItem}>
+                    <a
+                      href={`#${item.id}`}
+                      style={{
+                        ...styles.tocLink,
+                        ...(item.level === 3 ? styles.tocLinkH3 : {}),
+                        ...(activeId === item.id ? styles.tocLinkActive : {}),
+                      }}
+                    >
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          )}
+        </div>
+
+        {/* Prev / Next navigation */}
+        {(prevPage || nextPage) && (
+          <nav className="page-nav" style={styles.nav}>
+            {prevPage ? (
+              <Link to={prevPage.path} style={styles.navLink}>
+                <span style={styles.navArrow}>{"\u2190"}</span>
+                <span style={styles.navLinkText}>
+                  <span style={styles.navLabel}>Previous</span>
+                  <span style={styles.navTitle}>{prevPage.title}</span>
+                </span>
+              </Link>
+            ) : (
+              <span />
+            )}
+            {nextPage ? (
+              <Link to={nextPage.path} style={{ ...styles.navLink, ...styles.navLinkRight }}>
+                <span style={styles.navLinkText}>
+                  <span style={{ ...styles.navLabel, textAlign: "right" }}>Next</span>
+                  <span style={{ ...styles.navTitle, textAlign: "right" }}>{nextPage.title}</span>
+                </span>
+                <span style={styles.navArrow}>{"\u2192"}</span>
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
         )}
       </div>
-
-      {/* Main body: content + TOC sidebar */}
-      <div className="page-body" style={styles.body}>
-        <div className="page-content" ref={contentRef} style={styles.content}>
-          {children}
-        </div>
-
-        {/* Right-side table of contents, visible on wide screens */}
-        {tocItems.length > 0 && (
-          <aside className="page-toc" style={styles.toc}>
-            <h4 style={styles.tocTitle}>On this page</h4>
-            <ul style={styles.tocList}>
-              {tocItems.map((item) => (
-                <li key={item.key ?? item.id} style={styles.tocListItem}>
-                  <a
-                    href={`#${item.id}`}
-                    style={{
-                      ...styles.tocLink,
-                      ...(item.level === 3 ? styles.tocLinkH3 : {}),
-                      ...(activeId === item.id ? styles.tocLinkActive : {}),
-                    }}
-                  >
-                    {item.text}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </aside>
-        )}
-      </div>
-
-      {/* Prev / Next navigation */}
-      {(prevPage || nextPage) && (
-        <nav className="page-nav" style={styles.nav}>
-          {prevPage ? (
-            <Link to={prevPage.path} style={styles.navLink}>
-              <span style={styles.navArrow}>{"\u2190"}</span>
-              <span style={styles.navLinkText}>
-                <span style={styles.navLabel}>Previous</span>
-                <span style={styles.navTitle}>{prevPage.title}</span>
-              </span>
-            </Link>
-          ) : (
-            <span />
-          )}
-          {nextPage ? (
-            <Link
-              to={nextPage.path}
-              style={{ ...styles.navLink, ...styles.navLinkRight }}
-            >
-              <span style={styles.navLinkText}>
-                <span style={{ ...styles.navLabel, textAlign: "right" }}>
-                  Next
-                </span>
-                <span style={{ ...styles.navTitle, textAlign: "right" }}>
-                  {nextPage.title}
-                </span>
-              </span>
-              <span style={styles.navArrow}>{"\u2192"}</span>
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      )}
-    </div>
+    </BlocksViewProvider>
   )
 }
 

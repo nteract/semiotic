@@ -68,7 +68,10 @@ export default StreamPhysicsFrame
 
 export type { CollisionSwarmChartProps } from "./charts/physics/CollisionSwarmChart"
 export type { EventDropChartProps } from "./charts/physics/EventDropChart"
-export type { GaltonBoardChartProps } from "./charts/physics/GaltonBoardChart"
+export type {
+  GaltonBoardChartProps,
+  GaltonBoardReferenceLine
+} from "./charts/physics/GaltonBoardChart"
 export type {
   NetworkHOPsChartProps,
   NetworkHOPsModel,
@@ -90,6 +93,7 @@ export type {
   CollisionSwarmProjectionMetadata,
   EventDropWindowOptions,
   EventDropPhysicsOptions,
+  GaltonBoardProjectionMetadata,
   GaltonBoardPhysicsOptions,
   PhysicalFlowCoordinateMode,
   PhysicalFlowOptions,

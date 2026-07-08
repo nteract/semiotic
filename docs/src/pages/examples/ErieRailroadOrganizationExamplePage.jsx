@@ -388,12 +388,12 @@ function railroadOrganizationLayout(ctx) {
   return {
     sceneNodes,
     sceneEdges: [],
-    // The engraving is drawn entirely in the overlay; scene nodes are invisible
-    // hit targets. The no-op restyle opts into the style-only selection path:
-    // hover/lock changes swap the overlay's selection context without re-growing
-    // the trunks and crews or rebuilding the hit-test quadtree. View and
-    // employee-filter changes still relayout via layoutConfig (they change
-    // geometry emphasis), which is the intended split.
+    // Semantic overlay pattern: the engraving is bespoke SVG, while scene nodes
+    // keep keyboard nav, accessible rows, annotation anchors, and observations.
+    // The no-op restyle opts into style-only selection: hover/lock changes swap
+    // overlay context without re-growing trunks/crews or rebuilding hit tests.
+    // View and employee-filter changes still relayout via layoutConfig because
+    // they change geometry emphasis.
     restyle: () => undefined,
     overlays: (
       <RailroadPlateOverlay

@@ -1760,11 +1760,13 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
     propBags: ["physics"],
     ownProps: {
       valueAccessor: { type: ["string", "function"], default: "value", description: "Numeric field used to assign bodies to Galton bins." },
+      valueExtent: { type: "array", description: "Stable numeric [min, max] domain for binning and reference-line placement." },
       bins: { type: "number", default: 21, description: "Number of landing bins / histogram columns." },
       mode: { type: "string", enum: ["sample", "mechanical"] as const, default: "sample", description: "sample uses data values; mechanical emits a deterministic demonstration when no data is supplied." },
       pegRows: { type: "number", description: "Number of Bernoulli branch rows used by mechanical mode." },
       mechanicalCount: { type: "number", description: "Number of generated bodies in mechanical mode." },
       branchProbability: { type: "number", default: 0.5, description: "Probability that each mechanical sample branches right at a peg." },
+      referenceLines: { type: ["object", "array"], description: "One or more value markers drawn over the board: { value, label, color, strokeWidth, strokeDasharray, labelPosition }." },
       showProjection: { type: "boolean", description: "Whether companion docs or wrappers should show the settled projection." },
     },
     capabilities: {

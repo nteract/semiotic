@@ -1147,11 +1147,13 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
     props: {
       ...physicsProps,
       valueAccessor: { type: ["string", "function"] },
+      valueExtent: { type: "array" },
       bins: { type: "number" },
       mode: { type: "string", enum: ["sample", "mechanical"] },
       pegRows: { type: "number" },
       mechanicalCount: { type: "number" },
       branchProbability: { type: "number" },
+      referenceLines: { type: ["object", "array"] },
       showProjection: { type: "boolean" },
     },
   },

@@ -1180,6 +1180,10 @@ function HotDogRaceBars() {
 
 function RaceOrdinalChart({ refHandle, title, gender, width, height, totals, leader, active }) {
   const color = RACE_COLORS[gender]
+  const raceForegroundGraphics = useMemo(
+    () => raceValueLabelLayer(totals, color),
+    [color, totals],
+  )
   return (
     <div className="hotdog__race-card">
       <div className="hotdog__race-card-header">
@@ -1220,7 +1224,7 @@ function RaceOrdinalChart({ refHandle, title, gender, width, height, totals, lea
           valueLabel="Cumulative HDB"
           valueFormat={(value) => countLabel(value)}
           animate={{ duration: RACE_TICK_MS, easing: "linear", intro: false }}
-          foregroundGraphics={raceValueLabels(totals, color)}
+          foregroundGraphics={raceForegroundGraphics}
           enableHover
           accessibleTable={false}
           className="hotdog__race-frame"
@@ -1313,7 +1317,10 @@ function mapToRaceObject(totals) {
   return Object.fromEntries(Array.from(totals, ([name, value]) => [name, roundHdb(value)]))
 }
 
-function raceValueLabels(totals, color) {
+function raceValueLabelLayer(totals, color) {
+  // Foreground graphics receive StreamOrdinalFrame's resolved scales, so the
+  // labels anchor to the same animated bar positions instead of re-deriving
+  // pixel math from the data stream.
   return ({ scales }) => {
     if (!scales) return null
     const band = scales.o.bandwidth()

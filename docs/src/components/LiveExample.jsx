@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef } from "react"
 import { StreamOrdinalFrame } from "semiotic"
-import {
-  propertyToString,
-  getFunctionString,
-  getFramePropsString,
-  getCodeBlock,
-} from "./codegen"
+import { propertyToString, getFunctionString, getFramePropsString, getCodeBlock } from "./codegen"
+import CodeBlock from "./CodeBlock"
+import { useBlocksView, useRegisterBlocksExample } from "./BlocksView"
 
 // Re-export so existing importers (PlaygroundLayout) keep their
 // `import { propertyToString } from "./LiveExample"`.
@@ -28,9 +25,9 @@ export default function LiveExample({
   sideBySide = false,
   title,
 }) {
-  const [codeState, setCodeState] = useState(
-    startHidden ? "hidden" : "expanded"
-  )
+  const { blocksMode } = useBlocksView()
+  useRegisterBlocksExample()
+  const [codeState, setCodeState] = useState(startHidden ? "hidden" : "expanded")
   const [copied, setCopied] = useState(false)
   const codeRef = useRef(null)
   const vizContainerRef = useRef(null)
@@ -40,13 +37,16 @@ export default function LiveExample({
   const [docsTheme, setDocsTheme] = useState(() =>
     typeof document !== "undefined"
       ? document.documentElement.getAttribute("data-theme") || "dark"
-      : "dark"
+      : "dark",
   )
   useEffect(() => {
     const observer = new MutationObserver(() => {
       setDocsTheme(document.documentElement.getAttribute("data-theme") || "dark")
     })
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] })
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    })
     return () => observer.disconnect()
   }, [])
 
@@ -81,7 +81,7 @@ export default function LiveExample({
     functions,
     overrideProps,
     true,
-    hiddenProps
+    hiddenProps,
   )
   const functionsString = getFunctionString(functions, overrideProps)
   const trimmedCode = getCodeBlock(
@@ -90,7 +90,7 @@ export default function LiveExample({
     functionsString,
     trimmedFramePropsString,
     overrideRender,
-    importStatement
+    importStatement,
   )
 
   // Build the full code string (for copy). `faithful: true` serializes the
@@ -103,7 +103,7 @@ export default function LiveExample({
     overrideProps,
     false,
     hiddenProps,
-    true
+    true,
   )
   const fullCode = getCodeBlock(
     frameName,
@@ -111,7 +111,7 @@ export default function LiveExample({
     functionsString,
     fullFramePropsString,
     overrideRender,
-    importStatement
+    importStatement,
   )
 
   // Copy handler with fallback
@@ -171,7 +171,7 @@ export default function LiveExample({
   // Set both so each component type picks up the one it needs.
   const responsiveFrameProps = { ...frameProps }
   if (containerWidth) {
-    const height = frameProps.size ? frameProps.size[1] : (frameProps.height || 300)
+    const height = frameProps.size ? frameProps.size[1] : frameProps.height || 300
     responsiveFrameProps.size = [containerWidth, height]
     responsiveFrameProps.width = containerWidth
   }
@@ -179,28 +179,23 @@ export default function LiveExample({
   // Visualization element — render with fallback size if container hasn't been measured yet
   const visualization = (
     <div ref={vizContainerRef} style={styles.vizContainer} className="live-example-viz">
-      {containerWidth
-        ? <Frame key={docsTheme} {...responsiveFrameProps} />
-        : <Frame key={docsTheme} {...frameProps} />
-      }
+      {containerWidth ? (
+        <Frame key={docsTheme} {...responsiveFrameProps} />
+      ) : (
+        <Frame key={docsTheme} {...frameProps} />
+      )}
     </div>
   )
 
   // Code element
   const codeBlock = (
     <div style={getCodeContainerStyle()} ref={codeRef} className="live-example-code">
-      <pre
-        className="language-jsx"
-        style={styles.pre}
-      >
+      <pre className="language-jsx" style={styles.pre}>
         <code className="language-jsx">{trimmedCode}</code>
       </pre>
       {codeState === "collapsed" && (
         <div style={styles.gradientOverlay}>
-          <button
-            onClick={expandCode}
-            style={styles.expandButton}
-          >
+          <button onClick={expandCode} style={styles.expandButton}>
             Expand
           </button>
         </div>
@@ -221,10 +216,7 @@ export default function LiveExample({
         </button>
       )}
       {codeState === "expanded" && (
-        <button
-          onClick={() => setCodeState("collapsed")}
-          style={styles.button}
-        >
+        <button onClick={() => setCodeState("collapsed")} style={styles.button}>
           Collapse
         </button>
       )}
@@ -240,14 +232,31 @@ export default function LiveExample({
     </div>
   )
 
+  if (blocksMode) {
+    return (
+      <section className="blocks-example live-example">
+        <h2 className="blocks-example-title">
+          Interactive Example
+          {title && <span className="blocks-example-kicker">{title}</span>}
+        </h2>
+        <div className="blocks-example-output">{visualization}</div>
+        <CodeBlock code={fullCode} language="jsx" showCopyButton />
+      </section>
+    )
+  }
+
   // Side-by-side layout
   if (sideBySide && codeState !== "hidden") {
     return (
       <div style={styles.wrapper} className="live-example">
         {title && <h3 style={styles.title}>{title}</h3>}
         <div style={styles.sideBySideContainer} className="live-example-side-by-side">
-          <div style={styles.sideBySideLeft} className="live-example-side-left">{visualization}</div>
-          <div style={styles.sideBySideRight} className="live-example-side-right">{codeBlock}</div>
+          <div style={styles.sideBySideLeft} className="live-example-side-left">
+            {visualization}
+          </div>
+          <div style={styles.sideBySideRight} className="live-example-side-right">
+            {codeBlock}
+          </div>
         </div>
         {toolbar}
       </div>
@@ -345,8 +354,7 @@ const styles = {
     left: 0,
     right: 0,
     height: "80px",
-    background:
-      "linear-gradient(to bottom, transparent, var(--surface-2) 85%)",
+    background: "linear-gradient(to bottom, transparent, var(--surface-2) 85%)",
     display: "flex",
     alignItems: "flex-end",
     justifyContent: "center",
