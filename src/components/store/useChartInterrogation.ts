@@ -21,6 +21,11 @@ import { profileData } from "../ai/profileData"
 import { suggestCharts } from "../ai/suggestCharts"
 import type { ChartDataProfile, Suggestion } from "../ai/chartCapabilityTypes"
 import type { IntentId } from "../ai/intents"
+import {
+  buildReaderGrounding,
+  type ChartReaderGrounding,
+  type ChartReaderGroundingOptions,
+} from "../ai/readerGrounding"
 
 /**
  * Identifies a single point of interest on the chart — typically the datum
@@ -52,6 +57,8 @@ export interface InterrogationContext {
   componentName?: string
   /** Optional caller-supplied chart props (accessor names, scales, etc.). */
   props?: Record<string, unknown>
+  /** Optional reader-grounding payload for faithful chart interpretation. */
+  grounding?: ChartReaderGrounding
   /**
    * The current focused datum — what the user is interactively pointing at.
    * Lets the LLM tailor responses to a specific point ("why is *this* one
@@ -110,6 +117,12 @@ export interface UseChartInterrogationOptions {
    * `onObservation` callback or the convenience `useChartFocus` hook.
    */
   focus?: InterrogationFocus | null
+  /**
+   * Include `buildReaderGrounding()` in the interrogation context. Pass true
+   * for default grounding, or an options object for capability/audience,
+   * structure, and physics runtime grounding controls.
+   */
+  includeGrounding?: boolean | ChartReaderGroundingOptions
 }
 
 export interface UseChartInterrogationResult {
@@ -179,6 +192,7 @@ export function useChartInterrogation(
     suggestionsIntent,
     suggestionsMax,
     focus,
+    includeGrounding,
   } = options
 
   const [history, setHistory] = useState<InterrogationMessage[]>([])
@@ -204,6 +218,19 @@ export function useChartInterrogation(
         : undefined,
     [includeSuggestions, profile, data, suggestionsIntent, suggestionsMax]
   )
+  const grounding = useMemo(() => {
+    if (!includeGrounding || !componentName) return undefined
+    const groundingOptions =
+      typeof includeGrounding === "object" ? includeGrounding : undefined
+    return buildReaderGrounding(
+      componentName,
+      {
+        data: data ?? [],
+        ...(props ?? {}),
+      },
+      groundingOptions
+    )
+  }, [includeGrounding, componentName, props, data])
 
   // Latest callback ref so ask() always sees the current onQuery without re-creating itself.
   const onQueryRef = useRef(onQuery)
@@ -222,6 +249,8 @@ export function useChartInterrogation(
   suggestionsRef.current = suggestions
   const focusRef = useRef(focus)
   focusRef.current = focus
+  const groundingRef = useRef(grounding)
+  groundingRef.current = grounding
 
   const ask = useCallback(async (query: string) => {
     const trimmed = query.trim()
@@ -248,6 +277,7 @@ export function useChartInterrogation(
         suggestions: suggestionsRef.current,
         componentName: componentNameRef.current,
         props: propsRef.current,
+        grounding: groundingRef.current,
         focus: focusRef.current ?? undefined,
       })
       setHistory((prev) => [...prev, { role: "assistant", text: result.answer }])

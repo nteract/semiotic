@@ -1,0 +1,285 @@
+.physics-custom-chart-demo-shell {
+  display: grid;
+  gap: 16px;
+  margin: 16px 0 28px;
+}
+
+.physics-custom-chart-demo-controls {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+}
+
+.physics-custom-chart-demo-control-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.physics-custom-chart-demo-control-label,
+.physics-custom-chart-demo-kicker {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.physics-custom-chart-demo-segmented {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(78px, 1fr));
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.physics-custom-chart-demo-segmented button,
+.physics-custom-chart-demo-button-row button {
+  min-height: 36px;
+  border: 0;
+  border-right: 1px solid var(--surface-3);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  padding: 8px 10px;
+}
+
+.physics-custom-chart-demo-segmented button:last-child {
+  border-right: 0;
+}
+
+.physics-custom-chart-demo-segmented button.is-active {
+  background: var(--accent);
+  color: var(--surface-0);
+  font-weight: 700;
+}
+
+.physics-custom-chart-demo-control-group input[type="range"] {
+  width: min(240px, 100%);
+  accent-color: var(--accent);
+}
+
+.physics-custom-chart-demo-readout {
+  min-width: 44px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.physics-custom-chart-demo-button-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
+  gap: 8px;
+}
+
+.physics-custom-chart-demo-button-row button {
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+
+.physics-custom-chart-demo-button-row button:hover,
+.physics-custom-chart-demo-segmented button:hover {
+  filter: brightness(0.98);
+}
+
+.physics-custom-chart-demo-push--triage {
+  border-color: color-mix(in srgb, #4e79a7 58%, var(--surface-3)) !important;
+}
+
+.physics-custom-chart-demo-push--review {
+  border-color: color-mix(in srgb, #59a14f 58%, var(--surface-3)) !important;
+}
+
+.physics-custom-chart-demo-push--ship {
+  border-color: color-mix(in srgb, #e15759 58%, var(--surface-3)) !important;
+}
+
+.physics-custom-chart-demo-stage {
+  position: relative;
+  overflow-x: auto;
+  padding: 12px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 92%, transparent), var(--surface-2));
+}
+
+.physics-custom-chart-demo-stage .stream-physics-frame {
+  min-width: 760px;
+}
+
+.physics-custom-chart-demo-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.physics-custom-chart-demo-plot {
+  fill: color-mix(in srgb, var(--surface-2) 72%, transparent);
+  stroke: var(--surface-3);
+}
+
+.physics-custom-chart-demo-sensor {
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+  opacity: 0.22;
+}
+
+.physics-custom-chart-demo-sensor--triage {
+  fill: #4e79a7;
+  stroke: #4e79a7;
+}
+
+.physics-custom-chart-demo-sensor--review {
+  fill: #59a14f;
+  stroke: #59a14f;
+}
+
+.physics-custom-chart-demo-sensor--ship {
+  fill: #e15759;
+  stroke: #e15759;
+}
+
+.physics-custom-chart-demo-route-label {
+  fill: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.physics-custom-chart-demo-barrier,
+.physics-custom-chart-demo-deflector,
+.physics-custom-chart-demo-divider {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.physics-custom-chart-demo-barrier {
+  stroke: #3b4453;
+  stroke-width: 8;
+  opacity: 0.56;
+}
+
+.physics-custom-chart-demo-deflector {
+  stroke: #c37a25;
+  stroke-width: 10;
+  opacity: 0.75;
+}
+
+.physics-custom-chart-demo-divider {
+  stroke: color-mix(in srgb, var(--text-secondary) 48%, transparent);
+  stroke-width: 8;
+  opacity: 0.35;
+}
+
+.physics-custom-chart-demo-readouts,
+.physics-custom-chart-demo-lanes,
+.physics-custom-chart-demo-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.physics-custom-chart-demo-status-card,
+.physics-custom-chart-demo-lane,
+.physics-custom-chart-demo-events,
+.physics-custom-chart-demo-comparison article {
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+  padding: 14px;
+}
+
+.physics-custom-chart-demo-status-card {
+  display: grid;
+  gap: 4px;
+  min-height: 112px;
+}
+
+.physics-custom-chart-demo-status-card strong {
+  color: var(--text-primary);
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.physics-custom-chart-demo-status-card span:not(.physics-custom-chart-demo-kicker),
+.physics-custom-chart-demo-status-card small,
+.physics-custom-chart-demo-lane small {
+  color: var(--text-secondary);
+}
+
+.physics-custom-chart-demo-lane {
+  display: grid;
+  gap: 5px;
+  border-left-width: 4px;
+}
+
+.physics-custom-chart-demo-lane strong {
+  text-transform: capitalize;
+}
+
+.physics-custom-chart-demo-lane--triage {
+  border-left-color: #4e79a7;
+}
+
+.physics-custom-chart-demo-lane--review {
+  border-left-color: #59a14f;
+}
+
+.physics-custom-chart-demo-lane--ship {
+  border-left-color: #e15759;
+}
+
+.physics-custom-chart-demo-lane.is-entered {
+  background: color-mix(in srgb, var(--surface-1) 82%, #59a14f);
+}
+
+.physics-custom-chart-demo-lane.is-exited {
+  background: color-mix(in srgb, var(--surface-1) 88%, #f0b35a);
+}
+
+.physics-custom-chart-demo-events h3,
+.physics-custom-chart-demo-comparison h3 {
+  margin-top: 0;
+}
+
+.physics-custom-chart-demo-events ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.physics-custom-chart-demo-events p,
+.physics-custom-chart-demo-comparison p {
+  margin-bottom: 0;
+}
+
+.physics-custom-chart-demo-comparison article {
+  min-height: 130px;
+}
+
+@media (max-width: 720px) {
+  .physics-custom-chart-demo-controls {
+    padding: 12px;
+  }
+
+  .physics-custom-chart-demo-control-group {
+    align-items: stretch;
+  }
+
+  .physics-custom-chart-demo-segmented {
+    width: 100%;
+  }
+
+  .physics-custom-chart-demo-stage {
+    padding: 8px;
+  }
+}

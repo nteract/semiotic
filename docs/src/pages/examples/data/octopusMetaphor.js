@@ -372,32 +372,45 @@ export const FRAME_META = {
     label: "XY Frame",
     shortLabel: "XY",
     color: "#3b6ea8",
-    angle: -2.35,
+    angle: -2.4,
   },
   ordinal: {
     id: "frame-ordinal",
     label: "Ordinal Frame",
     shortLabel: "Ordinal",
     color: "#c64a3d",
-    angle: -0.84,
+    angle: -1.2,
   },
   network: {
     id: "frame-network",
     label: "Network Frame",
     shortLabel: "Network",
     color: "#5e8f5a",
-    angle: 0.84,
+    angle: 0,
   },
   geo: {
     id: "frame-geo",
     label: "Geo Frame",
     shortLabel: "Geo",
     color: "#b8872d",
-    angle: 2.35,
+    angle: 1.2,
+  },
+  physics: {
+    id: "frame-physics",
+    label: "Physics Frame",
+    shortLabel: "Physics",
+    color: "#7b61a8",
+    angle: 2.4,
   },
 }
 
-export const FRAME_IDS = ["frame-xy", "frame-ordinal", "frame-network", "frame-geo"]
+export const FRAME_IDS = [
+  "frame-xy",
+  "frame-ordinal",
+  "frame-network",
+  "frame-geo",
+  "frame-physics",
+]
 
 export const HOC_SPLITS = {
   "hoc-xy-lines": [

@@ -1,6 +1,6 @@
 "use strict"
 
-const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "value"]
+const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"]
 
 const COMPONENTS_BY_CATEGORY = {
   xy: [
@@ -23,6 +23,10 @@ const COMPONENTS_BY_CATEGORY = {
   realtime: [
     "RealtimeLineChart", "RealtimeHistogram", "TemporalHistogram", "RealtimeSwarmChart",
     "RealtimeWaterfallChart", "RealtimeHeatmap",
+  ],
+  physics: [
+    "GaltonBoardChart", "EventDropChart", "PhysicsPileChart", "CollisionSwarmChart",
+    "NetworkHOPsChart", "PhysicalFlowChart",
   ],
   value: [
     "BigNumber",
@@ -49,6 +53,7 @@ function categoryForComponent(name) {
 }
 
 function importPathForCategory(category) {
+  if (category === "physics") return "semiotic/physics"
   return category === "geo" ? "semiotic/geo" : `semiotic/${category}`
 }
 

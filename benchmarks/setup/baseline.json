@@ -478,6 +478,22 @@
     "50k push/evict cycles maintain constant buffer size": {
       "mean": 2.466882591132995,
       "unit": "ms"
+    },
+    "kernel-250-bodies-120-steps": {
+      "mean": 73.3004,
+      "unit": "ms"
+    },
+    "kernel-1000-bodies-120-steps": {
+      "mean": 357.07,
+      "unit": "ms"
+    },
+    "kernel-250-bodies-settle-300-step-limit": {
+      "mean": 575.93,
+      "unit": "ms"
+    },
+    "kernel-1000-bodies-settle-300-step-limit": {
+      "mean": 3317.68,
+      "unit": "ms"
     }
   }
 }

@@ -5,6 +5,24 @@
 // name each path; the check:docs-routes gate catches drift.)
 export const EXAMPLES = [
   {
+    title: "Watermarks, Made Physical",
+    path: "/examples/watermarks",
+    eyebrow: "EventDropChart · streaming lateness",
+    description:
+      "A physics-backed remake of the flink-watermarks mechanic: event-time windows become bins, the watermark closes old windows, and late arrivals collect in a visible gutter.",
+    preview: "watermarks",
+    badges: ["EventDropChart", "Physics", "Agent-readable"],
+  },
+  {
+    title: "Plinko Quantile Dotplot",
+    path: "/examples/plinko-quantile-dotplot",
+    eyebrow: "GaltonBoardChart · posterior samples",
+    description:
+      "Posterior draws become semantic tokens, fall through a Galton-board process, and settle into a quantile dotplot so the same sample drives both motion and uncertainty reading.",
+    preview: "plinko-quantile",
+    badges: ["GaltonBoardChart", "generateTokens", "Uncertainty"],
+  },
+  {
     title: "Brushable Weather Rings",
     path: "/examples/climate-radial-weather",
     eyebrow: "Point controls + radial weather",

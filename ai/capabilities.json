@@ -2,27 +2,6 @@
   "__generated": true,
   "__source": "src/components/charts/shared/chartSpecs.ts",
   "charts": {
-    "BigNumber": {
-      "category": "value",
-      "supportsLegend": false,
-      "supportsSelection": false,
-      "supportsLinkedHover": false,
-      "supportsPush": true,
-      "supportsSSR": false,
-      "colorModel": "threshold",
-      "layoutMode": "synthetic",
-      "specialFeatures": [
-        "threshold-zones",
-        "value-only",
-        "comparison",
-        "target",
-        "staleness",
-        "intl-format",
-        "chart-slot",
-        "trend-slot",
-        "hoc-ssr-only"
-      ]
-    },
     "AreaChart": {
       "category": "xy",
       "supportsLegend": true,
@@ -628,6 +607,123 @@
       "layoutMode": "plugin",
       "specialFeatures": [
         "brush"
+      ]
+    },
+    "CollisionSwarmChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "collision-layout",
+        "settled-projection"
+      ]
+    },
+    "EventDropChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "event-time",
+        "watermark",
+        "arrival-pacing",
+        "settled-projection"
+      ]
+    },
+    "GaltonBoardChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "settled-projection",
+        "deterministic-seed"
+      ]
+    },
+    "NetworkHOPsChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": false,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "force-simulation",
+        "uncertainty",
+        "hypothetical-outcomes",
+        "sample-animation"
+      ]
+    },
+    "PhysicalFlowChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "path-constrained-flow",
+        "fluid-envelope",
+        "static-flow",
+        "proximity-sensors",
+        "settled-projection"
+      ]
+    },
+    "PhysicsPileChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "unitized",
+        "settled-projection"
+      ]
+    },
+    "BigNumber": {
+      "category": "value",
+      "supportsLegend": false,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": false,
+      "colorModel": "threshold",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "threshold-zones",
+        "value-only",
+        "comparison",
+        "target",
+        "staleness",
+        "intl-format",
+        "chart-slot",
+        "trend-slot",
+        "hoc-ssr-only"
       ]
     }
   }

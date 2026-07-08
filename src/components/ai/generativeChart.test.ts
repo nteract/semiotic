@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { RenderEvidence } from "../server/renderEvidence"
+import { renderChartWithEvidence } from "../server/renderToStaticSVG"
 import {
   chartGenerationTool,
   createChartToolHandler,
@@ -18,6 +19,13 @@ const GOOD_BAR = {
   component: "BarChart",
   props: { data: BARS, categoryAccessor: "cat", valueAccessor: "val" },
 }
+
+const GALTON_SAMPLES = [
+  { id: "a", value: 1 },
+  { id: "b", value: 2 },
+  { id: "c", value: 3 },
+  { id: "d", value: 4 }
+]
 
 function evidence(partial: Partial<RenderEvidence>): RenderEvidence {
   return {
@@ -95,6 +103,30 @@ describe("prepareChart", () => {
     expect(result.ok).toBe(true)
     expect(result.svg).toBe("<svg>bars</svg>")
     expect(result.evidence?.markCount).toBe(3)
+  })
+
+  it("passes a first-try physics proposal with render evidence", () => {
+    const result = prepareChart({
+      component: "GaltonBoardChart",
+      props: {
+        data: GALTON_SAMPLES,
+        valueAccessor: "value",
+        bins: 4,
+        width: 320,
+        height: 200,
+        title: "First-try physics distribution"
+      },
+    }, {
+      render: (component, props) =>
+        renderChartWithEvidence(component as Parameters<typeof renderChartWithEvidence>[0], props),
+    })
+
+    expect(result.ok).toBe(true)
+    expect(result.jsx).toContain("<GaltonBoardChart")
+    expect(result.evidence?.component).toBe("GaltonBoardChart")
+    expect(result.evidence?.frameType).toBe("physics")
+    expect(result.evidence?.empty).toBe(false)
+    expect(result.evidence?.markCount).toBeGreaterThanOrEqual(GALTON_SAMPLES.length)
   })
 
   it("can surface error diagnostics as non-blocking when asked", () => {

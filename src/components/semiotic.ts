@@ -4,7 +4,7 @@ import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
 // ── Chart HOCs ─────────────────────────────────────────────────────────
-import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, DifferenceChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart, XYCustomChart, NetworkCustomChart, OrdinalCustomChart, responsiveRuleMatches, resolveResponsiveRules } from "./charts"
+import { Scatterplot, ConnectedScatterplot, LineChart, AreaChart, DifferenceChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, LikertChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GaugeChart, GroupedBarChart, FunnelChart, SwimlaneChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram, ScatterplotMatrix, MinimapChart, QuadrantChart, MultiAxisLineChart, CandlestickChart, XYCustomChart, NetworkCustomChart, OrdinalCustomChart, GaltonBoardChart, EventDropChart, PhysicsCustomChart, PhysicsPileChart, CollisionSwarmChart, NetworkHOPsChart, PhysicalFlowChart, responsiveRuleMatches, resolveResponsiveRules } from "./charts"
 
 // ── Coordinated views ──────────────────────────────────────────────────
 import { LinkedCharts } from "./LinkedCharts"
@@ -103,6 +103,13 @@ export {
   XYCustomChart,
   NetworkCustomChart,
   OrdinalCustomChart,
+  GaltonBoardChart,
+  EventDropChart,
+  PhysicsCustomChart,
+  PhysicsPileChart,
+  CollisionSwarmChart,
+  NetworkHOPsChart,
+  PhysicalFlowChart,
   // Coordinated views
   LinkedCharts,
   // Theme
@@ -208,6 +215,19 @@ export type {
   MultiAxisLineChartProps,
   MultiAxisSeriesConfig,
   CandlestickChartProps,
+  GaltonBoardChartProps,
+  EventDropChartProps,
+  PhysicsCustomChartProps,
+  PhysicsCustomLayout,
+  PhysicsCustomLayoutContext,
+  PhysicsCustomLayoutResult,
+  PhysicsCustomSpawnDatumResult,
+  PhysicsPileChartProps,
+  CollisionSwarmChartProps,
+  NetworkHOPsChartProps,
+  NetworkHOPsModel,
+  NetworkHOPsSample,
+  PhysicalFlowChartProps,
   QuadrantsConfig,
   QuadrantsConfigOverride,
   QuadrantConfig,

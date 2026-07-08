@@ -36,6 +36,12 @@ const SERVER_ONLY = new Set([
   "GeoCustomChart",
 ])
 
+const AI_EXPORT_ONLY = new Set([
+  // Exported for docs/intelligence demos, but not schema-driven or MCP-renderable
+  // because callers must provide a layout function.
+  "PhysicsCustomChart",
+])
+
 const SERVER_CONFIG_EXCLUDED = new Map([
   ["MultiAxisLineChart", "composite dual-axis HOC; renderable through the HOC SSR path, not serverChartConfigs"],
   ["ScatterplotMatrix", "SVG composite with internal brush overlay; renderable through the HOC SSR path"],
@@ -79,7 +85,7 @@ function parseSchemaComponents() {
 function parseSemioticAIChartExports() {
   const source = read(files.semioticAI)
   const names = new Set()
-  const exportRegex = /export\s+\{([^}]+)\}\s+from\s+"\.\/charts\/(?:xy|ordinal|network|realtime|value)\//g
+  const exportRegex = /export\s+\{([^}]+)\}\s+from\s+"\.\/charts\/(?:xy|ordinal|network|realtime|physics|value)\//g
   for (const match of source.matchAll(exportRegex)) {
     for (const raw of match[1].split(",")) {
       const name = raw.trim().split(/\s+as\s+/)[0].trim()
@@ -149,7 +155,7 @@ const metadataRenderable = new Set(
 // AI exports set. Geo charts stay excluded because they ship under a
 // separate subpath and aren't re-exported from `semiotic/ai`.
 const expectedAIExports = new Set(
-  [...validation].filter(name => !geoCharts.has(name))
+  [...validation, ...AI_EXPORT_ONLY].filter(name => !geoCharts.has(name))
 )
 const expectedMCPRegistry = new Set(
   [...validation].filter(name => !realtimeCharts.has(name) && !valueCharts.has(name))

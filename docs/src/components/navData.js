@@ -89,6 +89,19 @@ const navData = [
         ],
       },
       {
+        title: "Physics",
+        category: "physics",
+        children: [
+          { title: "Galton Board Chart", path: "/charts/galton-board-chart" },
+          { title: "Event Drop Chart", path: "/charts/event-drop-chart" },
+          { title: "Physics Pile Chart", path: "/charts/physics-pile-chart" },
+          { title: "Collision Swarm Chart", path: "/charts/collision-swarm-chart" },
+          { title: "Network HOPs Chart", path: "/charts/network-hops-chart" },
+          { title: "Physical Flow Chart", path: "/charts/physical-flow-chart" },
+          { title: "Physics Custom Chart", path: "/charts/physics-custom-chart" },
+        ],
+      },
+      {
         title: "Value",
         category: "value",
         children: [{ title: "Big Number", path: "/charts/big-number" }],
@@ -104,6 +117,7 @@ const navData = [
       { title: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
       { title: "StreamNetworkFrame", path: "/frames/network-frame" },
       { title: "StreamGeoFrame", path: "/frames/geo-frame" },
+      { title: "StreamPhysicsFrame", path: "/frames/physics-frame" },
     ],
   },
   {
@@ -128,6 +142,7 @@ const navData = [
       { title: "Streaming System Model", path: "/features/streaming-system-model" },
       { title: "Performance", path: "/features/performance" },
       { title: "Push API", path: "/features/push-api" },
+      { title: "When Physics?", path: "/features/when-physics" },
     ],
   },
   {

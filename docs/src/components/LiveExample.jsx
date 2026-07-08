@@ -20,6 +20,7 @@ export default function LiveExample({
   type = StreamOrdinalFrame,
   overrideProps = {},
   functions = {},
+  importStatement,
   pre,
   overrideRender,
   hiddenProps = {},
@@ -50,7 +51,7 @@ export default function LiveExample({
   }, [])
 
   const Frame = type
-  const frameName = Frame.displayName
+  const frameName = Frame.displayName || Frame.name || "Frame"
 
   // Measure container width for responsive sizing
   useEffect(() => {
@@ -88,7 +89,8 @@ export default function LiveExample({
     pre,
     functionsString,
     trimmedFramePropsString,
-    overrideRender
+    overrideRender,
+    importStatement
   )
 
   // Build the full code string (for copy). `faithful: true` serializes the
@@ -108,7 +110,8 @@ export default function LiveExample({
     pre,
     functionsString,
     fullFramePropsString,
-    overrideRender
+    overrideRender,
+    importStatement
   )
 
   // Copy handler with fallback

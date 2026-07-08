@@ -42,6 +42,24 @@
       "require": "./dist/realtime.min.js",
       "default": "./dist/realtime.module.min.js"
     },
+    "./physics": {
+      "types": "./dist/semiotic-physics.d.ts",
+      "import": "./dist/physics.module.min.js",
+      "require": "./dist/physics.min.js",
+      "default": "./dist/physics.module.min.js"
+    },
+    "./physics/rapier": {
+      "types": "./dist/semiotic-physics-rapier.d.ts",
+      "import": "./dist/physics-rapier.module.min.js",
+      "require": "./dist/physics-rapier.min.js",
+      "default": "./dist/physics-rapier.module.min.js"
+    },
+    "./physics/matter": {
+      "types": "./dist/semiotic-physics-matter.d.ts",
+      "import": "./dist/physics-matter.module.min.js",
+      "require": "./dist/physics-matter.min.js",
+      "default": "./dist/physics-matter.module.min.js"
+    },
     "./server": {
       "types": "./dist/semiotic-server.d.ts",
       "import": "./dist/server.module.min.js",
@@ -104,6 +122,7 @@
     "dist/*-statisticalOverlays-*.js",
     "dist/**/*.d.ts",
     "dist/forceLayoutWorker.js",
+    "dist/physicsWorker.js",
     "ai/schema.json",
     "ai/system-prompt.md",
     "ai/examples.md",
@@ -317,8 +336,18 @@
     "vitest": "^4.1.4"
   },
   "peerDependencies": {
+    "@dimforge/rapier2d-compat": "^0.19.3",
+    "matter-js": "^0.20.0",
     "react": "^18.1.0 || ^19.0.0",
     "react-dom": "^18.1.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@dimforge/rapier2d-compat": {
+      "optional": true
+    },
+    "matter-js": {
+      "optional": true
+    }
   },
   "optionalDependencies": {
     "gifenc": "^1.0.3",

@@ -18,7 +18,11 @@ export default function ExamplesOverviewPage() {
       <div style={styles.grid}>
         {EXAMPLES.map((example) => (
           <Link key={example.path} to={example.path} style={styles.card}>
-            {example.preview === "climate"
+            {example.preview === "watermarks"
+              ? <MiniWatermarksPreview />
+              : example.preview === "plinko-quantile"
+              ? <MiniPlinkoQuantilePreview />
+              : example.preview === "climate"
               ? <MiniClimatePreview />
               : example.preview === "lake-isotype"
                 ? <MiniLakeIsotypePreview />
@@ -85,6 +89,104 @@ export default function ExamplesOverviewPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+function MiniWatermarksPreview() {
+  const events = [
+    [24, 25, "#244f72"], [45, 31, "#244f72"], [66, 53, "#23735d"],
+    [89, 42, "#23735d"], [112, 63, "#a73b45"], [137, 36, "#244f72"],
+    [160, 67, "#a73b45"], [185, 48, "#23735d"], [206, 71, "#a73b45"],
+  ]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#eef3f4" />
+      <text x="12" y="18" fill="#1d2730" fontSize="11" fontWeight="900" fontFamily="sans-serif">
+        WATERMARKS
+      </text>
+      {[0, 1, 2, 3, 4].map((index) => {
+        const x = 14 + index * 43
+        const closed = index < 3
+        return (
+          <g key={index}>
+            <rect
+              x={x}
+              y="42"
+              width="36"
+              height="38"
+              fill={closed ? "#f0d9dc" : "#dbe9ee"}
+              stroke="#b8c3c9"
+            />
+            {closed && (
+              <line x1={x + 4} x2={x + 32} y1="42" y2="42" stroke="#a73b45" strokeWidth="4" strokeLinecap="round" />
+            )}
+          </g>
+        )
+      })}
+      <line x1="137" x2="137" y1="20" y2="83" stroke="#d39b2a" strokeWidth="3" strokeDasharray="6 4" />
+      {events.map(([x, y, fill], index) => (
+        <circle key={index} cx={x} cy={y} r={index % 3 === 0 ? 4.4 : 3.6} fill={fill} stroke="#ffffff" strokeWidth="1" />
+      ))}
+      <path d="M200 29h26v49h-26z" fill="#f5e1e3" stroke="#a73b45" strokeWidth="1.2" />
+      <text x="213" y="24" textAnchor="middle" fill="#a73b45" fontSize="8" fontWeight="800" fontFamily="sans-serif">
+        LATE
+      </text>
+    </svg>
+  )
+}
+
+function MiniPlinkoQuantilePreview() {
+  const dots = Array.from({ length: 54 }, (_, index) => {
+    const column = index % 18
+    const row = Math.floor(index / 18)
+    const x = 22 + column * 11
+    const y = 71 - row * 7 - Math.max(0, Math.abs(column - 9) - 5) * 1.8
+    const win = column >= 9
+    return [x, y, win]
+  })
+  const pegs = []
+  for (let row = 0; row < 5; row += 1) {
+    for (let column = 0; column < row + 6; column += 1) {
+      pegs.push([80 + column * 12 - row * 5.5, 24 + row * 8])
+    }
+  }
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#eef4f1" />
+      <text x="12" y="18" fill="#1d2730" fontSize="11" fontWeight="900" fontFamily="sans-serif">
+        PLINKO POSTERIOR
+      </text>
+      <line x1="124" x2="124" y1="20" y2="82" stroke="#b0454c" strokeWidth="2.2" strokeDasharray="5 4" />
+      {pegs.map(([x, y], index) => (
+        <circle key={index} cx={x} cy={y} r="2.1" fill="#738d90" opacity="0.6" />
+      ))}
+      {[0, 1, 2, 3, 4, 5].map((index) => (
+        <line
+          key={index}
+          x1={51 + index * 30}
+          x2={51 + index * 30}
+          y1="56"
+          y2="82"
+          stroke="#9eadac"
+          strokeWidth="1"
+        />
+      ))}
+      {dots.map(([x, y, win], index) => (
+        <circle
+          key={index}
+          cx={x}
+          cy={y}
+          r="3.1"
+          fill={win ? "#76b7b2" : "#f28e2b"}
+          stroke="#1d2730"
+          strokeWidth="0.6"
+        />
+      ))}
+      <path d="M28 82H213" stroke="#1d2730" strokeWidth="1.4" />
+      <text x="136" y="30" fill="#8f3038" fontSize="8" fontWeight="800" fontFamily="sans-serif">
+        50%
+      </text>
+    </svg>
   )
 }
 

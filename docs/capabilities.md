@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-05-28 · 47 charts indexed.
+Last regen: 2026-07-07 · 53 charts indexed.
 
 **Column key**
 
@@ -15,12 +15,6 @@ Last regen: 2026-05-28 · 47 charts indexed.
 - **SSR**: registered in `serverChartConfigs.ts` for `renderChart()`.
 - **Color**: `categorical`, `sequential`, `threshold`, `continuous`, or `none`.
 - **Layout**: `plugin` (built-in), `custom` (escape hatch), `synthetic` (no layout).
-
-## value
-
-| Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
-|---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **BigNumber** | — | — | — | ✓ | — | threshold | synthetic | `threshold-zones` `value-only` `comparison` `target` `staleness` `intl-format` `chart-slot` `trend-slot` `hoc-ssr-only` |
 
 ## XY
 
@@ -93,12 +87,29 @@ Last regen: 2026-05-28 · 47 charts indexed.
 | **RealtimeWaterfallChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `live-stream` |
 | **TemporalHistogram** | ✓ | ✓ | ✓ | — | — | categorical | plugin | `brush` |
 
+## Physics
+
+| Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
+|---|:-:|:-:|:-:|:-:|:-:|---|---|---|
+| **CollisionSwarmChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
+| **EventDropChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
+| **GaltonBoardChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
+| **NetworkHOPsChart** | ✓ | ✓ | — | — | ✓ | categorical | plugin | `force-simulation` `uncertainty` `hypothetical-outcomes` `sample-animation` |
+| **PhysicalFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `fluid-envelope` `static-flow` `proximity-sensors` `settled-projection` |
+| **PhysicsPileChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
+
+## Value
+
+| Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
+|---|:-:|:-:|:-:|:-:|:-:|---|---|---|
+| **BigNumber** | — | — | — | ✓ | — | threshold | synthetic | `threshold-zones` `value-only` `comparison` `target` `staleness` `intl-format` `chart-slot` `trend-slot` `hoc-ssr-only` |
+
 ---
 
 ## Aggregate counts
 
-- 40/47 charts render a top-level legend.
-- 38/47 charts expose a push API.
-- 35/47 charts SSR via the `renderChart()` registry.
-- 1/47 charts use the customLayout escape hatch.
-- 2/47 charts use synthetic (no-layout) construction.
+- 46/53 charts render a top-level legend.
+- 43/53 charts expose a push API.
+- 41/53 charts SSR via the `renderChart()` registry.
+- 1/53 charts use the customLayout escape hatch.
+- 7/53 charts use synthetic (no-layout) construction.

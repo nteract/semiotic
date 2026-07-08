@@ -33,6 +33,7 @@ function annotationDensity
 function annotationLayout
 function arcLayout
 function arcPath
+function arrivalReplay
 function axisFixedForceLayout
 function axisFixedForcePositions
 function bandLabel
@@ -49,6 +50,7 @@ function circularLayout
 function clamp
 function closeness
 function clustering
+function collidersFromScales
 function cubicPath
 function cubicPoint
 function cubicTangent
@@ -65,6 +67,7 @@ function flextreeLayout
 function forceLayout
 function forceLayoutAsync
 function formatTooltipValue
+function galtonPegs
 function generateTokens
 function geoAreaHitTarget
 function geoHitTarget
@@ -120,12 +123,14 @@ function roundedEnclosure
 function runLengthEncode
 function runs
 function scalePoint
+function sedimentBake
 function selectCyclicRange
 function selectIsometricLandmarks
 function shade
 function shortestArcDelta
 function shortestPath
 function signatureKey
+function spawnFromTokens
 function subtractPoints
 function suggestTokenEncoding
 function symbolExtent
@@ -156,6 +161,7 @@ interface AnnotationLayoutConfig
 interface AnnotationLayoutOptions
 interface AnnotationMobileConfig
 interface ArcLayoutOptions
+interface ArrivalReplayOptions
 interface AxisFixedForceConfig
 interface AxisFixedForceResult
 interface BandLabelProps
@@ -178,6 +184,7 @@ interface FanOutBendOptions
 interface FlextreeConfig
 interface ForceLayoutAsyncOptions
 interface ForceLayoutOptions
+interface GaltonPegsOptions
 interface GeoAreaHitTargetProps
 interface GlyphDef
 interface GlyphPart
@@ -222,6 +229,15 @@ interface PackIntervalsResult
 interface PackedClusterMatrixConfig
 interface PackedInterval
 interface ParallelCoordinatesConfig
+interface PhysicsBandColliderOptions
+interface PhysicsColliderSpec
+interface PhysicsPlotBounds
+interface PhysicsQueuedSpawn
+interface PhysicsScaleColliderOptions
+interface PhysicsSedimentBinSnapshot
+interface PhysicsSedimentColumn
+interface PhysicsSedimentHeightfieldOptions
+interface PhysicsSpawnPacingOptions
 interface Point
 interface PolarOptions
 interface PositionedNode
@@ -233,6 +249,9 @@ interface RectCollideOptions
 interface RoundedEnclosureProps
 interface Run
 interface RunOptions
+interface SedimentBakeOptions
+interface SedimentBakeResult
+interface SpawnFromTokensOptions
 interface SuggestTokenEncodingInput
 interface TokenDiagnostic
 interface TokenDiagnosticsContext
@@ -255,6 +274,7 @@ type AnnotationCohesion
 type AutoPlaceAnnotations
 type AutoPlaceAnnotationsConfig
 type AxisOrient
+type BandScale
 type CalloutConnector
 type CustomLayout
 type EdgeOrientation
@@ -266,6 +286,7 @@ type MobileAnnotationStrategyMode
 type MobileChartFamily
 type NetworkCustomLayout
 type NetworkSymbolName
+type NumericScale
 type OrdinalCustomLayout
 type RingArcOptions
 type TokenCapabilityIntent

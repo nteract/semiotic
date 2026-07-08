@@ -204,9 +204,10 @@ export default function OctopusMetaphorExamplePage() {
           <h2 id="semiotic-heading">Semiotic is an octopus</h2>
           <p>
             The closing diagram flips the metaphor. The central body is not a villainous power
-            but a library with four frame arms. Each arm holds a smaller frame-octopus, and each
-            small octopus holds bars for the chart HOCs built on that frame. The data comes from
-            the same architecture table used elsewhere in the examples section.
+            but a library with five frame arms. The new physics arm holds process-driven chart
+            HOCs beside XY, Ordinal, Network, and Geo. Each arm holds a smaller frame-octopus,
+            and each small octopus holds bars for the chart HOCs built on that frame. The data
+            comes from the same architecture table used elsewhere in the examples section.
           </p>
         </div>
 
@@ -224,8 +225,8 @@ export default function OctopusMetaphorExamplePage() {
                 margin={0}
                 enableHover
                 onObservation={handleSemioticObservation}
-                description="A system diagram saying Semiotic is an octopus. The central Semiotic octopus holds four smaller octopuses, one each for the XY, Ordinal, Network, and Geo frames. Each smaller octopus holds bars representing the HOCs built from that frame."
-                summary={`Four frame tendrils hold ${semioticData.hocCount} HOC bars in total. ${semioticData.frameSummary}.`}
+                description="A system diagram saying Semiotic is an octopus. The central Semiotic octopus holds five smaller octopuses, one each for the XY, Ordinal, Network, Geo, and Physics frames. Each smaller octopus holds bars representing the HOCs built from that frame."
+                summary={`${semioticData.frameCount} frame tendrils hold ${semioticData.hocCount} HOC bars in total. ${semioticData.frameSummary}.`}
                 accessibleTable
                 frameProps={{
                   background: "transparent",
@@ -688,7 +689,7 @@ function buildSemioticOctopusData() {
       id: "semiotic-octopus",
       label: "Semiotic",
       kind: "core",
-      detail: "The public chart system holding four frame families.",
+      detail: "The public chart system holding five frame families.",
     },
     ...frames,
     ...hocs,
@@ -710,6 +711,7 @@ function buildSemioticOctopusData() {
   return {
     nodes,
     edges,
+    frameCount: frames.length,
     hocCount: hocs.length,
     frameSummary: frameCounts.map((frame) => `${frame.label} has ${frame.count}`).join(", "),
   }

@@ -74,6 +74,13 @@ function checkEmptyData(
   }
 
   if (spec.dataShape === "network") {
+    if (
+      component === "NetworkHOPsChart" &&
+      Array.isArray(props.samples) &&
+      props.samples.length > 0
+    ) {
+      return
+    }
     if (props.edges && Array.isArray(props.edges) && props.edges.length === 0) {
       out.push({
         severity: "error",
@@ -1035,6 +1042,279 @@ function checkPieTooManySlices(
   }
 }
 
+const PHYSICS_COMPONENTS = new Set([
+  "GaltonBoardChart",
+  "EventDropChart",
+  "PhysicsPileChart",
+  "CollisionSwarmChart",
+  "NetworkHOPsChart",
+])
+
+function finiteNumber(value: unknown): number | null {
+  const number = value instanceof Date ? value.getTime() : Number(value)
+  return Number.isFinite(number) ? number : null
+}
+
+function readField(datum: Datum, accessor: unknown, fallback: string): unknown {
+  if (typeof accessor === "function") return accessor(datum)
+  const key = typeof accessor === "string" ? accessor : fallback
+  return datum?.[key]
+}
+
+function checkPhysicsConfig(
+  component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  if (!PHYSICS_COMPONENTS.has(component)) return
+
+  if (component === "GaltonBoardChart") {
+    const bins = props.bins
+    if (typeof bins === "number" && bins < 2) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_BINS",
+        message: `bins=${bins} leaves no meaningful settled projection for a Galton board.`,
+        fix: `Use at least two bins; 8-24 bins is a practical range for physics distributions.`,
+      })
+    }
+    const branchProbability = finiteNumber(props.branchProbability)
+    if (
+      props.branchProbability != null &&
+      (branchProbability == null || branchProbability < 0 || branchProbability > 1)
+    ) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_BRANCH_PROBABILITY",
+        message: `branchProbability=${String(props.branchProbability)} must be between 0 and 1.`,
+        fix: `Use branchProbability={0.5} for a balanced Galton board, or bias it within the [0, 1] range.`,
+      })
+    }
+    const mechanicalCount = finiteNumber(props.mechanicalCount)
+    if (props.mechanicalCount != null && (mechanicalCount == null || mechanicalCount <= 0)) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_MECHANICAL_COUNT",
+        message: `mechanicalCount=${String(props.mechanicalCount)} cannot generate a mechanical Galton board.`,
+        fix: `Use a positive mechanicalCount, for example 96.`,
+      })
+    }
+  }
+
+  if (component === "EventDropChart") {
+    const windows = props.windows
+    const windowSize =
+      windows && typeof windows === "object" ? finiteNumber((windows as Datum).size) : null
+    if (windowSize != null && windowSize <= 0) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_WINDOW_SIZE",
+        message: `windows.size=${windowSize} cannot form event-time barriers.`,
+        fix: `Set windows={{ size: positiveNumber }} so each event can settle into a real time window.`,
+      })
+    }
+    if (typeof props.timeScale === "number" && props.timeScale <= 0) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_TIME_SCALE",
+        message: `timeScale=${props.timeScale} prevents arrival replay from advancing.`,
+        fix: `Use a positive timeScale, or omit it for the default pace.`,
+      })
+    }
+
+    const data = Array.isArray(props.data) ? props.data : []
+    if (data.length > 0) {
+      const timeAccessor = props.timeAccessor || "time"
+      const arrivalAccessor = props.arrivalAccessor || "arrivalTime"
+      const hasDistinctArrival = data.some((datum: Datum) => {
+        const eventTime = finiteNumber(readField(datum, timeAccessor, "time"))
+        const arrivalTime = finiteNumber(readField(datum, arrivalAccessor, "arrivalTime"))
+        return eventTime != null && arrivalTime != null && eventTime !== arrivalTime
+      })
+      if (!hasDistinctArrival) {
+        out.push({
+          severity: "warning",
+          code: "PHYSICS_EVENTDROP_NO_ARRIVAL_SPREAD",
+          message: `EventDropChart data does not show distinct arrival times, so the physics replay collapses to event order.`,
+          fix: `Provide an arrivalAccessor field with event-arrival times when demonstrating lateness, watermarks, or out-of-order streams.`,
+        })
+      }
+    }
+  }
+
+  if (component === "PhysicsPileChart") {
+    const mechanicalCount = finiteNumber(props.mechanicalCount)
+    if (props.mechanicalCount != null && (mechanicalCount == null || mechanicalCount <= 0)) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_MECHANICAL_COUNT",
+        message: `mechanicalCount=${String(props.mechanicalCount)} cannot generate a mechanical pile chart.`,
+        fix: `Use a positive mechanicalCount, for example 80.`,
+      })
+    }
+    if (
+      props.mode === "mechanical" &&
+      Array.isArray(props.mechanicalCategories) &&
+      props.mechanicalCategories.length === 0
+    ) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_EMPTY_MECHANICAL_CATEGORIES",
+        message: `mechanicalCategories=[] leaves no containers for the generated unit pile.`,
+        fix: `Provide at least one category label, or omit mechanicalCategories for the default set.`,
+      })
+    }
+
+    const unitValue = finiteNumber(props.unitValue ?? 1) ?? 1
+    if (unitValue <= 0) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_UNIT_VALUE",
+        message: `unitValue=${props.unitValue} cannot unitize values into physical bodies.`,
+        fix: `Set unitValue to a positive number represented by one body.`,
+      })
+      return
+    }
+
+    const data = Array.isArray(props.data) ? props.data : []
+    const valueAccessor = props.valueAccessor || "value"
+    const bodyEstimate = data.reduce((sum: number, datum: Datum) => {
+      const value = finiteNumber(readField(datum, valueAccessor, "value")) ?? 0
+      return sum + Math.max(0, Math.round(value / unitValue))
+    }, 0)
+    if (bodyEstimate > 1500) {
+      out.push({
+        severity: "warning",
+        code: "PHYSICS_BODY_BUDGET",
+        message: `PhysicsPileChart would create about ${bodyEstimate} live bodies; motion may dominate the chart and stress the frame budget.`,
+        fix: `Increase unitValue, cap visible units, or aggregate before rendering so the settled projection remains readable.`,
+      })
+    }
+  }
+
+  if (component === "CollisionSwarmChart") {
+    const pointRadius = finiteNumber(props.pointRadius ?? 5) ?? 5
+    if (pointRadius <= 0) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_POINT_RADIUS",
+        message: `pointRadius=${props.pointRadius} cannot produce collision bodies.`,
+        fix: `Use a positive pointRadius, for example 5.`,
+      })
+    }
+    const collisionIterations = finiteNumber(props.collisionIterations ?? 6) ?? 6
+    if (collisionIterations <= 0) {
+      out.push({
+        severity: "error",
+        code: "PHYSICS_BAD_COLLISION_ITERATIONS",
+        message: `collisionIterations=${props.collisionIterations} disables collision relaxation.`,
+        fix: `Use at least one collision iteration; 4-8 is a practical range for swarms.`,
+      })
+    }
+    if (props.xExtent != null) {
+      const extent = Array.isArray(props.xExtent) ? props.xExtent : []
+      const min = finiteNumber(extent[0])
+      const max = finiteNumber(extent[1])
+      if (extent.length < 2 || min == null || max == null) {
+        out.push({
+          severity: "error",
+          code: "PHYSICS_BAD_X_EXTENT",
+          message: `xExtent must be a numeric [min, max] pair for CollisionSwarmChart.`,
+          fix: `Pass xExtent={[min, max]} or omit it so the chart infers the domain from data.`,
+        })
+      }
+    }
+
+    const data = Array.isArray(props.data) ? props.data : []
+    if (data.length > 1200) {
+      out.push({
+        severity: "warning",
+        code: "PHYSICS_BODY_BUDGET",
+        message: `CollisionSwarmChart would create ${data.length} live bodies; collision relaxation may dominate the frame budget.`,
+        fix: `Sample, aggregate, reduce point radius, or move to a static SwarmPlot when every row does not need a physical body.`,
+      })
+    }
+    const groupAccessor = props.groupAccessor
+    if (data.length > 0 && groupAccessor) {
+      const groups = new Set<unknown>()
+      for (const datum of data) {
+        const value = readField(datum, groupAccessor, "group")
+        if (value != null) groups.add(value)
+      }
+      if (groups.size > 12) {
+        out.push({
+          severity: "warning",
+          code: "PHYSICS_TOO_MANY_SWARM_LANES",
+          message: `CollisionSwarmChart has ${groups.size} group lanes, which leaves little vertical room for collision separation.`,
+          fix: `Facet or filter groups, or use an ordinary SwarmPlot/BoxPlot for dense grouped comparison.`,
+        })
+      }
+    }
+  }
+
+  if (component === "NetworkHOPsChart") {
+    const edges = Array.isArray(props.edges) ? props.edges : []
+    const samples = Array.isArray(props.samples) ? props.samples : []
+    if (edges.length === 0 && samples.length === 0) {
+      out.push({
+        severity: "error",
+        code: "NETWORK_HOPS_MISSING_TOPOLOGY",
+        message: `NetworkHOPsChart needs probabilistic edges or explicit graph samples.`,
+        fix: `Provide edges={[{ source: "A", target: "B", p: 0.6 }]} or samples={[{ id: "s1", edges: [...] }]}.`,
+      })
+    }
+
+    const sampleRate = finiteNumber(props.sampleRate ?? 1) ?? 1
+    if (sampleRate <= 0) {
+      out.push({
+        severity: "error",
+        code: "NETWORK_HOPS_BAD_SAMPLE_RATE",
+        message: `sampleRate=${String(props.sampleRate)} prevents sample animation from advancing.`,
+        fix: `Use a positive sampleRate, for example 1, or pass paused={true} with a controlled sampleIndex.`,
+      })
+    }
+
+    if (samples.length > 0) {
+      const missingEdges = samples.filter(
+        (sample: Datum) => !sample || !Array.isArray(sample.edges)
+      )
+      if (missingEdges.length > 0) {
+        out.push({
+          severity: "error",
+          code: "NETWORK_HOPS_BAD_SAMPLE",
+          message: `${missingEdges.length} NetworkHOPsChart sample(s) are missing an edges array.`,
+          fix: `Shape every sample as { id, label, nodes?, edges: [{ source, target }] }.`,
+        })
+      } else if (
+        samples.every((sample: Datum) => Array.isArray(sample.edges) && sample.edges.length === 0)
+      ) {
+        out.push({
+          severity: "warning",
+          code: "NETWORK_HOPS_EMPTY_SAMPLES",
+          message: `All NetworkHOPsChart samples have empty edge lists, so the graph will not show changing outcomes.`,
+          fix: `Include at least one edge in one sample, or use probabilistic edges with an edgeProbabilityAccessor.`,
+        })
+      }
+    }
+
+    if (edges.length > 0) {
+      const probabilityAccessor = props.edgeProbabilityAccessor || "p"
+      const invalid = edges.find((edge: Datum) => {
+        const value = finiteNumber(readField(edge, probabilityAccessor, "p"))
+        return value == null || value < 0 || value > 1
+      })
+      if (invalid) {
+        out.push({
+          severity: "error",
+          code: "NETWORK_HOPS_BAD_PROBABILITY",
+          message: `NetworkHOPsChart edge probabilities must be numeric values between 0 and 1.`,
+          fix: `Set ${typeof probabilityAccessor === "string" ? probabilityAccessor : "the probability accessor"} to values like 0.2, 0.5, or 0.9 on every probabilistic edge.`,
+        })
+      }
+    }
+  }
+}
+
 export function diagnoseConfig(
   componentName: string,
   props: Datum
@@ -1093,6 +1373,7 @@ export function diagnoseConfig(
   checkNonPassingCurve(componentName, props, diagnoses)
   checkExtremeAspectRatio(componentName, props, diagnoses)
   checkPieTooManySlices(componentName, props, diagnoses)
+  checkPhysicsConfig(componentName, props, diagnoses)
 
   return {
     ok: diagnoses.every(d => d.severity === "warning"),

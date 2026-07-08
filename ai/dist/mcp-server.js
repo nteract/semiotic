@@ -6894,7 +6894,7 @@ var require_dist = __commonJS({
 var require_componentMetadata = __commonJS({
   "ai/componentMetadata.cjs"(exports2, module2) {
     "use strict";
-    var CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "value"];
+    var CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"];
     var COMPONENTS_BY_CATEGORY = {
       xy: [
         "LineChart",
@@ -6952,6 +6952,14 @@ var require_componentMetadata = __commonJS({
         "RealtimeWaterfallChart",
         "RealtimeHeatmap"
       ],
+      physics: [
+        "GaltonBoardChart",
+        "EventDropChart",
+        "PhysicsPileChart",
+        "CollisionSwarmChart",
+        "NetworkHOPsChart",
+        "PhysicalFlowChart"
+      ],
       value: [
         "BigNumber"
       ]
@@ -6973,6 +6981,7 @@ var require_componentMetadata = __commonJS({
       return category;
     }
     function importPathForCategory(category) {
+      if (category === "physics") return "semiotic/physics";
       return category === "geo" ? "semiotic/geo" : `semiotic/${category}`;
     }
     function metadataForComponent2(entryOrName) {
@@ -32404,7 +32413,13 @@ var COMPONENT_REGISTRY = {
   ChoroplethMap: { component: import_geo.ChoroplethMap, category: "geo" },
   ProportionalSymbolMap: { component: import_geo.ProportionalSymbolMap, category: "geo" },
   FlowMap: { component: import_geo.FlowMap, category: "geo" },
-  DistanceCartogram: { component: import_geo.DistanceCartogram, category: "geo" }
+  DistanceCartogram: { component: import_geo.DistanceCartogram, category: "geo" },
+  GaltonBoardChart: { component: import_ai.GaltonBoardChart, category: "physics" },
+  EventDropChart: { component: import_ai.EventDropChart, category: "physics" },
+  PhysicsPileChart: { component: import_ai.PhysicsPileChart, category: "physics" },
+  CollisionSwarmChart: { component: import_ai.CollisionSwarmChart, category: "physics" },
+  NetworkHOPsChart: { component: import_ai.NetworkHOPsChart, category: "physics" },
+  PhysicalFlowChart: { component: import_ai.PhysicalFlowChart, category: "physics" }
 };
 
 // ai/renderHOCToSVG.tsx

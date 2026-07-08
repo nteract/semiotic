@@ -55,6 +55,14 @@ function checkType(value: unknown, expected: PropType | PropType[]): boolean {
   return types.includes(actual as PropType)
 }
 
+function allowsGeneratedArrayData(componentName: string, props: Datum): boolean {
+  return (
+    props.mode === "mechanical" &&
+    (componentName === "GaltonBoardChart" ||
+      componentName === "PhysicsPileChart")
+  )
+}
+
 import { closestMatch } from "./stringDistance"
 
 // ---------------------------------------------------------------------------
@@ -110,6 +118,7 @@ export function validateProps(
   if (
     spec.dataShape === "array" &&
     !spec.required.includes("data") &&
+    !allowsGeneratedArrayData(componentName, props) &&
     (props.data === undefined || props.data === null)
   ) {
     errors.push(`"data" is required for ${componentName}.`)

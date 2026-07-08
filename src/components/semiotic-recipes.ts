@@ -323,6 +323,33 @@ export type { ForceLayoutOptions } from "./recipes/forceLayout"
 export { forceLayoutAsync } from "./recipes/forceLayoutAsync"
 export type { ForceLayoutAsyncOptions } from "./recipes/forceLayoutAsync"
 
+// ── Physics recipes (use with PhysicsCustomChart / StreamPhysicsFrame) ──
+export {
+  arrivalReplay,
+  collidersFromScales,
+  galtonPegs,
+  sedimentBake,
+  spawnFromTokens,
+} from "./recipes/physics"
+export type {
+  ArrivalReplayOptions,
+  BandScale,
+  GaltonPegsOptions,
+  NumericScale,
+  PhysicsBandColliderOptions,
+  PhysicsColliderSpec,
+  PhysicsPlotBounds,
+  PhysicsQueuedSpawn,
+  PhysicsScaleColliderOptions,
+  PhysicsSedimentBinSnapshot,
+  PhysicsSedimentColumn,
+  PhysicsSedimentHeightfieldOptions,
+  PhysicsSpawnPacingOptions,
+  SedimentBakeOptions,
+  SedimentBakeResult,
+  SpawnFromTokensOptions,
+} from "./recipes/physics"
+
 // ── Static network layouts (arc diagram / adjacency matrix / circular). ──
 export {
   orderByGroupDegree,

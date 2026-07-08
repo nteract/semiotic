@@ -38,6 +38,64 @@ const SAMPLES = {
     },
     capability: { family: "categorical", intentScores: { "part-to-whole": 4 } },
   },
+  "Physics routing state": {
+    component: "PhysicsCustomChart",
+    props: {
+      data: [
+        { id: "pkg-1", route: "triage" },
+        { id: "pkg-2", route: "review" },
+        { id: "pkg-3", route: "review" },
+        { id: "pkg-4", route: "ship" },
+      ],
+      projectionRows: [
+        { id: "triage", label: "Triage lane", count: 1 },
+        { id: "review", label: "Review lane", count: 2 },
+        { id: "ship", label: "Ship lane", count: 1 },
+      ],
+      physics: {
+        snapshot: {
+          simulationState: "settled",
+          elapsedSeconds: 3.2,
+          paused: false,
+          visible: true,
+          queue: [],
+          liveBodyOrder: ["pkg-1", "pkg-2", "pkg-3", "pkg-4"],
+          activeSensorPairs: ["sensor-review::pkg-2"],
+          config: {
+            fixedDt: 1 / 120,
+            maxSubsteps: 8,
+            timeScale: 1,
+            bodyLimit: 120,
+            eviction: "oldest",
+            kernel: {
+              seed: 42,
+              gravity: { x: 0, y: 820 },
+            },
+          },
+          sediment: [
+            { id: "archive", label: "Archived packets", count: 3, total: 9 },
+          ],
+          world: {
+            bodies: [
+              { id: "pkg-1", sleeping: true },
+              { id: "pkg-2", sleeping: true },
+              { id: "pkg-3", sleeping: true },
+              { id: "pkg-4", sleeping: true },
+            ],
+            colliders: [
+              { id: "floor" },
+              { id: "sensor-triage", sensor: true },
+              { id: "sensor-review", sensor: true },
+              { id: "sensor-ship", sensor: true },
+            ],
+            springs: [],
+            activeSensors: ["sensor-review"],
+          },
+        },
+      },
+    },
+    capability: { family: "custom", intentScores: { flow: 4 } },
+  },
 }
 
 function GroundingDemo() {
@@ -68,6 +126,9 @@ function GroundingDemo() {
         {g.intent && (
           <Row tag={`intent · ${g.intent.act}`} color="#8250df">{g.intent.sentence}</Row>
         )}
+        {g.physics && (
+          <Row tag="physics" color="#953800">{g.physics.text}</Row>
+        )}
         <Row tag="structure" color="#0969da">
           {`${countNodes(g.structure)} navigable nodes — chart → ${(g.structure.children || []).map((c) => c.role).filter((r, i, a) => a.indexOf(r) === i).join(" / ")} → datum`}
         </Row>
@@ -93,9 +154,9 @@ export default function ReaderGroundingPage() {
     >
       <p>
         A capability descriptor says how a chart <em>should</em> be used — which
-        intents it serves, what data it fits. That's the <strong>author</strong> side.
+        intents it serves, what data it fits. That&apos;s the <strong>author</strong> side.
         The reader side is the inverse question: handed a specific chart, how does
-        an agent (or a screen-reader user — they're the same consumer) recover what
+        an agent (or a screen-reader user — they&apos;re the same consumer) recover what
         it means without seeing the pixels?{" "}
         <code>buildReaderGrounding()</code> answers that with a single payload.
       </p>
@@ -109,8 +170,8 @@ export default function ReaderGroundingPage() {
         </li>
         <li>
           <strong>intent</strong> — the <strong>L4 communicative act</strong>: what the
-          chart is asking the reader to do ("This is an alerting chart; the spike at
-          11:00 is the point to investigate"), derived from the chart's capability intent.
+          chart is asking the reader to do (<q>This is an alerting chart; the spike at
+          11:00 is the point to investigate</q>), derived from the chart&apos;s capability intent.
         </li>
         <li>
           <strong>structure</strong> — the{" "}
@@ -140,10 +201,14 @@ grounding.description.text   // "A line chart of sales by month. sales ranges fr
 grounding.intent.act         // "tracking" | "alerting" | "comparing" | …
 grounding.intent.sentence    // "This is a trend chart; read it for the trajectory of sales …"
 grounding.structure          // NavTreeNode (chart → axes/series → datum)
+grounding.physics            // Physics runtime: seed, gravity, bodies, sensors, sediment, aggregates
 grounding.text               // L1–L4 joined — feed this straight to the model
 
 // Token-budget mode: skip the structure
-buildReaderGrounding("PieChart", props, { includeStructure: false })`}
+buildReaderGrounding("PieChart", props, { includeStructure: false })
+
+// Physics token-budget mode: omit simulation details
+buildReaderGrounding("PhysicsCustomChart", props, { physics: false })`}
         language="jsx"
       />
 
@@ -152,11 +217,11 @@ buildReaderGrounding("PieChart", props, { includeStructure: false })`}
         The <code>capability</code> input drives the L4 act. Pass a full capability
         descriptor (from <code>semiotic/ai</code>) or a resolved{" "}
         <code>{`{ family, intentScores }`}</code> — a{" "}
-        <Link to="/intelligence/suggestions">suggestion</Link>'s already-resolved
+        <Link to="/intelligence/suggestions">suggestion</Link>&apos;s already-resolved
         scores are the most precise source. Without any capability, the act is
-        inferred from the component's family (a line chart reads as "tracking"),
+        inferred from the component&apos;s family (a line chart reads as <q>tracking</q>),
         best-effort. A chart whose primary intents are computed at suggestion time
-        (a line's <code>trend</code> scorer is a function) falls back to the family
+        (a line&apos;s <code>trend</code> scorer is a function) falls back to the family
         rather than mislabeling from leftover static scores.
       </p>
 
@@ -166,10 +231,10 @@ buildReaderGrounding("PieChart", props, { includeStructure: false })`}
         problem — meaning has to survive without the rendering — so they deserve the
         same evidence. Standardizing on one grounding payload means an agent that
         reads a chart faithfully and a screen reader that announces it are reading
-        the <em>same</em> structured account, and an evaluator can check an agent's
-        interpretation against it. It's the reader-side complement to the{" "}
+        the <em>same</em> structured account, and an evaluator can check an agent&apos;s
+        interpretation against it. It&apos;s the reader-side complement to the{" "}
         <Link to="/intelligence/capabilities">capability descriptor</Link> and partial
-        "render evidence" for tool-using models.
+        <q>render evidence</q> for tool-using models.
       </p>
 
       <h2 id="related">Related</h2>

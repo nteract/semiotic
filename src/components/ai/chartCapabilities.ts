@@ -51,6 +51,14 @@ import { ProportionalSymbolMapCapability } from "../charts/geo/ProportionalSymbo
 import { FlowMapCapability } from "../charts/geo/FlowMap.capability"
 import { DistanceCartogramCapability } from "../charts/geo/DistanceCartogram.capability"
 
+// Physics family
+import { GaltonBoardChartCapability } from "../charts/physics/GaltonBoardChart.capability"
+import { EventDropChartCapability } from "../charts/physics/EventDropChart.capability"
+import { PhysicsPileChartCapability } from "../charts/physics/PhysicsPileChart.capability"
+import { CollisionSwarmChartCapability } from "../charts/physics/CollisionSwarmChart.capability"
+import { NetworkHOPsChartCapability } from "../charts/physics/NetworkHOPsChart.capability"
+import { PhysicalFlowChartCapability } from "../charts/physics/PhysicalFlowChart.capability"
+
 // Value family
 import { BigNumberCapability } from "../charts/value/BigNumber.capability"
 
@@ -117,6 +125,13 @@ const BUILT_IN_CAPABILITIES: ReadonlyArray<ChartCapability> = [
   ProportionalSymbolMapCapability,
   FlowMapCapability,
   DistanceCartogramCapability,
+  // Physics
+  GaltonBoardChartCapability,
+  EventDropChartCapability,
+  PhysicsPileChartCapability,
+  CollisionSwarmChartCapability,
+  NetworkHOPsChartCapability,
+  PhysicalFlowChartCapability,
   // Value
   BigNumberCapability,
 ]
@@ -205,4 +220,11 @@ export {
   ProportionalSymbolMapCapability,
   FlowMapCapability,
   DistanceCartogramCapability,
+  // Physics
+  GaltonBoardChartCapability,
+  EventDropChartCapability,
+  PhysicsPileChartCapability,
+  CollisionSwarmChartCapability,
+  NetworkHOPsChartCapability,
+  PhysicalFlowChartCapability,
 }

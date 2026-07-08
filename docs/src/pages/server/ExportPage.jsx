@@ -431,13 +431,62 @@ const frames = generateFrameSequence("SankeyDiagram",
         </tbody>
       </table>
 
+      <h2>Physics GIFs</h2>
+      <p>
+        Standard <code>renderToAnimatedGif</code> advances by slicing data into frames.
+        Physics charts need simulation time instead: enqueue bodies once, advance a
+        deterministic fixed-step store, and render each live snapshot.
+      </p>
+      <CodeBlock code={`import {
+  generatePhysicsFrameSVGs,
+  renderPhysicsToAnimatedGif,
+} from "semiotic/server"
+import { buildEventDropPhysics } from "semiotic/physics"
+
+const layout = buildEventDropPhysics({
+  data: events,
+  timeAccessor: "eventTime",
+  arrivalAccessor: "arrivalTime",
+  windows: { size: 12 },
+  watermark: { delay: 18 },
+  ballRadius: 5,
+  seed: 17,
+  size: [640, 360],
+  timeScale: 0.08,
+})
+
+const frames = generatePhysicsFrameSVGs({
+  width: 640,
+  height: 360,
+  config: layout.config,
+  initialSpawns: layout.initialSpawns,
+  initialSpawnPacing: layout.initialSpawnPacing,
+  title: "Watermark replay",
+}, {
+  fps: 12,
+  frameCount: 36,
+})
+
+const gif = await renderPhysicsToAnimatedGif({
+  width: 640,
+  height: 360,
+  config: layout.config,
+  initialSpawns: layout.initialSpawns,
+  initialSpawnPacing: layout.initialSpawnPacing,
+}, {
+  fps: 12,
+  frameCount: 36,
+})`} language="js" />
+
       <h2>Server-side API overview</h2>
       <CodeBlock code={`import {
   renderChart,          // SVG string (sync)
   renderToImage,        // PNG/JPEG Buffer (async, requires sharp)
   renderToAnimatedGif,  // GIF Buffer (async, requires sharp + gifenc)
+  renderPhysicsToAnimatedGif, // Physics GIF Buffer (async, requires sharp + gifenc)
   renderDashboard,      // Multi-chart SVG string (sync)
   generateFrameSVGs,    // Animation frame SVGs (sync, no deps)
+  generatePhysicsFrameSVGs, // Physics frame SVGs (sync, no deps)
 } from "semiotic/server"`} language="js" />
     </PageLayout>
   )

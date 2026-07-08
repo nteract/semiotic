@@ -40,7 +40,7 @@ const VALIDATION_MAP = path.join(ROOT, "src/components/charts/shared/validationM
 
 // ── 1. Discover HOC chart names ────────────────────────────────────────
 
-const HOC_DIRS = ["xy", "ordinal", "network", "geo", "custom"]
+const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom"]
 const hocsOnDisk = new Set()
 
 for (const dir of HOC_DIRS) {

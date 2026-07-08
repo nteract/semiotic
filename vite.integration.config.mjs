@@ -74,6 +74,7 @@ export default defineConfig(({ mode }) => ({
         primitiveProps: resolve(integrationRoot, "primitive-props-examples/index.html"),
         primitiveThemeMatrix: resolve(integrationRoot, "primitive-theme-matrix-examples/index.html"),
         processSankey: resolve(integrationRoot, "process-sankey-examples/index.html"),
+        physics: resolve(integrationRoot, "physics-examples/index.html"),
         realtime: resolve(integrationRoot, "realtime-examples/index.html"),
         ssrParity: resolve(integrationRoot, "ssr-parity-examples/index.html"),
         statusScaleTheme: resolve(integrationRoot, "status-scale-theme-examples/index.html"),

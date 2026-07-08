@@ -89,6 +89,7 @@ const ORDER = [
   "./themes",
   "./data",
   "./value",
+  "./physics",
   "./ai",
   "."
 ]
@@ -98,6 +99,7 @@ const DOC_CATEGORIES = [
   "Ordinal Charts",
   "Network Charts",
   "Geo Charts",
+  "Physics Charts",
   "Custom Charts",
   "Accessibility",
   "Annotations",
@@ -117,6 +119,7 @@ const DOC_CATEGORY_COLORS: Record<string, string> = {
   "Ordinal Charts": "#4589ff",
   "Network Charts": "#78a9ff",
   "Geo Charts": "#a6c8ff",
+  "Physics Charts": "#33b1ff",
   "Custom Charts": "#d0e2ff",
   Features: "#007d79",
   Theming: "#42be65",
@@ -186,6 +189,12 @@ const GEO_CHART_PAGES = new Set([
   "FlowMapPage",
   "DistanceCartogramPage",
   "TileMapPage"
+])
+
+const PHYSICS_CHART_PAGES = new Set([
+  "GaltonBoardChartPage",
+  "EventDropChartPage",
+  "PhysicsPileChartPage"
 ])
 
 const CUSTOM_CHART_PAGES = new Set([
@@ -450,6 +459,7 @@ function chartDocCategory(component: string): string | null {
   if (ORDINAL_CHART_PAGES.has(component)) return "Ordinal Charts"
   if (NETWORK_CHART_PAGES.has(component)) return "Network Charts"
   if (GEO_CHART_PAGES.has(component)) return "Geo Charts"
+  if (PHYSICS_CHART_PAGES.has(component)) return "Physics Charts"
   return null
 }
 

@@ -6,6 +6,9 @@
     "src/components/semiotic-ordinal.ts",
     "src/components/semiotic-network.ts",
     "src/components/semiotic-geo.ts",
+    "src/components/semiotic-physics.ts",
+    "src/components/semiotic-physics-matter.ts",
+    "src/components/semiotic-physics-rapier.ts",
     "src/components/semiotic-realtime.ts",
     "src/components/semiotic-server.ts",
     "src/components/semiotic-ai.ts"

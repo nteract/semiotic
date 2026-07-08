@@ -5,8 +5,21 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
   <id>https://semiotic3.nteract.io/blog/</id>
-  <updated>2026-07-05T00:00:00Z</updated>
+  <updated>2026-07-07T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Physics that settles into charts</title>
+    <id>https://semiotic3.nteract.io/blog/physics-that-settles-into-charts</id>
+    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/physics-that-settles-into-charts"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/physics-that-settles-into-charts.png"/>
+    <published>2026-07-07T00:00:00Z</published>
+    <updated>2026-07-07T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="physics"/>
+    <category term="realtime"/>
+    <summary type="text">The physics frame is not a particle-effect feature. It is a chart frame for cases where motion is the mechanism: sampling, lateness, queueing, routing, collision, and accumulation. The guardrail is simple: every physics chart must settle into a readable chart, expose the same state to readers and agents, and be exportable without asking the browser to perform the story live.</summary>
+  </entry>
   <entry>
     <title>Semiotic 3.8.0</title>
     <id>https://semiotic3.nteract.io/blog/release-3-8-0</id>

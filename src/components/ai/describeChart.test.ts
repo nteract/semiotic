@@ -122,6 +122,73 @@ describe("describeChart — L3 trend", () => {
   })
 })
 
+describe("describeChart — physics settled projection", () => {
+  it("describes EventDrop charts from the settled window projection, not body paths", () => {
+    const r = describeChart("EventDropChart", {
+      physics: {
+        settledProjectionRows: [
+          { id: "window-0", label: "0-12s", count: 4, secondary: 1, secondaryLabel: "late" },
+          { id: "window-1", label: "12-24s", count: 11, secondary: 2, secondaryLabel: "late" },
+          { id: "window-2", label: "24-36s", count: 5, secondary: 0, secondaryLabel: "late" },
+        ],
+      },
+    })
+    expect(r.levels.l1).toContain("settled projection by event-time window")
+    expect(r.levels.l2).toContain("20 events across 3 time windows")
+    expect(r.levels.l2).toContain("The largest time window is 12-24s with 11 events")
+    expect(r.levels.l2).toContain("3 events are marked late")
+    expect(r.levels.l3).toContain("12-24s")
+    expect(r.levels.l3).toContain("55%")
+    expect(r.text).not.toContain("trajectory")
+  })
+
+  it("describes Galton boards as settled histogram projections", () => {
+    const r = describeChart("GaltonBoardChart", {
+      settledProjectionRows: [
+        { id: "bin-0", label: "40-50", count: 7 },
+        { id: "bin-1", label: "50-60", count: 13 },
+        { id: "bin-2", label: "60-70", count: 5 },
+      ],
+    })
+    expect(r.levels.l1).toContain("settled histogram projection")
+    expect(r.levels.l2).toContain("25 samples across 3 bins")
+    expect(r.levels.l3).toContain("50-60")
+    expect(r.levels.l3).toContain("52%")
+  })
+
+  it("uses singular grammar for one populated physics projection row", () => {
+    const r = describeChart("EventDropChart", {
+      projectionRows: [
+        { id: "window-0", label: "0-12s", count: 1, secondary: 1, secondaryLabel: "late" },
+        { id: "window-1", label: "12-24s", count: 0, secondary: 0, secondaryLabel: "late" },
+      ],
+    }, { levels: ["l2"] })
+    expect(r.levels.l2).toContain("1 time window is non-empty")
+    expect(r.levels.l2).toContain("1 event is marked late")
+  })
+
+  it("does not invent a largest container for an empty settled projection", () => {
+    const r = describeChart("EventDropChart", {
+      projectionRows: [
+        { id: "window-0", label: "0-12s", count: 0 },
+        { id: "window-1", label: "12-24s", count: 0 },
+      ],
+    }, { levels: ["l2", "l3"] })
+    expect(r.levels.l2).toBe(
+      "The settled projection contains 0 events across 2 time windows; no time windows are non-empty yet."
+    )
+    expect(r.levels.l2).not.toContain("largest")
+    expect(r.levels.l3).toBeUndefined()
+  })
+
+  it("degrades cleanly when a physics chart has not exposed projection rows yet", () => {
+    const r = describeChart("PhysicsPileChart", {}, { levels: ["l1", "l2", "l3"] })
+    expect(r.levels.l1).toContain("settled bar-style projection by container")
+    expect(r.levels.l2).toBe("No settled projection is loaded yet.")
+    expect(r.levels.l3).toBeUndefined()
+  })
+})
+
 describe("describeChart — composition", () => {
   it("joins requested levels into text, in L1→L2→L3 order", () => {
     const r = describeChart("LineChart", { data: [{ month: "Jan", sales: 100 }, { month: "Feb", sales: 200 }], xAccessor: "month", yAccessor: "sales" })

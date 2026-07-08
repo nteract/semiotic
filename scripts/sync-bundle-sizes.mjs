@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global console, process */
 /**
  * Measures gzip size of every public-subpath ESM bundle in `dist/`,
  * formats two views (table + bullet list), and upserts them into the
@@ -64,7 +65,10 @@ const BLURBS = {
   "./themes":   "Theme presets only (tufte, carbon, etc.)",
   "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
   "./value":    "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)",
-  "./ai":       "All 47 schema-backed charts + validation — optimized for LLM code generation",
+  "./physics":  "GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, NetworkHOPsChart, PhysicalFlowChart, PhysicsCustomChart",
+  "./physics/matter": "Matter.js migration helpers + optional peer guard (no chart components)",
+  "./physics/rapier": "Rapier peer guard + adapter decision metadata (no chart components)",
+  "./ai":       "All schema-backed charts + validation — optimized for LLM code generation",
 }
 
 // Display order — independent of `package.json` key order so the
@@ -73,8 +77,8 @@ const BLURBS = {
 // smallest sub-path that fits your charts" message lands clearly.
 const ORDER = [
   "./xy", "./ordinal", "./network", "./geo", "./realtime", "./server",
-  "./utils", "./recipes", "./themes", "./data", "./value",
-  "./ai", ".",
+  "./utils", "./recipes", "./themes", "./data", "./value", "./physics",
+  "./physics/matter", "./physics/rapier", "./ai", ".",
 ]
 
 // `./` → "semiotic", "./xy" → "semiotic/xy", "." → "semiotic".
