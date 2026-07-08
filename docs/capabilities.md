@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-07-07 · 53 charts indexed.
+Last regen: 2026-07-08 · 53 charts indexed.
 
 **Column key**
 
@@ -95,7 +95,7 @@ Last regen: 2026-07-07 · 53 charts indexed.
 | **EventDropChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
 | **GaltonBoardChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
 | **NetworkHOPsChart** | ✓ | ✓ | — | — | ✓ | categorical | plugin | `force-simulation` `uncertainty` `hypothetical-outcomes` `sample-animation` |
-| **PhysicalFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `fluid-envelope` `static-flow` `proximity-sensors` `settled-projection` |
+| **PhysicalFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
 | **PhysicsPileChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
 
 ## Value

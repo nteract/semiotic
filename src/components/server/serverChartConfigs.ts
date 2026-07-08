@@ -28,12 +28,14 @@ import {
   generatePhysicsPileMechanicalSamples,
   styleFromColorAccessor
 } from "../charts/physics/physicsChartUtils"
+import { resolveCustomLayout } from "../charts/physics/PhysicsCustomChart"
 import {
   buildNetworkHOPsModel,
   networkHOPsEdgeId,
   NETWORK_HOPS_EDGE_ID,
   NETWORK_HOPS_PROBABILITY
 } from "../charts/physics/networkHopsUtils"
+import { LIGHT_THEME, resolveThemeSemanticColors } from "../store/ThemeStore"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
 
@@ -1360,6 +1362,7 @@ const eventDropChart: ChartConfig = {
       ballRadius: rest.ballRadius ?? 5,
       seed: rest.seed ?? 1,
       size,
+      timeExtent: rest.timeExtent,
       timeScale: rest.timeScale ?? 1
     })
     return {
@@ -1558,6 +1561,45 @@ const physicalFlowChart: ChartConfig = {
   },
 }
 
+// PhysicsCustomChart's `layout(ctx)` is a pure function of a synchronous
+// context (same contract the XY/ordinal/network/geo customLayout escape
+// hatches use), so it can run once here exactly like the client HOC does via
+// the shared `resolveCustomLayout`. There is no live theme in static
+// rendering, so the context falls back to `LIGHT_THEME` — the same default
+// the component uses before a ThemeProvider resolves. Note this bridges only
+// bodies/colliders/config through the settled-scene renderer; unlike the
+// SceneNode-based custom charts, `renderPhysicsSettledSVG` has no overlay
+// slot yet, so a layout's `overlays`/`backgroundOverlays` render on canvas
+// but are silently absent from SSR output.
+const physicsCustomChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [700, 380]
+    const resolved = resolveCustomLayout({
+      chartId: rest.chartId,
+      colorScheme,
+      config: rest.config,
+      data: Array.isArray(data) ? data : [],
+      layout: rest.layout,
+      layoutConfig: rest.layoutConfig,
+      semantic: resolveThemeSemanticColors(LIGHT_THEME) ?? {},
+      size,
+      themeCategorical: LIGHT_THEME.colors.categorical,
+      xExtent: rest.xExtent,
+      yExtent: rest.yExtent
+    })
+    return {
+      ...common,
+      config: resolved.config,
+      initialSpawns: allAtOnce(resolved.initialSpawns),
+      projectionRows: [],
+      bodyStyle:
+        resolved.result.bodyStyle ??
+        styleFromColorAccessor(colorBy || rest.colorBy)
+    }
+  },
+}
+
 // ── Registry ───────────────────────────────────────────────────────────
 
 // `satisfies` (not `: Record<string, ChartConfig>`) so TypeScript preserves
@@ -1624,4 +1666,5 @@ export const CHART_CONFIGS = {
   CollisionSwarmChart: collisionSwarmChart,
   NetworkHOPsChart: networkHOPsChart,
   PhysicalFlowChart: physicalFlowChart,
+  PhysicsCustomChart: physicsCustomChart,
 } satisfies Record<string, ChartConfig>

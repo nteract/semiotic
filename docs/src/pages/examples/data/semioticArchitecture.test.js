@@ -24,14 +24,14 @@ describe("Semiotic architecture example data", () => {
     }
   })
 
-  it("maps the public chart leaves through the four frame models", () => {
+  it("maps the public chart leaves through the five frame models", () => {
     const frames = new Set(
       SEMIOTIC_ARCHITECTURE_NODES
         .filter((node) => node.layer === "frame")
         .map((node) => node.id)
     )
     expect(frames).toEqual(
-      new Set(["frame-xy", "frame-ordinal", "frame-network", "frame-geo"])
+      new Set(["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics"])
     )
 
     const profilesById = new Map(
@@ -41,6 +41,7 @@ describe("Semiotic architecture example data", () => {
     expect(architectureHighlight(profilesById.get("us-war-timeline"))).toContain("frame-ordinal")
     expect(architectureHighlight(profilesById.get("art-movement-genealogy"))).toContain("frame-network")
     expect(architectureHighlight(profilesById.get("paris-isometric-landmarks"))).toContain("frame-geo")
+    expect(architectureHighlight(profilesById.get("watermarks"))).toContain("frame-physics")
   })
 
   it("maps the Wikipedia realtime example to the imperative Push API", () => {

@@ -105,6 +105,10 @@ const SERVER_CONFIG_ONLY = new Map([
     "GeoCustomChart",
     "custom-layout escape hatch; named recipes register capability entries instead",
   ],
+  [
+    "PhysicsCustomChart",
+    "custom-layout escape hatch; named recipes register capability entries instead",
+  ],
 ])
 
 // ── Index HOC source files for the push-API gate ───────────────────

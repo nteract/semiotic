@@ -230,7 +230,7 @@ function attachInitialConstraints(
   })
 }
 
-function resolveCustomLayout<
+export function resolveCustomLayout<
   TDatum extends Datum,
   TConfig extends object
 >(options: {

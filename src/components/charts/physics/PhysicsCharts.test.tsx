@@ -22,6 +22,7 @@ import {
   buildGaltonBoardPhysics,
   buildPhysicalFlowPhysics,
   buildPhysicsPile,
+  type EventDropProjectionMetadata,
   generateGaltonMechanicalSamples,
   generatePhysicsPileMechanicalSamples
 } from "./physicsChartUtils"
@@ -104,6 +105,59 @@ describe("physics chart builders", () => {
     expect(
       layout.initialSpawns.find((spawn) => spawn.id === "late")?.datum
     ).toMatchObject({ late: true })
+  })
+
+  it("drops EventDrop bodies over event time and uses left-gutter lid geometry", () => {
+    const layout = buildEventDropPhysics({
+      data: [
+        { id: "old", time: 4, arrivalTime: 40 },
+        { id: "frontier", time: 24, arrivalTime: 12 }
+      ],
+      timeAccessor: "time",
+      arrivalAccessor: "arrivalTime",
+      windows: { size: 10 },
+      watermark: { value: 20 },
+      ballRadius: 5,
+      seed: 1,
+      size: [360, 200],
+      timeExtent: [0, 30]
+    })
+    const metadata = layout.metadata as EventDropProjectionMetadata
+    const old = layout.initialSpawns.find((spawn) => spawn.id === "old")
+
+    expect(metadata.gutter.x).toBeLessThan(metadata.windowPlot.x)
+    expect(metadata.closedWindowCount).toBe(2)
+    expect(metadata.lidSegments.some((segment) => segment.windowIndex === 0)).toBe(true)
+    expect(
+      Math.min(...metadata.lidSegments.flatMap((segment) => [segment.x1, segment.x2]))
+    ).toBeCloseTo(metadata.windowPlot.x)
+    expect(
+      metadata.lidSegments.some((segment) => segment.windowIndex == null)
+    ).toBe(false)
+    expect(old?.x).toBeGreaterThan(metadata.windowPlot.x)
+    expect(old?.x).toBeLessThan(metadata.windowPlot.x + metadata.windowPlot.width)
+    expect(old).toMatchObject({
+      datum: { late: true, windowIndex: 0 },
+      friction: 0.02
+    })
+    for (let index = 0; index <= metadata.closedWindowCount; index += 1) {
+      const wall = layout.config.colliders.find(
+        (collider) => collider.id === `eventdrop-window-wall-${index}`
+      )
+      const shape = wall?.shape.type === "aabb" ? wall.shape : null
+      const lidY =
+        index === 0
+          ? metadata.lidSegments[0]?.y1
+          : metadata.lidSegments[index - 1]?.y2 ?? metadata.lidSegments[index]?.y1
+      expect(shape).toBeTruthy()
+      expect(lidY).toBeDefined()
+      expect(shape!.y - shape!.height / 2).toBeGreaterThan(lidY!)
+    }
+    expect(
+      layout.config.colliders
+        .filter((collider) => collider.id.startsWith("eventdrop-lid-"))
+        .every((collider) => collider.friction === 0.02)
+    ).toBe(true)
   })
 
   it("uses EventDrop timeScale for arrival pacing without slowing gravity", () => {
@@ -822,5 +876,38 @@ describe("physics chart server rendering", () => {
     expect(evidence.frameType).toBe("physics")
     expect(evidence.empty).toBe(false)
     expect(evidence.markCount).toBeGreaterThan(0)
+  })
+
+  it("server-renders PhysicsCustomChart by running the user layout once", () => {
+    const layout = (ctx: PhysicsCustomLayoutContext) => ({
+      bodies: ctx.data.map((datum, index) => ({
+        id: String(datum.id),
+        x: 40 + index * 30,
+        y: 20,
+        mass: 1,
+        shape: { type: "circle" as const, radius: 6 },
+        datum
+      })),
+      colliders: [
+        {
+          id: "floor",
+          shape: { type: "aabb" as const, x: 100, y: 150, width: 200, height: 12 }
+        }
+      ]
+    })
+
+    const { svg, evidence } = renderChartWithEvidence("PhysicsCustomChart", {
+      data: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      layout,
+      width: 240,
+      height: 160,
+      title: "Custom physics"
+    })
+
+    expect(svg).toContain("<svg")
+    expect(evidence.component).toBe("PhysicsCustomChart")
+    expect(evidence.frameType).toBe("physics")
+    expect(evidence.empty).toBe(false)
+    expect(evidence.markCount).toBe(3)
   })
 })

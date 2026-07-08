@@ -1165,6 +1165,7 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = {
       arrivalAccessor: { type: ["string", "function"] },
       windows: { type: "object" },
       watermark: { type: ["object", "function"] },
+      timeExtent: { type: "array" },
       timeScale: { type: "number" },
     },
   },

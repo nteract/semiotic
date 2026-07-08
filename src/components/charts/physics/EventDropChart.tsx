@@ -43,10 +43,11 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
   timeAccessor?: ChartAccessor<TDatum, number>
   arrivalAccessor?: ChartAccessor<TDatum, number>
   windows?: EventDropWindowOptions
-  watermark?: { delay: number } | ((latestEventTime: number) => number)
+  watermark?: { delay?: number; value?: number } | ((latestEventTime: number) => number)
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
   seed?: number
+  timeExtent?: [number, number]
   timeScale?: number
   showProjection?: boolean
   tooltip?: TooltipProp
@@ -72,9 +73,18 @@ function eventDropOverlay(
     ]
     const area = physicsChartArea(resolvedSize)
     const windowCount = Math.max(1, metadata.windowCount)
-    const laneWidth = area.plot.width / windowCount
-    const yBottom = area.plot.y + area.plot.height
-    const windowTop = area.plot.y + area.plot.height * 0.48
+    const plot = metadata.plot ?? area.plot
+    const gutter = metadata.gutter ?? {
+      x: plot.x,
+      y: plot.y,
+      width: 0,
+      height: plot.height
+    }
+    const windowPlot = metadata.windowPlot ?? plot
+    const laneWidth = windowPlot.width / windowCount
+    const yBottom = plot.y + plot.height
+    const windowTop = plot.y + plot.height * 0.48
+    const gutterTop = metadata.lidSegments[0]?.y1 ?? windowTop
     const domainStart = metadata.windowStart
     const domainEnd = metadata.windowStart + windowCount * metadata.windowSize
     const watermarkRatio =
@@ -82,7 +92,7 @@ function eventDropOverlay(
         ? 0
         : (metadata.watermarkValue - domainStart) / (domainEnd - domainStart)
     const watermarkX =
-      area.plot.x + Math.max(0, Math.min(1, watermarkRatio)) * area.plot.width
+      windowPlot.x + Math.max(0, Math.min(1, watermarkRatio)) * windowPlot.width
 
     return (
       <svg
@@ -98,18 +108,43 @@ function eventDropOverlay(
         }}
       >
         <rect
-          x={area.plot.x}
-          y={area.plot.y}
-          width={area.plot.width}
-          height={area.plot.height}
+          x={plot.x}
+          y={plot.y}
+          width={plot.width}
+          height={plot.height}
           fill="none"
           stroke="var(--semiotic-border, #d1d5db)"
           strokeOpacity={0.7}
           strokeWidth={1}
         />
+        {gutter.width > 0 ? (
+          <g>
+            <rect
+              x={gutter.x}
+              y={gutterTop}
+              width={gutter.width}
+              height={yBottom - gutterTop}
+              fill="var(--semiotic-negative, #e15759)"
+              fillOpacity={0.07}
+              stroke="var(--semiotic-border, #d1d5db)"
+              strokeOpacity={0.55}
+              strokeWidth={1}
+            />
+            <text
+              x={gutter.x + gutter.width / 2}
+              y={gutterTop - 8}
+              textAnchor="middle"
+              fill="var(--semiotic-negative, #e15759)"
+              fontSize={10}
+              fontWeight={700}
+            >
+              gutter
+            </text>
+          </g>
+        ) : null}
         {Array.from({ length: windowCount }, (_, index) => {
           const row = rows[index]
-          const x = area.plot.x + index * laneWidth
+          const x = windowPlot.x + index * laneWidth
           const closed = index < metadata.closedWindowCount
           const late = row?.secondary ?? 0
           return (
@@ -130,15 +165,21 @@ function eventDropOverlay(
                 strokeWidth={1}
               />
               {closed ? (
-                <line
-                  x1={x + 2}
-                  x2={x + laneWidth - 2}
-                  y1={windowTop}
-                  y2={windowTop}
-                  stroke="var(--semiotic-negative, #e15759)"
-                  strokeOpacity={0.78}
-                  strokeWidth={2}
-                />
+                metadata.lidSegments
+                  .filter((segment) => segment.windowIndex === index)
+                  .map((segment) => (
+                    <line
+                      key={segment.id}
+                      x1={segment.x1}
+                      x2={segment.x2}
+                      y1={segment.y1}
+                      y2={segment.y2}
+                      stroke="var(--semiotic-negative, #e15759)"
+                      strokeOpacity={0.78}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                    />
+                  ))
               ) : null}
               <text
                 x={x + laneWidth / 2}
@@ -163,9 +204,24 @@ function eventDropOverlay(
             </g>
           )
         })}
+        {metadata.lidSegments
+          .filter((segment) => segment.windowIndex == null)
+          .map((segment) => (
+            <line
+              key={segment.id}
+              x1={segment.x1}
+              x2={segment.x2}
+              y1={segment.y1}
+              y2={segment.y2}
+              stroke="var(--semiotic-negative, #e15759)"
+              strokeOpacity={0.62}
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          ))}
         <line
-          x1={area.plot.x}
-          x2={area.plot.x + area.plot.width}
+          x1={plot.x}
+          x2={plot.x + plot.width}
           y1={yBottom}
           y2={yBottom}
           stroke="var(--semiotic-border, #d1d5db)"
@@ -175,15 +231,15 @@ function eventDropOverlay(
           data-testid="event-drop-watermark"
           x1={watermarkX}
           x2={watermarkX}
-          y1={area.plot.y + 8}
+          y1={plot.y + 8}
           y2={yBottom}
           stroke="var(--semiotic-warning, #f28e2b)"
           strokeDasharray="5 4"
           strokeWidth={2}
         />
         <text
-          x={Math.min(area.plot.x + area.plot.width - 4, watermarkX + 6)}
-          y={area.plot.y + 16}
+          x={Math.min(plot.x + plot.width - 4, watermarkX + 6)}
+          y={plot.y + 16}
           fill="var(--semiotic-warning, #f28e2b)"
           fontSize={10}
           fontWeight={700}
@@ -192,9 +248,9 @@ function eventDropOverlay(
         </text>
         {metadata.lateCount > 0 ? (
           <text
-            x={area.plot.x + area.plot.width - 4}
-            y={area.plot.y + 32}
-            textAnchor="end"
+            x={gutter.x + gutter.width / 2}
+            y={plot.y + 32}
+            textAnchor="middle"
             fill="var(--semiotic-negative, #e15759)"
             fontSize={10}
             fontWeight={700}
@@ -205,6 +261,39 @@ function eventDropOverlay(
       </svg>
     )
   }
+}
+
+function eventDropSemanticItems(
+  rows: ProjectionRow[],
+  metadata: EventDropProjectionMetadata | undefined,
+  chartSize: [number, number]
+) {
+  if (!metadata) return projectionRowsToSemanticItems(rows, chartSize, "window")
+  const laneWidth = metadata.windowPlot.width / Math.max(1, rows.length)
+  const maxValue = Math.max(1, ...rows.map((row) => row.value + (row.secondary ?? 0)))
+  const maxHeight = metadata.windowPlot.height * 0.62
+  const yBottom = metadata.windowPlot.y + metadata.windowPlot.height
+
+  return rows.map((row, index) => {
+    const total = row.value + (row.secondary ?? 0)
+    const barHeight = Math.max(8, (total / maxValue) * maxHeight)
+    const x = metadata.windowPlot.x + (index + 0.5) * laneWidth
+    const y = yBottom - barHeight / 2
+    const late = row.secondary ? `, ${row.secondary} late` : ""
+    const label = `window ${row.label}: ${row.value} on time${late}`
+    return {
+      id: `window-${row.label}`,
+      label,
+      description: label,
+      datum: row,
+      x,
+      y,
+      shape: "rect" as const,
+      width: Math.max(12, laneWidth * 0.58),
+      height: barHeight,
+      group: "window"
+    }
+  })
 }
 
 export const EventDropChart = forwardRef(function EventDropChart<
@@ -228,6 +317,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
     showProjection = true,
     size,
     timeAccessor = "time" as ChartAccessor<TDatum, number>,
+    timeExtent,
     timeScale = 1,
     watermark,
     width,
@@ -255,6 +345,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
         ballRadius,
         seed,
         size: chartSize,
+        timeExtent,
         timeScale
       }),
     [
@@ -264,6 +355,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
       chartData,
       seed,
       timeAccessor,
+      timeExtent,
       timeScale,
       watermark,
       windows
@@ -308,8 +400,8 @@ export const EventDropChart = forwardRef(function EventDropChart<
     [colorBy]
   )
   const semanticItems = useMemo(
-    () => projectionRowsToSemanticItems(layout.projectionRows, chartSize, "window"),
-    [chartSize, layout.projectionRows]
+    () => eventDropSemanticItems(layout.projectionRows, metadata, chartSize),
+    [chartSize, layout.projectionRows, metadata]
   )
 
   const stateEl = renderPhysicsChartState({

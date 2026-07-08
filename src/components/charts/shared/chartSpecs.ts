@@ -1792,7 +1792,8 @@ export const CHART_SPECS: Record<string, ChartSpec> = {
       timeAccessor: { type: ["string", "function"], default: "time", description: "Event-time field used to assign drops to windows." },
       arrivalAccessor: { type: ["string", "function"], default: "arrivalTime", description: "Arrival-time field used to pace event ingestion." },
       windows: { type: "object", description: "Windowing config, currently { size, gapPolicy? }." },
-      watermark: { type: ["object", "function"], description: "Watermark config: { delay } or a function of latest event time." },
+      watermark: { type: ["object", "function"], description: "Watermark config: { delay }, { value }, or a function of latest event time." },
+      timeExtent: { type: "array", description: "Optional stable event-time extent [min, max] for the window layout." },
       timeScale: { type: "number", default: 1, description: "Playback speed for event-arrival pacing; higher is faster (1 = real event-time)." },
     },
     capabilities: {
