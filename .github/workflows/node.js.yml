@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Use Node.js
         uses: actions/setup-node@v6
@@ -182,7 +182,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           # `bench:pr-vs-main` worktrees `origin/main` to capture a
           # CI-native baseline. Default checkout is shallow to the
@@ -208,7 +208,7 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Use Node.js
         uses: actions/setup-node@v6
