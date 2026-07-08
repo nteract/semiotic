@@ -352,17 +352,17 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/network` | **88 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **64 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
 | `semiotic/realtime` | **111 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/server` | **156 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server` | **167 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/utils` | **60 KB** | ThemeProvider, validators, serialization — no chart components |
 | `semiotic/recipes` | **45 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **6 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **4 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/physics` | **109 KB** | GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, NetworkHOPsChart, PhysicalFlowChart, PhysicsCustomChart |
+| `semiotic/physics` | **107 KB** | GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, NetworkHOPsChart, PhysicalFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **363 KB** | All schema-backed charts + validation — optimized for LLM code generation |
-| `semiotic` | **282 KB** | Everything below (full bundle) |
+| `semiotic/ai` | **362 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic` | **281 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 
