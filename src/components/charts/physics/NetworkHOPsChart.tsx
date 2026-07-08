@@ -135,6 +135,29 @@ function sampleReadout(
   )
 }
 
+/**
+ * Physics-backed network HOPs chart that animates sampled or probabilistic edges around anchored nodes.
+ *
+ * @example
+ * ```tsx
+ * <NetworkHOPsChart
+ *   nodes={[{ id: "a", x: 0.2, y: 0.4 }, { id: "b", x: 0.8, y: 0.5 }]}
+ *   edges={[{ source: "a", target: "b", p: 0.42 }]}
+ *   edgeProbabilityAccessor="p"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * <NetworkHOPsChart
+ *   nodes={nodes}
+ *   edges={edges}
+ *   sampleRate={0.2}
+ *   showAggregate
+ *   showSampleReadout
+ * />
+ * ```
+ */
 export const NetworkHOPsChart = forwardRef(function NetworkHOPsChart<
   TNode extends Datum = Datum,
   TEdge extends Datum = Datum

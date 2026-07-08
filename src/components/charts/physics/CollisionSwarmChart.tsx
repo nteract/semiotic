@@ -181,6 +181,29 @@ function collisionSwarmSemanticItems(
   })
 }
 
+/**
+ * Physics-backed collision swarm chart that preserves a quantitative x position while separating overlapping bodies.
+ *
+ * @example
+ * ```tsx
+ * <CollisionSwarmChart
+ *   data={[{ id: "a", x: 12, group: "East" }, { id: "b", x: 14, group: "East" }]}
+ *   xAccessor="x"
+ *   groupAccessor="group"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * <CollisionSwarmChart
+ *   data={samples}
+ *   xAccessor={(d) => d.score}
+ *   radiusAccessor="weight"
+ *   collisionIterations={180}
+ *   settle
+ * />
+ * ```
+ */
 export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
   TDatum extends Datum = Datum
 >(props: CollisionSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {

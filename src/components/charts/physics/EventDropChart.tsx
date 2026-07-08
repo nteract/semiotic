@@ -296,6 +296,31 @@ function eventDropSemanticItems(
   })
 }
 
+/**
+ * Physics-backed event drop chart for replaying arrivals against event-time windows and watermarks.
+ *
+ * @example
+ * ```tsx
+ * <EventDropChart
+ *   data={[{ id: "a", time: 4, arrivalTime: 8 }, { id: "b", time: 18, arrivalTime: 12 }]}
+ *   timeAccessor="time"
+ *   arrivalAccessor="arrivalTime"
+ *   windows={{ size: 10 }}
+ *   watermark={{ delay: 5 }}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * <EventDropChart
+ *   data={events}
+ *   windows={{ size: 60_000 }}
+ *   watermark={{ value: Date.now() - 120_000 }}
+ *   timeScale={4}
+ *   timeExtent={[start, end]}
+ * />
+ * ```
+ */
 export const EventDropChart = forwardRef(function EventDropChart<
   TDatum extends Datum = Datum
 >(props: EventDropChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {

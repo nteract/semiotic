@@ -464,6 +464,29 @@ function withPhysicalFlowObservation(
   }
 }
 
+/**
+ * Physics-backed flow chart that sends packet bodies along authored routes while retaining a static throughput layer.
+ *
+ * @example
+ * ```tsx
+ * <PhysicalFlowChart
+ *   nodes={[{ id: "in", x: 0.1, y: 0.5 }, { id: "out", x: 0.9, y: 0.5 }]}
+ *   links={[{ source: "in", target: "out", value: 40 }]}
+ *   coordinateMode="normalized"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * <PhysicalFlowChart
+ *   nodes={ports}
+ *   edges={routes}
+ *   pathAccessor="path"
+ *   maxParticles={120}
+ *   showSensors
+ * />
+ * ```
+ */
 export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
   TNode extends Datum = Datum,
   TLink extends Datum = Datum

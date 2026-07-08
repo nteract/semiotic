@@ -124,10 +124,10 @@ if (!subpathRule) {
     (sp) => !subpathRule.includes(`/${sp}`),
   )
   const phantomInRule = []
-  // Pull `/word` tokens out of the rule text and compare against the
+  // Pull `/word` and nested `/word/word` tokens out of the rule text and compare against the
   // exported set. The rule format is loose ("`semiotic/xy`, `/ordinal`,
   // …") so we look for `/<sub-path>` occurrences.
-  const ruleTokens = [...subpathRule.matchAll(/\/([a-z][a-z-]*)/g)].map(
+  const ruleTokens = [...subpathRule.matchAll(/\/([a-z][a-z-]*(?:\/[a-z][a-z-]*)*)/g)].map(
     (m) => m[1],
   )
   for (const tok of ruleTokens) {

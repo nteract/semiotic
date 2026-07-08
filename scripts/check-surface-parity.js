@@ -34,6 +34,7 @@ const SERVER_ONLY = new Set([
   "OrdinalCustomChart",
   "NetworkCustomChart",
   "GeoCustomChart",
+  "PhysicsCustomChart",
 ])
 
 const AI_EXPORT_ONLY = new Set([

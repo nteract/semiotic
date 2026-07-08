@@ -147,6 +147,29 @@ function galtonBoardOverlay(
   }
 }
 
+/**
+ * Physics-backed Galton board chart that drops values through seeded pegs into a settled distribution.
+ *
+ * @example
+ * ```tsx
+ * <GaltonBoardChart
+ *   data={[{ id: "a", value: 2 }, { id: "b", value: 7 }]}
+ *   valueAccessor="value"
+ *   bins={12}
+ *   size={[520, 320]}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * <GaltonBoardChart
+ *   mode="mechanical"
+ *   mechanicalCount={80}
+ *   branchProbability={0.62}
+ *   seed={11}
+ * />
+ * ```
+ */
 export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
   TDatum extends Datum = Datum
 >(props: GaltonBoardChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {

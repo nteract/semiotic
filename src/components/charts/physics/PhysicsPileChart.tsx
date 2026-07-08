@@ -145,6 +145,29 @@ function pileProjectionOverlay(
   }
 }
 
+/**
+ * Physics-backed unit pile chart that converts category values into repeated bodies and a readable settled projection.
+ *
+ * @example
+ * ```tsx
+ * <PhysicsPileChart
+ *   data={[{ category: "A", value: 12 }, { category: "B", value: 8 }]}
+ *   categoryAccessor="category"
+ *   valueAccessor="value"
+ *   unitValue={1}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * <PhysicsPileChart
+ *   mode="mechanical"
+ *   mechanicalCategories={["North", "South", "West"]}
+ *   mechanicalCount={90}
+ *   seed={5}
+ * />
+ * ```
+ */
 export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
   TDatum extends Datum = Datum
 >(props: PhysicsPileChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {

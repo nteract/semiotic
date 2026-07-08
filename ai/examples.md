@@ -1251,6 +1251,79 @@ import { PhysicsPileChart } from "semiotic/physics"
 
 Key props: `unitValue` controls how many simulated bodies appear. Increase it for large values so the settled piles remain readable and the frame budget stays bounded.
 
+### CollisionSwarmChart (axis-preserving collision layout)
+
+```jsx
+import { CollisionSwarmChart } from "semiotic/physics"
+
+<CollisionSwarmChart
+  data={[
+    { id: "a", latency: 42, service: "api", weight: 4 },
+    { id: "b", latency: 45, service: "api", weight: 6 },
+    { id: "c", latency: 63, service: "worker", weight: 5 },
+    { id: "d", latency: 68, service: "worker", weight: 7 },
+  ]}
+  xAccessor="latency"
+  groupAccessor="service"
+  radiusAccessor="weight"
+  colorBy="service"
+  settle
+  size={[640, 320]}
+/>
+```
+
+Key props: `xAccessor` preserves the quantitative position, `groupAccessor` creates lanes, and collision settings separate overlapping records without losing the axis.
+
+### NetworkHOPsChart (probabilistic network replay)
+
+```jsx
+import { NetworkHOPsChart } from "semiotic/physics"
+
+<NetworkHOPsChart
+  nodes={[
+    { id: "Gateway", x: 0.2, y: 0.5 },
+    { id: "Auth", x: 0.5, y: 0.25 },
+    { id: "Payments", x: 0.78, y: 0.55 },
+  ]}
+  edges={[
+    { source: "Gateway", target: "Auth", p: 0.86 },
+    { source: "Auth", target: "Payments", p: 0.42 },
+  ]}
+  edgeProbabilityAccessor="p"
+  sampleRate={0.3}
+  showAggregate
+  showSampleReadout
+  size={[640, 360]}
+/>
+```
+
+Key props: `edgeProbabilityAccessor` reads per-edge probabilities, `sampleRate` controls replay density, and `showAggregate` keeps the stable topology visible behind sampled hops.
+
+### PhysicalFlowChart (packet flow over routes)
+
+```jsx
+import { PhysicalFlowChart } from "semiotic/physics"
+
+<PhysicalFlowChart
+  nodes={[
+    { id: "Inbound", x: 0.08, y: 0.5 },
+    { id: "Queue", x: 0.45, y: 0.32 },
+    { id: "Shipped", x: 0.88, y: 0.58 },
+  ]}
+  links={[
+    { source: "Inbound", target: "Queue", value: 40 },
+    { source: "Queue", target: "Shipped", value: 28 },
+  ]}
+  coordinateMode="normalized"
+  throughputAccessor="value"
+  maxParticles={90}
+  showStaticFlow
+  size={[700, 360]}
+/>
+```
+
+Key props: `nodes` provide route geometry, `links`/`edges` provide throughput, and `showStaticFlow` keeps the route quantities readable while packet bodies move.
+
 ---
 
 ## Value Charts — One Number Is The Visualization
