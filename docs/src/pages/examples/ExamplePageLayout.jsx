@@ -19,20 +19,22 @@ export default function ExamplePageLayout({
   children,
   useFullCodeFallback = true,
 }) {
+  const normalizePath = (value) => value.replace(/\/+$/, "").replace(/\/{2,}/g, "/")
   // Prev/next derive from the examples manifest (the single source of the
   // narrative order), keyed by the current route — reordering the section
   // never requires touching individual pages. Explicit props still win for
   // one-off overrides.
   const { pathname } = useLocation()
-  const index = EXAMPLES.findIndex((example) => example.path === pathname)
+  const normalizedPath = normalizePath(pathname)
+  const index = EXAMPLES.findIndex((example) => example.path === normalizedPath)
   const prev = prevPage ?? (index > 0 ? EXAMPLES[index - 1] : undefined)
   const next = nextPage ?? (index >= 0 ? EXAMPLES[index + 1] : undefined)
-  const sourceLoader = useMemo(() => getExampleSourceLoader(pathname), [pathname])
+  const sourceLoader = useMemo(() => getExampleSourceLoader(normalizedPath), [normalizedPath])
   const [sourceCode, setSourceCode] = useState("")
   const hasFullCodeFallback = useFullCodeFallback && Boolean(sourceLoader)
   const blocksView = useBlocksViewState()
   const { blockCount, blocksMode, registerBlock, setBlocksMode } = blocksView
-  const fallbackBlockId = useMemo(() => `example-full-code-${pathname}`, [pathname])
+  const fallbackBlockId = useMemo(() => `example-full-code-${normalizedPath}`, [normalizedPath])
 
   useEffect(() => {
     if (!hasFullCodeFallback) return undefined

@@ -24,4 +24,16 @@ describe("ExamplePageLayout", () => {
 
     expect(await screen.findByText("Failed to load source.")).toBeTruthy()
   })
+
+  it("resolves prev/next links for direct links with a trailing slash", () => {
+    render(
+      <MemoryRouter initialEntries={["/examples/watermarks/"]}>
+        <ExamplePageLayout title="Watermarks">
+          <p>Narrative content</p>
+        </ExamplePageLayout>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole("link", { name: /next example/i })).toBeTruthy()
+  })
 })
