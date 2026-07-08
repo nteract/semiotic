@@ -13,6 +13,7 @@ import { PhysicalFlowChart } from "./PhysicalFlowChart"
 import { buildNetworkHOPsModel } from "./networkHopsUtils"
 import {
   PhysicsCustomChart,
+  type PhysicsCustomLayout,
   type PhysicsCustomLayoutContext
 } from "./PhysicsCustomChart"
 import { PhysicsPileChart } from "./PhysicsPileChart"
@@ -122,8 +123,9 @@ describe("physics chart builders", () => {
       size: [360, 200],
       timeExtent: [0, 30]
     })
-    const metadata = layout.metadata as EventDropProjectionMetadata
+    const metadata = layout.metadata as unknown as EventDropProjectionMetadata
     const old = layout.initialSpawns.find((spawn) => spawn.id === "old")
+    const colliders = layout.config.colliders ?? []
 
     expect(metadata.gutter.x).toBeLessThan(metadata.windowPlot.x)
     expect(metadata.closedWindowCount).toBe(2)
@@ -141,7 +143,7 @@ describe("physics chart builders", () => {
       friction: 0.02
     })
     for (let index = 0; index <= metadata.closedWindowCount; index += 1) {
-      const wall = layout.config.colliders.find(
+      const wall = colliders.find(
         (collider) => collider.id === `eventdrop-window-wall-${index}`
       )
       const shape = wall?.shape.type === "aabb" ? wall.shape : null
@@ -154,7 +156,7 @@ describe("physics chart builders", () => {
       expect(shape!.y - shape!.height / 2).toBeGreaterThan(lidY!)
     }
     expect(
-      layout.config.colliders
+      colliders
         .filter((collider) => collider.id.startsWith("eventdrop-lid-"))
         .every((collider) => collider.friction === 0.02)
     ).toBe(true)
@@ -390,7 +392,7 @@ describe("physics chart builders", () => {
       layout.initialSpawns.every(
         (spawn) =>
           Array.isArray((spawn.datum as { flowPath?: unknown }).flowPath) &&
-          (spawn.datum as { flowPath?: unknown[] }).flowPath?.length >= 2
+          ((spawn.datum as { flowPath?: unknown[] }).flowPath?.length ?? 0) >= 2
       )
     ).toBe(true)
     expect(layout.initialSpawns.every((spawn) => spawn.springs == null)).toBe(true)
@@ -718,9 +720,10 @@ describe("physics chart HOCs", () => {
   })
 
   it("renders PhysicsCustomChart with world context, overlays, and row push", () => {
-    let captured: PhysicsCustomLayoutContext | null = null
+    type LaneDatum = { id: string; lane: string }
+    let captured: PhysicsCustomLayoutContext<LaneDatum> | null = null
     const ref = React.createRef<RealtimeFrameHandle>()
-    const layout = (ctx: PhysicsCustomLayoutContext) => {
+    const layout: PhysicsCustomLayout<LaneDatum> = (ctx) => {
       captured = ctx
       return {
         bodies: ctx.data.map((datum, index) => ({
@@ -758,7 +761,7 @@ describe("physics chart HOCs", () => {
 
     expect(container.querySelector(".stream-physics-frame canvas")).not.toBeNull()
     expect(getByTestId("custom-physics-overlay")).not.toBeNull()
-    expect(captured?.world).toBeInstanceOf(PhysicsPipelineStore)
+    expect(captured!.world).toBeInstanceOf(PhysicsPipelineStore)
     ref.current?.push({ id: "b", lane: "B" })
     expect(ref.current?.getData().some((datum) => datum.id === "b")).toBe(true)
   })

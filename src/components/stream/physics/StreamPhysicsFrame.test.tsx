@@ -371,7 +371,8 @@ describe("StreamPhysicsFrame", () => {
     )
     expect(container.querySelector("canvas")).not.toBeNull()
 
-    root?.unmount()
+    const mountedRoot = root as ReturnType<typeof hydrateRoot> | null
+    mountedRoot?.unmount()
     errorSpy.mockRestore()
   })
 

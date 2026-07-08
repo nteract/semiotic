@@ -380,7 +380,7 @@ describe("renderToStaticSVG dispatch", () => {
       projectionRows: layout.projectionRows,
       size: [300, 180],
       title: "Physics distribution"
-    } as StaticFrameProps)
+    } as unknown as StaticFrameProps)
 
     expect(svg).toContain("stream-physics-frame")
     expect(countMatches(svg, /<circle /g)).toBeGreaterThanOrEqual(3)
@@ -507,7 +507,7 @@ describe("renderGeoToStaticSVG - reference string error", () => {
       renderGeoToStaticSVG({
         areas: "world-110m",
         size: [600, 400]
-      } as StaticGeoProps)
+      } as unknown as StaticGeoProps)
     ).toThrow(/resolveReferenceGeography/)
   })
 
@@ -516,7 +516,7 @@ describe("renderGeoToStaticSVG - reference string error", () => {
       renderGeoToStaticSVG({
         areas: "world-50m",
         size: [600, 400]
-      } as StaticGeoProps)
+      } as unknown as StaticGeoProps)
     ).toThrow(/world-50m/)
   })
 })

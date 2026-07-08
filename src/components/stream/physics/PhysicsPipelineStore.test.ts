@@ -78,7 +78,8 @@ describe("PhysicsPipelineStore", () => {
     store.spawnNow(circle("factory-body"))
     store.tick(0.1)
     expect(store.readBodies()[0].y).toBeCloseTo(0.1)
-    expect(adapter?.snapshot().bodies.map((body) => body.id)).toEqual([
+    const currentAdapter = adapter as PhysicsEngineAdapter | null
+    expect(currentAdapter?.snapshot().bodies.map((body) => body.id)).toEqual([
       "factory-body"
     ])
   })
@@ -428,7 +429,7 @@ describe("PhysicsPipelineStore", () => {
     const laneCount = 6
     const store = new PhysicsPipelineStore({
       bodyLimit,
-      bodyBudget: { warnAt: 18, limit: bodyLimit, action: "sediment" },
+      bodyBudget: { warnAt: 18 },
       sediment: {
         binAccessor: "lane",
         valueAccessor: "weight",

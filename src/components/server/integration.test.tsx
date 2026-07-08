@@ -131,7 +131,7 @@ describe("SVG generation (end-to-end)", () => {
       initialSpawns: physicsLayout.initialSpawns,
       projectionRows: physicsLayout.projectionRows,
       size: [300, 200]
-    } as StaticFrameProps)
+    } as unknown as StaticFrameProps)
 
     expect(isValidSVG(xy)).toBe(true)
     expect(isValidSVG(ordinal)).toBe(true)
