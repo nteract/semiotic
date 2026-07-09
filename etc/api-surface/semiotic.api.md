@@ -38,7 +38,9 @@ function ForceDirectedGraph
 function FunnelChart
 function GaltonBoardChart
 function GaugeChart
+function GauntletChart
 function GroupedBarChart
+function GuantletChart
 function Heatmap
 function Histogram
 function IntentMark
@@ -170,6 +172,17 @@ interface FunnelChartProps
 interface GaltonBoardChartProps
 interface GaugeChartProps
 interface GaugeThreshold
+interface GauntletChartProps
+interface GauntletEffect
+interface GauntletEvent
+interface GauntletEventContext
+interface GauntletEventLogItem
+interface GauntletGate
+interface GauntletLayout
+interface GauntletProjectPlacement
+interface GauntletProjectState
+interface GauntletPropertyDefinition
+interface GauntletPropertyForceContext
 interface GroupedBarChartProps
 interface HatchPatternOptions
 interface HeatmapProps
@@ -209,6 +222,9 @@ interface PhysicsCustomChartProps
 interface PhysicsCustomLayoutContext
 interface PhysicsCustomLayoutResult
 interface PhysicsPileChartProps
+interface PhysicsProcessBodyGroup
+interface PhysicsProcessBoundaryOptions
+interface PhysicsProcessStage
 interface PieChartProps
 interface ProcessSankeyProps
 interface ProcessSankeyTick
