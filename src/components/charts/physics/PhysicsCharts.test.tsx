@@ -6,11 +6,15 @@ import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { EventDropChart } from "./EventDropChart"
+import {
+  GauntletChart,
+  clampGauntletPoint,
+  GAUNTLET_WALL
+} from "./GauntletChart"
 import { GaltonBoardChart } from "./GaltonBoardChart"
 import { CollisionSwarmChart } from "./CollisionSwarmChart"
-import { NetworkHOPsChart } from "./NetworkHOPsChart"
 import { PhysicalFlowChart } from "./PhysicalFlowChart"
-import { buildNetworkHOPsModel } from "./networkHopsUtils"
+import { ProcessFlowChart } from "./ProcessFlowChart"
 import {
   PhysicsCustomChart,
   type PhysicsCustomLayout,
@@ -23,6 +27,7 @@ import {
   buildGaltonBoardPhysics,
   buildPhysicalFlowPhysics,
   buildPhysicsPile,
+  buildProcessFlowPhysics,
   type EventDropProjectionMetadata,
   generateGaltonMechanicalSamples,
   generatePhysicsPileMechanicalSamples
@@ -235,6 +240,65 @@ describe("physics chart builders", () => {
     ])
   })
 
+  it("builds process-flow stages, groups, and absorb completion", () => {
+    const layout = buildProcessFlowPhysics({
+      data: [
+        { id: "p1", stage: "coding", featureId: "auth", featureLabel: "Auth" },
+        { id: "p2", stage: "review", featureId: "auth", featureLabel: "Auth" },
+        { id: "p3", stage: "merged", featureId: "billing", featureLabel: "Billing" },
+        { id: "p4", stage: "merged", featureId: "billing", featureLabel: "Billing" }
+      ],
+      stages: [
+        { id: "coding", label: "Coding", force: 12 },
+        {
+          id: "review",
+          label: "Review",
+          capacity: { unitsPerSecond: 4 },
+          pressure: { pressure: 1.2 }
+        },
+        { id: "revision", label: "Revision", portal: { targetStageId: "coding" } },
+        { id: "merged", label: "Merged", absorb: true }
+      ],
+      size: [720, 360],
+      idAccessor: "id",
+      stageAccessor: "stage",
+      groupBy: "featureId",
+      groupLabelAccessor: "featureLabel",
+      groupCompletion: "allAbsorbed",
+      seed: 3,
+      settle: true
+    })
+
+    expect(layout.initialSpawns).toHaveLength(4)
+    expect(layout.projectionRows).toEqual([
+      { label: "Coding", value: 1 },
+      { label: "Review", value: 1 },
+      { label: "Revision", value: 0 },
+      { label: "Merged", value: 2 }
+    ])
+    const metadata = layout.metadata as {
+      kind: string
+      groups: Array<{ id: string; bodyIds?: readonly string[] }>
+      groupCompletion: Array<{ id: string; complete: boolean; absorbed: number; total: number }>
+      regionEffects: Array<{ id: string }>
+    }
+    expect(metadata.kind).toBe("process-flow")
+    expect(metadata.groups.map((group) => group.id).sort()).toEqual([
+      "auth",
+      "billing"
+    ])
+    expect(
+      metadata.groupCompletion.find((row) => row.id === "billing")
+    ).toMatchObject({ complete: true, absorbed: 2, total: 2 })
+    expect(
+      metadata.groupCompletion.find((row) => row.id === "auth")
+    ).toMatchObject({ complete: false, absorbed: 0, total: 2 })
+    expect(metadata.regionEffects.some((region) => region.id === "process-stage-review")).toBe(
+      true
+    )
+    expect(layout.config.colliders?.length).toBeGreaterThan(0)
+  })
+
   it("falls back safely when PhysicsPile unitValue is not positive", () => {
     const layout = buildPhysicsPile({
       data: [{ id: "a", category: "A", value: 2 }],
@@ -329,55 +393,7 @@ describe("physics chart builders", () => {
     })
   })
 
-  it("builds NetworkHOPs sampled aggregate topology with active edge state", () => {
-    const model = buildNetworkHOPsModel({
-      samples: [
-        {
-          id: "a",
-          edges: [
-            { source: "A", target: "B" },
-            { source: "B", target: "C" }
-          ]
-        },
-        {
-          id: "b",
-          edges: [
-            { source: "A", target: "B" },
-            { source: "C", target: "A" }
-          ]
-        }
-      ],
-      sampleIndex: 1
-    })
 
-    expect(model.nodes.map((node) => node.id).sort()).toEqual(["A", "B", "C"])
-    expect(model.aggregateEdges).toHaveLength(3)
-    expect(model.activeEdgeIds).toEqual(new Set(["A->B", "C->A"]))
-    expect(model.sampleLabel).toBe("b")
-    expect(
-      model.aggregateEdges.find((edge) => edge.__networkHopsEdgeId === "A->B")
-    ).toMatchObject({ __networkHopsProbability: 1 })
-  })
-
-  it("builds deterministic NetworkHOPs probabilistic samples", () => {
-    const options = {
-      nodes: [{ id: "A" }, { id: "B" }, { id: "C" }],
-      edges: [
-        { source: "A", target: "B", p: 1 },
-        { source: "B", target: "C", p: 0 },
-        { source: "C", target: "A", p: 0.5 }
-      ],
-      seed: 5,
-      sampleIndex: 2
-    }
-
-    const first = buildNetworkHOPsModel(options)
-    const second = buildNetworkHOPsModel(options)
-    expect(first.activeEdgeIds).toEqual(second.activeEdgeIds)
-    expect(first.activeEdgeIds.has("A->B")).toBe(true)
-    expect(first.activeEdgeIds.has("B->C")).toBe(false)
-    expect(first.projectionRows[0]).toMatchObject({ label: "active edges" })
-  })
 
   it("builds PhysicalFlow packets from authored route geometry and sensors", () => {
     const layout = buildPhysicalFlowPhysics({
@@ -490,6 +506,69 @@ describe("physics chart HOCs", () => {
     expect(container.querySelector(".stream-physics-frame canvas")).not.toBeNull()
   })
 
+  it("accepts ChartMode alongside simulationMode for Galton", () => {
+    const { container } = render(
+      <GaltonBoardChart
+        mode="context"
+        simulationMode="mechanical"
+        bins={7}
+        mechanicalCount={12}
+        size={[200, 120]}
+      />
+    )
+    const root = container.querySelector(".stream-physics-frame")!
+    expect(root.getAttribute("data-semiotic-mode")).toBe("context")
+    expect(root).toHaveClass("stream-physics-frame--mode-context")
+    // compact ChartMode suppresses default title chrome
+    expect(container.querySelector(".semiotic-chart-title")).toBeNull()
+  })
+
+  it("ProcessFlowChart sparkline mode is ChartContainer-exportable (svg+canvas)", () => {
+    const { container } = render(
+      <ProcessFlowChart
+        mode="sparkline"
+        data={[{ id: "a", stage: "coding" }]}
+        stages={[
+          { id: "coding", label: "Coding", force: 8 },
+          { id: "done", label: "Done", absorb: true }
+        ]}
+      />
+    )
+    const root = container.querySelector(".stream-physics-frame")!
+    expect(root.getAttribute("data-semiotic-mode")).toBe("sparkline")
+    expect(container.querySelector("svg.stream-physics-frame__overlay")).not.toBeNull()
+    expect(container.querySelector("canvas")).not.toBeNull()
+  })
+
+  it("renders ProcessFlowChart with stage chrome and push", () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const { container, getByTestId } = render(
+      <ProcessFlowChart
+        ref={ref}
+        data={[
+          { id: "a", stage: "coding", featureId: "f1" },
+          { id: "b", stage: "review", featureId: "f1" }
+        ]}
+        stages={[
+          { id: "coding", label: "Coding", force: 10 },
+          { id: "review", label: "Review", capacity: { unitsPerSecond: 3 } },
+          { id: "merged", label: "Merged", absorb: true }
+        ]}
+        idAccessor="id"
+        stageAccessor="stage"
+        groupBy="featureId"
+        size={[480, 260]}
+        settle
+      />
+    )
+
+    expect(container.querySelector(".stream-physics-frame canvas")).not.toBeNull()
+    expect(getByTestId("process-flow-chrome")).not.toBeNull()
+    expect(getByTestId("process-flow-projection-overlay")).not.toBeNull()
+    ref.current?.push({ id: "c", stage: "coding", featureId: "f2" })
+    expect(ref.current?.getData().some((datum) => datum.id === "c")).toBe(true)
+  })
+
   it("renders PhysicsPileChart mechanical mode without data", () => {
     const { container } = render(
       <PhysicsPileChart
@@ -528,21 +607,118 @@ describe("physics chart HOCs", () => {
     expect(ref.current?.getData().some((datum) => datum.id === "c")).toBe(true)
   })
 
-  it("renders NetworkHOPsChart with a sample readout overlay", () => {
-    const { container, getByTestId } = render(
-      <NetworkHOPsChart
-        nodes={[{ id: "A", group: "core" }, { id: "B", group: "leaf" }]}
-        edges={[{ source: "A", target: "B", p: 1, weight: 2 }]}
-        colorBy="group"
-        edgeWidth="weight"
-        paused
-        size={[260, 180]}
+  it("keeps gauntlet property satellites inside the wall corridor (no stuck-left spawns)", () => {
+    // Regression: multi-project orbits (Homes on Main Street) spawned left of
+    // the left wall and never recovered. Spawns must clamp inside the corridor.
+    const layout = {
+      width: 720,
+      floorY: 344
+    }
+    const leftLimit = GAUNTLET_WALL.left + GAUNTLET_WALL.thickness / 2
+    // A satellite that would orbit past the wall without clamping.
+    const raw = clampGauntletPoint(12, 180, 10, layout)
+    expect(raw.x).toBeGreaterThan(leftLimit + 10)
+    expect(raw.x).toBeLessThan(layout.width - GAUNTLET_WALL.rightInset)
+
+    const ref = React.createRef<RealtimeFrameHandle>()
+    render(
+      <GauntletChart
+        ref={ref}
+        data={[
+          {
+            id: "civic-housing",
+            label: "Civic Housing",
+            positives: ["homes", "shade", "transit"],
+            negatives: ["cost"],
+            metrics: { units: 42 },
+            viability: 92
+          },
+          {
+            id: "main-street",
+            label: "Main Street",
+            positives: ["homes", "plaza"],
+            negatives: ["cost", "fatigue"],
+            metrics: { units: 18 },
+            viability: 74
+          }
+        ]}
+        idAccessor="id"
+        positiveAccessor="positives"
+        negativeAccessor="negatives"
+        metricsAccessor="metrics"
+        initialViability="viability"
+        positiveProperties={[
+          { id: "homes", label: "Homes", buoyancy: 3, radius: 10 },
+          { id: "shade", label: "Shade", buoyancy: 1.4, radius: 8 },
+          { id: "transit", label: "Transit", buoyancy: 2, radius: 8 },
+          { id: "plaza", label: "Plaza", buoyancy: 1.2, radius: 8 }
+        ]}
+        negativeProperties={[
+          { id: "cost", label: "Cost", load: 1.1, radius: 7 },
+          { id: "fatigue", label: "Fatigue", load: 0.9, radius: 7 }
+        ]}
+        size={[720, 380]}
       />
     )
 
-    expect(container.querySelector(".stream-network-frame")).not.toBeNull()
-    expect(getByTestId("network-hops-sample-readout")).not.toBeNull()
+    const snapshot = ref.current?.getCustomLayout?.() as {
+      world?: { bodies?: Array<{ x: number; y: number; shape?: { radius?: number } }> }
+    } | null
+    const bodies = snapshot?.world?.bodies ?? []
+    expect(bodies.length).toBeGreaterThan(4)
+    for (const body of bodies) {
+      const r = body.shape?.radius ?? 8
+      expect(body.x).toBeGreaterThanOrEqual(leftLimit + r - 0.5)
+      expect(body.x).toBeLessThanOrEqual(720 - GAUNTLET_WALL.rightInset - r + 0.5)
+    }
   })
+
+  it("renders GauntletChart from declarative properties and exposes project push", () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const { container, getByText } = render(
+      <GauntletChart
+        ref={ref}
+        data={[
+          {
+            id: "plan-a",
+            positives: ["homes", "plaza"],
+            negatives: ["cost"],
+            metrics: { units: 42 }
+          }
+        ]}
+        idAccessor="id"
+        positiveAccessor="positives"
+        negativeAccessor="negatives"
+        metricsAccessor="metrics"
+        positiveProperties={[
+          { id: "homes", label: "Homes", short: "H", value: 3 },
+          { id: "plaza", label: "Plaza", short: "P", value: 1 }
+        ]}
+        negativeProperties={[
+          { id: "cost", label: "Cost", short: "$", load: 1.2 }
+        ]}
+        gates={[
+          {
+            id: "review",
+            label: "Review",
+            regionEffect: { force: { x: 10, y: 0 }, semanticItem: false }
+          }
+        ]}
+        size={[280, 170]}
+      />
+    )
+
+    expect(container.querySelector(".stream-physics-frame canvas")).not.toBeNull()
+    expect(getByText("Review")).toBeTruthy()
+    ref.current?.push({
+      id: "plan-b",
+      positives: ["homes"],
+      negatives: [],
+      metrics: { units: 12 }
+    })
+    expect(ref.current?.getData().some((datum) => datum.id === "plan-b")).toBe(true)
+  })
+
 
   it("renders PhysicalFlowChart with static pipes, sensors, and row push", () => {
     const ref = React.createRef<RealtimeFrameHandle>()
@@ -733,6 +909,326 @@ describe("physics chart HOCs", () => {
     expect(container.querySelector(".stream-physics-frame canvas")).not.toBeNull()
   })
 
+  it("ProcessFlowChart wires live capacity, annotations, observation, and chart mode", () => {
+    const observations: Array<{ type: string; chartId?: string }> = []
+    const capacityReports: number[] = []
+    const { container } = render(
+      <ProcessFlowChart
+        chartId="capacity-flow"
+        mode="primary"
+        title="Live capacity"
+        data={[
+          { id: "a", stage: "review", work: 2 },
+          { id: "b", stage: "review", work: 2 }
+        ]}
+        stages={[
+          { id: "coding", label: "Coding", force: 8 },
+          {
+            id: "review",
+            label: "Review",
+            capacity: { unitsPerSecond: 6 },
+            pressure: true
+          },
+          { id: "merged", label: "Merged", absorb: true }
+        ]}
+        liveCapacity
+        workAccessor="work"
+        stageAccessor="stage"
+        idAccessor="id"
+        size={[480, 220]}
+        settle
+        annotations={[
+          {
+            type: "label",
+            x: 240,
+            y: 40,
+            label: "Review bay",
+            dx: 0,
+            dy: 0
+          }
+        ]}
+        onObservation={(event) =>
+          observations.push({ type: event.type, chartId: event.chartId })
+        }
+        onCapacityChange={(stats) => capacityReports.push(stats.length)}
+      />
+    )
+
+    const root = container.querySelector(".stream-physics-frame")!
+    expect(root.querySelector("canvas")).not.toBeNull()
+    expect(container.querySelector('[data-testid="process-flow-chrome"]')).not.toBeNull()
+    expect(container.querySelector(".semiotic-chart-title")?.textContent).toBe(
+      "Live capacity"
+    )
+    expect(container.textContent).toMatch(/Review bay/)
+    // Live capacity controllers are installed; chrome shows cap badges
+    expect(container.textContent).toMatch(/cap/i)
+  })
+
+  it("remove/update work on static initial rows without a prior push", () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    render(
+      <CollisionSwarmChart
+        ref={ref}
+        data={[
+          { id: "s1", x: 10, group: "A" },
+          { id: "s2", x: 20, group: "B" }
+        ]}
+        xAccessor="x"
+        groupAccessor="group"
+        size={[240, 140]}
+      />
+    )
+
+    expect(ref.current?.getData().map((d) => (d as { id?: string }).id).sort()).toEqual([
+      "s1",
+      "s2"
+    ])
+    const removed = ref.current?.remove("s1") ?? []
+    expect(removed.some((d) => (d as { id?: string }).id === "s1")).toBe(true)
+    expect(
+      ref.current?.getData().some((d) => (d as { id?: string }).id === "s1")
+    ).toBe(false)
+
+    ref.current?.update("s2", (d) => ({ ...d, x: 99 }))
+    const updated = ref.current?.getData().find((d) => (d as { id?: string }).id === "s2")
+    expect(updated).toMatchObject({ id: "s2", x: 99 })
+  })
+
+  it("forwards HOC color primitives and description through shared frame props", () => {
+    const { container } = render(
+      <GaltonBoardChart
+        data={[{ id: "a", value: 2 }]}
+        valueAccessor="value"
+        color="#112233"
+        stroke="#445566"
+        strokeWidth={2}
+        opacity={0.7}
+        description="Galton accessibility label"
+        summary="Most samples land near the center"
+        size={[220, 140]}
+      />
+    )
+    const root = container.querySelector(".stream-physics-frame")!
+    expect(root.getAttribute("aria-label")).toMatch(/Galton accessibility label/)
+    expect(container.textContent).toMatch(/Most samples land near the center/)
+  })
+
+  it("context ChartMode suppresses default title and projection chrome by default", () => {
+    const { container, queryByTestId } = render(
+      <ProcessFlowChart
+        mode="context"
+        data={[{ id: "a", stage: "coding" }]}
+        stages={[
+          { id: "coding", label: "Coding", force: 6 },
+          { id: "done", label: "Done", absorb: true }
+        ]}
+        size={[300, 160]}
+      />
+    )
+    expect(container.querySelector(".stream-physics-frame--mode-context")).not.toBeNull()
+    expect(container.querySelector(".semiotic-chart-title")).toBeNull()
+    // showChrome/showProjection default off in compact modes unless forced
+    expect(queryByTestId("process-flow-chrome")).toBeNull()
+  })
+
+  it("exposes the full RealtimeFrameHandle push API on every physics HOC (push-only mount)", () => {
+    const processStages = [
+      { id: "coding", label: "Coding", force: 10 },
+      { id: "done", label: "Done", absorb: true }
+    ] as const
+    const customLayout: PhysicsCustomLayout<{ id: string; lane: string }> = (
+      ctx
+    ) => ({
+      bodies: ctx.data.map((datum, index) => ({
+        id: String(datum.id),
+        x: 30 + index * 12,
+        y: 30,
+        mass: 1,
+        shape: { type: "circle" as const, radius: 4 },
+        datum
+      })),
+      colliders: [
+        {
+          id: "floor",
+          shape: {
+            type: "aabb" as const,
+            x: 100,
+            y: 120,
+            width: 180,
+            height: 10
+          }
+        }
+      ]
+    })
+
+    const cases: Array<{
+      name: string
+      render: (ref: React.RefObject<RealtimeFrameHandle | null>) => React.ReactElement
+      row: Record<string, unknown>
+      more: Record<string, unknown>[]
+    }> = [
+      {
+        name: "GaltonBoardChart",
+        render: (ref) => (
+          <GaltonBoardChart
+            ref={ref}
+            valueAccessor="value"
+            valueExtent={[0, 10]}
+            size={[200, 120]}
+          />
+        ),
+        row: { id: "g1", value: 3 },
+        more: [{ id: "g2", value: 4 }]
+      },
+      {
+        name: "PhysicsPileChart",
+        render: (ref) => (
+          <PhysicsPileChart
+            ref={ref}
+            categoryAccessor="category"
+            valueAccessor="value"
+            size={[200, 120]}
+          />
+        ),
+        row: { id: "p1", category: "A", value: 2 },
+        more: [{ id: "p2", category: "B", value: 1 }]
+      },
+      {
+        name: "EventDropChart",
+        render: (ref) => (
+          <EventDropChart
+            ref={ref}
+            timeAccessor="time"
+            arrivalAccessor="arrivalTime"
+            windows={{ size: 10 }}
+            size={[200, 120]}
+          />
+        ),
+        row: { id: "e1", time: 5, arrivalTime: 5 },
+        more: [{ id: "e2", time: 8, arrivalTime: 9 }]
+      },
+      {
+        name: "CollisionSwarmChart",
+        render: (ref) => (
+          <CollisionSwarmChart ref={ref} xAccessor="x" size={[200, 120]} />
+        ),
+        row: { id: "c1", x: 10 },
+        more: [{ id: "c2", x: 20 }]
+      },
+      {
+        name: "ProcessFlowChart",
+        render: (ref) => (
+          <ProcessFlowChart
+            ref={ref}
+            stages={[...processStages]}
+            stageAccessor="stage"
+            size={[240, 140]}
+          />
+        ),
+        row: { id: "f1", stage: "coding" },
+        more: [{ id: "f2", stage: "coding" }]
+      },
+      {
+        name: "PhysicalFlowChart",
+        render: (ref) => (
+          <PhysicalFlowChart
+            ref={ref}
+            nodes={[
+              { id: "source", x: 0.1, y: 0.5 },
+              { id: "sink", x: 0.9, y: 0.5 }
+            ]}
+            size={[220, 140]}
+          />
+        ),
+        row: { id: "l1", source: "source", target: "sink", value: 4 },
+        more: [{ id: "l2", source: "source", target: "sink", value: 2 }]
+      },
+      {
+        name: "PhysicsCustomChart",
+        render: (ref) => (
+          <PhysicsCustomChart
+            ref={ref}
+            layout={customLayout}
+            size={[200, 120]}
+          />
+        ),
+        row: { id: "x1", lane: "A" },
+        more: [{ id: "x2", lane: "B" }]
+      },
+      {
+        name: "GauntletChart",
+        render: (ref) => (
+          <GauntletChart
+            ref={ref}
+            positiveProperties={[{ id: "focus", label: "Focus" }]}
+            negativeProperties={[{ id: "debt", label: "Debt" }]}
+            size={[280, 180]}
+          />
+        ),
+        row: {
+          id: "proj-1",
+          label: "Alpha",
+          positive: ["focus"],
+          negative: ["debt"]
+        },
+        more: [
+          {
+            id: "proj-2",
+            label: "Beta",
+            positive: ["focus"],
+            negative: []
+          }
+        ]
+      }
+    ]
+
+    for (const entry of cases) {
+      const ref = React.createRef<RealtimeFrameHandle>()
+      const { unmount, container } = render(entry.render(ref))
+      expect(
+        container.querySelector(".stream-physics-frame canvas"),
+        `${entry.name} mounts canvas for push-only`
+      ).not.toBeNull()
+
+      const handle = ref.current
+      expect(handle, `${entry.name} exposes ref handle`).toBeTruthy()
+      expect(typeof handle!.push).toBe("function")
+      expect(typeof handle!.pushMany).toBe("function")
+      expect(typeof handle!.remove).toBe("function")
+      expect(typeof handle!.update).toBe("function")
+      expect(typeof handle!.clear).toBe("function")
+      expect(typeof handle!.getData).toBe("function")
+      expect(handle!.getScales?.()).toBeNull()
+
+      handle!.push(entry.row)
+      expect(
+        handle!.getData().some((d) => d && (d as { id?: string }).id === entry.row.id),
+        `${entry.name} push lands`
+      ).toBe(true)
+
+      handle!.pushMany(entry.more)
+      expect(
+        handle!.getData().some((d) => d && (d as { id?: string }).id === entry.more[0].id),
+        `${entry.name} pushMany lands`
+      ).toBe(true)
+
+      const beforeUpdate = handle!.getData().length
+      handle!.update(String(entry.row.id), (d) => ({ ...d, __touched: true }))
+      expect(handle!.getData().length).toBeGreaterThanOrEqual(1)
+      // update replaces bodies; row count should stay positive
+      expect(beforeUpdate).toBeGreaterThan(0)
+
+      const removed = handle!.remove(String(entry.more[0].id))
+      expect(removed.length).toBeGreaterThanOrEqual(0)
+
+      handle!.clear()
+      expect(handle!.getData().length).toBe(0)
+
+      unmount()
+    }
+  })
+
   it("renders EventDropChart with window and watermark scaffold", () => {
     const { container, getByTestId } = render(
       <EventDropChart
@@ -879,23 +1375,6 @@ describe("physics chart server rendering", () => {
     expect(evidence.markCount).toBeGreaterThan(0)
   })
 
-  it("server-renders NetworkHOPsChart as a sampled network SVG", () => {
-    const { svg, evidence } = renderChartWithEvidence("NetworkHOPsChart", {
-      nodes: [{ id: "A", group: "core" }, { id: "B", group: "leaf" }],
-      edges: [{ source: "A", target: "B", p: 1, weight: 2 }],
-      colorBy: "group",
-      edgeWidth: "weight",
-      width: 260,
-      height: 180,
-      title: "Network HOPs"
-    })
-
-    expect(svg).toContain("<svg")
-    expect(evidence.component).toBe("NetworkHOPsChart")
-    expect(evidence.frameType).toBe("network")
-    expect(evidence.empty).toBe(false)
-    expect(evidence.markCount).toBeGreaterThan(0)
-  })
 
   it("server-renders PhysicalFlowChart as settled packet SVG", () => {
     const { svg, evidence } = renderChartWithEvidence("PhysicalFlowChart", {

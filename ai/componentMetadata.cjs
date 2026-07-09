@@ -26,7 +26,7 @@ const COMPONENTS_BY_CATEGORY = {
   ],
   physics: [
     "GaltonBoardChart", "EventDropChart", "PhysicsPileChart", "CollisionSwarmChart",
-    "NetworkHOPsChart", "PhysicalFlowChart",
+    "PhysicalFlowChart", "ProcessFlowChart", "GauntletChart",
   ],
   value: [
     "BigNumber",

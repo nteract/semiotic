@@ -74,13 +74,6 @@ function checkEmptyData(
   }
 
   if (spec.dataShape === "network") {
-    if (
-      component === "NetworkHOPsChart" &&
-      Array.isArray(props.samples) &&
-      props.samples.length > 0
-    ) {
-      return
-    }
     if (props.edges && Array.isArray(props.edges) && props.edges.length === 0) {
       out.push({
         severity: "error",
@@ -1047,7 +1040,10 @@ const PHYSICS_COMPONENTS = new Set([
   "EventDropChart",
   "PhysicsPileChart",
   "CollisionSwarmChart",
-  "NetworkHOPsChart",
+  "PhysicalFlowChart",
+  "ProcessFlowChart",
+  "GauntletChart",
+  "PhysicsCustomChart",
 ])
 
 function finiteNumber(value: unknown): number | null {
@@ -1252,65 +1248,121 @@ function checkPhysicsConfig(
     }
   }
 
-  if (component === "NetworkHOPsChart") {
-    const edges = Array.isArray(props.edges) ? props.edges : []
-    const samples = Array.isArray(props.samples) ? props.samples : []
-    if (edges.length === 0 && samples.length === 0) {
+  // Process / frame physics honesty rules (pre-release DX gate).
+  if (
+    component === "GaltonBoardChart" ||
+    component === "PhysicsPileChart" ||
+    component === "CollisionSwarmChart" ||
+    component === "ProcessFlowChart" ||
+    component === "EventDropChart"
+  ) {
+    const massEncoded =
+      props.massBy != null ||
+      props.massAccessor != null ||
+      (props.frameProps &&
+        typeof props.frameProps === "object" &&
+        (props.frameProps as Datum).bodyMassBy != null)
+    if (massEncoded) {
       out.push({
-        severity: "error",
-        code: "NETWORK_HOPS_MISSING_TOPOLOGY",
-        message: `NetworkHOPsChart needs probabilistic edges or explicit graph samples.`,
-        fix: `Provide edges={[{ source: "A", target: "B", p: 0.6 }]} or samples={[{ id: "s1", edges: [...] }]}.`,
+        severity: "warning",
+        code: "PHYSICS_DATA_IN_DYNAMICS",
+        message: `${component} appears to map a data field to mass/dynamics. Mass is not a readable quantitative channel.`,
+        fix: `Encode quantities in spawn position, bin, size, color, or glyph — keep mass/friction/restitution as process texture. Use showProjection for the truth layer.`,
       })
     }
+  }
 
-    const sampleRate = finiteNumber(props.sampleRate ?? 1) ?? 1
-    if (sampleRate <= 0) {
+  if (
+    (component === "PhysicsPileChart" ||
+      component === "GaltonBoardChart" ||
+      component === "CollisionSwarmChart" ||
+      component === "ProcessFlowChart") &&
+    props.showProjection === false
+  ) {
+    out.push({
+      severity: "warning",
+      code: "PHYSICS_NO_PROJECTION",
+      message: `${component} has showProjection={false}. Without a settled projection, motion is easy to over-read as data.`,
+      fix: `Keep showProjection enabled (default) so the chart collapses to a legible static reading, or document why the process alone is the claim.`,
+    })
+  }
+
+  if (component === "ProcessFlowChart") {
+    const stages = Array.isArray(props.stages) ? props.stages : []
+    if (stages.length === 0) {
       out.push({
         severity: "error",
-        code: "NETWORK_HOPS_BAD_SAMPLE_RATE",
-        message: `sampleRate=${String(props.sampleRate)} prevents sample animation from advancing.`,
-        fix: `Use a positive sampleRate, for example 1, or pass paused={true} with a controlled sampleIndex.`,
+        code: "PROCESS_FLOW_MISSING_STAGES",
+        message: `ProcessFlowChart requires a non-empty stages array.`,
+        fix: `Provide stages={[{ id: "coding", force: 12 }, { id: "merged", absorb: true }]}.`,
       })
-    }
-
-    if (samples.length > 0) {
-      const missingEdges = samples.filter(
-        (sample: Datum) => !sample || !Array.isArray(sample.edges)
+    } else {
+      const missingId = stages.some(
+        (stage: Datum) => !stage || stage.id == null || String(stage.id).trim() === ""
       )
-      if (missingEdges.length > 0) {
+      if (missingId) {
         out.push({
           severity: "error",
-          code: "NETWORK_HOPS_BAD_SAMPLE",
-          message: `${missingEdges.length} NetworkHOPsChart sample(s) are missing an edges array.`,
-          fix: `Shape every sample as { id, label, nodes?, edges: [{ source, target }] }.`,
+          code: "PROCESS_FLOW_BAD_STAGE",
+          message: `Every ProcessFlowChart stage needs a stable id.`,
+          fix: `Use stages like { id: "review", label: "Review", capacity: { unitsPerSecond: 4 } }.`,
         })
-      } else if (
-        samples.every((sample: Datum) => Array.isArray(sample.edges) && sample.edges.length === 0)
-      ) {
+      }
+      const absorbCount = stages.filter((stage: Datum) => stage?.absorb).length
+      if (props.groupBy && absorbCount === 0) {
         out.push({
           severity: "warning",
-          code: "NETWORK_HOPS_EMPTY_SAMPLES",
-          message: `All NetworkHOPsChart samples have empty edge lists, so the graph will not show changing outcomes.`,
-          fix: `Include at least one edge in one sample, or use probabilistic edges with an edgeProbabilityAccessor.`,
+          code: "PROCESS_FLOW_GROUP_NO_ABSORB",
+          message: `groupBy is set but no stage has absorb: true, so all-members completion cannot resolve.`,
+          fix: `Mark a terminal stage with absorb: true (e.g. merged), or set groupCompletion="none".`,
         })
       }
     }
+  }
 
-    if (edges.length > 0) {
-      const probabilityAccessor = props.edgeProbabilityAccessor || "p"
-      const invalid = edges.find((edge: Datum) => {
-        const value = finiteNumber(readField(edge, probabilityAccessor, "p"))
-        return value == null || value < 0 || value > 1
+  if (component === "GauntletChart") {
+    if (!Array.isArray(props.positiveProperties) || props.positiveProperties.length === 0) {
+      out.push({
+        severity: "error",
+        code: "GAUNTLET_MISSING_POSITIVE_PROPERTIES",
+        message: `GauntletChart requires positiveProperties definitions for tethered lift/value bodies.`,
+        fix: `Provide positiveProperties={[{ id: "homes", label: "Homes", buoyancy: 2 }]}.`,
       })
-      if (invalid) {
-        out.push({
-          severity: "error",
-          code: "NETWORK_HOPS_BAD_PROBABILITY",
-          message: `NetworkHOPsChart edge probabilities must be numeric values between 0 and 1.`,
-          fix: `Set ${typeof probabilityAccessor === "string" ? probabilityAccessor : "the probability accessor"} to values like 0.2, 0.5, or 0.9 on every probabilistic edge.`,
-        })
-      }
+    }
+    if (!Array.isArray(props.negativeProperties)) {
+      out.push({
+        severity: "warning",
+        code: "GAUNTLET_MISSING_NEGATIVE_PROPERTIES",
+        message: `GauntletChart usually needs negativeProperties for drag/cost bodies (empty array is ok if intentional).`,
+        fix: `Provide negativeProperties={[{ id: "cost", label: "Cost", load: 1 }]} or explicitly pass [].`,
+      })
+    }
+  }
+
+  // Live body budget heuristic for value-encoding physics charts.
+  if (
+    component === "PhysicsPileChart" ||
+    component === "GaltonBoardChart" ||
+    component === "CollisionSwarmChart" ||
+    component === "ProcessFlowChart" ||
+    component === "EventDropChart"
+  ) {
+    const data = Array.isArray(props.data) ? props.data : []
+    const mechanicalCount = finiteNumber(props.mechanicalCount) ?? 0
+    const estimated =
+      data.length > 0
+        ? data.length *
+          (component === "PhysicsPileChart"
+            ? Math.max(1, finiteNumber(props.unitValue) ? 1 : 1)
+            : 1)
+        : mechanicalCount
+    if (estimated > 2500) {
+      out.push({
+        severity: "warning",
+        code: "PHYSICS_BODY_BUDGET",
+        message: `${component} may spawn ~${Math.round(estimated)} live bodies, which can overwhelm the simulation loop.`,
+        fix: `Lower mechanicalCount / unitize with a larger unitValue, enable sediment/windowSize, or sample the data before spawn.`,
+      })
     }
   }
 }

@@ -6957,8 +6957,9 @@ var require_componentMetadata = __commonJS({
         "EventDropChart",
         "PhysicsPileChart",
         "CollisionSwarmChart",
-        "NetworkHOPsChart",
-        "PhysicalFlowChart"
+        "PhysicalFlowChart",
+        "ProcessFlowChart",
+        "GauntletChart"
       ],
       value: [
         "BigNumber"
@@ -32418,8 +32419,9 @@ var COMPONENT_REGISTRY = {
   EventDropChart: { component: import_ai.EventDropChart, category: "physics" },
   PhysicsPileChart: { component: import_ai.PhysicsPileChart, category: "physics" },
   CollisionSwarmChart: { component: import_ai.CollisionSwarmChart, category: "physics" },
-  NetworkHOPsChart: { component: import_ai.NetworkHOPsChart, category: "physics" },
-  PhysicalFlowChart: { component: import_ai.PhysicalFlowChart, category: "physics" }
+  PhysicalFlowChart: { component: import_ai.PhysicalFlowChart, category: "physics" },
+  ProcessFlowChart: { component: import_ai.ProcessFlowChart, category: "physics" },
+  GauntletChart: { component: import_ai.GauntletChart, category: "physics" }
 };
 
 // ai/renderHOCToSVG.tsx

@@ -107,6 +107,28 @@ describe("physics worker protocol", () => {
         sediment: { binAccessor: () => "lane" }
       })
     ).toBe(false)
+    expect(
+      isPhysicsWorkerConfigSupported({
+        colliders: [
+          {
+            id: "comment-wall",
+            bodyFilter: { property: "datum.kind", equals: "comment" },
+            shape: { type: "aabb", x: 0, y: 0, width: 10, height: 10 }
+          }
+        ]
+      })
+    ).toBe(true)
+    expect(
+      isPhysicsWorkerConfigSupported({
+        colliders: [
+          {
+            id: "custom-wall",
+            bodyFilter: () => true,
+            shape: { type: "aabb", x: 0, y: 0, width: 10, height: 10 }
+          }
+        ]
+      })
+    ).toBe(false)
     expect(() =>
       createPhysicsWorkerConfig({ engine: (() => null) as never })
     ).toThrow("built-in kernel")

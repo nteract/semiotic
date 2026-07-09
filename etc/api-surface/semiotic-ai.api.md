@@ -76,6 +76,7 @@ function ForceDirectedGraph
 function FunnelChart
 function GaltonBoardChart
 function GaugeChart
+function GauntletChart
 function GroupedBarChart
 function Heatmap
 function Histogram
@@ -89,12 +90,12 @@ function MobileChartContainer
 function MobileStandardControls
 function MultiAxisLineChart
 function MultiLineTooltip
-function NetworkHOPsChart
 function OrbitDiagram
 function PhysicalFlowChart
 function PhysicsCustomChart
 function PhysicsPileChart
 function PieChart
+function ProcessFlowChart
 function ProcessSankey
 function QuadrantChart
 function RealtimeHeatmap

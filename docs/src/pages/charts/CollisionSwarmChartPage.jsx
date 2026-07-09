@@ -135,7 +135,7 @@ export default function CollisionSwarmChartPage() {
         { label: "CollisionSwarmChart", path: "/charts/collision-swarm-chart" },
       ]}
       prevPage={{ title: "PhysicsPileChart", path: "/charts/physics-pile-chart" }}
-      nextPage={{ title: "NetworkHOPsChart", path: "/charts/network-hops-chart" }}
+      nextPage={{ title: "PhysicalFlowChart", path: "/charts/physical-flow-chart" }}
     >
       <ComponentMeta
         componentName="CollisionSwarmChart"
@@ -147,7 +147,7 @@ export default function CollisionSwarmChartPage() {
           { name: "SwarmPlot", path: "/charts/swarm-plot" },
           { name: "DotPlot", path: "/charts/dot-plot" },
           { name: "PhysicsPileChart", path: "/charts/physics-pile-chart" },
-          { name: "NetworkHOPsChart", path: "/charts/network-hops-chart" },
+          { name: "ProcessFlowChart", path: "/charts/process-flow-chart" },
           { name: "PhysicsCustomChart", path: "/charts/physics-custom-chart" },
         ]}
       />

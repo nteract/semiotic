@@ -623,14 +623,6 @@ describe("auditAccessibility — physics motion contract", () => {
     expect(status(r, "flexible.sim-pause-control")).toBe("warn")
   })
 
-  it("does not auto-credit NetworkHOPsChart, which is not frame-based", () => {
-    const r = auditAccessibility("NetworkHOPsChart", {
-      title: "Sampled network realizations",
-      accessibleTable: true
-    })
-    expect(status(r, "flexible.settled-projection")).toBe("warn")
-    expect(status(r, "flexible.reduced-motion-settle")).toBe("warn")
-  })
 
   it("also lets existing continuous charts pass reduced-motion when a pause control is declared", () => {
     const r = auditAccessibility("OrbitDiagram", {

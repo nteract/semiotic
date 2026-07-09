@@ -22,34 +22,25 @@ interface FlippingTooltipProps {
 
 /**
  * True when the tooltip content's root element looks like the
- * consumer is handling chrome themselves. Four signals, any one of
- * which is enough:
+ * consumer is handling chrome themselves. Signals (any one is enough):
  *
- *   1. The standard `.semiotic-tooltip` className.
- *   2. An inline `background` declaration on `style`. Catches the
- *      Landing-page gallery pattern (`style={{ background: "white",
- *      ... }}` with no className).
- *   3. An inline `backgroundColor` declaration on `style`. Same
- *      intent as (2) just spelled differently.
- *   4. `data-semiotic-tooltip-chrome`, for CSS-class-only tooltip
- *      chrome where the actual background is defined outside the
- *      React element.
+ *   1. Component-type `ownsChrome: true` (for components that paint
+ *      chrome internally — avoids double-wrap).
+ *   2. An inline `background` / `backgroundColor` on `style`.
+ *   3. `data-semiotic-tooltip-chrome` for CSS-class-only chrome
+ *      where the background is defined outside the React element.
  *
- * When none of these fire, `FlippingTooltip` paints
- * `defaultTooltipStyle` on its own wrapper so the tooltip can never
- * come out chrome-less. The footgun this guards against: chart-
- * specific `tooltipContent` callbacks have recurringly returned
- * `<div style={{ minWidth: 160 }}>...</div>` — no class, no
- * background, just sizing — producing transparent floating boxes
- * (the ProcessSankey and original-DifferenceChart regressions).
+ * **`.semiotic-tooltip` class alone is NOT ownership.** Charts and
+ * examples repeatedly return `<div className="semiotic-tooltip">…</div>`
+ * without a background (expecting a global CSS rule or theme var that
+ * is missing or transparent). Treating the class as ownership was the
+ * transparent-tooltip regression. Shared helpers that truly own chrome
+ * pass `defaultTooltipStyle` (inline background) or `ownsChrome`.
  *
- * A class name alone is intentionally not enough. Classed custom
- * content is commonly used for internal layout only, and treating
- * every className as chrome ownership lets transparent tooltips leak
- * through. CSS-class-only tooltip chrome should opt in with
- * `data-semiotic-tooltip-chrome`.
+ * When none of these fire, `FlippingTooltip` paints `defaultTooltipStyle`
+ * on its wrapper so the tooltip can never come out chrome-less.
  */
-function hasOwnChrome(node: React.ReactNode): boolean {
+export function hasOwnChrome(node: React.ReactNode): boolean {
   if (!React.isValidElement(node)) return false
   // Component-level opt-in. The auto-chrome path only inspects props
   // on the *immediate* React element, which works for intrinsic
@@ -67,18 +58,20 @@ function hasOwnChrome(node: React.ReactNode): boolean {
     className?: unknown
     style?: React.CSSProperties
   } & Record<string, unknown>
-  if (
-    typeof props.className === "string" &&
-    props.className.split(/\s+/).includes("semiotic-tooltip")
-  ) {
-    return true
-  }
   if (props["data-semiotic-tooltip-chrome"] === true) return true
   if (props["data-semiotic-tooltip-chrome"] === "true") return true
   const style = props.style
   if (style && typeof style === "object") {
-    if (style.background != null && style.background !== "") return true
-    if (style.backgroundColor != null && style.backgroundColor !== "") return true
+    if (style.background != null && style.background !== "" && style.background !== "transparent") {
+      return true
+    }
+    if (
+      style.backgroundColor != null &&
+      style.backgroundColor !== "" &&
+      style.backgroundColor !== "transparent"
+    ) {
+      return true
+    }
   }
   return false
 }

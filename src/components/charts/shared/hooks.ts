@@ -881,7 +881,8 @@ interface ChartModeInput {
   responsiveRules?: ResponsiveRule[]
 }
 
-interface ChartModeResult {
+/** Result of {@link useChartMode} — exported so declaration emit can name it. */
+export interface ChartModeResult {
   width: number
   height: number
   showAxes: boolean

@@ -9515,296 +9515,6 @@
     {
       "type": "function",
       "function": {
-        "name": "NetworkHOPsChart",
-        "description": "Network hypothetical outcome plot. Animates sampled realizations of uncertain or probabilistic graphs while node positions stay anchored to the aggregate topology.",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "width": {
-              "type": "number",
-              "default": 600
-            },
-            "height": {
-              "type": "number",
-              "default": 400
-            },
-            "margin": {
-              "type": "object",
-              "description": "Object margin. A side value of \"auto\" or null leaves that side available for auto-reservation."
-            },
-            "className": {
-              "type": "string"
-            },
-            "title": {
-              "type": "string"
-            },
-            "enableHover": {
-              "type": "boolean",
-              "default": true
-            },
-            "showLegend": {
-              "type": "boolean"
-            },
-            "showGrid": {
-              "type": "boolean",
-              "default": false
-            },
-            "colorBy": {
-              "type": [
-                "string",
-                "function"
-              ]
-            },
-            "colorScheme": {
-              "type": [
-                "string",
-                "array"
-              ],
-              "default": "category10"
-            },
-            "tooltip": {
-              "type": [
-                "boolean",
-                "function",
-                "object"
-              ]
-            },
-            "annotations": {
-              "type": "array",
-              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain label), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "widget",
-                      "label",
-                      "callout",
-                      "text",
-                      "bracket",
-                      "y-threshold",
-                      "x-threshold",
-                      "band",
-                      "enclose",
-                      "rect-enclose",
-                      "highlight",
-                      "trend",
-                      "envelope",
-                      "anomaly-band",
-                      "forecast"
-                    ],
-                    "description": "Annotation type"
-                  }
-                },
-                "required": [
-                  "type"
-                ]
-              }
-            },
-            "autoPlaceAnnotations": {
-              "type": [
-                "boolean",
-                "object"
-              ],
-              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
-              "default": false
-            },
-            "responsiveRules": {
-              "type": "array",
-              "description": "Semantic responsive transforms applied before chart-mode defaults."
-            },
-            "mobileSemantics": {
-              "type": "object",
-              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
-            },
-            "mobileInteraction": {
-              "type": [
-                "boolean",
-                "object"
-              ],
-              "description": "Touch-first interaction policy for phone-sized chart slots."
-            },
-            "axisExtent": {
-              "type": "string",
-              "enum": [
-                "nice",
-                "exact"
-              ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
-              "default": "nice"
-            },
-            "size": {
-              "type": "array",
-              "description": "[width, height] in pixels"
-            },
-            "nodes": {
-              "type": "array",
-              "description": "Array of node objects. Optional when samples include nodes or edges can infer endpoint ids."
-            },
-            "edges": {
-              "type": "array",
-              "description": "Probabilistic edge list. Each edge should include source, target, and a probability field such as p."
-            },
-            "samples": {
-              "type": "array",
-              "description": "Explicit graph realizations: [{ id?, label?, nodes?, edges }]. Used instead of probabilistic edges when available."
-            },
-            "nodeIdAccessor": {
-              "type": [
-                "string",
-                "function"
-              ],
-              "description": "Key for node unique identifier.",
-              "default": "id"
-            },
-            "nodeIDAccessor": {
-              "type": [
-                "string",
-                "function"
-              ],
-              "description": "Legacy alias for nodeIdAccessor.",
-              "default": "id"
-            },
-            "sourceAccessor": {
-              "type": [
-                "string",
-                "function"
-              ],
-              "description": "Key for edge source node ID.",
-              "default": "source"
-            },
-            "targetAccessor": {
-              "type": [
-                "string",
-                "function"
-              ],
-              "description": "Key for edge target node ID.",
-              "default": "target"
-            },
-            "edgeProbabilityAccessor": {
-              "type": [
-                "string",
-                "function"
-              ],
-              "description": "Probability field used when edges are probabilistic rather than explicit samples.",
-              "default": "p"
-            },
-            "sampleIndex": {
-              "type": "number",
-              "description": "Controlled realization index. Omit to animate through samples."
-            },
-            "sampleRate": {
-              "type": "number",
-              "description": "Realizations per second when sampleIndex is uncontrolled.",
-              "default": 1
-            },
-            "paused": {
-              "type": "boolean",
-              "description": "Pause animated sample cycling.",
-              "default": false
-            },
-            "seed": {
-              "type": "number",
-              "description": "Deterministic seed for probabilistic edge sampling.",
-              "default": 1
-            },
-            "anchoringStrength": {
-              "type": "number",
-              "description": "Force-directed link strength used for the stable aggregate layout.",
-              "default": 0.14
-            },
-            "showAggregate": {
-              "type": "boolean",
-              "description": "Draw inactive aggregate edges faintly behind the active sample.",
-              "default": true
-            },
-            "showSampleReadout": {
-              "type": "boolean",
-              "description": "Show active-edge and aggregate summary overlay.",
-              "default": true
-            },
-            "activeEdgeColor": {
-              "type": "string",
-              "description": "Stroke color for edges present in the active realization."
-            },
-            "activeEdgeOpacity": {
-              "type": "number",
-              "default": 0.88
-            },
-            "aggregateEdgeColor": {
-              "type": "string",
-              "default": "#94a3b8"
-            },
-            "aggregateEdgeOpacity": {
-              "type": "number",
-              "default": 0.18
-            },
-            "aggregateEdgeWidth": {
-              "type": "number",
-              "default": 1
-            },
-            "edgeWidth": {
-              "type": [
-                "number",
-                "string",
-                "function"
-              ],
-              "description": "Width for active sampled edges.",
-              "default": 2
-            },
-            "edgeColor": {
-              "type": "string",
-              "default": "#2563eb"
-            },
-            "iterations": {
-              "type": "number",
-              "description": "Force simulation iterations for aggregate node layout.",
-              "default": 300
-            },
-            "nodeLabel": {
-              "type": [
-                "string",
-                "function"
-              ],
-              "description": "Key or accessor for node labels."
-            },
-            "nodeSize": {
-              "type": [
-                "number",
-                "string",
-                "function"
-              ],
-              "default": 8
-            },
-            "nodeSizeRange": {
-              "type": "array",
-              "default": [
-                5,
-                20
-              ]
-            },
-            "showLabels": {
-              "type": "boolean",
-              "default": false
-            },
-            "layoutExecution": {
-              "type": "string",
-              "enum": [
-                "auto",
-                "worker",
-                "sync"
-              ],
-              "default": "auto"
-            }
-          },
-          "required": []
-        }
-      }
-    },
-    {
-      "type": "function",
-      "function": {
         "name": "PhysicalFlowChart",
         "description": "Experimental physics-backed flow chart. Packets move along authored node coordinates or link paths while a static throughput layer keeps the route quantities readable.",
         "parameters": {
@@ -10070,6 +9780,274 @@
             }
           },
           "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GauntletChart",
+        "description": "Physics-backed compound-plan gauntlet. A project core carries tethered positive/negative property bodies through timed gate events; settled projection is viability and outcome, not trajectories.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of source records. Each record becomes one or more simulated bodies."
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field or accessor used to color simulated bodies."
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic simulation seed.",
+              "default": 1
+            },
+            "ballRadius": {
+              "type": "number",
+              "description": "Radius of each simulated circular body in pixels."
+            },
+            "hoverRadius": {
+              "type": "number",
+              "description": "Pixel hit radius for body hover tooltips."
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause the simulation at mount or on prop update."
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+            },
+            "positiveProperties": {
+              "type": "array",
+              "description": "Lift/value property definitions attached to each project core."
+            },
+            "negativeProperties": {
+              "type": "array",
+              "description": "Drag/cost property definitions attached to each project core."
+            },
+            "gates": {
+              "type": "array",
+              "description": "Named process gates along the route."
+            },
+            "events": {
+              "type": [
+                "array",
+                "function"
+              ],
+              "description": "Timed gate effects that add/pop properties and set outcomes."
+            },
+            "showChrome": {
+              "type": "boolean",
+              "description": "Draw route, socket, and graveyard chrome.",
+              "default": true
+            },
+            "showProjection": {
+              "type": "boolean",
+              "description": "Draw settled viability/outcome strip.",
+              "default": true
+            },
+            "showTethers": {
+              "type": "boolean",
+              "description": "Draw tethers between cores and property bodies.",
+              "default": true
+            },
+            "terminalBehavior": {
+              "type": "string",
+              "enum": [
+                "outcome",
+                "hold-last"
+              ],
+              "default": "outcome"
+            }
+          },
+          "required": [
+            "positiveProperties",
+            "negativeProperties"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ProcessFlowChart",
+        "description": "Physics-backed multi-body process flow. Work items move through ordered stages with optional capacity, pressure, portals, absorb sinks, and feature groups that complete only when every member is absorbed.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Array of source records. Each record becomes one or more simulated bodies."
+            },
+            "size": {
+              "type": "array",
+              "description": "[width, height] in pixels"
+            },
+            "width": {
+              "type": "number",
+              "description": "Alias for size[0]"
+            },
+            "height": {
+              "type": "number",
+              "description": "Alias for size[1]"
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "colorBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Categorical field or accessor used to color simulated bodies."
+            },
+            "seed": {
+              "type": "number",
+              "description": "Deterministic seed for placement jitter.",
+              "default": 1
+            },
+            "ballRadius": {
+              "type": "number",
+              "description": "Fallback body radius.",
+              "default": 6
+            },
+            "hoverRadius": {
+              "type": "number",
+              "description": "Pixel hit radius for body hover tooltips."
+            },
+            "paused": {
+              "type": "boolean",
+              "description": "Pause the simulation at mount or on prop update."
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "function",
+                "object"
+              ],
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+            },
+            "stages": {
+              "type": "array",
+              "description": "Ordered process stages: { id, label?, force?, damping?, capacity?, pressure?, portal?, absorb? }."
+            },
+            "stageAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Field or accessor for each work item's current stage id.",
+              "default": "stage"
+            },
+            "idAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Stable work-item id."
+            },
+            "groupBy": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Optional feature/group key. Groups complete when all members reach an absorb stage."
+            },
+            "groupLabelAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Display label for group anchors."
+            },
+            "workAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Work-units field stamped for capacity metadata."
+            },
+            "radiusAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Optional per-body radius in pixels."
+            },
+            "groupCompletion": {
+              "type": "string",
+              "enum": [
+                "allAbsorbed",
+                "none"
+              ],
+              "description": "How feature groups report completion.",
+              "default": "allAbsorbed when groupBy is set"
+            },
+            "groupAnchorAlong": {
+              "type": "number",
+              "description": "0–1 position along the lane for group anchors."
+            },
+            "showProjection": {
+              "type": "boolean",
+              "description": "Draw settled stage-count bars.",
+              "default": true
+            },
+            "showChrome": {
+              "type": "boolean",
+              "description": "Draw stage labels, capacity notes, and group anchors.",
+              "default": true
+            },
+            "settle": {
+              "type": "boolean",
+              "description": "Start bodies at stage targets for a calmer first paint."
+            }
+          },
+          "required": [
+            "stages"
+          ]
         }
       }
     }

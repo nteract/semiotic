@@ -56,8 +56,9 @@ import { GaltonBoardChartCapability } from "../charts/physics/GaltonBoardChart.c
 import { EventDropChartCapability } from "../charts/physics/EventDropChart.capability"
 import { PhysicsPileChartCapability } from "../charts/physics/PhysicsPileChart.capability"
 import { CollisionSwarmChartCapability } from "../charts/physics/CollisionSwarmChart.capability"
-import { NetworkHOPsChartCapability } from "../charts/physics/NetworkHOPsChart.capability"
 import { PhysicalFlowChartCapability } from "../charts/physics/PhysicalFlowChart.capability"
+import { ProcessFlowChartCapability } from "../charts/physics/ProcessFlowChart.capability"
+import { GauntletChartCapability } from "../charts/physics/GauntletChart.capability"
 
 // Value family
 import { BigNumberCapability } from "../charts/value/BigNumber.capability"
@@ -130,8 +131,9 @@ const BUILT_IN_CAPABILITIES: ReadonlyArray<ChartCapability> = [
   EventDropChartCapability,
   PhysicsPileChartCapability,
   CollisionSwarmChartCapability,
-  NetworkHOPsChartCapability,
   PhysicalFlowChartCapability,
+  ProcessFlowChartCapability,
+  GauntletChartCapability,
   // Value
   BigNumberCapability,
 ]
@@ -225,6 +227,7 @@ export {
   EventDropChartCapability,
   PhysicsPileChartCapability,
   CollisionSwarmChartCapability,
-  NetworkHOPsChartCapability,
   PhysicalFlowChartCapability,
+  ProcessFlowChartCapability,
+  GauntletChartCapability,
 }

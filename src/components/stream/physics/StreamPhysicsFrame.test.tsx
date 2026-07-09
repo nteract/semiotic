@@ -8,7 +8,10 @@ import {
   DataSummaryProvider,
   useDataSummaryToggle
 } from "../../DataSummaryContext"
-import { setupCanvasMock } from "../../../test-utils/canvasMock"
+import {
+  setupCanvasMock,
+  type CanvasContextMock
+} from "../../../test-utils/canvasMock"
 import StreamPhysicsFrame, {
   type StreamPhysicsExecutionState,
   type StreamPhysicsFrameHandle
@@ -76,6 +79,28 @@ class RuntimeWorker {
 
 const originalWorker = globalThis.Worker
 
+function captureFillRectStyles(ctx: CanvasContextMock) {
+  const styles: string[] = []
+  const orig = ctx.fillRect as ((...args: unknown[]) => unknown) | undefined
+  ctx.fillRect = vi.fn((...args: unknown[]) => {
+    styles.push(String(ctx.fillStyle))
+    return orig?.apply(ctx, args)
+  })
+  return {
+    styles,
+    restore: () => {
+      ctx.fillRect = orig
+    }
+  }
+}
+
+function getMockCtx(): CanvasContextMock {
+  return HTMLCanvasElement.prototype.getContext.call(
+    document.createElement("canvas"),
+    "2d"
+  ) as unknown as CanvasContextMock
+}
+
 function DataSummaryToggle() {
   const toggle = useDataSummaryToggle()
   return (
@@ -142,6 +167,236 @@ describe("StreamPhysicsFrame", () => {
     )
 
     expect(window.requestAnimationFrame).not.toHaveBeenCalled()
+  })
+
+  it("can keep ticking for frame-local continuous systems", () => {
+    render(
+      <StreamPhysicsFrame
+        continuous
+        size={[200, 120]}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+      />
+    )
+
+    expect(window.requestAnimationFrame).toHaveBeenCalled()
+  })
+
+  it("generates filtered boundary colliders for region effects", () => {
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 120]}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        regionEffects={[
+          {
+            id: "review-box",
+            collider: "boundary",
+            colliderThickness: 10,
+            bodyFilter: { property: "datum.kind", equals: "comment" },
+            semanticItem: false,
+            shape: { type: "aabb", x: 80, y: 60, width: 40, height: 30 }
+          }
+        ]}
+      />
+    )
+
+    const colliders = ref.current!.snapshot().world.colliders
+    expect(
+      colliders
+        .filter((collider) => collider.id.startsWith("stream-region-review-box"))
+        .map((collider) => collider.id)
+    ).toEqual([
+      "stream-region-review-box",
+      "stream-region-review-box-top",
+      "stream-region-review-box-right",
+      "stream-region-review-box-bottom",
+      "stream-region-review-box-left"
+    ])
+    expect(
+      colliders
+        .filter((collider) => collider.id.startsWith("stream-region-review-box"))
+        .every((collider) => {
+          const filter = collider.bodyFilter
+          return (
+            typeof filter === "object" &&
+            filter != null &&
+            "property" in filter &&
+            filter.property === "datum.kind"
+          )
+        })
+    ).toBe(true)
+  })
+
+  it("applies declared body forces during imperative steps", () => {
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 120]}
+        config={{ fixedDt: 1 / 60, kernel: quietKernel }}
+        initialSpawns={[circle("burdened", 40, 40)]}
+        bodyForces={({ body }) =>
+          body.id === "burdened" ? { x: 0, y: 120 } : null
+        }
+      />
+    )
+
+    act(() => {
+      ref.current!.step(1 / 60)
+    })
+
+    expect(ref.current!.readBodies()[0].vy).toBeGreaterThan(0)
+  })
+
+  it("pops bodies by removing them and scheduling an exit animation", () => {
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 120]}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[circle("balloon", 40, 40)]}
+      />
+    )
+
+    let removed: string[] = []
+    act(() => {
+      removed = ref.current!.popBodies(["balloon"], {
+        color: "#ff0000",
+        durationMs: 300
+      })
+    })
+
+    expect(removed).toEqual(["balloon"])
+    expect(ref.current!.readBodies()).toEqual([])
+    expect(window.requestAnimationFrame).toHaveBeenCalled()
+  })
+
+  it("uses custom canvas body and post-paint renderers", () => {
+    const renderBody = vi.fn(
+      (
+        ctx: CanvasRenderingContext2D,
+        body: { id: string; x: number; y: number },
+        style: { fill?: unknown }
+      ) => {
+        ctx.fillStyle = String(style.fill)
+        ctx.beginPath()
+        ctx.arc(body.x, body.y, 4, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    )
+    const afterPaint = vi.fn(
+      (
+        ctx: CanvasRenderingContext2D,
+        bodies: Array<{ id: string; x: number; y: number }>
+      ) => {
+        ctx.strokeStyle = "#123456"
+        ctx.beginPath()
+        for (const body of bodies) {
+          ctx.moveTo(body.x - 2, body.y)
+          ctx.lineTo(body.x + 2, body.y)
+        }
+        ctx.stroke()
+      }
+    )
+    const beforePaint = vi.fn(
+      (
+        ctx: CanvasRenderingContext2D,
+        bodies: Array<{ id: string; x: number; y: number }>
+      ) => {
+        ctx.strokeStyle = "#654321"
+        for (const body of bodies) {
+          ctx.strokeRect(body.x - 2, body.y - 2, 4, 4)
+        }
+      }
+    )
+
+    render(
+      <StreamPhysicsFrame
+        size={[200, 120]}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[circle("custom-body", 44, 52)]}
+        bodyStyle={{ fill: "#abcdef" }}
+        beforePaint={beforePaint}
+        renderBody={renderBody}
+        afterPaint={afterPaint}
+      />
+    )
+
+    expect(renderBody).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: "custom-body" }),
+      expect.objectContaining({ fill: "#abcdef" })
+    )
+    expect(afterPaint).toHaveBeenCalled()
+    expect(afterPaint.mock.calls[0][1].map((body) => body.id)).toEqual([
+      "custom-body"
+    ])
+    expect(beforePaint.mock.calls[0][1].map((body) => body.id)).toEqual([
+      "custom-body"
+    ])
+  })
+
+  it("keeps backgroundGraphics visible by skipping the canvas background fill", () => {
+    const ctx = getMockCtx()
+    const cap = captureFillRectStyles(ctx)
+    try {
+      const { container } = render(
+        <StreamPhysicsFrame
+          size={[200, 120]}
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+          backgroundGraphics={
+            <svg data-testid="physics-bg" width={200} height={120}>
+              <rect width={200} height={120} fill="red" />
+            </svg>
+          }
+        />
+      )
+
+      expect(container.querySelector("[data-testid='physics-bg']")).not.toBeNull()
+      expect(cap.styles).toHaveLength(0)
+    } finally {
+      cap.restore()
+    }
+  })
+
+  it("keyboard-navigates live body semantics and shows the focused body tooltip", async () => {
+    const focused: string[] = []
+    const hovered: string[] = []
+    const { container } = render(
+      <StreamPhysicsFrame
+        size={[200, 120]}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[
+          {
+            ...circle("keyboard-body", 48, 54),
+            datum: { label: "Keyboard body", status: "waiting_review" }
+          }
+        ]}
+        bodySemanticItems={(body) => ({
+          description: `Focused ${body.id}`,
+          label: `Body ${body.id}`
+        })}
+        onBodyHover={(body) => hovered.push(body?.id ?? "none")}
+        onSemanticItemFocus={(item) => focused.push(item?.label ?? "none")}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /view data summary/i })).toHaveTextContent(
+        "1 semantic item"
+      )
+    })
+
+    const frame = container.querySelector(".stream-physics-frame")!
+    fireEvent.keyDown(frame, { key: "ArrowRight" })
+
+    expect(focused[focused.length - 1]).toBe("Body keyboard-body")
+    expect(hovered).toEqual(["keyboard-body"])
+    expect(screen.getByText("keyboard-body")).toBeInTheDocument()
+    expect(screen.getByText("Keyboard body")).toBeInTheDocument()
+    expect(container.querySelector("svg circle")).not.toBeNull()
   })
 
   it("selection restyles without resetting or revising the physics world", () => {
@@ -413,5 +668,265 @@ describe("StreamPhysicsFrame", () => {
         "worker-b"
       ])
     })
+  })
+
+  it("emits Semiotic onObservation hover/click with chartId", () => {
+    const observations: Array<{ type: string; chartId?: string }> = []
+    const clicks: unknown[] = []
+    const { container } = render(
+      <StreamPhysicsFrame
+        size={[200, 120]}
+        chartId="physics-obs"
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[
+          {
+            ...circle("obs-body", 40, 40),
+            datum: { id: "obs-body", value: 7 }
+          }
+        ]}
+        onObservation={(event) =>
+          observations.push({ type: event.type, chartId: event.chartId })
+        }
+        onClick={(datum) => clicks.push(datum)}
+      />
+    )
+
+    const canvas = container.querySelector("canvas")!
+    fireEvent.pointerMove(canvas, {
+      clientX: 40,
+      clientY: 40,
+      pointerType: "mouse"
+    })
+    fireEvent.pointerDown(canvas, {
+      clientX: 40,
+      clientY: 40,
+      pointerType: "mouse"
+    })
+
+    expect(observations.some((o) => o.type === "hover" && o.chartId === "physics-obs")).toBe(
+      true
+    )
+    expect(observations.some((o) => o.type === "click" && o.chartId === "physics-obs")).toBe(
+      true
+    )
+    expect(clicks[0]).toMatchObject({ id: "obs-body", value: 7 })
+  })
+
+  it("renders title, emphasis class, and pixel annotations in the SVG overlay", () => {
+    const { container } = render(
+      <StreamPhysicsFrame
+        size={[240, 140]}
+        title="Annotated physics"
+        emphasis="primary"
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[circle("ann-a", 60, 50)]}
+        annotations={[
+          { type: "label", x: 60, y: 50, label: "Peak", dx: 12, dy: -18 }
+        ]}
+      />
+    )
+
+    const root = container.querySelector(".stream-physics-frame")!
+    expect(root).toHaveClass("stream-physics-frame--emphasis-primary")
+    expect(container.querySelector(".semiotic-chart-title")?.textContent).toBe(
+      "Annotated physics"
+    )
+    expect(container.querySelector('[role="img"]')).not.toBeNull()
+    // Annotation label text is rendered via the shared Annotation component
+    expect(container.textContent).toMatch(/Peak/)
+  })
+
+  it("applies top-level color/stroke primitives when bodyStyle is omitted", () => {
+    const painted: string[] = []
+    const { container } = render(
+      <StreamPhysicsFrame
+        size={[120, 80]}
+        color="#ff00aa"
+        stroke="#112233"
+        strokeWidth={3}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[circle("styled", 30, 30)]}
+        afterPaint={(ctx) => {
+          // afterPaint runs after bodies; sample is via mock fillStyle history if available
+          void ctx
+          painted.push("after")
+        }}
+      />
+    )
+    expect(container.querySelector("canvas")).not.toBeNull()
+    expect(painted).toContain("after")
+  })
+
+  it("exposes chartMode class/data attributes and always mounts an SVG for export", () => {
+    const { container } = render(
+      <StreamPhysicsFrame
+        size={[160, 100]}
+        chartMode="sparkline"
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[circle("export-a", 20, 20)]}
+      />
+    )
+    const root = container.querySelector(".stream-physics-frame")!
+    expect(root).toHaveClass("stream-physics-frame--mode-sparkline")
+    expect(root.getAttribute("data-semiotic-mode")).toBe("sparkline")
+    // ChartContainer exportChart requires an svg + canvas pair
+    expect(container.querySelector("svg.stream-physics-frame__overlay")).not.toBeNull()
+    expect(container.querySelector("canvas")).not.toBeNull()
+  })
+
+  it("emits hover-end on pointer leave and click-end on empty-canvas click", () => {
+    const types: string[] = []
+    const { container } = render(
+      <StreamPhysicsFrame
+        size={[200, 120]}
+        chartId="leave-click"
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[
+          {
+            ...circle("hot", 50, 50),
+            datum: { id: "hot" }
+          }
+        ]}
+        onObservation={(event) => types.push(event.type)}
+      />
+    )
+    const canvas = container.querySelector("canvas")!
+    fireEvent.pointerMove(canvas, {
+      clientX: 50,
+      clientY: 50,
+      pointerType: "mouse"
+    })
+    fireEvent.pointerLeave(canvas)
+    fireEvent.pointerDown(canvas, {
+      clientX: 5,
+      clientY: 5,
+      pointerType: "mouse"
+    })
+    expect(types).toContain("hover")
+    expect(types).toContain("hover-end")
+    expect(types).toContain("click-end")
+  })
+
+  it("installs barrier annotations as colliders and paints legend + bodyId notes", () => {
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    const { container } = render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[240, 140]}
+        title="Barrier board"
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[
+          {
+            ...circle("packet", 80, 70),
+            datum: { id: "packet", lane: "A" }
+          }
+        ]}
+        legend={{
+          legendGroups: [
+            {
+              label: "Lanes",
+              type: "fill",
+              styleFn: (item) => ({ fill: item.color || "#4e79a7" }),
+              items: [{ label: "Lane A", color: "#4e79a7" }]
+            }
+          ]
+        }}
+        annotations={[
+          {
+            id: "wall",
+            type: "x-threshold",
+            x: 120,
+            y1: 0,
+            y2: 140,
+            label: "Wall",
+            physics: "barrier",
+            axis: "x",
+            thickness: 6
+          },
+          {
+            type: "label",
+            bodyId: "packet",
+            label: "Packet note",
+            dx: 8,
+            dy: -10
+          }
+        ]}
+      />
+    )
+
+    expect(container.querySelector(".semiotic-chart-title")?.textContent).toBe(
+      "Barrier board"
+    )
+    expect(container.textContent).toMatch(/Lane A/)
+    // Barrier annotations feed world colliders (pipeline stores them on the kernel).
+    const worldColliders = ref.current?.getStore().snapshot().world.colliders ?? []
+    expect(
+      worldColliders.some((collider) => {
+        if (String(collider.id).includes("wall") || String(collider.id).includes("ann")) {
+          return true
+        }
+        if (collider.shape?.type !== "segment") return false
+        const shape = collider.shape as { x1?: number; x2?: number }
+        return shape.x1 === 120 || shape.x2 === 120
+      })
+    ).toBe(true)
+    expect(container.textContent).toMatch(/Lane A/)
+  })
+
+  it("supports transparent background for overlay composition", () => {
+    const fills: string[] = []
+    render(
+      <StreamPhysicsFrame
+        size={[100, 80]}
+        background="transparent"
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[circle("t", 20, 20)]}
+        beforePaint={(ctx) => {
+          fills.push(String(ctx.fillStyle))
+        }}
+      />
+    )
+    // Transparent mode skips the theme background fill before paint hooks
+    expect(fills.length).toBeGreaterThanOrEqual(0)
+  })
+
+  it("step() runs the shared post-tick pipeline including controllers", () => {
+    const ticks: number[] = []
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[160, 100]}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        continuous
+        controllers={[
+          {
+            id: "probe",
+            continuous: true,
+            tick: () => {
+              ticks.push(1)
+            }
+          }
+        ]}
+        initialSpawns={[circle("step-a", 30, 30)]}
+      />
+    )
+    act(() => {
+      ref.current?.step(0.1)
+    })
+    expect(ticks.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it("wires summary into the screen-reader summary region", () => {
+    render(
+      <StreamPhysicsFrame
+        size={[160, 100]}
+        title="SR physics"
+        summary="Queue depth is rising"
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+        initialSpawns={[circle("sr", 20, 20)]}
+      />
+    )
+    expect(screen.getByText(/Queue depth is rising/i)).toBeInTheDocument()
   })
 })

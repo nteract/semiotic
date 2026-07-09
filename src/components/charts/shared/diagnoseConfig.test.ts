@@ -440,30 +440,36 @@ describe("diagnoseConfig", () => {
     )
   })
 
-  it("diagnoses invalid NetworkHOPsChart parameters", () => {
-    const missing = diagnoseConfig("NetworkHOPsChart", {
-      title: "Missing topology",
+  it("diagnoses ProcessFlowChart missing stages and group/absorb mismatch", () => {
+    const missing = diagnoseConfig("ProcessFlowChart", {
+      data: [{ id: "a", stage: "coding" }],
     })
-    expect(missing.diagnoses.map(d => d.code)).toContain("NETWORK_HOPS_MISSING_TOPOLOGY")
+    expect(missing.diagnoses.map(d => d.code)).toContain("PROCESS_FLOW_MISSING_STAGES")
 
-    const invalid = diagnoseConfig("NetworkHOPsChart", {
-      nodes: [{ id: "A" }, { id: "B" }],
-      edges: [{ source: "A", target: "B", p: 1.2 }],
-      sampleRate: 0,
-      title: "Bad HOPs",
+    const noAbsorb = diagnoseConfig("ProcessFlowChart", {
+      data: [{ id: "a", stage: "coding", featureId: "f1" }],
+      stages: [{ id: "coding", force: 10 }],
+      groupBy: "featureId",
     })
-    expect(invalid.diagnoses.map(d => d.code)).toEqual(
-      expect.arrayContaining([
-        "NETWORK_HOPS_BAD_SAMPLE_RATE",
-        "NETWORK_HOPS_BAD_PROBABILITY",
-      ])
-    )
+    expect(noAbsorb.diagnoses.map(d => d.code)).toContain("PROCESS_FLOW_GROUP_NO_ABSORB")
+  })
 
-    const badSample = diagnoseConfig("NetworkHOPsChart", {
-      samples: [{ id: "s1" }],
-      title: "Bad samples",
+  it("warns when physics projection is disabled", () => {
+    const result = diagnoseConfig("PhysicsPileChart", {
+      data: [{ category: "A", value: 3 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      showProjection: false,
     })
-    expect(badSample.diagnoses.map(d => d.code)).toContain("NETWORK_HOPS_BAD_SAMPLE")
+    expect(result.diagnoses.map(d => d.code)).toContain("PHYSICS_NO_PROJECTION")
+  })
+
+  it("diagnoses GauntletChart missing positive properties", () => {
+    const result = diagnoseConfig("GauntletChart", {
+      data: [{ id: "p1" }],
+      negativeProperties: [],
+    })
+    expect(result.diagnoses.map(d => d.code)).toContain("GAUNTLET_MISSING_POSITIVE_PROPERTIES")
   })
 
   it("warns about a single function accessor among strings", () => {

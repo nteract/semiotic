@@ -1,0 +1,504 @@
+.nimby-example {
+  --nimby-bg: var(--surface-0, #0b1020);
+  --nimby-panel: color-mix(in srgb, var(--surface-0, #0b1020) 88%, var(--text-primary, #e5eef8) 12%);
+  --nimby-panel-strong: color-mix(in srgb, var(--surface-0, #0b1020) 76%, var(--text-primary, #e5eef8) 24%);
+  --nimby-border: var(--surface-3, #2d3748);
+  --nimby-text: var(--text-primary, #e5eef8);
+  --nimby-muted: var(--text-secondary, #9aa7b5);
+  --nimby-ink: #0b1020;
+  --nimby-core: #0f766e;
+  --nimby-blue: #38bdf8;
+  --nimby-green: #22c55e;
+  --nimby-gold: #f59e0b;
+  --nimby-red: #ef4444;
+  --nimby-purple: #a78bfa;
+  --nimby-homes: #45c2b4;
+  --nimby-afford: #8ddf5f;
+  --nimby-height: #93c5fd;
+  --nimby-retail: #f8c24e;
+  --nimby-trees: #46b36a;
+  --nimby-bike: #67e8f9;
+  --nimby-childcare: #f0a6d2;
+  --nimby-plaza: #c4b5fd;
+  --nimby-energy: #bef264;
+  --nimby-feature-text: #07111f;
+  --nimby-dollar-fill: #d94a45;
+  --nimby-dollar-stroke: #7f1d1d;
+  --nimby-muted-stroke: #64748b;
+  --nimby-tooltip-bg: color-mix(in srgb, var(--surface-0, #0b1020) 92%, var(--text-primary, #e5eef8) 8%);
+  --nimby-tooltip-shadow: 0 18px 38px rgba(0, 0, 0, 0.36);
+  display: grid;
+  gap: 22px;
+  color: var(--nimby-text);
+}
+
+[data-theme="light"] .nimby-example {
+  --nimby-bg: #f6f8fb;
+  --nimby-panel: #ffffff;
+  --nimby-panel-strong: #eef4f7;
+  --nimby-border: #d5dee6;
+  --nimby-text: #172033;
+  --nimby-muted: #546274;
+  --nimby-ink: #172033;
+  --nimby-core: #0f8f82;
+  --nimby-tooltip-bg: #ffffff;
+  --nimby-tooltip-shadow: 0 16px 36px rgba(31, 41, 55, 0.18);
+}
+
+.nimby-example__hero,
+.nimby-example__explanation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+}
+
+.nimby-example__kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--nimby-blue);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nimby-example__lede {
+  max-width: 760px;
+  margin: 0;
+  color: var(--nimby-muted);
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
+.nimby-example__formula {
+  display: grid;
+  gap: 5px;
+  min-width: 292px;
+  padding: 15px 17px;
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: var(--nimby-panel);
+}
+
+.nimby-example__formula span,
+.nimby-example__metric span,
+.nimby-example__metric small,
+.nimby-example__control strong,
+.nimby-example__panel p,
+.nimby-example__ledger span {
+  color: var(--nimby-muted);
+}
+
+.nimby-example__formula strong {
+  color: var(--nimby-text);
+  font-size: 0.95rem;
+}
+
+.nimby-example__project-picker,
+.nimby-example__presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 9px;
+}
+
+.nimby-example__project-picker {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.nimby-example__project-picker button,
+.nimby-example__presets button,
+.nimby-example__rerun {
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: var(--nimby-panel);
+  color: var(--nimby-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.nimby-example__project-picker button,
+.nimby-example__presets button {
+  display: grid;
+  gap: 6px;
+  min-height: 116px;
+  padding: 12px;
+  text-align: left;
+}
+
+.nimby-example__project-picker button.is-active,
+.nimby-example__presets button.is-active {
+  border-color: var(--nimby-blue);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nimby-blue) 70%, transparent);
+}
+
+.nimby-example__project-picker span,
+.nimby-example__presets span {
+  color: var(--nimby-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.nimby-example__chart-shell {
+  --semiotic-accent: var(--nimby-blue);
+  --semiotic-background: var(--nimby-feature-text);
+  --semiotic-negative: var(--nimby-red);
+  --semiotic-positive: var(--nimby-green);
+  --semiotic-text-secondary: var(--nimby-muted);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--nimby-panel-strong) 70%, transparent), var(--nimby-bg));
+}
+
+.nimby-example__chart-shell .stream-physics-frame {
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.nimby-example__chart-shell canvas {
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.nimby-example__chrome,
+.nimby-example__overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.nimby-example__chrome {
+  z-index: 0;
+}
+
+.nimby-example__overlay {
+  z-index: 2;
+}
+
+.nimby-example__route {
+  fill: none;
+  stroke: url(#nimby-route-gradient);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 18 12;
+  opacity: 0.58;
+}
+
+.nimby-example__crash-line {
+  stroke: color-mix(in srgb, var(--nimby-red) 54%, transparent);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 7;
+  opacity: 0.72;
+}
+
+.nimby-example__crash-label {
+  fill: color-mix(in srgb, var(--nimby-red) 80%, var(--nimby-muted));
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 9px;
+  font-weight: 900;
+  text-anchor: start;
+}
+
+.nimby-example__eddy {
+  fill: color-mix(in srgb, var(--nimby-red) 10%, transparent);
+  stroke: var(--nimby-red);
+  stroke-width: 1.6;
+  stroke-dasharray: 6 6;
+  opacity: 0.82;
+}
+
+.nimby-example__gate {
+  fill: color-mix(in srgb, var(--gate-color) 14%, transparent);
+  stroke: color-mix(in srgb, var(--gate-color) 70%, var(--nimby-border));
+  stroke-width: 1.3;
+  stroke-dasharray: 5 5;
+}
+
+.nimby-example__gate-label,
+.nimby-example__stat,
+.nimby-example__bin text,
+.nimby-example__socket text,
+.nimby-example__graveyard text {
+  fill: var(--nimby-muted);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  text-anchor: middle;
+}
+
+.nimby-example__stat {
+  text-anchor: start;
+  fill: var(--nimby-text);
+}
+
+.nimby-example__stat.is-burden {
+  fill: var(--nimby-red);
+}
+
+.nimby-example__socket rect {
+  fill: color-mix(in srgb, var(--nimby-green) 13%, var(--nimby-panel));
+  stroke: var(--nimby-green);
+  stroke-width: 1.6;
+}
+
+.nimby-example__socket path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--nimby-green) 76%, var(--nimby-text));
+  stroke-linecap: round;
+  stroke-width: 5;
+}
+
+.nimby-example__graveyard rect {
+  fill: color-mix(in srgb, var(--nimby-red) 16%, var(--nimby-panel));
+  stroke: color-mix(in srgb, var(--nimby-red) 64%, var(--nimby-border));
+  stroke-width: 1.4;
+}
+
+.nimby-example__graveyard text {
+  fill: var(--nimby-red);
+}
+
+.nimby-example__graveyard text + text {
+  fill: var(--nimby-muted);
+  font-size: 9px;
+}
+
+.nimby-example__bin rect {
+  fill: color-mix(in srgb, var(--bin-color) 12%, var(--nimby-panel));
+  stroke: color-mix(in srgb, var(--bin-color) 58%, var(--nimby-border));
+  stroke-width: 1.1;
+}
+
+.nimby-example__bin text {
+  fill: var(--nimby-muted);
+  font-size: 8.5px;
+}
+
+.nimby-example__callout {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--nimby-gold) 48%, var(--nimby-border));
+  border-radius: 8px;
+  background: var(--nimby-tooltip-bg);
+  box-shadow: var(--nimby-tooltip-shadow);
+  color: var(--nimby-text);
+  font: 12px/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.nimby-example__callout span {
+  color: var(--nimby-muted);
+}
+
+.nimby-example__panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(360px, 1.25fr) minmax(320px, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 18px;
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: var(--nimby-panel);
+}
+
+.nimby-example__panel-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.nimby-example__panel h2 {
+  margin: 0;
+  color: var(--nimby-text);
+  font-size: 1.45rem;
+  line-height: 1.1;
+}
+
+.nimby-example__panel p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.nimby-example__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nimby-example__metric {
+  display: grid;
+  gap: 2px;
+  min-height: 74px;
+  padding: 10px;
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--nimby-panel-strong) 74%, transparent);
+}
+
+.nimby-example__metric strong {
+  color: var(--nimby-text);
+  font-size: 1.25rem;
+}
+
+.nimby-example__metric span,
+.nimby-example__metric small {
+  font-size: 0.74rem;
+  line-height: 1.25;
+}
+
+.nimby-example__metric.is-warning {
+  border-color: color-mix(in srgb, var(--nimby-red) 54%, var(--nimby-border));
+}
+
+.nimby-example__metric.is-warning strong {
+  color: var(--nimby-red);
+}
+
+.nimby-example__ledger {
+  display: grid;
+  gap: 8px;
+}
+
+.nimby-example__ledger div {
+  display: grid;
+  gap: 2px;
+  padding: 9px 0 0;
+  border-top: 1px solid var(--nimby-border);
+}
+
+.nimby-example__ledger strong {
+  color: var(--nimby-text);
+  font-size: 0.86rem;
+}
+
+.nimby-example__ledger span {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.nimby-example__controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nimby-example__control {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: var(--nimby-panel);
+}
+
+.nimby-example__control span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--nimby-text);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.nimby-example__control input {
+  width: 100%;
+  accent-color: var(--nimby-blue);
+}
+
+.nimby-example__rerun {
+  min-height: 70px;
+  color: var(--nimby-text);
+  font-weight: 900;
+}
+
+.nimby-example__explanation {
+  grid-template-columns: minmax(220px, 0.85fr) repeat(2, minmax(0, 1fr));
+  padding: 22px;
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: var(--nimby-panel);
+}
+
+.nimby-example__explanation h2,
+.nimby-example__explanation p {
+  margin: 0;
+}
+
+.nimby-example__explanation h2 {
+  color: var(--nimby-text);
+  font-size: 1.35rem;
+}
+
+.nimby-example__explanation p {
+  color: var(--nimby-muted);
+  line-height: 1.6;
+}
+
+.nimby-example__explanation code {
+  color: var(--nimby-blue);
+  font-weight: 800;
+}
+
+.nimby-example__tooltip {
+  display: grid;
+  gap: 4px;
+  max-width: 250px;
+  padding: 10px 12px;
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: var(--nimby-tooltip-bg);
+  color: var(--nimby-text);
+  box-shadow: var(--nimby-tooltip-shadow);
+}
+
+.nimby-example .semiotic-tooltip {
+  border: 1px solid var(--nimby-border);
+  border-radius: 8px;
+  background: var(--nimby-tooltip-bg);
+  color: var(--nimby-text);
+  box-shadow: var(--nimby-tooltip-shadow);
+}
+
+.nimby-example__tooltip strong {
+  color: var(--nimby-text);
+}
+
+.nimby-example__tooltip div {
+  color: var(--nimby-muted);
+}
+
+@media (max-width: 980px) {
+  .nimby-example__hero,
+  .nimby-example__explanation {
+    grid-template-columns: 1fr;
+  }
+
+  .nimby-example__panel {
+    grid-template-columns: 1fr;
+  }
+
+  .nimby-example__project-picker,
+  .nimby-example__presets,
+  .nimby-example__controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nimby-example__chart-shell {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .nimby-example__project-picker,
+  .nimby-example__presets,
+  .nimby-example__controls,
+  .nimby-example__metrics {
+    grid-template-columns: 1fr;
+  }
+}

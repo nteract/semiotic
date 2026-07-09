@@ -145,8 +145,8 @@ const PHYSICS = new Set([
   "EventDropChart",
   "PhysicsPileChart",
   "CollisionSwarmChart",
-  "NetworkHOPsChart",
   "PhysicalFlowChart",
+  "ProcessFlowChart",
   "PhysicsCustomChart"
 ])
 const CONTINUOUS_MOTION = new Set(["OrbitDiagram", ...PHYSICS])
@@ -157,7 +157,9 @@ const PHYSICS_SETTLED = new Set([
   "EventDropChart",
   "PhysicsPileChart",
   "CollisionSwarmChart",
-  "PhysicalFlowChart"
+  "PhysicalFlowChart",
+  "ProcessFlowChart",
+  "GauntletChart"
 ])
 const REALTIME = new Set([
   "RealtimeLineChart",
@@ -402,9 +404,9 @@ export function auditAccessibility(
   const pauseControl = hasPauseControl(props)
   // StreamPhysicsFrame guarantees the settled-projection table and the
   // reduced-motion synchronous settle for its frame-based charts, so credit
-  // those contracts by component (NetworkHOPsChart wraps ForceDirectedGraph and
+  // those contracts by component (
   // is excluded). Pause control is not yet baked in and stays author-declared.
-  const framePhysics = isPhysics && component !== "NetworkHOPsChart"
+  const framePhysics = isPhysics
   const settledProjection =
     hasSettledProjection(props) || (PHYSICS_SETTLED.has(component) && tableEnabled)
   const reducedMotionSettle = hasReducedMotionSettle(props) || framePhysics

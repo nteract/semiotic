@@ -23,6 +23,33 @@ export const EXAMPLES = [
     badges: ["GaltonBoardChart", "generateTokens", "Uncertainty"],
   },
   {
+    title: "The Stakeholder Journey",
+    path: "/examples/stakeholder-journey",
+    eyebrow: "StreamPhysicsFrame · contributor pipeline",
+    description:
+      "A stacked physics argument about open-source sustainability: permeable membranes lead to First Impact, charged particles either retain social energy on the right, and a separate OSE Canvas field shows the sustainability cells beneath the journey.",
+    preview: "stakeholder-journey",
+    badges: ["StreamPhysicsFrame", "Physics", "OSE Canvas"],
+  },
+  {
+    title: "Merge Pressure",
+    path: "/examples/merge-pressure",
+    eyebrow: "GauntletChart · review bottlenecks",
+    description:
+      "A physics dashboard for AI-assisted delivery: PR bodies stream through CI, review pressure, rework, and merge while feature tethers reveal why almost-done work is not product velocity.",
+    preview: "merge-pressure",
+    badges: ["GauntletChart", "Region effects", "Process physics"],
+  },
+  {
+    title: "Not in MY Backyard",
+    path: "/examples/not-in-my-backyard",
+    eyebrow: "GauntletChart · compound process physics",
+    description:
+      "A housing approval simulator where a plan enters as a compound glyph, loses features at civic gates, gains dollar-weight burden, loops through procedural review, and may reach approval without becoming housing.",
+    preview: "nimby",
+    badges: ["GauntletChart", "bodyForces", "Compound glyphs"],
+  },
+  {
     title: "Brushable Weather Rings",
     path: "/examples/climate-radial-weather",
     eyebrow: "Point controls + radial weather",

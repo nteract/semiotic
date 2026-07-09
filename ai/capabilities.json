@@ -656,20 +656,19 @@
         "deterministic-seed"
       ]
     },
-    "NetworkHOPsChart": {
+    "GauntletChart": {
       "category": "physics",
-      "supportsLegend": true,
-      "supportsSelection": true,
+      "supportsLegend": false,
+      "supportsSelection": false,
       "supportsLinkedHover": false,
-      "supportsPush": false,
+      "supportsPush": true,
       "supportsSSR": true,
       "colorModel": "categorical",
-      "layoutMode": "plugin",
+      "layoutMode": "synthetic",
       "specialFeatures": [
-        "force-simulation",
-        "uncertainty",
-        "hypothetical-outcomes",
-        "sample-animation"
+        "physics-simulation",
+        "process-gauntlet",
+        "settled-projection"
       ]
     },
     "PhysicalFlowChart": {
@@ -701,6 +700,23 @@
       "specialFeatures": [
         "physics-simulation",
         "unitized",
+        "settled-projection"
+      ]
+    },
+    "ProcessFlowChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "process-flow",
+        "capacitated-stages",
+        "group-completion",
         "settled-projection"
       ]
     },

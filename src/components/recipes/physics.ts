@@ -469,3 +469,59 @@ export type {
   PhysicsSedimentHeightfieldOptions,
   PhysicsSpawnPacingOptions
 }
+
+// Process-physics authoring kit (stage volumes, region factories, groups).
+export {
+  absorbRegion,
+  aggregateRegionCounts,
+  bodyGroupSpec,
+  capacitatedRegion,
+  chargeGateRegion,
+  forceFieldRegion,
+  groupCompletionRows,
+  membraneRegion,
+  portalRegion,
+  pressureFieldRegion,
+  processLaneWalls,
+  processStageLayout,
+  regionCountsToProjectionRows,
+  routeSurfaceRegion,
+  stageTargetInVolume
+} from "./processPhysics"
+
+// Process controllers (live capacity / portals) — also on StreamPhysicsFrame.
+export {
+  composePhysicsControllers,
+  createCapacityQueueController,
+  createPortalController
+} from "../stream/physics/PhysicsControllers"
+export type {
+  CapacityQueueControllerOptions,
+  CapacityQueueSnapshot,
+  ComposedPhysicsControllers,
+  PhysicsController,
+  PhysicsControllerTickContext
+} from "../stream/physics/PhysicsControllers"
+
+// Process chrome (stage bays, capacity badges, feature sockets).
+export { processChrome } from "./processChrome"
+export type {
+  ProcessChromeGroup,
+  ProcessChromeLayout,
+  ProcessChromeOptions,
+  ProcessChromeStage
+} from "./processChrome"
+export type {
+  BodyGroupSpec,
+  BodyGroupSpecOptions,
+  ProcessMembraneDef,
+  ProcessRegionBaseOptions,
+  ProcessStageDef,
+  ProcessVolumeLayout,
+  ProcessVolumeLayoutOptions,
+  ProcessVolumeMembraneBand,
+  ProcessVolumeShape,
+  ProcessVolumeStageBand,
+  RegionCountBucket,
+  RegionCountMap
+} from "./processPhysics"

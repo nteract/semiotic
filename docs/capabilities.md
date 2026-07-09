@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-07-08 · 53 charts indexed.
+Last regen: 2026-07-09 · 54 charts indexed.
 
 **Column key**
 
@@ -94,9 +94,10 @@ Last regen: 2026-07-08 · 53 charts indexed.
 | **CollisionSwarmChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
 | **EventDropChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
 | **GaltonBoardChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
-| **NetworkHOPsChart** | ✓ | ✓ | — | — | ✓ | categorical | plugin | `force-simulation` `uncertainty` `hypothetical-outcomes` `sample-animation` |
+| **GauntletChart** | — | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-gauntlet` `settled-projection` |
 | **PhysicalFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
 | **PhysicsPileChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `unitized` `settled-projection` |
+| **ProcessFlowChart** | ✓ | — | — | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-flow` `capacitated-stages` `group-completion` `settled-projection` |
 
 ## Value
 
@@ -108,8 +109,8 @@ Last regen: 2026-07-08 · 53 charts indexed.
 
 ## Aggregate counts
 
-- 46/53 charts render a top-level legend.
-- 43/53 charts expose a push API.
-- 41/53 charts SSR via the `renderChart()` registry.
-- 1/53 charts use the customLayout escape hatch.
-- 7/53 charts use synthetic (no-layout) construction.
+- 46/54 charts render a top-level legend.
+- 45/54 charts expose a push API.
+- 42/54 charts SSR via the `renderChart()` registry.
+- 1/54 charts use the customLayout escape hatch.
+- 9/54 charts use synthetic (no-layout) construction.

@@ -27,6 +27,9 @@ import {
   resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
+  usePhysicsChartMode,
+  type PhysicsHocFrameProps,
+  type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
 
@@ -37,7 +40,8 @@ type ProjectionRow = {
 }
 
 export interface EventDropChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin"> {
+  extends Omit<BaseChartProps, "margin">,
+    PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
   timeAccessor?: ChartAccessor<TDatum, number>
@@ -52,12 +56,7 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
   showProjection?: boolean
   tooltip?: TooltipProp
   paused?: boolean
-  frameProps?: Partial<
-    Omit<
-      StreamPhysicsFrameProps,
-      "config" | "initialSpawns" | "initialSpawnPacing" | "size"
-    >
-  >
+  frameProps?: PhysicsHocFrameProps<"config">
 }
 
 function eventDropOverlay(
@@ -327,37 +326,36 @@ export const EventDropChart = forwardRef(function EventDropChart<
   const {
     arrivalAccessor = "arrivalTime" as ChartAccessor<TDatum, number>,
     ballRadius = 7,
-    className,
     colorBy,
     data,
     emptyContent,
     frameProps,
-    height,
     loading,
     loadingContent,
     paused,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
-    showProjection = true,
-    size,
     timeAccessor = "time" as ChartAccessor<TDatum, number>,
     timeExtent,
     timeScale = 1,
     watermark,
-    width,
     windows = { size: 10 }
   } = props
+  const layoutMode = usePhysicsChartMode(props, [760, 360])
+  const {
+    chartSize,
+    showProjection,
+    className: modeClassName,
+    title: modeTitle,
+    chartMode,
+    margin: modeMargin,
+    enableHover: modeEnableHover,
+    description: modeDescription,
+    summary: modeSummary,
+    accessibleTable: modeAccessibleTable
+  } = layoutMode
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const sizeWidth = size?.[0]
-  const sizeHeight = size?.[1]
-  const chartSize = useMemo(
-    () =>
-      sizeWidth != null && sizeHeight != null
-        ? [sizeWidth, sizeHeight] as [number, number]
-        : resolvePhysicsChartSize(undefined, width, height, [760, 360]),
-    [height, sizeHeight, sizeWidth, width]
-  )
   const chartData = useMemo(() => data ?? [], [data])
   const layout = useMemo(
     () =>
@@ -416,7 +414,12 @@ export const EventDropChart = forwardRef(function EventDropChart<
     },
     [arrivalAccessor, ballRadius, chartSize, metadata, timeAccessor]
   )
-  usePhysicsHocHandle(ref, { frameRef, spawnDatum })
+  usePhysicsHocHandle(ref, {
+    frameRef,
+    spawnDatum,
+    seedRows: chartData as Datum[],
+    seedSpawns: layout.initialSpawns
+  })
   const bodyStyle = useMemo(
     () =>
       styleFromColorAccessor(
@@ -446,7 +449,17 @@ export const EventDropChart = forwardRef(function EventDropChart<
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     props,
     frameProps,
-    semanticItems
+    semanticItems,
+    {
+      chartMode,
+      className: modeClassName,
+      title: modeTitle,
+      description: modeDescription,
+      summary: modeSummary,
+      accessibleTable: modeAccessibleTable,
+      enableHover: modeEnableHover,
+      margin: modeMargin
+    }
   )
 
   return renderPhysicsFrame(
@@ -457,7 +470,6 @@ export const EventDropChart = forwardRef(function EventDropChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      className={className}
       config={layout.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,
@@ -469,7 +481,6 @@ export const EventDropChart = forwardRef(function EventDropChart<
       responsiveHeight={responsiveHeight}
       responsiveWidth={responsiveWidth}
       size={chartSize}
-      title={props.title ?? "Event drop chart"}
       bodyStyle={bodyStyle}
     />
   )

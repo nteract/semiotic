@@ -143,15 +143,15 @@ const KIND_PHRASE: Record<string, string> = {
   StreamPhysicsFrame: "physics stream frame", EventDropChart: "event-drop physics chart",
   GaltonBoardChart: "Galton board chart", PhysicsPileChart: "physics pile chart",
   CollisionSwarmChart: "collision swarm chart",
-  NetworkHOPsChart: "network hypothetical outcome plot",
   PhysicalFlowChart: "physical flow chart",
+  ProcessFlowChart: "process flow physics chart",
   PhysicsCustomChart: "custom physics chart",
 }
 
 // XY_FAMILY / BAR_FAMILY / PART_TO_WHOLE / DISTRIBUTION + roles/seriesField/fmtDim
 // are shared with navigationTree via ./chartRoles. NETWORK is description-only.
 const NETWORK = new Set(["ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram"])
-const PHYSICS = new Set(["StreamPhysicsFrame", "EventDropChart", "GaltonBoardChart", "PhysicsPileChart", "CollisionSwarmChart", "NetworkHOPsChart", "PhysicalFlowChart", "PhysicsCustomChart"])
+const PHYSICS = new Set(["StreamPhysicsFrame", "EventDropChart", "GaltonBoardChart", "PhysicsPileChart", "CollisionSwarmChart", "PhysicalFlowChart", "ProcessFlowChart", "GauntletChart", "PhysicsCustomChart"])
 
 interface PhysicsProjectionRow {
   label: string
@@ -215,7 +215,6 @@ function physicsRowNoun(component: string): string {
   if (component === "EventDropChart") return "time window"
   if (component === "GaltonBoardChart") return "bin"
   if (component === "CollisionSwarmChart") return "group lane"
-  if (component === "NetworkHOPsChart") return "sample summary"
   if (component === "PhysicalFlowChart") return "flow node"
   return "container"
 }
@@ -224,7 +223,6 @@ function physicsUnitNoun(component: string): string {
   if (component === "EventDropChart") return "event"
   if (component === "GaltonBoardChart") return "sample"
   if (component === "CollisionSwarmChart") return "point"
-  if (component === "NetworkHOPsChart") return "edge"
   if (component === "PhysicalFlowChart") return "packet"
   return "body"
 }
@@ -241,9 +239,6 @@ function physicsL1Sentence(component: string, kind: string): string {
   }
   if (component === "CollisionSwarmChart") {
     return "A collision swarm chart that separates overlapping points while preserving their quantitative axis position."
-  }
-  if (component === "NetworkHOPsChart") {
-    return "A network hypothetical outcome plot that keeps node positions anchored while sampled edges switch between possible graph realizations."
   }
   if (component === "PhysicalFlowChart") {
     return "A physical flow chart that keeps authored routes visible while packet bodies show throughput and proximity events."

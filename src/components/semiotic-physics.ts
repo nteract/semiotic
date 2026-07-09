@@ -8,15 +8,22 @@ import { EventDropChart } from "./charts/physics/EventDropChart"
 import { PhysicsPileChart } from "./charts/physics/PhysicsPileChart"
 import { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
 import { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
-import { NetworkHOPsChart } from "./charts/physics/NetworkHOPsChart"
+import { GauntletChart, GuantletChart } from "./charts/physics/GauntletChart"
 import { PhysicalFlowChart } from "./charts/physics/PhysicalFlowChart"
-import { buildNetworkHOPsModel } from "./charts/physics/networkHopsUtils"
+import { ProcessFlowChart } from "./charts/physics/ProcessFlowChart"
+import {
+  physicsProcessBoundaryColliders,
+  physicsProcessGroupSemanticItems,
+  physicsProcessRegionSemanticItem,
+  physicsProcessStageSemanticItems
+} from "./charts/physics/physicsProcessPrimitives"
 import {
   buildCollisionSwarmPhysics,
   buildEventDropPhysics,
   buildGaltonBoardPhysics,
   buildPhysicalFlowPhysics,
-  buildPhysicsPile
+  buildPhysicsPile,
+  buildProcessFlowPhysics
 } from "./charts/physics/physicsChartUtils"
 import StreamPhysicsFrame, {
   StreamPhysicsFrame as NamedStreamPhysicsFrame
@@ -29,38 +36,84 @@ import {
 import { evaluatePhysicsBodyBudget } from "./stream/physics/PhysicsBodyBudget"
 import { PhysicsSedimentAccumulator, sedimentHeightfield } from "./stream/physics/PhysicsSediment"
 import {
+  composePhysicsControllers,
+  createCapacityQueueController,
+  createPortalController
+} from "./stream/physics/PhysicsControllers"
+import { processChrome } from "./recipes/processChrome"
+import {
+  absorbRegion,
+  aggregateRegionCounts,
   arrivalReplay,
+  bodyGroupSpec,
+  capacitatedRegion,
+  chargeGateRegion,
   collidersFromScales,
+  forceFieldRegion,
   galtonPegs,
+  groupCompletionRows,
+  membraneRegion,
+  portalRegion,
+  pressureFieldRegion,
+  processLaneWalls,
+  processStageLayout,
+  regionCountsToProjectionRows,
+  routeSurfaceRegion,
   sedimentBake,
-  spawnFromTokens
+  spawnFromTokens,
+  stageTargetInVolume
 } from "./recipes/physics"
 
 export {
   BuiltInPhysicsEngineAdapter,
   CollisionSwarmChart,
   EventDropChart,
+  GauntletChart,
   GaltonBoardChart,
-  NetworkHOPsChart,
+  GuantletChart,
   PhysicalFlowChart,
   PhysicsCustomChart,
   PhysicsPileChart,
   PhysicsPipelineStore,
   PhysicsSedimentAccumulator,
+  ProcessFlowChart,
+  absorbRegion,
+  aggregateRegionCounts,
   arrivalReplay,
+  bodyGroupSpec,
   buildCollisionSwarmPhysics,
   buildEventDropPhysics,
   buildGaltonBoardPhysics,
-  buildNetworkHOPsModel,
   buildPhysicalFlowPhysics,
   buildPhysicsPile,
+  buildProcessFlowPhysics,
+  capacitatedRegion,
+  chargeGateRegion,
   collidersFromScales,
+  composePhysicsControllers,
+  createCapacityQueueController,
   createDefaultPhysicsEngineAdapter,
+  createPortalController,
   evaluatePhysicsBodyBudget,
+  processChrome,
+  forceFieldRegion,
   galtonPegs,
+  groupCompletionRows,
+  membraneRegion,
+  physicsProcessBoundaryColliders,
+  physicsProcessGroupSemanticItems,
+  physicsProcessRegionSemanticItem,
+  physicsProcessStageSemanticItems,
+  portalRegion,
+  pressureFieldRegion,
+  processLaneWalls,
+  processStageLayout,
+  regionCountsToProjectionRows,
+  routeSurfaceRegion,
   sedimentBake,
   sedimentHeightfield,
   spawnFromTokens,
+  stageTargetInVolume,
   NamedStreamPhysicsFrame as StreamPhysicsFrame
 }
 
@@ -69,16 +122,33 @@ export default StreamPhysicsFrame
 export type { CollisionSwarmChartProps } from "./charts/physics/CollisionSwarmChart"
 export type { EventDropChartProps } from "./charts/physics/EventDropChart"
 export type {
+  GauntletChartProps,
+  GauntletEffect,
+  GauntletEvent,
+  GauntletEventContext,
+  GauntletEventLogItem,
+  GauntletGate,
+  GauntletLayout,
+  GauntletProjectPlacement,
+  GauntletProjectState,
+  GauntletPropertyForceContext,
+  GauntletPropertyDefinition
+} from "./charts/physics/GauntletChart"
+export type {
+  PhysicsProcessBodyGroup,
+  PhysicsProcessBoundaryOptions,
+  PhysicsProcessStage
+} from "./charts/physics/physicsProcessPrimitives"
+export type {
   GaltonBoardChartProps,
   GaltonBoardReferenceLine
 } from "./charts/physics/GaltonBoardChart"
-export type {
-  NetworkHOPsChartProps,
-  NetworkHOPsModel,
-  NetworkHOPsSample
-} from "./charts/physics/NetworkHOPsChart"
 export type { PhysicalFlowChartProps } from "./charts/physics/PhysicalFlowChart"
-export type { NetworkHOPsModelOptions } from "./charts/physics/networkHopsUtils"
+export type {
+  ProcessFlowChartProps,
+  ProcessFlowProjectionMetadata,
+  ProcessFlowStageDef
+} from "./charts/physics/ProcessFlowChart"
 export type {
   PhysicsCustomChartProps,
   PhysicsCustomLayout,
@@ -101,15 +171,42 @@ export type {
   PhysicalFlowPoint,
   PhysicalFlowProjectionMetadata,
   PhysicalFlowRawPath,
-  PhysicsPileOptions
+  PhysicsPileOptions,
+  ProcessFlowPhysicsOptions
 } from "./charts/physics/physicsChartUtils"
+export type {
+  CapacityQueueControllerOptions,
+  CapacityQueueSnapshot,
+  ComposedPhysicsControllers,
+  PhysicsController,
+  PhysicsControllerTickContext
+} from "./stream/physics/PhysicsControllers"
+export type {
+  ProcessChromeGroup,
+  ProcessChromeLayout,
+  ProcessChromeOptions,
+  ProcessChromeStage
+} from "./recipes/processChrome"
+export type { PhysicsBodyMark } from "./stream/physics/StreamPhysicsFrame"
 export type {
   ArrivalReplayOptions,
   BandScale,
+  BodyGroupSpec,
+  BodyGroupSpecOptions,
   GaltonPegsOptions,
   NumericScale,
   PhysicsBandColliderOptions,
   PhysicsScaleColliderOptions,
+  ProcessMembraneDef,
+  ProcessRegionBaseOptions,
+  ProcessStageDef,
+  ProcessVolumeLayout,
+  ProcessVolumeLayoutOptions,
+  ProcessVolumeMembraneBand,
+  ProcessVolumeShape,
+  ProcessVolumeStageBand,
+  RegionCountBucket,
+  RegionCountMap,
   SedimentBakeOptions,
   SedimentBakeResult,
   SpawnFromTokensOptions
@@ -117,10 +214,31 @@ export type {
 export type {
   StreamPhysicsFrameHandle,
   StreamPhysicsFrameProps,
+  PhysicsBodySemanticItemAccessor,
+  PhysicsBodySemanticItemContext,
   PhysicsBodySelection,
   PhysicsBodyStyleContext,
+  StreamPhysicsBodyForce,
+  StreamPhysicsBodyForceContext,
+  StreamPhysicsPopOptions,
+  StreamPhysicsBodyRegionState,
+  StreamPhysicsRegionEffect,
+  StreamPhysicsRegionEffectContext,
+  StreamPhysicsRegionEvent,
+  StreamPhysicsRegionKind,
+  StreamPhysicsRegionVector,
   StreamPhysicsExecutionState
 } from "./stream/physics/StreamPhysicsFrame"
+export {
+  PhysicsSVGOverlay,
+  bodiesToAnnotationAnchors,
+  buildPhysicsAnnotationContext,
+  normalizePhysicsAnnotations
+} from "./stream/physics/PhysicsSVGOverlay"
+export type {
+  PhysicsAnnotationAnchorNode,
+  PhysicsSVGOverlayProps
+} from "./stream/physics/PhysicsSVGOverlay"
 export type {
   PhysicsExecution
 } from "./stream/physics/PhysicsWorkerProtocol"
@@ -163,6 +281,8 @@ export type {
   PhysicsBodyShape,
   PhysicsBodySpec,
   PhysicsBodyState,
+  PhysicsColliderBodyFilter,
+  PhysicsColliderBodyFilterSpec,
   PhysicsColliderShape,
   PhysicsColliderSpec,
   PhysicsKernelOptions,

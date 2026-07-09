@@ -104,6 +104,8 @@ export type PhysicsObservationEventType =
   | "physics-proximity-exit"
   | "physics-late"
   | "physics-barrier-cross"
+  | "physics-capacity-processed"
+  | "physics-capacity-queued"
   | "sim-active"
   | "sim-idle"
 
@@ -134,6 +136,10 @@ export interface PhysicsObservationEvent {
   warnAt?: number
   simulationState?: PhysicsSimulationState
   previousSimulationState?: PhysicsSimulationState
+  /** Capacitated region id for capacity queue controllers. */
+  regionId?: string
+  /** Work units processed when a capacity queue releases a body. */
+  work?: number
 }
 
 export type PhysicsObservationRecord = Omit<
@@ -413,7 +419,15 @@ function cloneColliders(
 ): PhysicsColliderSpec[] {
   return colliders.map((collider) => ({
     ...collider,
-    shape: { ...collider.shape }
+    shape: { ...collider.shape },
+    bodyFilter:
+      collider.bodyFilter && typeof collider.bodyFilter !== "function"
+        ? {
+            ...collider.bodyFilter,
+            oneOf: collider.bodyFilter.oneOf?.slice(),
+            notOneOf: collider.bodyFilter.notOneOf?.slice()
+          }
+        : collider.bodyFilter
   }))
 }
 

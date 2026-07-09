@@ -191,15 +191,72 @@ export type { PhysicsPileChartProps } from "./physics/PhysicsPileChart"
 export { CollisionSwarmChart } from "./physics/CollisionSwarmChart"
 export type { CollisionSwarmChartProps } from "./physics/CollisionSwarmChart"
 
-export { NetworkHOPsChart } from "./physics/NetworkHOPsChart"
+export { GauntletChart, GuantletChart } from "./physics/GauntletChart"
 export type {
-  NetworkHOPsChartProps,
-  NetworkHOPsModel,
-  NetworkHOPsSample
-} from "./physics/NetworkHOPsChart"
+  GauntletChartProps,
+  GauntletEffect,
+  GauntletEvent,
+  GauntletEventContext,
+  GauntletEventLogItem,
+  GauntletGate,
+  GauntletLayout,
+  GauntletProjectPlacement,
+  GauntletProjectState,
+  GauntletPropertyForceContext,
+  GauntletPropertyDefinition
+} from "./physics/GauntletChart"
+export {
+  physicsProcessBoundaryColliders,
+  physicsProcessGroupSemanticItems,
+  physicsProcessRegionSemanticItem,
+  physicsProcessStageSemanticItems
+} from "./physics/physicsProcessPrimitives"
+export type {
+  PhysicsProcessBodyGroup,
+  PhysicsProcessBoundaryOptions,
+  PhysicsProcessStage
+} from "./physics/physicsProcessPrimitives"
+export {
+  absorbRegion,
+  aggregateRegionCounts,
+  bodyGroupSpec,
+  capacitatedRegion,
+  chargeGateRegion,
+  forceFieldRegion,
+  groupCompletionRows,
+  membraneRegion,
+  portalRegion,
+  pressureFieldRegion,
+  processLaneWalls,
+  processStageLayout,
+  regionCountsToProjectionRows,
+  routeSurfaceRegion,
+  stageTargetInVolume
+} from "../recipes/processPhysics"
+export type {
+  BodyGroupSpec,
+  BodyGroupSpecOptions,
+  ProcessMembraneDef,
+  ProcessRegionBaseOptions,
+  ProcessStageDef,
+  ProcessVolumeLayout,
+  ProcessVolumeLayoutOptions,
+  ProcessVolumeMembraneBand,
+  ProcessVolumeShape,
+  ProcessVolumeStageBand,
+  RegionCountBucket,
+  RegionCountMap
+} from "../recipes/processPhysics"
 
 export { PhysicalFlowChart } from "./physics/PhysicalFlowChart"
 export type { PhysicalFlowChartProps } from "./physics/PhysicalFlowChart"
+
+export { ProcessFlowChart } from "./physics/ProcessFlowChart"
+export type {
+  ProcessFlowChartProps,
+  ProcessFlowProjectionMetadata,
+  ProcessFlowStageDef
+} from "./physics/ProcessFlowChart"
 
 export { PhysicsCustomChart } from "./physics/PhysicsCustomChart"
 export type {

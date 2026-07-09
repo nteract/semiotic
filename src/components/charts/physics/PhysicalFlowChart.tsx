@@ -33,13 +33,17 @@ import {
   resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
+  usePhysicsChartMode,
+  type PhysicsHocFrameProps,
+  type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
 
 export interface PhysicalFlowChartProps<
   TNode extends Datum = Datum,
   TLink extends Datum = Datum
-> extends Omit<BaseChartProps, "margin"> {
+> extends Omit<BaseChartProps, "margin">,
+    PhysicsSharedChartProps {
   nodes?: TNode[]
   links?: TLink[]
   edges?: TLink[]
@@ -66,12 +70,7 @@ export interface PhysicalFlowChartProps<
   seed?: number
   tooltip?: TooltipProp
   paused?: boolean
-  frameProps?: Partial<
-    Omit<
-      StreamPhysicsFrameProps,
-      "config" | "initialSpawns" | "initialSpawnPacing" | "size"
-    >
-  >
+  frameProps?: PhysicsHocFrameProps<"config">
 }
 
 function formatThroughput(value: number): string {
@@ -532,16 +531,19 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     throughputAccessor = "value" as ChartAccessor<TLink, number>,
     width
   } = props
+  const layoutMode = usePhysicsChartMode(props, [760, 420])
+  const {
+    chartSize,
+    className: modeClassName,
+    title: modeTitle,
+    chartMode,
+    margin: modeMargin,
+    enableHover: modeEnableHover,
+    description: modeDescription,
+    summary: modeSummary,
+    accessibleTable: modeAccessibleTable
+  } = layoutMode
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const sizeWidth = size?.[0]
-  const sizeHeight = size?.[1]
-  const chartSize = useMemo(
-    () =>
-      sizeWidth != null && sizeHeight != null
-        ? [sizeWidth, sizeHeight] as [number, number]
-        : resolvePhysicsChartSize(undefined, width, height, [760, 420]),
-    [height, sizeHeight, sizeWidth, width]
-  )
   const chartNodes = useMemo(() => nodes ?? [], [nodes])
   const chartLinks = useMemo(
     () => links ?? edges ?? data ?? [],
@@ -652,7 +654,12 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
       throughputAccessor
     ]
   )
-  usePhysicsHocHandle(ref, { frameRef, spawnDatum })
+  usePhysicsHocHandle(ref, {
+    frameRef,
+    spawnDatum,
+    seedRows: chartLinks as Datum[],
+    seedSpawns: layout.initialSpawns
+  })
 
   const resolvedColorBy =
     (colorBy as ChartAccessor<Datum, string> | undefined) ??
@@ -665,15 +672,16 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     () => withPhysicalFlowObservation(layout.config, chartId, onObservation),
     [chartId, layout.config, onObservation]
   )
-  const userOnTick = frameProps?.onTick
+  const userOnTickRef = useRef(frameProps?.onTick)
+  userOnTickRef.current = frameProps?.onTick
   const flowOnTick = useCallback<NonNullable<StreamPhysicsFrameProps["onTick"]>>(
     (result, controls) => {
       if (!reducedMotion && pathConstraint !== "none") {
         steerPhysicalFlowBodies(controls, flowSpeed)
       }
-      userOnTick?.(result, controls)
+      userOnTickRef.current?.(result, controls)
     },
-    [flowSpeed, pathConstraint, reducedMotion, userOnTick]
+    [flowSpeed, pathConstraint, reducedMotion]
   )
 
   const stateEl = renderPhysicsChartState({
@@ -699,7 +707,17 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     props,
     frameProps,
-    semanticItems
+    semanticItems,
+    {
+      chartMode,
+      className: modeClassName,
+      title: modeTitle,
+      description: modeDescription,
+      summary: modeSummary,
+      accessibleTable: modeAccessibleTable,
+      enableHover: modeEnableHover,
+      margin: modeMargin
+    }
   )
 
   return renderPhysicsFrame(
@@ -710,8 +728,8 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      className={className}
       config={observedConfig}
+      continuous={!reducedMotion && pathConstraint !== "none"}
       foregroundGraphics={composePhysicsFrameGraphics(
         overlay,
         frameProps?.foregroundGraphics
@@ -727,7 +745,6 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
           : "sync"
       }
       size={chartSize}
-      title={props.title ?? "Physical flow chart"}
       bodyStyle={bodyStyle}
       workerBodyThreshold={frameProps?.workerBodyThreshold ?? Number.POSITIVE_INFINITY}
     />

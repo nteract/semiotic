@@ -56,29 +56,6 @@ describe("validateProps — malformed input must not throw", () => {
   })
 })
 
-describe("validateProps — NetworkHOPsChart accepts network-shaped uncertainty inputs", () => {
-  it("accepts probabilistic edges without a row-wise data array", () => {
-    const result = validateProps("NetworkHOPsChart", {
-      nodes: [{ id: "A" }, { id: "B" }],
-      edges: [{ source: "A", target: "B", p: 0.7 }],
-      edgeProbabilityAccessor: "p",
-    })
-
-    expect(result.valid).toBe(true)
-    expect(result.errors).toHaveLength(0)
-  })
-
-  it("accepts explicit graph samples without edges", () => {
-    const result = validateProps("NetworkHOPsChart", {
-      samples: [
-        { id: "s1", edges: [{ source: "A", target: "B" }] },
-        { id: "s2", edges: [{ source: "B", target: "C" }] },
-      ],
-    })
-
-    expect(result.errors).not.toContain('"data" is required for NetworkHOPsChart.')
-  })
-})
 
 describe("validateProps — array charts require data in static usage", () => {
   // These charts list semantic accessors (not `data`) in `required`, so they

@@ -161,11 +161,25 @@ function workerObservationConfig(
   }
 }
 
+function isSerializableColliderConfig(
+  colliders: PhysicsPipelineConfig["colliders"]
+): boolean {
+  if (!colliders) return true
+  return colliders.every((collider) => {
+    const filter = collider.bodyFilter
+    return !filter || typeof filter !== "function"
+  })
+}
+
 export function isPhysicsWorkerConfigSupported(
   config: PhysicsPipelineConfig | undefined
 ): boolean {
   if (!config) return true
-  return !config.engine && isSerializableSedimentConfig(config.sediment)
+  return (
+    !config.engine &&
+    isSerializableSedimentConfig(config.sediment) &&
+    isSerializableColliderConfig(config.colliders)
+  )
 }
 
 export function isPhysicsWorkerPacingSupported(

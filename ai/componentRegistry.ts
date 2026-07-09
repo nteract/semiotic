@@ -12,7 +12,7 @@ import {
   PieChart, DonutChart, GaugeChart, FunnelChart, LikertChart, SwimlaneChart,
   ForceDirectedGraph, ChordDiagram, SankeyDiagram, ProcessSankey, TreeDiagram, Treemap, CirclePack, OrbitDiagram,
   TemporalHistogram,
-  EventDropChart, GaltonBoardChart, PhysicsPileChart, CollisionSwarmChart, NetworkHOPsChart, PhysicalFlowChart
+  EventDropChart, GaltonBoardChart, PhysicsPileChart, CollisionSwarmChart, PhysicalFlowChart, ProcessFlowChart, GauntletChart
 } from "semiotic/ai"
 
 import {
@@ -74,6 +74,7 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   EventDropChart: { component: EventDropChart, category: "physics" },
   PhysicsPileChart: { component: PhysicsPileChart, category: "physics" },
   CollisionSwarmChart: { component: CollisionSwarmChart, category: "physics" },
-  NetworkHOPsChart: { component: NetworkHOPsChart, category: "physics" },
   PhysicalFlowChart: { component: PhysicalFlowChart, category: "physics" },
+  ProcessFlowChart: { component: ProcessFlowChart, category: "physics" },
+  GauntletChart: { component: GauntletChart, category: "physics" },
 }

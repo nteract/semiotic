@@ -230,8 +230,8 @@ export default function PhysicalFlowChartPage() {
         { label: "Physics", path: "/charts/physical-flow-chart" },
         { label: "PhysicalFlowChart", path: "/charts/physical-flow-chart" },
       ]}
-      prevPage={{ title: "NetworkHOPsChart", path: "/charts/network-hops-chart" }}
-      nextPage={{ title: "PhysicsCustomChart", path: "/charts/physics-custom-chart" }}
+      prevPage={{ title: "CollisionSwarmChart", path: "/charts/collision-swarm-chart" }}
+      nextPage={{ title: "ProcessFlowChart", path: "/charts/process-flow-chart" }}
     >
       <ComponentMeta
         componentName="PhysicalFlowChart"
@@ -242,7 +242,8 @@ export default function PhysicalFlowChartPage() {
         related={[
           { name: "SankeyDiagram", path: "/charts/sankey-diagram" },
           { name: "FlowMap", path: "/charts/flow-map" },
-          { name: "NetworkHOPsChart", path: "/charts/network-hops-chart" },
+          { name: "ProcessFlowChart", path: "/charts/process-flow-chart" },
+          { name: "GauntletChart", path: "/charts/gauntlet-chart" },
           { name: "PhysicsCustomChart", path: "/charts/physics-custom-chart" },
         ]}
       />

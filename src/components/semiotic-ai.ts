@@ -73,8 +73,9 @@ export { EventDropChart } from "./charts/physics/EventDropChart"
 export { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
 export { PhysicsPileChart } from "./charts/physics/PhysicsPileChart"
 export { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
-export { NetworkHOPsChart } from "./charts/physics/NetworkHOPsChart"
 export { PhysicalFlowChart } from "./charts/physics/PhysicalFlowChart"
+export { ProcessFlowChart } from "./charts/physics/ProcessFlowChart"
+export { GauntletChart } from "./charts/physics/GauntletChart"
 
 // Value Charts
 export { BigNumber } from "./charts/value/BigNumber"

@@ -55,10 +55,9 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     expect(hasPadding).toBe(true)
   })
 
-  it("does NOT double-apply chrome when the user content already has .semiotic-tooltip", () => {
-    // The shared `Tooltip()` / `MultiLineTooltip()` / `buildDefaultTooltip()`
-    // helpers wrap their output in `<div className="semiotic-tooltip">` —
-    // those should pass through transparent so chrome doesn't pile up.
+  it("does NOT double-apply chrome when content has an inline background", () => {
+    // Shared helpers that truly own chrome pass an opaque background
+    // (often via defaultTooltipStyle). Class alone is not enough.
     const { container } = render(
       <FlippingTooltip {...baseProps}>
         <div className="semiotic-tooltip" style={{ background: "red", padding: 99 }}>
@@ -73,14 +72,29 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     expect(wrapper.style.background).toBe("")
   })
 
-  it("detects .semiotic-tooltip even when other classes are present", () => {
+  it("applies chrome when content only has .semiotic-tooltip class (no background)", () => {
+    // Regression: Gauntlet / merge-pressure / custom tooltips return
+    // `<div className="semiotic-tooltip">` without a fill. Class alone
+    // must NOT suppress auto-chrome or the tooltip is transparent.
     const { container } = render(
       <FlippingTooltip {...baseProps}>
-        <div className="my-custom semiotic-tooltip extra">Pre-styled</div>
+        <div className="my-custom semiotic-tooltip extra">Class only</div>
       </FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement
-    expect(wrapper.style.background).toBe("")
+    expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
+  })
+
+  it("treats transparent background as missing chrome", () => {
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <div className="semiotic-tooltip" style={{ background: "transparent" }}>
+          Transparent
+        </div>
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
   })
 
   it("respects an inline `background` style as chrome ownership (no double-wrap)", () => {
