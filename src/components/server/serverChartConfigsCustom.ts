@@ -1,4 +1,3 @@
-import type { Datum } from "../charts/shared/datumTypes"
 import { type ChartConfig } from "./serverChartConfigShared"
 
 // ── Custom Chart HOCs ──────────────────────────────────────────────────

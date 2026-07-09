@@ -76,13 +76,6 @@ export function applyDistanceCartogram(
 
   const costScale = scaleLinear().domain([0, maxCost]).range([0, availableRadius])
 
-  let cartogramLayout: GeoCartogramLayout = {
-    cx,
-    cy,
-    maxCost,
-    availableRadius
-  }
-
   // Warn about areas in cartogram mode
   if (areasLength > 0 && process.env.NODE_ENV !== "production") {
     console.warn(
@@ -130,7 +123,7 @@ export function applyDistanceCartogram(
     }
   }
 
-  cartogramLayout = { cx: viewCx, cy: viewCy, maxCost, availableRadius }
+  const cartogramLayout: GeoCartogramLayout = { cx: viewCx, cy: viewCy, maxCost, availableRadius }
 
   // Reposition lines connecting repositioned points
   const lineNodes = scene.filter(

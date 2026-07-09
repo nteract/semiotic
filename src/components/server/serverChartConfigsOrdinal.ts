@@ -1,8 +1,5 @@
-import type { Datum } from "../charts/shared/datumTypes"
-import { createColorScale, getColor } from "../charts/shared/colorUtils"
 import { buildGaugeArcModel } from "../charts/shared/gaugeGradient"
-import { type ChartConfig, viridisColor } from "./serverChartConfigShared"
-import { LIGHT_THEME, resolveThemeSemanticColors } from "../store/ThemeStore"
+import { type ChartConfig } from "./serverChartConfigShared"
 
 // ── Ordinal Charts ─────────────────────────────────────────────────────
 

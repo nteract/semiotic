@@ -3,8 +3,6 @@ import {
   type PhysicsBodyState,
   type PhysicsColliderSpec,
   type PhysicsKernelEvent,
-  type PhysicsKernelOptions,
-  type PhysicsKernelSnapshot,
   type PhysicsSpringSpec
 } from "./PhysicsKernel"
 import {

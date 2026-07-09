@@ -16,8 +16,7 @@ import type {
   StreamGeoFrameHandle,
   GeoSceneNode,
   GeoAreaSceneNode,
-  GeoLineSceneNode,
-  ProjectionProp
+  GeoLineSceneNode
 } from "./geoTypes"
 import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
 import type { HoverData } from "../realtime/types"
@@ -69,8 +68,6 @@ import {
   resolveProjectionName,
   ensureHitCanvasContext,
   type GeoFeatureLike,
-  type HitCanvas,
-  type HitCanvasContext,
   type GeoZoomSelection,
   type GeoZoomControlBehavior
 } from "./geoFrameHelpers"

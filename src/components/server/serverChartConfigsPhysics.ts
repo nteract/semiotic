@@ -1,4 +1,3 @@
-import type { Datum } from "../charts/shared/datumTypes"
 import {
   buildCollisionSwarmPhysics,
   buildEventDropPhysics,

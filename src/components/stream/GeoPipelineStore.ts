@@ -6,13 +6,11 @@ import {
 } from "d3-geo"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
-import { scaleLinear } from "d3-scale"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import type {
   GeoPipelineConfig,
   GeoScales,
   GeoSceneNode,
-  GeoAreaSceneNode,
   GeoLineSceneNode,
   GraticuleConfig,
   DistanceCartogramConfig
@@ -30,7 +28,6 @@ import {
   now as getTimestamp
 } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
-import { getMax } from "../charts/shared/minMax"
 import { computePulseIntensity, hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
