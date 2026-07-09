@@ -13,7 +13,12 @@ export default defineConfig({
       // with its own jest test runner. Exclude its test files (and the
       // nested node_modules vitest auto-walks into) so Semiotic's vitest
       // doesn't try to run jscodeshift internals.
-      'codemod/**'
+      'codemod/**',
+      // check-file-size.test.mjs uses the Node built-in test runner
+      // (`node --test`), not vitest — it imports `node:test` directly,
+      // which vitest's bundler can't resolve. Exclude it so vitest's
+      // default *.test.mjs glob doesn't sweep it in.
+      'scripts/**/*.test.mjs'
     ],
     coverage: {
       provider: 'v8',
