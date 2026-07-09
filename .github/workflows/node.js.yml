@@ -27,6 +27,22 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Lightweight cleanliness gates first — fail fast before the dist build.
+      - name: Lint (errors only)
+        # Warnings (e.g. no-explicit-any) are staged as non-blocking; --quiet
+        # keeps the gate focused on hard errors so CI stays green while the
+        # warn backlog burns down.
+        run: npx eslint src --quiet
+
+      - name: Check source file size limits
+        run: npm run check:file-size
+
+      - name: Check test quality baseline
+        run: npm run check:test-quality
+
+      - name: Check AI behavior contracts freshness
+        run: npm run check:ai-contracts
+
       - name: Build library
         run: npm run dist
 

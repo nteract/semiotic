@@ -64,7 +64,8 @@ async function loadTopology(name: ReferenceGeography): Promise<{ topology: Topol
     const message = error instanceof Error ? error.message : String(error)
     if (/Cannot find module|Failed to resolve|world-atlas/i.test(message)) {
       throw new Error(
-        `resolveReferenceGeography("${name}"): ${WORLD_ATLAS_INSTALL_HINT}`
+        `resolveReferenceGeography("${name}"): ${WORLD_ATLAS_INSTALL_HINT}`,
+        { cause: error }
       )
     }
     throw error

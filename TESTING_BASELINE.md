@@ -56,6 +56,7 @@ Use current package scripts for the definitive set. Common gates include:
 npm test
 npm run typescript
 npm run lint
+npm run check:file-size
 npm run check:chart-specs
 npm run check:surface
 npm run check:ssr
@@ -70,7 +71,7 @@ npm run size
 
 ## CI Pipeline
 
-GitHub Actions is the release-confidence source. The workflow builds the library, builds the MCP server, runs unit tests, checks types, validates generated/public surfaces, verifies chart and AI contracts, builds production bundles, checks package contents, enforces size limits, and runs Playwright/browser coverage.
+GitHub Actions is the release-confidence source. The workflow lints for hard errors, enforces source file line limits, checks the test-quality baseline and AI contract freshness, builds the library, builds the MCP server, runs unit tests, checks types, validates generated/public surfaces, verifies chart and AI contracts, builds production bundles, checks package contents, enforces bundle size limits, and runs Playwright/browser coverage.
 
 Treat this section as a map of the testing posture rather than a replacement for `.github/workflows/node.js.yml`.
 

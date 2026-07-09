@@ -1,0 +1,198 @@
+{
+  "$schema": "./file-size-policy.schema.json",
+  "description": "Source file size policy for Semiotic. New or growing files must stay under the hard limits. Existing oversized files are listed with a ratchet ceiling (maxLines). Prefer splitting modules over raising maxLines.",
+  "roots": [
+    "src"
+  ],
+  "extensions": [
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx"
+  ],
+  "exclude": [
+    "**/vendor/**",
+    "**/*.generated.*",
+    "**/gofishDisplayListFixtures.generated.ts"
+  ],
+  "production": {
+    "maxLines": 800,
+    "warnLines": 500
+  },
+  "test": {
+    "maxLines": 1500,
+    "warnLines": 800
+  },
+  "allowlist": [
+    {
+      "path": "src/components/ai/conversationArc.ts",
+      "maxLines": 1078,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/ai/describeChart.ts",
+      "maxLines": 992,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/ChartContainer.tsx",
+      "maxLines": 1310,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/network/ProcessSankey.tsx",
+      "maxLines": 1112,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/network/processSankey/algorithm.ts",
+      "maxLines": 1374,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/physics/PhysicsCharts.test.tsx",
+      "maxLines": 1510,
+      "reason": "Grandfathered test file above hard limit (1500). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/shared/annotationRules.tsx",
+      "maxLines": 1073,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/shared/auditAccessibility.ts",
+      "maxLines": 1416,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/shared/hooks.ts",
+      "maxLines": 997,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/value/BigNumber.tsx",
+      "maxLines": 1252,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/xy/DifferenceChart.tsx",
+      "maxLines": 810,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/xy/LineChart.tsx",
+      "maxLines": 1014,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/charts/xy/ScatterplotMatrix.tsx",
+      "maxLines": 931,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/recipes/packedClusterMatrix.tsx",
+      "maxLines": 1031,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/recipes/processPhysics.ts",
+      "maxLines": 1040,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/recipes/tokenEncoding.ts",
+      "maxLines": 860,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/semiotic-themes.ts",
+      "maxLines": 812,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/AccessibleDataTable.tsx",
+      "maxLines": 884,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/GeoPipelineStore.ts",
+      "maxLines": 1218,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/NetworkPipelineStore.ts",
+      "maxLines": 1504,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/networkTypes.ts",
+      "maxLines": 850,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/OrdinalPipelineStore.ts",
+      "maxLines": 1638,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/ordinalSceneBuilders/ordinalSceneBuilders.test.ts",
+      "maxLines": 2044,
+      "reason": "Grandfathered test file above hard limit (1500). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/physics/PhysicsKernel.ts",
+      "maxLines": 1201,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/physics/PhysicsPipelineStore.ts",
+      "maxLines": 970,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/physics/StreamPhysicsFrame.tsx",
+      "maxLines": 1610,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/PipelineStore.ts",
+      "maxLines": 1498,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/SceneToSVG.tsx",
+      "maxLines": 1002,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/StreamGeoFrame.tsx",
+      "maxLines": 1479,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/StreamNetworkFrame.tsx",
+      "maxLines": 1704,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/StreamOrdinalFrame.tsx",
+      "maxLines": 1194,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/StreamXYFrame.tsx",
+      "maxLines": 1521,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/SVGOverlay.tsx",
+      "maxLines": 1022,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    },
+    {
+      "path": "src/components/stream/types.ts",
+      "maxLines": 1052,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+    }
+  ]
+}

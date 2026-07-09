@@ -17,7 +17,8 @@ const ROOT = path.resolve(__dirname, "..")
 
 const files = {
   schema: path.join(ROOT, "ai/schema.json"),
-  validation: path.join(ROOT, "src/components/charts/shared/validationMap.ts"),
+  chartSpecsIndex: path.join(ROOT, "src/components/charts/shared/chartSpecs.ts"),
+  chartSpecsDir: path.join(ROOT, "src/components/charts/shared"),
   semioticAI: path.join(ROOT, "src/components/semiotic-ai.ts"),
   componentRegistry: path.join(ROOT, "ai/componentRegistry.ts"),
   componentMetadata: path.join(ROOT, "ai/componentMetadata.cjs"),
@@ -64,12 +65,28 @@ function difference(a, b) {
   return sorted([...a].filter(value => !b.has(value)))
 }
 
+// validationMap.ts derives VALIDATION_MAP from CHART_SPECS at runtime
+// rather than declaring chart entries as literal object keys, so there's
+// nothing to scan there anymore. Walk the per-family spec files
+// chartSpecs.ts composes CHART_SPECS from instead — those still declare
+// one literal `ChartName: {` key per chart.
+function chartSpecFamilyFiles() {
+  const indexSource = read(files.chartSpecsIndex)
+  const paths = []
+  for (const match of indexSource.matchAll(/from\s+"\.\/(chartSpecs\w+)"/g)) {
+    paths.push(path.join(files.chartSpecsDir, `${match[1]}.ts`))
+  }
+  return paths
+}
+
 function parseValidationComponents() {
-  const source = read(files.validation)
   const names = new Set()
-  for (const match of source.matchAll(/^\s{2}(\w+):\s*\{/gm)) {
-    const name = match[1]
-    if (/^[A-Z]/.test(name)) names.add(name)
+  for (const specFile of chartSpecFamilyFiles()) {
+    const source = read(specFile)
+    for (const match of source.matchAll(/^\s{2}(\w+):\s*\{/gm)) {
+      const name = match[1]
+      if (/^[A-Z]/.test(name)) names.add(name)
+    }
   }
   return names
 }

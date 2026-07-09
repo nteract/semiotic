@@ -17,38 +17,21 @@ import type { Datum } from "../charts/shared/datumTypes"
  *
  * Consumed by: StreamXYFrame (sole consumer).
  */
-import { scaleLinear, scaleLog, scaleSymlog, scaleTime, type ScaleLinear } from "d3-scale"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
-import { computeBinExtent } from "../realtime/BinAccumulator"
-import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
-import { computeDivergingStackExtent, computeStackOffsets } from "./SceneGraph"
 import type {
   Changeset,
-  StreamChartType,
   StreamScales,
   StreamLayout,
   SceneNode,
   PointSceneNode,
-  CandlestickStyle,
-  Style,
-  ArrowOfTime,
-  WindowMode,
-  DecayConfig,
-  PulseConfig,
-  TransitionConfig,
-  StalenessConfig,
-  CurveType,
-  BarStyle,
-  ThemeSemanticColors,
-  BandConfig
+  Style
 } from "./types"
-import type { SymbolName } from "./symbolPath"
-import { resolveAccessor, resolveStringAccessor, accessorsEquivalent, type CoercibleNumber } from "./accessorUtils"
+import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
-import type { ActiveTransition } from "./pipelineTransitionUtils"
+import { now as getTimestamp, type ActiveTransition } from "./pipelineTransitionUtils"
 import {
   computeDecayOpacity as computeDecayOpacityFn,
   applyDecay as applyDecayFn,
@@ -75,282 +58,51 @@ import { buildBarScene } from "./xySceneBuilders/barScene"
 import { buildSwarmScene } from "./xySceneBuilders/swarmScene"
 import { buildWaterfallScene } from "./xySceneBuilders/waterfallScene"
 import { buildCandlestickScene } from "./xySceneBuilders/candlestickScene"
-import type { CustomLayout, LayoutContext, LayoutResult } from "./customLayout"
+import type { LayoutContext, LayoutResult } from "./customLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import type { MarginType } from "../types/marginType"
+import { resolveRibbons } from "./pipelineRibbons"
+import {
+  buildPipelineScales,
+  expandYDomainWithRibbons,
+  isFullySpecifiedExtent,
+  mergePartialDomain,
+  padYDomain,
+  reapplyPartialYExtent,
+  rescueDegenerateDomains,
+  resolveBarBinYDomain,
+  resolveStackedAreaYDomain,
+  resolveWaterfallYDomain,
+  type StackExtentCache,
+  makePipelineScale
+} from "./pipelineDomainResolution"
+import {
+  groupPipelineData,
+  resolvePipelineColorMap,
+  resolvePipelineGroupColor,
+  resolvePipelineLineStyle,
+  resolvePipelineAreaStyle,
+  resolvePipelineBoundsStyle,
+} from "./pipelineStyleResolvers"
+import {
+  type PipelineConfig,
+  DEFAULT_GROWING_MAX_CAPACITY,
+  GROWING_CAPACITY_WARN_THRESHOLD
+} from "./pipelineConfig"
+import {
+  compactTimestampBufferForRemoval,
+  ensureRingBufferCapacity,
+  pushWithTimestamp
+} from "./pipelineBufferUtils"
 
-// ── Axis direction helpers ─────────────────────────────────────────────
-
-function getTimeAxis(arrowOfTime: ArrowOfTime): "x" | "y" {
-  return arrowOfTime === "up" || arrowOfTime === "down" ? "y" : "x"
-}
-
-// ── Ribbon resolution (bounds + band → ResolvedRibbon[]) ──────────────
-
-/**
- * Read a value off a datum preserving null/undefined as NaN so ribbon
- * gap semantics work. `resolveAccessor` coerces null→0 via unary `+`,
- * which would silently produce a "valid" 0 baseline for missing data —
- * fine for primary y values, wrong for envelope edges.
- */
-function resolveRibbonValueAccessor(
-  accessor: string | ((d: Datum) => number) | undefined,
-  fallback: string
-): (d: Datum) => number {
-  const get: (d: Datum) => unknown = typeof accessor === "function"
-    ? accessor as (d: Datum) => unknown
-    : (d) => (d as Record<string, unknown>)[accessor || fallback]
-  return (d: Datum) => {
-    const raw = get(d)
-    if (raw == null) return Number.NaN
-    return +(raw as number)
-  }
-}
-
-/**
- * Compose the full ribbon list from both public envelope APIs:
- * `boundsAccessor` (symmetric ±offset) and `band` (asymmetric pairs).
- * Bounds is prepended so it paints furthest back when both are set on
- * the same chart. Both surfaces share scene-builder, y-extent, and
- * style-cascade machinery — only the resolution differs.
- *
- * Both APIs use null-preserving accessors (NaN for null/undefined) so
- * the unified `buildRibbonForGroup` can rely on a single
- * `Number.isFinite` check to skip gap datums. Without this, `null + 5`
- * coerces to `5` and would silently render a bounds ribbon around the
- * implicit-zero "value" of a missing row.
- */
-function resolveRibbons(config: PipelineConfig): ResolvedRibbon[] {
-  const ribbons: ResolvedRibbon[] = []
-  const useStreamingDefaults =
-    ["bar", "swarm", "waterfall"].includes(config.chartType) || config.runtimeMode === "streaming"
-  const rawY = resolveRibbonValueAccessor(
-    (useStreamingDefaults ? (config.valueAccessor || config.yAccessor) : config.yAccessor) as
-      string | ((d: Datum) => number) | undefined,
-    useStreamingDefaults ? "value" : "y"
-  )
-
-  // boundsAccessor → one ribbon. Legacy behavior: when the offset is
-  // not a finite non-zero number, the top and bottom collapse to `y`
-  // (degenerate zero-width ribbon — preserved via the conditional).
-  if (config.boundsAccessor) {
-    const offsetGet = resolveAccessor(config.boundsAccessor, "bounds")
-    ribbons.push({
-      kind: "bounds",
-      getTop: (d) => {
-        const y = rawY(d)
-        if (!Number.isFinite(y)) return Number.NaN
-        const o = offsetGet(d)
-        return Number.isFinite(o) && o !== 0 ? y + o : y
-      },
-      getBottom: (d) => {
-        const y = rawY(d)
-        if (!Number.isFinite(y)) return Number.NaN
-        const o = offsetGet(d)
-        return Number.isFinite(o) && o !== 0 ? y - o : y
-      },
-      style: config.boundsStyle as Style | ((d: Datum, group?: string) => Style) | undefined,
-      perSeries: true,
-      interactive: false,
-    })
-  }
-
-  // band → one ribbon per BandConfig (array form drives fan charts).
-  if (config.band) {
-    const list = Array.isArray(config.band) ? config.band : [config.band]
-    for (const b of list) {
-      ribbons.push({
-        kind: "band",
-        getTop: resolveRibbonValueAccessor(
-          b.y1Accessor as string | ((d: Datum) => number) | undefined,
-          "y1"
-        ),
-        getBottom: resolveRibbonValueAccessor(
-          b.y0Accessor as string | ((d: Datum) => number) | undefined,
-          "y0"
-        ),
-        style: b.style as Style | ((d: Datum, group?: string) => Style) | undefined,
-        perSeries: b.perSeries !== false,
-        interactive: b.interactive === true,
-      })
-    }
-  }
-
-  return ribbons
-}
+export type { PipelineConfig } from "./pipelineConfig"
+export {
+  DEFAULT_GROWING_MAX_CAPACITY,
+  GROWING_CAPACITY_WARN_THRESHOLD
+} from "./pipelineConfig"
 
 // ── PipelineStore config ───────────────────────────────────────────────
-
-export interface PipelineConfig {
-  chartType: StreamChartType
-  runtimeMode?: "streaming" | "bounded"
-  windowSize: number
-  windowMode: WindowMode
-  arrowOfTime: ArrowOfTime
-  extentPadding: number
-  /** Pixel inset on scale ranges to prevent glyph clipping at chart edges. Default 0. */
-  scalePadding?: number
-  /** When `"exact"`, the x and y axis domains pin to the literal data
-   *  min/max — `extentPadding` is skipped so the first and last ticks
-   *  read as the actual data bounds. Default `"nice"` keeps the existing
-   *  padded domain so glyphs at the extremes don't clip the plot edge. */
-  axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
-  /**
-   * Hard cap for `windowMode: "growing"`. Defaults to
-   * {@link DEFAULT_GROWING_MAX_CAPACITY} (100_000). Canvas scene graphs
-   * degrade well before the previous 1e6 ceiling; pass a higher value
-   * only when you know the host can afford it.
-   */
-  maxCapacity?: number
-
-  // Accessors
-  xAccessor?: string | ((d: Datum) => CoercibleNumber)
-  yAccessor?: string | ((d: Datum) => CoercibleNumber)
-  timeAccessor?: string | ((d: Datum) => CoercibleNumber)
-  valueAccessor?: string | ((d: Datum) => CoercibleNumber)
-  colorAccessor?: string | ((d: Datum) => string)
-  sizeAccessor?: string | ((d: Datum) => CoercibleNumber)
-  /** Categorical accessor → glyph shape (scatter/bubble). Emits SymbolSceneNodes. */
-  symbolAccessor?: string | ((d: Datum) => string)
-  /** Explicit `{category → shape}` map; unmapped categories auto-assign. */
-  symbolMap?: Record<string, SymbolName>
-  groupAccessor?: string | ((d: Datum) => string)
-  categoryAccessor?: string | ((d: Datum) => string)
-  lineDataAccessor?: string
-
-  // Scale types
-  xScaleType?: "linear" | "log" | "time"
-  yScaleType?: "linear" | "log" | "symlog"
-
-  // Fixed extents (partial: [min] or [min, undefined] to set only min)
-  xExtent?: [number | undefined, number | undefined] | [number]
-  yExtent?: [number | undefined, number | undefined] | [number]
-  sizeRange?: [number, number]
-
-  // Bar/heatmap specifics
-  binSize?: number
-  normalize?: boolean
-  /** Stacked area baseline mode. Only consulted by stackedarea chart type. */
-  baseline?: "zero" | "wiggle" | "silhouette" | "diverging"
-  /** Stack order — see StreamXYFrameProps.stackOrder. */
-  stackOrder?: "key" | "input" | "insideOut" | "asc" | "desc"
-
-  // Candlestick accessors
-  openAccessor?: string | ((d: Datum) => CoercibleNumber)
-  highAccessor?: string | ((d: Datum) => CoercibleNumber)
-  lowAccessor?: string | ((d: Datum) => CoercibleNumber)
-  closeAccessor?: string | ((d: Datum) => CoercibleNumber)
-  candlestickStyle?: CandlestickStyle
-  /** Internal: set by PipelineStore when open/close accessors are both missing */
-  candlestickRangeMode?: boolean
-
-  // Bounds/uncertainty
-  boundsAccessor?: string | ((d: Datum) => CoercibleNumber)
-  boundsStyle?: any
-
-  // Per-point area baseline (for band/ribbon charts like percentile bands)
-  y0Accessor?: string | ((d: Datum) => CoercibleNumber)
-
-  // Asymmetric min/max band(s) drawn under the lines/areas. Single
-  // BandConfig or array (fan chart). Normalized into the unified
-  // `resolvedRibbons: ResolvedRibbon[]` at store construction alongside
-  // any `boundsAccessor` ribbon.
-  band?: BandConfig | BandConfig[]
-
-  // Area gradient fill (opacity or multi-color)
-  gradientFill?: { topOpacity: number; bottomOpacity: number } | { colorStops: Array<{ offset: number; color: string }> }
-  // Series names rendered as areas in "mixed" chart type
-  areaGroups?: Set<string>
-  // Horizontal gradient for line strokes
-  lineGradient?: { colorStops: Array<{ offset: number; color: string }> }
-
-  // Style
-  lineStyle?: any
-  pointStyle?: (d: Datum) => Style & { r?: number }
-  areaStyle?: (d: Datum) => Style
-  swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
-  waterfallStyle?: { positiveColor?: string; negativeColor?: string; connectorStroke?: string; connectorWidth?: number; gap?: number; stroke?: string; strokeWidth?: number }
-  colorScheme?: string | string[] | Record<string, string>
-  /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
-  themeCategorical?: string[]
-  /**
-   * Theme-resolved semantic role colors. Scene builders use these as the
-   * default before falling back to hardcoded hex. Populated by the Stream
-   * Frame from the in-memory `SemioticTheme.colors` object at render time
-   * — the values are concrete hex (or whatever the preset declares), not
-   * `var(...)` strings, and so this channel does NOT participate in the
-   * DOM CSS cascade. Changing the ambient theme (`<ThemeProvider>`) or
-   * swapping to a nested provider is how you override these values.
-   *
-   * Per-scope overrides via CSS custom properties
-   * (e.g. `<div style={{ "--semiotic-danger": "#c00" }}>`) work only for
-   * values a user explicitly passes through as `var(--...)` strings in
-   * chart props — those are resolved via `getComputedStyle` in the
-   * canvas renderer at paint time (see `resolveCSSColor.ts`). The theme
-   * defaults in this field don't read CSS.
-   */
-  themeSemantic?: ThemeSemanticColors
-  /** Theme sequential scheme name (e.g. "blues") — fallback when `colorScheme` is not explicitly set for magnitude encodings (heatmap, choropleth, size). */
-  themeSequential?: string
-  /** Theme diverging scheme name (e.g. "RdBu") — fallback when `colorScheme` is not explicitly set for midpoint encodings (likert, bivariate, ± deviation). */
-  themeDiverging?: string
-  barColors?: Record<string, string>
-  /** Histogram bar style — fill/stroke/strokeWidth/gap. Accepted by RealtimeHistogram and routed through to the bar scene builder. */
-  barStyle?: BarStyle
-
-  // Annotations (threshold coloring uses these)
-  annotations?: Datum[]
-
-  // Realtime encoding
-  decay?: DecayConfig
-  pulse?: PulseConfig
-  transition?: TransitionConfig
-  /** Whether to animate elements on first render (points scale up, lines/areas clip from left, rects grow from baseline) */
-  introAnimation?: boolean
-  staleness?: StalenessConfig
-
-  // Streaming heatmap
-  heatmapAggregation?: "count" | "sum" | "mean"
-  heatmapXBins?: number
-  heatmapYBins?: number
-
-  // Heatmap value labels
-  showValues?: boolean
-  heatmapValueFormat?: (v: number) => string
-
-  // Point identification (for point-anchored annotations)
-  pointIdAccessor?: string | ((d: Datum) => string)
-
-  // Curve interpolation for line/area charts
-  curve?: CurveType
-
-  // ── customLayout escape hatch ─────────────────────────────────────
-  /** When provided, replaces chart-type dispatch in scene building.
-   *  Receives a LayoutContext (scales, dimensions, theme, resolveColor)
-   *  and returns scene nodes plus optional overlays. */
-  customLayout?: CustomLayout
-  /** User-supplied config blob threaded through to LayoutContext.config. */
-  layoutConfig?: object
-  /** Resolved margin — passed through so LayoutContext.dimensions.margin reflects what the frame actually used. */
-  layoutMargin?: MarginType
-  /** Resolved shared selection projected into LayoutContext.selection. Owned by
-   *  a dedicated frame effect (kept off the rebuild-triggering path). */
-  layoutSelection?: CustomLayoutSelection | null
-}
-
-// ── Growing-window capacity ────────────────────────────────────────────
-
-/** Default hard cap for `windowMode: "growing"`. */
-export const DEFAULT_GROWING_MAX_CAPACITY = 100_000
-
-/**
- * Dev-only warning threshold: when a growing buffer first crosses this
- * size we log once so unbounded push loops surface before the hard cap.
- */
-export const GROWING_CAPACITY_WARN_THRESHOLD = 50_000
-
-// ── PipelineStore ──────────────────────────────────────────────────────
 
 export class PipelineStore {
   private buffer: RingBuffer<Datum>
@@ -418,7 +170,7 @@ export class PipelineStore {
 
   // ── Stacked area extent caching ───────────────────────────────────
   /** Cache stacked area cumulative sums to skip recalculation when buffer hasn't changed */
-  private _stackExtentCache: { key: string; yDomain: [number, number] } | null = null
+  private _stackExtentCache: StackExtentCache | null = null
   /** Monotonic counter incremented on each ingest — used as part of cache keys */
   private _ingestVersion = 0
   /** Datum→index map for decay/pulse, cached by `_ingestVersion`. */
@@ -579,7 +331,7 @@ export class PipelineStore {
       // state is exactly what this call would produce.
       return false
     }
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const now = getTimestamp()
     this.lastIngestTime = now
     this.needsFullRebuild = true
     this._bufferDirty = true
@@ -634,16 +386,10 @@ export class PipelineStore {
       // totalSize is set when data is progressively chunked — pre-allocate
       // for the full dataset so subsequent append chunks don't evict.
       const targetSize = changeset.totalSize || changeset.inserts.length
-      if (targetSize > this.buffer.capacity) {
-        this.buffer.resize(targetSize)
-        if (this.timestampBuffer && targetSize > this.timestampBuffer.capacity) {
-          this.timestampBuffer.resize(targetSize)
-        }
-      }
+      ensureRingBufferCapacity(this.buffer, targetSize, this.timestampBuffer)
 
       for (const d of changeset.inserts) {
-        this.buffer.push(d)
-        if (this.timestampBuffer) this.timestampBuffer.push(now)
+        pushWithTimestamp(this.buffer, d, this.timestampBuffer, now)
         this.xExtent.push(this.getX(d))
         if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
           this.yExtent.push(this.getHigh(d))
@@ -682,8 +428,7 @@ export class PipelineStore {
           }
         }
 
-        const evicted = this.buffer.push(d)
-        if (this.timestampBuffer) this.timestampBuffer.push(now)
+        const evicted = pushWithTimestamp(this.buffer, d, this.timestampBuffer, now)
         this.xExtent.push(this.getX(d))
         if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
           this.yExtent.push(this.getHigh(d))
@@ -763,304 +508,73 @@ export class PipelineStore {
     const bufferArray = this.getBufferArray()
 
     // Resolve domains — merge user-specified extents with data extents
+    // (chart-type rules + scale construction live in pipelineDomainResolution.ts)
     const dataXDomain = this.xExtent.extent
     const dataYDomain = this.yExtent.extent
-    let xDomain: [number, number] = config.xExtent
-      ? [
-          config.xExtent[0] ?? dataXDomain[0],
-          config.xExtent[1] ?? dataXDomain[1]
-        ]
-      : dataXDomain
-    let yDomain: [number, number] = config.yExtent
-      ? [
-          config.yExtent[0] ?? dataYDomain[0],
-          config.yExtent[1] ?? dataYDomain[1]
-        ]
-      : dataYDomain
+    let xDomain = mergePartialDomain(dataXDomain, config.xExtent)
+    let yDomain = mergePartialDomain(dataYDomain, config.yExtent)
 
-    // Determine if extents are fully user-specified (no padding needed)
-    const yFullySpecified = config.yExtent && config.yExtent[0] != null && config.yExtent[1] != null
-    const _xFullySpecified = config.xExtent && config.xExtent[0] != null && config.xExtent[1] != null
-
-    // `axisExtent === "exact"` pins the y-domain to the literal data
-    // min/max — `extentPadding` is treated as 0 below so the first/last
-    // ticks read as the actual data bounds. Trade-off: glyphs at the
-    // extremes can sit at the plot edge. Per-branch padding sites are
-    // guarded by this constant rather than swapping the config value so
-    // user-supplied partial extents still merge correctly.
+    const yFullySpecified = isFullySpecifiedExtent(config.yExtent)
     const exactMode = config.axisExtent === "exact"
 
-    // Chart-type specific extent adjustments
     if (config.chartType === "stackedarea" && !yFullySpecified && buffer.size > 0) {
-      // Stacked areas: y-extent must cover the cumulative sums, not raw values
-      if (config.normalize) {
-        // Normalized: all stacks sum to 1.0
-        yDomain = [0, exactMode ? 1 : 1 + config.extentPadding]
-      } else {
-        // Cache the stacked extent computation — only rebuild when buffer data changes
-        const stackCacheKey = `${buffer.size}:${this._ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}`
-        if (this._stackExtentCache && this._stackExtentCache.key === stackCacheKey) {
-          yDomain = this._stackExtentCache.yDomain
-        } else {
-          const groups = this.groupData(bufferArray)
-
-          // Per-group-per-x value lookup (mirrors buildStackedAreaNodes).
-          const valueMaps = new Map<string, Map<number, number>>()
-          const xSet = new Set<number>()
-          let maxStacked = 0
-          const xTotals = new Map<number, number>()
-          const groupTotals = new Map<string, number>()
-          for (const g of groups) {
-            const m = new Map<number, number>()
-            let groupTotal = 0
-            for (const d of g.data) {
-              const x = this.getX(d)
-              const y = this.getY(d)
-              // `Number.isFinite` rejects NaN, Infinity, -Infinity, and
-              // non-numbers — stricter than `isNaN` (which only catches
-              // NaN). Without this, ±Infinity values leak into totals
-              // and the resulting yDomain can be ±Infinity (zero
-              // baseline) or fall back to [0,0] (wiggle/silhouette
-              // non-finite guard), producing blank/clipped charts.
-              if (!Number.isFinite(x) || !Number.isFinite(y)) continue
-              m.set(x, (m.get(x) || 0) + y)
-              xSet.add(x)
-              groupTotal += y
-              const total = (xTotals.get(x) || 0) + y
-              xTotals.set(x, total)
-              if (total > maxStacked) maxStacked = total
-            }
-            valueMaps.set(g.key, m)
-            groupTotals.set(g.key, groupTotal)
-          }
-
-          // Sort group keys to match buildStackedAreaNodes' stacking order —
-          // wiggle offsets depend on group order, so the extent must agree
-          // with the rendered geometry.
-          const order = config.stackOrder ?? "key"
-          // Tie-breaker for equal-total groups — must match areaScene
-          // exactly (both paths use lexicographic key order on ties).
-          // Without this, sliding-window eviction can re-order tied
-          // groups between frames and the rendered stack swaps layers.
-          const keyCmp = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0
-          let groupKeys: string[]
-          if (order === "input") {
-            groupKeys = groups.map((g) => g.key)
-          } else if (order === "insideOut") {
-            const sorted = [...groups].map((g) => g.key)
-              .sort((a, b) => {
-                const d = (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0)
-                return d !== 0 ? d : keyCmp(a, b)
-              })
-            const tops: string[] = []
-            const bottoms: string[] = []
-            let topSum = 0
-            let bottomSum = 0
-            for (const k of sorted) {
-              if (topSum < bottomSum) { tops.push(k); topSum += groupTotals.get(k) ?? 0 }
-              else { bottoms.push(k); bottomSum += groupTotals.get(k) ?? 0 }
-            }
-            groupKeys = [...bottoms.reverse(), ...tops]
-          } else if (order === "asc") {
-            groupKeys = groups.map((g) => g.key).sort((a, b) => {
-              const d = (groupTotals.get(a) ?? 0) - (groupTotals.get(b) ?? 0)
-              return d !== 0 ? d : keyCmp(a, b)
-            })
-          } else if (order === "desc") {
-            groupKeys = groups.map((g) => g.key).sort((a, b) => {
-              const d = (groupTotals.get(b) ?? 0) - (groupTotals.get(a) ?? 0)
-              return d !== 0 ? d : keyCmp(a, b)
-            })
-          } else {
-            groupKeys = groups.map((g) => g.key).sort(keyCmp)
-          }
-
-          if (config.baseline === "wiggle" || config.baseline === "silhouette") {
-            // Compute the actual per-x offsets and bound the y-domain by the
-            // observed min(offset) and max(offset + total). For wiggle the
-            // accumulated offset can drift well outside ±total/2; using the
-            // exact rendered range is the only safe way to avoid clipping.
-            const xValues = Array.from(xSet).sort((a, b) => a - b)
-            const offsets = computeStackOffsets(
-              xValues,
-              groupKeys,
-              (k, x) => valueMaps.get(k)?.get(x) || 0,
-              config.baseline
-            )
-            let lo = Infinity
-            let hi = -Infinity
-            for (const x of xValues) {
-              const off = offsets.get(x) ?? 0
-              const total = xTotals.get(x) ?? 0
-              if (off < lo) lo = off
-              if (off + total > hi) hi = off + total
-            }
-            if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
-              lo = 0; hi = 0
-            }
-            const range = hi - lo
-            const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
-            yDomain = [lo - pad, hi + pad]
-          } else if (config.baseline === "diverging") {
-            // Positives stack above 0, negatives below — extent must cover both.
-            const xValues = Array.from(xSet).sort((a, b) => a - b)
-            const [lo, hi] = computeDivergingStackExtent(
-              xValues,
-              groupKeys,
-              (k, x) => valueMaps.get(k)?.get(x) || 0
-            )
-            const range = hi - lo
-            const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
-            yDomain = [lo - pad, hi + pad]
-          } else {
-            const pad = exactMode ? 0 : (maxStacked > 0 ? maxStacked * config.extentPadding : 1)
-            yDomain = [0, maxStacked + pad]
-          }
-          this._stackExtentCache = { key: stackCacheKey, yDomain }
-        }
-      }
+      const stacked = resolveStackedAreaYDomain({
+        config,
+        groups: this.groupData(bufferArray),
+        getX: this.getX,
+        getY: this.getY,
+        bufferSize: buffer.size,
+        ingestVersion: this._ingestVersion,
+        stackExtentCache: this._stackExtentCache
+      })
+      yDomain = stacked.yDomain
+      this._stackExtentCache = stacked.stackExtentCache
     } else if (config.chartType === "bar" && config.binSize && !yFullySpecified && buffer.size > 0) {
-      const [, maxTotal] = computeBinExtent(
-        buffer, this.getX, this.getY, config.binSize, this.getCategory
+      yDomain = resolveBarBinYDomain(
+        buffer,
+        this.getX,
+        this.getY,
+        config.binSize,
+        this.getCategory,
+        config.extentPadding,
+        exactMode
       )
-      yDomain = [0, exactMode ? maxTotal : maxTotal + maxTotal * config.extentPadding]
     } else if (config.chartType === "waterfall" && !yFullySpecified && buffer.size > 0) {
-      const [minCum, maxCum] = computeWaterfallExtent(buffer, this.getY)
-      const range = maxCum - minCum
-      const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
-      yDomain = [
-        Math.min(0, minCum - Math.abs(pad)),
-        Math.max(0, maxCum + Math.abs(pad))
-      ]
+      yDomain = resolveWaterfallYDomain(
+        buffer,
+        this.getY,
+        config.extentPadding,
+        exactMode
+      )
     } else if (!yFullySpecified && yDomain[0] !== Infinity) {
-      // Expand extent to include every ribbon's top/bottom value. Both
-      // `boundsAccessor` (symmetric ±offset) and `band` (asymmetric
-      // pairs) normalize into the same `resolvedRibbons` list at
-      // construction time, so this one loop covers both APIs.
-      if (this.resolvedRibbons.length > 0) {
-        for (const d of bufferArray) {
-          for (const r of this.resolvedRibbons) {
-            const top = r.getTop(d)
-            const bottom = r.getBottom(d)
-            if (Number.isFinite(top)) {
-              if (top < yDomain[0]) yDomain[0] = top
-              if (top > yDomain[1]) yDomain[1] = top
-            }
-            if (Number.isFinite(bottom)) {
-              if (bottom < yDomain[0]) yDomain[0] = bottom
-              if (bottom > yDomain[1]) yDomain[1] = bottom
-            }
-          }
-        }
-      }
-      const range = yDomain[1] - yDomain[0]
-      const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
-      // Only pad the data-derived side; preserve user-specified bounds
-      const userMin = config.yExtent?.[0]
-      const userMax = config.yExtent?.[1]
-      yDomain = [
-        userMin != null ? yDomain[0] : yDomain[0] - pad,
-        userMax != null ? yDomain[1] : yDomain[1] + pad
-      ]
-      // For log scales, ensure domain minimum stays positive (log(0) is undefined).
-      // This branch handles the case where extent-padding pushed an
-      // otherwise-positive `dataYDomain[0]` to ≤ 0: substitute a
-      // multiplicative pad instead. Exact mode skips this rescue because
-      // it skips padding entirely — but note the downstream `makeScale`
-      // log branch ALSO clamps both bounds to ≥ 1e-6 unconditionally
-      // (see line ~807), so non-positive data extents produce a clamped
-      // scale even in exact mode. The first/last ticks in that case
-      // read as `max(dataMin, 1e-6)` and `max(dataMax, 1e-6)`, not the
-      // literal data values.
-      if (config.yScaleType === "log" && yDomain[0] <= 0 && dataYDomain[0] > 0 && !exactMode) {
-        const logPad = 1 + config.extentPadding
-        yDomain[0] = userMin != null ? yDomain[0] : dataYDomain[0] / logPad
-      }
+      yDomain = expandYDomainWithRibbons(
+        yDomain,
+        bufferArray,
+        this.resolvedRibbons
+      )
+      yDomain = padYDomain(yDomain, {
+        exactMode,
+        extentPadding: config.extentPadding,
+        userMin: config.yExtent?.[0],
+        userMax: config.yExtent?.[1],
+        yScaleType: config.yScaleType,
+        dataYDomain
+      })
     }
 
-    // Re-apply user-specified partial `yExtent` bounds after the
-    // chart-type-specific extent rules. The stackedarea / bar-binSize /
-    // waterfall branches replace yDomain wholesale to cover their
-    // cumulative-sum or signed-bar geometry; without this merge a
-    // user's `yExtent={[0, undefined]}` would be silently dropped on
-    // those chart types (the generic branch already merges partial
-    // bounds inline, but the chart-type branches don't go through it).
-    // Copy before assigning in case yDomain came from `_stackExtentCache`
-    // — mutating the cached reference would poison subsequent hits.
-    if (config.yExtent && !yFullySpecified) {
-      const userMin = config.yExtent[0]
-      const userMax = config.yExtent[1]
-      if (userMin != null || userMax != null) {
-        yDomain = [
-          userMin != null ? userMin : yDomain[0],
-          userMax != null ? userMax : yDomain[1],
-        ]
-      }
-    }
+    yDomain = reapplyPartialYExtent(yDomain, config.yExtent, !!yFullySpecified)
+    ;({ xDomain, yDomain } = rescueDegenerateDomains(
+      xDomain,
+      yDomain,
+      config.xScaleType
+    ))
 
-    // Handle degenerate extents
-    if (xDomain[0] === Infinity || xDomain[1] === -Infinity) {
-      // Empty data fallback — use sensible default for the scale type
-      if (config.xScaleType === "time") {
-        const now = Date.now()
-        xDomain = [now - 86400000, now] // last 24 hours
-      } else {
-        xDomain = [0, 1]
-      }
-    }
-    if (yDomain[0] === Infinity || yDomain[1] === -Infinity) yDomain = [0, 1]
-
-    // Build scales
-    // For streaming charts, use time/value axes based on arrowOfTime
-    const isStreaming = config.runtimeMode === "streaming"
-    // Clamp scalePadding to non-negative, no larger than half the smallest layout dimension
-    const rawSp = config.scalePadding || 0
-    const sp = Math.max(0, Math.min(rawSp, Math.min(layout.width, layout.height) / 2 - 1))
-    const makeScale = (
-      type: "linear" | "log" | "symlog" | "time" | undefined,
-      domain: [number, number],
-      range: [number, number],
-    ) => {
-      if (type === "log") {
-        const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
-        return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
-      }
-      if (type === "symlog") {
-        return scaleSymlog().domain(domain).range(range) as unknown as ScaleLinear<number, number>
-      }
-      if (type === "time") {
-        // Cast: scaleTime returns Date ticks at runtime, but typed as ScaleLinear for pipeline compat.
-        // Consumers should use valueOf() when comparing domain values (see StreamScales JSDoc).
-        return scaleTime().domain([new Date(domain[0]), new Date(domain[1])]).range(range) as unknown as ScaleLinear<number, number>
-      }
-      return scaleLinear().domain(domain).range(range)
-    }
-
-    if (isStreaming) {
-      const timeAxis = getTimeAxis(config.arrowOfTime)
-      if (timeAxis === "x") {
-        const xRange: [number, number] = config.arrowOfTime === "right"
-          ? [sp, layout.width - sp]
-          : [layout.width - sp, sp]
-        this.scales = {
-          x: scaleLinear().domain(xDomain).range(xRange),
-          y: makeScale(config.yScaleType, yDomain, [layout.height - sp, sp])
-        }
-      } else {
-        const yRange: [number, number] = config.arrowOfTime === "down"
-          ? [sp, layout.height - sp]
-          : [layout.height - sp, sp]
-        this.scales = {
-          x: makeScale(config.yScaleType, yDomain, [sp, layout.width - sp]),
-          y: scaleLinear().domain(xDomain).range(yRange)
-        }
-      }
-    } else {
-      this.scales = {
-        x: makeScale(config.xScaleType, xDomain, [sp, layout.width - sp]),
-        y: makeScale(config.yScaleType, yDomain, [layout.height - sp, sp])
-      }
-    }
+    this.scales = buildPipelineScales({
+      config,
+      layout,
+      xDomain,
+      yDomain
+    })
 
     // Snapshot positions for transition animation (before rebuild)
     if (this.config.transition && this.scene.length > 0) {
@@ -1212,19 +726,7 @@ export class PipelineStore {
     const yDomain = this.scales!.y.domain() as [number, number]
     const oldXRange = this.scales!.x.range() as [number, number]
     const oldYRange = this.scales!.y.range() as [number, number]
-    const remapScale = (type: "linear" | "log" | "symlog" | "time" | undefined, domain: [number, number], range: [number, number]) => {
-      if (type === "log") {
-        const safeDomain: [number, number] = [Math.max(domain[0], 1e-6), Math.max(domain[1], 1e-6)]
-        return scaleLog().domain(safeDomain).range(range).clamp(true) as unknown as ScaleLinear<number, number>
-      }
-      if (type === "symlog") {
-        return scaleSymlog().domain(domain).range(range) as unknown as ScaleLinear<number, number>
-      }
-      if (type === "time") {
-        return scaleTime().domain([new Date(domain[0]), new Date(domain[1])]).range(range) as unknown as ScaleLinear<number, number>
-      }
-      return scaleLinear().domain(domain).range(range)
-    }
+    const remapScale = makePipelineScale
     // Rebuild ranges preserving original direction (e.g. arrowOfTime="left" has reversed x range)
     const rsp = Math.max(0, Math.min(this.config.scalePadding || 0, Math.min(layout.width, layout.height) / 2 - 1))
     const xFlipped = oldXRange[0] > oldXRange[1]
@@ -1392,20 +894,12 @@ export class PipelineStore {
   }
 
   private resolveBoundsStyle(group: string, sampleDatum?: Datum): Style {
-    const bs = this.config.boundsStyle
-    if (typeof bs === "function") {
-      return bs(sampleDatum || {}, group)
-    }
-    if (bs && typeof bs === "object") {
-      return bs
-    }
-    // Default: match line color with low opacity
-    const lineStyle = this.resolveLineStyle(group, sampleDatum)
-    return {
-      fill: lineStyle.stroke || this.config.themeSemantic?.primary || "#4e79a7",
-      fillOpacity: 0.2,
-      stroke: "none"
-    }
+    return resolvePipelineBoundsStyle(
+      this.config,
+      group,
+      sampleDatum,
+      (g, d) => this.resolveLineStyle(g, d)
+    )
   }
 
   // ── Decay (delegated to pipelineDecay.ts) ───────────────────────────
@@ -1561,30 +1055,13 @@ export class PipelineStore {
   // ── Helpers ──────────────────────────────────────────────────────────
 
   private groupData(data: Datum[]): { key: string; data: Datum[] }[] {
-    // Fast path: same buffer, same grouping, same ingest → reuse the buckets.
-    if (
-      this._groupDataCache &&
-      this._groupDataCache.version === this._ingestVersion &&
-      this._groupDataCache.group === this.getGroup &&
-      this._groupDataCache.data === data
-    ) {
-      return this._groupDataCache.result
-    }
-
-    let result: { key: string; data: Datum[] }[]
-    if (!this.getGroup) {
-      result = [{ key: "_default", data }]
-    } else {
-      const groups = new Map<string, Datum[]>()
-      for (const d of data) {
-        const key = this.getGroup(d)
-        if (!groups.has(key)) groups.set(key, [])
-        groups.get(key)!.push(d)
-      }
-      result = Array.from(groups.entries()).map(([key, data]) => ({ key, data }))
-    }
-
-    this._groupDataCache = { version: this._ingestVersion, group: this.getGroup, data, result }
+    const { result, cache } = groupPipelineData(
+      data,
+      this.getGroup,
+      this._ingestVersion,
+      this._groupDataCache
+    )
+    this._groupDataCache = cache
     return result
   }
 
@@ -1596,139 +1073,48 @@ export class PipelineStore {
    * entirely after the first call.
    */
   private resolveColorMap(data: Datum[]): Map<string, string> {
-    if (this._colorMapCache && this._colorMapCache.version === this._ingestVersion) {
-      return this._colorMapCache.map
-    }
-
-    const categories = new Set<string>()
-    for (const d of data) {
-      const c = this.getColor!(d)
-      if (c) categories.add(c)
-    }
-    const sorted = Array.from(categories).sort()
-    const cacheKey = sorted.join('\0')
-
-    if (this._colorMapCache && this._colorMapCache.key === cacheKey) {
-      // Categories unchanged across the version bump (e.g., layout-only update).
-      // Refresh the version so future calls in this frame short-circuit.
-      this._colorMapCache.version = this._ingestVersion
-      return this._colorMapCache.map
-    }
-
-    const palette = Array.isArray(this.config.colorScheme)
-      ? this.config.colorScheme
-      : this.config.themeCategorical || STREAMING_PALETTE
-    const colorMap = new Map<string, string>()
-    for (let ci = 0; ci < sorted.length; ci++) {
-      colorMap.set(sorted[ci], palette[ci % palette.length])
-    }
-    this._colorMapCache = { key: cacheKey, map: colorMap, version: this._ingestVersion }
-    return colorMap
+    const { map, cache } = resolvePipelineColorMap(
+      data,
+      this.getColor,
+      this.config,
+      this._ingestVersion,
+      this._colorMapCache
+    )
+    this._colorMapCache = cache
+    return map
   }
 
   private resolveLineStyle(group: string, sampleDatum?: Datum): Style {
-    const ls = this.config.lineStyle
-    if (typeof ls === "function") {
-      const style = ls(sampleDatum || {}, group)
-      // When HOC returns no stroke (push API, colorScale unavailable),
-      // fill in from the frame's palette. Use group name for color assignment
-      // even when colorAccessor is not set (e.g. StackedAreaChart streaming).
-      if (style && !style.stroke && group) {
-        const color = this.resolveGroupColor(group)
-        if (color) return { ...style, stroke: color }
-      }
-      return style
-    }
-    // Theme primary is the designer-facing default; hardcoded #007bff stays
-    // as the ultimate fallback when no theme is in scope.
-    const themePrimary = this.config.themeSemantic?.primary
-    if (ls && typeof ls === "object") {
-      return {
-        stroke: ls.stroke || themePrimary || "#007bff",
-        strokeWidth: ls.strokeWidth || 2,
-        strokeDasharray: ls.strokeDasharray,
-        fill: ls.fill,
-        fillOpacity: ls.fillOpacity,
-        opacity: ls.opacity
-      }
-    }
-    const color = this.resolveGroupColor(group) || themePrimary || "#007bff"
-    return { stroke: color, strokeWidth: 2 }
+    return resolvePipelineLineStyle(
+      this.config,
+      group,
+      sampleDatum,
+      (g) => this.resolveGroupColor(g)
+    )
   }
 
   private resolveAreaStyle(group: string, sampleDatum?: Datum): Style {
-    if (this.config.areaStyle) {
-      const style = this.config.areaStyle(sampleDatum || {})
-      // Fill in colors from frame's palette when HOC has no color scale (push API).
-      // Use group name for assignment even without colorAccessor.
-      if (style && !style.fill && group) {
-        const color = this.resolveGroupColor(group)
-        if (color) return { ...style, fill: color, stroke: style.stroke || color }
-      }
-      return style
-    }
-    // Fall back to lineStyle — AreaChart passes area styling via lineStyle
-    const ls = this.config.lineStyle
-    if (typeof ls === "function") {
-      const style = ls(sampleDatum || {}, group)
-      if (style && !style.fill && group) {
-        const color = this.resolveGroupColor(group)
-        if (color) return { ...style, fill: color, stroke: style.stroke || color }
-      }
-      return style
-    }
-    const themePrimary = this.config.themeSemantic?.primary
-    if (ls && typeof ls === "object") {
-      return {
-        fill: ls.fill || ls.stroke || themePrimary || "#4e79a7",
-        fillOpacity: ls.fillOpacity ?? 0.7,
-        stroke: ls.stroke || themePrimary || "#4e79a7",
-        strokeWidth: ls.strokeWidth || 2
-      }
-    }
-    const color = this.resolveGroupColor(group) || themePrimary || "#4e79a7"
-    return { fill: color, fillOpacity: 0.7, stroke: color, strokeWidth: 2 }
+    return resolvePipelineAreaStyle(
+      this.config,
+      group,
+      sampleDatum,
+      (g) => this.resolveGroupColor(g)
+    )
   }
 
-  /** Resolve a group name to a color from the cached color map or a dedicated group palette.
-   *  First checks _colorMapCache (populated by resolveColorMap when colorAccessor is set).
-   *  Falls back to _groupColorMap (insertion-order, never mutates _colorMapCache).
-   *
-   *  FIFO-evicts the oldest entry when the map exceeds `GROUP_COLOR_MAP_CAP`. The palette index
-   *  uses `_groupColorCounter` (monotonic, decoupled from map size) so eviction doesn't cause
-   *  new groups to collide with existing entries on a shrunk map. */
   private resolveGroupColor(group: string): string | null {
-    // Prefer the accessor-based color map when available
-    if (this._colorMapCache) {
-      const c = this._colorMapCache.map.get(group)
-      if (c) return c
-    }
-    // Fall back to dedicated group color map (does not pollute _colorMapCache)
-    const existing = this._groupColorMap.get(group)
-    if (existing) return existing
-
-    // Palette selection with empty-array guards — an explicit `colorScheme: []`
-    // (or empty `themeCategorical`) would otherwise index `palette[NaN]` → undefined
-    // and poison the cached color.
-    const userScheme = Array.isArray(this.config.colorScheme) && this.config.colorScheme.length > 0
-      ? this.config.colorScheme
-      : null
-    const themePalette = Array.isArray(this.config.themeCategorical) && this.config.themeCategorical.length > 0
-      ? this.config.themeCategorical
-      : null
-    const palette = userScheme || themePalette || STREAMING_PALETTE
-    if (palette.length === 0) return null
-
-    const color = palette[this._groupColorCounter % palette.length]
-    this._groupColorCounter++
-    this._groupColorMap.set(group, color)
-
-    if (this._groupColorMap.size > PipelineStore.GROUP_COLOR_MAP_CAP) {
-      const oldestKey = this._groupColorMap.keys().next().value
-      if (oldestKey !== undefined) this._groupColorMap.delete(oldestKey)
-    }
+    const { color, groupColorCounter } = resolvePipelineGroupColor({
+      group,
+      colorMapCache: this._colorMapCache,
+      groupColorMap: this._groupColorMap,
+      groupColorCounter: this._groupColorCounter,
+      groupColorMapCap: PipelineStore.GROUP_COLOR_MAP_CAP,
+      config: this.config
+    })
+    this._groupColorCounter = groupColorCounter
     return color
   }
+
 
   // ── Buffer array cache ──────────────────────────────────────────────
 
@@ -1766,17 +1152,8 @@ export class PipelineStore {
     }
     const ids = toIdSet(id)
     const getPointId = this.getPointId
-    // Compact timestamp buffer in lockstep with data removal
     const predicate = (item: Datum) => ids.has(getPointId(item))
-    if (this.timestampBuffer && this.timestampBuffer.size > 0) {
-      const oldTimestamps = this.timestampBuffer.toArray()
-      const removeSet = new Set<number>()
-      this.buffer.forEach((item, i) => { if (predicate(item)) removeSet.add(i) })
-      this.timestampBuffer.clear()
-      for (let i = 0; i < oldTimestamps.length; i++) {
-        if (!removeSet.has(i)) this.timestampBuffer.push(oldTimestamps[i])
-      }
-    }
+    compactTimestampBufferForRemoval(this.buffer, this.timestampBuffer, predicate)
 
     const removed = this.buffer.remove(predicate)
     if (removed.length === 0) return removed
@@ -1798,7 +1175,7 @@ export class PipelineStore {
     this._ingestVersion++
     // A removal is data activity — refresh the staleness clock so a chart
     // mutated via remove() isn't flagged stale.
-    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = getTimestamp()
     return removed
   }
 
@@ -1853,7 +1230,7 @@ export class PipelineStore {
     this._ingestVersion++
     // An in-place update is data activity — refresh the staleness clock so a
     // chart streamed via update() isn't flagged stale between updates.
-    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = getTimestamp()
     return previous
   }
 

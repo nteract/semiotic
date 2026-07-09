@@ -36,7 +36,8 @@ const path = require("path")
 const ROOT = path.resolve(__dirname, "..")
 const CHARTS_DIR = path.join(ROOT, "src/components/charts")
 const SSR_CONFIGS = path.join(ROOT, "src/components/server/serverChartConfigs.ts")
-const VALIDATION_MAP = path.join(ROOT, "src/components/charts/shared/validationMap.ts")
+const CHART_SPECS_INDEX = path.join(ROOT, "src/components/charts/shared/chartSpecs.ts")
+const CHART_SHARED_DIR = path.join(ROOT, "src/components/charts/shared")
 
 // ── 1. Discover HOC chart names ────────────────────────────────────────
 
@@ -73,13 +74,26 @@ while ((match = configRegex.exec(ssrSource))) {
 }
 
 // ── 3. Extract validation map chart names ──────────────────────────────
+//
+// validationMap.ts derives VALIDATION_MAP from CHART_SPECS at runtime
+// (`Object.fromEntries(Object.entries(CHART_SPECS)...)`) rather than listing
+// charts as literal object keys, so there's nothing left to scan there.
+// Instead walk the family spec files chartSpecs.ts composes CHART_SPECS
+// from — those still declare one literal `ChartName: {` key per chart.
 
-const validationSource = fs.readFileSync(VALIDATION_MAP, "utf8")
+const chartSpecsIndexSource = fs.readFileSync(CHART_SPECS_INDEX, "utf8")
 const validationNames = new Set()
-const valRegex = /^\s+(\w+):\s*\{/gm
-while ((match = valRegex.exec(validationSource))) {
-  if (/^[A-Z]/.test(match[1])) {
-    validationNames.add(match[1])
+const specFileRegex = /from\s+"\.\/(chartSpecs\w+)"/g
+while ((match = specFileRegex.exec(chartSpecsIndexSource))) {
+  const specFile = path.join(CHART_SHARED_DIR, `${match[1]}.ts`)
+  if (!fs.existsSync(specFile)) continue
+  const specSource = fs.readFileSync(specFile, "utf8")
+  const keyRegex = /^\s+(\w+):\s*\{/gm
+  let keyMatch
+  while ((keyMatch = keyRegex.exec(specSource))) {
+    if (/^[A-Z]/.test(keyMatch[1])) {
+      validationNames.add(keyMatch[1])
+    }
   }
 }
 

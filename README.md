@@ -347,13 +347,13 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/xy` | **97 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/xy` | **98 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
 | `semiotic/ordinal` | **79 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
 | `semiotic/network` | **84 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **61 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **105 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/server` | **176 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/utils` | **58 KB** | ThemeProvider, validators, serialization — no chart components |
+| `semiotic/realtime` | **107 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/server` | **179 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/utils` | **71 KB** | ThemeProvider, validators, serialization — no chart components |
 | `semiotic/recipes` | **46 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/themes` | **6 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/data` | **3 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
@@ -361,8 +361,8 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/physics` | **79 KB** | GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, PhysicalFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **367 KB** | All schema-backed charts + validation — optimized for LLM code generation |
-| `semiotic` | **235 KB** | Everything below (full bundle) |
+| `semiotic/ai` | **382 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic` | **250 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
 

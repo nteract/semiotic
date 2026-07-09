@@ -19,7 +19,6 @@
  */
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 import * as React from "react"
 import {
   useRef,
@@ -34,11 +33,8 @@ import {
 import type {
   StreamOrdinalFrameProps,
   StreamOrdinalFrameHandle,
-  OrdinalChartType,
   OrdinalScales,
-  
   OrdinalPipelineConfig,
-  
   OrdinalLayout,
   HoverData
 } from "./ordinalTypes"
@@ -66,176 +62,15 @@ import { useFrame } from "./useFrame"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
-// Canvas renderers
+// Canvas setup / hover
 import { getDevicePixelRatio } from "./canvasSetup"
-import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
-import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
-import { symbolCanvasRenderer } from "./renderers/symbolCanvasRenderer"
-import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
-import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
-import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
-import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
-import { trapezoidCanvasRenderer, funnelLabelRenderer } from "./renderers/trapezoidCanvasRenderer"
-import { barFunnelHatchRenderer, barFunnelLabelRenderer } from "./renderers/barFunnelCanvasRenderer"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 
-// ── Renderer dispatch ──────────────────────────────────────────────────
-
-// Connectors are built into the scene graph by the store, so every
-// chart type includes the connector renderer to paint them.
-// Renderers internally filter nodes by type, so the union-typed array is safe.
-// Use a relaxed function type to avoid casting every renderer to OrdinalRendererFn.
-type AnyRendererFn = (ctx: CanvasRenderingContext2D, nodes: any[], scales: any, layout: any) => void
-
-const withConnectors = (renderers: AnyRendererFn[]): AnyRendererFn[] =>
-  [connectorCanvasRenderer, ...renderers]
-
-const RENDERERS: Record<OrdinalChartType, AnyRendererFn[]> = {
-  bar: withConnectors([barCanvasRenderer]),
-  clusterbar: withConnectors([barCanvasRenderer]),
-  point: withConnectors([pointCanvasRenderer, symbolCanvasRenderer]),
-  swarm: withConnectors([pointCanvasRenderer, symbolCanvasRenderer]),
-  pie: [wedgeCanvasRenderer],
-  donut: [wedgeCanvasRenderer],
-  boxplot: withConnectors([boxplotCanvasRenderer, pointCanvasRenderer]),
-  violin: withConnectors([violinCanvasRenderer]),
-  histogram: withConnectors([barCanvasRenderer]),
-  ridgeline: withConnectors([violinCanvasRenderer]),
-  timeline: withConnectors([barCanvasRenderer]),
-  funnel: [barCanvasRenderer, trapezoidCanvasRenderer, funnelLabelRenderer],
-  "bar-funnel": [barCanvasRenderer, barFunnelHatchRenderer, barFunnelLabelRenderer],
-  swimlane: withConnectors([barCanvasRenderer]),
-  // custom: any node type possible — each renderer self-filters to its type.
-  custom: withConnectors([
-    barCanvasRenderer,
-    pointCanvasRenderer,
-    symbolCanvasRenderer,
-    glyphCanvasRenderer,
-    wedgeCanvasRenderer,
-    boxplotCanvasRenderer,
-    violinCanvasRenderer,
-    trapezoidCanvasRenderer,
-  ])
-}
-
-// ── Defaults ───────────────────────────────────────────────────────────
+import { ORDINAL_CANVAS_RENDERERS as RENDERERS } from "./ordinalCanvasRenderers"
+import { DefaultOrdinalTooltip } from "./ordinalDefaultTooltip"
 
 const DEFAULT_MARGIN = { top: 50, right: 40, bottom: 60, left: 70 }
-
-// ── Tooltip ────────────────────────────────────────────────────────────
-
-const defaultTooltipStyle: React.CSSProperties = {
-  background: "rgba(0, 0, 0, 0.85)",
-  color: "white",
-  padding: "6px 10px",
-  borderRadius: "4px",
-  fontSize: "13px",
-  lineHeight: "1.4",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-  pointerEvents: "none",
-  whiteSpace: "nowrap"
-}
-
-/** Render an ordinal datum smartly: a name/label title, a type, a value, then
- *  the rest — for swarm/point and custom-layout fallbacks. `skipPositional`
- *  stays off because in user data x/y are values, not coordinates. */
-function smartOrdinalTooltip(d: Datum) {
-  const smart = smartTooltipEntries(d, { skipPositional: false })
-  if (smart.title == null && smart.entries.length === 0) return null
-  return (
-    <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      {smart.title != null && <div style={{ fontWeight: "bold" }}>{String(smart.title)}</div>}
-      {smart.entries.map((e) => (
-        <div key={e.key}>
-          <span style={{ opacity: 0.7 }}>{e.key}:</span>{" "}
-          {typeof e.value === "number" ? e.value.toLocaleString() : String(e.value)}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
-  const d = hover.data || {}
-  const stats = hover.stats
-  const hoverCategory = hover.category
-
-  // For summary types (boxplot, violin, ridgeline), datum is an array of pieces
-  if (Array.isArray(d)) {
-    const category = hoverCategory || d[0]?.category || ""
-    if (stats) {
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-          <div>n = {stats.n}</div>
-          <div>Min: {stats.min.toLocaleString()}</div>
-          <div>Q1: {stats.q1.toLocaleString()}</div>
-          <div>Median: {stats.median.toLocaleString()}</div>
-          <div>Q3: {stats.q3.toLocaleString()}</div>
-          <div>Max: {stats.max.toLocaleString()}</div>
-          <div style={{ opacity: 0.8 }}>Mean: {stats.mean.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-        </div>
-      )
-    }
-    const n = d.length
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-        <div>{n} items</div>
-      </div>
-    )
-  }
-
-  // For histogram bins
-  if (d.bin != null && d.count != null) {
-    const range = d.range || []
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        {d.category && <div style={{ fontWeight: "bold" }}>{String(d.category)}</div>}
-        <div>Count: {d.count}</div>
-        {range.length === 2 && (
-          <div style={{ opacity: 0.8 }}>
-            {Number(range[0]).toFixed(1)} – {Number(range[1]).toFixed(1)}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // Accessor hints passed from the hover handler
-  const oAccessor = hover.__oAccessor
-  const rAccessor = hover.__rAccessor
-  const hoverChartType = hover.__chartType
-
-  // For swarm/point charts, show the datum fields (point-level data, not
-  // aggregated) — smartly: a name/label title, then a type, a value, the rest.
-  if (hoverChartType === "swarm" || hoverChartType === "point") {
-    return smartOrdinalTooltip(d)
-  }
-
-  // For regular pieces (bar, pie, etc.) — use accessor names to find category and value
-  const category = (oAccessor && d[oAccessor] != null ? d[oAccessor] : null)
-    || d.category || d.name || d.group || d.__rName || ""
-  const value = d.__aggregateValue
-    ?? (rAccessor && d[rAccessor] != null ? d[rAccessor] : null)
-    ?? d.value ?? d.__rValue ?? d.pct ?? ""
-
-  // If standard fields didn't match, fall back to the smart field selection
-  // (custom ordinal layouts, unusual datums) instead of dumping every field.
-  if (!category && value === "") {
-    return smartOrdinalTooltip(d)
-  }
-
-  return (
-    <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-      {value !== "" && <div>{typeof value === "number" ? value.toLocaleString() : String(value)}</div>}
-    </div>
-  )
-}
-;(DefaultOrdinalTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
 
 // ── Component ──────────────────────────────────────────────────────────
 

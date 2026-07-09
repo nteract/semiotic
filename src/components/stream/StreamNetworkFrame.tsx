@@ -1,6 +1,5 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import { formatVal, smartTooltipEntries } from "../charts/shared/tooltipUtils"
 import * as React from "react"
 import {
   useRef,
@@ -28,7 +27,6 @@ import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
-import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
 import {
   extractNetworkNavPoints,
   buildNavGraph,
@@ -39,7 +37,6 @@ import {
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
-import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
@@ -56,8 +53,6 @@ import {
   useHydrationLifecycle
 } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
-import { paintCanvasBackground } from "./canvasBackground"
-import { needsDataCanvasPaint } from "./paintNeeds"
 import {
   NetworkAccessibleDataTable,
   AriaLiveTooltip,
@@ -75,20 +70,24 @@ import {
 } from "./layouts/forceLayoutWorkerClient"
 
 // Canvas setup
-import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 
 // Canvas renderers
-import { networkRectRenderer } from "./renderers/networkRectRenderer"
-import { networkCircleRenderer } from "./renderers/networkCircleRenderer"
-import { networkArcRenderer } from "./renderers/networkArcRenderer"
-import { networkSymbolRenderer } from "./renderers/networkSymbolRenderer"
-import { networkGlyphRenderer } from "./renderers/glyphCanvasRenderer"
-import { networkEdgeRenderer } from "./renderers/networkEdgeRenderer"
+import { DefaultNetworkTooltip } from "./networkDefaultTooltip"
 import {
-  renderNetworkParticles,
-  spawnNetworkParticles
-} from "./renderers/networkParticleRenderer"
-import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
+  buildNetworkPipelineConfig,
+  buildNetworkLayoutConfigSignature
+} from "./networkPipelineConfig"
+
+import { paintNetworkFrame } from "./networkFramePaint"
+import {
+  networkEdgeFallbackColor,
+  resolveNetworkEdgeColor,
+  resolveNetworkEdgeEndpoint,
+  resolveNetworkNodeColor,
+  resolveNetworkParticleColor,
+  syncNetworkNodeColorMap
+} from "./networkColorAccessors"
+import { resolveNetworkPointerHit } from "./networkFrameInteraction"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -96,142 +95,6 @@ const DEFAULT_MARGIN = { top: 20, right: 80, bottom: 20, left: 80 }
 const CENTERED_MARGIN = { top: 40, right: 40, bottom: 40, left: 40 }
 const CENTERED_TYPES = new Set(["chord", "force", "circlepack", "orbit"])
 const DEFAULT_SIZE: [number, number] = [800, 600]
-
-// ── Tooltip ────────────────────────────────────────────────────────────
-
-const defaultTooltipStyle: React.CSSProperties = {
-  background: "rgba(0, 0, 0, 0.85)",
-  color: "white",
-  padding: "6px 10px",
-  borderRadius: 4,
-  fontSize: 12,
-  lineHeight: 1.5,
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-  pointerEvents: "none",
-  whiteSpace: "nowrap"
-}
-
-function DefaultNetworkTooltip({ data }: { data: HoverData }) {
-  if (data.nodeOrEdge === "edge") {
-    const edge = data.data as RealtimeEdge | null
-    if (!edge) return null
-    const sourceId =
-      typeof edge.source === "object" ? edge.source.id : edge.source
-    const targetId =
-      typeof edge.target === "object" ? edge.target.id : edge.target
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        <div style={{ fontWeight: 600 }}>
-          {sourceId} → {targetId}
-        </div>
-        {edge.value != null && (
-          <div style={{ marginTop: 4, opacity: 0.8 }}>
-            Value:{" "}
-            {typeof edge.value === "number"
-              ? edge.value.toLocaleString()
-              : String(edge.value)}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  const node = data.data as RealtimeNode | null
-  if (!node) return null
-
-  // Hierarchy nodes have a __hierarchyNode with a .parent chain.
-  // Show ancestor breadcrumb: grandparent → parent → **node**
-  type HierarchyNode = { data?: Datum; parent?: HierarchyNode }
-  const hNode = (node as RealtimeNode & { __hierarchyNode?: HierarchyNode })
-    .__hierarchyNode
-  if (hNode) {
-    const ancestors: string[] = []
-    let cur: HierarchyNode | undefined = hNode
-    while (cur) {
-      const name = cur.data?.name ?? cur.data?.id ?? node.id
-      if (name != null) ancestors.unshift(String(name))
-      cur = cur.parent
-    }
-    // Drop root (first entry) from the breadcrumb — it's usually unnamed
-    if (ancestors.length > 1) ancestors.shift()
-
-    const last = ancestors.length - 1
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        <div>
-          {ancestors.map((name, i) => (
-            <span key={i}>
-              {i > 0 && (
-                <span style={{ margin: "0 3px", opacity: 0.5 }}>{" → "}</span>
-              )}
-              {i === last ? (
-                <strong>{name}</strong>
-              ) : (
-                <span style={{ opacity: 0.7 }}>{name}</span>
-              )}
-            </span>
-          ))}
-        </div>
-        {node.value != null && node.value > 0 && (
-          <div style={{ marginTop: 4, opacity: 0.8 }}>
-            {typeof node.value === "number"
-              ? node.value.toLocaleString()
-              : String(node.value)}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // Compute degree centrality from source/target links
-  const degree =
-    (node.sourceLinks?.length || 0) + (node.targetLinks?.length || 0)
-  const weightedDegree =
-    (node.sourceLinks || []).reduce((s, e) => s + (e.value || 0), 0) +
-    (node.targetLinks || []).reduce((s, e) => s + (e.value || 0), 0)
-
-  // Smartly surface the user datum's meaningful fields — a name for the title,
-  // then a type/kind, then a value, then the rest — instead of just the id.
-  // This is what makes the default tooltip useful for custom/recipe layouts
-  // (Mermaid, lineage, dagre, …) where the id alone says nothing.
-  const userDatum = (node.data ?? node) as Datum
-  const smart = smartTooltipEntries(userDatum)
-  const heading = smart.title != null ? String(smart.title) : node.id
-  const hasValueRow = smart.entries.some((e) => VALUE_ROW_RE.test(e.key))
-
-  return (
-    <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      <div style={{ fontWeight: 600 }}>{heading}</div>
-      {smart.entries.map((e) => (
-        <div key={e.key} style={{ marginTop: 4, opacity: 0.8 }}>
-          {e.key}: {formatVal(e.value)}
-        </div>
-      ))}
-      {!hasValueRow && node.value != null && node.value > 0 && (
-        <div style={{ marginTop: 4, opacity: 0.8 }}>
-          Total:{" "}
-          {typeof node.value === "number"
-            ? node.value.toLocaleString()
-            : String(node.value)}
-        </div>
-      )}
-      {degree > 0 && (
-        <div style={{ marginTop: 4, opacity: 0.8 }}>
-          Connections: {degree}
-          {weightedDegree !== degree &&
-            ` (weighted: ${weightedDegree.toLocaleString()})`}
-        </div>
-      )}
-    </div>
-  )
-}
-
-const VALUE_ROW_RE = /^(value|amount|total|count|weight|score)$/i
-// Tell FlippingTooltip's chrome detector that this component paints its
-// own chrome internally. Without this, the wrapper double-wraps and a
-// theme with a light tooltip background (Carbon, journalist-light, etc.)
-// reads as a white box around the tooltip text.
-;(DefaultNetworkTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
 
 // ── StreamNetworkFrame ─────────────────────────────────────────────────
 
@@ -399,66 +262,63 @@ const StreamNetworkFrame = memo(forwardRef<
   // ── Pipeline config ──────────────────────────────────────────────────
 
   const pipelineConfig = useMemo(
-    (): NetworkPipelineConfig => ({
-      chartType,
-      nodeIDAccessor,
-      sourceAccessor,
-      targetAccessor,
-      valueAccessor,
-      edgeIdAccessor,
-      childrenAccessor,
-      hierarchySum,
-      orientation,
-      nodeAlign,
-      nodePaddingRatio,
-      nodeWidth,
-      iterations,
-      forceStrength,
-      padAngle,
-      groupWidth,
-      sortGroups,
-      edgeSort,
-      treeOrientation,
-      edgeType,
-      padding,
-      paddingTop,
-      tensionConfig,
-      showParticles,
-      particleStyle,
-      nodeStyle,
-      edgeStyle,
-      nodeLabel,
-      showLabels,
-      labelMode,
-      colorBy,
-      colorScheme,
-      themeCategorical: currentTheme?.colors?.categorical,
-      themeSemantic: resolveThemeSemanticColors(currentTheme),
-      edgeColorBy,
-      edgeOpacity,
-      colorByDepth,
-      nodeSize,
-      nodeSizeRange,
-      decay,
-      pulse,
-      transition,
-      introAnimation: introEnabled,
-      staleness,
-      thresholds,
-      orbitMode,
-      orbitSize,
-      orbitSpeed,
-      orbitRevolution,
-      orbitRevolutionStyle,
-      orbitEccentricity,
-      orbitShowRings,
-      orbitAnimated,
-      customNetworkLayout,
-      layoutConfig
-      // NOTE: `layoutSelection` is intentionally NOT part of pipelineConfig — a
-      // selection change must not trigger the rebuild path. A dedicated effect
-      // below feeds it to the store and either restyles (cheap) or rebuilds.
-    }),
+    (): NetworkPipelineConfig =>
+      buildNetworkPipelineConfig({
+        chartType,
+        nodeIDAccessor,
+        sourceAccessor,
+        targetAccessor,
+        valueAccessor,
+        edgeIdAccessor,
+        childrenAccessor,
+        hierarchySum,
+        orientation,
+        nodeAlign,
+        nodePaddingRatio,
+        nodeWidth,
+        iterations,
+        forceStrength,
+        padAngle,
+        groupWidth,
+        sortGroups,
+        edgeSort,
+        treeOrientation,
+        edgeType,
+        padding,
+        paddingTop,
+        tensionConfig,
+        showParticles,
+        particleStyle,
+        nodeStyle,
+        edgeStyle,
+        nodeLabel,
+        showLabels,
+        labelMode,
+        colorBy,
+        colorScheme,
+        edgeColorBy,
+        edgeOpacity,
+        colorByDepth,
+        nodeSize,
+        nodeSizeRange,
+        decay,
+        pulse,
+        transition,
+        introAnimation: introEnabled,
+        staleness,
+        thresholds,
+        orbitMode,
+        orbitSize,
+        orbitSpeed,
+        orbitRevolution,
+        orbitRevolutionStyle,
+        orbitEccentricity,
+        orbitShowRings,
+        orbitAnimated,
+        customNetworkLayout,
+        layoutConfig,
+        currentTheme
+      }),
     [
       chartType,
       nodeIDAccessor,
@@ -551,34 +411,37 @@ const StreamNetworkFrame = memo(forwardRef<
   // `updateConfig` effect → render-loop `buildScene` (an in-place re-layout),
   // with no topology re-ingest. That makes config-driven custom-layout updates
   // — interaction state, styling, animation progress — cheap to drive per frame.
-  const stableLayoutConfig = useStableShallow({
-    chartType,
-    nodeIDAccessor,
-    sourceAccessor,
-    targetAccessor,
-    valueAccessor,
-    childrenAccessor,
-    hierarchySum,
-    orientation,
-    nodeAlign,
-    nodePaddingRatio,
-    nodeWidth,
-    iterations,
-    forceStrength,
-    padAngle,
-    groupWidth,
-    sortGroups,
-    edgeSort,
-    treeOrientation,
-    edgeType,
-    padding,
-    paddingTop,
-    tensionConfig,
-    orbitMode,
-    orbitSize,
-    orbitEccentricity,
-    customNetworkLayout
-  })
+  const stableLayoutConfig = useStableShallow(
+    buildNetworkLayoutConfigSignature({
+      chartType,
+      nodeIDAccessor,
+      sourceAccessor,
+      targetAccessor,
+      valueAccessor,
+      edgeIdAccessor,
+      childrenAccessor,
+      hierarchySum,
+      orientation,
+      nodeAlign,
+      nodePaddingRatio,
+      nodeWidth,
+      iterations,
+      forceStrength,
+      padAngle,
+      groupWidth,
+      sortGroups,
+      edgeSort,
+      treeOrientation,
+      edgeType,
+      padding,
+      paddingTop,
+      tensionConfig,
+      customNetworkLayout,
+      orbitMode,
+      orbitSize,
+      orbitEccentricity
+    })
+  )
 
   // ── Refs ─────────────────────────────────────────────────────────────
 
@@ -641,36 +504,14 @@ const StreamNetworkFrame = memo(forwardRef<
   const colorIndexRef = useRef(0)
 
   const getNodeColor = useCallback(
-    (node: RealtimeNode): string => {
-      if (typeof colorBy === "function") return String(colorBy(node))
-      if (typeof colorBy === "string" && node.data) {
-        const val = node.data[colorBy]
-        if (val !== undefined) {
-          if (!nodeColorMap.current.has(String(val))) {
-            const colors = Array.isArray(colorScheme)
-              ? colorScheme
-              : DEFAULT_COLORS
-            nodeColorMap.current.set(
-              String(val),
-              colors[colorIndexRef.current++ % colors.length]
-            )
-          }
-          return nodeColorMap.current.get(String(val))!
-        }
-      }
-      // Check if scene-fill sync already assigned this node a color
-      if (nodeColorMap.current.has(node.id)) {
-        return nodeColorMap.current.get(node.id)!
-      }
-      // No colorBy → all nodes get the same first palette color (matches HOC nodeStyle).
-      // With colorBy (handled above), nodes cycle through the palette by category.
-      const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
-      const color = colorBy
-        ? colors[colorIndexRef.current++ % colors.length]
-        : colors[0]
-      nodeColorMap.current.set(node.id, color)
-      return color
-    },
+    (node: RealtimeNode): string =>
+      resolveNetworkNodeColor({
+        node,
+        colorBy,
+        colorScheme,
+        nodeColorMap: nodeColorMap.current,
+        colorIndexRef
+      }),
     [colorBy, colorScheme]
   )
 
@@ -679,11 +520,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // themeSemantic: chart border > secondary > primary > hardcoded #999.
   // A custom theme that omits border+secondary still falls back to the
   // theme's accent rather than the hardcoded gray.
-  const edgeFallbackColor =
-    currentTheme?.colors?.border ||
-    currentTheme?.colors?.secondary ||
-    currentTheme?.colors?.primary ||
-    "#999"
+  const edgeFallbackColor = networkEdgeFallbackColor(currentTheme)
 
   // Resolve a source/target field to a RealtimeNode. For built-in
   // sankey layouts, d3-sankey replaces string ids with node references
@@ -692,67 +529,35 @@ const StreamNetworkFrame = memo(forwardRef<
   // customLayout path doesn't run plugin dispatch. Look up by id when
   // we get a string so both paths converge on a RealtimeNode.
   const resolveEdgeEndpoint = useCallback(
-    (endpoint: RealtimeNode | string | undefined): RealtimeNode | null => {
-      if (!endpoint) return null
-      if (typeof endpoint === "object") return endpoint
-      return storeRef.current?.nodes.get(endpoint) ?? null
-    },
+    (endpoint: RealtimeNode | string | undefined): RealtimeNode | null =>
+      resolveNetworkEdgeEndpoint(endpoint, storeRef.current?.nodes),
     []
   )
 
   const getEdgeColor = useCallback(
-    (edge: RealtimeEdge): string => {
-      if (typeof edgeColorBy === "function") return edgeColorBy(edge)
-      const sourceNode = resolveEdgeEndpoint(edge.source)
-      const targetNode = resolveEdgeEndpoint(edge.target)
-
-      if (edgeColorBy === "target" && targetNode) {
-        return getNodeColor(targetNode)
-      }
-      if (sourceNode) {
-        return getNodeColor(sourceNode)
-      }
-      return edgeFallbackColor
-    },
+    (edge: RealtimeEdge): string =>
+      resolveNetworkEdgeColor({
+        edge,
+        edgeColorBy,
+        getNodeColor,
+        resolveEndpoint: resolveEdgeEndpoint,
+        fallback: edgeFallbackColor
+      }),
     [edgeColorBy, getNodeColor, edgeFallbackColor, resolveEdgeEndpoint]
   )
 
   const getParticleColor = useCallback(
-    (edge: RealtimeEdge): string => {
-      // Functional `particleStyle.color` runs first so users can fully
-      // control per-edge colors. The particle renderer no longer
-      // invokes the function directly — it delegates here so the
-      // user-supplied callback receives a real `RealtimeNode` even
-      // when `edge.source` is a string id (the case for
-      // `customNetworkLayout` charts like ProcessSankey, which the
-      // earlier `typeof edge.source === "object"` gate silently
-      // dropped).
-      if (typeof particleStyle.color === "function") {
-        const sourceNode = resolveEdgeEndpoint(edge.source)
-        if (sourceNode) {
-          return (
-            particleStyle.color as (e: RealtimeEdge, n: RealtimeNode) => string
-          )(edge, sourceNode)
-        }
-        return edgeFallbackColor
-      }
-      // When the user hasn't explicitly set particleStyle.colorBy,
-      // inherit the edge color so particles match their edge's fill.
-      if (!particleStyleProp?.colorBy) {
-        return getEdgeColor(edge)
-      }
-      const colorByMode = particleStyle.colorBy!
-      const sourceNode = resolveEdgeEndpoint(edge.source)
-      const targetNode = resolveEdgeEndpoint(edge.target)
-
-      if (colorByMode === "target" && targetNode) {
-        return getNodeColor(targetNode)
-      }
-      if (sourceNode) {
-        return getNodeColor(sourceNode)
-      }
-      return edgeFallbackColor
-    },
+    (edge: RealtimeEdge): string =>
+      resolveNetworkParticleColor({
+        edge,
+        particleStyleColor: particleStyle.color,
+        particleColorBy: particleStyle.colorBy,
+        hasExplicitParticleColorBy: !!particleStyleProp?.colorBy,
+        getEdgeColor,
+        getNodeColor,
+        resolveEndpoint: resolveEdgeEndpoint,
+        fallback: edgeFallbackColor
+      }),
     [
       particleStyleProp?.colorBy,
       particleStyle.color,
@@ -811,11 +616,12 @@ const StreamNetworkFrame = memo(forwardRef<
     const store = storeRef.current
     if (!store) return
     store.buildScene([adjustedWidth, adjustedHeight])
-    for (const sceneNode of store.sceneNodes) {
-      if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
-        nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
-      }
-    }
+    colorIndexRef.current = syncNetworkNodeColorMap({
+      sceneNodes: store.sceneNodes,
+      nodes: store.nodes.values(),
+      nodeColorMap: nodeColorMap.current,
+      colorScheme
+    })
     dirtyRef.current = true
     scheduleRender()
   }, [currentTheme, adjustedWidth, adjustedHeight, scheduleRender])
@@ -830,25 +636,12 @@ const StreamNetworkFrame = memo(forwardRef<
     store.buildScene([adjustedWidth, adjustedHeight])
     dirtyRef.current = true
 
-    // Sync nodeColorMap from actual scene fills so particle/hover colors
-    // match the rendered node colors exactly. The scene builder applies
-    // the HOC's nodeStyleFn (which may use ThemeProvider, colorBy, or
-    // resolveDefaultFill) — those are the authoritative colors.
-    for (const sceneNode of store.sceneNodes) {
-      if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
-        nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
-      }
-    }
-    // Fill remaining from palette (streaming: new nodes not yet in scene)
-    const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
-    const layoutNodes = Array.from(store.nodes.values())
-    for (let i = 0; i < layoutNodes.length; i++) {
-      const node = layoutNodes[i]
-      if (!nodeColorMap.current.has(node.id)) {
-        nodeColorMap.current.set(node.id, colors[i % colors.length])
-      }
-    }
-    colorIndexRef.current = layoutNodes.length
+    colorIndexRef.current = syncNetworkNodeColorMap({
+      sceneNodes: store.sceneNodes,
+      nodes: store.nodes.values(),
+      nodeColorMap: nodeColorMap.current,
+      colorScheme
+    })
 
     setLayoutVersion(store.layoutVersion)
 
@@ -1153,22 +946,12 @@ const StreamNetworkFrame = memo(forwardRef<
             // Keep the hover/particle color cache in parity with the normal
             // synchronous layout path. Scene fills are authoritative because
             // they include nodeStyle, colorBy, and theme resolution.
-            for (const sceneNode of store.sceneNodes) {
-              if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
-                nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
-              }
-            }
-            const colors = Array.isArray(colorScheme)
-              ? colorScheme
-              : DEFAULT_COLORS
-            const layoutNodes = Array.from(store.nodes.values())
-            for (let i = 0; i < layoutNodes.length; i++) {
-              const node = layoutNodes[i]
-              if (!nodeColorMap.current.has(node.id)) {
-                nodeColorMap.current.set(node.id, colors[i % colors.length])
-              }
-            }
-            colorIndexRef.current = layoutNodes.length
+            colorIndexRef.current = syncNetworkNodeColorMap({
+              sceneNodes: store.sceneNodes,
+              nodes: store.nodes.values(),
+              nodeColorMap: nodeColorMap.current,
+              colorScheme
+            })
 
             setLayoutPending(false)
             onLayoutStateChangeRef.current?.("ready")
@@ -1183,11 +966,12 @@ const StreamNetworkFrame = memo(forwardRef<
             // the established synchronous plugin path.
             store.runLayout(size)
             store.buildScene(size)
-            for (const sceneNode of store.sceneNodes) {
-              if (sceneNode.id && typeof sceneNode.style?.fill === "string") {
-                nodeColorMap.current.set(sceneNode.id, sceneNode.style.fill)
-              }
-            }
+            colorIndexRef.current = syncNetworkNodeColorMap({
+              sceneNodes: store.sceneNodes,
+              nodes: store.nodes.values(),
+              nodeColorMap: nodeColorMap.current,
+              colorScheme
+            })
             setLayoutPending(false)
             onLayoutStateChangeRef.current?.("error")
             setLayoutVersion(store.layoutVersion)
@@ -1205,21 +989,12 @@ const StreamNetworkFrame = memo(forwardRef<
 
       // Sync nodeColorMap from actual scene fills so particle/hover colors
       // match the rendered node colors exactly (same logic as runLayout sync)
-      for (const sceneNode of store.sceneNodes) {
-        if (sceneNode.id && sceneNode.style?.fill) {
-          nodeColorMap.current.set(sceneNode.id, String(sceneNode.style.fill))
-        }
-      }
-      // Fill remaining from palette (streaming: new nodes not yet in scene)
-      const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
-      const layoutNodes = Array.from(store.nodes.values())
-      for (let i = 0; i < layoutNodes.length; i++) {
-        const node = layoutNodes[i]
-        if (!nodeColorMap.current.has(node.id)) {
-          nodeColorMap.current.set(node.id, colors[i % colors.length])
-        }
-      }
-      colorIndexRef.current = layoutNodes.length
+      colorIndexRef.current = syncNetworkNodeColorMap({
+        sceneNodes: store.sceneNodes,
+        nodes: store.nodes.values(),
+        nodeColorMap: nodeColorMap.current,
+        colorScheme
+      })
 
       dirtyRef.current = true
       scheduleRender()
@@ -1336,46 +1111,25 @@ const StreamNetworkFrame = memo(forwardRef<
   hoverHandlerRef.current = (e: HoverPointerCoords) => {
     if (!enableHover) return
     const paintsCanvas = hoverPaintsCanvas()
-
     const canvas = canvasRef.current
     if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-
-    const chartX = e.clientX - rect.left - margin.left
-    const chartY = e.clientY - rect.top - margin.top
-
-    if (
-      chartX < 0 ||
-      chartX > adjustedWidth ||
-      chartY < 0 ||
-      chartY > adjustedHeight
-    ) {
-      if (hoverRef.current) {
-        hoverRef.current = null
-        setHoverData(null)
-        if (customHoverBehavior) {
-          customHoverBehavior(null)
-          if (paintsCanvas) dirtyRef.current = true
-        }
-        if (paintsCanvas) scheduleRender()
-      }
-      return
-    }
-
     const store = storeRef.current
     if (!store) return
 
-    const hit = findNearestNetworkNode(
-      store.sceneNodes,
-      store.sceneEdges,
-      chartX,
-      chartY,
-      30,
-      store.nodeQuadtree,
-      store.maxNodeRadius
-    )
+    const result = resolveNetworkPointerHit({
+      clientX: e.clientX,
+      clientY: e.clientY,
+      canvasRect: canvas.getBoundingClientRect(),
+      margin,
+      adjustedWidth,
+      adjustedHeight,
+      sceneNodes: store.sceneNodes,
+      sceneEdges: store.sceneEdges,
+      nodeQuadtree: store.nodeQuadtree,
+      maxNodeRadius: store.maxNodeRadius
+    })
 
-    if (!hit) {
+    if (result.kind !== "hit") {
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
@@ -1388,15 +1142,10 @@ const StreamNetworkFrame = memo(forwardRef<
       return
     }
 
-    const rawDatum = hit.datum || {}
-    const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y, {
-      nodeOrEdge: hit.type as "node" | "edge"
-    })
-
-    hoverRef.current = hover
-    setHoverData(hover)
+    hoverRef.current = result.hover
+    setHoverData(result.hover)
     if (customHoverBehavior) {
-      customHoverBehavior(hover)
+      customHoverBehavior(result.hover)
       if (paintsCanvas) dirtyRef.current = true
     }
     if (paintsCanvas) scheduleRender()
@@ -1421,49 +1170,32 @@ const StreamNetworkFrame = memo(forwardRef<
 
   clickHandlerRef.current = (e: React.MouseEvent) => {
     if (!customClickBehaviorProp && !onObservation) return
-
     const canvas = canvasRef.current
     if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-
-    const chartX = e.clientX - rect.left - margin.left
-    const chartY = e.clientY - rect.top - margin.top
-
-    if (
-      chartX < 0 ||
-      chartX > adjustedWidth ||
-      chartY < 0 ||
-      chartY > adjustedHeight
-    ) {
-      return
-    }
-
     const store = storeRef.current
     if (!store) return
 
-    const hit = findNearestNetworkNode(
-      store.sceneNodes,
-      store.sceneEdges,
-      chartX,
-      chartY,
-      30,
-      store.nodeQuadtree,
-      store.maxNodeRadius
-    )
+    const result = resolveNetworkPointerHit({
+      clientX: e.clientX,
+      clientY: e.clientY,
+      canvasRect: canvas.getBoundingClientRect(),
+      margin,
+      adjustedWidth,
+      adjustedHeight,
+      sceneNodes: store.sceneNodes,
+      sceneEdges: store.sceneEdges,
+      nodeQuadtree: store.nodeQuadtree,
+      maxNodeRadius: store.maxNodeRadius
+    })
 
-    if (hit) {
-      const rawDatum = hit.datum || {}
-      customClickBehavior(
-        buildHoverData(rawDatum, hit.x, hit.y, {
-          nodeOrEdge: hit.type as "node" | "edge"
-        })
-      )
-    } else {
+    if (result.kind === "hit") {
+      customClickBehavior(result.hover)
+    } else if (result.kind === "miss") {
       customClickBehavior(null)
     }
   }
 
-  // pointermove coalescing + onPointerLeave come from useFrame above.
+  // pointermove coalescing  // pointermove coalescing + onPointerLeave come from useFrame above.
   const onClick = useCallback(
     (e: React.MouseEvent) => clickHandlerRef.current(e),
     []
@@ -1597,231 +1329,36 @@ const StreamNetworkFrame = memo(forwardRef<
     rafRef.current = 0
     const canvas = canvasRef.current
     if (!canvas) return
-
-    // ctx obtained here for early null-check; prepareCanvas resets transform below
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
     const store = storeRef.current
     if (!store) return
 
-    const now = performance.now()
-    const deltaTime = lastFrameTimeRef.current
-      ? Math.min((now - lastFrameTimeRef.current) / 1000, 0.1)
-      : 0.016
-    lastFrameTimeRef.current = now
-
-    // Fast-forward transitions when reduced motion is active so target positions
-    // are applied immediately and transition state is cleared properly
-    const transitionActive = store.advanceTransition(
-      reducedMotionRef.current ? now + 1e6 : now
-    )
-    const isTransitioning = reducedMotionRef.current ? false : transitionActive
-
-    // Advance layout animation (e.g. orbit rotation) — skip when reduced motion
-    const animationTicked = reducedMotionRef.current
-      ? false
-      : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
-
-    const wasDirty = dirtyRef.current
-    if (transitionActive || wasDirty || animationTicked) {
-      // Rebuild scene for current positions
-      store.buildScene([adjustedWidth, adjustedHeight])
-    }
-
-    // Live encodings / particles need a full canvas repaint every tick.
-    // Annotation-only rAF retries (pendingAnnotationFrame) skip clear+draw
-    // so a throttled SVG overlay update does not thrash the data canvas.
-    const particlesWanted =
-      showParticles && !reducedMotionRef.current && !!store.particlePool
-    const liveEncoding =
-      !!decay ||
-      !!pulse ||
-      !!thresholds ||
-      (animate !== false && store.hasActiveTopologyDiff) ||
-      store.hasActivePulses ||
-      store.hasActiveThresholds
-    const needsDataRepaint = needsDataCanvasPaint({
-      dirtyOrRebuilt: wasDirty,
-      transitioning: isTransitioning,
-      animationTicked,
-      continuous: particlesWanted || isContinuous,
-      liveEncoding
+    paintNetworkFrame({
+      canvas,
+      store,
+      size,
+      margin,
+      adjustedWidth,
+      adjustedHeight,
+      background,
+      dirtyRef,
+      lastFrameTimeRef,
+      reducedMotion: !!reducedMotionRef.current,
+      showParticles,
+      isContinuous,
+      animate,
+      decay,
+      pulse,
+      thresholds,
+      staleness,
+      particleStyle,
+      getParticleColor,
+      pendingAnnotationFrameRef,
+      lastAnnotationFrameTimeRef,
+      setAnnotationFrame,
+      scheduleNextFrame: () => {
+        rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+      }
     })
-
-    // Staleness dimming (read once; applied only on data paints)
-    const staleThreshold = staleness?.threshold ?? 5000
-    const currentlyStale =
-      staleness &&
-      store.lastIngestTime > 0 &&
-      now - store.lastIngestTime > staleThreshold
-
-    if (needsDataRepaint) {
-      // DPR setup — prepareCanvas sets size, DPR transform, and margin translate
-      const dpr = getDevicePixelRatio()
-      if (!prepareCanvas(canvas, size, margin, dpr)) return
-      ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
-
-      // Background. The user prop may be a `var(--token, fallback)`
-      // string — resolve CSS variables before assigning fillStyle.
-      paintCanvasBackground(ctx, {
-        background,
-        width: adjustedWidth,
-        height: adjustedHeight
-      })
-
-      // Apply realtime encoding (pulse/decay/thresholds)
-      if (decay) {
-        store.applyDecay()
-      }
-      if (pulse) {
-        store.applyPulse(now)
-      }
-      if (thresholds) {
-        store.applyThresholds(now)
-      }
-
-      // Topology diff highlighting (newly-added nodes glow briefly). Active for
-      // streaming, but suppressed when the consumer opts out of animation with
-      // `animate={false}` — a bounded/static chart (e.g. a minimap) shouldn't
-      // pulse every node on its first render.
-      if (animate !== false) {
-        store.applyTopologyDiff(now)
-      }
-
-      if (currentlyStale) {
-        ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
-      }
-
-      // Render edges first (they go behind nodes)
-      networkEdgeRenderer(ctx, store.sceneEdges)
-
-      // Render nodes
-      networkRectRenderer(ctx, store.sceneNodes)
-      networkCircleRenderer(ctx, store.sceneNodes)
-      networkArcRenderer(ctx, store.sceneNodes)
-      networkSymbolRenderer(ctx, store.sceneNodes)
-      networkGlyphRenderer(ctx, store.sceneNodes)
-
-      // Render particles (sankey only) — stop entirely when stale or when the
-      // user prefers reduced motion (particles are purely decorative movement).
-      if (particlesWanted && !currentlyStale) {
-        // Read-only consumer — reuse the store's per-frame cached array instead
-        // of allocating a fresh one every animation frame.
-        const edges = store.edgesArray
-        if (edges.length > 0) {
-          spawnNetworkParticles(
-            store.particlePool!,
-            edges,
-            deltaTime,
-            particleStyle
-          )
-          const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
-
-          // Compute per-edge speed multipliers for proportional flow rate
-          let edgeSpeedMultipliers: number[] | undefined
-          if (particleStyle.proportionalSpeed) {
-            const maxValue = edges.reduce(
-              (max, e) => Math.max(max, e.value || 1),
-              1
-            )
-            edgeSpeedMultipliers = edges.map((e) => {
-              const ratio = (e.value || 1) / maxValue
-              // Scale between 0.3x and 2x so low-value edges still move
-              return 0.3 + ratio * 1.7
-            })
-          }
-
-          store.particlePool!.step(deltaTime, speed, edges, edgeSpeedMultipliers)
-          renderNetworkParticles(
-            ctx,
-            store.particlePool!,
-            edges,
-            particleStyle,
-            getParticleColor
-          )
-        }
-      }
-
-      // Reset staleness dimming
-      if (currentlyStale) {
-        ctx.globalAlpha = 1
-      }
-    }
-
-    dirtyRef.current = false
-
-    // NOTE: custom-layout overlays are read directly from
-    // `storeRef.current.customLayoutOverlays` during React render (see the
-    // `foregroundGraphics` composition). The render loop only triggers throttled
-    // re-renders via `setAnnotationFrame`, so there's no per-frame overlay setState.
-
-    // Update canvas aria-label imperatively after scene changes
-    if (wasDirty || isTransitioning || animationTicked) {
-      const canvas = canvasRef.current
-      if (canvas) {
-        canvas.setAttribute(
-          "aria-label",
-          computeNetworkAriaLabel(
-            store.sceneNodes?.length ?? 0,
-            store.sceneEdges?.length ?? 0,
-            "Network chart"
-          )
-        )
-      }
-    }
-
-    // Update SVG overlay when layout changes. Throttle uniformly to
-    // ~30 Hz regardless of source — animationTicked, isTransitioning,
-    // and wasDirty all funnel through the same gate. The looser bound
-    // protects against a parent re-rendering (e.g. a docs page whose
-    // IntersectionObserver-driven sticky-TOC dirties the prop chain on
-    // every scroll-pixel) compounding with the orbit's own continuous
-    // animation tick to push React past its max-update-depth guard.
-    // The canvas itself still paints every frame; this only governs
-    // how often we ask React to reconcile the SVG-label layer.
-    // Fold `pendingAnnotationFrameRef.current` into the predicate so a
-    // previously-throttled frame still counts as wanting an update on
-    // the very next tick (without it, a one-shot `wasDirty` that
-    // landed inside the gate could leave `pending=true` while
-    // `wantsAnnotationUpdate` flips back to false on the retry frame
-    // and the rAF chain would keep spinning forever waiting for an
-    // update that nothing was asking for anymore).
-    const wantsAnnotationUpdate =
-      wasDirty ||
-      isTransitioning ||
-      animationTicked ||
-      pendingAnnotationFrameRef.current
-    if (
-      wantsAnnotationUpdate &&
-      now - lastAnnotationFrameTimeRef.current >= 33
-    ) {
-      setAnnotationFrame((f) => f + 1)
-      lastAnnotationFrameTimeRef.current = now
-      pendingAnnotationFrameRef.current = false
-    } else if (wantsAnnotationUpdate) {
-      pendingAnnotationFrameRef.current = true
-    } else {
-      // Nothing to update — clear the pending flag so the rAF
-      // continuation below doesn't keep ticking.
-      pendingAnnotationFrameRef.current = false
-    }
-
-    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs/animation),
-    // OR to retry a throttled setAnnotationFrame so a one-shot dirty event
-    // that landed inside the throttle gate still reconciles the SVG layer.
-    if (
-      isContinuous ||
-      isTransitioning ||
-      store.transition != null ||
-      animationTicked ||
-      store.hasActivePulses ||
-      store.hasActiveThresholds ||
-      (animate !== false && store.hasActiveTopologyDiff) ||
-      pendingAnnotationFrameRef.current
-    ) {
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
-    }
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────

@@ -1,0 +1,241 @@
+/**
+ * Canvas paint tick for StreamNetworkFrame.
+ * Extracted so the React component stays focused on wiring/state.
+ */
+import { getDevicePixelRatio, prepareCanvas } from "./canvasSetup"
+import { paintCanvasBackground } from "./canvasBackground"
+import { needsDataCanvasPaint } from "./paintNeeds"
+import { networkEdgeRenderer } from "./renderers/networkEdgeRenderer"
+import { networkRectRenderer } from "./renderers/networkRectRenderer"
+import { networkCircleRenderer } from "./renderers/networkCircleRenderer"
+import { networkArcRenderer } from "./renderers/networkArcRenderer"
+import { networkSymbolRenderer } from "./renderers/networkSymbolRenderer"
+import { networkGlyphRenderer } from "./renderers/glyphCanvasRenderer"
+import {
+  renderNetworkParticles,
+  spawnNetworkParticles
+} from "./renderers/networkParticleRenderer"
+import { computeNetworkAriaLabel } from "./AccessibleDataTable"
+import type { NetworkPipelineStore } from "./NetworkPipelineStore"
+import type {
+  NetworkPipelineConfig,
+  ParticleStyle,
+  RealtimeEdge
+} from "./networkTypes"
+import type { MarginType } from "../types/marginType"
+import type { DecayConfig, PulseConfig, StalenessConfig } from "./types"
+
+export interface NetworkFramePaintContext {
+  canvas: HTMLCanvasElement
+  store: NetworkPipelineStore
+  size: [number, number]
+  margin: MarginType
+  adjustedWidth: number
+  adjustedHeight: number
+  background?: string
+  dirtyRef: { current: boolean }
+  lastFrameTimeRef: { current: number }
+  reducedMotion: boolean
+  showParticles: boolean
+  isContinuous: boolean
+  /** Truthy animate (boolean or config object) enables topology-diff pulses. */
+  animate: unknown
+  decay?: DecayConfig
+  pulse?: PulseConfig
+  thresholds?: NetworkPipelineConfig["thresholds"]
+  staleness?: StalenessConfig
+  particleStyle: ParticleStyle
+  getParticleColor: (edge: RealtimeEdge, node?: unknown) => string
+  pendingAnnotationFrameRef: { current: boolean }
+  lastAnnotationFrameTimeRef: { current: number }
+  setAnnotationFrame: (updater: (f: number) => number) => void
+  scheduleNextFrame: () => void
+}
+
+/**
+ * Run one paint tick. Returns whether another rAF should be scheduled
+ * (also invoked via scheduleNextFrame for continuous modes).
+ */
+export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
+  const {
+    canvas,
+    store,
+    size,
+    margin,
+    adjustedWidth,
+    adjustedHeight,
+    background,
+    dirtyRef,
+    lastFrameTimeRef,
+    reducedMotion,
+    showParticles,
+    isContinuous,
+    animate,
+    decay,
+    pulse,
+    thresholds,
+    staleness,
+    particleStyle,
+    getParticleColor,
+    pendingAnnotationFrameRef,
+    lastAnnotationFrameTimeRef,
+    setAnnotationFrame,
+    scheduleNextFrame
+  } = ctx
+
+  const c2d = canvas.getContext("2d")
+  if (!c2d) return
+
+  const now = performance.now()
+  const deltaTime = lastFrameTimeRef.current
+    ? Math.min((now - lastFrameTimeRef.current) / 1000, 0.1)
+    : 0.016
+  lastFrameTimeRef.current = now
+
+  const transitionActive = store.advanceTransition(
+    reducedMotion ? now + 1e6 : now
+  )
+  const isTransitioning = reducedMotion ? false : transitionActive
+
+  const animationTicked = reducedMotion
+    ? false
+    : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
+
+  const wasDirty = dirtyRef.current
+  if (transitionActive || wasDirty || animationTicked) {
+    store.buildScene([adjustedWidth, adjustedHeight])
+  }
+
+  const particlesWanted =
+    showParticles && !reducedMotion && !!store.particlePool
+  const liveEncoding =
+    !!decay ||
+    !!pulse ||
+    !!thresholds ||
+    (animate !== false && store.hasActiveTopologyDiff) ||
+    store.hasActivePulses ||
+    store.hasActiveThresholds
+  const needsDataRepaint = needsDataCanvasPaint({
+    dirtyOrRebuilt: wasDirty,
+    transitioning: isTransitioning,
+    animationTicked,
+    continuous: particlesWanted || isContinuous,
+    liveEncoding
+  })
+
+  const staleThreshold = staleness?.threshold ?? 5000
+  const currentlyStale =
+    !!staleness &&
+    store.lastIngestTime > 0 &&
+    now - store.lastIngestTime > staleThreshold
+
+  if (needsDataRepaint) {
+    const dpr = getDevicePixelRatio()
+    if (!prepareCanvas(canvas, size, margin, dpr)) return
+    c2d.clearRect(-margin.left, -margin.top, size[0], size[1])
+
+    paintCanvasBackground(c2d, {
+      background,
+      width: adjustedWidth,
+      height: adjustedHeight
+    })
+
+    if (decay) store.applyDecay()
+    if (pulse) store.applyPulse(now)
+    if (thresholds) store.applyThresholds(now)
+    if (animate !== false) store.applyTopologyDiff(now)
+
+    if (currentlyStale) {
+      c2d.globalAlpha = staleness?.dimOpacity ?? 0.5
+    }
+
+    networkEdgeRenderer(c2d, store.sceneEdges)
+    networkRectRenderer(c2d, store.sceneNodes)
+    networkCircleRenderer(c2d, store.sceneNodes)
+    networkArcRenderer(c2d, store.sceneNodes)
+    networkSymbolRenderer(c2d, store.sceneNodes)
+    networkGlyphRenderer(c2d, store.sceneNodes)
+
+    if (particlesWanted && !currentlyStale) {
+      const edges = store.edgesArray
+      if (edges.length > 0) {
+        spawnNetworkParticles(
+          store.particlePool!,
+          edges,
+          deltaTime,
+          particleStyle
+        )
+        const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
+
+        let edgeSpeedMultipliers: number[] | undefined
+        if (particleStyle.proportionalSpeed) {
+          const maxValue = edges.reduce(
+            (max, e) => Math.max(max, e.value || 1),
+            1
+          )
+          edgeSpeedMultipliers = edges.map((e) => {
+            const ratio = (e.value || 1) / maxValue
+            return 0.3 + ratio * 1.7
+          })
+        }
+
+        store.particlePool!.step(deltaTime, speed, edges, edgeSpeedMultipliers)
+        renderNetworkParticles(
+          c2d,
+          store.particlePool!,
+          edges,
+          particleStyle,
+          getParticleColor
+        )
+      }
+    }
+
+    if (currentlyStale) {
+      c2d.globalAlpha = 1
+    }
+  }
+
+  dirtyRef.current = false
+
+  if (wasDirty || isTransitioning || animationTicked) {
+    canvas.setAttribute(
+      "aria-label",
+      computeNetworkAriaLabel(
+        store.sceneNodes?.length ?? 0,
+        store.sceneEdges?.length ?? 0,
+        "Network chart"
+      )
+    )
+  }
+
+  const wantsAnnotationUpdate =
+    wasDirty ||
+    isTransitioning ||
+    animationTicked ||
+    pendingAnnotationFrameRef.current
+  if (
+    wantsAnnotationUpdate &&
+    now - lastAnnotationFrameTimeRef.current >= 33
+  ) {
+    setAnnotationFrame((f) => f + 1)
+    lastAnnotationFrameTimeRef.current = now
+    pendingAnnotationFrameRef.current = false
+  } else if (wantsAnnotationUpdate) {
+    pendingAnnotationFrameRef.current = true
+  } else {
+    pendingAnnotationFrameRef.current = false
+  }
+
+  if (
+    isContinuous ||
+    isTransitioning ||
+    store.transition != null ||
+    animationTicked ||
+    store.hasActivePulses ||
+    store.hasActiveThresholds ||
+    (animate !== false && store.hasActiveTopologyDiff) ||
+    pendingAnnotationFrameRef.current
+  ) {
+    scheduleNextFrame()
+  }
+}

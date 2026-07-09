@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { contrastRatio } from "../charts/shared/diagnoseConfig"
+import { contrastRatio } from "../charts/shared/colorContrast"
 import { extractAllRows } from "../stream/accessibleDataRows"
 import type { NavTreeNode } from "./navigationTree"
 import type {

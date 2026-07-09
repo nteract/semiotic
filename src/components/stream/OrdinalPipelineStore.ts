@@ -28,44 +28,33 @@ import type {
   WedgeSceneNode
 } from "./ordinalTypes"
 import type { Changeset, Style, PointSceneNode } from "./types"
-import { computeDecayOpacity } from "./pipelineDecay"
+import { buildDatumIndexMap, computeDecayOpacity } from "./pipelineDecay"
+import {
+  computePulseIntensity,
+  hasActivePulses as hasActivePulsesShared
+} from "./pipelinePulse"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
-import { buildBarScene, buildClusterBarScene } from "./ordinalSceneBuilders/barScene"
-import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointScene"
-import { buildPieScene } from "./ordinalSceneBuilders/pieScene"
-import { buildBoxplotScene, buildViolinScene, buildHistogramScene, buildRidgelineScene } from "./ordinalSceneBuilders/statisticalScene"
-import { buildTimelineScene } from "./ordinalSceneBuilders/timelineScene"
-import { buildFunnelScene } from "./ordinalSceneBuilders/funnelScene"
-import { buildBarFunnelScene } from "./ordinalSceneBuilders/barFunnelScene"
-import { buildSwimlaneScene } from "./ordinalSceneBuilders/swimlaneScene"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
-import type { OrdinalSceneContext, SceneBuilderFn } from "./ordinalSceneBuilders/types"
+import type { OrdinalSceneContext } from "./ordinalSceneBuilders/types"
+import { ORDINAL_SCENE_BUILDERS as SCENE_BUILDERS } from "./ordinalSceneBuilders/sceneBuilderMap"
+import {
+  buildOrdinalColumns,
+  computeOrdinalValueDomain
+} from "./ordinalDomain"
 import type { OrdinalLayoutContext, OrdinalLayoutResult } from "./ordinalCustomLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import type { MarginType } from "../types/marginType"
-
-const SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
-  bar: buildBarScene,
-  clusterbar: buildClusterBarScene,
-  point: buildPointScene,
-  swarm: buildSwarmScene,
-  pie: buildPieScene,
-  donut: buildPieScene,
-  boxplot: buildBoxplotScene,
-  violin: buildViolinScene,
-  histogram: buildHistogramScene,
-  ridgeline: buildRidgelineScene,
-  timeline: buildTimelineScene,
-  funnel: buildFunnelScene,
-  "bar-funnel": buildBarFunnelScene,
-  swimlane: buildSwimlaneScene,
-}
+import {
+  compactTimestampBufferForRemoval,
+  ensureRingBufferCapacity,
+  pushWithTimestamp
+} from "./pipelineBufferUtils"
 
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
@@ -181,7 +170,7 @@ export class OrdinalPipelineStore {
   // ── Data ingestion ───────────────────────────────────────────────────
 
   ingest(changeset: Changeset): boolean {
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const now = getTimestamp()
     this.lastIngestTime = now
     this._dataVersion++
 
@@ -210,16 +199,10 @@ export class OrdinalPipelineStore {
       if (this.timestampBuffer) this.timestampBuffer.clear()
 
       const targetSize = changeset.totalSize || changeset.inserts.length
-      if (targetSize > this.buffer.capacity) {
-        this.buffer.resize(targetSize)
-        if (this.timestampBuffer && targetSize > this.timestampBuffer.capacity) {
-          this.timestampBuffer.resize(targetSize)
-        }
-      }
+      ensureRingBufferCapacity(this.buffer, targetSize, this.timestampBuffer)
 
       for (const d of changeset.inserts) {
-        this.buffer.push(d)
-        if (this.timestampBuffer) this.timestampBuffer.push(now)
+        pushWithTimestamp(this.buffer, d, this.timestampBuffer, now)
         this.categories.add(this.getO(d))
         this.pushValueExtent(d)
       }
@@ -227,8 +210,7 @@ export class OrdinalPipelineStore {
       // Streaming append
       this._hasStreamingData = true
       for (const d of changeset.inserts) {
-        const evicted = this.buffer.push(d)
-        if (this.timestampBuffer) this.timestampBuffer.push(now)
+        const evicted = pushWithTimestamp(this.buffer, d, this.timestampBuffer, now)
         this.categories.add(this.getO(d))
         this.pushValueExtent(d)
 
@@ -503,109 +485,20 @@ export class OrdinalPipelineStore {
   // ── Value domain computation ─────────────────────────────────────────
 
   private computeValueDomain(data: Datum[], _oExtent: string[]): [number, number] {
-    const chartType = this.config.chartType
-    const pad = this.config.extentPadding ?? 0.05
-
-    // For radial pie/donut, the value axis represents proportions
-    // But for radial point (radar), use actual data values
-    if (this.config.projection === "radial" && (chartType === "pie" || chartType === "donut")) {
-      return [0, 1]
-    }
-
-    let min = 0
-    let max = 0
-
-    if (chartType === "bar" && this.getStack && this.config.normalize) {
-      // Normalized stacked bars: values are divided by column total → domain is [0, 1]
-      min = 0
-      max = 1
-    } else if (chartType === "bar" && this.getStack) {
-      // Stacked bars: compute per-category stacked sums
-      const posSums = new Map<string, number>()
-      const negSums = new Map<string, number>()
-
-      for (const d of data) {
-        const cat = this.getO(d)
-        const val = this.getR(d)
-        if (val >= 0) {
-          posSums.set(cat, (posSums.get(cat) || 0) + val)
-        } else {
-          negSums.set(cat, (negSums.get(cat) || 0) + val)
-        }
-      }
-
-      for (const s of posSums.values()) if (s > max) max = s
-      for (const s of negSums.values()) if (s < min) min = s
-    } else if (chartType === "bar") {
-      // Non-stacked bars: pieces within each category are summed,
-      // so the domain must cover the per-category total
-      const catSums = new Map<string, number>()
-      for (const d of data) {
-        const cat = this.getO(d)
-        const val = this.getR(d)
-        catSums.set(cat, (catSums.get(cat) || 0) + val)
-      }
-      for (const s of catSums.values()) {
-        if (s > max) max = s
-        if (s < min) min = s
-      }
-    } else if (chartType === "swimlane") {
-      // Swimlane: items stack sequentially per lane — domain covers max lane sum
-      const laneSums = new Map<string, number>()
-      for (const d of data) {
-        const cat = this.getO(d)
-        const val = Math.abs(this.getR(d))
-        laneSums.set(cat, (laneSums.get(cat) || 0) + val)
-      }
-      for (const s of laneSums.values()) {
-        if (s > max) max = s
-      }
-    } else if (chartType === "clusterbar" || chartType === "bar-funnel") {
-      // Cluster bars / bar-funnel: individual values (side-by-side grouping)
-      for (const d of data) {
-        const val = this.getR(d)
-        if (val > max) max = val
-        if (val < min) min = val
-      }
-    } else {
-      // Points, swarm, summary types: raw data extent
-      const dataMin = this.rExtent.extent[0]
-      const dataMax = this.rExtent.extent[1]
-      if (dataMin !== Infinity) min = dataMin
-      if (dataMax !== -Infinity) max = dataMax
-    }
-
-    // Apply user-specified extents
-    if (this.config.rExtent) {
-      if (this.config.rExtent[0] != null) min = this.config.rExtent[0]
-      if (this.config.rExtent[1] != null) max = this.config.rExtent[1]
-    }
-
-    // Bars should include zero FIRST (unless user explicitly set rExtent)
-    const isBarType = chartType === "bar" || chartType === "clusterbar" || chartType === "bar-funnel" || chartType === "swimlane"
-    if (isBarType) {
-      if (!(this.config.rExtent?.[0] != null || this.config.rExtent?.[1] != null)) {
-        if (min > 0) min = 0
-        if (max < 0) max = 0
-      }
-    }
-
-    // Apply padding AFTER include-zero (bar-funnel needs exact [0, max])
-    // `axisExtent === "exact"` opts out of extent padding entirely so the
-    // first and last ticks land on the literal data min/max — the user
-    // accepts the trade-off that symbols at the extremes may sit at the
-    // plot edge.
-    if (chartType !== "bar-funnel" && this.config.axisExtent !== "exact") {
-      const range = max - min
-      const padAmount = range > 0 ? range * pad : 1
-      // When baselinePadding is false (default), don't pad the side that sits at 0
-      const skipMinPad = isBarType && !this.config.baselinePadding && min === 0
-      const skipMaxPad = (isBarType && !this.config.baselinePadding && max === 0) || chartType === "swimlane"
-      if (this.config.rExtent?.[0] == null && !skipMinPad) min -= padAmount
-      if (this.config.rExtent?.[1] == null && !skipMaxPad) max += padAmount
-    }
-
-    return [min, max]
+    return computeOrdinalValueDomain({
+      data,
+      chartType: this.config.chartType,
+      projection: this.config.projection,
+      normalize: this.config.normalize,
+      rExtent: this.config.rExtent,
+      extentPadding: this.config.extentPadding,
+      baselinePadding: this.config.baselinePadding,
+      axisExtent: this.config.axisExtent,
+      getO: this.getO,
+      getR: this.getR,
+      getStack: this.getStack,
+      rawRExtent: this.rExtent.extent
+    })
   }
 
   // ── Column projection ────────────────────────────────────────────────
@@ -617,87 +510,16 @@ export class OrdinalPipelineStore {
     projection: string,
     layout: OrdinalLayout
   ): Record<string, OrdinalColumn> {
-    const columns: Record<string, OrdinalColumn> = {}
-
-    // Group data by category
-    const grouped = new Map<string, Datum[]>()
-    for (const d of data) {
-      const cat = this.getO(d)
-      if (!grouped.has(cat)) grouped.set(cat, [])
-      grouped.get(cat)!.push(d)
-    }
-
-    // Compute total for radial proportions
-    let total = 0
-    if (projection === "radial") {
-      for (const d of data) {
-        total += Math.abs(this.getR(d))
-      }
-    }
-
-    // Dynamic column widths: compute proportional widths instead of uniform bands
-    const dcw = this.config.dynamicColumnWidth
-    let dynamicWidths: Map<string, number> | null = null
-    if (dcw && projection !== "radial") {
-      dynamicWidths = new Map()
-      let totalWidth = 0
-      for (const cat of oExtent) {
-        const pieceData = grouped.get(cat) || []
-        let colValue: number
-        if (typeof dcw === "string") {
-          colValue = pieceData.reduce((s, d) => s + (Number(d[dcw]) || 0), 0)
-        } else {
-          colValue = dcw(pieceData)
-        }
-        dynamicWidths.set(cat, colValue)
-        totalWidth += colValue
-      }
-      // Normalize to available space
-      const availableSpace = projection === "horizontal" ? layout.height : layout.width
-      const paddingTotal = oScale.padding() * oScale.step() * oExtent.length
-      const usableSpace = availableSpace - paddingTotal
-      if (totalWidth > 0) {
-        for (const [cat, val] of dynamicWidths) {
-          dynamicWidths.set(cat, (val / totalWidth) * usableSpace)
-        }
-      }
-    }
-
-    let cumulativePct = 0
-    let cumulativeX = 0
-
-    for (const cat of oExtent) {
-      const pieceData = grouped.get(cat) || []
-      const catSum = pieceData.reduce((s, d) => s + Math.abs(this.getR(d)), 0)
-      const pct = total > 0 ? catSum / total : 0
-
-      let bandStart: number
-      let bandwidth: number
-      if (dynamicWidths) {
-        bandStart = cumulativeX
-        bandwidth = dynamicWidths.get(cat) || oScale.bandwidth()
-        cumulativeX += bandwidth + (oScale.padding() * oScale.step())
-      } else {
-        bandStart = oScale(cat) ?? 0
-        bandwidth = oScale.bandwidth()
-      }
-
-      columns[cat] = {
-        name: cat,
-        x: bandStart,
-        y: 0,
-        width: bandwidth,
-        middle: bandStart + bandwidth / 2,
-        padding: oScale.padding() * oScale.step(),
-        pieceData,
-        pct,
-        pctStart: cumulativePct
-      }
-
-      cumulativePct += pct
-    }
-
-    return columns
+    return buildOrdinalColumns({
+      data,
+      oExtent,
+      oScale,
+      projection,
+      layout,
+      dynamicColumnWidth: this.config.dynamicColumnWidth,
+      getO: this.getO,
+      getR: this.getR
+    })
   }
 
   // ── Scene graph building ─────────────────────────────────────────────
@@ -908,10 +730,7 @@ export class OrdinalPipelineStore {
     if (this._datumIndexCache && this._datumIndexCache.version === this._dataVersion) {
       return this._datumIndexCache.map
     }
-    const map = new Map<any, number>()
-    for (let i = 0; i < data.length; i++) {
-      map.set(data[i], i)
-    }
+    const map = buildDatumIndexMap(data)
     this._datumIndexCache = { version: this._dataVersion, map }
     return map
   }
@@ -1014,10 +833,9 @@ export class OrdinalPipelineStore {
 
   private applyPulse(nodes: OrdinalSceneNode[], data: Datum[]): void {
     if (!this.config.pulse || !this.timestampBuffer) return
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-    const duration = this.config.pulse.duration ?? 500
     const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
     const glowRadius = this.config.pulse.glowRadius ?? 4
+    const now = getTimestamp()
 
     const indexMap = this.getDatumIndexMap(data)
     let categoryIndex: Map<string, number[]> | null = null
@@ -1037,11 +855,8 @@ export class OrdinalPipelineStore {
         for (let j = 0; j < indices.length; j++) {
           const insertTime = this.timestampBuffer.get(indices[j])
           if (insertTime == null) continue
-          const age = now - insertTime
-          if (age < duration) {
-            const intensity = 1 - age / duration
-            if (intensity > bestIntensity) bestIntensity = intensity
-          }
+          const intensity = computePulseIntensity(this.config.pulse, insertTime, now)
+          if (intensity > bestIntensity) bestIntensity = intensity
         }
         if (bestIntensity > 0) {
           node._pulseIntensity = bestIntensity
@@ -1054,9 +869,8 @@ export class OrdinalPipelineStore {
       if (idx == null) continue
       const insertTime = this.timestampBuffer.get(idx)
       if (insertTime == null) continue
-      const age = now - insertTime
-      if (age < duration) {
-        const intensity = 1 - age / duration
+      const intensity = computePulseIntensity(this.config.pulse, insertTime, now)
+      if (intensity > 0) {
         node._pulseIntensity = intensity
         node._pulseColor = pulseColor
         node._pulseGlowRadius = glowRadius
@@ -1065,11 +879,8 @@ export class OrdinalPipelineStore {
   }
 
   get hasActivePulses(): boolean {
-    if (!this.config.pulse || !this.timestampBuffer || this.timestampBuffer.size === 0) return false
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
-    const duration = this.config.pulse.duration ?? 500
-    const newest = this.timestampBuffer.peek()
-    return newest != null && (now - newest) < duration
+    if (!this.config.pulse) return false
+    return hasActivePulsesShared(this.config.pulse, this.timestampBuffer)
   }
 
   // ── Transitions ─────────────────────────────────────────────────────
@@ -1447,17 +1258,8 @@ export class OrdinalPipelineStore {
     }
     const ids = toIdSet(id)
     const getDataId = this.getDataId
-    // Compact timestamp buffer in lockstep with data removal
     const predicate = (item: Datum) => ids.has(getDataId(item))
-    if (this.timestampBuffer && this.timestampBuffer.size > 0) {
-      const oldTimestamps = this.timestampBuffer.toArray()
-      const removeSet = new Set<number>()
-      this.buffer.forEach((item, i) => { if (predicate(item)) removeSet.add(i) })
-      this.timestampBuffer.clear()
-      for (let i = 0; i < oldTimestamps.length; i++) {
-        if (!removeSet.has(i)) this.timestampBuffer.push(oldTimestamps[i])
-      }
-    }
+    compactTimestampBufferForRemoval(this.buffer, this.timestampBuffer, predicate)
     const removed = this.buffer.remove(predicate)
     if (removed.length === 0) return removed
 
@@ -1472,7 +1274,7 @@ export class OrdinalPipelineStore {
     this._dataVersion++
     this.version++
     // A removal is data activity — refresh the staleness clock.
-    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = getTimestamp()
     return removed
   }
 
@@ -1513,7 +1315,7 @@ export class OrdinalPipelineStore {
     this.version++
     // An in-place update is data activity — refresh the staleness clock so a
     // chart streamed via update() (e.g. a refill demo) isn't flagged stale.
-    this.lastIngestTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = getTimestamp()
     return previous
   }
 

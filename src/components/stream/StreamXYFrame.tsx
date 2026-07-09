@@ -1,6 +1,5 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import { smartTooltipEntries } from "../charts/shared/tooltipUtils"
 import * as React from "react"
 import {
   useRef,
@@ -16,7 +15,6 @@ import {
 import type {
   StreamXYFrameProps,
   StreamXYFrameHandle,
-  StreamChartType,
   HoverData,
   HoverAnnotationConfig,
   SceneNode,
@@ -44,8 +42,7 @@ import { paintCanvasBackground } from "./canvasBackground"
 import { needsInteractionCanvasPaint } from "./paintNeeds"
 import {
   createFrameThemeColorCache,
-  LIGHT_FRAME_THEME,
-  type FrameThemeColors
+  LIGHT_FRAME_THEME
 } from "./frameThemeColors"
 
 export { withAlpha } from "./frameThemeColors"
@@ -56,301 +53,28 @@ import { useFrame } from "./useFrame"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
-
-// Canvas renderers
-import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
-import { areaCanvasRenderer } from "./renderers/areaCanvasRenderer"
-import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
-import { symbolCanvasRenderer } from "./renderers/symbolCanvasRenderer"
-import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
-import { symbolRadius } from "./symbolPath"
-import { glyphHitGeometry } from "./glyphDef"
-import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { buildHoverData, getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
-import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
-import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
-import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
-import { candlestickCanvasRenderer } from "./renderers/candlestickCanvasRenderer"
-import type { StreamRendererFn } from "./renderers/types"
-import { resolveNodeColor } from "./sceneUtils"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
-
-// ── Auto-date tick formatting ─────────────────────────────────────────
-
-const DATE_MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-function brushTouchAction(brush: StreamXYFrameProps["brush"]): React.CSSProperties["touchAction"] | undefined {
-  if (!brush) return undefined
-  if (brush.dimension === "x") return "pan-y"
-  if (brush.dimension === "y") return "pan-x"
-  return "none"
-}
-
-function makeDateTickFormatter(domain: [number, number]): (v: number) => string {
-  const span = domain[1] - domain[0]
-  const MS_DAY = 8.64e7
-  const MS_YEAR = 3.156e10
-
-  // Use UTC getters throughout so SSR and client produce identical labels
-  // regardless of server/browser timezone differences.
-  if (span < MS_DAY) {
-    return (v) => {
-      const d = new Date(v)
-      return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`
-    }
-  }
-  if (span < MS_YEAR) {
-    return (v) => {
-      const d = new Date(v)
-      return `${DATE_MONTH_SHORT[d.getUTCMonth()]} ${d.getUTCDate()}`
-    }
-  }
-  if (span < 5 * MS_YEAR) {
-    return (v) => {
-      const d = new Date(v)
-      return `${DATE_MONTH_SHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`
-    }
-  }
-  return (v) => String(new Date(v).getUTCFullYear())
-}
-
-// ── Renderer dispatch ──────────────────────────────────────────────────
-
-const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
-  line: [areaCanvasRenderer, lineCanvasRenderer, pointCanvasRenderer],
-  area: [areaCanvasRenderer, pointCanvasRenderer],
-  stackedarea: [areaCanvasRenderer, pointCanvasRenderer],
-  scatter: [pointCanvasRenderer, symbolCanvasRenderer],
-  bubble: [pointCanvasRenderer, symbolCanvasRenderer],
-  heatmap: [heatmapCanvasRenderer],
-  bar: [barCanvasRenderer],
-  swarm: [swarmCanvasRenderer],
-  waterfall: [waterfallCanvasRenderer],
-  candlestick: [candlestickCanvasRenderer],
-  mixed: [areaCanvasRenderer, lineCanvasRenderer, pointCanvasRenderer],
-  // custom: all node types possible — each renderer self-filters to its type.
-  custom: [
-    areaCanvasRenderer,
-    barCanvasRenderer,
-    heatmapCanvasRenderer,
-    lineCanvasRenderer,
-    pointCanvasRenderer,
-    symbolCanvasRenderer,
-    glyphCanvasRenderer,
-    candlestickCanvasRenderer,
-  ]
-}
-
-/**
- * Harvest annotation anchors from the scene: every mark type that carries a
- * `pointId` becomes a `{ pointId, x, y, r }` anchor record. Points anchor at
- * their center; symbols at their center with their effective radius; glyphs
- * at their drawn (anchor-offset) visual center. This is what lets a
- * `{ pointId }` annotation resolve to a custom layout's mark regardless of
- * which mark type the layout emitted.
- */
-function collectAnnotationAnchors(
-  scene: SceneNode[] | undefined
-): { pointId?: string; x: number; y: number; r: number }[] | undefined {
-  if (!scene) return undefined
-  const anchors: { pointId?: string; x: number; y: number; r: number }[] = []
-  for (const n of scene) {
-    if (n.type === "point") {
-      anchors.push(n)
-    } else if (n.type === "symbol") {
-      anchors.push({ pointId: n.pointId, x: n.x, y: n.y, r: symbolRadius(n.size) })
-    } else if (n.type === "glyph") {
-      const geometry = glyphHitGeometry(n.glyph, n.size)
-      anchors.push({
-        pointId: n.pointId,
-        x: n.x + geometry.centerDx,
-        y: n.y + geometry.centerDy,
-        r: geometry.radius,
-      })
-    }
-  }
-  return anchors
-}
+import { makeDateTickFormatter } from "./xyDateTicks"
+import { collectAnnotationAnchors } from "./xyAnnotationAnchors"
+import { XY_CANVAS_RENDERERS as RENDERERS } from "./xyCanvasRenderers"
+import { drawCrosshair, drawLineHighlight } from "./xyCrosshair"
+import { DefaultTooltip } from "./xyDefaultTooltip"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
 const DEFAULT_MARGIN = { top: 20, right: 20, bottom: 30, left: 40 }
 
 // Theme colors live in frameThemeColors.ts (shared across Stream Frames).
-type ThemeColors = FrameThemeColors
 const LIGHT_THEME = LIGHT_FRAME_THEME
 
-// ── Tooltip ────────────────────────────────────────────────────────────
-
-const defaultTooltipStyle: React.CSSProperties = {
-  background: "rgba(0, 0, 0, 0.85)",
-  color: "white",
-  padding: "6px 10px",
-  borderRadius: 4,
-  fontSize: 12,
-  lineHeight: 1.5,
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-  pointerEvents: "none",
-  whiteSpace: "nowrap"
-}
-
-function DefaultTooltip({ hover }: { hover: HoverData }) {
-  const fmt = (v: unknown): string => {
-    if (v == null) return ""
-    if (typeof v === "number") return Number.isInteger(v) ? String(v) : v.toFixed(2)
-    if (v instanceof Date) return v.toLocaleString()
-    return String(v)
-  }
-  // Read data-space values off the raw datum. The Stream Frame's
-  // hover-build pipeline doesn't know the consumer's accessor names,
-  // so the default tooltip displays the canonical-shape fields. HOCs
-  // that want to honor `xAccessor`/`yAccessor` build their own
-  // tooltip — see `buildDefaultRealtimeTooltip` for the realtime
-  // family's accessor-aware fallback.
-  const datum = (hover.data ?? {}) as Record<string, unknown>
-  const yField = datum.y ?? datum.value
-  const xField = datum.x ?? datum.time
-  // XYCustomChart and other bespoke data may carry neither x/y nor value/time.
-  // Rather than render blank, fall back to a smart title + de-noised rows.
-  if (yField === undefined && xField === undefined) {
-    const smart = smartTooltipEntries(datum as Datum)
-    if (smart.title != null || smart.entries.length > 0) {
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          {smart.title != null && (
-            <div style={{ fontWeight: 600, marginBottom: smart.entries.length ? 2 : 0 }}>
-              {String(smart.title)}
-            </div>
-          )}
-          {smart.entries.map((e) => (
-            <div key={e.key} style={{ opacity: 0.7, fontSize: 11 }}>
-              {e.key}: <span style={{ fontWeight: 600 }}>{fmt(e.value)}</span>
-            </div>
-          ))}
-        </div>
-      )
-    }
-  }
-  return (
-    <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      <div style={{ fontWeight: 600, marginBottom: 2 }}>{fmt(yField)}</div>
-      <div style={{ opacity: 0.7, fontSize: 11 }}>{fmt(xField)}</div>
-    </div>
-  )
-}
-;(DefaultTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
-
-// ── Crosshair drawing ──────────────────────────────────────────────────
-
-function drawCrosshair(
-  ctx: CanvasRenderingContext2D,
-  hover: HoverData,
-  width: number,
-  height: number,
-  config: HoverAnnotationConfig,
-  hoveredNode: SceneNode | null,
-  theme: ThemeColors
-) {
-  const showCrosshair = config.crosshair !== false
-  if (!showCrosshair) return
-
-  const allSeries = hover.allSeries
-  const isMulti = allSeries && allSeries.length > 0
-  const xPx = hover.xPx ?? hover.x
-
-  ctx.save()
-  const crossStyle = typeof config.crosshair === "object" ? config.crosshair : {}
-  ctx.strokeStyle = crossStyle.stroke || theme.crosshair
-  ctx.lineWidth = crossStyle.strokeWidth || 1
-  if (crossStyle.strokeDasharray) {
-    ctx.setLineDash(crossStyle.strokeDasharray.split(/[\s,]+/).map(Number))
-  } else {
-    ctx.setLineDash([4, 4])
-  }
-
-  // Vertical crosshair line (always)
-  ctx.beginPath()
-  ctx.moveTo(isMulti ? xPx : hover.x, 0)
-  ctx.lineTo(isMulti ? xPx : hover.x, height)
-  ctx.stroke()
-
-  // Horizontal crosshair line (single-point mode only)
-  if (!isMulti) {
-    ctx.beginPath()
-    ctx.moveTo(0, hover.y)
-    ctx.lineTo(width, hover.y)
-    ctx.stroke()
-  }
-
-  ctx.restore()
-
-  if (isMulti) {
-    // Multi-point mode: draw a dot on each series at its interpolated Y
-    ctx.lineWidth = 2
-    ctx.strokeStyle = theme.pointRing
-    for (const s of allSeries) {
-      if (s.valuePx == null) continue
-      ctx.beginPath()
-      ctx.arc(xPx, s.valuePx, 4, 0, Math.PI * 2)
-      ctx.fillStyle = s.color || theme.primary
-      ctx.fill()
-      ctx.stroke()
-    }
-  } else {
-    // Single-point mode: one dot at the hovered datum.
-    // `theme.primary` already resolves from `--semiotic-primary`; the
-    // previous inline getComputedStyle call duplicated that lookup.
-    const pointColor = config.pointColor || resolveNodeColor(hoveredNode) || theme.primary
-    ctx.beginPath()
-    ctx.arc(hover.x, hover.y, 4, 0, Math.PI * 2)
-    ctx.fillStyle = pointColor
-    ctx.fill()
-    ctx.strokeStyle = theme.pointRing
-    ctx.lineWidth = 2
-    ctx.stroke()
-  }
-}
-
-// ── Line highlight on hover ───────────────────────────────────────────
-
-function drawLineHighlight(
-  ctx: CanvasRenderingContext2D,
-  scene: SceneNode[],
-  hoveredNode: SceneNode | null,
-  highlightConfig: { style?: Datum | ((d: Datum) => Datum) },
-  theme: ThemeColors
-) {
-  if (!hoveredNode) return
-
-  // Find the group of the hovered line
-  const hoveredGroup = "group" in hoveredNode ? hoveredNode.group : undefined
-  if (hoveredGroup === undefined) return
-
-  // Re-draw all lines in the same group with highlight style
-  for (const node of scene) {
-    if (node.type !== "line") continue
-    if (node.group !== hoveredGroup) continue
-    if (node.path.length < 2) continue
-
-    // Resolve style
-    const rawStyle = typeof highlightConfig.style === "function"
-      ? (node.datum ? highlightConfig.style(node.datum) : {})
-      : (highlightConfig.style || {})
-
-    ctx.save()
-    ctx.beginPath()
-    ctx.moveTo(node.path[0][0], node.path[0][1])
-    for (let i = 1; i < node.path.length; i++) {
-      ctx.lineTo(node.path[i][0], node.path[i][1])
-    }
-    ctx.strokeStyle = rawStyle.stroke || node.style.stroke || theme.primary
-    ctx.lineWidth = rawStyle.strokeWidth || (node.style.strokeWidth || 2) + 2
-    ctx.globalAlpha = rawStyle.opacity ?? 1
-    ctx.stroke()
-    ctx.restore()
-  }
+function brushTouchAction(brush: StreamXYFrameProps["brush"]): React.CSSProperties["touchAction"] | undefined {
+  if (!brush) return undefined
+  if (brush.dimension === "x") return "pan-y"
+  if (brush.dimension === "y") return "pan-x"
+  return "none"
 }
 
 // ── StreamXYFrame ──────────────────────────────────────────────────────
