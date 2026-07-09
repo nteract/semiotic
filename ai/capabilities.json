@@ -656,22 +656,6 @@
         "deterministic-seed"
       ]
     },
-    "NetworkHOPsChart": {
-      "category": "physics",
-      "supportsLegend": true,
-      "supportsSelection": true,
-      "supportsLinkedHover": false,
-      "supportsPush": false,
-      "supportsSSR": true,
-      "colorModel": "categorical",
-      "layoutMode": "plugin",
-      "specialFeatures": [
-        "force-simulation",
-        "uncertainty",
-        "hypothetical-outcomes",
-        "sample-animation"
-      ]
-    },
     "PhysicalFlowChart": {
       "category": "physics",
       "supportsLegend": true,

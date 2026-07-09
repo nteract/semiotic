@@ -9514,17 +9514,7 @@
     },
     {
       "type": "function",
-      "function": {
-        "name": "NetworkHOPsChart",
-        "description": "Network hypothetical outcome plot. Animates sampled realizations of uncertain or probabilistic graphs while node positions stay anchored to the aggregate topology.",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "width": {
-              "type": "number",
-              "default": 600
-            },
-            "height": {
+      "function":             "height": {
               "type": "number",
               "default": 400
             },

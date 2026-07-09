@@ -52,7 +52,6 @@ function MobileStandardControls
 function MultiAxisLineChart
 function MultiLineTooltip
 function NetworkCustomChart
-function NetworkHOPsChart
 function OrbitDiagram
 function OrdinalCustomChart
 function PhysicalFlowChart
@@ -201,9 +200,6 @@ interface MultiAxisLineChartProps
 interface MultiAxisSeriesConfig
 interface MultiLineTooltipConfig
 interface NavTreeNode
-interface NetworkHOPsChartProps
-interface NetworkHOPsModel
-interface NetworkHOPsSample
 interface NetworkLabel
 interface OrbitDiagramProps
 interface OrbitNode

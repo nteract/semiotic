@@ -1274,30 +1274,6 @@ import { CollisionSwarmChart } from "semiotic/physics"
 
 Key props: `xAccessor` preserves the quantitative position, `groupAccessor` creates lanes, and collision settings separate overlapping records without losing the axis.
 
-### NetworkHOPsChart (probabilistic network replay)
-
-```jsx
-import { NetworkHOPsChart } from "semiotic/physics"
-
-<NetworkHOPsChart
-  nodes={[
-    { id: "Gateway", x: 0.2, y: 0.5 },
-    { id: "Auth", x: 0.5, y: 0.25 },
-    { id: "Payments", x: 0.78, y: 0.55 },
-  ]}
-  edges={[
-    { source: "Gateway", target: "Auth", p: 0.86 },
-    { source: "Auth", target: "Payments", p: 0.42 },
-  ]}
-  edgeProbabilityAccessor="p"
-  sampleRate={0.3}
-  showAggregate
-  showSampleReadout
-  size={[640, 360]}
-/>
-```
-
-Key props: `edgeProbabilityAccessor` reads per-edge probabilities, `sampleRate` controls replay density, and `showAggregate` keeps the stable topology visible behind sampled hops.
 
 ### PhysicalFlowChart (packet flow over routes)
 

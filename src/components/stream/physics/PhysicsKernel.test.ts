@@ -87,6 +87,74 @@ describe("PhysicsKernelWorld", () => {
     expect(world.events().some((event) => event.type === "contact")).toBe(true)
   })
 
+  it("applies solid and sensor colliders only to matching body filters", () => {
+    const world = new PhysicsKernelWorld({
+      gravity: { x: 0, y: 0 },
+      restitution: 0,
+      velocityDamping: 1,
+      sleepAfter: 10
+    })
+    world.setColliders([
+      {
+        id: "comment-wall",
+        bodyFilter: { property: "datum.kind", equals: "comment" },
+        shape: { type: "aabb", x: 100, y: 0, width: 20, height: 180 }
+      },
+      {
+        id: "comment-sensor",
+        sensor: true,
+        bodyFilter: { property: "datum.kind", equals: "comment" },
+        shape: { type: "aabb", x: 40, y: 0, width: 20, height: 180 }
+      }
+    ])
+    world.spawn({
+      id: "comment",
+      x: 0,
+      y: -40,
+      vx: 300,
+      vy: 0,
+      shape: { type: "circle", radius: 8 },
+      datum: { kind: "comment" }
+    })
+    world.spawn({
+      id: "pr",
+      x: 0,
+      y: 40,
+      vx: 300,
+      vy: 0,
+      shape: { type: "circle", radius: 8 },
+      datum: { kind: "pr" }
+    })
+
+    const events = []
+    for (let i = 0; i < 80; i += 1) {
+      world.step()
+      events.push(...world.events())
+    }
+
+    const bodies = Object.fromEntries(
+      world.readState().map((body) => [body.id, body])
+    )
+    expect(bodies.comment.x).toBeLessThanOrEqual(82.01)
+    expect(bodies.pr.x).toBeGreaterThan(120)
+    expect(
+      events.some(
+        (event) =>
+          event.type === "sensor-enter" &&
+          event.sensorId === "comment-sensor" &&
+          event.bodyId === "comment"
+      )
+    ).toBe(true)
+    expect(
+      events.some(
+        (event) =>
+          event.type === "sensor-enter" &&
+          event.sensorId === "comment-sensor" &&
+          event.bodyId === "pr"
+      )
+    ).toBe(false)
+  })
+
   it("keeps dynamic bodies separated through the spatial hash broadphase", () => {
     const world = new PhysicsKernelWorld({
       gravity: { x: 0, y: 0 },

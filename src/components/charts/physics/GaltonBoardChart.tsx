@@ -23,11 +23,15 @@ import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
   renderPhysicsFrame,
-  resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
+  usePhysicsChartMode,
+  type PhysicsHocFrameProps,
+  type PhysicsSharedChartProps,
+  type PhysicsSimulationMode,
   type TooltipProp
 } from "./physicsHocUtils"
+import type { ChartMode } from "../shared/types"
 
 type ProjectionRow = {
   label: string
@@ -45,13 +49,21 @@ export interface GaltonBoardReferenceLine {
 }
 
 export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin" | "mode"> {
+  extends Omit<BaseChartProps, "margin" | "mode">,
+    PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
   valueAccessor?: ChartAccessor<TDatum, number>
   valueExtent?: [number, number]
   bins?: number
-  mode?: "sample" | "mechanical"
+  /**
+   * Chart display mode (`primary`/`context`/`sparkline`/`mobile`) **or**
+   * legacy simulation mode (`sample`/`mechanical`). Prefer `simulationMode`
+   * for sample vs mechanical; use `mode` for ChartContainer / ChartMode.
+   */
+  mode?: ChartMode | PhysicsSimulationMode
+  /** Sample data rows vs seeded mechanical demo (no data required). */
+  simulationMode?: PhysicsSimulationMode
   pegRows?: number
   mechanicalCount?: number
   branchProbability?: number
@@ -62,12 +74,7 @@ export interface GaltonBoardChartProps<TDatum extends Datum = Datum>
   showProjection?: boolean
   tooltip?: TooltipProp
   paused?: boolean
-  frameProps?: Partial<
-    Omit<
-      StreamPhysicsFrameProps,
-      "config" | "initialSpawns" | "initialSpawnPacing" | "size"
-    >
-  >
+  frameProps?: PhysicsHocFrameProps<"config">
 }
 
 function normalizeValueExtent(
@@ -255,47 +262,49 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     bins = 21,
     ballRadius = 6,
     colorBy,
-    className,
     branchProbability = 0.5,
     emptyContent,
     frameProps,
-    height,
     loading,
     loadingContent,
     mechanicalCount,
-    mode = "sample",
     paused,
     pegRows,
     referenceLines,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
-    showProjection = true,
-    size,
-    valueExtent,
-    width
+    valueExtent
   } = props
+  const layoutMode = usePhysicsChartMode(props, [700, 420], {
+    hasSimulationMode: true
+  })
+  const {
+    chartSize,
+    simulationMode,
+    showProjection,
+    className,
+    title: modeTitle,
+    chartMode,
+    compactMode,
+    margin: modeMargin,
+    enableHover: modeEnableHover,
+    description: modeDescription,
+    summary: modeSummary,
+    accessibleTable: modeAccessibleTable
+  } = layoutMode
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const sizeWidth = size?.[0]
-  const sizeHeight = size?.[1]
-  const chartSize = useMemo(
-    () =>
-      sizeWidth != null && sizeHeight != null
-        ? [sizeWidth, sizeHeight] as [number, number]
-        : resolvePhysicsChartSize(undefined, width, height, [700, 420]),
-    [height, sizeHeight, sizeWidth, width]
-  )
   const resolvedPegRows = Math.max(1, Math.round(pegRows ?? bins - 1))
   const resolvedValueExtent = useMemo(
     () =>
-      mode === "mechanical"
+      simulationMode === "mechanical"
         ? ([0, resolvedPegRows] as [number, number])
         : normalizeValueExtent(valueExtent),
-    [mode, resolvedPegRows, valueExtent]
+    [resolvedPegRows, simulationMode, valueExtent]
   )
   const chartData = useMemo(
     () =>
-      mode === "mechanical"
+      simulationMode === "mechanical"
         ? (generateGaltonMechanicalSamples({
             bins,
             branchProbability,
@@ -304,7 +313,15 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
             seed
           }) as TDatum[])
         : (data ?? []),
-    [bins, branchProbability, data, mechanicalCount, mode, resolvedPegRows, seed]
+    [
+      bins,
+      branchProbability,
+      data,
+      mechanicalCount,
+      resolvedPegRows,
+      seed,
+      simulationMode
+    ]
   )
   const layout = useMemo(
     () =>
@@ -346,9 +363,14 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     },
     [ballRadius, bins, chartSize, resolvedValueExtent, seed, valueAccessor]
   )
-  usePhysicsHocHandle(ref, { frameRef, spawnDatum })
+  usePhysicsHocHandle(ref, {
+    frameRef,
+    spawnDatum,
+    seedRows: chartData as Datum[],
+    seedSpawns: layout.initialSpawns
+  })
   const resolvedColorBy =
-    mode === "mechanical" && colorBy == null
+    simulationMode === "mechanical" && colorBy == null
       ? ("side" as ChartAccessor<Datum, string>)
       : (colorBy as ChartAccessor<Datum, string> | undefined)
   const bodyStyle = useMemo(
@@ -361,7 +383,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
   )
 
   const stateEl = renderPhysicsChartState({
-    data: mode === "mechanical" ? chartData : data,
+    data: simulationMode === "mechanical" ? chartData : data,
     emptyContent,
     loading,
     loadingContent,
@@ -379,7 +401,17 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     props,
     frameProps,
-    semanticItems
+    semanticItems,
+    {
+      chartMode,
+      className,
+      title: compactMode ? modeTitle : (modeTitle ?? "Galton board chart"),
+      description: modeDescription,
+      summary: modeSummary,
+      accessibleTable: modeAccessibleTable,
+      enableHover: modeEnableHover,
+      margin: modeMargin
+    }
   )
 
   return renderPhysicsFrame(
@@ -390,7 +422,6 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      className={className}
       config={layout.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         structureOverlay,
@@ -402,7 +433,6 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       responsiveHeight={responsiveHeight}
       responsiveWidth={responsiveWidth}
       size={chartSize}
-      title={props.title ?? "Galton board chart"}
       bodyStyle={bodyStyle}
     />
   )

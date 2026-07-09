@@ -19,11 +19,34 @@ import {
 import { isServerEnvironment } from "../SceneToSVG"
 import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
 import type { Style } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
+import type { OnObservationCallback } from "../../store/ObservationStore"
+import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
+import type { AnnotationContext } from "../../realtime/types"
+import type {
+  GradientLegendConfig,
+  LegendGroup,
+  LegendLayout
+} from "../../types/legendTypes"
 import { useDataSummary } from "../../DataSummaryContext"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import { resolvePhysicsCanvasTheme } from "./PhysicsCanvasTheme"
-import type { PhysicsBodyState } from "./PhysicsKernel"
+import {
+  PhysicsSVGOverlay,
+  bodiesToAnnotationAnchors,
+  type PhysicsAnnotationAnchorNode
+} from "./PhysicsSVGOverlay"
+import {
+  collidersFromPhysicsAnnotations,
+  type PhysicsStaticAnnotation
+} from "./PhysicsAnnotations"
+import type {
+  PhysicsBodyState,
+  PhysicsColliderBodyFilter,
+  PhysicsColliderShape,
+  PhysicsColliderSpec
+} from "./PhysicsKernel"
 import {
   PhysicsWorkerSession,
   canUsePhysicsWorker
@@ -32,6 +55,7 @@ import {
   PhysicsPipelineStore,
   type PhysicsPipelineConfig,
   type PhysicsPipelineControlSurface,
+  type PhysicsObservationEvent,
   type PhysicsPipelineSnapshot,
   type PhysicsPipelineTickResult,
   type PhysicsQueuedSpawn,
@@ -39,6 +63,10 @@ import {
   type PhysicsSimulationState
 } from "./PhysicsPipelineStore"
 import { renderPhysicsSettledSVG } from "./PhysicsSettledSVG"
+import {
+  composePhysicsControllers,
+  type PhysicsController
+} from "./PhysicsControllers"
 import {
   DEFAULT_PHYSICS_WORKER_BODY_THRESHOLD,
   isPhysicsWorkerConfigSupported,
@@ -192,9 +220,137 @@ export interface PhysicsBodySelection {
   predicate?: (body: PhysicsBodyState) => boolean
 }
 
+export type StreamPhysicsRegionKind =
+  | "region"
+  | "membrane"
+  | "charge-gate"
+  | "force-field"
+  | "sink"
+  | "source"
+
+export interface StreamPhysicsRegionVector {
+  x?: number
+  y?: number
+}
+
+export interface StreamPhysicsBodyRegionState {
+  activeRegionIds: string[]
+  regionIds: string[]
+  charges: Record<string, unknown>
+  attributes: Record<string, unknown>
+  energy: number
+}
+
+interface InternalStreamPhysicsBodyRegionState {
+  activeRegionIds: Set<string>
+  regionIds: Set<string>
+  charges: Record<string, unknown>
+  attributes: Record<string, unknown>
+  energy: number
+}
+
+export interface StreamPhysicsRegionEffectContext {
+  body: PhysicsBodyState
+  region: StreamPhysicsRegionEffect
+  regionState: StreamPhysicsBodyRegionState
+}
+
+export interface StreamPhysicsRegionEvent {
+  type: "region-enter" | "region-exit"
+  bodyId: string
+  datum?: unknown
+  observation: PhysicsObservationEvent
+  region: StreamPhysicsRegionEffect
+  regionState: StreamPhysicsBodyRegionState
+}
+
+export interface StreamPhysicsRegionEffect {
+  /**
+   * Stable region id. This is used for observations, accessibility labels,
+   * body region state, and generated sensor collider ids.
+   */
+  id: string
+  /**
+   * Visual/semantic intent. The physics behavior is controlled by the other
+   * properties; kind lets charts and agents describe the region correctly.
+   */
+  kind?: StreamPhysicsRegionKind
+  label?: string
+  description?: string
+  shape: PhysicsColliderShape
+  /**
+   * Add a solid collider with the same shape in addition to the sensor region.
+   * Defaults to false because information membranes normally tax or annotate
+   * bodies without hard-blocking them.
+   */
+  collider?: boolean | "solid" | "boundary"
+  /**
+   * Optional filter applied to generated region sensors and colliders. This is
+   * useful for permeable regions where one body class should observe or collide
+   * with a boundary while other bodies pass through.
+   */
+  bodyFilter?: PhysicsColliderBodyFilter
+  /**
+   * Segment thickness used when `collider` is `"boundary"` for an AABB region.
+   */
+  colliderThickness?: number
+  friction?: number
+  restitution?: number
+  /**
+   * The generated sensor collider id. Override only when coordinating with
+   * existing observations.
+   */
+  sensorId?: string
+  binId?: string
+  /**
+   * State attached to a body when it enters the region. `true` on a
+   * charge-gate means a charge value of 1.
+   */
+  charge?:
+    | boolean
+    | number
+    | string
+    | ((context: StreamPhysicsRegionEffectContext) => unknown)
+  energyDelta?: number
+  attributes?:
+    | Record<string, unknown>
+    | ((context: StreamPhysicsRegionEffectContext) => Record<string, unknown>)
+  /**
+   * Continuous force applied while a body is inside the region. This is modeled
+   * as a per-frame impulse and currently runs on the sync execution path.
+   */
+  force?:
+    | StreamPhysicsRegionVector
+    | ((context: StreamPhysicsRegionEffectContext) => StreamPhysicsRegionVector | null | undefined)
+  /**
+   * Linear damping applied while a body is inside the region. Values are
+   * per-second-ish coefficients and are intentionally lightweight.
+   */
+  damping?: number
+  impulseOnEnter?:
+    | StreamPhysicsRegionVector
+    | ((context: StreamPhysicsRegionEffectContext) => StreamPhysicsRegionVector | null | undefined)
+  impulseOnExit?:
+    | StreamPhysicsRegionVector
+    | ((context: StreamPhysicsRegionEffectContext) => StreamPhysicsRegionVector | null | undefined)
+  bodyStyle?:
+    | Style
+    | ((body: PhysicsBodyState, context: PhysicsBodyStyleContext) => Style)
+  /**
+   * Set to false to suppress generated keyboard/accessibility semantics.
+   * Pass a partial item to override the generated label/description/group.
+   */
+  semanticItem?: false | Partial<PhysicsSemanticItem>
+  metadata?: unknown
+  onEnter?: (event: StreamPhysicsRegionEvent) => void
+  onExit?: (event: StreamPhysicsRegionEvent) => void
+}
+
 export interface PhysicsBodyStyleContext {
   selected: boolean
   simulationState: PhysicsSimulationState
+  regionState?: StreamPhysicsBodyRegionState
+  regions?: StreamPhysicsRegionEffect[]
 }
 
 export interface StreamPhysicsExecutionState {
@@ -206,6 +362,7 @@ export interface StreamPhysicsExecutionState {
 }
 
 export interface PhysicsSemanticItem {
+  bodyId?: string
   id?: string
   label: string
   description?: string
@@ -217,6 +374,45 @@ export interface PhysicsSemanticItem {
   height?: number
   pathData?: string
   group?: string
+}
+
+export interface PhysicsBodySemanticItemContext {
+  index: number
+  simulationState: PhysicsSimulationState
+}
+
+export type PhysicsBodySemanticItemAccessor = (
+  body: PhysicsBodyState,
+  context: PhysicsBodySemanticItemContext
+) => false | null | undefined | Partial<PhysicsSemanticItem>
+
+export interface StreamPhysicsBodyForceContext {
+  body: PhysicsBodyState
+  bodies: readonly PhysicsBodyState[]
+  index: number
+  regionState?: StreamPhysicsBodyRegionState
+  regions?: StreamPhysicsRegionEffect[]
+  simulationState: PhysicsSimulationState
+}
+
+export type StreamPhysicsBodyForce =
+  | StreamPhysicsRegionVector
+  | ((
+      context: StreamPhysicsBodyForceContext
+    ) => StreamPhysicsRegionVector | null | undefined)
+
+export interface StreamPhysicsPopOptions {
+  color?: string
+  durationMs?: number
+  radius?: number
+}
+
+interface StreamPhysicsPopAnimation {
+  body: PhysicsBodyState
+  color: string
+  durationMs: number
+  radius: number
+  startedAt: number
 }
 
 export interface PhysicsHoverData {
@@ -231,19 +427,93 @@ export interface PhysicsHoverData {
 
 export interface StreamPhysicsFrameProps {
   accessibleTable?: boolean
+  /**
+   * Canvas fill. When set, overrides the theme background unless
+   * `backgroundGraphics` already owns the backdrop. Pass `"transparent"`
+   * to composite over siblings (same contract as StreamXYFrame).
+   */
+  background?: string
   backgroundGraphics?: FrameGraphicsProp
+  bodySemanticItemLimit?: number
+  bodySemanticItems?: boolean | PhysicsBodySemanticItemAccessor
+  bodySemanticUpdateMs?: number
+  bodyForces?: StreamPhysicsBodyForce
   bodyStyle?:
     | Style
     | ((body: PhysicsBodyState, context: PhysicsBodyStyleContext) => Style)
+  /** Identifier included on `onObservation` events and pipeline observations. */
+  chartId?: string
   className?: string
+  /**
+   * Uniform fill for bodies when `bodyStyle` does not set `fill`.
+   * Accepts CSS vars (`var(--semiotic-primary)`).
+   */
+  color?: string
   config?: PhysicsPipelineConfig
+  /**
+   * Process plugins that tick with the physics heartbeat (capacity queues,
+   * portals, custom process rules). Prefer controllers over pumping
+   * `layoutConfig` every frame. Controllers with `continuous` keep RAF alive
+   * while they still have work even if the kernel is sleeping.
+   */
+  controllers?: readonly PhysicsController[]
+  /**
+   * Keep the animation loop alive even when the physics store reports no
+   * pending work. Use for frame-local systems that drive motion from `onTick`
+   * or other imperative controls instead of queued spawns/body forces.
+   * Also set automatically when any controller opts into continuous mode.
+   */
+  continuous?: boolean
   description?: string
+  /** Dashboard hierarchy class hook (`stream-physics-frame--emphasis-*`). */
+  emphasis?: "primary" | "secondary"
+  /**
+   * Chart display mode (primary/context/sparkline/mobile). HOCs resolve this
+   * via `useChartMode` and pass it for class hooks + ChartContainer export.
+   */
+  chartMode?: "primary" | "context" | "sparkline" | "mobile"
   enableHover?: boolean
   foregroundGraphics?: FrameGraphicsProp
   hoverRadius?: number
   initialSpawns?: PhysicsQueuedSpawn[]
   initialSpawnPacing?: PhysicsSpawnPacingOptions
+  /**
+   * Semiotic annotations (label/callout/threshold/…). Pixel-space `x`/`y`,
+   * or `pointId`/`bodyId` to track a live body. Notes with
+   * `physics: "barrier"|"sensor"` also feed colliders via PhysicsAnnotations.
+   */
+  annotations?: Datum[]
+  autoPlaceAnnotations?: AutoPlaceAnnotations
+  svgAnnotationRules?: (
+    annotation: Datum,
+    index: number,
+    context: AnnotationContext
+  ) => React.ReactNode
+  legend?:
+    | React.ReactNode
+    | { legendGroups: LegendGroup[] }
+    | { gradient: GradientLegendConfig }
+  legendHoverBehavior?: (item: { label: string } | null) => void
+  legendClickBehavior?: (item: { label: string }) => void
+  legendHighlightedCategory?: string | null
+  legendIsolatedCategories?: Set<string>
+  legendPosition?: "right" | "left" | "top" | "bottom"
+  legendLayout?: LegendLayout
   margin?: Partial<FrameMargin>
+  /**
+   * Structured interaction events (hover / hover-end / click / click-end) —
+   * same contract as XY/ordinal/network frames for AI + coordinated views.
+   */
+  onObservation?: OnObservationCallback
+  /**
+   * Click on a body (or empty canvas when null). Prefer this over
+   * `onBodyPointerDown` when you only need the Semiotic click contract.
+   */
+  onClick?: (
+    datum: unknown | null,
+    event: { x: number; y: number; body: PhysicsBodyState | null }
+  ) => void
+  onRegionEvent?: (event: StreamPhysicsRegionEvent) => void
   onSimulationExecutionChange?: (state: StreamPhysicsExecutionState) => void
   onBodyPointerDown?: (
     body: PhysicsBodyState | null,
@@ -259,9 +529,12 @@ export interface StreamPhysicsFrameProps {
     result: PhysicsPipelineTickResult,
     controls: PhysicsPipelineControlSurface
   ) => void
+  /** Uniform opacity for bodies when `bodyStyle` does not set `opacity`. */
+  opacity?: number
   paused?: boolean
   responsiveHeight?: boolean
   responsiveWidth?: boolean
+  regionEffects?: StreamPhysicsRegionEffect[]
   selectedBodyStyle?:
     | Style
     | ((body: PhysicsBodyState, context: PhysicsBodyStyleContext) => Style)
@@ -269,17 +542,38 @@ export interface StreamPhysicsFrameProps {
   semanticItems?: PhysicsSemanticItem[]
   simulationExecution?: PhysicsExecution
   size?: [number, number]
+  /** Uniform stroke for bodies when `bodyStyle` does not set `stroke`. */
+  stroke?: string
+  strokeWidth?: number
   summary?: string
   suspendWhenHidden?: boolean
-  title?: string
+  title?: string | React.ReactNode
   tooltipContent?: (hover: PhysicsHoverData) => React.ReactNode
   workerBodyThreshold?: number
+  renderBody?: (
+    ctx: CanvasRenderingContext2D,
+    body: PhysicsBodyState,
+    style: Style
+  ) => void
+  beforePaint?: (
+    ctx: CanvasRenderingContext2D,
+    bodies: PhysicsBodyState[]
+  ) => void
+  afterPaint?: (
+    ctx: CanvasRenderingContext2D,
+    bodies: PhysicsBodyState[]
+  ) => void
 }
 
 export interface StreamPhysicsFrameHandle
   extends PhysicsPipelineControlSurface {
   getData: () => PhysicsBodyState[]
+  getRegionState: (
+    bodyId?: string
+  ) => StreamPhysicsBodyRegionState | Record<string, StreamPhysicsBodyRegionState> | undefined
+  clearRegionState: (bodyId?: string) => void
   getStore: () => PhysicsPipelineStore
+  popBodies: (ids: string[], options?: StreamPhysicsPopOptions) => string[]
 }
 
 function createStore(
@@ -302,19 +596,363 @@ function isSelected(
   return selection.predicate?.(body) ?? true
 }
 
+function regionSensorId(region: StreamPhysicsRegionEffect): string {
+  return region.sensorId ?? `stream-region-${region.id}`
+}
+
+function regionBoundaryColliders(
+  region: StreamPhysicsRegionEffect
+): PhysicsColliderSpec[] {
+  const baseId = regionSensorId(region)
+  const common = {
+    bodyFilter: region.bodyFilter,
+    friction: region.friction,
+    restitution: region.restitution
+  }
+  if (region.collider === "boundary" && region.shape.type === "aabb") {
+    const thickness = region.colliderThickness ?? 8
+    const left = region.shape.x - region.shape.width / 2
+    const right = region.shape.x + region.shape.width / 2
+    const top = region.shape.y - region.shape.height / 2
+    const bottom = region.shape.y + region.shape.height / 2
+    return [
+      {
+        ...common,
+        id: `${baseId}-top`,
+        shape: { type: "segment", x1: left, y1: top, x2: right, y2: top, thickness }
+      },
+      {
+        ...common,
+        id: `${baseId}-right`,
+        shape: { type: "segment", x1: right, y1: top, x2: right, y2: bottom, thickness }
+      },
+      {
+        ...common,
+        id: `${baseId}-bottom`,
+        shape: { type: "segment", x1: right, y1: bottom, x2: left, y2: bottom, thickness }
+      },
+      {
+        ...common,
+        id: `${baseId}-left`,
+        shape: { type: "segment", x1: left, y1: bottom, x2: left, y2: top, thickness }
+      }
+    ]
+  }
+  if (!region.collider) return []
+  return [
+    {
+      ...common,
+      id: `${baseId}-collider`,
+      shape: region.shape
+    }
+  ]
+}
+
+function publicRegionState(
+  state: InternalStreamPhysicsBodyRegionState | undefined
+): StreamPhysicsBodyRegionState | undefined {
+  if (!state) return undefined
+  return {
+    activeRegionIds: Array.from(state.activeRegionIds),
+    regionIds: Array.from(state.regionIds),
+    charges: { ...state.charges },
+    attributes: { ...state.attributes },
+    energy: state.energy
+  }
+}
+
+function cloneRegionStateSnapshot(
+  state: Map<string, InternalStreamPhysicsBodyRegionState>
+): Record<string, StreamPhysicsBodyRegionState> {
+  const snapshot: Record<string, StreamPhysicsBodyRegionState> = {}
+  state.forEach((value, key) => {
+    const publicState = publicRegionState(value)
+    if (publicState) snapshot[key] = publicState
+  })
+  return snapshot
+}
+
+function ensureInternalRegionState(
+  state: Map<string, InternalStreamPhysicsBodyRegionState>,
+  bodyId: string
+): InternalStreamPhysicsBodyRegionState {
+  let current = state.get(bodyId)
+  if (!current) {
+    current = {
+      activeRegionIds: new Set(),
+      attributes: {},
+      charges: {},
+      energy: 0,
+      regionIds: new Set()
+    }
+    state.set(bodyId, current)
+  }
+  return current
+}
+
+function resolveRegionVector(
+  vector:
+    | StreamPhysicsRegionVector
+    | ((context: StreamPhysicsRegionEffectContext) => StreamPhysicsRegionVector | null | undefined)
+    | undefined,
+  context: StreamPhysicsRegionEffectContext
+): StreamPhysicsRegionVector | null {
+  const resolved = typeof vector === "function" ? vector(context) : vector
+  if (!resolved) return null
+  const x = Number(resolved.x ?? 0)
+  const y = Number(resolved.y ?? 0)
+  if (!Number.isFinite(x) && !Number.isFinite(y)) return null
+  return {
+    x: Number.isFinite(x) ? x : 0,
+    y: Number.isFinite(y) ? y : 0
+  }
+}
+
+function mergeRegionAttributes(
+  region: StreamPhysicsRegionEffect,
+  context: StreamPhysicsRegionEffectContext,
+  state: InternalStreamPhysicsBodyRegionState
+): void {
+  const nextAttributes =
+    typeof region.attributes === "function"
+      ? region.attributes(context)
+      : region.attributes
+  if (nextAttributes) {
+    state.attributes = { ...state.attributes, ...nextAttributes }
+  }
+}
+
+function resolveRegionCharge(
+  region: StreamPhysicsRegionEffect,
+  context: StreamPhysicsRegionEffectContext
+): unknown {
+  if (region.charge !== undefined) {
+    return typeof region.charge === "function"
+      ? region.charge(context)
+      : region.charge
+  }
+  return region.kind === "charge-gate" ? 1 : undefined
+}
+
+function regionToSemanticItem(
+  region: StreamPhysicsRegionEffect
+): PhysicsSemanticItem | null {
+  if (region.semanticItem === false) return null
+  const shape = region.shape
+  const override = region.semanticItem ?? {}
+  const base: PhysicsSemanticItem =
+    shape.type === "aabb"
+      ? {
+          id: region.id,
+          label: region.label ?? region.id,
+          description: region.description,
+          group: region.kind ?? "region",
+          x: shape.x,
+          y: shape.y,
+          width: shape.width,
+          height: shape.height
+        }
+      : {
+          id: region.id,
+          label: region.label ?? region.id,
+          description: region.description,
+          group: region.kind ?? "region",
+          x: (shape.x1 + shape.x2) / 2,
+          y: (shape.y1 + shape.y2) / 2,
+          pathData: `M ${shape.x1} ${shape.y1} L ${shape.x2} ${shape.y2}`
+        }
+  return {
+    ...base,
+    ...override,
+    id: override.id ?? base.id
+  }
+}
+
+function regionRuntimeEffectsRequireSync(
+  regionEffects: readonly StreamPhysicsRegionEffect[]
+): boolean {
+  return regionEffects.some(
+    (region) =>
+      region.force != null ||
+      region.damping != null ||
+      region.impulseOnEnter != null ||
+      region.impulseOnExit != null
+  )
+}
+
+function applyActiveRegionEffects(
+  controls: PhysicsPipelineControlSurface,
+  regionEffects: readonly StreamPhysicsRegionEffect[],
+  regionState: Map<string, InternalStreamPhysicsBodyRegionState>
+): boolean {
+  if (!regionRuntimeEffectsRequireSync(regionEffects)) return false
+  const regionsById = new Map(regionEffects.map((region) => [region.id, region]))
+  const bodies = controls.readBodies()
+  let applied = false
+  for (const body of bodies) {
+    const internalState = regionState.get(body.id)
+    if (!internalState || !internalState.activeRegionIds.size) continue
+    const publicState = publicRegionState(internalState)
+    if (!publicState) continue
+    for (const regionId of internalState.activeRegionIds) {
+      const region = regionsById.get(regionId)
+      if (!region) continue
+      const context = { body, region, regionState: publicState }
+      const force = resolveRegionVector(region.force, context)
+      const damping = Number(region.damping ?? 0)
+      const ix =
+        (force?.x ?? 0) / 60 - (Number.isFinite(damping) ? body.vx * damping / 60 : 0)
+      const iy =
+        (force?.y ?? 0) / 60 - (Number.isFinite(damping) ? body.vy * damping / 60 : 0)
+      if (ix || iy) {
+        controls.applyImpulse(body.id, ix, iy)
+        applied = true
+      }
+    }
+  }
+  return applied
+}
+
+function resolveBodyForceVector(
+  force: StreamPhysicsBodyForce | undefined,
+  context: StreamPhysicsBodyForceContext
+): StreamPhysicsRegionVector | null {
+  const resolved = typeof force === "function" ? force(context) : force
+  if (!resolved) return null
+  const x = Number(resolved.x ?? 0)
+  const y = Number(resolved.y ?? 0)
+  if (!Number.isFinite(x) && !Number.isFinite(y)) return null
+  return {
+    x: Number.isFinite(x) ? x : 0,
+    y: Number.isFinite(y) ? y : 0
+  }
+}
+
+const EMPTY_REGION_EFFECTS: StreamPhysicsRegionEffect[] = []
+
+function applyBodyForces(
+  controls: PhysicsPipelineControlSurface,
+  bodyForces: StreamPhysicsBodyForce | undefined,
+  regionEffects: readonly StreamPhysicsRegionEffect[],
+  regionState: Map<string, InternalStreamPhysicsBodyRegionState>,
+  simulationState: PhysicsSimulationState
+): boolean {
+  if (!bodyForces) return false
+  const regionById = new Map(regionEffects.map((region) => [region.id, region]))
+  const bodies = controls.readBodies()
+  let applied = false
+  for (let index = 0; index < bodies.length; index += 1) {
+    const body = bodies[index]
+    const internalState = regionState.get(body.id)
+    const publicState = publicRegionState(internalState)
+    // Build regions without Array.from + map + filter intermediate arrays.
+    let regions: StreamPhysicsRegionEffect[] = EMPTY_REGION_EFFECTS
+    if (internalState && internalState.activeRegionIds.size > 0) {
+      const list: StreamPhysicsRegionEffect[] = []
+      for (const id of internalState.activeRegionIds) {
+        const region = regionById.get(id)
+        if (region) list.push(region)
+      }
+      regions = list
+    }
+    const vector = resolveBodyForceVector(bodyForces, {
+      body,
+      bodies,
+      index,
+      regionState: publicState,
+      regions,
+      simulationState
+    })
+    if (!vector) continue
+    const ix = (vector.x ?? 0) / 60
+    const iy = (vector.y ?? 0) / 60
+    if (ix || iy) {
+      controls.applyImpulse(body.id, ix, iy)
+      applied = true
+    }
+  }
+  return applied
+}
+
+/**
+ * Shared post-tick pipeline: region forces → body forces → controllers → onTick.
+ * Used by the main RAF path and the worker-fallback path (DRY + one snapshot).
+ */
+function runPhysicsPostTick(options: {
+  store: PhysicsPipelineStore
+  result: PhysicsPipelineTickResult
+  regionEffects: readonly StreamPhysicsRegionEffect[]
+  regionState: Map<string, InternalStreamPhysicsBodyRegionState>
+  bodyForces: StreamPhysicsBodyForce | undefined
+  composed: ReturnType<typeof composePhysicsControllers>
+  onTick?: (
+    result: PhysicsPipelineTickResult,
+    controls: PhysicsPipelineControlSurface
+  ) => void
+}): {
+  regionEffectsApplied: boolean
+  bodyForcesApplied: boolean
+  snapshot: ReturnType<PhysicsPipelineStore["snapshot"]>
+} {
+  const controls = options.store.controls()
+  // Single snapshot for simulation state + reschedule predicate.
+  const snapshot = options.store.snapshot()
+  const regionEffectsApplied = applyActiveRegionEffects(
+    controls,
+    options.regionEffects,
+    options.regionState
+  )
+  const bodyForcesApplied = applyBodyForces(
+    controls,
+    options.bodyForces,
+    options.regionEffects,
+    options.regionState,
+    snapshot.simulationState
+  )
+  if (options.composed) {
+    const fixedDt = snapshot.config.fixedDt || 1 / 60
+    const dt = Math.max(0, (options.result.steps || 1) * fixedDt)
+    options.composed.onTick(options.result, controls, {
+      dt,
+      elapsed: options.result.elapsedSeconds,
+      getRegionState: (bodyId) =>
+        publicRegionState(options.regionState.get(bodyId))
+    })
+  }
+  options.onTick?.(options.result, controls)
+  return { regionEffectsApplied, bodyForcesApplied, snapshot }
+}
+
 function resolveStyle(
   body: PhysicsBodyState,
   simulationState: PhysicsSimulationState,
   bodyStyle: StreamPhysicsFrameProps["bodyStyle"],
   selectedBodyStyle: StreamPhysicsFrameProps["selectedBodyStyle"],
   selection: StreamPhysicsFrameProps["selection"],
+  regionState: StreamPhysicsBodyRegionState | undefined,
+  activeRegions: StreamPhysicsRegionEffect[],
   fallbackFill: string,
-  fallbackStroke: string
+  fallbackStroke: string,
+  primitives?: {
+    color?: string
+    stroke?: string
+    strokeWidth?: number
+    opacity?: number
+  }
 ): Style {
   const selected = isSelected(body, selection)
-  const context = { selected, simulationState }
+  const context = { selected, simulationState, regionState, regions: activeRegions }
   const base =
     typeof bodyStyle === "function" ? bodyStyle(body, context) : bodyStyle
+  const regionPatch = activeRegions.reduce<Style>((style, region) => {
+    if (!region.bodyStyle) return style
+    return {
+      ...style,
+      ...(typeof region.bodyStyle === "function"
+        ? region.bodyStyle(body, context)
+        : region.bodyStyle)
+    }
+  }, {})
   const selectedPatch = selected
     ? typeof selectedBodyStyle === "function"
       ? selectedBodyStyle(body, context)
@@ -322,13 +960,49 @@ function resolveStyle(
     : undefined
 
   return {
-    fill: fallbackFill,
-    stroke: fallbackStroke,
-    strokeWidth: 1,
-    opacity: 0.9,
+    fill: primitives?.color ?? fallbackFill,
+    stroke: primitives?.stroke ?? fallbackStroke,
+    strokeWidth: primitives?.strokeWidth ?? 1,
+    opacity: primitives?.opacity ?? 0.9,
     ...base,
+    ...regionPatch,
     ...selectedPatch
   }
+}
+
+const CHART_TYPE = "StreamPhysicsFrame"
+
+/**
+ * Body mark kinds for process identity without custom renderBody.
+ * Set via bodyStyle.mark or datum.__physicsMark / datum.mark.
+ */
+export type PhysicsBodyMark =
+  | "circle"
+  | "halo"
+  | "faceted"
+  | "pill"
+  | "diamond"
+  | "square"
+
+function resolveBodyMark(
+  body: PhysicsBodyState,
+  style: Style
+): PhysicsBodyMark {
+  const fromStyle = (style as Style & { mark?: PhysicsBodyMark }).mark
+  if (fromStyle) return fromStyle
+  const datum = body.datum as Record<string, unknown> | undefined
+  const fromDatum = datum?.__physicsMark ?? datum?.mark
+  if (
+    fromDatum === "circle" ||
+    fromDatum === "halo" ||
+    fromDatum === "faceted" ||
+    fromDatum === "pill" ||
+    fromDatum === "diamond" ||
+    fromDatum === "square"
+  ) {
+    return fromDatum
+  }
+  return body.shape.type === "circle" ? "circle" : "square"
 }
 
 function drawBody(
@@ -341,20 +1015,56 @@ function drawBody(
   const strokeWidth = style.strokeWidth ?? 0
   const opacity = style.opacity ?? 1
   const fillOpacity = style.fillOpacity ?? 1
+  const mark = resolveBodyMark(body, style)
+  const radius =
+    body.shape.type === "circle"
+      ? (style.r ?? body.shape.radius)
+      : Math.max(body.shape.width, body.shape.height) / 2
 
   ctx.save()
   ctx.globalAlpha *= opacity
   ctx.beginPath()
-  if (body.shape.type === "circle") {
-    const radius = style.r ?? body.shape.radius
-    ctx.arc(body.x, body.y, radius, 0, Math.PI * 2)
+  if (mark === "pill" || mark === "square" || body.shape.type === "aabb") {
+    const w =
+      mark === "pill"
+        ? radius * 2.4
+        : body.shape.type === "aabb"
+          ? body.shape.width
+          : radius * 1.7
+    const h =
+      mark === "pill"
+        ? radius * 1.35
+        : body.shape.type === "aabb"
+          ? body.shape.height
+          : radius * 1.7
+    const x = body.x - w / 2
+    const y = body.y - h / 2
+    const rr = mark === "pill" ? h / 2 : Math.min(4, w / 4)
+    ctx.moveTo(x + rr, y)
+    ctx.arcTo(x + w, y, x + w, y + h, rr)
+    ctx.arcTo(x + w, y + h, x, y + h, rr)
+    ctx.arcTo(x, y + h, x, y, rr)
+    ctx.arcTo(x, y, x + w, y, rr)
+    ctx.closePath()
+  } else if (mark === "diamond") {
+    ctx.moveTo(body.x, body.y - radius)
+    ctx.lineTo(body.x + radius, body.y)
+    ctx.lineTo(body.x, body.y + radius)
+    ctx.lineTo(body.x - radius, body.y)
+    ctx.closePath()
+  } else if (mark === "faceted") {
+    const n = 6
+    for (let i = 0; i < n; i += 1) {
+      const a = (Math.PI * 2 * i) / n - Math.PI / 2
+      const px = body.x + Math.cos(a) * radius
+      const py = body.y + Math.sin(a) * radius
+      if (i === 0) ctx.moveTo(px, py)
+      else ctx.lineTo(px, py)
+    }
+    ctx.closePath()
   } else {
-    ctx.rect(
-      body.x - body.shape.width / 2,
-      body.y - body.shape.height / 2,
-      body.shape.width,
-      body.shape.height
-    )
+    // circle + halo
+    ctx.arc(body.x, body.y, radius, 0, Math.PI * 2)
   }
 
   if (fill) {
@@ -363,6 +1073,15 @@ function drawBody(
     ctx.fillStyle = fill
     ctx.fill()
     ctx.restore()
+  }
+  if (mark === "halo") {
+    ctx.beginPath()
+    ctx.arc(body.x, body.y, radius * 1.35, 0, Math.PI * 2)
+    ctx.strokeStyle = stroke ?? fill
+    ctx.lineWidth = Math.max(1.5, strokeWidth || 1.5)
+    ctx.globalAlpha *= 0.55
+    ctx.stroke()
+    ctx.globalAlpha /= 0.55
   }
   if (stroke && strokeWidth > 0) {
     ctx.strokeStyle = stroke
@@ -378,6 +1097,68 @@ function drawBody(
     ctx.stroke()
   }
   ctx.restore()
+}
+
+function physicsBodyRadius(body: PhysicsBodyState): number {
+  if (body.shape.type === "circle") return body.shape.radius
+  return Math.max(body.shape.width, body.shape.height) / 2
+}
+
+function drawPopAnimations(
+  ctx: CanvasRenderingContext2D,
+  animations: Map<string, StreamPhysicsPopAnimation>,
+  now: number
+): boolean {
+  let active = false
+  for (const [id, animation] of animations) {
+    const t = Math.min(1, Math.max(0, (now - animation.startedAt) / animation.durationMs))
+    if (t >= 1) {
+      animations.delete(id)
+      continue
+    }
+    active = true
+    const easeOut = 1 - Math.pow(1 - t, 3)
+    const { body } = animation
+    const radius = animation.radius + 28 * easeOut
+    const alpha = 1 - t
+
+    ctx.save()
+    ctx.globalAlpha *= alpha
+    ctx.strokeStyle = animation.color
+    ctx.fillStyle = animation.color
+    ctx.lineWidth = 2.4 * alpha + 0.4
+    ctx.beginPath()
+    ctx.arc(body.x, body.y, radius, 0, Math.PI * 2)
+    ctx.stroke()
+
+    ctx.globalAlpha *= 0.18
+    ctx.beginPath()
+    ctx.arc(body.x, body.y, radius * 0.52, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+
+    ctx.save()
+    ctx.globalAlpha *= alpha
+    ctx.strokeStyle = animation.color
+    ctx.lineWidth = 1.8
+    for (let index = 0; index < 8; index += 1) {
+      const angle = index * (Math.PI / 4) + t * 1.4
+      const inner = animation.radius + 5 + easeOut * 12
+      const outer = animation.radius + 12 + easeOut * 34
+      ctx.beginPath()
+      ctx.moveTo(
+        body.x + Math.cos(angle) * inner,
+        body.y + Math.sin(angle) * inner
+      )
+      ctx.lineTo(
+        body.x + Math.cos(angle) * outer,
+        body.y + Math.sin(angle) * outer
+      )
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+  return active
 }
 
 function documentIsVisible(): boolean {
@@ -406,6 +1187,105 @@ function physicsHoverData(body: PhysicsBodyState): PhysicsHoverData {
     x: body.x,
     y: body.y
   }
+}
+
+function bodySemanticShape(body: PhysicsBodyState): Pick<
+  PhysicsSemanticItem,
+  "height" | "shape" | "width"
+> {
+  if (body.shape.type === "circle") {
+    const diameter = Math.max(4, body.shape.radius * 2)
+    return {
+      height: diameter,
+      shape: "circle",
+      width: diameter
+    }
+  }
+  return {
+    height: body.shape.height,
+    shape: "rect",
+    width: body.shape.width
+  }
+}
+
+function defaultBodySemanticLabel(body: PhysicsBodyState): string {
+  const datum = body.datum
+  if (datum && typeof datum === "object") {
+    const record = datum as Record<string, unknown>
+    const label = record.label ?? record.name ?? record.id
+    if (
+      typeof label === "string" ||
+      typeof label === "number" ||
+      typeof label === "boolean"
+    ) {
+      return String(label)
+    }
+  }
+  return body.id
+}
+
+function defaultBodySemanticDescription(body: PhysicsBodyState): string {
+  const rows = physicsTooltipRows(body.datum ?? body)
+  if (!rows.length) return `Physics body ${body.id}`
+  return rows.map(([key, value]) => `${key}: ${value}`).join(", ")
+}
+
+function createBodySemanticItems(
+  bodies: readonly PhysicsBodyState[],
+  simulationState: PhysicsSimulationState,
+  bodySemanticItems: StreamPhysicsFrameProps["bodySemanticItems"],
+  limit: number
+): PhysicsSemanticItem[] {
+  if (!bodySemanticItems) return []
+  const maxItems = Math.max(0, Math.floor(limit))
+  if (!maxItems) return []
+  const items: PhysicsSemanticItem[] = []
+  for (let index = 0; index < bodies.length && items.length < maxItems; index += 1) {
+    const body = bodies[index]
+    const context = { index, simulationState }
+    const override =
+      typeof bodySemanticItems === "function"
+        ? bodySemanticItems(body, context)
+        : undefined
+    if (override === false) continue
+    const shape = bodySemanticShape(body)
+    items.push({
+      datum: body.datum ?? body,
+      description: defaultBodySemanticDescription(body),
+      group: "body",
+      label: defaultBodySemanticLabel(body),
+      ...shape,
+      ...(override ?? {}),
+      bodyId: override?.bodyId ?? body.id,
+      id: override?.id ?? `body:${body.id}`,
+      x: override?.x ?? body.x,
+      y: override?.y ?? body.y
+    })
+  }
+  return items
+}
+
+function semanticItemsChanged(
+  previous: readonly PhysicsSemanticItem[],
+  next: readonly PhysicsSemanticItem[]
+): boolean {
+  if (previous.length !== next.length) return true
+  for (let index = 0; index < previous.length; index += 1) {
+    const a = previous[index]
+    const b = next[index]
+    if (
+      a.id !== b.id ||
+      a.label !== b.label ||
+      a.description !== b.description ||
+      a.group !== b.group ||
+      a.bodyId !== b.bodyId ||
+      Math.round(a.x) !== Math.round(b.x) ||
+      Math.round(a.y) !== Math.round(b.y)
+    ) {
+      return true
+    }
+  }
+  return false
 }
 
 function physicsTooltipRows(data: unknown): Array<[string, string]> {
@@ -637,24 +1517,49 @@ export const StreamPhysicsFrame = forwardRef<
 >(function StreamPhysicsFrame(props, ref) {
   const {
     accessibleTable = true,
+    annotations,
+    autoPlaceAnnotations,
+    background,
     backgroundGraphics,
+    bodySemanticItemLimit = 200,
+    bodySemanticItems = false,
+    bodySemanticUpdateMs = 200,
+    bodyForces,
     bodyStyle,
+    chartId,
     className,
+    color,
     config,
+    controllers,
+    continuous = false,
     description,
+    emphasis,
+    chartMode,
     enableHover = true,
     foregroundGraphics,
     hoverRadius = 16,
     initialSpawns,
     initialSpawnPacing,
+    legend,
+    legendClickBehavior,
+    legendHighlightedCategory,
+    legendHoverBehavior,
+    legendIsolatedCategories,
+    legendLayout,
+    legendPosition,
     margin: marginProp,
+    onClick,
+    onObservation,
+    onRegionEvent,
     onSimulationExecutionChange,
     onBodyHover,
     onBodyPointerDown,
     onSemanticItemActivate,
     onSemanticItemFocus,
     onTick,
+    opacity,
     paused = false,
+    regionEffects = [],
     responsiveHeight,
     responsiveWidth,
     selectedBodyStyle = {
@@ -666,16 +1571,277 @@ export const StreamPhysicsFrame = forwardRef<
     semanticItems = [],
     simulationExecution = "auto",
     size: sizeProp = DEFAULT_SIZE,
+    stroke,
+    strokeWidth,
     summary,
     suspendWhenHidden = true,
+    svgAnnotationRules,
     title,
     tooltipContent,
-    workerBodyThreshold = DEFAULT_PHYSICS_WORKER_BODY_THRESHOLD
+    workerBodyThreshold = DEFAULT_PHYSICS_WORKER_BODY_THRESHOLD,
+    renderBody: renderBodyProp,
+    beforePaint,
+    afterPaint
   } = props
+  const stylePrimitives = React.useMemo(
+    () => ({ color, stroke, strokeWidth, opacity }),
+    [color, opacity, stroke, strokeWidth]
+  )
+  const onObservationRef = useRef(onObservation)
+  onObservationRef.current = onObservation
+  const chartIdRef = useRef(chartId)
+  chartIdRef.current = chartId
 
+  const regionStateRef = useRef<
+    Map<string, InternalStreamPhysicsBodyRegionState>
+  >(new Map())
+  const regionEffectsRef = useRef(regionEffects)
+  regionEffectsRef.current = regionEffects
+  const bodyForcesRef = useRef(bodyForces)
+  bodyForcesRef.current = bodyForces
+  const onTickRef = useRef(onTick)
+  onTickRef.current = onTick
+  const composedControllers = React.useMemo(
+    () => composePhysicsControllers(controllers),
+    [controllers]
+  )
+  const composedControllersRef = useRef(composedControllers)
+  composedControllersRef.current = composedControllers
+  const continuousEffective =
+    continuous || Boolean(composedControllers?.continuous)
+  const continuousRef = useRef(continuousEffective)
+  continuousRef.current = continuousEffective
+
+  const composedBodyForces = React.useMemo<StreamPhysicsBodyForce | undefined>(() => {
+    if (!bodyForces && !composedControllers?.bodyForce) return bodyForces
+    if (!composedControllers?.bodyForce) return bodyForces
+    if (!bodyForces) return composedControllers.bodyForce
+    const controllerForce = composedControllers.bodyForce
+    return (context) => {
+      const a =
+        typeof bodyForces === "function" ? bodyForces(context) : bodyForces
+      const b =
+        typeof controllerForce === "function"
+          ? controllerForce(context)
+          : controllerForce
+      if (!a && !b) return null
+      return {
+        x: (a?.x ?? 0) + (b?.x ?? 0),
+        y: (a?.y ?? 0) + (b?.y ?? 0)
+      }
+    }
+  }, [bodyForces, composedControllers])
+  bodyForcesRef.current = composedBodyForces
+
+  const regionBySensorId = React.useMemo(() => {
+    return new Map(
+      regionEffects.map((region) => [regionSensorId(region), region])
+    )
+  }, [regionEffects])
+  const regionById = React.useMemo(() => {
+    return new Map(regionEffects.map((region) => [region.id, region]))
+  }, [regionEffects])
+  const regionSemanticItems = React.useMemo(
+    () =>
+      regionEffects
+        .map(regionToSemanticItem)
+        .filter((item): item is PhysicsSemanticItem => item != null),
+    [regionEffects]
+  )
+  const [bodySemanticItemsSnapshot, setBodySemanticItemsSnapshot] =
+    React.useState<PhysicsSemanticItem[]>([])
+  const allSemanticItems = React.useMemo(
+    () =>
+      bodySemanticItemsSnapshot.length || regionSemanticItems.length
+        ? [...semanticItems, ...bodySemanticItemsSnapshot, ...regionSemanticItems]
+        : semanticItems,
+    [bodySemanticItemsSnapshot, regionSemanticItems, semanticItems]
+  )
+  const hasRuntimeRegionEffects = React.useMemo(
+    () => regionRuntimeEffectsRequireSync(regionEffects),
+    [regionEffects]
+  )
+  const hasRuntimeBodyForces = Boolean(composedBodyForces)
   const storeRef = useRef<PhysicsPipelineStore | null>(null)
+
+  const applyRegionImpulse = useCallback(
+    (
+      bodyId: string,
+      region: StreamPhysicsRegionEffect,
+      vector:
+        | StreamPhysicsRegionVector
+        | ((
+            context: StreamPhysicsRegionEffectContext
+          ) => StreamPhysicsRegionVector | null | undefined)
+        | undefined
+    ) => {
+      const store = storeRef.current
+      if (!store || !vector) return false
+      const body = store.readBodies().find((candidate) => candidate.id === bodyId)
+      const internalState = regionStateRef.current.get(bodyId)
+      const regionState = publicRegionState(internalState)
+      if (!body || !regionState) return false
+      const resolved = resolveRegionVector(vector, {
+        body,
+        region,
+        regionState
+      })
+      if (!resolved || (!resolved.x && !resolved.y)) return false
+      store.applyImpulse(bodyId, resolved.x ?? 0, resolved.y ?? 0)
+      return true
+    },
+    []
+  )
+
+  const emitRegionEvent = useCallback(
+    (
+      type: StreamPhysicsRegionEvent["type"],
+      region: StreamPhysicsRegionEffect,
+      observation: PhysicsObservationEvent
+    ) => {
+      if (!observation.bodyId) return
+      const publicState = publicRegionState(
+        regionStateRef.current.get(observation.bodyId)
+      )
+      if (!publicState) return
+      const event: StreamPhysicsRegionEvent = {
+        bodyId: observation.bodyId,
+        datum: observation.datum,
+        observation,
+        region,
+        regionState: publicState,
+        type
+      }
+      if (type === "region-enter") region.onEnter?.(event)
+      else region.onExit?.(event)
+      onRegionEvent?.(event)
+    },
+    [onRegionEvent]
+  )
+
+  const handleRegionObservation = useCallback(
+    (event: PhysicsObservationEvent) => {
+      const region = event.sensorId ? regionBySensorId.get(event.sensorId) : undefined
+      if (!region || !event.bodyId) return
+      const internalState = ensureInternalRegionState(
+        regionStateRef.current,
+        event.bodyId
+      )
+      const body = storeRef.current
+        ?.readBodies()
+        .find((candidate) => candidate.id === event.bodyId)
+      const publicStateBefore = publicRegionState(internalState)
+      const context =
+        body && publicStateBefore
+          ? { body, region, regionState: publicStateBefore }
+          : null
+
+      if (event.type === "physics-proximity-enter") {
+        internalState.activeRegionIds.add(region.id)
+        internalState.regionIds.add(region.id)
+        internalState.energy += region.energyDelta ?? 0
+        if (context) {
+          mergeRegionAttributes(region, context, internalState)
+          const charge = resolveRegionCharge(region, context)
+          if (charge !== undefined) internalState.charges[region.id] = charge
+        }
+        applyRegionImpulse(event.bodyId, region, region.impulseOnEnter)
+        emitRegionEvent("region-enter", region, event)
+      } else if (event.type === "physics-proximity-exit") {
+        internalState.activeRegionIds.delete(region.id)
+        applyRegionImpulse(event.bodyId, region, region.impulseOnExit)
+        emitRegionEvent("region-exit", region, event)
+      }
+    },
+    [applyRegionImpulse, emitRegionEvent, regionBySensorId]
+  )
+
+  const annotationColliders = React.useMemo(() => {
+    if (!annotations?.length) return []
+    const staticPhysicsNotes = annotations.filter(
+      (ann): ann is PhysicsStaticAnnotation & Datum =>
+        ann.physics === "barrier" || ann.physics === "sensor"
+    )
+    if (!staticPhysicsNotes.length) return []
+    return collidersFromPhysicsAnnotations(staticPhysicsNotes, {
+      idPrefix: chartId ? `${chartId}-ann` : "physics-ann",
+      plotBounds: {
+        x: 0,
+        y: 0,
+        width: sizeProp?.[0] ?? DEFAULT_SIZE[0],
+        height: sizeProp?.[1] ?? DEFAULT_SIZE[1]
+      }
+    })
+  }, [annotations, chartId, sizeProp])
+
+  const augmentedConfig = React.useMemo(() => {
+    const regionColliders: NonNullable<PhysicsPipelineConfig["colliders"]> =
+      regionEffects.flatMap((region) => {
+        const sensorCollider = {
+          id: regionSensorId(region),
+          sensor: true,
+          shape: region.shape,
+          bodyFilter: region.bodyFilter,
+          friction: region.friction,
+          restitution: region.restitution
+        }
+        return [sensorCollider, ...regionBoundaryColliders(region)]
+      })
+    const regionSensors = Object.fromEntries(
+      regionEffects.map((region) => [
+        regionSensorId(region),
+        {
+          binId: region.binId ?? region.id,
+          enterType: "physics-proximity-enter",
+          exitType: "physics-proximity-exit"
+        }
+      ])
+    ) as NonNullable<
+      NonNullable<PhysicsPipelineConfig["observation"]>["sensors"]
+    >
+    const previousObservation = config?.observation
+    const hasRegionWiring = regionEffects.length > 0
+    const hasExtraColliders =
+      regionColliders.length > 0 || annotationColliders.length > 0
+    if (
+      !hasRegionWiring &&
+      !hasExtraColliders &&
+      chartId == null &&
+      !previousObservation
+    ) {
+      return config
+    }
+    return {
+      ...config,
+      colliders: [
+        ...(config?.colliders ?? []),
+        ...regionColliders,
+        ...annotationColliders
+      ],
+      observation: {
+        ...previousObservation,
+        chartId: chartId ?? previousObservation?.chartId,
+        chartType: previousObservation?.chartType ?? CHART_TYPE,
+        sensors: {
+          ...(previousObservation?.sensors ?? {}),
+          ...regionSensors
+        },
+        onObservation: (event: PhysicsObservationEvent) => {
+          if (hasRegionWiring) handleRegionObservation(event)
+          previousObservation?.onObservation?.(event)
+        }
+      }
+    }
+  }, [
+    annotationColliders,
+    chartId,
+    config,
+    handleRegionObservation,
+    regionEffects
+  ])
+
   if (!storeRef.current) {
-    storeRef.current = createStore(config, initialSpawns, initialSpawnPacing)
+    storeRef.current = createStore(augmentedConfig, initialSpawns, initialSpawnPacing)
   }
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -717,33 +1883,115 @@ export const StreamPhysicsFrame = forwardRef<
   const [hoverData, setHoverData] = React.useState<PhysicsHoverData | null>(
     null
   )
+  const focusedBodyIdRef = useRef<string | null>(null)
+  const lastBodySemanticUpdateRef = useRef(0)
+  const popAnimationsRef = useRef(new Map<string, StreamPhysicsPopAnimation>())
   const liveRegionId = `${svgInstanceId}-physics-live`
+
+  const syncBodySemanticItems = useCallback(
+    (bodies: readonly PhysicsBodyState[], simulationState: PhysicsSimulationState, force = false) => {
+      if (!bodySemanticItems) {
+        setBodySemanticItemsSnapshot((current) => current.length ? [] : current)
+        return
+      }
+
+      const now =
+        typeof performance !== "undefined" ? performance.now() : Date.now()
+      if (
+        !force &&
+        bodySemanticUpdateMs > 0 &&
+        now - lastBodySemanticUpdateRef.current < bodySemanticUpdateMs
+      ) {
+        return
+      }
+      lastBodySemanticUpdateRef.current = now
+
+      const next = createBodySemanticItems(
+        bodies,
+        simulationState,
+        bodySemanticItems,
+        bodySemanticItemLimit
+      )
+      setBodySemanticItemsSnapshot((current) =>
+        semanticItemsChanged(current, next) ? next : current
+      )
+    },
+    [
+      bodySemanticItemLimit,
+      bodySemanticItems,
+      bodySemanticUpdateMs
+    ]
+  )
 
   const focusSemanticItem = useCallback(
     (index: number) => {
-      if (!semanticItems.length) return
-      const nextIndex = Math.max(0, Math.min(index, semanticItems.length - 1))
+      if (!allSemanticItems.length) return
+      const nextIndex = Math.max(0, Math.min(index, allSemanticItems.length - 1))
       semanticFocusIndexRef.current = nextIndex
-      const item = semanticItems[nextIndex]
+      const item = allSemanticItems[nextIndex]
+      focusedBodyIdRef.current = item.bodyId ?? null
       setFocusedSemanticItem(item)
       onSemanticItemFocus?.(item)
+
+      if (item.bodyId && storeRef.current) {
+        const body = storeRef.current
+          .readBodies()
+          .find((candidate) => candidate.id === item.bodyId)
+        if (body) {
+          const hover = physicsHoverData(body)
+          setHoverData(hover)
+          onBodyHover?.(body, hover)
+        }
+      }
     },
-    [onSemanticItemFocus, semanticItems]
+    [allSemanticItems, onBodyHover, onSemanticItemFocus]
   )
 
   const clearSemanticFocus = useCallback(() => {
     semanticFocusIndexRef.current = -1
+    focusedBodyIdRef.current = null
     setFocusedSemanticItem(null)
     onSemanticItemFocus?.(null)
   }, [onSemanticItemFocus])
+
+  const emitObservation = useCallback(
+    (
+      type: "hover" | "hover-end" | "click" | "click-end",
+      payload?: { datum?: unknown; x?: number; y?: number }
+    ) => {
+      const cb = onObservationRef.current
+      if (!cb) return
+      const now = Date.now()
+      if (type === "hover" || type === "click") {
+        cb({
+          type,
+          datum: (payload?.datum as Datum) ?? {},
+          x: payload?.x ?? 0,
+          y: payload?.y ?? 0,
+          timestamp: now,
+          chartType: CHART_TYPE,
+          chartId: chartIdRef.current
+        })
+        return
+      }
+      cb({
+        type,
+        timestamp: now,
+        chartType: CHART_TYPE,
+        chartId: chartIdRef.current
+      })
+    },
+    []
+  )
 
   const clearHover = useCallback(() => {
     setHoverData((current) => {
       if (!current) return current
       onBodyHover?.(null, null)
+      emitObservation("hover-end")
       return null
     })
-  }, [onBodyHover])
+  }, [emitObservation, onBodyHover])
 
   const handleCanvasPointerMove = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -769,24 +2017,93 @@ export const StreamPhysicsFrame = forwardRef<
           return current
         }
         onBodyHover?.(body, hover)
+        emitObservation("hover", {
+          datum: body.datum,
+          x: body.x,
+          y: body.y
+        })
         return hover
       })
     },
-    [clearHover, enableHover, hoverRadius, onBodyHover]
+    [clearHover, emitObservation, enableHover, hoverRadius, onBodyHover]
+  )
+
+  const handleCanvasPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      clearSemanticFocus()
+      const store = storeRef.current
+      const rect = event.currentTarget.getBoundingClientRect()
+      const x = event.clientX - rect.left
+      const y = event.clientY - rect.top
+      const body = store
+        ? store.hitTest(x, y, Math.max(16, hoverRadius))
+        : null
+      onBodyPointerDown?.(body, event)
+      if (body) {
+        emitObservation("click", {
+          datum: body.datum,
+          x: body.x,
+          y: body.y
+        })
+        onClick?.(body.datum ?? null, { x: body.x, y: body.y, body })
+      } else {
+        emitObservation("click-end")
+        onClick?.(null, { x, y, body: null })
+        clearHover()
+      }
+    },
+    [
+      clearHover,
+      clearSemanticFocus,
+      emitObservation,
+      hoverRadius,
+      onBodyPointerDown,
+      onClick
+    ]
   )
 
   useEffect(() => {
-    if (!semanticItems.length) {
+    if (!allSemanticItems.length) {
       clearSemanticFocus()
       return
     }
     const current = semanticFocusIndexRef.current
-    if (current >= semanticItems.length) {
-      focusSemanticItem(semanticItems.length - 1)
+    if (current >= allSemanticItems.length) {
+      focusSemanticItem(allSemanticItems.length - 1)
     } else if (current >= 0) {
-      setFocusedSemanticItem(semanticItems[current])
+      const item = allSemanticItems[current]
+      focusedBodyIdRef.current = item.bodyId ?? null
+      setFocusedSemanticItem((previous) => {
+        if (
+          previous != null &&
+          previous.id === item.id &&
+          Math.round(previous.x) === Math.round(item.x) &&
+          Math.round(previous.y) === Math.round(item.y)
+        ) {
+          return previous
+        }
+        return item
+      })
+      if (item.bodyId && storeRef.current) {
+        const body = storeRef.current
+          .readBodies()
+          .find((candidate) => candidate.id === item.bodyId)
+        if (body) {
+          const hover = physicsHoverData(body)
+          setHoverData((previous) => {
+            if (
+              previous?.id === hover.id &&
+              Math.round(previous.x) === Math.round(hover.x) &&
+              Math.round(previous.y) === Math.round(hover.y)
+            ) {
+              return previous
+            }
+            return hover
+          })
+        }
+      }
     }
-  }, [clearSemanticFocus, focusSemanticItem, semanticItems])
+  }, [allSemanticItems, clearSemanticFocus, focusSemanticItem])
 
   useEffect(() => {
     if (!enableHover) clearHover()
@@ -794,7 +2111,7 @@ export const StreamPhysicsFrame = forwardRef<
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (!semanticItems.length) return
+      if (!allSemanticItems.length) return
 
       if (event.key === "Escape") {
         event.preventDefault()
@@ -807,7 +2124,7 @@ export const StreamPhysicsFrame = forwardRef<
         semanticFocusIndexRef.current >= 0
       ) {
         event.preventDefault()
-        onSemanticItemActivate?.(semanticItems[semanticFocusIndexRef.current])
+        onSemanticItemActivate?.(allSemanticItems[semanticFocusIndexRef.current])
         return
       }
 
@@ -820,16 +2137,16 @@ export const StreamPhysicsFrame = forwardRef<
         return
       }
 
-      const pageStep = Math.max(1, Math.floor(semanticItems.length * 0.1))
+      const pageStep = Math.max(1, Math.floor(allSemanticItems.length * 0.1))
       let next = current
       if (event.key === "Home") next = 0
-      else if (event.key === "End") next = semanticItems.length - 1
+      else if (event.key === "End") next = allSemanticItems.length - 1
       else if (event.key === "PageDown") {
-        next = Math.min(semanticItems.length - 1, current + pageStep)
+        next = Math.min(allSemanticItems.length - 1, current + pageStep)
       } else if (event.key === "PageUp") {
         next = Math.max(0, current - pageStep)
       } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-        next = Math.min(semanticItems.length - 1, current + 1)
+        next = Math.min(allSemanticItems.length - 1, current + 1)
       } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
         next = Math.max(0, current - 1)
       }
@@ -839,9 +2156,19 @@ export const StreamPhysicsFrame = forwardRef<
       clearSemanticFocus,
       focusSemanticItem,
       onSemanticItemActivate,
-      semanticItems
+      allSemanticItems
     ]
   )
+
+  const [annotationAnchors, setAnnotationAnchors] = React.useState<
+    PhysicsAnnotationAnchorNode[]
+  >([])
+  const lastAnnotationAnchorUpdateRef = useRef(0)
+  const needsLiveAnnotationAnchors =
+    Boolean(annotations?.length) &&
+    annotations!.some(
+      (ann) => ann.pointId != null || ann.bodyId != null || ann.anchor === "latest"
+    )
 
   const paint = useCallback(() => {
     const canvas = canvasRef.current
@@ -852,32 +2179,98 @@ export const StreamPhysicsFrame = forwardRef<
     if (!ctx) return
 
     const theme = resolvePhysicsCanvasTheme(ctx)
-    ctx.fillStyle = theme.background
-    ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
+    ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
+    if (!backgroundGraphics) {
+      if (background === "transparent") {
+        // leave cleared (compositing over siblings)
+      } else {
+        ctx.fillStyle = background ?? theme.background
+        ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
+      }
+    }
 
     const snapshot = store.snapshot()
     const bodies = store.readBodies()
-    for (const body of bodies) {
-      drawBody(
-        ctx,
-        body,
-        resolveStyle(
-          body,
-          snapshot.simulationState,
-          bodyStyle,
-          selectedBodyStyle,
-          selection,
-          theme.primary,
-          theme.text
-        )
-      )
+    syncBodySemanticItems(bodies, snapshot.simulationState)
+    if (needsLiveAnnotationAnchors) {
+      const now =
+        typeof performance !== "undefined" ? performance.now() : Date.now()
+      if (now - lastAnnotationAnchorUpdateRef.current >= 100) {
+        lastAnnotationAnchorUpdateRef.current = now
+        const next = bodiesToAnnotationAnchors(bodies)
+        setAnnotationAnchors((prev) => {
+          if (
+            prev.length === next.length &&
+            prev.every(
+              (row, i) =>
+                row.pointId === next[i].pointId &&
+                Math.round(row.x) === Math.round(next[i].x) &&
+                Math.round(row.y) === Math.round(next[i].y)
+            )
+          ) {
+            return prev
+          }
+          return next
+        })
+      }
     }
+    if (beforePaint) {
+      ctx.save()
+      beforePaint(ctx, bodies)
+      ctx.restore()
+    }
+    for (const body of bodies) {
+      const internalRegionState = regionStateRef.current.get(body.id)
+      const activeRegions = internalRegionState
+        ? Array.from(internalRegionState.activeRegionIds)
+            .map((id) => regionById.get(id))
+            .filter((region): region is StreamPhysicsRegionEffect => region != null)
+        : []
+      const style = resolveStyle(
+        body,
+        snapshot.simulationState,
+        bodyStyle,
+        selectedBodyStyle,
+        selection,
+        publicRegionState(internalRegionState),
+        activeRegions,
+        theme.primary,
+        theme.text,
+        stylePrimitives
+      )
+      if (renderBodyProp) {
+        ctx.save()
+        renderBodyProp(ctx, body, style)
+        ctx.restore()
+      } else {
+        drawBody(ctx, body, style)
+      }
+    }
+    if (afterPaint) {
+      ctx.save()
+      afterPaint(ctx, bodies)
+      ctx.restore()
+    }
+    drawPopAnimations(
+      ctx,
+      popAnimationsRef.current,
+      typeof performance !== "undefined" ? performance.now() : Date.now()
+    )
     dirtyRef.current = false
   }, [
+    afterPaint,
+    background,
+    backgroundGraphics,
+    beforePaint,
     bodyStyle,
     margin,
+    needsLiveAnnotationAnchors,
+    regionById,
+    renderBodyProp,
     selectedBodyStyle,
     selection,
+    stylePrimitives,
+    syncBodySemanticItems,
     size
   ])
 
@@ -914,7 +2307,10 @@ export const StreamPhysicsFrame = forwardRef<
   const workerUnsupportedReason = useCallback((): string | null => {
     if (!hydrated) return "hydrating"
     if (!canUsePhysicsWorker()) return "worker unavailable"
-    if (!isPhysicsWorkerConfigSupported(config)) {
+    if (hasRuntimeRegionEffects) return "runtime region effects require sync"
+    if (hasRuntimeBodyForces) return "body forces require sync"
+    if (composedControllers) return "physics controllers require sync"
+    if (!isPhysicsWorkerConfigSupported(augmentedConfig ?? {})) {
       return "config is not worker-cloneable"
     }
     if (!isPhysicsWorkerPacingSupported(initialSpawnPacing)) {
@@ -922,7 +2318,14 @@ export const StreamPhysicsFrame = forwardRef<
     }
     if (workerFailedRef.current) return "worker fallback"
     return null
-  }, [config, hydrated, initialSpawnPacing])
+  }, [
+    augmentedConfig,
+    composedControllers,
+    hasRuntimeBodyForces,
+    hasRuntimeRegionEffects,
+    hydrated,
+    initialSpawnPacing
+  ])
 
   const workerChoice = useCallback(() => {
     const store = storeRef.current
@@ -962,8 +2365,9 @@ export const StreamPhysicsFrame = forwardRef<
       paint()
 
       const latest = store.snapshot()
+      const popAnimationsActive = popAnimationsRef.current.size > 0
       if (
-        frame.result.shouldContinue &&
+        (frame.result.shouldContinue || popAnimationsActive) &&
         !latest.paused &&
         latest.visible &&
         !reducedMotionRef.current
@@ -1006,7 +2410,7 @@ export const StreamPhysicsFrame = forwardRef<
     workerGenerationRef.current = generation
 
     session
-      .initFromSnapshot(config, store.snapshot())
+      .initFromSnapshot(augmentedConfig ?? {}, store.snapshot())
       .then((frame) => {
         if (workerGenerationRef.current !== generation) return
         workerStartingRef.current = false
@@ -1035,7 +2439,7 @@ export const StreamPhysicsFrame = forwardRef<
     return true
   }, [
     applyWorkerFrame,
-    config,
+    augmentedConfig,
     handleWorkerError,
     paint,
     reducedMotionRef,
@@ -1077,10 +2481,15 @@ export const StreamPhysicsFrame = forwardRef<
     if (!store) return
     const usingWorker = startWorkerIfNeeded()
     const snapshot = store.snapshot()
+    const frameDrivenWork =
+      continuousEffective ||
+      hasRuntimeBodyForces ||
+      hasRuntimeRegionEffects ||
+      Boolean(composedControllers)
     if (
       snapshot.paused ||
       !snapshot.visible ||
-      !store.hasPendingWork() ||
+      (!store.hasPendingWork() && !frameDrivenWork) ||
       reducedMotionRef.current
     ) {
       renderFnRef.current()
@@ -1090,6 +2499,10 @@ export const StreamPhysicsFrame = forwardRef<
     lastFrameTimeRef.current = 0
     scheduleRender()
   }, [
+    composedControllers,
+    continuousEffective,
+    hasRuntimeBodyForces,
+    hasRuntimeRegionEffects,
     reducedMotionRef,
     renderFnRef,
     scheduleRender,
@@ -1131,7 +2544,15 @@ export const StreamPhysicsFrame = forwardRef<
           const result = reducedMotionRef.current
             ? store.settleWithObservations()
             : store.tick(deltaSeconds)
-          onTick?.(result, store.controls())
+          runPhysicsPostTick({
+            store,
+            result,
+            regionEffects: regionEffectsRef.current,
+            regionState: regionStateRef.current,
+            bodyForces: bodyForcesRef.current,
+            composed: composedControllersRef.current,
+            onTick: onTickRef.current
+          })
           paint()
         })
       return
@@ -1149,12 +2570,27 @@ export const StreamPhysicsFrame = forwardRef<
       result = store.tick(deltaSeconds)
     }
 
-    onTick?.(result, store.controls())
+    const composed = composedControllersRef.current
+    const { regionEffectsApplied, bodyForcesApplied, snapshot: latest } =
+      runPhysicsPostTick({
+        store,
+        result,
+        regionEffects: regionEffectsRef.current,
+        regionState: regionStateRef.current,
+        bodyForces: bodyForcesRef.current,
+        composed,
+        onTick: onTickRef.current
+      })
     paint()
 
-    const latest = store.snapshot()
+    const popAnimationsActive = popAnimationsRef.current.size > 0
     if (
-      result.shouldContinue &&
+      (continuousRef.current ||
+        result.shouldContinue ||
+        regionEffectsApplied ||
+        bodyForcesApplied ||
+        Boolean(composed) ||
+        popAnimationsActive) &&
       !latest.paused &&
       latest.visible &&
       !reducedMotionRef.current
@@ -1164,7 +2600,6 @@ export const StreamPhysicsFrame = forwardRef<
   }, [
     finishWorkerFrame,
     handleWorkerError,
-    onTick,
     paint,
     rafRef,
     reducedMotionRef,
@@ -1184,17 +2619,16 @@ export const StreamPhysicsFrame = forwardRef<
   })
 
   useEffect(() => {
-    if (!config) return
     workerFailedRef.current = false
     if (workerActiveRef.current || workerStartingRef.current) {
       stopWorker("config changed", false)
     }
-    storeRef.current?.updateConfig(config)
+    storeRef.current?.updateConfig(augmentedConfig ?? {})
     requestRender()
     // requestRender depends on paint/layout callbacks; config changes are the
     // intentional trigger here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, stopWorker])
+  }, [augmentedConfig, stopWorker])
 
   useEffect(() => {
     workerFailedRef.current = false
@@ -1252,10 +2686,21 @@ export const StreamPhysicsFrame = forwardRef<
       },
       clear: () => {
         storeRef.current!.clear()
+        regionStateRef.current.clear()
+        popAnimationsRef.current.clear()
         postWorkerCommand({ type: "clear" })
         requestRender()
       },
+      clearRegionState: (bodyId) => {
+        if (bodyId) regionStateRef.current.delete(bodyId)
+        else regionStateRef.current.clear()
+        requestRender()
+      },
       getData: () => storeRef.current!.readBodies(),
+      getRegionState: (bodyId) =>
+        bodyId
+          ? publicRegionState(regionStateRef.current.get(bodyId))
+          : cloneRegionStateSnapshot(regionStateRef.current),
       getStore: () => storeRef.current!,
       pause: () => {
         storeRef.current!.setPaused(true)
@@ -1280,14 +2725,45 @@ export const StreamPhysicsFrame = forwardRef<
         }
         requestRender()
       },
+      popBodies: (ids, options = {}) => {
+        const store = storeRef.current!
+        const bodyById = new Map(store.readBodies().map((body) => [body.id, body]))
+        const removed = store.remove(ids)
+        const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+        for (const id of removed) {
+          const body = bodyById.get(id)
+          if (!body) continue
+          regionStateRef.current.delete(id)
+          popAnimationsRef.current.set(id, {
+            body,
+            color: options.color ?? "#f59e0b",
+            durationMs: Math.max(120, options.durationMs ?? 520),
+            radius: options.radius ?? physicsBodyRadius(body),
+            startedAt: now
+          })
+          if (focusedBodyIdRef.current === id) {
+            focusedBodyIdRef.current = null
+            setFocusedSemanticItem(null)
+          }
+          setHoverData((current) => current?.id === id ? null : current)
+        }
+        if (removed.length) {
+          postWorkerCommand({ type: "remove", ids: removed })
+          requestRender()
+        }
+        return removed
+      },
       remove: (ids) => {
         const removed = storeRef.current!.remove(ids)
+        for (const id of ids) regionStateRef.current.delete(id)
         postWorkerCommand({ type: "remove", ids })
         requestRender()
         return removed
       },
       restore: (snapshot: PhysicsPipelineSnapshot) => {
         storeRef.current!.restore(snapshot)
+        regionStateRef.current.clear()
+        popAnimationsRef.current.clear()
         postWorkerCommand({ type: "restore", snapshot }, false)
         requestRender()
       },
@@ -1309,7 +2785,17 @@ export const StreamPhysicsFrame = forwardRef<
         return result
       },
       step: (deltaSeconds) => {
-        const result = storeRef.current!.tick(deltaSeconds)
+        const store = storeRef.current!
+        const result = store.tick(deltaSeconds)
+        runPhysicsPostTick({
+          store,
+          result,
+          regionEffects: regionEffectsRef.current,
+          regionState: regionStateRef.current,
+          bodyForces: bodyForcesRef.current,
+          composed: composedControllersRef.current,
+          onTick: onTickRef.current
+        })
         postWorkerCommand({ type: "tick", deltaSeconds })
         paint()
         return result
@@ -1320,11 +2806,21 @@ export const StreamPhysicsFrame = forwardRef<
 
   const serverLikeRender =
     isServerEnvironment || (!hydrated && wasHydratingFromSSR)
-  const wrapperClassName = ["stream-physics-frame", className]
+  const wrapperClassName = [
+    "stream-physics-frame",
+    chartMode ? `stream-physics-frame--mode-${chartMode}` : null,
+    emphasis ? `stream-physics-frame--emphasis-${emphasis}` : null,
+    className
+  ]
     .filter(Boolean)
     .join(" ")
-  const ariaLabel = description ?? title ?? "Physics chart"
+  const ariaLabel =
+    description ??
+    (typeof title === "string" ? title : undefined) ??
+    "Physics chart"
   const tableId = `${svgInstanceId}-physics-table`
+  const plotWidth = Math.max(1, size[0] - margin.left - margin.right)
+  const plotHeight = Math.max(1, size[1] - margin.top - margin.bottom)
   const tooltipRendered =
     enableHover && hoverData
       ? tooltipContent
@@ -1348,11 +2844,14 @@ export const StreamPhysicsFrame = forwardRef<
 
   if (serverLikeRender) {
     const store =
-      storeRef.current ?? createStore(config, initialSpawns, initialSpawnPacing)
+      storeRef.current ?? createStore(augmentedConfig, initialSpawns, initialSpawnPacing)
+    const titleText = typeof title === "string" ? title : undefined
     const { svg } = renderPhysicsSettledSVG(store, {
       width: size[0],
       height: size[1],
-      title,
+      title: titleText,
+      description,
+      background: background === "transparent" ? undefined : background,
       className: "stream-physics-frame__svg",
       idPrefix: `physics-${svgInstanceId}`
     })
@@ -1360,6 +2859,7 @@ export const StreamPhysicsFrame = forwardRef<
       <div
         ref={responsiveRef}
         className={wrapperClassName}
+        data-semiotic-mode={chartMode}
         role="img"
         aria-label={ariaLabel}
         style={{ width: size[0], height: size[1] }}
@@ -1374,6 +2874,7 @@ export const StreamPhysicsFrame = forwardRef<
     <div
       ref={responsiveRef}
       className={wrapperClassName}
+      data-semiotic-mode={chartMode}
       role="group"
       aria-label={ariaLabel}
       aria-describedby={focusedSemanticItem ? liveRegionId : undefined}
@@ -1389,54 +2890,69 @@ export const StreamPhysicsFrame = forwardRef<
       {accessibleTable ? (
         <PhysicsSemanticDataTable
           chartTitle={typeof title === "string" ? title : ariaLabel}
-          items={semanticItems}
+          items={allSemanticItems}
           tableId={tableId}
         />
       ) : null}
       <ScreenReaderSummary summary={summary} />
+      {/* Live region must sit outside role="img" so AT announces hover/focus. */}
       <AriaLiveTooltip hoverPoint={hoverData} />
       <div id={liveRegionId} aria-live="polite" aria-atomic="true" style={SR_ONLY_STYLE}>
         {focusedSemanticItem
           ? focusedSemanticItem.description ?? focusedSemanticItem.label
           : ""}
       </div>
-      {resolvedBackground}
-      <canvas
-        ref={canvasRef}
-        width={size[0]}
-        height={size[1]}
+      <div
+        role="img"
         aria-label={ariaLabel}
-        onPointerDown={(event) => {
-          clearSemanticFocus()
-          clearHover()
-          if (!onBodyPointerDown || !storeRef.current) return
-          const rect = event.currentTarget.getBoundingClientRect()
-          const body = storeRef.current.hitTest(
-            event.clientX - rect.left,
-            event.clientY - rect.top,
-            16
-          )
-          onBodyPointerDown(body, event)
-        }}
-        onPointerMove={enableHover ? handleCanvasPointerMove : undefined}
-        onPointerLeave={enableHover ? clearHover : undefined}
-      />
-      {resolvedForeground}
-      <FocusRing
-        active={focusedSemanticItem != null}
-        hoverPoint={
-          focusedSemanticItem
-            ? { x: focusedSemanticItem.x, y: focusedSemanticItem.y }
-            : null
-        }
-        margin={margin}
-        size={size}
-        shape={focusedSemanticItem?.shape}
-        width={focusedSemanticItem?.width}
-        height={focusedSemanticItem?.height}
-        pathData={focusedSemanticItem?.pathData}
-      />
-      {tooltipElement}
+        style={{ position: "relative", width: "100%", height: "100%" }}
+      >
+        {resolvedBackground}
+        <canvas
+          ref={canvasRef}
+          width={size[0]}
+          height={size[1]}
+          aria-hidden="true"
+          onPointerDown={handleCanvasPointerDown}
+          onPointerMove={enableHover ? handleCanvasPointerMove : undefined}
+          onPointerLeave={enableHover ? clearHover : undefined}
+        />
+        {resolvedForeground}
+        <PhysicsSVGOverlay
+          width={plotWidth}
+          height={plotHeight}
+          totalWidth={size[0]}
+          totalHeight={size[1]}
+          margin={margin}
+          title={title}
+          legend={legend}
+          legendPosition={legendPosition}
+          legendLayout={legendLayout}
+          legendHoverBehavior={legendHoverBehavior}
+          legendClickBehavior={legendClickBehavior}
+          legendHighlightedCategory={legendHighlightedCategory}
+          legendIsolatedCategories={legendIsolatedCategories}
+          pointNodes={annotationAnchors}
+          annotations={annotations}
+          autoPlaceAnnotations={autoPlaceAnnotations}
+          svgAnnotationRules={svgAnnotationRules}
+        />
+        <FocusRing
+          active={focusedSemanticItem != null}
+          hoverPoint={
+            focusedSemanticItem
+              ? { x: focusedSemanticItem.x, y: focusedSemanticItem.y }
+              : null
+          }
+          margin={margin}
+          size={size}
+          shape={focusedSemanticItem?.shape}
+          width={focusedSemanticItem?.width}
+          height={focusedSemanticItem?.height}
+          pathData={focusedSemanticItem?.pathData}
+        />
+        {tooltipElement}
+      </div>
     </div>
   )
 })

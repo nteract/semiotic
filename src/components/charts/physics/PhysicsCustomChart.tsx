@@ -14,9 +14,12 @@ import type { Style, ThemeSemanticColors } from "../../stream/types"
 import StreamPhysicsFrame, {
   type PhysicsBodyStyleContext,
   type PhysicsSemanticItem,
+  type StreamPhysicsBodyForce,
   type StreamPhysicsFrameHandle,
-  type StreamPhysicsFrameProps
+  type StreamPhysicsFrameProps,
+  type StreamPhysicsRegionEffect
 } from "../../stream/physics/StreamPhysicsFrame"
+import type { PhysicsController } from "../../stream/physics/PhysicsControllers"
 import {
   PhysicsPipelineStore,
   type PhysicsPipelineConfig,
@@ -48,6 +51,9 @@ import {
   resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
+  usePhysicsChartMode,
+  type PhysicsHocFrameProps,
+  type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
 
@@ -88,6 +94,18 @@ export interface PhysicsCustomLayoutResult {
   constraints?: PhysicsSpringSpec[]
   config?: PhysicsPipelineConfig
   initialSpawnPacing?: PhysicsSpawnPacingOptions
+  /**
+   * Region effects (membranes, capacity stages, portals). Prefer declaring
+   * these here and driving interaction via `controllers` / `layoutConfig`
+   * rather than re-spawning bodies.
+   */
+  regionEffects?: StreamPhysicsRegionEffect[]
+  /**
+   * Process plugins (capacity queues, portals). Tick with the frame heartbeat
+   * without rebuilding world topology when only `layoutConfig` changes.
+   */
+  controllers?: PhysicsController[]
+  bodyForces?: StreamPhysicsBodyForce
   overlays?: ReactNode
   backgroundOverlays?: ReactNode
   bodyStyle?: StreamPhysicsFrameProps["bodyStyle"]
@@ -110,9 +128,16 @@ export type PhysicsCustomSpawnDatumResult =
 export interface PhysicsCustomChartProps<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
-> extends Omit<BaseChartProps, "margin"> {
+> extends Omit<BaseChartProps, "margin">,
+    PhysicsSharedChartProps {
   data?: TDatum[]
   layout: PhysicsCustomLayout<TDatum, TConfig>
+  /**
+   * Interaction / style config passed as `ctx.config`. Changing only
+   * `layoutConfig` re-runs the layout for regionEffects, controllers, overlays,
+   * and bodyStyle — it does **not** re-create the physics store or re-enqueue
+   * initial spawns (topology is keyed by data + size + layout identity).
+   */
   layoutConfig?: TConfig
   config?: PhysicsPipelineConfig
   size?: [number, number]
@@ -122,17 +147,20 @@ export interface PhysicsCustomChartProps<
   colorScheme?: string | string[] | Record<string, string>
   paused?: boolean
   tooltip?: TooltipProp
+  /**
+   * Extra process controllers composed with any returned from `layout()`.
+   */
+  controllers?: PhysicsController[]
   spawnDatum?: (
     datum: TDatum,
     index: number,
     ctx: PhysicsCustomLayoutContext<TDatum, TConfig>
   ) => PhysicsCustomSpawnDatumResult
-  frameProps?: Partial<
-    Omit<
-      StreamPhysicsFrameProps,
-      "config" | "initialSpawns" | "initialSpawnPacing" | "size"
-    >
-  >
+  /**
+   * Frame passthrough. Prefer top-level `controllers` / layout-returned
+   * regionEffects; frameProps merges are still supported for escape hatches.
+   */
+  frameProps?: PhysicsHocFrameProps<"config">
 }
 
 interface ResolvedPhysicsCustomLayout<
@@ -325,6 +353,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     colorBy,
     colorScheme,
     config,
+    controllers: propControllers,
     data,
     emptyContent,
     frameProps = {},
@@ -346,16 +375,22 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     xExtent,
     yExtent
   } = props
+  const layoutMode = usePhysicsChartMode(props, [700, 380])
+  const {
+    chartSize,
+    className: modeClassName,
+    title: modeTitle,
+    chartMode,
+    compactMode,
+    margin: modeMargin,
+    enableHover: modeEnableHover,
+    description: modeDescription,
+    summary: modeSummary,
+    accessibleTable: modeAccessibleTable
+  } = layoutMode
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const sizeWidth = size?.[0]
-  const sizeHeight = size?.[1]
-  const chartSize = useMemo(
-    () =>
-      sizeWidth != null && sizeHeight != null
-        ? [sizeWidth, sizeHeight] as [number, number]
-        : resolvePhysicsChartSize(undefined, width, height, [700, 380]),
-    [height, sizeHeight, sizeWidth, width]
-  )
+  const topologySpawnsRef = useRef<PhysicsQueuedSpawn[] | null>(null)
+  const topologyKeyRef = useRef<string>("")
   const stateEl = renderPhysicsChartState({
     data,
     emptyContent,
@@ -374,6 +409,22 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     [theme]
   )
   const themeCategorical = theme?.colors?.categorical ?? LIGHT_THEME.colors.categorical
+
+  // Topology key excludes layoutConfig so interaction restyles do not re-enqueue bodies.
+  const topologyKey = useMemo(
+    () =>
+      [
+        chartSize[0],
+        chartSize[1],
+        safeData.length,
+        safeData
+          .map((row, index) => String(row.id ?? index))
+          .join("|"),
+        xExtent?.join(",") ?? "",
+        yExtent?.join(",") ?? ""
+      ].join("::"),
+    [chartSize, safeData, xExtent, yExtent]
+  )
 
   const resolved = useMemo(
     () =>
@@ -408,6 +459,27 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
       yExtent
     ]
   )
+
+  if (topologyKeyRef.current !== topologyKey || topologySpawnsRef.current == null) {
+    topologyKeyRef.current = topologyKey
+    topologySpawnsRef.current = resolved.initialSpawns
+  }
+  const stableInitialSpawns = topologySpawnsRef.current
+
+  const controllers = useMemo(() => {
+    const fromLayout = resolved.result.controllers ?? []
+    const fromProps = propControllers ?? []
+    const fromFrame = frameProps.controllers ?? []
+    const merged = [...fromLayout, ...fromProps, ...fromFrame]
+    return merged.length ? merged : undefined
+  }, [frameProps.controllers, propControllers, resolved.result.controllers])
+
+  const regionEffects = useMemo(() => {
+    const fromLayout = resolved.result.regionEffects ?? []
+    const fromFrame = frameProps.regionEffects ?? []
+    const merged = [...fromLayout, ...fromFrame]
+    return merged.length ? merged : undefined
+  }, [frameProps.regionEffects, resolved.result.regionEffects])
 
   const fallbackBodyStyle = useCallback<PhysicsBodyStyleFn>(
     (body) => {
@@ -482,17 +554,22 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
       yExtent
     ]
   )
-  usePhysicsHocHandle(ref, { frameRef, spawnDatum })
+  usePhysicsHocHandle(ref, {
+    frameRef,
+    spawnDatum,
+    seedRows: safeData as Datum[],
+    seedSpawns: stableInitialSpawns
+  })
 
   const handlePointerDown = useCallback<
     NonNullable<StreamPhysicsFrameProps["onBodyPointerDown"]>
   >(
     (body, event) => {
+      // Semiotic onClick/onObservation are owned by StreamPhysicsFrame via
+      // resolvePhysicsFrameSharedProps — only forward frameProps escape hatch.
       frameProps.onBodyPointerDown?.(body, event)
-      if (!body?.datum || !onClick) return
-      onClick(body.datum, { x: body.x, y: body.y })
     },
-    [frameProps, onClick]
+    [frameProps]
   )
 
   if (stateEl) return stateEl
@@ -500,7 +577,17 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     props,
     frameProps,
-    resolved.result.semanticItems
+    resolved.result.semanticItems,
+    {
+      chartMode,
+      className: modeClassName,
+      title: compactMode ? modeTitle : (modeTitle ?? title ?? "Physics custom chart"),
+      description: modeDescription,
+      summary: modeSummary,
+      accessibleTable: modeAccessibleTable,
+      enableHover: modeEnableHover,
+      margin: modeMargin
+    }
   )
 
   return renderPhysicsFrame(
@@ -515,24 +602,25 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
         frameProps.backgroundGraphics,
         resolved.result.backgroundOverlays
       )}
+      bodyForces={resolved.result.bodyForces ?? frameProps.bodyForces}
       bodyStyle={resolved.result.bodyStyle ?? frameProps.bodyStyle ?? fallbackBodyStyle}
-      className={className}
       config={resolved.config}
+      controllers={controllers}
       foregroundGraphics={composePhysicsFrameGraphics(
         frameProps.foregroundGraphics,
         resolved.result.overlays
       )}
       initialSpawnPacing={resolved.initialSpawnPacing}
-      initialSpawns={resolved.initialSpawns}
+      initialSpawns={stableInitialSpawns}
       onBodyPointerDown={handlePointerDown}
       paused={paused}
+      regionEffects={regionEffects}
       responsiveHeight={props.responsiveHeight}
       responsiveWidth={props.responsiveWidth}
       selectedBodyStyle={
         resolved.result.selectedBodyStyle ?? frameProps.selectedBodyStyle
       }
       size={chartSize}
-      title={title ?? "Physics custom chart"}
     />
   )
 }) as unknown as {

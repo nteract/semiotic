@@ -167,8 +167,8 @@ const PHYSICS_COMPONENTS = new Set([
   "GaltonBoardChart",
   "PhysicsPileChart",
   "CollisionSwarmChart",
-  "NetworkHOPsChart",
   "PhysicalFlowChart",
+  "ProcessFlowChart",
   "PhysicsCustomChart",
 ])
 

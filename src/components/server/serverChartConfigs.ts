@@ -24,17 +24,12 @@ import {
   buildGaltonBoardPhysics,
   buildPhysicalFlowPhysics,
   buildPhysicsPile,
+  buildProcessFlowPhysics,
   generateGaltonMechanicalSamples,
   generatePhysicsPileMechanicalSamples,
   styleFromColorAccessor
 } from "../charts/physics/physicsChartUtils"
 import { resolveCustomLayout } from "../charts/physics/PhysicsCustomChart"
-import {
-  buildNetworkHOPsModel,
-  networkHOPsEdgeId,
-  NETWORK_HOPS_EDGE_ID,
-  NETWORK_HOPS_PROBABILITY
-} from "../charts/physics/networkHopsUtils"
 import { LIGHT_THEME, resolveThemeSemanticColors } from "../store/ThemeStore"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
@@ -1437,86 +1432,39 @@ const collisionSwarmChart: ChartConfig = {
   },
 }
 
-function networkHOPsPositiveNumber(value: unknown, fallback: number): number {
-  const number = typeof value === "number" ? value : Number(value)
-  return Number.isFinite(number) && number > 0 ? number : fallback
-}
-
-function networkHOPsEdgeWidth(edge: Datum, edgeWidth: unknown): number {
-  if (typeof edgeWidth === "number") return edgeWidth
-  if (typeof edgeWidth === "function") {
-    return networkHOPsPositiveNumber(edgeWidth(edge), 2)
-  }
-  if (typeof edgeWidth === "string") {
-    return networkHOPsPositiveNumber(edge[edgeWidth], 2)
-  }
-  return 2
-}
-
-const networkHOPsChart: ChartConfig = {
-  frameType: "network",
-  buildProps: (_data, colorBy, colorScheme, common, rest) => {
-    const sourceAccessor = rest.sourceAccessor || "source"
-    const targetAccessor = rest.targetAccessor || "target"
-    const nodeIdAccessor = rest.nodeIdAccessor || rest.nodeIDAccessor || "id"
-    const model = buildNetworkHOPsModel({
-      nodes: rest.nodes,
-      edges: rest.edges,
-      samples: rest.samples,
-      nodeIdAccessor,
-      sourceAccessor,
-      targetAccessor,
-      edgeProbabilityAccessor: rest.edgeProbabilityAccessor || "p",
-      sampleIndex: rest.sampleIndex ?? 0,
-      seed: rest.seed ?? 1
+const processFlowChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, _colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [900, 420]
+    const stages = Array.isArray(rest.stages) ? rest.stages : []
+    const layout = buildProcessFlowPhysics({
+      data: Array.isArray(data) ? data : [],
+      stages,
+      size,
+      idAccessor: rest.idAccessor,
+      stageAccessor: rest.stageAccessor || "stage",
+      groupBy: rest.groupBy,
+      groupLabelAccessor: rest.groupLabelAccessor,
+      workAccessor: rest.workAccessor,
+      radiusAccessor: rest.radiusAccessor,
+      ballRadius: rest.ballRadius ?? 6,
+      seed: rest.seed ?? 1,
+      groupCompletion: rest.groupCompletion,
+      groupAnchorAlong: rest.groupAnchorAlong,
+      settle: rest.settle ?? true,
+      gravityX: rest.gravityX,
+      gravityY: rest.gravityY
     })
-    const userEdgeStyle = rest.frameProps?.edgeStyle || rest.edgeStyle
-    const showAggregate = rest.showAggregate !== false
+    const metadata = layout.metadata as { regionEffects?: unknown[] } | undefined
     return {
-      chartType: "force",
-      nodes: model.nodes,
-      edges: model.aggregateEdges,
-      nodeIDAccessor: nodeIdAccessor,
-      sourceAccessor,
-      targetAccessor,
-      colorBy,
-      colorScheme,
-      iterations: rest.iterations ?? 300,
-      forceStrength: rest.anchoringStrength ?? rest.forceStrength ?? 0.14,
-      showLabels: rest.showLabels,
-      nodeLabel: rest.nodeLabel,
-      nodeSize: rest.nodeSize,
-      nodeSizeRange: rest.nodeSizeRange,
-      nodeStyle: rest.nodeStyle,
-      edgeStyle: (edgeDatum: Datum) => {
-        const edge = ((edgeDatum?.data as Datum | undefined) ?? edgeDatum) as Datum
-        const id = String(
-          edge[NETWORK_HOPS_EDGE_ID] ??
-            networkHOPsEdgeId(edge, 0, sourceAccessor, targetAccessor)
-        )
-        const active = model.activeEdgeIds.has(id)
-        const probability = networkHOPsPositiveNumber(
-          edge[NETWORK_HOPS_PROBABILITY],
-          0
-        )
-        const base =
-          typeof userEdgeStyle === "function" ? userEdgeStyle(edgeDatum) : {}
-        return {
-          ...base,
-          stroke: active
-            ? rest.activeEdgeColor ?? rest.edgeColor ?? "#2563eb"
-            : rest.aggregateEdgeColor ?? "#94a3b8",
-          strokeWidth: active
-            ? networkHOPsEdgeWidth(edge, rest.edgeWidth)
-            : rest.aggregateEdgeWidth ?? 1,
-          opacity: active
-            ? rest.activeEdgeOpacity ?? 0.88
-            : showAggregate
-              ? Math.max(0.025, (rest.aggregateEdgeOpacity ?? 0.18) * probability)
-              : 0
-        }
-      },
       ...common,
+      config: layout.config,
+      initialSpawns: allAtOnce(layout.initialSpawns),
+      projectionRows: layout.projectionRows,
+      regionEffects: metadata?.regionEffects,
+      bodyStyle: styleFromColorAccessor(
+        colorBy || rest.colorBy || rest.groupBy
+      )
     }
   },
 }
@@ -1664,7 +1612,7 @@ export const CHART_CONFIGS = {
   EventDropChart: eventDropChart,
   PhysicsPileChart: physicsPileChart,
   CollisionSwarmChart: collisionSwarmChart,
-  NetworkHOPsChart: networkHOPsChart,
+  ProcessFlowChart: processFlowChart,
   PhysicalFlowChart: physicalFlowChart,
   PhysicsCustomChart: physicsCustomChart,
 } satisfies Record<string, ChartConfig>

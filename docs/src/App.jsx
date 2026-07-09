@@ -54,8 +54,9 @@ const GaltonBoardChartPage = lazy(() => import("./pages/charts/GaltonBoardChartP
 const EventDropChartPage = lazy(() => import("./pages/charts/EventDropChartPage"))
 const PhysicsPileChartPage = lazy(() => import("./pages/charts/PhysicsPileChartPage"))
 const CollisionSwarmChartPage = lazy(() => import("./pages/charts/CollisionSwarmChartPage"))
-const NetworkHOPsChartPage = lazy(() => import("./pages/charts/NetworkHOPsChartPage"))
 const PhysicalFlowChartPage = lazy(() => import("./pages/charts/PhysicalFlowChartPage"))
+const ProcessFlowChartPage = lazy(() => import("./pages/charts/ProcessFlowChartPage"))
+const GauntletChartPage = lazy(() => import("./pages/charts/GauntletChartPage"))
 const PhysicsCustomChartPage = lazy(() => import("./pages/charts/PhysicsCustomChartPage"))
 const PieChartPage = lazy(() => import("./pages/charts/PieChartPage"))
 const DonutChartPage = lazy(() => import("./pages/charts/DonutChartPage"))
@@ -117,6 +118,7 @@ const StreamingSystemModelPage = lazy(() => import("./pages/features/StreamingSy
 const PerformancePage = lazy(() => import("./pages/features/PerformancePage"))
 const PushApiPage = lazy(() => import("./pages/features/PushApiPage"))
 const WhenPhysicsPage = lazy(() => import("./pages/features/WhenPhysicsPage"))
+const PhysicsProcessGuidePage = lazy(() => import("./pages/features/PhysicsProcessGuidePage"))
 const CustomChartsOverviewPage = lazy(
   () => import("./pages/custom-charts/CustomChartsOverviewPage"),
 )
@@ -164,6 +166,15 @@ const ClimateAnomalyExamplePage = lazy(() => import("./pages/examples/ClimateAno
 const WatermarksExamplePage = lazy(() => import("./pages/examples/WatermarksExamplePage"))
 const PlinkoQuantileDotplotExamplePage = lazy(
   () => import("./pages/examples/PlinkoQuantileDotplotExamplePage"),
+)
+const StakeholderJourneyExamplePage = lazy(
+  () => import("./pages/examples/StakeholderJourneyExamplePage"),
+)
+const MergePressureExamplePage = lazy(
+  () => import("./pages/examples/MergePressureExamplePage"),
+)
+const NimbyExamplePage = lazy(
+  () => import("./pages/examples/NimbyExamplePage"),
 )
 const ClimateRadialWeatherExamplePage = lazy(
   () => import("./pages/examples/ClimateRadialWeatherExamplePage"),
@@ -393,6 +404,18 @@ export default function DocsApp() {
               <Route
                 path="examples/plinko-quantile-dotplot"
                 element={<PlinkoQuantileDotplotExamplePage />}
+              />
+              <Route
+                path="examples/stakeholder-journey"
+                element={<StakeholderJourneyExamplePage />}
+              />
+              <Route
+                path="examples/merge-pressure"
+                element={<MergePressureExamplePage />}
+              />
+              <Route
+                path="examples/not-in-my-backyard"
+                element={<NimbyExamplePage />}
               />
               <Route path="examples/climate-anomaly" element={<ClimateAnomalyExamplePage />} />
               <Route
@@ -705,6 +728,7 @@ export default function DocsApp() {
                 <Route path="performance" element={<PerformancePage />} />
                 <Route path="push-api" element={<PushApiPage />} />
                 <Route path="when-physics" element={<WhenPhysicsPage />} />
+                <Route path="physics-process-guide" element={<PhysicsProcessGuidePage />} />
                 <Route
                   path="gofish-layouts"
                   element={<Navigate to="/interoperability/gofish" replace />}
@@ -872,8 +896,9 @@ export default function DocsApp() {
                 <Route path="event-drop-chart" element={<EventDropChartPage />} />
                 <Route path="physics-pile-chart" element={<PhysicsPileChartPage />} />
                 <Route path="collision-swarm-chart" element={<CollisionSwarmChartPage />} />
-                <Route path="network-hops-chart" element={<NetworkHOPsChartPage />} />
                 <Route path="physical-flow-chart" element={<PhysicalFlowChartPage />} />
+                <Route path="process-flow-chart" element={<ProcessFlowChartPage />} />
+                <Route path="gauntlet-chart" element={<GauntletChartPage />} />
                 <Route path="physics-custom-chart" element={<PhysicsCustomChartPage />} />
                 {/* Categorical Charts */}
                 <Route path="bar-chart" element={<BarChartPage />} />

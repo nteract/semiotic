@@ -65,12 +65,30 @@ export interface PhysicsBodyState {
   datum?: unknown
 }
 
+export interface PhysicsColliderBodyFilterSpec {
+  property: string
+  equals?: unknown
+  notEquals?: unknown
+  oneOf?: unknown[]
+  notOneOf?: unknown[]
+}
+
+export type PhysicsColliderBodyFilter =
+  | PhysicsColliderBodyFilterSpec
+  | ((body: PhysicsBodyState) => boolean)
+
 export interface PhysicsColliderSpec {
   id: string
   shape: PhysicsColliderShape
   sensor?: boolean
   restitution?: number
   friction?: number
+  /**
+   * Optional body filter for permeable colliders. Bodies that do not match the
+   * filter ignore this collider or sensor entirely. Object filters are worker
+   * serializable; function filters require sync execution.
+   */
+  bodyFilter?: PhysicsColliderBodyFilter
 }
 
 export interface PhysicsSpringSpec {
@@ -521,6 +539,19 @@ function cloneBody(body: MutableBody): MutableBody {
   }
 }
 
+function cloneColliderBodyFilter(
+  filter: PhysicsColliderBodyFilter | undefined
+): PhysicsColliderBodyFilter | undefined {
+  if (!filter || typeof filter === "function") return filter
+  return {
+    property: filter.property,
+    equals: filter.equals,
+    notEquals: filter.notEquals,
+    oneOf: filter.oneOf?.slice(),
+    notOneOf: filter.notOneOf?.slice()
+  }
+}
+
 function cloneCollider(collider: MutableCollider): MutableCollider {
   return {
     id: collider.id,
@@ -528,8 +559,39 @@ function cloneCollider(collider: MutableCollider): MutableCollider {
     sensor: collider.sensor,
     restitution: collider.restitution,
     friction: collider.friction,
+    bodyFilter: cloneColliderBodyFilter(collider.bodyFilter),
     index: collider.index
   }
+}
+
+function valueAtPath(source: unknown, path: string): unknown {
+  if (!path) return undefined
+  let current = source
+  for (const part of path.split(".")) {
+    if (current == null || typeof current !== "object") return undefined
+    current = (current as Record<string, unknown>)[part]
+  }
+  return current
+}
+
+function valueIn(value: unknown, options: unknown[] | undefined): boolean {
+  return Boolean(options?.some((candidate) => Object.is(value, candidate)))
+}
+
+function colliderAppliesToBody(
+  collider: MutableCollider,
+  body: MutableBody
+): boolean {
+  const filter = collider.bodyFilter
+  if (!filter) return true
+  if (typeof filter === "function") return filter(body)
+
+  const value = valueAtPath(body, filter.property)
+  if ("equals" in filter && !Object.is(value, filter.equals)) return false
+  if ("notEquals" in filter && Object.is(value, filter.notEquals)) return false
+  if (filter.oneOf && !valueIn(value, filter.oneOf)) return false
+  if (filter.notOneOf && valueIn(value, filter.notOneOf)) return false
+  return true
 }
 
 export class PhysicsKernelWorld {
@@ -614,6 +676,7 @@ export class PhysicsKernelWorld {
       this.colliders.set(collider.id, {
         ...collider,
         shape: cloneColliderShape(collider.shape),
+        bodyFilter: cloneColliderBodyFilter(collider.bodyFilter),
         index: this.nextColliderIndex
       })
       this.nextColliderIndex += 1
@@ -1005,6 +1068,7 @@ export class PhysicsKernelWorld {
   ): void {
     for (const body of bodies) {
       for (const collider of colliders) {
+        if (!colliderAppliesToBody(collider, body)) continue
         if (!aabbOverlap(bodyBounds(body), colliderBounds(collider))) continue
         const collision = bodyColliderCollision(body, collider)
         if (!collision) continue
@@ -1063,6 +1127,7 @@ export class PhysicsKernelWorld {
     for (const body of bodies) {
       const bounds = bodyBounds(body)
       for (const sensor of sensors) {
+        if (!colliderAppliesToBody(sensor, body)) continue
         if (!aabbOverlap(bounds, colliderBounds(sensor))) continue
         if (!bodyColliderCollision(body, sensor)) continue
         const key = sensorKey(sensor.id, body.id)

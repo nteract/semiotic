@@ -1,0 +1,477 @@
+.stakeholder-journey {
+  --journey-ink: #22304a;
+  --journey-blue: #0c7894;
+  --journey-red: #b63832;
+  --journey-green: #287a48;
+  --journey-gold: #f1c75b;
+  --journey-paper: #fffaf0;
+  display: grid;
+  gap: 30px;
+  overflow-x: auto;
+  padding-bottom: 44px;
+  color: var(--text-primary);
+}
+
+.stakeholder-journey a {
+  color: var(--accent);
+}
+
+.stakeholder-journey__hero,
+.stakeholder-journey__comparison,
+.stakeholder-journey__canvas-section,
+.stakeholder-journey__synthesis,
+.stakeholder-journey__needs {
+  width: 100%;
+  min-width: min(100%, 720px);
+  box-sizing: border-box;
+}
+
+.stakeholder-journey__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, 0.65fr);
+  gap: 24px;
+  align-items: end;
+  padding: 28px;
+  border: 1px solid var(--surface-3);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 15% 16%, color-mix(in srgb, var(--journey-gold) 28%, transparent), transparent 32%),
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-0) 88%, #e7f7fa), var(--surface-1));
+}
+
+.stakeholder-journey__kicker {
+  color: var(--journey-blue);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stakeholder-journey__lede {
+  max-width: 900px;
+  margin: 10px 0 0;
+  color: var(--text-primary);
+  font-size: clamp(1.05rem, 2vw, 1.43rem);
+  line-height: 1.55;
+}
+
+.stakeholder-journey__source-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--surface-3);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-0) 82%, #fff8e6);
+}
+
+.stakeholder-journey__source-card strong {
+  color: var(--journey-ink);
+}
+
+.stakeholder-journey__source-card a {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.stakeholder-journey__comparison,
+.stakeholder-journey__canvas-section,
+.stakeholder-journey__needs {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--surface-3);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 94%, #fff8e6), var(--surface-0)),
+    var(--surface-0);
+  box-shadow: 0 20px 60px color-mix(in srgb, #22304a 10%, transparent);
+}
+
+.stakeholder-journey__comparison-header,
+.stakeholder-journey__section-header {
+  display: grid;
+  gap: 6px;
+}
+
+.stakeholder-journey__comparison-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.stakeholder-journey__comparison-header h2,
+.stakeholder-journey__section-header h2,
+.stakeholder-journey__synthesis h2 {
+  margin: 0;
+  color: var(--journey-ink);
+  font-size: clamp(1.35rem, 3vw, 2.1rem);
+  line-height: 1.08;
+}
+
+.stakeholder-journey__section-header p {
+  max-width: 780px;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.stakeholder-journey__comparison-header button {
+  min-height: 38px;
+  padding: 0 15px;
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  background: var(--journey-blue);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
+.stakeholder-journey__bowtie-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.stakeholder-journey__bowtie {
+  display: grid;
+  gap: 13px;
+  overflow-x: auto;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--surface-3);
+  border-radius: 18px;
+  background: var(--surface-0);
+}
+
+.stakeholder-journey__bowtie--works {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--journey-blue) 12%, transparent);
+}
+
+.stakeholder-journey__bowtie--fails {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--journey-red) 14%, transparent);
+}
+
+.stakeholder-journey__bowtie header {
+  display: grid;
+  gap: 4px;
+}
+
+.stakeholder-journey__bowtie header span {
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.stakeholder-journey__bowtie header h3 {
+  margin: 0;
+  color: var(--journey-ink);
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+}
+
+.stakeholder-journey__bowtie header p,
+.stakeholder-journey__readout span,
+.stakeholder-journey__factor-list div,
+.stakeholder-journey__synthesis p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.stakeholder-journey__chart-stage,
+.stakeholder-journey__canvas-stage {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--surface-3);
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, #ffffff 0%, #ffffff 47%, #e7f7fa 48%, #fff7d8 100%),
+    var(--journey-paper);
+}
+
+.stakeholder-journey__chart-stage {
+  min-height: 430px;
+}
+
+.stakeholder-journey__canvas-stage {
+  min-height: 560px;
+  background: #ffffff;
+}
+
+.stakeholder-journey__chart-stage .stream-physics-frame,
+.stakeholder-journey__canvas-stage .stream-physics-frame {
+  position: relative;
+  z-index: 1;
+}
+
+.stakeholder-journey__overlay,
+.stakeholder-journey__canvas-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.stakeholder-journey__funnel {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: var(--journey-ink);
+  stroke-width: 2.1;
+}
+
+.stakeholder-journey__funnel--center {
+  fill: rgba(12, 120, 148, 0.18);
+}
+
+.stakeholder-journey__stage-rule {
+  stroke: #93a3af;
+  stroke-dasharray: 7 7;
+  stroke-width: 1.2;
+}
+
+.stakeholder-journey__stage-label text {
+  fill: var(--journey-ink);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.stakeholder-journey__stage-label.is-center text {
+  fill: #fff;
+}
+
+.stakeholder-journey__membrane-region path:last-of-type {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1 8;
+  opacity: 0.78;
+}
+
+.stakeholder-journey__membrane-region text {
+  fill: var(--journey-ink);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.stakeholder-journey__impact-gate rect {
+  fill: rgba(12, 120, 148, 0.84);
+  stroke: #044d61;
+  stroke-width: 2;
+}
+
+.stakeholder-journey__impact-gate text,
+.stakeholder-journey__right-field text {
+  fill: var(--journey-ink);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.stakeholder-journey__right-field path {
+  fill: none;
+  stroke: #8b95a1;
+  stroke-linecap: round;
+  stroke-width: 3.4;
+  stroke-dasharray: 2 10;
+  opacity: 0.42;
+}
+
+.stakeholder-journey__right-field.is-active path {
+  stroke: #d09316;
+  opacity: 0.82;
+}
+
+.stakeholder-journey__right-field circle {
+  fill: #d8dee6;
+  stroke: #667085;
+  stroke-width: 2;
+}
+
+.stakeholder-journey__right-field.is-active circle {
+  fill: #ffe08a;
+  stroke: #9b6a12;
+}
+
+.stakeholder-journey__bowtie-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(260px, 1.2fr);
+  gap: 10px;
+}
+
+.stakeholder-journey__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stakeholder-journey__metric {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid var(--surface-3);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-0) 82%, #fff8e6);
+}
+
+.stakeholder-journey__metric span {
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stakeholder-journey__metric strong {
+  color: var(--journey-ink);
+  font-size: 1.26rem;
+  line-height: 1;
+}
+
+.stakeholder-journey__metric small {
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+}
+
+.stakeholder-journey__readout {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--journey-blue) 10%, var(--surface-1));
+}
+
+.stakeholder-journey__readout strong {
+  color: var(--journey-ink);
+}
+
+.stakeholder-journey__factor-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stakeholder-journey__factor-list div {
+  padding: 10px 11px;
+  border: 1px solid var(--surface-3);
+  border-radius: 12px;
+  background: var(--surface-1);
+  font-size: 0.88rem;
+}
+
+.stakeholder-journey__canvas-cell rect {
+  fill: rgba(255, 255, 255, 0.18);
+  stroke-width: 2.2;
+}
+
+.stakeholder-journey__canvas-cell text,
+.stakeholder-journey__canvas-heading {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.stakeholder-journey__canvas-heading {
+  fill: #5e6875;
+  font-size: 15px;
+}
+
+.stakeholder-journey__canvas-flow {
+  fill: none;
+  stroke: #1f63a8;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 4 8;
+  opacity: 0.55;
+}
+
+.stakeholder-journey__canvas-caption {
+  fill: #5e6875;
+  font-size: 15px;
+  font-style: italic;
+}
+
+.stakeholder-journey__tooltip {
+  display: grid;
+  gap: 3px;
+}
+
+.stakeholder-journey__synthesis {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+  padding: 24px;
+  border: 1px solid var(--surface-3);
+  border-radius: 18px;
+  background: var(--surface-1);
+}
+
+.stakeholder-journey__research-grid,
+.stakeholder-journey__needs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stakeholder-journey__research-card,
+.stakeholder-journey__need-card {
+  display: grid;
+  gap: 6px;
+  padding: 13px;
+  border: 1px solid var(--surface-3);
+  border-radius: 13px;
+  background: var(--surface-1);
+  text-decoration: none;
+}
+
+.stakeholder-journey__research-card strong,
+.stakeholder-journey__need-card strong {
+  color: var(--journey-ink);
+}
+
+.stakeholder-journey__research-card span,
+.stakeholder-journey__need-card span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.42;
+}
+
+@media (max-width: 900px) {
+  .stakeholder-journey__hero,
+  .stakeholder-journey__bowtie-bottom,
+  .stakeholder-journey__synthesis {
+    grid-template-columns: 1fr;
+  }
+
+  .stakeholder-journey__factor-list,
+  .stakeholder-journey__research-grid,
+  .stakeholder-journey__needs-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .stakeholder-journey__hero,
+  .stakeholder-journey__comparison,
+  .stakeholder-journey__canvas-section,
+  .stakeholder-journey__synthesis,
+  .stakeholder-journey__needs {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .stakeholder-journey__comparison-header,
+  .stakeholder-journey__metrics,
+  .stakeholder-journey__factor-list,
+  .stakeholder-journey__research-grid,
+  .stakeholder-journey__needs-grid {
+    grid-template-columns: 1fr;
+  }
+}

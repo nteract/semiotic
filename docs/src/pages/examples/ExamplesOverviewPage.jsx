@@ -22,6 +22,12 @@ export default function ExamplesOverviewPage() {
               ? <MiniWatermarksPreview />
               : example.preview === "plinko-quantile"
               ? <MiniPlinkoQuantilePreview />
+              : example.preview === "stakeholder-journey"
+              ? <MiniStakeholderJourneyPreview />
+              : example.preview === "merge-pressure"
+              ? <MiniMergePressurePreview />
+              : example.preview === "nimby"
+              ? <MiniNimbyPreview />
               : example.preview === "climate"
               ? <MiniClimatePreview />
               : example.preview === "lake-isotype"
@@ -1280,6 +1286,135 @@ function MiniClimatePreview() {
       <path d={line} fill="none" stroke="var(--text-primary)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
       <line x1="205" x2="205" y1="12" y2="88" stroke="rgba(148, 163, 184, 0.7)" strokeWidth="2" strokeDasharray="6 6" />
       <circle cx="205" cy="70" r="5" fill="var(--text-primary)" />
+    </svg>
+  )
+}
+
+function MiniStakeholderJourneyPreview() {
+  const bodies = [
+    [58, 60, "#e2e8ee"],
+    [92, 70, "#43d6f1"],
+    [142, 64, "#ffe08a"],
+    [206, 72, "#263653"],
+    [58, 132, "#e2e8ee"],
+    [104, 126, "#43d6f1"],
+    [166, 137, "#94d7cd"],
+    [394, 146, "#1f63a8"],
+  ]
+  return (
+    <svg style={styles.preview} viewBox="0 0 500 200" role="img" aria-label="Mini stakeholder journey bowtie preview">
+      <rect width="500" height="200" fill="#fffaf0" />
+      <text x="34" y="25" fill="#22304a" fontSize="12" fontWeight="900">STACKED BOWTIES</text>
+      <path d="M 24 38 L 196 61 L 196 79 L 24 100 Z" fill="#ffffff" stroke="#22304a" strokeWidth="2.2" />
+      <path d="M 196 61 L 236 61 L 236 79 L 196 79 Z" fill="#087895" opacity="0.72" />
+      <path d="M 236 61 L 342 38 L 342 100 L 236 79 Z" fill="#ffe8a8" stroke="#22304a" strokeWidth="2.2" />
+      <path d="M 24 110 L 196 132 L 196 150 L 24 172 Z" fill="#ffffff" stroke="#22304a" strokeWidth="2.2" />
+      <path d="M 196 132 L 236 132 L 236 150 L 196 150 Z" fill="#087895" opacity="0.4" />
+      <path d="M 236 132 L 342 110 L 342 172 L 236 150 Z" fill="#d8dee6" stroke="#22304a" strokeWidth="2.2" />
+      {[78, 124, 170].map((x) => (
+        <path key={x} d={`M ${x} 42 C ${x + 8} 58, ${x - 8} 82, ${x} 98`} fill="none" stroke="#b63832" strokeWidth="5" strokeLinecap="round" opacity="0.55" />
+      ))}
+      {[78, 124, 170].map((x) => (
+        <path key={`b-${x}`} d={`M ${x} 114 C ${x + 12} 128, ${x - 12} 154, ${x} 168`} fill="none" stroke="#7b8491" strokeWidth="7" strokeLinecap="round" opacity="0.38" />
+      ))}
+      <rect x="366" y="38" width="42" height="48" fill="none" stroke="#287a48" strokeWidth="3" />
+      <rect x="414" y="38" width="42" height="48" fill="none" stroke="#b63832" strokeWidth="3" />
+      <rect x="366" y="94" width="90" height="76" fill="none" stroke="#1f63a8" strokeWidth="3" />
+      {bodies.map(([x, y, fill], index) => (
+        <circle key={`${x}-${y}-${index}`} cx={x} cy={y} r={index > 5 ? 8 : 7} fill={fill} stroke="#22304a" strokeWidth="2" />
+      ))}
+      <text x="412" y="187" textAnchor="middle" fill="#22304a" fontSize="12" fontWeight="900">
+        OSE CANVAS FIELD
+      </text>
+    </svg>
+  )
+}
+
+function MiniMergePressurePreview() {
+  const prs = [
+    [54, 74, "#dbeafe"],
+    [92, 96, "#d8f5ee"],
+    [132, 78, "#f7e0ff"],
+    [214, 88, "#d8f5ee"],
+    [246, 104, "#f7e0ff"],
+    [282, 82, "#f7e0ff"],
+    [324, 118, "#d8f5ee"],
+  ]
+  return (
+    <svg style={styles.preview} viewBox="0 0 500 200" role="img" aria-label="Mini merge pressure preview">
+      <rect width="500" height="200" fill="#f8fbfc" />
+      <text x="38" y="30" fill="#233148" fontSize="12" fontWeight="900">CODING</text>
+      <text x="178" y="30" fill="#233148" fontSize="12" fontWeight="900">FEATURES</text>
+      <text x="286" y="30" fill="#b63832" fontSize="12" fontWeight="900">REVIEW DAM</text>
+      <text x="410" y="30" fill="#233148" fontSize="12" fontWeight="900">APP</text>
+      <path d="M 38 102 C 118 78, 178 116, 238 98 S 342 70, 424 102" fill="none" stroke="#8fa3af" strokeWidth="5" strokeLinecap="round" strokeDasharray="2 11" />
+      <rect x="260" y="44" width="72" height="118" rx="14" fill="#fff0d6" stroke="#b63832" strokeWidth="3" strokeDasharray="7 6" />
+      {[62, 88, 114].map((y, index) => (
+        <g key={y}>
+          <line x1="162" y1={y} x2="394" y2={y} stroke="#50677a" strokeWidth="2" strokeDasharray="4 6" opacity={index === 1 ? 0.85 : 0.28} />
+          <rect x="154" y={y - 15} width="82" height="30" rx="9" fill="#ffffff" stroke={index === 1 ? "#b63832" : "#64748b"} strokeWidth="2" />
+          <rect x="390" y={y - 14} width="54" height="28" rx="7" fill={index === 0 ? "#f1c75b" : "#ffffff"} stroke={index === 1 ? "#b63832" : "#64748b"} strokeWidth="2" />
+        </g>
+      ))}
+      {prs.map(([x, y, fill], index) => (
+        <circle key={`${x}-${y}-${index}`} cx={x} cy={y} r={index > 4 ? 8 : 7} fill={fill} stroke={index > 3 ? "#9f2f2f" : "#244f72"} strokeWidth="2" />
+      ))}
+      <text x="250" y="182" textAnchor="middle" fill="#233148" fontSize="13" fontWeight="900" letterSpacing="1.4">
+        PR COUNT IS NOT PRODUCT VELOCITY
+      </text>
+    </svg>
+  )
+}
+
+function MiniNimbyPreview() {
+  const features = [
+    [64, 84, "#45c2b4", "H"],
+    [92, 58, "#8ddf5f", "A"],
+    [104, 112, "#f0a6d2", "C"],
+    [132, 82, "#f8c24e", "R"],
+    [348, 144, "#c4b5fd", "P"],
+    [380, 152, "#46b36a", "T"],
+  ]
+  const dollars = [
+    [214, 72],
+    [228, 98],
+    [248, 86],
+    [268, 112],
+    [286, 95],
+  ]
+  return (
+    <svg style={styles.preview} viewBox="0 0 500 200" role="img" aria-label="Mini not in my backyard preview">
+      <rect width="500" height="200" fill="#f7fafb" />
+      <path d="M 42 100 C 126 50, 184 148, 246 100 S 340 56, 430 100" fill="none" stroke="#9eb4c0" strokeWidth="6" strokeLinecap="round" strokeDasharray="12 10" />
+      {["ZONING", "DESIGN", "PARKING", "REVIEW", "COUNCIL"].map((label, index) => {
+        const x = 126 + index * 68
+        return (
+          <g key={label}>
+            <rect x={x - 21} y="44" width="42" height="112" rx="8" fill={index === 2 ? "#fff2cc" : index === 3 ? "#ffe4e6" : "#edf7f6"} stroke={index === 3 ? "#b63832" : "#287a74"} strokeWidth="2" strokeDasharray="5 5" />
+            <text x={x} y="34" textAnchor="middle" fill="#233148" fontSize="8" fontWeight="900">{label}</text>
+          </g>
+        )
+      })}
+      <ellipse cx="330" cy="102" rx="54" ry="48" fill="none" stroke="#b63832" strokeWidth="2.5" strokeDasharray="6 5" />
+      <rect x="414" y="66" width="58" height="70" rx="9" fill="#e3f7ec" stroke="#287a48" strokeWidth="2.5" />
+      <text x="443" y="55" textAnchor="middle" fill="#287a48" fontSize="9" fontWeight="900">SOCKET</text>
+      <circle cx="84" cy="88" r="27" fill="#0f8f82" stroke="#233148" strokeWidth="2.4" />
+      <text x="84" y="92" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="900">84</text>
+      {features.map(([x, y, fill, label], index) => (
+        <g key={`${label}-${index}`}>
+          <line x1={index > 3 ? 330 : 84} y1={index > 3 ? 118 : 88} x2={x} y2={y} stroke="#64748b" strokeWidth="1.5" strokeDasharray="3 4" />
+          <circle cx={x} cy={y} r="10" fill={fill} stroke="#233148" strokeWidth="1.6" />
+          <text x={x} y={y + 3} textAnchor="middle" fill="#172033" fontSize="8" fontWeight="900">{label}</text>
+        </g>
+      ))}
+      {dollars.map(([x, y], index) => (
+        <g key={`${x}-${y}`}>
+          <circle cx={x} cy={y} r={index === 4 ? 8 : 7} fill="#d94a45" stroke="#7f1d1d" strokeWidth="1.5" />
+          <text x={x} y={y + 3} textAnchor="middle" fill="#fff7ed" fontSize="10" fontWeight="900">$</text>
+        </g>
+      ))}
+      <rect x="314" y="154" width="96" height="24" rx="7" fill="#fff1f2" stroke="#b63832" />
+      <text x="362" y="171" textAnchor="middle" fill="#b63832" fontSize="9" fontWeight="900">LOST FEATURES</text>
     </svg>
   )
 }

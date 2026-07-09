@@ -18,9 +18,9 @@ const modeRows = [
   },
   {
     mode: "Uncertainty",
-    readout: "Read possible states",
-    use: "A stable base layout stays in place while sampled outcomes, probabilistic links, or scenario states switch on and off.",
-    component: <Link to="/charts/network-hops-chart">NetworkHOPsChart</Link>,
+    readout: "Read the settled distribution",
+    use: "Posterior samples or scenario draws fall through a process and rest as a quantile dotplot or histogram — motion frames frequency, not network topology.",
+    component: <Link to="/charts/galton-board-chart">GaltonBoardChart</Link>,
   },
   {
     mode: "Texture",
@@ -56,10 +56,22 @@ const hocRows = [
     settled: "X-axis distribution with optional group lanes and counts.",
   },
   {
-    name: "NetworkHOPsChart",
-    path: "/charts/network-hops-chart",
-    when: "Uncertain networks with probabilistic edges or explicit sampled graph realizations.",
-    settled: "Stable aggregate node layout plus active-edge counts for the current sample.",
+    name: "ProcessFlowChart",
+    path: "/charts/process-flow-chart",
+    when: "Multi-body workflows with capacitated stages, rework portals, and feature groups that complete only when every member is absorbed.",
+    settled: "Stage occupancy counts and group completion ledger.",
+  },
+  {
+    name: "GauntletChart",
+    path: "/charts/gauntlet-chart",
+    when: "One compound plan degraded by timed gate effects (lift balloons and drag particles).",
+    settled: "Property inventory, viability, and outcome state.",
+  },
+  {
+    name: "PhysicalFlowChart",
+    path: "/charts/physical-flow-chart",
+    when: "Packets on authored routes where throughput stays readable as a static layer.",
+    settled: "Route throughput and node totals.",
   },
   {
     name: "PhysicsCustomChart",
@@ -135,13 +147,18 @@ export default function WhenPhysicsPage() {
         { label: "When Physics?", path: "/features/when-physics" },
       ]}
       prevPage={{ title: "Push API", path: "/features/push-api" }}
-      nextPage={{ title: "GaltonBoardChart", path: "/charts/galton-board-chart" }}
+      nextPage={{ title: "Physics process guide", path: "/features/physics-process-guide" }}
     >
       <section>
         <p style={styles.lede}>
           Use physics when movement carries a data claim: a body is delayed, blocked,
           sorted, sampled, counted, or settled because of the data. If movement only
           makes a static chart feel active, use ordinary chart animation or no motion.
+        </p>
+        <p>
+          For process HOCs (Gauntlet vs ProcessFlow), capacity queues, body marks, and
+          the example checklist, see the{" "}
+          <Link to="/features/physics-process-guide">Physics process guide</Link>.
         </p>
         <div style={styles.callout}>
           <strong>Rule of thumb:</strong> every physics chart needs a settled projection
@@ -198,8 +215,8 @@ export default function WhenPhysicsPage() {
             uses collisions to separate overlapping dots while preserving their x-axis position.
           </li>
           <li>
-            <Link to="/charts/network-hops-chart">NetworkHOPsChart</Link>{" "}
-            keeps nodes fixed to the aggregate network while sampled edges change state.
+            <Link to="/charts/process-flow-chart">ProcessFlowChart</Link>{" "}
+            moves work items through capacitated stages and reads stage counts plus feature completion.
           </li>
         </ul>
       </section>

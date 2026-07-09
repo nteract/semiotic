@@ -10,7 +10,6 @@ class PhysicsSedimentAccumulator
 function CollisionSwarmChart
 function EventDropChart
 function GaltonBoardChart
-function NetworkHOPsChart
 function PhysicalFlowChart
 function PhysicsCustomChart
 function PhysicsPileChart
@@ -19,7 +18,6 @@ function arrivalReplay
 function buildCollisionSwarmPhysics
 function buildEventDropPhysics
 function buildGaltonBoardPhysics
-function buildNetworkHOPsModel
 function buildPhysicalFlowPhysics
 function buildPhysicsPile
 function collidersFromScales
@@ -42,10 +40,6 @@ interface GaltonBoardPhysicsOptions
 interface GaltonBoardProjectionMetadata
 interface GaltonBoardReferenceLine
 interface GaltonPegsOptions
-interface NetworkHOPsChartProps
-interface NetworkHOPsModel
-interface NetworkHOPsModelOptions
-interface NetworkHOPsSample
 interface PhysicalFlowChartProps
 interface PhysicalFlowOptions
 interface PhysicalFlowPoint

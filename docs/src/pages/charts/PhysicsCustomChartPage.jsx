@@ -380,7 +380,7 @@ const comparisonCards = [
   {
     title: "Fixed physics chart HOCs",
     path: "/charts/galton-board-chart",
-    summary: "Use GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, NetworkHOPsChart, or PhysicalFlowChart when their data model is already your chart.",
+    summary: "Use GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, or PhysicalFlowChart when their data model is already your chart.",
   },
   {
     title: "StreamPhysicsFrame",
@@ -587,7 +587,7 @@ export default function PhysicsCustomChartPage() {
         { label: "Physics", path: "/charts/physics-custom-chart" },
         { label: "PhysicsCustomChart", path: "/charts/physics-custom-chart" },
       ]}
-      prevPage={{ title: "PhysicalFlowChart", path: "/charts/physical-flow-chart" }}
+      prevPage={{ title: "GauntletChart", path: "/charts/gauntlet-chart" }}
       nextPage={{ title: "Custom Layouts", path: "/custom-charts/custom-layouts" }}
     >
       <ComponentMeta
@@ -600,7 +600,7 @@ export default function PhysicsCustomChartPage() {
           { name: "StreamPhysicsFrame", path: "/dev/physics-frame" },
           { name: "PhysicsPileChart", path: "/charts/physics-pile-chart" },
           { name: "CollisionSwarmChart", path: "/charts/collision-swarm-chart" },
-          { name: "NetworkHOPsChart", path: "/charts/network-hops-chart" },
+          { name: "GauntletChart", path: "/charts/gauntlet-chart" },
           { name: "PhysicalFlowChart", path: "/charts/physical-flow-chart" },
           { name: "Custom Layouts", path: "/custom-charts/custom-layouts" },
         ]}

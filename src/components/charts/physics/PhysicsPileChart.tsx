@@ -9,7 +9,7 @@ import StreamPhysicsFrame, {
 } from "../../stream/physics/StreamPhysicsFrame"
 import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
-import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, ChartMode } from "../shared/types"
 import {
   buildPhysicsPile,
   generatePhysicsPileMechanicalSamples,
@@ -23,9 +23,12 @@ import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
   renderPhysicsFrame,
-  resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
+  usePhysicsChartMode,
+  type PhysicsHocFrameProps,
+  type PhysicsSharedChartProps,
+  type PhysicsSimulationMode,
   type TooltipProp
 } from "./physicsHocUtils"
 
@@ -35,12 +38,18 @@ type ProjectionRow = {
 }
 
 export interface PhysicsPileChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin" | "mode"> {
+  extends Omit<BaseChartProps, "margin" | "mode">,
+    PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
-  mode?: "sample" | "mechanical"
+  /**
+   * Chart display mode **or** legacy simulation mode (`sample`/`mechanical`).
+   * Prefer `simulationMode` for mechanical demos; use `mode` for ChartMode.
+   */
+  mode?: ChartMode | PhysicsSimulationMode
+  simulationMode?: PhysicsSimulationMode
   mechanicalCount?: number
   mechanicalCategories?: readonly string[]
   unitValue?: number
@@ -51,12 +60,7 @@ export interface PhysicsPileChartProps<TDatum extends Datum = Datum>
   sediment?: boolean
   tooltip?: TooltipProp
   paused?: boolean
-  frameProps?: Partial<
-    Omit<
-      StreamPhysicsFrameProps,
-      "config" | "initialSpawns" | "initialSpawnPacing" | "size"
-    >
-  >
+  frameProps?: PhysicsHocFrameProps<"config">
 }
 
 function pileProjectionOverlay(
@@ -174,44 +178,46 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
   const {
     ballRadius = 8,
     categoryAccessor = "category" as ChartAccessor<TDatum, string>,
-    className,
     colorBy,
     data,
     emptyContent,
     frameProps,
-    height,
     loading,
     loadingContent,
     mechanicalCategories,
     mechanicalCount,
-    mode = "sample",
     paused,
     responsiveHeight,
     responsiveWidth,
     seed = 1,
-    showProjection = true,
-    size,
     unitValue = 1,
-    valueAccessor,
-    width
+    valueAccessor
   } = props
+  const layoutMode = usePhysicsChartMode(props, [700, 380], {
+    hasSimulationMode: true
+  })
+  const {
+    chartSize,
+    simulationMode,
+    showProjection,
+    className,
+    title: modeTitle,
+    chartMode,
+    compactMode,
+    margin: modeMargin,
+    enableHover: modeEnableHover,
+    description: modeDescription,
+    summary: modeSummary,
+    accessibleTable: modeAccessibleTable
+  } = layoutMode
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const sizeWidth = size?.[0]
-  const sizeHeight = size?.[1]
-  const chartSize = useMemo(
-    () =>
-      sizeWidth != null && sizeHeight != null
-        ? [sizeWidth, sizeHeight] as [number, number]
-        : resolvePhysicsChartSize(undefined, width, height, [700, 380]),
-    [height, sizeHeight, sizeWidth, width]
-  )
   const resolvedValueAccessor =
-    mode === "mechanical" && valueAccessor == null
+    simulationMode === "mechanical" && valueAccessor == null
       ? ("value" as ChartAccessor<TDatum, number>)
       : valueAccessor
   const chartData = useMemo(
     () =>
-      mode === "mechanical"
+      simulationMode === "mechanical"
         ? (generatePhysicsPileMechanicalSamples({
             categories: mechanicalCategories,
             count: mechanicalCount,
@@ -219,7 +225,14 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
             unitValue
           }) as TDatum[])
         : (data ?? []),
-    [data, mechanicalCategories, mechanicalCount, mode, seed, unitValue]
+    [
+      data,
+      mechanicalCategories,
+      mechanicalCount,
+      seed,
+      simulationMode,
+      unitValue
+    ]
   )
   const layout = useMemo(
     () =>
@@ -279,9 +292,14 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
       unitValue
     ]
   )
-  usePhysicsHocHandle(ref, { frameRef, spawnDatum })
+  usePhysicsHocHandle(ref, {
+    frameRef,
+    spawnDatum,
+    seedRows: chartData as Datum[],
+    seedSpawns: layout.initialSpawns
+  })
   const resolvedColorBy =
-    mode === "mechanical" && colorBy == null
+    simulationMode === "mechanical" && colorBy == null
       ? ("category" as ChartAccessor<Datum, string>)
       : (colorBy as ChartAccessor<Datum, string> | undefined)
   const bodyStyle = useMemo(
@@ -299,7 +317,7 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
   )
 
   const stateEl = renderPhysicsChartState({
-    data: mode === "mechanical" ? chartData : data,
+    data: simulationMode === "mechanical" ? chartData : data,
     emptyContent,
     loading,
     loadingContent,
@@ -315,7 +333,17 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     props,
     frameProps,
-    semanticItems
+    semanticItems,
+    {
+      chartMode,
+      className,
+      title: compactMode ? modeTitle : (modeTitle ?? "Physics pile chart"),
+      description: modeDescription,
+      summary: modeSummary,
+      accessibleTable: modeAccessibleTable,
+      enableHover: modeEnableHover,
+      margin: modeMargin
+    }
   )
 
   return renderPhysicsFrame(
@@ -326,7 +354,6 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      className={className}
       config={layout.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,
@@ -338,7 +365,6 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
       responsiveHeight={responsiveHeight}
       responsiveWidth={responsiveWidth}
       size={chartSize}
-      title={props.title ?? "Physics pile chart"}
       bodyStyle={bodyStyle}
     />
   )

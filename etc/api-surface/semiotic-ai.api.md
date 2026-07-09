@@ -89,7 +89,6 @@ function MobileChartContainer
 function MobileStandardControls
 function MultiAxisLineChart
 function MultiLineTooltip
-function NetworkHOPsChart
 function OrbitDiagram
 function PhysicalFlowChart
 function PhysicsCustomChart

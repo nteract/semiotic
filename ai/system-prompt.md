@@ -62,7 +62,6 @@ Use only when motion maps to the data semantics; the settled projection is what 
 - **EventDropChart** — `data`, `timeAccessor` ("time"), `arrivalAccessor` ("arrivalTime"), `windows={{size}}`, `watermark={{delay}}`, `timeScale`, `colorBy`, `size`. Event-time arrival replay and late/watermark windows.
 - **PhysicsPileChart** — `data`, `categoryAccessor` ("category"), `valueAccessor` ("value"), `mode` ("sample"|"mechanical"), `mechanicalCount`, `mechanicalCategories`, `unitValue`, `colorBy`, `showProjection`, `size`. Unitized category piles; mechanical mode can generate a seeded no-data capacity sketch; default projection overlay keeps exact totals readable; raise `unitValue` for large values.
 - **CollisionSwarmChart** — `data`, `xAccessor` ("x"), optional `groupAccessor`, `radiusAccessor`, `xExtent`, `collisionIterations`, `settle`, `showProjection`, `colorBy`, `size`. Collision-relaxed dot-strip/swarm chart that preserves quantitative axis position and optional group lanes.
-- **NetworkHOPsChart** — `nodes`, `edges` with `p` or `samples`, `edgeProbabilityAccessor`, `sampleRate`, `paused`, `seed`, `anchoringStrength`, `showAggregate`, `edgeWidth`, `colorBy`, `size`. Probabilistic network replay that keeps node positions anchored to the aggregate topology while sampled edges change state.
 - **PhysicsCustomChart** — `data`, `layout(ctx)`, `layoutConfig`, `config`, `colorBy`, `size`. Escape hatch for bespoke physics scenes; layouts return bodies/colliders/sensors plus optional SVG overlays.
 
 ### Push API on HOC charts

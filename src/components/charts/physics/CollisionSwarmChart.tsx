@@ -25,11 +25,15 @@ import {
   resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
+  usePhysicsChartMode,
+  type PhysicsHocFrameProps,
+  type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
 
 export interface CollisionSwarmChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "margin"> {
+  extends Omit<BaseChartProps, "margin">,
+    PhysicsSharedChartProps {
   data?: TDatum[]
   size?: [number, number]
   xAccessor?: ChartAccessor<TDatum, number>
@@ -44,12 +48,7 @@ export interface CollisionSwarmChartProps<TDatum extends Datum = Datum>
   showProjection?: boolean
   tooltip?: TooltipProp
   paused?: boolean
-  frameProps?: Partial<
-    Omit<
-      StreamPhysicsFrameProps,
-      "config" | "initialSpawns" | "initialSpawnPacing" | "size"
-    >
-  >
+  frameProps?: PhysicsHocFrameProps<"config">
 }
 
 function formatTick(value: number): string {
@@ -208,14 +207,12 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
   TDatum extends Datum = Datum
 >(props: CollisionSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const {
-    className,
     colorBy,
     collisionIterations,
     data,
     emptyContent,
     frameProps,
     groupAccessor,
-    height,
     loading,
     loadingContent,
     paused,
@@ -225,22 +222,24 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     responsiveWidth,
     seed = 1,
     settle,
-    showProjection = true,
-    size,
-    width,
     xAccessor = "x" as ChartAccessor<TDatum, number>,
     xExtent
   } = props
+  const layoutMode = usePhysicsChartMode(props, [700, 360])
+  const {
+    chartSize,
+    showProjection,
+    className: modeClassName,
+    title: modeTitle,
+    chartMode,
+    compactMode,
+    margin: modeMargin,
+    enableHover: modeEnableHover,
+    description: modeDescription,
+    summary: modeSummary,
+    accessibleTable: modeAccessibleTable
+  } = layoutMode
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const sizeWidth = size?.[0]
-  const sizeHeight = size?.[1]
-  const chartSize = useMemo(
-    () =>
-      sizeWidth != null && sizeHeight != null
-        ? [sizeWidth, sizeHeight] as [number, number]
-        : resolvePhysicsChartSize(undefined, width, height, [700, 360]),
-    [height, sizeHeight, sizeWidth, width]
-  )
   const chartData = useMemo(() => data ?? [], [data])
   const layout = useMemo(
     () =>
@@ -309,7 +308,12 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       xExtent
     ]
   )
-  usePhysicsHocHandle(ref, { frameRef, spawnDatum })
+  usePhysicsHocHandle(ref, {
+    frameRef,
+    spawnDatum,
+    seedRows: chartData as Datum[],
+    seedSpawns: layout.initialSpawns
+  })
 
   const resolvedColorBy =
     (colorBy as ChartAccessor<Datum, string> | undefined) ??
@@ -339,7 +343,17 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     props,
     frameProps,
-    semanticItems
+    semanticItems,
+    {
+      chartMode,
+      className: modeClassName,
+      title: compactMode ? modeTitle : (modeTitle ?? "Collision swarm chart"),
+      description: modeDescription,
+      summary: modeSummary,
+      accessibleTable: modeAccessibleTable,
+      enableHover: modeEnableHover,
+      margin: modeMargin
+    }
   )
 
   return renderPhysicsFrame(
@@ -350,7 +364,6 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       {...tooltipProps}
       {...sharedFrameProps}
       ref={frameRef}
-      className={className}
       config={layout.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,
@@ -361,7 +374,6 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       responsiveHeight={responsiveHeight}
       responsiveWidth={responsiveWidth}
       size={chartSize}
-      title={props.title ?? "Collision swarm chart"}
       bodyStyle={bodyStyle}
     />
   )
