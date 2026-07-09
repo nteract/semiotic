@@ -36,7 +36,14 @@ const edges = [
   { source: "c", target: "d", value: 4 },
 ]
 
-const hierarchy = {
+/** Hierarchy nodes: intermediate levels may omit `value` (summed from leaves). */
+type HierarchyNode = {
+  name: string
+  value?: number
+  children?: HierarchyNode[]
+}
+
+const hierarchy: HierarchyNode = {
   name: "root",
   children: [
     {
@@ -77,13 +84,13 @@ const cases: HydrationCase[] = [
   ) },
   // Hierarchy: rects + connectors.
   { name: "TreeDiagram", render: () => (
-    <TreeDiagram data={hierarchy} childrenAccessor="children" valueAccessor={"value" as never} width={500} height={400} />
+    <TreeDiagram data={hierarchy} childrenAccessor="children" valueAccessor="value" width={500} height={400} />
   ) },
   { name: "Treemap", render: () => (
-    <Treemap data={hierarchy} childrenAccessor="children" valueAccessor={"value" as never} width={500} height={400} />
+    <Treemap data={hierarchy} childrenAccessor="children" valueAccessor="value" width={500} height={400} />
   ) },
   { name: "CirclePack", render: () => (
-    <CirclePack data={hierarchy} childrenAccessor="children" valueAccessor={"value" as never} width={400} height={400} />
+    <CirclePack data={hierarchy} childrenAccessor="children" valueAccessor="value" width={400} height={400} />
   ) },
   // Orbit: arcs + animated node positions. We freeze animation off so
   // the snapshot is stable; the SSR branch otherwise emits whatever

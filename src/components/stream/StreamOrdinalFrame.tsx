@@ -943,10 +943,16 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       //   • `background="transparent"` — explicit opt-out for overlay composition.
       //   • `backgroundGraphics` is provided — user supplied their own SVG
       //     background behind the canvas; painting a themed fill would hide it.
+      // Only resolve --semiotic-bg when paintCanvasBackground will actually
+      // use it (no explicit background, no backgroundGraphics, not transparent).
+      const needsThemeBg =
+        !backgroundGraphics &&
+        background !== "transparent" &&
+        !background
       paintCanvasBackground(ctx, {
         background,
         hasBackgroundGraphics: Boolean(backgroundGraphics),
-        themeBackground: !background
+        themeBackground: needsThemeBg
           ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
           : "",
         width: size[0],

@@ -271,6 +271,8 @@ export type Accessor<T = any> = string | ((d: any, i?: number) => T)
  */
 export type ChartAccessor<TDatum, T> =
   | (keyof TDatum & string)
+  // Function form takes the shared Datum base so HOC accessors stay
+  // assignable to frame props (which erase TDatum at the Stream boundary).
   | ((d: Datum, i?: number) => T)
 
 /**

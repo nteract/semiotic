@@ -35,7 +35,7 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
    * Field name or function to access x values
    * @default "x"
    */
-  xAccessor?: ChartAccessor<TDatum, number>
+  xAccessor?: ChartAccessor<TDatum, number | Date | string>
 
   /**
    * Field name or function to access y values
