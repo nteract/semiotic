@@ -303,7 +303,6 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
     className,
     title: modeTitle,
     chartMode,
-    compactMode,
     margin: modeMargin,
     enableHover: modeEnableHover,
     description: modeDescription,
@@ -553,7 +552,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
     {
       chartMode,
       className,
-      title: compactMode ? modeTitle : (modeTitle ?? "Process flow chart"),
+      title: modeTitle,
       description: modeDescription,
       summary: modeSummary,
       accessibleTable: modeAccessibleTable,

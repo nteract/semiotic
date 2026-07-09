@@ -537,7 +537,6 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     className: modeClassName,
     title: modeTitle,
     chartMode,
-    compactMode,
     margin: modeMargin,
     enableHover: modeEnableHover,
     description: modeDescription,
@@ -712,7 +711,7 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     {
       chartMode,
       className: modeClassName,
-      title: compactMode ? modeTitle : (modeTitle ?? "Physical flow chart"),
+      title: modeTitle,
       description: modeDescription,
       summary: modeSummary,
       accessibleTable: modeAccessibleTable,

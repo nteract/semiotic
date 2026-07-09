@@ -286,7 +286,6 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     className,
     title: modeTitle,
     chartMode,
-    compactMode,
     margin: modeMargin,
     enableHover: modeEnableHover,
     description: modeDescription,
@@ -405,7 +404,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     {
       chartMode,
       className,
-      title: compactMode ? modeTitle : (modeTitle ?? "Galton board chart"),
+      title: modeTitle,
       description: modeDescription,
       summary: modeSummary,
       accessibleTable: modeAccessibleTable,

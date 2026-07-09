@@ -381,7 +381,6 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     className: modeClassName,
     title: modeTitle,
     chartMode,
-    compactMode,
     margin: modeMargin,
     enableHover: modeEnableHover,
     description: modeDescription,
@@ -581,7 +580,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     {
       chartMode,
       className: modeClassName,
-      title: compactMode ? modeTitle : (modeTitle ?? title ?? "Physics custom chart"),
+      title: modeTitle ?? title,
       description: modeDescription,
       summary: modeSummary,
       accessibleTable: modeAccessibleTable,

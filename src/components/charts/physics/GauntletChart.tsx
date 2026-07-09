@@ -999,7 +999,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     className: modeClassName,
     title: modeTitle,
     chartMode,
-    compactMode,
     margin: modeMargin,
     enableHover: modeEnableHover,
     description: modeDescription,
@@ -1594,7 +1593,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     {
       chartMode,
       className: modeClassName,
-      title: compactMode ? modeTitle : (modeTitle ?? "Gauntlet chart"),
+      title: modeTitle,
       description: modeDescription,
       summary: modeSummary,
       accessibleTable: modeAccessibleTable,

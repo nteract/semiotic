@@ -349,7 +349,6 @@ export const EventDropChart = forwardRef(function EventDropChart<
     className: modeClassName,
     title: modeTitle,
     chartMode,
-    compactMode,
     margin: modeMargin,
     enableHover: modeEnableHover,
     description: modeDescription,
@@ -454,7 +453,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
     {
       chartMode,
       className: modeClassName,
-      title: compactMode ? modeTitle : (modeTitle ?? "Event drop chart"),
+      title: modeTitle,
       description: modeDescription,
       summary: modeSummary,
       accessibleTable: modeAccessibleTable,

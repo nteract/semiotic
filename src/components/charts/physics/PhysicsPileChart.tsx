@@ -203,7 +203,6 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
     className,
     title: modeTitle,
     chartMode,
-    compactMode,
     margin: modeMargin,
     enableHover: modeEnableHover,
     description: modeDescription,
@@ -337,7 +336,7 @@ export const PhysicsPileChart = forwardRef(function PhysicsPileChart<
     {
       chartMode,
       className,
-      title: compactMode ? modeTitle : (modeTitle ?? "Physics pile chart"),
+      title: modeTitle,
       description: modeDescription,
       summary: modeSummary,
       accessibleTable: modeAccessibleTable,

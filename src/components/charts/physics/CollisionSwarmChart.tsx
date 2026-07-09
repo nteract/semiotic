@@ -232,7 +232,6 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     className: modeClassName,
     title: modeTitle,
     chartMode,
-    compactMode,
     margin: modeMargin,
     enableHover: modeEnableHover,
     description: modeDescription,
@@ -347,7 +346,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     {
       chartMode,
       className: modeClassName,
-      title: compactMode ? modeTitle : (modeTitle ?? "Collision swarm chart"),
+      title: modeTitle,
       description: modeDescription,
       summary: modeSummary,
       accessibleTable: modeAccessibleTable,
