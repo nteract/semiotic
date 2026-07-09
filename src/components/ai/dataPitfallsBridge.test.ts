@@ -215,7 +215,7 @@ describe("dataPitfallsBridge", () => {
     expect(bridge.meta).toEqual({ count: 3, kind: "image" })
     expect(bridge.notifications).toEqual([
       {
-        id: "truncated-axis",
+        id: "truncated-axis:0",
         level: "error",
         title: "Truncated axis",
         message: "Start the axis at zero.",
@@ -223,13 +223,31 @@ describe("dataPitfallsBridge", () => {
         dismissible: false,
       },
       {
-        id: "missing-context",
+        id: "missing-context:1",
         level: "warning",
         title: "Missing decision context",
         message: "readers cannot tell whether the observed lift is enough",
         source: "datapitfalls · Epistemic Errors",
         dismissible: false,
       },
+    ])
+  })
+
+  it("keeps notification IDs unique when multiple findings share a rule", () => {
+    const duplicateRuleReport: DataPitfallsReport = {
+      ...pitfallReport,
+      findings: [
+        pitfallReport.findings[0],
+        {
+          ...pitfallReport.findings[0],
+          evidence: "another chart region has the same rule finding",
+        },
+      ],
+    }
+
+    expect(toDataPitfallsNotifications(duplicateRuleReport).map((n) => n.id)).toEqual([
+      "truncated-axis:0",
+      "truncated-axis:1",
     ])
   })
 
@@ -276,6 +294,41 @@ describe("dataPitfallsBridge", () => {
     expect(first).not.toHaveProperty("disable")
     expect(first).not.toHaveProperty("x")
     expect(first).not.toHaveProperty("y")
+  })
+
+  it("uses the host info palette fallback and sanitized class names for forward-compatible severities", () => {
+    const unknownSeverityReport: DataPitfallsReport = {
+      ...pitfallReport,
+      findings: [{
+        ...pitfallReport.findings[0],
+        severity: "review needed",
+      }],
+    }
+
+    const [annotation] = toDataPitfallsAnnotations(unknownSeverityReport, {
+      palette: { info: "#abcdef" },
+    })
+
+    expect(annotation.color).toBe("#abcdef")
+    expect(annotation.className).toBe("pitfall-review-needed")
+  })
+
+  it("keeps provenance stableId equal to ruleId for DataPitfalls semantic matching", () => {
+    const duplicateRuleReport: DataPitfallsReport = {
+      ...pitfallReport,
+      findings: [
+        pitfallReport.findings[0],
+        {
+          ...pitfallReport.findings[0],
+          evidence: "another chart region has the same rule finding",
+        },
+      ],
+    }
+
+    expect(toDataPitfallsAnnotations(duplicateRuleReport).map((a) => a.provenance.stableId)).toEqual([
+      "truncated-axis",
+      "truncated-axis",
+    ])
   })
 
   it("caps annotations while keeping the full finding count visible in meta", () => {

@@ -314,7 +314,19 @@ function paletteColor(
   severity: DataPitfallsSeverity,
   palette: Partial<Record<string, string>>
 ): string {
-  return palette[severity] ?? DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE.info
+  return palette[severity] ?? palette.info ?? DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE.info
+}
+
+function findingId(finding: DataPitfallsFinding): string {
+  return firstText(finding.ruleId, finding.name)
+}
+
+function indexedFindingId(finding: DataPitfallsFinding, index: number): string {
+  return `${findingId(finding)}:${index}`
+}
+
+function severityClassName(severity: DataPitfallsSeverity): string {
+  return `pitfall-${String(severity).toLowerCase().replace(/[^a-z0-9_-]/g, "-")}`
 }
 
 export function dataPitfallsFindingToNotification(
@@ -325,7 +337,7 @@ export function dataPitfallsFindingToNotification(
 ): DataPitfallsChartNotification {
   const prefix = options.sourcePrefix ?? "datapitfalls"
   return {
-    id: firstText(finding.ruleId, finding.name),
+    id: indexedFindingId(finding, index),
     level: notificationLevel(finding.severity),
     title: findingTitle(finding),
     message: options.message
@@ -374,7 +386,7 @@ export function dataPitfallsFindingToAnnotation(
     label: findingMessage(finding),
     wrap: options.wrap ?? DEFAULT_DATA_PITFALLS_WRAP,
     color: paletteColor(finding.severity, palette),
-    className: `pitfall-${finding.severity}`,
+    className: severityClassName(finding.severity),
     emphasis: finding.severity === "error" ? "primary" : "secondary",
     provenance: {
       author: "datapitfalls",
