@@ -39,9 +39,17 @@ const repoRoot = resolve(__dirname, "..")
 // `renderable: true` would be tighter — only renderable charts truly
 // belong in `ai/examples.md` since that's the surface MCP/CLI agents
 // reach for. Both are checked.
+//
+// chartSpecs.ts composes CHART_SPECS from per-family files
+// (chartSpecsXY.ts, chartSpecsOrdinal.ts, ...) rather than declaring
+// chart entries itself, so discover those files from its own imports
+// and walk each in turn.
 
-const chartSpecsPath = join(repoRoot, "src/components/charts/shared/chartSpecs.ts")
-const chartSpecsSource = readFileSync(chartSpecsPath, "utf8")
+const chartSpecsDir = join(repoRoot, "src/components/charts/shared")
+const chartSpecsIndexPath = join(chartSpecsDir, "chartSpecs.ts")
+const chartSpecsIndexSource = readFileSync(chartSpecsIndexPath, "utf8")
+const chartSpecFiles = [...chartSpecsIndexSource.matchAll(/from\s+"\.\/(chartSpecs\w+)"/g)]
+  .map((match) => join(chartSpecsDir, `${match[1]}.ts`))
 
 const SPEC_BLOCK_RE = /^ {2}([A-Z][A-Za-z]+):\s*\{\n([\s\S]*?)^ {2}\},?$/gm
 const NAME_RE = /^\s*name:\s*"([^"]+)"/m
@@ -50,19 +58,22 @@ const RENDERABLE_RE = /^\s*renderable:\s*(true|false)/m
 const allCharts = new Set()
 const renderableCharts = new Set()
 
-for (const match of chartSpecsSource.matchAll(SPEC_BLOCK_RE)) {
-  const body = match[2]
-  const nameMatch = NAME_RE.exec(body)
-  if (!nameMatch) continue
-  const name = nameMatch[1]
-  allCharts.add(name)
-  const renderableMatch = RENDERABLE_RE.exec(body)
-  // Default to true if not explicitly set — matches the registry's
-  // own default-on convention for unmarked entries (the only entries
-  // that explicitly set `renderable: false` are the ones that fail the
-  // server-side render path).
-  if (!renderableMatch || renderableMatch[1] === "true") {
-    renderableCharts.add(name)
+for (const chartSpecsPath of chartSpecFiles) {
+  const chartSpecsSource = readFileSync(chartSpecsPath, "utf8")
+  for (const match of chartSpecsSource.matchAll(SPEC_BLOCK_RE)) {
+    const body = match[2]
+    const nameMatch = NAME_RE.exec(body)
+    if (!nameMatch) continue
+    const name = nameMatch[1]
+    allCharts.add(name)
+    const renderableMatch = RENDERABLE_RE.exec(body)
+    // Default to true if not explicitly set — matches the registry's
+    // own default-on convention for unmarked entries (the only entries
+    // that explicitly set `renderable: false` are the ones that fail the
+    // server-side render path).
+    if (!renderableMatch || renderableMatch[1] === "true") {
+      renderableCharts.add(name)
+    }
   }
 }
 

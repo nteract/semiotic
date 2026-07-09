@@ -106,6 +106,26 @@ export type { GauntletChartProps }
  *   size={[720, 380]}
  * />
  * ```
+ *
+ * @example
+ * Multiple attached properties routed through timed gates, with the
+ * settled viability/outcome projection strip enabled:
+ * ```tsx
+ * <GauntletChart
+ *   data={[{ id: "plan-a", positives: ["homes", "jobs"], negatives: ["cost"] }]}
+ *   positiveProperties={[
+ *     { id: "homes", label: "Homes", radius: 10 },
+ *     { id: "jobs", label: "Jobs", radius: 10 },
+ *   ]}
+ *   negativeProperties={[{ id: "cost", label: "Cost", load: 1.2, radius: 8 }]}
+ *   gates={[
+ *     { id: "review", label: "Review" },
+ *     { id: "budget", label: "Budget" },
+ *   ]}
+ *   showProjection
+ *   size={[720, 380]}
+ * />
+ * ```
  */
 export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Datum = Datum>(
   props: GauntletChartProps<TDatum>,

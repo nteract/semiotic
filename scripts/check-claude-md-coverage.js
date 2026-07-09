@@ -28,13 +28,22 @@ function info(msg) {
 }
 
 console.log("\n[1/2] Parsing validationMap.ts VALIDATION_MAP...")
-const validatePath = path.join(ROOT, "src", "components", "charts", "shared", "validationMap.ts")
+// validationMap.ts derives VALIDATION_MAP from CHART_SPECS at runtime
+// (`Object.fromEntries(Object.entries(CHART_SPECS)...)`) rather than
+// declaring chart entries as literal object keys, so walk the per-family
+// spec files chartSpecs.ts composes CHART_SPECS from instead — those
+// still declare one literal `ChartName: {` key per chart.
+const chartSpecsIndexPath = path.join(ROOT, "src", "components", "charts", "shared", "chartSpecs.ts")
+const chartSpecsDir = path.join(ROOT, "src", "components", "charts", "shared")
 const validationComponents = new Set()
 try {
-  const src = fs.readFileSync(validatePath, "utf-8")
-  for (const m of src.matchAll(/^\s{2}(\w+):\s*\{/gm)) {
-    const name = m[1]
-    if (name[0] === name[0].toUpperCase()) validationComponents.add(name)
+  const indexSrc = fs.readFileSync(chartSpecsIndexPath, "utf-8")
+  for (const fileMatch of indexSrc.matchAll(/from\s+"\.\/(chartSpecs\w+)"/g)) {
+    const specSrc = fs.readFileSync(path.join(chartSpecsDir, `${fileMatch[1]}.ts`), "utf-8")
+    for (const m of specSrc.matchAll(/^\s{2}(\w+):\s*\{/gm)) {
+      const name = m[1]
+      if (name[0] === name[0].toUpperCase()) validationComponents.add(name)
+    }
   }
   info(`${validationComponents.size} components found in VALIDATION_MAP`)
 } catch (e) {

@@ -39,36 +39,47 @@ const repoRoot = resolve(__dirname, "..")
 // truth. Parsing the literal `name`/`category` pairs (rather than
 // importing the TS module) keeps this script dependency-free and
 // avoids a tsx compile step.
+//
+// chartSpecs.ts composes CHART_SPECS from per-family files
+// (chartSpecsXY.ts, chartSpecsOrdinal.ts, ...) rather than declaring
+// chart entries itself, so discover those files from its own imports
+// and walk each in turn.
 
-const chartSpecsPath = join(repoRoot, "src/components/charts/shared/chartSpecs.ts")
-const chartSpecsSource = readFileSync(chartSpecsPath, "utf8")
+const chartSpecsDir = join(repoRoot, "src/components/charts/shared")
+const chartSpecsIndexPath = join(chartSpecsDir, "chartSpecs.ts")
+const chartSpecsIndexSource = readFileSync(chartSpecsIndexPath, "utf8")
+const chartSpecFiles = [...chartSpecsIndexSource.matchAll(/from\s+"\.\/(chartSpecs\w+)"/g)]
+  .map((match) => join(chartSpecsDir, `${match[1]}.ts`))
 
 const SPEC_BLOCK_RE = /^ {2}([A-Z][A-Za-z]+):\s*\{\n([\s\S]*?)^ {2}\},?$/gm
 const NAME_RE = /^\s*name:\s*"([^"]+)"/m
 const CATEGORY_RE = /^\s*category:\s*"([^"]+)"/m
 
 const hocs = []
-for (const match of chartSpecsSource.matchAll(SPEC_BLOCK_RE)) {
-  const key = match[1]
-  const body = match[2]
-  const nameMatch = NAME_RE.exec(body)
-  const categoryMatch = CATEGORY_RE.exec(body)
-  if (!nameMatch || !categoryMatch) continue
-  const name = nameMatch[1]
-  // The keyword "category" inside CHART_SPECS uses one of: xy, ordinal,
-  // network, geo, realtime. The realtime charts live in
-  // src/components/charts/realtime/ even though they're categorized as
-  // "realtime" in the spec — the directory and category line up by
-  // convention.
-  const category = categoryMatch[1]
-  const filePath = join(repoRoot, `src/components/charts/${category}/${name}.tsx`)
-  if (!existsSync(filePath)) {
-    // Defer this to check:chart-specs / check:surface — they catch
-    // missing files with a clearer error. We only fail when the file
-    // exists but its JSDoc is insufficient.
-    continue
+for (const chartSpecsPath of chartSpecFiles) {
+  const chartSpecsSource = readFileSync(chartSpecsPath, "utf8")
+  for (const match of chartSpecsSource.matchAll(SPEC_BLOCK_RE)) {
+    const key = match[1]
+    const body = match[2]
+    const nameMatch = NAME_RE.exec(body)
+    const categoryMatch = CATEGORY_RE.exec(body)
+    if (!nameMatch || !categoryMatch) continue
+    const name = nameMatch[1]
+    // The keyword "category" inside CHART_SPECS uses one of: xy, ordinal,
+    // network, geo, realtime. The realtime charts live in
+    // src/components/charts/realtime/ even though they're categorized as
+    // "realtime" in the spec — the directory and category line up by
+    // convention.
+    const category = categoryMatch[1]
+    const filePath = join(repoRoot, `src/components/charts/${category}/${name}.tsx`)
+    if (!existsSync(filePath)) {
+      // Defer this to check:chart-specs / check:surface — they catch
+      // missing files with a clearer error. We only fail when the file
+      // exists but its JSDoc is insufficient.
+      continue
+    }
+    hocs.push({ name, category, filePath, key })
   }
-  hocs.push({ name, category, filePath, key })
 }
 
 if (hocs.length === 0) {
