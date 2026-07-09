@@ -56,7 +56,7 @@ describe("LineChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(LineChart, {
         data: processedData,
-        xAccessor: (d: Datum) => new Date(d.x),
+        xAccessor: ((d: Datum) => new Date(d.x)) as never,
         yAccessor: "value",
         lineBy: "metricLabel",
         colorBy: "metricLabel",
@@ -96,7 +96,7 @@ describe("LineChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(LineChart, {
         data: processedData,
-        xAccessor: (d: Datum) => new Date(d.x),
+        xAccessor: ((d: Datum) => new Date(d.x)) as never,
         yAccessor: "value",
         lineBy: "metricLabel",
         width: 600,
@@ -128,7 +128,7 @@ describe("StackedAreaChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(StackedAreaChart, {
         data: processedData,
-        xAccessor: (d: Datum) => new Date(d.x),
+        xAccessor: ((d: Datum) => new Date(d.x)) as never,
         yAccessor: "value",
         areaBy: "metricLabel",
         colorBy: "metricLabel",
@@ -155,7 +155,7 @@ describe("StackedAreaChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(StackedAreaChart, {
         data: processedData,
-        xAccessor: (d: Datum) => new Date(d.x),
+        xAccessor: ((d: Datum) => new Date(d.x)) as never,
         yAccessor: "value",
         areaBy: "metricLabel",
         colorBy: "metricLabel",
@@ -176,7 +176,7 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(MultiAxisLineChart, {
         data: multiAxisRows,
-        xAccessor: (d: Datum) => new Date(d.x),
+        xAccessor: ((d: Datum) => new Date(d.x)) as never,
         series: [
           { yAccessor: "requests", label: "requests" },
           { yAccessor: "latencyMs", label: "latencyMs" }
@@ -208,7 +208,7 @@ describe("MultiAxisLineChart HOC → StreamXYFrame prop verification", () => {
     render(
       React.createElement(MultiAxisLineChart, {
         data: multiAxisRows,
-        xAccessor: (d: Datum) => new Date(d.x),
+        xAccessor: ((d: Datum) => new Date(d.x)) as never,
         series: [
           { yAccessor: "requests", label: "requests" },
           { yAccessor: "latencyMs", label: "latencyMs" }

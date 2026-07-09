@@ -138,7 +138,7 @@ describe("MinimapChart", () => {
   })
 
   it("handles data update via rerender", () => {
-    const { _container, rerender } = render(
+    const { rerender } = render(
       <TooltipProvider>
         <MinimapChart data={sampleData} />
       </TooltipProvider>

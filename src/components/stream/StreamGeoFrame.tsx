@@ -9,7 +9,8 @@ import {
   useMemo,
   useCallback,
   useImperativeHandle,
-  forwardRef
+  forwardRef,
+  memo
 } from "react"
 import type {
   StreamGeoFrameProps,
@@ -35,7 +36,8 @@ import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
-import { resolveCSSColor } from "./renderers/resolveCSSColor"
+import { paintCanvasBackground } from "./canvasBackground"
+import { needsDataCanvasPaint, needsInteractionCanvasPaint } from "./paintNeeds"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -217,7 +219,7 @@ function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
 
 // ── StreamGeoFrame ─────────────────────────────────────────────────────
 
-const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
+const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
   function StreamGeoFrame(props, ref) {
     const {
       // Projection
@@ -473,6 +475,8 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
     // Hover state
     const hoverRef = useRef<HoverData | null>(null)
     const hoveredNodeRef = useRef<GeoSceneNode | null>(null)
+    /** True when interaction canvas last painted hover content (for idle skip). */
+    const interactionHasContentRef = useRef(false)
     const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
@@ -856,10 +860,12 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
       // Apply pending drag-rotation (coalesced from pointer events)
       const pendingRot = pendingRotationRef.current
+      let rotationApplied = false
       if (pendingRot) {
         pendingRotationRef.current = null
         const rotLayout = { width: adjustedWidth, height: adjustedHeight }
         store.applyRotation(pendingRot, rotLayout)
+        rotationApplied = true
       }
 
       // Advance transition — skip when reduced motion
@@ -911,7 +917,22 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
 
       const dpr = getDevicePixelRatio()
 
+      // Particles / transition / scene rebuild / rotation need a full data paint.
+      // Hover-only scheduleRender skips the data canvas and only updates the
+      // interaction layer (same pattern as StreamXYFrame / Network).
+      const particlesWanted =
+        showParticles && !reducedMotionRef.current && !!particlePoolRef.current
+      const needsDataRepaint = needsDataCanvasPaint({
+        dirtyOrRebuilt: computedSceneThisFrame,
+        transitioning: isTransitioning,
+        continuous: particlesWanted,
+        liveEncoding: store.hasActivePulses,
+        forced: rotationApplied
+      })
+
       // ── Tile canvas (behind data canvas) ──
+      // Always attempt when tiles are configured — incomplete loads set
+      // needsContinuation so progressive tile load keeps working.
       if (tileURL && tileCacheRef.current) {
         const tileCanvas = tileCanvasRef.current
         if (tileCanvas && store.scales?.projection) {
@@ -939,105 +960,112 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       }
 
       // ── Data canvas ──
-      const ctx = prepareCanvas(canvas, size, margin, dpr)
-      if (!ctx) return
-      ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
+      if (needsDataRepaint) {
+        const ctx = prepareCanvas(canvas, size, margin, dpr)
+        if (!ctx) return
+        ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-      // Background (skip if tiles are rendering — tiles are the background).
-      // Resolve CSS-variable strings before assignment; canvas's `fillStyle`
-      // silently rejects `var(...)` syntax and leaves the previous fill
-      // (a node/edge/particle color) in place — see the matching comment
-      // in StreamNetworkFrame for the flashing-background incident.
-      if (background && !tileURL) {
-        const resolvedBg = resolveCSSColor(ctx, background)
-        if (resolvedBg) {
-          ctx.fillStyle = resolvedBg
-          ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
+        // Background (skip if tiles are rendering — tiles are the background).
+        if (!tileURL) {
+          paintCanvasBackground(ctx, {
+            background,
+            width: adjustedWidth,
+            height: adjustedHeight
+          })
         }
-      }
 
-      ctx.save()
-      ctx.beginPath()
-      ctx.rect(0, 0, adjustedWidth, adjustedHeight)
-      ctx.clip()
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(0, 0, adjustedWidth, adjustedHeight)
+        ctx.clip()
 
-      const scene = store.scene
-      const scales = store.scales
-      const layout = { width: adjustedWidth, height: adjustedHeight }
+        const scene = store.scene
+        const scales = store.scales
+        const layout = { width: adjustedWidth, height: adjustedHeight }
 
-      geoCanvasRenderer(ctx, scene, scales, layout)
-      lineCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
-      pointCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
-      glyphCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+        geoCanvasRenderer(ctx, scene, scales, layout)
+        lineCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+        pointCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+        glyphCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
 
-      // ── Geo particles ── (skipped under reduced motion: decorative movement)
-      if (showParticles && !reducedMotionRef.current && particlePoolRef.current) {
-        const pool = particlePoolRef.current
-        const lineNodes = scene.filter(
-          (n): n is GeoLineSceneNode => n.type === "line"
-        )
+        // ── Geo particles ── (skipped under reduced motion: decorative movement)
+        if (particlesWanted && particlePoolRef.current) {
+          const pool = particlePoolRef.current
+          const lineNodes = scene.filter(
+            (n): n is GeoLineSceneNode => n.type === "line"
+          )
 
-        if (lineNodes.length > 0) {
-          const pStyle = particleStyle || {}
-          const speed = (pStyle.speedMultiplier ?? 1) * 0.3
-          const maxPerLine = pStyle.maxPerLine ?? defaultGeoParticleMaxPerLine()
-          const spawnRate = pStyle.spawnRate ?? defaultGeoParticleSpawnRate()
-          const radius = pStyle.radius ?? 2
-          const opacity = pStyle.opacity ?? 0.7
+          if (lineNodes.length > 0) {
+            const pStyle = particleStyle || {}
+            const speed = (pStyle.speedMultiplier ?? 1) * 0.3
+            const maxPerLine = pStyle.maxPerLine ?? defaultGeoParticleMaxPerLine()
+            const spawnRate = pStyle.spawnRate ?? defaultGeoParticleSpawnRate()
+            const radius = pStyle.radius ?? 2
+            const opacity = pStyle.opacity ?? 0.7
 
-          // Compute deltaTime
-          const nowMs = now / 1000
-          const dt = lastParticleTimeRef.current > 0
-            ? Math.min(nowMs - lastParticleTimeRef.current, 0.1)
-            : 0.016
-          lastParticleTimeRef.current = nowMs
+            // Compute deltaTime
+            const nowMs = now / 1000
+            const dt = lastParticleTimeRef.current > 0
+              ? Math.min(nowMs - lastParticleTimeRef.current, 0.1)
+              : 0.016
+            lastParticleTimeRef.current = nowMs
 
-          // Build path and width arrays
-          const paths = lineNodes.map(n => n.path)
-          const widths = lineNodes.map(n => n.style.strokeWidth || 2)
+            // Build path and width arrays
+            const paths = lineNodes.map(n => n.path)
+            const widths = lineNodes.map(n => n.style.strokeWidth || 2)
 
-          // Spawn particles
-          for (let li = 0; li < lineNodes.length; li++) {
-            if (Math.random() < spawnRate && pool.countForLine(li) < maxPerLine) {
-              pool.spawn(li)
+            // Spawn particles
+            for (let li = 0; li < lineNodes.length; li++) {
+              if (Math.random() < spawnRate && pool.countForLine(li) < maxPerLine) {
+                pool.spawn(li)
+              }
             }
+
+            // Step
+            pool.step(dt, speed, paths, widths)
+
+            // Render
+            ctx.globalAlpha = opacity
+            for (let i = 0; i < pool.particles.length; i++) {
+              const p = pool.particles[i]
+              if (!p.active) continue
+              const lineNode = lineNodes[p.lineIndex]
+              const color = typeof pStyle.color === "function"
+                ? pStyle.color(lineNode?.datum ?? {})
+                : pStyle.color === "source" || !pStyle.color
+                  ? (lineNode?.style.stroke || "#fff")
+                  : pStyle.color
+              ctx.beginPath()
+              ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+              ctx.fillStyle = color
+              ctx.fill()
+            }
+            ctx.globalAlpha = 1
+
+            needsContinuation = true
           }
-
-          // Step
-          pool.step(dt, speed, paths, widths)
-
-          // Render
-          ctx.globalAlpha = opacity
-          for (let i = 0; i < pool.particles.length; i++) {
-            const p = pool.particles[i]
-            if (!p.active) continue
-            const lineNode = lineNodes[p.lineIndex]
-            const color = typeof pStyle.color === "function"
-              ? pStyle.color(lineNode?.datum ?? {})
-              : pStyle.color === "source" || !pStyle.color
-                ? (lineNode?.style.stroke || "#fff")
-                : pStyle.color
-            ctx.beginPath()
-            ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
-            ctx.fillStyle = color
-            ctx.fill()
-          }
-          ctx.globalAlpha = 1
-
-          needsContinuation = true
         }
-      }
 
-      ctx.restore()
+        ctx.restore()
+      }
 
       // ── Interaction canvas (hover highlight) ──
+      // Skip clear/draw when idle; force one clear when hover ends so
+      // the previous highlight does not stick.
+      const hoveredNode = hoveredNodeRef.current
+      const interactionActive = Boolean(
+        hoveredNode && (hoveredNode.type === "geoarea" || hoveredNode.type === "point")
+      )
+      const needsInteractionRepaint = needsInteractionCanvasPaint(
+        interactionActive,
+        interactionHasContentRef.current
+      )
       const interCanvas = interactionCanvasRef.current
-      if (interCanvas) {
+      if (interCanvas && needsInteractionRepaint) {
         const ictx = prepareCanvas(interCanvas, size, margin, dpr)
         if (ictx) {
           ictx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-          const hoveredNode = hoveredNodeRef.current
           if (hoveredNode && hoveredNode.type === "geoarea") {
             const geoNode = hoveredNode as GeoAreaSceneNode
             const path = new Path2D(geoNode.pathData)
@@ -1070,6 +1098,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
             ictx.stroke()
           }
         }
+        interactionHasContentRef.current = interactionActive
       }
 
       // Staleness badge state is owned by the shared useStalenessCheck hook
@@ -1586,7 +1615,7 @@ const StreamGeoFrame = forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(
       </div>
     )
   }
-)
+))
 
 StreamGeoFrame.displayName = "StreamGeoFrame"
 export default StreamGeoFrame

@@ -9,14 +9,14 @@ import type {
   NetworkCircleNode,
 } from "../../../stream/networkTypes"
 
-function ctxWith(config: ProcessSankeyLayoutConfig): NetworkLayoutContext {
+function ctxWith(config: ProcessSankeyLayoutConfig): NetworkLayoutContext<ProcessSankeyLayoutConfig> {
   return {
     nodes: [],
     edges: [],
     dimensions: { width: 400, height: 300, plot: { x: 0, y: 0, width: 400, height: 300 } },
     theme: { semantic: {}, categorical: [] },
     resolveColor: (k: string) => `color(${k})`,
-    config: config as unknown as Record<string, unknown>,
+    config,
   }
 }
 

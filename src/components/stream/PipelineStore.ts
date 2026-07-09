@@ -46,9 +46,14 @@ import type {
 } from "./types"
 import type { SymbolName } from "./symbolPath"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent, type CoercibleNumber } from "./accessorUtils"
+import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
-import { computeDecayOpacity as computeDecayOpacityFn, applyDecay as applyDecayFn } from "./pipelineDecay"
+import {
+  computeDecayOpacity as computeDecayOpacityFn,
+  applyDecay as applyDecayFn,
+  buildDatumIndexMap
+} from "./pipelineDecay"
 import { applyPulse as applyPulseFn, hasActivePulses as hasActivePulsesFn } from "./pipelinePulse"
 import {
   snapshotPositions as snapshotPositionsFn,
@@ -191,6 +196,12 @@ export interface PipelineConfig {
    *  read as the actual data bounds. Default `"nice"` keeps the existing
    *  padded domain so glyphs at the extremes don't clip the plot edge. */
   axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
+  /**
+   * Hard cap for `windowMode: "growing"`. Defaults to
+   * {@link DEFAULT_GROWING_MAX_CAPACITY} (100_000). Canvas scene graphs
+   * degrade well before the previous 1e6 ceiling; pass a higher value
+   * only when you know the host can afford it.
+   */
   maxCapacity?: number
 
   // Accessors
@@ -328,6 +339,17 @@ export interface PipelineConfig {
   layoutSelection?: CustomLayoutSelection | null
 }
 
+// ── Growing-window capacity ────────────────────────────────────────────
+
+/** Default hard cap for `windowMode: "growing"`. */
+export const DEFAULT_GROWING_MAX_CAPACITY = 100_000
+
+/**
+ * Dev-only warning threshold: when a growing buffer first crosses this
+ * size we log once so unbounded push loops surface before the hard cap.
+ */
+export const GROWING_CAPACITY_WARN_THRESHOLD = 50_000
+
 // ── PipelineStore ──────────────────────────────────────────────────────
 
 export class PipelineStore {
@@ -336,6 +358,7 @@ export class PipelineStore {
   private yExtent = new IncrementalExtent()
   private config: PipelineConfig
   private growingCap: number
+  private growingCapacityWarned = false
 
   private getX: (d: Datum) => number
   private getY: (d: Datum) => number
@@ -398,6 +421,8 @@ export class PipelineStore {
   private _stackExtentCache: { key: string; yDomain: [number, number] } | null = null
   /** Monotonic counter incremented on each ingest — used as part of cache keys */
   private _ingestVersion = 0
+  /** Datum→index map for decay/pulse, cached by `_ingestVersion`. */
+  private _datumIndexCache: { version: number; map: Map<Datum, number> } | null = null
 
   // ── Buffer array caching ────────────────────────────────────────────
   /** Cached materialized array from buffer.toArray() — only rebuilt when buffer changes */
@@ -637,11 +662,23 @@ export class PipelineStore {
       // Streaming append
       for (const d of changeset.inserts) {
         if (this.config.windowMode === "growing" && this.buffer.full) {
-          const maxCap = this.config.maxCapacity || 1_000_000
+          const maxCap = this.config.maxCapacity ?? DEFAULT_GROWING_MAX_CAPACITY
           if (this.growingCap < maxCap) {
             this.growingCap = Math.min(this.growingCap * 2, maxCap)
             this.buffer.resize(this.growingCap)
             if (this.timestampBuffer) this.timestampBuffer.resize(this.growingCap)
+            if (
+              process.env.NODE_ENV !== "production" &&
+              !this.growingCapacityWarned &&
+              this.growingCap >= GROWING_CAPACITY_WARN_THRESHOLD
+            ) {
+              this.growingCapacityWarned = true
+              console.warn(
+                `[Semiotic] Growing window buffer reached ${this.growingCap} points ` +
+                  `(cap ${maxCap}). Large canvas scenes are expensive — prefer a sliding ` +
+                  `window, aggregation, or an explicit maxCapacity if this is intentional.`
+              )
+            }
           }
         }
 
@@ -1379,16 +1416,31 @@ export class PipelineStore {
     return computeDecayOpacityFn(decay, bufferIndex, bufferSize)
   }
 
+  private getDatumIndexMap(data: Datum[]): Map<Datum, number> {
+    if (this._datumIndexCache && this._datumIndexCache.version === this._ingestVersion) {
+      return this._datumIndexCache.map
+    }
+    const map = buildDatumIndexMap(data)
+    this._datumIndexCache = { version: this._ingestVersion, map }
+    return map
+  }
+
   private applyDecay(nodes: SceneNode[], data: Datum[]): void {
     if (!this.config.decay) return
-    applyDecayFn(this.config.decay, nodes, data)
+    applyDecayFn(this.config.decay, nodes, data, this.getDatumIndexMap(data))
   }
 
   // ── Pulse (delegated to pipelinePulse.ts) ──────────────────────────
 
   private applyPulse(nodes: SceneNode[], data: Datum[]): void {
     if (!this.config.pulse || !this.timestampBuffer) return
-    applyPulseFn(this.config.pulse, nodes, data, this.timestampBuffer)
+    applyPulseFn(
+      this.config.pulse,
+      nodes,
+      data,
+      this.timestampBuffer,
+      this.getDatumIndexMap(data)
+    )
   }
 
   get hasActivePulses(): boolean {
@@ -1712,7 +1764,7 @@ export class PipelineStore {
     if (this.config.transition && this.scene.length > 0) {
       this.snapshotPositions()
     }
-    const ids = new Set(Array.isArray(id) ? id : [id])
+    const ids = toIdSet(id)
     const getPointId = this.getPointId
     // Compact timestamp buffer in lockstep with data removal
     const predicate = (item: Datum) => ids.has(getPointId(item))
@@ -1759,7 +1811,7 @@ export class PipelineStore {
     if (!this.getPointId) {
       throw new Error("update() requires pointIdAccessor to be configured")
     }
-    const ids = new Set(Array.isArray(id) ? id : [id])
+    const ids = toIdSet(id)
     const getPointId = this.getPointId
     // Capture matched indices before mutation (updater may change the ID field)
     const matchedIndices = new Set<number>()
@@ -1837,6 +1889,7 @@ export class PipelineStore {
     this.needsFullRebuild = true
     this._bufferDirty = true
     this._bufferArrayCache = null
+    this._datumIndexCache = null
     this.lastLayout = null
     this.scales = null
     this.scene = []

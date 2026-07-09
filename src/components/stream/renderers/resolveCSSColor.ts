@@ -106,6 +106,15 @@ export function clearCSSColorCache(_canvas?: HTMLCanvasElement): void {
 }
 
 /**
+ * Monotonic version bumped by theme changes and `clearCSSColorCache`.
+ * Frames can cache derived theme color objects keyed by this value so
+ * paint loops avoid `getComputedStyle` on every rAF.
+ */
+export function getCSSColorCacheVersion(): number {
+  return currentVersion
+}
+
+/**
  * Test-only: reset all cache state, including disconnecting any installed
  * observer/matchMedia listeners. Required for test isolation — without it,
  * observers accumulate across files and bump `currentVersion` more than once

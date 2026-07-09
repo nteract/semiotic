@@ -125,7 +125,13 @@ const cases: ParityCase[] = [
       width: 500, height: 400,
     }),
     inFrame: () => renderToString(
-      <Treemap data={hierarchy} childrenAccessor="children" valueAccessor="value" width={500} height={400} />,
+      <Treemap
+        data={hierarchy}
+        childrenAccessor="children"
+        valueAccessor={"value" as never}
+        width={500}
+        height={400}
+      />,
     ),
   },
 ]

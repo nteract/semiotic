@@ -78,6 +78,8 @@ All geo: `fitPadding`, `zoomable`, `zoomExtent`, `onZoom`, `dragRotate`, `gratic
 
 ## Physics Charts (`semiotic/physics`)
 
+Import from `semiotic/physics` only — not re-exported from the root `semiotic` entry (keeps the physics kernel out of default dashboards).
+
 Process/arrival/distribution charts backed by `StreamPhysicsFrame`. The settled projection is the chart; motion is explanatory context. Use when the movement has data semantics, not as decoration.
 
 **GaltonBoardChart** — `data`, `valueAccessor` ("value"), `bins` (21), `mode` ("sample"|"mechanical"), `pegRows`, `mechanicalCount`, `branchProbability`, `ballRadius`, `colorBy`, `seed`, `size`/`width`/`height`, `paused`, `frameProps`. Renders a deterministic Galton/Plinko-style distribution that settles into bins; mechanical mode can generate a seeded no-data demonstration.

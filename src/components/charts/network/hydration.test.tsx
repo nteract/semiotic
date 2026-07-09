@@ -77,13 +77,13 @@ const cases: HydrationCase[] = [
   ) },
   // Hierarchy: rects + connectors.
   { name: "TreeDiagram", render: () => (
-    <TreeDiagram data={hierarchy} childrenAccessor="children" valueAccessor="value" width={500} height={400} />
+    <TreeDiagram data={hierarchy} childrenAccessor="children" valueAccessor={"value" as never} width={500} height={400} />
   ) },
   { name: "Treemap", render: () => (
-    <Treemap data={hierarchy} childrenAccessor="children" valueAccessor="value" width={500} height={400} />
+    <Treemap data={hierarchy} childrenAccessor="children" valueAccessor={"value" as never} width={500} height={400} />
   ) },
   { name: "CirclePack", render: () => (
-    <CirclePack data={hierarchy} childrenAccessor="children" valueAccessor="value" width={400} height={400} />
+    <CirclePack data={hierarchy} childrenAccessor="children" valueAccessor={"value" as never} width={400} height={400} />
   ) },
   // Orbit: arcs + animated node positions. We freeze animation off so
   // the snapshot is stable; the SSR branch otherwise emits whatever
@@ -100,8 +100,8 @@ const cases: HydrationCase[] = [
       layout={(ctx) => ({
         sceneNodes: ctx.nodes.map((n, i) => ({
           type: "circle" as const,
-          x: 50 + i * 80,
-          y: 100,
+          cx: 50 + i * 80,
+          cy: 100,
           r: 12,
           style: { fill: ctx.resolveColor(String(n.id)) },
           datum: n,
@@ -139,9 +139,9 @@ describe("Network HOC catalog — hydration parity", () => {
         const html = renderToString(c.render())
         container.innerHTML = html
 
-        let root: ReturnType<typeof hydrateRoot> | null = null
+        const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
-          root = hydrateRoot(container, c.render())
+          rootBox.current = hydrateRoot(container, c.render())
         })
 
         const mismatchWarnings = errorSpy.mock.calls.filter((call) => {
@@ -150,7 +150,7 @@ describe("Network HOC catalog — hydration parity", () => {
         })
         expect(mismatchWarnings).toEqual([])
 
-        root?.unmount()
+        rootBox.current?.unmount()
         errorSpy.mockRestore()
       })
 
@@ -158,15 +158,15 @@ describe("Network HOC catalog — hydration parity", () => {
         const html = renderToString(c.render())
         container.innerHTML = html
 
-        let root: ReturnType<typeof hydrateRoot> | null = null
+        const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
-          root = hydrateRoot(container, c.render())
+          rootBox.current = hydrateRoot(container, c.render())
         })
 
         const canvases = container.querySelectorAll("canvas")
         expect(canvases.length).toBeGreaterThanOrEqual(1)
 
-        root?.unmount()
+        rootBox.current?.unmount()
       })
     })
   }

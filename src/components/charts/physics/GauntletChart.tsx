@@ -1978,6 +1978,10 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
 
 ;(GauntletChart as { displayName?: string }).displayName = "GauntletChart"
 
+/**
+ * @deprecated Typo alias of {@link GauntletChart}. Use `GauntletChart` instead.
+ * Removed in the next major version.
+ */
 export const GuantletChart = GauntletChart
 
 export default GauntletChart

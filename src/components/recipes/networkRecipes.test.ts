@@ -4,6 +4,11 @@ import { dagreLayout } from "./dagre"
 import type { NetworkLayoutContext } from "../stream/networkCustomLayout"
 import type { RealtimeNode, RealtimeEdge, NetworkRectNode, NetworkCurvedEdge, NetworkLineEdge } from "../stream/networkTypes"
 
+const node = (partial: Partial<RealtimeNode> & { id: string }): RealtimeNode =>
+  partial as RealtimeNode
+const edge = (partial: Partial<RealtimeEdge> & { source: string; target: string }): RealtimeEdge =>
+  partial as RealtimeEdge
+
 function makeCtx<C extends object>(
   config: C,
   nodes: RealtimeNode[],
@@ -25,13 +30,13 @@ function makeCtx<C extends object>(
 
 describe("flextreeLayout", () => {
   const nodes: RealtimeNode[] = [
-    { id: "root", x: 200, y: 20 },
-    { id: "a", x: 100, y: 100 },
-    { id: "b", x: 300, y: 100 },
+    node({ id: "root", x: 200, y: 20 }),
+    node({ id: "a", x: 100, y: 100 }),
+    node({ id: "b", x: 300, y: 100 }),
   ]
   const edges: RealtimeEdge[] = [
-    { source: "root", target: "a" },
-    { source: "root", target: "b" },
+    edge({ source: "root", target: "a" }),
+    edge({ source: "root", target: "b" }),
   ]
 
   it("emits one rect per node", () => {
@@ -60,7 +65,7 @@ describe("flextreeLayout", () => {
 
   it("centers rects on each node's x/y", () => {
     const result = flextreeLayout(makeCtx({ nodeWidth: 40, nodeHeight: 20 }, nodes, edges))
-    const root = result.sceneNodes!.find((n: NetworkRectNode) => n.id === "root") as NetworkRectNode
+    const root = result.sceneNodes!.find((n) => n.type === "rect" && n.id === "root") as NetworkRectNode
     expect(root.x).toBe(200 - 20)
     expect(root.y).toBe(20 - 10)
     expect(root.w).toBe(40)
@@ -123,10 +128,10 @@ describe("dagreLayout", () => {
 
   it("falls back to a straight line when no waypoints provided", () => {
     const nodes: RealtimeNode[] = [
-      { id: "x", x: 50, y: 50 },
-      { id: "y", x: 200, y: 200 },
+      node({ id: "x", x: 50, y: 50 }),
+      node({ id: "y", x: 200, y: 200 }),
     ]
-    const edges: RealtimeEdge[] = [{ source: "x", target: "y" }]
+    const edges: RealtimeEdge[] = [edge({ source: "x", target: "y" })]
     const result = dagreLayout(makeCtx({}, nodes, edges))
     expect(result.sceneEdges).toHaveLength(1)
     const e = result.sceneEdges![0] as NetworkLineEdge
@@ -149,8 +154,8 @@ describe("dagreLayout", () => {
 
   it("smooth edge style produces a curved path", () => {
     const nodes: RealtimeNode[] = [
-      { id: "x", x: 0, y: 0 },
-      { id: "y", x: 200, y: 200 },
+      node({ id: "x", x: 0, y: 0 }),
+      node({ id: "y", x: 200, y: 200 }),
     ]
     const edges: RealtimeEdge[] = [
       { source: "x", target: "y", points: [{ x: 0, y: 0 }, { x: 100, y: 50 }, { x: 150, y: 150 }, { x: 200, y: 200 }] },

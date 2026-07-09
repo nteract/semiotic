@@ -118,7 +118,7 @@ describe("OrbitDiagram", () => {
   })
 
   it("applies className", () => {
-    const { _container } = render(
+    render(
       <OrbitDiagram data={sampleData} className="custom" animated={false} />
     )
     expect(lastNetworkFrameProps.className).toBe("custom")

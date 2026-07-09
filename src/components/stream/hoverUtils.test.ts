@@ -18,7 +18,7 @@ describe("buildHoverData", () => {
     // consumer reads through `hover.data.fieldName` now. This test
     // pins the contract so a future "convenience" change can't
     // re-introduce the leak.
-    const hover = buildHoverData({ category: "A", value: 10 }, 100, 200) as Record<string, unknown>
+    const hover = buildHoverData({ category: "A", value: 10 }, 100, 200) as unknown as Record<string, unknown>
     expect(hover.category).toBeUndefined()
     expect(hover.value).toBeUndefined()
   })

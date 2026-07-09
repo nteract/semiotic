@@ -67,10 +67,10 @@ describe("StreamXYFrame hydration parity", () => {
     const html = renderToString(<StreamXYFrame {...baseProps} />)
     container.innerHTML = html
 
-    let root: ReturnType<typeof hydrateRoot> | null = null
-    act(() => {
-      root = hydrateRoot(container, <StreamXYFrame {...baseProps} />)
-    })
+    const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
+        act(() => {
+          rootBox.current = hydrateRoot(container, <StreamXYFrame {...baseProps} />)
+        })
 
     // React logs hydration mismatches via console.error with messages
     // mentioning "did not match" or "Hydration failed". If our SVG
@@ -82,7 +82,7 @@ describe("StreamXYFrame hydration parity", () => {
     })
     expect(mismatchWarnings).toEqual([])
 
-    root?.unmount()
+    rootBox.current?.unmount()
     errorSpy.mockRestore()
   })
 
@@ -95,10 +95,10 @@ describe("StreamXYFrame hydration parity", () => {
     expect(wrapper).not.toBeNull()
     expect(wrapper?.getAttribute("role")).toBe("img")
 
-    let root: ReturnType<typeof hydrateRoot> | null = null
-    act(() => {
-      root = hydrateRoot(container, <StreamXYFrame {...baseProps} />)
-    })
+    const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
+        act(() => {
+          rootBox.current = hydrateRoot(container, <StreamXYFrame {...baseProps} />)
+        })
 
     // Post-hydration: useLayoutEffect has fired, hydrated flipped to
     // true, the canvas branch is now live. The wrapper's role flips
@@ -109,7 +109,7 @@ describe("StreamXYFrame hydration parity", () => {
     // And a <canvas> should now exist for data-mark painting.
     expect(container.querySelector("canvas")).not.toBeNull() // test-quality-gate: allow-mount-only - verifies the hydration branch swapped to the interactive canvas surface.
 
-    root?.unmount()
+    rootBox.current?.unmount()
   })
 
   it("preserves SVG output when window/document remain undefined (true SSR path)", () => {

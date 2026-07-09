@@ -38,7 +38,7 @@ describe("PipelineStore — Streaming Heatmap", () => {
 
     // Each cell should have count in datum
     for (const cell of heatcells) {
-      expect(cell.datum.count).toBeGreaterThan(0)
+      expect(cell.datum!.count).toBeGreaterThan(0)
     }
   })
 
@@ -65,16 +65,16 @@ describe("PipelineStore — Streaming Heatmap", () => {
     expect(heatcells.length).toBeGreaterThan(0)
 
     // Verify all data points are accounted for and sum aggregation is correct
-    const totalCount = heatcells.reduce((s, c) => s + c.datum.count, 0)
+    const totalCount = heatcells.reduce((s, c) => s + (c.datum?.count ?? 0), 0)
     expect(totalCount).toBe(3)
 
     // For sum aggregation, cell.value === cell.sum
     for (const cell of heatcells) {
-      expect(cell.datum.value).toBe(cell.datum.sum)
+      expect(cell.datum!.value).toBe(cell.datum!.sum)
     }
 
     // Total value across all cells should equal total input values (10+20+30=60)
-    const totalValue = heatcells.reduce((s, c) => s + c.datum.value, 0)
+    const totalValue = heatcells.reduce((s, c) => s + (c.datum?.value ?? 0), 0)
     expect(totalValue).toBe(60)
   })
 
@@ -101,14 +101,14 @@ describe("PipelineStore — Streaming Heatmap", () => {
     expect(heatcells.length).toBeGreaterThan(0)
 
     // Verify aggregation values across all cells
-    const totalCount = heatcells.reduce((s, c) => s + c.datum.count, 0)
+    const totalCount = heatcells.reduce((s, c) => s + (c.datum?.count ?? 0), 0)
     expect(totalCount).toBe(3) // all 3 data points accounted for
 
     // For mean aggregation, a cell with count > 1 should have a mean value
-    const multiCell = heatcells.find(c => c.datum.count > 1)
+    const multiCell = heatcells.find(c => (c.datum?.count ?? 0) > 1)
     if (multiCell) {
       // cell.value = sum / count (mean aggregation)
-      expect(multiCell.datum.value).toBeCloseTo(multiCell.datum.sum / multiCell.datum.count, 5)
+      expect(multiCell.datum!.value).toBeCloseTo(multiCell.datum!.sum / multiCell.datum!.count, 5)
     }
   })
 

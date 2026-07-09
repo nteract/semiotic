@@ -36,7 +36,7 @@ describe("useFrameImperativeHandle reference stability", () => {
     }
 
     function Inner() {
-      const frameRef = useRef<Frame>({
+      const frameRef = useRef<RealtimeFrameHandle>({
         push: () => {},
         pushMany: () => {},
         remove: () => [],

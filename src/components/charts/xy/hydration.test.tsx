@@ -123,9 +123,13 @@ const cases: HydrationCase[] = [
     />
   ) },
   { name: "MinimapChart", render: () => (
-    <MinimapChart width={500} height={300}>
-      <LineChart data={xyTimeSeries} xAccessor="x" yAccessor="y" />
-    </MinimapChart>
+    <MinimapChart
+      data={xyTimeSeries}
+      xAccessor="x"
+      yAccessor="y"
+      width={500}
+      height={300}
+    />
   ) },
   { name: "XYCustomChart", render: () => (
     <XYCustomChart
@@ -179,9 +183,9 @@ describe("XY HOC catalog — hydration parity", () => {
         const html = renderToString(c.render())
         container.innerHTML = html
 
-        let root: ReturnType<typeof hydrateRoot> | null = null
+        const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
-          root = hydrateRoot(container, c.render())
+          rootBox.current = hydrateRoot(container, c.render())
         })
 
         // React logs hydration mismatches via console.error. Filter for
@@ -193,7 +197,7 @@ describe("XY HOC catalog — hydration parity", () => {
         })
         expect(mismatchWarnings).toEqual([])
 
-        root?.unmount()
+        rootBox.current?.unmount()
         errorSpy.mockRestore()
       })
 
@@ -201,9 +205,9 @@ describe("XY HOC catalog — hydration parity", () => {
         const html = renderToString(c.render())
         container.innerHTML = html
 
-        let root: ReturnType<typeof hydrateRoot> | null = null
+        const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
-          root = hydrateRoot(container, c.render())
+          rootBox.current = hydrateRoot(container, c.render())
         })
 
         // After useLayoutEffect fires, hydrated flips and the canvas
@@ -213,7 +217,7 @@ describe("XY HOC catalog — hydration parity", () => {
         const canvases = container.querySelectorAll("canvas")
         expect(canvases.length).toBeGreaterThanOrEqual(1)
 
-        root?.unmount()
+        rootBox.current?.unmount()
       })
     })
   }

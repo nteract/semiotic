@@ -5,7 +5,7 @@ import { calendarLayout } from "./calendar"
 import type { LayoutContext } from "../stream/customLayout"
 import type { RectSceneNode } from "../stream/types"
 
-function makeCtx<C>(config: C, overrides?: Partial<LayoutContext<C>>): LayoutContext<C> {
+function makeCtx<C extends object>(config: C, overrides?: Partial<LayoutContext<C>>): LayoutContext<C> {
   const x = scaleLinear().domain([0, 100]).range([0, 400])
   const y = scaleLinear().domain([0, 100]).range([200, 0])
   return {
@@ -98,16 +98,16 @@ describe("waffleLayout", () => {
     expect(result.nodes!.length).toBe(100)
     const amer = (result.nodes as RectSceneNode[]).find(n => n.group === "AMER")!
     // Canonical keys for portable tooltips.
-    expect(amer.datum.category).toBe("AMER")
-    expect(amer.datum.value).toBe(60)
+    expect(amer.datum!.category).toBe("AMER")
+    expect(amer.datum!.value).toBe(60)
     // User-accessor keys for tooltips that look up by configured field name.
-    expect(amer.datum.region).toBe("AMER")
-    expect(amer.datum.share).toBe(60)
+    expect(amer.datum!.region).toBe("AMER")
+    expect(amer.datum!.share).toBe(60)
     // Per-category cell count surfaced as an explicit "cells" field.
-    expect(amer.datum.cells).toBe(60)
+    expect(amer.datum!.cells).toBe(60)
     // The legacy underscore-prefixed fields stay for back-compat.
-    expect(amer.datum._waffleCategory).toBe("AMER")
-    expect(typeof amer.datum._waffleIndex).toBe("number")
+    expect(amer.datum!._waffleCategory).toBe("AMER")
+    expect(typeof amer.datum!._waffleIndex).toBe("number")
   })
 
   it("falls back to canonical keys when accessors are functions (no string name to mirror)", () => {
@@ -122,8 +122,8 @@ describe("waffleLayout", () => {
       )
     )
     const node = result.nodes![0] as RectSceneNode
-    expect(node.datum.category).toBe("X")
-    expect(node.datum.value).toBe(100)
+    expect(node.datum!.category).toBe("X")
+    expect(node.datum!.value).toBe(100)
   })
 })
 

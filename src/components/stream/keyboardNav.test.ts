@@ -12,6 +12,20 @@ import {
   type NavPoint
 } from "./keyboardNav"
 import type { GeoSceneNode } from "./geoTypes"
+import type { SceneNode } from "./types"
+import type { OrdinalSceneNode } from "./ordinalTypes"
+import type { NetworkSceneNode } from "./networkTypes"
+import type { Datum } from "../charts/shared/datumTypes"
+
+/** Test fixtures use partial scene shapes; cast to production unions. */
+const asXY = (scene: object[]) => scene as SceneNode[]
+const asOrd = (scene: object[]) => scene as OrdinalSceneNode[]
+const asNet = (scene: object[]) => scene as NetworkSceneNode[]
+const asGeo = (scene: object[]) => scene as GeoSceneNode[]
+const d = (v: unknown): Datum =>
+  (typeof v === "object" && v !== null ? v : { id: v }) as Datum
+const idOf = (datum: Datum | null | undefined) =>
+  datum == null ? undefined : (datum as { id?: unknown }).id
 
 describe("extractXYNavPoints", () => {
   it("extracts points from a scatter scene", () => {
@@ -19,7 +33,7 @@ describe("extractXYNavPoints", () => {
       { type: "point", x: 50, y: 30, datum: { id: 1 } },
       { type: "point", x: 10, y: 20, datum: { id: 2 } }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result).toHaveLength(2)
     // Should be sorted by x
     expect(result[0]).toMatchObject({ x: 10, y: 20, datum: { id: 2 }, shape: "circle" })
@@ -35,7 +49,7 @@ describe("extractXYNavPoints", () => {
         datum: [{ t: 0 }, { t: 1 }, { t: 2 }]
       }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result).toHaveLength(3)
     expect(result[0]).toMatchObject({ x: 0, y: 100, datum: { t: 0 }, group: "seriesA" })
     expect(result[2]).toMatchObject({ x: 100, y: 0, datum: { t: 2 }, group: "seriesA" })
@@ -49,15 +63,15 @@ describe("extractXYNavPoints", () => {
         datum: [{ t: 0 }]
       }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result[0].group).toBe("_default")
   })
 
   it("handles line with non-array datum gracefully", () => {
     const scene = [
-      { type: "line", path: [[10, 20]], datum: "not-an-array" }
+      { type: "line", path: [[10, 20]], datum: d("not-an-array") }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result).toHaveLength(0)
   })
 
@@ -71,7 +85,7 @@ describe("extractXYNavPoints", () => {
         datum: [{ v: "a" }, { v: "b" }]
       }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result).toHaveLength(2)
     expect(result[0]).toMatchObject({ x: 10, y: 80, datum: { v: "a" }, group: "areaGroup" })
     expect(result[1]).toMatchObject({ x: 50, y: 40, datum: { v: "b" }, group: "areaGroup" })
@@ -79,9 +93,9 @@ describe("extractXYNavPoints", () => {
 
   it("handles area with non-array datum gracefully", () => {
     const scene = [
-      { type: "area", topPath: [[10, 20]], datum: "not-an-array" }
+      { type: "area", topPath: [[10, 20]], datum: d("not-an-array") }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result).toHaveLength(0)
   })
 
@@ -89,7 +103,7 @@ describe("extractXYNavPoints", () => {
     const scene = [
       { type: "rect", x: 20, y: 10, w: 40, h: 60, datum: { cat: "A" } }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({ x: 40, y: 40, datum: { cat: "A" }, shape: "rect", w: 40, h: 60 })
   })
@@ -98,41 +112,41 @@ describe("extractXYNavPoints", () => {
     const scene = [
       { type: "heatcell", x: 0, y: 0, w: 20, h: 20, datum: { val: 5 } }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({ x: 10, y: 10, datum: { val: 5 }, shape: "rect", w: 20, h: 20 })
   })
 
   it("returns empty array for empty scene", () => {
-    expect(extractXYNavPoints([])).toEqual([])
+    expect(extractXYNavPoints(asXY([]))).toEqual([])
   })
 
   it("ignores unknown node types", () => {
     const scene = [{ type: "unknown", x: 5, y: 5 }]
-    expect(extractXYNavPoints(scene)).toEqual([])
+    expect(extractXYNavPoints(asXY(scene))).toEqual([])
   })
 
   it("sorts by x then y for tie-breaking", () => {
     const scene = [
-      { type: "point", x: 10, y: 50, datum: "B" },
-      { type: "point", x: 10, y: 10, datum: "A" },
-      { type: "point", x: 5, y: 99, datum: "C" }
+      { type: "point", x: 10, y: 50, datum: d("B") },
+      { type: "point", x: 10, y: 10, datum: d("A") },
+      { type: "point", x: 5, y: 99, datum: d("C") }
     ]
-    const result = extractXYNavPoints(scene)
-    expect(result.map(p => p.datum)).toEqual(["C", "A", "B"])
+    const result = extractXYNavPoints(asXY(scene))
+    expect(result.map(p => idOf(p.datum))).toEqual(["C", "A", "B"])
   })
 
   it("handles mixed node types in a single scene", () => {
     const scene = [
-      { type: "point", x: 100, y: 10, datum: "pt" },
-      { type: "rect", x: 0, y: 0, w: 20, h: 20, datum: "rect" },
+      { type: "point", x: 100, y: 10, datum: d("pt") },
+      { type: "rect", x: 0, y: 0, w: 20, h: 20, datum: d("rect") },
       {
         type: "line",
         path: [[50, 50]] as [number, number][],
         datum: [{ line: true }]
       }
     ]
-    const result = extractXYNavPoints(scene)
+    const result = extractXYNavPoints(asXY(scene))
     expect(result).toHaveLength(3)
     // Sorted: rect center (10), line (50), point (100)
     expect(result[0].x).toBe(10)
@@ -147,7 +161,7 @@ describe("extractOrdinalNavPoints", () => {
       { type: "rect", x: 0, y: 10, w: 30, h: 80, datum: { cat: "A" }, group: "stack1" },
       { type: "rect", x: 40, y: 20, w: 30, h: 70, datum: { cat: "B" }, group: "stack2" }
     ]
-    const result = extractOrdinalNavPoints(scene)
+    const result = extractOrdinalNavPoints(asOrd(scene))
     expect(result).toHaveLength(2)
     expect(result[0]).toMatchObject({ x: 15, y: 50, group: "stack1" })
     expect(result[1]).toMatchObject({ x: 55, y: 55, group: "stack2" })
@@ -157,7 +171,7 @@ describe("extractOrdinalNavPoints", () => {
     const scene = [
       { type: "rect", x: 0, y: 10, w: 30, h: 80, datum: { category: "CatA" } }
     ]
-    const result = extractOrdinalNavPoints(scene)
+    const result = extractOrdinalNavPoints(asOrd(scene))
     expect(result[0].group).toBe("CatA")
   })
 
@@ -165,7 +179,7 @@ describe("extractOrdinalNavPoints", () => {
     const scene = [
       { type: "point", x: 25, y: 60, datum: { val: 3 } }
     ]
-    const result = extractOrdinalNavPoints(scene)
+    const result = extractOrdinalNavPoints(asOrd(scene))
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({ x: 25, y: 60, datum: { val: 3 }, shape: "circle" })
   })
@@ -183,7 +197,7 @@ describe("extractOrdinalNavPoints", () => {
         datum: { slice: "half" }
       }
     ]
-    const result = extractOrdinalNavPoints(scene)
+    const result = extractOrdinalNavPoints(asOrd(scene))
     expect(result).toHaveLength(1)
     expect(result[0].x).toBeCloseTo(100, 0)
     expect(result[0].y).toBeCloseTo(140, 0)
@@ -203,7 +217,7 @@ describe("extractOrdinalNavPoints", () => {
         datum: null
       }
     ]
-    expect(extractOrdinalNavPoints(scene)).toHaveLength(0)
+    expect(extractOrdinalNavPoints(asOrd(scene))).toHaveLength(0)
   })
 
   it("handles donut wedge with innerRadius", () => {
@@ -219,28 +233,28 @@ describe("extractOrdinalNavPoints", () => {
         datum: { d: 1 }
       }
     ]
-    const result = extractOrdinalNavPoints(scene)
+    const result = extractOrdinalNavPoints(asOrd(scene))
     expect(result).toHaveLength(1)
     expect(result[0].x).toBeCloseTo(80)
     expect(result[0].y).toBeCloseTo(50)
   })
 
   it("returns empty array for empty scene", () => {
-    expect(extractOrdinalNavPoints([])).toEqual([])
+    expect(extractOrdinalNavPoints(asOrd([]))).toEqual([])
   })
 
   it("skips rect nodes with null x", () => {
     const scene = [
       { type: "rect", x: null, y: 10, w: 20, h: 20, datum: { skip: true } }
     ]
-    expect(extractOrdinalNavPoints(scene)).toEqual([])
+    expect(extractOrdinalNavPoints(asOrd(scene))).toEqual([])
   })
 
   it("skips wedge nodes with null cx", () => {
     const scene = [
       { type: "wedge", cx: null, cy: 50, startAngle: 0, endAngle: Math.PI, datum: { skip: true } }
     ]
-    expect(extractOrdinalNavPoints(scene)).toEqual([])
+    expect(extractOrdinalNavPoints(asOrd(scene))).toEqual([])
   })
 
 })
@@ -251,7 +265,7 @@ describe("extractNetworkNavPoints", () => {
       { type: "circle", cx: 100, cy: 200, r: 10, datum: { id: "A" } },
       { type: "circle", cx: 50, cy: 150, r: 8, datum: { id: "B" } }
     ]
-    const result = extractNetworkNavPoints(scene)
+    const result = extractNetworkNavPoints(asNet(scene))
     expect(result).toHaveLength(2)
     // Sorted by x
     expect(result[0]).toMatchObject({ x: 50, y: 150, group: "B" })
@@ -262,7 +276,7 @@ describe("extractNetworkNavPoints", () => {
     const scene = [
       { type: "rect", x: 10, y: 20, w: 20, h: 60, datum: { id: "node1" } }
     ]
-    const result = extractNetworkNavPoints(scene)
+    const result = extractNetworkNavPoints(asNet(scene))
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({ x: 20, y: 50, group: "node1" })
   })
@@ -271,7 +285,7 @@ describe("extractNetworkNavPoints", () => {
     const scene = [
       { type: "arc", cx: 200, cy: 200, datum: { id: "group1" } }
     ]
-    const result = extractNetworkNavPoints(scene)
+    const result = extractNetworkNavPoints(asNet(scene))
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({ x: 200, y: 200, group: "group1" })
   })
@@ -281,11 +295,11 @@ describe("extractNetworkNavPoints", () => {
       { type: "line", x1: 0, y1: 0, x2: 100, y2: 100, datum: {} },
       { type: "bezier", pathD: "M0,0 C...", datum: {} }
     ]
-    expect(extractNetworkNavPoints(scene)).toEqual([])
+    expect(extractNetworkNavPoints(asNet(scene))).toEqual([])
   })
 
   it("returns empty array for empty scene", () => {
-    expect(extractNetworkNavPoints([])).toEqual([])
+    expect(extractNetworkNavPoints(asNet([]))).toEqual([])
   })
 
   it("skips circle nodes without coordinates", () => {
@@ -293,23 +307,23 @@ describe("extractNetworkNavPoints", () => {
       { type: "circle", cx: null, cy: 100, r: 5, datum: { id: "no-x" } },
       { type: "circle", cx: 50, cy: 75, r: 5, datum: { id: "valid" } }
     ]
-    const result = extractNetworkNavPoints(scene)
+    const result = extractNetworkNavPoints(asNet(scene))
     expect(result).toHaveLength(1)
-    expect(result[0].datum.id).toBe("valid")
+    expect(result[0].datum!.id).toBe("valid")
   })
 
   it("skips rect nodes with null x", () => {
     const scene = [
       { type: "rect", x: null, y: 0, w: 10, h: 10, datum: { id: "skip" } }
     ]
-    expect(extractNetworkNavPoints(scene)).toEqual([])
+    expect(extractNetworkNavPoints(asNet(scene))).toEqual([])
   })
 
   it("skips arc nodes with null cx", () => {
     const scene = [
       { type: "arc", cx: null, cy: 200, datum: { id: "skip" } }
     ]
-    expect(extractNetworkNavPoints(scene)).toEqual([])
+    expect(extractNetworkNavPoints(asNet(scene))).toEqual([])
   })
 
   it("skips zero-radius circle nodes (e.g. ProcessSankey color-binding placeholders)", () => {
@@ -322,9 +336,9 @@ describe("extractNetworkNavPoints", () => {
       { type: "circle", cx: -10000, cy: -10000, r: 0, datum: { id: "Bob" } },
       { type: "circle", cx: 50, cy: 50, r: 8, datum: { id: "visible" } },
     ]
-    const result = extractNetworkNavPoints(scene)
+    const result = extractNetworkNavPoints(asNet(scene))
     expect(result).toHaveLength(1)
-    expect(result[0].datum.id).toBe("visible")
+    expect(result[0].datum!.id).toBe("visible")
   })
 
   it("skips zero-area rect nodes", () => {
@@ -332,9 +346,9 @@ describe("extractNetworkNavPoints", () => {
       { type: "rect", x: -10000, y: -10000, w: 0, h: 0, datum: { id: "hidden" } },
       { type: "rect", x: 0, y: 0, w: 20, h: 30, datum: { id: "visible" } },
     ]
-    const result = extractNetworkNavPoints(scene)
+    const result = extractNetworkNavPoints(asNet(scene))
     expect(result).toHaveLength(1)
-    expect(result[0].datum.id).toBe("visible")
+    expect(result[0].datum!.id).toBe("visible")
   })
 
   it("handles mixed node types", () => {
@@ -343,7 +357,7 @@ describe("extractNetworkNavPoints", () => {
       { type: "rect", x: 0, y: 0, w: 10, h: 40, datum: { id: "r" } },
       { type: "arc", cx: 150, cy: 150, datum: { id: "a" } }
     ]
-    const result = extractNetworkNavPoints(scene)
+    const result = extractNetworkNavPoints(asNet(scene))
     expect(result).toHaveLength(3)
     expect(result[0].x).toBe(5)   // rect center
     expect(result[1].x).toBe(150) // arc
@@ -427,7 +441,7 @@ describe("extractGeoNavPoints", () => {
       { type: "point", x: 100, y: 200, datum: { name: "city1" } },
       { type: "point", x: 50, y: 150, datum: { name: "city2" } }
     ]
-    const result = extractGeoNavPoints(scene)
+    const result = extractGeoNavPoints(asGeo(scene))
     expect(result).toHaveLength(2)
     expect(result[0]).toMatchObject({ x: 50, y: 150, datum: { name: "city2" }, shape: "circle" })
     expect(result[1]).toMatchObject({ x: 100, y: 200, datum: { name: "city1" }, shape: "circle" })
@@ -437,7 +451,7 @@ describe("extractGeoNavPoints", () => {
     const scene = [
       { type: "geoarea", centroid: [300, 200], pathData: "M0,0 L10,0 L10,10 Z", datum: { properties: { name: "France" } } }
     ]
-    const result = extractGeoNavPoints(scene)
+    const result = extractGeoNavPoints(asGeo(scene))
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({
       x: 300,
@@ -456,14 +470,14 @@ describe("extractGeoNavPoints", () => {
       { type: "geoarea", centroid: [400, 300], pathData: "M0,0 L800,600", bounds: [[0, 0], [800, 600]], screenArea: 0, style: {}, datum: null, interactive: false },
       { type: "geoarea", centroid: [300, 200], pathData: "M0,0 L10,0 L10,10 Z", bounds: [[0, 0], [10, 10]], screenArea: 100, style: {}, datum: { properties: { name: "France" } }, interactive: true }
     ]
-    const result = extractGeoNavPoints(scene)
+    const result = extractGeoNavPoints(asGeo(scene))
     // Only the interactive, data-backed area is navigable.
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({ shape: "geoarea", datum: { properties: { name: "France" } } })
   })
 
   it("returns empty array for empty scene", () => {
-    expect(extractGeoNavPoints([])).toEqual([])
+    expect(extractGeoNavPoints(asGeo([]))).toEqual([])
   })
 
   it("ignores non-navigable node types", () => {
@@ -471,14 +485,14 @@ describe("extractGeoNavPoints", () => {
       { type: "line", path: [[0, 0], [100, 100]], datum: {} },
       { type: "graticule", pathData: "M...", datum: null }
     ]
-    expect(extractGeoNavPoints(scene)).toEqual([])
+    expect(extractGeoNavPoints(asGeo(scene))).toEqual([])
   })
 
   it("skips point nodes with null x", () => {
     const scene = [
       { type: "point", x: null, y: 100, datum: { id: "skip" } }
     ]
-    expect(extractGeoNavPoints(scene)).toEqual([])
+    expect(extractGeoNavPoints(asGeo(scene))).toEqual([])
   })
 })
 
@@ -507,10 +521,10 @@ describe("navPointToHover", () => {
 describe("buildNavGraph", () => {
   it("groups points by their group field", () => {
     const points: NavPoint[] = [
-      { x: 0, y: 10, datum: "a1", group: "A" },
-      { x: 0, y: 50, datum: "b1", group: "B" },
-      { x: 10, y: 15, datum: "a2", group: "A" },
-      { x: 10, y: 55, datum: "b2", group: "B" },
+      { x: 0, y: 10, datum: d("a1"), group: "A" },
+      { x: 0, y: 50, datum: d("b1"), group: "B" },
+      { x: 10, y: 15, datum: d("a2"), group: "A" },
+      { x: 10, y: 55, datum: d("b2"), group: "B" },
     ]
     const graph = buildNavGraph(points)
     expect(graph.groups).toHaveLength(2)
@@ -520,19 +534,19 @@ describe("buildNavGraph", () => {
 
   it("sorts within-group points by x", () => {
     const points: NavPoint[] = [
-      { x: 50, y: 10, datum: "a2", group: "A" },
-      { x: 10, y: 10, datum: "a1", group: "A" },
+      { x: 50, y: 10, datum: d("a2"), group: "A" },
+      { x: 10, y: 10, datum: d("a1"), group: "A" },
     ]
     const graph = buildNavGraph(points)
     const groupA = graph.byGroup.get("A")!
-    expect(groupA[0].datum).toBe("a1")
-    expect(groupA[1].datum).toBe("a2")
+    expect(idOf(groupA[0].datum)).toBe("a1")
+    expect(idOf(groupA[1].datum)).toBe("a2")
   })
 
   it("sorts groups by first-point y (top to bottom)", () => {
     const points: NavPoint[] = [
-      { x: 0, y: 100, datum: "b", group: "bottom" },
-      { x: 0, y: 10, datum: "t", group: "top" },
+      { x: 0, y: 100, datum: d("b"), group: "bottom" },
+      { x: 0, y: 10, datum: d("t"), group: "top" },
     ]
     const graph = buildNavGraph(points)
     expect(graph.groups[0]).toBe("top")
@@ -541,8 +555,8 @@ describe("buildNavGraph", () => {
 
   it("defaults missing group to _default", () => {
     const points: NavPoint[] = [
-      { x: 0, y: 0, datum: "a" },
-      { x: 10, y: 10, datum: "b" },
+      { x: 0, y: 0, datum: d("a") },
+      { x: 10, y: 10, datum: d("b") },
     ]
     const graph = buildNavGraph(points)
     expect(graph.groups).toEqual(["_default"])
@@ -551,9 +565,9 @@ describe("buildNavGraph", () => {
 
   it("flat array contains all points sorted by x", () => {
     const points: NavPoint[] = [
-      { x: 50, y: 10, datum: "a", group: "A" },
-      { x: 10, y: 20, datum: "b", group: "B" },
-      { x: 30, y: 15, datum: "c", group: "A" },
+      { x: 50, y: 10, datum: d("a"), group: "A" },
+      { x: 10, y: 20, datum: d("b"), group: "B" },
+      { x: 30, y: 15, datum: d("c"), group: "A" },
     ]
     const graph = buildNavGraph(points)
     expect(graph.flat).toHaveLength(3)
@@ -566,9 +580,9 @@ describe("buildNavGraph", () => {
 describe("resolvePosition", () => {
   it("finds correct group and index for a flat index", () => {
     const points: NavPoint[] = [
-      { x: 0, y: 10, datum: "a1", group: "A" },
-      { x: 0, y: 50, datum: "b1", group: "B" },
-      { x: 10, y: 15, datum: "a2", group: "A" },
+      { x: 0, y: 10, datum: d("a1"), group: "A" },
+      { x: 0, y: 50, datum: d("b1"), group: "B" },
+      { x: 10, y: 15, datum: d("a2"), group: "A" },
     ]
     const graph = buildNavGraph(points)
 
@@ -590,12 +604,12 @@ describe("resolvePosition", () => {
 describe("nextGraphIndex — XY series navigation", () => {
   // Two series: "top" at y=10 and "bottom" at y=50, each with 3 x-positions
   const points: NavPoint[] = [
-    { x: 0, y: 10, datum: "t0", group: "top" },
-    { x: 50, y: 10, datum: "t1", group: "top" },
-    { x: 100, y: 10, datum: "t2", group: "top" },
-    { x: 0, y: 50, datum: "b0", group: "bottom" },
-    { x: 50, y: 50, datum: "b1", group: "bottom" },
-    { x: 100, y: 50, datum: "b2", group: "bottom" },
+    { x: 0, y: 10, datum: d("t0"), group: "top" },
+    { x: 50, y: 10, datum: d("t1"), group: "top" },
+    { x: 100, y: 10, datum: d("t2"), group: "top" },
+    { x: 0, y: 50, datum: d("b0"), group: "bottom" },
+    { x: 50, y: 50, datum: d("b1"), group: "bottom" },
+    { x: 100, y: 50, datum: d("b2"), group: "bottom" },
   ]
 
   function getGraph() { return buildNavGraph(points) }
@@ -603,23 +617,23 @@ describe("nextGraphIndex — XY series navigation", () => {
   it("ArrowRight moves within the same series", () => {
     const graph = getGraph()
     // Start at t0 (group "top", index 0)
-    const t0idx = graph.flat.findIndex(p => p.datum === "t0")
+    const t0idx = graph.flat.findIndex(p => idOf(p.datum) === "t0")
     const pos = resolvePosition(graph, t0idx)
     const nextIdx = nextGraphIndex("ArrowRight", pos, graph)!
-    expect(graph.flat[nextIdx].datum).toBe("t1")
+    expect(idOf(graph.flat[nextIdx].datum)).toBe("t1")
   })
 
   it("ArrowLeft moves back within the same series", () => {
     const graph = getGraph()
-    const t1idx = graph.flat.findIndex(p => p.datum === "t1")
+    const t1idx = graph.flat.findIndex(p => idOf(p.datum) === "t1")
     const pos = resolvePosition(graph, t1idx)
     const nextIdx = nextGraphIndex("ArrowLeft", pos, graph)!
-    expect(graph.flat[nextIdx].datum).toBe("t0")
+    expect(idOf(graph.flat[nextIdx].datum)).toBe("t0")
   })
 
   it("ArrowRight at end of series stays put", () => {
     const graph = getGraph()
-    const t2idx = graph.flat.findIndex(p => p.datum === "t2")
+    const t2idx = graph.flat.findIndex(p => idOf(p.datum) === "t2")
     const pos = resolvePosition(graph, t2idx)
     const nextIdx = nextGraphIndex("ArrowRight", pos, graph)!
     expect(nextIdx).toBe(t2idx) // stays at end
@@ -627,25 +641,25 @@ describe("nextGraphIndex — XY series navigation", () => {
 
   it("ArrowDown switches to the nearest point in the next series", () => {
     const graph = getGraph()
-    const t1idx = graph.flat.findIndex(p => p.datum === "t1")
+    const t1idx = graph.flat.findIndex(p => idOf(p.datum) === "t1")
     const pos = resolvePosition(graph, t1idx)
     const nextIdx = nextGraphIndex("ArrowDown", pos, graph)!
     // Should jump to bottom series at x=50
-    expect(graph.flat[nextIdx].datum).toBe("b1")
+    expect(idOf(graph.flat[nextIdx].datum)).toBe("b1")
   })
 
   it("ArrowUp switches to the nearest point in the previous series", () => {
     const graph = getGraph()
-    const b2idx = graph.flat.findIndex(p => p.datum === "b2")
+    const b2idx = graph.flat.findIndex(p => idOf(p.datum) === "b2")
     const pos = resolvePosition(graph, b2idx)
     const nextIdx = nextGraphIndex("ArrowUp", pos, graph)!
     // Should jump to top series at x=100
-    expect(graph.flat[nextIdx].datum).toBe("t2")
+    expect(idOf(graph.flat[nextIdx].datum)).toBe("t2")
   })
 
   it("ArrowDown at last group stays put", () => {
     const graph = getGraph()
-    const b0idx = graph.flat.findIndex(p => p.datum === "b0")
+    const b0idx = graph.flat.findIndex(p => idOf(p.datum) === "b0")
     const pos = resolvePosition(graph, b0idx)
     const nextIdx = nextGraphIndex("ArrowDown", pos, graph)!
     expect(nextIdx).toBe(b0idx) // already at last group
@@ -653,7 +667,7 @@ describe("nextGraphIndex — XY series navigation", () => {
 
   it("ArrowUp at first group stays put", () => {
     const graph = getGraph()
-    const t0idx = graph.flat.findIndex(p => p.datum === "t0")
+    const t0idx = graph.flat.findIndex(p => idOf(p.datum) === "t0")
     const pos = resolvePosition(graph, t0idx)
     const nextIdx = nextGraphIndex("ArrowUp", pos, graph)!
     expect(nextIdx).toBe(t0idx) // already at first group
@@ -686,16 +700,16 @@ describe("nextGraphIndex — XY series navigation", () => {
 
 describe("nextGraphIndex — single series falls back to within-group", () => {
   const points: NavPoint[] = [
-    { x: 0, y: 10, datum: "a", group: "only" },
-    { x: 50, y: 20, datum: "b", group: "only" },
-    { x: 100, y: 30, datum: "c", group: "only" },
+    { x: 0, y: 10, datum: d("a"), group: "only" },
+    { x: 50, y: 20, datum: d("b"), group: "only" },
+    { x: 100, y: 30, datum: d("c"), group: "only" },
   ]
 
   it("ArrowRight moves forward", () => {
     const graph = buildNavGraph(points)
     const pos = resolvePosition(graph, 0)
     const next = nextGraphIndex("ArrowRight", pos, graph)!
-    expect(graph.flat[next].datum).toBe("b")
+    expect(idOf(graph.flat[next].datum)).toBe("b")
   })
 
   it("ArrowDown stays put (no other group)", () => {
@@ -725,7 +739,7 @@ describe("nextNetworkIndex — spatial navigation + edge following", () => {
   ]
 
   function setup() {
-    const navPoints = extractNetworkNavPoints(scene)
+    const navPoints = extractNetworkNavPoints(asNet(scene))
     const graph = buildNavGraph(navPoints)
     const neighborIdx = { current: -1 }
     return { graph, neighborIdx }
@@ -733,48 +747,48 @@ describe("nextNetworkIndex — spatial navigation + edge following", () => {
 
   it("ArrowRight moves to nearest node to the right", () => {
     const { graph, neighborIdx } = setup()
-    const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
+    const aIdx = graph.flat.findIndex(p => idOf(p.datum) === "A")
     const pos = resolvePosition(graph, aIdx)
     const next = nextNetworkIndex("ArrowRight", pos, graph, edges, neighborIdx)!
     // From A (0,0), rightward should find B (100,0) — same y, only candidate
-    expect(graph.flat[next].datum.id).toBe("B")
+    expect(graph.flat[next].datum!.id).toBe("B")
   })
 
   it("ArrowLeft moves to nearest node to the left", () => {
     const { graph, neighborIdx } = setup()
-    const bIdx = graph.flat.findIndex(p => p.datum.id === "B")
+    const bIdx = graph.flat.findIndex(p => idOf(p.datum) === "B")
     const pos = resolvePosition(graph, bIdx)
     const next = nextNetworkIndex("ArrowLeft", pos, graph, edges, neighborIdx)!
     // From B (100,0), leftward should find A (0,0)
-    expect(graph.flat[next].datum.id).toBe("A")
+    expect(graph.flat[next].datum!.id).toBe("A")
   })
 
   it("ArrowDown moves to nearest node below", () => {
     const { graph, neighborIdx } = setup()
-    const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
+    const aIdx = graph.flat.findIndex(p => idOf(p.datum) === "A")
     const pos = resolvePosition(graph, aIdx)
     const next = nextNetworkIndex("ArrowDown", pos, graph, edges, neighborIdx)!
     // From A (0,0), down should find C (0,100) — same x
-    expect(graph.flat[next].datum.id).toBe("C")
+    expect(graph.flat[next].datum!.id).toBe("C")
   })
 
   it("ArrowUp moves to nearest node above", () => {
     const { graph, neighborIdx } = setup()
-    const cIdx = graph.flat.findIndex(p => p.datum.id === "C")
+    const cIdx = graph.flat.findIndex(p => idOf(p.datum) === "C")
     const pos = resolvePosition(graph, cIdx)
     const next = nextNetworkIndex("ArrowUp", pos, graph, edges, neighborIdx)!
     // From C (0,100), up should find A (0,0)
-    expect(graph.flat[next].datum.id).toBe("A")
+    expect(graph.flat[next].datum!.id).toBe("A")
   })
 
   it("Enter follows edge to connected neighbor and resets cycle", () => {
     const { graph, neighborIdx } = setup()
-    const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
+    const aIdx = graph.flat.findIndex(p => idOf(p.datum) === "A")
 
     // Enter from A — connected to B and C
     const pos1 = resolvePosition(graph, aIdx)
     const next1 = nextNetworkIndex("Enter", pos1, graph, edges, neighborIdx)!
-    const id1 = graph.flat[next1].datum.id
+    const id1 = graph.flat[next1].datum!.id
     expect(["B", "C"]).toContain(id1)
 
     // neighborIdx resets after Enter so the new node starts fresh
@@ -790,7 +804,7 @@ describe("nextNetworkIndex — spatial navigation + edge following", () => {
   it("neighborIdx resets after spatial arrow move", () => {
     const { graph, neighborIdx } = setup()
     neighborIdx.current = 5 // simulate stale state from previous node
-    const bIdx = graph.flat.findIndex(p => p.datum.id === "B")
+    const bIdx = graph.flat.findIndex(p => idOf(p.datum) === "B")
     const posB = resolvePosition(graph, bIdx)
     nextNetworkIndex("ArrowDown", posB, graph, edges, neighborIdx)
     expect(neighborIdx.current).toBe(-1)
@@ -798,7 +812,7 @@ describe("nextNetworkIndex — spatial navigation + edge following", () => {
 
   it("stays put when no node in arrow direction", () => {
     const { graph, neighborIdx } = setup()
-    const aIdx = graph.flat.findIndex(p => p.datum.id === "A")
+    const aIdx = graph.flat.findIndex(p => idOf(p.datum) === "A")
     const pos = resolvePosition(graph, aIdx)
     // A is at (0,0) — nothing to the left or above
     const next = nextNetworkIndex("ArrowLeft", pos, graph, edges, neighborIdx)!
@@ -809,7 +823,7 @@ describe("nextNetworkIndex — spatial navigation + edge following", () => {
     const isolated = [
       { type: "circle", cx: 0, cy: 0, r: 5, datum: { id: "X" } }
     ]
-    const navPoints = extractNetworkNavPoints(isolated)
+    const navPoints = extractNetworkNavPoints(asNet(isolated))
     const graph = buildNavGraph(navPoints)
     const neighborIdx = { current: -1 }
     const pos = resolvePosition(graph, 0)

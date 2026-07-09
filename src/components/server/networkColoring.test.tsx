@@ -29,7 +29,7 @@ describe("Network node coloring via nodeStyle", () => {
       edges,
       width: 400,
       height: 300,
-      nodeStyle: (d) => ({ fill: groupColors[d.data?.group] || "#888" }),
+      nodeStyle: (d: { data?: { group?: keyof typeof groupColors } }) => ({ fill: groupColors[d.data?.group as keyof typeof groupColors] || "#888" }),
     })
 
     // Check that our specific colors appear in the SVG
@@ -59,7 +59,7 @@ describe("Network node coloring via nodeStyle", () => {
       edges: [{ source: "A", target: "B" }, { source: "B", target: "C" }],
       width: 400, height: 200,
       iterations: 0,
-      nodeStyle: (d) => ({ fill: groupColors[d.data?.group] || "#888" }),
+      nodeStyle: (d: { data?: { group?: keyof typeof groupColors } }) => ({ fill: groupColors[d.data?.group as keyof typeof groupColors] || "#888" }),
     })
 
     const circles = [...svg.matchAll(/cx="([\d.]+)"/g)].map(m => parseFloat(m[1]))
@@ -86,11 +86,11 @@ describe("Network node coloring via nodeStyle", () => {
 
     const frames = generateFrameSequence("ForceDirectedGraph", snapshots, {
       width: 400, height: 200, iterations: 0,
-      nodeStyle: (d) => ({ fill: groupColors[d.data?.group] || "#888" }),
+      nodeStyle: (d: { data?: { group?: keyof typeof groupColors } }) => ({ fill: groupColors[d.data?.group as keyof typeof groupColors] || "#888" }),
     })
 
     // Frame 0 and frame 1 should have A at the same position
-    const getCxValues = (svg) => [...svg.matchAll(/cx="([\d.]+)"/g)].map(m => parseFloat(m[1]))
+    const getCxValues = (svg: string) => [...svg.matchAll(/cx="([\d.]+)"/g)].map(m => parseFloat(m[1]!))
     const frame0cx = getCxValues(frames[0])
     const frame1cx = getCxValues(frames[1])
 
@@ -116,7 +116,7 @@ describe("Network node coloring via nodeStyle", () => {
       ],
       width: 400, height: 200,
       showLabels: true,
-      nodeStyle: (d) => ({ fill: stageColors[d.data?.id] || "#888" }),
+      nodeStyle: (d: { data?: { id?: keyof typeof stageColors } }) => ({ fill: stageColors[d.data?.id as keyof typeof stageColors] || "#888" }),
     })
 
     expect(svg).toContain("#7b9ec4") // source blue
@@ -166,7 +166,7 @@ describe("Network node coloring via nodeStyle", () => {
 
     const frames = generateFrameSequence("ForceDirectedGraph", snapshots, {
       width: 400, height: 300,
-      nodeStyle: (d) => ({ fill: groupColors[d.data?.group] || "#888" }),
+      nodeStyle: (d: { data?: { group?: keyof typeof groupColors } }) => ({ fill: groupColors[d.data?.group as keyof typeof groupColors] || "#888" }),
     })
 
     expect(frames).toHaveLength(3)
