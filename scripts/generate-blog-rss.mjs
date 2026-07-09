@@ -33,7 +33,7 @@ const META_FILE = resolve(ROOT, "docs/src/blog/entries-meta.js")
 
 // Canonical site origin used for feed-level `<id>` URIs and per-entry
 // links. Matches the canonical URL set in `docs/public/index.html`.
-const SITE_URL = "https://semiotic3.nteract.io"
+const SITE_URL = "https://semiotic.nteract.io"
 const FEED_TITLE = "Semiotic Blog"
 const FEED_SUBTITLE = "Chart explainers, case studies, and release notes from the Semiotic data-visualization library."
 const FEED_AUTHOR = "Semiotic"

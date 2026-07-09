@@ -26,7 +26,7 @@ const PUBLIC_API_DIR = resolve(__dirname, "../docs/public/api")
 const PUBLIC_BLOG_OG_DIR = resolve(__dirname, "../docs/public/blog/og")
 const PUBLIC_EXAMPLE_OG_DIR = resolve(__dirname, "../docs/public/examples/og")
 const EXAMPLES_MANIFEST = resolve(__dirname, "../docs/src/pages/examples/examplesManifest.js")
-const SITE_URL = "https://semiotic3.nteract.io"
+const SITE_URL = "https://semiotic.nteract.io"
 const DEFAULT_OG_IMAGE = `${SITE_URL}/assets/img/semiotic-social.png`
 const ROUTE_DOCS_MANIFEST = "llms-routes.json"
 
@@ -747,6 +747,15 @@ function machineDocScript(doc) {
   return `<script type="application/json" id="semiotic-route-doc">${json}</script>`
 }
 
+function injectHeadMarkup(html, markup) {
+  if (/<\/head>/i.test(html)) {
+    return html.replace(/<\/head>/i, `${markup}</head>`)
+  }
+  // Some HTML minifiers omit the closing head tag. In that shape,
+  // inserting before <body> still leaves metadata in the implied head.
+  return html.replace(/<body\b/i, `${markup}<body`)
+}
+
 // ── Generate pre-rendered HTML for a route ──────────────────────────────
 
 const escHtml = (s) =>
@@ -797,7 +806,7 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
   // `/charts/line-chart/`) don't end up pointing at
   // `/charts/line-chart/blog/feed.xml`.
   const blogFeedAlternate = '<link rel="alternate" type="application/atom+xml" title="Semiotic Blog" href="/blog/feed.xml" />'
-  const jsonLd = '<script type="application/ld+json" data-jsonld="semiotic">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic3.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
+  const jsonLd = '<script type="application/ld+json" data-jsonld="semiotic">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Semiotic","applicationCategory":"DeveloperApplication","description":"React data visualization library for charts, networks, and streaming data.","url":"https://semiotic.nteract.io","codeRepository":"https://github.com/nteract/semiotic","programmingLanguage":["TypeScript","React"],"license":"https://opensource.org/licenses/Apache-2.0","author":{"@type":"Person","name":"Elijah Meeks"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}<\/script>'
   const canonicalUrl = routePath ? `${SITE_URL}/${routePath}` : SITE_URL
   let normalizedShell = normalizeShellAssetUrls(shellHtml)
   let previousShell
@@ -820,10 +829,9 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
   // generic shell tags, then inject page-specific description / og /
   // twitter / JSON-LD markup.
   //
-  // Anchor the injection at `<body` (case-insensitive) rather than
-  // `</head>` — HTML minifiers can strip the implicit `</head>`
-  // closing tag, so a `</head>`-anchored regex silently no-ops on the
-  // built shell. `<body>` is always emitted.
+  // Prefer injecting before the explicit closing </head> so social
+  // crawlers see the tags as head metadata. Keep a <body> fallback for
+  // minified shells that omit the closing head tag.
   if (blogMeta || routeMeta) {
     let metaTags
     if (blogMeta) {
@@ -881,7 +889,7 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
       .replace(/<meta\b[^>]*\bproperty=["']?article:[a-z_]+["']?[^>]*>\s*/gi, "")
       .replace(/<meta\b[^>]*\bname=["']?twitter:[^"' >]+["']?[^>]*>\s*/gi, "")
       .replace(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])(?=[^>]*\bdata-jsonld=["']blog-entry["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
-      .replace(/<body\b/i, `${metaTags}<body`)
+    html = injectHeadMarkup(html, metaTags)
   }
 
   return html

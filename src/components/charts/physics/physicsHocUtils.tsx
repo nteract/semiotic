@@ -172,15 +172,21 @@ export function usePhysicsChartMode(
     { width: primaryFallback[0], height: primaryFallback[1] }
   )
 
+  // Depend on numeric dimensions, not `props.size` array identity — callers
+  // often pass `size={[w, h]}` inline and a fresh array must not rebuild layout.
+  const sizeW = props.size?.[0]
+  const sizeH = props.size?.[1]
+  const fallbackW = primaryFallback[0]
+  const fallbackH = primaryFallback[1]
   const chartSize = useMemo(
     () =>
       resolvePhysicsChartSize(
-        props.size,
+        sizeW != null && sizeH != null ? [sizeW, sizeH] : undefined,
         resolved.width,
         resolved.height,
-        primaryFallback
+        [fallbackW, fallbackH]
       ),
-    [primaryFallback, props.size, resolved.height, resolved.width]
+    [fallbackH, fallbackW, resolved.height, resolved.width, sizeH, sizeW]
   )
 
   const margin = physicsMarginForMode(resolved.compactMode, modes.chartMode)

@@ -2,16 +2,16 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>Semiotic Blog</title>
   <subtitle>Chart explainers, case studies, and release notes from the Semiotic data-visualization library.</subtitle>
-  <link rel="self" type="application/atom+xml" href="https://semiotic3.nteract.io/blog/feed.xml"/>
-  <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog"/>
-  <id>https://semiotic3.nteract.io/blog/</id>
+  <link rel="self" type="application/atom+xml" href="https://semiotic.nteract.io/blog/feed.xml"/>
+  <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog"/>
+  <id>https://semiotic.nteract.io/blog/</id>
   <updated>2026-07-07T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
   <entry>
     <title>Physics that settles into charts</title>
-    <id>https://semiotic3.nteract.io/blog/physics-that-settles-into-charts</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/physics-that-settles-into-charts"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/physics-that-settles-into-charts.png"/>
+    <id>https://semiotic.nteract.io/blog/physics-that-settles-into-charts</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/physics-that-settles-into-charts"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/physics-that-settles-into-charts.png"/>
     <published>2026-07-07T00:00:00Z</published>
     <updated>2026-07-07T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -22,9 +22,9 @@
   </entry>
   <entry>
     <title>Semiotic 3.8.0</title>
-    <id>https://semiotic3.nteract.io/blog/release-3-8-0</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-8-0"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-8-0.png"/>
+    <id>https://semiotic.nteract.io/blog/release-3-8-0</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-8-0"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-8-0.png"/>
     <published>2026-07-05T00:00:00Z</published>
     <updated>2026-07-05T00:00:00Z</updated>
     <author><name>AI-Generated</name></author>
@@ -33,9 +33,9 @@
   </entry>
   <entry>
     <title>How Semiotic Keeps Fast PRs Clean</title>
-    <id>https://semiotic3.nteract.io/blog/release-gates-for-fast-prs</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-gates-for-fast-prs"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-gates-for-fast-prs.png"/>
+    <id>https://semiotic.nteract.io/blog/release-gates-for-fast-prs</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-gates-for-fast-prs"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-gates-for-fast-prs.png"/>
     <published>2026-07-05T00:00:00Z</published>
     <updated>2026-07-05T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -46,9 +46,9 @@
   </entry>
   <entry>
     <title>What an Annotation Should Carry</title>
-    <id>https://semiotic3.nteract.io/blog/what-an-annotation-should-carry</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/what-an-annotation-should-carry"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/what-an-annotation-should-carry.png"/>
+    <id>https://semiotic.nteract.io/blog/what-an-annotation-should-carry</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/what-an-annotation-should-carry"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/what-an-annotation-should-carry.png"/>
     <published>2026-07-03T00:00:00Z</published>
     <updated>2026-07-03T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -57,9 +57,9 @@
   </entry>
   <entry>
     <title>Live conversational dashboards</title>
-    <id>https://semiotic3.nteract.io/blog/live-conversational-dashboard</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/live-conversational-dashboard"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/live-conversational-dashboard.png"/>
+    <id>https://semiotic.nteract.io/blog/live-conversational-dashboard</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/live-conversational-dashboard"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/live-conversational-dashboard.png"/>
     <published>2026-07-02T00:00:00Z</published>
     <updated>2026-07-02T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -69,9 +69,9 @@
   </entry>
   <entry>
     <title>Your sample lies about your data</title>
-    <id>https://semiotic3.nteract.io/blog/scale-aware-suggestions</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/scale-aware-suggestions"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/scale-aware-suggestions.png"/>
+    <id>https://semiotic.nteract.io/blog/scale-aware-suggestions</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/scale-aware-suggestions"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/scale-aware-suggestions.png"/>
     <published>2026-06-30T00:00:00Z</published>
     <updated>2026-06-30T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -81,9 +81,9 @@
   </entry>
   <entry>
     <title>From spec to runtime</title>
-    <id>https://semiotic3.nteract.io/blog/from-spec-to-runtime</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/from-spec-to-runtime"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/from-spec-to-runtime.png"/>
+    <id>https://semiotic.nteract.io/blog/from-spec-to-runtime</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/from-spec-to-runtime"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/from-spec-to-runtime.png"/>
     <published>2026-06-26T00:00:00Z</published>
     <updated>2026-06-26T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -94,9 +94,9 @@
   </entry>
   <entry>
     <title>The arc, the annotation, and the variant</title>
-    <id>https://semiotic3.nteract.io/blog/talk-track-intelligence</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/talk-track-intelligence"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/talk-track-intelligence.png"/>
+    <id>https://semiotic.nteract.io/blog/talk-track-intelligence</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/talk-track-intelligence"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/talk-track-intelligence.png"/>
     <published>2026-06-25T00:00:00Z</published>
     <updated>2026-06-25T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -107,9 +107,9 @@
   </entry>
   <entry>
     <title>Multimodal response: chart as output channel</title>
-    <id>https://semiotic3.nteract.io/blog/multimodal-response</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/multimodal-response"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/multimodal-response.png"/>
+    <id>https://semiotic.nteract.io/blog/multimodal-response</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/multimodal-response"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/multimodal-response.png"/>
     <published>2026-06-23T00:00:00Z</published>
     <updated>2026-06-23T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -118,9 +118,9 @@
   </entry>
   <entry>
     <title>Annotations That Make Room and Make Sense</title>
-    <id>https://semiotic3.nteract.io/blog/annotations-that-make-room-and-make-sense</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/annotations-that-make-room-and-make-sense"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/annotations-that-make-room-and-make-sense.png"/>
+    <id>https://semiotic.nteract.io/blog/annotations-that-make-room-and-make-sense</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/annotations-that-make-room-and-make-sense"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/annotations-that-make-room-and-make-sense.png"/>
     <published>2026-06-21T00:00:00Z</published>
     <updated>2026-06-21T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -130,9 +130,9 @@
   </entry>
   <entry>
     <title>Making Better Custom Charts</title>
-    <id>https://semiotic3.nteract.io/blog/making-better-custom-charts</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/making-better-custom-charts"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/making-better-custom-charts.png"/>
+    <id>https://semiotic.nteract.io/blog/making-better-custom-charts</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/making-better-custom-charts"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/making-better-custom-charts.png"/>
     <published>2026-06-20T00:00:00Z</published>
     <updated>2026-06-20T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -143,9 +143,9 @@
   </entry>
   <entry>
     <title>Streaming that aggregates itself</title>
-    <id>https://semiotic3.nteract.io/blog/streaming-that-aggregates-itself</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/streaming-that-aggregates-itself"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/streaming-that-aggregates-itself.png"/>
+    <id>https://semiotic.nteract.io/blog/streaming-that-aggregates-itself</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/streaming-that-aggregates-itself"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/streaming-that-aggregates-itself.png"/>
     <published>2026-06-19T00:00:00Z</published>
     <updated>2026-06-19T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -155,9 +155,9 @@
   </entry>
   <entry>
     <title>Semiotic 3.7.2</title>
-    <id>https://semiotic3.nteract.io/blog/release-3-7-2</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-7-2"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-7-2.png"/>
+    <id>https://semiotic.nteract.io/blog/release-3-7-2</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-7-2"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-7-2.png"/>
     <published>2026-06-12T00:00:00Z</published>
     <updated>2026-06-12T00:00:00Z</updated>
     <author><name>AI-Generated</name></author>
@@ -166,9 +166,9 @@
   </entry>
   <entry>
     <title>Semiotic 3.7.1</title>
-    <id>https://semiotic3.nteract.io/blog/release-3-7-1</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-7-1"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-7-1.png"/>
+    <id>https://semiotic.nteract.io/blog/release-3-7-1</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-7-1"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-7-1.png"/>
     <published>2026-06-11T00:00:00Z</published>
     <updated>2026-06-11T00:00:00Z</updated>
     <author><name>AI-Generated</name></author>
@@ -177,9 +177,9 @@
   </entry>
   <entry>
     <title>Annotations That Get Contested, and Heard</title>
-    <id>https://semiotic3.nteract.io/blog/annotations-that-get-contested-and-heard</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/annotations-that-get-contested-and-heard"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/annotations-that-get-contested-and-heard.png"/>
+    <id>https://semiotic.nteract.io/blog/annotations-that-get-contested-and-heard</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/annotations-that-get-contested-and-heard"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/annotations-that-get-contested-and-heard.png"/>
     <published>2026-06-10T00:00:00Z</published>
     <updated>2026-06-10T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -190,9 +190,9 @@
   </entry>
   <entry>
     <title>Annotations That Adapt and Travel</title>
-    <id>https://semiotic3.nteract.io/blog/annotations-that-adapt-and-travel</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/annotations-that-adapt-and-travel"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/annotations-that-adapt-and-travel.png"/>
+    <id>https://semiotic.nteract.io/blog/annotations-that-adapt-and-travel</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/annotations-that-adapt-and-travel"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/annotations-that-adapt-and-travel.png"/>
     <published>2026-06-09T00:00:00Z</published>
     <updated>2026-06-09T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -202,9 +202,9 @@
   </entry>
   <entry>
     <title>Annotations That Lead and Land</title>
-    <id>https://semiotic3.nteract.io/blog/annotations-that-lead-and-land</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/annotations-that-lead-and-land"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/annotations-that-lead-and-land.png"/>
+    <id>https://semiotic.nteract.io/blog/annotations-that-lead-and-land</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/annotations-that-lead-and-land"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/annotations-that-lead-and-land.png"/>
     <published>2026-06-07T00:00:00Z</published>
     <updated>2026-06-07T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -214,9 +214,9 @@
   </entry>
   <entry>
     <title>Semiotic 3.7.0</title>
-    <id>https://semiotic3.nteract.io/blog/release-3-7-0</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-7-0"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-7-0.png"/>
+    <id>https://semiotic.nteract.io/blog/release-3-7-0</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-7-0"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-7-0.png"/>
     <published>2026-06-07T00:00:00Z</published>
     <updated>2026-06-07T00:00:00Z</updated>
     <author><name>AI-Generated</name></author>
@@ -225,9 +225,9 @@
   </entry>
   <entry>
     <title>Auditing What You Can&apos;t See</title>
-    <id>https://semiotic3.nteract.io/blog/auditing-what-you-cant-see</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/auditing-what-you-cant-see"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/auditing-what-you-cant-see.png"/>
+    <id>https://semiotic.nteract.io/blog/auditing-what-you-cant-see</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/auditing-what-you-cant-see"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/auditing-what-you-cant-see.png"/>
     <published>2026-06-05T00:00:00Z</published>
     <updated>2026-06-05T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -237,9 +237,9 @@
   </entry>
   <entry>
     <title>Anchored conversations: when the AI knows which point you&apos;re asking about</title>
-    <id>https://semiotic3.nteract.io/blog/anchored-conversations</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/anchored-conversations"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/anchored-conversations.png"/>
+    <id>https://semiotic.nteract.io/blog/anchored-conversations</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/anchored-conversations"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/anchored-conversations.png"/>
     <published>2026-06-01T00:00:00Z</published>
     <updated>2026-06-01T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -248,9 +248,9 @@
   </entry>
   <entry>
     <title>Semiotic 3.6.0</title>
-    <id>https://semiotic3.nteract.io/blog/release-3-6-0</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-6-0"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-6-0.png"/>
+    <id>https://semiotic.nteract.io/blog/release-3-6-0</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-6-0"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-6-0.png"/>
     <published>2026-05-26T00:00:00Z</published>
     <updated>2026-05-26T00:00:00Z</updated>
     <author><name>AI-Generated</name></author>
@@ -259,9 +259,9 @@
   </entry>
   <entry>
     <title>Charts that know what they&apos;re for</title>
-    <id>https://semiotic3.nteract.io/blog/charts-that-know-what-theyre-for</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/charts-that-know-what-theyre-for"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/charts-that-know-what-theyre-for.png"/>
+    <id>https://semiotic.nteract.io/blog/charts-that-know-what-theyre-for</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/charts-that-know-what-theyre-for"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/charts-that-know-what-theyre-for.png"/>
     <published>2026-05-25T00:00:00Z</published>
     <updated>2026-05-25T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -270,9 +270,9 @@
   </entry>
   <entry>
     <title>Semiotic 3.5.4</title>
-    <id>https://semiotic3.nteract.io/blog/release-3-5-4</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-5-4"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-5-4.png"/>
+    <id>https://semiotic.nteract.io/blog/release-3-5-4</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-5-4"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-5-4.png"/>
     <published>2026-05-21T00:00:00Z</published>
     <updated>2026-05-21T00:00:00Z</updated>
     <author><name>AI-Generated</name></author>
@@ -281,9 +281,9 @@
   </entry>
   <entry>
     <title>Semiotic 3.5.3</title>
-    <id>https://semiotic3.nteract.io/blog/release-3-5-3</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-5-3"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-5-3.png"/>
+    <id>https://semiotic.nteract.io/blog/release-3-5-3</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-5-3"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-5-3.png"/>
     <published>2026-05-18T00:00:00Z</published>
     <updated>2026-05-18T00:00:00Z</updated>
     <author><name>AI-Generated</name></author>
@@ -292,9 +292,9 @@
   </entry>
   <entry>
     <title>Process Sankey vs Classic Sankey</title>
-    <id>https://semiotic3.nteract.io/blog/process-sankey-vs-classic-sankey</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/process-sankey-vs-classic-sankey"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/process-sankey-vs-classic-sankey.png"/>
+    <id>https://semiotic.nteract.io/blog/process-sankey-vs-classic-sankey</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/process-sankey-vs-classic-sankey"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/process-sankey-vs-classic-sankey.png"/>
     <published>2026-05-16T00:00:00Z</published>
     <updated>2026-05-16T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -305,9 +305,9 @@
   </entry>
   <entry>
     <title>DifferenceChart, explained</title>
-    <id>https://semiotic3.nteract.io/blog/difference-chart</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/difference-chart"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/difference-chart.png"/>
+    <id>https://semiotic.nteract.io/blog/difference-chart</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/difference-chart"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/difference-chart.png"/>
     <published>2026-05-14T00:00:00Z</published>
     <updated>2026-05-14T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -317,9 +317,9 @@
   </entry>
   <entry>
     <title>Semiotic 3.5.2</title>
-    <id>https://semiotic3.nteract.io/blog/release-3-5-2</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/release-3-5-2"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/release-3-5-2.png"/>
+    <id>https://semiotic.nteract.io/blog/release-3-5-2</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-5-2"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-5-2.png"/>
     <published>2026-05-10T00:00:00Z</published>
     <updated>2026-05-10T00:00:00Z</updated>
     <author><name>AI-Generated</name></author>
@@ -328,9 +328,9 @@
   </entry>
   <entry>
     <title>Minard&apos;s March, rebuilt in Semiotic</title>
-    <id>https://semiotic3.nteract.io/blog/minards-march</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/minards-march"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/minards-march.png"/>
+    <id>https://semiotic.nteract.io/blog/minards-march</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/minards-march"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/minards-march.png"/>
     <published>2026-04-22T00:00:00Z</published>
     <updated>2026-04-22T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -341,9 +341,9 @@
   </entry>
   <entry>
     <title>QuadrantChart, explained</title>
-    <id>https://semiotic3.nteract.io/blog/quadrant-chart</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/quadrant-chart"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/quadrant-chart.png"/>
+    <id>https://semiotic.nteract.io/blog/quadrant-chart</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/quadrant-chart"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/quadrant-chart.png"/>
     <published>2026-04-03T00:00:00Z</published>
     <updated>2026-04-03T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -353,9 +353,9 @@
   </entry>
   <entry>
     <title>FunnelChart, explained</title>
-    <id>https://semiotic3.nteract.io/blog/funnel-chart</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/funnel-chart"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/funnel-chart.png"/>
+    <id>https://semiotic.nteract.io/blog/funnel-chart</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/funnel-chart"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/funnel-chart.png"/>
     <published>2026-03-08T00:00:00Z</published>
     <updated>2026-03-08T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>
@@ -365,9 +365,9 @@
   </entry>
   <entry>
     <title>OrbitDiagram, explained</title>
-    <id>https://semiotic3.nteract.io/blog/orbit-diagram</id>
-    <link rel="alternate" type="text/html" href="https://semiotic3.nteract.io/blog/orbit-diagram"/>
-    <link rel="enclosure" type="image/png" href="https://semiotic3.nteract.io/blog/og/orbit-diagram.png"/>
+    <id>https://semiotic.nteract.io/blog/orbit-diagram</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/orbit-diagram"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/orbit-diagram.png"/>
     <published>2026-02-18T00:00:00Z</published>
     <updated>2026-02-18T00:00:00Z</updated>
     <author><name>Elijah Meeks</name></author>

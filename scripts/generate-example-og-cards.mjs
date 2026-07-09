@@ -1,16 +1,13 @@
 #!/usr/bin/env node
+/* global Buffer, console, process */
 /**
  * Generates the social-preview Open Graph cards for each examples entry.
  *
  *   docs/public/examples/og/<slug>.png   (1200 × 630)
  *
- * Each example gets a branded text card carrying its name (the thing a
- * shared link should announce): a "Semiotic · Example" brand row, the
- * example's eyebrow, its title, and its description, on the dark
- * Semiotic identity. Unlike the blog cards this is intentionally
- * chart-free — examples are complex multi-frame pages with no single
- * server-renderable hero chart, so a legible, consistent text card is
- * the honest preview.
+ * Each example gets a branded card carrying its name (the thing a
+ * shared link should announce) and the same miniature preview artwork
+ * used on the examples overview page.
  *
  * The examples manifest (docs/src/pages/examples/examplesManifest.js) is
  * the single source of truth; it is pure data (no JSX) so it imports
@@ -28,12 +25,16 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { resolve, dirname } from "path"
 import { fileURLToPath } from "url"
+import { build } from "esbuild"
+import React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import sharp from "sharp"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, "..")
 const OUT_DIR = resolve(ROOT, "docs/public/examples/og")
 const MANIFEST_FILE = resolve(ROOT, "docs/src/pages/examples/examplesManifest.js")
+const PREVIEWS_FILE = resolve(ROOT, "docs/src/pages/examples/ExamplesOverviewPage.jsx")
 const args = process.argv.slice(2)
 const force = args.includes("--force")
 const slugFilter = new Set(
@@ -52,6 +53,10 @@ const BG = "#0a0a0f"
 const FG = "#e5e7eb"
 const FG_DIM = "#94a3b8"
 const ACCENT = "#0f62fe" // Semiotic's primary blue.
+const CARD_SURFACE = "#111827"
+const CARD_STROKE = "#263244"
+const PREVIEW_W = 500
+const PREVIEW_H = 200
 
 // XML/attribute-safe text escaping. Titles include `&` at times
 // ("Cubism & Abstract Art", "New York & Erie Railroad").
@@ -112,19 +117,21 @@ function slugFor(entry) {
 
 function buildCardSVG(entry) {
   const leftX = 72
-  const rightEdge = W - 72
-  const titleLines = wrapText(entry.title, 24, 3)
-  const descLines = wrapText(entry.description, 62, 3)
+  const previewX = 628
+  const previewY = 168
+  const previewPad = 18
+  const titleLines = wrapText(entry.title, 18, 3)
+  const descLines = wrapText(entry.description, 43, 3)
 
   // Brand row at the top; eyebrow, title, description flow below it.
   const brandY = 104
 
   // Anchor the title block so the whole composition sits centered-ish
   // vertically regardless of how many title/description lines there are.
-  const titleSize = 68
-  const titleLH = 82
-  const eyebrowY = 236
-  const titleY = eyebrowY + 66
+  const titleSize = 62
+  const titleLH = 74
+  const eyebrowY = 186
+  const titleY = eyebrowY + 62
   const titleBlockSVG = titleLines
     .map(
       (l, i) =>
@@ -134,7 +141,7 @@ function buildCardSVG(entry) {
     )
     .join("")
 
-  const descY = titleY + (titleLines.length - 1) * titleLH + 74
+  const descY = titleY + (titleLines.length - 1) * titleLH + 68
   const descLH = 38
   const descSVG = descLines
     .map(
@@ -144,15 +151,6 @@ function buildCardSVG(entry) {
            font-size="26" font-weight="400">${escapeXml(l)}</text>`
     )
     .join("")
-
-  // A faint stack of pictogram-like signs in the bottom-right, echoing the
-  // ISOTYPE lean of the examples section without competing with the text.
-  const signMotif = `
-    <g opacity="0.10" fill="${ACCENT}">
-      ${[0, 1, 2, 3]
-        .map((i) => `<rect x="${rightEdge - 40 - i * 92}" y="${H - 150}" width="56" height="118" rx="6" />`)
-        .join("")}
-    </g>`
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
     <rect width="${W}" height="${H}" fill="${BG}" />
@@ -178,12 +176,47 @@ function buildCardSVG(entry) {
     <!-- Description -->
     ${descSVG}
 
+    <!-- Overview preview artwork lands here via sharp composite. -->
+    <rect x="${previewX - previewPad}" y="${previewY - previewPad}" width="${PREVIEW_W + previewPad * 2}" height="${PREVIEW_H + previewPad * 2}" rx="22" fill="${CARD_SURFACE}" stroke="${CARD_STROKE}" />
+    <rect x="${previewX}" y="${previewY}" width="${PREVIEW_W}" height="${PREVIEW_H}" rx="12" fill="#f8fafc" />
+
     <!-- Footer -->
     <text x="${leftX}" y="${H - 44}" fill="${FG_DIM}"
-      font-family="ui-monospace, Menlo, monospace" font-size="16" opacity="0.7">semiotic3.nteract.io/examples</text>
-
-    ${signMotif}
+      font-family="ui-monospace, Menlo, monospace" font-size="16" opacity="0.7">semiotic.nteract.io/examples</text>
   </svg>`
+}
+
+function normalizePreviewSvg(svg) {
+  return svg
+    .replace("<svg ", `<svg width="${PREVIEW_W}" height="${PREVIEW_H}" preserveAspectRatio="xMidYMid meet" `)
+    .replaceAll("var(--surface-0)", "#ffffff")
+    .replaceAll("var(--surface-1)", "#f8fafc")
+    .replaceAll("var(--surface-2)", "#eef2f7")
+    .replaceAll("var(--surface-3)", "#cbd5e1")
+    .replaceAll("var(--text-primary)", "#111827")
+    .replaceAll("var(--text-secondary)", "#475569")
+    .replaceAll("var(--accent)", ACCENT)
+}
+
+async function loadPreviewRenderer() {
+  const bundled = await build({
+    entryPoints: [PREVIEWS_FILE],
+    bundle: true,
+    write: false,
+    format: "esm",
+    platform: "node",
+    jsx: "automatic",
+    logLevel: "silent",
+  })
+  const code = bundled.outputFiles[0].text
+  return import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`)
+}
+
+async function renderPreviewPng(ExamplePreview, entry) {
+  const svg = normalizePreviewSvg(
+    renderToStaticMarkup(React.createElement(ExamplePreview, { preview: entry.preview })),
+  )
+  return sharp(Buffer.from(svg)).png().toBuffer()
 }
 
 // ── Manifest loader ────────────────────────────────────────────────────
@@ -202,6 +235,10 @@ async function loadExamples() {
 async function main() {
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true })
   const examples = await loadExamples()
+  const { ExamplePreview } = await loadPreviewRenderer()
+  if (typeof ExamplePreview !== "function") {
+    throw new Error("ExamplesOverviewPage.jsx did not export ExamplePreview")
+  }
   const selected = slugFilter.size > 0
     ? examples.filter((entry) => slugFilter.has(slugFor(entry)))
     : examples
@@ -221,7 +258,11 @@ async function main() {
     }
     try {
       const svg = buildCardSVG(entry)
-      const png = await sharp(Buffer.from(svg)).png().toBuffer()
+      const preview = await renderPreviewPng(ExamplePreview, entry)
+      const png = await sharp(Buffer.from(svg))
+        .composite([{ input: preview, left: 628, top: 168 }])
+        .png()
+        .toBuffer()
       writeFileSync(outFile, png)
       ok++
     } catch (err) {

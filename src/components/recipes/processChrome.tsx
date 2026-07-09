@@ -51,6 +51,11 @@ export interface ProcessChromeOptions {
   showStageCounts?: boolean
   showCapacityBadges?: boolean
   showGroupSockets?: boolean
+  /**
+   * When true, stage bays are stroke-only (transparent fill) so particles
+   * and paired charts remain visible through the gate geometry.
+   */
+  outlineStages?: boolean
   testId?: string
 }
 
@@ -91,6 +96,7 @@ export function processChrome(
     showStageCounts = true,
     showCapacityBadges = true,
     showGroupSockets = true,
+    outlineStages = false,
     testId = "process-flow-chrome"
   } = options
   const { width: w, height: h, left, right, topY, bottomY, midY, stages, groups = [] } =
@@ -101,11 +107,17 @@ export function processChrome(
     <svg
       aria-hidden="true"
       data-testid={testId}
+      data-outline-stages={outlineStages ? "true" : undefined}
       width={w}
       height={h}
       viewBox={`0 0 ${w} ${h}`}
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-      className="semiotic-process-chrome"
+      className={[
+        "semiotic-process-chrome",
+        outlineStages ? "semiotic-process-chrome--outline-stages" : null
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <defs>
         <linearGradient id="semiotic-process-floor" x1="0" x2="0" y1="0" y2="1">
@@ -152,14 +164,15 @@ export function processChrome(
         return (
           <g key={stage.id} data-stage={stage.id} data-role={role}>
             <rect
+              className="semiotic-process-chrome__stage-bay"
               x={stage.x0 + 4}
               y={topY + 6}
               width={bandW}
               height={laneH - 12}
               rx={10}
-              fill={palette.fill}
+              fill={outlineStages ? "none" : palette.fill}
               stroke={palette.stroke}
-              strokeWidth={role === "flow" ? 1 : 1.6}
+              strokeWidth={outlineStages ? 1.85 : role === "flow" ? 1 : 1.6}
             />
             {index < stages.length - 1 ? (
               <polygon

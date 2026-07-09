@@ -93,6 +93,7 @@ const AccessibilityPage = lazy(() => import("./pages/accessibility/Accessibility
 const AccessibilityAuditPage = lazy(() => import("./pages/accessibility/AccessibilityAuditPage"))
 const DescribeChartPage = lazy(() => import("./pages/accessibility/DescribeChartPage"))
 const NavigationTreePage = lazy(() => import("./pages/accessibility/NavigationTreePage"))
+const AnchoringComplexChartsPage = lazy(() => import("./pages/accessibility/AnchoringComplexChartsPage"))
 const SmallMultiplesPage = lazy(() => import("./pages/features/SmallMultiplesPage"))
 const StylingPage = lazy(() => import("./pages/features/StylingPage"))
 const ThemingPage = lazy(() => import("./pages/features/ThemingPage"))
@@ -353,7 +354,7 @@ function useJsonLd() {
       applicationCategory: "DeveloperApplication",
       operatingSystem: "Any",
       programmingLanguage: "JavaScript",
-      url: "https://semiotic3.nteract.io",
+      url: "https://semiotic.nteract.io",
       codeRepository: "https://github.com/nteract/semiotic",
       license: "https://opensource.org/licenses/Apache-2.0",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -759,6 +760,7 @@ export default function DocsApp() {
                 <Route path="audit" element={<AccessibilityAuditPage />} />
                 <Route path="descriptions" element={<DescribeChartPage />} />
                 <Route path="navigation" element={<NavigationTreePage />} />
+                <Route path="anchoring-complex-charts" element={<AnchoringComplexChartsPage />} />
               </Route>
 
               {/* Annotations routes — own section (moved out of Features) */}

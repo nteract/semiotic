@@ -111,7 +111,9 @@ export default function AccessibilityPage() {
         of a chart's statistics and trends with{" "}
         <Link to="/accessibility/descriptions">Chart Descriptions</Link>, and
         expose a screen-reader-navigable tree of the chart's structure with{" "}
-        <Link to="/accessibility/navigation">Structured Navigation</Link>.
+        <Link to="/accessibility/navigation">Structured Navigation</Link>, and
+        connect hard-to-summarize process charts to ordinary encodings with{" "}
+        <Link to="/accessibility/anchoring-complex-charts">Anchoring Complex Charts</Link>.
       </p>
 
       {/* ----------------------------------------------------------------- */}

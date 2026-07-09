@@ -23,7 +23,7 @@ import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import { computeBinExtent } from "../realtime/BinAccumulator"
 import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
-import { computeStackOffsets } from "./SceneGraph"
+import { computeDivergingStackExtent, computeStackOffsets } from "./SceneGraph"
 import type {
   Changeset,
   StreamChartType,
@@ -221,7 +221,7 @@ export interface PipelineConfig {
   binSize?: number
   normalize?: boolean
   /** Stacked area baseline mode. Only consulted by stackedarea chart type. */
-  baseline?: "zero" | "wiggle" | "silhouette"
+  baseline?: "zero" | "wiggle" | "silhouette" | "diverging"
   /** Stack order — see StreamXYFrameProps.stackOrder. */
   stackOrder?: "key" | "input" | "insideOut" | "asc" | "desc"
 
@@ -861,6 +861,17 @@ export class PipelineStore {
             if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
               lo = 0; hi = 0
             }
+            const range = hi - lo
+            const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
+            yDomain = [lo - pad, hi + pad]
+          } else if (config.baseline === "diverging") {
+            // Positives stack above 0, negatives below — extent must cover both.
+            const xValues = Array.from(xSet).sort((a, b) => a - b)
+            const [lo, hi] = computeDivergingStackExtent(
+              xValues,
+              groupKeys,
+              (k, x) => valueMaps.get(k)?.get(x) || 0
+            )
             const range = hi - lo
             const pad = exactMode ? 0 : (range > 0 ? range * config.extentPadding : 1)
             yDomain = [lo - pad, hi + pad]

@@ -33,4 +33,4 @@ Allow: /
 # Point to AI-readable docs
 # llms.txt standard: https://llmstxt.org/
 # Full API reference for LLM consumption
-Sitemap: https://semiotic3.nteract.io/sitemap.txt
+Sitemap: https://semiotic.nteract.io/sitemap.txt

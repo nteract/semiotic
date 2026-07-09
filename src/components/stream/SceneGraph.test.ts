@@ -1,4 +1,9 @@
-import { buildLineNode, buildAreaNode, buildStackedAreaNodes } from "./SceneGraph"
+import {
+  buildLineNode,
+  buildAreaNode,
+  buildStackedAreaNodes,
+  computeDivergingStackExtent
+} from "./SceneGraph"
 import type { StreamScales } from "./types"
 import { scaleLinear } from "d3-scale"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -175,5 +180,115 @@ describe("SceneGraph — buildStackedAreaNodes", () => {
         expect(node.topPath[i][0]).toBeGreaterThanOrEqual(node.topPath[i - 1][0])
       }
     }
+  })
+
+  it("diverging baseline stacks positives above 0 and negatives below", () => {
+    // identity scales so path y equals data y
+    const scales = {
+      x: (v: number) => v,
+      y: (v: number) => v,
+      xInvert: (v: number) => v,
+      yInvert: (v: number) => v
+    }
+    const groups = [
+      { key: "risk", data: [{ x: 0, y: -2 }, { x: 1, y: -1 }] },
+      { key: "benefit", data: [{ x: 0, y: 3 }, { x: 1, y: 4 }] },
+      { key: "risk2", data: [{ x: 0, y: -1 }, { x: 1, y: -2 }] }
+    ]
+    const { nodes, stackedTops } = buildStackedAreaNodes(
+      groups,
+      scales as never,
+      (d) => d.x,
+      (d) => d.y,
+      () => ({ fill: "#000" }),
+      false,
+      undefined,
+      "diverging"
+    )
+
+    // risk: from 0 → -2 at x=0
+    const risk = nodes.find((n) => n.group === "risk")!
+    expect(risk.bottomPath[0][1]).toBe(0)
+    expect(risk.topPath[0][1]).toBe(-2)
+    // risk2: from -2 → -3 at x=0
+    const risk2 = nodes.find((n) => n.group === "risk2")!
+    expect(risk2.bottomPath[0][1]).toBe(-2)
+    expect(risk2.topPath[0][1]).toBe(-3)
+    // benefit: from 0 → 3 (independent of negatives)
+    const benefit = nodes.find((n) => n.group === "benefit")!
+    expect(benefit.bottomPath[0][1]).toBe(0)
+    expect(benefit.topPath[0][1]).toBe(3)
+
+    expect(stackedTops.get("risk")?.get(0)).toBe(-2)
+    expect(stackedTops.get("risk2")?.get(0)).toBe(-3)
+    expect(stackedTops.get("benefit")?.get(0)).toBe(3)
+  })
+
+  it("cuts area segments at zero / missing values instead of drawing flat ribbons", () => {
+    const scales = {
+      x: (v: number) => v,
+      y: (v: number) => v,
+      xInvert: (v: number) => v,
+      yInvert: (v: number) => v
+    }
+    // benefit is active at x=0,1 then drops out; risk only at x=2,3
+    const groups = [
+      {
+        key: "benefit",
+        data: [
+          { x: 0, y: 2 },
+          { x: 1, y: 3 },
+          { x: 2, y: 0 },
+          { x: 3, y: 0 }
+        ]
+      },
+      {
+        key: "risk",
+        data: [
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+          { x: 2, y: -1 },
+          { x: 3, y: -2 }
+        ]
+      }
+    ]
+    const { nodes } = buildStackedAreaNodes(
+      groups,
+      scales as never,
+      (d) => d.x,
+      (d) => d.y,
+      () => ({ fill: "#000" }),
+      false,
+      undefined,
+      "diverging"
+    )
+    const benefitNodes = nodes.filter((n) => n.group === "benefit")
+    const riskNodes = nodes.filter((n) => n.group === "risk")
+    // Each polarity is one contiguous non-zero run → one area node each
+    expect(benefitNodes).toHaveLength(1)
+    expect(riskNodes).toHaveLength(1)
+    expect(benefitNodes[0].topPath).toHaveLength(2)
+    expect(riskNodes[0].topPath).toHaveLength(2)
+    // benefit path only covers x=0,1 (not flat zeros at 2,3)
+    expect(benefitNodes[0].topPath.map((p) => p[0])).toEqual([0, 1])
+    expect(riskNodes[0].topPath.map((p) => p[0])).toEqual([2, 3])
+  })
+})
+
+describe("SceneGraph — computeDivergingStackExtent", () => {
+  it("returns [sumNeg, sumPos] across x", () => {
+    const [lo, hi] = computeDivergingStackExtent(
+      [0, 1],
+      ["a", "b", "c"],
+      (k, x) => {
+        if (k === "a") return 2
+        if (k === "b") return -1
+        return x === 0 ? -3 : 4
+      }
+    )
+    // x=0: pos=2, neg=-4 → lo=-4, hi=2
+    // x=1: pos=6, neg=-1 → lo=-4, hi=6
+    expect(lo).toBe(-4)
+    expect(hi).toBe(6)
   })
 })

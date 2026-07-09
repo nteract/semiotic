@@ -13,7 +13,7 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_BUILD_DIR = resolve(__dirname, "../docs/build")
-const SITE_URL = "https://semiotic3.nteract.io"
+const SITE_URL = "https://semiotic.nteract.io"
 
 export const REQUIRED_DOCS_ROUTES = [
   {

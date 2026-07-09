@@ -56,7 +56,7 @@ const gauntletChartProps = [
   { name: "positiveProperties", type: "array", required: true, default: null, description: "Definitions for lift, value, color, radius, spring, and optional custom target behavior." },
   { name: "negativeProperties", type: "array", required: true, default: null, description: "Definitions for load, pull, color, radius, spring, and optional custom target behavior." },
   { name: "gates", type: "array", required: false, default: "[]", description: "Named regions along the route. Each gate can contribute a StreamPhysicsFrame regionEffect." },
-  { name: "events", type: "array | function", required: false, default: "[]", description: "Timed project events that add negatives, add positives, pop positives, change stage, mutate metrics, or set final outcome." },
+  { name: "events", type: "array | function", required: false, default: "[]", description: "Timed project events that add negatives, add positives, pop positives, pop negatives, change stage, mutate metrics, or set final outcome." },
   { name: "bodyGroups", type: "array | function", required: false, default: "[]", description: "Optional semantic groups for higher-level aggregates such as features or cohorts." },
   { name: "coreBody", type: "function", required: false, default: null, description: "Overrides generated core spawn fields for non-default glyphs, mass, radius, velocity, or spawn timing." },
   { name: "projectPlacement", type: "function", required: false, default: null, description: "Overrides start, route, socket, and graveyard coordinates per project." },

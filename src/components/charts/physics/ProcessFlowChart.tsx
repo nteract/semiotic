@@ -17,7 +17,10 @@ import {
   type PhysicsController
 } from "../../stream/physics/PhysicsControllers"
 import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
-import { processChrome } from "../../recipes/processChrome"
+import {
+  processChrome,
+  type ProcessChromeOptions
+} from "../../recipes/processChrome"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { filterSparseArray } from "../shared/sparseArray"
@@ -68,6 +71,8 @@ export interface ProcessFlowChartProps<TDatum extends Datum = Datum>
   groupAnchorAlong?: number
   showProjection?: boolean
   showChrome?: boolean
+  /** Options for the default processChrome overlay (stage bays, badges, sockets). */
+  chromeOptions?: ProcessChromeOptions
   settle?: boolean
   gravityX?: number
   gravityY?: number
@@ -127,7 +132,8 @@ function capacitySnapshotsEqual(
 function processFlowChrome(
   metadata: ProcessFlowProjectionMetadata | undefined,
   enabled: boolean | undefined,
-  capacityByRegion: Record<string, CapacityQueueSnapshot> = {}
+  capacityByRegion: Record<string, CapacityQueueSnapshot> = {},
+  chromeOptions?: ProcessChromeOptions
 ): StreamPhysicsFrameProps["backgroundGraphics"] | undefined {
   if (enabled === false || !metadata) return undefined
   const { volume, stages, groups, groupCompletion } = metadata
@@ -178,7 +184,11 @@ function processFlowChrome(
         stages: chromeStages,
         groups: chromeGroups
       },
-      { showCapacityBadges: true, showGroupSockets: true }
+      {
+        showCapacityBadges: true,
+        showGroupSockets: true,
+        ...chromeOptions
+      }
     )
   }
 }
@@ -279,6 +289,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
 >(props: ProcessFlowChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const {
     ballRadius = 6,
+    chromeOptions,
     colorBy,
     data,
     emptyContent,
@@ -542,7 +553,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
     )
   }
 
-  const chrome = processFlowChrome(metadata, showChrome, capacityStats)
+  const chrome = processFlowChrome(metadata, showChrome, capacityStats, chromeOptions)
   const projectionOverlay = processFlowProjectionOverlay(
     layout.projectionRows,
     metadata,
