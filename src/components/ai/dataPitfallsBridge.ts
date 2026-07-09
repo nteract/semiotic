@@ -125,6 +125,136 @@ export interface DataPitfallsBridgeResult {
   accessibility?: AccessibilityAuditResult
 }
 
+export type DataPitfallsSeverity =
+  | "info"
+  | "warning"
+  | "error"
+  | (string & {})
+
+export type DataPitfallsInputKind =
+  | "text"
+  | "code"
+  | "image"
+  | "document"
+  | "slides"
+  | "chain"
+  | (string & {})
+
+export interface DataPitfallsFinding {
+  ruleId: string
+  name: string
+  domain: string
+  severity: DataPitfallsSeverity
+  evidence?: string
+  remediation?: string
+  explanation?: string
+  condition?: string
+  [key: string]: unknown
+}
+
+export interface DataPitfallsReport {
+  kind: DataPitfallsInputKind
+  findings: DataPitfallsFinding[]
+  [key: string]: unknown
+}
+
+export type DataPitfallsNotificationLevel =
+  | "info"
+  | "warning"
+  | "error"
+  | "neutral"
+
+export interface DataPitfallsChartNotification {
+  id?: string
+  level?: DataPitfallsNotificationLevel
+  title?: string
+  message: string
+  source?: string
+  dismissible?: boolean
+}
+
+export type DataPitfallsNotificationMessage =
+  (
+    finding: DataPitfallsFinding,
+    index: number,
+    report: DataPitfallsReport
+  ) => string
+
+export interface DataPitfallsNotificationBridgeOptions {
+  /** Cap emitted notifications. `meta.count` keeps the uncapped finding count. */
+  max?: number
+  /** Prefix for the source tag. Default: "datapitfalls". */
+  sourcePrefix?: string
+  /** Passed through to ChartContainer notifications when set. */
+  dismissible?: boolean
+  /** Custom message mapper. Defaults to remediation, explanation, evidence, then condition. */
+  message?: DataPitfallsNotificationMessage
+}
+
+export interface DataPitfallsNotificationBridge {
+  notifications: DataPitfallsChartNotification[]
+  meta: { count: number; kind: DataPitfallsInputKind }
+}
+
+export type DataPitfallsAnnotationType = "label" | "text"
+
+export interface DataPitfallsSemioticAnnotation {
+  type: DataPitfallsAnnotationType
+  title: string
+  label: string
+  wrap: number
+  color: string
+  className: string
+  emphasis: "primary" | "secondary"
+  provenance: {
+    author: "datapitfalls"
+    authorKind: "watcher"
+    source: "computed"
+    basis: "llm-inference"
+    stableId: string
+  }
+  dataPitfall: {
+    ruleId: string
+    domain: string
+    severity: DataPitfallsSeverity
+    evidence: string
+  }
+  [key: string]: unknown
+}
+
+export interface DataPitfallsAnnotationBridgeOptions {
+  /** Override severity colors. Merged over the defaults. */
+  palette?: Partial<Record<string, string>>
+  /** Cap emitted annotations. `meta.count` keeps the uncapped finding count. */
+  max?: number
+  /** Text wrap width passed through to Semiotic v3 annotations. Default: 240. */
+  wrap?: number
+  /** Semiotic v3 annotation type. Default: "label". */
+  type?: DataPitfallsAnnotationType
+  /**
+   * Optional host-owned anchoring. Return `{ x, y }`, data accessors, or any
+   * other Semiotic annotation fields for findings you can position.
+   */
+  anchorFor?: (
+    finding: DataPitfallsFinding,
+    index: number,
+    report: DataPitfallsReport
+  ) => Record<string, unknown> | null | undefined
+}
+
+export interface DataPitfallsAnnotationBridge {
+  annotations: DataPitfallsSemioticAnnotation[]
+  meta: { count: number; kind: DataPitfallsInputKind }
+}
+
+export const DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE = {
+  info: "#2563eb",
+  warning: "#d97706",
+  error: "#dc2626",
+} as const
+
+const DEFAULT_DATA_PITFALLS_WRAP = 240
+
 function asArray<T>(value: T | T[] | undefined): T[] {
   if (value == null) return []
   return Array.isArray(value) ? value : [value]
@@ -136,6 +266,148 @@ function stringify(value: unknown): string {
     return JSON.stringify(value, null, 2) ?? String(value)
   } catch {
     return String(value)
+  }
+}
+
+function cappedFindings(
+  report: DataPitfallsReport,
+  max: number | undefined
+): DataPitfallsFinding[] {
+  return max == null
+    ? report.findings
+    : report.findings.slice(0, Math.max(0, max))
+}
+
+function firstText(...values: Array<string | undefined>): string {
+  for (const value of values) {
+    const trimmed = value?.trim()
+    if (trimmed) return trimmed
+  }
+  return "Review this finding."
+}
+
+function findingMessage(finding: DataPitfallsFinding): string {
+  return firstText(
+    finding.remediation,
+    finding.explanation,
+    finding.evidence,
+    finding.condition
+  )
+}
+
+function findingTitle(finding: DataPitfallsFinding): string {
+  return firstText(finding.name, finding.ruleId)
+}
+
+function notificationLevel(severity: DataPitfallsSeverity): DataPitfallsNotificationLevel {
+  if (severity === "error") return "error"
+  if (severity === "warning") return "warning"
+  if (severity === "info") return "info"
+  return "neutral"
+}
+
+function findingSource(finding: DataPitfallsFinding, prefix: string): string {
+  return finding.domain ? `${prefix} · ${finding.domain}` : prefix
+}
+
+function paletteColor(
+  severity: DataPitfallsSeverity,
+  palette: Partial<Record<string, string>>
+): string {
+  return palette[severity] ?? DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE.info
+}
+
+export function dataPitfallsFindingToNotification(
+  finding: DataPitfallsFinding,
+  options: DataPitfallsNotificationBridgeOptions = {},
+  index = 0,
+  report: DataPitfallsReport = { kind: "image", findings: [finding] }
+): DataPitfallsChartNotification {
+  const prefix = options.sourcePrefix ?? "datapitfalls"
+  return {
+    id: firstText(finding.ruleId, finding.name),
+    level: notificationLevel(finding.severity),
+    title: findingTitle(finding),
+    message: options.message
+      ? options.message(finding, index, report)
+      : findingMessage(finding),
+    source: findingSource(finding, prefix),
+    ...(options.dismissible === undefined ? {} : { dismissible: options.dismissible }),
+  }
+}
+
+export function toDataPitfallsNotifications(
+  report: DataPitfallsReport,
+  options: DataPitfallsNotificationBridgeOptions = {}
+): DataPitfallsChartNotification[] {
+  return cappedFindings(report, options.max).map((finding, index) =>
+    dataPitfallsFindingToNotification(finding, options, index, report)
+  )
+}
+
+export function buildDataPitfallsNotificationBridge(
+  report: DataPitfallsReport,
+  options: DataPitfallsNotificationBridgeOptions = {}
+): DataPitfallsNotificationBridge {
+  return {
+    notifications: toDataPitfallsNotifications(report, options),
+    meta: { count: report.findings.length, kind: report.kind },
+  }
+}
+
+export function dataPitfallsFindingToAnnotation(
+  finding: DataPitfallsFinding,
+  options: DataPitfallsAnnotationBridgeOptions = {},
+  index = 0,
+  report: DataPitfallsReport = { kind: "image", findings: [finding] }
+): DataPitfallsSemioticAnnotation {
+  const palette = {
+    ...DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE,
+    ...options.palette,
+  }
+  const anchor = options.anchorFor?.(finding, index, report)
+
+  return {
+    ...(anchor ?? {}),
+    type: options.type ?? "label",
+    title: findingTitle(finding),
+    label: findingMessage(finding),
+    wrap: options.wrap ?? DEFAULT_DATA_PITFALLS_WRAP,
+    color: paletteColor(finding.severity, palette),
+    className: `pitfall-${finding.severity}`,
+    emphasis: finding.severity === "error" ? "primary" : "secondary",
+    provenance: {
+      author: "datapitfalls",
+      authorKind: "watcher",
+      source: "computed",
+      basis: "llm-inference",
+      stableId: finding.ruleId,
+    },
+    dataPitfall: {
+      ruleId: finding.ruleId,
+      domain: finding.domain,
+      severity: finding.severity,
+      evidence: finding.evidence ?? "",
+    },
+  }
+}
+
+export function toDataPitfallsAnnotations(
+  report: DataPitfallsReport,
+  options: DataPitfallsAnnotationBridgeOptions = {}
+): DataPitfallsSemioticAnnotation[] {
+  return cappedFindings(report, options.max).map((finding, index) =>
+    dataPitfallsFindingToAnnotation(finding, options, index, report)
+  )
+}
+
+export function buildDataPitfallsAnnotationBridge(
+  report: DataPitfallsReport,
+  options: DataPitfallsAnnotationBridgeOptions = {}
+): DataPitfallsAnnotationBridge {
+  return {
+    annotations: toDataPitfallsAnnotations(report, options),
+    meta: { count: report.findings.length, kind: report.kind },
   }
 }
 

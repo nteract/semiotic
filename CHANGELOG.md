@@ -132,9 +132,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same unit the next began).
 - **DataPitfalls and GoFish adapters remain experimental.** The DataPitfalls
   bridge is exposed from `semiotic/experimental` as
-  `unstable_toDataPitfallsChain` / `unstable_buildDataPitfallsBridge`, and the
-  GoFish DisplayList adapter remains `unstable_fromGofishIR` on the same
-  endpoint. Neither adapter is part of the stable API surface yet.
+  `unstable_toDataPitfallsChain` / `unstable_buildDataPitfallsBridge`, with
+  return-path helpers for DataPitfalls PR #35 reports:
+  `unstable_toDataPitfallsNotifications` for chart-level findings and
+  `unstable_toDataPitfallsAnnotations` for host-anchored Semiotic v3
+  annotations. The GoFish DisplayList adapter remains `unstable_fromGofishIR`
+  on the same endpoint. Neither adapter is part of the stable API surface yet.
 
 ## [3.7.5] - 2026-06-24
 

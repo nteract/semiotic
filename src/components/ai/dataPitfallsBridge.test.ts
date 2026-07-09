@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest"
 import {
+  DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE,
+  buildDataPitfallsAnnotationBridge,
   buildDataPitfallsBridge,
+  buildDataPitfallsNotificationBridge,
+  toDataPitfallsAnnotations,
   toDataPitfallsChain,
+  toDataPitfallsNotifications,
   type DataPitfallsChainStage,
+  type DataPitfallsReport,
   type DataPitfallsTextInput,
 } from "./dataPitfallsBridge"
 
@@ -24,6 +30,38 @@ function textOrCodeArtifact(stage: DataPitfallsChainStage): DataPitfallsTextInpu
     throw new Error(`Expected text/code artifact, received ${artifact.kind}`)
   }
   return artifact
+}
+
+const pitfallReport: DataPitfallsReport = {
+  kind: "image",
+  model: "test-model",
+  rulesConsidered: 3,
+  findings: [
+    {
+      ruleId: "truncated-axis",
+      name: "Truncated axis",
+      domain: "Graphical Gaffes",
+      severity: "error",
+      evidence: "the y-axis starts at 90, not 0",
+      remediation: "Start the axis at zero.",
+    },
+    {
+      ruleId: "missing-context",
+      name: "Missing decision context",
+      domain: "Epistemic Errors",
+      severity: "warning",
+      evidence: "the chart does not define the decision threshold",
+      explanation: "readers cannot tell whether the observed lift is enough",
+    },
+    {
+      ruleId: "data-reality-gap",
+      name: "Data-reality gap",
+      domain: "Epistemic Errors",
+      severity: "info",
+      evidence: "survey responses are shown as population fact",
+      condition: "the metric is a sample proxy",
+    },
+  ],
 }
 
 describe("dataPitfallsBridge", () => {
@@ -166,5 +204,112 @@ describe("dataPitfallsBridge", () => {
     const configArtifact = textOrCodeArtifact(config)
     expect(configArtifact.content).toContain("\"xAccessor\": \"month\"")
     expect(configArtifact.content).not.toContain("\"data\"")
+  })
+
+  it("maps Data Pitfalls findings to ChartContainer-compatible notifications", () => {
+    const bridge = buildDataPitfallsNotificationBridge(pitfallReport, {
+      max: 2,
+      dismissible: false,
+    })
+
+    expect(bridge.meta).toEqual({ count: 3, kind: "image" })
+    expect(bridge.notifications).toEqual([
+      {
+        id: "truncated-axis",
+        level: "error",
+        title: "Truncated axis",
+        message: "Start the axis at zero.",
+        source: "datapitfalls · Graphical Gaffes",
+        dismissible: false,
+      },
+      {
+        id: "missing-context",
+        level: "warning",
+        title: "Missing decision context",
+        message: "readers cannot tell whether the observed lift is enough",
+        source: "datapitfalls · Epistemic Errors",
+        dismissible: false,
+      },
+    ])
+  })
+
+  it("supports custom notification source and message mapping", () => {
+    const notifications = toDataPitfallsNotifications(pitfallReport, {
+      sourcePrefix: "audit",
+      message: (finding, index, report) =>
+        `${index + 1}/${report.findings.length}: ${finding.ruleId}`,
+    })
+
+    expect(notifications[0]).toMatchObject({
+      source: "audit · Graphical Gaffes",
+      message: "1/3: truncated-axis",
+    })
+  })
+
+  it("emits Data Pitfalls report findings as Semiotic v3-native annotations", () => {
+    const annotations = toDataPitfallsAnnotations(pitfallReport)
+    const first = annotations[0]
+
+    expect(first).toMatchObject({
+      type: "label",
+      title: "Truncated axis",
+      label: "Start the axis at zero.",
+      wrap: 240,
+      color: DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE.error,
+      className: "pitfall-error",
+      emphasis: "primary",
+      provenance: {
+        author: "datapitfalls",
+        authorKind: "watcher",
+        source: "computed",
+        basis: "llm-inference",
+        stableId: "truncated-axis",
+      },
+      dataPitfall: {
+        ruleId: "truncated-axis",
+        domain: "Graphical Gaffes",
+        severity: "error",
+        evidence: "the y-axis starts at 90, not 0",
+      },
+    })
+    expect(first).not.toHaveProperty("note")
+    expect(first).not.toHaveProperty("disable")
+    expect(first).not.toHaveProperty("x")
+    expect(first).not.toHaveProperty("y")
+  })
+
+  it("caps annotations while keeping the full finding count visible in meta", () => {
+    const bridge = buildDataPitfallsAnnotationBridge(pitfallReport, {
+      max: 1,
+      type: "text",
+      wrap: 320,
+      palette: { error: "#111111" },
+    })
+
+    expect(bridge.meta).toEqual({ count: 3, kind: "image" })
+    expect(bridge.annotations).toHaveLength(1)
+    expect(bridge.annotations[0]).toMatchObject({
+      type: "text",
+      wrap: 320,
+      color: "#111111",
+    })
+  })
+
+  it("merges host-owned anchors into Data Pitfalls annotations without inventing coordinates", () => {
+    const annotations = toDataPitfallsAnnotations(pitfallReport, {
+      anchorFor: (finding) =>
+        finding.ruleId === "truncated-axis"
+          ? { x: 9, y: 9000, anchor: "semantic" }
+          : null,
+    })
+
+    expect(annotations[0]).toMatchObject({
+      x: 9,
+      y: 9000,
+      anchor: "semantic",
+      title: "Truncated axis",
+    })
+    expect(annotations[1]).not.toHaveProperty("x")
+    expect(annotations[1]).not.toHaveProperty("y")
   })
 })
