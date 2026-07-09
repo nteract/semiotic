@@ -1,4 +1,3 @@
-import { interpolateNumber } from "d3-interpolate"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
@@ -16,9 +15,9 @@ import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import {
   computeEasing,
   computeRawProgress,
-  lerp
+  lerp,
+  now as getTimestamp
 } from "./pipelineTransitionUtils"
-import { computeDecayOpacity } from "./pipelineDecay"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import type {
@@ -31,13 +30,25 @@ import type {
   RealtimeEdge,
   EdgePush,
   TensionConfig,
-  BezierCache,
-  BezierPoint
+  BezierCache
 } from "./networkTypes"
+import { createNode, isValidBezierCache } from "./networkPipelineHelpers"
+import {
+  NETWORK_EDGE_CURVATURE,
+  updateEdgeBezier as updateEdgeBezierPure
+} from "./networkBezier"
+import {
+  applyNetworkPulse,
+  applyNetworkDecay,
+  applyNetworkTopologyDiff,
+  hasActiveNetworkTopologyDiff,
+  applyNetworkThresholds,
+  hasActiveNetworkThresholds,
+  hasActiveNetworkPulses,
+  type NetworkDecayCache
+} from "./networkRealtimeEncoding"
 import { DEFAULT_TENSION_CONFIG } from "./networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
-
-const CURVATURE = 0.5
 
 /**
  * NetworkPipelineStore — stateful store for the StreamNetworkFrame.
@@ -168,6 +179,7 @@ export class NetworkPipelineStore {
   lastTopologyChangeTime = 0
   private previousNodeIds: Set<string> = new Set()
   private previousEdgeKeys: Set<string> = new Set()
+  private _networkDecayCache: NetworkDecayCache | null = null
 
   /** Snapshot of node positions from the last layout — used for force warm-start */
   _lastPositionSnapshot: Map<string, { x: number; y: number }> | null = null
@@ -249,7 +261,7 @@ export class NetworkPipelineStore {
 
     this.nodes.clear()
     this.edges.clear()
-    this._decaySortedNodes = null
+    this._decaySortedNodes = null; this._networkDecayCache = null
 
     // Stash hierarchy root on config for the plugin to read
     this.config.__hierarchyRoot = rootData
@@ -327,7 +339,7 @@ export class NetworkPipelineStore {
 
     this.nodes.clear()
     this.edges.clear()
-    this._decaySortedNodes = null
+    this._decaySortedNodes = null; this._networkDecayCache = null
 
     // Build node map
     for (const raw of rawNodes) {
@@ -432,10 +444,9 @@ export class NetworkPipelineStore {
     const { source, target, value } = push
     const isFirst = this.nodes.size === 0
     let topologyChanged = false
-    const now =
-      typeof performance !== "undefined" ? performance.now() : Date.now()
+    const now = getTimestamp()
     this.lastIngestTime = now
-    this._decaySortedNodes = null
+    this._decaySortedNodes = null; this._networkDecayCache = null
 
     if (!this.nodes.has(source)) {
       this.nodes.set(source, createNode(source))
@@ -557,7 +568,7 @@ export class NetworkPipelineStore {
     if (plugin.hierarchical && nodesArr.length > 0) {
       this.nodes.clear()
       this.edges.clear()
-      this._decaySortedNodes = null
+      this._decaySortedNodes = null; this._networkDecayCache = null
       for (const node of nodesArr) {
         this.nodes.set(node.id, node)
       }
@@ -657,14 +668,14 @@ export class NetworkPipelineStore {
       }
       this.restorePreviousPositions()
       this.transition = {
-        startTime: performance.now(),
+        startTime: getTimestamp(),
         duration: transitionDuration
       }
     } else if (hasOldPositions && transitionDuration > 0) {
       // Data-change transition: reset to previous positions (animation starts from here)
       this.restorePreviousPositions()
       this.transition = {
-        startTime: performance.now(),
+        startTime: getTimestamp(),
         duration: transitionDuration
       }
     }
@@ -712,8 +723,7 @@ export class NetworkPipelineStore {
       this.addedEdges.size > 0 ||
       this.removedEdges.size > 0
     ) {
-      this.lastTopologyChangeTime =
-        typeof performance !== "undefined" ? performance.now() : Date.now()
+      this.lastTopologyChangeTime = getTimestamp()
     }
 
     this.previousNodeIds = currentNodeIds
@@ -1222,138 +1232,10 @@ export class NetworkPipelineStore {
     this.rebuildAllBeziers()
   }
 
-  // ── Bezier caching (ported from TopologyStore) ────────────────────────
+  // ── Bezier caching (see networkBezier.ts) ────────────────────────────
 
   private updateEdgeBezier(edge: RealtimeEdge): void {
-    const sourceNode =
-      typeof edge.source === "string"
-        ? this.nodes.get(edge.source)!
-        : edge.source
-    const targetNode =
-      typeof edge.target === "string"
-        ? this.nodes.get(edge.target)!
-        : edge.target
-
-    if (!sourceNode || !targetNode) return
-
-    if (edge.circular && edge.circularPathData) {
-      edge.bezier = this.buildCircularBezier(edge)
-    } else {
-      edge.bezier = this.buildStandardBezier(edge, sourceNode, targetNode)
-    }
-  }
-
-  private buildStandardBezier(
-    edge: RealtimeEdge,
-    sourceNode: RealtimeNode,
-    targetNode: RealtimeNode
-  ): BezierCache {
-    const hw = (edge.sankeyWidth || 1) / 2
-
-    if (edge.direction === "down") {
-      // Vertical sankey: d3-sankey uses swapped extent so x = depth, y = breadth.
-      // For rendering: breadth (y) → horizontal, depth (x) → vertical.
-      // source.x1 = depth bottom of source, target.x0 = depth top of target.
-      const y0 = sourceNode.x1
-      const y1 = targetNode.x0
-      const xi = interpolateNumber(y0, y1)
-      const p0: BezierPoint = { x: edge.y0, y: y0 }
-      const p1: BezierPoint = { x: edge.y0, y: xi(CURVATURE) }
-      const p2: BezierPoint = { x: edge.y1, y: xi(1 - CURVATURE) }
-      const p3: BezierPoint = { x: edge.y1, y: y1 }
-      return { circular: false, points: [p0, p1, p2, p3], halfWidth: hw }
-    }
-
-    // Horizontal (default)
-    const x0 = sourceNode.x1
-    const x1 = targetNode.x0
-    const xi = interpolateNumber(x0, x1)
-    const p0: BezierPoint = { x: x0, y: edge.y0 }
-    const p1: BezierPoint = { x: xi(CURVATURE), y: edge.y0 }
-    const p2: BezierPoint = { x: xi(1 - CURVATURE), y: edge.y1 }
-    const p3: BezierPoint = { x: x1, y: edge.y1 }
-    return { circular: false, points: [p0, p1, p2, p3], halfWidth: hw }
-  }
-
-  private buildCircularBezier(edge: RealtimeEdge): BezierCache {
-    const hw = (edge._circularWidth || edge.sankeyWidth || 1) / 2
-    const cpd = edge.circularPathData
-    if (!cpd) throw new Error("buildCircularBezier requires circularPathData")
-
-    // Stub edges: particles travel outbound stub, then teleport to inbound stub
-    if (edge._circularStub) {
-      const stubLen = Math.max(
-        15,
-        Math.min(40, (cpd.rightFullExtent - cpd.sourceX) * 0.33)
-      )
-      const stubLenT = Math.max(
-        15,
-        Math.min(40, (cpd.targetX - cpd.leftFullExtent) * 0.33)
-      )
-
-      // Two segments: outbound stub (t=0..0.5), then teleport to inbound stub (t=0.5..1)
-      const segments: Array<
-        [BezierPoint, BezierPoint, BezierPoint, BezierPoint]
-      > = [
-        // Outbound: source → source+stubLen (first half of t)
-        [
-          { x: cpd.sourceX, y: cpd.sourceY },
-          { x: cpd.sourceX + stubLen * 0.33, y: cpd.sourceY },
-          { x: cpd.sourceX + stubLen * 0.66, y: cpd.sourceY },
-          { x: cpd.sourceX + stubLen, y: cpd.sourceY }
-        ],
-        // Inbound: target-stubLenT → target (second half of t)
-        [
-          { x: cpd.targetX - stubLenT, y: cpd.targetY },
-          { x: cpd.targetX - stubLenT * 0.66, y: cpd.targetY },
-          { x: cpd.targetX - stubLenT * 0.33, y: cpd.targetY },
-          { x: cpd.targetX, y: cpd.targetY }
-        ]
-      ]
-
-      return { circular: true, segments, halfWidth: hw }
-    }
-
-    // Full circular path: source → right → vertical → left → target
-    let waypoints: BezierPoint[]
-
-    if (edge.direction === "down") {
-      waypoints = [
-        { x: cpd.sourceY, y: cpd.sourceX },
-        { x: cpd.sourceY, y: cpd.rightFullExtent },
-        { x: cpd.verticalFullExtent, y: cpd.rightFullExtent },
-        { x: cpd.verticalFullExtent, y: cpd.leftFullExtent },
-        { x: cpd.targetY, y: cpd.leftFullExtent },
-        { x: cpd.targetY, y: cpd.targetX }
-      ]
-    } else {
-      waypoints = [
-        { x: cpd.sourceX, y: cpd.sourceY },
-        { x: cpd.rightFullExtent, y: cpd.sourceY },
-        { x: cpd.rightFullExtent, y: cpd.verticalFullExtent },
-        { x: cpd.leftFullExtent, y: cpd.verticalFullExtent },
-        { x: cpd.leftFullExtent, y: cpd.targetY },
-        { x: cpd.targetX, y: cpd.targetY }
-      ]
-    }
-
-    const segments: Array<
-      [BezierPoint, BezierPoint, BezierPoint, BezierPoint]
-    > = []
-    for (let i = 0; i < waypoints.length - 1; i++) {
-      const a = waypoints[i]
-      const b = waypoints[i + 1]
-      const dx = b.x - a.x
-      const dy = b.y - a.y
-      segments.push([
-        a,
-        { x: a.x + dx / 3, y: a.y + dy / 3 },
-        { x: a.x + (2 * dx) / 3, y: a.y + (2 * dy) / 3 },
-        b
-      ])
-    }
-
-    return { circular: true, segments, halfWidth: hw }
+    updateEdgeBezierPure(edge, this.nodes, NETWORK_EDGE_CURVATURE)
   }
 
   rebuildAllBeziers(): void {
@@ -1368,211 +1250,76 @@ export class NetworkPipelineStore {
     }
   }
 
-  // ── Realtime encoding ─────────────────────────────────────────────────
+  // ── Realtime encoding (see networkRealtimeEncoding.ts) ───────────────
 
-  /**
-   * Apply pulse glow to scene nodes/edges based on their creation timestamps.
-   */
   applyPulse(now: number): void {
-    const pulse = this.config.pulse
-    if (!pulse) return
-
-    const duration = pulse.duration ?? 500
-    const pulseColor = pulse.color ?? "rgba(255,255,255,0.6)"
-    const glowRadius = pulse.glowRadius ?? 4
-
-    for (const node of this.sceneNodes) {
-      const nodeId = node.id
-      if (!nodeId) continue
-      const ts = this.nodeTimestamps.get(nodeId)
-      if (!ts) continue
-      const age = now - ts
-      if (age >= duration) continue
-      const intensity = 1 - age / duration
-      node._pulseIntensity = intensity
-      node._pulseColor = pulseColor
-      node._pulseGlowRadius = glowRadius
-    }
-
-    for (const edge of this.sceneEdges) {
-      const edgeDatum = edge.datum
-      if (!edgeDatum) continue
-      const sourceId =
-        typeof edgeDatum.source === "object"
-          ? edgeDatum.source?.id
-          : edgeDatum.source
-      const targetId =
-        typeof edgeDatum.target === "object"
-          ? edgeDatum.target?.id
-          : edgeDatum.target
-      if (!sourceId || !targetId) continue
-      const key = `${sourceId}\0${targetId}`
-      const ts = this.edgeTimestamps.get(key)
-      if (!ts) continue
-      const age = now - ts
-      if (age >= duration) continue
-      const intensity = 1 - age / duration
-      edge._pulseIntensity = intensity
-      edge._pulseColor = pulseColor
-    }
+    applyNetworkPulse({
+      sceneNodes: this.sceneNodes,
+      sceneEdges: this.sceneEdges,
+      nodeTimestamps: this.nodeTimestamps,
+      edgeTimestamps: this.edgeTimestamps,
+      pulse: this.config.pulse,
+      now
+    })
   }
 
-  /**
-   * Apply decay opacity to scene nodes based on topology age order.
-   * Older nodes (created earlier) are more faded.
-   */
   applyDecay(): void {
-    const decay = this.config.decay
-    if (!decay) return
-
-    const nodeCount = this.nodeTimestamps.size
-    if (nodeCount <= 1) return
-
-    // Sort nodes by creation time (oldest first) and build the id→age-index map
-    // — both cached when topology is stable. The age map used to be rebuilt
-    // every frame (O(n) Map alloc + fill) even though the sort was cached; now
-    // it rebuilds only when the sort does (i.e. on a topology change).
+    if (!this._networkDecayCache) {
+      this._networkDecayCache = { sortedNodes: null, ageMap: null }
+    }
     if (!this._decaySortedNodes) {
-      this._decaySortedNodes = Array.from(this.nodeTimestamps.entries()).sort(
-        (a, b) => a[1] - b[1]
-      )
-      const ageMap = new Map<string, number>()
-      for (let i = 0; i < this._decaySortedNodes.length; i++) {
-        ageMap.set(this._decaySortedNodes[i][0], i)
-      }
-      this._decayAgeMap = ageMap
+      this._networkDecayCache.sortedNodes = null
+      this._networkDecayCache.ageMap = null
     }
-    const nodeAgeMap = this._decayAgeMap!
-
-    for (const node of this.sceneNodes) {
-      const nodeId = node.id
-      if (!nodeId) continue
-      const ageIndex = nodeAgeMap.get(nodeId)
-      if (ageIndex === undefined) continue
-
-      const opacity = computeDecayOpacity(decay, ageIndex, nodeCount)
-      const baseOpacity = node.style?.opacity ?? 1
-      node.style = { ...node.style, opacity: baseOpacity * opacity }
-    }
+    applyNetworkDecay({
+      sceneNodes: this.sceneNodes,
+      nodeTimestamps: this.nodeTimestamps,
+      decay: this.config.decay,
+      cache: this._networkDecayCache
+    })
+    this._decaySortedNodes = this._networkDecayCache.sortedNodes
+    this._decayAgeMap = this._networkDecayCache.ageMap
   }
 
-  /**
-   * Apply topology diff highlight — newly added nodes glow briefly.
-   * Duration: 2 seconds from lastTopologyChangeTime.
-   */
   applyTopologyDiff(now: number): void {
-    const topologyPulseColor = "rgba(34, 197, 94, 0.7)"
-
-    // Pulse fields live on scene nodes between frames. Clear the prior
-    // topology pulse before deciding whether the two-second window is still
-    // active; otherwise the final painted intensity remains on transparent
-    // custom-layout hit targets indefinitely after animation scheduling stops.
-    for (const sceneNode of this.sceneNodes) {
-      if (sceneNode._pulseColor !== topologyPulseColor) continue
-      sceneNode._pulseIntensity = 0
-      sceneNode._pulseColor = undefined
-      sceneNode._pulseGlowRadius = undefined
-    }
-
-    if (this.addedNodes.size === 0) return
-
-    const age = now - this.lastTopologyChangeTime
-    const duration = 2000
-    if (age >= duration) return
-
-    const intensity = 1 - age / duration
-
-    for (const sceneNode of this.sceneNodes) {
-      const nodeId = sceneNode.id
-      if (!nodeId || !this.addedNodes.has(nodeId)) continue
-      sceneNode._pulseIntensity = Math.max(
-        sceneNode._pulseIntensity ?? 0,
-        intensity
-      )
-      sceneNode._pulseColor = topologyPulseColor
-      sceneNode._pulseGlowRadius = 8
-    }
+    applyNetworkTopologyDiff({
+      sceneNodes: this.sceneNodes,
+      addedNodes: this.addedNodes,
+      lastTopologyChangeTime: this.lastTopologyChangeTime,
+      now
+    })
   }
 
-  /** Whether there is an active topology diff animation */
   get hasActiveTopologyDiff(): boolean {
-    if (this.addedNodes.size === 0) return false
-    const now =
-      typeof performance !== "undefined" ? performance.now() : Date.now()
-    return now - this.lastTopologyChangeTime < 2000
+    return hasActiveNetworkTopologyDiff(
+      this.addedNodes,
+      this.lastTopologyChangeTime
+    )
   }
 
-  /**
-   * Apply threshold alerting to scene nodes.
-   * Overrides fill color and adds pulse for nodes exceeding thresholds.
-   */
   applyThresholds(now: number): void {
-    const thresholds = this.config.thresholds
-    if (!thresholds) return
-
-    const warningColor = thresholds.warningColor ?? "#f59e0b"
-    const criticalColor = thresholds.criticalColor ?? "#ef4444"
-    const shouldPulse = thresholds.pulse !== false
-
-    for (const sceneNode of this.sceneNodes) {
-      const nodeId = sceneNode.id
-      if (!nodeId) continue
-      const realtimeNode = this.nodes.get(nodeId)
-      if (!realtimeNode) continue
-
-      const value = thresholds.metric(realtimeNode)
-      let alertColor: string | null = null
-
-      if (thresholds.critical !== undefined && value >= thresholds.critical) {
-        alertColor = criticalColor
-      } else if (
-        thresholds.warning !== undefined &&
-        value >= thresholds.warning
-      ) {
-        alertColor = warningColor
-      }
-
-      if (alertColor) {
-        sceneNode.style = { ...sceneNode.style, fill: alertColor }
-        if (shouldPulse) {
-          sceneNode._pulseIntensity = 0.6 + 0.4 * Math.sin(now / 300)
-          sceneNode._pulseColor = alertColor
-          sceneNode._pulseGlowRadius = 6
-        }
-      }
-    }
+    applyNetworkThresholds({
+      sceneNodes: this.sceneNodes,
+      nodes: this.nodes,
+      thresholds: this.config.thresholds,
+      now
+    })
   }
 
-  /**
-   * Whether there are active threshold alerts on any node.
-   */
   get hasActiveThresholds(): boolean {
-    const thresholds = this.config.thresholds
-    if (!thresholds) return false
-
-    for (const node of this.nodes.values()) {
-      const value = thresholds.metric(node)
-      if (
-        (thresholds.warning !== undefined && value >= thresholds.warning) ||
-        (thresholds.critical !== undefined && value >= thresholds.critical)
-      ) {
-        return true
-      }
-    }
-    return false
+    return hasActiveNetworkThresholds(
+      this.nodes.values(),
+      this.config.thresholds
+    )
   }
 
-  /**
-   * Whether there are active pulse animations (recent ingests within pulse duration).
-   */
   get hasActivePulses(): boolean {
-    const pulse = this.config.pulse
-    if (!pulse || this.lastIngestTime === 0) return false
-    const now =
-      typeof performance !== "undefined" ? performance.now() : Date.now()
-    const duration = pulse.duration ?? 500
-    return now - this.lastIngestTime < duration
+    return hasActiveNetworkPulses({
+      pulse: this.config.pulse,
+      lastIngestTime: this.lastIngestTime
+    })
   }
+
 
   // ── Public accessors ──────────────────────────────────────────────────
 
@@ -1592,8 +1339,7 @@ export class NetworkPipelineStore {
     const previous = node.data ? { ...node.data } : {}
     node.data = updater(node.data ?? {})
     this.layoutVersion++
-    this.lastIngestTime =
-      typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = getTimestamp()
     return previous
   }
 
@@ -1626,8 +1372,7 @@ export class NetworkPipelineStore {
     }
     if (results.length > 0) {
       this.layoutVersion++
-      this.lastIngestTime =
-        typeof performance !== "undefined" ? performance.now() : Date.now()
+      this.lastIngestTime = getTimestamp()
     }
     return results
   }
@@ -1650,8 +1395,7 @@ export class NetworkPipelineStore {
       }
     }
     this.layoutVersion++
-    this.lastIngestTime =
-      typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = getTimestamp()
     return true
   }
 
@@ -1703,8 +1447,7 @@ export class NetworkPipelineStore {
     }
     if (toDelete.length > 0) {
       this.layoutVersion++
-      this.lastIngestTime =
-        typeof performance !== "undefined" ? performance.now() : Date.now()
+      this.lastIngestTime = getTimestamp()
     }
     return toDelete.length > 0
   }
@@ -1712,7 +1455,7 @@ export class NetworkPipelineStore {
   clear(): void {
     this.nodes.clear()
     this.edges.clear()
-    this._decaySortedNodes = null
+    this._decaySortedNodes = null; this._networkDecayCache = null
     this._decayAgeMap = null
     // Invalidate the lazily-built node spatial index AND the materialized
     // node/edge array caches. These hold references to the actual node/edge
@@ -1753,52 +1496,4 @@ export class NetworkPipelineStore {
       this.particlePool.clear()
     }
   }
-}
-
-function createNode(id: string): RealtimeNode {
-  return {
-    id,
-    x0: 0,
-    x1: 0,
-    y0: 0,
-    y1: 0,
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-    value: 0,
-    createdByFrame: true
-  }
-}
-
-/** Validate a value matches the `BezierCache` shape before assigning it
- *  to a `RealtimeEdge`. The particle pipeline reads
- *  `edge.bezier.points[i].x` etc. unguarded — a malformed bezier
- *  (e.g. `bezier: true`, missing points, non-finite coords) would
- *  crash the canvas frame loop. */
-function isValidBezierCache(value: unknown): value is BezierCache {
-  if (!value || typeof value !== "object") return false
-  const b = value as Partial<BezierCache>
-  if (typeof b.circular !== "boolean") return false
-  if (typeof b.halfWidth !== "number" || !Number.isFinite(b.halfWidth))
-    return false
-  if (b.circular) {
-    if (!Array.isArray(b.segments) || b.segments.length === 0) return false
-    for (const seg of b.segments) {
-      if (!isFourFinitePoints(seg)) return false
-    }
-    return true
-  }
-  return isFourFinitePoints(b.points)
-}
-
-function isFourFinitePoints(pts: unknown): boolean {
-  if (!Array.isArray(pts) || pts.length !== 4) return false
-  for (const p of pts) {
-    if (!p || typeof p !== "object") return false
-    const pp = p as { x?: unknown; y?: unknown }
-    if (typeof pp.x !== "number" || !Number.isFinite(pp.x)) return false
-    if (typeof pp.y !== "number" || !Number.isFinite(pp.y)) return false
-  }
-  return true
 }

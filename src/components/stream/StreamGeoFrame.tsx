@@ -1,6 +1,5 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import { smartTooltipEntries, formatVal } from "../charts/shared/tooltipUtils"
 import * as React from "react"
 import {
   useRef,
@@ -18,11 +17,9 @@ import type {
   GeoSceneNode,
   GeoAreaSceneNode,
   GeoLineSceneNode,
-  ProjectionName,
   ProjectionProp
 } from "./geoTypes"
-import type { GlyphSceneNode, PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
-import { glyphHitGeometry } from "./glyphDef"
+import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoPipelineConfig } from "./geoTypes"
@@ -46,7 +43,7 @@ import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
 import type { ZoomBehavior, ZoomTransform, D3ZoomEvent } from "d3-zoom"
-import { select, type Selection } from "d3-selection"
+import { select } from "d3-selection"
 
 // Canvas renderers
 import { geoCanvasRenderer } from "./renderers/geoCanvasRenderer"
@@ -61,161 +58,22 @@ import { resolveNodeColor } from "./sceneUtils"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 
-// ── Annotation anchors ───────────────────────────────────────────────────
-// Map the scene's anchorable marks into the `{ pointId, x, y, r }` shape the
-// SVG overlay uses to resolve `pointId`-anchored annotations. Point marks pass
-// through; glyph marks contribute their drawn-bounds center + radius (via the
-// shared hit geometry) so annotations resolve against pictograms too.
-function collectGeoAnnotationAnchors(
-  scene: (GeoSceneNode | SceneNode)[] | undefined
-): { pointId?: string; x: number; y: number; r: number }[] | undefined {
-  if (!scene) return undefined
-  const anchors: { pointId?: string; x: number; y: number; r: number }[] = []
-  for (const n of scene) {
-    if (n.type === "point") {
-      anchors.push(n as PointSceneNode)
-    } else if (n.type === "glyph") {
-      const g = n as GlyphSceneNode
-      const geometry = glyphHitGeometry(g.glyph, g.size)
-      anchors.push({
-        pointId: g.pointId,
-        x: g.x + geometry.centerDx,
-        y: g.y + geometry.centerDy,
-        r: geometry.radius,
-      })
-    }
-  }
-  return anchors
-}
-
-// ── Defaults ───────────────────────────────────────────────────────────
-
-const DEFAULT_MARGIN = { top: 10, right: 10, bottom: 10, left: 10 }
-const DEFAULT_GEO_HOVER_RADIUS = 30
-let geoParticleConservationCache: boolean | null = null
-
-function shouldConserveGeoParticles(): boolean {
-  if (geoParticleConservationCache !== null) return geoParticleConservationCache
-  if (typeof window === "undefined") return false
-  const coarsePointer =
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(pointer: coarse)").matches
-  const lowCoreCount =
-    typeof navigator !== "undefined" &&
-    typeof navigator.hardwareConcurrency === "number" &&
-    navigator.hardwareConcurrency <= 4
-  const lowMemory =
-    typeof navigator !== "undefined" &&
-    typeof (navigator as Navigator & { deviceMemory?: number }).deviceMemory === "number" &&
-    (navigator as Navigator & { deviceMemory?: number }).deviceMemory! <= 4
-  geoParticleConservationCache = coarsePointer || lowCoreCount || lowMemory
-  return geoParticleConservationCache
-}
-
-function defaultGeoParticleMaxPerLine(): number {
-  return shouldConserveGeoParticles() ? 12 : 30
-}
-
-function defaultGeoParticleSpawnRate(): number {
-  return shouldConserveGeoParticles() ? 0.06 : 0.15
-}
-
-// ── Tooltip ────────────────────────────────────────────────────────────
-
-const defaultTooltipStyle: React.CSSProperties = {
-  background: "rgba(0, 0, 0, 0.85)",
-  color: "white",
-  padding: "6px 10px",
-  borderRadius: 4,
-  fontSize: 12,
-  lineHeight: 1.5,
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-  pointerEvents: "none",
-  whiteSpace: "nowrap"
-}
-
-const zoomButtonStyle: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  border: "1px solid rgba(0,0,0,0.2)",
-  borderRadius: 4,
-  background: "rgba(255,255,255,0.9)",
-  color: "#333",
-  fontSize: 16,
-  fontWeight: 600,
-  lineHeight: 1,
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 0,
-  boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
-}
-
-type GeoTooltipData = HoverData | null
-type GeoFeatureLike = Datum & {
-  properties?: Datum
-  geometry?: unknown
-  data?: Datum
-}
-type HitCanvas = HTMLCanvasElement | OffscreenCanvas
-type HitCanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
-type GeoZoomSelection = Selection<HTMLDivElement, unknown, null, undefined>
-
-interface GeoZoomControlBehavior {
-  scaleBy(selection: GeoZoomSelection, factor: number): void
-  transform(selection: GeoZoomSelection, transform: ZoomTransform | Pick<ZoomTransform, "k">): void
-}
-
-function resolveProjectionName(projection: ProjectionProp): ProjectionName | null {
-  if (typeof projection === "string") return projection
-  if (typeof projection === "object" && projection && "type" in projection) {
-    return projection.type
-  }
-  return null
-}
-
-function ensureHitCanvasContext(canvas: HitCanvas | null): HitCanvasContext | null {
-  if (!canvas) return null
-  return canvas.getContext("2d")
-}
-
-function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
-  if (!data) return null
-  // GeoJSON features: show properties (lifted to top-level on the hover wrapper)
-  if (data.properties) {
-    const name = data.properties.name || data.properties.NAME || data.properties.id || "Feature"
-    return (
-      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-        <div style={{ fontWeight: 600 }}>{name}</div>
-      </div>
-    )
-  }
-  // Point data: hover wrapper now has the canonical { data, x, y } shape
-  // (no flattened fields), so read user-facing fields off `data.data`.
-  // Skip wrapper-internal keys when iterating so the default tooltip
-  // shows the user's actual datum fields, not "data: [object]".
-  const source = data.data != null ? data.data : data
-  if (!source || typeof source !== "object") return null
-  // Pick a human-meaningful title + de-noised rows rather than dumping fields.
-  const smart = smartTooltipEntries(source as Datum)
-  const title = smart.title != null ? String(smart.title) : null
-  if (title == null && smart.entries.length === 0) return null
-  return (
-    <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      {title != null && (
-        <div style={{ fontWeight: 600, marginBottom: smart.entries.length ? 2 : 0 }}>{title}</div>
-      )}
-      {smart.entries.map((e) => (
-        <div key={e.key}>
-          <span style={{ opacity: 0.7 }}>{e.key}: </span>
-          <span style={{ fontWeight: 600 }}>{formatVal(e.value)}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-;(DefaultGeoTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
+import { collectGeoAnnotationAnchors } from "./geoAnnotationAnchors"
+import { DefaultGeoTooltip } from "./geoDefaultTooltip"
+import {
+  DEFAULT_GEO_MARGIN as DEFAULT_MARGIN,
+  DEFAULT_GEO_HOVER_RADIUS,
+  defaultGeoParticleMaxPerLine,
+  defaultGeoParticleSpawnRate,
+  zoomButtonStyle,
+  resolveProjectionName,
+  ensureHitCanvasContext,
+  type GeoFeatureLike,
+  type HitCanvas,
+  type HitCanvasContext,
+  type GeoZoomSelection,
+  type GeoZoomControlBehavior
+} from "./geoFrameHelpers"
 
 // ── StreamGeoFrame ─────────────────────────────────────────────────────
 

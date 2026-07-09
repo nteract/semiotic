@@ -1,4 +1,5 @@
 import type { Datum } from "./datumTypes"
+import type { Diagnosis, DiagnosisResult } from "./diagnoseTypes"
 /**
  * diagnoseConfig — anti-pattern detector for Semiotic chart configurations.
  *
@@ -7,41 +8,32 @@ import type { Datum } from "./datumTypes"
  */
 
 import { VALIDATION_MAP, validateProps } from "./validateProps"
-import { annotationBudget } from "../../recipes/annotationDensity"
 import { diagnoseTokenEncoding } from "../../recipes/tokenEncoding"
+import { contrastRatio } from "./colorContrast"
 import {
-  annotationDrawsConnector,
-  annotationType,
-  isNoteAnnotation,
-} from "./annotationTypes"
+  BAR_AREA_CHARTS,
+  HIERARCHY_CHARTS,
+  NETWORK_CHARTS,
+  ORDINAL_BAR_CHARTS,
+  TREND_SERIES_CHARTS,
+} from "./chartFamilySets"
+import {
+  checkAnnotationConnectors,
+  checkAnnotationDensity,
+} from "./diagnoseAnnotationChecks"
+import {
+  checkCherryPickedWindow,
+  checkDualAxisUnlabeled,
+  checkExtremeAspectRatio,
+  checkInvertedAxis,
+  checkNonPassingCurve,
+  checkPartToWholeNegative,
+  checkPieTooManySlices,
+} from "./diagnoseMisleadingChecks"
+import { checkPhysicsConfig } from "./diagnosePhysicsChecks"
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface Diagnosis {
-  severity: "error" | "warning"
-  code: string
-  message: string
-  fix: string
-}
-
-export interface DiagnosisResult {
-  ok: boolean
-  diagnoses: Diagnosis[]
-}
-
-// ---------------------------------------------------------------------------
-// Checks
-// ---------------------------------------------------------------------------
-
-const HIERARCHY_COMPONENTS = new Set([
-  "TreeDiagram", "Treemap", "CirclePack", "OrbitDiagram"
-])
-
-const NETWORK_COMPONENTS = new Set([
-  "ForceDirectedGraph", "SankeyDiagram", "ChordDiagram"
-])
+export { contrastRatio } from "./colorContrast"
+export type { Diagnosis, DiagnosisResult } from "./diagnoseTypes"
 
 // Named color schemes that resolve to a palette (colorUtils.COLOR_SCHEMES).
 // A string `colorScheme` outside this set silently falls back to the default
@@ -108,7 +100,6 @@ function checkBadDimensions(
       fix: `Set height={400} or use responsiveHeight={true}.`,
     })
   }
-  // size=[0,0] or similar
   if (props.size && Array.isArray(props.size)) {
     const [sw, sh] = props.size
     if ((sw != null && sw <= 0) || (sh != null && sh <= 0)) {
@@ -155,7 +146,7 @@ function checkHierarchyDataAsArray(
   props: Datum,
   out: Diagnosis[]
 ): void {
-  if (!HIERARCHY_COMPONENTS.has(component)) return
+  if (!HIERARCHY_CHARTS.has(component)) return
   if (Array.isArray(props.data)) {
     out.push({
       severity: "error",
@@ -171,7 +162,7 @@ function checkNetworkMissingEdges(
   props: Datum,
   out: Diagnosis[]
 ): void {
-  if (!NETWORK_COMPONENTS.has(component)) return
+  if (!NETWORK_CHARTS.has(component)) return
   if (!props.edges && !props.data) {
     out.push({
       severity: "error",
@@ -195,7 +186,6 @@ function checkDateWithoutFormat(
   const sample = data[0]
   if (!sample || typeof sample !== "object") return
 
-  // Check if xAccessor points to a Date field
   const xAcc = props.xAccessor
   if (typeof xAcc === "string" && sample[xAcc] instanceof Date && !props.xFormat) {
     out.push({
@@ -212,7 +202,6 @@ function checkLinkedChartsWithoutSelection(
   props: Datum,
   out: Diagnosis[]
 ): void {
-  // If linkedHover is set but selection is not, the highlight won't apply
   if (props.linkedHover && !props.selection) {
     out.push({
       severity: "warning",
@@ -223,22 +212,13 @@ function checkLinkedChartsWithoutSelection(
   }
 }
 
-const BAR_AREA_COMPONENTS = new Set([
-  "BarChart", "StackedBarChart", "GroupedBarChart",
-  "AreaChart", "StackedAreaChart"
-])
-
-const XY_COMPONENTS = new Set([
-  "LineChart", "AreaChart", "StackedAreaChart"
-])
-
 function checkDataGaps(
   component: string,
   props: Datum,
   out: Diagnosis[]
 ): void {
-  if (!XY_COMPONENTS.has(component)) return
-  if (props.gapStrategy) return // explicit strategy set, no warning needed
+  if (!TREND_SERIES_CHARTS.has(component)) return
+  if (props.gapStrategy) return
   const data = props.data
   if (!data || !Array.isArray(data) || data.length === 0) return
 
@@ -265,11 +245,8 @@ function checkNonZeroBaseline(
   props: Datum,
   out: Diagnosis[]
 ): void {
-  if (!BAR_AREA_COMPONENTS.has(component)) return
+  if (!BAR_AREA_CHARTS.has(component)) return
 
-  // Check if an explicit value-axis extent sets a non-zero minimum.
-  // Ordinal HOCs expose this as `valueExtent` (mapped to rExtent internally);
-  // frames and XY charts as `rExtent`/`yExtent`.
   const extent = props.rExtent || props.yExtent || props.valueExtent
   if (extent && Array.isArray(extent) && extent.length >= 1 && extent[0] != null && extent[0] !== 0) {
     out.push({
@@ -280,10 +257,6 @@ function checkNonZeroBaseline(
     })
   }
 }
-
-const ORDINAL_BAR_COMPONENTS = new Set([
-  "BarChart", "StackedBarChart", "GroupedBarChart", "FunnelChart"
-])
 
 function checkDegenerateExtent(
   component: string,
@@ -332,7 +305,7 @@ function checkBarPaddingInvisible(
   props: Datum,
   out: Diagnosis[]
 ): void {
-  if (!ORDINAL_BAR_COMPONENTS.has(component)) return
+  if (!ORDINAL_BAR_CHARTS.has(component)) return
   const padding = props.barPadding
   if (typeof padding === "number" && padding < 10) {
     out.push({
@@ -411,44 +384,14 @@ function checkHeatmapStringAccessor(
   }
 }
 
-/** Compute relative luminance of a hex color (WCAG formula).
- *  Accepts 6-digit (#1f77b4) and 3-digit shorthand (#333) hex — the default
- *  light/dark themes use shorthand, so the shorthand path is load-bearing for
- *  the theme contrast conformance test. */
-function luminance(hex: string): number | null {
-  let h = hex.replace(/^#/, "")
-  if (/^[a-f\d]{3}$/i.test(h)) {
-    h = h.split("").map((c) => c + c).join("")
-  }
-  const m = h.match(/^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
-  if (!m) return null
-  const [r, g, b] = [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255]
-  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
-  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)
-}
-
-/** WCAG contrast ratio between two hex colors. Exported for reuse by the
- *  accessibility audit (auditAccessibility.ts) — single source of truth for the
- *  contrast math. Returns null if either color isn't a parseable hex. */
-export function contrastRatio(hex1: string, hex2: string): number | null {
-  const l1 = luminance(hex1)
-  const l2 = luminance(hex2)
-  if (l1 === null || l2 === null) return null
-  const lighter = Math.max(l1, l2)
-  const darker = Math.min(l1, l2)
-  return (lighter + 0.05) / (darker + 0.05)
-}
-
 function checkColorContrast(
   _component: string,
   props: Datum,
   out: Diagnosis[]
 ): void {
-  // Check categorical colors against background if both are hex
   const colors = props.colorScheme
   if (!colors || !Array.isArray(colors)) return
 
-  // Try to determine background — explicit prop or default white/dark
   const bg = typeof props.background === "string" ? props.background : "#ffffff"
   if (!bg.startsWith("#")) return
 
@@ -514,7 +457,6 @@ function checkMissingDescription(
   props: Datum,
   out: Diagnosis[]
 ): void {
-  // Chartability critical: charts should have a title, description, or summary
   const hasTitle = typeof props.title === "string" && props.title.trim().length > 0
   const hasDescription = typeof props.description === "string" && props.description.trim().length > 0
   const hasSummary = typeof props.summary === "string" && props.summary.trim().length > 0
@@ -535,10 +477,8 @@ function checkUnknownColorScheme(
   out: Diagnosis[]
 ): void {
   const scheme = props.colorScheme
-  // Arrays are explicit palettes; non-strings aren't named schemes.
   if (typeof scheme !== "string") return
-  // Charts with an explicit colorScheme enum (e.g. Heatmap's sequential names,
-  // including "custom") are validated by validateProps — don't second-guess it.
+
   const spec = VALIDATION_MAP[component]
   if (spec?.props?.colorScheme?.enum) return
   if (!KNOWN_COLOR_SCHEMES.has(scheme)) {
@@ -559,7 +499,6 @@ function checkAdjacentCategoryContrast(
   const colors = props.colorScheme
   if (!colors || !Array.isArray(colors) || colors.length < 2) return
 
-  // Check that adjacent categorical colors are distinguishable from each other
   const hexColors = colors.filter((c: any) => typeof c === "string" && c.startsWith("#"))
   if (hexColors.length < 2) return
 
@@ -733,663 +672,32 @@ function propsForValidation(props: Datum): Datum {
   return validationProps
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
 /**
  * Run anti-pattern diagnostics on a Semiotic chart configuration.
  *
  * Returns actionable diagnoses with severity, code, message, and fix instruction.
  * Runs validateProps internally — validation errors are included as diagnoses.
  */
-// Connector-necessity (Rahman et al.'s "Placement"): a note should sit next to
-// its target, with a connector only when proximity is infeasible. Two cheap
-// static smells — a note placed far from its anchor with no connector at all,
-// and a connector long enough to suggest the note could have been adjacent.
-// Advisory only (warnings). The label/callout default offset (~42px) sits well
-// under both thresholds, so default-placed notes never trip this.
-const FAR_PLACEMENT_PX = 120
-const VERY_LONG_CONNECTOR_PX = 250
-
-function checkAnnotationConnectors(
-  _component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  const anns = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
-  if (!anns) return
-  for (const a of anns) {
-    if (!a || typeof a !== "object") continue
-    const type = annotationType(a)
-    // Widgets are HTML affordances rather than anchored SVG notes, so the
-    // connector-distance diagnostic does not apply to them.
-    if (!isNoteAnnotation(a) || type === "widget") continue
-    const dx = typeof a.dx === "number" ? a.dx : 0
-    const dy = typeof a.dy === "number" ? a.dy : 0
-    const dist = Math.hypot(dx, dy)
-    const label = typeof a.label === "string" ? a.label : typeof a.title === "string" ? a.title : type
-    // `text` never draws a connector; label/callout draw one unless disabled.
-    const hasConnector = annotationDrawsConnector(a)
-
-    if (!hasConnector && dist > FAR_PLACEMENT_PX) {
-      out.push({
-        severity: "warning",
-        code: "ANNOTATION_FAR_NO_CONNECTOR",
-        message: `Annotation "${label}" sits ~${Math.round(dist)}px from its anchor with no connector — a reader can't tell what it refers to.`,
-        fix: `Add a connector (connector: { end: "arrow" }, the label/callout default) or place the note adjacent to its target (smaller dx/dy).`,
-      })
-    } else if (hasConnector && dist > VERY_LONG_CONNECTOR_PX) {
-      out.push({
-        severity: "warning",
-        code: "ANNOTATION_LONG_CONNECTOR",
-        message: `Annotation "${label}" uses a very long connector (~${Math.round(dist)}px); prefer placing the note adjacent to its target when space allows.`,
-        fix: `Reduce dx/dy so the note sits near its target, or keep the long connector only if proximity is genuinely infeasible.`,
-      })
-    }
-  }
-}
-
-// Amount & density (Rahman et al.'s "Amount of annotation": balance explanatory
-// support against clutter). A soft, advisory smell — count note-like
-// annotations against the same area-derived budget the runtime density pass
-// uses, and suggest emphasis or progressive disclosure when they pile up.
-// Reference lines, bands and overlays don't count toward the budget.
-function checkAnnotationDensity(
-  _component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  const anns = Array.isArray(props.annotations) ? (props.annotations as Datum[]) : null
-  if (!anns) return
-
-  const noteCount = anns.filter(isNoteAnnotation).length
-  if (noteCount === 0) return
-
-  const width = typeof props.width === "number" ? props.width : 600
-  const height = typeof props.height === "number" ? props.height : 400
-  const budget = annotationBudget(width, height)
-  if (!Number.isFinite(budget) || noteCount <= budget) return
-
-  out.push({
-    severity: "warning",
-    code: "ANNOTATION_DENSITY",
-    message: `${noteCount} note annotations on a ${width}×${height} chart exceed the ~${budget} notes the plot area carries comfortably — the chart may read as cluttered.`,
-    fix: `Mark the essential notes emphasis: "primary" and let density management shed the rest (autoPlaceAnnotations: { density: true }), enable progressive disclosure to reveal secondary notes on hover, or give the chart more room.`,
-  })
-}
-
-// ---------------------------------------------------------------------------
-// Misleading-design checks (deception pack)
-//
-// Rules for design patterns that mislead readers — and, per "The Perils of
-// Chart Deception" (IEEE VIS 2025) — mislead vision-language models the same
-// way. Each rule targets a deception category with empirical backing (CALVI's
-// misleading-element items; Cleveland & McGill on encoding fidelity). All are
-// config-level checks: they read props + data, never the rendered output, so
-// they run identically in --doctor, MCP diagnoseConfig, and CI.
-// ---------------------------------------------------------------------------
-
-const EXTENT_PROPS = ["xExtent", "yExtent", "rExtent"] as const
-
-function checkInvertedAxis(
-  _component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  for (const prop of EXTENT_PROPS) {
-    const extent = props[prop]
-    if (!Array.isArray(extent) || extent.length < 2) continue
-    const [lo, hi] = extent
-    if (typeof lo !== "number" || typeof hi !== "number") continue
-    if (lo > hi) {
-      out.push({
-        severity: "warning",
-        code: "INVERTED_AXIS",
-        message: `${prop}=[${lo}, ${hi}] is descending — the axis renders inverted, so "up" reads as less. Inverted axes are a classic misleading-design pattern unless the inversion is the point.`,
-        fix: `Order the extent ascending (${prop}={[${hi}, ${lo}]}). If the inversion is deliberate (e.g. rank #1 at top), say so in the title or an annotation so readers aren't misled.`,
-      })
-    }
-  }
-}
-
-function checkDualAxisUnlabeled(
-  component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  if (component !== "MultiAxisLineChart") return
-  const series = props.series
-  // Dual-axis mode is exactly two series; ≠2 falls back to multi-line.
-  if (!Array.isArray(series) || series.length !== 2) return
-  const unlabeled = series.filter(
-    (s: Datum) => !s || typeof s !== "object" || typeof s.label !== "string" || s.label.trim().length === 0
-  )
-  if (unlabeled.length > 0) {
-    out.push({
-      severity: "warning",
-      code: "DUAL_AXIS_UNLABELED",
-      message: `Dual-axis chart with ${unlabeled.length} unlabeled series. Two y-scales invite false equivalence between the lines; without per-series labels a reader can't tell which scale is whose.`,
-      fix: `Give every series a label: series={[{ yAccessor: "a", label: "Revenue ($)" }, { yAccessor: "b", label: "Users" }]} — and consider whether two separate charts read more honestly.`,
-    })
-  }
-}
-
-const TREND_WINDOW_COMPONENTS = new Set([
-  "LineChart", "AreaChart", "StackedAreaChart"
-])
-
-function checkCherryPickedWindow(
-  component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  if (!TREND_WINDOW_COMPONENTS.has(component)) return
-  const extent = props.xExtent
-  if (!Array.isArray(extent) || extent.length < 2) return
-  const [lo, hi] = extent
-  if (typeof lo !== "number" || typeof hi !== "number" || lo >= hi) return
-  const data = props.data
-  if (!data || !Array.isArray(data) || data.length < 4) return
-  const xAcc = props.xAccessor ?? "x"
-  if (typeof xAcc !== "string") return
-
-  let dataMin = Infinity
-  let dataMax = -Infinity
-  for (const d of data) {
-    const v = d?.[xAcc]
-    if (typeof v !== "number" || !Number.isFinite(v)) continue
-    if (v < dataMin) dataMin = v
-    if (v > dataMax) dataMax = v
-  }
-  if (!Number.isFinite(dataMin) || !Number.isFinite(dataMax) || dataMax <= dataMin) return
-
-  const dataSpan = dataMax - dataMin
-  const visibleSpan = Math.max(0, Math.min(hi, dataMax) - Math.max(lo, dataMin))
-  const coverage = visibleSpan / dataSpan
-  if (coverage < 0.7) {
-    out.push({
-      severity: "warning",
-      code: "CHERRY_PICKED_WINDOW",
-      message: `xExtent=[${lo}, ${hi}] shows only ~${Math.round(coverage * 100)}% of the data's x range [${dataMin}, ${dataMax}] — a trend cropped to a favorable window is a classic misleading-design pattern.`,
-      fix: `Widen xExtent to cover the data, filter the data itself so the chart shows what it has, or annotate the visible window ("Q4 only") so the cropping is explicit.`,
-    })
-  }
-}
-
-const PART_TO_WHOLE_COMPONENTS: Record<string, string> = {
-  PieChart: "valueAccessor",
-  DonutChart: "valueAccessor",
-  FunnelChart: "valueAccessor",
-}
-
-const NORMALIZED_STACK_COMPONENTS: Record<string, string> = {
-  StackedBarChart: "valueAccessor",
-  StackedAreaChart: "yAccessor",
-}
-
-function checkPartToWholeNegative(
-  component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  const pieLike = PART_TO_WHOLE_COMPONENTS[component]
-  const stackLike = NORMALIZED_STACK_COMPONENTS[component]
-  if (!pieLike && !stackLike) return
-  // Normalized stacks distort with negatives; un-normalized stacks diverge
-  // around zero (a legitimate encoding), so only gate stacks when normalize.
-  if (stackLike && !props.normalize) return
-
-  const accProp = pieLike ?? stackLike!
-  const accValue = props[accProp]
-  const accessor =
-    typeof accValue === "string" ? accValue : accProp === "yAccessor" ? "y" : "value"
-  const data = props.data
-  if (!data || !Array.isArray(data) || data.length === 0) return
-
-  const negatives = data.filter((d: Datum) => {
-    const v = d?.[accessor]
-    return typeof v === "number" && v < 0
-  })
-  if (negatives.length > 0) {
-    out.push({
-      severity: pieLike ? "error" : "warning",
-      code: "PART_TO_WHOLE_NEGATIVE",
-      message: `${negatives.length} negative value(s) in "${accessor}" — a part-to-whole encoding cannot represent negative parts${pieLike ? "; slice angles/areas for negatives are meaningless" : "; normalized shares distort when parts are negative"}.`,
-      fix: pieLike
-        ? `Filter or transform negative values first, or switch to a BarChart/WaterfallChart, which encode signed values honestly.`
-        : `Drop normalize for signed data, or use a diverging BarChart so negative contributions read as negative.`,
-    })
-  }
-}
-
-const CURVE_COMPONENTS = new Set([
-  "LineChart", "AreaChart", "StackedAreaChart", "ConnectedScatterplot"
-])
-
-function checkNonPassingCurve(
-  component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  if (!CURVE_COMPONENTS.has(component)) return
-  if (props.curve !== "basis") return
-  out.push({
-    severity: "warning",
-    code: "NON_PASSING_CURVE",
-    message: `curve="basis" draws a B-spline that does NOT pass through your data points — rendered values differ from actual values everywhere except the endpoints.`,
-    fix: `Use curve="monotoneX" or curve="catmullRom" (both interpolate through every point), or keep "basis" only for deliberately schematic, clearly-labeled smoothing.`,
-  })
-}
-
-function checkExtremeAspectRatio(
-  component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  if (component !== "LineChart" && component !== "AreaChart") return
-  if (props.mode === "sparkline") return // sparklines are wide by contract
-  if (props.responsiveWidth || props.responsiveHeight) return // container decides
-  const w = typeof props.width === "number" ? props.width : 600
-  const h = typeof props.height === "number" ? props.height : 400
-  if (w <= 0 || h <= 0) return
-  const ratio = w / h
-  if (ratio > 8 || ratio < 0.25) {
-    const direction = ratio > 8 ? "flattens" : "exaggerates"
-    out.push({
-      severity: "warning",
-      code: "EXTREME_ASPECT_RATIO",
-      message: `${w}×${h} (${ratio.toFixed(1)}:1) is an extreme aspect ratio that ${direction} the slopes a reader perceives — aspect-ratio distortion is a documented misleading-design pattern.`,
-      fix: ratio > 8
-        ? `Use a more balanced aspect (e.g. width/height between 1 and 3), or set mode="sparkline" if this is genuinely a sparkline strip.`
-        : `Use a more balanced aspect (e.g. width/height between 1 and 3); very tall trend charts overstate every change.`,
-    })
-  }
-}
-
-const PIE_COMPONENTS = new Set(["PieChart", "DonutChart"])
-const MAX_LEGIBLE_SLICES = 8
-
-function checkPieTooManySlices(
-  component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  if (!PIE_COMPONENTS.has(component)) return
-  const data = props.data
-  if (!data || !Array.isArray(data) || data.length === 0) return
-  const catAcc = props.categoryAccessor
-  const accessor = typeof catAcc === "string" ? catAcc : "category"
-  const distinct = new Set<unknown>()
-  for (const d of data) {
-    const v = d?.[accessor]
-    if (v != null) distinct.add(v)
-  }
-  if (distinct.size > MAX_LEGIBLE_SLICES) {
-    out.push({
-      severity: "warning",
-      code: "PIE_TOO_MANY_SLICES",
-      message: `${distinct.size} slices — angle judgments degrade rapidly past ~${MAX_LEGIBLE_SLICES} categories (Cleveland & McGill), and thin slices become unreadable and unlabelable.`,
-      fix: `Use a BarChart or DotPlot for ${distinct.size} categories, or group the long tail into an "Other" slice before charting.`,
-    })
-  }
-}
-
-const PHYSICS_COMPONENTS = new Set([
-  "GaltonBoardChart",
-  "EventDropChart",
-  "PhysicsPileChart",
-  "CollisionSwarmChart",
-  "PhysicalFlowChart",
-  "ProcessFlowChart",
-  "GauntletChart",
-  "PhysicsCustomChart",
-])
-
-function finiteNumber(value: unknown): number | null {
-  const number = value instanceof Date ? value.getTime() : Number(value)
-  return Number.isFinite(number) ? number : null
-}
-
-function readField(datum: Datum, accessor: unknown, fallback: string): unknown {
-  if (typeof accessor === "function") return accessor(datum)
-  const key = typeof accessor === "string" ? accessor : fallback
-  return datum?.[key]
-}
-
-function checkPhysicsConfig(
-  component: string,
-  props: Datum,
-  out: Diagnosis[]
-): void {
-  if (!PHYSICS_COMPONENTS.has(component)) return
-
-  if (component === "GaltonBoardChart") {
-    const bins = props.bins
-    if (typeof bins === "number" && bins < 2) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_BINS",
-        message: `bins=${bins} leaves no meaningful settled projection for a Galton board.`,
-        fix: `Use at least two bins; 8-24 bins is a practical range for physics distributions.`,
-      })
-    }
-    const branchProbability = finiteNumber(props.branchProbability)
-    if (
-      props.branchProbability != null &&
-      (branchProbability == null || branchProbability < 0 || branchProbability > 1)
-    ) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_BRANCH_PROBABILITY",
-        message: `branchProbability=${String(props.branchProbability)} must be between 0 and 1.`,
-        fix: `Use branchProbability={0.5} for a balanced Galton board, or bias it within the [0, 1] range.`,
-      })
-    }
-    const mechanicalCount = finiteNumber(props.mechanicalCount)
-    if (props.mechanicalCount != null && (mechanicalCount == null || mechanicalCount <= 0)) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_MECHANICAL_COUNT",
-        message: `mechanicalCount=${String(props.mechanicalCount)} cannot generate a mechanical Galton board.`,
-        fix: `Use a positive mechanicalCount, for example 96.`,
-      })
-    }
-  }
-
-  if (component === "EventDropChart") {
-    const windows = props.windows
-    const windowSize =
-      windows && typeof windows === "object" ? finiteNumber((windows as Datum).size) : null
-    if (windowSize != null && windowSize <= 0) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_WINDOW_SIZE",
-        message: `windows.size=${windowSize} cannot form event-time barriers.`,
-        fix: `Set windows={{ size: positiveNumber }} so each event can settle into a real time window.`,
-      })
-    }
-    if (typeof props.timeScale === "number" && props.timeScale <= 0) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_TIME_SCALE",
-        message: `timeScale=${props.timeScale} prevents arrival replay from advancing.`,
-        fix: `Use a positive timeScale, or omit it for the default pace.`,
-      })
-    }
-
-    const data = Array.isArray(props.data) ? props.data : []
-    if (data.length > 0) {
-      const timeAccessor = props.timeAccessor || "time"
-      const arrivalAccessor = props.arrivalAccessor || "arrivalTime"
-      const hasDistinctArrival = data.some((datum: Datum) => {
-        const eventTime = finiteNumber(readField(datum, timeAccessor, "time"))
-        const arrivalTime = finiteNumber(readField(datum, arrivalAccessor, "arrivalTime"))
-        return eventTime != null && arrivalTime != null && eventTime !== arrivalTime
-      })
-      if (!hasDistinctArrival) {
-        out.push({
-          severity: "warning",
-          code: "PHYSICS_EVENTDROP_NO_ARRIVAL_SPREAD",
-          message: `EventDropChart data does not show distinct arrival times, so the physics replay collapses to event order.`,
-          fix: `Provide an arrivalAccessor field with event-arrival times when demonstrating lateness, watermarks, or out-of-order streams.`,
-        })
-      }
-    }
-  }
-
-  if (component === "PhysicsPileChart") {
-    const mechanicalCount = finiteNumber(props.mechanicalCount)
-    if (props.mechanicalCount != null && (mechanicalCount == null || mechanicalCount <= 0)) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_MECHANICAL_COUNT",
-        message: `mechanicalCount=${String(props.mechanicalCount)} cannot generate a mechanical pile chart.`,
-        fix: `Use a positive mechanicalCount, for example 80.`,
-      })
-    }
-    if (
-      props.mode === "mechanical" &&
-      Array.isArray(props.mechanicalCategories) &&
-      props.mechanicalCategories.length === 0
-    ) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_EMPTY_MECHANICAL_CATEGORIES",
-        message: `mechanicalCategories=[] leaves no containers for the generated unit pile.`,
-        fix: `Provide at least one category label, or omit mechanicalCategories for the default set.`,
-      })
-    }
-
-    const unitValue = finiteNumber(props.unitValue ?? 1) ?? 1
-    if (unitValue <= 0) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_UNIT_VALUE",
-        message: `unitValue=${props.unitValue} cannot unitize values into physical bodies.`,
-        fix: `Set unitValue to a positive number represented by one body.`,
-      })
-      return
-    }
-
-    const data = Array.isArray(props.data) ? props.data : []
-    const valueAccessor = props.valueAccessor || "value"
-    const bodyEstimate = data.reduce((sum: number, datum: Datum) => {
-      const value = finiteNumber(readField(datum, valueAccessor, "value")) ?? 0
-      return sum + Math.max(0, Math.round(value / unitValue))
-    }, 0)
-    if (bodyEstimate > 1500) {
-      out.push({
-        severity: "warning",
-        code: "PHYSICS_BODY_BUDGET",
-        message: `PhysicsPileChart would create about ${bodyEstimate} live bodies; motion may dominate the chart and stress the frame budget.`,
-        fix: `Increase unitValue, cap visible units, or aggregate before rendering so the settled projection remains readable.`,
-      })
-    }
-  }
-
-  if (component === "CollisionSwarmChart") {
-    const pointRadius = finiteNumber(props.pointRadius ?? 5) ?? 5
-    if (pointRadius <= 0) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_POINT_RADIUS",
-        message: `pointRadius=${props.pointRadius} cannot produce collision bodies.`,
-        fix: `Use a positive pointRadius, for example 5.`,
-      })
-    }
-    const collisionIterations = finiteNumber(props.collisionIterations ?? 6) ?? 6
-    if (collisionIterations <= 0) {
-      out.push({
-        severity: "error",
-        code: "PHYSICS_BAD_COLLISION_ITERATIONS",
-        message: `collisionIterations=${props.collisionIterations} disables collision relaxation.`,
-        fix: `Use at least one collision iteration; 4-8 is a practical range for swarms.`,
-      })
-    }
-    if (props.xExtent != null) {
-      const extent = Array.isArray(props.xExtent) ? props.xExtent : []
-      const min = finiteNumber(extent[0])
-      const max = finiteNumber(extent[1])
-      if (extent.length < 2 || min == null || max == null) {
-        out.push({
-          severity: "error",
-          code: "PHYSICS_BAD_X_EXTENT",
-          message: `xExtent must be a numeric [min, max] pair for CollisionSwarmChart.`,
-          fix: `Pass xExtent={[min, max]} or omit it so the chart infers the domain from data.`,
-        })
-      }
-    }
-
-    const data = Array.isArray(props.data) ? props.data : []
-    if (data.length > 1200) {
-      out.push({
-        severity: "warning",
-        code: "PHYSICS_BODY_BUDGET",
-        message: `CollisionSwarmChart would create ${data.length} live bodies; collision relaxation may dominate the frame budget.`,
-        fix: `Sample, aggregate, reduce point radius, or move to a static SwarmPlot when every row does not need a physical body.`,
-      })
-    }
-    const groupAccessor = props.groupAccessor
-    if (data.length > 0 && groupAccessor) {
-      const groups = new Set<unknown>()
-      for (const datum of data) {
-        const value = readField(datum, groupAccessor, "group")
-        if (value != null) groups.add(value)
-      }
-      if (groups.size > 12) {
-        out.push({
-          severity: "warning",
-          code: "PHYSICS_TOO_MANY_SWARM_LANES",
-          message: `CollisionSwarmChart has ${groups.size} group lanes, which leaves little vertical room for collision separation.`,
-          fix: `Facet or filter groups, or use an ordinary SwarmPlot/BoxPlot for dense grouped comparison.`,
-        })
-      }
-    }
-  }
-
-  // Process / frame physics honesty rules (pre-release DX gate).
-  if (
-    component === "GaltonBoardChart" ||
-    component === "PhysicsPileChart" ||
-    component === "CollisionSwarmChart" ||
-    component === "ProcessFlowChart" ||
-    component === "EventDropChart"
-  ) {
-    const massEncoded =
-      props.massBy != null ||
-      props.massAccessor != null ||
-      (props.frameProps &&
-        typeof props.frameProps === "object" &&
-        (props.frameProps as Datum).bodyMassBy != null)
-    if (massEncoded) {
-      out.push({
-        severity: "warning",
-        code: "PHYSICS_DATA_IN_DYNAMICS",
-        message: `${component} appears to map a data field to mass/dynamics. Mass is not a readable quantitative channel.`,
-        fix: `Encode quantities in spawn position, bin, size, color, or glyph — keep mass/friction/restitution as process texture. Use showProjection for the truth layer.`,
-      })
-    }
-  }
-
-  if (
-    (component === "PhysicsPileChart" ||
-      component === "GaltonBoardChart" ||
-      component === "CollisionSwarmChart" ||
-      component === "ProcessFlowChart") &&
-    props.showProjection === false
-  ) {
-    out.push({
-      severity: "warning",
-      code: "PHYSICS_NO_PROJECTION",
-      message: `${component} has showProjection={false}. Without a settled projection, motion is easy to over-read as data.`,
-      fix: `Keep showProjection enabled (default) so the chart collapses to a legible static reading, or document why the process alone is the claim.`,
-    })
-  }
-
-  if (component === "ProcessFlowChart") {
-    const stages = Array.isArray(props.stages) ? props.stages : []
-    if (stages.length === 0) {
-      out.push({
-        severity: "error",
-        code: "PROCESS_FLOW_MISSING_STAGES",
-        message: `ProcessFlowChart requires a non-empty stages array.`,
-        fix: `Provide stages={[{ id: "coding", force: 12 }, { id: "merged", absorb: true }]}.`,
-      })
-    } else {
-      const missingId = stages.some(
-        (stage: Datum) => !stage || stage.id == null || String(stage.id).trim() === ""
-      )
-      if (missingId) {
-        out.push({
-          severity: "error",
-          code: "PROCESS_FLOW_BAD_STAGE",
-          message: `Every ProcessFlowChart stage needs a stable id.`,
-          fix: `Use stages like { id: "review", label: "Review", capacity: { unitsPerSecond: 4 } }.`,
-        })
-      }
-      const absorbCount = stages.filter((stage: Datum) => stage?.absorb).length
-      if (props.groupBy && absorbCount === 0) {
-        out.push({
-          severity: "warning",
-          code: "PROCESS_FLOW_GROUP_NO_ABSORB",
-          message: `groupBy is set but no stage has absorb: true, so all-members completion cannot resolve.`,
-          fix: `Mark a terminal stage with absorb: true (e.g. merged), or set groupCompletion="none".`,
-        })
-      }
-    }
-  }
-
-  if (component === "GauntletChart") {
-    if (!Array.isArray(props.positiveProperties) || props.positiveProperties.length === 0) {
-      out.push({
-        severity: "error",
-        code: "GAUNTLET_MISSING_POSITIVE_PROPERTIES",
-        message: `GauntletChart requires positiveProperties definitions for tethered lift/value bodies.`,
-        fix: `Provide positiveProperties={[{ id: "homes", label: "Homes", buoyancy: 2 }]}.`,
-      })
-    }
-    if (!Array.isArray(props.negativeProperties)) {
-      out.push({
-        severity: "warning",
-        code: "GAUNTLET_MISSING_NEGATIVE_PROPERTIES",
-        message: `GauntletChart usually needs negativeProperties for drag/cost bodies (empty array is ok if intentional).`,
-        fix: `Provide negativeProperties={[{ id: "cost", label: "Cost", load: 1 }]} or explicitly pass [].`,
-      })
-    }
-  }
-
-  // Live body budget heuristic for value-encoding physics charts.
-  if (
-    component === "PhysicsPileChart" ||
-    component === "GaltonBoardChart" ||
-    component === "CollisionSwarmChart" ||
-    component === "ProcessFlowChart" ||
-    component === "EventDropChart"
-  ) {
-    const data = Array.isArray(props.data) ? props.data : []
-    const mechanicalCount = finiteNumber(props.mechanicalCount) ?? 0
-    const estimated =
-      data.length > 0
-        ? data.length *
-          (component === "PhysicsPileChart"
-            ? Math.max(1, finiteNumber(props.unitValue) ? 1 : 1)
-            : 1)
-        : mechanicalCount
-    if (estimated > 2500) {
-      out.push({
-        severity: "warning",
-        code: "PHYSICS_BODY_BUDGET",
-        message: `${component} may spawn ~${Math.round(estimated)} live bodies, which can overwhelm the simulation loop.`,
-        fix: `Lower mechanicalCount / unitize with a larger unitValue, enable sediment/windowSize, or sample the data before spawn.`,
-      })
-    }
-  }
-}
-
 export function diagnoseConfig(
   componentName: string,
   props: Datum
 ): DiagnosisResult {
   const diagnoses: Diagnosis[] = []
 
-  // Run validateProps first
   const validation = validateProps(componentName, propsForValidation(props))
   for (const err of validation.errors) {
     diagnoses.push({
       severity: "error",
       code: "VALIDATION",
       message: err,
-      fix: "", // validateProps errors already contain guidance
+      fix: "",
     })
   }
 
-  // If component is unknown, skip further checks
   if (!VALIDATION_MAP[componentName]) {
     return { ok: diagnoses.length === 0, diagnoses }
   }
 
-  // Run anti-pattern checks
   checkEmptyData(componentName, props, diagnoses)
   checkBadDimensions(componentName, props, diagnoses)
   checkAccessorFieldMissing(componentName, props, diagnoses)
@@ -1417,7 +725,6 @@ export function diagnoseConfig(
   checkAnnotationConnectors(componentName, props, diagnoses)
   checkAnnotationDensity(componentName, props, diagnoses)
 
-  // Misleading-design checks (deception pack)
   checkInvertedAxis(componentName, props, diagnoses)
   checkDualAxisUnlabeled(componentName, props, diagnoses)
   checkCherryPickedWindow(componentName, props, diagnoses)

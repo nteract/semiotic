@@ -25,12 +25,25 @@ import type { Datum } from "./datumTypes"
  */
 
 import { VALIDATION_MAP } from "./validateProps"
-import { contrastRatio } from "./diagnoseConfig"
+import { contrastRatio } from "./colorContrast"
 import {
   annotationDrawsConnector,
   annotationType,
   isNoteAnnotation
 } from "./annotationTypes"
+import {
+  CONTINUOUS_MOTION_CHARTS as CONTINUOUS_MOTION,
+  DUAL_AXIS_CHARTS as DUAL_AXIS,
+  GEO_CHARTS as GEO,
+  HIERARCHY_CHARTS as HIERARCHY,
+  PART_TO_WHOLE_CHARTS as PART_TO_WHOLE,
+  PHYSICS_MOTION_CHARTS as PHYSICS,
+  PHYSICS_SETTLED_CHARTS as PHYSICS_SETTLED,
+  POINT_TARGET_RADIUS_PROP,
+  REALTIME_CHARTS as REALTIME,
+  VALUE_CHARTS as VALUE,
+  XY_WITH_AXES_CHARTS as XY_WITH_AXES,
+} from "./chartFamilySets"
 import { getChartRecipe } from "../../ai/chartRecipeRegistry"
 
 // ---------------------------------------------------------------------------
@@ -110,83 +123,6 @@ export interface AuditAccessibilityOptions {
    * Default false.
    */
   navigable?: boolean
-}
-
-// ---------------------------------------------------------------------------
-// Component families (self-contained; mirrors diagnoseConfig's approach)
-// ---------------------------------------------------------------------------
-
-const HIERARCHY = new Set([
-  "TreeDiagram",
-  "Treemap",
-  "CirclePack",
-  "OrbitDiagram"
-])
-const PART_TO_WHOLE = new Set(["PieChart", "DonutChart", "FunnelChart"])
-const VALUE = new Set(["BigNumber"])
-const XY_WITH_AXES = new Set([
-  "LineChart",
-  "AreaChart",
-  "DifferenceChart",
-  "StackedAreaChart",
-  "Scatterplot",
-  "ConnectedScatterplot",
-  "BubbleChart",
-  "QuadrantChart",
-  "MultiAxisLineChart",
-  "CandlestickChart",
-  "Heatmap",
-  "MinimapChart"
-])
-// Charts whose default presentation animates continuously / loops.
-const PHYSICS = new Set([
-  "StreamPhysicsFrame",
-  "GaltonBoardChart",
-  "EventDropChart",
-  "PhysicsPileChart",
-  "CollisionSwarmChart",
-  "PhysicalFlowChart",
-  "ProcessFlowChart",
-  "PhysicsCustomChart"
-])
-const CONTINUOUS_MOTION = new Set(["OrbitDiagram", ...PHYSICS])
-// Frame-based physics data charts whose StreamPhysicsFrame always renders a
-// settled-projection semantic table (the aggregate the motion collapses to).
-const PHYSICS_SETTLED = new Set([
-  "GaltonBoardChart",
-  "EventDropChart",
-  "PhysicsPileChart",
-  "CollisionSwarmChart",
-  "PhysicalFlowChart",
-  "ProcessFlowChart",
-  "GauntletChart"
-])
-const REALTIME = new Set([
-  "RealtimeLineChart",
-  "RealtimeHistogram",
-  "RealtimeSwarmChart",
-  "RealtimeWaterfallChart",
-  "RealtimeHeatmap",
-  "ProcessSankey"
-])
-// Dual/secondary-axis charts — Chartability flags multiple axes as a complexity risk.
-const DUAL_AXIS = new Set(["MultiAxisLineChart"])
-// Geo charts support pan/zoom (and therefore reflow) via `zoomable`.
-const GEO = new Set([
-  "ChoroplethMap",
-  "ProportionalSymbolMap",
-  "FlowMap",
-  "DistanceCartogram"
-])
-// Charts that draw discrete, point-like interactive marks whose hit target is
-// driven by a radius/size prop (Chartability target-size heuristic, 24px min).
-const POINT_TARGET_RADIUS_PROP: Record<string, string> = {
-  Scatterplot: "pointRadius",
-  BubbleChart: "pointRadius",
-  ConnectedScatterplot: "pointRadius",
-  QuadrantChart: "pointRadius",
-  SwarmPlot: "pointRadius",
-  DotPlot: "dotRadius"
 }
 
 // The Wong colorblind-safe palette Semiotic ships (COLOR_BLIND_SAFE_CATEGORICAL,

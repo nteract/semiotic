@@ -90,7 +90,9 @@ npm run docs:dev     # Or website:start for dist-backed docs
 - `npm run website:start:clean` — Full clean + rebuild + docs server
 - `npm run website:build` — Production docs build + prerender
 - `npm run test` — Vitest unit/integration suite
-- `npm run lint` — ESLint on `src`
+- `npm run lint` — ESLint on `src` (CI runs `eslint src --quiet` for hard errors)
+- `npm run check:file-size` — hard line limits + ratchet allowlist (`scripts/file-size-policy.json`)
+- `npm run check:test-quality` — mount-only assertion baseline (no new bare mount asserts)
 
 ### Cache Locations
 

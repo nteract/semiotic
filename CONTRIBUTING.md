@@ -72,6 +72,7 @@ npm test
 npm run typescript
 npm run typescript:mcp
 npm run lint
+npm run check:file-size   # hard line limits (see scripts/file-size-policy.json)
 
 # Builds
 npm run dist          # unminified library bundles (tests / local)
@@ -133,6 +134,28 @@ Prefer **subpath imports** in application code (`semiotic/xy`, `semiotic/ordinal
 - Avoid `any` in new code unless there is a clear boundary reason.
 - Prettier and ESLint define formatting and lint rules.
 - Existing style uses no semicolons and double quotes.
+
+### Source file size limits
+
+CI enforces hard line counts on `src/**/*.{ts,tsx,js,jsx}` (physical lines, same as `wc -l`):
+
+| Kind | Soft warning | Hard fail |
+| --- | ---: | ---: |
+| Production source | 500 | **800** |
+| Tests (`*.test.*` / `*.spec.*` / `__tests__`) | 800 | **1500** |
+
+ESLint’s `max-lines` defaults to 300 and docs recommend 100–500; visualization / stream-frame code is denser, so Semiotic uses a higher ceiling plus a **ratchet allowlist** for the remaining mega-files we are splitting.
+
+- Prefer extracting a helper module over growing a large file.
+- Grandfathered files live in `scripts/file-size-policy.json` with a `maxLines` ceiling — they **must not grow** past that ceiling.
+- When a split brings a file under the hard limit, remove its allowlist entry (or run `npm run check:file-size -- --update-allowlist`).
+- Escape hatch for true corner cases: add an allowlist entry with a clear `reason`, or (for generated fixtures) an inline `// file-size-limit: allow — reason` in the first 40 lines.
+
+```bash
+npm run check:file-size
+npm run check:file-size -- --json          # machine-readable report
+npm run check:file-size -- --update-allowlist
+```
 
 ## Before Opening a PR
 

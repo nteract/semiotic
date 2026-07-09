@@ -1,7 +1,5 @@
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import {
-  type PhysicsActiveSensorPair,
-  type PhysicsBodySpec,
   type PhysicsBodyState,
   type PhysicsColliderSpec,
   type PhysicsKernelEvent,
@@ -19,7 +17,6 @@ import {
   sedimentHeightfield,
   type PhysicsSedimentBinSnapshot,
   type PhysicsSedimentColumn,
-  type PhysicsSedimentConfig,
   type PhysicsSedimentHeightfieldOptions,
   type PhysicsSedimentTotals
 } from "./PhysicsSediment"
@@ -28,611 +25,65 @@ import {
   type PhysicsBodyBudgetDecision,
   type PhysicsBodyBudgetOptions
 } from "./PhysicsBodyBudget"
-
-export interface PhysicsPlotBounds {
-  x: number
-  y: number
-  width: number
-  height: number
-}
-
-export interface PhysicsBoundsColliderOptions {
-  idPrefix?: string
-  includeFloor?: boolean
-  includeCeiling?: boolean
-  includeLeftWall?: boolean
-  includeRightWall?: boolean
-  wallThickness?: number
-  floorThickness?: number
-}
-
-export interface PhysicsXBinColliderOptions {
-  idPrefix?: string
-  count: number
-  domainStart: number
-  domainStep: number
-  xScale: (value: number) => number
-  yTop: number
-  yBottom: number
-  wallThickness?: number
-  includeBoundaryWalls?: boolean
-  includeInteriorWalls?: boolean
-  closedBefore?: number
-  lidY?: number
-  lidThickness?: number
-}
-
-export type PhysicsSpawnSpringSpec = Omit<PhysicsSpringSpec, "bodyId">
-
-export interface PhysicsQueuedSpawn extends PhysicsBodySpec {
-  spawnAt?: number
-  springs?: PhysicsSpawnSpringSpec[]
-}
-
-export type PhysicsSpawnPacing =
-  | "immediate"
-  | "arrival"
-  | { ratePerSec: number }
-
-export type PhysicsSpawnTimeAccessor =
-  | string
-  | ((spawn: PhysicsQueuedSpawn, index: number) => unknown)
-
-export interface PhysicsSpawnPacingOptions {
-  pacing?: PhysicsSpawnPacing
-  startAt?: number
-  timeAccessor?: PhysicsSpawnTimeAccessor
-  timeScale?: number
-}
-
-export interface PhysicsPipelineQueuedSpawnSnapshot extends PhysicsQueuedSpawn {
-  sequence: number
-  spawnAt: number
-}
-
-type InternalQueuedSpawn = PhysicsPipelineQueuedSpawnSnapshot
-
-export type PhysicsObservationEventType =
-  | "physics-spawn"
-  | "physics-settle"
-  | "physics-sediment"
-  | "physics-budget-warning"
-  | "physics-budget-overflow"
-  | "physics-bin-enter"
-  | "physics-bin-exit"
-  | "physics-proximity-enter"
-  | "physics-proximity-exit"
-  | "physics-late"
-  | "physics-barrier-cross"
-  | "physics-capacity-processed"
-  | "physics-capacity-queued"
-  | "sim-active"
-  | "sim-idle"
-
-export type PhysicsSimulationState = "running" | "paused" | "settled"
-
-export interface PhysicsObservationEvent {
-  type: PhysicsObservationEventType
-  timestamp: number
-  chartType: string
-  chartId: string
-  bodyId?: string
-  datum?: unknown
-  x?: number
-  y?: number
-  sensorId?: string
-  binId?: string
-  barrierId?: string
-  barrierValue?: number
-  count?: number
-  total?: number
-  budgetAction?: PhysicsBodyBudgetDecision["action"]
-  bodyLimit?: number
-  engineMaxBodiesHint?: number
-  liveBodies?: number
-  overflow?: number
-  projectedBodies?: number
-  queuedBodies?: number
-  warnAt?: number
-  simulationState?: PhysicsSimulationState
-  previousSimulationState?: PhysicsSimulationState
-  /** Capacitated region id for capacity queue controllers. */
-  regionId?: string
-  /** Work units processed when a capacity queue releases a body. */
-  work?: number
-}
-
-export type PhysicsObservationRecord = Omit<
+import type {
   PhysicsObservationEvent,
-  "timestamp" | "chartType" | "chartId"
-> &
-  Partial<Pick<PhysicsObservationEvent, "timestamp" | "chartType" | "chartId">>
+  PhysicsObservationRecord,
+  PhysicsPipelineConfig,
+  PhysicsPipelineControlSurface,
+  PhysicsPipelineSnapshot,
+  PhysicsPipelineTickResult,
+  PhysicsQueuedSpawn,
+  PhysicsSimulationState,
+  PhysicsSpawnPacingOptions
+} from "./PhysicsPipelineTypes"
+import {
+  DEFAULT_PHYSICS_PIPELINE_CONFIG,
+  bodyHitDistanceSquared,
+  bodySearchRadius,
+  cloneBodyBudgetOptions,
+  cloneColliders,
+  cloneQueuedSpawn,
+  cloneSpawn,
+  normalizeObservationConfig,
+  parseSensorPairKey,
+  requiredKernelOptions,
+  schedulePhysicsSpawns,
+  sensorPairKey,
+  sortQueue,
+  type InternalQueuedSpawn,
+  type NormalizedObservationConfig,
+  type PhysicsPipelineEvictionResult,
+  type PhysicsQuadtreeLeaf
+} from "./physicsPipelineHelpers"
 
-export interface PhysicsSensorObservationConfig {
-  binId?: string
-  enterType?: PhysicsObservationEventType
-  exitType?: PhysicsObservationEventType
-}
+// Re-export public API for stable import paths
+export type {
+  PhysicsPlotBounds,
+  PhysicsBoundsColliderOptions,
+  PhysicsXBinColliderOptions,
+  PhysicsSpawnSpringSpec,
+  PhysicsQueuedSpawn,
+  PhysicsSpawnPacing,
+  PhysicsSpawnTimeAccessor,
+  PhysicsSpawnPacingOptions,
+  PhysicsPipelineQueuedSpawnSnapshot,
+  PhysicsObservationEventType,
+  PhysicsSimulationState,
+  PhysicsObservationEvent,
+  PhysicsObservationRecord,
+  PhysicsSensorObservationConfig,
+  PhysicsPipelineObservationOptions,
+  PhysicsPipelineConfig,
+  PhysicsPipelineTickResult,
+  PhysicsPipelineSnapshot,
+  PhysicsPipelineControlSurface
+} from "./PhysicsPipelineTypes"
 
-export interface PhysicsPipelineObservationOptions {
-  chartId?: string
-  chartType?: string
-  sensors?: Record<string, PhysicsSensorObservationConfig>
-  onObservation?: (event: PhysicsObservationEvent) => void
-  onSimulationStateChange?: (
-    state: PhysicsSimulationState,
-    previousState: PhysicsSimulationState
-  ) => void
-}
-
-export interface PhysicsPipelineConfig {
-  bodyBudget?: false | PhysicsBodyBudgetOptions
-  engine?: PhysicsEngineAdapterInput
-  kernel?: PhysicsKernelOptions
-  colliders?: PhysicsColliderSpec[]
-  bodyLimit?: number
-  eviction?: false | "oldest" | "sleeping-first"
-  sediment?: false | PhysicsSedimentConfig
-  fixedDt?: number
-  maxDeltaSeconds?: number
-  maxSubsteps?: number
-  settleStepLimit?: number
-  timeScale?: number
-  observation?: PhysicsPipelineObservationOptions
-}
-
-export interface PhysicsPipelineTickResult {
-  budget: PhysicsBodyBudgetDecision
-  elapsedSeconds: number
-  evicted: string[]
-  events: PhysicsKernelEvent[]
-  observations: PhysicsObservationEvent[]
-  queueSize: number
-  revision: number
-  shouldContinue: boolean
-  sleeping: boolean
-  sedimented: string[]
-  spawned: string[]
-  steps: number
-}
-
-export interface PhysicsPipelineSnapshot {
-  accumulator: number
-  activeSensorPairs: string[]
-  bodyBudget: false | PhysicsBodyBudgetOptions
-  config: Required<
-    Omit<
-      PhysicsPipelineConfig,
-      | "bodyBudget"
-      | "colliders"
-      | "engine"
-      | "kernel"
-      | "observation"
-      | "sediment"
-    >
-  > & { kernel: Required<PhysicsKernelOptions> }
-  elapsedSeconds: number
-  paused: boolean
-  queue: PhysicsPipelineQueuedSpawnSnapshot[]
-  revision: number
-  sediment: PhysicsSedimentBinSnapshot[]
-  simulationState: PhysicsSimulationState
-  liveBodyOrder: string[]
-  visible: boolean
-  world: PhysicsKernelSnapshot
-}
-
-export interface PhysicsPipelineControlSurface {
-  applyImpulse: (id: string, ix: number, iy: number) => void
-  clear: () => void
-  hitTest: (x: number, y: number, radius?: number) => PhysicsBodyState | null
-  pause: () => void
-  push: (spawn: PhysicsQueuedSpawn, pacing?: PhysicsSpawnPacingOptions) => void
-  pushMany: (
-    spawns: PhysicsQueuedSpawn[],
-    pacing?: PhysicsSpawnPacingOptions
-  ) => void
-  readBodies: (out?: PhysicsBodyState[]) => PhysicsBodyState[]
-  readSediment: () => PhysicsSedimentBinSnapshot[]
-  bodyBudgetStatus: () => PhysicsBodyBudgetDecision
-  recordObservation: (event: PhysicsObservationRecord) => PhysicsObservationEvent
-  remove: (ids: string[]) => string[]
-  restore: (snapshot: PhysicsPipelineSnapshot) => void
-  resume: () => void
-  settle: (maxSteps?: number) => number
-  settleWithObservations: (maxSteps?: number) => PhysicsPipelineTickResult
-  snapshot: () => PhysicsPipelineSnapshot
-  sedimentHeightfield: (
-    options?: PhysicsSedimentHeightfieldOptions
-  ) => PhysicsSedimentColumn[]
-  sedimentTotals: () => PhysicsSedimentTotals
-  step: (deltaSeconds: number) => PhysicsPipelineTickResult
-}
-
-const DEFAULT_CONFIG: Required<
-  Omit<
-    PhysicsPipelineConfig,
-    | "bodyBudget"
-    | "colliders"
-    | "engine"
-    | "kernel"
-    | "observation"
-    | "sediment"
-  >
-> = {
-  bodyLimit: Number.POSITIVE_INFINITY,
-  eviction: "oldest",
-  fixedDt: 1 / 120,
-  maxDeltaSeconds: 0.1,
-  maxSubsteps: 8,
-  settleStepLimit: 1200,
-  timeScale: 1
-}
-
-interface NormalizedObservationConfig {
-  chartId: string
-  chartType: string
-  sensors: Record<string, PhysicsSensorObservationConfig>
-  onObservation?: (event: PhysicsObservationEvent) => void
-  onSimulationStateChange?: (
-    state: PhysicsSimulationState,
-    previousState: PhysicsSimulationState
-  ) => void
-}
-
-const DEFAULT_OBSERVATION_CONFIG: NormalizedObservationConfig = {
-  chartId: "physics",
-  chartType: "physics",
-  sensors: {},
-  onObservation: undefined,
-  onSimulationStateChange: undefined
-}
-
-function normalizeObservationConfig(
-  options: PhysicsPipelineObservationOptions = {},
-  previous: NormalizedObservationConfig = DEFAULT_OBSERVATION_CONFIG
-): NormalizedObservationConfig {
-  return {
-    chartId: options.chartId ?? previous.chartId,
-    chartType: options.chartType ?? previous.chartType,
-    sensors: options.sensors ?? previous.sensors,
-    onObservation: options.onObservation ?? previous.onObservation,
-    onSimulationStateChange:
-      options.onSimulationStateChange ?? previous.onSimulationStateChange
-  }
-}
-
-function cloneSpawn(spawn: PhysicsQueuedSpawn): PhysicsQueuedSpawn {
-  return {
-    ...spawn,
-    shape: { ...spawn.shape },
-    datum: spawn.datum,
-    springs: spawn.springs?.map((spring) => ({
-      ...spring,
-      target: { ...spring.target }
-    }))
-  }
-}
-
-function finiteNumber(value: unknown): number | undefined {
-  if (value instanceof Date) {
-    const time = value.getTime()
-    return Number.isFinite(time) ? time : undefined
-  }
-  const number =
-    typeof value === "number"
-      ? value
-      : typeof value === "string" && value.trim()
-        ? Number(value)
-        : NaN
-  return Number.isFinite(number) ? number : undefined
-}
-
-function spawnRecordValue(
-  spawn: PhysicsQueuedSpawn,
-  key: string
-): unknown {
-  const spawnRecord = spawn as unknown as Record<string, unknown>
-  if (spawnRecord[key] != null) return spawnRecord[key]
-  const datum = spawn.datum
-  if (datum && typeof datum === "object") {
-    return (datum as Record<string, unknown>)[key]
-  }
-  return undefined
-}
-
-function spawnTimeValue(
-  spawn: PhysicsQueuedSpawn,
-  index: number,
-  accessor?: PhysicsSpawnTimeAccessor
-): number | undefined {
-  if (typeof accessor === "function") {
-    return finiteNumber(accessor(spawn, index))
-  }
-  if (typeof accessor === "string") {
-    return finiteNumber(spawnRecordValue(spawn, accessor))
-  }
-  return (
-    finiteNumber(spawn.spawnAt) ??
-    finiteNumber(spawnRecordValue(spawn, "arrivalTime")) ??
-    finiteNumber(spawnRecordValue(spawn, "timestamp")) ??
-    finiteNumber(spawnRecordValue(spawn, "time")) ??
-    finiteNumber(spawnRecordValue(spawn, "eventTime"))
-  )
-}
-
-export function schedulePhysicsSpawns(
-  spawns: PhysicsQueuedSpawn[],
-  options: PhysicsSpawnPacingOptions = {}
-): PhysicsQueuedSpawn[] {
-  const startAt = finiteNumber(options.startAt) ?? 0
-  const pacing = options.pacing ?? "immediate"
-
-  if (pacing === "arrival") {
-    const values = spawns.map((spawn, index) =>
-      spawnTimeValue(spawn, index, options.timeAccessor)
-    )
-    const finiteValues = values.filter(
-      (value): value is number => value != null
-    )
-    const first = finiteValues.length > 0 ? Math.min(...finiteValues) : 0
-    // Playback-speed semantics: higher timeScale = faster (less spread).
-    // timeScale=1 replays arrivals in real event-time; 10 is 10× fast-forward.
-    const rawScale = finiteNumber(options.timeScale) ?? 1
-    const timeScale = rawScale > 0 ? rawScale : 1
-    return spawns.map((spawn, index) => {
-      const value = values[index]
-      const delta = value == null ? 0 : Math.max(0, value - first)
-      return {
-        ...cloneSpawn(spawn),
-        spawnAt: startAt + delta / timeScale
-      }
-    })
-  }
-
-  if (typeof pacing === "object") {
-    const rate = finiteNumber(pacing.ratePerSec)
-    if (rate && rate > 0) {
-      return spawns.map((spawn, index) => ({
-        ...cloneSpawn(spawn),
-        spawnAt: startAt + index / rate
-      }))
-    }
-  }
-
-  return spawns.map((spawn) => ({
-    ...cloneSpawn(spawn),
-    spawnAt: startAt
-  }))
-}
-
-function cloneQueuedSpawn(spawn: InternalQueuedSpawn): InternalQueuedSpawn {
-  return {
-    ...cloneSpawn(spawn),
-    sequence: spawn.sequence,
-    spawnAt: spawn.spawnAt
-  }
-}
-
-function cloneColliders(
-  colliders: PhysicsColliderSpec[]
-): PhysicsColliderSpec[] {
-  return colliders.map((collider) => ({
-    ...collider,
-    shape: { ...collider.shape },
-    bodyFilter:
-      collider.bodyFilter && typeof collider.bodyFilter !== "function"
-        ? {
-            ...collider.bodyFilter,
-            oneOf: collider.bodyFilter.oneOf?.slice(),
-            notOneOf: collider.bodyFilter.notOneOf?.slice()
-          }
-        : collider.bodyFilter
-  }))
-}
-
-function cloneBodyBudgetOptions(
-  options: false | PhysicsBodyBudgetOptions
-): false | PhysicsBodyBudgetOptions {
-  return options === false ? false : { ...options }
-}
-
-function sortQueue(a: InternalQueuedSpawn, b: InternalQueuedSpawn): number {
-  return a.spawnAt === b.spawnAt
-    ? a.sequence - b.sequence
-    : a.spawnAt - b.spawnAt
-}
-
-function requiredKernelOptions(
-  kernel: PhysicsKernelSnapshot["options"]
-): Required<PhysicsKernelOptions> {
-  return {
-    ...kernel,
-    gravity: { ...kernel.gravity }
-  }
-}
-
-function bodySearchRadius(body: PhysicsBodyState): number {
-  if (body.shape.type === "circle") return body.shape.radius
-  return Math.hypot(body.shape.width, body.shape.height) / 2
-}
-
-function bodyHitDistanceSquared(
-  body: PhysicsBodyState,
-  x: number,
-  y: number,
-  radius: number
-): number | null {
-  if (body.shape.type === "circle") {
-    const dx = body.x - x
-    const dy = body.y - y
-    const allowed = body.shape.radius + radius
-    const distanceSquared = dx * dx + dy * dy
-    return distanceSquared <= allowed * allowed ? distanceSquared : null
-  }
-
-  const dx = Math.max(Math.abs(x - body.x) - body.shape.width / 2, 0)
-  const dy = Math.max(Math.abs(y - body.y) - body.shape.height / 2, 0)
-  const distanceSquared = dx * dx + dy * dy
-  return distanceSquared <= radius * radius ? distanceSquared : null
-}
-
-function sensorPairKey(sensorId: string, bodyId: string): string {
-  return `${sensorId}\u0000${bodyId}`
-}
-
-function parseSensorPairKey(key: string): PhysicsActiveSensorPair {
-  const index = key.indexOf("\u0000")
-  return {
-    sensorId: key.slice(0, index),
-    bodyId: key.slice(index + 1)
-  }
-}
-
-type PhysicsQuadtreeLeaf = {
-  data?: PhysicsBodyState
-  next?: PhysicsQuadtreeLeaf
-  length?: number
-}
-
-export function collidersFromPlotBounds(
-  bounds: PhysicsPlotBounds,
-  options: PhysicsBoundsColliderOptions = {}
-): PhysicsColliderSpec[] {
-  const {
-    idPrefix = "plot",
-    includeFloor = true,
-    includeCeiling = false,
-    includeLeftWall = true,
-    includeRightWall = true,
-    wallThickness = 20,
-    floorThickness = wallThickness
-  } = options
-  const colliders: PhysicsColliderSpec[] = []
-  const midX = bounds.x + bounds.width / 2
-  const midY = bounds.y + bounds.height / 2
-
-  if (includeFloor) {
-    colliders.push({
-      id: `${idPrefix}-floor`,
-      shape: {
-        type: "aabb",
-        x: midX,
-        y: bounds.y + bounds.height + floorThickness / 2,
-        width: bounds.width + wallThickness * 2,
-        height: floorThickness
-      }
-    })
-  }
-  if (includeCeiling) {
-    colliders.push({
-      id: `${idPrefix}-ceiling`,
-      shape: {
-        type: "aabb",
-        x: midX,
-        y: bounds.y - floorThickness / 2,
-        width: bounds.width + wallThickness * 2,
-        height: floorThickness
-      }
-    })
-  }
-  if (includeLeftWall) {
-    colliders.push({
-      id: `${idPrefix}-left-wall`,
-      shape: {
-        type: "aabb",
-        x: bounds.x - wallThickness / 2,
-        y: midY,
-        width: wallThickness,
-        height: bounds.height + floorThickness * 2
-      }
-    })
-  }
-  if (includeRightWall) {
-    colliders.push({
-      id: `${idPrefix}-right-wall`,
-      shape: {
-        type: "aabb",
-        x: bounds.x + bounds.width + wallThickness / 2,
-        y: midY,
-        width: wallThickness,
-        height: bounds.height + floorThickness * 2
-      }
-    })
-  }
-
-  return colliders
-}
-
-export function collidersFromXScaleBins(
-  options: PhysicsXBinColliderOptions
-): PhysicsColliderSpec[] {
-  const {
-    idPrefix = "bin",
-    count,
-    domainStart,
-    domainStep,
-    xScale,
-    yTop,
-    yBottom,
-    wallThickness = 4,
-    includeBoundaryWalls = true,
-    includeInteriorWalls = true,
-    closedBefore,
-    lidY = yTop,
-    lidThickness = Math.max(2, wallThickness)
-  } = options
-  const colliders: PhysicsColliderSpec[] = []
-  const wallY = yTop + (yBottom - yTop) / 2
-  const wallHeight = Math.abs(yBottom - yTop)
-  const firstWall = includeBoundaryWalls ? 0 : 1
-  const lastWall = includeBoundaryWalls ? count : count - 1
-
-  if (includeInteriorWalls || includeBoundaryWalls) {
-    for (let i = firstWall; i <= lastWall; i += 1) {
-      if (!includeInteriorWalls && i > 0 && i < count) continue
-      const x = xScale(domainStart + i * domainStep)
-      colliders.push({
-        id: `${idPrefix}-wall-${i}`,
-        shape: {
-          type: "aabb",
-          x,
-          y: wallY,
-          width: wallThickness,
-          height: wallHeight
-        }
-      })
-    }
-  }
-
-  if (closedBefore != null) {
-    for (let i = 0; i < count; i += 1) {
-      const start = domainStart + i * domainStep
-      const end = start + domainStep
-      if (end >= closedBefore) continue
-      const x0 = xScale(start)
-      const x1 = xScale(end)
-      colliders.push({
-        id: `${idPrefix}-lid-${i}`,
-        shape: {
-          type: "segment",
-          x1: Math.min(x0, x1) + wallThickness / 2,
-          y1: lidY,
-          x2: Math.max(x0, x1) - wallThickness / 2,
-          y2: lidY,
-          thickness: lidThickness
-        }
-      })
-    }
-  }
-
-  return colliders
-}
-
-interface PhysicsPipelineEvictionResult {
-  evicted: string[]
-  sedimented: string[]
-}
+export {
+  schedulePhysicsSpawns,
+  collidersFromPlotBounds,
+  collidersFromXScaleBins
+} from "./physicsPipelineHelpers"
 
 export class PhysicsPipelineStore {
   private activeSensorPairs = new Set<string>()
@@ -676,7 +127,7 @@ export class PhysicsPipelineStore {
       sediment,
       ...storeConfig
     } = config
-    this.config = { ...DEFAULT_CONFIG, ...storeConfig }
+    this.config = { ...DEFAULT_PHYSICS_PIPELINE_CONFIG, ...storeConfig }
     this.bodyBudget = bodyBudget ?? {}
     this.engineInput = engine
     this.observation = normalizeObservationConfig(observation)

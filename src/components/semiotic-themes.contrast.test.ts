@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { contrastRatio } from "./charts/shared/diagnoseConfig"
+import { contrastRatio } from "./charts/shared/colorContrast"
 import { THEME_PRESETS } from "./semiotic-themes"
 
 /**
