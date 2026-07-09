@@ -15,7 +15,7 @@ import type {
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartMode } from "../shared/types"
-import { useChartMode } from "../shared/hooks"
+import { useChartMode, type ChartModeResult } from "../shared/hooks"
 
 export type PhysicsHocFrameProps<
   TOmitted extends keyof StreamPhysicsFrameProps = never
@@ -114,6 +114,25 @@ export type PhysicsChartModeProps = {
   className?: string
 }
 
+export interface PhysicsChartModeResult {
+  chartMode: ChartMode | undefined
+  simulationMode: PhysicsSimulationMode
+  resolved: ChartModeResult
+  chartSize: [number, number]
+  margin: { top: number; right: number; bottom: number; left: number }
+  showProjection: boolean
+  showChrome: boolean
+  enableHover: boolean
+  title: string | undefined
+  description: string | undefined
+  summary: string | undefined
+  accessibleTable: boolean | undefined
+  className: string | undefined
+  compactMode: boolean
+  mobileInteraction: ChartModeResult["mobileInteraction"]
+  mobileSemantics: ChartModeResult["mobileSemantics"]
+}
+
 /**
  * ChartMode + size + compact chrome defaults for every physics HOC.
  * Primary physics sizes stay family-specific (`primaryFallback`); mode only
@@ -123,7 +142,7 @@ export function usePhysicsChartMode(
   props: PhysicsChartModeProps,
   primaryFallback: [number, number],
   options?: { hasSimulationMode?: boolean }
-) {
+): PhysicsChartModeResult {
   const modes = options?.hasSimulationMode
     ? resolvePhysicsModes({
         mode: props.mode,

@@ -32,7 +32,6 @@ import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
   renderPhysicsFrame,
-  resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
@@ -951,7 +950,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   ref: React.Ref<RealtimeFrameHandle>
 ) {
   const {
-    className,
     bodyGroups,
     coreBody,
     crashOffset = 30,
@@ -960,7 +958,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     events,
     frameProps = {},
     gates,
-    height,
     initialSpawnPacing,
     loading,
     loadingContent,

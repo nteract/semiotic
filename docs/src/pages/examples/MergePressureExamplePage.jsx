@@ -431,8 +431,8 @@ export default function MergePressureExamplePage() {
               <button
                 key={id}
                 type="button"
-                className={settings.chapter === preset.chapter ? "is-active" : ""}
-                aria-pressed={settings.chapter === preset.chapter}
+                className={active ? "is-active" : ""}
+                aria-pressed={active}
                 onClick={() => {
                   setSettings(preset)
                   setRunId((current) => current + 1)
