@@ -94,16 +94,25 @@ export interface GauntletGate {
   width?: number
 }
 
+/** Pop one or more attached property ids from a project. */
+export type GauntletPopSpec =
+  | readonly string[]
+  | {
+      candidates?: readonly string[]
+      count?: number
+      ids?: readonly string[]
+    }
+
 export interface GauntletEffect {
   addPositive?: readonly string[] | Record<string, number>
   addNegative?: readonly string[] | Record<string, number>
-  popPositive?:
-    | readonly string[]
-    | {
-        candidates?: readonly string[]
-        count?: number
-        ids?: readonly string[]
-      }
+  popPositive?: GauntletPopSpec
+  /**
+   * Remove attached negative property bodies — the inverse of the common
+   * "pop positives / add negatives" gate. Supports the same array / candidates
+   * / ids shape as {@link popPositive}.
+   */
+  popNegative?: GauntletPopSpec
   delayDelta?: number
   metricsDelta?: Record<string, number>
   outcome?: string
@@ -147,6 +156,8 @@ export interface GauntletProjectState<TDatum extends Datum = Datum> {
   negativeIds: string[]
   outcome: string
   poppedPositiveIds: string[]
+  /** Negative property ids removed by {@link GauntletEffect.popNegative}. */
+  poppedNegativeIds: string[]
   stage: string
   viability: number
 }
@@ -265,24 +276,52 @@ function expandIds(input: readonly string[] | Record<string, number> | undefined
   )
 }
 
-function isReadonlyStringArray(
-  value: GauntletEffect["popPositive"]
-): value is readonly string[] {
+function isReadonlyStringArray(value: GauntletPopSpec | undefined): value is readonly string[] {
   return Array.isArray(value)
+}
+
+function resolvePopSpecIds(
+  attachedIds: readonly string[],
+  popSpec: GauntletPopSpec | undefined
+): string[] {
+  if (!popSpec) return []
+  if (isReadonlyStringArray(popSpec)) return [...popSpec]
+  if (popSpec.ids) return [...popSpec.ids]
+  if (!popSpec.candidates) return []
+  return popSpec.candidates
+    .filter((id: string) => attachedIds.includes(id))
+    .slice(0, popSpec.count ?? 1)
 }
 
 function resolvePopPositiveIds<TDatum extends Datum>(
   project: GauntletProjectState<TDatum>,
   effect: GauntletEffect
 ): string[] {
-  const popPositive = effect.popPositive
-  if (!popPositive) return []
-  if (isReadonlyStringArray(popPositive)) return [...popPositive]
-  if (popPositive.ids) return [...popPositive.ids]
-  if (!popPositive.candidates) return []
-  return popPositive.candidates
-    .filter((id: string) => project.activePositiveIds.includes(id))
-    .slice(0, popPositive.count ?? 1)
+  return resolvePopSpecIds(project.activePositiveIds, effect.popPositive)
+}
+
+/**
+ * Resolve which negative property instances to detach. Returns body indices
+ * into `project.negativeIds` so multi-instance loads keep stable body ids.
+ */
+function resolvePopNegativeEntries<TDatum extends Datum>(
+  project: GauntletProjectState<TDatum>,
+  effect: GauntletEffect
+): Array<{ propertyId: string; index: number }> {
+  const wanted = resolvePopSpecIds(project.negativeIds, effect.popNegative)
+  if (!wanted.length) return []
+  const remaining = new Map<string, number>()
+  for (const id of wanted) {
+    remaining.set(id, (remaining.get(id) ?? 0) + 1)
+  }
+  const entries: Array<{ propertyId: string; index: number }> = []
+  project.negativeIds.forEach((propertyId, index) => {
+    const count = remaining.get(propertyId) ?? 0
+    if (count <= 0) return
+    entries.push({ propertyId, index })
+    remaining.set(propertyId, count - 1)
+  })
+  return entries
 }
 
 function propertyLabel(property: GauntletPropertyDefinition | undefined): string {
@@ -449,6 +488,7 @@ function createInitialState<TDatum extends Datum>(
     negativeIds,
     outcome: "in_process",
     poppedPositiveIds: [],
+    poppedNegativeIds: [],
     stage: "project filed",
     viability: readAccessor(datum, index, props.initialViability, 100)
   }
@@ -730,7 +770,12 @@ function buildNegativeSpawn<TDatum extends Datum>(
   }
 }
 
-function applyEffect<TDatum extends Datum>(
+/**
+ * Pure project-state transition for a single gate effect. Exported so unit
+ * tests can cover popPositive / popNegative / add* without driving the
+ * full physics tick loop.
+ */
+export function applyGauntletEffect<TDatum extends Datum>(
   project: GauntletProjectState<TDatum>,
   effect: GauntletEffect,
   context: GauntletEventContext<TDatum>
@@ -743,6 +788,17 @@ function applyEffect<TDatum extends Datum>(
       ...next,
       activePositiveIds: next.activePositiveIds.filter((id) => !popIds.includes(id)),
       poppedPositiveIds: Array.from(new Set([...next.poppedPositiveIds, ...popIds]))
+    }
+  }
+  const popNegativeEntries = resolvePopNegativeEntries(next, effect)
+  if (popNegativeEntries.length) {
+    const removeIndices = new Set(popNegativeEntries.map((entry) => entry.index))
+    next = {
+      ...next,
+      negativeIds: next.negativeIds.filter((_, index) => !removeIndices.has(index)),
+      poppedNegativeIds: Array.from(
+        new Set([...next.poppedNegativeIds, ...popNegativeEntries.map((entry) => entry.propertyId)])
+      )
     }
   }
   const addedPositive = expandIds(effect.addPositive)
@@ -1251,32 +1307,61 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   )
   const statesRef = useRef(states)
   const elapsedRef = useRef(0)
+  // Keep latest builders/callbacks in refs so identity thrash (inline
+  // viability, data={[row]}, onStateChange={() => …}) cannot re-seed the
+  // simulation or re-enter React update loops.
+  const safeDataRef = useRef(safeData)
+  safeDataRef.current = safeData
+  const onStateChangeRef = useRef(onStateChange)
+  onStateChangeRef.current = onStateChange
+  const createStateDepsRef = useRef({
+    negativeById,
+    positiveById,
+    positiveProperties,
+    stateAccessors,
+    viability
+  })
+  createStateDepsRef.current = {
+    negativeById,
+    positiveById,
+    positiveProperties,
+    stateAccessors,
+    viability
+  }
 
-  const createState = useCallback(
-    (datum: TDatum, index: number) => {
-      const state = createInitialState(datum, index, stateAccessors, positiveProperties, negativeById)
-      return {
-        ...state,
-        viability:
-          viability?.(state, {
-            negativeProperties: negativeById,
-            positiveProperties: positiveById
-          }) ?? defaultViability(state, positiveById, negativeById)
-      }
-    },
-    [negativeById, positiveById, positiveProperties, stateAccessors, viability]
-  )
+  const createState = useCallback((datum: TDatum, index: number) => {
+    const deps = createStateDepsRef.current
+    const state = createInitialState(
+      datum,
+      index,
+      deps.stateAccessors,
+      deps.positiveProperties,
+      deps.negativeById
+    )
+    return {
+      ...state,
+      viability:
+        deps.viability?.(state, {
+          negativeProperties: deps.negativeById,
+          positiveProperties: deps.positiveById
+        }) ?? defaultViability(state, deps.positiveById, deps.negativeById)
+    }
+  }, [])
 
+  // Re-seed project state only when the set of project ids changes — not when
+  // the parent passes a fresh `data={[…]}` array with the same rows (the usual
+  // cause of gauntlet remount flicker + max-update-depth loops with live
+  // onStateChange readouts).
   useEffect(() => {
-    const next = safeData.map((datum, index) => createState(datum, index))
+    const next = safeDataRef.current.map((datum, index) => createState(datum, index))
     statesRef.current = next
     setStates(next)
-  }, [createState, safeData])
+  }, [createState, dataKey])
 
   useEffect(() => {
     statesRef.current = states
-    onStateChange?.(states)
-  }, [onStateChange, states])
+    onStateChangeRef.current?.(states)
+  }, [states])
 
   const projectEvents = useCallback(
     (project: GauntletProjectState<TDatum>) => {
@@ -1469,6 +1554,18 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
           radius: (property?.radius ?? 10) + 3
         })
       }
+      const popNegativeEntries = resolvePopNegativeEntries(project, effect)
+      for (const entry of popNegativeEntries) {
+        const property = negativeById.get(entry.propertyId)
+        frameRef.current?.popBodies(
+          [projectNegativeId(project.id, entry.propertyId, entry.index)],
+          {
+            color: property?.popColor ?? property?.color,
+            durationMs: 900,
+            radius: (property?.radius ?? 7) + 3
+          }
+        )
+      }
     },
     [coreBody, layout, negativeById, positiveById]
   )
@@ -1635,7 +1732,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
             }
             if (effect.when && !effect.when(context)) continue
             addBodiesForEffect(projectedForBodies, effect, controls)
-            projectedForBodies = applyEffect(projectedForBodies, effect, context)
+            projectedForBodies = applyGauntletEffect(projectedForBodies, effect, context)
           }
           updateProjectState(project.id, (current) => {
             let next: GauntletProjectState<TDatum> = {
@@ -1652,7 +1749,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
                 positiveProperties: positiveById,
                 project: next
               }
-              next = applyEffect(next, effect, context)
+              next = applyGauntletEffect(next, effect, context)
             }
             const computedViability =
               viability?.(next, {

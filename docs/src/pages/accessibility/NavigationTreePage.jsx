@@ -108,7 +108,7 @@ export default function NavigationTreePage() {
         { label: "Structured Navigation", path: "/accessibility/navigation" },
       ]}
       prevPage={{ title: "Chart Descriptions", path: "/accessibility/descriptions" }}
-      nextPage={{ title: "Observation Hooks", path: "/intelligence/observation-hooks" }}
+      nextPage={{ title: "Anchoring Complex Charts", path: "/accessibility/anchoring-complex-charts" }}
     >
       <p>
         A data table flattens a chart into rows. But a chart has{" "}
@@ -375,6 +375,7 @@ const sync = useNavigationSync({ tree, chartId: "sales", annotations })
       <h2 id="related">Related</h2>
       <ul>
         <li><Link to="/accessibility/descriptions">Chart Descriptions</Link> — generates the node labels</li>
+        <li><Link to="/accessibility/anchoring-complex-charts">Anchoring Complex Charts</Link> — link physics process charts to traditional encodings</li>
         <li><Link to="/intelligence/reader-grounding">Agent-Reader Grounding</Link> — bundles this structure with the description for an LLM</li>
         <li><Link to="/intelligence/conversation-arc">Conversation Arc</Link> — where traversal events land</li>
         <li><Link to="/accessibility/audit">Chartability Audit</Link> — grades navigable structure</li>

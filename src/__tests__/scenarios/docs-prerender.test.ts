@@ -77,8 +77,8 @@ describe("docs prerender helpers", () => {
     const html = generatePage(shell, "")
 
     expect(html).toContain("<title>Semiotic \u2014 Data Visualization for React</title>")
-    expect(html).toContain('property="og:url" content="https://semiotic3.nteract.io"')
-    expect(html).toContain('rel="canonical" href="https://semiotic3.nteract.io"')
+    expect(html).toContain('property="og:url" content="https://semiotic.nteract.io"')
+    expect(html).toContain('rel="canonical" href="https://semiotic.nteract.io"')
     expect(html).toContain('data-jsonld="semiotic"')
     expect(html).toContain("AI / Machine-readable docs")
     expect(html).not.toContain("old fallback")
@@ -97,7 +97,7 @@ describe("docs prerender helpers", () => {
     `
     const html = generatePage(shell, "charts/line-chart", null, {
       route: "charts/line-chart",
-      url: "https://semiotic3.nteract.io/charts/line-chart",
+      url: "https://semiotic.nteract.io/charts/line-chart",
       html: "<article><h1>LineChart</h1><p>LineChart route content for agents.</p></article>",
       text: "LineChart route content for agents.",
       headings: [{ level: 1, text: "LineChart" }],
@@ -171,8 +171,8 @@ describe("docs prerender helpers", () => {
       "theming/styling"
     )
 
-    expect(html).toContain('property="og:url" content="https://semiotic3.nteract.io/theming/styling"')
-    expect(html).toContain('rel="canonical" href="https://semiotic3.nteract.io/theming/styling"')
+    expect(html).toContain('property="og:url" content="https://semiotic.nteract.io/theming/styling"')
+    expect(html).toContain('rel="canonical" href="https://semiotic.nteract.io/theming/styling"')
     expect(html).not.toContain("https://example.com")
   })
 
@@ -185,8 +185,8 @@ describe("docs prerender helpers", () => {
     expect(twice.match(/"@type":"SoftwareApplication"/g)).toHaveLength(1)
     expect(twice.match(/data-jsonld="semiotic"/g)).toHaveLength(1)
     expect(twice.match(/property="og:url"/g)).toHaveLength(1)
-    expect(twice).toContain('property="og:url" content="https://semiotic3.nteract.io/theming/styling"')
-    expect(twice).toContain('rel="canonical" href="https://semiotic3.nteract.io/theming/styling"')
+    expect(twice).toContain('property="og:url" content="https://semiotic.nteract.io/theming/styling"')
+    expect(twice).toContain('rel="canonical" href="https://semiotic.nteract.io/theming/styling"')
   })
 
   it("preserves unrelated JSON-LD scripts", () => {
@@ -219,7 +219,7 @@ describe("docs prerender helpers", () => {
     expect(html).toContain('<title>My Post — Semiotic Blog</title>')
     expect(html).toContain('property="og:type" content="article"')
     expect(html).toContain('property="og:title" content="My Post"')
-    expect(html).toContain('property="og:image" content="https://semiotic3.nteract.io/blog/og/my-post.png"')
+    expect(html).toContain('property="og:image" content="https://semiotic.nteract.io/blog/og/my-post.png"')
     expect(html).toContain('property="article:published_time" content="2026-01-15"')
     expect(html).toContain('property="article:author" content="Jane"')
     expect(html).toContain('property="article:tag" content="release"')
@@ -237,15 +237,20 @@ describe("docs prerender helpers", () => {
   })
 
   it("applies per-route ROUTE_META overrides for non-blog pages", () => {
-    const shell = '<html><head><meta name=description content="generic landing description"><meta property=og:title content="Generic"><meta property=og:description content="Generic"><meta property=og:image content="https://semiotic3.nteract.io/assets/img/semiotic-social.png"><meta name=twitter:card content=summary><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com><title>Shell</title></head><body><noscript>old</noscript></body></html>'
+    const shell = '<html><head><meta name=description content="generic landing description"><meta property=og:title content="Generic"><meta property=og:description content="Generic"><meta property=og:image content="https://semiotic.nteract.io/assets/img/semiotic-social.png"><meta name=twitter:card content=summary><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com><title>Shell</title></head><body><noscript>old</noscript></body></html>'
 
     const html = generatePage(shell, "charts")
+    const head = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i)?.[1] || ""
+    const afterHeadBeforeBody = html.slice(html.indexOf("</head>"), html.indexOf("<body"))
 
     expect(html).toContain('<title>Charts — Semiotic</title>')
     // Section description comes from the ROUTE_META map.
     expect(html).toContain('name="description" content="The Semiotic chart catalog')
     expect(html).toContain('property="og:title" content="Charts — Semiotic"')
     expect(html).toContain('property="og:type" content="website"')
+    expect(head).toContain('property="og:image"')
+    expect(head).toContain('name="twitter:image"')
+    expect(afterHeadBeforeBody).not.toContain('property="og:image"')
     // Generic shell description is gone.
     expect(html).not.toContain('generic landing description')
   })

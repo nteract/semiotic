@@ -89,7 +89,7 @@ export function buildAreaNode(
 /** Per-group-per-x stacked top values, keyed by group then x */
 export type StackedTops = Map<string, Map<number, number>>
 
-export type StackBaseline = "zero" | "wiggle" | "silhouette"
+export type StackBaseline = "zero" | "wiggle" | "silhouette" | "diverging"
 
 /**
  * Compute per-x stack baseline offsets. Shared between scene rendering
@@ -102,6 +102,9 @@ export type StackBaseline = "zero" | "wiggle" | "silhouette"
  *   xValues   — sorted unique x values
  *   groupKeys — group keys in stacking order (same order both callers use)
  *   valueAt   — (groupKey, x) → group's value at x (0 if absent)
+ *
+ * `"diverging"` returns zero offsets — positives and negatives stack from
+ * y=0 independently inside {@link buildStackedAreaNodes}.
  */
 export function computeStackOffsets(
   xValues: number[],
@@ -158,9 +161,35 @@ export function computeStackOffsets(
       }
     }
   } else {
+    // "zero" and "diverging" both anchor stacks at y=0.
     for (const x of xValues) offsets.set(x, 0)
   }
   return offsets
+}
+
+/**
+ * Diverging stack extent: positives accumulate above 0, negatives below.
+ * Shared by PipelineStore auto-extent and any host that needs matching bounds.
+ */
+export function computeDivergingStackExtent(
+  xValues: number[],
+  groupKeys: string[],
+  valueAt: (groupKey: string, x: number) => number
+): [number, number] {
+  let lo = 0
+  let hi = 0
+  for (const x of xValues) {
+    let pos = 0
+    let neg = 0
+    for (const k of groupKeys) {
+      const v = valueAt(k, x) || 0
+      if (v >= 0) pos += v
+      else neg += v
+    }
+    if (neg < lo) lo = neg
+    if (pos > hi) hi = pos
+  }
+  return [lo, hi]
 }
 
 export function buildStackedAreaNodes(
@@ -214,55 +243,99 @@ export function buildStackedAreaNodes(
     }
   }
 
-  // Compute per-x baseline offset (shared with PipelineStore's extent pass).
-  const offsets = computeStackOffsets(
-    xValues,
-    groups.map((g) => g.key),
-    (k, x) => valueMaps.get(k)?.get(x) || 0,
-    baseline
-  )
+  const groupKeys = groups.map((g) => g.key)
+  const valueAt = (k: string, x: number) => valueMaps.get(k)?.get(x) || 0
 
-  // Build stacked area nodes bottom-up
+  // Compute per-x baseline offset (shared with PipelineStore's extent pass).
+  // Diverging stacks ignore the single-cursor offset and use dual bases.
+  const offsets = computeStackOffsets(xValues, groupKeys, valueAt, baseline)
+  const diverging = baseline === "diverging" && !normalize
+
+  // Build stacked area nodes. Standard modes walk one cumulative cursor;
+  // diverging keeps separate positive (above 0) and negative (below 0) cursors
+  // so risk series with signed y values stack under the axis (d3 stackOffsetDiverging).
   const nodes: AreaSceneNode[] = []
   const stackedTops: StackedTops = new Map()
   const baselines = new Map<number, number>() // x → cumulative y (relative to offset)
-  for (const x of xValues) baselines.set(x, offsets.get(x) ?? 0)
+  const posBases = new Map<number, number>()
+  const negBases = new Map<number, number>()
+  for (const x of xValues) {
+    baselines.set(x, offsets.get(x) ?? 0)
+    posBases.set(x, 0)
+    negBases.set(x, 0)
+  }
 
   for (const g of groups) {
     const vMap = valueMaps.get(g.key)!
-    const topPath: [number, number][] = []
-    const bottomPath: [number, number][] = []
     const groupTops = new Map<number, number>()
+    // Contiguous non-zero runs → separate area nodes (LineChart gapStrategy
+    // "break" semantics for stacks). Zero / missing values cut the band so we
+    // don't draw a flat line along the axis for inactive series.
+    let topPath: [number, number][] = []
+    let bottomPath: [number, number][] = []
+
+    const flushSegment = () => {
+      if (topPath.length >= 2) {
+        const areaNode: AreaSceneNode = {
+          type: "area",
+          topPath,
+          bottomPath,
+          style: styleFn(g.key, g.data[0]),
+          datum: g.data,
+          group: g.key
+        }
+        if (curve) areaNode.curve = curve
+        nodes.push(areaNode)
+      }
+      topPath = []
+      bottomPath = []
+    }
 
     for (const x of xValues) {
-      let rawY = vMap.get(x) || 0
-      const base = baselines.get(x)!
-
-      if (normalize) {
+      const hasValue = vMap.has(x)
+      let rawY = hasValue ? (vMap.get(x) as number) : 0
+      if (normalize && hasValue) {
         const total = totals!.get(x)!
         rawY = rawY / total
       }
 
-      const stackedY = base + rawY
+      // Missing or non-finite → no contribution and cut the path.
+      // Exact zero → no contribution and cut (no zero-height ribbon along the axis).
+      const isDefined = hasValue && Number.isFinite(rawY) && rawY !== 0
+
+      if (!isDefined) {
+        flushSegment()
+        continue
+      }
+
+      let base: number
+      let stackedY: number
+      if (diverging) {
+        if (rawY > 0) {
+          base = posBases.get(x)!
+          stackedY = base + rawY
+          posBases.set(x, stackedY)
+        } else {
+          // Negative branch: stack downward from 0 / previous negative total.
+          base = negBases.get(x)!
+          stackedY = base + rawY
+          negBases.set(x, stackedY)
+        }
+      } else {
+        base = baselines.get(x)!
+        stackedY = base + rawY
+        baselines.set(x, stackedY)
+      }
+
       const px = scales.x(x)
+      // Area fill spans [base, stackedY] regardless of sign.
       bottomPath.push([px, scales.y(base)])
       topPath.push([px, scales.y(stackedY)])
-      baselines.set(x, stackedY)
       groupTops.set(x, stackedY)
     }
 
+    flushSegment()
     stackedTops.set(g.key, groupTops)
-
-    const areaNode: AreaSceneNode = {
-      type: "area",
-      topPath,
-      bottomPath,
-      style: styleFn(g.key, g.data[0]),
-      datum: g.data,
-      group: g.key
-    }
-    if (curve) areaNode.curve = curve
-    nodes.push(areaNode)
   }
 
   return { nodes, stackedTops }

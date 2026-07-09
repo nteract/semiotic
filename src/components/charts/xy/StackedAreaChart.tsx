@@ -126,13 +126,16 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
    *   wiggle across series — best for high-cardinality series where
    *   relative shape matters more than absolute values.
    * - `"silhouette"`: center the stack symmetrically around y=0.
+   * - `"diverging"`: series with **positive** y stack above 0; series with
+   *   **negative** y stack below 0 (signed benefit / risk stacks). Pass
+   *   negative values for risk layers — do not use absolute magnitudes.
    *
    * Mutually exclusive with `normalize` — when `normalize` is true,
    * baseline is forced to `"zero"`.
    *
    * @default "zero"
    */
-  baseline?: "zero" | "wiggle" | "silhouette"
+  baseline?: "zero" | "wiggle" | "silhouette" | "diverging"
 
   /**
    * Stack order — controls which series sits at the top, middle, or

@@ -162,6 +162,7 @@ interface StreamPhysicsRegionEffectContext
 interface StreamPhysicsRegionEvent
 interface StreamPhysicsRegionVector
 type BandScale
+type GauntletPopSpec
 type NumericScale
 type PhysicalFlowCoordinateMode
 type PhysicalFlowPathConstraint

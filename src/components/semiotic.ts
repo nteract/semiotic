@@ -232,6 +232,7 @@ export type {
   GauntletEventLogItem,
   GauntletGate,
   GauntletLayout,
+  GauntletPopSpec,
   GauntletProjectPlacement,
   GauntletProjectState,
   GauntletPropertyForceContext,

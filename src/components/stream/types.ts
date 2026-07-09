@@ -725,12 +725,13 @@ export interface StreamXYFrameProps<T = Datum> {
    * - "zero" (default): standard stack from y=0
    * - "wiggle": Byron–Wattenberg streamgraph offset (minimizes wiggle)
    * - "silhouette": center the stack symmetrically around y=0
+   * - "diverging": positives stack above 0, negatives below 0 (signed values)
    *
    * Mutually exclusive with `normalize`: when `normalize` is `true`, the
    * stack is forced to a `"zero"` baseline (any other value is ignored)
    * because normalization assumes a fixed `[0, 1]` y-domain.
    */
-  baseline?: "zero" | "wiggle" | "silhouette"
+  baseline?: "zero" | "wiggle" | "silhouette" | "diverging"
   /**
    * Stack order — controls which series sits at the top, middle, or bottom.
    * - "key" (default): alphabetical by group key

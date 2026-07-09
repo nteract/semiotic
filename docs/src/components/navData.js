@@ -137,14 +137,20 @@ const navData = [
       { title: "Chart Container", path: "/features/chart-container" },
       { title: "Chart States", path: "/features/chart-states" },
       { title: "Chart Modes", path: "/features/chart-modes" },
-      { title: "Mobile Visualization", path: "/features/mobile-visualization" },
-      { title: "Mobile Standard Controls", path: "/features/mobile/controls" },
-      { title: "Mobile Recipes & Transforms", path: "/features/mobile/recipes" },
       { title: "Streaming System Model", path: "/features/streaming-system-model" },
       { title: "Performance", path: "/features/performance" },
       { title: "Push API", path: "/features/push-api" },
       { title: "When Physics?", path: "/features/when-physics" },
       { title: "Physics process guide", path: "/features/physics-process-guide" },
+    ],
+  },
+  {
+    title: "Mobile",
+    path: "/features/mobile-visualization",
+    children: [
+      { title: "Mobile Visualization", path: "/features/mobile-visualization" },
+      { title: "Mobile Standard Controls", path: "/features/mobile/controls" },
+      { title: "Mobile Recipes & Transforms", path: "/features/mobile/recipes" },
     ],
   },
   {
@@ -195,6 +201,7 @@ const navData = [
       { title: "Chartability Audit", path: "/accessibility/audit" },
       { title: "Chart Descriptions", path: "/accessibility/descriptions" },
       { title: "Structured Navigation", path: "/accessibility/navigation" },
+      { title: "Anchoring Complex Charts", path: "/accessibility/anchoring-complex-charts" },
     ],
   },
   {

@@ -96,7 +96,7 @@ function writeRouteFiles(buildDir: string) {
 function writeMachineReadableManifest(buildDir: string) {
   writeFileSync(join(buildDir, "llms-routes.json"), JSON.stringify({
     generatedAt: "2026-06-07T00:00:00.000Z",
-    site: "https://semiotic3.nteract.io",
+    site: "https://semiotic.nteract.io",
     routes: REQUIRED_MACHINE_READABLE_ROUTES.map((route: RequiredMachineReadableRoute) => machineDocForRoute(route.routePath)),
   }))
 }
@@ -108,7 +108,7 @@ function machineDocForRoute(routePath: string) {
   const text = `${keyword} machine-readable route content. `.repeat(12).trim()
   return {
     route: routeKey,
-    url: routePath ? `https://semiotic3.nteract.io/${routePath}` : "https://semiotic3.nteract.io",
+    url: routePath ? `https://semiotic.nteract.io/${routePath}` : "https://semiotic.nteract.io",
     html: `<article><h1>${keyword}</h1><p>${text}</p></article>`,
     text,
     headings: [{ level: 1, text: keyword }],

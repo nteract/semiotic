@@ -3,6 +3,44 @@ import { Link } from "react-router-dom"
 import { EXAMPLES } from "./examplesManifest"
 
 
+const PREVIEW_COMPONENTS = {
+  watermarks: MiniWatermarksPreview,
+  "plinko-quantile": MiniPlinkoQuantilePreview,
+  "stakeholder-journey": MiniStakeholderJourneyPreview,
+  "merge-pressure": MiniMergePressurePreview,
+  nimby: MiniNimbyPreview,
+  climate: MiniClimatePreview,
+  "lake-isotype": MiniLakeIsotypePreview,
+  "hotdog-variations": MiniHotDogPreview,
+  "data-centers-isotype": MiniDataCentersIsotypePreview,
+  "creative-contours": MiniCreativeContoursPreview,
+  discrete: MiniDiscretePreview,
+  isometric: MiniIsometricPreview,
+  wars: MiniWarsPreview,
+  art: MiniArtPreview,
+  urine: MiniUrinePreview,
+  erie: MiniEriePreview,
+  wikipedia: MiniWikipediaPreview,
+  "local-government": MiniLocalGovernmentPreview,
+  "port-replay": MiniPortReplayPreview,
+  "scroll-tell": MiniScrollTellPreview,
+  "dataviz-people": MiniDatavizPeoplePreview,
+  "distant-reading": MiniDistantReadingPreview,
+  funnels: MiniFunnelsPreview,
+  machine: MiniMachinePreview,
+  architecture: MiniArchitecturePreview,
+  octopus: MiniOctopusPreview,
+  gestalt: MiniGestaltPreview,
+  mobilevis: MiniMobileVisPreview,
+  networkviz: MiniNetworkVizPreview,
+  oregontrail: MiniOregonTrailPreview,
+}
+
+export function ExamplePreview({ preview }) {
+  const Preview = PREVIEW_COMPONENTS[preview]
+  return Preview ? <Preview /> : <MiniRadialPreview combined={preview === "combined"} />
+}
+
 export default function ExamplesOverviewPage() {
   return (
     <div style={styles.page}>
@@ -18,67 +56,7 @@ export default function ExamplesOverviewPage() {
       <div style={styles.grid}>
         {EXAMPLES.map((example) => (
           <Link key={example.path} to={example.path} style={styles.card}>
-            {example.preview === "watermarks"
-              ? <MiniWatermarksPreview />
-              : example.preview === "plinko-quantile"
-              ? <MiniPlinkoQuantilePreview />
-              : example.preview === "stakeholder-journey"
-              ? <MiniStakeholderJourneyPreview />
-              : example.preview === "merge-pressure"
-              ? <MiniMergePressurePreview />
-              : example.preview === "nimby"
-              ? <MiniNimbyPreview />
-              : example.preview === "climate"
-              ? <MiniClimatePreview />
-              : example.preview === "lake-isotype"
-                ? <MiniLakeIsotypePreview />
-              : example.preview === "hotdog-variations"
-                ? <MiniHotDogPreview />
-              : example.preview === "data-centers-isotype"
-                ? <MiniDataCentersIsotypePreview />
-              : example.preview === "creative-contours"
-                ? <MiniCreativeContoursPreview />
-              : example.preview === "discrete"
-                ? <MiniDiscretePreview />
-              : example.preview === "isometric"
-                ? <MiniIsometricPreview />
-              : example.preview === "wars"
-                ? <MiniWarsPreview />
-                : example.preview === "art"
-                  ? <MiniArtPreview />
-                : example.preview === "urine"
-                  ? <MiniUrinePreview />
-                : example.preview === "erie"
-                  ? <MiniEriePreview />
-                : example.preview === "wikipedia"
-                  ? <MiniWikipediaPreview />
-                : example.preview === "local-government"
-                  ? <MiniLocalGovernmentPreview />
-                : example.preview === "port-replay"
-                  ? <MiniPortReplayPreview />
-                : example.preview === "scroll-tell"
-                  ? <MiniScrollTellPreview />
-                : example.preview === "dataviz-people"
-                  ? <MiniDatavizPeoplePreview />
-                : example.preview === "distant-reading"
-                  ? <MiniDistantReadingPreview />
-                : example.preview === "funnels"
-                  ? <MiniFunnelsPreview />
-                : example.preview === "machine"
-                  ? <MiniMachinePreview />
-                : example.preview === "architecture"
-                  ? <MiniArchitecturePreview />
-                : example.preview === "octopus"
-                  ? <MiniOctopusPreview />
-                : example.preview === "gestalt"
-                  ? <MiniGestaltPreview />
-                : example.preview === "mobilevis"
-                  ? <MiniMobileVisPreview />
-                : example.preview === "networkviz"
-                  ? <MiniNetworkVizPreview />
-                : example.preview === "oregontrail"
-                  ? <MiniOregonTrailPreview />
-                : <MiniRadialPreview combined={example.preview === "combined"} />}
+            <ExamplePreview preview={example.preview} />
             <div style={styles.cardBody}>
               <div style={styles.eyebrow}>{example.eyebrow}</div>
               <h2 style={styles.cardTitle}>{example.title}</h2>

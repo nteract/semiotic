@@ -22,6 +22,7 @@ const processFlowChartProps = [
   { name: "groupAnchorAlong", type: "number", required: false, default: "0.55", description: "0–1 position along the lane for group anchors." },
   { name: "showProjection", type: "boolean", required: false, default: "true", description: "Draw settled stage-count bars." },
   { name: "showChrome", type: "boolean", required: false, default: "true", description: "Draw stage labels, capacity notes, and group anchors." },
+  { name: "chromeOptions", type: "object", required: false, default: null, description: "processChrome options: outlineStages (stroke-only bays), showFlowSpine, showStageCounts, showCapacityBadges, showGroupSockets." },
   { name: "liveCapacity", type: "boolean", required: false, default: "true", description: "Install live FIFO capacity-queue controllers for stages with capacity (drains work at unitsPerSecond)." },
   { name: "onCapacityChange", type: "function", required: false, default: null, description: "Receives CapacityQueueSnapshot[] (queueDepth, processedCount, remainingWork) each tick while capacity queues run." },
   { name: "bodyLimit", type: "number", required: false, default: null, description: "Soft live-body budget; evicts oldest when exceeded (stream / sediment pattern)." },

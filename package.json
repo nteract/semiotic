@@ -162,6 +162,7 @@
     "website:clean": "npm run clean && npm run dist:prod",
     "docs:dev": "vite --config vite.docs.config.mjs --host 127.0.0.1 --port 3000",
     "check:docs-entry": "node scripts/check-docs-dev-entry.mjs",
+    "check:social-meta": "node scripts/check-social-meta.mjs",
     "website:start": "npm run dist:prod && npm run docs:api:json && npm run docs:dev",
     "website:start:clean": "npm run clean && npm run dist:prod && npm run docs:dev",
     "generate:ssr-gallery": "npx tsx scripts/ssr-gallery.tsx > docs/public/ssr-gallery.html 2>/dev/null",

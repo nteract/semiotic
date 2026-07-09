@@ -1,6 +1,6 @@
 import * as React from "react"
 import { fireEvent, render } from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
@@ -8,8 +8,10 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { EventDropChart } from "./EventDropChart"
 import {
   GauntletChart,
+  applyGauntletEffect,
   clampGauntletPoint,
-  GAUNTLET_WALL
+  GAUNTLET_WALL,
+  type GauntletProjectState
 } from "./GauntletChart"
 import { GaltonBoardChart } from "./GaltonBoardChart"
 import { CollisionSwarmChart } from "./CollisionSwarmChart"
@@ -717,6 +719,84 @@ describe("physics chart HOCs", () => {
       metrics: { units: 12 }
     })
     expect(ref.current?.getData().some((datum) => datum.id === "plan-b")).toBe(true)
+  })
+
+  it("does not re-seed GauntletChart when data array identity changes with the same ids", () => {
+    const onStateChange = vi.fn()
+    const baseProps = {
+      idAccessor: "id" as const,
+      positiveAccessor: "positives" as const,
+      negativeAccessor: "negatives" as const,
+      positiveProperties: [{ id: "homes", label: "Homes", value: 3 }],
+      negativeProperties: [{ id: "cost", label: "Cost", load: 1 }],
+      size: [280, 170] as [number, number],
+      onStateChange
+    }
+    const { rerender } = render(
+      <GauntletChart
+        {...baseProps}
+        data={[{ id: "plan-a", positives: ["homes"], negatives: ["cost"] }]}
+      />
+    )
+    const callsAfterMount = onStateChange.mock.calls.length
+    expect(callsAfterMount).toBeGreaterThan(0)
+
+    for (let i = 0; i < 8; i += 1) {
+      rerender(
+        <GauntletChart
+          {...baseProps}
+          data={[{ id: "plan-a", positives: ["homes"], negatives: ["cost"] }]}
+        />
+      )
+    }
+
+    // Same project ids → dataKey stable → no re-seed storm / update-depth loop.
+    expect(onStateChange.mock.calls.length).toBe(callsAfterMount)
+  })
+
+  it("applyGauntletEffect can pop negatives and add positives (reverse of the usual gate)", () => {
+    const project: GauntletProjectState = {
+      id: "trial-1",
+      activePositiveIds: ["efficacy"],
+      datum: { id: "trial-1" },
+      delay: 0,
+      eventsApplied: [],
+      killed: false,
+      metrics: {},
+      missingPositiveIds: ["biomarker"],
+      negativeIds: ["toxicity", "cost"],
+      outcome: "in_process",
+      poppedPositiveIds: [],
+      poppedNegativeIds: [],
+      stage: "phase-i",
+      viability: 60
+    }
+    const next = applyGauntletEffect(
+      project,
+      {
+        popNegative: { candidates: ["toxicity", "cost"], count: 1 },
+        addPositive: ["biomarker"],
+        stage: "phase-ii cleared",
+        summary: "Toxicity flag cleared; biomarker evidence added."
+      },
+      {
+        event: { id: "e1", time: 1 },
+        negativeProperties: new Map([
+          ["toxicity", { id: "toxicity", load: 1.4 }],
+          ["cost", { id: "cost", load: 1 }]
+        ]),
+        positiveProperties: new Map([
+          ["efficacy", { id: "efficacy", value: 3 }],
+          ["biomarker", { id: "biomarker", value: 1.5 }]
+        ]),
+        project
+      }
+    )
+    expect(next.negativeIds).toEqual(["cost"])
+    expect(next.poppedNegativeIds).toEqual(["toxicity"])
+    expect(next.activePositiveIds).toEqual(["efficacy", "biomarker"])
+    expect(next.missingPositiveIds).toEqual([])
+    expect(next.stage).toBe("phase-ii cleared")
   })
 
 
