@@ -906,8 +906,8 @@ export function createDefaultAnnotationRules(
 
       // ── Widget (arbitrary HTML/React content at data coordinates) ────
       case "widget": {
-        let px: number | null = null
-        let py: number | null = null
+        let px: number
+        let py: number
 
         if (ann.px != null && ann.py != null) {
           // Explicit pixel coordinates bypass anchor resolution
@@ -919,7 +919,6 @@ export function createDefaultAnnotationRules(
           px = pos.x
           py = pos.y
         }
-        if (px == null || py == null) return null
         if (!isInBounds(px, py, context)) return null
 
         const offsetX = ann.dx ?? 0

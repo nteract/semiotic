@@ -65,7 +65,13 @@ async function checkImage(imageUrl) {
     return
   }
 
-  const url = new URL(imageUrl)
+  let url
+  try {
+    url = new URL(imageUrl)
+  } catch {
+    fail(`og:image is not a valid absolute URL: ${imageUrl}`)
+    return
+  }
   if (url.origin !== SITE_URL) fail(`local og:image origin is ${url.origin}, expected ${SITE_URL}`)
   const imagePath = resolve("docs/build", url.pathname.replace(/^\//, ""))
   if (!existsSync(imagePath)) {

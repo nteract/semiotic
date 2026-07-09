@@ -48,7 +48,6 @@ import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
   renderPhysicsFrame,
-  resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
@@ -348,7 +347,6 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
 ) {
   const {
     chartId,
-    className,
     color,
     colorBy,
     colorScheme,
@@ -357,21 +355,17 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     data,
     emptyContent,
     frameProps = {},
-    height,
     layout,
     layoutConfig,
     loading,
     loadingContent,
-    onClick,
     onObservation,
     opacity,
     paused,
-    size,
     spawnDatum: customSpawnDatum,
     stroke,
     strokeWidth,
     title,
-    width,
     xExtent,
     yExtent
   } = props

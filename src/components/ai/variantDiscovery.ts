@@ -411,16 +411,13 @@ function collectProposals(
   addAll(builtInHeuristicProposals(component, capability, context))
 
   for (const fn of discoveryFns) {
-    let proposals: ReadonlyArray<VariantProposal> = []
     try {
-      proposals = fn(component, capability, context) ?? []
+      addAll(fn(component, capability, context) ?? [])
     } catch (err) {
       if (typeof console !== "undefined") {
         console.warn("[variantDiscovery] proposer threw:", err)
       }
-      continue
     }
-    addAll(proposals)
   }
 
   return Array.from(seen.values())

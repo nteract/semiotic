@@ -329,8 +329,8 @@ export function generateTokens<D = unknown>(
 ): TokenSet<D> {
   const normalizedEncoding = normalizeTokenEncoding(encoding)
   const normalized = normalizeInput(input)
-  let tokens: VisualToken<D>[] = []
-  let total = 0
+  let tokens: VisualToken<D>[]
+  let total: number
   let shown = 0
   let overflow = false
   let numerator: number | undefined

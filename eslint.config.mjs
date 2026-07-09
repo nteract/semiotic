@@ -1,14 +1,23 @@
-// ESLint flat config (ESLint 9+).
+// ESLint flat config (ESLint 10+).
 //
-// Migrated from .eslintrc.json during the 3.5.0 dep sweep. Behaviour matches
-// the legacy config: eslint:recommended + plugin:react/recommended for all
-// files, @typescript-eslint for .ts/.tsx, with the same rule overrides and
-// ignore patterns.
+// Migrated from .eslintrc.json during the 3.5.0 dep sweep; upgraded to ESLint 10
+// in a later pass. Behaviour matches the legacy config: eslint:recommended +
+// plugin:react/recommended for all files, @typescript-eslint for .ts/.tsx,
+// with the same rule overrides and ignore patterns.
+//
+// eslint-plugin-react@7.37.x still uses removed ESLint context APIs
+// (context.getFilename) and peers only eslint ^9.7. We bridge it with
+// @eslint/compat's fixupPluginRules, pin react.version so it skips
+// filesystem detection, and install with --legacy-peer-deps until upstream
+// ships ESLint 10 support.
 import js from "@eslint/js"
+import { fixupPluginRules } from "@eslint/compat"
 import tseslint from "typescript-eslint"
 import reactPlugin from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks"
 import globals from "globals"
+
+const react = fixupPluginRules(reactPlugin)
 
 export default [
   {
@@ -32,11 +41,13 @@ export default [
       }
     },
     plugins: {
-      react: reactPlugin,
+      react,
       "react-hooks": reactHooks
     },
     settings: {
-      react: { version: "detect" }
+      // Pin explicitly so eslint-plugin-react skips version "detect", which
+      // still calls context.getFilename() (removed in ESLint 10).
+      react: { version: "19.2" }
     },
     rules: {
       ...reactPlugin.configs.recommended.rules,

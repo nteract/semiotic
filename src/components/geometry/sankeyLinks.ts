@@ -131,11 +131,10 @@ function linearRibbon() {
   function buildRibbon(points) {
     const bothCode = []
     let x = 0
-    let transformedPoints = { x1: 0, y1: 0, x2: 0, y2: 0 }
 
     while (x < points.length) {
       if (x !== points.length - 1) {
-        transformedPoints = offsetEdge({
+        const transformedPoints = offsetEdge({
           source: points[x],
           target: points[x + 1]
         })

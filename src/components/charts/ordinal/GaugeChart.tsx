@@ -370,8 +370,8 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
         const ly = Math.sin(labelAngle) * labelR
         // Clock hour from labelAngle: 12 at top, clockwise.
         const hour = (((labelAngle + Math.PI / 2) / (2 * Math.PI)) * 12 + 12) % 12
-        let textAnchor: "start" | "middle" | "end" = "middle"
-        let dominantBaseline: "auto" | "middle" | "hanging" = "middle"
+        let textAnchor: "start" | "middle" | "end"
+        let dominantBaseline: "auto" | "middle" | "hanging"
         if (hour >= 11 || hour < 1) {
           textAnchor = "middle"
           dominantBaseline = "auto" // text sits above the mark
