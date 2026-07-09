@@ -256,6 +256,23 @@ function processFlowProjectionOverlay(
  *   ]}
  * />
  * ```
+ *
+ * @example
+ * ```tsx
+ * // Push-only: omit data, stream work items live through the capacity lane.
+ * const ref = useRef()
+ * <ProcessFlowChart
+ *   ref={ref}
+ *   stages={[
+ *     { id: "triage", label: "Triage", force: 10 },
+ *     { id: "review", label: "Review", capacity: { unitsPerSecond: 3 } },
+ *     { id: "done", label: "Done", absorb: true },
+ *   ]}
+ *   stageAccessor="stage"
+ *   liveCapacity
+ * />
+ * ref.current?.push({ id: "pr-42", stage: "review", work: 2 })
+ * ```
  */
 export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
   TDatum extends Datum = Datum

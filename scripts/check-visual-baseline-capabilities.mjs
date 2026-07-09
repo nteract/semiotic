@@ -114,6 +114,8 @@ const SSR_PARITY_BURN_DOWN = new Map([
   ["PhysicalFlowChart", "experimental route-flow physics HOC SSR/CSR parity needs a deterministic path fixture"],
   ["GaltonBoardChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
   ["PhysicsPileChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
+  ["ProcessFlowChart", "process-flow physics HOC SSR/CSR parity needs a settled-capacity fixture"],
+  ["GauntletChart", "gauntlet physics HOC SSR/CSR parity needs a deterministic gate-route fixture"],
 ])
 
 const ssrBurnDownCharts = new Set(SSR_PARITY_BURN_DOWN.keys())

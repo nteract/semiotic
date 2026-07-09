@@ -1300,6 +1300,62 @@ import { PhysicalFlowChart } from "semiotic/physics"
 
 Key props: `nodes` provide route geometry, `links`/`edges` provide throughput, and `showStaticFlow` keeps the route quantities readable while packet bodies move.
 
+### ProcessFlowChart (capacitated multi-body process lane)
+
+```jsx
+import { ProcessFlowChart } from "semiotic/physics"
+
+<ProcessFlowChart
+  data={[
+    { id: "pr-1", stage: "coding", featureId: "auth" },
+    { id: "pr-2", stage: "review", featureId: "auth", work: 2 },
+    { id: "pr-3", stage: "merged", featureId: "auth" },
+  ]}
+  idAccessor="id"
+  stageAccessor="stage"
+  groupBy="featureId"
+  workAccessor="work"
+  stages={[
+    { id: "coding", label: "Coding", force: 14 },
+    { id: "review", label: "Review", capacity: { unitsPerSecond: 4 }, pressure: true },
+    { id: "merged", label: "Merged", absorb: true },
+  ]}
+  liveCapacity
+  size={[900, 420]}
+/>
+```
+
+Key props: `stages` declare force / capacity / absorb behavior, `groupBy` forms feature sockets that complete when every member is absorbed, and `liveCapacity` installs FIFO queue controllers for capacitated stages. Prefer ProcessFlowChart for many independent work items; use GauntletChart for one compound project degraded by gates.
+
+### GauntletChart (compound project through timed gates)
+
+```jsx
+import { GauntletChart } from "semiotic/physics"
+
+<GauntletChart
+  data={[
+    {
+      id: "plan-a",
+      positives: ["homes", "jobs"],
+      negatives: ["cost"],
+    },
+  ]}
+  positiveProperties={[
+    { id: "homes", label: "Homes", radius: 10 },
+    { id: "jobs", label: "Jobs", radius: 10 },
+  ]}
+  negativeProperties={[{ id: "cost", label: "Cost", load: 1.2, radius: 8 }]}
+  gates={[
+    { id: "review", label: "Review" },
+    { id: "budget", label: "Budget" },
+  ]}
+  showProjection
+  size={[720, 380]}
+/>
+```
+
+Key props: `positiveProperties` / `negativeProperties` define satellite marks on each project core, `gates` place timed obstacles along the route, and the settled projection strip summarizes viability. Prefer GauntletChart for one plan with many attached attributes; use ProcessFlowChart for many independent work items.
+
 ---
 
 ## Value Charts — One Number Is The Visualization

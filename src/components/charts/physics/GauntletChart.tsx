@@ -1091,6 +1091,36 @@ function GauntletProjectionOverlay<TDatum extends Datum>({
   )
 }
 
+/**
+ * Physics-backed gauntlet for compound projects: one core body carries
+ * positive/negative property satellites through timed gates until socket
+ * or graveyard outcomes settle.
+ *
+ * @example
+ * ```tsx
+ * <GauntletChart
+ *   data={[{ id: "plan-a", positives: ["homes"], negatives: ["cost"] }]}
+ *   positiveProperties={[{ id: "homes", label: "Homes", radius: 10 }]}
+ *   negativeProperties={[{ id: "cost", label: "Cost", load: 1.2, radius: 8 }]}
+ *   size={[720, 380]}
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * <GauntletChart
+ *   data={projects}
+ *   positiveProperties={positives}
+ *   negativeProperties={negatives}
+ *   gates={[
+ *     { id: "review", label: "Review", x: 280 },
+ *     { id: "budget", label: "Budget", x: 480 },
+ *   ]}
+ *   showProjection
+ *   size={[900, 420]}
+ * />
+ * ```
+ */
 export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Datum = Datum>(
   props: GauntletChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>

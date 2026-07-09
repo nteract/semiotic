@@ -656,6 +656,21 @@
         "deterministic-seed"
       ]
     },
+    "GauntletChart": {
+      "category": "physics",
+      "supportsLegend": false,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "process-gauntlet",
+        "settled-projection"
+      ]
+    },
     "PhysicalFlowChart": {
       "category": "physics",
       "supportsLegend": true,
@@ -685,6 +700,23 @@
       "specialFeatures": [
         "physics-simulation",
         "unitized",
+        "settled-projection"
+      ]
+    },
+    "ProcessFlowChart": {
+      "category": "physics",
+      "supportsLegend": true,
+      "supportsSelection": false,
+      "supportsLinkedHover": false,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "synthetic",
+      "specialFeatures": [
+        "physics-simulation",
+        "process-flow",
+        "capacitated-stages",
+        "group-completion",
         "settled-projection"
       ]
     },
