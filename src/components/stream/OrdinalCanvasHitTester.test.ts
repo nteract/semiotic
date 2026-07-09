@@ -245,7 +245,7 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
       medianPos: 100,
       q3Pos: 140,
       maxPos: 180,
-      stats: { min: 1, q1: 3, median: 5, q3: 7, max: 9 },
+      stats: { min: 1, q1: 3, median: 5, q3: 7, max: 9, n: 5, mean: 5 },
       style: { fill: "#76b7b2" },
       datum: [{ v: 1 }, { v: 5 }, { v: 9 }],
       category: "group1"

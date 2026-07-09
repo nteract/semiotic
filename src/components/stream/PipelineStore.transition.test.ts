@@ -47,7 +47,8 @@ describe("PipelineStore — Transitions", () => {
     store.computeScene({ width: 100, height: 100 })
     expect(store.activeTransition).toBeNull()
 
-    const firstSceneX = store.scene[0]?.x
+    const firstPoint = store.scene.find((n) => n.type === "point")
+    const firstSceneX = firstPoint && firstPoint.type === "point" ? firstPoint.x : undefined
 
     // Second render with different data — should start transition
     store.ingest({ inserts: [{ x: 50, y: 50 }], bounded: true })
@@ -58,7 +59,7 @@ describe("PipelineStore — Transitions", () => {
       const pointNode = store.scene.find(n => n.type === "point")
       expect(pointNode).toBeDefined()
       // At t=0, node should still be at (or very near) previous position
-      expect(pointNode!.x).toBeCloseTo(firstSceneX!, 0)
+      expect(pointNode && pointNode.type === "point" ? pointNode.x : undefined).toBeCloseTo(firstSceneX!, 0)
     }
   })
 

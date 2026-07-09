@@ -14,10 +14,8 @@ if (!baseline || typeof baseline !== "object" || Array.isArray(baseline) || !bas
   process.exit(1)
 }
 const known = baseline.files
-if (Object.keys(known).length === 0) {
-  console.error("Invalid scripts/test-typecheck-baseline.json: baseline.files is empty.")
-  process.exit(1)
-}
+// Empty `files` is valid: it means the suite currently typechecks with zero
+// known debt. Any new diagnostic then fails as a "new file" regression.
 const tscBin = join("node_modules", ".bin", process.platform === "win32" ? "tsc.cmd" : "tsc")
 
 const result = spawnSync(tscBin, ["-p", "tsconfig.tests.json", "--noEmit", "--pretty", "false"], {

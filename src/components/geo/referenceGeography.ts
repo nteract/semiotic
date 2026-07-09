@@ -31,29 +31,43 @@ function unwrapModule(mod: any): Topology {
   return (mod.default ?? mod) as Topology
 }
 
+const WORLD_ATLAS_INSTALL_HINT =
+  'Install the optional peer dependency `world-atlas` (`npm install world-atlas`) ' +
+  "to use built-in reference geographies, or pass GeoJSON Feature[] to `areas`."
+
 async function loadTopology(name: ReferenceGeography): Promise<{ topology: Topology; objectName: string }> {
-  switch (name) {
-    case "world-110m": {
-      const mod = await import("world-atlas/countries-110m.json")
-      return { topology: unwrapModule(mod), objectName: "countries" }
+  try {
+    switch (name) {
+      case "world-110m": {
+        const mod = await import("world-atlas/countries-110m.json")
+        return { topology: unwrapModule(mod), objectName: "countries" }
+      }
+      case "world-50m": {
+        const mod = await import("world-atlas/countries-50m.json")
+        return { topology: unwrapModule(mod), objectName: "countries" }
+      }
+      case "land-110m": {
+        const mod = await import("world-atlas/land-110m.json")
+        return { topology: unwrapModule(mod), objectName: "land" }
+      }
+      case "land-50m": {
+        const mod = await import("world-atlas/land-50m.json")
+        return { topology: unwrapModule(mod), objectName: "land" }
+      }
+      default:
+        throw new Error(
+          `Unknown reference geography: "${name}". ` +
+          `Supported: "world-110m", "world-50m", "land-110m", "land-50m".`
+        )
     }
-    case "world-50m": {
-      const mod = await import("world-atlas/countries-50m.json")
-      return { topology: unwrapModule(mod), objectName: "countries" }
-    }
-    case "land-110m": {
-      const mod = await import("world-atlas/land-110m.json")
-      return { topology: unwrapModule(mod), objectName: "land" }
-    }
-    case "land-50m": {
-      const mod = await import("world-atlas/land-50m.json")
-      return { topology: unwrapModule(mod), objectName: "land" }
-    }
-    default:
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (/Cannot find module|Failed to resolve|world-atlas/i.test(message)) {
       throw new Error(
-        `Unknown reference geography: "${name}". ` +
-        `Supported: "world-110m", "world-50m", "land-110m", "land-50m".`
+        `resolveReferenceGeography("${name}"): ${WORLD_ATLAS_INSTALL_HINT}`
       )
+    }
+    throw error
   }
 }
 

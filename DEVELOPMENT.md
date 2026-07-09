@@ -4,55 +4,66 @@
 
 ### Understanding the Build Process
 
-The docs site imports from `"semiotic"` which resolves to the **built dist bundle**, not the source files. This means:
+The library is built with **tsup/esbuild** (`npm run dist` / `npm run dist:prod`) into `dist/`.
 
-1. Source changes (`src/`) don't auto-update in the docs
-2. You must rebuild `dist/` after making changes
-3. Caches can cause stale code to be served
+The **docs site** (Vite) aliases `semiotic/*` to source via `vite.shared.mjs` for many packages, but production docs builds and some workflows still consume built `dist/` artifacts. When in doubt:
+
+1. Rebuild `dist/` after library source changes that affect packaged entry points
+2. Prefer `npm run docs:dev` for day-to-day docs work
+3. Use `npm run website:start` when you need the production-dist path the docs historically used
 
 ### Development Workflow
 
-#### Option 1: Clean Start (Recommended when switching context)
+#### Option 1: Docs from source (fastest day-to-day)
+
+```bash
+npm run docs:dev
+```
+
+Opens the Vite docs server (default http://127.0.0.1:3000). Source aliases apply for most `semiotic/*` imports.
+
+#### Option 2: Clean start against production dist
 
 ```bash
 npm run website:start:clean
 ```
 
 This will:
-1. Remove all caches (`.parcel-cache`, `docs/build`, `dist`)
-2. Rebuild the dist bundle from source
-3. Start the dev server with caching disabled
-4. Open http://localhost:1234
 
-#### Option 2: Quick Start (When continuing work)
+1. Remove caches (`.vite`, `docs/build`, `dist`)
+2. Rebuild production dist from source
+3. Start the docs dev server
+
+#### Option 3: Quick start (continuing work on dist-backed docs)
 
 ```bash
 npm run website:start
 ```
 
-This will:
-1. Rebuild the dist bundle
-2. Start the dev server with caching disabled
-3. Open http://localhost:1234
+Rebuilds production dist, then starts the docs server.
 
-#### Option 3: Full Clean (When things go wrong)
+#### Option 4: Full clean (when things go wrong)
 
 ```bash
-npm run clean        # Clear all caches and build artifacts
-npm run dist         # Rebuild dist bundle
-npm run website:start # Start dev server
+npm run clean        # Clear caches and build artifacts
+npm run dist         # Rebuild dist (unminified; fine for tests)
+npm run docs:dev     # Or website:start for dist-backed docs
 ```
 
 ### Making Changes to Source Code
 
-When you make changes to `src/` files:
+**Library (`src/`):**
 
-1. **Stop the dev server** (Ctrl+C)
-2. **Rebuild the dist bundle**: `npm run dist:prod` (builds production minified bundle)
-3. **Restart the dev server**: `npm run website:start`
-4. **Hard refresh your browser**: Cmd+Shift+R (Mac) or Ctrl+Shift+F5 (Windows/Linux)
+1. Edit source under `src/`
+2. Run focused tests: `npx vitest run path/to/file.test.tsx`
+3. Rebuild dist when testing packaged consumers or MCP: `npm run dist`
+4. Typecheck: `npm run typescript`
 
-**Note:** The docs use the **production build** (`dist:prod`) which creates minified bundles. This ensures the package.json entry points resolve correctly.
+**Docs (`docs/src/`):**
+
+1. Edit docs source
+2. `npm run docs:dev` and hard-refresh if needed
+3. Route / coverage checks when adding pages: `npm run check:docs-routes`
 
 ### Troubleshooting
 
@@ -60,41 +71,50 @@ When you make changes to `src/` files:
 
 1. Stop the dev server
 2. Run: `npm run clean`
-3. Run: `npm run dist`
-4. Run: `npm run website:start`
-5. Hard refresh browser (Cmd+Shift+R or Ctrl+Shift+F5)
-6. Open DevTools > Network tab > Check "Disable cache"
+3. Run: `npm run dist` or `npm run dist:prod`
+4. Restart: `npm run docs:dev` or `npm run website:start`
+5. Hard refresh (Cmd+Shift+R / Ctrl+Shift+F5)
+6. DevTools → Network → Disable cache
 
-#### Browser freezes or infinite loop
+#### Changes not appearing in dist consumers
 
-1. Stop the dev server
-2. Clear browser cache completely
-3. Run: `npm run website:start:clean`
-4. Hard refresh browser
-
-#### Changes not appearing
-
-The docs use the **built dist bundle**, not source files. Always rebuild after source changes:
-
-```bash
-npm run dist
-```
+`npm run dist` writes **unminified** bundles that still use the `*.min.js` filename convention for package exports compatibility. Production minification is `npm run dist:prod` only. Always rebuild after library changes before testing packed entry points.
 
 ### Available Scripts
 
-- `npm run clean` - Remove all caches and build artifacts
-- `npm run dist` - Build non-minified dist bundle (for tests)
-- `npm run dist:prod` - Build minified production bundle (for docs)
-- `npm run website:start` - Start dev server (rebuilds production dist first, no cache)
-- `npm run website:start:clean` - Full clean + rebuild + start dev server
-- `npm run website:build` - Build docs for production
-- `npm run test` - Run tests
-- `npm run lint` - Check code style
+- `npm run clean` — Remove caches and build artifacts
+- `npm run dist` — Build library bundles (unminified)
+- `npm run dist:prod` — Build minified production bundles
+- `npm run docs:dev` — Vite docs server
+- `npm run website:start` — Rebuild prod dist + docs server
+- `npm run website:start:clean` — Full clean + rebuild + docs server
+- `npm run website:build` — Production docs build + prerender
+- `npm run test` — Vitest unit/integration suite
+- `npm run lint` — ESLint on `src`
 
 ### Cache Locations
 
-- `.parcel-cache/` - Parcel's build cache
-- `docs/build/` - Built docs website
-- `dist/` - Built semiotic bundle (used by docs)
+- `node_modules/.vite` / `.vite` — Vite caches
+- `docs/build/` — Built docs website
+- `dist/` — Built library bundles
 
 All of these are cleared by `npm run clean`.
+
+### Bundle entry points
+
+Prefer subpath imports in apps:
+
+| Import | Contents |
+|--------|----------|
+| `semiotic/xy` | XY charts + StreamXYFrame |
+| `semiotic/ordinal` | Ordinal charts |
+| `semiotic/network` | Network charts |
+| `semiotic/geo` | Geo charts (isolates d3-geo / map data) |
+| `semiotic/realtime` | Streaming HOCs |
+| `semiotic/physics` | Physics charts only (not on root `semiotic`; optional Matter/Rapier peers) |
+| `semiotic/server` | SSR / static render |
+| `semiotic/ai` | Tooling / codegen surface (large; not for production UI) |
+| `semiotic/value` | BigNumber |
+| `semiotic/recipes` | Pure layout kit |
+
+`world-atlas` is an optional peer for built-in reference geographies (`resolveReferenceGeography`). Install it when using string map names like `"world-110m"`.

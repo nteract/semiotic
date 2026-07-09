@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   forwardRef,
+  memo,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -1511,7 +1512,7 @@ function PhysicsSemanticDataTable(props: {
   )
 }
 
-export const StreamPhysicsFrame = forwardRef<
+export const StreamPhysicsFrame = memo(forwardRef<
   StreamPhysicsFrameHandle,
   StreamPhysicsFrameProps
 >(function StreamPhysicsFrame(props, ref) {
@@ -2955,7 +2956,7 @@ export const StreamPhysicsFrame = forwardRef<
       </div>
     </div>
   )
-})
+}))
 
 StreamPhysicsFrame.displayName = "StreamPhysicsFrame"
 

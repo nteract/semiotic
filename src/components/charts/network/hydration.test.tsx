@@ -36,7 +36,14 @@ const edges = [
   { source: "c", target: "d", value: 4 },
 ]
 
-const hierarchy = {
+/** Hierarchy nodes: intermediate levels may omit `value` (summed from leaves). */
+type HierarchyNode = {
+  name: string
+  value?: number
+  children?: HierarchyNode[]
+}
+
+const hierarchy: HierarchyNode = {
   name: "root",
   children: [
     {
@@ -100,8 +107,8 @@ const cases: HydrationCase[] = [
       layout={(ctx) => ({
         sceneNodes: ctx.nodes.map((n, i) => ({
           type: "circle" as const,
-          x: 50 + i * 80,
-          y: 100,
+          cx: 50 + i * 80,
+          cy: 100,
           r: 12,
           style: { fill: ctx.resolveColor(String(n.id)) },
           datum: n,
@@ -139,9 +146,9 @@ describe("Network HOC catalog — hydration parity", () => {
         const html = renderToString(c.render())
         container.innerHTML = html
 
-        let root: ReturnType<typeof hydrateRoot> | null = null
+        const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
-          root = hydrateRoot(container, c.render())
+          rootBox.current = hydrateRoot(container, c.render())
         })
 
         const mismatchWarnings = errorSpy.mock.calls.filter((call) => {
@@ -150,7 +157,7 @@ describe("Network HOC catalog — hydration parity", () => {
         })
         expect(mismatchWarnings).toEqual([])
 
-        root?.unmount()
+        rootBox.current?.unmount()
         errorSpy.mockRestore()
       })
 
@@ -158,15 +165,15 @@ describe("Network HOC catalog — hydration parity", () => {
         const html = renderToString(c.render())
         container.innerHTML = html
 
-        let root: ReturnType<typeof hydrateRoot> | null = null
+        const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
-          root = hydrateRoot(container, c.render())
+          rootBox.current = hydrateRoot(container, c.render())
         })
 
         const canvases = container.querySelectorAll("canvas")
         expect(canvases.length).toBeGreaterThanOrEqual(1)
 
-        root?.unmount()
+        rootBox.current?.unmount()
       })
     })
   }

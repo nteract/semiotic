@@ -58,7 +58,14 @@ const networkEdges = [
   { source: "b", target: "c", value: 3 },
 ]
 
-const hierarchy = {
+/** Hierarchy nodes: intermediate levels may omit `value` (summed from leaves). */
+type HierarchyNode = {
+  name: string
+  value?: number
+  children?: HierarchyNode[]
+}
+
+const hierarchy: HierarchyNode = {
   name: "root",
   children: [
     { name: "alpha", value: 10 },
@@ -125,7 +132,13 @@ const cases: ParityCase[] = [
       width: 500, height: 400,
     }),
     inFrame: () => renderToString(
-      <Treemap data={hierarchy} childrenAccessor="children" valueAccessor="value" width={500} height={400} />,
+      <Treemap
+        data={hierarchy}
+        childrenAccessor="children"
+        valueAccessor="value"
+        width={500}
+        height={400}
+      />,
     ),
   },
 ]

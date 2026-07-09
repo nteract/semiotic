@@ -8,8 +8,12 @@ const isAnalyze = args.includes("--analyze")
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"))
 const optionalDependencyNames = Object.keys(pkg.optionalDependencies ?? {})
+const optionalPeerNames = Object.entries(pkg.peerDependenciesMeta ?? {})
+  .filter(([, meta]) => meta && meta.optional)
+  .map(([name]) => name)
 const explicitExternals = [
   ...optionalDependencyNames,
+  ...optionalPeerNames,
   /^world-atlas\//,
   "react-dom/server",
   "react/jsx-runtime",
@@ -44,7 +48,9 @@ async function createBundle(options = {}) {
   const commonOptions = {
     entry: { [name]: input },
     outDir: "dist",
-    target: "es2015",
+    // es2020 matches modern React/Vite targets and drops many esbuild
+    // helpers (optional chaining, nullish coalescing, class fields stay native).
+    target: "es2020",
     platform: serverOnly ? "node" : "neutral",
     dts: false,
     bundle: true,

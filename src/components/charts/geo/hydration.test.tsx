@@ -83,8 +83,6 @@ const cases: HydrationCase[] = [
       flows={syntheticFlows}
       nodes={syntheticPoints}
       nodeIdAccessor="id"
-      sourceAccessor="source"
-      targetAccessor="target"
       valueAccessor="value"
       xAccessor="lon"
       yAccessor="lat"
@@ -95,7 +93,7 @@ const cases: HydrationCase[] = [
   { name: "DistanceCartogram", render: () => (
     <DistanceCartogram
       points={syntheticPoints}
-      center={syntheticPoints[0]}
+      center={syntheticPoints[0]!.id}
       xAccessor="lon"
       yAccessor="lat"
       costAccessor="value"
@@ -131,9 +129,9 @@ describe("Geo HOC catalog — hydration parity", () => {
         const html = renderToString(c.render())
         container.innerHTML = html
 
-        let root: ReturnType<typeof hydrateRoot> | null = null
+        const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
-          root = hydrateRoot(container, c.render())
+          rootBox.current = hydrateRoot(container, c.render())
         })
 
         const mismatchWarnings = errorSpy.mock.calls.filter((call) => {
@@ -142,7 +140,7 @@ describe("Geo HOC catalog — hydration parity", () => {
         })
         expect(mismatchWarnings).toEqual([])
 
-        root?.unmount()
+        rootBox.current?.unmount()
         errorSpy.mockRestore()
       })
 
@@ -150,15 +148,15 @@ describe("Geo HOC catalog — hydration parity", () => {
         const html = renderToString(c.render())
         container.innerHTML = html
 
-        let root: ReturnType<typeof hydrateRoot> | null = null
+        const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
-          root = hydrateRoot(container, c.render())
+          rootBox.current = hydrateRoot(container, c.render())
         })
 
         const canvases = container.querySelectorAll("canvas")
         expect(canvases.length).toBeGreaterThanOrEqual(1)
 
-        root?.unmount()
+        rootBox.current?.unmount()
       })
     })
   }

@@ -32,6 +32,7 @@ import { computeDecayOpacity } from "./pipelineDecay"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
+import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { buildBarScene, buildClusterBarScene } from "./ordinalSceneBuilders/barScene"
 import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointScene"
@@ -1444,7 +1445,7 @@ export class OrdinalPipelineStore {
     if (this.config.transition && this.scene.length > 0) {
       this.snapshotPositions()
     }
-    const ids = new Set(Array.isArray(id) ? id : [id])
+    const ids = toIdSet(id)
     const getDataId = this.getDataId
     // Compact timestamp buffer in lockstep with data removal
     const predicate = (item: Datum) => ids.has(getDataId(item))
@@ -1483,7 +1484,7 @@ export class OrdinalPipelineStore {
     if (!this.getDataId) {
       throw new Error("update() requires dataIdAccessor to be configured")
     }
-    const ids = new Set(Array.isArray(id) ? id : [id])
+    const ids = toIdSet(id)
     const getDataId = this.getDataId
     // Capture matched indices before mutation (updater may change the ID field)
     const matchedIndices = new Set<number>()

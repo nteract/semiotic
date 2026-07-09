@@ -28,7 +28,8 @@ import {
   useMemo,
   useCallback,
   useImperativeHandle,
-  forwardRef
+  forwardRef,
+  memo
 } from "react"
 import type {
   StreamOrdinalFrameProps,
@@ -57,7 +58,7 @@ import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
-import { resolveCSSColor } from "./renderers/resolveCSSColor"
+import { paintCanvasBackground } from "./canvasBackground"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -238,7 +239,7 @@ function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
 
 // ── Component ──────────────────────────────────────────────────────────
 
-const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFrameProps>(
+const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFrameProps>(
   function StreamOrdinalFrame(props, ref) {
     const {
       chartType,
@@ -942,20 +943,21 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       //   • `background="transparent"` — explicit opt-out for overlay composition.
       //   • `backgroundGraphics` is provided — user supplied their own SVG
       //     background behind the canvas; painting a themed fill would hide it.
-      const shouldPaintBg = background !== "transparent" && !backgroundGraphics
-      if (shouldPaintBg) {
-        const semioticBg = canvas
+      // Only resolve --semiotic-bg when paintCanvasBackground will actually
+      // use it (no explicit background, no backgroundGraphics, not transparent).
+      const needsThemeBg =
+        !backgroundGraphics &&
+        background !== "transparent" &&
+        !background
+      paintCanvasBackground(ctx, {
+        background,
+        hasBackgroundGraphics: Boolean(backgroundGraphics),
+        themeBackground: needsThemeBg
           ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
-          : ""
-        // Resolve `var(...)` so canvas accepts the assignment — see
-        // the matching comment in StreamNetworkFrame.
-        const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-        const resolvedBg = effectiveBg ? resolveCSSColor(ctx, effectiveBg) : null
-        if (resolvedBg) {
-          ctx.fillStyle = resolvedBg
-          ctx.fillRect(0, 0, size[0], size[1])
-        }
-      }
+          : "",
+        width: size[0],
+        height: size[1]
+      })
 
       const isRadial = projection === "radial"
 
@@ -1351,7 +1353,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       </div>
     )
   }
-)
+))
 
 StreamOrdinalFrame.displayName = "StreamOrdinalFrame"
 export default StreamOrdinalFrame

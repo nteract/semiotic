@@ -57,9 +57,9 @@ describe("useHydration / useWasHydratingFromSSR", () => {
     container.innerHTML = html
 
     const results: Array<{ hydrated: boolean; ssr: boolean }> = []
-    let root: ReturnType<typeof hydrateRoot> | null = null
+    const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
     act(() => {
-      root = hydrateRoot(container, <Probe onResult={(r) => results.push(r)} />)
+      rootBox.current = hydrateRoot(container, <Probe onResult={(r) => results.push(r)} />)
     })
 
     // After hydration, `hydrated` is true and `wasHydratingFromSSR`
@@ -69,7 +69,7 @@ describe("useHydration / useWasHydratingFromSSR", () => {
     expect(last.hydrated).toBe(true)
     expect(last.ssr).toBe(true)
 
-    root?.unmount()
+    rootBox.current?.unmount()
   })
 
   it("a fresh client mount (no hydration) reports `wasHydratingFromSSR === false`", async () => {
@@ -78,10 +78,10 @@ describe("useHydration / useWasHydratingFromSSR", () => {
     // captures the CSR snapshot (`false`) on first render.
     const { createRoot } = await import("react-dom/client")
     const results: Array<{ hydrated: boolean; ssr: boolean }> = []
-    let root: ReturnType<typeof createRoot> | null = null
+    const rootBox: { current: ReturnType<typeof createRoot> | null } = { current: null }
     act(() => {
-      root = createRoot(container)
-      root.render(<Probe onResult={(r) => results.push(r)} />)
+      rootBox.current = createRoot(container)
+      rootBox.current!.render(<Probe onResult={(r) => results.push(r)} />)
     })
 
     const last = results[results.length - 1]
@@ -91,6 +91,6 @@ describe("useHydration / useWasHydratingFromSSR", () => {
     // the same hook.
     expect(last.ssr).toBe(false)
 
-    root?.unmount()
+    rootBox.current?.unmount()
   })
 })

@@ -14,11 +14,11 @@ function createMockHitCtx(): CanvasRenderingContext2D & MockHitContext {
   const pathsInPoint = new Set<string>()
 
   const hitCtx: MockHitContext = {
-    isPointInPath: vi.fn((path: Path2D, _x: number, _y: number) => {
-      // Simulate: any path whose data starts with "M0" is "hit" for point (50,50)
-      // We use the pathsInPoint set to control which paths register hits
+    isPointInPath: vi.fn((...args: unknown[]) => {
+      // Canvas isPointInPath overloads: (x,y) | (path,x,y). Tests always pass Path2D first.
+      const path = args[0] as Path2D
       return pathsInPoint.has((path as TestPath2D).__testId)
-    }),
+    }) as CanvasRenderingContext2D["isPointInPath"],
     _registerHit: (id: string) => pathsInPoint.add(id),
     _clearHits: () => pathsInPoint.clear()
   }
@@ -126,7 +126,7 @@ describe("findNearestGeoNode", () => {
       type: "line",
       path: [[0, 50], [100, 50]],
       style: { stroke: "red", strokeWidth: 2 },
-      datum: { id: "route" }
+      datum: [{ id: "route" }]
     }
 
     const hitCtx = createMockHitCtx()

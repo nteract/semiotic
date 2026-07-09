@@ -37,6 +37,23 @@ export interface ForceWorkerResponse {
   positions: Record<string, Point>
 }
 
+interface ForceWorkerWireRequest {
+  requestId: number
+  request: ForceWorkerRequest
+}
+
+interface ForceWorkerWireResponse {
+  requestId?: number
+  positions?: Record<string, Point>
+  error?: { message: string; name?: string; stack?: string }
+}
+
+interface PendingForceWorkerRequest {
+  cleanup: () => void
+  reject: (error: Error) => void
+  resolve: (payload: ForceWorkerResponse) => void
+}
+
 export const DEFAULT_FORCE_WORKER_THRESHOLD = 40_000
 
 export function shouldUseForceWorker(
@@ -53,6 +70,13 @@ export function shouldUseForceWorker(
 
 export function canUseForceWorker(): boolean {
   return typeof window !== "undefined" && typeof Worker !== "undefined"
+}
+
+export function createForceLayoutWorker(): Worker {
+  return new Worker(new URL("./forceLayoutWorker.js", import.meta.url), {
+    type: "module",
+    name: "semiotic-force-layout"
+  })
 }
 
 export function createFrameForceWorkerRequest(
@@ -125,6 +149,126 @@ function abortError(): Error {
   return error
 }
 
+/**
+ * Long-lived force-layout worker session. Mirrors PhysicsWorkerSession:
+ * one Worker is reused across layouts so module parse + startup cost is
+ * paid once per page, not once per graph re-layout.
+ */
+export class ForceLayoutWorkerSession {
+  private nextRequestId = 1
+  private pending = new Map<number, PendingForceWorkerRequest>()
+  private worker: Worker
+  private dead = false
+
+  constructor(worker: Worker = createForceLayoutWorker()) {
+    this.worker = worker
+    this.worker.onmessage = (event: MessageEvent<ForceWorkerWireResponse>) => {
+      const response = event.data
+      const requestId = response.requestId
+      // Back-compat: one-shot workers that omit requestId resolve the
+      // oldest pending request (at most one in that protocol).
+      const pending =
+        requestId != null
+          ? this.pending.get(requestId)
+          : this.pending.values().next().value
+      if (!pending) return
+      if (requestId != null) this.pending.delete(requestId)
+      else this.pending.clear()
+      pending.cleanup()
+      if (response.error) {
+        const error = new Error(response.error.message)
+        error.name = response.error.name ?? "Error"
+        if (response.error.stack) error.stack = response.error.stack
+        pending.reject(error)
+        return
+      }
+      pending.resolve({ positions: response.positions ?? {} })
+    }
+    this.worker.onerror = (event: ErrorEvent) => {
+      this.rejectAll(new Error(event.message || "Force layout worker failed"))
+      this.terminate()
+    }
+  }
+
+  get isDead(): boolean {
+    return this.dead
+  }
+
+  request(
+    request: ForceWorkerRequest,
+    signal?: AbortSignal
+  ): Promise<ForceWorkerResponse> {
+    if (this.dead) {
+      return Promise.reject(new Error("Force layout worker session is closed"))
+    }
+    if (signal?.aborted) return Promise.reject(abortError())
+
+    const requestId = this.nextRequestId
+    this.nextRequestId += 1
+    const wire: ForceWorkerWireRequest = { requestId, request }
+
+    return new Promise((resolve, reject) => {
+      const onAbort = () => {
+        this.pending.delete(requestId)
+        signal?.removeEventListener("abort", onAbort)
+        reject(abortError())
+      }
+      const cleanup = () => signal?.removeEventListener("abort", onAbort)
+      this.pending.set(requestId, { cleanup, reject, resolve })
+      signal?.addEventListener("abort", onAbort, { once: true })
+
+      try {
+        this.worker.postMessage(wire)
+      } catch (error) {
+        this.pending.delete(requestId)
+        cleanup()
+        reject(error instanceof Error ? error : new Error(String(error)))
+      }
+    })
+  }
+
+  terminate(): void {
+    if (this.dead) return
+    this.dead = true
+    this.rejectAll(new Error("Force layout worker terminated"))
+    this.worker.terminate()
+  }
+
+  private rejectAll(error: Error): void {
+    for (const pending of this.pending.values()) {
+      pending.cleanup()
+      pending.reject(error)
+    }
+    this.pending.clear()
+  }
+}
+
+/** Shared session for the package-level `runForceLayoutWorker` helper. */
+let sharedSession: ForceLayoutWorkerSession | null = null
+
+function getSharedForceLayoutSession(): ForceLayoutWorkerSession {
+  if (!sharedSession || sharedSession.isDead) {
+    sharedSession = new ForceLayoutWorkerSession()
+  }
+  return sharedSession
+}
+
+/** Test helper: drop the shared session so the next call creates a fresh Worker. */
+export function _resetSharedForceLayoutSessionForTest(): void {
+  if (sharedSession) {
+    try {
+      sharedSession.terminate()
+    } catch {
+      /* ignore */
+    }
+    sharedSession = null
+  }
+}
+
+/**
+ * Run a force layout on a reused worker session.
+ * Prefer this over constructing a new Worker per layout.
+ */
 export function runForceLayoutWorker(
   request: ForceWorkerRequest,
   signal?: AbortSignal
@@ -134,35 +278,5 @@ export function runForceLayoutWorker(
   }
   if (signal?.aborted) return Promise.reject(abortError())
 
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(
-      new URL("./forceLayoutWorker.js", import.meta.url),
-      { type: "module", name: "semiotic-force-layout" }
-    )
-
-    const cleanup = () => {
-      signal?.removeEventListener("abort", onAbort)
-      worker.terminate()
-    }
-    const onAbort = () => {
-      cleanup()
-      reject(abortError())
-    }
-
-    worker.onmessage = (event: MessageEvent<ForceWorkerResponse>) => {
-      cleanup()
-      resolve(event.data)
-    }
-    worker.onerror = (event: ErrorEvent) => {
-      cleanup()
-      reject(new Error(event.message || "Force layout worker failed"))
-    }
-    signal?.addEventListener("abort", onAbort, { once: true })
-    try {
-      worker.postMessage(request)
-    } catch (error) {
-      cleanup()
-      reject(error)
-    }
-  })
+  return getSharedForceLayoutSession().request(request, signal)
 }

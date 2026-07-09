@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Force layout worker session.** `runForceLayoutWorker` reuses a long-lived
+  `ForceLayoutWorkerSession` (request IDs, no spawn/terminate per layout),
+  matching the physics worker lifecycle. Abort cancels the pending request
+  without killing the shared worker.
+- **Growing-window default cap.** `windowMode: "growing"` now defaults
+  `maxCapacity` to **100_000** (was 1_000_000). Dev builds log a one-time
+  warning when the buffer first crosses 50_000 points.
+- **`world-atlas` is an optional peer.** Built-in reference geographies still
+  work when the package is installed; consumers who never call
+  `resolveReferenceGeography` no longer take it as a hard dependency.
+  (Still a devDependency for tests/docs.)
+- **Library build target** raised from `es2015` to **`es2020`**.
+- **CI:** full gate suite runs once on Node 22; other engines run a smoke
+  matrix (install, dist, vitest, typecheck).
+- **size-limit** budgets added for `physics`, `server`, `ai`, `recipes`,
+  `utils`, and `value` entry points.
+- **Stream frames memoized:** `StreamXYFrame`, `StreamOrdinalFrame`,
+  `StreamNetworkFrame`, `StreamGeoFrame`, and `StreamPhysicsFrame` are
+  `React.memo`-wrapped so parent re-renders with stable props skip the
+  frame body.
+- **Interaction canvas idle skip** on XY and Geo (one clear when hover ends).
+- **Shared `frameThemeColors`** module for version-cached theme/background
+  resolution (StreamXYFrame uses it; other frames can adopt the same helper).
+- **`RingBuffer.resize`** uses `slice` for shrink (avoids O(n²) `shift` loops
+  when a growing window hits its cap).
+- **`pipelineIdentityOps`** shared helpers for id-keyed remove/update paths.
+- **Shared `paintCanvasBackground`** helper used by XY / Ordinal / Network / Geo
+  frames (CSS-var-safe fill, transparent + backgroundGraphics opt-outs).
+- **Network dirty-canvas path:** full clear/redraw only when data, transition,
+  particles, encodings, or continuous animation need it — annotation-only rAF
+  retries no longer thrash the data canvas.
+- **Root entry diet:** physics HOCs (`GaltonBoardChart`, `GauntletChart`,
+  `PhysicsPileChart`, etc.) are **no longer exported from `semiotic`**. Import
+  from `semiotic/physics` (or `semiotic/ai` for tooling). Measured full
+  package entry ~233 KB gz (was ~296 KB gz).
+- **XY decay/pulse** share a version-cached datum→index map
+  (`buildDatumIndexMap`) so continuous frames do not rebuild the map twice.
+- **Geo dirty-canvas path:** hover-only repaints skip the data canvas and
+  only update the interaction layer.
+- **Shared `paintNeeds` helpers** (`needsDataCanvasPaint` /
+  `needsInteractionCanvasPaint`) used by Network/Geo/XY paint gates.
+- **Test typecheck is clean:** baseline emptied (**~228 → 0** known errors).
+  Cleared keyboardNav (82), ordinalSceneBuilders (45), recipes, heatmap,
+  hydration suites, networkColoring, and the remaining debt files.
+
+### Deprecated
+
+- **`GuantletChart`** typo alias of `GauntletChart` — use `GauntletChart`.
+  Removal planned for the next major.
+
+### Docs
+
+- `CONTRIBUTING.md` / `DEVELOPMENT.md` updated for the tsup + Vite toolchain
+  (removed stale Rollup/Parcel/`src/processing` guidance).
+
 ## [3.8.0] - 2026-07-05
 
 ### Added

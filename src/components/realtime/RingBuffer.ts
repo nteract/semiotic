@@ -81,16 +81,20 @@ export class RingBuffer<T> {
       throw new Error("RingBuffer capacity must be at least 1")
     }
     const items = this.toArray()
-    const evicted: T[] = []
-    while (items.length > newCapacity) {
-      evicted.push(items.shift()!)
+    // Drop oldest items with slice — avoid O(n²) shift() loops when
+    // shrinking a large growing window down to maxCapacity.
+    let keepStart = 0
+    let evicted: T[] = []
+    if (items.length > newCapacity) {
+      keepStart = items.length - newCapacity
+      evicted = items.slice(0, keepStart)
     }
     this._capacity = newCapacity
     this.buffer = new Array(newCapacity)
     this.head = 0
     this._size = 0
-    for (const item of items) {
-      this.push(item)
+    for (let i = keepStart; i < items.length; i++) {
+      this.push(items[i]!)
     }
     return evicted
   }

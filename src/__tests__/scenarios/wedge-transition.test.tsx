@@ -6,7 +6,15 @@
  */
 
 import { OrdinalPipelineStore } from "../../components/stream/OrdinalPipelineStore"
-import type { OrdinalPipelineConfig } from "../../components/stream/ordinalTypes"
+import type {
+  OrdinalPipelineConfig,
+  OrdinalSceneNode,
+  WedgeSceneNode
+} from "../../components/stream/ordinalTypes"
+
+function isWedge(n: OrdinalSceneNode): n is WedgeSceneNode {
+  return n.type === "wedge"
+}
 
 function makeConfig(overrides: Partial<OrdinalPipelineConfig> = {}): OrdinalPipelineConfig {
   return {
@@ -74,7 +82,7 @@ describe("wedge angle interpolation", () => {
     store.computeScene(layout)
 
     // Capture original angles
-    const wedgeA1 = store.scene.find(n => n.type === "wedge" && n.category === "A")!
+    const wedgeA1 = store.scene.find((n): n is WedgeSceneNode => isWedge(n) && n.category === "A")!
     const origStart = wedgeA1.startAngle
     const origEnd = wedgeA1.endAngle
 
@@ -85,7 +93,7 @@ describe("wedge angle interpolation", () => {
     ] })
     store.computeScene(layout)
 
-    const wedgeA2 = store.scene.find(n => n.type === "wedge" && n.category === "A")!
+    const wedgeA2 = store.scene.find((n): n is WedgeSceneNode => isWedge(n) && n.category === "A")!
     // Node should be at previous angles with targets set
     expect(wedgeA2._targetStartAngle).toBeDefined()
     expect(wedgeA2._targetEndAngle).toBeDefined()
@@ -104,7 +112,7 @@ describe("wedge angle interpolation", () => {
     ] })
     store.computeScene(layout)
 
-    const wedgeA1 = store.scene.find(n => n.type === "wedge" && n.category === "A")!
+    const wedgeA1 = store.scene.find((n): n is WedgeSceneNode => isWedge(n) && n.category === "A")!
     const oldEnd = wedgeA1.endAngle
 
     store.ingest({ bounded: true, inserts: [
@@ -113,7 +121,7 @@ describe("wedge angle interpolation", () => {
     ] })
     store.computeScene(layout)
 
-    const wedgeA2 = store.scene.find(n => n.type === "wedge" && n.category === "A")!
+    const wedgeA2 = store.scene.find((n): n is WedgeSceneNode => isWedge(n) && n.category === "A")!
     const targetEnd = wedgeA2._targetEndAngle!
 
     // Advance to ~50% (approximate by setting time halfway through duration)
@@ -142,7 +150,7 @@ describe("wedge angle interpolation", () => {
     ] })
     store.computeScene(layout)
 
-    const wedgeC = store.scene.find(n => n.type === "wedge" && n.category === "C")!
+    const wedgeC = store.scene.find((n): n is WedgeSceneNode => isWedge(n) && n.category === "C")!
     // Entering wedge should have collapsed angles (start === end)
     expect(wedgeC.startAngle).toBe(wedgeC.endAngle)
     // With targets to expand to

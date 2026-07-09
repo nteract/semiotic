@@ -9,7 +9,8 @@ import {
   useMemo,
   useCallback,
   useImperativeHandle,
-  forwardRef
+  forwardRef,
+  memo
 } from "react"
 import type {
   StreamNetworkFrameProps,
@@ -55,7 +56,8 @@ import {
   useHydrationLifecycle
 } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
-import { resolveCSSColor } from "./renderers/resolveCSSColor"
+import { paintCanvasBackground } from "./canvasBackground"
+import { needsDataCanvasPaint } from "./paintNeeds"
 import {
   NetworkAccessibleDataTable,
   AriaLiveTooltip,
@@ -233,7 +235,7 @@ const VALUE_ROW_RE = /^(value|amount|total|count|weight|score)$/i
 
 // ── StreamNetworkFrame ─────────────────────────────────────────────────
 
-const StreamNetworkFrame = forwardRef<
+const StreamNetworkFrame = memo(forwardRef<
   StreamNetworkFrameHandle,
   StreamNetworkFrameProps
 >(function StreamNetworkFrame(props, ref) {
@@ -1621,117 +1623,132 @@ const StreamNetworkFrame = forwardRef<
       ? false
       : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
 
-    if (transitionActive || dirtyRef.current || animationTicked) {
+    const wasDirty = dirtyRef.current
+    if (transitionActive || wasDirty || animationTicked) {
       // Rebuild scene for current positions
       store.buildScene([adjustedWidth, adjustedHeight])
     }
 
-    // DPR setup — prepareCanvas sets size, DPR transform, and margin translate
-    const dpr = getDevicePixelRatio()
-    if (!prepareCanvas(canvas, size, margin, dpr)) return
-    ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
+    // Live encodings / particles need a full canvas repaint every tick.
+    // Annotation-only rAF retries (pendingAnnotationFrame) skip clear+draw
+    // so a throttled SVG overlay update does not thrash the data canvas.
+    const particlesWanted =
+      showParticles && !reducedMotionRef.current && !!store.particlePool
+    const liveEncoding =
+      !!decay ||
+      !!pulse ||
+      !!thresholds ||
+      (animate !== false && store.hasActiveTopologyDiff) ||
+      store.hasActivePulses ||
+      store.hasActiveThresholds
+    const needsDataRepaint = needsDataCanvasPaint({
+      dirtyOrRebuilt: wasDirty,
+      transitioning: isTransitioning,
+      animationTicked,
+      continuous: particlesWanted || isContinuous,
+      liveEncoding
+    })
 
-    // Background. The user prop may be a `var(--token, fallback)`
-    // string, which the canvas API silently rejects when assigned to
-    // `ctx.fillStyle` — leaving the prior frame's fillStyle (a node,
-    // edge, or particle color) in place. The next `fillRect` then
-    // paints the chart background with that stale color, producing
-    // a palette-flashing effect on every animation frame. Resolve
-    // CSS variables to their concrete value before assigning.
-    if (background) {
-      const resolvedBg = resolveCSSColor(ctx, background)
-      if (resolvedBg) {
-        ctx.fillStyle = resolvedBg
-        ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
-      }
-    }
-
-    // Apply realtime encoding (pulse/decay/thresholds)
-    if (decay) {
-      store.applyDecay()
-    }
-    if (pulse) {
-      store.applyPulse(now)
-    }
-    if (thresholds) {
-      store.applyThresholds(now)
-    }
-
-    // Topology diff highlighting (newly-added nodes glow briefly). Active for
-    // streaming, but suppressed when the consumer opts out of animation with
-    // `animate={false}` — a bounded/static chart (e.g. a minimap) shouldn't
-    // pulse every node on its first render.
-    if (animate !== false) {
-      store.applyTopologyDiff(now)
-    }
-
-    // Staleness dimming
+    // Staleness dimming (read once; applied only on data paints)
     const staleThreshold = staleness?.threshold ?? 5000
     const currentlyStale =
       staleness &&
       store.lastIngestTime > 0 &&
       now - store.lastIngestTime > staleThreshold
 
-    if (currentlyStale) {
-      ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
-    }
+    if (needsDataRepaint) {
+      // DPR setup — prepareCanvas sets size, DPR transform, and margin translate
+      const dpr = getDevicePixelRatio()
+      if (!prepareCanvas(canvas, size, margin, dpr)) return
+      ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-    // Render edges first (they go behind nodes)
-    networkEdgeRenderer(ctx, store.sceneEdges)
+      // Background. The user prop may be a `var(--token, fallback)`
+      // string — resolve CSS variables before assigning fillStyle.
+      paintCanvasBackground(ctx, {
+        background,
+        width: adjustedWidth,
+        height: adjustedHeight
+      })
 
-    // Render nodes
-    networkRectRenderer(ctx, store.sceneNodes)
-    networkCircleRenderer(ctx, store.sceneNodes)
-    networkArcRenderer(ctx, store.sceneNodes)
-    networkSymbolRenderer(ctx, store.sceneNodes)
-    networkGlyphRenderer(ctx, store.sceneNodes)
+      // Apply realtime encoding (pulse/decay/thresholds)
+      if (decay) {
+        store.applyDecay()
+      }
+      if (pulse) {
+        store.applyPulse(now)
+      }
+      if (thresholds) {
+        store.applyThresholds(now)
+      }
 
-    // Render particles (sankey only) — stop entirely when stale or when the
-    // user prefers reduced motion (particles are purely decorative movement).
-    if (showParticles && !reducedMotionRef.current && store.particlePool && !currentlyStale) {
-      // Read-only consumer — reuse the store's per-frame cached array instead
-      // of allocating a fresh one every animation frame.
-      const edges = store.edgesArray
-      if (edges.length > 0) {
-        spawnNetworkParticles(
-          store.particlePool,
-          edges,
-          deltaTime,
-          particleStyle
-        )
-        const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
+      // Topology diff highlighting (newly-added nodes glow briefly). Active for
+      // streaming, but suppressed when the consumer opts out of animation with
+      // `animate={false}` — a bounded/static chart (e.g. a minimap) shouldn't
+      // pulse every node on its first render.
+      if (animate !== false) {
+        store.applyTopologyDiff(now)
+      }
 
-        // Compute per-edge speed multipliers for proportional flow rate
-        let edgeSpeedMultipliers: number[] | undefined
-        if (particleStyle.proportionalSpeed) {
-          const maxValue = edges.reduce(
-            (max, e) => Math.max(max, e.value || 1),
-            1
+      if (currentlyStale) {
+        ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
+      }
+
+      // Render edges first (they go behind nodes)
+      networkEdgeRenderer(ctx, store.sceneEdges)
+
+      // Render nodes
+      networkRectRenderer(ctx, store.sceneNodes)
+      networkCircleRenderer(ctx, store.sceneNodes)
+      networkArcRenderer(ctx, store.sceneNodes)
+      networkSymbolRenderer(ctx, store.sceneNodes)
+      networkGlyphRenderer(ctx, store.sceneNodes)
+
+      // Render particles (sankey only) — stop entirely when stale or when the
+      // user prefers reduced motion (particles are purely decorative movement).
+      if (particlesWanted && !currentlyStale) {
+        // Read-only consumer — reuse the store's per-frame cached array instead
+        // of allocating a fresh one every animation frame.
+        const edges = store.edgesArray
+        if (edges.length > 0) {
+          spawnNetworkParticles(
+            store.particlePool!,
+            edges,
+            deltaTime,
+            particleStyle
           )
-          edgeSpeedMultipliers = edges.map((e) => {
-            const ratio = (e.value || 1) / maxValue
-            // Scale between 0.3x and 2x so low-value edges still move
-            return 0.3 + ratio * 1.7
-          })
-        }
+          const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
 
-        store.particlePool.step(deltaTime, speed, edges, edgeSpeedMultipliers)
-        renderNetworkParticles(
-          ctx,
-          store.particlePool,
-          edges,
-          particleStyle,
-          getParticleColor
-        )
+          // Compute per-edge speed multipliers for proportional flow rate
+          let edgeSpeedMultipliers: number[] | undefined
+          if (particleStyle.proportionalSpeed) {
+            const maxValue = edges.reduce(
+              (max, e) => Math.max(max, e.value || 1),
+              1
+            )
+            edgeSpeedMultipliers = edges.map((e) => {
+              const ratio = (e.value || 1) / maxValue
+              // Scale between 0.3x and 2x so low-value edges still move
+              return 0.3 + ratio * 1.7
+            })
+          }
+
+          store.particlePool!.step(deltaTime, speed, edges, edgeSpeedMultipliers)
+          renderNetworkParticles(
+            ctx,
+            store.particlePool!,
+            edges,
+            particleStyle,
+            getParticleColor
+          )
+        }
+      }
+
+      // Reset staleness dimming
+      if (currentlyStale) {
+        ctx.globalAlpha = 1
       }
     }
 
-    // Reset staleness dimming
-    if (currentlyStale) {
-      ctx.globalAlpha = 1
-    }
-
-    const wasDirty = dirtyRef.current
     dirtyRef.current = false
 
     // NOTE: custom-layout overlays are read directly from
@@ -2144,7 +2161,7 @@ const StreamNetworkFrame = forwardRef<
       {/* end role="img" */}
     </div>
   )
-})
+}))
 
 StreamNetworkFrame.displayName = "StreamNetworkFrame"
 export default StreamNetworkFrame

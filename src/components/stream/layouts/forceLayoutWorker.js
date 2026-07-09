@@ -1,30 +1,49 @@
 import { forceLayout } from "../../recipes/forceLayout"
 import { forceLayoutPlugin } from "./forceLayoutPlugin"
 
+/**
+ * Long-lived force-layout worker. Clients send `{ requestId, ...request }`
+ * and receive `{ requestId, positions }` so a single Worker instance can
+ * serve concurrent layouts without spawn/terminate thrash.
+ */
 self.onmessage = (event) => {
-  const request = event.data
+  const message = event.data
+  const requestId = message?.requestId
+  const request = message?.request ?? message
 
-  if (request.kind === "normalized") {
-    const nodeRadii = request.nodeRadii
-    const options = nodeRadii
-      ? {
-          ...request.options,
-          nodeRadius: (node) => nodeRadii[node.id] ?? 12,
-        }
-      : request.options
+  try {
+    if (request.kind === "normalized") {
+      const nodeRadii = request.nodeRadii
+      const options = nodeRadii
+        ? {
+            ...request.options,
+            nodeRadius: (node) => nodeRadii[node.id] ?? 12,
+          }
+        : request.options
+      self.postMessage({
+        requestId,
+        positions: forceLayout(request.nodes, request.edges, options),
+      })
+      return
+    }
+
+    const nodes = request.nodes
+    const edges = request.edges
+    forceLayoutPlugin.computeLayout(nodes, edges, request.config, request.size)
     self.postMessage({
-      positions: forceLayout(request.nodes, request.edges, options),
+      requestId,
+      positions: Object.fromEntries(
+        nodes.map((node) => [node.id, { x: node.x, y: node.y }]),
+      ),
     })
-    return
+  } catch (error) {
+    self.postMessage({
+      requestId,
+      error: {
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : "Error",
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+    })
   }
-
-  const nodes = request.nodes
-  const edges = request.edges
-  forceLayoutPlugin.computeLayout(nodes, edges, request.config, request.size)
-  self.postMessage({
-    positions: Object.fromEntries(
-      nodes.map((node) => [node.id, { x: node.x, y: node.y }]),
-    ),
-  })
 }
-

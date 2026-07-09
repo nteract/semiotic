@@ -208,8 +208,8 @@ describe("buildBarScene", () => {
     expect(nodes).toHaveLength(2)
     // With normalization, 60/(60+40)=0.6 and 40/(60+40)=0.4
     // The datum should have __aggregateValue showing original value
-    if (nodes[0].type === "rect") {
-      expect(nodes[0].datum.__aggregateValue).toBe(60)
+    if (nodes[0]?.type === "rect") {
+      expect(nodes[0].datum!.__aggregateValue).toBe(60)
     }
   })
 
@@ -223,7 +223,7 @@ describe("buildBarScene", () => {
     })
     const nodes = buildBarScene(ctx, layout)
     expect(nodes).toHaveLength(1)
-    if (nodes[0].type === "rect") {
+    if (nodes[0]?.type === "rect") {
       expect(nodes[0].style.fill).toBe("#ff0000")
       expect(nodes[0].style.opacity).toBe(0.7)
     }
@@ -236,9 +236,9 @@ describe("buildBarScene", () => {
       }
     })
     const nodes = buildBarScene(ctx, layout)
-    if (nodes[0].type === "rect") {
-      expect(nodes[0].datum.__aggregateValue).toBe(42)
-      expect(nodes[0].datum.category).toBe("A")
+    if (nodes[0]?.type === "rect") {
+      expect(nodes[0].datum!.__aggregateValue).toBe(42)
+      expect(nodes[0].datum!.category).toBe("A")
     }
   })
 
@@ -253,7 +253,7 @@ describe("buildBarScene", () => {
     // Look up by datum.category — scene-builder emit order is an impl detail.
     const byCat = new Map<string, any>()
     for (const n of nodes) {
-      if (n.type === "rect") byCat.set(n.datum.category, n)
+      if (n.type === "rect") byCat.set(n.datum!.category, n)
     }
     // Default projection is vertical — positive = tip "top", negative = tip "bottom"
     expect(byCat.get("A")?.roundedEdge).toBe("top")
@@ -263,7 +263,7 @@ describe("buildBarScene", () => {
   it("attaches config.gradientFill to every rect node", () => {
     const gradientFill = { topOpacity: 0.9, bottomOpacity: 0.1 }
     const ctx = makeCtx({
-      config: { gradientFill },
+      config: makeConfig({ gradientFill }),
       columns: {
         A: makeColumn("A", [{ category: "A", value: 10 }]),
         B: makeColumn("B", [{ category: "B", value: 20 }]),
@@ -1431,17 +1431,17 @@ describe("buildFunnelScene", () => {
     expect(rects.length).toBe(4)
 
     // Step1 rects: Web (even index=0) extends right from center, Mobile (odd index=1) extends left
-    const step1Rects = rects.filter(n => n.type === "rect" && n.datum.__funnelStep === "Step1")
+    const step1Rects = rects.filter(n => n.type === "rect" && n.datum!.__funnelStep === "Step1")
     expect(step1Rects.length).toBe(2)
 
     // Web (category index 0, even) should be to the right of center
-    const webRect = step1Rects.find(n => n.datum.category === "Web")!
+    const webRect = step1Rects.find(n => n.datum!.category === "Web")!
     if (webRect.type === "rect") {
       expect(webRect.x).toBeGreaterThanOrEqual(centerX - 1) // starts at or right of center
     }
 
     // Mobile (category index 1, odd) should be to the left of center
-    const mobileRect = step1Rects.find(n => n.datum.category === "Mobile")!
+    const mobileRect = step1Rects.find(n => n.datum!.category === "Mobile")!
     if (mobileRect.type === "rect") {
       expect(mobileRect.x + mobileRect.w).toBeLessThanOrEqual(centerX + 1) // ends at or left of center
     }
@@ -1512,9 +1512,9 @@ describe("buildFunnelScene", () => {
 
     for (const r of rects) {
       if (r.type === "rect") {
-        expect(r.datum.__funnelStep).toBeDefined()
-        expect(typeof r.datum.__funnelValue).toBe("number")
-        expect(typeof r.datum.__funnelPercent).toBe("number")
+        expect(r.datum!.__funnelStep).toBeDefined()
+        expect(typeof r.datum!.__funnelValue).toBe("number")
+        expect(typeof r.datum!.__funnelPercent).toBe("number")
       }
     }
   })
@@ -1539,13 +1539,13 @@ describe("buildFunnelScene", () => {
     const rects = nodes.filter(n => n.type === "rect")
 
     // First step
-    const firstRect = rects.find(n => n.type === "rect" && n.datum.__funnelStep === "Top")!
-    expect(firstRect.datum.__funnelPercent).toBeCloseTo(100)
-    expect(firstRect.datum.__funnelIsFirstStep).toBe(true)
+    const firstRect = rects.find(n => n.type === "rect" && n.datum!.__funnelStep === "Top")!
+    expect(firstRect.datum!.__funnelPercent).toBeCloseTo(100)
+    expect(firstRect.datum!.__funnelIsFirstStep).toBe(true)
 
     // Second step should not be marked as first step
-    const midRect = rects.find(n => n.type === "rect" && n.datum.__funnelStep === "Mid")!
-    expect(midRect.datum.__funnelIsFirstStep).toBe(false)
+    const midRect = rects.find(n => n.type === "rect" && n.datum!.__funnelStep === "Mid")!
+    expect(midRect.datum!.__funnelIsFirstStep).toBe(false)
   })
 
   it("empty columns returns empty result", () => {
@@ -1578,13 +1578,13 @@ describe("buildFunnelScene", () => {
     const nodes = buildFunnelScene(ctx, layout)
     const rects = nodes.filter(n => n.type === "rect")
 
-    const s1 = rects.find(n => n.datum.__funnelStep === "S1")!
-    const s2 = rects.find(n => n.datum.__funnelStep === "S2")!
-    const s3 = rects.find(n => n.datum.__funnelStep === "S3")!
+    const s1 = rects.find(n => n.datum!.__funnelStep === "S1")!
+    const s2 = rects.find(n => n.datum!.__funnelStep === "S2")!
+    const s3 = rects.find(n => n.datum!.__funnelStep === "S3")!
 
-    expect(s1.datum.__funnelPercent).toBeCloseTo(100) // 400/400
-    expect(s2.datum.__funnelPercent).toBeCloseTo(50)  // 200/400
-    expect(s3.datum.__funnelPercent).toBeCloseTo(25)  // 100/400
+    expect(s1.datum!.__funnelPercent).toBeCloseTo(100) // 400/400
+    expect(s2.datum!.__funnelPercent).toBeCloseTo(50)  // 200/400
+    expect(s3.datum!.__funnelPercent).toBeCloseTo(25)  // 100/400
   })
 })
 
@@ -1618,14 +1618,14 @@ describe("buildBarFunnelScene", () => {
     })
 
     const nodes = buildBarFunnelScene(ctx, layout)
-    const retainedBars = nodes.filter(n => n.type === "rect" && !n.datum.__barFunnelIsDropoff)
+    const retainedBars = nodes.filter(n => n.type === "rect" && !n.datum!.__barFunnelIsDropoff)
 
     // 3 steps = 3 retained bars
     expect(retainedBars.length).toBe(3)
 
     // All retained bars should be marked as not dropoff
     for (const bar of retainedBars) {
-      expect(bar.datum.__barFunnelIsDropoff).toBe(false)
+      expect(bar.datum!.__barFunnelIsDropoff).toBe(false)
     }
 
     // Retained bar heights should be proportional to values (100:60)
@@ -1651,15 +1651,15 @@ describe("buildBarFunnelScene", () => {
     })
 
     const nodes = buildBarFunnelScene(ctx, layout)
-    const dropoffBars = nodes.filter(n => n.type === "rect" && n.datum.__barFunnelIsDropoff === true)
+    const dropoffBars = nodes.filter(n => n.type === "rect" && n.datum!.__barFunnelIsDropoff === true)
 
     // Step2 has dropoff of 100-70=30
     expect(dropoffBars.length).toBe(1)
-    expect(dropoffBars[0].datum.__barFunnelValue).toBe(30)
-    expect(dropoffBars[0].datum.__barFunnelIsDropoff).toBe(true)
+    expect(dropoffBars[0]!.datum!.__barFunnelValue).toBe(30)
+    expect(dropoffBars[0]!.datum!.__barFunnelIsDropoff).toBe(true)
 
     // Dropoff bar should sit on top of the retained bar for Step2
-    const step2Retained = nodes.find(n => n.type === "rect" && n.datum.__barFunnelStep === "Step2" && !n.datum.__barFunnelIsDropoff)!
+    const step2Retained = nodes.find(n => n.type === "rect" && n.datum!.__barFunnelStep === "Step2" && !n.datum!.__barFunnelIsDropoff)!
     if (dropoffBars[0].type === "rect" && step2Retained.type === "rect") {
       // Dropoff top (y) should be above retained top (y), i.e. smaller y value
       expect(dropoffBars[0].y).toBeLessThan(step2Retained.y)
@@ -1686,11 +1686,11 @@ describe("buildBarFunnelScene", () => {
     const nodes = buildBarFunnelScene(ctx, layout)
 
     // First step should have __barFunnelIsFirstStep=true and no dropoff bar
-    const firstStepNodes = nodes.filter(n => n.type === "rect" && n.datum.__barFunnelStep === "First")
+    const firstStepNodes = nodes.filter(n => n.type === "rect" && n.datum!.__barFunnelStep === "First")
     expect(firstStepNodes.length).toBe(1) // only retained, no dropoff
-    expect(firstStepNodes[0].datum.__barFunnelIsFirstStep).toBe(true)
-    expect(firstStepNodes[0].datum.__barFunnelIsDropoff).toBe(false)
-    expect(firstStepNodes[0].datum.__barFunnelDropoffValue).toBe(0)
+    expect(firstStepNodes[0]!.datum!.__barFunnelIsFirstStep).toBe(true)
+    expect(firstStepNodes[0]!.datum!.__barFunnelIsDropoff).toBe(false)
+    expect(firstStepNodes[0]!.datum!.__barFunnelDropoffValue).toBe(0)
   })
 
   it("multi-category groups positioned side-by-side", () => {
@@ -1716,13 +1716,13 @@ describe("buildBarFunnelScene", () => {
     })
 
     const nodes = buildBarFunnelScene(ctx, layout)
-    const retainedBars = nodes.filter(n => n.type === "rect" && !n.datum.__barFunnelIsDropoff)
+    const retainedBars = nodes.filter(n => n.type === "rect" && !n.datum!.__barFunnelIsDropoff)
 
     // 2 steps x 2 categories = 4 retained bars
     expect(retainedBars.length).toBe(4)
 
     // Within the same step, bars for different categories should have different x positions
-    const s1Retained = retainedBars.filter(n => n.datum.__barFunnelStep === "S1")
+    const s1Retained = retainedBars.filter(n => n.datum!.__barFunnelStep === "S1")
     expect(s1Retained.length).toBe(2)
     if (s1Retained[0].type === "rect" && s1Retained[1].type === "rect") {
       expect(s1Retained[0].x).not.toBeCloseTo(s1Retained[1].x, 0)
@@ -1748,17 +1748,17 @@ describe("buildBarFunnelScene", () => {
     const rects = nodes.filter(n => n.type === "rect")
 
     for (const r of rects) {
-      expect(r.datum.__barFunnelStep).toBeDefined()
-      expect(typeof r.datum.__barFunnelValue).toBe("number")
-      expect(typeof r.datum.__barFunnelPercent).toBe("number")
+      expect(r.datum!.__barFunnelStep).toBeDefined()
+      expect(typeof r.datum!.__barFunnelValue).toBe("number")
+      expect(typeof r.datum!.__barFunnelPercent).toBe("number")
     }
 
     // Check specific percent values
-    const topRect = rects.find(n => n.datum.__barFunnelStep === "Top" && !n.datum.__barFunnelIsDropoff)!
-    expect(topRect.datum.__barFunnelPercent).toBeCloseTo(100) // 100/100
+    const topRect = rects.find(n => n.datum!.__barFunnelStep === "Top" && !n.datum!.__barFunnelIsDropoff)!
+    expect(topRect.datum!.__barFunnelPercent).toBeCloseTo(100) // 100/100
 
-    const bottomRetained = rects.find(n => n.datum.__barFunnelStep === "Bottom" && !n.datum.__barFunnelIsDropoff)!
-    expect(bottomRetained.datum.__barFunnelPercent).toBeCloseTo(40) // 40/100
+    const bottomRetained = rects.find(n => n.datum!.__barFunnelStep === "Bottom" && !n.datum!.__barFunnelIsDropoff)!
+    expect(bottomRetained.datum!.__barFunnelPercent).toBeCloseTo(40) // 40/100
   })
 })
 
@@ -1807,18 +1807,23 @@ describe("buildSwimlaneScene", () => {
 
     // Horizontal: offset accumulates along x-axis
     // rScale maps [0,100] → [0,400], so 1 data unit = 4 px
-    if (nodes[0].type === "rect" && nodes[1].type === "rect" && nodes[2].type === "rect") {
+    const r0 = nodes[0]
+    const r1 = nodes[1]
+    const r2 = nodes[2]
+    if (r0?.type === "rect" && r1?.type === "rect" && r2?.type === "rect") {
       // All rects should have positive width
-      for (const n of nodes) expect(n.w).toBeGreaterThan(0)
+      expect(r0.w).toBeGreaterThan(0)
+      expect(r1.w).toBeGreaterThan(0)
+      expect(r2.w).toBeGreaterThan(0)
       // Rects should be laid out left-to-right with no overlap
-      expect(nodes[0].x).toBeLessThan(nodes[1].x)
-      expect(nodes[1].x).toBeLessThan(nodes[2].x)
+      expect(r0.x).toBeLessThan(r1.x)
+      expect(r1.x).toBeLessThan(r2.x)
       // Adjacent rects should abut (second starts where first ends)
-      expect(nodes[0].x + nodes[0].w).toBeCloseTo(nodes[1].x, 1)
-      expect(nodes[1].x + nodes[1].w).toBeCloseTo(nodes[2].x, 1)
+      expect(r0.x + r0.w).toBeCloseTo(r1.x, 1)
+      expect(r1.x + r1.w).toBeCloseTo(r2.x, 1)
       // Widths should be proportional to values (20:30:10)
-      expect(nodes[1].w / nodes[0].w).toBeCloseTo(30 / 20, 1)
-      expect(nodes[0].w / nodes[2].w).toBeCloseTo(20 / 10, 1)
+      expect(r1.w / r0.w).toBeCloseTo(30 / 20, 1)
+      expect(r0.w / r2.w).toBeCloseTo(20 / 10, 1)
     }
   })
 

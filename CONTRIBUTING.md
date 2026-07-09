@@ -1,6 +1,6 @@
 # Contributing to Semiotic
 
-Semiotic is a React data visualization library with canvas-first chart rendering, server-side SVG rendering, AI/MCP tooling, and a Parcel-powered documentation site. This guide describes the current repository workflow; package scripts and CI are the source of truth.
+Semiotic is a React data visualization library with canvas-first chart rendering, server-side SVG rendering, AI/MCP tooling, and a Vite-powered documentation site. This guide describes the current repository workflow; package scripts and CI are the source of truth.
 
 ## Getting Started
 
@@ -24,20 +24,26 @@ The repo pins Node with Volta in `package.json`. Use that version when possible.
 ```text
 src/
   components/
-    StreamXYFrame.tsx, StreamOrdinalFrame.tsx, StreamNetworkFrame.tsx, StreamGeoFrame.tsx
+    stream/       # Stream Frames, pipeline stores, canvas renderers, workers
     charts/
       xy/         # LineChart, AreaChart, Scatterplot, etc.
       ordinal/    # BarChart, StackedBarChart, PieChart, etc.
       network/    # ForceDirectedGraph, SankeyDiagram, TreeDiagram, etc.
       geo/        # ChoroplethMap, FlowMap, DistanceCartogram, etc.
       realtime/   # push-driven realtime charts
+      physics/    # Galton, pile, process, gauntlet, etc.
+      value/      # BigNumber
       shared/     # shared HOC helpers, validation, metadata
     server/       # static SVG, image, dashboard, and export utilities
-  processing/     # data pipelines and layout algorithms
+    recipes/      # pure custom-layout kit + chrome helpers
+    ai/           # suggestCharts, describe, navigation, provenance
+    data/         # transforms, portability, adapters
+  vendor/         # vendored third-party (e.g. sankey-plus)
 ai/               # schema, MCP server, CLI, prompts, examples, metadata
-docs/             # documentation site source
+docs/             # documentation site source (Vite)
 integration-tests/# Playwright fixtures and specs
 scripts/          # build, release, validation, and generated-doc scripts
+benchmarks/       # vitest bench suites
 ```
 
 ## Development Workflow
@@ -50,12 +56,12 @@ scripts/          # build, release, validation, and generated-doc scripts
 
 ## Toolchain
 
-- **Rollup** via `scripts/build.mjs` for library bundles.
-- **Parcel** for the docs website.
-- **TypeScript 6** for type checking and declarations.
+- **tsup / esbuild** via `scripts/build.mjs` for library bundles (ESM + CJS).
+- **Vite 8** for the docs website and integration-example server.
+- **TypeScript 6** for type checking and declarations (`tsconfig.declarations.json`).
 - **Vitest** for unit, integration, and benchmark tests.
 - **Playwright** for browser and visual regression coverage.
-- **esbuild** for the bundled MCP server.
+- **esbuild** (via `scripts/build-mcp.mjs`) for the bundled MCP server.
 - **size-limit** for bundle budgets.
 
 ## Common Commands
@@ -68,8 +74,8 @@ npm run typescript:mcp
 npm run lint
 
 # Builds
-npm run dist
-npm run dist:prod
+npm run dist          # unminified library bundles (tests / local)
+npm run dist:prod     # minified production bundles
 npm run build:mcp
 
 # Browser and visual tests
@@ -110,6 +116,8 @@ Semiotic has three main user-facing layers:
 | **Utilities and AI tooling** | Validation, serialization, themes, server rendering, MCP, and assistant contracts | `validateProps`, `renderChart`, `semiotic-ai` |
 
 HOC charts wrap Stream Frames. Every HOC accepts `frameProps` for advanced pass-through behavior.
+
+Prefer **subpath imports** in application code (`semiotic/xy`, `semiotic/ordinal`, …) so consumers do not pull the full library. The root `semiotic` entry and `semiotic/ai` are convenience / tooling surfaces.
 
 ## Testing Guidance
 

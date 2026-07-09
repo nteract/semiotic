@@ -1,7 +1,7 @@
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 
 describe("Swimlane extent padding", () => {
-  const makeStore = (extentPadding?: number) => {
+  const makeStore = (extentPadding: number = 0.1) => {
     const store = new OrdinalPipelineStore({
       chartType: "swimlane",
       windowSize: 100,

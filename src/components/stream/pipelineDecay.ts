@@ -42,18 +42,32 @@ export function computeDecayOpacity(decay: DecayConfig, bufferIndex: number, buf
 }
 
 /**
- * Apply decay opacity to a list of scene nodes.
- * Uses the datum's index in the buffer data array.
+ * Build a datum→buffer-index map. Callers that apply decay + pulse in the
+ * same scene pass should share one map (and cache it by ingest version)
+ * so continuous animation does not re-walk the buffer twice per frame.
  */
-export function applyDecay(decay: DecayConfig, nodes: SceneNode[], data: Datum[]): void {
-  const bufferSize = data.length
-  if (bufferSize <= 1) return
-
-  // Build datum→index lookup
-  const indexMap = new Map<any, number>()
+export function buildDatumIndexMap(data: readonly Datum[]): Map<Datum, number> {
+  const indexMap = new Map<Datum, number>()
   for (let i = 0; i < data.length; i++) {
     indexMap.set(data[i], i)
   }
+  return indexMap
+}
+
+/**
+ * Apply decay opacity to a list of scene nodes.
+ * Uses the datum's index in the buffer data array.
+ *
+ * @param indexMap Optional prebuilt datum→index map (see {@link buildDatumIndexMap}).
+ */
+export function applyDecay(
+  decay: DecayConfig,
+  nodes: SceneNode[],
+  data: Datum[],
+  indexMap: Map<any, number> = buildDatumIndexMap(data)
+): void {
+  const bufferSize = data.length
+  if (bufferSize <= 1) return
 
   for (const node of nodes) {
     // Per-vertex decay for line nodes

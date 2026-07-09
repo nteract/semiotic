@@ -47,7 +47,7 @@ export interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends B
   /** Array of data points shared by both series */
   data?: TDatum[]
   /** Field name or function to access x values @default "x" */
-  xAccessor?: ChartAccessor<TDatum, number>
+  xAccessor?: ChartAccessor<TDatum, number | Date | string>
   /** Series configuration — exactly 2 for dual-axis mode.
    *  If not exactly 2, renders as a normal line chart with a console warning. */
   series: MultiAxisSeriesConfig<TDatum>[]

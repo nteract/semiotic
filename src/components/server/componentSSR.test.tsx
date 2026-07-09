@@ -472,7 +472,7 @@ describe("Component SSR — Equivalence with renderToStaticSVG", () => {
     // Component SSR
     const componentHTML = renderComponent(
       <LineChart data={xyData} xAccessor="x" yAccessor="y" width={500} height={300}
-        frameProps={{ margin, size: [500, 300] }} />
+        frameProps={{ margin }} />
     )
 
     // Standalone SSR
@@ -497,8 +497,8 @@ describe("Component SSR — Equivalence with renderToStaticSVG", () => {
     expect(componentPaths.length).toBe(standalonePaths.length)
 
     // First path (the data line) should have the same number of points
-    const componentPoints = (componentPaths[0].match(/L/g) || []).length
-    const standalonePoints = (standalonePaths[0].match(/L/g) || []).length
+    const componentPoints = (componentPaths[0]?.match(/L/g) || []).length
+    const standalonePoints = (standalonePaths[0]?.match(/L/g) || []).length
     expect(componentPoints).toBe(standalonePoints)
   })
 

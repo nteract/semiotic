@@ -10,7 +10,8 @@ import {
   useCallback,
   useImperativeHandle,
   useId,
-  forwardRef
+  forwardRef,
+  memo
 } from "react"
 import type {
   StreamXYFrameProps,
@@ -39,7 +40,15 @@ import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
-import { resolveCSSColor } from "./renderers/resolveCSSColor"
+import { paintCanvasBackground } from "./canvasBackground"
+import { needsInteractionCanvasPaint } from "./paintNeeds"
+import {
+  createFrameThemeColorCache,
+  LIGHT_FRAME_THEME,
+  type FrameThemeColors
+} from "./frameThemeColors"
+
+export { withAlpha } from "./frameThemeColors"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -169,90 +178,9 @@ function collectAnnotationAnchors(
 
 const DEFAULT_MARGIN = { top: 20, right: 20, bottom: 30, left: 40 }
 
-// ── Theme  ─────────────────────────────────────────
-
-interface ThemeColors {
-  axisStroke: string
-  tickText: string
-  crosshair: string
-  hoverFill: string
-  hoverStroke: string
-  pointRing: string
-  /** Primary accent color — crosshair dots and line-highlight strokes fall back here when the hovered datum has no color of its own. */
-  primary: string
-}
-
-const LIGHT_THEME: ThemeColors = {
-  axisStroke: "#ccc",
-  tickText: "#666",
-  crosshair: "rgba(0, 0, 0, 0.25)",
-  hoverFill: "rgba(255, 255, 255, 0.3)",
-  hoverStroke: "rgba(0, 0, 0, 0.4)",
-  pointRing: "white",
-  primary: "#007bff"
-}
-
-/**
- * Append a 2-char hex alpha to an existing CSS color, returning a valid
- * CSS color string. The naive `${color}${alpha}` concatenation only works
- * when `color` is a 6-char `#rrggbb`; shorthand `#rgb` produces the
- * invalid 5-char `#rgbXX`, which `ctx.strokeStyle`/`fillStyle` silently
- * rejects (falling back to `#000000` — black, invisible on dark themes).
- * The /cookbook/marginal-graphics crosshair invisibility was caused
- * precisely by `--semiotic-text-secondary: "#aaa"` hitting this path.
- *
- * Handles:
- *   • 3-char hex (`#abc`) → expanded to 6-char then concatenated
- *   • 6-char hex (`#aabbcc`) → concatenated directly
- *   • `rgb(...)` → repacked as `rgba(..., a)` with numeric alpha
- * Any other form (named colors, hsl(), oklch(), etc.) falls back to the
- * raw color without alpha — degrades gracefully.
- */
-export function withAlpha(color: string, alphaHex: string): string {
-  const trimmed = color.trim()
-  if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
-    const r = trimmed[1], g = trimmed[2], b = trimmed[3]
-    return `#${r}${r}${g}${g}${b}${b}${alphaHex}`
-  }
-  if (/^#[0-9a-f]{6}$/i.test(trimmed)) {
-    return `${trimmed}${alphaHex}`
-  }
-  const rgbMatch = trimmed.match(/^rgb\s*\(\s*([^)]+?)\s*\)$/i)
-  if (rgbMatch) {
-    const alpha = parseInt(alphaHex, 16) / 255
-    return `rgba(${rgbMatch[1]}, ${alpha.toFixed(3)})`
-  }
-  return trimmed
-}
-
-function resolveThemeColors(el: HTMLElement | null): ThemeColors {
-  if (!el) return LIGHT_THEME
-  const style = getComputedStyle(el)
-
-  // Check for semiotic ThemeProvider CSS custom properties first
-  const semioticBorder = style.getPropertyValue("--semiotic-border").trim()
-  const semioticTextSecondary = style.getPropertyValue("--semiotic-text-secondary").trim()
-  const semioticBg = style.getPropertyValue("--semiotic-bg").trim()
-  const semioticPrimary = style.getPropertyValue("--semiotic-primary").trim()
-
-  // Fall back to docs shell CSS vars
-  const textSecondary = semioticTextSecondary || style.getPropertyValue("--text-secondary").trim()
-  const textPrimary = style.getPropertyValue("--text-primary").trim()
-  const surface3 = semioticBorder || style.getPropertyValue("--surface-3").trim()
-  const surface0 = semioticBg || style.getPropertyValue("--surface-0").trim()
-
-  if (!textSecondary && !textPrimary && !semioticBorder && !semioticPrimary) return LIGHT_THEME
-
-  return {
-    axisStroke: surface3 || LIGHT_THEME.axisStroke,
-    tickText: textSecondary || LIGHT_THEME.tickText,
-    crosshair: textSecondary ? withAlpha(textSecondary, "66") : LIGHT_THEME.crosshair,
-    hoverFill: surface0 ? withAlpha(surface0, "4D") : LIGHT_THEME.hoverFill,
-    hoverStroke: textSecondary ? withAlpha(textSecondary, "99") : LIGHT_THEME.hoverStroke,
-    pointRing: surface0 || LIGHT_THEME.pointRing,
-    primary: semioticPrimary || LIGHT_THEME.primary
-  }
-}
+// Theme colors live in frameThemeColors.ts (shared across Stream Frames).
+type ThemeColors = FrameThemeColors
+const LIGHT_THEME = LIGHT_FRAME_THEME
 
 // ── Tooltip ────────────────────────────────────────────────────────────
 
@@ -427,7 +355,7 @@ function drawLineHighlight(
 
 // ── StreamXYFrame ──────────────────────────────────────────────────────
 
-const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
+const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
   function StreamXYFrame(props, ref) {
     const {
       chartType,
@@ -672,12 +600,12 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
 
-    // Cached theme primary — updated by the render loop (which already calls
-    // resolveThemeColors on every frame). The hover handler reads from here
-    // instead of re-invoking resolveThemeColors (which calls getComputedStyle)
-    // on every pointermove. Initialized to LIGHT_THEME.primary so the first
-    // hover before a paint still returns a valid color.
+    // Cached theme primary — updated by the render loop. The hover handler
+    // reads from here instead of re-resolving theme colors on every pointermove.
     const themePrimaryRef = useRef<string>(LIGHT_THEME.primary)
+    const themeColorCacheRef = useRef(createFrameThemeColorCache())
+    /** True when the interaction canvas last painted hover/highlight content. */
+    const interactionHasContentRef = useRef(false)
     const lastLegendCategoriesRef = useRef<string[]>([])
     const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
     const onCategoriesChangeRef = useRef(onCategoriesChange)
@@ -1274,7 +1202,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
 
       const dpr = getDevicePixelRatio()
-      const theme = resolveThemeColors(canvas)
+      const theme = themeColorCacheRef.current.resolve(canvas)
       // Cache the theme primary for the hover handler — avoids re-running
       // getComputedStyle on every pointermove event at high pointer rates.
       themePrimaryRef.current = theme.primary
@@ -1306,21 +1234,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           //     background shows through. If the user also wants a themed
           //     color behind their graphics, they can apply it in the SVG
           //     they render.
-          const shouldPaintBg = background !== "transparent" && !backgroundGraphics
-          if (shouldPaintBg) {
-            const semioticBg = getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
-            // Resolve `var(...)` so canvas accepts the assignment — without
-            // this, a user passing `background="var(--surface-1)"` would
-            // silently fall back to the prior fillStyle (a node/area color
-            // from the last draw), producing a palette-flashing background
-            // on every animation frame.
-            const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
-            const resolvedBg = effectiveBg ? resolveCSSColor(ctx, effectiveBg) : null
-            if (resolvedBg) {
-              ctx.fillStyle = resolvedBg
-              ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
-            }
-          }
+          paintCanvasBackground(ctx, {
+            background,
+            hasBackgroundGraphics: Boolean(backgroundGraphics),
+            themeBackground: theme.background,
+            x: -margin.left,
+            y: -margin.top,
+            width: size[0],
+            height: size[1]
+          })
 
           // Clip and render data marks
           ctx.save()
@@ -1364,15 +1286,33 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }
       }
 
-      // ── Interaction canvas: always repaint (crosshair + highlights) ──
-      {
+      // ── Interaction canvas: only when hover / highlight is active ──
+      // Idle transition/pulse frames skip clear+draw on the interaction
+      // layer. When hover ends, `interactionHasContentRef` forces one
+      // clear so the previous crosshair does not stick.
+      const hasHoverOverlay =
+        Boolean(effectiveHoverAnnotation && hoverRef.current && store.scales)
+      const hasHighlightOverlay =
+        Boolean(
+          hoveredNodeRef.current &&
+            Array.isArray(hoverAnnotation) &&
+            hoverAnnotation.some(
+              (a: { type?: string } | null) => a && typeof a === "object" && a.type === "highlight"
+            )
+        )
+      const interactionActive = hasHoverOverlay || hasHighlightOverlay
+      const needsInteractionRepaint = needsInteractionCanvasPaint(
+        interactionActive,
+        interactionHasContentRef.current
+      )
+      if (needsInteractionRepaint) {
         const ictx = prepareCanvas(interactionCanvas, size, margin, dpr)
         if (ictx) {
           // Clear previous frame (crosshair, highlights, etc.)
           ictx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
           // Crosshair on hover
-          if (effectiveHoverAnnotation && hoverRef.current && store.scales) {
+          if (hasHoverOverlay && hoverRef.current) {
             const config: HoverAnnotationConfig =
               typeof effectiveHoverAnnotation === "object" ? effectiveHoverAnnotation : {}
             drawCrosshair(
@@ -1387,15 +1327,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           }
 
           // Line highlight on hover
-          if (hoveredNodeRef.current && Array.isArray(hoverAnnotation)) {
+          if (hasHighlightOverlay && hoveredNodeRef.current && Array.isArray(hoverAnnotation)) {
             const highlightEntry = hoverAnnotation.find(
-              (a: any) => a && typeof a === "object" && a.type === "highlight"
+              (a: { type?: string } | null) => a && typeof a === "object" && a.type === "highlight"
             )
             if (highlightEntry) {
               drawLineHighlight(ictx, store.scene, hoveredNodeRef.current, highlightEntry, theme)
             }
           }
         }
+        interactionHasContentRef.current = interactionActive
       }
 
       // ── Update canvas aria-label imperatively after scene changes ──
@@ -1850,7 +1791,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       </div>
     )
   }
-)
+))
 
 StreamXYFrame.displayName = "StreamXYFrame"
 export default StreamXYFrame

@@ -24,22 +24,26 @@ export function computePulseIntensity(pulse: PulseConfig, insertTime: number, no
 
 /**
  * Apply pulse glow to scene nodes using insertion timestamps.
+ *
+ * @param indexMap Optional prebuilt datum→index map so a scene pass that
+ * also runs decay can share one O(n) walk of the buffer.
  */
 export function applyPulse(
   pulse: PulseConfig,
   nodes: SceneNode[],
   data: Datum[],
-  timestampBuffer: RingBuffer<number>
+  timestampBuffer: RingBuffer<number>,
+  indexMap?: Map<any, number>
 ): void {
   const now = typeof performance !== "undefined" ? performance.now() : Date.now()
   const pulseColor = pulse.color ?? "rgba(255,255,255,0.6)"
   const glowRadius = pulse.glowRadius ?? 4
 
-  // Build datum→index lookup
-  const indexMap = new Map<any, number>()
-  for (let i = 0; i < data.length; i++) {
-    indexMap.set(data[i], i)
-  }
+  const map = indexMap ?? (() => {
+    const m = new Map<any, number>()
+    for (let i = 0; i < data.length; i++) m.set(data[i], i)
+    return m
+  })()
 
   for (const node of nodes) {
     if (node.type === "line") continue
@@ -50,7 +54,7 @@ export function applyPulse(
       const datumArr = Array.isArray(node.datum) ? node.datum : [node.datum]
       let bestIntensity = 0
       for (const d of datumArr) {
-        const idx = indexMap.get(d)
+        const idx = map.get(d)
         if (idx == null) continue
         const insertTime = timestampBuffer.get(idx)
         if (insertTime == null) continue
@@ -64,7 +68,7 @@ export function applyPulse(
       continue
     }
 
-    const idx = indexMap.get(node.datum)
+    const idx = map.get(node.datum)
     if (idx == null) continue
     const insertTime = timestampBuffer.get(idx)
     if (insertTime == null) continue
