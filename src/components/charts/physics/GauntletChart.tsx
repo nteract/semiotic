@@ -540,6 +540,152 @@ function buildProjectSpawns<TDatum extends Datum>(
   return spawns
 }
 
+/**
+ * Pure Gauntlet world builder for SSR / renderChart. Materializes project
+ * cores + property satellites once without React state or gate animation.
+ */
+export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
+  data?: readonly TDatum[]
+  size?: [number, number]
+  gates?: readonly GauntletGate[]
+  positiveProperties?: readonly GauntletPropertyDefinition[]
+  negativeProperties?: readonly GauntletPropertyDefinition[]
+  crashOffset?: number
+  idAccessor?: ChartAccessor<TDatum, string>
+  positiveAccessor?: ChartAccessor<TDatum, string[]>
+  negativeAccessor?: ChartAccessor<TDatum, string[]>
+  metricsAccessor?: ChartAccessor<TDatum, Record<string, number>>
+  initialViability?: ChartAccessor<TDatum, number>
+  projectPlacement?: GauntletChartProps<TDatum>["projectPlacement"]
+  coreBody?: GauntletChartProps<TDatum>["coreBody"]
+  viability?: GauntletChartProps<TDatum>["viability"]
+}): {
+  config: NonNullable<import("../../stream/physics/PhysicsPipelineStore").PhysicsPipelineConfig>
+  initialSpawns: PhysicsQueuedSpawn[]
+  layout: GauntletLayout
+} {
+  const size = options.size ?? [900, 520]
+  const layout = buildLayout(size, options.gates, options.crashOffset ?? 30)
+  const positiveProperties = options.positiveProperties ?? []
+  const positiveById = new Map(positiveProperties.map((p) => [p.id, p]))
+  const negativeById = new Map(
+    (options.negativeProperties ?? []).map((p) => [p.id, p])
+  )
+  const accessors = {
+    idAccessor: options.idAccessor,
+    initialViability: options.initialViability,
+    metricsAccessor: options.metricsAccessor,
+    negativeAccessor: options.negativeAccessor,
+    positiveAccessor: options.positiveAccessor
+  }
+  const data = options.data ?? []
+  const states = data.map((datum, index) => {
+    const state = createInitialState(
+      datum,
+      index,
+      accessors,
+      positiveProperties,
+      negativeById
+    )
+    return {
+      ...state,
+      viability:
+        options.viability?.(state, {
+          negativeProperties: negativeById,
+          positiveProperties: positiveById
+        }) ?? defaultViability(state, positiveById, negativeById)
+    }
+  })
+  const initialSpawns = states.flatMap((project, index) => {
+    const placement = resolvePlacement(
+      project,
+      index,
+      layout,
+      options.projectPlacement
+    )
+    return buildProjectSpawns(
+      project,
+      index,
+      layout,
+      placement,
+      positiveById,
+      negativeById,
+      options.coreBody
+    )
+  })
+  return {
+    layout,
+    initialSpawns,
+    config: {
+      fixedDt: 1 / 60,
+      maxSubsteps: 8,
+      kernel: {
+        gravity: { x: 0, y: 0 },
+        restitution: 0.16,
+        friction: 0.44,
+        velocityDamping: 0.982,
+        maxVelocity: 520,
+        sleepAfter: 0.8,
+        sleepSpeed: 7
+      },
+      colliders: [
+        {
+          id: "gauntlet-left",
+          restitution: 0.12,
+          friction: 0.42,
+          shape: {
+            type: "segment",
+            x1: 28,
+            y1: 76,
+            x2: 28,
+            y2: layout.floorY,
+            thickness: 8
+          }
+        },
+        {
+          id: "gauntlet-ceiling",
+          restitution: 0.12,
+          friction: 0.42,
+          shape: {
+            type: "segment",
+            x1: 28,
+            y1: 76,
+            x2: layout.width - 30,
+            y2: 76,
+            thickness: 8
+          }
+        },
+        {
+          id: "gauntlet-floor",
+          restitution: 0.12,
+          friction: 0.42,
+          shape: {
+            type: "segment",
+            x1: 28,
+            y1: layout.floorY,
+            x2: layout.width - 30,
+            y2: layout.floorY,
+            thickness: 8
+          }
+        },
+        {
+          id: "gauntlet-right",
+          restitution: 0.12,
+          friction: 0.42,
+          shape: {
+            type: "segment",
+            x1: layout.width - 30,
+            y1: 76,
+            x2: layout.width - 30,
+            y2: layout.floorY,
+            thickness: 8
+          }
+        }
+      ]
+    }
+  }
+}
+
 function buildNegativeSpawn<TDatum extends Datum>(
   project: GauntletProjectState<TDatum>,
   property: GauntletPropertyDefinition,

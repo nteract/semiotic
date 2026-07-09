@@ -30,6 +30,7 @@ import {
   styleFromColorAccessor
 } from "../charts/physics/physicsChartUtils"
 import { resolveCustomLayout } from "../charts/physics/PhysicsCustomChart"
+import { buildGauntletPhysics } from "../charts/physics/GauntletChart"
 import { LIGHT_THEME, resolveThemeSemanticColors } from "../store/ThemeStore"
 
 type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
@@ -1469,6 +1470,36 @@ const processFlowChart: ChartConfig = {
   },
 }
 
+const gauntletChart: ChartConfig = {
+  frameType: "physics",
+  buildProps: (data, colorBy, _colorScheme, common, rest) => {
+    const size = (common.size as [number, number]) ?? [900, 520]
+    const built = buildGauntletPhysics({
+      data: Array.isArray(data) ? data : [],
+      size,
+      gates: rest.gates,
+      positiveProperties: rest.positiveProperties,
+      negativeProperties: rest.negativeProperties,
+      crashOffset: rest.crashOffset,
+      idAccessor: rest.idAccessor,
+      positiveAccessor: rest.positiveAccessor,
+      negativeAccessor: rest.negativeAccessor,
+      metricsAccessor: rest.metricsAccessor,
+      initialViability: rest.initialViability,
+      projectPlacement: rest.projectPlacement,
+      coreBody: rest.coreBody,
+      viability: rest.viability
+    })
+    return {
+      ...common,
+      config: built.config,
+      initialSpawns: allAtOnce(built.initialSpawns),
+      projectionRows: [],
+      bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy)
+    }
+  }
+}
+
 const physicalFlowChart: ChartConfig = {
   frameType: "physics",
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
@@ -1613,6 +1644,7 @@ export const CHART_CONFIGS = {
   PhysicsPileChart: physicsPileChart,
   CollisionSwarmChart: collisionSwarmChart,
   ProcessFlowChart: processFlowChart,
+  GauntletChart: gauntletChart,
   PhysicalFlowChart: physicalFlowChart,
   PhysicsCustomChart: physicsCustomChart,
 } satisfies Record<string, ChartConfig>
