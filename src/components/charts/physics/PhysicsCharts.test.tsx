@@ -661,7 +661,7 @@ describe("physics chart HOCs", () => {
       />
     )
 
-    const snapshot = ref.current?.getCustomLayout() as {
+    const snapshot = ref.current?.getCustomLayout?.() as {
       world?: { bodies?: Array<{ x: number; y: number; shape?: { radius?: number } }> }
     } | null
     const bodies = snapshot?.world?.bodies ?? []

@@ -14,7 +14,8 @@ import {
   processStageLayout,
   regionCountsToProjectionRows,
   routeSurfaceRegion,
-  stageTargetInVolume
+  stageTargetInVolume,
+  type RegionCountMap
 } from "./processPhysics"
 
 describe("processStageLayout", () => {
@@ -216,7 +217,7 @@ describe("process region factories", () => {
 
 describe("aggregates and body groups", () => {
   it("counts unique region enters", () => {
-    let counts = {}
+    let counts: RegionCountMap = {}
     const region = {
       id: "impact",
       label: "First Impact",

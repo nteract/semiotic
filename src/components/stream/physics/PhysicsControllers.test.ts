@@ -151,12 +151,16 @@ describe("createCapacityQueueController", () => {
       }
     ])
     expect(composed?.continuous).toBe(true)
-    const force = composed?.bodyForce({
-      body: { id: "x", x: 0, y: 0, vx: 0, vy: 0, mass: 1 } as never,
-      bodies: [],
-      index: 0,
-      simulationState: "running"
-    })
+    const bodyForce = composed?.bodyForce
+    const force =
+      typeof bodyForce === "function"
+        ? bodyForce({
+            body: { id: "x", x: 0, y: 0, vx: 0, vy: 0, mass: 1 } as never,
+            bodies: [],
+            index: 0,
+            simulationState: "running"
+          })
+        : bodyForce
     expect(force).toEqual({ x: 3, y: 3 })
     composed?.onTick(
       {

@@ -216,7 +216,15 @@ describe("StreamPhysicsFrame", () => {
     expect(
       colliders
         .filter((collider) => collider.id.startsWith("stream-region-review-box"))
-        .every((collider) => collider.bodyFilter?.property === "datum.kind")
+        .every((collider) => {
+          const filter = collider.bodyFilter
+          return (
+            typeof filter === "object" &&
+            filter != null &&
+            "property" in filter &&
+            filter.property === "datum.kind"
+          )
+        })
     ).toBe(true)
   })
 

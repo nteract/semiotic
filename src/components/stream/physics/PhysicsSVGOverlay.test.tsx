@@ -24,7 +24,7 @@ function body(
     vx: 0,
     vy: 0,
     mass: 1,
-    invMass: 1,
+    angle: 0,
     sleeping: false,
     shape: { type: "circle", radius }
   }
