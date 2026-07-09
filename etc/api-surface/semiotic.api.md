@@ -319,6 +319,7 @@ type ChartObservation
 type CopyFormat
 type CurveType
 type ForceLayoutStatus
+type GauntletPopSpec
 type LegendInteractionMode
 type LinkedBrushProp
 type LinkedHoverProp
