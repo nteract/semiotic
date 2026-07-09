@@ -133,7 +133,7 @@ export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayou
 
     // Build symmetric violin path
     const halfWidth = col.width / 2 * 0.9
-    let pathStr = ""
+    let pathStr: string
 
     if (isVertical) {
       // Right side: start at vMin (zero width), through bin centers, end at vMax (zero width)
@@ -309,7 +309,7 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
     const halfBand = col.width * amplitude
 
     // Build one-sided area path (density extends in one direction from baseline)
-    let pathStr = ""
+    let pathStr: string
 
     if (isHorizontal) {
       // Horizontal: categories on y, values on x

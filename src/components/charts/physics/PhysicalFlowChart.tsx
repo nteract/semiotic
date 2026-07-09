@@ -30,7 +30,6 @@ import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
   renderPhysicsFrame,
-  resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
@@ -495,7 +494,6 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
 ) {
   const {
     chartId,
-    className,
     colorBy,
     coordinateMode = "auto",
     data,
@@ -503,7 +501,6 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     emptyContent,
     flowSpeed = 90,
     frameProps,
-    height,
     links,
     loading,
     loadingContent,
@@ -525,11 +522,9 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
     showNodeLabels = true,
     showSensors = false,
     showStaticFlow = true,
-    size,
     sourceAccessor = "source" as ChartAccessor<TLink, string>,
     targetAccessor = "target" as ChartAccessor<TLink, string>,
-    throughputAccessor = "value" as ChartAccessor<TLink, number>,
-    width
+    throughputAccessor = "value" as ChartAccessor<TLink, number>
   } = props
   const layoutMode = usePhysicsChartMode(props, [760, 420])
   const {

@@ -53,7 +53,7 @@ export interface XYSceneConfig {
   curve?: CurveType
   colorScheme?: string | string[] | Record<string, string>
   normalize?: boolean
-  /** Stacked area baseline. "zero" (default), "wiggle" (streamgraph), "silhouette" (centered). */
+  /** Stacked area baseline. "zero" (default), "wiggle" (streamgraph), "silhouette" (centered), "diverging" (signed y above/below 0). */
   baseline?: "zero" | "wiggle" | "silhouette" | "diverging"
   /** Stack order — see PipelineConfig.stackOrder. */
   stackOrder?: "key" | "input" | "insideOut" | "asc" | "desc"

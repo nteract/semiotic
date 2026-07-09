@@ -24,7 +24,6 @@ import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
   renderPhysicsFrame,
-  resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,

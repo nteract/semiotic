@@ -44,9 +44,18 @@ function run(cmd, opts = {}) {
 // `execSync` errors carry `stderr`/`stdout` as Buffers when no encoding is
 // applied to the failing channel. Coerce explicitly so `.split` etc. don't
 // crash while we're already in an error path.
+// Prefer the real Error line (ERR_MODULE_NOT_FOUND, etc.) over stack frames
+// like `node:internal/modules/package_json_reader:314`.
 function firstLine(err) {
-  const raw = err?.stderr ?? err?.stdout ?? err?.message ?? String(err)
-  return String(raw).split("\n").find((l) => l.trim().length > 0) ?? ""
+  const raw = String(err?.stderr ?? err?.stdout ?? err?.message ?? err)
+  const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean)
+  const meaningful = lines.find(
+    (l) =>
+      /ERR_[A-Z_]+|Cannot find (?:package|module)|Error:|SyntaxError:|TypeError:/.test(l)
+      && !l.startsWith("node:internal/")
+      && !l.startsWith("at ")
+  )
+  return meaningful ?? lines.find((l) => !l.startsWith("node:internal/") && !l.startsWith("at ")) ?? lines[0] ?? ""
 }
 
 function findTarball(dir) {
@@ -132,7 +141,12 @@ try {
   // --no-save avoids dirtying the throwaway package.json with a tarball path.
   // --ignore-scripts skips lifecycle hooks of transitive deps; we only care
   // about whether the tarball's files resolve.
-  run(`npm install --no-save --ignore-scripts "${tarball}"`, { cwd: proj })
+  // --no-legacy-peer-deps forces npm to install peerDependencies (react,
+  // react-dom). The repo `.npmrc` sets `legacy-peer-deps=true` for the
+  // eslint-plugin-react / ESLint 10 peer mismatch, and that npm_config_*
+  // flag is inherited by child installs — without this override the smoke
+  // consumer never gets React and every React entry point fails to import.
+  run(`npm install --no-save --ignore-scripts --no-legacy-peer-deps "${tarball}"`, { cwd: proj })
 
   // Verify each entry resolves under ESM and CJS, and that its `types`
   // file (per package.json `exports`) actually exists on disk.

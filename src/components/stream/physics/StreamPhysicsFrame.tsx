@@ -2558,7 +2558,7 @@ export const StreamPhysicsFrame = forwardRef<
       return
     }
 
-    let result: PhysicsPipelineTickResult | null = null
+    let result: PhysicsPipelineTickResult
     if (reducedMotionRef.current) {
       result = store.settleWithObservations()
     } else {

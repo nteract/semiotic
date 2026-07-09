@@ -238,7 +238,6 @@ function renderNote(
         </div>
       </foreignObject>
     )
-    yOffset = titleLines.length * lineHeight
   } else {
     if (titleLines.length > 0) {
       textElements.push(

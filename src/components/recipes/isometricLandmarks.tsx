@@ -266,8 +266,8 @@ export function selectIsometricLandmarks(
       const id = `tile-${row}-${column}`
       const centerXKm = -radius + (column + 0.5) * cellSpan
       const centerYKm = radius - (row + 0.5) * cellSpan
-      let landmark: IsometricLandmarkTile["landmark"] = null
-      let landmarks: IsometricLandmarkTile["landmarks"] = []
+      let landmark: IsometricLandmarkTile["landmark"]
+      let landmarks: IsometricLandmarkTile["landmarks"]
 
       if (row === middle && column === middle && centerCandidate) {
         landmark = centerCandidate
