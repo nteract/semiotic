@@ -464,12 +464,16 @@ describe("diagnoseConfig", () => {
     expect(result.diagnoses.map(d => d.code)).toContain("PHYSICS_NO_PROJECTION")
   })
 
-  it("diagnoses GauntletChart missing positive properties", () => {
+  it("allows a negative-only GauntletChart without positive properties", () => {
     const result = diagnoseConfig("GauntletChart", {
-      data: [{ id: "p1" }],
-      negativeProperties: [],
+      data: [{ id: "p1", negatives: ["cost"] }],
+      negativeProperties: [{ id: "cost", label: "Cost", load: 1 }],
+      title: "Review burden",
     })
-    expect(result.diagnoses.map(d => d.code)).toContain("GAUNTLET_MISSING_POSITIVE_PROPERTIES")
+    expect(result.ok).toBe(true)
+    expect(result.diagnoses.map(d => d.code)).not.toContain(
+      "GAUNTLET_MISSING_POSITIVE_PROPERTIES"
+    )
   })
 
   it("warns about a single function accessor among strings", () => {

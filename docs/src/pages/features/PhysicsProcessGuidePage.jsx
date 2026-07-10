@@ -74,12 +74,12 @@ const decisionRows = [
   {
     choose: "ProcessFlowChart",
     when: "Many independent work items move through ordered stages with capacity, rework, and optional feature groups that complete only when every member is absorbed.",
-    examples: "Merge Pressure, hospital triage, moderation queues, ETL backlog",
+    examples: "Hospital triage, moderation queues, ETL backlog",
   },
   {
     choose: "GauntletChart",
     when: "One compound plan (a project core) carries tethered positive/negative properties through timed gate effects that pop lift or add drag.",
-    examples: "Not in MY Backyard, legislation, product roadmap risk",
+    examples: "Merge Pressure, Not in MY Backyard, legislation, product roadmap risk",
   },
   {
     choose: "EventDropChart",

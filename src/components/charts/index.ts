@@ -191,7 +191,12 @@ export type { PhysicsPileChartProps } from "./physics/PhysicsPileChart"
 export { CollisionSwarmChart } from "./physics/CollisionSwarmChart"
 export type { CollisionSwarmChartProps } from "./physics/CollisionSwarmChart"
 
-export { GauntletChart, GuantletChart } from "./physics/GauntletChart"
+export {
+  GauntletChart,
+  GuantletChart,
+  planGauntletPropertyWork,
+  replaceGauntletNegative
+} from "./physics/GauntletChart"
 export type {
   GauntletChartProps,
   GauntletEffect,
@@ -200,11 +205,14 @@ export type {
   GauntletEventLogItem,
   GauntletGate,
   GauntletLayout,
+  GauntletNegativeReplacementOptions,
   GauntletPopSpec,
   GauntletProjectPlacement,
   GauntletProjectState,
   GauntletPropertyForceContext,
-  GauntletPropertyDefinition
+  GauntletPropertyDefinition,
+  GauntletPropertyWorkPlan,
+  GauntletPropertyWorkPlanOptions
 } from "./physics/GauntletChart"
 export {
   physicsProcessBoundaryColliders,

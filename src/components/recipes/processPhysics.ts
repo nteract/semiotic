@@ -834,13 +834,19 @@ export interface BodyGroupSpecOptions<TDatum extends Datum = Datum> {
   /** Anchor point for tethers / chrome. */
   anchor?: { x: number; y: number }
   /**
-   * Completion rule metadata for ProcessFlow / custom controllers.
-   * Geometry helpers do not enforce this — they only stamp the intent.
+   * Completion rule consumed by `groupCompletionRows` and available to
+   * ProcessFlow / custom controllers as group metadata.
    */
   completion?: {
     mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"
     targetZone?: string
+    /** Required absorbed member value when mode is `threshold`. */
     threshold?: number
+    /**
+     * Optional per-member values used by threshold completion and progress
+     * readouts. Members without an entry have value 1.
+     */
+    valueByBodyId?: Readonly<Record<string, number>>
   }
   tether?: {
     stiffness?: number
@@ -946,8 +952,8 @@ export function regionCountsToProjectionRows(
 }
 
 /**
- * Group-completion ledger for all-members absorption stories.
- * Pure: callers supply which member ids have been absorbed.
+ * Group-completion ledger for all-members, any-member, and weighted-threshold
+ * stories. Pure: callers supply which member ids have been absorbed.
  */
 export function groupCompletionRows(
   groups: readonly BodyGroupSpec[],
@@ -955,9 +961,13 @@ export function groupCompletionRows(
 ): Array<{
   id: string
   label: string
+  mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"
   complete: boolean
   absorbed: number
   total: number
+  absorbedValue: number
+  totalValue: number
+  threshold?: number
   missing: string[]
 }> {
   const absorbed =
@@ -968,12 +978,46 @@ export function groupCompletionRows(
     const members = group.bodyIds ?? []
     const missing = members.filter((id) => !absorbed.has(id))
     const absorbedCount = members.length - missing.length
+    const mode = group.completion?.mode ?? "allMembersAbsorbed"
+    const valueByBodyId = group.completion?.valueByBodyId
+    const memberValue = (bodyId: string): number => {
+      const configured = valueByBodyId?.[bodyId]
+      return Number.isFinite(configured) && Number(configured) >= 0
+        ? Number(configured)
+        : 1
+    }
+    const totalValue = members.reduce(
+      (sum, bodyId) => sum + memberValue(bodyId),
+      0
+    )
+    const absorbedValue = members.reduce(
+      (sum, bodyId) => sum + (absorbed.has(bodyId) ? memberValue(bodyId) : 0),
+      0
+    )
+    const configuredThreshold = group.completion?.threshold
+    const threshold =
+      mode === "threshold"
+        ? Number.isFinite(configuredThreshold) && Number(configuredThreshold) >= 0
+          ? Number(configuredThreshold)
+          : totalValue
+        : undefined
+    const complete =
+      members.length > 0 &&
+      (mode === "anyAbsorbed"
+        ? absorbedCount > 0
+        : mode === "threshold"
+          ? absorbedValue >= (threshold ?? totalValue)
+          : missing.length === 0)
     return {
       id: group.id,
       label: group.label ?? group.id,
-      complete: members.length > 0 && missing.length === 0,
+      mode,
+      complete,
       absorbed: absorbedCount,
       total: members.length,
+      absorbedValue,
+      totalValue,
+      threshold,
       missing
     }
   })

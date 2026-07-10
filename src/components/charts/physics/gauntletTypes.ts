@@ -44,6 +44,10 @@ export interface GauntletPropertyDefinition {
   mass?: number
   buoyancy?: number
   load?: number
+  /** Work units required to remove one occurrence at a bounded-work gate. */
+  work?: number
+  /** Lower values are selected first by the default work-budget planner. */
+  priority?: number
   pull?: { x?: number; y?: number }
   popColor?: string
   spring?: false | Partial<PhysicsSpawnSpringSpec>
@@ -55,6 +59,24 @@ export interface GauntletGate {
   label?: string
   description?: string
   color?: string
+  /**
+   * Optional shared FIFO capacity for compound cores crossing this gate.
+   * Event time remains the earliest arrival; the matching gate event waits
+   * until the project's core has been processed.
+   */
+  capacity?: {
+    unitsPerSecond: number
+    /** Reads work units from the source datum or live project state. */
+    unitAccessor?:
+      | string
+      | ((project: GauntletProjectState) => number)
+    maxQueue?: number
+    queueLayout?: "lane" | "none"
+    queueSlotSpacing?: number
+    queueStiffness?: number
+    /** Invisible sensor/queue width; independent from the drawn gate width. */
+    sensorWidth?: number
+  }
   enabled?: boolean
   regionEffect?: Partial<Omit<StreamPhysicsRegionEffect, "id" | "shape">>
   time?: number
@@ -95,6 +117,8 @@ export interface GauntletEvent {
   label?: string
   time: number
   gateId?: string
+  /** Capacity-gate visit this event waits for. Defaults to its gate-event ordinal. */
+  gateVisit?: number
   effects?: readonly GauntletEffect[]
   final?: boolean
   outcome?: string
@@ -107,6 +131,8 @@ export interface GauntletEventLogItem {
   id: string
   label: string
   summary?: string
+  /** Actual project-local application time (event `time` is the authored earliest time). */
+  appliedAt?: number
   time?: number
 }
 
@@ -117,6 +143,8 @@ export interface GauntletProjectState<TDatum extends Datum = Datum> {
   datum: TDatum
   delay: number
   eventsApplied: string[]
+  /** Ordered event tape for readouts, replay evidence, and accessibility. */
+  eventHistory?: GauntletEventLogItem[]
   killed: boolean
   lastEvent?: GauntletEventLogItem
   metrics: Record<string, number>
@@ -126,6 +154,8 @@ export interface GauntletProjectState<TDatum extends Datum = Datum> {
   poppedPositiveIds: string[]
   /** Negative property ids removed by {@link GauntletEffect.popNegative}. */
   poppedNegativeIds: string[]
+  /** Project-local timeline origin in simulation seconds. */
+  startedAt?: number
   stage: string
   viability: number
 }
@@ -183,6 +213,30 @@ export interface GauntletAccessors<TDatum extends Datum = Datum> {
   metricsAccessor?: ChartAccessor<TDatum, Record<string, number>>
   negativeAccessor?: ChartAccessor<TDatum, readonly string[]>
   positiveAccessor?: ChartAccessor<TDatum, readonly string[]>
+  startTimeAccessor?: ChartAccessor<TDatum, number>
+}
+
+export interface GauntletPropertyWorkPlanOptions {
+  attachedIds: readonly string[]
+  properties:
+    | readonly GauntletPropertyDefinition[]
+    | Map<string, GauntletPropertyDefinition>
+  budget: number
+  candidates?: readonly string[]
+}
+
+export interface GauntletPropertyWorkPlan {
+  ids: string[]
+  used: number
+  budget: number
+  remaining: number
+  skippedIds: string[]
+}
+
+export interface GauntletNegativeReplacementOptions {
+  from: string
+  to: string
+  count?: number
 }
 
 /** Wall colliders matching {@link GAUNTLET_WALL} / SSR builder. */
@@ -193,4 +247,3 @@ export interface GauntletBodyDatum<TDatum extends Datum = Datum> {
   property?: GauntletPropertyDefinition
   sourceDatum: TDatum
 }
-

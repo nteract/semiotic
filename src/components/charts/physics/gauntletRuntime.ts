@@ -213,8 +213,9 @@ export function computeGauntletBodyForce<TDatum extends Datum>(options: {
     }
   }
   const projectEventsForRoute = projectEvents(project)
+  const projectElapsed = Math.max(0, elapsed - (project.startedAt ?? 0))
   const target = projectRouteTarget(
-    elapsed,
+    projectElapsed,
     project,
     layout,
     placement,

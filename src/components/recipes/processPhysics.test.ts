@@ -268,4 +268,87 @@ describe("aggregates and body groups", () => {
     const done = groupCompletionRows([group], new Set(["pr-1", "pr-2", "pr-3"]))
     expect(done[0].complete).toBe(true)
   })
+
+  it("honors any-member and weighted-threshold completion modes", () => {
+    const anyMember = bodyGroupSpec({
+      id: "reviewed",
+      bodyIds: ["pr-1", "pr-2"],
+      completion: { mode: "anyAbsorbed", targetZone: "merged" }
+    })
+    const featurePoints = bodyGroupSpec({
+      id: "feature",
+      bodyIds: ["pr-1", "pr-2", "pr-3"],
+      completion: {
+        mode: "threshold",
+        targetZone: "merged",
+        threshold: 10,
+        valueByBodyId: { "pr-1": 4, "pr-2": 6, "pr-3": 3 }
+      }
+    })
+
+    const partial = groupCompletionRows(
+      [anyMember, featurePoints],
+      new Set(["pr-1"])
+    )
+    expect(partial[0]).toMatchObject({
+      mode: "anyAbsorbed",
+      complete: true,
+      absorbed: 1,
+      absorbedValue: 1,
+      totalValue: 2
+    })
+    expect(partial[1]).toMatchObject({
+      mode: "threshold",
+      complete: false,
+      absorbed: 1,
+      absorbedValue: 4,
+      totalValue: 13,
+      threshold: 10,
+      missing: ["pr-2", "pr-3"]
+    })
+
+    const complete = groupCompletionRows(
+      [featurePoints],
+      new Set(["pr-1", "pr-2"])
+    )
+    expect(complete[0]).toMatchObject({
+      complete: true,
+      absorbed: 2,
+      absorbedValue: 10,
+      totalValue: 13,
+      threshold: 10,
+      missing: ["pr-3"]
+    })
+  })
+
+  it("keeps all-members completion as the default and sanitizes invalid weights", () => {
+    const group = bodyGroupSpec({
+      id: "default",
+      bodyIds: ["a", "b"],
+      completion: {
+        mode: "threshold",
+        threshold: Number.NaN,
+        valueByBodyId: { a: -2, b: 3 }
+      }
+    })
+
+    const threshold = groupCompletionRows([group], ["b"])[0]
+    expect(threshold).toMatchObject({
+      complete: false,
+      absorbedValue: 3,
+      totalValue: 4,
+      threshold: 4
+    })
+
+    const implicitAll = groupCompletionRows(
+      [bodyGroupSpec({ id: "all", bodyIds: ["a", "b"] })],
+      ["a"]
+    )[0]
+    expect(implicitAll).toMatchObject({
+      mode: "allMembersAbsorbed",
+      complete: false,
+      absorbed: 1,
+      total: 2
+    })
+  })
 })

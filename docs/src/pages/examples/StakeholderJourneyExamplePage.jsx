@@ -23,7 +23,7 @@ const STAGES = [
   { id: "impact", label: "FIRST IMPACT", voice: "It did the thing I came for." },
   { id: "habit", label: "HABIT", voice: "It becomes a default." },
   { id: "commitment", label: "COMMITMENT", voice: "I help tend the project." },
-  { id: "leadership", label: "ECOSYSTEM LEADERSHIP", voice: "I help steward the system." },
+  { id: "leadership", label: "LEADERSHIP", voice: "I help steward the ecosystem." },
 ]
 
 const DESTINATION_LABELS = {
@@ -46,7 +46,7 @@ const SYSTEMS = [
   {
     id: "works",
     title: "Why the ecosystem relay works",
-    subtitle: "First Impact charges people, and the right side has enough trust and invitation to retain that charge.",
+    subtitle: "First Impact charges people, then community infrastructure keeps that charge from becoming private consumption.",
     verdict: "Works: designed community physics",
     seed: 208,
     pace: 2.5,
@@ -54,9 +54,9 @@ const SYSTEMS = [
     fieldThreshold: 18,
     canvasCoherence: 0.86,
     membraneNote:
-      "The left side still has resistance, but the membranes are legible: search/recommendation, value fit, and activation each has a named passage and a known cost.",
+      "Discovery, value fit, and activation are separate membranes with named costs, so the system can reduce friction without pretending every participant follows the same path.",
     rightNote:
-      "The charged particles do not just drift. They enter a field of community members, governance, impact, and near-peer invitation, so Habit can become Commitment.",
+      "Charged participants enter a field of maintainers, contribution paths, governance, and recognition, so Habit can convert into Commitment.",
     membranes: [
       { id: "findability", label: "findability", offset: 0.2, cost: 0.24, wobble: -10, color: "#b63832" },
       { id: "value-fit", label: "value fit", offset: 0.36, cost: 0.32, wobble: 9, color: "#1f63a8" },
@@ -64,15 +64,15 @@ const SYSTEMS = [
     ],
     distribution: { activation: 3, impact: 7, habit: 14, commitment: 24, leadership: 8 },
     factors: [
-      "Canvas discipline separates contributor value from user value instead of flattening everyone into one generic user.",
-      "The ecosystem map names arrows, not just nodes: learning, trust, reputation, governance, funding, and belonging are visible flows.",
-      "The right side contains near-peer pull, so a repeat user can see a reachable next role before charge dissipates.",
+      "Contributor, user, funder, and steward value are separated before they are recombined as flows.",
+      "The map names arrows, not just boxes: learning, trust, reputation, governance, funding, and belonging become visible forces.",
+      "The right side contains near-peer pull, so a repeat user sees a reachable next role before charge dissipates.",
     ],
   },
   {
     id: "fails",
     title: "Why the passive funnel fails",
-    subtitle: "People may reach First Impact, but charge dissipates because the ecosystem field was never designed.",
+    subtitle: "People can still reach First Impact, but the field treats usage as the end state and lets community charge leak away.",
     verdict: "Fails: accidental product funnel",
     seed: 77,
     pace: 2.1,
@@ -80,9 +80,9 @@ const SYSTEMS = [
     fieldThreshold: 18,
     canvasCoherence: 0.38,
     membraneNote:
-      "The left membranes are treated like a single funnel problem. AI-mediated discovery, mixed value propositions, and activation work are not named as separate regions.",
+      "The left side is managed as one acquisition problem. AI-mediated discovery, mixed value propositions, and activation work are not separated as regions.",
     rightNote:
-      "The right side is thin. Users can develop Habit, but without visible community roles, trust, and governance, the charge leaks before Commitment.",
+      "The right side is thin. Users can develop Habit, but without visible community roles, trust, or governance, the charge leaks before Commitment.",
     membranes: [
       { id: "ai-gate", label: "AI gate", offset: 0.2, cost: 0.64, wobble: 18, color: "#7b8491" },
       { id: "mixed-value", label: "mixed value", offset: 0.36, cost: 0.72, wobble: -16, color: "#7b8491" },
@@ -91,24 +91,24 @@ const SYSTEMS = [
     distribution: { activation: 8, impact: 18, habit: 24, commitment: 5, leadership: 1 },
     factors: [
       "The canvas hides a mismatch: contributors and users may be different communities with different reasons to show up.",
-      "Saboteurs and gatekeepers remain fuzzy, so substitutes, AI mediation, and trust leaks are not part of the map.",
-      "Habit stays consumption. The project sees usage, but the community does not see the next generation forming.",
+      "Saboteurs, substitutes, AI mediation, and trust leaks remain fuzzy, so the map cannot assign force to them.",
+      "Habit stays consumption. The project sees usage, but the community cannot see a next generation forming.",
     ],
   },
 ]
 
 const CANVAS_CELLS = [
-  { id: "funding", label: "FUNDING SOURCES", group: "viability", col: 0, row: 0, tokens: 6 },
-  { id: "revenue", label: "REVENUE STREAMS", group: "viability", col: 0, row: 1, tokens: 4 },
-  { id: "inkind", label: "IN-KIND SUPPORT", group: "viability", col: 0, row: 2, tokens: 7 },
-  { id: "operations", label: "OPERATIONS, ACTIVITIES", group: "feasibility", col: 1, row: 0, tokens: 8 },
-  { id: "governance", label: "GOVERNANCE", group: "feasibility", col: 1, row: 1, tokens: 5 },
-  { id: "costs", label: "COSTS", group: "feasibility", col: 1, row: 2, tokens: 5 },
-  { id: "channels", label: "CHANNELS", group: "feasibility", col: 2, row: 0, spanRows: 2, tokens: 7 },
-  { id: "gtm", label: "GO TO MARKET", group: "feasibility", col: 2, row: 2, tokens: 6 },
-  { id: "value", label: "VALUE PROPOSITIONS", group: "desirability", col: 3, row: 0, spanRows: 2, tokens: 9 },
-  { id: "members", label: "COMMUNITY MEMBERS", group: "desirability", col: 4, row: 0, spanRows: 2, tokens: 10 },
-  { id: "impact", label: "IMPACT", group: "desirability", col: 3, row: 2, spanCols: 2, tokens: 8 },
+  { id: "funding", label: "Funding sources", group: "viability", role: "source", effect: "energy in", col: 0, row: 0, tokens: 6 },
+  { id: "revenue", label: "Revenue streams", group: "viability", role: "source", effect: "recurring energy", col: 0, row: 1, tokens: 4 },
+  { id: "inkind", label: "In-kind support", group: "viability", role: "source", effect: "borrowed capacity", col: 0, row: 2, tokens: 7 },
+  { id: "operations", label: "Operations and activities", group: "feasibility", role: "route", effect: "work lanes", col: 1, row: 0, tokens: 8 },
+  { id: "governance", label: "Governance", group: "feasibility", role: "route", effect: "decision gates", col: 1, row: 1, tokens: 5 },
+  { id: "costs", label: "Costs", group: "feasibility", role: "sink", effect: "energy drain", col: 1, row: 2, tokens: 5 },
+  { id: "channels", label: "Channels", group: "feasibility", role: "route", effect: "discovery flow", col: 2, row: 0, spanRows: 2, tokens: 7 },
+  { id: "gtm", label: "Go to market", group: "feasibility", role: "route", effect: "outside pull", col: 2, row: 2, tokens: 6 },
+  { id: "value", label: "Value propositions", group: "desirability", role: "pull", effect: "First Impact charge", col: 3, row: 0, spanRows: 2, tokens: 9 },
+  { id: "members", label: "Community members", group: "desirability", role: "pull", effect: "near-peer gravity", col: 4, row: 0, spanRows: 2, tokens: 10 },
+  { id: "impact", label: "Impact", group: "desirability", role: "pull", effect: "proof of value", col: 3, row: 2, spanCols: 2, tokens: 8 },
 ]
 
 const GROUP_COLORS = {
@@ -116,6 +116,40 @@ const GROUP_COLORS = {
   feasibility: "#b63832",
   desirability: "#1f63a8",
 }
+
+const CANVAS_LINKS = [
+  { source: "funding", target: "operations" },
+  { source: "inkind", target: "operations" },
+  { source: "governance", target: "members" },
+  { source: "channels", target: "value" },
+  { source: "gtm", target: "value" },
+  { source: "value", target: "impact" },
+  { source: "members", target: "impact" },
+  { source: "costs", target: "impact", tension: -0.16 },
+]
+
+const ECOSYSTEM_LENSES = [
+  {
+    name: "CHAOSS metrics models",
+    href: "https://www.chaoss.community/kb-metrics-and-metrics-models/",
+    lesson: "health questions need collections of metrics, not one popularity number",
+  },
+  {
+    name: "Contributor retention management",
+    href: "https://arxiv.org/abs/2602.11447",
+    lesson: "retention work needs earlier risk signals, not only retrospective dashboards",
+  },
+  {
+    name: "CROSS lifecycle model",
+    href: "https://arxiv.org/abs/2409.08267",
+    lesson: "contributors move through stages with different driving and retaining forces",
+  },
+  {
+    name: "OSS sustainability dual view",
+    href: "https://arxiv.org/abs/2203.03144",
+    lesson: "governance rules and socio-technical networks explain sustainability together",
+  },
+]
 
 const RESEARCH_LINKS = [
   {
@@ -454,13 +488,13 @@ export default function StakeholderJourneyExamplePage() {
       <div className="stakeholder-journey" ref={hostRef}>
         <section className="stakeholder-journey__hero">
           <div>
-            <span className="stakeholder-journey__kicker">StreamPhysicsFrame as an ecosystem argument</span>
+            <span className="stakeholder-journey__kicker">StreamPhysicsFrame as an ecosystem health argument</span>
             <p className="stakeholder-journey__lede">
-              The original bowtie returns here: Discovery, Acquisition, Activation, First Impact,
-              Habit, Commitment, and Ecosystem Leadership. The physics layer now separates two
-              media. The left side is a set of permeable membranes that cost energy to cross. First
-              Impact charges a particle. The right side either retains that charge through trust,
-              governance, belonging, and invitation, or lets it dissipate into passive use.
+              The bowtie is still Discovery, Acquisition, Activation, First Impact, Habit,
+              Commitment, and Leadership, but the argument is no longer a passive funnel. The
+              left side is a set of permeable membranes that tax attention. First Impact charges a
+              participant. The right side either retains that charge through roles, governance,
+              belonging, and near-peer invitation, or dissipates it into private usage.
             </p>
           </div>
           <div className="stakeholder-journey__source-card">
@@ -498,12 +532,12 @@ export default function StakeholderJourneyExamplePage() {
 
         <section className="stakeholder-journey__canvas-section" aria-labelledby="ose-canvas-heading">
           <div className="stakeholder-journey__section-header">
-            <span className="stakeholder-journey__kicker">Separate physics-ized OSE Canvas</span>
-            <h2 id="ose-canvas-heading">The sustainability field beneath the journey</h2>
+            <span className="stakeholder-journey__kicker">Ecosystem field composer</span>
+            <h2 id="ose-canvas-heading">The canvas explains where the forces come from</h2>
             <p>
-              The canvas is not another static checklist. These cells are hypotheses with force:
-              viability keeps the project supplied, feasibility keeps work governable, and desirability
-              keeps value attached to real community members and impact.
+              The canvas is not a second toy underneath the bowtie. It is the parameter map:
+              viability cells supply energy, feasibility cells route and govern work, cost cells
+              drain energy, and desirability cells create the pull that turns value into community.
             </p>
           </div>
           <OSECanvasPhysics model={canvasModel} runId={runId} />
@@ -531,8 +565,20 @@ export default function StakeholderJourneyExamplePage() {
 
         <section className="stakeholder-journey__needs">
           <div className="stakeholder-journey__section-header">
+            <span className="stakeholder-journey__kicker">Open-source analysis lenses</span>
+            <h2>What the physics is trying to preserve</h2>
+          </div>
+          <div className="stakeholder-journey__research-grid">
+            {ECOSYSTEM_LENSES.map((link) => (
+              <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="stakeholder-journey__research-card">
+                <strong>{link.name}</strong>
+                <span>{link.lesson}</span>
+              </a>
+            ))}
+          </div>
+          <div className="stakeholder-journey__section-header stakeholder-journey__section-header--tight">
             <span className="stakeholder-journey__kicker">Process authoring kit</span>
-            <h2>Reusable primitives behind this example</h2>
+            <h2>Reusable primitives behind the metaphor</h2>
           </div>
           <div className="stakeholder-journey__research-grid">
             {RESEARCH_LINKS.map((link) => (
@@ -784,19 +830,21 @@ function buildCanvasModel(width, runId) {
       }
       spawns.push({
         id: `canvas-${cell.id}-${index}`,
-        x: layout.width / 2 + randomBetween(random, -80, 80),
-        y: 26 + randomBetween(random, -8, 14),
-        vx: randomBetween(random, -20, 20),
-        vy: randomBetween(random, 20, 80),
-        mass: cell.group === "desirability" ? 1.15 : 1,
-        shape: { type: "circle", radius: cell.group === "desirability" ? 6.5 : 5.6 },
+        x: target.x + randomBetween(random, -22, 22),
+        y: target.y + randomBetween(random, -22, 22),
+        vx: randomBetween(random, -16, 16),
+        vy: randomBetween(random, -12, 12),
+        mass: cell.role === "pull" ? 1.16 : cell.role === "sink" ? 1.32 : 1,
+        shape: { type: "circle", radius: cell.role === "pull" ? 6.6 : cell.role === "sink" ? 6.2 : 5.6 },
         datum: {
           cell: cell.label,
           group: cell.group,
+          role: cell.role,
+          effect: cell.effect,
           target,
         },
-        spawnAt: spawns.length * 0.045,
-        springs: [{ target: { type: "point", ...target }, stiffness: 0.032, damping: 0.8, restLength: 3 }],
+        spawnAt: spawns.length * 0.006,
+        springs: [{ target: { type: "point", ...target }, stiffness: 0.068, damping: 0.82, restLength: 3 }],
       })
     }
   })
@@ -862,23 +910,24 @@ function OSECanvasPhysics({ model, runId }) {
         size={[model.layout.width, CANVAS_HEIGHT]}
         config={config}
         initialSpawns={model.spawns}
-        initialSpawnPacing={{ pacing: "arrival", timeAccessor: "spawnAt", timeScale: 3.4 }}
+        initialSpawnPacing={{ pacing: "arrival", timeAccessor: "spawnAt", timeScale: 7 }}
         accessibleTable
         enableHover
         hoverRadius={16}
         bodyStyle={(body) => {
           const group = body.datum?.group ?? "desirability"
+          const role = body.datum?.role
           return {
-            fill: GROUP_COLORS[group],
-            stroke: "#ffffff",
-            strokeWidth: 1.4,
-            opacity: 0.86,
+            fill: role === "sink" ? "#b63832" : GROUP_COLORS[group],
+            stroke: role === "pull" ? "#ffe08a" : "#ffffff",
+            strokeWidth: role === "pull" ? 1.8 : 1.4,
+            opacity: role === "sink" ? 0.74 : 0.88,
           }
         }}
         tooltipContent={(hover) => (
           <div className="semiotic-tooltip stakeholder-journey__tooltip">
             <strong>{hover.datum?.cell ?? hover.id}</strong>
-            <div>{hover.datum?.group ?? "canvas"}</div>
+            <div>{hover.datum?.effect ?? hover.datum?.group ?? "canvas"}</div>
           </div>
         )}
       />
@@ -890,26 +939,69 @@ function OSECanvasPhysics({ model, runId }) {
 function OSECanvasOverlay({ layout }) {
   return (
     <svg className="stakeholder-journey__canvas-overlay" viewBox={`0 0 ${layout.width} ${layout.height}`} aria-hidden="true">
-      <text className="stakeholder-journey__canvas-heading" x={layout.margin} y="30">VIABILITY</text>
-      <text className="stakeholder-journey__canvas-heading" x={layout.margin + (layout.colWidth + layout.gap)} y="30">FEASIBILITY</text>
-      <text className="stakeholder-journey__canvas-heading" x={layout.margin + (layout.colWidth + layout.gap) * 3} y="30">DESIRABILITY</text>
+      <defs>
+        <marker id="stakeholder-canvas-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M 0 0 L 7 4 L 0 8 Z" />
+        </marker>
+      </defs>
+      <text className="stakeholder-journey__canvas-heading" x={layout.margin} y="30">VIABILITY SUPPLIES</text>
+      <text className="stakeholder-journey__canvas-heading" x={layout.margin + (layout.colWidth + layout.gap)} y="30">FEASIBILITY ROUTES</text>
+      <text className="stakeholder-journey__canvas-heading" x={layout.margin + (layout.colWidth + layout.gap) * 3} y="30">DESIRABILITY PULLS</text>
+      {CANVAS_LINKS.map((link) => (
+        <path
+          key={`${link.source}-${link.target}`}
+          className={`stakeholder-journey__canvas-flow ${link.source === "costs" ? "is-drain" : ""}`}
+          d={canvasLinkPath(layout, link)}
+          markerEnd="url(#stakeholder-canvas-arrow)"
+        />
+      ))}
       {CANVAS_CELLS.map((cell) => {
         const rect = layout.cells[cell.id]
         const color = GROUP_COLORS[cell.group]
         return (
-          <g key={cell.id} className="stakeholder-journey__canvas-cell">
+          <g key={cell.id} className={`stakeholder-journey__canvas-cell is-${cell.role}`}>
             <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} rx="4" stroke={color} />
-            <text x={rect.x + 14} y={rect.y + 27} fill={color}>{cell.label}</text>
+            <CanvasCellLabel cell={cell} rect={rect} color={color} />
           </g>
         )
       })}
-      <path className="stakeholder-journey__canvas-flow" d={`M ${layout.cells.value.x + layout.cells.value.width * 0.35} ${layout.cells.value.y + layout.cells.value.height} C ${layout.width * 0.48} ${layout.height - 108}, ${layout.width * 0.58} ${layout.height - 108}, ${layout.cells.impact.x + 40} ${layout.cells.impact.y + 32}`} />
-      <path className="stakeholder-journey__canvas-flow" d={`M ${layout.cells.members.x + 36} ${layout.cells.members.y + layout.cells.members.height} C ${layout.width * 0.78} ${layout.height - 106}, ${layout.width * 0.72} ${layout.height - 96}, ${layout.cells.impact.x + layout.cells.impact.width - 48} ${layout.cells.impact.y + 36}`} />
       <text className="stakeholder-journey__canvas-caption" x={layout.width / 2} y={layout.height - 12} textAnchor="middle">
-        The OSE Canvas as a sustainability field: every particle is a hypothesis that needs a cell, a force, and a flow.
+        Field grammar: sources add energy, routes govern movement, sinks drain energy, pulls retain charged participants.
       </text>
     </svg>
   )
+}
+
+function CanvasCellLabel({ cell, rect, color }) {
+  const lines = wrapSvgText(cell.label, Math.max(8, Math.floor((rect.width - 24) / 7.1)))
+  return (
+    <>
+      <text className="stakeholder-journey__canvas-cell-label" x={rect.x + 14} y={rect.y + 28} fill={color}>
+        {lines.map((line, index) => (
+          <tspan key={`${cell.id}-${line}`} x={rect.x + 14} dy={index === 0 ? 0 : 15}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+      <text className="stakeholder-journey__canvas-cell-effect" x={rect.x + 14} y={rect.y + rect.height - 18} fill={color}>
+        {cell.effect}
+      </text>
+    </>
+  )
+}
+
+function canvasLinkPath(layout, link) {
+  const source = layout.cells[link.source]
+  const target = layout.cells[link.target]
+  const sx = source.x + source.width
+  const sy = source.y + source.height / 2
+  const tx = target.x
+  const ty = target.y + target.height / 2
+  const tension = link.tension ?? 0
+  const c1x = sx + Math.max(30, (tx - sx) * 0.48)
+  const c2x = tx - Math.max(30, (tx - sx) * 0.36)
+  const offset = tension * layout.height
+  return `M ${sx} ${sy} C ${c1x} ${sy + offset}, ${c2x} ${ty - offset}, ${tx} ${ty}`
 }
 
 function Metric({ label, value, detail }) {
@@ -933,4 +1025,21 @@ function FeatureNeed({ title, body }) {
 
 function points(values) {
   return values.map(([x, y]) => `${x},${y}`).join(" ")
+}
+
+function wrapSvgText(text, maxChars) {
+  const words = String(text).split(/\s+/).filter(Boolean)
+  const lines = []
+  let current = ""
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word
+    if (next.length <= maxChars || !current) {
+      current = next
+    } else {
+      lines.push(current)
+      current = word
+    }
+  }
+  if (current) lines.push(current)
+  return lines.slice(0, 3)
 }

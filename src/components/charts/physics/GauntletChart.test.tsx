@@ -2,14 +2,20 @@ import { describe, expect, it } from "vitest"
 import { createMockCanvasContext } from "../../../test-utils/canvasMock"
 import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
 import {
+  applyGauntletEffect,
   buildGauntletPhysics,
+  planGauntletPropertyWork,
+  replaceGauntletNegative,
   type GauntletProjectState
 } from "./GauntletChart"
 import { drawGauntletBody } from "./gauntletChrome"
 import {
   buildLayout,
+  defaultPlacement,
+  projectRouteTarget,
   projectCoreId,
-  projectNegativeId
+  projectNegativeId,
+  recordGauntletEvent
 } from "./gauntletPhysics"
 import {
   computeGauntletBodyForce,
@@ -17,6 +23,160 @@ import {
 } from "./gauntletRuntime"
 
 describe("GauntletChart physics primitives", () => {
+  it("uses one project-local start time for a core and every satellite", () => {
+    const { initialSpawns } = buildGauntletPhysics({
+      data: [
+        {
+          id: "pr-1",
+          arrival: 2.5,
+          positives: ["value"],
+          negatives: ["risk", "risk"]
+        }
+      ],
+      idAccessor: "id",
+      positiveAccessor: "positives",
+      negativeAccessor: "negatives",
+      startTimeAccessor: "arrival",
+      positiveProperties: [{ id: "value" }],
+      negativeProperties: [{ id: "risk" }]
+    })
+
+    expect(initialSpawns).toHaveLength(4)
+    expect(initialSpawns.every((spawn) => spawn.spawnAt === 2.5)).toBe(true)
+  })
+
+  it("plans bounded property work deterministically and preserves occurrences", () => {
+    const plan = planGauntletPropertyWork({
+      attachedIds: ["expensive", "cheap", "cheap"],
+      properties: [
+        { id: "expensive", work: 5, priority: 0 },
+        { id: "cheap", work: 2, priority: 1 }
+      ],
+      budget: 4
+    })
+
+    expect(plan).toMatchObject({
+      ids: ["cheap", "cheap"],
+      used: 4,
+      remaining: 0,
+      skippedIds: ["expensive"]
+    })
+  })
+
+  it("replaces a bounded number of duplicate negatives without losing history", () => {
+    const project: GauntletProjectState = {
+      id: "pr-1",
+      activePositiveIds: [],
+      datum: { id: "pr-1" },
+      delay: 0,
+      eventsApplied: [],
+      killed: false,
+      metrics: {},
+      missingPositiveIds: [],
+      negativeIds: ["missing", "missing", "scope"],
+      outcome: "in_process",
+      poppedPositiveIds: [],
+      poppedNegativeIds: [],
+      stage: "review",
+      viability: 70
+    }
+    const effect = replaceGauntletNegative(project, {
+      from: "missing",
+      to: "bad-tests",
+      count: 2
+    })
+    const next = applyGauntletEffect(project, effect, {
+      event: { id: "ai", time: 1 },
+      negativeProperties: new Map(),
+      positiveProperties: new Map(),
+      project
+    })
+
+    expect(next.negativeIds).toEqual(["scope", "bad-tests", "bad-tests"])
+    expect(next.poppedNegativeIds).toEqual(["missing", "missing"])
+    expect(
+      replaceGauntletNegative(next, { from: "absent", to: "bad-tests" })
+    ).toEqual({})
+  })
+
+  it("holds a route at a capacity gate until its event is applied", () => {
+    const layout = buildLayout(
+      [720, 380],
+      [
+        { id: "review", x: 280, capacity: { unitsPerSecond: 2 } },
+        { id: "ci", x: 500 }
+      ],
+      30
+    )
+    const project: GauntletProjectState = {
+      id: "pr-1",
+      activePositiveIds: [],
+      datum: { id: "pr-1" },
+      delay: 0,
+      eventsApplied: [],
+      killed: false,
+      metrics: {},
+      missingPositiveIds: [],
+      negativeIds: [],
+      outcome: "in_process",
+      poppedPositiveIds: [],
+      poppedNegativeIds: [],
+      stage: "filed",
+      viability: 100
+    }
+    const events = [
+      { id: "review", gateId: "review", time: 1 },
+      { id: "ci", gateId: "ci", time: 2 }
+    ]
+    const target = projectRouteTarget(
+      3,
+      project,
+      layout,
+      defaultPlacement(layout),
+      events,
+      new Map(layout.gates.map((gate) => [gate.id, gate])),
+      "hold-last"
+    )
+
+    expect(target.x).toBe(280)
+  })
+
+  it("records each semantic event once when a tick is replayed before commit", () => {
+    const project: GauntletProjectState = {
+      id: "pr-1",
+      activePositiveIds: [],
+      datum: { id: "pr-1" },
+      delay: 0,
+      eventsApplied: [],
+      eventHistory: [],
+      killed: false,
+      metrics: {},
+      missingPositiveIds: [],
+      negativeIds: [],
+      outcome: "in_process",
+      poppedPositiveIds: [],
+      poppedNegativeIds: [],
+      stage: "review",
+      viability: 100
+    }
+    const once = recordGauntletEvent(project, {
+      id: "merge-decision",
+      label: "Merge Decision",
+      time: 2.7,
+      appliedAt: 2.8
+    })
+    const replayed = recordGauntletEvent(once, {
+      id: "merge-decision",
+      label: "Merge Decision",
+      time: 2.7,
+      appliedAt: 2.9
+    })
+
+    expect(replayed).toBe(once)
+    expect(replayed.eventsApplied).toEqual(["merge-decision"])
+    expect(replayed.eventHistory).toHaveLength(1)
+  })
+
   it("places positives above the core, negatives below it, and only the core is load-bearing", () => {
     const { initialSpawns } = buildGauntletPhysics({
       data: [

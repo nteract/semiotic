@@ -3,6 +3,9 @@
  */
 import type { StreamPhysicsFrameProps } from "../../stream/physics/StreamPhysicsFrame"
 import type {
+  CapacityQueueSnapshot
+} from "../../stream/physics/PhysicsControllers"
+import type {
   PhysicsQueuedSpawn
 } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
@@ -31,9 +34,11 @@ export interface GauntletChartProps<TDatum extends Datum = Datum>
   labelAccessor?: ChartAccessor<TDatum, string>
   positiveAccessor?: ChartAccessor<TDatum, readonly string[]>
   negativeAccessor?: ChartAccessor<TDatum, readonly string[]>
+  /** Simulation second when each project's local gate timeline begins. */
+  startTimeAccessor?: ChartAccessor<TDatum, number>
   metricsAccessor?: ChartAccessor<TDatum, Record<string, number>>
   initialViability?: ChartAccessor<TDatum, number>
-  positiveProperties: readonly GauntletPropertyDefinition[]
+  positiveProperties?: readonly GauntletPropertyDefinition[]
   negativeProperties: readonly GauntletPropertyDefinition[]
   bodyGroups?:
     | readonly PhysicsProcessBodyGroup<TDatum>[]
@@ -63,6 +68,8 @@ export interface GauntletChartProps<TDatum extends Datum = Datum>
   loading?: BaseChartProps["loading"]
   loadingContent?: BaseChartProps["loadingContent"]
   onStateChange?: (states: GauntletProjectState<TDatum>[]) => void
+  /** Live snapshots for gates declaring shared FIFO capacity. */
+  onCapacityChange?: (snapshots: CapacityQueueSnapshot[]) => void
   outcome?: (
     project: GauntletProjectState<TDatum>,
     context: {

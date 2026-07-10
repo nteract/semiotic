@@ -51,6 +51,8 @@ export interface ProcessChromeOptions {
   showStageCounts?: boolean
   showCapacityBadges?: boolean
   showGroupSockets?: boolean
+  /** Fit stage labels to the stage band instead of drawing fixed-width pills. */
+  stageLabelMode?: "auto" | "full" | "compact" | "none"
   /**
    * When true, stage bays are stroke-only (transparent fill) so particles
    * and paired charts remain visible through the gate geometry.
@@ -65,6 +67,52 @@ const ROLE_PALETTE = {
   portal: { fill: "rgba(244, 114, 182, 0.14)", stroke: "rgba(244, 114, 182, 0.7)", accent: "#f472b6" },
   absorb: { fill: "rgba(52, 211, 153, 0.18)", stroke: "rgba(52, 211, 153, 0.8)", accent: "#34d399" }
 } as const
+
+const AVG_LABEL_CHAR_PX = 6.2
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
+}
+
+function estimateLabelWidth(label: string): number {
+  return label.length * AVG_LABEL_CHAR_PX
+}
+
+function compactLabel(label: string, maxChars: number): string {
+  const trimmed = label.trim()
+  if (trimmed.length <= maxChars) return trimmed
+  if (maxChars <= 1) return trimmed.slice(0, 1)
+  const initials = trimmed
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+  if (initials.length > 1 && initials.length <= maxChars) return initials
+  if (maxChars <= 3) return trimmed.slice(0, maxChars).toUpperCase()
+  return `${trimmed.slice(0, Math.max(1, maxChars - 2))}..`
+}
+
+function fittedLabel(
+  label: string,
+  maxWidth: number,
+  mode: NonNullable<ProcessChromeOptions["stageLabelMode"]> = "auto"
+): { text: string; textLength?: number } {
+  const availableChars = Math.max(1, Math.floor(maxWidth / AVG_LABEL_CHAR_PX))
+  const text =
+    mode === "compact"
+      ? compactLabel(label, availableChars)
+      : mode === "full"
+        ? label
+        : estimateLabelWidth(label) <= maxWidth
+          ? label
+          : compactLabel(label, availableChars)
+  const estimated = estimateLabelWidth(text)
+  return {
+    text,
+    textLength: estimated > maxWidth ? Math.max(4, maxWidth) : undefined
+  }
+}
 
 function stageRole(stage: ProcessChromeStage): keyof typeof ROLE_PALETTE {
   if (stage.absorb) return "absorb"
@@ -96,6 +144,7 @@ export function processChrome(
     showStageCounts = true,
     showCapacityBadges = true,
     showGroupSockets = true,
+    stageLabelMode = "auto",
     outlineStages = false,
     testId = "process-flow-chrome"
   } = options
@@ -161,6 +210,22 @@ export function processChrome(
         const role = stageRole(stage)
         const palette = ROLE_PALETTE[role]
         const bandW = Math.max(12, stage.width - 8)
+        const labelBoxW = clamp(bandW - 8, 22, 88)
+        const labelTextMaxW = Math.max(8, labelBoxW - 10)
+        const label = fittedLabel(stage.label, labelTextMaxW, stageLabelMode)
+        const showStageLabel = stageLabelMode !== "none" && labelBoxW >= 22
+        const badge = stageBadge(stage)
+        const badgeTextMaxW = Math.max(16, bandW - 10)
+        const fittedBadge = fittedLabel(badge, badgeTextMaxW, "auto")
+        const showBadge = showCapacityBadges && bandW >= 32
+        const countText =
+          stage.count != null
+            ? `n=${stage.count}${stage.processed != null ? ` done ${stage.processed}` : ""}`
+            : ""
+        const countTextMaxW = Math.max(16, bandW - 8)
+        const fittedCount = fittedLabel(countText, countTextMaxW, "auto")
+        const stageLabelY = Math.max(30, topY - 15)
+        const stageLabelBoxY = stageLabelY - 13
         return (
           <g key={stage.id} data-stage={stage.id} data-role={role}>
             <rect
@@ -181,28 +246,36 @@ export function processChrome(
                 opacity={0.85}
               />
             ) : null}
-            <rect
-              x={stage.x - 36}
-              y={Math.max(6, topY - 28)}
-              width={72}
-              height={18}
-              rx={9}
-              fill="var(--semiotic-bg, #0f172a)"
-              fillOpacity={0.75}
-              stroke={palette.stroke}
-            />
-            <text
-              x={stage.x}
-              y={Math.max(18, topY - 15)}
-              textAnchor="middle"
-              fill={palette.accent}
-              fontSize={10}
-              fontWeight={800}
-              className="semiotic-process-chrome__stage-label"
-            >
-              {stage.label}
-            </text>
-            {showCapacityBadges ? (
+            {showStageLabel ? (
+              <>
+                <rect
+                  className="semiotic-process-chrome__stage-label-bg"
+                  x={stage.x - labelBoxW / 2}
+                  y={stageLabelBoxY}
+                  width={labelBoxW}
+                  height={18}
+                  rx={9}
+                  fill="var(--semiotic-bg, #0f172a)"
+                  fillOpacity={0.75}
+                  stroke={palette.stroke}
+                />
+                <text
+                  x={stage.x}
+                  y={stageLabelY}
+                  textAnchor="middle"
+                  fill={palette.accent}
+                  fontSize={10}
+                  fontWeight={800}
+                  className="semiotic-process-chrome__stage-label"
+                  textLength={label.textLength}
+                  lengthAdjust={label.textLength ? "spacingAndGlyphs" : undefined}
+                >
+                  <title>{stage.label}</title>
+                  {label.text}
+                </text>
+              </>
+            ) : null}
+            {showBadge ? (
               <text
                 x={stage.x}
                 y={topY + 22}
@@ -210,8 +283,11 @@ export function processChrome(
                 fill="var(--semiotic-process-muted, var(--semiotic-text-secondary, #94a3b8))"
                 fontSize={9}
                 fontWeight={700}
+                textLength={fittedBadge.textLength}
+                lengthAdjust={fittedBadge.textLength ? "spacingAndGlyphs" : undefined}
               >
-                {stageBadge(stage)}
+                <title>{badge}</title>
+                {fittedBadge.text}
               </text>
             ) : null}
             {showStageCounts && stage.count != null ? (
@@ -222,9 +298,11 @@ export function processChrome(
                 fill="var(--semiotic-process-text, var(--semiotic-text, #e2e8f0))"
                 fontSize={11}
                 fontWeight={800}
+                textLength={fittedCount.textLength}
+                lengthAdjust={fittedCount.textLength ? "spacingAndGlyphs" : undefined}
               >
-                n={stage.count}
-                {stage.processed != null ? ` · ✓${stage.processed}` : ""}
+                <title>{countText}</title>
+                {fittedCount.text}
               </text>
             ) : null}
           </g>
@@ -242,12 +320,22 @@ export function processChrome(
                 ? "rgba(251, 191, 36, 0.28)"
                 : "rgba(15, 23, 42, 0.75)"
             const stroke = done ? "#34d399" : almost ? "#fbbf24" : "var(--semiotic-border, #64748b)"
+            const status = total > 0
+              ? `${absorbed}/${total}${done ? " shipped" : almost ? " almost" : ""}`
+              : `feature ${groupIndex + 1}`
+            const socketW = clamp(
+              Math.max(54, estimateLabelWidth(group.label) + 18, estimateLabelWidth(status) + 16),
+              54,
+              104
+            )
+            const fittedGroup = fittedLabel(group.label, socketW - 12, "auto")
+            const fittedStatus = fittedLabel(status, socketW - 12, "auto")
             return (
               <g key={group.id} data-group={group.id}>
                 <rect
-                  x={group.x - 42}
+                  x={group.x - socketW / 2}
                   y={group.y - 22}
-                  width={84}
+                  width={socketW}
                   height={44}
                   rx={10}
                   fill={fill}
@@ -261,8 +349,11 @@ export function processChrome(
                   fill="var(--semiotic-process-text, var(--semiotic-text, #f8fafc))"
                   fontSize={10}
                   fontWeight={800}
+                  textLength={fittedGroup.textLength}
+                  lengthAdjust={fittedGroup.textLength ? "spacingAndGlyphs" : undefined}
                 >
-                  {group.label}
+                  <title>{group.label}</title>
+                  {fittedGroup.text}
                 </text>
                 <text
                   x={group.x}
@@ -271,10 +362,11 @@ export function processChrome(
                   fill={stroke}
                   fontSize={9}
                   fontWeight={700}
+                  textLength={fittedStatus.textLength}
+                  lengthAdjust={fittedStatus.textLength ? "spacingAndGlyphs" : undefined}
                 >
-                  {total > 0
-                    ? `${absorbed}/${total}${done ? " shipped" : almost ? " almost" : ""}`
-                    : `feature ${groupIndex + 1}`}
+                  <title>{status}</title>
+                  {fittedStatus.text}
                 </text>
               </g>
             )

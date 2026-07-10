@@ -8,7 +8,12 @@ import { EventDropChart } from "./charts/physics/EventDropChart"
 import { PhysicsPileChart } from "./charts/physics/PhysicsPileChart"
 import { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
 import { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
-import { GauntletChart, GuantletChart } from "./charts/physics/GauntletChart"
+import {
+  GauntletChart,
+  GuantletChart,
+  planGauntletPropertyWork,
+  replaceGauntletNegative
+} from "./charts/physics/GauntletChart"
 import { PhysicalFlowChart } from "./charts/physics/PhysicalFlowChart"
 import { ProcessFlowChart } from "./charts/physics/ProcessFlowChart"
 import {
@@ -99,6 +104,7 @@ export {
   forceFieldRegion,
   galtonPegs,
   groupCompletionRows,
+  planGauntletPropertyWork,
   membraneRegion,
   physicsProcessBoundaryColliders,
   physicsProcessGroupSemanticItems,
@@ -109,6 +115,7 @@ export {
   processLaneWalls,
   processStageLayout,
   regionCountsToProjectionRows,
+  replaceGauntletNegative,
   routeSurfaceRegion,
   sedimentBake,
   sedimentHeightfield,
@@ -129,11 +136,14 @@ export type {
   GauntletEventLogItem,
   GauntletGate,
   GauntletLayout,
+  GauntletNegativeReplacementOptions,
   GauntletPopSpec,
   GauntletProjectPlacement,
   GauntletProjectState,
   GauntletPropertyForceContext,
-  GauntletPropertyDefinition
+  GauntletPropertyDefinition,
+  GauntletPropertyWorkPlan,
+  GauntletPropertyWorkPlanOptions
 } from "./charts/physics/GauntletChart"
 export type {
   PhysicsProcessBodyGroup,

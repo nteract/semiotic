@@ -14,6 +14,10 @@ import StreamPhysicsFrame, {
   type StreamPhysicsRegionEffect
 } from "../../stream/physics/StreamPhysicsFrame"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
+import {
+  createCapacityQueueController,
+  type CapacityQueueSnapshot
+} from "../../stream/physics/PhysicsControllers"
 import type {
   PhysicsPipelineControlSurface,
   PhysicsPipelineTickResult,
@@ -48,11 +52,13 @@ import {
   projectPositiveId,
   propertyLabel,
   readAccessor,
+  recordGauntletEvent,
   resolvePlacement,
   type GauntletBodyDatum,
   type GauntletEffect,
   type GauntletEventContext,
-  type GauntletProjectState
+  type GauntletProjectState,
+  type GauntletPropertyDefinition
 } from "./gauntletPhysics"
 import {
   computeGauntletBodyForce,
@@ -73,7 +79,9 @@ export {
   GAUNTLET_WALL,
   clampGauntletPoint,
   buildGauntletPhysics,
-  applyGauntletEffect
+  applyGauntletEffect,
+  planGauntletPropertyWork,
+  replaceGauntletNegative
 } from "./gauntletPhysics"
 export type {
   GauntletAccessors,
@@ -90,12 +98,34 @@ export type {
   GauntletProjectState,
   GauntletPropertyDefinition,
   GauntletPropertyForceContext,
+  GauntletPropertyWorkPlan,
+  GauntletPropertyWorkPlanOptions,
+  GauntletNegativeReplacementOptions,
   GauntletViabilityFn
 } from "./gauntletPhysics"
 export type { GauntletChartProps }
 
+const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] = []
+
+function capacitySnapshotsEqual(
+  a: readonly CapacityQueueSnapshot[],
+  b: readonly CapacityQueueSnapshot[]
+): boolean {
+  if (a.length !== b.length) return false
+  return a.every((snapshot, index) => {
+    const other = b[index]
+    return (
+      snapshot.regionId === other?.regionId &&
+      snapshot.queueDepth === other.queueDepth &&
+      snapshot.processedCount === other.processedCount &&
+      Math.abs(snapshot.remainingWork - other.remainingWork) < 0.01
+    )
+  })
+}
+
 /**
- * Physics-backed gauntlet: project core + property satellites through timed gates.
+ * Physics-backed gauntlet: project core + property satellites through timed or
+ * capacity-gated process events.
  *
  * @example
  * ```tsx
@@ -126,6 +156,24 @@ export type { GauntletChartProps }
  *   size={[720, 380]}
  * />
  * ```
+ *
+ * @example
+ * Stagger negative-only compound entities on project-local clocks and share a
+ * finite service across their root bodies:
+ * ```tsx
+ * <GauntletChart
+ *   data={pullRequests}
+ *   startTimeAccessor="arrival"
+ *   negativeAccessor="risks"
+ *   negativeProperties={riskProperties}
+ *   gates={[{
+ *     id: "review",
+ *     capacity: { unitsPerSecond: 5, unitAccessor: "reviewWork" }
+ *   }]}
+ *   events={reviewEvents}
+ *   onCapacityChange={setCapacity}
+ * />
+ * ```
  */
 export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Datum = Datum>(
   props: GauntletChartProps<TDatum>,
@@ -146,11 +194,12 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     loading,
     loadingContent,
     negativeProperties,
+    onCapacityChange,
     onClick,
     onStateChange,
     outcome,
     paused,
-    positiveProperties,
+    positiveProperties = EMPTY_GAUNTLET_PROPERTIES,
     projectPlacement,
     responsiveHeight,
     responsiveWidth,
@@ -165,14 +214,16 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       initialViability: props.initialViability,
       metricsAccessor: props.metricsAccessor,
       negativeAccessor: props.negativeAccessor,
-      positiveAccessor: props.positiveAccessor
+      positiveAccessor: props.positiveAccessor,
+      startTimeAccessor: props.startTimeAccessor
     }),
     [
       props.idAccessor,
       props.initialViability,
       props.metricsAccessor,
       props.negativeAccessor,
-      props.positiveAccessor
+      props.positiveAccessor,
+      props.startTimeAccessor
     ]
   )
   const layoutMode = usePhysicsChartMode(props, [DEFAULT_WIDTH, DEFAULT_HEIGHT])
@@ -234,11 +285,16 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         id: `gauntlet-gate-${gate.id}`,
         label: gate.label ?? gate.id,
         description: gate.description,
+        bodyFilter: gate.capacity
+          ? { property: "datum.kind", equals: CORE_KIND }
+          : gate.regionEffect?.bodyFilter,
         shape: {
           type: "aabb",
           x: gate.x,
           y: layout.routeY,
-          width: gate.width,
+          width: gate.capacity
+            ? gate.capacity.sensorWidth ?? Math.max(96, gate.width * 6)
+            : Math.max(gate.width, 54),
           height: Math.min(360, layout.height - 170)
         }
       })),
@@ -259,6 +315,67 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   )
   const statesRef = useRef(states)
   const elapsedRef = useRef(0)
+  const processedGateVisitsRef = useRef(new Map<string, number>())
+  const capacitySnapshotsRef = useRef<CapacityQueueSnapshot[]>([])
+  const onCapacityChangeRef = useRef(onCapacityChange)
+  onCapacityChangeRef.current = onCapacityChange
+  const capacityControllers = useMemo(
+    () =>
+      layout.gates.flatMap((gate) => {
+        if (!gate.capacity || gate.capacity.unitsPerSecond <= 0) return []
+        const regionId = `gauntlet-gate-${gate.id}`
+        return [
+          createCapacityQueueController({
+            id: `gauntlet-capacity-${dataKey}-${gate.id}`,
+            regionId,
+            unitsPerSecond: gate.capacity.unitsPerSecond,
+            bodyFilter: { property: "datum.kind", equals: CORE_KIND },
+            maxQueue: gate.capacity.maxQueue,
+            queueLayout: gate.capacity.queueLayout,
+            queueSlotSpacing: gate.capacity.queueSlotSpacing,
+            queueStiffness: gate.capacity.queueStiffness ?? 24,
+            releaseImpulse: { x: 36, y: 0 },
+            unitAccessor: (body) => {
+              const wrapped = body.datum as GauntletBodyDatum<TDatum> | undefined
+              const source = wrapped?.sourceDatum as Record<string, unknown> | undefined
+              const accessor = gate.capacity?.unitAccessor
+              const project = statesRef.current.find(
+                (candidate) => candidate.id === wrapped?.projectId
+              )
+              let sourceValue: unknown
+              if (typeof accessor === "function") {
+                sourceValue = project
+                  ? accessor(project as GauntletProjectState)
+                  : undefined
+              } else if (accessor) {
+                sourceValue = source?.[accessor]
+              }
+              const fallback =
+                source?.reviewWork ??
+                source?.work ??
+                project?.metrics.reviewWork ??
+                source?.points
+              const work = Number(sourceValue ?? fallback)
+              return Number.isFinite(work) && work > 0 ? work : 1
+            },
+            onProcessed: (body) => {
+              const wrapped = body.datum as GauntletBodyDatum<TDatum> | undefined
+              if (!wrapped?.projectId) return
+              const key = `${wrapped.projectId}:${gate.id}`
+              processedGateVisitsRef.current.set(
+                key,
+                (processedGateVisitsRef.current.get(key) ?? 0) + 1
+              )
+            }
+          })
+        ]
+      }),
+    [dataKey, layout.gates]
+  )
+  const combinedControllers = useMemo(
+    () => [...capacityControllers, ...(frameProps.controllers ?? [])],
+    [capacityControllers, frameProps.controllers]
+  )
   // Keep latest builders/callbacks in refs so identity thrash (inline
   // viability, data={[row]}, onStateChange={() => …}) cannot re-seed the
   // simulation or re-enter React update loops.
@@ -281,7 +398,11 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     viability
   }
 
-  const createState = useCallback((datum: TDatum, index: number) => {
+  const createState = useCallback((
+    datum: TDatum,
+    index: number,
+    defaultStartedAt = 0
+  ) => {
     const deps = createStateDepsRef.current
     const state = createInitialState(
       datum,
@@ -290,6 +411,9 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       deps.positiveProperties,
       deps.negativeById
     )
+    if (!deps.stateAccessors.startTimeAccessor) {
+      state.startedAt = Math.max(0, defaultStartedAt)
+    }
     return {
       ...state,
       viability:
@@ -305,6 +429,8 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   // cause of gauntlet remount flicker + max-update-depth loops with live
   // onStateChange readouts).
   useEffect(() => {
+    processedGateVisitsRef.current.clear()
+    capacitySnapshotsRef.current = []
     const next = safeDataRef.current.map((datum, index) => createState(datum, index))
     statesRef.current = next
     setStates(next)
@@ -323,6 +449,39 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     [events, layout]
   )
 
+  const capacityEventReady = useCallback(
+    (
+      project: GauntletProjectState<TDatum>,
+      event: ReturnType<typeof projectEvents>[number],
+      timeline: readonly ReturnType<typeof projectEvents>[number][]
+    ) => {
+      if (!event.gateId || !gateById.get(event.gateId)?.capacity) return true
+      const authoredVisit = Number(event.gateVisit)
+      const visitOrdinal =
+        Number.isFinite(authoredVisit) && authoredVisit > 0
+          ? Math.floor(authoredVisit)
+          : timeline
+              .filter((candidate) => candidate.gateId === event.gateId)
+              .findIndex((candidate) => candidate.id === event.id) + 1
+      if (visitOrdinal <= 0) return false
+      const completed =
+        processedGateVisitsRef.current.get(`${project.id}:${event.gateId}`) ?? 0
+      return completed >= visitOrdinal
+    },
+    [gateById]
+  )
+
+  const reportCapacity = useCallback(() => {
+    if (!capacityControllers.length) return
+    const snapshots = capacityControllers.flatMap((controller) => {
+      const snapshot = controller.getSnapshot?.()
+      return snapshot ? [snapshot as CapacityQueueSnapshot] : []
+    })
+    if (capacitySnapshotsEqual(capacitySnapshotsRef.current, snapshots)) return
+    capacitySnapshotsRef.current = snapshots
+    onCapacityChangeRef.current?.(snapshots)
+  }, [capacityControllers])
+
   const initialSpawns = useMemo(
     () =>
       states.flatMap((project, index) => {
@@ -333,20 +492,30 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   )
 
   const updateProjectState = useCallback((projectId: string, updater: (project: GauntletProjectState<TDatum>) => GauntletProjectState<TDatum>) => {
-    setStates((current) => {
-      const next = current.map((project) =>
-        project.id === projectId ? updater(project) : project
-      )
-      statesRef.current = next
-      return next
+    let changed = false
+    const next = statesRef.current.map((project) => {
+      if (project.id !== projectId) return project
+      const updated = updater(project)
+      changed = changed || updated !== project
+      return updated
     })
+    if (!changed) return
+
+    // Physics ticks can outpace React commits. Advance the authoritative ref
+    // immediately so a due event cannot be discovered again on the next tick.
+    statesRef.current = next
+    setStates(next)
   }, [])
 
   useImperativeHandle(
     ref,
     (): RealtimeFrameHandle => ({
       push: (datum) => {
-        const state = createState(datum as TDatum, statesRef.current.length)
+        const state = createState(
+          datum as TDatum,
+          statesRef.current.length,
+          elapsedRef.current
+        )
         const placement = resolvePlacement(
           state,
           statesRef.current.length,
@@ -371,8 +540,13 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       pushMany: (rows) => {
         const nextStates = [...statesRef.current]
         const nextSpawns: PhysicsQueuedSpawn[] = []
+        const startedAt = elapsedRef.current
         rows.forEach((row) => {
-          const state = createState(row as TDatum, nextStates.length)
+          const state = createState(
+            row as TDatum,
+            nextStates.length,
+            startedAt
+          )
           const placement = resolvePlacement(state, nextStates.length, layout, projectPlacement)
           nextSpawns.push(
             ...buildProjectSpawns(
@@ -422,7 +596,11 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
           const projectIndex = statesRef.current.findIndex((state) => state.id === projectId)
           previous.push(old.datum)
           const nextDatum = updater(old.datum) as TDatum
-          const nextState = createState(nextDatum, projectIndex < 0 ? statesRef.current.length : projectIndex)
+          const nextState = createState(
+            nextDatum,
+            projectIndex < 0 ? statesRef.current.length : projectIndex,
+            old.startedAt ?? elapsedRef.current
+          )
           const placement = resolvePlacement(
             nextState,
             projectIndex < 0 ? statesRef.current.length : projectIndex,
@@ -501,6 +679,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     (result: PhysicsPipelineTickResult, controls: PhysicsPipelineControlSurface) => {
       frameProps.onTick?.(result, controls)
       elapsedRef.current = result.elapsedSeconds ?? controls.snapshot().elapsedSeconds
+      reportCapacity()
       for (const project of statesRef.current) {
         const core = controls.readBodies().find((body) => body.id === projectCoreId(project.id))
         if (!core) continue
@@ -511,34 +690,50 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
             if (!datum?.__gauntlet || datum.projectId !== project.id) return
             controls.applyImpulse(body.id, -body.vx * body.mass, 0)
           })
-          updateProjectState(project.id, (current) => ({
-            ...current,
-            crashX: core.x,
-            killed: true,
-            lastEvent: {
+          updateProjectState(project.id, (current) => {
+            const crashEvent = {
+              appliedAt: Math.max(
+                0,
+                elapsedRef.current - (current.startedAt ?? 0)
+              ),
               id: "gauntlet-crash-line",
               label: "Crash Line",
               summary: "The project hit the crash threshold; lift and forward motion shut off.",
-              time: elapsedRef.current
-            },
-            metrics: {
-              ...current.metrics,
-              lastX: core.x
-            },
-            outcome: "bad_design_crash",
-            stage: "Crash Line",
-            viability: Math.min(0, current.viability)
-          }))
+              time: Math.max(0, elapsedRef.current - (current.startedAt ?? 0))
+            }
+            return {
+              ...current,
+              crashX: core.x,
+              eventHistory: [...(current.eventHistory ?? []), crashEvent],
+              killed: true,
+              lastEvent: crashEvent,
+              metrics: {
+                ...current.metrics,
+                lastX: core.x
+              },
+              outcome: "bad_design_crash",
+              stage: "Crash Line",
+              viability: Math.min(0, current.viability)
+            }
+          })
           continue
         }
         if (project.killed) continue
-        const due = projectEvents(project).filter(
-          (event) => event.time <= elapsedRef.current && !project.eventsApplied.includes(event.id)
+        const projectElapsed = Math.max(
+          0,
+          elapsedRef.current - (project.startedAt ?? 0)
         )
+        const timeline = projectEvents(project)
+        const due = timeline.filter(
+          (event) =>
+            event.time <= projectElapsed &&
+            !project.eventsApplied.includes(event.id) &&
+            capacityEventReady(project, event, timeline)
+        )
+        let projectedForBodies = project
         for (const event of due) {
           const gate = event.gateId ? gateById.get(event.gateId) : undefined
           const effects = event.effects ?? []
-          let projectedForBodies = project
           for (const effect of effects) {
             const context: GauntletEventContext<TDatum> = {
               event,
@@ -551,13 +746,14 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
             addBodiesForEffect(projectedForBodies, effect, controls)
             projectedForBodies = applyGauntletEffect(projectedForBodies, effect, context)
           }
+          const logItem = {
+            ...eventLogItem(event, effects),
+            appliedAt: projectElapsed
+          }
+          projectedForBodies = recordGauntletEvent(projectedForBodies, logItem)
           updateProjectState(project.id, (current) => {
-            let next: GauntletProjectState<TDatum> = {
-              ...current,
-              eventsApplied: [...current.eventsApplied, event.id],
-              lastEvent: eventLogItem(event, effects),
-              stage: event.label ?? current.stage
-            }
+            let next = recordGauntletEvent(current, logItem)
+            if (next === current) return current
             for (const effect of effects) {
               const context: GauntletEventContext<TDatum> = {
                 event,
@@ -594,6 +790,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     },
     [
       addBodiesForEffect,
+      capacityEventReady,
       crashDetection,
       frameProps,
       gateById,
@@ -602,6 +799,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       outcome,
       positiveById,
       projectEvents,
+      reportCapacity,
       updateProjectState,
       viability
     ]
@@ -767,6 +965,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
           ...(frameProps.config?.colliders ?? [])
         ]
       }}
+      controllers={combinedControllers}
       enableHover={tooltipProps.enableHover ?? true}
       foregroundGraphics={foregroundGraphics}
       hoverRadius={props.hoverRadius ?? frameProps.hoverRadius ?? 18}

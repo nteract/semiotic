@@ -18,11 +18,14 @@ import {
   type GauntletEventLogItem,
   type GauntletGate,
   type GauntletLayout,
+  type GauntletNegativeReplacementOptions,
   type GauntletPopSpec,
   type GauntletProjectPlacement,
   type GauntletProjectPlacementFn,
   type GauntletProjectState,
   type GauntletPropertyDefinition,
+  type GauntletPropertyWorkPlan,
+  type GauntletPropertyWorkPlanOptions,
   type GauntletViabilityFn
 } from "./gauntletTypes"
 
@@ -41,12 +44,15 @@ export type {
   GauntletEventLogItem,
   GauntletGate,
   GauntletLayout,
+  GauntletNegativeReplacementOptions,
   GauntletPopSpec,
   GauntletProjectPlacement,
   GauntletProjectPlacementFn,
   GauntletProjectState,
   GauntletPropertyDefinition,
   GauntletPropertyForceContext,
+  GauntletPropertyWorkPlan,
+  GauntletPropertyWorkPlanOptions,
   GauntletViabilityFn
 } from "./gauntletTypes"
 
@@ -155,6 +161,75 @@ export function resolvePopPositiveIds<TDatum extends Datum>(
   effect: GauntletEffect
 ): string[] {
   return resolvePopSpecIds(project.activePositiveIds, effect.popPositive)
+}
+
+/**
+ * Select attached property occurrences without exceeding a bounded work
+ * budget. Selection is deterministic: property priority, then attachment
+ * order. Expensive occurrences are skipped so later affordable work can fit.
+ */
+export function planGauntletPropertyWork(
+  options: GauntletPropertyWorkPlanOptions
+): GauntletPropertyWorkPlan {
+  const budgetValue = Number(options.budget)
+  const budget = Number.isFinite(budgetValue) ? Math.max(0, budgetValue) : 0
+  const properties =
+    options.properties instanceof Map
+      ? options.properties
+      : new Map(options.properties.map((property) => [property.id, property]))
+  const candidates = options.candidates ? new Set(options.candidates) : null
+  const occurrences = options.attachedIds
+    .map((id, index) => {
+      const property = properties.get(id)
+      const workValue = Number(property?.work ?? 1)
+      const priorityValue = Number(property?.priority ?? index)
+      return {
+        id,
+        index,
+        priority: Number.isFinite(priorityValue) ? priorityValue : index,
+        work: Number.isFinite(workValue) && workValue > 0 ? workValue : 1
+      }
+    })
+    .filter((entry) => !candidates || candidates.has(entry.id))
+    .sort((a, b) => a.priority - b.priority || a.index - b.index)
+
+  const ids: string[] = []
+  const skippedIds: string[] = []
+  let used = 0
+  for (const entry of occurrences) {
+    if (used + entry.work > budget + Number.EPSILON) {
+      skippedIds.push(entry.id)
+      continue
+    }
+    ids.push(entry.id)
+    used += entry.work
+  }
+
+  return {
+    ids,
+    used,
+    budget,
+    remaining: Math.max(0, budget - used),
+    skippedIds
+  }
+}
+
+/** Build one add/pop effect for an occurrence-preserving replacement. */
+export function replaceGauntletNegative<TDatum extends Datum>(
+  project: GauntletProjectState<TDatum>,
+  options: GauntletNegativeReplacementOptions
+): GauntletEffect {
+  if (!options.from || !options.to || options.from === options.to) return {}
+  const requested = Math.max(0, Math.floor(Number(options.count ?? 1) || 0))
+  const available = project.negativeIds.filter((id) => id === options.from).length
+  const count = Math.min(requested, available)
+  if (!count) return {}
+  return {
+    addNegative: { [options.to]: count },
+    popNegative: {
+      ids: Array.from({ length: count }, () => options.from)
+    }
+  }
 }
 
 /**
@@ -336,6 +411,7 @@ export function createInitialState<TDatum extends Datum>(
     datum,
     delay: 0,
     eventsApplied: [],
+    eventHistory: [],
     killed: false,
     metrics: { ...readAccessor(datum, index, props.metricsAccessor, {}) },
     missingPositiveIds: allPositiveIds.filter((propertyId) => !activePositiveIds.includes(propertyId)),
@@ -343,6 +419,10 @@ export function createInitialState<TDatum extends Datum>(
     outcome: "in_process",
     poppedPositiveIds: [],
     poppedNegativeIds: [],
+    startedAt: Math.max(
+      0,
+      Number(readAccessor(datum, index, props.startTimeAccessor, 0)) || 0
+    ),
     stage: "project filed",
     viability: readAccessor(datum, index, props.initialViability, 100)
   }
@@ -378,7 +458,7 @@ export function buildProjectSpawns<TDatum extends Datum>(
       mass: corePatch.mass ?? 7,
       bodyCollisions: corePatch.bodyCollisions ?? true,
       shape: corePatch.shape ?? { type: "circle", radius: 28 },
-      spawnAt: corePatch.spawnAt,
+      spawnAt: corePatch.spawnAt ?? project.startedAt,
       datum: coreDatum
     }
   ]
@@ -407,7 +487,7 @@ export function buildProjectSpawns<TDatum extends Datum>(
       mass: property.mass ?? 0.75,
       bodyCollisions: false,
       shape: { type: "circle", radius },
-      spawnAt: corePatch.spawnAt,
+      spawnAt: corePatch.spawnAt ?? project.startedAt,
       datum: {
         __gauntlet: true,
         kind: POSITIVE_KIND,
@@ -430,7 +510,15 @@ export function buildProjectSpawns<TDatum extends Datum>(
     const property = negativeProperties.get(propertyId)
     if (!property) return
     spawns.push(
-      buildNegativeSpawn(project, property, index, clampedCore.x, clampedCore.y, layout, corePatch.spawnAt)
+      buildNegativeSpawn(
+        project,
+        property,
+        index,
+        clampedCore.x,
+        clampedCore.y,
+        layout,
+        corePatch.spawnAt ?? project.startedAt
+      )
     )
   })
   return spawns
@@ -452,6 +540,7 @@ export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
   negativeAccessor?: ChartAccessor<TDatum, readonly string[]>
   metricsAccessor?: ChartAccessor<TDatum, Record<string, number>>
   initialViability?: ChartAccessor<TDatum, number>
+  startTimeAccessor?: ChartAccessor<TDatum, number>
   projectPlacement?: GauntletProjectPlacementFn<TDatum>
   coreBody?: GauntletCoreBodyFn<TDatum>
   viability?: GauntletViabilityFn<TDatum>
@@ -472,7 +561,8 @@ export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
     initialViability: options.initialViability,
     metricsAccessor: options.metricsAccessor,
     negativeAccessor: options.negativeAccessor,
-    positiveAccessor: options.positiveAccessor
+    positiveAccessor: options.positiveAccessor,
+    startTimeAccessor: options.startTimeAccessor
   }
   const data = options.data ?? []
   const states = data.map((datum, index) => {
@@ -600,9 +690,10 @@ export function applyGauntletEffect<TDatum extends Datum>(
     next = {
       ...next,
       negativeIds: next.negativeIds.filter((_, index) => !removeIndices.has(index)),
-      poppedNegativeIds: Array.from(
-        new Set([...next.poppedNegativeIds, ...popNegativeEntries.map((entry) => entry.propertyId)])
-      )
+      poppedNegativeIds: [
+        ...next.poppedNegativeIds,
+        ...popNegativeEntries.map((entry) => entry.propertyId)
+      ]
     }
   }
   const addedPositive = expandIds(effect.addPositive)
@@ -647,6 +738,21 @@ export function eventLogItem(event: GauntletEvent, effects: readonly GauntletEff
   }
 }
 
+/** Append one semantic event exactly once, even when render ticks outpace state commits. */
+export function recordGauntletEvent<TDatum extends Datum>(
+  project: GauntletProjectState<TDatum>,
+  logItem: GauntletEventLogItem
+): GauntletProjectState<TDatum> {
+  if (project.eventsApplied.includes(logItem.id)) return project
+  return {
+    ...project,
+    eventsApplied: [...project.eventsApplied, logItem.id],
+    eventHistory: [...(project.eventHistory ?? []), logItem],
+    lastEvent: logItem,
+    stage: logItem.label ?? project.stage
+  }
+}
+
 export function projectRouteTarget<TDatum extends Datum>(
   elapsed: number,
   project: GauntletProjectState<TDatum>,
@@ -659,8 +765,17 @@ export function projectRouteTarget<TDatum extends Datum>(
   if (project.killed) return { x: project.metrics.lastX ?? placement.graveyardX, y: placement.graveyardY }
   const finalEvent = events[events.length - 1]
   if (!finalEvent) return { x: placement.socketX, y: placement.routeY }
+  const waitingForCapacity = events.find((event) => {
+    if (event.time > elapsed || project.eventsApplied.includes(event.id)) {
+      return false
+    }
+    return Boolean(event.gateId && gateById.get(event.gateId)?.capacity)
+  })
+  const routeElapsed = waitingForCapacity
+    ? Math.min(elapsed, waitingForCapacity.time)
+    : elapsed
   const successful = project.outcome === "built" || project.outcome === "built_diminished"
-  if (elapsed > finalEvent.time + 0.85) {
+  if (routeElapsed > finalEvent.time + 0.85) {
     if (terminalBehavior === "hold-last") {
       const gate = finalEvent.gateId ? gateById.get(finalEvent.gateId) : undefined
       return {
@@ -690,17 +805,20 @@ export function projectRouteTarget<TDatum extends Datum>(
   let previous = keyframes[0]
   let next = keyframes[keyframes.length - 1]
   for (let index = 1; index < keyframes.length; index += 1) {
-    if (elapsed <= keyframes[index].time) {
+    if (routeElapsed <= keyframes[index].time) {
       next = keyframes[index]
       break
     }
     previous = keyframes[index]
   }
   const span = Math.max(0.1, next.time - previous.time)
-  const tRaw = Math.max(0, Math.min(1, (elapsed - previous.time) / span))
+  const tRaw = Math.max(0, Math.min(1, (routeElapsed - previous.time) / span))
   const t = tRaw * tRaw * (3 - 2 * tRaw)
   return {
     x: previous.x + (next.x - previous.x) * t,
-    y: previous.y + (next.y - previous.y) * t + Math.sin(elapsed * 2.6) * 7
+    y:
+      previous.y +
+      (next.y - previous.y) * t +
+      Math.sin(routeElapsed * 2.6) * 7
   }
 }
