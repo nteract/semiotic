@@ -594,7 +594,9 @@ export default function DataPitfallsBridgePage() {
         </a>
         . Semiotic contributes the chart config, JSX, reader grounding, config diagnostics,
         accessibility audit, and optional render evidence. Data Pitfalls remains the model-backed
-        detector that reviews that chain against its pitfall taxonomy.
+        detector that reviews that chain against its pitfall taxonomy. The return-path helpers map a
+        report back into chart-level notifications or Semiotic v3 annotation objects, mirroring the
+        dependency-free bridge added in DataPitfalls PR #35.
       </p>
 
       <h2 id="live-demo">Live payload builder</h2>
@@ -634,6 +636,42 @@ const report = await detectPitfalls(input, {
 console.log(formatReport(report))
 if (hasBlockingFindings(report)) process.exit(1)`}
       </CodeBlock>
+
+      <h2 id="return-path">Return path</h2>
+      <p>
+        DataPitfalls PR #35 adds <code>toSemioticAnnotations()</code> in the DataPitfalls package.
+        Semiotic also exposes structural helpers for apps that already have a report object and want
+        to keep rendering code dependency-free. Whole-chart findings fit the{" "}
+        <code>ChartContainer</code> notification stack; mark-level findings can become annotations
+        once the host app supplies coordinates or semantic anchors.
+      </p>
+
+      <CodeBlock language="tsx">{`import { ChartContainer } from "semiotic"
+import { LineChart } from "semiotic/xy"
+import {
+  unstable_toDataPitfallsAnnotations,
+  unstable_toDataPitfallsNotifications,
+} from "semiotic/experimental"
+
+const notifications = unstable_toDataPitfallsNotifications(report, { max: 3 })
+
+const annotations = unstable_toDataPitfallsAnnotations(report, {
+  anchorFor: (finding) =>
+    finding.ruleId === "truncated-axis"
+      ? { x: 9, y: 9000, anchor: "semantic" }
+      : null,
+})
+
+<ChartContainer notifications={notifications}>
+  <LineChart {...props} annotations={annotations} />
+</ChartContainer>`}
+      </CodeBlock>
+
+      <p>
+        The annotation helper deliberately does not invent <code>x</code> or <code>y</code>. An
+        unanchored Semiotic v3 annotation is dropped until the host places it, while unanchored
+        report-level findings remain visible as notifications.
+      </p>
 
       <h2 id="what-semiotic-adds">What Semiotic adds</h2>
       <ul>

@@ -35,21 +35,43 @@ export type { GofishIRExample as UnstableGofishIRExample } from "./recipes/gofis
 // DataPitfalls bridge (§8.x). This packages Semiotic config, JSX, reader
 // grounding, diagnostics, accessibility audit output, and optional render
 // evidence into the chain input consumed by the external `datapitfalls`
-// package. Kept experimental while that package's input contract settles.
+// package, and maps returned pitfall reports into chart-level notifications or
+// Semiotic v3-native annotation specs. Kept experimental while that package's
+// bridge contracts settle.
 export {
+  DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE as unstable_DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE,
+  buildDataPitfallsAnnotationBridge as unstable_buildDataPitfallsAnnotationBridge,
   buildDataPitfallsBridge as unstable_buildDataPitfallsBridge,
-  toDataPitfallsChain as unstable_toDataPitfallsChain
+  buildDataPitfallsNotificationBridge as unstable_buildDataPitfallsNotificationBridge,
+  dataPitfallsFindingToAnnotation as unstable_dataPitfallsFindingToAnnotation,
+  dataPitfallsFindingToNotification as unstable_dataPitfallsFindingToNotification,
+  toDataPitfallsAnnotations as unstable_toDataPitfallsAnnotations,
+  toDataPitfallsChain as unstable_toDataPitfallsChain,
+  toDataPitfallsNotifications as unstable_toDataPitfallsNotifications
 } from "./ai/dataPitfallsBridge"
 export type {
+  DataPitfallsAnnotationBridge as UnstableDataPitfallsAnnotationBridge,
+  DataPitfallsAnnotationBridgeOptions as UnstableDataPitfallsAnnotationBridgeOptions,
+  DataPitfallsAnnotationType as UnstableDataPitfallsAnnotationType,
   DataPitfallsBridgeOptions as UnstableDataPitfallsBridgeOptions,
   DataPitfallsBridgeResult as UnstableDataPitfallsBridgeResult,
   DataPitfallsChainInput as UnstableDataPitfallsChainInput,
   DataPitfallsChainStage as UnstableDataPitfallsChainStage,
+  DataPitfallsChartNotification as UnstableDataPitfallsChartNotification,
   DataPitfallsDocumentInput as UnstableDataPitfallsDocumentInput,
+  DataPitfallsFinding as UnstableDataPitfallsFinding,
   DataPitfallsImageInput as UnstableDataPitfallsImageInput,
   DataPitfallsImageMediaType as UnstableDataPitfallsImageMediaType,
   DataPitfallsImageSource as UnstableDataPitfallsImageSource,
+  DataPitfallsInputKind as UnstableDataPitfallsInputKind,
+  DataPitfallsNotificationBridge as UnstableDataPitfallsNotificationBridge,
+  DataPitfallsNotificationBridgeOptions as UnstableDataPitfallsNotificationBridgeOptions,
+  DataPitfallsNotificationLevel as UnstableDataPitfallsNotificationLevel,
+  DataPitfallsNotificationMessage as UnstableDataPitfallsNotificationMessage,
   DataPitfallsRenderedChart as UnstableDataPitfallsRenderedChart,
+  DataPitfallsReport as UnstableDataPitfallsReport,
+  DataPitfallsSemioticAnnotation as UnstableDataPitfallsSemioticAnnotation,
+  DataPitfallsSeverity as UnstableDataPitfallsSeverity,
   DataPitfallsSlideContent as UnstableDataPitfallsSlideContent,
   DataPitfallsSlidesInput as UnstableDataPitfallsSlidesInput,
   DataPitfallsSingleArtifactInput as UnstableDataPitfallsSingleArtifactInput,

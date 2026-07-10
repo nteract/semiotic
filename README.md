@@ -127,6 +127,29 @@ const input = unstable_toDataPitfallsChain("LineChart", props, {
 const report = await detectPitfalls(input, { apiKey: process.env.ANTHROPIC_API_KEY })
 ```
 
+The return path stays dependency-free too. Use whole-chart findings as
+`ChartContainer` notifications, and only turn findings into annotations after
+your app can anchor them to marks or semantic positions:
+
+```tsx
+import { ChartContainer } from "semiotic"
+import { LineChart } from "semiotic/xy"
+import {
+  unstable_toDataPitfallsAnnotations,
+  unstable_toDataPitfallsNotifications,
+} from "semiotic/experimental"
+
+const notifications = unstable_toDataPitfallsNotifications(report)
+const annotations = unstable_toDataPitfallsAnnotations(report, {
+  anchorFor: (finding) =>
+    finding.ruleId === "truncated-axis" ? { x: 9, y: 9000 } : null,
+})
+
+<ChartContainer notifications={notifications}>
+  <LineChart {...props} annotations={annotations} />
+</ChartContainer>
+```
+
 ### When to use something else
 
 Need a standard bar or line chart for a dashboard you'll never need to
