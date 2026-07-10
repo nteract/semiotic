@@ -1,158 +1,220 @@
-import React, { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import {
   StreamPhysicsFrame,
+  aggregateRegionCounts,
   chargeGateRegion,
+  createProcessJourneyLedger,
   forceFieldRegion,
+  processJourneyRows,
   processStageLayout,
-  stageTargetInVolume,
+  processStageRegions,
+  processVolumePolygons,
+  updateProcessJourney,
 } from "semiotic/physics"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import "./StakeholderJourneyExamplePage.css"
 
 const MAX_WIDTH = 1120
-const MIN_WIDTH = 720
-const BOWTIE_HEIGHT = 430
-const CANVAS_HEIGHT = 560
-const TOKEN_RADIUS = 6.5
+const MIN_WIDTH = 300
+const BOWTIE_HEIGHT = 400
+const COHORT_SIZE = 36
+const COHORT_SEED = 208
+const IMPACT_HEIGHT_PER_LEADER = 2
 
 const STAGES = [
-  { id: "discovery", label: "DISCOVERY", voice: "I find it and it looks relevant." },
-  { id: "acquisition", label: "ACQUISITION", voice: "I reach the project and try it." },
-  { id: "activation", label: "ACTIVATION", voice: "The first wall clears." },
-  { id: "impact", label: "FIRST IMPACT", voice: "It did the thing I came for." },
-  { id: "habit", label: "HABIT", voice: "It becomes a default." },
-  { id: "commitment", label: "COMMITMENT", voice: "I help tend the project." },
-  { id: "leadership", label: "ECOSYSTEM LEADERSHIP", voice: "I help steward the system." },
-]
-
-const DESTINATION_LABELS = {
-  activation: "Activation",
-  impact: "First Impact",
-  habit: "Habit",
-  commitment: "Commitment",
-  leadership: "Ecosystem Leadership",
-}
-
-const DESTINATION_PALETTE = {
-  activation: { fill: "#dfe7ee", stroke: "#647789" },
-  impact: { fill: "#0c7894", stroke: "#044d61" },
-  habit: { fill: "#94d7cd", stroke: "#286c6c" },
-  commitment: { fill: "#f1c75b", stroke: "#8d6420" },
-  leadership: { fill: "#263653", stroke: "#111827" },
-}
-
-const SYSTEMS = [
   {
-    id: "works",
-    title: "Why the ecosystem relay works",
-    subtitle: "First Impact charges people, and the right side has enough trust and invitation to retain that charge.",
-    verdict: "Works: designed community physics",
-    seed: 208,
-    pace: 2.5,
-    pull: 0.025,
-    fieldThreshold: 18,
-    canvasCoherence: 0.86,
-    membraneNote:
-      "The left side still has resistance, but the membranes are legible: search/recommendation, value fit, and activation each has a named passage and a known cost.",
-    rightNote:
-      "The charged particles do not just drift. They enter a field of community members, governance, impact, and near-peer invitation, so Habit can become Commitment.",
-    membranes: [
-      { id: "findability", label: "findability", offset: 0.2, cost: 0.24, wobble: -10, color: "#b63832" },
-      { id: "value-fit", label: "value fit", offset: 0.36, cost: 0.32, wobble: 9, color: "#1f63a8" },
-      { id: "activation-work", label: "activation work", offset: 0.52, cost: 0.38, wobble: -4, color: "#b63832" },
-    ],
-    distribution: { activation: 3, impact: 7, habit: 14, commitment: 24, leadership: 8 },
-    factors: [
-      "Canvas discipline separates contributor value from user value instead of flattening everyone into one generic user.",
-      "The ecosystem map names arrows, not just nodes: learning, trust, reputation, governance, funding, and belonging are visible flows.",
-      "The right side contains near-peer pull, so a repeat user can see a reachable next role before charge dissipates.",
-    ],
+    id: "discovery",
+    label: "Discovery",
+    short: "DISC",
+    voice: "I find it and it looks relevant.",
   },
   {
-    id: "fails",
-    title: "Why the passive funnel fails",
-    subtitle: "People may reach First Impact, but charge dissipates because the ecosystem field was never designed.",
-    verdict: "Fails: accidental product funnel",
-    seed: 77,
-    pace: 2.1,
-    pull: 0.01,
-    fieldThreshold: 18,
-    canvasCoherence: 0.38,
-    membraneNote:
-      "The left membranes are treated like a single funnel problem. AI-mediated discovery, mixed value propositions, and activation work are not named as separate regions.",
-    rightNote:
-      "The right side is thin. Users can develop Habit, but without visible community roles, trust, and governance, the charge leaks before Commitment.",
-    membranes: [
-      { id: "ai-gate", label: "AI gate", offset: 0.2, cost: 0.64, wobble: 18, color: "#7b8491" },
-      { id: "mixed-value", label: "mixed value", offset: 0.36, cost: 0.72, wobble: -16, color: "#7b8491" },
-      { id: "activation-work", label: "activation work", offset: 0.52, cost: 0.8, wobble: 10, color: "#b63832" },
-    ],
-    distribution: { activation: 8, impact: 18, habit: 24, commitment: 5, leadership: 1 },
-    factors: [
-      "The canvas hides a mismatch: contributors and users may be different communities with different reasons to show up.",
-      "Saboteurs and gatekeepers remain fuzzy, so substitutes, AI mediation, and trust leaks are not part of the map.",
-      "Habit stays consumption. The project sees usage, but the community does not see the next generation forming.",
-    ],
+    id: "acquisition",
+    label: "Acquisition",
+    short: "ACQ",
+    voice: "I reach the project and try it.",
+  },
+  {
+    id: "activation",
+    label: "Activation",
+    short: "ACT",
+    voice: "The first wall clears.",
+  },
+  {
+    id: "impact",
+    label: "First Impact",
+    short: "IMPACT",
+    voice: "It did the thing I came for.",
+  },
+  {
+    id: "habit",
+    label: "Habit",
+    short: "HABIT",
+    voice: "It becomes a default.",
+  },
+  {
+    id: "commitment",
+    label: "Commitment",
+    short: "COM",
+    voice: "I help tend the project.",
+  },
+  {
+    id: "leadership",
+    label: "Ecosystem Leadership",
+    short: "LEAD",
+    voice: "I help steward the ecosystem.",
   },
 ]
 
-const CANVAS_CELLS = [
-  { id: "funding", label: "FUNDING SOURCES", group: "viability", col: 0, row: 0, tokens: 6 },
-  { id: "revenue", label: "REVENUE STREAMS", group: "viability", col: 0, row: 1, tokens: 4 },
-  { id: "inkind", label: "IN-KIND SUPPORT", group: "viability", col: 0, row: 2, tokens: 7 },
-  { id: "operations", label: "OPERATIONS, ACTIVITIES", group: "feasibility", col: 1, row: 0, tokens: 8 },
-  { id: "governance", label: "GOVERNANCE", group: "feasibility", col: 1, row: 1, tokens: 5 },
-  { id: "costs", label: "COSTS", group: "feasibility", col: 1, row: 2, tokens: 5 },
-  { id: "channels", label: "CHANNELS", group: "feasibility", col: 2, row: 0, spanRows: 2, tokens: 7 },
-  { id: "gtm", label: "GO TO MARKET", group: "feasibility", col: 2, row: 2, tokens: 6 },
-  { id: "value", label: "VALUE PROPOSITIONS", group: "desirability", col: 3, row: 0, spanRows: 2, tokens: 9 },
-  { id: "members", label: "COMMUNITY MEMBERS", group: "desirability", col: 4, row: 0, spanRows: 2, tokens: 10 },
-  { id: "impact", label: "IMPACT", group: "desirability", col: 3, row: 2, spanCols: 2, tokens: 8 },
-]
+const STAGE_INDEX = Object.fromEntries(
+  STAGES.map((stage, index) => [stage.id, index]),
+)
 
-const GROUP_COLORS = {
-  viability: "#287a48",
-  feasibility: "#b63832",
-  desirability: "#1f63a8",
-}
-
-const RESEARCH_LINKS = [
+const MEMBRANES = [
   {
-    name: "Unity Area Effector 2D",
-    href: "https://docs.unity3d.com/Manual/class-AreaEffector2D.html",
-    lesson: "regions can apply force, drag, and variation when bodies overlap a trigger collider",
+    id: "findability",
+    label: "Findability",
+    compact: "M1",
+    offset: 0.2,
+    cost: 0.26,
+    wobble: -9,
+    color: "#c2413b",
   },
   {
-    name: "Unity Buoyancy Effector 2D",
-    href: "https://docs.unity3d.com/Manual/2d-physics/effectors/buoyancy-effector-2d-reference.html",
-    lesson: "fluid zones combine surface level, density, damping, flow direction, and flow magnitude",
+    id: "value-fit",
+    label: "Value fit",
+    compact: "M2",
+    offset: 0.4,
+    cost: 0.34,
+    wobble: 8,
+    color: "#2563a6",
   },
   {
-    name: "Godot Area2D",
-    href: "https://docs.godotengine.org/en/stable/classes/class_area2d.html",
-    lesson: "areas override gravity and damping and emit body-entered/body-exited signals",
-  },
-  {
-    name: "Box2D sensors",
-    href: "https://box2d.org/documentation/md_simulation.html#autotoc_md148",
-    lesson: "sensors detect overlap without collision response, which is what an information membrane needs",
+    id: "activation-work",
+    label: "Activation work",
+    compact: "M3",
+    offset: 0.6,
+    cost: 0.4,
+    wobble: -4,
+    color: "#c2413b",
   },
 ]
 
-function makeEmptyCrossings() {
-  return Object.fromEntries(
-    SYSTEMS.map((system) => [
-      system.id,
-      {
-        membrane: Object.fromEntries(system.membranes.map((membrane) => [membrane.id, new Set()])),
-        charged: new Set(),
-        commitment: new Set(),
-        leadership: new Set(),
-      },
-    ]),
-  )
+const SYSTEMS = {
+  relay: {
+    id: "relay",
+    short: "Designed relay",
+    title: "Invitation makes the next role visible",
+    verdict: "Intentional community path",
+    description:
+      "After First Impact, a near-peer field pulls charged participants from Habit toward Commitment and gives committed people a visible path toward stewardship.",
+    invitationForce: 80,
+    invitationDamping: 0.045,
+    leadershipForce: 90,
+    leadershipDamping: 0.04,
+    accent: "#0c7894",
+    fieldLabel: "near-peer invitation",
+  },
+  passive: {
+    id: "passive",
+    short: "Passive path",
+    title: "Utility alone does not create commitment",
+    verdict: "Product usage without invitation",
+    description:
+      "The same participants can reach First Impact and Habit, but the path to a community role is weak and friction pulls people back toward private use.",
+    invitationForce: -240,
+    invitationDamping: 0.3,
+    leadershipForce: -280,
+    leadershipDamping: 0.34,
+    accent: "#b63832",
+    fieldLabel: "no intentional invitation",
+  },
 }
+
+const SYSTEM_ORDER = ["relay", "passive"]
+
+const FORCE_MAP = [
+  {
+    cell: "Channels",
+    group: "Feasibility",
+    stageId: "discovery",
+    mechanism: "Findability membrane",
+    assumption: "Can the people the project needs encounter it?",
+  },
+  {
+    cell: "Value propositions",
+    group: "Desirability",
+    stageId: "impact",
+    mechanism: "First Impact charge gate",
+    assumption: "Did the project help with a goal the participant actually had?",
+  },
+  {
+    cell: "Community members",
+    group: "Desirability",
+    stageId: "commitment",
+    mechanism: "Near-peer invitation field",
+    assumption: "Is the next role visible, personal, and reachable?",
+  },
+  {
+    cell: "Operations + in-kind support",
+    group: "Viability / feasibility",
+    stageId: "commitment",
+    mechanism: "Mentoring capacity",
+    assumption: "Can the project sustain the human work of invitation?",
+  },
+  {
+    cell: "Governance",
+    group: "Feasibility",
+    stageId: "leadership",
+    mechanism: "Stewardship path",
+    assumption: "Can committed people see how decisions and responsibility move?",
+  },
+]
+
+const implementationCode = `import {
+  chargeGateRegion,
+  createProcessJourneyLedger,
+  processJourneyRows,
+  processStageLayout,
+  processStageRegions,
+  processVolumePolygons,
+  updateProcessJourney,
+} from "semiotic/physics"
+
+const rows = processJourneyRows(journey)
+const leaders = rows.find((row) => row.id === "leadership")
+const layout = processStageLayout({
+  shape: "bowtie",
+  stages,
+  membranes,
+  width,
+  height: 400,
+  pinchHeightOffset: (leaders?.reached ?? 0) * 2,
+})
+
+const stageRegions = processStageRegions(layout, {
+  metadata: { systemId: scenario.id },
+})
+const impactRegion = chargeGateRegion({
+  id: "first-impact",
+  ...layout.stages[impactIndex],
+  height: layout.pinchHeight,
+  charge: "first-impact",
+})
+const overlayPolygons = processVolumePolygons(layout)
+
+<StreamPhysicsFrame
+  initialSpawns={sharedCohort}
+  config={{ colliders: layout.colliders }}
+  regionEffects={[...layout.regionEffects, ...stageRegions, impactRegion]}
+  onRegionEvent={(event) =>
+    setJourney((current) => updateProcessJourney(current, event))
+  }
+/>
+
+// Render overlayPolygons in SVG or Canvas; every edge matches the barriers.
+`
 
 function mulberry32(seed) {
   let value = seed
@@ -169,407 +231,428 @@ function randomBetween(random, min, max) {
   return min + random() * Math.max(0, max - min)
 }
 
-function shuffle(values, random) {
-  const copy = values.slice()
-  for (let index = copy.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(random() * (index + 1))
-    const current = copy[index]
-    copy[index] = copy[swapIndex]
-    copy[swapIndex] = current
-  }
-  return copy
+function cohortBodyId(systemId, runId, index) {
+  return `${systemId}-${runId}-participant-${index}`
 }
 
-function expandDestinations(distribution) {
-  return Object.entries(distribution).flatMap(([destination, count]) =>
-    Array.from({ length: count }, () => destination),
+function cohortBodyIds(systemId, runId) {
+  return Array.from({ length: COHORT_SIZE }, (_, index) =>
+    cohortBodyId(systemId, runId, index),
   )
 }
 
-const DESTINATION_ALONG = {
-  activation: 0.62,
-  impact: 0.5,
-  habit: 0.52,
-  commitment: 0.56,
-  leadership: 0.56,
+function emptyJourney(systemId, runId) {
+  return createProcessJourneyLedger({
+    stages: STAGES,
+    bodyIds: cohortBodyIds(systemId, runId),
+  })
 }
 
-/**
- * Build the bowtie volume + process regionEffects from the shared process
- * recipe kit (`processStageLayout`, charge/force region factories).
- */
-function buildBowtieLayout(width, system) {
-  const w = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.round(width)))
-  const voiceById = Object.fromEntries(STAGES.map((stage) => [stage.id, stage.voice]))
+function emptyJourneys(runId) {
+  return Object.fromEntries(
+    SYSTEM_ORDER.map((systemId) => [systemId, emptyJourney(systemId, runId)]),
+  )
+}
+
+function emptyRegionCounts() {
+  return Object.fromEntries(SYSTEM_ORDER.map((systemId) => [systemId, {}]))
+}
+
+function buildBowtieLayout(width, system, leadershipReached) {
+  const compact = width < 520
   const layout = processStageLayout({
-    width: w,
+    width,
     height: BOWTIE_HEIGHT,
     shape: "bowtie",
-    padX: 46,
-    padY: 72,
+    padX: compact ? 18 : 42,
+    padY: compact ? 68 : 72,
     stages: STAGES.map(({ id, label }) => ({ id, label })),
-    membranes: system.membranes.map((membrane) => ({
+    membranes: MEMBRANES.map((membrane) => ({
       ...membrane,
-      metadata: { role: "membrane", systemId: system.id, membraneId: membrane.id },
-      bodyStyle: { strokeWidth: system.id === "works" ? 1.4 : 1.8 },
+      metadata: {
+        role: "membrane",
+        systemId: system.id,
+        membraneId: membrane.id,
+      },
+      bodyStyle: { strokeWidth: 1.5 },
     })),
     idPrefix: system.id,
-    membraneDampingScale: system.id === "works" ? 0.36 : 0.72,
-    centerStageIndex: 3,
-    pinchRatio: 0.176,
+    membraneDampingScale: 0.42,
+    centerStageIndex: STAGE_INDEX.impact,
+    pinchRatio: compact ? 0.22 : 0.176,
+    pinchHeightOffset: leadershipReached * IMPACT_HEIGHT_PER_LEADER,
   })
 
-  // Preserve stage voice copy for overlay titles.
-  layout.stages = layout.stages.map((stage) => ({
-    ...stage,
-    voice: voiceById[stage.id],
-  }))
-  // Alias used by overlay chrome (padX was the old field name).
-  layout.padX = layout.left
-  layout.leftWidth = layout.centerLeft - layout.left
-  layout.rightWidth = layout.right - layout.centerRight
-
-  return layout
+  return {
+    ...layout,
+    compact,
+    stages: layout.stages.map((stage) => ({
+      ...stage,
+      voice: STAGES.find((candidate) => candidate.id === stage.id)?.voice,
+    })),
+  }
 }
 
-function boundaryY(layout, x, side) {
-  return layout.boundaryY(x, side)
-}
-
-function stageTarget(layout, destination, random) {
-  return stageTargetInVolume(layout, destination === "activation" ? "activation" : destination, {
-    random,
-    along: DESTINATION_ALONG[destination] ?? 0.5,
-    jitterX: destination === "impact" ? 8 : 24,
-    padY: 20,
+function buildRegionEffects(layout, system, leadershipReached) {
+  const systemMetadata = (role, extra = {}) => ({
+    role,
+    systemId: system.id,
+    ...extra,
   })
-}
-
-function buildBowtieRegionEffects(layout, system) {
-  const impactX = (layout.centerLeft + layout.centerRight) / 2
-  const commitment = layout.stages[5]
-  const leadership = layout.stages[6]
-  const systemMetadata = (role, extra = {}) => ({ role, systemId: system.id, ...extra })
-  const works = system.id === "works"
-
-  // Membrane regionEffects come from processStageLayout; stamp metadata for
-  // the example's region-enter bookkeeping.
+  const habit = layout.stages[STAGE_INDEX.habit]
+  const commitment = layout.stages[STAGE_INDEX.commitment]
+  const impact = layout.stages[STAGE_INDEX.impact]
+  const distanceScale = 1080 / layout.width
+  const stageRegions = processStageRegions(layout, {
+    idPrefix: `${system.id}-stage`,
+    insetX: 1,
+    metadata: (stage) => systemMetadata("stage", { stageId: stage.id }),
+  })
   const membranes = layout.regionEffects.map((region) => ({
     ...region,
-    metadata: region.metadata ?? systemMetadata("membrane", { membraneId: region.id }),
-    attributes: {
-      ...(region.attributes ?? {}),
-      membrane: region.id,
-    },
+    metadata:
+      region.metadata ??
+      systemMetadata("membrane", { membraneId: region.id }),
   }))
 
   return [
+    ...stageRegions,
     ...membranes,
     chargeGateRegion({
-      id: "first-impact",
-      label: "First Impact charge gate",
+      id: `${system.id}-first-impact`,
+      label: "First Impact",
       description:
-        "First Impact marks a body as charged: it has achieved a goal, not merely completed installation.",
-      x: impactX,
+        "Utility gate: the participant achieved a goal, not merely a successful install.",
+      x: impact.x,
       y: layout.midY,
-      width: layout.centerRight - layout.centerLeft + 36,
-      height: layout.pinchBottom - layout.pinchTop + 56,
-      charge: works ? 2 : 1,
-      energyDelta: works ? 1.2 : 0.55,
-      impulseOnEnter: { x: works ? 10 : 2, y: 0 },
-      metadata: systemMetadata("impact"),
+      width: impact.width + 12,
+      height: layout.pinchHeight + 42,
+      charge: "first-impact",
+      energyDelta: 1,
+      impulseOnEnter: { x: 7, y: 0 },
+      metadata: systemMetadata("impact", {
+        leadershipReached,
+        pinchHeight: layout.pinchHeight,
+      }),
       bodyStyle: { fill: "#43d6f1", stroke: "#087895" },
     }),
     forceFieldRegion({
-      id: "commitment-field",
-      label: "Commitment field",
+      id: `${system.id}-invitation-field`,
+      label: "Habit to Commitment",
       description:
-        "A right-side relationship field where trust, recognition, and near-peer invitation retain charge.",
+        "An illustrative invitation field at the user-to-contributor crossing.",
+      x: habit.x + habit.width * 0.34,
+      y: layout.midY,
+      width: habit.width * 0.9,
+      height: 244,
+      force: { x: system.invitationForce * distanceScale, y: 0 },
+      damping: system.invitationDamping,
+      metadata: systemMetadata("invitation"),
+      bodyStyle: {
+        fill: system.id === "relay" ? "#ffe08a" : "#cbd5e1",
+      },
+    }),
+    forceFieldRegion({
+      id: `${system.id}-leadership-field`,
+      label: "Commitment to Leadership",
+      description:
+        "A visible stewardship path beyond first contribution.",
       x: commitment.x,
       y: layout.midY,
       width: commitment.width,
-      height: 250,
-      force: { x: works ? 18 : -5, y: works ? -2 : 0 },
-      damping: works ? 0.05 : 0.32,
-      attributes: { field: "commitment" },
-      metadata: systemMetadata("commitment"),
-      bodyStyle: { fill: works ? "#ffe08a" : "#cfd7df" },
-    }),
-    forceFieldRegion({
-      id: "leadership-field",
-      label: "Ecosystem Leadership field",
-      description:
-        "A high-trust field where people can help steward the ecosystem rather than only consume the project.",
-      x: leadership.x,
-      y: layout.midY,
-      width: leadership.width,
-      height: 260,
-      force: { x: works ? 22 : -8, y: works ? 2 : 0 },
-      damping: works ? 0.04 : 0.36,
-      attributes: { field: "leadership" },
+      height: 252,
+      force: { x: system.leadershipForce * distanceScale, y: 0 },
+      damping: system.leadershipDamping,
       metadata: systemMetadata("leadership"),
-      bodyStyle: { fill: works ? "#ffe08a" : "#cfd7df" },
+      bodyStyle: {
+        fill: system.id === "relay" ? "#ffe08a" : "#cbd5e1",
+      },
     }),
   ]
 }
 
-function roleFor(destination, index) {
-  if (destination === "leadership") return index % 2 === 0 ? "steward" : "core contributor"
-  if (destination === "commitment") return index % 2 === 0 ? "new contributor" : "near-peer guide"
-  if (destination === "habit") return "repeat user"
-  if (destination === "impact") return "successful user"
-  return "blocked newcomer"
-}
+function buildCohortSpawns(layout, system, runId) {
+  const random = mulberry32(COHORT_SEED + runId * 997)
+  const startX = layout.left + (layout.compact ? 9 : 18)
+  const startTop = layout.boundaryY(startX, "top") + 16
+  const startBottom = layout.boundaryY(startX, "bottom") - 16
+  const radius = layout.compact ? 4.6 : 6.2
 
-function springStiffness(system, destination) {
-  const base = {
-    activation: 0.011,
-    impact: 0.015,
-    habit: 0.018,
-    commitment: 0.022,
-    leadership: 0.025,
-  }[destination]
-  return base + system.pull
-}
-
-function buildBowtieSpawns(layout, system, runId) {
-  const random = mulberry32(system.seed + runId * 997)
-  const destinations = shuffle(expandDestinations(system.distribution), random)
-  const startTop = boundaryY(layout, layout.padX + 24, "top") + 22
-  const startBottom = boundaryY(layout, layout.padX + 24, "bottom") - 22
-
-  return destinations.map((destination, index) => {
-    const target = stageTarget(layout, destination, random)
-    const chargedDestination = destination === "commitment" || destination === "leadership"
-    const id = `${system.id}-${runId}-${index}`
+  return Array.from({ length: COHORT_SIZE }, (_, index) => {
+    const id = cohortBodyId(system.id, runId, index)
     return {
       id,
-      x: layout.padX + randomBetween(random, 12, 30),
+      x: startX + randomBetween(random, 0, layout.compact ? 8 : 18),
       y: randomBetween(random, startTop, startBottom),
-      vx: randomBetween(random, 54, system.id === "works" ? 132 : 106),
-      vy: randomBetween(random, -30, 30),
-      mass: chargedDestination ? 1.18 : 1,
-      restitution: 0.2,
-      friction: 0.5,
-      shape: {
-        type: "circle",
-        radius: destination === "leadership" ? TOKEN_RADIUS + 1.6 : chargedDestination ? TOKEN_RADIUS + 0.8 : TOKEN_RADIUS,
-      },
+      vx: randomBetween(random, 120, 170),
+      vy: randomBetween(random, -24, 24),
+      mass: 1,
+      restitution: 0.18,
+      friction: 0.52,
+      bodyCollisions: false,
+      shape: { type: "circle", radius },
       datum: {
         id,
-        role: roleFor(destination, index),
-        destination,
-        destinationLabel: DESTINATION_LABELS[destination],
-        target,
+        participantId: `participant-${index}`,
+        label: `Participant ${String(index + 1).padStart(2, "0")}`,
         systemId: system.id,
       },
-      spawnAt: index * 0.1,
-      springs: [
-        {
-          target: { type: "point", x: target.x, y: target.y },
-          restLength: chargedDestination ? 3 : 13,
-          stiffness: springStiffness(system, destination),
-          damping: chargedDestination ? 0.74 : 0.87,
-        },
-      ],
+      spawnAt: index * 0.045,
     }
   })
 }
 
-function buildBowtieModel(width, system, runId) {
-  const layout = buildBowtieLayout(width, system)
+function buildBowtieModel(width, system, runId, leadershipReached) {
+  const layout = buildBowtieLayout(width, system, leadershipReached)
   return {
     layout,
     colliders: layout.colliders,
-    regionEffects: buildBowtieRegionEffects(layout, system),
-    spawns: buildBowtieSpawns(layout, system, runId),
+    regionEffects: buildRegionEffects(layout, system, leadershipReached),
+    spawns: buildCohortSpawns(layout, system, runId),
   }
 }
 
-function updateCrossings(previous, event) {
-  if (event.type !== "region-enter") return previous
-
-  const systemId = event.region.metadata?.systemId
-  const role = event.region.metadata?.role
-  const system = SYSTEMS.find((candidate) => candidate.id === systemId)
-  if (!system || !role) return previous
-  const current = previous[system.id]
-  if (!current) return previous
-
-  if (role === "membrane") {
-    const membraneId = event.region.metadata?.membraneId
-    if (!membraneId || current.membrane[membraneId].has(event.bodyId)) return previous
-    return {
-      ...previous,
-      [system.id]: {
-        ...current,
-        membrane: {
-          ...current.membrane,
-          [membraneId]: new Set(current.membrane[membraneId]).add(event.bodyId),
-        },
-      },
-    }
-  }
-
-  const key = role === "impact" ? "charged" : role === "commitment" ? "commitment" : role === "leadership" ? "leadership" : null
-  if (!key || current[key].has(event.bodyId)) return previous
-
-  return {
-    ...previous,
-    [system.id]: {
-      ...current,
-      [key]: new Set(current[key]).add(event.bodyId),
-    },
+function rowFor(rows, stageId) {
+  return rows.find((row) => row.id === stageId) ?? {
+    id: stageId,
+    label: stageId,
+    reached: 0,
+    total: COHORT_SIZE,
+    conversion: 0,
+    fromPrevious: 0,
+    dropoff: 0,
+    visits: 0,
+    repeatVisits: 0,
   }
 }
 
-function stewardshipCount(crossings) {
-  return crossings.commitment.size + crossings.leadership.size
+function percent(value) {
+  return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`
 }
 
 export default function StakeholderJourneyExamplePage() {
-  const [width, hostRef] = useResponsiveWidth(MIN_WIDTH, MAX_WIDTH)
-  const [runId, setRunId] = useState(0)
-  const [selected, setSelected] = useState(null)
-  const [crossings, setCrossings] = useState(makeEmptyCrossings)
-
-  const models = useMemo(
-    () => Object.fromEntries(SYSTEMS.map((system) => [system.id, buildBowtieModel(width, system, runId)])),
-    [runId, width],
+  const [hostWidth, hostRef] = useResponsiveWidth(MIN_WIDTH, MAX_WIDTH)
+  const chartWidth = Math.max(
+    MIN_WIDTH,
+    Math.min(1080, Math.round(hostWidth - (hostWidth < 560 ? 28 : 8))),
   )
-  const canvasModel = useMemo(() => buildCanvasModel(width, runId), [runId, width])
+  const [systemId, setSystemId] = useState("relay")
+  const [runId, setRunId] = useState(0)
+  const [journeys, setJourneys] = useState(() => emptyJourneys(0))
+  const [regionCounts, setRegionCounts] = useState(emptyRegionCounts)
+  const [selectedStageId, setSelectedStageId] = useState("commitment")
+  const system = SYSTEMS[systemId]
+  const rowsBySystem = useMemo(
+    () =>
+      Object.fromEntries(
+        SYSTEM_ORDER.map((id) => [id, processJourneyRows(journeys[id])]),
+      ),
+    [journeys],
+  )
+  const rows = rowsBySystem[systemId]
+  const leadershipReached = rowFor(rows, "leadership").reached
+  const model = useMemo(
+    () => buildBowtieModel(chartWidth, system, runId, leadershipReached),
+    [chartWidth, leadershipReached, runId, system],
+  )
+
+  useEffect(() => {
+    setJourneys(emptyJourneys(runId))
+    setRegionCounts(emptyRegionCounts())
+  }, [chartWidth, runId])
 
   const handleRegionEvent = useCallback((event) => {
-    setCrossings((previous) => updateCrossings(previous, event))
+    const eventSystemId = event.region.metadata?.systemId
+    if (!SYSTEMS[eventSystemId]) return
+    setJourneys((current) => {
+      const nextLedger = updateProcessJourney(current[eventSystemId], event)
+      return nextLedger === current[eventSystemId]
+        ? current
+        : { ...current, [eventSystemId]: nextLedger }
+    })
+    setRegionCounts((current) => {
+      const nextCounts = aggregateRegionCounts(current[eventSystemId], event)
+      return nextCounts === current[eventSystemId]
+        ? current
+        : { ...current, [eventSystemId]: nextCounts }
+    })
   }, [])
 
-  const resetRun = useCallback(() => {
-    setSelected(null)
-    setCrossings(makeEmptyCrossings())
+  const selectSystem = useCallback(
+    (nextSystemId) => {
+      if (nextSystemId === systemId) return
+      setSystemId(nextSystemId)
+      setJourneys((current) => ({
+        ...current,
+        [nextSystemId]: emptyJourney(nextSystemId, runId),
+      }))
+      setRegionCounts((current) => ({ ...current, [nextSystemId]: {} }))
+    },
+    [runId, systemId],
+  )
+
+  const replay = useCallback(() => {
     setRunId((current) => current + 1)
+    setSelectedStageId("commitment")
   }, [])
 
   return (
-    <ExamplePageLayout title="The Stakeholder Journey">
+    <ExamplePageLayout
+      title="The Stakeholder Journey"
+      code={implementationCode}
+    >
       <div className="stakeholder-journey" ref={hostRef}>
         <section className="stakeholder-journey__hero">
           <div>
-            <span className="stakeholder-journey__kicker">StreamPhysicsFrame as an ecosystem argument</span>
+            <span className="stakeholder-journey__kicker">
+              Controlled process-physics counterfactual
+            </span>
             <p className="stakeholder-journey__lede">
-              The original bowtie returns here: Discovery, Acquisition, Activation, First Impact,
-              Habit, Commitment, and Ecosystem Leadership. The physics layer now separates two
-              media. The left side is a set of permeable membranes that cost energy to cross. First
-              Impact charges a particle. The right side either retains that charge through trust,
-              governance, belonging, and invitation, or lets it dissipate into passive use.
+              First Impact proves utility. It does not create a contributor. The same
+              deterministic cohort starts with the same left-side membranes; after Habit,
+              an intentional invitation relay either makes Commitment reachable or leaves
+              usage private. Leadership can then feed capacity back into the whole passage.
             </p>
           </div>
-          <div className="stakeholder-journey__source-card">
-            <strong>Integrated source pieces</strong>
+          <aside className="stakeholder-journey__model-note">
+            <strong>Illustrative model, not observed stdlib data</strong>
+            <span>
+              Counts are unique stage crossings from the simulation. No participant is
+              assigned a final role or destination at spawn. In both conditions, each
+              Leadership crossing widens the complete Impact passage by two pixels.
+            </span>
+          </aside>
+          <div className="stakeholder-journey__sources" aria-label="Source essays">
             <a href="https://blog.stdlib.io/the-stakeholder-journey/" target="_blank" rel="noreferrer">Stakeholder Journey</a>
             <a href="https://blog.stdlib.io/open-source-ecosystem-canvas/" target="_blank" rel="noreferrer">Open-Source Ecosystem Canvas</a>
-            <a href="https://blog.stdlib.io/mapping-your-ecosystem-and-its-saboteurs/" target="_blank" rel="noreferrer">Ecosystem Map and Saboteurs</a>
+            <a href="https://blog.stdlib.io/mapping-your-ecosystem-and-its-saboteurs/" target="_blank" rel="noreferrer">Ecosystem Map</a>
           </div>
         </section>
 
-        <section className="stakeholder-journey__comparison" aria-labelledby="journey-comparison-heading">
-          <div className="stakeholder-journey__comparison-header">
+        <section className="stakeholder-journey__comparison" aria-labelledby="journey-heading">
+          <div className="stakeholder-journey__section-header">
             <div>
-              <span className="stakeholder-journey__kicker">Stacked comparison</span>
-              <h2 id="journey-comparison-heading">Same bowtie, different physics</h2>
+              <span className="stakeholder-journey__kicker">One initial force, shared feedback</span>
+              <h2 id="journey-heading">The Habit-to-Commitment crossing</h2>
+              <p>
+                Both views begin with identical geometry and forces through Habit. Switch
+                the right-side community condition while keeping all 36 participants,
+                spawn positions, velocities, timing, and left-side friction fixed. Once
+                Leadership appears, the same feedback rule widens the complete Impact
+                passage for later participants.
+              </p>
             </div>
-            <button type="button" onClick={resetRun}>Replay systems</button>
+            <button type="button" className="stakeholder-journey__replay" onClick={replay}>
+              Replay cohort
+            </button>
           </div>
 
-          <div className="stakeholder-journey__bowtie-stack">
-            {SYSTEMS.map((system) => (
-              <JourneyBowtie
-                key={system.id}
-                system={system}
-                model={models[system.id]}
-                runId={runId}
-                crossings={crossings[system.id]}
-                selected={selected}
-                setSelected={setSelected}
-                onRegionEvent={handleRegionEvent}
-              />
+          <div className="stakeholder-journey__scenario-control" role="group" aria-label="Community condition">
+            {SYSTEM_ORDER.map((id) => {
+              const candidate = SYSTEMS[id]
+              const active = id === systemId
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className={active ? "is-active" : ""}
+                  aria-pressed={active}
+                  onClick={() => selectSystem(id)}
+                >
+                  <strong>{candidate.short}</strong>
+                  <span>{candidate.verdict}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <JourneyBowtie
+            system={system}
+            model={model}
+            runId={runId}
+            journey={journeys[systemId]}
+            rows={rows}
+            regionCounts={regionCounts[systemId]}
+            selectedStageId={selectedStageId}
+            setSelectedStageId={setSelectedStageId}
+            onRegionEvent={handleRegionEvent}
+          />
+
+          <JourneyComparison rowsBySystem={rowsBySystem} activeSystemId={systemId} />
+        </section>
+
+        <section className="stakeholder-journey__force-map" aria-labelledby="force-map-heading">
+          <div className="stakeholder-journey__section-header">
+            <div>
+              <span className="stakeholder-journey__kicker">Ecosystem canvas as model map</span>
+              <h2 id="force-map-heading">Hypotheses become named mechanisms</h2>
+              <p>
+                Canvas cells are prompts, not particle quantities. Each row names the
+                journey mechanism a project would need to measure or design.
+              </p>
+            </div>
+          </div>
+          <div className="stakeholder-journey__force-table">
+            {FORCE_MAP.map((item) => (
+              <button
+                key={`${item.cell}-${item.stageId}`}
+                type="button"
+                className={selectedStageId === item.stageId ? "is-active" : ""}
+                onClick={() => setSelectedStageId(item.stageId)}
+              >
+                <span>{item.group}</span>
+                <strong>{item.cell}</strong>
+                <b>{item.mechanism}</b>
+                <small>{item.assumption}</small>
+              </button>
             ))}
           </div>
         </section>
 
-        <section className="stakeholder-journey__canvas-section" aria-labelledby="ose-canvas-heading">
-          <div className="stakeholder-journey__section-header">
-            <span className="stakeholder-journey__kicker">Separate physics-ized OSE Canvas</span>
-            <h2 id="ose-canvas-heading">The sustainability field beneath the journey</h2>
-            <p>
-              The canvas is not another static checklist. These cells are hypotheses with force:
-              viability keeps the project supplied, feasibility keeps work governable, and desirability
-              keeps value attached to real community members and impact.
-            </p>
-          </div>
-          <OSECanvasPhysics model={canvasModel} runId={runId} />
-        </section>
-
-        <section className="stakeholder-journey__synthesis">
+        <section className="stakeholder-journey__method" aria-labelledby="journey-method-heading">
           <div>
-            <span className="stakeholder-journey__kicker">Physics model reasoning</span>
-            <h2>Membranes should be regions, not walls.</h2>
+            <span className="stakeholder-journey__kicker">Reusable process evidence</span>
+            <h2 id="journey-method-heading">Geometry, observation, ledger.</h2>
           </div>
           <p>
-            Game engines generally do not model this as a line with a small hole. They model it as an
-            area: a region can apply force, drag, gravity override, flow, damping, or simply emit an
-            overlap event. That is the right metaphor for stakeholder journeys because discovery and
-            activation do not block absolutely; they tax energy, change velocity, and alter state.
+            <code>processStageLayout</code> owns the bowtie, membranes, and live
+            <code> pinchHeightOffset</code>. Its colliders, the stage sensors from
+            <code> processStageRegions</code>, and the panels from
+            <code> processVolumePolygons</code> now share one geometry. Meanwhile,
+            <code> updateProcessJourney</code> records first entry, repeat visits,
+            regressions, and furthest progress per entity. <code>processJourneyRows</code>
+            turns that evidence into the Leadership count that expands the whole
+            corridor by two pixels per participant.
           </p>
-          <p>
-            This page builds the bowtie from the process recipe kit:{" "}
-            <code>processStageLayout</code> supplies stage bands, walls, and membrane regions;
-            <code> chargeGateRegion</code> and <code>forceFieldRegion</code> add First Impact and the
-            right-side retention fields. The domain code is the journey stages, membrane costs, and
-            destination mix — not hand-written collider algebra.
-          </p>
-        </section>
-
-        <section className="stakeholder-journey__needs">
-          <div className="stakeholder-journey__section-header">
-            <span className="stakeholder-journey__kicker">Process authoring kit</span>
-            <h2>Reusable primitives behind this example</h2>
-          </div>
-          <div className="stakeholder-journey__research-grid">
-            {RESEARCH_LINKS.map((link) => (
-              <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="stakeholder-journey__research-card">
-                <strong>{link.name}</strong>
-                <span>{link.lesson}</span>
-              </a>
-            ))}
-          </div>
-          <div className="stakeholder-journey__needs-grid">
-            <FeatureNeed title="processStageLayout" body="Stage bands + lane/bowtie/funnel walls + membrane placement from declarative stage and membrane defs." />
-            <FeatureNeed title="chargeGateRegion / forceFieldRegion" body="Typed region factories for First Impact charge and right-side retention fields." />
-            <FeatureNeed title="regionEffects" body="Frame-level sensors, damping, charge, body-style patches, and onRegionEvent bookkeeping." />
-            <FeatureNeed title="ProcessFlowChart (next)" body="Multi-body capacitated workflows (merge pressure) will use the same kit plus capacity/portal controllers." />
-          </div>
         </section>
       </div>
     </ExamplePageLayout>
   )
 }
 
-function JourneyBowtie({ system, model, runId, crossings, selected, setSelected, onRegionEvent }) {
-  const active = stewardshipCount(crossings) >= system.fieldThreshold * system.canvasCoherence
-  const selectedActive = selected?.systemId === system.id
-
+function JourneyBowtie({
+  system,
+  model,
+  runId,
+  journey,
+  rows,
+  regionCounts,
+  selectedStageId,
+  setSelectedStageId,
+  onRegionEvent,
+}) {
   const config = useMemo(
     () => ({
       kernel: {
-        seed: system.seed + runId,
-        gravity: { x: system.id === "works" ? 18 : 7, y: 0 },
-        restitution: 0.2,
-        friction: 0.58,
-        velocityDamping: system.id === "works" ? 0.993 : 0.988,
+        seed: COHORT_SEED + runId,
+        gravity: { x: 60, y: 0 },
+        restitution: 0.18,
+        friction: 0.56,
+        velocityDamping: 0.996,
         collisionIterations: 3,
-        maxVelocity: 340,
-        sleepSpeed: 7,
-        sleepAfter: 0.95,
+        maxVelocity: 320,
+        sleepSpeed: 5,
+        sleepAfter: 0.9,
       },
       colliders: model.colliders,
       fixedDt: 1 / 60,
@@ -580,175 +663,278 @@ function JourneyBowtie({ system, model, runId, crossings, selected, setSelected,
         chartType: "StreamPhysicsFrame",
       },
     }),
-    [model.colliders, runId, system.id, system.seed],
+    [model.colliders, runId, system.id],
   )
-
-  const selection = useMemo(
-    () =>
-      selectedActive
-        ? { isActive: true, predicate: (body) => body.id === selected.bodyId }
-        : null,
-    [selected, selectedActive],
+  const rowMap = useMemo(
+    () => Object.fromEntries(rows.map((row) => [row.id, row])),
+    [rows],
   )
-
-  const selectedDatum = useMemo(() => {
-    if (!selectedActive) return null
-    return model.spawns.find((spawn) => spawn.id === selected.bodyId)?.datum ?? null
-  }, [model.spawns, selected, selectedActive])
+  const impact = rowFor(rows, "impact")
+  const habit = rowFor(rows, "habit")
+  const commitment = rowFor(rows, "commitment")
+  const leadership = rowFor(rows, "leadership")
+  const retention = impact.reached > 0 ? commitment.reached / impact.reached : 0
+  const selectedStage = STAGES.find((stage) => stage.id === selectedStageId) ?? STAGES[0]
 
   return (
-    <article className={`stakeholder-journey__bowtie stakeholder-journey__bowtie--${system.id}`}>
-      <header>
-        <span>{system.verdict}</span>
-        <h3>{system.title}</h3>
-        <p>{system.subtitle}</p>
+    <article className={`stakeholder-journey__system is-${system.id}`} style={{ "--journey-system": system.accent }}>
+      <header className="stakeholder-journey__system-header">
+        <div>
+          <span>{system.verdict}</span>
+          <h3>{system.title}</h3>
+        </div>
+        <p>{system.description}</p>
       </header>
 
       <div className="stakeholder-journey__chart-stage" style={{ width: model.layout.width }}>
         <StreamPhysicsFrame
           key={`${system.id}-${runId}-${model.layout.width}`}
-          title={`${system.title} physics model`}
-          summary={`${system.title}: ${model.spawns.length} bodies move through seven journey stages. First Impact charges particles; Commitment and Ecosystem Leadership measure retained charge.`}
-          description="Stakeholder particles pass through permeable membranes on the left, become charged at First Impact, and either retain or lose charge across Habit, Commitment, and Ecosystem Leadership."
+          title={`${system.short}: stakeholder journey`}
+          summary={`${system.short}. ${impact.reached} of ${COHORT_SIZE} participants have reached First Impact; ${commitment.reached} have crossed into Commitment and ${leadership.reached} have reached Ecosystem Leadership. The Impact passage is ${Math.round(model.layout.pinchHeight)} pixels high.`}
+          description="A controlled cohort crosses seven observed process stages. First Impact changes participant state; every unique Leadership crossing expands that region and its connecting barriers by two pixels. The Habit-to-Commitment field differs between community conditions."
           size={[model.layout.width, BOWTIE_HEIGHT]}
           config={config}
           initialSpawns={model.spawns}
-          initialSpawnPacing={{ pacing: "arrival", timeAccessor: "spawnAt", timeScale: system.pace }}
+          initialSpawnPacing={{
+            pacing: "arrival",
+            timeAccessor: "spawnAt",
+            timeScale: 5,
+          }}
           regionEffects={model.regionEffects}
           onRegionEvent={onRegionEvent}
+          suspendWhenHidden={false}
           accessibleTable
-          enableHover
-          hoverRadius={18}
-          selection={selection}
-          selectedBodyStyle={{ stroke: "#ffffff", strokeWidth: 3, opacity: 1 }}
-          bodyStyle={(body, context) => {
+          bodySemanticItemLimit={COHORT_SIZE}
+          bodySemanticUpdateMs={500}
+          bodySemanticItems={(body) => {
             const datum = body.datum ?? {}
-            const palette = DESTINATION_PALETTE[datum.destination] ?? DESTINATION_PALETTE.habit
-            const charged = crossings.charged.has(body.id) || context.regionState?.charges["first-impact"]
-            const retained = crossings.commitment.has(body.id) || crossings.leadership.has(body.id)
-            const dim = selectedActive && selected.bodyId !== body.id
+            const state = journey.entities[body.id]
+            const furthest = state?.furthestStageId
+              ? STAGES.find((stage) => stage.id === state.furthestStageId)?.label
+              : "not yet observed"
             return {
-              fill: retained ? "#ffe08a" : charged ? "#43d6f1" : palette.fill,
-              stroke: retained ? "#9b6a12" : charged ? "#087895" : palette.stroke,
-              strokeWidth: retained ? 2.2 : 1.2,
-              opacity: dim ? 0.28 : 0.93,
+              label: datum.label ?? body.id,
+              description: `Furthest stage: ${furthest}. ${state?.regressionCount ?? 0} backward transitions observed.`,
+              group: `${system.short} cohort`,
+              datum,
             }
           }}
-          onBodyPointerDown={(body) => setSelected(body ? { systemId: system.id, bodyId: body.id } : null)}
+          enableHover
+          hoverRadius={18}
+          bodyStyle={(body) => {
+            const state = journey.entities[body.id]
+            const furthest = state?.furthestStageIndex ?? -1
+            const charged = furthest >= STAGE_INDEX.impact
+            const committed = furthest >= STAGE_INDEX.commitment
+            const leader = furthest >= STAGE_INDEX.leadership
+            return {
+              fill: leader
+                ? "#f6c945"
+                : committed
+                  ? "#ffe08a"
+                  : charged
+                    ? "#43d6f1"
+                    : "#dbe4ea",
+              stroke: committed ? "#8d6420" : charged ? "#087895" : "#637485",
+              strokeWidth: committed ? 2 : 1.15,
+              opacity: 0.94,
+            }
+          }}
           tooltipContent={(hover) => {
-            const datum = hover.datum ?? {}
+            const datum = hover.data ?? {}
+            const state = journey.entities[hover.id]
+            const currentStage = state?.currentStageId
+              ? STAGES.find((stage) => stage.id === state.currentStageId)?.label
+              : "Not yet observed"
+            const furthestStage = state?.furthestStageId
+              ? STAGES.find((stage) => stage.id === state.furthestStageId)?.label
+              : "Not yet observed"
             return (
               <div className="semiotic-tooltip stakeholder-journey__tooltip">
-                <strong>{datum.role ?? hover.id}</strong>
-                <div>{datum.destinationLabel ?? "Stakeholder token"}</div>
-                <div>{crossings.charged.has(hover.id) ? "charged by First Impact" : "not yet charged"}</div>
+                <strong>{datum.label ?? hover.id}</strong>
+                <div>Current: {currentStage}</div>
+                <div>Furthest: {furthestStage}</div>
               </div>
             )
           }}
         />
-        <BowtieOverlay system={system} layout={model.layout} crossings={crossings} active={active} />
+        <BowtieOverlay
+          system={system}
+          layout={model.layout}
+          rows={rows}
+          regionCounts={regionCounts}
+          selectedStageId={selectedStageId}
+        />
       </div>
 
-      <div className="stakeholder-journey__bowtie-bottom">
-        <div className="stakeholder-journey__metrics">
-          <Metric label="charged" value={crossings.charged.size} detail="entered First Impact" />
-          <Metric label="retained" value={stewardshipCount(crossings)} detail="commitment + leadership" />
-          <Metric label="field" value={active ? "on" : "off"} detail="right-side activation" />
-        </div>
-        <div className="stakeholder-journey__readout">
-          {selectedDatum ? (
-            <>
-              <strong>{selectedDatum.role}</strong>
-              <span>{selectedDatum.destinationLabel}</span>
-            </>
-          ) : (
-            <>
-              <strong>{active ? "Positive effects are compounding" : "Charge is dissipating"}</strong>
-              <span>{active ? system.rightNote : system.membraneNote}</span>
-            </>
-          )}
-        </div>
+      <div className="stakeholder-journey__metrics" aria-label={`${system.short} journey metrics`}>
+        <Metric label="First Impact" value={impact.reached} detail={`${percent(impact.conversion)} / ${Math.round(model.layout.pinchHeight)}px high`} />
+        <Metric label="Habit" value={habit.reached} detail={`${habit.dropoff} drop from prior`} />
+        <Metric label="Commitment" value={commitment.reached} detail={`${percent(retention)} of impact`} emphasize />
+        <Metric label="Leadership" value={leadership.reached} detail={`${leadership.repeatVisits} repeat visits`} />
       </div>
 
-      <div className="stakeholder-journey__factor-list">
-        {system.factors.map((factor) => <div key={factor}>{factor}</div>)}
+      <div className="stakeholder-journey__stage-rail" aria-label="Journey stages">
+        {STAGES.map((stage) => {
+          const row = rowMap[stage.id] ?? rowFor(rows, stage.id)
+          return (
+            <button
+              key={stage.id}
+              type="button"
+              className={selectedStageId === stage.id ? "is-active" : ""}
+              aria-pressed={selectedStageId === stage.id}
+              aria-label={`${stage.label}: ${row.reached} of ${COHORT_SIZE} reached`}
+              onClick={() => setSelectedStageId(stage.id)}
+            >
+              <span>{stage.short}</span>
+              <strong>{row.reached}</strong>
+            </button>
+          )
+        })}
+      </div>
+      <div className="stakeholder-journey__voice" aria-live="polite">
+        <strong>{selectedStage.label}</strong>
+        <span>{selectedStage.voice}</span>
+      </div>
+
+      <div className="stakeholder-journey__membrane-ledger">
+        {MEMBRANES.map((membrane) => (
+          <div key={membrane.id}>
+            <span style={{ "--membrane-color": membrane.color }}>{membrane.compact}</span>
+            <strong>{membrane.label}</strong>
+            <b>{regionCounts[membrane.id]?.count ?? 0} crossed</b>
+            <small>cost {Math.round(membrane.cost * 100)}</small>
+          </div>
+        ))}
       </div>
     </article>
   )
 }
 
-function BowtieOverlay({ system, layout, crossings, active }) {
-  const leftPoints = [[layout.padX, layout.topY], [layout.centerLeft, layout.pinchTop], [layout.centerLeft, layout.pinchBottom], [layout.padX, layout.bottomY]]
-  const centerPoints = [[layout.centerLeft, layout.pinchTop], [layout.centerRight, layout.pinchTop], [layout.centerRight, layout.pinchBottom], [layout.centerLeft, layout.pinchBottom]]
-  const rightPoints = [[layout.centerRight, layout.pinchTop], [layout.right, layout.topY], [layout.right, layout.bottomY], [layout.centerRight, layout.pinchBottom]]
-  const glowId = `stakeholder-right-glow-${system.id}`
-  const membraneId = `stakeholder-membrane-${system.id}`
-  const commitmentStage = layout.stages[5]
-  const leadershipStage = layout.stages[6]
+function JourneyComparison({ rowsBySystem, activeSystemId }) {
+  const comparisonStages = ["activation", "impact", "habit", "commitment", "leadership"]
+  return (
+    <div className="stakeholder-journey__ledger" aria-label="Scenario comparison ledger">
+      <div className="stakeholder-journey__ledger-heading">
+        <div>
+          <span className="stakeholder-journey__kicker">Saved scenario evidence</span>
+          <h3>Unique participants reaching each stage</h3>
+        </div>
+        <span>Switch conditions to populate both columns.</span>
+      </div>
+      <div className="stakeholder-journey__ledger-row is-header" aria-hidden="true">
+        <span>Stage</span>
+        <b>Designed relay</b>
+        <b>Passive path</b>
+      </div>
+      {comparisonStages.map((stageId) => {
+        const stage = STAGES.find((candidate) => candidate.id === stageId)
+        const relay = rowFor(rowsBySystem.relay, stageId)
+        const passive = rowFor(rowsBySystem.passive, stageId)
+        return (
+          <div key={stageId} className="stakeholder-journey__ledger-row">
+            <span>{stage?.label ?? stageId}</span>
+            <b className={activeSystemId === "relay" ? "is-live" : ""}>{relay.reached} / {relay.total}</b>
+            <b className={activeSystemId === "passive" ? "is-live" : ""}>{passive.reached} / {passive.total}</b>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function BowtieOverlay({ system, layout, rows, regionCounts, selectedStageId }) {
+  const volumePolygons = processVolumePolygons(layout)
+  const rowMap = Object.fromEntries(rows.map((row) => [row.id, row]))
+  const habit = layout.stages[STAGE_INDEX.habit]
+  const commitment = layout.stages[STAGE_INDEX.commitment]
+  const leadership = layout.stages[STAGE_INDEX.leadership]
+  const leadershipReached = rowMap.leadership?.reached ?? 0
 
   return (
     <svg className="stakeholder-journey__overlay" viewBox={`0 0 ${layout.width} ${layout.height}`} aria-hidden="true">
-      <defs>
-        <linearGradient id={glowId} x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0%" stopColor="#e7f7fa" stopOpacity="0.14" />
-          <stop offset="100%" stopColor={active ? "#ffe08a" : "#d8dee6"} stopOpacity={active ? "0.54" : "0.24"} />
-        </linearGradient>
-        <pattern id={membraneId} width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
-          <line x1="0" y1="0" x2="0" y2="8" stroke="#ffffff" strokeWidth="2" opacity="0.42" />
-        </pattern>
-      </defs>
-
-      <polygon className="stakeholder-journey__funnel stakeholder-journey__funnel--left" points={points(leftPoints)} />
-      <polygon className="stakeholder-journey__funnel stakeholder-journey__funnel--center" points={points(centerPoints)} />
-      <polygon className="stakeholder-journey__funnel stakeholder-journey__funnel--right" points={points(rightPoints)} fill={`url(#${glowId})`} />
-
-      {layout.stages.slice(1).map((stage) => {
-        const x = stage.x0
-        return <line key={stage.id} className="stakeholder-journey__stage-rule" x1={x} x2={x} y1={boundaryY(layout, x, "top") + 8} y2={boundaryY(layout, x, "bottom") - 8} />
-      })}
-
-      {layout.membranes.map((membrane) => (
-        <g key={membrane.id} className="stakeholder-journey__membrane-region">
-          <path d={membranePath(layout, membrane)} fill={membrane.color} opacity={0.14 + membrane.cost * 0.24} />
-          <path d={membranePath(layout, membrane)} fill={`url(#${membraneId})`} opacity="0.82" />
-          <path d={membraneCenterline(layout, membrane)} stroke={membrane.color} />
-          <text x={membrane.x} y={layout.topY - 14} textAnchor="middle">{membrane.label}</text>
-          <text x={membrane.x} y={layout.bottomY + 24} textAnchor="middle">
-            {crossings.membrane[membrane.id].size} pass / cost {Math.round(membrane.cost * 100)}
-          </text>
-        </g>
+      {volumePolygons.map((polygon) => (
+        <polygon
+          key={polygon.id}
+          className={`stakeholder-journey__funnel ${
+            polygon.role === "center"
+              ? "is-impact"
+              : polygon.role === "outgoing"
+                ? "is-community"
+                : ""
+          }`}
+          data-process-polygon={polygon.role}
+          points={points(polygon.points)}
+        />
       ))}
 
-      {layout.stages.map((stage) => {
-        const x = (stage.x0 + stage.x1) / 2
-        const isCenter = stage.id === "impact"
-        const lines = stage.label.split(" ")
+      {layout.stages.slice(1).map((stage) => (
+        <line
+          key={stage.id}
+          className="stakeholder-journey__stage-rule"
+          x1={stage.x0}
+          x2={stage.x0}
+          y1={layout.boundaryY(stage.x0, "top") + 7}
+          y2={layout.boundaryY(stage.x0, "bottom") - 7}
+        />
+      ))}
+
+      {layout.membranes.map((membrane) => {
+        const source = MEMBRANES.find((item) => item.id === membrane.id)
         return (
-          <g key={stage.id} className={`stakeholder-journey__stage-label ${isCenter ? "is-center" : ""}`}>
-            {lines.map((line, index) => (
-              <text key={`${stage.id}-${line}-${index}`} x={x} y={layout.midY - (lines.length - 1) * 8 + index * 17} textAnchor="middle">
-                {line}
-              </text>
-            ))}
-            <title>{stage.voice}</title>
+          <g key={membrane.id} className="stakeholder-journey__membrane-region">
+            <path d={membranePath(layout, membrane)} fill={membrane.color} opacity={0.13 + membrane.cost * 0.22} />
+            <path d={membraneCenterline(layout, membrane)} stroke={membrane.color} />
+            <text x={membrane.x} y={layout.topY - 13} textAnchor="middle">
+              {layout.compact ? source?.compact : membrane.label}
+            </text>
+            <text x={membrane.x} y={layout.bottomY + 20} textAnchor="middle">
+              {regionCounts[membrane.id]?.count ?? 0}
+            </text>
+          </g>
+        )
+      })}
+
+      {layout.stages.map((stage) => {
+        const source = STAGES.find((candidate) => candidate.id === stage.id)
+        const highlighted = stage.id === selectedStageId
+        return (
+          <g key={stage.id} className={`stakeholder-journey__stage-label ${highlighted ? "is-highlighted" : ""}`}>
+            {highlighted ? (
+              <rect
+                x={stage.x - Math.min(28, stage.width * 0.42)}
+                y={layout.midY - 21}
+                width={Math.min(56, stage.width * 0.84)}
+                height={42}
+                rx="5"
+              />
+            ) : null}
+            <text x={stage.x} y={layout.midY - 2} textAnchor="middle">
+              {source?.short ?? stage.id}
+            </text>
+            <text className="is-count" x={stage.x} y={layout.midY + 13} textAnchor="middle">
+              {rowMap[stage.id]?.reached ?? 0}
+            </text>
           </g>
         )
       })}
 
       <g className="stakeholder-journey__impact-gate">
-        <rect x={layout.centerLeft + 4} y={layout.pinchTop + 4} width={layout.centerRight - layout.centerLeft - 8} height={layout.pinchBottom - layout.pinchTop - 8} rx="7" />
-        <text x={(layout.centerLeft + layout.centerRight) / 2} y={layout.pinchTop - 14} textAnchor="middle">
-          CHARGE GATE: {crossings.charged.size}
-        </text>
+        <rect
+          x={layout.centerLeft + 3}
+          y={layout.pinchTop + 3}
+          width={layout.centerRight - layout.centerLeft - 6}
+          height={Math.max(1, layout.pinchHeight - 6)}
+          data-leadership-reached={leadershipReached}
+          rx="5"
+        />
       </g>
 
-      <g className={`stakeholder-journey__right-field ${active ? "is-active" : ""}`}>
-        <path d={`M ${layout.centerRight + 24} ${layout.midY - 60} C ${commitmentStage.x0 + 10} ${layout.midY - 126}, ${commitmentStage.x1} ${layout.midY - 106}, ${leadershipStage.x1 - 22} ${layout.midY - 48}`} />
-        <path d={`M ${layout.centerRight + 24} ${layout.midY + 60} C ${commitmentStage.x0 + 10} ${layout.midY + 126}, ${commitmentStage.x1} ${layout.midY + 112}, ${leadershipStage.x1 - 22} ${layout.midY + 50}`} />
-        <circle cx={(commitmentStage.x0 + commitmentStage.x1) / 2} cy={layout.midY - 72} r={active ? 10 : 6} />
-        <circle cx={(leadershipStage.x0 + leadershipStage.x1) / 2} cy={layout.midY + 72} r={active ? 11 : 6} />
-        <text x={layout.right - 10} y={layout.topY - 14} textAnchor="end">
-          retained charge: {stewardshipCount(crossings)}
+      <g className={`stakeholder-journey__invitation-field is-${system.id}`}>
+        <path d={`M ${habit.x} ${layout.midY - 54} C ${commitment.x} ${layout.midY - 108}, ${leadership.x} ${layout.midY - 84}, ${layout.right - 14} ${layout.midY - 38}`} />
+        <path d={`M ${habit.x} ${layout.midY + 54} C ${commitment.x} ${layout.midY + 108}, ${leadership.x} ${layout.midY + 84}, ${layout.right - 14} ${layout.midY + 38}`} />
+        <text x={layout.right - 2} y={layout.topY - 13} textAnchor="end">
+          {system.fieldLabel}
         </text>
       </g>
     </svg>
@@ -756,177 +942,25 @@ function BowtieOverlay({ system, layout, crossings, active }) {
 }
 
 function membranePath(layout, membrane) {
-  const top = layout.topY + 12
-  const bottom = layout.bottomY - 12
+  const top = layout.topY + 10
+  const bottom = layout.bottomY - 10
   const half = membrane.width / 2
   const wobble = membrane.wobble
-  return `M ${membrane.x - half} ${top} C ${membrane.x - half + wobble} ${top + 72}, ${membrane.x - half - wobble} ${bottom - 72}, ${membrane.x - half} ${bottom} L ${membrane.x + half} ${bottom} C ${membrane.x + half - wobble} ${bottom - 72}, ${membrane.x + half + wobble} ${top + 72}, ${membrane.x + half} ${top} Z`
+  return `M ${membrane.x - half} ${top} C ${membrane.x - half + wobble} ${top + 68}, ${membrane.x - half - wobble} ${bottom - 68}, ${membrane.x - half} ${bottom} L ${membrane.x + half} ${bottom} C ${membrane.x + half - wobble} ${bottom - 68}, ${membrane.x + half + wobble} ${top + 68}, ${membrane.x + half} ${top} Z`
 }
 
 function membraneCenterline(layout, membrane) {
-  const top = layout.topY + 12
-  const bottom = layout.bottomY - 12
-  const wobble = membrane.wobble
-  return `M ${membrane.x} ${top} C ${membrane.x + wobble} ${top + 72}, ${membrane.x - wobble} ${bottom - 72}, ${membrane.x} ${bottom}`
+  const top = layout.topY + 10
+  const bottom = layout.bottomY - 10
+  return `M ${membrane.x} ${top} C ${membrane.x + membrane.wobble} ${top + 68}, ${membrane.x - membrane.wobble} ${bottom - 68}, ${membrane.x} ${bottom}`
 }
 
-function buildCanvasModel(width, runId) {
-  const layout = buildCanvasLayout(width)
-  const random = mulberry32(520 + runId * 401)
-  const spawns = []
-
-  CANVAS_CELLS.forEach((cell) => {
-    const rect = layout.cells[cell.id]
-    for (let index = 0; index < cell.tokens; index += 1) {
-      const target = {
-        x: randomBetween(random, rect.x + 34, rect.x + rect.width - 34),
-        y: randomBetween(random, rect.y + 48, rect.y + rect.height - 28),
-      }
-      spawns.push({
-        id: `canvas-${cell.id}-${index}`,
-        x: layout.width / 2 + randomBetween(random, -80, 80),
-        y: 26 + randomBetween(random, -8, 14),
-        vx: randomBetween(random, -20, 20),
-        vy: randomBetween(random, 20, 80),
-        mass: cell.group === "desirability" ? 1.15 : 1,
-        shape: { type: "circle", radius: cell.group === "desirability" ? 6.5 : 5.6 },
-        datum: {
-          cell: cell.label,
-          group: cell.group,
-          target,
-        },
-        spawnAt: spawns.length * 0.045,
-        springs: [{ target: { type: "point", ...target }, stiffness: 0.032, damping: 0.8, restLength: 3 }],
-      })
-    }
-  })
-
-  const colliders = [
-    { id: "canvas-floor", shape: { type: "segment", x1: 20, y1: CANVAS_HEIGHT - 18, x2: layout.width - 20, y2: CANVAS_HEIGHT - 18, thickness: 10 } },
-    { id: "canvas-left-wall", shape: { type: "segment", x1: 20, y1: 44, x2: 20, y2: CANVAS_HEIGHT - 18, thickness: 8 } },
-    { id: "canvas-right-wall", shape: { type: "segment", x1: layout.width - 20, y1: 44, x2: layout.width - 20, y2: CANVAS_HEIGHT - 18, thickness: 8 } },
-  ]
-
-  return { layout, spawns, colliders }
-}
-
-function buildCanvasLayout(width) {
-  const w = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.round(width)))
-  const margin = 20
-  const top = 58
-  const gap = 9
-  const colWidth = (w - margin * 2 - gap * 4) / 5
-  const rowHeight = 146
-  const cells = {}
-
-  CANVAS_CELLS.forEach((cell) => {
-    const spanCols = cell.spanCols ?? 1
-    const spanRows = cell.spanRows ?? 1
-    cells[cell.id] = {
-      x: margin + cell.col * (colWidth + gap),
-      y: top + cell.row * (rowHeight + gap),
-      width: colWidth * spanCols + gap * (spanCols - 1),
-      height: rowHeight * spanRows + gap * (spanRows - 1),
-    }
-  })
-
-  return { width: w, height: CANVAS_HEIGHT, cells, margin, top, gap, colWidth, rowHeight }
-}
-
-function OSECanvasPhysics({ model, runId }) {
-  const config = useMemo(
-    () => ({
-      kernel: {
-        seed: 500 + runId,
-        gravity: { x: 0, y: 16 },
-        restitution: 0.18,
-        friction: 0.62,
-        velocityDamping: 0.992,
-        sleepSpeed: 5,
-        sleepAfter: 0.8,
-      },
-      colliders: model.colliders,
-      fixedDt: 1 / 60,
-      maxSubsteps: 8,
-    }),
-    [model.colliders, runId],
-  )
-
+function Metric({ label, value, detail, emphasize = false }) {
   return (
-    <div className="stakeholder-journey__canvas-stage" style={{ width: model.layout.width }}>
-      <StreamPhysicsFrame
-        key={`ose-canvas-${runId}-${model.layout.width}`}
-        title="Open-Source Ecosystem Canvas as a physics field"
-        summary="Hypothesis particles settle into viability, feasibility, and desirability cells of the OSE Canvas."
-        description="A physics-ized Open-Source Ecosystem Canvas. Particles are tethered to canvas cells to show viability, feasibility, and desirability as active sustainability regions rather than static boxes."
-        size={[model.layout.width, CANVAS_HEIGHT]}
-        config={config}
-        initialSpawns={model.spawns}
-        initialSpawnPacing={{ pacing: "arrival", timeAccessor: "spawnAt", timeScale: 3.4 }}
-        accessibleTable
-        enableHover
-        hoverRadius={16}
-        bodyStyle={(body) => {
-          const group = body.datum?.group ?? "desirability"
-          return {
-            fill: GROUP_COLORS[group],
-            stroke: "#ffffff",
-            strokeWidth: 1.4,
-            opacity: 0.86,
-          }
-        }}
-        tooltipContent={(hover) => (
-          <div className="semiotic-tooltip stakeholder-journey__tooltip">
-            <strong>{hover.datum?.cell ?? hover.id}</strong>
-            <div>{hover.datum?.group ?? "canvas"}</div>
-          </div>
-        )}
-      />
-      <OSECanvasOverlay layout={model.layout} />
-    </div>
-  )
-}
-
-function OSECanvasOverlay({ layout }) {
-  return (
-    <svg className="stakeholder-journey__canvas-overlay" viewBox={`0 0 ${layout.width} ${layout.height}`} aria-hidden="true">
-      <text className="stakeholder-journey__canvas-heading" x={layout.margin} y="30">VIABILITY</text>
-      <text className="stakeholder-journey__canvas-heading" x={layout.margin + (layout.colWidth + layout.gap)} y="30">FEASIBILITY</text>
-      <text className="stakeholder-journey__canvas-heading" x={layout.margin + (layout.colWidth + layout.gap) * 3} y="30">DESIRABILITY</text>
-      {CANVAS_CELLS.map((cell) => {
-        const rect = layout.cells[cell.id]
-        const color = GROUP_COLORS[cell.group]
-        return (
-          <g key={cell.id} className="stakeholder-journey__canvas-cell">
-            <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} rx="4" stroke={color} />
-            <text x={rect.x + 14} y={rect.y + 27} fill={color}>{cell.label}</text>
-          </g>
-        )
-      })}
-      <path className="stakeholder-journey__canvas-flow" d={`M ${layout.cells.value.x + layout.cells.value.width * 0.35} ${layout.cells.value.y + layout.cells.value.height} C ${layout.width * 0.48} ${layout.height - 108}, ${layout.width * 0.58} ${layout.height - 108}, ${layout.cells.impact.x + 40} ${layout.cells.impact.y + 32}`} />
-      <path className="stakeholder-journey__canvas-flow" d={`M ${layout.cells.members.x + 36} ${layout.cells.members.y + layout.cells.members.height} C ${layout.width * 0.78} ${layout.height - 106}, ${layout.width * 0.72} ${layout.height - 96}, ${layout.cells.impact.x + layout.cells.impact.width - 48} ${layout.cells.impact.y + 36}`} />
-      <text className="stakeholder-journey__canvas-caption" x={layout.width / 2} y={layout.height - 12} textAnchor="middle">
-        The OSE Canvas as a sustainability field: every particle is a hypothesis that needs a cell, a force, and a flow.
-      </text>
-    </svg>
-  )
-}
-
-function Metric({ label, value, detail }) {
-  return (
-    <div className="stakeholder-journey__metric">
+    <div className={`stakeholder-journey__metric ${emphasize ? "is-emphasis" : ""}`}>
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{detail}</small>
-    </div>
-  )
-}
-
-function FeatureNeed({ title, body }) {
-  return (
-    <div className="stakeholder-journey__need-card">
-      <strong>{title}</strong>
-      <span>{body}</span>
     </div>
   )
 }

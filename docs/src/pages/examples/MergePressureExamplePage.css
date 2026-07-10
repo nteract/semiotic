@@ -1,50 +1,21 @@
 .merge-pressure {
-  --mp-ink: var(--semiotic-text, var(--text-primary));
-  --mp-muted: var(--semiotic-text-secondary, var(--text-secondary));
-  --mp-blue: var(--semiotic-primary, var(--viz-5));
-  --mp-red: var(--semiotic-danger, var(--viz-4));
-  --mp-gold: var(--semiotic-warning, var(--viz-3));
-  --mp-green: var(--semiotic-success, var(--viz-2));
-  --mp-purple: var(--viz-7);
-  --mp-feature-auth: var(--viz-5);
-  --mp-feature-billing: var(--viz-9);
-  --mp-feature-search: var(--viz-7);
-  --mp-feature-notifications: var(--viz-2);
-  --mp-feature-admin: var(--viz-10);
+  --mp-blue: var(--semiotic-primary, #0ea5e9);
+  --mp-green: var(--semiotic-success, #22c55e);
+  --mp-gold: var(--semiotic-warning, #f59e0b);
+  --mp-red: var(--semiotic-danger, #ef4444);
   --mp-chart-bg-start: #0f172a;
   --mp-chart-bg-mid: #111827;
   --mp-chart-bg-end: #1f2937;
-  --mp-chart-panel: rgba(15, 23, 42, 0.76);
-  --mp-chart-panel-strong: rgba(30, 41, 59, 0.9);
-  --mp-chart-panel-muted: rgba(15, 23, 42, 0.42);
-  --mp-chart-text: var(--semiotic-text, #cbd5e1);
-  --mp-chart-muted: var(--semiotic-text-secondary, #94a3b8);
-  --mp-chart-grid: var(--semiotic-grid, #1e293b);
   --mp-chart-border: var(--semiotic-border, #334155);
-  --mp-tooltip-bg: var(--semiotic-tooltip-bg, var(--surface-0));
-  --mp-tooltip-text: var(--semiotic-tooltip-text, var(--text-primary));
+  --mp-chart-muted: var(--semiotic-text-secondary, #94a3b8);
+  --mp-tooltip-bg: color-mix(in srgb, var(--surface-0) 94%, var(--text-primary) 6%);
+  --mp-tooltip-text: var(--text-primary);
   --mp-tooltip-border: var(--semiotic-border, var(--surface-3));
-  --mp-canvas-pr-stroke: #0f172a;
-  --mp-canvas-risk-stroke: var(--mp-red);
-  --mp-canvas-sparkle-fill: #ccfbf1;
-  --mp-canvas-sparkle-stroke: var(--mp-green);
-  --mp-canvas-comment-useful-fill: rgba(6, 182, 212, 0.9);
-  --mp-canvas-comment-useful-stroke: var(--viz-5);
-  --mp-canvas-comment-noise-fill: rgba(239, 68, 68, 0.9);
-  --mp-canvas-comment-noise-stroke: var(--mp-red);
-  --mp-socket-fill: rgba(15, 23, 42, 0.78);
-  --mp-socket-stroke: var(--semiotic-border, #334155);
-  --mp-socket-text: var(--semiotic-text, #cbd5e1);
-  --mp-socket-shipped-fill: rgba(245, 158, 11, 0.24);
-  --mp-socket-shipped-stroke: var(--mp-gold);
-  --mp-socket-blocked-fill: rgba(239, 68, 68, 0.12);
-  --mp-socket-blocked-stroke: var(--mp-red);
-  --mp-socket-blocked-text: var(--mp-red);
-  --semiotic-tooltip-bg: color-mix(in srgb, var(--surface-0) 94%, var(--text-primary) 6%);
-  --semiotic-tooltip-text: var(--text-primary);
+  --semiotic-tooltip-bg: var(--mp-tooltip-bg);
+  --semiotic-tooltip-text: var(--mp-tooltip-text);
   --semiotic-tooltip-shadow: 0 12px 32px color-mix(in srgb, #000 42%, transparent);
   display: grid;
-  gap: 24px;
+  gap: 22px;
   overflow-x: auto;
   padding-bottom: 42px;
   color: var(--text-primary);
@@ -54,27 +25,16 @@
   --mp-chart-bg-start: #fbfdff;
   --mp-chart-bg-mid: #f7fbfb;
   --mp-chart-bg-end: #fff6df;
-  --mp-chart-panel: rgba(255, 255, 255, 0.76);
-  --mp-chart-panel-strong: rgba(255, 255, 255, 0.92);
-  --mp-chart-panel-muted: rgba(255, 255, 255, 0.46);
-  --mp-canvas-pr-stroke: #ffffff;
-  --mp-canvas-sparkle-fill: #d8f5ee;
-  --mp-socket-fill: rgba(255, 255, 255, 0.78);
-  --mp-socket-text: #233148;
-  --mp-socket-shipped-fill: rgba(241, 199, 91, 0.58);
-  --mp-socket-blocked-fill: rgba(182, 56, 50, 0.08);
-  --semiotic-tooltip-bg: color-mix(in srgb, var(--surface-0) 96%, #000 4%);
+  --mp-tooltip-bg: color-mix(in srgb, var(--surface-0) 96%, #000 4%);
   --semiotic-tooltip-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
 }
 
 .merge-pressure__hero,
 .merge-pressure__presets,
-.merge-pressure__controls-header,
-.merge-pressure__controls,
+.merge-pressure__legend,
 .merge-pressure__workbench,
-.merge-pressure__feature-strip,
-.merge-pressure__explanation,
-.merge-pressure__needs {
+.merge-pressure__event-log,
+.merge-pressure__explanation {
   width: 100%;
   min-width: min(100%, 780px);
   box-sizing: border-box;
@@ -82,15 +42,13 @@
 
 .merge-pressure__hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(230px, 0.36fr);
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 0.32fr);
   gap: 24px;
   align-items: end;
-  padding: 28px;
+  padding: 26px;
   border: 1px solid var(--surface-3);
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at 8% 18%, color-mix(in srgb, var(--mp-gold) 30%, transparent), transparent 34%),
-    linear-gradient(135deg, color-mix(in srgb, var(--surface-0) 90%, #e6f4f7), var(--surface-1));
+  border-radius: 18px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--surface-0) 92%, #e6f4f7), var(--surface-1));
 }
 
 .merge-pressure__kicker {
@@ -102,60 +60,74 @@
 }
 
 .merge-pressure__lede {
-  max-width: 900px;
+  max-width: 930px;
   margin: 10px 0 0;
-  font-size: clamp(1.05rem, 2vw, 1.42rem);
+  font-size: clamp(1.04rem, 1.8vw, 1.34rem);
   line-height: 1.55;
 }
 
-.merge-pressure__equation {
+.merge-pressure__source-card {
   display: grid;
   gap: 8px;
-  padding: 18px;
+  padding: 15px;
   border: 1px solid var(--surface-3);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--surface-0) 84%, #fff4d8);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-0) 86%, #eef8fb);
 }
 
-.merge-pressure__equation span {
-  color: var(--text-secondary);
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.merge-pressure__equation strong {
+.merge-pressure__source-card strong,
+.merge-pressure__source-card b {
   color: var(--text-primary);
-  font-size: 1.2rem;
 }
 
-/* Stepper Narrative Timeline Buttons */
+.merge-pressure__source-card span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.merge-pressure__source-card button {
+  min-height: 36px;
+  padding: 0 13px;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  background: var(--mp-blue);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
 .merge-pressure__presets {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .merge-pressure__presets button {
   display: grid;
   gap: 6px;
-  min-height: 86px;
-  padding: 14px;
+  min-height: 78px;
+  padding: 13px;
   color: var(--text-primary);
   text-align: left;
   border: 1px solid var(--surface-3);
-  border-radius: 16px;
+  border-radius: 10px;
   background: var(--surface-0);
   cursor: pointer;
   font: inherit;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--mp-ink) 3%, transparent);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .merge-pressure__presets button:hover {
-  border-color: color-mix(in srgb, var(--mp-blue) 40%, var(--surface-3));
-  transform: translateY(-2px);
-  background: color-mix(in srgb, var(--surface-0) 96%, #f2fafc);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--mp-ink) 6%, transparent);
+  border-color: color-mix(in srgb, var(--mp-blue) 45%, var(--surface-3));
+  transform: translateY(-1px);
+}
+
+.merge-pressure__presets button strong {
+  color: var(--text-primary);
+  font-size: 0.96rem;
+  line-height: 1.2;
 }
 
 .merge-pressure__presets button span {
@@ -166,170 +138,118 @@
   text-transform: uppercase;
 }
 
-.merge-pressure__presets button strong {
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  line-height: 1.2;
-}
-
 .merge-pressure__presets button.is-active {
   border-color: var(--mp-blue);
   background: linear-gradient(135deg, color-mix(in srgb, var(--mp-blue) 12%, transparent), transparent), var(--surface-0);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-blue) 22%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-blue) 20%, transparent);
 }
 
-/* Simulation parameters header */
-.merge-pressure__controls-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-  margin-bottom: -12px;
-}
-
-.merge-pressure__controls-header h3 {
-  margin: 0;
-  font-size: 1.15rem;
-  color: var(--text-primary);
-  font-weight: 800;
-}
-
-.merge-pressure__controls-tip {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  background: color-mix(in srgb, var(--surface-1) 85%, #e3f2fd);
-  padding: 6px 12px;
-  border-radius: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 1px dashed color-mix(in srgb, var(--mp-blue) 30%, transparent);
-}
-
-.merge-pressure__link-btn {
-  background: none;
-  border: none;
-  color: var(--mp-blue);
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 0;
-  font: inherit;
-}
-
-.merge-pressure__link-btn:hover {
-  color: color-mix(in srgb, var(--mp-blue) 80%, #000);
-}
-
-.merge-pressure__controls {
+.merge-pressure__legend {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  padding: 14px;
+  padding: 12px;
   border: 1px solid var(--surface-3);
-  border-radius: 18px;
+  border-radius: 14px;
   background: var(--surface-0);
 }
 
-.merge-pressure__control {
+.merge-pressure__legend-item {
   display: grid;
-  gap: 6px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 2px 9px;
+  align-items: center;
+  min-height: 78px;
   padding: 10px;
   border: 1px solid var(--surface-3);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface-1);
-  transition: all 0.2s ease;
 }
 
-.merge-pressure__control.is-disabled {
-  opacity: 0.65;
-  background: var(--surface-2);
-  border-style: dashed;
-  pointer-events: none;
-}
-
-.merge-pressure__control-hdr {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.merge-pressure__control span {
-  color: var(--text-secondary);
-  font-size: 0.64rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.merge-pressure__control-lock {
-  font-size: 0.72rem;
-  opacity: 0.72;
-}
-
-.merge-pressure__control strong {
-  color: var(--text-primary);
-  font-size: 1rem;
-}
-
-.merge-pressure__control input {
-  width: 100%;
-  accent-color: var(--mp-blue);
-}
-
-.merge-pressure__chart-shell {
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--mp-chart-border);
-  background:
-    linear-gradient(160deg, var(--mp-chart-bg-start), var(--mp-chart-bg-mid) 48%, var(--mp-chart-bg-end));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.merge-pressure__chart.stream-physics-frame,
-.merge-pressure__chart-shell .stream-physics-frame {
-  background: transparent;
-}
-
-.merge-pressure__tooltip strong {
+.merge-pressure__legend-item i {
+  grid-row: span 2;
   display: block;
-  margin-bottom: 4px;
+  place-self: center;
+}
+
+.merge-pressure__legend-item i.is-core {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f8fafc;
+  border-radius: 999px;
+  background: #0f766e;
+}
+
+.merge-pressure__legend-item i.is-trait {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #020617;
+  border-radius: 3px;
+  background: var(--mp-red);
+}
+
+.merge-pressure__legend-item i.is-gate {
+  width: 6px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--mp-blue);
+}
+
+.merge-pressure__legend-item i.is-capacity {
+  width: 25px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--mp-gold) 62%, var(--surface-3) 62%);
+}
+
+.merge-pressure__legend-item i.is-feature {
+  width: 25px;
+  height: 25px;
+  border: 2px solid var(--mp-green);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--mp-green) 22%, transparent);
+  box-shadow: inset 0 0 0 5px var(--surface-1);
+}
+
+.merge-pressure__legend-item strong {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.merge-pressure__legend-item span {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .merge-pressure__workbench {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 18px;
-  align-items: stretch;
-  padding: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.34fr);
+  gap: 16px;
+  align-items: start;
+  padding: 16px;
   border: 1px solid var(--surface-3);
-  border-radius: 20px;
+  border-radius: 18px;
   background: var(--surface-0);
-  box-shadow: 0 20px 60px color-mix(in srgb, #22304a 10%, transparent);
+  box-shadow: 0 18px 50px color-mix(in srgb, #22304a 10%, transparent);
 }
 
 .merge-pressure__chart-shell {
   position: relative;
   overflow: hidden;
-  min-height: 610px;
-  border: 1px solid var(--surface-3);
-  border-radius: 16px;
+  min-height: 540px;
+  border: 1px solid var(--mp-chart-border);
+  border-radius: 12px;
   background:
     linear-gradient(90deg, var(--mp-chart-bg-start) 0%, var(--mp-chart-bg-start) 42%, var(--mp-chart-bg-mid) 58%, var(--mp-chart-bg-end) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.merge-pressure__chart-shell .stream-physics-frame {
-  position: relative;
-  z-index: 1;
+.merge-pressure__chart-shell .stream-physics-frame,
+.merge-pressure__chart.stream-physics-frame {
+  background: transparent;
 }
 
-.merge-pressure__chart-shell .stream-physics-frame canvas {
-  position: relative;
-  z-index: 1;
-  display: block;
-}
-
-.merge-pressure__underlay,
 .merge-pressure__overlay {
   position: absolute;
   inset: 0;
@@ -338,139 +258,125 @@
   pointer-events: none;
 }
 
-.merge-pressure__underlay {
-  z-index: 0;
-}
-
-.merge-pressure__overlay {
-  z-index: 2;
-}
-
-.merge-pressure__stage-label {
-  fill: var(--mp-chart-text);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.09em;
+.merge-pressure__route,
+.merge-pressure__return-route {
+  fill: none;
+  stroke: var(--mp-chart-muted);
+  stroke-linecap: round;
+  opacity: 0.46;
 }
 
 .merge-pressure__route {
-  fill: none;
-  stroke: var(--mp-chart-grid);
   stroke-width: 4;
-  stroke-linecap: round;
-  stroke-dasharray: 2 10;
-  opacity: 0.56;
+  stroke-dasharray: 12 12;
 }
 
-.merge-pressure__portal {
-  fill: none;
-  stroke: var(--mp-red);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-dasharray: 5 8;
-  opacity: 0.64;
-}
-
-.merge-pressure__review-zone {
-  fill: url("#merge-pressure-review");
+.merge-pressure__return-route {
   stroke: var(--mp-red);
   stroke-width: 2;
-  stroke-dasharray: 6 6;
+  stroke-dasharray: 5 7;
+  opacity: 0.72;
 }
 
-.merge-pressure__reviewer {
-  fill: var(--mp-chart-text);
-  opacity: 0.62;
+.merge-pressure__gate rect {
+  opacity: 0.24;
 }
 
-.merge-pressure__pressure-label,
-.merge-pressure__annotation {
-  fill: var(--mp-chart-text);
-  font-size: 11px;
+.merge-pressure__gate text {
+  fill: var(--mp-chart-muted);
+  font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
-.merge-pressure__annotation.is-gap {
-  fill: var(--mp-red);
+.merge-pressure__annotation text {
+  fill: var(--mp-chart-muted);
+  font-size: 10px;
+  font-weight: 800;
 }
 
-.merge-pressure__feature-tether {
-  stroke: var(--mp-chart-grid);
+.merge-pressure__feature-socket circle {
+  fill: color-mix(in srgb, var(--mp-green) 12%, var(--mp-chart-bg-end));
+  stroke: color-mix(in srgb, var(--mp-green) 68%, var(--mp-chart-muted));
   stroke-width: 2;
-  stroke-dasharray: 4 6;
+  stroke-dasharray: 5 5;
 }
 
-.merge-pressure__feature-bay,
-.merge-pressure__app-socket {
-  fill: var(--mp-chart-panel);
-  stroke: var(--mp-chart-border);
-  stroke-width: 2;
-  transition: all 0.3s ease;
+.merge-pressure__feature-socket.is-complete circle {
+  fill: color-mix(in srgb, var(--mp-green) 32%, var(--mp-chart-bg-end));
+  stroke: var(--mp-green);
+  stroke-dasharray: none;
 }
 
-.merge-pressure__feature-bay.is-complete,
-.merge-pressure__app-socket.is-complete {
-  fill: var(--mp-socket-shipped-fill);
-  stroke: var(--mp-socket-shipped-stroke);
-}
-
-.merge-pressure__feature-bay.is-blocked,
-.merge-pressure__app-socket.is-blocked {
-  fill: var(--mp-socket-blocked-fill);
-  stroke: var(--mp-socket-blocked-stroke);
-}
-
-.merge-pressure__feature-label,
-.merge-pressure__socket-label {
-  fill: var(--mp-chart-text);
-  font-size: 12px;
+.merge-pressure__feature-socket text {
+  fill: var(--mp-chart-muted);
+  font-size: 9px;
   font-weight: 900;
 }
 
 .merge-pressure__readout {
   display: grid;
   align-content: start;
-  gap: 14px;
-  padding: 20px;
+  gap: 13px;
+  padding: 18px;
   border: 1px solid var(--surface-3);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--surface-1);
 }
 
 .merge-pressure__readout h2 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 1.45rem;
+  font-size: 1.35rem;
   line-height: 1.25;
 }
 
-.merge-pressure__regime-desc {
+.merge-pressure__readout p {
   margin: 0;
   color: var(--text-secondary);
   line-height: 1.5;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
+}
+
+.merge-pressure__regime-callout {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--mp-blue) 34%, var(--surface-3));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-0) 78%, var(--mp-blue) 8%);
+}
+
+.merge-pressure__regime-callout strong {
+  color: var(--text-primary);
+  font-size: 0.94rem;
+  line-height: 1.35;
+}
+
+.merge-pressure__regime-callout span {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 
 .merge-pressure__metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .merge-pressure__metric {
   display: grid;
-  gap: 3px;
+  gap: 4px;
   padding: 10px;
   border: 1px solid var(--surface-3);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface-0);
 }
 
 .merge-pressure__metric.is-warning {
-  border-color: color-mix(in srgb, var(--mp-red) 50%, var(--surface-3));
-  background: color-mix(in srgb, var(--surface-0) 84%, #ffe7df);
+  border-color: color-mix(in srgb, var(--mp-red) 52%, var(--surface-3));
+  background: color-mix(in srgb, var(--surface-1) 88%, var(--mp-red) 12%);
 }
 
 .merge-pressure__metric span {
@@ -483,117 +389,133 @@
 
 .merge-pressure__metric strong {
   color: var(--text-primary);
-  font-size: 1.28rem;
+  font-size: 1.14rem;
   line-height: 1;
 }
 
 .merge-pressure__metric small {
   color: var(--text-secondary);
   font-size: 0.74rem;
+  line-height: 1.35;
 }
 
-.merge-pressure__tooltip {
+.merge-pressure__ledger {
   display: grid;
-  gap: 3px;
-  min-width: 180px;
-  padding: 9px 11px;
-  border: 1px solid var(--mp-tooltip-border);
-  border-radius: var(--semiotic-tooltip-radius, 8px);
-  background: var(--mp-tooltip-bg);
-  color: var(--mp-tooltip-text);
-  box-shadow: var(--semiotic-tooltip-shadow);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.merge-pressure__tooltip div {
-  color: var(--text-secondary);
-}
-
-.merge-pressure__tooltip strong {
-  color: var(--text-primary);
-}
-
-/* Feature Cards Strip */
-.merge-pressure__feature-strip {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.merge-pressure__feature-card {
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  gap: 4px;
-  min-height: 88px;
-  padding: 13px;
+  gap: 7px;
+  padding: 12px;
   border: 1px solid var(--surface-3);
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--surface-0);
 }
 
-.merge-pressure__feature-card strong,
-.merge-pressure__need-card strong {
-  color: var(--text-primary);
-}
-
-.merge-pressure__feature-card span,
-.merge-pressure__feature-card small,
-.merge-pressure__need-card span {
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-.merge-pressure__feature-card small {
-  font-size: 0.78rem;
-}
-
 .merge-pressure__feature-progress {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-0);
+}
+
+.merge-pressure__feature-progress > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.merge-pressure__feature-progress strong,
+.merge-pressure__feature-progress b {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+}
+
+.merge-pressure__feature-progress span {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.merge-pressure__feature-track {
+  position: relative;
+  overflow: hidden;
+  height: 9px;
+  border-radius: 4px;
+  background: var(--surface-3);
+}
+
+.merge-pressure__feature-track i {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 5px;
+  inset: 0 auto 0 0;
+  display: block;
+  min-width: 0;
+  border-radius: inherit;
   background: var(--mp-blue);
+  transition: width 0.25s ease;
 }
 
-.merge-pressure__feature-card.is-shipped .merge-pressure__feature-progress,
-.merge-pressure__feature-card.is-complete .merge-pressure__feature-progress {
-  background: var(--mp-gold);
+.merge-pressure__feature-progress.is-complete {
+  border-color: color-mix(in srgb, var(--mp-green) 62%, var(--surface-3));
 }
 
-.merge-pressure__feature-card.is-blocked {
-  border-color: color-mix(in srgb, var(--mp-red) 48%, var(--surface-3));
-}
-
-.merge-pressure__feature-card.is-blocked .merge-pressure__feature-progress {
-  background: var(--mp-red);
-}
-
-.merge-pressure__feature-card.is-integrating .merge-pressure__feature-progress {
+.merge-pressure__feature-progress.is-complete .merge-pressure__feature-track i {
   background: var(--mp-green);
 }
 
-.merge-pressure__feature-card.is-assembling .merge-pressure__feature-progress {
-  background: var(--mp-gold);
+.merge-pressure__ledger > strong {
+  color: var(--text-primary);
+  font-size: 0.92rem;
 }
 
+.merge-pressure__ledger > div {
+  display: grid;
+  grid-template-columns: 62px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.merge-pressure__ledger span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--mp-quality) 18%, #ffffff);
+  background: color-mix(in srgb, var(--mp-quality) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mp-quality) 62%, transparent);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.merge-pressure__ledger b {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
+.merge-pressure__ledger small {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+}
+
+.merge-pressure__event-log,
 .merge-pressure__explanation {
   display: grid;
-  grid-template-columns: minmax(240px, 0.8fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(230px, 0.72fr) minmax(0, 1.6fr);
   gap: 22px;
   align-items: start;
-  padding: 24px;
+  padding: 22px;
   border: 1px solid var(--surface-3);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--surface-1);
 }
 
+.merge-pressure__event-log h2,
 .merge-pressure__explanation h2 {
   margin: 6px 0 0;
   color: var(--text-primary);
-  font-size: clamp(1.35rem, 3vw, 2.1rem);
-  line-height: 1.08;
+  font-size: clamp(1.28rem, 2.5vw, 1.86rem);
+  line-height: 1.1;
 }
 
 .merge-pressure__explanation p {
@@ -602,199 +524,70 @@
   line-height: 1.58;
 }
 
-.merge-pressure__needs {
+.merge-pressure__event-list {
   display: grid;
-  gap: 14px;
-  padding: 20px;
+  gap: 8px;
+}
+
+.merge-pressure__event-list article,
+.merge-pressure__needs-grid > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
   border: 1px solid var(--surface-3);
-  border-radius: 18px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--mp-blue) 8%, transparent), transparent), var(--surface-0);
+  border-radius: 10px;
+  background: var(--surface-0);
+}
+
+.merge-pressure__event-list strong,
+.merge-pressure__needs-grid strong {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.merge-pressure__event-list span,
+.merge-pressure__needs-grid span {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.4;
 }
 
 .merge-pressure__needs-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  margin-top: 12px;
 }
 
-.merge-pressure__needs-grid > div,
-.merge-pressure__feature-list > div {
-  display: grid;
-  gap: 4px;
-  padding: 12px;
-  border: 1px solid var(--surface-3);
-  border-radius: 12px;
-  background: var(--surface-1);
-}
-
-.merge-pressure__needs-grid strong,
-.merge-pressure__feature-list strong {
-  font-size: 0.92rem;
-}
-
-.merge-pressure__needs-grid span,
-.merge-pressure__feature-list span {
-  color: var(--text-secondary);
-  font-size: 0.88rem;
-  line-height: 1.4;
-}
-
-.merge-pressure__feature-list {
-  display: grid;
-  gap: 8px;
-  margin: 14px 0;
-}
-
-.merge-pressure__feature-list > div.is-complete {
-  border-color: color-mix(in srgb, var(--semiotic-success, #16a34a) 45%, var(--surface-3));
-  background: color-mix(in srgb, var(--semiotic-success, #16a34a) 10%, var(--surface-1));
-}
-
-.merge-pressure__feature-list > div.is-almost {
-  border-color: color-mix(in srgb, var(--semiotic-warning, #f59e0b) 50%, var(--surface-3));
-  background: color-mix(in srgb, var(--semiotic-warning, #f59e0b) 12%, var(--surface-1));
-}
-
-.merge-pressure__legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  margin-top: 8px;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-}
-
-.merge-pressure__legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.merge-pressure__legend i {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  display: inline-block;
-}
-
-.merge-pressure__need-card {
-  display: grid;
-  gap: 6px;
-  padding: 13px;
-  border: 1px solid var(--surface-3);
-  border-radius: 13px;
-  background: var(--surface-1);
-}
-
-.merge-pressure__need-card span {
-  font-size: 0.88rem;
-}
-
-/* Stepper Next Button */
-.merge-pressure__next-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 18px;
-  border: none;
-  border-radius: 12px;
-  background: var(--mp-blue);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  margin-top: 8px;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--mp-blue) 30%, transparent);
-}
-
-.merge-pressure__next-btn:hover {
-  background: color-mix(in srgb, var(--mp-blue) 85%, #000);
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--mp-blue) 45%, transparent);
-}
-
-.merge-pressure__next-btn:active {
-  transform: translateY(0);
-}
-
-/* Annotation Callout Cards inside SVG */
-.merge-pressure__annotation-card {
-  padding: 10px 12px;
-  border: 1px solid var(--surface-3);
-  border-left-width: 4px;
-  border-radius: 10px;
-  background: var(--mp-tooltip-bg);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--mp-ink) 12%, transparent);
-  font-family: inherit;
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--text-primary);
-}
-
-.merge-pressure__annotation-card strong {
-  display: block;
-  margin-bottom: 4px;
-  font-weight: 800;
-  text-transform: uppercase;
-  font-size: 10px;
-  letter-spacing: 0.05em;
-}
-
-.merge-pressure__annotation-card p {
-  margin: 0;
-  color: var(--text-secondary);
-}
-
-/* Sparkle Halo Animation */
-@keyframes mp-shimmer-opacity {
-  0% { opacity: 0.4; }
-  50% { opacity: 0.85; }
-  100% { opacity: 0.4; }
-}
-
-.merge-pressure__sparkle-halo {
-  animation: mp-shimmer-opacity 2s infinite ease-in-out;
-}
-
-/* Responsiveness overrides */
 @media (max-width: 1040px) {
-  .merge-pressure__presets {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .merge-pressure__presets,
+  .merge-pressure__legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .merge-pressure__controls {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .merge-pressure__workbench,
+  .merge-pressure__event-log,
+  .merge-pressure__explanation {
+    grid-template-columns: 1fr;
   }
 
-  .merge-pressure__needs-grid,
-  .merge-pressure__feature-strip {
+  .merge-pressure__needs-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 900px) {
-  .merge-pressure__hero,
-  .merge-pressure__workbench,
-  .merge-pressure__explanation {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 640px) {
+  .merge-pressure__hero,
   .merge-pressure__presets,
-  .merge-pressure__controls,
+  .merge-pressure__legend,
   .merge-pressure__metrics,
-  .merge-pressure__needs-grid,
-  .merge-pressure__feature-strip {
+  .merge-pressure__needs-grid {
     grid-template-columns: 1fr;
   }
 
   .merge-pressure__hero,
   .merge-pressure__workbench,
-  .merge-pressure__explanation,
-  .merge-pressure__needs {
+  .merge-pressure__event-log,
+  .merge-pressure__explanation {
     padding: 16px;
     border-radius: 14px;
   }

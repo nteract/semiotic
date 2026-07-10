@@ -191,7 +191,12 @@ export type { PhysicsPileChartProps } from "./physics/PhysicsPileChart"
 export { CollisionSwarmChart } from "./physics/CollisionSwarmChart"
 export type { CollisionSwarmChartProps } from "./physics/CollisionSwarmChart"
 
-export { GauntletChart, GuantletChart } from "./physics/GauntletChart"
+export {
+  GauntletChart,
+  GuantletChart,
+  planGauntletPropertyWork,
+  replaceGauntletNegative
+} from "./physics/GauntletChart"
 export type {
   GauntletChartProps,
   GauntletEffect,
@@ -200,11 +205,14 @@ export type {
   GauntletEventLogItem,
   GauntletGate,
   GauntletLayout,
+  GauntletNegativeReplacementOptions,
   GauntletPopSpec,
   GauntletProjectPlacement,
   GauntletProjectState,
   GauntletPropertyForceContext,
-  GauntletPropertyDefinition
+  GauntletPropertyDefinition,
+  GauntletPropertyWorkPlan,
+  GauntletPropertyWorkPlanOptions
 } from "./physics/GauntletChart"
 export {
   physicsProcessBoundaryColliders,
@@ -219,35 +227,59 @@ export type {
 } from "./physics/physicsProcessPrimitives"
 export {
   absorbRegion,
-  aggregateRegionCounts,
   bodyGroupSpec,
   capacitatedRegion,
   chargeGateRegion,
   forceFieldRegion,
-  groupCompletionRows,
   membraneRegion,
   portalRegion,
   pressureFieldRegion,
   processLaneWalls,
   processStageLayout,
-  regionCountsToProjectionRows,
+  processStageRegions,
   routeSurfaceRegion,
   stageTargetInVolume
 } from "../recipes/processPhysics"
+export {
+  aggregateRegionCounts,
+  groupCompletionRows,
+  regionCountsToProjectionRows
+} from "../recipes/processAggregates"
+export { processVolumePolygons } from "../recipes/processVolumeGeometry"
+export {
+  createProcessJourneyLedger,
+  processJourneyRows,
+  updateProcessJourney
+} from "../recipes/processJourney"
 export type {
   BodyGroupSpec,
   BodyGroupSpecOptions,
   ProcessMembraneDef,
   ProcessRegionBaseOptions,
+  ProcessStageRegionOptions,
   ProcessStageDef,
   ProcessVolumeLayout,
   ProcessVolumeLayoutOptions,
   ProcessVolumeMembraneBand,
   ProcessVolumeShape,
-  ProcessVolumeStageBand,
+  ProcessVolumeStageBand
+} from "../recipes/processPhysics"
+export type {
   RegionCountBucket,
   RegionCountMap
-} from "../recipes/processPhysics"
+} from "../recipes/processAggregates"
+export type {
+  ProcessVolumePoint,
+  ProcessVolumePolygon,
+  ProcessVolumePolygonRole
+} from "../recipes/processVolumeGeometry"
+export type {
+  ProcessJourneyEntityState,
+  ProcessJourneyLedger,
+  ProcessJourneyRow,
+  ProcessJourneyStage,
+  ProcessJourneyUpdateOptions
+} from "../recipes/processJourney"
 
 export { PhysicalFlowChart } from "./physics/PhysicalFlowChart"
 export type { PhysicalFlowChartProps } from "./physics/PhysicalFlowChart"

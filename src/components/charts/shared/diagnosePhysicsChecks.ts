@@ -277,14 +277,6 @@ export function checkPhysicsConfig(
   }
 
   if (component === "GauntletChart") {
-    if (!Array.isArray(props.positiveProperties) || props.positiveProperties.length === 0) {
-      out.push({
-        severity: "error",
-        code: "GAUNTLET_MISSING_POSITIVE_PROPERTIES",
-        message: `GauntletChart requires positiveProperties definitions for tethered lift/value bodies.`,
-        fix: `Provide positiveProperties={[{ id: "homes", label: "Homes", buoyancy: 2 }]}.`,
-      })
-    }
     if (!Array.isArray(props.negativeProperties)) {
       out.push({
         severity: "warning",

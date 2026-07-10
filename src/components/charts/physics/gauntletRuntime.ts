@@ -12,24 +12,22 @@ import {
   buildProjectSpawns,
   clampGauntletPoint,
   defaultPlacement,
-  expandIds,
   featureSlot,
   projectCoreId,
   projectNegativeId,
   projectPositiveId,
-  projectRouteTarget,
   resolvePlacement,
-  resolvePopNegativeEntries,
-  resolvePopPositiveIds,
   type GauntletBodyDatum,
   type GauntletCoreBodyFn,
   type GauntletEffect,
   type GauntletEvent,
   type GauntletLayout,
+  type GauntletProjectPlacement,
   type GauntletProjectPlacementFn,
   type GauntletProjectState,
   type GauntletPropertyDefinition
 } from "./gauntletPhysics"
+import { expandIds, resolvePopNegativeEntries, resolvePopPositiveIds } from "./gauntletEffects"
 
 function isProjectNegativeBody<TDatum extends Datum>(
   body: PhysicsBodyState,
@@ -213,8 +211,9 @@ export function computeGauntletBodyForce<TDatum extends Datum>(options: {
     }
   }
   const projectEventsForRoute = projectEvents(project)
+  const projectElapsed = Math.max(0, elapsed - (project.startedAt ?? 0))
   const target = projectRouteTarget(
-    elapsed,
+    projectElapsed,
     project,
     layout,
     placement,
@@ -335,4 +334,74 @@ export function spawnBodiesForGauntletEffect<TDatum extends Datum>(options: {
       radius: (property?.radius ?? 7) + 3
     })
   })
+}
+
+export function projectRouteTarget<TDatum extends Datum>(
+  elapsed: number,
+  project: GauntletProjectState<TDatum>,
+  layout: GauntletLayout,
+  placement: Required<GauntletProjectPlacement>,
+  events: readonly GauntletEvent[],
+  gateById: Map<string, GauntletLayout["gates"][number]>,
+  terminalBehavior: "outcome" | "hold-last"
+): { x: number; y: number } {
+  if (project.killed) return { x: project.metrics.lastX ?? placement.graveyardX, y: placement.graveyardY }
+  const finalEvent = events[events.length - 1]
+  if (!finalEvent) return { x: placement.socketX, y: placement.routeY }
+  const waitingForCapacity = events.find((event) => {
+    if (event.time > elapsed || project.eventsApplied.includes(event.id)) {
+      return false
+    }
+    return Boolean(event.gateId && gateById.get(event.gateId)?.capacity)
+  })
+  const routeElapsed = waitingForCapacity
+    ? Math.min(elapsed, waitingForCapacity.time)
+    : elapsed
+  const successful = project.outcome === "built" || project.outcome === "built_diminished"
+  if (routeElapsed > finalEvent.time + 0.85) {
+    if (terminalBehavior === "hold-last") {
+      const gate = finalEvent.gateId ? gateById.get(finalEvent.gateId) : undefined
+      return {
+        x: finalEvent.routeX ?? gate?.x ?? placement.socketX,
+        y: finalEvent.routeY ?? placement.routeY
+      }
+    }
+    return successful
+      ? { x: placement.socketX, y: placement.socketY }
+      : { x: placement.graveyardX, y: placement.graveyardY - 14 }
+  }
+  const burden =
+    project.delay * 0.85 +
+    project.negativeIds.length * 12 +
+    (project.poppedPositiveIds.length + project.missingPositiveIds.length) * 8
+  const keyframes = [
+    { time: 0, x: placement.startX, y: placement.startY },
+    ...events.map((event) => {
+      const gate = event.gateId ? gateById.get(event.gateId) : undefined
+      return {
+        time: event.time,
+        x: event.routeX ?? gate?.x ?? placement.startX,
+        y: event.routeY ?? placement.routeY + Math.min(180, burden) * 0.28
+      }
+    })
+  ].sort((a, b) => a.time - b.time)
+  let previous = keyframes[0]
+  let next = keyframes[keyframes.length - 1]
+  for (let index = 1; index < keyframes.length; index += 1) {
+    if (routeElapsed <= keyframes[index].time) {
+      next = keyframes[index]
+      break
+    }
+    previous = keyframes[index]
+  }
+  const span = Math.max(0.1, next.time - previous.time)
+  const tRaw = Math.max(0, Math.min(1, (routeElapsed - previous.time) / span))
+  const t = tRaw * tRaw * (3 - 2 * tRaw)
+  return {
+    x: previous.x + (next.x - previous.x) * t,
+    y:
+      previous.y +
+      (next.y - previous.y) * t +
+      Math.sin(routeElapsed * 2.6) * 7
+  }
 }

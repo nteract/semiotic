@@ -7,7 +7,10 @@
  * other stateful process rules tick live.
  */
 
-import type { PhysicsBodyState } from "./PhysicsKernel"
+import type {
+  PhysicsBodyState,
+  PhysicsColliderBodyFilter
+} from "./PhysicsKernel"
 import type {
   PhysicsPipelineControlSurface,
   PhysicsPipelineTickResult
@@ -23,8 +26,9 @@ export interface PhysicsControllerTickContext {
   result: PhysicsPipelineTickResult
   controls: PhysicsPipelineControlSurface
   /**
-   * Seconds advanced this frame (pipeline fixed-dt accumulation may step more
-   * than once; prefer result.elapsedDelta when present, else dt).
+   * Exact simulated seconds advanced by the kernel for this callback:
+   * `result.steps * fixedDt`. This is zero when a pipeline tick does not run a
+   * fixed substep, so time-based controller work must not advance on that tick.
    */
   dt: number
   elapsed: number
@@ -32,9 +36,7 @@ export interface PhysicsControllerTickContext {
    * Region membership for a body (active region ids, charges, attributes).
    * Backed by StreamPhysicsFrame region state.
    */
-  getRegionState: (
-    bodyId: string
-  ) => StreamPhysicsBodyRegionState | undefined
+  getRegionState: (bodyId: string) => StreamPhysicsBodyRegionState | undefined
 }
 
 export interface PhysicsController {
@@ -45,11 +47,16 @@ export interface PhysicsController {
    * Capacity queues and continuous process rules should set this true.
    */
   continuous?: boolean
-  /** Called after each store.tick (and after region force application). */
+  /**
+   * Called after each store tick and continuous-force application. It may run
+   * with `context.dt === 0` when the frame only synchronizes runtime state.
+   */
   tick: (context: PhysicsControllerTickContext) => void
   /**
    * Optional force contribution composed into StreamPhysicsFrame bodyForces.
-   * Return null to skip this body.
+   * The frame integrates the returned vector over simulated fixed-step time
+   * and applies no impulse when the tick advances zero substeps. Return null to
+   * skip this body.
    */
   bodyForce?: (
     context: StreamPhysicsBodyForceContext
@@ -99,7 +106,8 @@ function addVectors(
 
 /**
  * Compose controllers into a single continuous flag, bodyForce, and onTick.
- * Call onTick from StreamPhysicsFrame after each pipeline step.
+ * Call onTick from StreamPhysicsFrame after each pipeline tick; `ctx.dt`
+ * accounts for every fixed substep completed by that tick.
  */
 export function composePhysicsControllers(
   controllers: readonly PhysicsController[] | undefined | null
@@ -152,12 +160,49 @@ function readUnitWork(
   return 1
 }
 
+function valueAtPath(source: unknown, path: string): unknown {
+  if (!path) return undefined
+  let current = source
+  for (const part of path.split(".")) {
+    if (current == null || typeof current !== "object") return undefined
+    current = (current as Record<string, unknown>)[part]
+  }
+  return current
+}
+
+function bodyMatchesFilter(
+  body: PhysicsBodyState,
+  filter: PhysicsColliderBodyFilter | undefined
+): boolean {
+  if (!filter) return true
+  if (typeof filter === "function") return filter(body)
+
+  const value = valueAtPath(body, filter.property)
+  if ("equals" in filter && !Object.is(value, filter.equals)) return false
+  if ("notEquals" in filter && Object.is(value, filter.notEquals)) return false
+  if (
+    filter.oneOf &&
+    !filter.oneOf.some((candidate) => Object.is(value, candidate))
+  ) {
+    return false
+  }
+  if (
+    filter.notOneOf &&
+    filter.notOneOf.some((candidate) => Object.is(value, candidate))
+  ) {
+    return false
+  }
+  return true
+}
+
 export interface CapacityQueueControllerOptions {
   id?: string
   /** Must match a StreamPhysicsRegionEffect id (sensor region). */
   regionId: string
   /** Work units processed per second while the queue is non-empty. */
   unitsPerSecond: number
+  /** Only matching bodies may enter the queue. Uses collider body-filter semantics. */
+  bodyFilter?: PhysicsColliderBodyFilter
   /**
    * Work-units per body. String form reads `body.datum[field]`.
    * Defaults to datum.work / reviewWork / value, then 1.
@@ -212,6 +257,7 @@ export function createCapacityQueueController(
   const maxQueue = options.maxQueue ?? Number.POSITIVE_INFINITY
   const releaseImpulse = options.releaseImpulse ?? { x: 90, y: 0 }
   const queue = new Map<string, QueueEntry>()
+  const processedInRegion = new Set<string>()
   let sequence = 0
   /** bodyId → FIFO rank; rebuilt each tick for O(1) bodyForce lookup. */
   let rankByBodyId = new Map<string, number>()
@@ -224,10 +270,7 @@ export function createCapacityQueueController(
   ): boolean {
     const state = getRegionState(bodyId)
     if (!state) return false
-    return (
-      state.activeRegionIds.includes(regionId) ||
-      state.regionIds.includes(regionId)
-    )
+    return state.activeRegionIds.includes(regionId)
   }
 
   return {
@@ -236,12 +279,15 @@ export function createCapacityQueueController(
     tick: (ctx) => {
       const bodies = ctx.controls.readBodies()
       const bodyById = new Map<string, PhysicsBodyState>()
+      const active = new Set<string>()
       const present = new Set<string>()
       for (const body of bodies) {
         bodyById.set(body.id, body)
         if (!inRegion(body.id, ctx.getRegionState)) continue
+        active.add(body.id)
+        if (!bodyMatchesFilter(body, options.bodyFilter)) continue
         present.add(body.id)
-        if (!queue.has(body.id)) {
+        if (!queue.has(body.id) && !processedInRegion.has(body.id)) {
           if (queue.size >= maxQueue) continue
           const total = readUnitWork(body, options.unitAccessor)
           queue.set(body.id, {
@@ -255,6 +301,9 @@ export function createCapacityQueueController(
 
       for (const id of queue.keys()) {
         if (!present.has(id)) queue.delete(id)
+      }
+      for (const id of processedInRegion) {
+        if (!active.has(id)) processedInRegion.delete(id)
       }
 
       const ordered = Array.from(queue.values()).sort(
@@ -278,6 +327,7 @@ export function createCapacityQueueController(
         if (entry.remaining > 1e-6) continue
 
         queue.delete(entry.bodyId)
+        processedInRegion.add(entry.bodyId)
         processedCount += 1
         const body = bodyById.get(entry.bodyId)
         if (!body) continue
@@ -377,9 +427,7 @@ export function createPortalController(options: {
       const bodies = ctx.controls.readBodies()
       for (const body of bodies) {
         const state = ctx.getRegionState(body.id)
-        const inside =
-          state?.activeRegionIds.includes(options.fromRegionId) ||
-          state?.regionIds.includes(options.fromRegionId)
+        const inside = state?.activeRegionIds.includes(options.fromRegionId)
         if (!inside) {
           seen.delete(body.id)
           continue

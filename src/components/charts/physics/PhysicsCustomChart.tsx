@@ -88,7 +88,9 @@ export interface PhysicsCustomLayoutContext<
 export interface PhysicsCustomLayoutResult {
   bodies?: PhysicsQueuedSpawn[]
   initialSpawns?: PhysicsQueuedSpawn[]
+  /** Fresh collider geometry replaces the live world without resetting bodies. */
   colliders?: PhysicsColliderSpec[]
+  /** Fresh sensor geometry replaces the live world without resetting bodies. */
   sensors?: PhysicsColliderSpec[]
   constraints?: PhysicsSpringSpec[]
   config?: PhysicsPipelineConfig
@@ -133,9 +135,10 @@ export interface PhysicsCustomChartProps<
   layout: PhysicsCustomLayout<TDatum, TConfig>
   /**
    * Interaction / style config passed as `ctx.config`. Changing only
-   * `layoutConfig` re-runs the layout for regionEffects, controllers, overlays,
-   * and bodyStyle — it does **not** re-create the physics store or re-enqueue
-   * initial spawns (topology is keyed by data + size + layout identity).
+   * `layoutConfig` re-runs the layout for colliders, sensors, regionEffects,
+   * controllers, overlays, and bodyStyle — it does **not** re-create the
+   * physics store or re-enqueue initial spawns (topology is keyed by data +
+   * size + layout identity). Keep collider/sensor ids stable across updates.
    */
   layoutConfig?: TConfig
   config?: PhysicsPipelineConfig
@@ -403,7 +406,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
   )
   const themeCategorical = theme?.colors?.categorical ?? LIGHT_THEME.colors.categorical
 
-  // Topology key excludes layoutConfig so interaction restyles do not re-enqueue bodies.
+  // layoutConfig may replace live geometry, but never re-enqueues initial bodies.
   const topologyKey = useMemo(
     () =>
       [

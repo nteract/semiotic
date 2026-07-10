@@ -866,6 +866,58 @@ describe("PhysicsPipelineStore", () => {
     ).toHaveLength(1)
   })
 
+  it("replaces live sensor geometry without resetting bodies or duplicate enters", () => {
+    const sensor = (width: number) => ({
+      id: "adaptive-window",
+      sensor: true,
+      shape: { type: "aabb" as const, x: 0, y: 0, width, height: 20 }
+    })
+    const store = new PhysicsPipelineStore({
+      fixedDt: 0.1,
+      maxSubsteps: 1,
+      colliders: [sensor(10)],
+      observation: {
+        sensors: { "adaptive-window": { binId: "adaptive" } }
+      },
+      kernel: {
+        gravity: { x: 0, y: 0 },
+        velocityDamping: 1,
+        sleepAfter: 999
+      }
+    })
+    store.spawnNow(circle("inside", 0, 0))
+    store.spawnNow(circle("newly-inside", 20, 0))
+
+    const initial = store.tick(0.1)
+    const bodyState = stateTuple(store)
+    expect(
+      initial.observations
+        .filter((event) => event.type === "physics-bin-enter")
+        .map((event) => event.bodyId)
+    ).toEqual(["inside"])
+
+    store.setColliders([sensor(50)])
+    const expanded = store.tick(0.1)
+    expect(stateTuple(store)).toEqual(bodyState)
+    expect(
+      expanded.observations
+        .filter((event) => event.type === "physics-bin-enter")
+        .map((event) => event.bodyId)
+    ).toEqual(["newly-inside"])
+
+    store.setColliders([sensor(10)])
+    const contracted = store.tick(0.1)
+    expect(
+      contracted.observations
+        .filter((event) => event.type === "physics-bin-exit")
+        .map((event) => event.bodyId)
+    ).toEqual(["newly-inside"])
+    expect(store.readBodies().map((body) => body.id)).toEqual([
+      "inside",
+      "newly-inside"
+    ])
+  })
+
   it("maps sleep events to settle observations", () => {
     const store = new PhysicsPipelineStore({
       fixedDt: 0.1,

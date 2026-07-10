@@ -9853,7 +9853,8 @@
             },
             "positiveProperties": {
               "type": "array",
-              "description": "Lift/value property definitions attached to each project core."
+              "description": "Optional lift/value property definitions attached to each project core. Omit or pass an empty array for negative-only compound bodies.",
+              "default": []
             },
             "negativeProperties": {
               "type": "array",
@@ -9861,7 +9862,7 @@
             },
             "gates": {
               "type": "array",
-              "description": "Named process gates along the route."
+              "description": "Named process gates along the route, with optional shared FIFO capacity."
             },
             "events": {
               "type": [
@@ -9869,6 +9870,17 @@
                 "function"
               ],
               "description": "Timed gate effects that add/pop properties and set outcomes."
+            },
+            "startTimeAccessor": {
+              "type": [
+                "string",
+                "function"
+              ],
+              "description": "Optional per-project simulation second used as the local event-timeline origin."
+            },
+            "onCapacityChange": {
+              "type": "function",
+              "description": "Receives live queue snapshots for gates that declare capacity."
             },
             "crashDetection": {
               "type": "boolean",
@@ -9909,7 +9921,6 @@
             }
           },
           "required": [
-            "positiveProperties",
             "negativeProperties"
           ]
         }

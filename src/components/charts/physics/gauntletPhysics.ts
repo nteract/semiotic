@@ -12,13 +12,8 @@ import {
   type GauntletAccessors,
   type GauntletBodyDatum,
   type GauntletCoreBodyFn,
-  type GauntletEffect,
-  type GauntletEvent,
-  type GauntletEventContext,
-  type GauntletEventLogItem,
   type GauntletGate,
   type GauntletLayout,
-  type GauntletPopSpec,
   type GauntletProjectPlacement,
   type GauntletProjectPlacementFn,
   type GauntletProjectState,
@@ -41,12 +36,15 @@ export type {
   GauntletEventLogItem,
   GauntletGate,
   GauntletLayout,
+  GauntletNegativeReplacementOptions,
   GauntletPopSpec,
   GauntletProjectPlacement,
   GauntletProjectPlacementFn,
   GauntletProjectState,
   GauntletPropertyDefinition,
   GauntletPropertyForceContext,
+  GauntletPropertyWorkPlan,
+  GauntletPropertyWorkPlanOptions,
   GauntletViabilityFn
 } from "./gauntletTypes"
 
@@ -123,62 +121,6 @@ export function readAccessor<TDatum extends Datum, TValue>(
   return typeof accessor === "function"
     ? accessor(datum, index)
     : (datum[accessor] as TValue) ?? fallback
-}
-
-export function expandIds(input: readonly string[] | Record<string, number> | undefined): string[] {
-  if (!input) return []
-  if (Array.isArray(input)) return [...input]
-  return Object.entries(input).flatMap(([id, count]) =>
-    Array.from({ length: Math.max(0, Math.round(Number(count) || 0)) }, () => id)
-  )
-}
-
-export function isReadonlyStringArray(value: GauntletPopSpec | undefined): value is readonly string[] {
-  return Array.isArray(value)
-}
-
-export function resolvePopSpecIds(
-  attachedIds: readonly string[],
-  popSpec: GauntletPopSpec | undefined
-): string[] {
-  if (!popSpec) return []
-  if (isReadonlyStringArray(popSpec)) return [...popSpec]
-  if (popSpec.ids) return [...popSpec.ids]
-  if (!popSpec.candidates) return []
-  return popSpec.candidates
-    .filter((id: string) => attachedIds.includes(id))
-    .slice(0, popSpec.count ?? 1)
-}
-
-export function resolvePopPositiveIds<TDatum extends Datum>(
-  project: GauntletProjectState<TDatum>,
-  effect: GauntletEffect
-): string[] {
-  return resolvePopSpecIds(project.activePositiveIds, effect.popPositive)
-}
-
-/**
- * Resolve which negative property instances to detach. Returns body indices
- * into `project.negativeIds` so multi-instance loads keep stable body ids.
- */
-export function resolvePopNegativeEntries<TDatum extends Datum>(
-  project: GauntletProjectState<TDatum>,
-  effect: GauntletEffect
-): Array<{ propertyId: string; index: number }> {
-  const wanted = resolvePopSpecIds(project.negativeIds, effect.popNegative)
-  if (!wanted.length) return []
-  const remaining = new Map<string, number>()
-  for (const id of wanted) {
-    remaining.set(id, (remaining.get(id) ?? 0) + 1)
-  }
-  const entries: Array<{ propertyId: string; index: number }> = []
-  project.negativeIds.forEach((propertyId, index) => {
-    const count = remaining.get(propertyId) ?? 0
-    if (count <= 0) return
-    entries.push({ propertyId, index })
-    remaining.set(propertyId, count - 1)
-  })
-  return entries
 }
 
 export function propertyLabel(property: GauntletPropertyDefinition | undefined): string {
@@ -336,6 +278,7 @@ export function createInitialState<TDatum extends Datum>(
     datum,
     delay: 0,
     eventsApplied: [],
+    eventHistory: [],
     killed: false,
     metrics: { ...readAccessor(datum, index, props.metricsAccessor, {}) },
     missingPositiveIds: allPositiveIds.filter((propertyId) => !activePositiveIds.includes(propertyId)),
@@ -343,6 +286,10 @@ export function createInitialState<TDatum extends Datum>(
     outcome: "in_process",
     poppedPositiveIds: [],
     poppedNegativeIds: [],
+    startedAt: Math.max(
+      0,
+      Number(readAccessor(datum, index, props.startTimeAccessor, 0)) || 0
+    ),
     stage: "project filed",
     viability: readAccessor(datum, index, props.initialViability, 100)
   }
@@ -378,7 +325,7 @@ export function buildProjectSpawns<TDatum extends Datum>(
       mass: corePatch.mass ?? 7,
       bodyCollisions: corePatch.bodyCollisions ?? true,
       shape: corePatch.shape ?? { type: "circle", radius: 28 },
-      spawnAt: corePatch.spawnAt,
+      spawnAt: corePatch.spawnAt ?? project.startedAt,
       datum: coreDatum
     }
   ]
@@ -407,7 +354,7 @@ export function buildProjectSpawns<TDatum extends Datum>(
       mass: property.mass ?? 0.75,
       bodyCollisions: false,
       shape: { type: "circle", radius },
-      spawnAt: corePatch.spawnAt,
+      spawnAt: corePatch.spawnAt ?? project.startedAt,
       datum: {
         __gauntlet: true,
         kind: POSITIVE_KIND,
@@ -430,7 +377,15 @@ export function buildProjectSpawns<TDatum extends Datum>(
     const property = negativeProperties.get(propertyId)
     if (!property) return
     spawns.push(
-      buildNegativeSpawn(project, property, index, clampedCore.x, clampedCore.y, layout, corePatch.spawnAt)
+      buildNegativeSpawn(
+        project,
+        property,
+        index,
+        clampedCore.x,
+        clampedCore.y,
+        layout,
+        corePatch.spawnAt ?? project.startedAt
+      )
     )
   })
   return spawns
@@ -452,6 +407,7 @@ export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
   negativeAccessor?: ChartAccessor<TDatum, readonly string[]>
   metricsAccessor?: ChartAccessor<TDatum, Record<string, number>>
   initialViability?: ChartAccessor<TDatum, number>
+  startTimeAccessor?: ChartAccessor<TDatum, number>
   projectPlacement?: GauntletProjectPlacementFn<TDatum>
   coreBody?: GauntletCoreBodyFn<TDatum>
   viability?: GauntletViabilityFn<TDatum>
@@ -472,7 +428,8 @@ export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
     initialViability: options.initialViability,
     metricsAccessor: options.metricsAccessor,
     negativeAccessor: options.negativeAccessor,
-    positiveAccessor: options.positiveAccessor
+    positiveAccessor: options.positiveAccessor,
+    startTimeAccessor: options.startTimeAccessor
   }
   const data = options.data ?? []
   const states = data.map((datum, index) => {
@@ -574,133 +531,3 @@ export function buildNegativeSpawn<TDatum extends Datum>(
   }
 }
 
-/**
- * Pure project-state transition for a single gate effect. Exported so unit
- * tests can cover popPositive / popNegative / add* without driving the
- * full physics tick loop.
- */
-export function applyGauntletEffect<TDatum extends Datum>(
-  project: GauntletProjectState<TDatum>,
-  effect: GauntletEffect,
-  context: GauntletEventContext<TDatum>
-): GauntletProjectState<TDatum> {
-  if (effect.when && !effect.when(context)) return project
-  let next = { ...project }
-  const popIds = resolvePopPositiveIds(next, effect)
-  if (popIds.length) {
-    next = {
-      ...next,
-      activePositiveIds: next.activePositiveIds.filter((id) => !popIds.includes(id)),
-      poppedPositiveIds: Array.from(new Set([...next.poppedPositiveIds, ...popIds]))
-    }
-  }
-  const popNegativeEntries = resolvePopNegativeEntries(next, effect)
-  if (popNegativeEntries.length) {
-    const removeIndices = new Set(popNegativeEntries.map((entry) => entry.index))
-    next = {
-      ...next,
-      negativeIds: next.negativeIds.filter((_, index) => !removeIndices.has(index)),
-      poppedNegativeIds: Array.from(
-        new Set([...next.poppedNegativeIds, ...popNegativeEntries.map((entry) => entry.propertyId)])
-      )
-    }
-  }
-  const addedPositive = expandIds(effect.addPositive)
-  if (addedPositive.length) {
-    next = {
-      ...next,
-      activePositiveIds: Array.from(new Set([...next.activePositiveIds, ...addedPositive])),
-      missingPositiveIds: next.missingPositiveIds.filter((id) => !addedPositive.includes(id))
-    }
-  }
-  const addedNegative = expandIds(effect.addNegative)
-  if (addedNegative.length) {
-    next = {
-      ...next,
-      negativeIds: [...next.negativeIds, ...addedNegative]
-    }
-  }
-  if (effect.delayDelta) {
-    next = { ...next, delay: next.delay + effect.delayDelta }
-  }
-  if (effect.metricsDelta) {
-    const metrics = { ...next.metrics }
-    for (const [key, value] of Object.entries(effect.metricsDelta)) {
-      metrics[key] = Number(metrics[key] ?? 0) + value
-    }
-    next = { ...next, metrics }
-  }
-  if (effect.viabilityDelta) {
-    next = { ...next, viability: next.viability + effect.viabilityDelta }
-  }
-  if (effect.stage) next = { ...next, stage: effect.stage }
-  if (effect.outcome) next = { ...next, outcome: effect.outcome }
-  return next
-}
-
-export function eventLogItem(event: GauntletEvent, effects: readonly GauntletEffect[]): GauntletEventLogItem {
-  return {
-    id: event.id,
-    label: event.label ?? event.id,
-    summary: event.summary ?? effects.find((effect) => effect.summary)?.summary,
-    time: event.time
-  }
-}
-
-export function projectRouteTarget<TDatum extends Datum>(
-  elapsed: number,
-  project: GauntletProjectState<TDatum>,
-  layout: GauntletLayout,
-  placement: Required<GauntletProjectPlacement>,
-  events: readonly GauntletEvent[],
-  gateById: Map<string, GauntletLayout["gates"][number]>,
-  terminalBehavior: "outcome" | "hold-last"
-): { x: number; y: number } {
-  if (project.killed) return { x: project.metrics.lastX ?? placement.graveyardX, y: placement.graveyardY }
-  const finalEvent = events[events.length - 1]
-  if (!finalEvent) return { x: placement.socketX, y: placement.routeY }
-  const successful = project.outcome === "built" || project.outcome === "built_diminished"
-  if (elapsed > finalEvent.time + 0.85) {
-    if (terminalBehavior === "hold-last") {
-      const gate = finalEvent.gateId ? gateById.get(finalEvent.gateId) : undefined
-      return {
-        x: finalEvent.routeX ?? gate?.x ?? placement.socketX,
-        y: finalEvent.routeY ?? placement.routeY
-      }
-    }
-    return successful
-      ? { x: placement.socketX, y: placement.socketY }
-      : { x: placement.graveyardX, y: placement.graveyardY - 14 }
-  }
-  const burden =
-    project.delay * 0.85 +
-    project.negativeIds.length * 12 +
-    (project.poppedPositiveIds.length + project.missingPositiveIds.length) * 8
-  const keyframes = [
-    { time: 0, x: placement.startX, y: placement.startY },
-    ...events.map((event) => {
-      const gate = event.gateId ? gateById.get(event.gateId) : undefined
-      return {
-        time: event.time,
-        x: event.routeX ?? gate?.x ?? placement.startX,
-        y: event.routeY ?? placement.routeY + Math.min(180, burden) * 0.28
-      }
-    })
-  ].sort((a, b) => a.time - b.time)
-  let previous = keyframes[0]
-  let next = keyframes[keyframes.length - 1]
-  for (let index = 1; index < keyframes.length; index += 1) {
-    if (elapsed <= keyframes[index].time) {
-      next = keyframes[index]
-      break
-    }
-    previous = keyframes[index]
-  }
-  const span = Math.max(0.1, next.time - previous.time)
-  const tRaw = Math.max(0, Math.min(1, (elapsed - previous.time) / span))
-  const t = tRaw * tRaw * (3 - 2 * tRaw)
-  return {
-    x: previous.x + (next.x - previous.x) * t,
-    y: previous.y + (next.y - previous.y) * t + Math.sin(elapsed * 2.6) * 7
-  }
-}

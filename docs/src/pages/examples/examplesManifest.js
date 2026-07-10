@@ -25,20 +25,20 @@ export const EXAMPLES = [
   {
     title: "The Stakeholder Journey",
     path: "/examples/stakeholder-journey",
-    eyebrow: "StreamPhysicsFrame · contributor pipeline",
+    eyebrow: "StreamPhysicsFrame · controlled process comparison",
     description:
-      "A stacked physics argument about open-source sustainability: permeable membranes lead to First Impact, charged particles either retain social energy on the right, and a separate OSE Canvas field shows the sustainability cells beneath the journey.",
+      "One deterministic cohort begins from the same path through Habit; a stage ledger measures the invitation relay and feeds Leadership reach back into synchronized process geometry.",
     preview: "stakeholder-journey",
-    badges: ["StreamPhysicsFrame", "Physics", "OSE Canvas"],
+    badges: ["StreamPhysicsFrame", "Stage ledger", "Live geometry"],
   },
   {
     title: "Merge Pressure",
     path: "/examples/merge-pressure",
-    eyebrow: "GauntletChart · review bottlenecks",
+    eyebrow: "GauntletChart · compound PR stream",
     description:
-      "A physics dashboard for AI-assisted delivery: PR bodies stream through CI, review pressure, rework, and merge while feature tethers reveal why almost-done work is not product velocity.",
+      "Staggered compound PRs share finite human review, recirculate through CI, transform attached risks, and accumulate merged points into a Feature.",
     preview: "merge-pressure",
-    badges: ["GauntletChart", "Region effects", "Process physics"],
+    badges: ["GauntletChart", "Shared capacity", "Weighted groups"],
   },
   {
     title: "Not in MY Backyard",

@@ -467,6 +467,14 @@ function SensorScene() {
         one-off impulses, or deterministic settle probes.
       </p>
 
+      <p>
+        Time-based controllers and continuous forces use simulated fixed-step
+        time, not the requested browser-frame delta. A controller receives{" "}
+        <code>ctx.dt = result.steps * fixedDt</code>. A zero-step call can
+        synchronize the frame, but it applies no continuous force and consumes
+        no capacity work.
+      </p>
+
       <CodeBlock
         language="jsx"
         code={`const frameRef = useRef(null)
@@ -481,6 +489,11 @@ frameRef.current?.push({
 })
 
 frameRef.current?.applyImpulse("next-particle", 120, -40)
+const result = frameRef.current?.step(1 / 30)
+const fixedDt = frameRef.current?.snapshot().config.fixedDt
+const simulatedDt = (result?.steps ?? 0) * fixedDt
+
+frameRef.current?.step(0) // synchronization only: simulated dt is zero
 const settledSteps = frameRef.current?.settle(240)
 const bodies = frameRef.current?.getData()
 const snapshot = frameRef.current?.snapshot()`}

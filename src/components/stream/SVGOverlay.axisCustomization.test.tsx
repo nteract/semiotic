@@ -316,4 +316,25 @@ describe("font-size CSS variables", () => {
     expect(landmark).toBeTruthy()
     expect(landmark!.getAttribute("style")).toContain("calc(var(--semiotic-tick-font-size, 12px) + 1px)")
   })
+
+  it("moves the x-axis label below rotated tick labels", () => {
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        axes={[
+          {
+            orient: "bottom",
+            autoRotate: true,
+            tickFormat: (d: number) => `Long stage ${d}`,
+          },
+        ]}
+        xLabel="Event step"
+      />,
+    )
+    const label = container.querySelector("text.semiotic-axis-label") as SVGTextElement | null
+    expect(label).toBeTruthy()
+    expect(label!.getAttribute("y")).toBe(String(baseProps.height + 58))
+  })
 })

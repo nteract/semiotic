@@ -715,6 +715,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
             const maxLabelW = xTicks.reduce((max, t) => Math.max(max, typeof t.label === "string" ? t.label.length * 6.5 : 60), 0)
             return avgSpacing < maxLabelW + 8
           })()
+          const bottomTickLabelY = shouldRotateBottom ? 12 : 18
+          const bottomAxisLabelY = height + (shouldRotateBottom ? 58 : 40)
 
           // Per-axis font-size resolution. Inline `style` references the
           // CSS var with the literal default as the fallback — consumers
@@ -755,7 +757,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 <line y2={5} stroke={axisStroke} strokeWidth={1} />
                 {typeof tick.label === "string" || typeof tick.label === "number" ? (
                   <text
-                    y={shouldRotateBottom ? 10 : 18}
+                    y={bottomTickLabelY}
                     textAnchor={shouldRotateBottom ? "end" : resolveHorizontalTickAnchor(
                       bottomTickAnchorMode,
                       tick.pixel === xPixelExtent.min,
@@ -780,7 +782,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
             {xLabel && (
               <text
                 x={width / 2}
-                y={height + 40}
+                y={bottomAxisLabelY}
                 textAnchor="middle"
                 fill={labelColor}
                 className="semiotic-axis-label"

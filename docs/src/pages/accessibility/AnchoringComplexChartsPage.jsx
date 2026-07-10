@@ -554,6 +554,7 @@ function GauntletStackedAreaDemo({ width }) {
                 tickValues: EVENT_TICKS.map((g) => g.step),
                 tickFormat: (d) => EVENT_TICKS.find((g) => g.step === d)?.label ?? d,
                 autoRotate: true,
+                tickAnchor: "edges",
               },
               { orient: "left" },
             ],
@@ -583,7 +584,7 @@ function GauntletStackedAreaDemo({ width }) {
 // ---------------------------------------------------------------------------
 
 const MERGE_STAGES = [
-  { id: "coding", label: "Coding", force: 14, share: 1.05 },
+  { id: "coding", label: "Authoring", force: 14, share: 1.05 },
   { id: "ci", label: "CI", force: 16, share: 0.9 },
   {
     id: "review",
@@ -595,7 +596,7 @@ const MERGE_STAGES = [
   },
   {
     id: "revision",
-    label: "Revision",
+    label: "Rework",
     portal: { targetStageId: "coding", force: { x: -36, y: 0 } },
     share: 0.85,
   },
@@ -661,17 +662,19 @@ function MergeLinkedInner({ halfWidth, height }) {
   const selection = useSelection({ name: MERGE_SELECTION_NAME, fields: ["id"] })
   const selectPoints = selection.selectPoints
   const clearSelection = selection.clear
+  const selectionActive = selection.isActive
+  const selectionPredicate = selection.predicate
 
   const physicsSelection = useMemo(
     () => ({
-      isActive: selection.isActive,
+      isActive: selectionActive,
       predicate: (body) => {
         const datum = unwrapDatum(body?.datum) ?? body?.datum
         if (!datum || typeof datum !== "object") return false
-        return selection.predicate(datum)
+        return selectionPredicate(datum)
       },
     }),
-    [selection.isActive, selection.predicate],
+    [selectionActive, selectionPredicate],
   )
 
   // Dim non-selected bodies when a linked selection is active. StreamPhysicsFrame
@@ -783,6 +786,7 @@ function MergeLinkedInner({ halfWidth, height }) {
                 orient: "left",
                 tickValues: MERGE_STAGES.map((_, i) => i),
                 tickFormat: (d) => MERGE_STAGES[d]?.label ?? d,
+                tickAnchor: "edges",
               },
             ],
           }}
@@ -976,7 +980,7 @@ function TrialWithStack() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="merge-scatter">2. Merge-pressure particles ↔ scatter (1:1)</h2>
       <p>
-        A compact ProcessFlowChart toy of merge pressure — PRs as particles through
+        A compact ProcessFlowChart view of merge pressure — PRs as particles through
         capacitated review stages (no feature-group sockets; the small panel needs the
         space). Beside it, a scatterplot with <strong>the same rows</strong>: one mark per
         particle, review work on x, stage index on y, author type as color, churn as size.

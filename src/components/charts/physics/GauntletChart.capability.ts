@@ -25,7 +25,7 @@ export const GauntletChartCapability: ChartCapability = {
   },
 
   caveats: () => [
-    "GauntletChart is for compound plans degraded by timed gate effects (one core + property satellites). Use ProcessFlowChart for many independent work items with capacitated queues.",
+    "GauntletChart is for compound entities whose attached properties transform at gates. Use ProcessFlowChart when work items do not need compound property bodies.",
     "Read viability, property inventory, and outcomes — not body trajectories."
   ],
 
@@ -48,8 +48,8 @@ export const GauntletChartCapability: ChartCapability = {
         { id: "cost", label: "Cost", short: "$", color: "#ef4444", load: 1.1, radius: 7 }
       ],
       gates: [
-        { id: "review", label: "Review", x: 0.45 },
-        { id: "approval", label: "Approval", x: 0.7 }
+        { id: "review", label: "Review" },
+        { id: "approval", label: "Approval" }
       ],
       showProjection: true,
       showChrome: true

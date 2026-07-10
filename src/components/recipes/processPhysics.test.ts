@@ -1,21 +1,17 @@
 import { describe, expect, it } from "vitest"
 import {
   absorbRegion,
-  aggregateRegionCounts,
-  bodyGroupSpec,
   capacitatedRegion,
   chargeGateRegion,
   forceFieldRegion,
-  groupCompletionRows,
   membraneRegion,
   portalRegion,
   pressureFieldRegion,
   processLaneWalls,
   processStageLayout,
-  regionCountsToProjectionRows,
+  processStageRegions,
   routeSurfaceRegion,
-  stageTargetInVolume,
-  type RegionCountMap
+  stageTargetInVolume
 } from "./processPhysics"
 
 describe("processStageLayout", () => {
@@ -89,6 +85,106 @@ describe("processStageLayout", () => {
     expect(midTop).toBeGreaterThan(leftTop)
   })
 
+  it("expands bowtie barriers and stage sensors from one pixel offset", () => {
+    const options = {
+      width: 720,
+      height: 320,
+      shape: "bowtie" as const,
+      padY: 48,
+      stages: [{ id: "incoming" }, { id: "impact" }, { id: "outgoing" }],
+      centerStageIndex: 1,
+      idPrefix: "adaptive"
+    }
+    const base = processStageLayout(options)
+    const expanded = processStageLayout({
+      ...options,
+      pinchHeightOffset: 20
+    })
+
+    expect(expanded.pinchHeight - base.pinchHeight).toBeCloseTo(20, 8)
+    expect(expanded.pinchTop - base.pinchTop).toBeCloseTo(-10, 8)
+    expect(expanded.pinchBottom - base.pinchBottom).toBeCloseTo(10, 8)
+    expect(expanded.colliders.map((collider) => collider.id)).toEqual(
+      base.colliders.map((collider) => collider.id)
+    )
+
+    const collider = (id: string) =>
+      expanded.colliders.find((candidate) => candidate.id === id)?.shape
+    expect(collider("adaptive-left-top")).toMatchObject({
+      type: "segment",
+      y2: expanded.pinchTop
+    })
+    expect(collider("adaptive-center-top")).toMatchObject({
+      type: "segment",
+      y1: expanded.pinchTop,
+      y2: expanded.pinchTop
+    })
+    expect(collider("adaptive-right-top")).toMatchObject({
+      type: "segment",
+      y1: expanded.pinchTop
+    })
+    expect(collider("adaptive-left-bottom")).toMatchObject({
+      type: "segment",
+      y2: expanded.pinchBottom
+    })
+    expect(collider("adaptive-center-bottom")).toMatchObject({
+      type: "segment",
+      y1: expanded.pinchBottom,
+      y2: expanded.pinchBottom
+    })
+    expect(collider("adaptive-right-bottom")).toMatchObject({
+      type: "segment",
+      y1: expanded.pinchBottom
+    })
+
+    const baseRegions = processStageRegions(base)
+    const expandedRegions = processStageRegions(expanded)
+    expect(
+      expandedRegions[1].shape.type === "aabb" &&
+        baseRegions[1].shape.type === "aabb"
+        ? expandedRegions[1].shape.height - baseRegions[1].shape.height
+        : NaN
+    ).toBeCloseTo(20, 8)
+  })
+
+  it("clamps non-finite and extreme pinch offsets deterministically", () => {
+    const options = {
+      width: 500,
+      height: 300,
+      shape: "bowtie" as const,
+      stages: [{ id: "left" }, { id: "center" }, { id: "right" }]
+    }
+    const base = processStageLayout(options)
+    const invalid = processStageLayout({ ...options, pinchHeightOffset: NaN })
+    const minimum = processStageLayout({
+      ...options,
+      pinchHeightOffset: -10000
+    })
+    const maximum = processStageLayout({
+      ...options,
+      pinchHeightOffset: 10000
+    })
+    const usableHeight = base.bottomY - base.topY
+
+    expect(invalid.pinchHeight).toBe(base.pinchHeight)
+    expect(minimum.pinchHeight).toBeCloseTo(usableHeight * 0.06, 8)
+    expect(maximum.pinchHeight).toBeCloseTo(usableHeight * 0.5, 8)
+  })
+
+  it("leaves lane barriers unchanged when a pinch offset is supplied", () => {
+    const options = {
+      width: 500,
+      height: 260,
+      shape: "lane" as const,
+      stages: [{ id: "one" }, { id: "two" }]
+    }
+    const base = processStageLayout(options)
+    const offset = processStageLayout({ ...options, pinchHeightOffset: 40 })
+
+    expect(offset.colliders).toEqual(base.colliders)
+    expect(offset.stages).toEqual(base.stages)
+  })
+
   it("honors relative stage shares", () => {
     const layout = processStageLayout({
       width: 500,
@@ -126,6 +222,53 @@ describe("processStageLayout", () => {
     expect(target.x).toBeLessThanOrEqual(layout.stages[1].x1)
     expect(target.y).toBeGreaterThan(layout.boundaryY(target.x, "top"))
     expect(target.y).toBeLessThan(layout.boundaryY(target.x, "bottom"))
+  })
+
+  it("clamps horizontal target jitter inside the requested stage", () => {
+    const layout = processStageLayout({
+      width: 300,
+      height: 180,
+      stages: [{ id: "first" }, { id: "second" }]
+    })
+    const target = stageTargetInVolume(layout, "first", {
+      along: 0.95,
+      jitterX: 1000,
+      random: () => 1
+    })
+
+    expect(target.x).toBeGreaterThan(layout.stages[0].x0)
+    expect(target.x).toBeLessThan(layout.stages[0].x1)
+  })
+
+  it("builds observable regions for every process stage", () => {
+    const layout = processStageLayout({
+      width: 500,
+      height: 240,
+      stages: [{ id: "discover", label: "Discover" }, { id: "impact" }]
+    })
+    const regions = processStageRegions(layout, {
+      idPrefix: "journey",
+      metadata: { systemId: "relay" }
+    })
+
+    expect(regions.map((region) => region.id)).toEqual([
+      "journey:discover",
+      "journey:impact"
+    ])
+    expect(regions[1]).toMatchObject({
+      label: "impact",
+      metadata: {
+        primitive: "processStage",
+        stageId: "impact",
+        stageIndex: 1,
+        systemId: "relay"
+      },
+      attributes: {
+        primitive: "processStage",
+        stageId: "impact",
+        stageIndex: 1
+      }
+    })
   })
 })
 
@@ -212,60 +355,5 @@ describe("process region factories", () => {
       openEnds: true
     })
     expect(walls).toHaveLength(2)
-  })
-})
-
-describe("aggregates and body groups", () => {
-  it("counts unique region enters", () => {
-    let counts: RegionCountMap = {}
-    const region = {
-      id: "impact",
-      label: "First Impact",
-      shape: { type: "aabb" as const, x: 0, y: 0, width: 1, height: 1 }
-    }
-    counts = aggregateRegionCounts(counts, {
-      type: "region-enter",
-      bodyId: "a",
-      region
-    })
-    counts = aggregateRegionCounts(counts, {
-      type: "region-enter",
-      bodyId: "a",
-      region
-    })
-    counts = aggregateRegionCounts(counts, {
-      type: "region-enter",
-      bodyId: "b",
-      region
-    })
-    counts = aggregateRegionCounts(counts, {
-      type: "region-exit",
-      bodyId: "c",
-      region
-    })
-    expect(counts.impact.count).toBe(2)
-    expect(regionCountsToProjectionRows(counts)).toEqual([
-      { label: "First Impact", value: 2 }
-    ])
-  })
-
-  it("tracks group completion from absorbed members", () => {
-    const group = bodyGroupSpec({
-      id: "auth",
-      label: "Auth",
-      bodyIds: ["pr-1", "pr-2", "pr-3"],
-      anchor: { x: 100, y: 50 },
-      completion: { mode: "allMembersAbsorbed", targetZone: "merged" }
-    })
-    expect(group.anchor).toEqual({ x: 100, y: 50 })
-    const partial = groupCompletionRows([group], ["pr-1", "pr-2"])
-    expect(partial[0]).toMatchObject({
-      complete: false,
-      absorbed: 2,
-      total: 3,
-      missing: ["pr-3"]
-    })
-    const done = groupCompletionRows([group], new Set(["pr-1", "pr-2", "pr-3"]))
-    expect(done[0].complete).toBe(true)
   })
 })

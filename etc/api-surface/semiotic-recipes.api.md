@@ -59,6 +59,7 @@ function collidersFromScales
 function composePhysicsControllers
 function createCapacityQueueController
 function createPortalController
+function createProcessJourneyLedger
 function cubicPath
 function cubicPoint
 function cubicTangent
@@ -128,8 +129,11 @@ function polarToXY
 function portalRegion
 function pressureFieldRegion
 function processChrome
+function processJourneyRows
 function processLaneWalls
 function processStageLayout
+function processStageRegions
+function processVolumePolygons
 function proximityProblem
 function radiusScale
 function readField
@@ -160,6 +164,7 @@ function tokenTaskIntentToCapabilityIntents
 function unitize
 function unitizeRange
 function unwrapDatum
+function updateProcessJourney
 function useCustomLayoutSelection
 function waffleLayout
 function withAlpha
@@ -272,12 +277,19 @@ interface ProcessChromeGroup
 interface ProcessChromeLayout
 interface ProcessChromeOptions
 interface ProcessChromeStage
+interface ProcessJourneyEntityState
+interface ProcessJourneyLedger
+interface ProcessJourneyRow
+interface ProcessJourneyStage
+interface ProcessJourneyUpdateOptions
 interface ProcessMembraneDef
 interface ProcessRegionBaseOptions
 interface ProcessStageDef
+interface ProcessStageRegionOptions
 interface ProcessVolumeLayout
 interface ProcessVolumeLayoutOptions
 interface ProcessVolumeMembraneBand
+interface ProcessVolumePolygon
 interface ProcessVolumeStageBand
 interface ProximityProblemOptions
 interface ProximityProblemResult
@@ -326,6 +338,8 @@ type NetworkCustomLayout
 type NetworkSymbolName
 type NumericScale
 type OrdinalCustomLayout
+type ProcessVolumePoint
+type ProcessVolumePolygonRole
 type ProcessVolumeShape
 type RegionCountMap
 type RingArcOptions
