@@ -60,6 +60,8 @@ const gauntletChartProps = [
   { name: "bodyGroups", type: "array | function", required: false, default: "[]", description: "Optional semantic groups for higher-level aggregates such as features or cohorts." },
   { name: "coreBody", type: "function", required: false, default: null, description: "Overrides generated core spawn fields for non-default glyphs, mass, radius, velocity, or spawn timing." },
   { name: "projectPlacement", type: "function", required: false, default: null, description: "Overrides start, route, socket, and graveyard coordinates per project." },
+  { name: "coreForceMode", type: '"route" | "net"', required: false, default: '"route"', description: "Use the default authored route force or a net lift/drag vertical force for physical crash-line examples." },
+  { name: "crashDetection", type: "boolean", required: false, default: "true", description: "When false, draw the crash line without turning contact with it into a live project crash." },
   { name: "terminalBehavior", type: '"outcome" | "hold-last"', required: false, default: '"outcome"', description: "Send terminal projects to socket/graveyard or hold them at their final authored stage." },
   { name: "initialSpawnPacing", type: "object", required: false, default: null, description: "Passed to StreamPhysicsFrame for staged project arrivals." },
   { name: "showChrome", type: "boolean", required: false, default: "true", description: "Draw the default route, gates, crash line, socket, and graveyard chrome." },

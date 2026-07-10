@@ -38,7 +38,11 @@ export function drawGauntletBody(ctx: CanvasRenderingContext2D, body: PhysicsBod
     ctx.strokeStyle = resolveCanvasColor(ctx, style.stroke, "#0f172a")
     ctx.lineWidth = 1.1
     ctx.beginPath()
-    ctx.arc(0, 0, radius, 0, Math.PI * 2)
+    if (datum.kind === NEGATIVE_KIND) {
+      ctx.rect(-radius, -radius, radius * 2, radius * 2)
+    } else {
+      ctx.arc(0, 0, radius, 0, Math.PI * 2)
+    }
     ctx.fill()
     ctx.stroke()
     ctx.fillStyle = resolveCanvasColor(ctx, "var(--semiotic-background, #07111f)", "#07111f")

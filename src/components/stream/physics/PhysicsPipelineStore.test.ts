@@ -84,6 +84,29 @@ describe("PhysicsPipelineStore", () => {
     ])
   })
 
+  it("lets visual satellite bodies opt out of body-body collision resolution", () => {
+    const store = new PhysicsPipelineStore({
+      fixedDt: 1 / 60,
+      kernel: {
+        gravity: { x: 0, y: 0 },
+        velocityDamping: 1,
+        sleepAfter: 999
+      }
+    })
+    store.spawnNow({ ...circle("core"), shape: { type: "circle", radius: 10 } })
+    store.spawnNow({
+      ...circle("satellite"),
+      bodyCollisions: false,
+      shape: { type: "circle", radius: 10 }
+    })
+    store.tick(1 / 60)
+
+    expect(stateTuple(store)).toEqual([
+      ["core", 0, 0],
+      ["satellite", 0, 0]
+    ])
+  })
+
   it("round-trips pipeline snapshots through a supplied engine adapter", () => {
     const store = new PhysicsPipelineStore({
       fixedDt: 1 / 60,

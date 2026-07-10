@@ -96,17 +96,20 @@
 }
 
 .nimby-example__project-picker,
+.nimby-example__mode-picker,
 .nimby-example__presets {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 9px;
 }
 
-.nimby-example__project-picker {
+.nimby-example__project-picker,
+.nimby-example__mode-picker {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .nimby-example__project-picker button,
+.nimby-example__mode-picker button,
 .nimby-example__presets button,
 .nimby-example__rerun {
   border: 1px solid var(--nimby-border);
@@ -118,6 +121,7 @@
 }
 
 .nimby-example__project-picker button,
+.nimby-example__mode-picker button,
 .nimby-example__presets button {
   display: grid;
   gap: 6px;
@@ -127,12 +131,14 @@
 }
 
 .nimby-example__project-picker button.is-active,
+.nimby-example__mode-picker button.is-active,
 .nimby-example__presets button.is-active {
   border-color: var(--nimby-blue);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nimby-blue) 70%, transparent);
 }
 
 .nimby-example__project-picker span,
+.nimby-example__mode-picker span,
 .nimby-example__presets span {
   color: var(--nimby-muted);
   font-size: 0.78rem;
@@ -484,6 +490,7 @@
   }
 
   .nimby-example__project-picker,
+  .nimby-example__mode-picker,
   .nimby-example__presets,
   .nimby-example__controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -496,6 +503,7 @@
 
 @media (max-width: 640px) {
   .nimby-example__project-picker,
+  .nimby-example__mode-picker,
   .nimby-example__presets,
   .nimby-example__controls,
   .nimby-example__metrics {
