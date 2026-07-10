@@ -134,6 +134,8 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   const {
     bodyGroups,
     coreBody,
+    coreForceMode = "route",
+    crashDetection = true,
     crashOffset = 30,
     data,
     emptyContent,
@@ -488,10 +490,11 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         negativeById,
         projectEvents,
         gateById,
+        coreForceMode,
         terminalBehavior,
         elapsed: elapsedRef.current
       }),
-    [gateById, layout, negativeById, positiveById, projectEvents, projectPlacement, terminalBehavior]
+    [coreForceMode, gateById, layout, negativeById, positiveById, projectEvents, projectPlacement, terminalBehavior]
   )
 
   const onTick = useCallback(
@@ -502,7 +505,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         const core = controls.readBodies().find((body) => body.id === projectCoreId(project.id))
         if (!core) continue
         const radius = core.shape.type === "circle" ? core.shape.radius : 28
-        if (!project.killed && core.y + radius >= layout.crashY) {
+        if (crashDetection && !project.killed && core.y + radius >= layout.crashY) {
           controls.readBodies().forEach((body) => {
             const datum = body.datum as GauntletBodyDatum | undefined
             if (!datum?.__gauntlet || datum.projectId !== project.id) return
@@ -591,6 +594,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     },
     [
       addBodiesForEffect,
+      crashDetection,
       frameProps,
       gateById,
       layout,
@@ -786,7 +790,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   ): React.ReactElement | null
   displayName?: string
 }
-
 ;(GauntletChart as { displayName?: string }).displayName = "GauntletChart"
 
 /**
@@ -794,5 +797,4 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
  * Removed in the next major version.
  */
 export const GuantletChart = GauntletChart
-
 export default GauntletChart

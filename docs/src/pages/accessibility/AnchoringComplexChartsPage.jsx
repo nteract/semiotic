@@ -302,11 +302,18 @@ function buildTrialEvents(project) {
       label: "Advisory vote",
       time: 5.05,
       gateId: "advisory",
+      summary: "Committee votes; a late label compromise can trim one softer benefit from the package.",
       final: true,
       effects: [
         {
           stage: "advisory outcome",
           summary: "Committee votes on the full benefit/risk package.",
+        },
+        {
+          popPositive: { candidates: ["access", "manufacturing", "biomarker"], count: 1 },
+          summary: "A late advisory compromise trims one softer benefit particle.",
+          when: ({ project }) =>
+            project.activePositiveIds.length >= 5 && project.negativeIds.length <= 2,
         },
       ],
     },
@@ -334,9 +341,9 @@ function trialOutcome(project) {
 /**
  * Build one diverging stacked-area cross-section at an event step.
  * Benefits → positive y (stack above 0); risks → negative y (stack below 0).
- * Only active (non-zero) properties are emitted — the stack builder cuts area
- * segments at missing/zero samples so inactive series don't draw a flat line
- * on the axis.
+ * Every property is emitted at every step; inactive properties use zero so
+ * the pushed area buffer has a complete synchronized snapshot. The stack
+ * builder cuts zero-height bands, so inactive series still don't draw.
  */
 function seriesRowsForState(project, step, gateLabel) {
   const posCounts = countIds(project.activePositiveIds)
@@ -348,8 +355,7 @@ function seriesRowsForState(project, step, gateLabel) {
       series.polarity === "benefit"
         ? (posCounts.get(series.id) ?? 0)
         : (negCounts.get(series.id) ?? 0)
-    if (count <= 0) continue
-    const magnitude = series.magnitude * count
+    const magnitude = count > 0 ? series.magnitude * count : 0
     rows.push({
       gate: step,
       gateLabel,
@@ -508,7 +514,7 @@ function GauntletStackedAreaDemo({ width }) {
         onStateChange={onStateChange}
         size={gauntletSize}
         title="NexaVax-7 regulatory gauntlet"
-        description="One drug candidate through a dense event schedule: preclinical (2), Phase I (3), Phase II (3 — including pop-negative + add-positive), advisory (2)."
+        description="One drug candidate through a dense event schedule: preclinical (2), Phase I (3), Phase II (3 — including pop-negative + add-positive), advisory (2 — including a conditional pop-positive vote compromise)."
       />
 
       <p style={{ ...chartTitleStyle, marginTop: 16 }}>
@@ -530,6 +536,7 @@ function GauntletStackedAreaDemo({ width }) {
           colorScheme={SERIES_COLOR_SCHEME}
           baseline="diverging"
           stackOrder="input"
+          curve="stepAfter"
           width={chartWidth}
           height={areaHeight}
           showLegend
@@ -864,7 +871,9 @@ export default function AnchoringComplexChartsPage() {
         <strong>negative</strong> y (below). Phase II&apos;s interim analysis is the
         reverse gate: <code>popNegative</code> clears <strong>Toxicity</strong> while{" "}
         <code>addPositive</code> attaches <strong>Biomarker</strong> — watch the red
-        band under the axis shrink and the purple band grow above.
+        band under the axis shrink and the purple band grow above. The final advisory
+        vote can also <code>popPositive</code> when the package arrives benefit-heavy
+        and risk-light, trimming one softer benefit before the outcome.
       </p>
 
       <div ref={widthRef} style={demoShellStyle}>

@@ -291,10 +291,10 @@ export function featureSlot(ids: readonly string[], id: string): { angle: number
   const ordered = [...ids].sort((a, b) => a.localeCompare(b))
   const index = Math.max(0, ordered.indexOf(id))
   const t = ordered.length > 1 ? index / (ordered.length - 1) : 0.5
-  // Prefer the upper half-circle so satellites sit above the core; keep
-  // orbit radius modest so left-side projects stay inside the left wall.
+  // Keep positives on the upper arc so they read as lift/balloons. Avoid
+  // angles in the lower half-plane; y increases downward in canvas space.
   return {
-    angle: -Math.PI * 0.55 + t * Math.PI * 1.1,
+    angle: -Math.PI * 0.82 + t * Math.PI * 0.64,
     index,
     radius: 48 + (index % 2) * 6
   }
@@ -376,6 +376,7 @@ export function buildProjectSpawns<TDatum extends Datum>(
       vx: corePatch.vx ?? 42,
       vy: corePatch.vy ?? 0,
       mass: corePatch.mass ?? 7,
+      bodyCollisions: corePatch.bodyCollisions ?? true,
       shape: corePatch.shape ?? { type: "circle", radius: 28 },
       spawnAt: corePatch.spawnAt,
       datum: coreDatum
@@ -404,6 +405,7 @@ export function buildProjectSpawns<TDatum extends Datum>(
       vx: Math.cos(slot.angle) * 18,
       vy: Math.sin(slot.angle) * 18,
       mass: property.mass ?? 0.75,
+      bodyCollisions: false,
       shape: { type: "circle", radius },
       spawnAt: corePatch.spawnAt,
       datum: {
@@ -550,6 +552,7 @@ export function buildNegativeSpawn<TDatum extends Datum>(
     vx: 10,
     vy: 6,
     mass: property.mass ?? 0.72,
+    bodyCollisions: false,
     shape: { type: "circle", radius },
     spawnAt,
     datum: {
@@ -701,4 +704,3 @@ export function projectRouteTarget<TDatum extends Datum>(
     y: previous.y + (next.y - previous.y) * t + Math.sin(elapsed * 2.6) * 7
   }
 }
-

@@ -137,6 +137,26 @@ const PRESETS = {
 
 const PRESET_ORDER = ["noGates", "zoning", "design", "parking", "procedural", "full"]
 
+const FAILURE_MODES = {
+  physics: {
+    id: "physics",
+    label: "Pure physics",
+    description: "Equal lift and drag totals steer the core; touching the crash line is the failure check.",
+  },
+  gate: {
+    id: "gate",
+    label: "Check each gate",
+    description: "After each gate, a too-heavy or too-diminished plan can terminate before later gates.",
+  },
+  end: {
+    id: "end",
+    label: "Check only at end",
+    description: "Every authored gate runs, then the final outcome check lands the plan at the last active gate.",
+  },
+}
+
+const FAILURE_MODE_ORDER = ["physics", "gate", "end"]
+
 const FEATURES = [
   { id: "homes", label: "Homes", short: "H", value: 4.8, color: "var(--nimby-homes)", popColor: "#45c2b4" },
   { id: "affordability", label: "Affordability", short: "A", value: 4.1, color: "var(--nimby-afford)", popColor: "#8ddf5f" },
@@ -435,6 +455,18 @@ function finalRouteForOutcome(layout, outcome) {
     : { x: layout.graveyardX, y: layout.graveyardY - 14 }
 }
 
+function terminalRouteForOutcome(layout, controls, event, outcome) {
+  if (landsInSocket(outcome)) return finalRouteForOutcome(layout, outcome)
+  const gates = buildGates(layout.width, controls)
+  const gate = event.gateId
+    ? gates.find((candidate) => candidate.id === event.gateId)
+    : gates[gates.length - 1]
+  return {
+    x: event.routeX ?? gate?.x ?? Math.round(layout.width * 0.58),
+    y: event.routeY ?? layout.height - 36 - CRASH_LINE_OFFSET - 28,
+  }
+}
+
 function outcomeFor(plan, controls, project) {
   if ((controls.enabledGateCount ?? 5) === 0 && (project.id === "bad" || plan.viability < 30)) return "bad_design_crash"
   if (plan.viability <= 0) return "financially_infeasible"
@@ -444,13 +476,74 @@ function outcomeFor(plan, controls, project) {
   return "built"
 }
 
-function buildProcessEvents(controls, layout, project) {
+function outcomeForMode(plan, controls, project, failureMode) {
+  if (failureMode === "physics") {
+    return plan.units < BASE_PLAN.originalUnits || plan.lostFeatures.length
+      ? "built_diminished"
+      : "built"
+  }
+  return outcomeFor(plan, controls, project)
+}
+
+function terminalEventForGate(event, plan, controls, layout) {
+  if (!event?.gateId) return null
+  const positiveCount = plan.activeFeatures.length
+  const negativeCount = plan.negativeDrags.length
+  const dragLoad = dragLoadFor(plan.negativeDrags)
+  let outcome = null
+  let summary = null
+
+  if (event.gateId === "design-review" && positiveCount <= 2 && negativeCount >= 8) {
+    outcome = "redesigned_below_viability"
+    summary = `${event.label} sees only ${positiveCount} lift balloons against ${negativeCount} drag particles; the plan terminates before later gates.`
+  } else if (event.gateId === "parking-traffic" && ((positiveCount <= 3 && negativeCount >= 8) || dragLoad >= 9 || plan.units < 45)) {
+    outcome = "financially_infeasible"
+    summary = `${event.label} pushes the plan to ${negativeCount} drag particles and ${plan.units} homes, so it cannot carry forward.`
+  } else if (event.gateId !== "zoning-fit" && plan.viability <= 0) {
+    outcome = "financially_infeasible"
+    summary = `${event.label} leaves the plan below viability with ${negativeCount} drag particles attached.`
+  } else if (event.gateId === "procedural-review" && (plan.viability < 18 || plan.delayMonths > 30)) {
+    outcome = "approved_not_built"
+    summary = `${event.label} leaves the plan with ${plan.delayMonths} months of delay and too little viability to continue.`
+  } else if (plan.units < 30 || plan.affordableUnits < 4) {
+    outcome = "redesigned_below_viability"
+    summary = `${event.label} cuts the housing package below the minimum viable plan.`
+  }
+
+  if (!outcome) return null
+  const route = terminalRouteForOutcome(layout, controls, event, outcome)
+  return {
+    id: `${event.id}-gate-stop`,
+    label: `${event.label} Stop`,
+    time: event.time + 0.28,
+    gateId: event.gateId,
+    routeX: route.x,
+    routeY: route.y,
+    addDragTypes: [],
+    delayMonths: 0,
+    detachFeatureIds: [],
+    final: true,
+    outcome,
+    summary,
+  }
+}
+
+function buildProcessEvents(controls, layout, project, failureMode = "end") {
   const random = mulberry32(controls.seed)
   const events = []
   const enabledGateCount = clamp(Math.round(controls.enabledGateCount ?? 5), 0, 5)
   const gateEnabled = (index) => enabledGateCount > index
   let plan = initialPlanState(controls, project)
   let time = enabledGateCount === 0 ? 4.9 : 1.55
+  let captureChance = 0
+  let loopCount = 0
+  const finishWithTerminal = (terminalEvent) => ({
+    captureChance,
+    events: [...events, terminalEvent],
+    finalPlan: { ...plan, outcome: terminalEvent.outcome, stage: OUTCOME_LABELS[terminalEvent.outcome] },
+    loopCount,
+  })
+  const maybeTerminalAtGate = (event) => failureMode === "gate" ? terminalEventForGate(event, plan, controls, layout) : null
 
   if (gateEnabled(0)) {
     const allowedHeight = 4 + Math.round(controls.affordableHousingBonus * 1.4 + controls.statePreemption * 1.6)
@@ -485,6 +578,8 @@ function buildProcessEvents(controls, layout, project) {
       events.push(event)
     }
     time += 1.55
+    const terminal = maybeTerminalAtGate(events[events.length - 1])
+    if (terminal) return finishWithTerminal(terminal)
   }
 
   if (gateEnabled(1)) {
@@ -523,6 +618,8 @@ function buildProcessEvents(controls, layout, project) {
       events.push(event)
     }
     time += 1.55
+    const terminal = maybeTerminalAtGate(events[events.length - 1])
+    if (terminal) return finishWithTerminal(terminal)
   }
 
   if (gateEnabled(2)) {
@@ -558,10 +655,10 @@ function buildProcessEvents(controls, layout, project) {
       events.push(event)
     }
     time += 1.35
+    const terminal = maybeTerminalAtGate(events[events.length - 1])
+    if (terminal) return finishWithTerminal(terminal)
   }
 
-  let captureChance = 0
-  let loopCount = 0
   if (gateEnabled(3)) {
     captureChance = clamp(
       controls.proceduralComplexity * 0.36 +
@@ -588,6 +685,8 @@ function buildProcessEvents(controls, layout, project) {
       }
       plan = applyEventPreview(plan, controls, project, event)
       events.push(event)
+      const terminal = maybeTerminalAtGate(event)
+      if (terminal) return finishWithTerminal(terminal)
       time += 1.08
     }
 
@@ -604,6 +703,8 @@ function buildProcessEvents(controls, layout, project) {
       plan = applyEventPreview(plan, controls, project, event)
       events.push(event)
       time += 0.9
+      const terminal = maybeTerminalAtGate(event)
+      if (terminal) return finishWithTerminal(terminal)
     }
   }
 
@@ -627,9 +728,11 @@ function buildProcessEvents(controls, layout, project) {
     }
     plan = applyEventPreview(plan, controls, project, finalEvent)
   } else {
-    const outcome = outcomeFor(plan, controls, project)
-    const route = finalRouteForOutcome(layout, outcome)
+    const outcome = outcomeForMode(plan, controls, project, failureMode)
     const isNoGateFlight = enabledGateCount === 0
+    const activeGates = buildGates(layout.width, controls)
+    const lastGate = activeGates[activeGates.length - 1]
+    const route = terminalRouteForOutcome(layout, controls, { gateId: lastGate?.id }, outcome)
     finalEvent = {
       id: isNoGateFlight ? "open-flight-finish" : "current-route-finish",
       label: isNoGateFlight ? "Open Flight" : "Current Process Edge",
@@ -650,7 +753,13 @@ function buildProcessEvents(controls, layout, project) {
     }
   }
 
-  finalEvent.outcome = finalEvent.outcome ?? outcomeFor(plan, controls, project)
+  finalEvent.outcome = finalEvent.outcome ?? outcomeForMode(plan, controls, project, failureMode)
+  const terminalRoute = terminalRouteForOutcome(layout, controls, finalEvent, finalEvent.outcome)
+  finalEvent = {
+    ...finalEvent,
+    routeX: finalEvent.routeX ?? terminalRoute.x,
+    routeY: finalEvent.routeY ?? terminalRoute.y,
+  }
   plan = finalEvent.id === "final-approval" ? plan : applyEventPreview(plan, controls, project, finalEvent)
   events.push(finalEvent)
 
@@ -741,27 +850,32 @@ export default function NimbyExamplePage() {
   const [width, hostRef] = useResponsiveWidth(MIN_WIDTH, MAX_WIDTH)
   const [settings, setSettings] = useState(PRESETS.noGates)
   const [projectType, setProjectType] = useState(PROJECT_ARCHETYPES.normal)
+  const [failureMode, setFailureMode] = useState("gate")
   const [runId, setRunId] = useState(0)
   const plotWidth = chartWidth(width)
   const layout = useMemo(() => previewLayout(plotWidth), [plotWidth])
   const gates = useMemo(() => buildGates(plotWidth, settings), [plotWidth, settings])
-  const runKey = `${projectType.id}:${settings.id}:${runId}:${plotWidth}`
+  const physicsFailureMode = failureMode === "physics"
+  const activeFailureMode = FAILURE_MODES[failureMode]
+  const runKey = `${projectType.id}:${settings.id}:${failureMode}:${runId}:${plotWidth}`
   const [planState, setPlanState] = useState(() => initialPlanState(settings, projectType))
   const [eventLog, setEventLog] = useState([])
 
   const processPreview = useMemo(
-    () => buildProcessEvents(settings, layout, projectType),
-    [layout, projectType, settings],
+    () => buildProcessEvents(settings, layout, projectType, failureMode),
+    [failureMode, layout, projectType, settings],
   )
 
   const positiveProperties = useMemo(
     () => FEATURES.map((feature) => ({
       ...feature,
-      buoyancy: feature.value * (1.15 + settings.designQuality * 1.55) * projectType.liftScale,
+      buoyancy: physicsFailureMode
+        ? 1
+        : feature.value * (1.15 + settings.designQuality * 1.55) * projectType.liftScale,
       mass: 0.75,
       radius: 10,
     })),
-    [projectType.liftScale, settings.designQuality],
+    [physicsFailureMode, projectType.liftScale, settings.designQuality],
   )
 
   const negativeProperties = useMemo(
@@ -770,7 +884,7 @@ export default function NimbyExamplePage() {
       label: drag.label,
       short: drag.short,
       color: drag.color,
-      load: drag.load * (0.9 + settings.costGravity * 0.55),
+      load: physicsFailureMode ? 1 : drag.load * (0.9 + settings.costGravity * 0.55),
       mass: 0.72,
       radius: 7.2,
       pull: {
@@ -778,7 +892,7 @@ export default function NimbyExamplePage() {
         y: drag.pullY * (0.58 + settings.costGravity * 0.52),
       },
     })),
-    [settings.costGravity, settings.developerMomentum],
+    [physicsFailureMode, settings.costGravity, settings.developerMomentum],
   )
 
   const projectData = useMemo(() => [
@@ -798,8 +912,8 @@ export default function NimbyExamplePage() {
   ], [projectType, runId, settings.id])
 
   const events = useCallback(
-    (_project, chartLayout) => buildProcessEvents(settings, chartLayout, projectType).events.map(toGauntletEvent),
-    [projectType, settings],
+    (_project, chartLayout) => buildProcessEvents(settings, chartLayout, projectType, failureMode).events.map(toGauntletEvent),
+    [failureMode, projectType, settings],
   )
 
   const computeViability = useCallback(
@@ -808,8 +922,8 @@ export default function NimbyExamplePage() {
   )
 
   const computeOutcome = useCallback(
-    (project) => outcomeFor(planFromGauntletState(project, settings, projectType), settings, projectType),
-    [projectType, settings],
+    (project) => outcomeForMode(planFromGauntletState(project, settings, projectType), settings, projectType, failureMode),
+    [failureMode, projectType, settings],
   )
 
   const initialViability = useCallback(
@@ -947,12 +1061,34 @@ export default function NimbyExamplePage() {
           })}
         </section>
 
+        <section className="nimby-example__mode-picker" aria-label="Failure mode">
+          {FAILURE_MODE_ORDER.map((id) => {
+            const mode = FAILURE_MODES[id]
+            const active = failureMode === id
+            return (
+              <button
+                key={id}
+                type="button"
+                className={active ? "is-active" : ""}
+                aria-pressed={active}
+                onClick={() => {
+                  setFailureMode(id)
+                  setRunId((current) => current + 1)
+                }}
+              >
+                <strong>{mode.label}</strong>
+                <span>{mode.description}</span>
+              </button>
+            )
+          })}
+        </section>
+
         <section className="nimby-example__workbench">
           <div className="nimby-example__chart-shell">
             <GauntletChart
               key={runKey}
               title={`${projectType.label}, ${settings.label} housing approval simulator`}
-              summary={`${projectType.label} under ${settings.label}: ${BASE_PLAN.originalUnits} homes enter review. Current state is ${outcomeLabel}, ${planState.units} homes, ${metrics.dragParticles} drag particles, ${planState.delayMonths} months delay.`}
+              summary={`${projectType.label} under ${settings.label}, ${activeFailureMode.label}: ${BASE_PLAN.originalUnits} homes enter review. Current state is ${outcomeLabel}, ${planState.units} homes, ${metrics.dragParticles} drag particles, ${planState.delayMonths} months delay.`}
               description="A compound housing plan moves through gauntlet gates. Attached positive property bodies act as lift balloons and pop when gate effects remove them; Cost, Ugly, Fatigue, and Slowdown properties are added through the same physics push path as live data."
               data={projectData}
               idAccessor="id"
@@ -966,8 +1102,11 @@ export default function NimbyExamplePage() {
               initialViability={initialViability}
               viability={computeViability}
               outcome={computeOutcome}
+              coreForceMode={physicsFailureMode ? "net" : "route"}
+              crashDetection={physicsFailureMode}
               crashOffset={CRASH_LINE_OFFSET}
               size={[plotWidth, FRAME_HEIGHT]}
+              terminalBehavior="hold-last"
               accessibleTable
               onStateChange={handleStateChange}
               frameProps={frameProps}
@@ -979,7 +1118,7 @@ export default function NimbyExamplePage() {
           <div className="nimby-example__panel-summary">
             <span className="nimby-example__kicker">Current plan</span>
             <h2>{outcomeLabel}</h2>
-            <p>{projectType.description} {settings.description}</p>
+            <p>{projectType.description} {settings.description} {activeFailureMode.description}</p>
           </div>
           <div className="nimby-example__metrics">
             <Metric label="homes" value={planState.units} detail={`${metrics.housingLost} lost`} warn={metrics.housingLost > 24} />
@@ -1035,7 +1174,7 @@ export default function NimbyExamplePage() {
             The page supplies <code>data</code>, positive and negative property definitions, gate definitions, and gate events. <code>GauntletChart</code> turns those declarations into core bodies, lift balloons, drag particles, gate regions, pops, route state, and event state.
           </p>
           <p>
-            That keeps the story visible: no-gate runs show bad packages crashing on their own, then each added gate can pop lift or add typed drag before the plan either lands in the socket or falls into the project graveyard.
+            The failure mode switch separates physical failure, per-gate checkpoint failure, and the original end-only outcome check. That lets the same plan either crash when the particles pull it down, stop at the first failed gate, or run every gate before the final decision.
           </p>
         </section>
       </div>

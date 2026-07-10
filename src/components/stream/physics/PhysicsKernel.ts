@@ -46,6 +46,8 @@ export interface PhysicsBodySpec {
   mass?: number
   restitution?: number
   friction?: number
+  /** Disable body-body contacts for visual/tethered satellite marks. */
+  bodyCollisions?: boolean
   shape: PhysicsBodyShape
   datum?: unknown
 }
@@ -60,6 +62,7 @@ export interface PhysicsBodyState {
   vy: number
   angle: number
   mass: number
+  bodyCollisions?: boolean
   shape: PhysicsBodyShape
   sleeping: boolean
   datum?: unknown
@@ -102,6 +105,7 @@ export interface PhysicsSpringSpec {
 }
 
 export interface PhysicsKernelSnapshotBody extends PhysicsBodyState {
+  bodyCollisions: boolean
   index: number
   sleepTime: number
   restitution?: number
@@ -118,22 +122,12 @@ export interface PhysicsKernelSnapshotSpring extends Required<
   target: PhysicsSpringSpec["target"]
 }
 
-export type PhysicsKernelEvent =
-  | { type: "contact"; bodyId: string; otherId: string; sensor: false }
-  | { type: "sensor-enter"; bodyId: string; sensorId: string }
-  | { type: "sensor-exit"; bodyId: string; sensorId: string }
-  | { type: "sleep"; bodyId: string }
-  | { type: "wake"; bodyId: string }
+export type PhysicsKernelEvent = { type: "contact"; bodyId: string; otherId: string; sensor: false } | { type: "sensor-enter"; bodyId: string; sensorId: string } | { type: "sensor-exit"; bodyId: string; sensorId: string } | { type: "sleep"; bodyId: string } | { type: "wake"; bodyId: string }
 
-export interface PhysicsActiveSensorPair {
-  sensorId: string
-  bodyId: string
-}
+export interface PhysicsActiveSensorPair { sensorId: string; bodyId: string }
 
 type MutableBody = PhysicsKernelSnapshotBody
-
 type MutableCollider = PhysicsKernelSnapshotCollider
-
 type MutableSpring = PhysicsKernelSnapshotSpring
 
 interface AabbBounds {
@@ -529,6 +523,7 @@ function cloneBody(body: MutableBody): MutableBody {
     vy: body.vy,
     angle: body.angle,
     mass: body.mass,
+    bodyCollisions: body.bodyCollisions,
     shape: cloneShape(body.shape),
     sleeping: body.sleeping,
     datum: body.datum,
@@ -647,6 +642,7 @@ export class PhysicsKernelWorld {
       vy: spec.vy ?? 0,
       angle: spec.angle ?? 0,
       mass: Math.max(EPSILON, spec.mass ?? 1),
+      bodyCollisions: spec.bodyCollisions ?? true,
       shape: cloneShape(spec.shape),
       sleeping: false,
       datum: spec.datum,
@@ -939,6 +935,7 @@ export class PhysicsKernelWorld {
     const cellSize = Math.max(1, this.options.cellSize)
     const cells = new Map<string, number[]>()
     for (let i = 0; i < bodies.length; i += 1) {
+      if (bodies[i].bodyCollisions === false) continue
       const bounds = bodyBounds(bodies[i])
       const minX = Math.floor(bounds.minX / cellSize)
       const maxX = Math.floor(bounds.maxX / cellSize)
@@ -962,6 +959,7 @@ export class PhysicsKernelWorld {
         for (let j = i + 1; j < indexes.length; j += 1) {
           const a = indexes[i]
           const b = indexes[j]
+          if (bodies[a].bodyCollisions === false || bodies[b].bodyCollisions === false) continue
           if (aabbOverlap(bodyBounds(bodies[a]), bodyBounds(bodies[b]))) {
             pairSet.add(`${a}:${b}`)
           }

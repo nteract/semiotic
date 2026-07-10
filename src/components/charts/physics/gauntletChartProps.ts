@@ -55,6 +55,8 @@ export interface GauntletChartProps<TDatum extends Datum = Datum>
         layout: GauntletLayout
       ) => readonly GauntletEvent[])
   crashOffset?: number
+  /** Draw the crash line but optionally disable live crash-line termination. */
+  crashDetection?: boolean
   emptyContent?: BaseChartProps["emptyContent"]
   frameProps?: PhysicsHocFrameProps<"bodyForces">
   initialSpawnPacing?: StreamPhysicsFrameProps["initialSpawnPacing"]
@@ -82,6 +84,13 @@ export interface GauntletChartProps<TDatum extends Datum = Datum>
    */
   showProjection?: boolean
   showTethers?: boolean
+  /**
+   * Core-body vertical force model.
+   * - "route": default authored route plus lift/drag burden.
+   * - "net": vertical drift follows summed positive vs negative property
+   *   weight, leaving the crash line to decide physical failure.
+   */
+  coreForceMode?: "route" | "net"
   terminalBehavior?: "outcome" | "hold-last"
   tooltip?: TooltipProp
   viability?: (

@@ -137,9 +137,11 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       negativeProperties: { type: "array", description: "Drag/cost property definitions attached to each project core." },
       gates: { type: "array", description: "Named process gates along the route." },
       events: { type: ["array", "function"], description: "Timed gate effects that add/pop properties and set outcomes." },
+      crashDetection: { type: "boolean", default: true, description: "Treat the crash line as a live failure trigger." },
       showChrome: { type: "boolean", default: true, description: "Draw route, socket, and graveyard chrome." },
       showProjection: { type: "boolean", default: true, description: "Draw settled viability/outcome strip." },
       showTethers: { type: "boolean", default: true, description: "Draw tethers between cores and property bodies." },
+      coreForceMode: { type: "string", enum: ["route", "net"] as const, default: "route", description: "Core-body vertical force model: authored route guidance or net lift/drag drift." },
       terminalBehavior: { type: "string", enum: ["outcome", "hold-last"] as const, default: "outcome" },
     },
     capabilities: {

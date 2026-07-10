@@ -9870,6 +9870,11 @@
               ],
               "description": "Timed gate effects that add/pop properties and set outcomes."
             },
+            "crashDetection": {
+              "type": "boolean",
+              "description": "Treat the crash line as a live failure trigger.",
+              "default": true
+            },
             "showChrome": {
               "type": "boolean",
               "description": "Draw route, socket, and graveyard chrome.",
@@ -9884,6 +9889,15 @@
               "type": "boolean",
               "description": "Draw tethers between cores and property bodies.",
               "default": true
+            },
+            "coreForceMode": {
+              "type": "string",
+              "enum": [
+                "route",
+                "net"
+              ],
+              "description": "Core-body vertical force model: authored route guidance or net lift/drag drift.",
+              "default": "route"
             },
             "terminalBehavior": {
               "type": "string",
