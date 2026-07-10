@@ -145,6 +145,7 @@ const PortabilitySpecPage = lazy(() => import("./pages/features/PortabilitySpecP
 const DataQualityBridgePage = lazy(() => import("./pages/features/DataQualityBridgePage"))
 const GenerativeUIPage = lazy(() => import("./pages/features/GenerativeUIPage"))
 const ObservablePlotPage = lazy(() => import("./pages/features/ObservablePlotPage"))
+const FlintChartAdapterPage = lazy(() => import("./pages/features/FlintChartAdapterPage"))
 const InteroperabilityPage = lazy(() => import("./pages/features/InteroperabilityPage"))
 const MermaidPage = lazy(() => import("./pages/features/MermaidPage"))
 const ArrowPage = lazy(() => import("./pages/features/ArrowPage"))
@@ -820,6 +821,7 @@ export default function DocsApp() {
                 <Route path="portability-spec" element={<PortabilitySpecPage />} />
                 <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
                 <Route path="observable-plot" element={<ObservablePlotPage />} />
+                <Route path="flint-chart" element={<FlintChartAdapterPage />} />
                 <Route path="mermaid" element={<MermaidPage />} />
                 <Route path="gofish" element={<GoFishLayoutsPage />} />
                 <Route path="arrow" element={<ArrowPage />} />

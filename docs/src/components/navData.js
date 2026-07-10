@@ -242,6 +242,7 @@ const navData = [
       { title: "Portability Spec", path: "/interoperability/portability-spec" },
       { title: "Vega-Lite", path: "/interoperability/vega-lite" },
       { title: "Observable Plot", path: "/interoperability/observable-plot" },
+      { title: "Flint Chart", path: "/interoperability/flint-chart" },
       { title: "Mermaid", path: "/interoperability/mermaid" },
       { title: "GoFish DisplayList", path: "/interoperability/gofish" },
       { title: "Apache Arrow", path: "/interoperability/arrow" },

@@ -53,6 +53,41 @@ describe("PipelineStore xScaleType=time integration", () => {
     expect(dec31Count).toBe(0)
   })
 
+  it("parses ISO year-month strings for time-scale line charts", () => {
+    const data = [
+      { month: "2026-01", value: 10 },
+      { month: "2026-02", value: 20 },
+      { month: "2026-03", value: 15 },
+    ]
+
+    const store = new PipelineStore({
+      chartType: "line",
+      xAccessor: "month",
+      yAccessor: "value",
+      xScaleType: "time",
+      runtimeMode: "bounded",
+      windowSize: 200,
+      windowMode: "sliding",
+      arrowOfTime: "right",
+      extentPadding: 0.05,
+    })
+
+    store.ingest({ inserts: data, bounded: true })
+    store.computeScene({ width: 600, height: 300 })
+
+    expect(store.xIsDate).toBe(true)
+    expect(store.scales).not.toBeNull()
+    const ticks = store.scales!.x.ticks(4)
+    expect(ticks[0]).toBeInstanceOf(Date)
+
+    const lineNode = store.scene.find((node) => node.type === "line")
+    expect(lineNode?.type).toBe("line")
+    if (lineNode?.type === "line") {
+      expect(lineNode.path).toHaveLength(3)
+      expect(lineNode.path.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))).toBe(true)
+    }
+  })
+
   it("produces number ticks (NOT Date) when xScaleType is NOT set", () => {
     const data = Array.from({ length: 90 }, (_, i) => {
       const d = new Date(2024, 0, 1 + i)

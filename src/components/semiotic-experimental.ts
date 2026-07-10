@@ -121,6 +121,22 @@ export type {
   ObservablePlotScale as UnstableObservablePlotScale,
   ObservablePlotChannel as UnstableObservablePlotChannel
 } from "./data/fromObservablePlot"
+// Flint Chart -> ChartConfig adapter. Consumes Flint's compact
+// ChartAssemblyInput shape as an ecosystem boundary format; staged here while
+// the coverage matrix and real-world fixtures settle.
+export { fromFlintChart as unstable_fromFlintChart } from "./data/fromFlintChart"
+export type {
+  FlintAggregate as UnstableFlintAggregate,
+  FlintChartAssemblyInput as UnstableFlintChartAssemblyInput,
+  FlintChartConfig as UnstableFlintChartConfig,
+  FlintChartConfigMetadata as UnstableFlintChartConfigMetadata,
+  FlintChartEncoding as UnstableFlintChartEncoding,
+  FlintChartSize as UnstableFlintChartSize,
+  FlintEncodingInput as UnstableFlintEncodingInput,
+  FlintEncodingType as UnstableFlintEncodingType,
+  FlintRawEncodingValue as UnstableFlintRawEncodingValue,
+  FlintSemanticAnnotation as UnstableFlintSemanticAnnotation
+} from "./data/fromFlintChart"
 
 // StreamPhysicsFrame M1 substrate. These are intentionally low-level and
 // unstable while the frame/HOC contract is proven in the internal sandbox.

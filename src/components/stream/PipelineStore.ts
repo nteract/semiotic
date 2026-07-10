@@ -29,6 +29,7 @@ import type {
   Style
 } from "./types"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
+import { coerceDateLikeValue, parseDateLikeString } from "../charts/shared/temporalStrings"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { now as getTimestamp, type ActiveTransition } from "./pipelineTransitionUtils"
@@ -363,22 +364,19 @@ export class PipelineStore {
 
         const isDateObj = rawVal instanceof Date
         const isDateStr = typeof rawVal === "string"
-          && rawVal.length >= 10
-          && !isNaN(new Date(rawVal).getTime())
-          && isNaN(Number(rawVal))
+          && Number.isFinite(parseDateLikeString(rawVal))
 
         this.xIsDate = isDateObj || isDateStr
 
         // resolveAccessor wraps with unary + which converts Date objects to
-        // epoch ms correctly, but date strings like "2003-01-06" become NaN.
+        // epoch ms correctly, but date strings like "2003-01-06" and
+        // year-month strings like "2003-01" become NaN.
         // Swap getX to a date-parsing accessor when date strings are detected.
         if (isDateStr) {
           const key = typeof rawAccessor === "string" ? rawAccessor : undefined
           this.getX = key
-            ? (d: Datum) => +new Date(d[key])
-            : (d: Datum) => +((rawAccessor as (d: Datum) => any)(d) instanceof Date
-                ? (rawAccessor as (d: Datum) => any)(d)
-                : new Date((rawAccessor as (d: Datum) => any)(d)))
+            ? (d: Datum) => coerceDateLikeValue(d[key])
+            : (d: Datum) => coerceDateLikeValue((rawAccessor as (d: Datum) => any)(d))
         }
       }
 

@@ -24,6 +24,7 @@ const GROUPS = [
     items: [
       { title: "Vega-Lite", path: "/interoperability/vega-lite", what: "fromVegaLite — the dominant declarative grammar (stable)." },
       { title: "Observable Plot", path: "/interoperability/observable-plot", what: "fromObservablePlot — the notebook→production handoff." },
+      { title: "Flint Chart", path: "/interoperability/flint-chart", what: "unstable_fromFlintChart — agent-authored semantic chart requests into Semiotic ChartConfig." },
       { title: "Mermaid", path: "/interoperability/mermaid", what: "fromMermaid — text-to-graph, compiled to a layered, accessible DAG." },
       { title: "GoFish DisplayList", path: "/interoperability/gofish", what: "unstable_fromGofishIR — maps GoFish's baked render IR (toDisplayList) onto a custom layout by role." },
     ],
