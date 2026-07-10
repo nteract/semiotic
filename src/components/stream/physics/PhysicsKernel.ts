@@ -949,7 +949,7 @@ export class PhysicsKernelWorld {
     const cellSize = Math.max(1, this.options.cellSize)
     const cells = new Map<string, number[]>()
     for (let i = 0; i < bodies.length; i += 1) {
-      if (!bodies[i].bodyCollisions) continue
+      if (bodies[i].bodyCollisions === false) continue
       const bounds = bodyBounds(bodies[i])
       const minX = Math.floor(bounds.minX / cellSize)
       const maxX = Math.floor(bounds.maxX / cellSize)
@@ -973,7 +973,7 @@ export class PhysicsKernelWorld {
         for (let j = i + 1; j < indexes.length; j += 1) {
           const a = indexes[i]
           const b = indexes[j]
-          if (!bodies[a].bodyCollisions || !bodies[b].bodyCollisions) continue
+          if (bodies[a].bodyCollisions === false || bodies[b].bodyCollisions === false) continue
           if (aabbOverlap(bodyBounds(bodies[a]), bodyBounds(bodies[b]))) {
             pairSet.add(`${a}:${b}`)
           }
