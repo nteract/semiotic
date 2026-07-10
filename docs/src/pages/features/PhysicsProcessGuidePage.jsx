@@ -4,6 +4,8 @@ import {
   GauntletChart,
   ProcessFlowChart,
   StreamPhysicsFrame,
+  comparePhysicsTrace,
+  physicsReferenceEnvelope,
   processStageLayout,
   processStageRegions,
   processVolumePolygons,
@@ -79,6 +81,38 @@ layout={(ctx) => {
 }}
 layoutConfig={{ highlightId }}`
 
+const serviceOperationsCode = `import {
+  createServiceResourcePoolController,
+  createServiceLevelController,
+  createDependencyGateController,
+} from "semiotic/physics"
+
+const agents = createServiceResourcePoolController({
+  resources: staffedAgents,
+  assignmentOffset: { x: 30, y: 0 },
+})
+
+const serviceLevel = createServiceLevelController({
+  bodyFilter: (body) => body.datum?.kind === "case",
+  deadlineAccessor: "promiseMinutes",
+  completionRegionId: "resolved",
+})
+
+const dependency = createDependencyGateController({
+  regionId: "upstream-recovery",
+  opensAt: recoveryMinute,
+  bodyFilter: (body) => body.datum?.requiresRecovery === true,
+})
+
+// The capacity queue owns work accounting; the resource pool is assigned
+// explicitly by domain callbacks, keeping service semantics deterministic.
+const desk = createCapacityQueueController({
+  regionId: "support",
+  unitsPerSecond: staffedAgents.length,
+  onQueued: (body) => agents.assign(body.id),
+  onProcessed: (body) => agents.release(body.id),
+})`
+
 const metricGeometryCode = `import {
   StreamPhysicsFrame,
   processStageLayout,
@@ -142,6 +176,24 @@ const groupRows = groupCompletionRows(groups, absorbedBodyIds)
   onRegionEvent={onRegionEvent}
   accessibleTable
 />`
+
+const referenceEnvelopeCode = `import {
+  comparePhysicsTrace,
+  physicsReferenceEnvelope,
+} from "semiotic/physics"
+
+const envelope = physicsReferenceEnvelope({
+  runs: historicalOrReplayTraces,
+  sampleAt: { start: 0, end: 30, step: 0.5 },
+  quantiles: [0.1, 0.5, 0.9],
+  interpolation: "step",
+})
+
+const evidence = comparePhysicsTrace(liveTrace, envelope, {
+  lower: 0.1,
+  upper: 0.9,
+})
+// evidence.aboveDuration, insideDuration, peakExcess, ...`
 
 const metricStages = [
   { id: "discovery", label: "Discovery" },
@@ -317,6 +369,86 @@ function MetricDrivenVolumeDemo() {
   )
 }
 
+const REFERENCE_DOC_RUNS = Array.from({ length: 9 }, (_, runIndex) => ({
+  id: `reference-${runIndex}`,
+  samples: Array.from({ length: 13 }, (_, index) => ({
+    time: index,
+    value: Math.max(
+      0,
+      2.4 + Math.sin(index * 0.72 + runIndex * 0.31) * 1.4 + (runIndex - 4) * 0.16,
+    ),
+  })),
+}))
+
+const REFERENCE_DOC_ENVELOPE = physicsReferenceEnvelope({
+  runs: REFERENCE_DOC_RUNS,
+  sampleAt: { start: 0, end: 12, step: 1 },
+  quantiles: [0.1, 0.5, 0.9],
+  interpolation: "linear",
+})
+
+function ReferenceEnvelopeDemo() {
+  const [load, setLoad] = useState(1)
+  const width = 720
+  const height = 220
+  const plot = { x: 38, y: 20, width: 664, height: 158 }
+  const trace = REFERENCE_DOC_ENVELOPE.points.map((point, index) => ({
+    time: point.time,
+    value: Math.max(0, (point.median ?? 0) * load + Math.sin(index * 0.9) * 0.45),
+  }))
+  const comparison = comparePhysicsTrace(trace, REFERENCE_DOC_ENVELOPE, {
+    lower: 0.1,
+    upper: 0.9,
+    interpolation: "linear",
+  })
+  const maxValue = Math.max(
+    7,
+    ...REFERENCE_DOC_ENVELOPE.points.map((point) => point.quantiles[0.9] ?? 0),
+    ...trace.map((point) => point.value),
+  )
+  const x = (time) => plot.x + (time / 12) * plot.width
+  const y = (value) => plot.y + plot.height - (value / maxValue) * plot.height
+  const upper = REFERENCE_DOC_ENVELOPE.points.map(
+    (point) => `${x(point.time)},${y(point.quantiles[0.9] ?? 0)}`,
+  )
+  const lower = [...REFERENCE_DOC_ENVELOPE.points]
+    .reverse()
+    .map((point) => `${x(point.time)},${y(point.quantiles[0.1] ?? 0)}`)
+  const actual = trace.map((point) => `${x(point.time)},${y(point.value)}`).join(" ")
+
+  return (
+    <div className="physics-reference-demo">
+      <div className="physics-reference-demo__controls">
+        <label htmlFor="physics-reference-load">Live trace load</label>
+        <input
+          id="physics-reference-load"
+          type="range"
+          min="0.65"
+          max="1.8"
+          step="0.05"
+          value={load}
+          onChange={(event) => setLoad(Number(event.target.value))}
+        />
+        <output htmlFor="physics-reference-load">{load.toFixed(2)}x</output>
+      </div>
+      <div className="physics-reference-demo__readouts" aria-live="polite">
+        <span><strong>{comparison.insideDuration.toFixed(1)}s</strong> inside</span>
+        <span><strong>{comparison.aboveDuration.toFixed(1)}s</strong> above</span>
+        <span><strong>{comparison.peakExcess.toFixed(1)}</strong> peak excess</span>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Adjustable live trace compared with a tenth to ninetieth percentile reference envelope.">
+        {[0, 0.5, 1].map((fraction) => (
+          <line key={fraction} x1={plot.x} x2={plot.x + plot.width} y1={plot.y + plot.height * fraction} y2={plot.y + plot.height * fraction} />
+        ))}
+        <polygon points={[...upper, ...lower].join(" ")} />
+        <polyline points={actual} />
+        <text x={plot.x} y={height - 12}>0s</text>
+        <text x={plot.x + plot.width} y={height - 12} textAnchor="end">12s</text>
+      </svg>
+    </div>
+  )
+}
+
 const decisionRows = [
   {
     choose: "ProcessFlowChart",
@@ -352,11 +484,11 @@ const checklist = [
   "Domain setup for the chart itself stays under ~150 lines",
   "Tooltips own chrome (inline background) or rely on FlippingTooltip auto-chrome",
   "Corridor integrity: bodies spawn and settle inside walls",
-  "If capacity matters, show queue depth / processed counts (onCapacityChange or chrome badges)",
+  "If capacity matters, show work, wait, utilization, pressure, and overflow from controller evidence",
 ]
 
 export default function PhysicsProcessGuidePage() {
-  const [capacityNote, setCapacityNote] = useState("—")
+  const [capacitySnapshot, setCapacitySnapshot] = useState(null)
   const prs = useMemo(
     () => [
       { id: "a1", stage: "coding", featureId: "auth", featureLabel: "Auth", reviewWork: 1.2, authorType: "human", mark: "circle" },
@@ -451,8 +583,13 @@ export default function PhysicsProcessGuidePage() {
         <div className="physics-process-guide__chart-card" style={card}>
           <h3 style={{ marginTop: 0 }}>ProcessFlowChart</h3>
           <p>
-            Many PRs · live capacity · feature sockets. Capacity readout:{" "}
-            <strong>{capacityNote}</strong>
+            Many PRs · live capacity · feature sockets. Review:{" "}
+            <strong>
+              q={capacitySnapshot?.queueDepth ?? 0},{" "}
+              oldest={(capacitySnapshot?.queueAge.oldestSeconds ?? 0).toFixed(1)}s,{" "}
+              util={Math.round((capacitySnapshot?.window.utilization ?? 0) * 100)}%,{" "}
+              pressure={(capacitySnapshot?.window.pressure ?? 0).toFixed(1)}x
+            </strong>
           </p>
           <ProcessFlowChart
             data={prs}
@@ -468,11 +605,7 @@ export default function PhysicsProcessGuidePage() {
             settle={false}
             onCapacityChange={(stats) => {
               const review = stats.find((s) => s.regionId.includes("review"))
-              if (review) {
-                setCapacityNote(
-                  `review q=${review.queueDepth} processed=${review.processedCount}`,
-                )
-              }
+              if (review) setCapacitySnapshot(review)
             }}
           />
         </div>
@@ -482,7 +615,8 @@ export default function PhysicsProcessGuidePage() {
       <p>
         Custom process essays should import the kit rather than inventing colliders:{" "}
         <code>processStageLayout</code>, <code>processVolumePolygons</code>, region factories,{" "}
-        <code>createCapacityQueueController</code>, <code>processChrome</code>.{" "}
+        <code>createCapacityQueueController</code>, <code>physicsReferenceEnvelope</code>,{" "}
+        <code>comparePhysicsTrace</code>, and <code>processChrome</code>.{" "}
         <code>layoutConfig</code> is the interaction hot path — regenerate geometry or
         styling without re-enqueueing bodies.
       </p>
@@ -497,6 +631,42 @@ export default function PhysicsProcessGuidePage() {
       </p>
       <MetricDrivenVolumeDemo />
       <CodeBlock language="jsx" code={metricGeometryCode} />
+
+      <h2>Capacity evidence and reference envelopes</h2>
+      <p>
+        <code>CapacityQueueSnapshot</code> distinguishes arrivals, admission, blocked work,
+        completion, and abandonment by semantic job visit. Queue ages, peaks, utilization,
+        throughput, and pressure advance in simulated fixed-step time. A separate reference
+        recipe aligns supplied or replayed traces; it does not claim that a quantile band is a
+        causal counterfactual. Move the load slider to compare one live trace with the same band.
+      </p>
+      <ReferenceEnvelopeDemo />
+      <CodeBlock language="jsx" code={referenceEnvelopeCode} />
+      <p>
+        See both contracts used together in <Link to="/examples/queue-weather">Player Support Capacity</Link>.
+      </p>
+
+      <h2>Finite service resources and external dependencies</h2>
+      <p>
+        Use <code>createServiceResourcePoolController</code> when staff, machines, or other
+        finite resources should be visible participants in the process rather than an abstract
+        rate. Assignment is explicit and deterministic; the controller supplies readable tethers,
+        home positions, and availability evidence. Pair it with <code>createServiceLevelController</code>
+        to model deadline breaches, protected cases, and late-but-completed outcomes.
+      </p>
+      <p>
+        <code>createDependencyGateController</code> holds only the work selected by its body filter
+        until a scheduled or live external condition opens. This distinguishes upstream-blocked
+        work from a capacity queue, and makes idle resources measurable instead of implying that
+        more service capacity can solve every delay.
+      </p>
+      <CodeBlock language="jsx" code={serviceOperationsCode} />
+      <p>
+        <code>processChrome</code> stages can also use a reader-facing <code>capacityLabel</code>
+        and per-stage <code>showBadge</code> flag, so a process can say “5 agents” instead of
+        exposing an unexplained implementation rate. See the complete interaction in{" "}
+        <Link to="/examples/queue-weather">Player Support Capacity</Link>.
+      </p>
 
       <h2>Journey and settled evidence</h2>
       <p>
@@ -533,7 +703,7 @@ export default function PhysicsProcessGuidePage() {
           <strong>liveCapacity</strong> — FIFO queue at <code>unitsPerSecond</code>, not just drag
         </li>
         <li>
-          <strong>onCapacityChange</strong> — queue depth + processed counts for readouts
+          <strong>onCapacityChange</strong> — work, age, overflow, throughput, utilization, and pressure
         </li>
         <li>
           <strong>bodyMark / __physicsMark</strong> — circle, halo, faceted, pill, diamond, square
@@ -558,6 +728,7 @@ export default function PhysicsProcessGuidePage() {
         Flagship demos:{" "}
         <Link to="/examples/watermarks">Watermarks</Link>,{" "}
         <Link to="/examples/plinko-quantile-dotplot">Plinko</Link>,{" "}
+        <Link to="/examples/queue-weather">Player Support Capacity</Link>,{" "}
         <Link to="/examples/merge-pressure">Merge Pressure</Link>,{" "}
         <Link to="/examples/not-in-my-backyard">NIMBY</Link>,{" "}
         <Link to="/examples/stakeholder-journey">Stakeholder Journey</Link>.

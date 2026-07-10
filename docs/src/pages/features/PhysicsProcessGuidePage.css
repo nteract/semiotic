@@ -114,12 +114,102 @@
   line-height: 1.5;
 }
 
+.physics-reference-demo {
+  width: 100%;
+  max-width: 760px;
+  margin: 18px 0 24px;
+  padding: 16px 0;
+  border-block: 1px solid var(--surface-3);
+}
+
+.physics-reference-demo__controls {
+  display: grid;
+  grid-template-columns: max-content minmax(140px, 1fr) 62px;
+  gap: 12px;
+  align-items: center;
+}
+
+.physics-reference-demo__controls label,
+.physics-reference-demo__controls output {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.physics-reference-demo__controls input {
+  width: 100%;
+  accent-color: #c2410c;
+}
+
+.physics-reference-demo__controls output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.physics-reference-demo__readouts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 12px 0 4px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.physics-reference-demo__readouts strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.physics-reference-demo svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+}
+
+.physics-reference-demo svg line {
+  stroke: var(--surface-3);
+  stroke-width: 1;
+}
+
+.physics-reference-demo svg polygon {
+  fill: rgb(14 116 144 / 16%);
+  stroke: rgb(14 116 144 / 52%);
+  stroke-width: 1;
+}
+
+.physics-reference-demo svg polyline {
+  fill: none;
+  stroke: #c2410c;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.physics-reference-demo svg text {
+  fill: var(--text-secondary);
+  font-size: 10px;
+  font-family: inherit;
+  letter-spacing: 0;
+}
+
 @media (max-width: 560px) {
   .physics-process-metric__controls {
     grid-template-columns: 1fr auto;
   }
 
   .physics-process-metric__controls input {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .physics-reference-demo__controls {
+    grid-template-columns: 1fr auto;
+  }
+
+  .physics-reference-demo__controls input {
     grid-column: 1 / -1;
     grid-row: 2;
   }

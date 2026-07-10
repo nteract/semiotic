@@ -495,6 +495,24 @@ export {
 
 export { processVolumePolygons } from "./processVolumeGeometry"
 
+export { comparePhysicsTrace, physicsReferenceEnvelope } from "./physicsReference"
+export type {
+  PhysicsReferenceBandSelector,
+  PhysicsReferenceEnvelope,
+  PhysicsReferenceEnvelopeOptions,
+  PhysicsReferenceEnvelopePoint,
+  PhysicsReferenceSampleGrid,
+  PhysicsReferenceTrace,
+  PhysicsScalarTraceSample,
+  PhysicsTraceAccessor,
+  PhysicsTraceComparison,
+  PhysicsTraceComparisonOptions,
+  PhysicsTraceComparisonPoint,
+  PhysicsTraceComparisonStatus,
+  PhysicsTraceInterpolation,
+  PhysicsTraceOutsideDomain
+} from "./physicsReference"
+
 export {
   createProcessJourneyLedger,
   processJourneyRows,
@@ -505,14 +523,36 @@ export {
 export {
   composePhysicsControllers,
   createCapacityQueueController,
-  createPortalController
+  createPortalController,
+  createDependencyGateController,
+  createServiceLevelController,
+  createServiceResourcePoolController
 } from "../stream/physics/PhysicsControllers"
 export type {
+  CapacityQueueAbandonedInfo,
+  CapacityQueueAgeSummary,
+  CapacityQueueBlockedInfo,
   CapacityQueueControllerOptions,
+  CapacityQueueProcessedInfo,
   CapacityQueueSnapshot,
+  CapacityQueueVisitInfo,
+  CapacityQueueWindowSnapshot,
   ComposedPhysicsControllers,
+  DependencyGateController,
+  DependencyGateOptions,
+  DependencyGateSnapshot,
   PhysicsController,
-  PhysicsControllerTickContext
+  PhysicsControllerTickContext,
+  ServiceLevelCaseInfo,
+  ServiceLevelCaseState,
+  ServiceLevelController,
+  ServiceLevelControllerOptions,
+  ServiceLevelSnapshot,
+  ServiceResourceAssignment,
+  ServiceResourceDefinition,
+  ServiceResourcePoolController,
+  ServiceResourcePoolOptions,
+  ServiceResourcePoolSnapshot
 } from "../stream/physics/PhysicsControllers"
 
 // Process chrome (stage bays, capacity badges, feature sockets).

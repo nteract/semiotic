@@ -18,6 +18,10 @@ export interface ProcessChromeStage {
   width: number
   count?: number
   capacity?: number
+  /** Reader-facing capacity badge; defaults to the numeric `cap` label. */
+  capacityLabel?: string
+  /** Override stage badges without hiding capacity badges across the layout. */
+  showBadge?: boolean
   absorb?: boolean
   portalTarget?: string
   queueDepth?: number
@@ -124,7 +128,11 @@ function stageRole(stage: ProcessChromeStage): keyof typeof ROLE_PALETTE {
 function stageBadge(stage: ProcessChromeStage): string {
   if (stage.capacity != null) {
     const q = stage.queueDepth != null ? ` · q ${stage.queueDepth}` : ""
-    return `cap ${Math.round(stage.capacity)}${q}`
+    if (stage.capacityLabel) return `${stage.capacityLabel}${q}`
+    const capacity = Number.isInteger(stage.capacity)
+      ? String(stage.capacity)
+      : stage.capacity.toFixed(1)
+    return `cap ${capacity}${q}`
   }
   if (stage.absorb) return "absorb"
   if (stage.portalTarget) return "portal"
@@ -217,7 +225,7 @@ export function processChrome(
         const badge = stageBadge(stage)
         const badgeTextMaxW = Math.max(16, bandW - 10)
         const fittedBadge = fittedLabel(badge, badgeTextMaxW, "auto")
-        const showBadge = showCapacityBadges && bandW >= 32
+        const showBadge = showCapacityBadges && stage.showBadge !== false && bandW >= 32
         const countText =
           stage.count != null
             ? `n=${stage.count}${stage.processed != null ? ` done ${stage.processed}` : ""}`

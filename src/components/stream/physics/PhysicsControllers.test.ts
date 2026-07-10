@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from "vitest"
 import {
   composePhysicsControllers,
   createCapacityQueueController,
-  createPortalController
+  createPortalController,
+  type CapacityQueueSnapshot
 } from "./PhysicsControllers"
 import { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import type { StreamPhysicsBodyRegionState } from "./StreamPhysicsFrame"
@@ -260,6 +261,367 @@ describe("createCapacityQueueController", () => {
       processedCount: 1,
       queueDepth: 0
     })
+  })
+
+  it("emits queued observations with stable visit ids and increments them after re-entry", () => {
+    const store = makeStore()
+    store.enqueue({
+      id: "root-a",
+      x: 100,
+      y: 100,
+      mass: 1,
+      shape: { type: "circle", radius: 5 },
+      datum: { jobId: "job-a", work: 2 }
+    })
+    store.tick(0)
+
+    const active = new Set(["root-a"])
+    const getRegionState = (
+      bodyId: string
+    ): StreamPhysicsBodyRegionState | undefined =>
+      active.has(bodyId)
+        ? {
+            activeRegionIds: ["review"],
+            regionIds: ["review"],
+            charges: {},
+            attributes: {},
+            energy: 0
+          }
+        : undefined
+    const onQueued = vi.fn()
+    const observationSpy = vi.spyOn(store, "recordObservation")
+    const controller = createCapacityQueueController({
+      regionId: "review",
+      unitsPerSecond: 0,
+      unitAccessor: "work",
+      jobKey: "jobId",
+      queueLayout: "none",
+      onQueued
+    })
+
+    controller.tick(controllerContext(store, getRegionState, 0, 0))
+    controller.tick(controllerContext(store, getRegionState, 0, 0))
+    expect(onQueued).toHaveBeenCalledTimes(1)
+    expect(onQueued.mock.calls[0][1]).toMatchObject({
+      bodyId: "root-a",
+      jobId: "job-a",
+      regionId: "review",
+      visit: 1,
+      visitId: "review:job-a:1"
+    })
+
+    active.clear()
+    controller.tick(controllerContext(store, getRegionState, 0, 0))
+    active.add("root-a")
+    controller.tick(controllerContext(store, getRegionState, 0, 0))
+
+    expect(onQueued).toHaveBeenCalledTimes(2)
+    expect(onQueued.mock.calls[1][1]).toMatchObject({
+      jobId: "job-a",
+      visit: 2,
+      visitId: "review:job-a:2"
+    })
+    const queuedObservations = observationSpy.mock.calls
+      .map(([observation]) => observation)
+      .filter((observation) => observation.type === "physics-capacity-queued")
+    expect(queuedObservations).toHaveLength(2)
+    expect(
+      queuedObservations.map((observation) => observation.visitId)
+    ).toEqual(["review:job-a:1", "review:job-a:2"])
+  })
+
+  it("reports waiting work, queue age, peaks, utilization, and pressure", () => {
+    const store = makeStore()
+    store.enqueue([
+      {
+        id: "a",
+        x: 100,
+        y: 100,
+        mass: 1,
+        shape: { type: "circle", radius: 5 },
+        datum: { work: 2 }
+      },
+      {
+        id: "b",
+        x: 110,
+        y: 100,
+        mass: 1,
+        shape: { type: "circle", radius: 5 },
+        datum: { work: 4 }
+      }
+    ])
+    store.tick(0)
+    const getRegionState = (): StreamPhysicsBodyRegionState => ({
+      activeRegionIds: ["review"],
+      regionIds: ["review"],
+      charges: {},
+      attributes: {},
+      energy: 0
+    })
+    const controller = createCapacityQueueController({
+      regionId: "review",
+      unitsPerSecond: 2,
+      unitAccessor: "work",
+      queueLayout: "none"
+    })
+
+    controller.tick(controllerContext(store, getRegionState, 0, 0))
+    controller.tick(controllerContext(store, getRegionState, 1, 1))
+    const snapshot = controller.getSnapshot?.() as CapacityQueueSnapshot
+
+    expect(snapshot).toMatchObject({
+      queueDepth: 1,
+      waitingWork: 4,
+      remainingWork: 4,
+      processedWork: 2,
+      completedWork: 2,
+      peakQueueDepth: 2,
+      peakRemainingWork: 6,
+      queueAge: {
+        count: 1,
+        meanSeconds: 1,
+        p50Seconds: 1,
+        p95Seconds: 1,
+        oldestSeconds: 1
+      },
+      window: {
+        seconds: 1,
+        arrivals: 2,
+        arrivalWork: 6,
+        completions: 1,
+        processedWork: 2,
+        utilization: 1,
+        pressure: 3
+      }
+    })
+  })
+
+  it("keeps overflow blocked and admits it with the same visit after capacity opens", () => {
+    const store = makeStore()
+    store.enqueue([
+      {
+        id: "a",
+        x: 100,
+        y: 100,
+        mass: 1,
+        shape: { type: "circle", radius: 5 },
+        datum: { work: 1 }
+      },
+      {
+        id: "b",
+        x: 110,
+        y: 100,
+        mass: 1,
+        shape: { type: "circle", radius: 5 },
+        datum: { work: 1 }
+      }
+    ])
+    store.tick(0)
+    const getRegionState = (): StreamPhysicsBodyRegionState => ({
+      activeRegionIds: ["review"],
+      regionIds: ["review"],
+      charges: {},
+      attributes: {},
+      energy: 0
+    })
+    const onQueued = vi.fn()
+    const onBlocked = vi.fn()
+    const controller = createCapacityQueueController({
+      regionId: "review",
+      unitsPerSecond: 1,
+      unitAccessor: "work",
+      maxQueue: 1,
+      queueLayout: "none",
+      onQueued,
+      onBlocked
+    })
+
+    controller.tick(controllerContext(store, getRegionState, 0, 0))
+    expect(controller.getSnapshot?.()).toMatchObject({
+      queueDepth: 1,
+      blockedDepth: 1,
+      blockedCount: 1,
+      admittedCount: 1,
+      waitingWork: 2
+    })
+    expect(onBlocked).toHaveBeenCalledTimes(1)
+    const blockedVisitId = onBlocked.mock.calls[0][1].visitId
+
+    controller.tick(controllerContext(store, getRegionState, 1, 1))
+    expect(controller.getSnapshot?.()).toMatchObject({
+      queueDepth: 1,
+      blockedDepth: 0,
+      admittedCount: 2,
+      processedCount: 1,
+      waitingWork: 1
+    })
+    expect(onQueued).toHaveBeenCalledTimes(2)
+    expect(onQueued.mock.calls[1][0].id).toBe("b")
+    expect(onQueued.mock.calls[1][1]).toMatchObject({
+      visit: 1,
+      visitId: blockedVisitId,
+      queuedAt: 0
+    })
+  })
+
+  it("records abandonment when admitted work leaves before completion", () => {
+    const store = makeStore()
+    store.enqueue({
+      id: "a",
+      x: 100,
+      y: 100,
+      mass: 1,
+      shape: { type: "circle", radius: 5 },
+      datum: { work: 2 }
+    })
+    store.tick(0)
+    const active = new Set(["a"])
+    const getRegionState = (
+      bodyId: string
+    ): StreamPhysicsBodyRegionState | undefined =>
+      active.has(bodyId)
+        ? {
+            activeRegionIds: ["review"],
+            regionIds: ["review"],
+            charges: {},
+            attributes: {},
+            energy: 0
+          }
+        : undefined
+    const onAbandoned = vi.fn()
+    const observationSpy = vi.spyOn(store, "recordObservation")
+    const controller = createCapacityQueueController({
+      regionId: "review",
+      unitsPerSecond: 1,
+      unitAccessor: "work",
+      queueLayout: "none",
+      onAbandoned
+    })
+
+    controller.tick(controllerContext(store, getRegionState, 0, 0))
+    controller.tick(controllerContext(store, getRegionState, 0.5, 0.5))
+    active.clear()
+    controller.tick(controllerContext(store, getRegionState, 0.25, 0.75))
+    controller.tick(controllerContext(store, getRegionState, 0.25, 1))
+
+    expect(onAbandoned).toHaveBeenCalledTimes(1)
+    expect(onAbandoned.mock.calls[0][1]).toMatchObject({
+      bodyId: "a",
+      visit: 1,
+      visitId: "review:a:1",
+      work: 2,
+      remainingWork: 1.5,
+      abandonedAt: 0.75,
+      queueSeconds: 0.75
+    })
+    expect(controller.getSnapshot?.()).toMatchObject({
+      queueDepth: 0,
+      waitingWork: 0,
+      abandonedCount: 1,
+      abandonedWork: 1.5,
+      processedWork: 0.5
+    })
+    expect(
+      observationSpy.mock.calls.filter(
+        ([observation]) => observation.type === "physics-capacity-abandoned"
+      )
+    ).toHaveLength(1)
+  })
+
+  it("deduplicates compound bodies that resolve to the same semantic job", () => {
+    const store = makeStore()
+    store.enqueue([
+      {
+        id: "root",
+        x: 100,
+        y: 100,
+        mass: 1,
+        shape: { type: "circle", radius: 5 },
+        datum: { jobId: "bus-7", kind: "root", work: 1 }
+      },
+      {
+        id: "satellite",
+        x: 106,
+        y: 100,
+        mass: 1,
+        shape: { type: "circle", radius: 3 },
+        datum: { jobId: "bus-7", kind: "satellite", work: 1 }
+      }
+    ])
+    store.tick(0)
+    const getRegionState = (): StreamPhysicsBodyRegionState => ({
+      activeRegionIds: ["review"],
+      regionIds: ["review"],
+      charges: {},
+      attributes: {},
+      energy: 0
+    })
+    const onQueued = vi.fn()
+    const onProcessed = vi.fn()
+    const controller = createCapacityQueueController({
+      regionId: "review",
+      unitsPerSecond: 10,
+      unitAccessor: "work",
+      jobKey: "jobId",
+      queueLayout: "none",
+      onQueued,
+      onProcessed
+    })
+
+    controller.tick(controllerContext(store, getRegionState, 0.2, 0.2))
+    controller.tick(controllerContext(store, getRegionState, 0.2, 0.4))
+
+    expect(onQueued).toHaveBeenCalledTimes(1)
+    expect(onProcessed).toHaveBeenCalledTimes(1)
+    expect(onQueued.mock.calls[0][1]).toMatchObject({
+      jobId: "bus-7",
+      visit: 1,
+      visitId: "review:bus-7:1"
+    })
+    expect(controller.getSnapshot?.()).toMatchObject({
+      arrivalCount: 1,
+      admittedCount: 1,
+      processedCount: 1,
+      completedWork: 1
+    })
+  })
+
+  it("does not advance queue time or rolling metrics on zero-dt ticks", () => {
+    const store = makeStore()
+    store.enqueue({
+      id: "a",
+      x: 100,
+      y: 100,
+      mass: 1,
+      shape: { type: "circle", radius: 5 },
+      datum: { work: 2 }
+    })
+    store.tick(0)
+    const getRegionState = (): StreamPhysicsBodyRegionState => ({
+      activeRegionIds: ["review"],
+      regionIds: ["review"],
+      charges: {},
+      attributes: {},
+      energy: 0
+    })
+    const controller = createCapacityQueueController({
+      regionId: "review",
+      unitsPerSecond: 1,
+      unitAccessor: "work",
+      queueLayout: "none"
+    })
+
+    controller.tick(controllerContext(store, getRegionState, 0.5, 0.5))
+    const before = controller.getSnapshot?.() as CapacityQueueSnapshot
+    controller.tick(controllerContext(store, getRegionState, 0, 10))
+    const after = controller.getSnapshot?.() as CapacityQueueSnapshot
+
+    expect(after.simulatedAt).toBe(before.simulatedAt)
+    expect(after.queueAge).toEqual(before.queueAge)
+    expect(after.window).toEqual(before.window)
+    expect(after.processedWork).toBe(before.processedWork)
+    expect(after.remainingWork).toBe(before.remainingWork)
+    expect(after.metricRevision).toBe(before.metricRevision)
   })
 
   it("composes controllers into a continuous bodyForce and onTick", () => {

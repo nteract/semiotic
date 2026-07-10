@@ -172,6 +172,9 @@ const PlinkoQuantileDotplotExamplePage = lazy(
 const StakeholderJourneyExamplePage = lazy(
   () => import("./pages/examples/StakeholderJourneyExamplePage"),
 )
+const QueueWeatherExamplePage = lazy(
+  () => import("./pages/examples/QueueWeatherExamplePage"),
+)
 const MergePressureExamplePage = lazy(
   () => import("./pages/examples/MergePressureExamplePage"),
 )
@@ -411,6 +414,7 @@ export default function DocsApp() {
                 path="examples/stakeholder-journey"
                 element={<StakeholderJourneyExamplePage />}
               />
+              <Route path="examples/queue-weather" element={<QueueWeatherExamplePage />} />
               <Route
                 path="examples/merge-pressure"
                 element={<MergePressureExamplePage />}

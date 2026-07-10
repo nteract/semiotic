@@ -1,0 +1,118 @@
+.examples-filter-bar {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 28px;
+  padding: 16px 0;
+  border-top: 1px solid var(--surface-3);
+  border-bottom: 1px solid var(--surface-3);
+}
+
+.examples-filter-group {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.examples-filter-label {
+  padding-top: 7px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.examples-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.examples-filter-option {
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 1px solid var(--surface-3);
+  border-radius: 5px;
+  background: var(--surface-0);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.examples-filter-option span {
+  display: inline-block;
+  min-width: 1.1em;
+  margin-left: 3px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.examples-filter-option:hover:not(:disabled),
+.examples-filter-option[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--surface-0);
+}
+
+.examples-filter-option[aria-pressed="true"] span {
+  color: inherit;
+}
+
+.examples-filter-option:focus-visible,
+.examples-filter-reset:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.examples-filter-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.examples-filter-summary {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-left: 74px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.examples-filter-reset {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.examples-empty-state {
+  padding: 24px 0;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+@media (max-width: 560px) {
+  .examples-filter-group {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .examples-filter-label,
+  .examples-filter-summary {
+    padding-left: 0;
+  }
+
+  .examples-filter-label {
+    padding-top: 0;
+  }
+}

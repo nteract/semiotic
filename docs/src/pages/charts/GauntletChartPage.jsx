@@ -70,7 +70,7 @@ const gauntletChartProps = [
   { name: "viability", type: "function", required: false, default: "built-in score", description: "Computes project viability from project state and property definitions." },
   { name: "outcome", type: "function", required: false, default: "built if viability > 20", description: "Computes final outcome when a final event does not set one directly." },
   { name: "onStateChange", type: "function", required: false, default: null, description: "Receives live GauntletProjectState rows after effects, crashes, and outcomes change." },
-  { name: "onCapacityChange", type: "function", required: false, default: null, description: "Receives live queue snapshots for gates that declare capacity." },
+  { name: "onCapacityChange", type: "function", required: false, default: null, description: "Receives visit-aware queue, blocked-work, age, peak, throughput, utilization, and pressure snapshots for capacitated gates." },
   { name: "tooltip", type: "boolean | function | object", required: false, default: "true", description: "Enable the default project/property tooltip, pass a custom tooltip renderer/config, or set false to disable hover tooltips." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Advanced StreamPhysicsFrame props for custom rendering, region effects, config, accessibility, and hooks." },
 ]

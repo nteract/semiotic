@@ -66,13 +66,10 @@ export interface PhysicsQueuedSpawn extends PhysicsBodySpec {
 }
 
 export type PhysicsSpawnPacing =
-  | "immediate"
-  | "arrival"
-  | { ratePerSec: number }
+  "immediate" | "arrival" | { ratePerSec: number }
 
 export type PhysicsSpawnTimeAccessor =
-  | string
-  | ((spawn: PhysicsQueuedSpawn, index: number) => unknown)
+  string | ((spawn: PhysicsQueuedSpawn, index: number) => unknown)
 
 export interface PhysicsSpawnPacingOptions {
   pacing?: PhysicsSpawnPacing
@@ -100,6 +97,8 @@ export type PhysicsObservationEventType =
   | "physics-barrier-cross"
   | "physics-capacity-processed"
   | "physics-capacity-queued"
+  | "physics-capacity-blocked"
+  | "physics-capacity-abandoned"
   | "sim-active"
   | "sim-idle"
 
@@ -134,6 +133,16 @@ export interface PhysicsObservationEvent {
   regionId?: string
   /** Work units processed when a capacity queue releases a body. */
   work?: number
+  /** Semantic service identity and visit metadata for capacity controllers. */
+  jobId?: string
+  visitId?: string
+  visit?: number
+  queuedAt?: number
+  completedAt?: number
+  queueSeconds?: number
+  queueDepth?: number
+  blockedDepth?: number
+  remainingWork?: number
 }
 
 export type PhysicsObservationRecord = Omit<
@@ -229,7 +238,9 @@ export interface PhysicsPipelineControlSurface {
   readBodies: (out?: PhysicsBodyState[]) => PhysicsBodyState[]
   readSediment: () => PhysicsSedimentBinSnapshot[]
   bodyBudgetStatus: () => PhysicsBodyBudgetDecision
-  recordObservation: (event: PhysicsObservationRecord) => PhysicsObservationEvent
+  recordObservation: (
+    event: PhysicsObservationRecord
+  ) => PhysicsObservationEvent
   remove: (ids: string[]) => string[]
   restore: (snapshot: PhysicsPipelineSnapshot) => void
   resume: () => void

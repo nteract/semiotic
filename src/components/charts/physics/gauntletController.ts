@@ -52,8 +52,9 @@ export function capacitySnapshotsEqual(
     return (
       snapshot.regionId === other.regionId &&
       snapshot.queueDepth === other.queueDepth &&
+      snapshot.blockedDepth === other.blockedDepth &&
       snapshot.processedCount === other.processedCount &&
-      Math.abs(snapshot.remainingWork - other.remainingWork) < 0.01
+      snapshot.metricRevision === other.metricRevision
     )
   })
 }

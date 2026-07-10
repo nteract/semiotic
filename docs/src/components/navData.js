@@ -158,6 +158,7 @@ const navData = [
     path: "/examples",
     children: [
       { title: "The Stakeholder Journey", path: "/examples/stakeholder-journey" },
+      { title: "Queue Weather", path: "/examples/queue-weather" },
       { title: "Merge Pressure", path: "/examples/merge-pressure" },
       { title: "Not in MY Backyard", path: "/examples/not-in-my-backyard" },
       { title: "Brushable Weather Rings", path: "/examples/climate-radial-weather" },

@@ -102,9 +102,9 @@ export interface ProcessFlowChartProps<TDatum extends Datum = Datum>
 }
 
 /**
- * Equality for capacity chrome/callback re-renders. Compares discrete
- * display fields only — remainingWork drifts every tick and would force
- * React updates at frame rate without changing queueDepth badges.
+ * Capacity controllers expose a coarse metricRevision (default 4 Hz), so
+ * callbacks can receive live work/age/utilization without rerendering at RAF
+ * frequency. Discrete queue changes also advance the revision immediately.
  */
 function capacitySnapshotsEqual(
   a: Record<string, CapacityQueueSnapshot>,
@@ -119,9 +119,11 @@ function capacitySnapshotsEqual(
     if (!next) return false
     if (
       prev.queueDepth !== next.queueDepth ||
+      prev.blockedDepth !== next.blockedDepth ||
       prev.processedCount !== next.processedCount ||
       prev.unitsPerSecond !== next.unitsPerSecond ||
-      prev.regionId !== next.regionId
+      prev.regionId !== next.regionId ||
+      prev.metricRevision !== next.metricRevision
     ) {
       return false
     }
