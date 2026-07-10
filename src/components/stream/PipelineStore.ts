@@ -29,6 +29,7 @@ import type {
   Style
 } from "./types"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
+import { coerceDateLikeValue, parseDateLikeString } from "../charts/shared/temporalStrings"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { now as getTimestamp, type ActiveTransition } from "./pipelineTransitionUtils"
@@ -101,23 +102,6 @@ export {
   DEFAULT_GROWING_MAX_CAPACITY,
   GROWING_CAPACITY_WARN_THRESHOLD
 } from "./pipelineConfig"
-
-const ISO_YEAR_MONTH = /^\d{4}-\d{1,2}$/
-
-function parseDateLikeString(value: string): number {
-  const trimmed = value.trim()
-  if (!trimmed || !Number.isNaN(Number(trimmed))) return NaN
-  const normalized = ISO_YEAR_MONTH.test(trimmed) ? `${trimmed}-01` : trimmed
-  if (normalized === trimmed && trimmed.length < 10) return NaN
-  const parsed = Date.parse(normalized)
-  return Number.isFinite(parsed) ? parsed : NaN
-}
-
-function coerceDateLikeX(value: unknown): number {
-  if (value instanceof Date) return value.getTime()
-  if (typeof value === "string") return parseDateLikeString(value)
-  return +(value as number)
-}
 
 // ── PipelineStore config ───────────────────────────────────────────────
 
@@ -391,8 +375,8 @@ export class PipelineStore {
         if (isDateStr) {
           const key = typeof rawAccessor === "string" ? rawAccessor : undefined
           this.getX = key
-            ? (d: Datum) => coerceDateLikeX(d[key])
-            : (d: Datum) => coerceDateLikeX((rawAccessor as (d: Datum) => any)(d))
+            ? (d: Datum) => coerceDateLikeValue(d[key])
+            : (d: Datum) => coerceDateLikeValue((rawAccessor as (d: Datum) => any)(d))
         }
       }
 

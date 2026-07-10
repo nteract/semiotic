@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { coerceTemporalStringRows } from "../charts/shared/temporalStrings"
 import type { ChartConfig } from "../export/chartConfig"
 
 /**
@@ -67,10 +68,7 @@ export interface FlintChartConfigMetadata {
   unmappedEncodings?: Record<string, FlintRawEncodingValue>
 }
 
-export type FlintChartConfig = ChartConfig & {
-  warnings?: string[]
-  flint: FlintChartConfigMetadata
-}
+export type FlintChartConfig = ChartConfig & { warnings?: string[]; flint: FlintChartConfigMetadata }
 
 type NormalizedEncodings = Record<string, FlintChartEncoding>
 type ChartKind =
@@ -117,8 +115,6 @@ const FLINT_CHANNEL_ALIASES: Record<string, string> = {
   theta: "size",
   value: "size",
 }
-
-const ISO_YEAR_MONTH = /^\d{4}-\d{1,2}$/
 
 const CONSUMED_CHANNELS: Record<ChartKind, string[]> = {
   bar: ["x", "y", "color"],
@@ -226,45 +222,8 @@ function booleanProp(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined
 }
 
-function parseTemporalString(value: string): number {
-  const trimmed = value.trim()
-  if (!trimmed || !Number.isNaN(Number(trimmed))) return NaN
-  const normalized = ISO_YEAR_MONTH.test(trimmed) ? `${trimmed}-01` : trimmed
-  if (normalized === trimmed && trimmed.length < 10) return NaN
-  const parsed = Date.parse(normalized)
-  return Number.isFinite(parsed) ? parsed : NaN
-}
-
-function coerceTemporalStringRows(
-  data: Datum[] | undefined,
-  fieldName: string | undefined,
-  axis: "x" | "y",
-  warnings: string[],
-): Datum[] | undefined {
-  if (!data || !fieldName) return data
-
-  let changed = false
-  let failed = false
-  const next = data.map((row) => {
-    const raw = row[fieldName]
-    if (typeof raw !== "string") return row
-
-    const parsed = parseTemporalString(raw)
-    changed = true
-    if (!Number.isFinite(parsed)) {
-      failed = true
-      return { ...row, [fieldName]: NaN }
-    }
-    return { ...row, [fieldName]: parsed }
-  })
-
-  if (failed) {
-    warnings.push(
-      `Temporal ${axis} field "${fieldName}" contains unparseable date strings; those rows will be skipped by the time scale. Prefer Date objects, ISO date strings, or epoch timestamps.`,
-    )
-  }
-
-  return changed ? next : data
+function warnTemporalCoercion(fieldName: string | undefined, axis: "x" | "y", warnings: string[]): void {
+  warnings.push(`Temporal ${axis} field "${fieldName || "unknown"}" contains unparseable date strings; those rows will be skipped by the time scale. Prefer Date objects, ISO date strings, or epoch timestamps.`)
 }
 
 function applySize(
@@ -573,8 +532,16 @@ function buildXY(
   const wantsXTime = looksTemporal(encodings.x, x, semanticTypes)
   const wantsYTime = looksTemporal(encodings.y, y, semanticTypes)
   let nextData = aggregate.data
-  if (wantsXTime) nextData = coerceTemporalStringRows(nextData, x, "x", warnings)
-  if (wantsYTime) nextData = coerceTemporalStringRows(nextData, aggregate.valueAccessor, "y", warnings)
+  if (wantsXTime) {
+    const result = coerceTemporalStringRows(nextData, x)
+    nextData = result.data
+    if (result.failed) warnTemporalCoercion(x, "x", warnings)
+  }
+  if (wantsYTime) {
+    const result = coerceTemporalStringRows(nextData, aggregate.valueAccessor)
+    nextData = result.data
+    if (result.failed) warnTemporalCoercion(aggregate.valueAccessor, "y", warnings)
+  }
 
   setData(props, nextData)
   if (x) props.xAccessor = x
