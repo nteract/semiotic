@@ -25,11 +25,11 @@ export const EXAMPLES = [
   {
     title: "The Stakeholder Journey",
     path: "/examples/stakeholder-journey",
-    eyebrow: "StreamPhysicsFrame · contributor pipeline",
+    eyebrow: "StreamPhysicsFrame · controlled process comparison",
     description:
-      "A physics argument about open-source sustainability: permeable membranes lead to First Impact, charged participants either retain community energy, and the OSE Canvas becomes a force-field composer behind the journey.",
+      "One deterministic cohort begins from the same path through Habit; a stage ledger measures the invitation relay and feeds Leadership reach back into synchronized process geometry.",
     preview: "stakeholder-journey",
-    badges: ["StreamPhysicsFrame", "Physics", "OSE Canvas"],
+    badges: ["StreamPhysicsFrame", "Stage ledger", "Live geometry"],
   },
   {
     title: "Merge Pressure",

@@ -18,7 +18,6 @@ import type {
 import type {
   PhysicsSemanticItem,
   StreamPhysicsRegionEffect,
-  StreamPhysicsRegionEvent,
   StreamPhysicsRegionKind,
   StreamPhysicsRegionVector
 } from "../stream/physics/StreamPhysicsFrame"
@@ -73,6 +72,12 @@ export interface ProcessVolumeLayoutOptions {
    */
   pinchRatio?: number
   /**
+   * Plot-pixel offset added to the ratio-derived pinch height. Recompute the
+   * layout with a live metric here to move bowtie/funnel walls and boundaries
+   * as one. Lane geometry is unaffected.
+   */
+  pinchHeightOffset?: number
+  /**
    * Bowtie: which stage index is the center "pinch" band
    * (default: middle stage).
    */
@@ -101,7 +106,9 @@ export interface ProcessVolumeStageBand {
   /** Center x of the stage band. */
   x: number
   width: number
+  /** Center y of the stage slice's axis-aligned physical envelope. */
   y: number
+  /** Height of the stage slice's axis-aligned physical envelope. */
   height: number
 }
 
@@ -125,6 +132,8 @@ export interface ProcessVolumeLayout {
   midY: number
   centerLeft: number
   centerRight: number
+  /** Resolved interior height of the bowtie/funnel pinch in plot pixels. */
+  pinchHeight: number
   pinchTop: number
   pinchBottom: number
   stages: ProcessVolumeStageBand[]
@@ -201,7 +210,16 @@ export function processStageLayout(
   const midY = (topY + bottomY) / 2
   const usableHeight = Math.max(1, bottomY - topY)
   const pinchRatio = clamp(options.pinchRatio ?? 0.18, 0.06, 0.5)
-  const pinchHalf = (usableHeight * pinchRatio) / 2
+  const authoredPinchOffset = Number(options.pinchHeightOffset ?? 0)
+  const pinchHeightOffset = Number.isFinite(authoredPinchOffset)
+    ? authoredPinchOffset
+    : 0
+  const pinchHeight = clamp(
+    usableHeight * pinchRatio + pinchHeightOffset,
+    usableHeight * 0.06,
+    usableHeight * 0.5
+  )
+  const pinchHalf = pinchHeight / 2
   const pinchTop = midY - pinchHalf
   const pinchBottom = midY + pinchHalf
   const idPrefix = options.idPrefix ?? "process"
@@ -221,7 +239,7 @@ export function processStageLayout(
   const totalShare = sumShares(stagesIn)
   const span = right - left
   let cursor = left
-  const stages: ProcessVolumeStageBand[] = stagesIn.map((stage, index) => {
+  const stageBands: ProcessVolumeStageBand[] = stagesIn.map((stage, index) => {
     const share = stage.share ?? 1
     const bandWidth = (share / totalShare) * span
     const x0 = cursor
@@ -242,7 +260,7 @@ export function processStageLayout(
     }
   })
 
-  const centerStage = stages[centerStageIndex]
+  const centerStage = stageBands[centerStageIndex]
   const centerLeft = centerStage.x0
   const centerRight = centerStage.x1
 
@@ -273,6 +291,22 @@ export function processStageLayout(
       ? pinchTop + (topY - pinchTop) * t
       : pinchBottom + (bottomY - pinchBottom) * t
   }
+
+  const stages = stageBands.map((stage) => {
+    const stageTop = Math.min(
+      boundaryY(stage.x0, "top"),
+      boundaryY(stage.x1, "top")
+    )
+    const stageBottom = Math.max(
+      boundaryY(stage.x0, "bottom"),
+      boundaryY(stage.x1, "bottom")
+    )
+    return {
+      ...stage,
+      y: (stageTop + stageBottom) / 2,
+      height: Math.max(1, stageBottom - stageTop)
+    }
+  })
 
   const wallOpts = { thickness, friction, restitution }
   const colliders: PhysicsColliderSpec[] = []
@@ -468,6 +502,7 @@ export function processStageLayout(
     midY,
     centerLeft,
     centerRight,
+    pinchHeight,
     pinchTop,
     pinchBottom,
     stages,
@@ -476,38 +511,6 @@ export function processStageLayout(
     regionEffects,
     boundaryY
   }
-}
-
-/**
- * Sample a spawn / spring target inside a stage band, respecting volume walls.
- */
-export function stageTargetInVolume(
-  layout: ProcessVolumeLayout,
-  stageId: string,
-  options: {
-    random?: () => number
-    /** Horizontal position inside the stage as 0–1 (default 0.5). */
-    along?: number
-    jitterX?: number
-    padY?: number
-  } = {}
-): { x: number; y: number } {
-  const random = options.random ?? Math.random
-  const stage =
-    layout.stages.find((candidate) => candidate.id === stageId) ??
-    layout.stages[layout.stages.length - 1]
-  const along = clamp(options.along ?? 0.5, 0.05, 0.95)
-  const jitterX = options.jitterX ?? 0
-  const padY = options.padY ?? 20
-  const x =
-    stage.x0 +
-    (stage.x1 - stage.x0) * along +
-    (random() * 2 - 1) * jitterX
-  const top = layout.boundaryY(x, "top") + padY
-  const bottom = layout.boundaryY(x, "bottom") - padY
-  const y =
-    bottom <= top ? layout.midY : top + random() * Math.max(1, bottom - top)
-  return { x, y }
 }
 
 // ── Region effect factories ──────────────────────────────────────────────
@@ -578,6 +581,59 @@ function regionBase(
     onEnter: options.onEnter,
     onExit: options.onExit
   }
+}
+
+export interface ProcessStageRegionOptions {
+  /** Region ids become `${idPrefix}:${stageId}`. Defaults to `stage`. */
+  idPrefix?: string
+  insetX?: number
+  insetY?: number
+  bodyFilter?: PhysicsColliderBodyFilter
+  semanticItem?: false | Partial<PhysicsSemanticItem>
+  metadata?:
+    | Record<string, unknown>
+    | ((stage: ProcessVolumeStageBand) => Record<string, unknown>)
+}
+
+/** Build one observation region from every stage's physical envelope. */
+export function processStageRegions(
+  layout: ProcessVolumeLayout,
+  options: ProcessStageRegionOptions = {}
+): StreamPhysicsRegionEffect[] {
+  const idPrefix = options.idPrefix ?? "stage"
+  const insetX = Math.max(0, options.insetX ?? 0)
+  const insetY = Math.max(0, options.insetY ?? 1)
+  return layout.stages.map((stage) => {
+    const authoredMetadata =
+      typeof options.metadata === "function"
+        ? options.metadata(stage)
+        : options.metadata ?? {}
+    return {
+      ...regionBase({
+        id: idPrefix ? `${idPrefix}:${stage.id}` : stage.id,
+        label: stage.label ?? stage.id,
+        description: stage.description,
+        kind: "region",
+        x: stage.x,
+        y: stage.y,
+        width: Math.max(1, stage.width - insetX * 2),
+        height: Math.max(1, stage.height - insetY * 2),
+        bodyFilter: options.bodyFilter,
+        semanticItem: options.semanticItem,
+        attributes: {
+          primitive: "processStage",
+          stageId: stage.id,
+          stageIndex: stage.index
+        },
+        metadata: {
+          ...authoredMetadata,
+          primitive: "processStage",
+          stageId: stage.id,
+          stageIndex: stage.index
+        }
+      })
+    }
+  })
 }
 
 /** Permeable information membrane: damps and taxes energy, does not block. */
@@ -898,131 +954,6 @@ export function bodyGroupSpec<TDatum extends Datum = Datum>(
   }
 }
 
-// ── Aggregates / settled projection ──────────────────────────────────────
-
-export interface RegionCountBucket {
-  id: string
-  label?: string
-  count: number
-  bodyIds: string[]
-}
-
-export type RegionCountMap = Record<string, RegionCountBucket>
-
-/**
- * Reduce region-enter events into per-region unique body counts.
- * Suitable for settled-projection rows and example readouts.
- */
-export function aggregateRegionCounts(
-  previous: RegionCountMap,
-  event: Pick<StreamPhysicsRegionEvent, "type" | "bodyId" | "region">
-): RegionCountMap {
-  if (event.type !== "region-enter") return previous
-  const regionId = event.region.id
-  const current = previous[regionId] ?? {
-    id: regionId,
-    label: event.region.label ?? regionId,
-    count: 0,
-    bodyIds: []
-  }
-  if (current.bodyIds.includes(event.bodyId)) return previous
-  const bodyIds = [...current.bodyIds, event.bodyId]
-  return {
-    ...previous,
-    [regionId]: {
-      ...current,
-      count: bodyIds.length,
-      bodyIds
-    }
-  }
-}
-
-export function regionCountsToProjectionRows(
-  counts: RegionCountMap,
-  order?: readonly string[]
-): Array<{ label: string; value: number }> {
-  const ids = order ?? Object.keys(counts)
-  return ids
-    .map((id) => counts[id])
-    .filter((bucket): bucket is RegionCountBucket => bucket != null)
-    .map((bucket) => ({
-      label: bucket.label ?? bucket.id,
-      value: bucket.count
-    }))
-}
-
-/**
- * Group-completion ledger for all-members, any-member, and weighted-threshold
- * stories. Pure: callers supply which member ids have been absorbed.
- */
-export function groupCompletionRows(
-  groups: readonly BodyGroupSpec[],
-  absorbedBodyIds: ReadonlySet<string> | readonly string[]
-): Array<{
-  id: string
-  label: string
-  mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"
-  complete: boolean
-  absorbed: number
-  total: number
-  absorbedValue: number
-  totalValue: number
-  threshold?: number
-  missing: string[]
-}> {
-  const absorbed =
-    absorbedBodyIds instanceof Set
-      ? absorbedBodyIds
-      : new Set(absorbedBodyIds)
-  return groups.map((group) => {
-    const members = group.bodyIds ?? []
-    const missing = members.filter((id) => !absorbed.has(id))
-    const absorbedCount = members.length - missing.length
-    const mode = group.completion?.mode ?? "allMembersAbsorbed"
-    const valueByBodyId = group.completion?.valueByBodyId
-    const memberValue = (bodyId: string): number => {
-      const configured = valueByBodyId?.[bodyId]
-      return Number.isFinite(configured) && Number(configured) >= 0
-        ? Number(configured)
-        : 1
-    }
-    const totalValue = members.reduce(
-      (sum, bodyId) => sum + memberValue(bodyId),
-      0
-    )
-    const absorbedValue = members.reduce(
-      (sum, bodyId) => sum + (absorbed.has(bodyId) ? memberValue(bodyId) : 0),
-      0
-    )
-    const configuredThreshold = group.completion?.threshold
-    const threshold =
-      mode === "threshold"
-        ? Number.isFinite(configuredThreshold) && Number(configuredThreshold) >= 0
-          ? Number(configuredThreshold)
-          : totalValue
-        : undefined
-    const complete =
-      members.length > 0 &&
-      (mode === "anyAbsorbed"
-        ? absorbedCount > 0
-        : mode === "threshold"
-          ? absorbedValue >= (threshold ?? totalValue)
-          : missing.length === 0)
-    return {
-      id: group.id,
-      label: group.label ?? group.id,
-      mode,
-      complete,
-      absorbed: absorbedCount,
-      total: members.length,
-      absorbedValue,
-      totalValue,
-      threshold,
-      missing
-    }
-  })
-}
-
 // ── Misc geometry ────────────────────────────────────────────────────────
 
 export function processLaneWalls(options: {
@@ -1082,3 +1013,11 @@ export function processLaneWalls(options: {
   }
   return colliders
 }
+
+export {
+  aggregateRegionCounts,
+  groupCompletionRows,
+  regionCountsToProjectionRows
+} from "./processAggregates"
+export type { RegionCountBucket, RegionCountMap } from "./processAggregates"
+export { stageTargetInVolume } from "./processVolumeGeometry"

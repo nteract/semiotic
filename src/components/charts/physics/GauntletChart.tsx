@@ -7,21 +7,16 @@ import type { Style } from "../../stream/types"
 import StreamPhysicsFrame, {
   type PhysicsBodySemanticItemAccessor,
   type PhysicsBodyStyleContext,
-  type PhysicsHoverData,
   type StreamPhysicsBodyForceContext,
   type StreamPhysicsFrameHandle,
   type StreamPhysicsFrameProps,
   type StreamPhysicsRegionEffect
 } from "../../stream/physics/StreamPhysicsFrame"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
-import {
-  createCapacityQueueController,
-  type CapacityQueueSnapshot
-} from "../../stream/physics/PhysicsControllers"
+import type { CapacityQueueSnapshot } from "../../stream/physics/PhysicsControllers"
 import type {
   PhysicsPipelineControlSurface,
-  PhysicsPipelineTickResult,
-  PhysicsQueuedSpawn
+  PhysicsPipelineTickResult
 } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
@@ -38,33 +33,30 @@ import {
   DEFAULT_WIDTH,
   DEFAULT_HEIGHT,
   CORE_KIND,
-  POSITIVE_KIND,
-  NEGATIVE_KIND,
-  applyGauntletEffect,
   buildLayout,
   buildProjectSpawns,
   createInitialState,
   defaultViability,
-  eventLogItem,
   gauntletWallColliders,
-  projectCoreId,
-  projectNegativeId,
-  projectPositiveId,
-  propertyLabel,
   readAccessor,
-  recordGauntletEvent,
   resolvePlacement,
   type GauntletBodyDatum,
   type GauntletEffect,
-  type GauntletEventContext,
   type GauntletProjectState,
   type GauntletPropertyDefinition
 } from "./gauntletPhysics"
+import {
+  buildGauntletCapacityControllers,
+  buildGauntletImperativeHandle,
+  capacitySnapshotsEqual,
+  runGauntletTick
+} from "./gauntletController"
 import {
   computeGauntletBodyForce,
   spawnBodiesForGauntletEffect
 } from "./gauntletRuntime"
 import {
+  defaultGauntletTooltipContent,
   drawGauntletBody,
   drawTethers,
   GauntletChrome,
@@ -78,11 +70,13 @@ import type { GauntletChartProps } from "./gauntletChartProps"
 export {
   GAUNTLET_WALL,
   clampGauntletPoint,
-  buildGauntletPhysics,
+  buildGauntletPhysics
+} from "./gauntletPhysics"
+export {
   applyGauntletEffect,
   planGauntletPropertyWork,
   replaceGauntletNegative
-} from "./gauntletPhysics"
+} from "./gauntletEffects"
 export type {
   GauntletAccessors,
   GauntletCoreBodyFn,
@@ -106,22 +100,6 @@ export type {
 export type { GauntletChartProps }
 
 const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] = []
-
-function capacitySnapshotsEqual(
-  a: readonly CapacityQueueSnapshot[],
-  b: readonly CapacityQueueSnapshot[]
-): boolean {
-  if (a.length !== b.length) return false
-  return a.every((snapshot, index) => {
-    const other = b[index]
-    return (
-      snapshot.regionId === other?.regionId &&
-      snapshot.queueDepth === other.queueDepth &&
-      snapshot.processedCount === other.processedCount &&
-      Math.abs(snapshot.remainingWork - other.remainingWork) < 0.01
-    )
-  })
-}
 
 /**
  * Physics-backed gauntlet: project core + property satellites through timed or
@@ -321,54 +299,11 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   onCapacityChangeRef.current = onCapacityChange
   const capacityControllers = useMemo(
     () =>
-      layout.gates.flatMap((gate) => {
-        if (!gate.capacity || gate.capacity.unitsPerSecond <= 0) return []
-        const regionId = `gauntlet-gate-${gate.id}`
-        return [
-          createCapacityQueueController({
-            id: `gauntlet-capacity-${dataKey}-${gate.id}`,
-            regionId,
-            unitsPerSecond: gate.capacity.unitsPerSecond,
-            bodyFilter: { property: "datum.kind", equals: CORE_KIND },
-            maxQueue: gate.capacity.maxQueue,
-            queueLayout: gate.capacity.queueLayout,
-            queueSlotSpacing: gate.capacity.queueSlotSpacing,
-            queueStiffness: gate.capacity.queueStiffness ?? 24,
-            releaseImpulse: { x: 36, y: 0 },
-            unitAccessor: (body) => {
-              const wrapped = body.datum as GauntletBodyDatum<TDatum> | undefined
-              const source = wrapped?.sourceDatum as Record<string, unknown> | undefined
-              const accessor = gate.capacity?.unitAccessor
-              const project = statesRef.current.find(
-                (candidate) => candidate.id === wrapped?.projectId
-              )
-              let sourceValue: unknown
-              if (typeof accessor === "function") {
-                sourceValue = project
-                  ? accessor(project as GauntletProjectState)
-                  : undefined
-              } else if (accessor) {
-                sourceValue = source?.[accessor]
-              }
-              const fallback =
-                source?.reviewWork ??
-                source?.work ??
-                project?.metrics.reviewWork ??
-                source?.points
-              const work = Number(sourceValue ?? fallback)
-              return Number.isFinite(work) && work > 0 ? work : 1
-            },
-            onProcessed: (body) => {
-              const wrapped = body.datum as GauntletBodyDatum<TDatum> | undefined
-              if (!wrapped?.projectId) return
-              const key = `${wrapped.projectId}:${gate.id}`
-              processedGateVisitsRef.current.set(
-                key,
-                (processedGateVisitsRef.current.get(key) ?? 0) + 1
-              )
-            }
-          })
-        ]
+      buildGauntletCapacityControllers({
+        dataKey,
+        gates: layout.gates,
+        statesRef,
+        processedGateVisitsRef
       }),
     [dataKey, layout.gates]
   )
@@ -509,134 +444,19 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
 
   useImperativeHandle(
     ref,
-    (): RealtimeFrameHandle => ({
-      push: (datum) => {
-        const state = createState(
-          datum as TDatum,
-          statesRef.current.length,
-          elapsedRef.current
-        )
-        const placement = resolvePlacement(
-          state,
-          statesRef.current.length,
-          layout,
-          projectPlacement
-        )
-        const spawns = buildProjectSpawns(
-          state,
-          statesRef.current.length,
-          layout,
-          placement,
-          positiveById,
-          negativeById,
-          coreBody
-        )
-        const nextStates = [...statesRef.current, state]
-        statesRef.current = nextStates
-        setStates(nextStates)
-        frameRef.current?.pushMany(spawns)
-        frameRef.current?.step(0)
-      },
-      pushMany: (rows) => {
-        const nextStates = [...statesRef.current]
-        const nextSpawns: PhysicsQueuedSpawn[] = []
-        const startedAt = elapsedRef.current
-        rows.forEach((row) => {
-          const state = createState(
-            row as TDatum,
-            nextStates.length,
-            startedAt
-          )
-          const placement = resolvePlacement(state, nextStates.length, layout, projectPlacement)
-          nextSpawns.push(
-            ...buildProjectSpawns(
-              state,
-              nextStates.length,
-              layout,
-              placement,
-              positiveById,
-              negativeById,
-              coreBody
-            )
-          )
-          nextStates.push(state)
-        })
-        statesRef.current = nextStates
-        setStates(nextStates)
-        if (nextSpawns.length) frameRef.current?.pushMany(nextSpawns)
-        frameRef.current?.step(0)
-      },
-      remove: (id) => {
-        const ids = Array.isArray(id) ? id : [id]
-        const removed: Datum[] = []
-        const bodyIds: string[] = []
-        for (const projectId of ids) {
-          const project = statesRef.current.find((state) => state.id === projectId)
-          if (!project) continue
-          removed.push(project.datum)
-          bodyIds.push(
-            projectCoreId(project.id),
-            ...project.activePositiveIds.map((propertyId) => projectPositiveId(project.id, propertyId))
-          )
-          project.negativeIds.forEach((propertyId, index) => {
-            bodyIds.push(projectNegativeId(project.id, propertyId, index))
-          })
-        }
-        statesRef.current = statesRef.current.filter((state) => !ids.includes(state.id))
-        setStates(statesRef.current)
-        frameRef.current?.remove(bodyIds)
-        return removed
-      },
-      update: (id, updater) => {
-        const ids = Array.isArray(id) ? id : [id]
-        const previous: Datum[] = []
-        for (const projectId of ids) {
-          const old = statesRef.current.find((state) => state.id === projectId)
-          if (!old) continue
-          const projectIndex = statesRef.current.findIndex((state) => state.id === projectId)
-          previous.push(old.datum)
-          const nextDatum = updater(old.datum) as TDatum
-          const nextState = createState(
-            nextDatum,
-            projectIndex < 0 ? statesRef.current.length : projectIndex,
-            old.startedAt ?? elapsedRef.current
-          )
-          const placement = resolvePlacement(
-            nextState,
-            projectIndex < 0 ? statesRef.current.length : projectIndex,
-            layout,
-            projectPlacement
-          )
-          frameRef.current?.remove([
-            projectCoreId(old.id),
-            ...old.activePositiveIds.map((propertyId) => projectPositiveId(old.id, propertyId)),
-            ...old.negativeIds.map((propertyId, index) => projectNegativeId(old.id, propertyId, index))
-          ])
-          frameRef.current?.pushMany(
-            buildProjectSpawns(
-              nextState,
-              projectIndex < 0 ? statesRef.current.length : projectIndex,
-              layout,
-              placement,
-              positiveById,
-              negativeById,
-              coreBody
-            )
-          )
-          statesRef.current = statesRef.current.map((state) => state.id === projectId ? nextState : state)
-        }
-        setStates(statesRef.current)
-        return previous
-      },
-      clear: () => {
-        statesRef.current = []
-        setStates([])
-        frameRef.current?.clear()
-      },
-      getData: () => statesRef.current.map((state) => state.datum),
-      getScales: () => null,
-      getCustomLayout: () => frameRef.current?.snapshot() ?? null
-    }),
+    () =>
+      buildGauntletImperativeHandle({
+        statesRef,
+        setStates,
+        elapsedRef,
+        frameRef,
+        layout,
+        projectPlacement,
+        positiveById,
+        negativeById,
+        coreBody,
+        createState
+      }),
     [coreBody, createState, layout, negativeById, positiveById, projectPlacement]
   )
 
@@ -677,116 +497,23 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
 
   const onTick = useCallback(
     (result: PhysicsPipelineTickResult, controls: PhysicsPipelineControlSurface) => {
-      frameProps.onTick?.(result, controls)
-      elapsedRef.current = result.elapsedSeconds ?? controls.snapshot().elapsedSeconds
-      reportCapacity()
-      for (const project of statesRef.current) {
-        const core = controls.readBodies().find((body) => body.id === projectCoreId(project.id))
-        if (!core) continue
-        const radius = core.shape.type === "circle" ? core.shape.radius : 28
-        if (crashDetection && !project.killed && core.y + radius >= layout.crashY) {
-          controls.readBodies().forEach((body) => {
-            const datum = body.datum as GauntletBodyDatum | undefined
-            if (!datum?.__gauntlet || datum.projectId !== project.id) return
-            controls.applyImpulse(body.id, -body.vx * body.mass, 0)
-          })
-          updateProjectState(project.id, (current) => {
-            const crashEvent = {
-              appliedAt: Math.max(
-                0,
-                elapsedRef.current - (current.startedAt ?? 0)
-              ),
-              id: "gauntlet-crash-line",
-              label: "Crash Line",
-              summary: "The project hit the crash threshold; lift and forward motion shut off.",
-              time: Math.max(0, elapsedRef.current - (current.startedAt ?? 0))
-            }
-            return {
-              ...current,
-              crashX: core.x,
-              eventHistory: [...(current.eventHistory ?? []), crashEvent],
-              killed: true,
-              lastEvent: crashEvent,
-              metrics: {
-                ...current.metrics,
-                lastX: core.x
-              },
-              outcome: "bad_design_crash",
-              stage: "Crash Line",
-              viability: Math.min(0, current.viability)
-            }
-          })
-          continue
-        }
-        if (project.killed) continue
-        const projectElapsed = Math.max(
-          0,
-          elapsedRef.current - (project.startedAt ?? 0)
-        )
-        const timeline = projectEvents(project)
-        const due = timeline.filter(
-          (event) =>
-            event.time <= projectElapsed &&
-            !project.eventsApplied.includes(event.id) &&
-            capacityEventReady(project, event, timeline)
-        )
-        let projectedForBodies = project
-        for (const event of due) {
-          const gate = event.gateId ? gateById.get(event.gateId) : undefined
-          const effects = event.effects ?? []
-          for (const effect of effects) {
-            const context: GauntletEventContext<TDatum> = {
-              event,
-              gate,
-              negativeProperties: negativeById,
-              positiveProperties: positiveById,
-              project: projectedForBodies
-            }
-            if (effect.when && !effect.when(context)) continue
-            addBodiesForEffect(projectedForBodies, effect, controls)
-            projectedForBodies = applyGauntletEffect(projectedForBodies, effect, context)
-          }
-          const logItem = {
-            ...eventLogItem(event, effects),
-            appliedAt: projectElapsed
-          }
-          projectedForBodies = recordGauntletEvent(projectedForBodies, logItem)
-          updateProjectState(project.id, (current) => {
-            let next = recordGauntletEvent(current, logItem)
-            if (next === current) return current
-            for (const effect of effects) {
-              const context: GauntletEventContext<TDatum> = {
-                event,
-                gate,
-                negativeProperties: negativeById,
-                positiveProperties: positiveById,
-                project: next
-              }
-              next = applyGauntletEffect(next, effect, context)
-            }
-            const computedViability =
-              viability?.(next, {
-                negativeProperties: negativeById,
-                positiveProperties: positiveById
-              }) ?? defaultViability(next, positiveById, negativeById)
-            next = { ...next, viability: computedViability }
-            if (event.final) {
-              next = {
-                ...next,
-                outcome:
-                  event.outcome ??
-                  outcome?.(next, {
-                    layout,
-                    negativeProperties: negativeById,
-                    positiveProperties: positiveById
-                  }) ??
-                  (next.viability > 20 ? "built" : "approved_not_built")
-              }
-            }
-            return next
-          })
-        }
-      }
+      runGauntletTick(result, controls, {
+        frameProps,
+        elapsedRef,
+        statesRef,
+        crashDetection,
+        layout,
+        projectEvents,
+        gateById,
+        capacityEventReady,
+        addBodiesForEffect,
+        updateProjectState,
+        viability,
+        positiveById,
+        negativeById,
+        outcome,
+        reportCapacity
+      })
     },
     [
       addBodiesForEffect,
@@ -906,30 +633,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     if (showTethers) drawTethers(ctx, bodies)
   }
   const renderBody = frameProps.renderBody ?? drawGauntletBody
-  const tooltipContent = tooltipProps.tooltipContent ?? ((hover: PhysicsHoverData) => {
-    const datum = hover.data as GauntletBodyDatum | undefined
-    if (!datum?.__gauntlet) return null
-    const sourceLabel =
-      typeof datum.sourceDatum?.label === "string"
-        ? datum.sourceDatum.label
-        : datum.projectId
-    return (
-      <div
-        className="semiotic-tooltip"
-        style={{
-          background: "var(--semiotic-tooltip-bg, rgba(15, 23, 42, 0.94))",
-          color: "var(--semiotic-tooltip-text, #f8fafc)",
-          padding: "8px 12px",
-          borderRadius: 6,
-          boxShadow: "var(--semiotic-tooltip-shadow, 0 8px 24px rgba(0,0,0,0.35))",
-          maxWidth: 280
-        }}
-      >
-        <strong>{datum.kind === CORE_KIND ? sourceLabel : propertyLabel(datum.property)}</strong>
-        <div>{datum.kind === POSITIVE_KIND ? "Positive property" : datum.kind === NEGATIVE_KIND ? "Negative property" : "Project core"}</div>
-      </div>
-    )
-  })
+  const tooltipContent = tooltipProps.tooltipContent ?? defaultGauntletTooltipContent
 
   return renderPhysicsFrame(
     "GauntletChart",

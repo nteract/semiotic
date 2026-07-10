@@ -7,6 +7,7 @@ import * as React from "react"
 import type { Datum } from "../shared/datumTypes"
 import type { Style } from "../../stream/types"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
+import type { PhysicsHoverData } from "../../stream/physics/StreamPhysicsFrame"
 import type { PhysicsSemanticItem } from "../../stream/physics/StreamPhysicsTypes"
 import {
   CORE_KIND,
@@ -17,6 +18,31 @@ import {
   type GauntletLayout,
   type GauntletProjectState
 } from "./gauntletPhysics"
+
+export function defaultGauntletTooltipContent(hover: PhysicsHoverData): React.ReactNode {
+  const datum = hover.data as GauntletBodyDatum | undefined
+  if (!datum?.__gauntlet) return null
+  const sourceLabel =
+    typeof datum.sourceDatum?.label === "string"
+      ? datum.sourceDatum.label
+      : datum.projectId
+  return (
+    <div
+      className="semiotic-tooltip"
+      style={{
+        background: "var(--semiotic-tooltip-bg, rgba(15, 23, 42, 0.94))",
+        color: "var(--semiotic-tooltip-text, #f8fafc)",
+        padding: "8px 12px",
+        borderRadius: 6,
+        boxShadow: "var(--semiotic-tooltip-shadow, 0 8px 24px rgba(0,0,0,0.35))",
+        maxWidth: 280
+      }}
+    >
+      <strong>{datum.kind === CORE_KIND ? sourceLabel : propertyLabel(datum.property)}</strong>
+      <div>{datum.kind === POSITIVE_KIND ? "Positive property" : datum.kind === NEGATIVE_KIND ? "Negative property" : "Project core"}</div>
+    </div>
+  )
+}
 
 export function drawGauntletBody(ctx: CanvasRenderingContext2D, body: PhysicsBodyState, style: Style): void {
   const datum = body.datum as GauntletBodyDatum | undefined

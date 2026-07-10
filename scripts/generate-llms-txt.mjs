@@ -108,6 +108,7 @@ const FEATURES = `## Features
 - [Coordinated Views](/features/linked-charts): LinkedCharts, cross-highlighting, crossfilter brushing
 - [Composition](/features/composition): ChartGrid, ContextLayout, CategoryColorProvider
 - [Responsive](/features/responsive): responsiveWidth, responsiveHeight
+- [Physics Process Authoring](/features/physics-process-guide): Metric-driven process geometry, stage sensors, journey ledgers, settled evidence, and live capacity
 - [Accessibility](/accessibility/overview): Keyboard navigation, ARIA, audit, descriptions, structured navigation, preference hooks
 - [Annotations](/annotations/overview): Labels, callouts, thresholds, placement, density, and analytical overlays
 - [Annotation Provenance & Lifecycle](/annotations/provenance-lifecycle): Provenance, freshness, editorial status, and supersession

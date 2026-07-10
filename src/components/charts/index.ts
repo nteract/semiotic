@@ -227,35 +227,59 @@ export type {
 } from "./physics/physicsProcessPrimitives"
 export {
   absorbRegion,
-  aggregateRegionCounts,
   bodyGroupSpec,
   capacitatedRegion,
   chargeGateRegion,
   forceFieldRegion,
-  groupCompletionRows,
   membraneRegion,
   portalRegion,
   pressureFieldRegion,
   processLaneWalls,
   processStageLayout,
-  regionCountsToProjectionRows,
+  processStageRegions,
   routeSurfaceRegion,
   stageTargetInVolume
 } from "../recipes/processPhysics"
+export {
+  aggregateRegionCounts,
+  groupCompletionRows,
+  regionCountsToProjectionRows
+} from "../recipes/processAggregates"
+export { processVolumePolygons } from "../recipes/processVolumeGeometry"
+export {
+  createProcessJourneyLedger,
+  processJourneyRows,
+  updateProcessJourney
+} from "../recipes/processJourney"
 export type {
   BodyGroupSpec,
   BodyGroupSpecOptions,
   ProcessMembraneDef,
   ProcessRegionBaseOptions,
+  ProcessStageRegionOptions,
   ProcessStageDef,
   ProcessVolumeLayout,
   ProcessVolumeLayoutOptions,
   ProcessVolumeMembraneBand,
   ProcessVolumeShape,
-  ProcessVolumeStageBand,
+  ProcessVolumeStageBand
+} from "../recipes/processPhysics"
+export type {
   RegionCountBucket,
   RegionCountMap
-} from "../recipes/processPhysics"
+} from "../recipes/processAggregates"
+export type {
+  ProcessVolumePoint,
+  ProcessVolumePolygon,
+  ProcessVolumePolygonRole
+} from "../recipes/processVolumeGeometry"
+export type {
+  ProcessJourneyEntityState,
+  ProcessJourneyLedger,
+  ProcessJourneyRow,
+  ProcessJourneyStage,
+  ProcessJourneyUpdateOptions
+} from "../recipes/processJourney"
 
 export { PhysicalFlowChart } from "./physics/PhysicalFlowChart"
 export type { PhysicalFlowChartProps } from "./physics/PhysicalFlowChart"

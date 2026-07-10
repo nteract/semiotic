@@ -26,8 +26,9 @@ export interface PhysicsControllerTickContext {
   result: PhysicsPipelineTickResult
   controls: PhysicsPipelineControlSurface
   /**
-   * Seconds advanced this frame (pipeline fixed-dt accumulation may step more
-   * than once; prefer result.elapsedDelta when present, else dt).
+   * Exact simulated seconds advanced by the kernel for this callback:
+   * `result.steps * fixedDt`. This is zero when a pipeline tick does not run a
+   * fixed substep, so time-based controller work must not advance on that tick.
    */
   dt: number
   elapsed: number
@@ -46,11 +47,16 @@ export interface PhysicsController {
    * Capacity queues and continuous process rules should set this true.
    */
   continuous?: boolean
-  /** Called after each store.tick (and after region force application). */
+  /**
+   * Called after each store tick and continuous-force application. It may run
+   * with `context.dt === 0` when the frame only synchronizes runtime state.
+   */
   tick: (context: PhysicsControllerTickContext) => void
   /**
    * Optional force contribution composed into StreamPhysicsFrame bodyForces.
-   * Return null to skip this body.
+   * The frame integrates the returned vector over simulated fixed-step time
+   * and applies no impulse when the tick advances zero substeps. Return null to
+   * skip this body.
    */
   bodyForce?: (
     context: StreamPhysicsBodyForceContext
@@ -100,7 +106,8 @@ function addVectors(
 
 /**
  * Compose controllers into a single continuous flag, bodyForce, and onTick.
- * Call onTick from StreamPhysicsFrame after each pipeline step.
+ * Call onTick from StreamPhysicsFrame after each pipeline tick; `ctx.dt`
+ * accounts for every fixed substep completed by that tick.
  */
 export function composePhysicsControllers(
   controllers: readonly PhysicsController[] | undefined | null

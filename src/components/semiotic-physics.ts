@@ -54,6 +54,7 @@ import {
   capacitatedRegion,
   chargeGateRegion,
   collidersFromScales,
+  createProcessJourneyLedger,
   forceFieldRegion,
   galtonPegs,
   groupCompletionRows,
@@ -61,12 +62,16 @@ import {
   portalRegion,
   pressureFieldRegion,
   processLaneWalls,
+  processJourneyRows,
   processStageLayout,
+  processStageRegions,
+  processVolumePolygons,
   regionCountsToProjectionRows,
   routeSurfaceRegion,
   sedimentBake,
   spawnFromTokens,
-  stageTargetInVolume
+  stageTargetInVolume,
+  updateProcessJourney
 } from "./recipes/physics"
 
 export {
@@ -99,6 +104,7 @@ export {
   createCapacityQueueController,
   createDefaultPhysicsEngineAdapter,
   createPortalController,
+  createProcessJourneyLedger,
   evaluatePhysicsBodyBudget,
   processChrome,
   forceFieldRegion,
@@ -113,7 +119,10 @@ export {
   portalRegion,
   pressureFieldRegion,
   processLaneWalls,
+  processJourneyRows,
   processStageLayout,
+  processStageRegions,
+  processVolumePolygons,
   regionCountsToProjectionRows,
   replaceGauntletNegative,
   routeSurfaceRegion,
@@ -121,6 +130,7 @@ export {
   sedimentHeightfield,
   spawnFromTokens,
   stageTargetInVolume,
+  updateProcessJourney,
   NamedStreamPhysicsFrame as StreamPhysicsFrame
 }
 
@@ -209,11 +219,20 @@ export type {
   PhysicsBandColliderOptions,
   PhysicsScaleColliderOptions,
   ProcessMembraneDef,
+  ProcessJourneyEntityState,
+  ProcessJourneyLedger,
+  ProcessJourneyRow,
+  ProcessJourneyStage,
+  ProcessJourneyUpdateOptions,
   ProcessRegionBaseOptions,
+  ProcessStageRegionOptions,
   ProcessStageDef,
   ProcessVolumeLayout,
   ProcessVolumeLayoutOptions,
   ProcessVolumeMembraneBand,
+  ProcessVolumePoint,
+  ProcessVolumePolygon,
+  ProcessVolumePolygonRole,
   ProcessVolumeShape,
   ProcessVolumeStageBand,
   RegionCountBucket,

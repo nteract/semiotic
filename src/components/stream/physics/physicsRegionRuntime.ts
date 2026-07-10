@@ -267,9 +267,11 @@ export function regionRuntimeEffectsRequireSync(
 export function applyActiveRegionEffects(
   controls: PhysicsPipelineControlSurface,
   regionEffects: readonly StreamPhysicsRegionEffect[],
-  regionState: Map<string, InternalStreamPhysicsBodyRegionState>
+  regionState: Map<string, InternalStreamPhysicsBodyRegionState>,
+  dtSeconds: number
 ): boolean {
-  if (!regionRuntimeEffectsRequireSync(regionEffects)) return false
+  const dt = Number.isFinite(dtSeconds) ? Math.max(0, dtSeconds) : 0
+  if (!(dt > 0) || !regionRuntimeEffectsRequireSync(regionEffects)) return false
   const regionsById = new Map(
     regionEffects.map((region) => [region.id, region])
   )
@@ -287,11 +289,11 @@ export function applyActiveRegionEffects(
       const force = resolveRegionVector(region.force, context)
       const damping = Number(region.damping ?? 0)
       const ix =
-        (force?.x ?? 0) / 60 -
-        (Number.isFinite(damping) ? (body.vx * damping) / 60 : 0)
+        (force?.x ?? 0) * dt -
+        (Number.isFinite(damping) ? body.vx * damping * dt : 0)
       const iy =
-        (force?.y ?? 0) / 60 -
-        (Number.isFinite(damping) ? (body.vy * damping) / 60 : 0)
+        (force?.y ?? 0) * dt -
+        (Number.isFinite(damping) ? body.vy * damping * dt : 0)
       if (ix || iy) {
         controls.applyImpulse(body.id, ix, iy)
         applied = true
@@ -323,12 +325,12 @@ export function applyBodyForces(
   bodyForces: StreamPhysicsBodyForce | undefined,
   regionEffects: readonly StreamPhysicsRegionEffect[],
   regionState: Map<string, InternalStreamPhysicsBodyRegionState>,
-  simulationState: PhysicsSimulationState
+  simulationState: PhysicsSimulationState,
+  dtSeconds: number
 ): boolean {
-  if (!bodyForces) return false
-  const regionById = new Map(
-    regionEffects.map((region) => [region.id, region])
-  )
+  const dt = Number.isFinite(dtSeconds) ? Math.max(0, dtSeconds) : 0
+  if (!(dt > 0) || !bodyForces) return false
+  const regionById = new Map(regionEffects.map((region) => [region.id, region]))
   const bodies = controls.readBodies()
   let applied = false
   for (let index = 0; index < bodies.length; index += 1) {
@@ -354,8 +356,8 @@ export function applyBodyForces(
       simulationState
     })
     if (!vector) continue
-    const ix = (vector.x ?? 0) / 60
-    const iy = (vector.y ?? 0) / 60
+    const ix = (vector.x ?? 0) * dt
+    const iy = (vector.y ?? 0) * dt
     if (ix || iy) {
       controls.applyImpulse(body.id, ix, iy)
       applied = true
@@ -387,23 +389,25 @@ export function runPhysicsPostTick(options: {
   const controls = options.store.controls()
   // Single snapshot for simulation state + reschedule predicate.
   const snapshot = options.store.snapshot()
+  const fixedDt = snapshot.config.fixedDt || 1 / 60
+  const simulatedDt = Math.max(0, options.result.steps * fixedDt)
   const regionEffectsApplied = applyActiveRegionEffects(
     controls,
     options.regionEffects,
-    options.regionState
+    options.regionState,
+    simulatedDt
   )
   const bodyForcesApplied = applyBodyForces(
     controls,
     options.bodyForces,
     options.regionEffects,
     options.regionState,
-    snapshot.simulationState
+    snapshot.simulationState,
+    simulatedDt
   )
   if (options.composed) {
-    const fixedDt = snapshot.config.fixedDt || 1 / 60
-    const dt = Math.max(0, (options.result.steps || 1) * fixedDt)
     options.composed.onTick(options.result, controls, {
-      dt,
+      dt: simulatedDt,
       elapsed: options.result.elapsedSeconds,
       getRegionState: (bodyId) =>
         publicRegionState(options.regionState.get(bodyId))

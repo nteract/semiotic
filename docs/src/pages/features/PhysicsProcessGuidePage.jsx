@@ -1,8 +1,17 @@
 import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { ProcessFlowChart, GauntletChart } from "semiotic/physics"
+import {
+  GauntletChart,
+  ProcessFlowChart,
+  StreamPhysicsFrame,
+  processStageLayout,
+  processStageRegions,
+  processVolumePolygons,
+} from "semiotic/physics"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import useResponsiveWidth from "../../hooks/useResponsiveWidth"
+import "./PhysicsProcessGuidePage.css"
 
 const processCode = `import { ProcessFlowChart } from "semiotic/physics"
 
@@ -64,11 +73,249 @@ layout={(ctx) => {
         unitsPerSecond: 4,
       }),
     ],
-    // layoutConfig changes restyle without re-enqueueing bodies
+    // layoutConfig changes rerun layout without re-enqueueing bodies
     overlays: processChrome({ ...volume, stages: chromeStages }),
   }
 }}
 layoutConfig={{ highlightId }}`
+
+const metricGeometryCode = `import {
+  StreamPhysicsFrame,
+  processStageLayout,
+  processStageRegions,
+  processVolumePolygons,
+} from "semiotic/physics"
+
+const layout = processStageLayout({
+  width,
+  height: 300,
+  shape: "bowtie",
+  stages,
+  centerStageIndex: 2,
+  pinchRatio: 0.16,
+  // One metric changes the complete process volume, not just its paint.
+  pinchHeightOffset: leadershipReached * 2,
+})
+
+const polygons = processVolumePolygons(layout)
+const regionEffects = processStageRegions(layout)
+
+<StreamPhysicsFrame
+  config={{ colliders: layout.colliders, fixedDt: 1 / 60 }}
+  regionEffects={regionEffects}
+  foregroundGraphics={() => (
+    <svg viewBox={\`0 0 \${layout.width} \${layout.height}\`}>
+      {polygons.map((polygon) => (
+        <polygon key={polygon.id} points={polygon.points.join(" ")} />
+      ))}
+    </svg>
+  )}
+/>`
+
+const processEvidenceCode = `import {
+  aggregateRegionCounts,
+  createProcessJourneyLedger,
+  groupCompletionRows,
+  processJourneyRows,
+  processStageRegions,
+  regionCountsToProjectionRows,
+  updateProcessJourney,
+} from "semiotic/physics"
+
+const regions = processStageRegions(layout)
+const initialJourney = createProcessJourneyLedger({
+  stages,
+  bodyIds: cohort.map((row) => row.id),
+})
+
+function onRegionEvent(event) {
+  setJourney((current) => updateProcessJourney(current, event))
+  setCounts((current) => aggregateRegionCounts(current, event))
+}
+
+const journeyRows = processJourneyRows(journey)
+const settledRegionRows = regionCountsToProjectionRows(counts)
+const groupRows = groupCompletionRows(groups, absorbedBodyIds)
+
+<StreamPhysicsFrame
+  regionEffects={regions}
+  onRegionEvent={onRegionEvent}
+  accessibleTable
+/>`
+
+const metricStages = [
+  { id: "discovery", label: "Discovery" },
+  { id: "activation", label: "Activation" },
+  { id: "impact", label: "First Impact" },
+  { id: "commitment", label: "Commitment" },
+  { id: "leadership", label: "Leadership" },
+]
+
+const METRIC_DEMO_HEIGHT = 300
+const METRIC_DEMO_MAX = 36
+const METRIC_GROWTH_PER_UNIT = 2
+
+function polygonPoints(points) {
+  return points.map(([x, y]) => `${x},${y}`).join(" ")
+}
+
+function metricDemoSpawns(layout) {
+  const x = layout.left + 12
+  const top = layout.boundaryY(x, "top") + 12
+  const bottom = layout.boundaryY(x, "bottom") - 12
+  const span = Math.max(1, bottom - top)
+  return Array.from({ length: 18 }, (_, index) => ({
+    id: `metric-particle-${index}`,
+    x: x + (index % 3) * 5,
+    y: top + ((index * 37) % Math.max(1, Math.floor(span))),
+    vx: 82 + (index % 5) * 7,
+    vy: ((index % 4) - 1.5) * 5,
+    bodyCollisions: false,
+    shape: { type: "circle", radius: layout.width < 480 ? 4.2 : 5.4 },
+    datum: { label: `Cohort member ${index + 1}` },
+    spawnAt: index * 0.04,
+  }))
+}
+
+function MetricDrivenVolumeDemo() {
+  const [leadershipReached, setLeadershipReached] = useState(12)
+  const [hostWidth, hostRef] = useResponsiveWidth(300, 760)
+  const width = Math.max(300, Math.floor(hostWidth))
+  const compact = width < 480
+  const layout = useMemo(
+    () =>
+      processStageLayout({
+        width,
+        height: METRIC_DEMO_HEIGHT,
+        shape: "bowtie",
+        padX: compact ? 20 : 34,
+        padY: compact ? 58 : 54,
+        stages: metricStages,
+        centerStageIndex: 2,
+        pinchRatio: 0.16,
+        pinchHeightOffset: leadershipReached * METRIC_GROWTH_PER_UNIT,
+        idPrefix: "metric-guide",
+      }),
+    [compact, leadershipReached, width],
+  )
+  const polygons = useMemo(() => processVolumePolygons(layout), [layout])
+  const regions = useMemo(
+    () => processStageRegions(layout, { idPrefix: "metric-guide-stage" }),
+    [layout],
+  )
+  const spawns = useMemo(() => metricDemoSpawns(layout), [layout])
+  const config = useMemo(
+    () => ({
+      kernel: {
+        seed: 31,
+        gravity: { x: 72, y: 0 },
+        restitution: 0.2,
+        friction: 0.56,
+        velocityDamping: 0.996,
+        maxVelocity: 250,
+      },
+      colliders: layout.colliders,
+      fixedDt: 1 / 60,
+      maxSubsteps: 8,
+      observation: {
+        chartId: "metric-driven-process-volume-guide",
+        chartType: "StreamPhysicsFrame",
+      },
+    }),
+    [layout.colliders],
+  )
+  const growth = leadershipReached * METRIC_GROWTH_PER_UNIT
+
+  return (
+    <div className="physics-process-metric" ref={hostRef}>
+      <div className="physics-process-metric__controls">
+        <label htmlFor="physics-process-leadership-count">
+          Leadership reached
+        </label>
+        <input
+          id="physics-process-leadership-count"
+          type="range"
+          min="0"
+          max={METRIC_DEMO_MAX}
+          step="1"
+          value={leadershipReached}
+          onChange={(event) => setLeadershipReached(Number(event.target.value))}
+        />
+        <output htmlFor="physics-process-leadership-count">
+          {leadershipReached} participants
+        </output>
+      </div>
+
+      <div className="physics-process-metric__readouts" aria-live="polite">
+        <span>
+          <strong>{growth}px</strong> metric offset
+        </span>
+        <span>
+          <strong>{Math.round(layout.pinchHeight)}px</strong> resolved impact height
+        </span>
+        <span>
+          <strong>{polygons.length}</strong> synchronized polygons
+        </span>
+      </div>
+
+      <div className="physics-process-metric__stage" style={{ width }}>
+        <StreamPhysicsFrame
+          key={width}
+          title="Metric-driven process volume"
+          summary={`${leadershipReached} participants reached Leadership. The First Impact passage is ${Math.round(layout.pinchHeight)} pixels high.`}
+          description="A bowtie process volume whose incoming barriers, center boundary, outgoing barriers, stage regions, and overlay polygons are all derived from one metric-aware layout."
+          size={[width, METRIC_DEMO_HEIGHT]}
+          config={config}
+          initialSpawns={spawns}
+          initialSpawnPacing={{
+            pacing: "arrival",
+            timeAccessor: "spawnAt",
+            timeScale: 4,
+          }}
+          regionEffects={regions}
+          suspendWhenHidden={false}
+          accessibleTable
+          bodySemanticItems={(body) => ({
+            label: body.datum?.label ?? body.id,
+            group: "Metric demo cohort",
+            datum: body.datum,
+          })}
+          bodyStyle={{
+            fill: "#22b8cf",
+            stroke: "#075985",
+            strokeWidth: 1.2,
+            opacity: 0.92,
+          }}
+        />
+        <svg
+          className="physics-process-metric__overlay"
+          viewBox={`0 0 ${layout.width} ${layout.height}`}
+          aria-hidden="true"
+        >
+          {polygons.map((polygon) => (
+            <polygon
+              key={polygon.id}
+              className={`is-${polygon.role}`}
+              points={polygonPoints(polygon.points)}
+            />
+          ))}
+          {layout.stages.map((stage) => (
+            <text key={stage.id} x={stage.x} y={layout.midY + 4} textAnchor="middle">
+              {compact ? stage.label.slice(0, 3).toUpperCase() : stage.label}
+            </text>
+          ))}
+        </svg>
+      </div>
+
+      <p className="physics-process-metric__caption">
+        The cyan border is not an independent illustration. It is rendered from
+        <code> processVolumePolygons(layout)</code>; the canvas barriers use
+        <code> layout.colliders</code>, and the observation envelope uses
+        <code> processStageRegions(layout)</code>.
+      </p>
+    </div>
+  )
+}
 
 const decisionRows = [
   {
@@ -177,8 +424,8 @@ export default function PhysicsProcessGuidePage() {
       </div>
 
       <h2>Gauntlet vs ProcessFlow</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div style={card}>
+      <div className="physics-process-guide__chart-comparison">
+        <div className="physics-process-guide__chart-card" style={card}>
           <h3 style={{ marginTop: 0 }}>GauntletChart</h3>
           <p>One core + tethered properties + timed gates.</p>
           <CodeBlock language="jsx" code={gauntletCode} />
@@ -201,7 +448,7 @@ export default function PhysicsProcessGuidePage() {
             showProjection
           />
         </div>
-        <div style={card}>
+        <div className="physics-process-guide__chart-card" style={card}>
           <h3 style={{ marginTop: 0 }}>ProcessFlowChart</h3>
           <p>
             Many PRs · live capacity · feature sockets. Capacity readout:{" "}
@@ -234,11 +481,50 @@ export default function PhysicsProcessGuidePage() {
       <h2>Authoring kit</h2>
       <p>
         Custom process essays should import the kit rather than inventing colliders:{" "}
-        <code>processStageLayout</code>, region factories,{" "}
+        <code>processStageLayout</code>, <code>processVolumePolygons</code>, region factories,{" "}
         <code>createCapacityQueueController</code>, <code>processChrome</code>.{" "}
-        <code>layoutConfig</code> is the interaction hot path — re-style without re-enqueueing.
+        <code>layoutConfig</code> is the interaction hot path — regenerate geometry or
+        styling without re-enqueueing bodies.
       </p>
       <CodeBlock language="jsx" code={customCode} />
+
+      <h2>Metric-driven volume geometry</h2>
+      <p>
+        A process metric can change available physical space, but the sensor, collision
+        barriers, and explanatory border must remain one geometry. This example adds two
+        pixels to the bowtie pinch for each participant reaching Leadership. Move the slider:
+        every surface below is regenerated from the same <code>ProcessVolumeLayout</code>.
+      </p>
+      <MetricDrivenVolumeDemo />
+      <CodeBlock language="jsx" code={metricGeometryCode} />
+
+      <h2>Journey and settled evidence</h2>
+      <p>
+        Region events should reduce into durable analytical state instead of making readers
+        infer outcomes from a moving body. The process kit separates three useful views of
+        that evidence:
+      </p>
+      <ul>
+        <li>
+          <code>processJourneyRows</code> reports monotonic <strong>reached</strong>, actual
+          unique <strong>entered</strong>, visits, repeat visits, conversion, and drop-off.
+        </li>
+        <li>
+          <code>aggregateRegionCounts</code> counts each body once per region;
+          <code>regionCountsToProjectionRows</code> makes those counts chart-ready.
+        </li>
+        <li>
+          <code>groupCompletionRows</code> projects all-member, any-member, or weighted
+          threshold completion from absorbed body ids.
+        </li>
+      </ul>
+      <CodeBlock language="jsx" code={processEvidenceCode} />
+      <p>
+        The reducers are serializable and independent of the live frame, so the same event
+        tape can be replayed, persisted, compared across scenarios, or rendered as an
+        accessible settled table. See the controlled comparison in{" "}
+        <Link to="/examples/stakeholder-journey">Stakeholder Journey</Link>.
+      </p>
 
       <h2>ProcessFlow props that matter</h2>
       <CodeBlock language="jsx" code={processCode} />
@@ -304,7 +590,7 @@ const td = {
 }
 const card = {
   border: "1px solid var(--surface-3)",
-  borderRadius: 12,
+  borderRadius: 8,
   padding: 14,
   background: "var(--surface-1)",
 }

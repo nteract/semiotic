@@ -473,21 +473,33 @@ export type {
 // Process-physics authoring kit (stage volumes, region factories, groups).
 export {
   absorbRegion,
-  aggregateRegionCounts,
   bodyGroupSpec,
   capacitatedRegion,
   chargeGateRegion,
   forceFieldRegion,
-  groupCompletionRows,
   membraneRegion,
   portalRegion,
   pressureFieldRegion,
   processLaneWalls,
   processStageLayout,
-  regionCountsToProjectionRows,
+  processStageRegions,
   routeSurfaceRegion,
   stageTargetInVolume
 } from "./processPhysics"
+
+export {
+  aggregateRegionCounts,
+  groupCompletionRows,
+  regionCountsToProjectionRows
+} from "./processAggregates"
+
+export { processVolumePolygons } from "./processVolumeGeometry"
+
+export {
+  createProcessJourneyLedger,
+  processJourneyRows,
+  updateProcessJourney
+} from "./processJourney"
 
 // Process controllers (live capacity / portals) — also on StreamPhysicsFrame.
 export {
@@ -516,12 +528,24 @@ export type {
   BodyGroupSpecOptions,
   ProcessMembraneDef,
   ProcessRegionBaseOptions,
+  ProcessStageRegionOptions,
   ProcessStageDef,
   ProcessVolumeLayout,
   ProcessVolumeLayoutOptions,
   ProcessVolumeMembraneBand,
   ProcessVolumeShape,
-  ProcessVolumeStageBand,
-  RegionCountBucket,
-  RegionCountMap
+  ProcessVolumeStageBand
 } from "./processPhysics"
+export type { RegionCountBucket, RegionCountMap } from "./processAggregates"
+export type {
+  ProcessVolumePoint,
+  ProcessVolumePolygon,
+  ProcessVolumePolygonRole
+} from "./processVolumeGeometry"
+export type {
+  ProcessJourneyEntityState,
+  ProcessJourneyLedger,
+  ProcessJourneyRow,
+  ProcessJourneyStage,
+  ProcessJourneyUpdateOptions
+} from "./processJourney"

@@ -37,6 +37,7 @@ function composePhysicsControllers
 function createCapacityQueueController
 function createDefaultPhysicsEngineAdapter
 function createPortalController
+function createProcessJourneyLedger
 function default
 function evaluatePhysicsBodyBudget
 function forceFieldRegion
@@ -52,8 +53,11 @@ function planGauntletPropertyWork
 function portalRegion
 function pressureFieldRegion
 function processChrome
+function processJourneyRows
 function processLaneWalls
 function processStageLayout
+function processStageRegions
+function processVolumePolygons
 function regionCountsToProjectionRows
 function replaceGauntletNegative
 function routeSurfaceRegion
@@ -61,6 +65,7 @@ function sedimentBake
 function sedimentHeightfield
 function spawnFromTokens
 function stageTargetInVolume
+function updateProcessJourney
 interface ArrivalReplayOptions
 interface BodyGroupSpec
 interface BodyGroupSpecOptions
@@ -144,12 +149,19 @@ interface ProcessFlowChartProps
 interface ProcessFlowPhysicsOptions
 interface ProcessFlowProjectionMetadata
 interface ProcessFlowStageDef
+interface ProcessJourneyEntityState
+interface ProcessJourneyLedger
+interface ProcessJourneyRow
+interface ProcessJourneyStage
+interface ProcessJourneyUpdateOptions
 interface ProcessMembraneDef
 interface ProcessRegionBaseOptions
 interface ProcessStageDef
+interface ProcessStageRegionOptions
 interface ProcessVolumeLayout
 interface ProcessVolumeLayoutOptions
 interface ProcessVolumeMembraneBand
+interface ProcessVolumePolygon
 interface ProcessVolumeStageBand
 interface RegionCountBucket
 interface RunningStatsSnapshot
@@ -190,6 +202,8 @@ type PhysicsSedimentAccessor
 type PhysicsSedimentValueAccessor
 type PhysicsSpawnPacing
 type PhysicsSpawnTimeAccessor
+type ProcessVolumePoint
+type ProcessVolumePolygonRole
 type ProcessVolumeShape
 type RegionCountMap
 type StreamPhysicsBodyForce

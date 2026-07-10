@@ -12,13 +12,13 @@ import { drawGauntletBody } from "./gauntletChrome"
 import {
   buildLayout,
   defaultPlacement,
-  projectRouteTarget,
   projectCoreId,
-  projectNegativeId,
-  recordGauntletEvent
+  projectNegativeId
 } from "./gauntletPhysics"
+import { recordGauntletEvent } from "./gauntletEffects"
 import {
   computeGauntletBodyForce,
+  projectRouteTarget,
   spawnBodiesForGauntletEffect
 } from "./gauntletRuntime"
 

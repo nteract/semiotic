@@ -186,8 +186,8 @@
     },
     {
       "path": "src/components/stream/SVGOverlay.tsx",
-      "maxLines": 1022,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1024,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +2 (2026-07-10): factored two rotated-bottom-tick offsets into named constants (bottomTickLabelY/bottomAxisLabelY) instead of repeating the ternary — net-positive readability, not worth a structural split for 2 lines."
     },
     {
       "path": "src/components/stream/types.ts",
