@@ -213,7 +213,7 @@ export function processChrome(
         const labelBoxW = clamp(bandW - 8, 22, 88)
         const labelTextMaxW = Math.max(8, labelBoxW - 10)
         const label = fittedLabel(stage.label, labelTextMaxW, stageLabelMode)
-        const showStageLabel = stageLabelMode !== "none" && labelBoxW >= 22
+        const showStageLabel = stageLabelMode !== "none" && bandW - 8 >= 22
         const badge = stageBadge(stage)
         const badgeTextMaxW = Math.max(16, bandW - 10)
         const fittedBadge = fittedLabel(badge, badgeTextMaxW, "auto")

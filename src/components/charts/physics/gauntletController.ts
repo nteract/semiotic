@@ -48,8 +48,9 @@ export function capacitySnapshotsEqual(
   if (a.length !== b.length) return false
   return a.every((snapshot, index) => {
     const other = b[index]
+    if (!other) return false
     return (
-      snapshot.regionId === other?.regionId &&
+      snapshot.regionId === other.regionId &&
       snapshot.queueDepth === other.queueDepth &&
       snapshot.processedCount === other.processedCount &&
       Math.abs(snapshot.remainingWork - other.remainingWork) < 0.01
