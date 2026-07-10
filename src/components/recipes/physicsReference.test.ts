@@ -189,6 +189,16 @@ describe("physicsReferenceEnvelope", () => {
       })
     ).toThrow(/quantiles/)
   })
+
+  it("rejects an oversized explicit sample grid", () => {
+    const oversized = Array.from({ length: 1_000_001 }, (_, index) => index)
+    expect(() =>
+      physicsReferenceEnvelope({
+        runs: [],
+        sampleAt: oversized
+      })
+    ).toThrow(/exceeds 1000000 points/)
+  })
 })
 
 describe("comparePhysicsTrace", () => {

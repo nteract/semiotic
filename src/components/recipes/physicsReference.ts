@@ -169,6 +169,11 @@ function normalizeQuantiles(values: readonly number[] | undefined): number[] {
 
 function normalizeSampleGrid(grid: PhysicsReferenceSampleGrid): number[] {
   if (Array.isArray(grid)) {
+    if (grid.length > MAX_GRID_POINTS) {
+      throw new RangeError(
+        `physicsReferenceEnvelope sampleAt exceeds ${MAX_GRID_POINTS} points`
+      )
+    }
     return Array.from(
       new Set(
         grid
