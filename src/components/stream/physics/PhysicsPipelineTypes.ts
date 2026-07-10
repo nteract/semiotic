@@ -138,7 +138,9 @@ export interface PhysicsObservationEvent {
   visitId?: string
   visit?: number
   queuedAt?: number
+  blockedAt?: number
   completedAt?: number
+  abandonedAt?: number
   queueSeconds?: number
   queueDepth?: number
   blockedDepth?: number

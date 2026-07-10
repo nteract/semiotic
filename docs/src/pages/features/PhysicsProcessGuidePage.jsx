@@ -82,6 +82,7 @@ layout={(ctx) => {
 layoutConfig={{ highlightId }}`
 
 const serviceOperationsCode = `import {
+  createCapacityQueueController,
   createServiceResourcePoolController,
   createServiceLevelController,
   createDependencyGateController,

@@ -412,7 +412,7 @@ export function createCapacityQueueController(
             visitId: queued.visitId,
             visit: queued.visit,
             queuedAt: queued.queuedAt,
-            completedAt: currentTime,
+            abandonedAt: currentTime,
             queueSeconds: info.queueSeconds,
             queueDepth: queue.size
           })
@@ -467,6 +467,7 @@ export function createCapacityQueueController(
             visitId: info.visitId,
             visit,
             queuedAt: currentTime,
+            blockedAt: currentTime,
             queueDepth: queue.size,
             blockedDepth: blocked.size
           })
