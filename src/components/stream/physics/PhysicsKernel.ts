@@ -46,11 +46,7 @@ export interface PhysicsBodySpec {
   mass?: number
   restitution?: number
   friction?: number
-  /**
-   * Whether this body resolves dynamic body-to-body contacts. Static colliders
-   * still apply. Useful for compound chart glyphs whose satellites should be
-   * visual/tethered marks, not load-bearing rigid bodies.
-   */
+  /** Disable body-body contacts for visual/tethered satellite marks. */
   bodyCollisions?: boolean
   shape: PhysicsBodyShape
   datum?: unknown
@@ -126,22 +122,12 @@ export interface PhysicsKernelSnapshotSpring extends Required<
   target: PhysicsSpringSpec["target"]
 }
 
-export type PhysicsKernelEvent =
-  | { type: "contact"; bodyId: string; otherId: string; sensor: false }
-  | { type: "sensor-enter"; bodyId: string; sensorId: string }
-  | { type: "sensor-exit"; bodyId: string; sensorId: string }
-  | { type: "sleep"; bodyId: string }
-  | { type: "wake"; bodyId: string }
+export type PhysicsKernelEvent = { type: "contact"; bodyId: string; otherId: string; sensor: false } | { type: "sensor-enter"; bodyId: string; sensorId: string } | { type: "sensor-exit"; bodyId: string; sensorId: string } | { type: "sleep"; bodyId: string } | { type: "wake"; bodyId: string }
 
-export interface PhysicsActiveSensorPair {
-  sensorId: string
-  bodyId: string
-}
+export interface PhysicsActiveSensorPair { sensorId: string; bodyId: string }
 
 type MutableBody = PhysicsKernelSnapshotBody
-
 type MutableCollider = PhysicsKernelSnapshotCollider
-
 type MutableSpring = PhysicsKernelSnapshotSpring
 
 interface AabbBounds {

@@ -790,7 +790,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   ): React.ReactElement | null
   displayName?: string
 }
-
 ;(GauntletChart as { displayName?: string }).displayName = "GauntletChart"
 
 /**
@@ -798,5 +797,4 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
  * Removed in the next major version.
  */
 export const GuantletChart = GauntletChart
-
 export default GauntletChart
