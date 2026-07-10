@@ -99,6 +99,7 @@ describe("fromFlintChart - mapping", () => {
     }))
     expect(line.component).toBe("LineChart")
     expect(line.props.xScaleType).toBe("time")
+    expect(line.props.data?.[0].month).toBe(Date.parse("2026-01-01"))
     expect(line.props.lineBy).toBe("segment")
     expect(line.props.curve).toBe("stepAfter")
     expect(line.props.showPoints).toBe(true)
@@ -118,6 +119,25 @@ describe("fromFlintChart - mapping", () => {
     expect(area.props.areaBy).toBe("segment")
     expect(area.props.normalize).toBe(true)
     expect(area.props.areaOpacity).toBe(0.45)
+  })
+
+  it("warns and skips unparseable temporal strings", () => {
+    const config = fromFlintChart({
+      data: { values: [{ month: "not-a-month", sales: 10 }] },
+      semantic_types: { month: "YearMonth" },
+      chart_spec: {
+        chartType: "Line Chart",
+        encodings: {
+          x: "month",
+          y: "sales",
+        },
+      },
+    })
+
+    expect(config.component).toBe("LineChart")
+    expect(config.props.xScaleType).toBe("time")
+    expect(Number.isNaN(config.props.data?.[0].month)).toBe(true)
+    expect(config.warnings?.[0]).toContain("Temporal x field")
   })
 
   it("translates scatter and bubble requests", () => {

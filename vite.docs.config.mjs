@@ -16,7 +16,7 @@ function copyDocsPublicAssets() {
       if (!existsSync(docsRoot)) return
       mkdirSync(outDir, { recursive: true })
       for (const entry of readdirSync(docsRoot)) {
-        if (entry === "index.html" || entry === ".DS_Store") continue
+        if (entry === "index.html" || entry === "docs-entry.jsx" || entry === ".DS_Store") continue
         const source = join(docsRoot, entry)
         const target = join(outDir, entry)
         if (statSync(source).isDirectory()) {
@@ -39,13 +39,12 @@ function docsDevEntrypoint() {
       .replace('href="./assets/img/favicon.png"', 'href="/assets/img/favicon.png"')
       .replace('src="./prism.js"', 'src="/prism.js"')
       .replace(
-        /src=(["'])(?:\.\.\/src\/index\.jsx|\/src\/index\.jsx|\/src\/index\.tsx|\/src\/index\.ts|\/src\/index\.js)\1/g,
+        /src=(["'])(?:\.\/docs-entry\.jsx|\.\.\/src\/index\.jsx|\/src\/index\.jsx|\/src\/index\.tsx|\/src\/index\.ts|\/src\/index\.js)\1/g,
         `src="${entryUrl}"`,
       )
 
   return {
     name: "docs-dev-entrypoint",
-    apply: "serve",
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         const pathname = req.url?.split("?")[0]

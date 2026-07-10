@@ -118,6 +118,8 @@ const FLINT_CHANNEL_ALIASES: Record<string, string> = {
   value: "size",
 }
 
+const ISO_YEAR_MONTH = /^\d{4}-\d{1,2}$/
+
 const CONSUMED_CHANNELS: Record<ChartKind, string[]> = {
   bar: ["x", "y", "color"],
   groupedBar: ["x", "y", "group", "color"],
@@ -222,6 +224,47 @@ function stringProp(value: unknown): string | undefined {
 
 function booleanProp(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined
+}
+
+function parseTemporalString(value: string): number {
+  const trimmed = value.trim()
+  if (!trimmed || !Number.isNaN(Number(trimmed))) return NaN
+  const normalized = ISO_YEAR_MONTH.test(trimmed) ? `${trimmed}-01` : trimmed
+  if (normalized === trimmed && trimmed.length < 10) return NaN
+  const parsed = Date.parse(normalized)
+  return Number.isFinite(parsed) ? parsed : NaN
+}
+
+function coerceTemporalStringRows(
+  data: Datum[] | undefined,
+  fieldName: string | undefined,
+  axis: "x" | "y",
+  warnings: string[],
+): Datum[] | undefined {
+  if (!data || !fieldName) return data
+
+  let changed = false
+  let failed = false
+  const next = data.map((row) => {
+    const raw = row[fieldName]
+    if (typeof raw !== "string") return row
+
+    const parsed = parseTemporalString(raw)
+    changed = true
+    if (!Number.isFinite(parsed)) {
+      failed = true
+      return { ...row, [fieldName]: NaN }
+    }
+    return { ...row, [fieldName]: parsed }
+  })
+
+  if (failed) {
+    warnings.push(
+      `Temporal ${axis} field "${fieldName}" contains unparseable date strings; those rows will be skipped by the time scale. Prefer Date objects, ISO date strings, or epoch timestamps.`,
+    )
+  }
+
+  return changed ? next : data
 }
 
 function applySize(
@@ -527,12 +570,17 @@ function buildXY(
     encodings.y?.aggregate,
     warnings,
   )
+  const wantsXTime = looksTemporal(encodings.x, x, semanticTypes)
+  const wantsYTime = looksTemporal(encodings.y, y, semanticTypes)
+  let nextData = aggregate.data
+  if (wantsXTime) nextData = coerceTemporalStringRows(nextData, x, "x", warnings)
+  if (wantsYTime) nextData = coerceTemporalStringRows(nextData, aggregate.valueAccessor, "y", warnings)
 
-  setData(props, aggregate.data)
+  setData(props, nextData)
   if (x) props.xAccessor = x
   if (aggregate.valueAccessor) props.yAccessor = aggregate.valueAccessor
-  if (looksTemporal(encodings.x, x, semanticTypes)) props.xScaleType = "time"
-  if (looksTemporal(encodings.y, y, semanticTypes)) props.yScaleType = "time"
+  if (wantsXTime) props.xScaleType = "time"
+  if (wantsYTime) props.yScaleType = "time"
   applyLabels(props, { x, y }, displayNames, "xy")
 
   if (kind === "line") {
