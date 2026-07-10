@@ -5,6 +5,7 @@ import {
   createServiceResourcePoolController
 } from "./ServiceOperationsControllers"
 import { PhysicsPipelineStore } from "./PhysicsPipelineStore"
+import type { PhysicsBodyState } from "./PhysicsKernel"
 import type { StreamPhysicsBodyRegionState } from "./StreamPhysicsFrame"
 
 function makeStore() {
@@ -40,7 +41,8 @@ describe("service operations controllers", () => {
     ])
     store.tick(0)
     const controller = createServiceLevelController({
-      bodyFilter: (body) => body.datum?.kind === "case",
+      bodyFilter: (body: PhysicsBodyState) =>
+        (body.datum as { kind?: string } | undefined)?.kind === "case",
       deadlineAccessor: "deadline"
     })
     const context = (elapsed: number) => ({
@@ -67,7 +69,9 @@ describe("service operations controllers", () => {
     const controller = createDependencyGateController({
       regionId: "recovery",
       opensAt: 3,
-      bodyFilter: (body) => body.datum?.requiresRecovery === true
+      bodyFilter: (body: PhysicsBodyState) =>
+        (body.datum as { requiresRecovery?: boolean } | undefined)
+          ?.requiresRecovery === true
     })
     const context = (elapsed: number) => ({
       result: {} as never,
