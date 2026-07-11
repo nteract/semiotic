@@ -31,6 +31,7 @@ function resolveResponsiveRules
 function responsiveRuleMatches
 function useCustomLayoutSelection
 interface BarChartProps
+interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface DonutChartProps
 interface FunnelChartProps
@@ -59,6 +60,8 @@ interface StackedBarChartProps
 interface StreamOrdinalFrameHandle
 interface StreamOrdinalFrameProps
 interface SwimlaneChartProps
+type CustomLayoutFailureRecovery
+type CustomLayoutFamily
 type OrdinalChartType
 type OrdinalCustomLayout
 type OrdinalSceneNode

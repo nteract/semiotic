@@ -21,6 +21,7 @@ function resolveReferenceGeography
 function resolveResponsiveRules
 function responsiveRuleMatches
 interface ChoroplethMapProps
+interface CustomLayoutFailureDiagnostic
 interface DistanceCartogramConfig
 interface DistanceCartogramProps
 interface FlowMapProps
@@ -47,6 +48,8 @@ interface SceneAccessibilityMetadata
 interface StreamGeoFrameHandle
 interface StreamGeoFrameProps
 type AreasProp
+type CustomLayoutFailureRecovery
+type CustomLayoutFamily
 type GeoCustomLayout
 type GeoSceneNode
 type ProjectionName
