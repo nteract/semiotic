@@ -27,6 +27,7 @@ describe("cold-consumer named import manifest", () => {
       new Set(stableModuleExportKeys(packageJson)),
     )
     expect(EXCLUDED_EXPORTS).toContain("./experimental")
+    expect(EXCLUDED_EXPORTS).toContain("./spec/*")
   })
 
   it("fails closed when a stable export has no named-import measurement", () => {
