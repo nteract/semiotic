@@ -992,22 +992,22 @@ export class PipelineStore {
   }
 
   // ── Pulse (delegated to pipelinePulse.ts) ──────────────────────────
+  private applyPulse = (nodes: SceneNode[], data: Datum[], now?: number): boolean =>
+    this.config.pulse && this.timestampBuffer
+      ? applyPulseFn(this.config.pulse, nodes, data, this.timestampBuffer, this.getDatumIndexMap(data), now)
+      : false
 
-  private applyPulse(nodes: SceneNode[], data: Datum[]): void {
-    if (!this.config.pulse || !this.timestampBuffer) return
-    applyPulseFn(
-      this.config.pulse,
-      nodes,
-      data,
-      this.timestampBuffer,
-      this.getDatumIndexMap(data)
-    )
+  /** Refresh pulse fields without rebuilding layout; retained custom scenes stay immutable. */
+  refreshPulse(now: number): boolean {
+    if (this.lastCustomLayoutFailure?.preservedLastGoodScene === true) return false
+    return this.applyPulse(this.scene, this.getBufferArray(), now)
   }
 
-  get hasActivePulses(): boolean {
-    if (!this.config.pulse) return false
-    return hasActivePulsesFn(this.config.pulse, this.timestampBuffer)
+  hasActivePulsesAt(now: number): boolean {
+    return !!this.config.pulse && hasActivePulsesFn(this.config.pulse, this.timestampBuffer, now)
   }
+
+  get hasActivePulses(): boolean { return this.hasActivePulsesAt(getTimestamp()) }
 
   // ── Transitions (delegated to pipelineTransitions.ts) ──────────────
 

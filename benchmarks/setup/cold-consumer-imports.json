@@ -33,7 +33,8 @@
   },
   "excludedExports": [
     "./experimental",
-    "./package.json"
+    "./package.json",
+    "./spec/*"
   ],
   "measurements": [
     {
@@ -41,8 +42,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 1001699,
-      "gzipBytes": 293604,
+      "rawBytes": 1002732,
+      "gzipBytes": 293879,
       "packedPackageInputFiles": 3
     },
     {
@@ -50,8 +51,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 440789,
-      "gzipBytes": 139685,
+      "rawBytes": 441546,
+      "gzipBytes": 139889,
       "packedPackageInputFiles": 3
     },
     {
@@ -59,8 +60,8 @@
       "importPath": "semiotic/ordinal",
       "symbol": "BarChart",
       "platform": "browser",
-      "rawBytes": 379497,
-      "gzipBytes": 115150,
+      "rawBytes": 380383,
+      "gzipBytes": 115445,
       "packedPackageInputFiles": 1
     },
     {
@@ -77,8 +78,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 504614,
-      "gzipBytes": 158479,
+      "rawBytes": 505334,
+      "gzipBytes": 158678,
       "packedPackageInputFiles": 1
     },
     {
@@ -113,8 +114,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 786135,
-      "gzipBytes": 251215,
+      "rawBytes": 787162,
+      "gzipBytes": 251572,
       "packedPackageInputFiles": 1
     },
     {
@@ -122,8 +123,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 1391634,
-      "gzipBytes": 419724,
+      "rawBytes": 1392665,
+      "gzipBytes": 420058,
       "packedPackageInputFiles": 3
     },
     {
@@ -150,7 +151,7 @@
       "symbol": "ChoroplethMap",
       "platform": "browser",
       "rawBytes": 315853,
-      "gzipBytes": 104946,
+      "gzipBytes": 104945,
       "packedPackageInputFiles": 1
     },
     {

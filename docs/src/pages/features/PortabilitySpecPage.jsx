@@ -3,7 +3,7 @@ import { BarChart, LineChart, PieChart, Scatterplot } from "semiotic"
 import { fromVegaLite } from "semiotic/data"
 import { suggestCharts } from "semiotic/ai"
 import {
-  unstable_toVegaLite as toVegaLite,
+  unstable_toVegaLiteResult as toVegaLiteResult,
   unstable_attachIDID as attachIDID,
   unstable_attachIDIDAnnotations as attachIDIDAnnotations,
   unstable_readIDID as readIDID,
@@ -140,6 +140,12 @@ const PRESET_INTENT = {
 
 const pretty = (v) => JSON.stringify(v, null, 2)
 
+function supportedVegaLiteSpec(config) {
+  const result = toVegaLiteResult(config)
+  if (!result.spec) throw new Error(result.diagnostics.map((diagnostic) => diagnostic.message).join(" "))
+  return result.spec
+}
+
 // ── Small UI atoms ──────────────────────────────────────────────────────────
 
 const panelStyle = {
@@ -186,7 +192,7 @@ export default function PortabilitySpecPage() {
   // The full inbound → outbound round trip, recomputed on selection.
   const { config, roundTrip, dataValues } = useMemo(() => {
     const cfg = fromVegaLite(vegaSpec)
-    const back = toVegaLite(cfg)
+    const back = supportedVegaLiteSpec(cfg)
     return { config: cfg, roundTrip: back, dataValues: vegaSpec.data.values }
   }, [vegaSpec])
 
@@ -214,7 +220,7 @@ export default function PortabilitySpecPage() {
   )
 
   const enrichedSpec = useMemo(() => {
-    let spec = toVegaLite(config)
+    let spec = supportedVegaLiteSpec(config)
     spec = attachIDID(spec, { capability, audience: AUDIENCE })
     spec = attachIDIDAnnotations(spec, [annotation])
     return spec
@@ -286,7 +292,7 @@ export default function PortabilitySpecPage() {
       </div>
 
       <p>
-        Every field is labelled with <code>x-idid-status</code> so a reader can
+        Public domain fields are labelled with <code>x-idid-status</code> so a reader can
         tell what's real today (<code>shipped</code> — Semiotic ships all v0.1
         fields) from what the spec reserves for the future (<code>proposed</code>).
         Open string unions (e.g. <code>provenance.source</code>) stay open with a
@@ -298,7 +304,7 @@ export default function PortabilitySpecPage() {
 
       <details style={{ ...panelStyle, marginBottom: 16 }}>
         <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-          View the published schemas ({capabilitySchema.$id ? "live from /spec/v0.1" : ""})
+          View the published schemas ({capabilitySchema.$id ? "packed with semiotic under /spec/v0.1" : ""})
         </summary>
         <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
           <CodeBlock language="json">{pretty(capabilitySchema.$defs.rubric)}</CodeBlock>
@@ -313,9 +319,10 @@ export default function PortabilitySpecPage() {
         Vega-Lite is the closest thing the ecosystem has to a neutral chart
         interchange format. Semiotic already reads it
         (<code>fromVegaLite</code>); the spec adds the inverse
-        (<code>toVegaLite</code>), so a chart round-trips through the dominant
-        format <em>with its IDID metadata preserved</em>. Pick a spec and watch
-        it travel in and back out:
+        (<code>toVegaLiteResult</code>), so the tested supported single-view
+        subset round-trips through the dominant format. Unsupported semantics
+        return a typed refusal rather than a plausible fallback. Pick a spec and
+        watch it travel in and back out:
       </p>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0" }}>
@@ -351,7 +358,7 @@ export default function PortabilitySpecPage() {
         </div>
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
-            3 · Back to Vega-Lite — <code>toVegaLite()</code>
+            3 · Back to Vega-Lite — <code>toVegaLiteResult()</code>
           </div>
           <CodeBlock language="json" wrap>{pretty({ mark: roundTrip.mark, encoding: roundTrip.encoding })}</CodeBlock>
         </div>
@@ -365,7 +372,8 @@ export default function PortabilitySpecPage() {
       <h2>Carrying the IDID metadata on the spec</h2>
 
       <p>
-        The round trip above loses nothing the format can express — but plain
+        The supported round trip above preserves its tested data, mark, and
+        encoding subset — but plain
         Vega-Lite has no place for capability, audience, or provenance. The
         binding rides them under <code>usermeta.idid</code> (which every
         Vega-Lite renderer ignores) so the spec and its meaning travel together.
@@ -385,12 +393,14 @@ export default function PortabilitySpecPage() {
 
       <CodeBlock language="ts">
 {`import {
-  unstable_toVegaLite as toVegaLite,
+  unstable_toVegaLiteResult as toVegaLiteResult,
   unstable_attachIDID as attachIDID,
   unstable_attachIDIDAnnotations as attachIDIDAnnotations,
 } from "semiotic/experimental"
 
-let spec = toVegaLite(config)                          // chart → Vega-Lite
+const result = toVegaLiteResult(config)                 // chart → Vega-Lite
+if (result.status === "refused") throw new Error(result.diagnostics[0].message)
+let spec = result.spec
 spec = attachIDID(spec, { capability, audience })       // ride under usermeta.idid
 spec = attachIDIDAnnotations(spec, [provenancedNote])   // + a note with its evidence
 
@@ -440,10 +450,11 @@ spec = attachIDIDAnnotations(spec, [provenancedNote])   // + a note with its evi
           legibility/receivability/provenance the source format lacks.
         </li>
         <li>
-          <strong>Round-trip without metadata loss.</strong>{" "}
-          <code>fromVegaLite</code> ⇄ <code>toVegaLite</code> proves a chart can
-          pass through the dominant interchange format and come back whole —
-          with its IDID metadata intact under <code>usermeta</code>.
+          <strong>Tested supported-subset round trip.</strong>{" "}
+          <code>fromVegaLite</code> ⇄ <code>toVegaLiteResult</code> proves a chart can
+          pass through the dominant interchange format with its IDID metadata
+          intact under <code>usermeta</code>; unsupported constructs refuse with
+          diagnostics instead of rendering an approximation.
         </li>
         <li>
           <strong>Implementable without this library.</strong> The schemas are
@@ -460,7 +471,8 @@ spec = attachIDIDAnnotations(spec, [provenancedNote])   // + a note with its evi
         The runtime helpers above ship behind the <code>unstable_</code> prefix in{" "}
         <code>semiotic/experimental</code> while the surface is proven against real
         consumers; the JSON Schemas themselves are the stable artifact. The canonical
-        copies live in the repository's <code>/spec/v0.1</code> directory.
+        copies ship in the npm package under <code>/spec/v0.1</code> and live in
+        the repository at the same path.
       </p>
     </PageLayout>
   )

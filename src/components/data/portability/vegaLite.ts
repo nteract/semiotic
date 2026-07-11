@@ -21,10 +21,30 @@ import type {
   PortableChartCapability,
 } from "./spec"
 import { IDID_SPEC_VERSION } from "./spec"
+import type {
+  PortabilityDiagnostic,
+  PortabilityExportResult,
+  PortabilityLoss,
+} from "./result"
 
 // ── toVegaLite ───────────────────────────────────────────────────────────────
 
 type AnyProps = Record<string, any>
+
+/** Options for the strict, typed outbound Vega-Lite adapter. */
+export interface ToVegaLiteOptions {
+  /**
+   * Allow a documented approximation. The default is false, so a caller never
+   * receives a visually plausible but semantically different Vega-Lite spec by
+   * accident.
+   */
+  allowLossy?: boolean
+}
+
+/** Typed result for Vega-Lite export. A refused result deliberately has no spec. */
+export interface VegaLiteExportResult extends PortabilityExportResult<VegaLiteSpec> {
+  spec?: VegaLiteSpec
+}
 
 /** Reverse of fromVegaLite's CURVE_MAP. */
 const CURVE_TO_INTERPOLATE: Record<string, string> = {
@@ -56,14 +76,84 @@ function withAxisTitle(enc: VegaLiteEncoding, label: unknown): VegaLiteEncoding 
   return enc
 }
 
+const REQUIRED_ACCESSORS: Record<string, readonly string[]> = {
+  BarChart: ["categoryAccessor", "valueAccessor"],
+  StackedBarChart: ["categoryAccessor", "valueAccessor", "stackBy"],
+  GroupedBarChart: ["categoryAccessor", "valueAccessor", "groupBy"],
+  LineChart: ["xAccessor", "yAccessor"],
+  AreaChart: ["xAccessor", "yAccessor"],
+  StackedAreaChart: ["xAccessor", "yAccessor", "areaBy"],
+  Scatterplot: ["xAccessor", "yAccessor"],
+  BubbleChart: ["xAccessor", "yAccessor", "sizeBy"],
+  Heatmap: ["xAccessor", "yAccessor", "valueAccessor"],
+  PieChart: ["valueAccessor", "categoryAccessor"],
+  DonutChart: ["valueAccessor", "categoryAccessor"],
+  DotPlot: ["categoryAccessor", "valueAccessor"],
+  Histogram: ["valueAccessor"],
+}
+
+const OPTIONAL_ACCESSORS: Record<string, readonly string[]> = {
+  LineChart: ["lineBy", "colorBy"],
+  AreaChart: ["colorBy"],
+  StackedAreaChart: ["colorBy"],
+  Scatterplot: ["colorBy"],
+  BubbleChart: ["colorBy"],
+  Heatmap: ["colorBy"],
+  Histogram: ["categoryAccessor"],
+}
+
+function accessorDiagnostics(component: string, props: AnyProps): PortabilityDiagnostic[] {
+  const diagnostics: PortabilityDiagnostic[] = []
+  for (const key of REQUIRED_ACCESSORS[component] || []) {
+    if (typeof props[key] !== "string" || props[key].length === 0) {
+      diagnostics.push({
+        code: "UNSERIALIZABLE_ACCESSOR",
+        severity: "error",
+        path: `/props/${key}`,
+        message: `${component} requires a string ${key} for Vega-Lite export.`,
+      })
+    }
+  }
+  for (const key of OPTIONAL_ACCESSORS[component] || []) {
+    if (props[key] !== undefined && (typeof props[key] !== "string" || props[key].length === 0)) {
+      diagnostics.push({
+        code: "UNSERIALIZABLE_ACCESSOR",
+        severity: "error",
+        path: `/props/${key}`,
+        message: `${component} can export ${key} only as a non-empty string field name.`,
+      })
+    }
+  }
+  return diagnostics
+}
+
 /**
- * Translate a Semiotic ChartConfig into a Vega-Lite spec. Covers the families
- * `fromVegaLite` covers, so the pair round-trips. Constructs unsupported by
- * Vega-Lite's single-view core surface a warning rather than a wrong spec.
+ * Translate a Semiotic ChartConfig into Vega-Lite through an explicit result.
+ * Unsupported components are refused by default; pass `allowLossy` only when
+ * the caller has chosen to accept the listed semantic loss.
  */
-export function toVegaLite(config: ChartConfig): VegaLiteSpec & { warnings?: string[] } {
-  const warnings: string[] = []
+export function toVegaLiteResult(
+  config: ChartConfig,
+  options: ToVegaLiteOptions = {},
+): VegaLiteExportResult {
+  const lossReport: PortabilityLoss[] = []
+  const provenance = {
+    adapter: "semiotic/vega-lite",
+    direction: "export" as const,
+    sourceFormat: "semiotic-chart-config",
+    targetFormat: "vega-lite",
+    ...(typeof config.version === "string" ? { specVersion: config.version } : {}),
+  }
   const props: AnyProps = config.props || {}
+  const accessorErrors = accessorDiagnostics(config.component, props)
+  if (accessorErrors.length > 0) {
+    return {
+      status: "refused",
+      diagnostics: accessorErrors,
+      lossReport: accessorErrors.map(({ code, message, path }) => ({ code, message, path })),
+      provenance,
+    }
+  }
   const enc: Record<string, VegaLiteEncoding> = {}
   let mark: VegaLiteSpec["mark"]
 
@@ -88,9 +178,11 @@ export function toVegaLite(config: ChartConfig): VegaLiteSpec & { warnings?: str
         enc.color = nominal(props.stackBy)
       } else if (component === "GroupedBarChart" && props.groupBy) {
         enc.color = nominal(props.groupBy)
-        warnings.push(
-          'GroupedBarChart maps groupBy to color; Vega-Lite expresses grouping via "xOffset". Adjust if exact grouped layout is required.'
-        )
+        lossReport.push({
+          code: "GROUPED_BAR_APPROXIMATION",
+          path: "/props/groupBy",
+          message: 'GroupedBarChart maps groupBy to color; Vega-Lite needs xOffset for an exact grouped layout.',
+        })
       }
       break
     }
@@ -173,13 +265,18 @@ export function toVegaLite(config: ChartConfig): VegaLiteSpec & { warnings?: str
       break
     }
     default: {
-      warnings.push(
-        `Component "${component}" has no Vega-Lite single-view equivalent. Emitting a point mark as a placeholder; the data and any IDID metadata are preserved.`
-      )
-      mark = "point"
-      if (props.xAccessor) enc.x = quant(props.xAccessor)
-      if (props.yAccessor) enc.y = quant(props.yAccessor)
-      break
+      const message = `Component "${component}" has no supported Vega-Lite single-view equivalent.`
+      return {
+        status: "refused",
+        diagnostics: [{
+          code: "UNSUPPORTED_COMPONENT",
+          severity: "error",
+          path: "/component",
+          message,
+        }],
+        lossReport: [{ code: "UNSUPPORTED_COMPONENT", path: "/component", message }],
+        provenance,
+      }
     }
   }
 
@@ -188,15 +285,52 @@ export function toVegaLite(config: ChartConfig): VegaLiteSpec & { warnings?: str
     enc.color.scale = { ...(enc.color.scale || {}), scheme: props.colorScheme }
   }
 
-  const spec: VegaLiteSpec & { warnings?: string[] } = { mark }
+  const spec: VegaLiteSpec = { mark }
   if (Array.isArray(props.data)) spec.data = { values: props.data }
   if (Object.keys(enc).length > 0) spec.encoding = enc
   if (typeof props.title === "string") spec.title = props.title
   if (typeof props.width === "number") spec.width = props.width
   if (typeof props.height === "number") spec.height = props.height
 
-  if (warnings.length > 0) spec.warnings = warnings
-  return spec
+  if (lossReport.length > 0 && !options.allowLossy) {
+    return {
+      status: "refused",
+      diagnostics: lossReport.map(({ code, message, path }) => ({
+        code,
+        severity: "error" as const,
+        message,
+        path,
+      })),
+      lossReport,
+      provenance,
+    }
+  }
+
+  return {
+    status: lossReport.length > 0 ? "lossy" : "success",
+    spec,
+    artifact: spec,
+    diagnostics: lossReport.map(({ code, message, path }) => ({
+      code,
+      severity: "warning" as const,
+      message,
+      path,
+    })),
+    lossReport,
+    provenance,
+  }
+}
+
+/**
+ * Convenience wrapper for the supported subset. Returns undefined on refusal
+ * rather than synthesizing a placeholder chart; use `toVegaLiteResult()` when
+ * a caller needs the structured diagnostic and loss report.
+ */
+export function toVegaLite(
+  config: ChartConfig,
+  options?: ToVegaLiteOptions,
+): VegaLiteSpec | undefined {
+  return toVegaLiteResult(config, options).spec
 }
 
 // ── IDID-over-Vega-Lite binding ──────────────────────────────────────────────
@@ -222,9 +356,14 @@ export function attachIDID(
   spec: VegaLiteSpec,
   meta: { capability?: PortableChartCapability; audience?: PortableAudienceProfile }
 ): VegaLiteSpec {
-  const idid: IDIDVegaLiteMeta = { specVersion: IDID_SPEC_VERSION }
-  if (meta.capability) idid.capability = meta.capability
-  if (meta.audience) idid.audience = meta.audience
+  // Descriptor and annotation attachment must compose in either order. Keep
+  // an existing IDID block, then overwrite only fields supplied by this call.
+  const idid: IDIDVegaLiteMeta = {
+    ...readIDID(spec),
+    specVersion: IDID_SPEC_VERSION,
+  }
+  if (meta.capability !== undefined) idid.capability = meta.capability
+  if (meta.audience !== undefined) idid.audience = meta.audience
   return {
     ...spec,
     usermeta: { ...(spec.usermeta as object | undefined), idid },
@@ -256,8 +395,8 @@ export function attachIDIDAnnotations(
 ): VegaLiteSpec {
   const existing = readIDID(spec)
   const idid: IDIDVegaLiteMeta = {
-    specVersion: IDID_SPEC_VERSION,
     ...existing,
+    specVersion: IDID_SPEC_VERSION,
     annotations: [...annotations],
   }
 

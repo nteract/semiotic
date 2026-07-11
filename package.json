@@ -120,6 +120,7 @@
       "require": "./dist/semiotic-value.min.js",
       "default": "./dist/semiotic-value.module.min.js"
     },
+    "./spec/*": "./spec/*",
     "./package.json": "./package.json"
   },
   "files": [
@@ -139,6 +140,7 @@
     "ai/cli.js",
     "ai/dist/*.js",
     "agent-skill/semiotic-charts/SKILL.md",
+    "spec/**/*",
     "CLAUDE.md",
     "README.md",
     "LICENSE"
@@ -183,7 +185,7 @@
     "generate:blog-og-cards": "node scripts/generate-blog-og-cards.mjs",
     "generate:example-og-cards": "node scripts/generate-example-og-cards.mjs",
     "generate:blog-rss": "node scripts/generate-blog-rss.mjs",
-    "website:build": "npm run dist:prod && npm run docs:api:json && npm run docs:llms && npm run generate:ssr-gallery && npm run generate:demo-gifs && npm run check:blog-entries && npm run generate:blog-og-cards && npm run generate:example-og-cards && npm run generate:blog-rss && vite build --config vite.docs.config.mjs && node scripts/prerender.mjs && npm run check:docs-routes",
+    "website:build": "npm run check:ai-instructions && npm run dist:prod && npm run docs:api:json && npm run docs:llms && npm run generate:ssr-gallery && npm run generate:demo-gifs && npm run check:blog-entries && npm run generate:blog-og-cards && npm run generate:example-og-cards && npm run generate:blog-rss && vite build --config vite.docs.config.mjs && node scripts/prerender.mjs && npm run check:docs-routes",
     "build:mcp": "node scripts/build-mcp.mjs",
     "docs:api": "typedoc",
     "docs:api:json": "typedoc --json docs/public/api/api.json && node scripts/generate-component-descriptions.mjs",
@@ -197,6 +199,7 @@
     "check:api-surface": "node scripts/check-api-surface.mjs",
     "docs:api-surface": "node scripts/generate-api-surface.mjs",
     "docs:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs",
+    "docs:ai-instructions": "node scripts/sync-ai-instructions.mjs",
     "docs:ai-surface": "node scripts/generate-ai-surface-manifest.mjs",
     "check:claude-md-coverage": "node scripts/check-claude-md-coverage.js",
     "check:context7": "node scripts/check-context7.mjs",
@@ -206,6 +209,7 @@
     "check:agent-skill": "node scripts/check-agent-skill.mjs",
     "eval:ai": "node scripts/run-ai-evals.mjs",
     "check:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs --check",
+    "check:ai-instructions": "node scripts/sync-ai-instructions.mjs --check",
     "check:ssr": "node scripts/check-ssr-alignment.js",
     "check:capabilities": "node scripts/check-capabilities.mjs",
     "check:visual-baseline-capabilities": "node scripts/check-visual-baseline-capabilities.mjs",
@@ -237,8 +241,8 @@
     "docs:cold-consumer": "node scripts/measure-cold-consumer.mjs --write",
     "docs:readme-dashboard": "npx tsx scripts/generate-readme-dashboard.tsx",
     "check:readme-dashboard": "npx tsx scripts/generate-readme-dashboard.tsx --check",
-    "release:check": "npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:ai-schema && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-example-integrity && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-surface && npm run check:agent-skill && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run check:cold-consumer && npm run size && npm run check:pack && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:ai-schema && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-example-integrity && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-surface && npm run check:agent-skill && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run size"
+    "release:check": "npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:ai-schema && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-example-integrity && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-surface && npm run check:agent-skill && npm run check:ai-contracts && npm run check:ai-instructions && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:api-surface && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run check:cold-consumer && npm run size && npm run check:pack && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:ai-schema && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-example-integrity && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-surface && npm run check:agent-skill && npm run check:ai-contracts && npm run check:ai-instructions && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:api-surface && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run size"
   },
   "repository": {
     "type": "git",

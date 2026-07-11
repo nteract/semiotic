@@ -29,7 +29,7 @@ function ssrParityFixtureEsmPlugin() {
   isotypeGhost as GLYPH_GHOST,
   isotypeServerGlyph as SERVER_GLYPH,
   isotypeNetworkGlyphs as NETWORK_GLYPHS,
-} from "../dist/semiotic-recipes.module.js"`,
+} from "../dist/semiotic-recipes.module.min.js"`,
         )
         .replace("module.exports = { makeSsrParityCases }", "export { makeSsrParityCases }")
     },

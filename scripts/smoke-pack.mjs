@@ -37,7 +37,14 @@ function run(cmd, opts = {}) {
 // Prefer the real Error line (ERR_MODULE_NOT_FOUND, etc.) over stack frames
 // like `node:internal/modules/package_json_reader:314`.
 function firstLine(err) {
-  const raw = String(err?.stderr ?? err?.stdout ?? err?.message ?? err)
+  // `npm pack ... 2>&1` intentionally puts diagnostics on stdout. Node still
+  // supplies an empty stderr Buffer on the Error object, so nullish-coalescing
+  // stderr/stdout would hide the useful failure text. Combine every non-empty
+  // channel instead.
+  const raw = [err?.stderr, err?.stdout, err?.message, err]
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean)
+    .join("\n")
   const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean)
   const meaningful = lines.find(
     (l) =>
@@ -107,15 +114,23 @@ function assertLocalChunksExist(packageRoot, entryRel, failures) {
 function splitExports(exportsMap, failures) {
   if (!exportsMap || typeof exportsMap !== "object") {
     failures.push("package.json: missing exports map")
-    return { modules: [], packageJson: null }
+    return { modules: [], packageJson: null, resources: [] }
   }
 
   const modules = []
+  const resources = []
   let packageJson = null
 
   for (const [entry, exportEntry] of Object.entries(exportsMap)) {
     if (entry === "./package.json") {
       packageJson = exportEntry
+      continue
+    }
+
+    // JSON schemas and standalone bindings are deliberately exported as
+    // resources, not package entry modules with import/require conditions.
+    if (typeof exportEntry === "string") {
+      resources.push({ entry, target: exportEntry })
       continue
     }
 
@@ -133,7 +148,7 @@ function splitExports(exportsMap, failures) {
     modules.push({ entry, exportEntry, esmPath })
   }
 
-  return { modules, packageJson }
+  return { modules, packageJson, resources }
 }
 
 function checkPackageJsonExport(packageRoot, packageJsonExport, proj, failures) {
@@ -165,6 +180,89 @@ function checkPackageJsonExport(packageRoot, packageJsonExport, proj, failures) 
     console.log("  ✓ semiotic/package.json (metadata): resolves and parses")
   } catch (err) {
     failures.push(`semiotic/package.json (metadata): ${firstLine(err)}`)
+  }
+}
+
+function checkPortabilitySpec(packageRoot, resources, proj, failures) {
+  const specExport = resources.find((resource) => resource.entry === "./spec/*")
+  if (!specExport || specExport.target !== "./spec/*") {
+    failures.push('semiotic/spec/*: missing resource export for the published IDID schemas')
+    return
+  }
+
+  const schemaNames = [
+    "chart-capability.schema.json",
+    "audience-profile.schema.json",
+    "annotation-provenance.schema.json",
+  ]
+  for (const name of schemaNames) {
+    const path = join(packageRoot, "spec", "v0.1", name)
+    if (!existsSync(path)) {
+      failures.push(`semiotic/spec/v0.1/${name}: missing from installed tarball`)
+      continue
+    }
+    try {
+      const schema = JSON.parse(readFileSync(path, "utf8"))
+      if (schema.$schema !== "https://json-schema.org/draft/2020-12/schema" ||
+        typeof schema.$id !== "string" || !schema.$id.includes(`/spec/v0.1/${name}`)) {
+        failures.push(`semiotic/spec/v0.1/${name}: invalid schema identity`)
+        continue
+      }
+      console.log(`  ✓ semiotic/spec/v0.1/${name}: packaged and parseable`)
+    } catch (err) {
+      failures.push(`semiotic/spec/v0.1/${name}: invalid JSON (${err.message})`)
+    }
+  }
+
+  try {
+    const code = "import * as m from 'semiotic/spec/bindings/vega-lite.mjs'; if (typeof m.attachIdid !== 'function') throw new Error('missing binding export'); console.log(m.IDID_SPEC_VERSION)"
+    const out = run(`node --input-type=module -e ${JSON.stringify(code)}`, { cwd: proj })
+    if (out.trim() !== "0.1") {
+      failures.push(`semiotic/spec/bindings/vega-lite.mjs: unexpected spec version ${JSON.stringify(out.trim())}`)
+    } else {
+      console.log("  ✓ semiotic/spec/bindings/vega-lite.mjs: resolves from installed tarball")
+    }
+  } catch (err) {
+    failures.push(`semiotic/spec/bindings/vega-lite.mjs: ${firstLine(err)}`)
+  }
+}
+
+function legacyAliasPaths(entryPoints) {
+  const aliases = new Set()
+  for (const { esmPath } of entryPoints) {
+    if (typeof esmPath !== "string") continue
+    const path = esmPath.replace(/^\.\//, "")
+    if (path.endsWith(".module.min.js")) {
+      aliases.add(path.replace(/\.module\.min\.js$/, ".module.js"))
+      aliases.add(path.replace(/\.module\.min\.js$/, ".js"))
+    }
+  }
+  return [...aliases].sort()
+}
+
+/**
+ * The old unminified-looking filenames were local build copies only: they were
+ * never in the tarball or exports map. Assert that they stay absent so a local
+ * fixture cannot accidentally start depending on an unpublished deep path.
+ */
+function checkUnpublishedLegacyAliases(packageRoot, entryPoints, proj, failures) {
+  const aliases = legacyAliasPaths(entryPoints)
+  for (const alias of aliases) {
+    if (existsSync(join(packageRoot, alias))) {
+      failures.push(`legacy alias unexpectedly published: semiotic/${alias}`)
+    }
+  }
+
+  try {
+    const code = "try { await import('semiotic/dist/semiotic.module.js'); throw new Error('legacy deep import unexpectedly resolved') } catch (error) { if (error?.code !== 'ERR_PACKAGE_PATH_NOT_EXPORTED') throw error; console.log(error.code) }"
+    const out = run(`node --input-type=module -e ${JSON.stringify(code)}`, { cwd: proj })
+    if (out.trim() !== "ERR_PACKAGE_PATH_NOT_EXPORTED") {
+      failures.push(`legacy deep import: unexpected result ${JSON.stringify(out.trim())}`)
+    } else {
+      console.log(`  ✓ ${aliases.length} legacy aliases absent; deep import remains blocked`)
+    }
+  } catch (err) {
+    failures.push(`legacy deep import: ${firstLine(err)}`)
   }
 }
 
@@ -304,9 +402,15 @@ try {
   // file (per package.json `exports`) actually exists on disk.
   const pkg = JSON.parse(run(`node -e "console.log(JSON.stringify(require('semiotic/package.json')))"`, { cwd: proj }))
   const packageRoot = join(proj, "node_modules/semiotic")
-  const { modules: entryPoints, packageJson: packageJsonExport } = splitExports(pkg.exports, failures)
+  const {
+    modules: entryPoints,
+    packageJson: packageJsonExport,
+    resources,
+  } = splitExports(pkg.exports, failures)
   console.log(`▶ checking ${entryPoints.length} importable entry points from package.json#exports (semiotic@${pkg.version})`)
   checkPackageJsonExport(packageRoot, packageJsonExport, proj, failures)
+  checkPortabilitySpec(packageRoot, resources, proj, failures)
+  checkUnpublishedLegacyAliases(packageRoot, entryPoints, proj, failures)
 
   for (const { entry, exportEntry, esmPath } of entryPoints) {
     const importPath = entry === "." ? "semiotic" : `semiotic${entry.slice(1)}`
@@ -358,7 +462,7 @@ try {
 
   checkTypeScriptConsumer(proj, packageRoot, failures)
 } catch (err) {
-  console.error("✗ smoke test crashed:", err.message)
+  console.error("✗ smoke test crashed:", firstLine(err))
   exitCode = 2
 } finally {
   // Clean up — best-effort.

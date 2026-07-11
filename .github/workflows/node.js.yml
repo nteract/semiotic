@@ -43,6 +43,9 @@ jobs:
       - name: Check AI behavior contracts freshness
         run: npm run check:ai-contracts
 
+      - name: Check AI instruction mirror freshness
+        run: npm run check:ai-instructions
+
       - name: Build library
         run: npm run dist
 

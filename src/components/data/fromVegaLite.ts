@@ -8,6 +8,10 @@ import type { Datum } from "../charts/shared/datumTypes"
  */
 import type { ChartConfig } from "../export/chartConfig"
 import { rollup } from "./transforms"
+import type {
+  PortabilityDiagnostic,
+  PortabilityImportResult,
+} from "./portability/result"
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -33,12 +37,26 @@ export interface VegaLiteSpec {
   [key: string]: any
 }
 
+/** Strictness for the typed, experimental Vega-Lite import result. */
+export interface FromVegaLiteOptions {
+  /**
+   * Strict is the safe default: unsupported composition or marks return a
+   * typed refusal instead of a plausible fallback chart. `lossy` retains the
+   * legacy fallback behavior, but reports every known loss explicitly.
+   */
+  mode?: "strict" | "lossy"
+}
+
+/** Typed result for the experimental, loss-aware Vega-Lite importer. */
+export type VegaLiteImportResult = PortabilityImportResult<ChartConfig>
+
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-function normalizeMark(mark: string | { type: string; [key: string]: any }): {
+function normalizeMark(mark: string | { type: string; [key: string]: any } | undefined): {
   type: string
   markProps: Datum
 } {
+  if (!mark) return { type: "", markProps: {} }
   if (typeof mark === "string") {
     return { type: mark, markProps: {} }
   }
@@ -58,6 +76,107 @@ function isCategory(type?: string): boolean {
 
 function isQuantitative(type?: string): boolean {
   return type === "quantitative" || type === "temporal"
+}
+
+type UnknownRecord = Record<string, unknown>
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function readIDIDMetadata(spec: VegaLiteSpec): UnknownRecord | undefined {
+  const usermeta = (spec as UnknownRecord).usermeta
+  if (!isRecord(usermeta) || !isRecord(usermeta.idid)) return undefined
+  return usermeta.idid
+}
+
+function isIDIDAnnotationLayer(layer: unknown): boolean {
+  if (!isRecord(layer) || !isRecord(layer.usermeta) || !isRecord(layer.usermeta.idid)) {
+    return false
+  }
+  return layer.usermeta.idid.role === "annotation-layer"
+}
+
+/**
+ * Recover the one base view emitted by attachIDIDAnnotations(). This is
+ * intentionally narrow: arbitrary Vega-Lite layer composition remains
+ * unsupported and must not be guessed as a chart configuration.
+ */
+export function unwrapIDIDEnrichedVegaLiteSpec(spec: VegaLiteSpec): VegaLiteSpec {
+  const record = spec as UnknownRecord
+  if (!readIDIDMetadata(spec) || !Array.isArray(record.layer)) return spec
+
+  const baseLayers = record.layer.filter(
+    (layer): layer is UnknownRecord => isRecord(layer) && !isIDIDAnnotationLayer(layer),
+  )
+  if (baseLayers.length !== 1 || baseLayers[0].mark === undefined) return spec
+
+  const { layer: _layer, ...outer } = record
+  const { usermeta: _baseUsermeta, ...base } = baseLayers[0]
+  return { ...outer, ...base } as VegaLiteSpec
+}
+
+function strictImportDiagnostics(spec: VegaLiteSpec): PortabilityDiagnostic[] {
+  const original = spec as UnknownRecord
+  const recovered = unwrapIDIDEnrichedVegaLiteSpec(spec)
+  const normalized = recovered as UnknownRecord
+  const diagnostics: PortabilityDiagnostic[] = []
+
+  if (Array.isArray(original.layer) && recovered === spec) {
+    diagnostics.push({
+      code: "UNSUPPORTED_COMPOSITION",
+      severity: "error",
+      path: "/layer",
+      message: "Only the single base view in an IDID-enriched annotation layer can be imported.",
+    })
+  }
+  if (normalized.mark === undefined) {
+    diagnostics.push({
+      code: "MISSING_MARK",
+      severity: "error",
+      path: "/mark",
+      message: "A Vega-Lite spec needs a supported single-view mark.",
+    })
+  } else {
+    const { type } = normalizeMark(normalized.mark as VegaLiteSpec["mark"])
+    const supported = new Set(["bar", "line", "area", "point", "circle", "square", "rect", "arc", "tick"])
+    if (!supported.has(type)) {
+      diagnostics.push({
+        code: "UNSUPPORTED_MARK",
+        severity: "error",
+        path: "/mark",
+        message: `Vega-Lite mark "${type || "(missing)"}" has no supported Semiotic translation.`,
+      })
+    }
+  }
+  if (Array.isArray(normalized.transform) && normalized.transform.length > 0) {
+    diagnostics.push({
+      code: "UNSUPPORTED_TRANSFORM",
+      severity: "error",
+      path: "/transform",
+      message: "Vega-Lite transforms must be materialized before strict import.",
+    })
+  }
+  for (const key of ["hconcat", "vconcat", "concat", "facet", "repeat", "params", "selection"] as const) {
+    if (normalized[key] !== undefined) {
+      diagnostics.push({
+        code: "UNSUPPORTED_COMPOSITION",
+        severity: "error",
+        path: `/${key}`,
+        message: `Vega-Lite "${key}" is not part of the supported single-view import subset.`,
+      })
+    }
+  }
+  if (isRecord(normalized.data) && typeof normalized.data.url === "string") {
+    diagnostics.push({
+      code: "UNSUPPORTED_DATA_URL",
+      severity: "error",
+      path: "/data/url",
+      message: "Strict import accepts inline data.values only; load URL data before importing.",
+    })
+  }
+
+  return diagnostics
 }
 
 /** Map Vega-Lite color scheme names to Semiotic equivalents */
@@ -106,6 +225,10 @@ const AGG_MAP: Record<string, "sum" | "mean" | "count" | "min" | "max"> = {
 // ── Main ─────────────────────────────────────────────────────────────────
 
 export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[] } {
+  // attachIDIDAnnotations() represents courtesy marks as a Vega-Lite layer.
+  // Recover its one actual chart layer before inspecting `mark`; arbitrary
+  // layered specs remain on the legacy warning/fallback path below.
+  spec = unwrapIDIDEnrichedVegaLiteSpec(spec)
   const warnings: string[] = []
   const { type: markType, markProps } = normalizeMark(spec.mark)
   const enc = spec.encoding || {}
@@ -355,6 +478,67 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
   }
 
   return buildConfig(component, props, warnings)
+}
+
+/**
+ * Strict, loss-aware Vega-Lite import.
+ *
+ * `fromVegaLite()` remains the stable compatibility helper and therefore
+ * preserves its historical fallback behavior. New portability integrations
+ * should use this result API, whose default is to refuse unsupported semantics
+ * rather than return a chart that merely looks plausible.
+ */
+export function fromVegaLiteResult(
+  spec: VegaLiteSpec,
+  options: FromVegaLiteOptions = {},
+): VegaLiteImportResult {
+  const diagnostics = strictImportDiagnostics(spec)
+  const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error")
+  const idid = readIDIDMetadata(spec)
+  const provenance = {
+    adapter: "semiotic/vega-lite",
+    direction: "import" as const,
+    sourceFormat: "vega-lite",
+    targetFormat: "semiotic-chart-config",
+    ...(typeof idid?.specVersion === "string" ? { specVersion: idid.specVersion } : {}),
+    ...(idid ? { metadata: { idid } } : {}),
+  }
+
+  if (errors.length > 0 && options.mode !== "lossy") {
+    return {
+      status: "refused",
+      diagnostics,
+      lossReport: errors.map(({ code, message, path }) => ({ code, message, path })),
+      provenance,
+    }
+  }
+
+  const config = fromVegaLite(spec)
+  const warningDiagnostics: PortabilityDiagnostic[] = (config.warnings || []).map((message) => ({
+    code: "LEGACY_TRANSLATION_WARNING",
+    severity: "warning",
+    message,
+  }))
+  const lossReport = errors.map(({ code, message, path }) => ({ code, message, path }))
+  // In lossy mode, strict-subset failures describe approximated or discarded
+  // semantics rather than a refusal. Keep them in `lossReport`, but surface
+  // them as warnings so callers can use error-level diagnostics as a reliable
+  // refusal signal.
+  const surfacedDiagnostics = options.mode === "lossy"
+    ? diagnostics.map((diagnostic) => (
+      diagnostic.severity === "error"
+        ? { ...diagnostic, severity: "warning" as const }
+        : diagnostic
+    ))
+    : diagnostics
+
+  return {
+    status: lossReport.length > 0 ? "lossy" : "success",
+    config,
+    diagnostics: [...surfacedDiagnostics, ...warningDiagnostics],
+    lossReport,
+    provenance,
+  }
 }
 
 // ── Internal helpers ─────────────────────────────────────────────────────

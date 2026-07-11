@@ -15,6 +15,7 @@
     },
     "component": {
       "type": "string",
+      "minLength": 1,
       "description": "Stable name of the chart this descriptor is about (e.g. \"BarChart\", \"SankeyDiagram\"). The portable identity of the chart; how a host resolves it to a renderer is a binding concern.",
       "x-idid-status": "shipped"
     },

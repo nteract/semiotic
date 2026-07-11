@@ -111,6 +111,10 @@ const IGNORED_SUBPATHS = new Set(["experimental"])
 const exportedSubpaths = Object.keys(pkg.exports || {})
   .filter((k) => k.startsWith("./") && k !== "./package.json")
   .map((k) => k.slice(2))
+  // Wildcard asset exports (e.g. `./spec/*`) aren't importable JS sub-paths —
+  // strip the trailing glob so they compare against the rule text as their
+  // base path (`spec`), matching what the rule-token regex below can parse.
+  .map((k) => (k.endsWith("/*") ? k.slice(0, -2) : k))
   .filter((k) => !IGNORED_SUBPATHS.has(k))
 
 const subpathRule = (manifest.rules || []).find((r) => r.includes("sub-path"))

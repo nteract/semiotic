@@ -50,6 +50,7 @@ import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableL
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
+import { refreshIdlePulse } from "./pulseFrameRefresh"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -219,7 +220,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // scene nodes (progressively, since the error scales with x) until the
     // transition ends.
     const lastSceneDimsRef = useRef({ w: -1, h: -1 })
-
+    const pulseFramePendingRef = useRef(false)
     // XY resolves foreground/background locally (not via useFrame) because
     // the marginalGraphics branch below may expand margin, and function-form
     // graphics must be evaluated against the final margin. Having useFrame
@@ -934,6 +935,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         emitLegendCategories()
       }
 
+      const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       const dpr = getDevicePixelRatio()
       const theme = themeColorCacheRef.current.resolve(canvas)
       // Cache the theme primary for the hover handler — avoids re-running
@@ -946,8 +948,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const resolvedStaleness = resolveStaleness(staleness, idleMs)
       const currentlyStale = staleness && resolvedStaleness.isStale
 
-      // ── Data canvas: repaint when data/props changed or a restyle is pending ─
-      if (needsDataRepaint || stylePaintPending) {
+      // ── Data canvas: repaint when data/props changed or a restyle/pulse is pending ─
+      if (needsDataRepaint || stylePaintPending || pulseRefresh.changed) {
         const ctx = prepareCanvas(canvas, size, margin, dpr)
         if (ctx) {
           ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
@@ -1139,10 +1141,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         setIsStale(!!currentlyStale)
       }
 
-      // Schedule next frame for continuous rendering (pulse/transitions).
-      // Re-check activeTransition after computeScene — intro animation may
-      // have been set up during this frame's computeScene call.
-      const needsContinuation = isTransitioning || store.activeTransition != null || store.hasActivePulses
+      // Continue transitions and active pulse frames.
+      const needsContinuation = isTransitioning || store.activeTransition != null || pulseRefresh.pending
       if (needsContinuation) {
         rafRef.current = requestAnimationFrame(() => renderFnRef.current())
       }

@@ -203,9 +203,66 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 }
 
 function checkRubricAxis(errors: string[], path: string, v: unknown): void {
-  if (typeof v !== "number" || !Number.isFinite(v) || v < 1 || v > 5) {
-    errors.push(`${path} must be a number in [1, 5]`)
+  if (typeof v !== "number" || !Number.isInteger(v) || v < 1 || v > 5) {
+    errors.push(`${path} must be an integer in [1, 5]`)
   }
+}
+
+function checkOptionalString(errors: string[], path: string, value: unknown): void {
+  if (value !== undefined && typeof value !== "string") {
+    errors.push(`${path} must be a string`)
+  }
+}
+
+function checkOptionalFiniteNumber(
+  errors: string[],
+  path: string,
+  value: unknown,
+  minimum?: number,
+  maximum?: number,
+): void {
+  if (value === undefined) return
+  if (typeof value !== "number" || !Number.isFinite(value) ||
+    (minimum !== undefined && value < minimum) ||
+    (maximum !== undefined && value > maximum)) {
+    const range = minimum !== undefined && maximum !== undefined
+      ? ` in [${minimum}, ${maximum}]`
+      : minimum !== undefined
+        ? ` >= ${minimum}`
+        : ""
+    errors.push(`${path} must be a finite number${range}`)
+  }
+}
+
+function checkOptionalBoolean(errors: string[], path: string, value: unknown): void {
+  if (value !== undefined && typeof value !== "boolean") {
+    errors.push(`${path} must be a boolean`)
+  }
+}
+
+function checkNoExtraKeys(
+  errors: string[],
+  path: string,
+  value: Record<string, unknown>,
+  allowed: readonly string[],
+): void {
+  for (const key of Object.keys(value)) {
+    if (!allowed.includes(key)) errors.push(`${path}.${key} is not allowed`)
+  }
+}
+
+function checkSpecVersion(errors: string[], value: unknown): void {
+  if (value !== undefined && value !== IDID_SPEC_VERSION) {
+    errors.push(`specVersion must be the string ${IDID_SPEC_VERSION}`)
+  }
+}
+
+function isISODateTime(value: string): boolean {
+  // JSON Schema's date-time format is RFC 3339-like. Date.parse alone accepts
+  // informal values such as a bare date, which would make the runtime helper
+  // more permissive than the published schema.
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)
+    && !Number.isNaN(Date.parse(value))
 }
 
 /**
@@ -218,13 +275,17 @@ export function validatePortableCapability(value: unknown): ValidationResult {
   if (!isPlainObject(value)) {
     return { valid: false, errors: ["capability must be an object"] }
   }
+  checkSpecVersion(errors, value.specVersion)
   if (typeof value.component !== "string" || value.component.length === 0) {
     errors.push("component is required and must be a non-empty string")
   }
+  checkOptionalString(errors, "family", value.family)
+  checkOptionalString(errors, "importPath", value.importPath)
   const rubric = value.rubric
   if (!isPlainObject(rubric)) {
     errors.push("rubric is required and must be an object")
   } else {
+    checkNoExtraKeys(errors, "rubric", rubric, ["familiarity", "accuracy", "precision"])
     checkRubricAxis(errors, "rubric.familiarity", rubric.familiarity)
     checkRubricAxis(errors, "rubric.accuracy", rubric.accuracy)
     checkRubricAxis(errors, "rubric.precision", rubric.precision)
@@ -234,9 +295,7 @@ export function validatePortableCapability(value: unknown): ValidationResult {
       errors.push("intentScores must be an object")
     } else {
       for (const [k, score] of Object.entries(value.intentScores)) {
-        if (typeof score !== "number" || score < 0 || score > 5) {
-          errors.push(`intentScores.${k} must be a number in [0, 5]`)
-        }
+        checkOptionalFiniteNumber(errors, `intentScores.${k}`, score, 0, 5)
       }
     }
   }
@@ -251,6 +310,37 @@ export function validatePortableCapability(value: unknown): ValidationResult {
         }
         if (typeof variant.key !== "string") errors.push(`variants[${i}].key is required`)
         if (typeof variant.label !== "string") errors.push(`variants[${i}].label is required`)
+        checkOptionalString(errors, `variants[${i}].description`, variant.description)
+        if (variant.intentDeltas !== undefined) {
+          if (!isPlainObject(variant.intentDeltas)) {
+            errors.push(`variants[${i}].intentDeltas must be an object`)
+          } else {
+            for (const [key, score] of Object.entries(variant.intentDeltas)) {
+              checkOptionalFiniteNumber(errors, `variants[${i}].intentDeltas.${key}`, score)
+            }
+          }
+        }
+        if (variant.rubricDeltas !== undefined) {
+          if (!isPlainObject(variant.rubricDeltas)) {
+            errors.push(`variants[${i}].rubricDeltas must be an object`)
+          } else {
+            checkNoExtraKeys(errors, `variants[${i}].rubricDeltas`, variant.rubricDeltas, ["familiarity", "accuracy", "precision"])
+            for (const key of ["familiarity", "accuracy", "precision"] as const) {
+              checkOptionalFiniteNumber(errors, `variants[${i}].rubricDeltas.${key}`, variant.rubricDeltas[key])
+            }
+          }
+        }
+        for (const key of ["caveats", "tags"] as const) {
+          const entries = variant[key]
+          if (entries !== undefined) {
+            if (!Array.isArray(entries) || entries.some((entry) => typeof entry !== "string")) {
+              errors.push(`variants[${i}].${key} must be an array of strings`)
+            }
+          }
+        }
+        if (variant.props !== undefined && !isPlainObject(variant.props)) {
+          errors.push(`variants[${i}].props must be an object`)
+        }
       })
     }
   }
@@ -259,32 +349,60 @@ export function validatePortableCapability(value: unknown): ValidationResult {
       errors.push("mobile must be an object")
     } else {
       const mobile = value.mobile
+      checkOptionalString(errors, "mobile.strategy", mobile.strategy)
+      checkOptionalBoolean(errors, "mobile.responsive", mobile.responsive)
+      checkOptionalBoolean(errors, "mobile.supportsResponsiveLayout", mobile.supportsResponsiveLayout)
       for (const key of ["minViewportWidth", "maxMarks", "maxAnnotations", "minimumHitTarget"]) {
-        const v = mobile[key]
-        if (v !== undefined && (typeof v !== "number" || !Number.isFinite(v))) {
-          errors.push(`mobile.${key} must be a number`)
-        }
+        checkOptionalFiniteNumber(errors, `mobile.${key}`, mobile[key], 0)
       }
       if (mobile.breakpoints !== undefined) {
         if (!Array.isArray(mobile.breakpoints)) {
           errors.push("mobile.breakpoints must be an array")
         } else {
           mobile.breakpoints.forEach((v, i) => {
-            if (typeof v !== "number" || !Number.isFinite(v)) {
-              errors.push(`mobile.breakpoints[${i}] must be a number`)
-            }
+            checkOptionalFiniteNumber(errors, `mobile.breakpoints[${i}]`, v)
           })
         }
       }
-      if (mobile.interaction !== undefined && !isPlainObject(mobile.interaction)) {
-        errors.push("mobile.interaction must be an object")
+      if (mobile.summary !== undefined && typeof mobile.summary !== "boolean" && typeof mobile.summary !== "string") {
+        errors.push("mobile.summary must be a boolean or string")
       }
-      if (mobile.labels !== undefined && !isPlainObject(mobile.labels)) {
-        errors.push("mobile.labels must be an object")
+      if (mobile.interaction !== undefined) {
+        if (!isPlainObject(mobile.interaction)) {
+          errors.push("mobile.interaction must be an object")
+        } else {
+          checkOptionalString(errors, "mobile.interaction.primary", mobile.interaction.primary)
+          checkOptionalString(errors, "mobile.interaction.hoverFallback", mobile.interaction.hoverFallback)
+          checkOptionalFiniteNumber(errors, "mobile.interaction.targetSize", mobile.interaction.targetSize, 0)
+          if (mobile.interaction.alternatives !== undefined &&
+            (!Array.isArray(mobile.interaction.alternatives) || mobile.interaction.alternatives.some((entry) => typeof entry !== "string"))) {
+            errors.push("mobile.interaction.alternatives must be an array of strings")
+          }
+        }
       }
-      if (mobile.custom !== undefined && !isPlainObject(mobile.custom)) {
-        errors.push("mobile.custom must be an object")
+      if (mobile.labels !== undefined) {
+        if (!isPlainObject(mobile.labels)) {
+          errors.push("mobile.labels must be an object")
+        } else {
+          checkOptionalString(errors, "mobile.labels.strategy", mobile.labels.strategy)
+          checkOptionalFiniteNumber(errors, "mobile.labels.minFontSize", mobile.labels.minFontSize, 0)
+        }
       }
+      if (mobile.custom !== undefined) {
+        if (!isPlainObject(mobile.custom)) {
+          errors.push("mobile.custom must be an object")
+        } else {
+          checkOptionalBoolean(errors, "mobile.custom.dataBearingSceneNodes", mobile.custom.dataBearingSceneNodes)
+          checkOptionalBoolean(errors, "mobile.custom.stableIds", mobile.custom.stableIds)
+          checkOptionalString(errors, "mobile.custom.navigationGranularity", mobile.custom.navigationGranularity)
+        }
+      }
+    }
+  }
+  for (const key of ["caveats", "tags"] as const) {
+    const entries = value[key]
+    if (entries !== undefined && (!Array.isArray(entries) || entries.some((entry) => typeof entry !== "string"))) {
+      errors.push(`${key} must be an array of strings`)
     }
   }
   return { valid: errors.length === 0, errors }
@@ -296,13 +414,15 @@ export function validatePortableAudienceProfile(value: unknown): ValidationResul
   if (!isPlainObject(value)) {
     return { valid: false, errors: ["audience profile must be an object"] }
   }
+  checkSpecVersion(errors, value.specVersion)
+  checkOptionalString(errors, "name", value.name)
   if (value.familiarity !== undefined) {
     if (!isPlainObject(value.familiarity)) {
       errors.push("familiarity must be an object")
     } else {
       for (const [k, f] of Object.entries(value.familiarity)) {
-        if (typeof f !== "number" || f < 1 || f > 5) {
-          errors.push(`familiarity.${k} must be a number in [1, 5]`)
+        if (typeof f !== "number" || !Number.isInteger(f) || f < 1 || f > 5) {
+          errors.push(`familiarity.${k} must be an integer in [1, 5]`)
         }
       }
     }
@@ -314,13 +434,18 @@ export function validatePortableAudienceProfile(value: unknown): ValidationResul
       for (const [k, t] of Object.entries(value.targets)) {
         if (!isPlainObject(t) || (t.direction !== "increase" && t.direction !== "decrease")) {
           errors.push(`targets.${k}.direction must be "increase" or "decrease"`)
-        } else if (t.weight !== undefined && (typeof t.weight !== "number" || t.weight < 1 || t.weight > 3)) {
-          errors.push(`targets.${k}.weight must be a number in [1, 3]`)
+        } else {
+          checkNoExtraKeys(errors, `targets.${k}`, t, ["direction", "weight", "reason"])
+          if (t.weight !== undefined && (typeof t.weight !== "number" || !Number.isInteger(t.weight) || t.weight < 1 || t.weight > 3)) {
+            errors.push(`targets.${k}.weight must be an integer in [1, 3]`)
+          }
+          checkOptionalString(errors, `targets.${k}.reason`, t.reason)
         }
       }
     }
   }
-  if (value.exposureLevel !== undefined && ![0, 1, 2].includes(value.exposureLevel as number)) {
+  if (value.exposureLevel !== undefined &&
+    (typeof value.exposureLevel !== "number" || !Number.isInteger(value.exposureLevel) || ![0, 1, 2].includes(value.exposureLevel))) {
     errors.push("exposureLevel must be 0, 1, or 2")
   }
   if (value.receptionModality !== undefined && !MODALITY.has(value.receptionModality as string)) {
@@ -344,10 +469,11 @@ export function validatePortableAnnotation(value: unknown): ValidationResult {
     if (!isPlainObject(prov)) {
       errors.push("provenance must be an object")
     } else {
-      if (prov.confidence !== undefined && (typeof prov.confidence !== "number" || prov.confidence < 0 || prov.confidence > 1)) {
-        errors.push("provenance.confidence must be a number in [0, 1]")
+      for (const key of ["author", "authorKind", "source", "basis", "dataVersion", "stableId"] as const) {
+        checkOptionalString(errors, `provenance.${key}`, prov[key])
       }
-      if (prov.createdAt !== undefined && (typeof prov.createdAt !== "string" || Number.isNaN(Date.parse(prov.createdAt)))) {
+      checkOptionalFiniteNumber(errors, "provenance.confidence", prov.confidence, 0, 1)
+      if (prov.createdAt !== undefined && (typeof prov.createdAt !== "string" || !isISODateTime(prov.createdAt))) {
         errors.push("provenance.createdAt must be an ISO 8601 date-time string")
       }
     }
@@ -366,7 +492,9 @@ export function validatePortableAnnotation(value: unknown): ValidationResult {
       if (life.anchor !== undefined && !ANCHOR.has(life.anchor as string)) {
         errors.push(`lifecycle.anchor must be one of ${[...ANCHOR].join(", ")}`)
       }
-      if (life.ttlHint !== undefined && typeof life.ttlHint !== "string" && typeof life.ttlHint !== "number") {
+      checkOptionalString(errors, "lifecycle.supersedes", life.supersedes)
+      if (life.ttlHint !== undefined &&
+        (typeof life.ttlHint !== "string" && (typeof life.ttlHint !== "number" || !Number.isFinite(life.ttlHint)))) {
         errors.push("lifecycle.ttlHint must be an ISO 8601 duration string or a number of milliseconds")
       }
     }

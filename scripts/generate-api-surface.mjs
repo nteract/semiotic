@@ -19,6 +19,17 @@ import ts from "typescript"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
+const args = process.argv.slice(2)
+
+function argumentValue(name, fallback) {
+  const index = args.indexOf(name)
+  if (index === -1) return fallback
+  const value = args[index + 1]
+  if (!value || value.startsWith("--")) {
+    throw new Error(`${name} requires a path`)
+  }
+  return value
+}
 
 // Map of entry-point name → its built `.d.ts` file.
 // `semiotic-experimental` is intentionally omitted: that sub-path is packaged
@@ -43,7 +54,10 @@ const ENTRIES = {
   "semiotic-value": "dist/semiotic-value.d.ts",
 }
 
-const outDir = join(repoRoot, "etc/api-surface")
+// CI passes a temporary directory so surface verification never modifies
+// tracked snapshots. The default remains the checked-in location for the
+// explicit `docs:api-surface` regeneration command.
+const outDir = resolve(repoRoot, argumentValue("--out-dir", "etc/api-surface"))
 mkdirSync(outDir, { recursive: true })
 
 const missingDist = Object.entries(ENTRIES).filter(([, p]) => !existsSync(join(repoRoot, p)))
@@ -182,7 +196,7 @@ for (const [name, relPath] of Object.entries(ENTRIES)) {
 }
 
 if (exitCode === 0) {
-  console.log(`✅ wrote ${summary.length} surface snapshots → etc/api-surface/`)
+  console.log(`✅ wrote ${summary.length} surface snapshots → ${outDir}`)
   for (const { name, count } of summary) console.log(`  ${name}: ${count} exports`)
 }
 process.exit(exitCode)

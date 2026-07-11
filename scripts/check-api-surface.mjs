@@ -2,44 +2,57 @@
 /**
  * Surface drift gate — runs in CI.
  *
- * Regenerates `etc/api-surface/*.api.md` and fails if any file changed.
- * A clean diff means the public API surface is unchanged. To intentionally
- * change the surface, run `npm run docs:api-surface` locally and commit
- * the resulting `.api.md` files alongside the code change.
+ * Generates `etc/api-surface/*.api.md` equivalents into a temporary directory
+ * and compares them with the checked-in snapshots without writing tracked
+ * files. To intentionally change the surface, run `npm run docs:api-surface`
+ * locally and commit the resulting `.api.md` files alongside the code change.
  */
-import { execSync, spawnSync } from "node:child_process"
-import { dirname, resolve } from "node:path"
+import { spawnSync } from "node:child_process"
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
+const snapshotDir = join(repoRoot, "etc/api-surface")
+const tempDir = mkdtempSync(join(tmpdir(), "semiotic-api-surface-"))
 
-console.log("▶ regenerating api-surface snapshots…")
-const gen = spawnSync(process.execPath, ["scripts/generate-api-surface.mjs"], {
-  cwd: repoRoot,
-  stdio: "inherit",
-})
-if (gen.status !== 0) {
-  console.error("✗ generator failed")
-  process.exit(gen.status || 1)
+try {
+  console.log("▶ generating temporary api-surface snapshots…")
+  const gen = spawnSync(
+    process.execPath,
+    ["scripts/generate-api-surface.mjs", "--out-dir", tempDir],
+    { cwd: repoRoot, stdio: "inherit" },
+  )
+  if (gen.status !== 0) {
+    console.error("✗ generator failed")
+    process.exitCode = gen.status || 1
+  } else {
+    console.log("▶ checking for surface drift…")
+    const names = new Set([
+      ...readdirSync(snapshotDir).filter((name) => name.endsWith(".api.md")),
+      ...readdirSync(tempDir).filter((name) => name.endsWith(".api.md")),
+    ])
+    const changes = [...names].sort().filter((name) => {
+      const expectedPath = join(snapshotDir, name)
+      const actualPath = join(tempDir, name)
+      const expected = existsSync(expectedPath) ? readFileSync(expectedPath, "utf8") : undefined
+      const actual = existsSync(actualPath) ? readFileSync(actualPath, "utf8") : undefined
+      return expected !== actual
+    })
+
+    if (changes.length > 0) {
+      console.error("\n✗ public API surface drift detected:")
+      for (const name of changes) console.error(`- etc/api-surface/${name}`)
+      console.error("\nIf this change is intentional, run:")
+      console.error("  npm run docs:api-surface")
+      console.error("…and commit the updated etc/api-surface/*.api.md files.")
+      process.exitCode = 1
+    } else {
+      console.log("✅ public API surface unchanged")
+    }
+  }
+} finally {
+  rmSync(tempDir, { recursive: true, force: true })
 }
-
-console.log("▶ checking for surface drift…")
-const diff = execSync("git status --porcelain etc/api-surface", {
-  cwd: repoRoot,
-  encoding: "utf8",
-}).trim()
-
-if (diff) {
-  console.error("\n✗ public API surface drift detected:")
-  console.error(diff)
-  console.error("\nIf this change is intentional, run:")
-  console.error("  npm run docs:api-surface")
-  console.error("…and commit the updated etc/api-surface/*.api.md files.\n")
-  console.error("Diff preview (first 200 lines):")
-  const preview = execSync("git diff -- etc/api-surface", { cwd: repoRoot, encoding: "utf8" })
-  process.stderr.write(preview.split("\n").slice(0, 200).join("\n") + "\n")
-  process.exit(1)
-}
-
-console.log("✅ public API surface unchanged")

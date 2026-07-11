@@ -45,9 +45,12 @@ const printOnly = args.has("--print")
 
 const MARKER_START = "<!-- semiotic-bundle-sizes:start -->"
 const MARKER_END = "<!-- semiotic-bundle-sizes:end -->"
-// Unstable preview bundles are packaged for collaborators but are intentionally
-// omitted from the consumer-facing bundle-size table and CI drift gate.
-const IGNORED_EXPORTS = new Set(["./experimental"])
+// Exports with no measurable JS bundle are intentionally omitted from the
+// consumer-facing bundle-size table and CI drift gate:
+//   - `./experimental` is an unstable preview bundle packaged for collaborators.
+//   - `./spec/*` is a wildcard export of raw JSON-Schema asset files (the
+//     portability spec) with no corresponding `dist/*.module.min.js` to gzip.
+const IGNORED_EXPORTS = new Set(["./experimental", "./spec/*"])
 
 // Subpath → short "what's inside" blurb shown in the README table.
 // Keep these short and stable; they describe *which charts/utilities*

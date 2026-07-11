@@ -409,16 +409,16 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
-| `import { LineChart } from "semiotic"` | browser | **286.7 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **136.4 KiB** |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **112.5 KiB** |
+| `import { LineChart } from "semiotic"` | browser | **287.0 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **136.6 KiB** |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **112.7 KiB** |
 | `import { SankeyDiagram } from "semiotic/network"` | browser | **117.9 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **154.8 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **155.0 KiB** |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **100.6 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **245.3 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **409.9 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **245.7 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **410.2 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **42.9 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **102.5 KiB** |

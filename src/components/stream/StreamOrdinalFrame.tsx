@@ -59,6 +59,7 @@ import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableL
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
+import { refreshIdlePulse } from "./pulseFrameRefresh"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
@@ -259,12 +260,12 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     const lastAnnotationFrameTimeRef = useRef(0)
     const [isStale, setIsStale] = useState(false)
     const lastSceneDimsRef = useRef({ w: -1, h: -1 })
+    const pulseFramePendingRef = useRef(false)
     // customLayout overlays are read straight from store.customLayoutOverlays at
     // render time (see the foregroundGraphics composition below) — same pattern
     // as StreamXYFrame / StreamNetworkFrame. The render loop's `setAnnotationFrame`
     // re-render (fired on `wasDirty`, after `computeScene` refreshes the store)
     // picks up fresh overlays, so no separate React state / setState is needed.
-
     // ── Hover config ─────────────────────────────────────────────────────
 
     const effectiveHoverAnnotation = enableHover || hoverAnnotation
@@ -747,6 +748,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       }
       dirtyRef.current = wasDirty && isTransitioning && !computedSceneThisFrame
 
+      const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       // Update canvas aria-label imperatively after scene changes
       if (computedSceneThisFrame || isTransitioning) {
         canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
@@ -852,10 +854,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         setIsStale(!!currentlyStale)
       }
 
-      // Schedule next frame for pulse/transition continuous rendering
-      // Re-check activeTransition after computeScene — intro animation may
-      // have been set up during this frame's computeScene call.
-      const needsContinuation = isTransitioning || store.activeTransition != null || store.hasActivePulses
+      // Continue transitions and active pulse frames.
+      const needsContinuation = isTransitioning || store.activeTransition != null || pulseRefresh.pending
       if (needsContinuation) {
         rafRef.current = requestAnimationFrame(() => renderFnRef.current())
       }
