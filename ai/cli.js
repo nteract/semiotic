@@ -323,7 +323,7 @@ if (flag === "--doctor") {
 
     // Tracks whether the doctor found any error-level problem. The process
     // MUST exit nonzero when this is false so CI/agents can gate on it.
-    let ok = true
+    let ok
 
     if (!diagnoseConfig && !validateProps) {
       if (asJson) {

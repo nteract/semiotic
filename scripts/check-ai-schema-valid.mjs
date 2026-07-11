@@ -28,7 +28,12 @@ const schema = JSON.parse(readFileSync(schemaPath, "utf-8"))
 // `strict: false` lets our `x-semiotic-runtime-types` extension keyword through
 // without a strict-mode error while still validating the schema against the
 // Draft 2020-12 metaschema. We register the keyword explicitly for clarity.
-const ajv = new Ajv2020.default({ strict: false, allErrors: true })
+//
+// ajv's CJS/ESM interop build exposes the constructor both as the default
+// export and as `default.default`; guard against either shape so this
+// doesn't break on an ajv version that drops the self-reference.
+const Ajv2020Constructor = Ajv2020.default ?? Ajv2020
+const ajv = new Ajv2020Constructor({ strict: false, allErrors: true })
 ajv.addKeyword({ keyword: "x-semiotic-runtime-types" })
 
 const tools = Array.isArray(schema.tools) ? schema.tools : []
