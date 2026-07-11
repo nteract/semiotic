@@ -9880,7 +9880,7 @@
             },
             "onCapacityChange": {
               "type": "function",
-              "description": "Receives live queue snapshots for gates that declare capacity."
+              "description": "Receives visit-aware queue work, wait, overflow, throughput, utilization, and pressure snapshots."
             },
             "crashDetection": {
               "type": "boolean",

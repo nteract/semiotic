@@ -475,6 +475,15 @@ function SensorScene() {
         no capacity work.
       </p>
 
+      <p>
+        <code>createCapacityQueueController</code> records one semantic job visit
+        per physical entry. Its observations distinguish <code>queued</code>,{" "}
+        <code>processed</code>, <code>blocked</code>, and <code>abandoned</code> with
+        stable <code>jobId</code>, <code>visitId</code>, queue timing, and work fields.
+        Snapshot ages, utilization, throughput, and pressure use the same simulated
+        clock; <code>metricRevision</code> provides a callback-safe reporting cadence.
+      </p>
+
       <CodeBlock
         language="jsx"
         code={`const frameRef = useRef(null)

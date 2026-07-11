@@ -1,12 +1,14 @@
-import React from "react"
+import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { EXAMPLES } from "./examplesManifest"
+import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
+import "./ExamplesOverviewPage.css"
 
 
 const PREVIEW_COMPONENTS = {
   watermarks: MiniWatermarksPreview,
   "plinko-quantile": MiniPlinkoQuantilePreview,
   "stakeholder-journey": MiniStakeholderJourneyPreview,
+  "queue-weather": MiniQueueWeatherPreview,
   "merge-pressure": MiniMergePressurePreview,
   nimby: MiniNimbyPreview,
   climate: MiniClimatePreview,
@@ -42,6 +44,28 @@ export function ExamplePreview({ preview }) {
 }
 
 export default function ExamplesOverviewPage() {
+  const [frame, setFrame] = useState("all")
+  const [topic, setTopic] = useState("all")
+  const visibleExamples = useMemo(
+    () =>
+      EXAMPLES.filter(
+        (example) =>
+          (frame === "all" || example.frames?.includes(frame)) &&
+          (topic === "all" || example.topics?.includes(topic))
+      ),
+    [frame, topic]
+  )
+  const hasActiveFilters = frame !== "all" || topic !== "all"
+
+  const countForFilter = (kind, value) =>
+    EXAMPLES.filter(
+      (example) =>
+        (kind !== "frames" || value === "all" || example.frames?.includes(value)) &&
+        (kind !== "topics" || value === "all" || example.topics?.includes(value)) &&
+        (kind === "frames" || frame === "all" || example.frames?.includes(frame)) &&
+        (kind === "topics" || topic === "all" || example.topics?.includes(topic))
+    ).length
+
   return (
     <div style={styles.page}>
       <div style={styles.header}>
@@ -53,8 +77,40 @@ export default function ExamplesOverviewPage() {
         </p>
       </div>
 
+      <section className="examples-filter-bar" aria-label="Filter examples">
+        <ExampleFilterGroup
+          label="Frame"
+          options={EXAMPLE_FILTERS.frames}
+          selected={frame}
+          onSelect={setFrame}
+          countForOption={(value) => countForFilter("frames", value)}
+        />
+        <ExampleFilterGroup
+          label="Topic"
+          options={EXAMPLE_FILTERS.topics}
+          selected={topic}
+          onSelect={setTopic}
+          countForOption={(value) => countForFilter("topics", value)}
+        />
+        <div className="examples-filter-summary" aria-live="polite">
+          <span>{visibleExamples.length} examples</span>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="examples-filter-reset"
+              onClick={() => {
+                setFrame("all")
+                setTopic("all")
+              }}
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      </section>
+
       <div style={styles.grid}>
-        {EXAMPLES.map((example) => (
+        {visibleExamples.map((example) => (
           <Link key={example.path} to={example.path} style={styles.card}>
             <ExamplePreview preview={example.preview} />
             <div style={styles.cardBody}>
@@ -72,7 +128,51 @@ export default function ExamplesOverviewPage() {
           </Link>
         ))}
       </div>
+      {visibleExamples.length === 0 && (
+        <div className="examples-empty-state">
+          No examples match this frame and topic combination.
+        </div>
+      )}
     </div>
+  )
+}
+
+function ExampleFilterGroup({ label, options, selected, onSelect, countForOption }) {
+  return (
+    <div className="examples-filter-group" role="group" aria-label={`Filter by ${label.toLowerCase()}`}>
+      <span className="examples-filter-label">{label}</span>
+      <div className="examples-filter-options">
+        <FilterOption
+          label="All"
+          count={countForOption("all")}
+          selected={selected === "all"}
+          onClick={() => onSelect("all")}
+        />
+        {options.map((option) => (
+          <FilterOption
+            key={option.id}
+            label={option.label}
+            count={countForOption(option.id)}
+            selected={selected === option.id}
+            onClick={() => onSelect(option.id)}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FilterOption({ label, count, selected, onClick }) {
+  return (
+    <button
+      type="button"
+      className="examples-filter-option"
+      aria-pressed={selected}
+      onClick={onClick}
+      disabled={count === 0}
+    >
+      {label} <span aria-hidden="true">{count}</span>
+    </button>
   )
 }
 
@@ -1304,6 +1404,34 @@ function MiniStakeholderJourneyPreview() {
       <text x="412" y="187" textAnchor="middle" fill="#22304a" fontSize="12" fontWeight="900">
         OSE CANVAS FIELD
       </text>
+    </svg>
+  )
+}
+
+function MiniQueueWeatherPreview() {
+  const queue = [
+    [122, 72, "#ef8354"],
+    [148, 104, "#4f9da6"],
+    [174, 82, "#f2c14e"],
+    [202, 112, "#ef8354"],
+    [228, 70, "#4f9da6"],
+    [254, 96, "#f2c14e"],
+  ]
+  const trace = "M 32 174 L 72 166 L 112 169 L 152 145 L 192 152 L 232 112 L 272 124 L 312 88 L 352 103 L 392 72 L 458 86"
+  return (
+    <svg style={styles.preview} viewBox="0 0 500 200" role="img" aria-label="Mini Queue Weather preview">
+      <rect width="500" height="200" fill="#f7f9f8" />
+      <text x="28" y="28" fill="#17242b" fontSize="12" fontWeight="900">PLAYER SUPPORT</text>
+      <rect x="28" y="42" width="294" height="94" rx="6" fill="#16262b" stroke="#617b80" strokeWidth="2" />
+      <rect x="102" y="52" width="160" height="74" fill="#ef8354" fillOpacity="0.1" stroke="#ef8354" strokeDasharray="5 5" />
+      <text x="182" y="65" textAnchor="middle" fill="#f6d8cb" fontSize="9" fontWeight="800">FINITE SUPPORT TEAM</text>
+      {queue.map(([x, y, fill], index) => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r={7 + (index % 3)} fill={fill} stroke="#f7f9f8" strokeWidth="1.5" />
+      ))}
+      <path d="M 338 152 C 370 126, 398 150, 464 98 L 464 150 C 410 168, 374 146, 338 178 Z" fill="#147d86" fillOpacity="0.18" />
+      <path d={trace} fill="none" stroke="#df653c" strokeWidth="4" strokeLinejoin="round" />
+      <line x1="338" x2="464" y1="132" y2="116" stroke="#147d86" strokeWidth="2" strokeDasharray="5 5" />
+      <text x="400" y="188" textAnchor="middle" fill="#147d86" fontSize="10" fontWeight="900">ORDINARY RANGE</text>
     </svg>
   )
 }

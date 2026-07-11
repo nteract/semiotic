@@ -24,7 +24,7 @@ const processFlowChartProps = [
   { name: "showChrome", type: "boolean", required: false, default: "true", description: "Draw stage labels, capacity notes, and group anchors." },
   { name: "chromeOptions", type: "object", required: false, default: null, description: "processChrome options: outlineStages (stroke-only bays), showFlowSpine, showStageCounts, showCapacityBadges, showGroupSockets." },
   { name: "liveCapacity", type: "boolean", required: false, default: "true", description: "Install live FIFO capacity-queue controllers for stages with capacity (drains work at unitsPerSecond)." },
-  { name: "onCapacityChange", type: "function", required: false, default: null, description: "Receives CapacityQueueSnapshot[] (queueDepth, processedCount, remainingWork) each tick while capacity queues run." },
+  { name: "onCapacityChange", type: "function", required: false, default: null, description: "Receives CapacityQueueSnapshot[] at a coarse live cadence: queue/blocked work, visit counts, ages, peaks, throughput, utilization, and pressure." },
   { name: "bodyLimit", type: "number", required: false, default: null, description: "Soft live-body budget; evicts oldest when exceeded (stream / sediment pattern)." },
   { name: "bodyMark", type: "string", required: false, default: "circle", description: "Default mark: circle | halo | faceted | pill | diamond | square. Per-row via datum.__physicsMark." },
   { name: "selection", type: "object", required: false, default: null, description: "Shared selection for dim/highlight without relayout." },

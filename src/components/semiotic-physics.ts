@@ -43,7 +43,10 @@ import { PhysicsSedimentAccumulator, sedimentHeightfield } from "./stream/physic
 import {
   composePhysicsControllers,
   createCapacityQueueController,
-  createPortalController
+  createPortalController,
+  createDependencyGateController,
+  createServiceLevelController,
+  createServiceResourcePoolController
 } from "./stream/physics/PhysicsControllers"
 import { processChrome } from "./recipes/processChrome"
 import {
@@ -58,6 +61,7 @@ import {
   forceFieldRegion,
   galtonPegs,
   groupCompletionRows,
+  comparePhysicsTrace,
   membraneRegion,
   portalRegion,
   pressureFieldRegion,
@@ -66,6 +70,7 @@ import {
   processStageLayout,
   processStageRegions,
   processVolumePolygons,
+  physicsReferenceEnvelope,
   regionCountsToProjectionRows,
   routeSurfaceRegion,
   sedimentBake,
@@ -102,14 +107,18 @@ export {
   collidersFromScales,
   composePhysicsControllers,
   createCapacityQueueController,
+  createDependencyGateController,
   createDefaultPhysicsEngineAdapter,
   createPortalController,
+  createServiceLevelController,
+  createServiceResourcePoolController,
   createProcessJourneyLedger,
   evaluatePhysicsBodyBudget,
   processChrome,
   forceFieldRegion,
   galtonPegs,
   groupCompletionRows,
+  comparePhysicsTrace,
   planGauntletPropertyWork,
   membraneRegion,
   physicsProcessBoundaryColliders,
@@ -123,6 +132,7 @@ export {
   processStageLayout,
   processStageRegions,
   processVolumePolygons,
+  physicsReferenceEnvelope,
   regionCountsToProjectionRows,
   replaceGauntletNegative,
   routeSurfaceRegion,
@@ -196,11 +206,30 @@ export type {
   ProcessFlowPhysicsOptions
 } from "./charts/physics/physicsChartUtils"
 export type {
+  CapacityQueueAbandonedInfo,
+  CapacityQueueAgeSummary,
+  CapacityQueueBlockedInfo,
   CapacityQueueControllerOptions,
+  CapacityQueueProcessedInfo,
   CapacityQueueSnapshot,
+  CapacityQueueVisitInfo,
+  CapacityQueueWindowSnapshot,
   ComposedPhysicsControllers,
+  DependencyGateController,
+  DependencyGateOptions,
+  DependencyGateSnapshot,
   PhysicsController,
-  PhysicsControllerTickContext
+  PhysicsControllerTickContext,
+  ServiceLevelCaseInfo,
+  ServiceLevelCaseState,
+  ServiceLevelController,
+  ServiceLevelControllerOptions,
+  ServiceLevelSnapshot,
+  ServiceResourceAssignment,
+  ServiceResourceDefinition,
+  ServiceResourcePoolController,
+  ServiceResourcePoolOptions,
+  ServiceResourcePoolSnapshot
 } from "./stream/physics/PhysicsControllers"
 export type {
   ProcessChromeGroup,
@@ -237,6 +266,20 @@ export type {
   ProcessVolumeStageBand,
   RegionCountBucket,
   RegionCountMap,
+  PhysicsReferenceBandSelector,
+  PhysicsReferenceEnvelope,
+  PhysicsReferenceEnvelopeOptions,
+  PhysicsReferenceEnvelopePoint,
+  PhysicsReferenceSampleGrid,
+  PhysicsReferenceTrace,
+  PhysicsScalarTraceSample,
+  PhysicsTraceAccessor,
+  PhysicsTraceComparison,
+  PhysicsTraceComparisonOptions,
+  PhysicsTraceComparisonPoint,
+  PhysicsTraceComparisonStatus,
+  PhysicsTraceInterpolation,
+  PhysicsTraceOutsideDomain,
   SedimentBakeOptions,
   SedimentBakeResult,
   SpawnFromTokensOptions

@@ -138,7 +138,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       gates: { type: "array", description: "Named process gates along the route, with optional shared FIFO capacity." },
       events: { type: ["array", "function"], description: "Timed gate effects that add/pop properties and set outcomes." },
       startTimeAccessor: { type: ["string", "function"], description: "Optional per-project simulation second used as the local event-timeline origin." },
-      onCapacityChange: { type: "function", description: "Receives live queue snapshots for gates that declare capacity." },
+      onCapacityChange: { type: "function", description: "Receives visit-aware queue work, wait, overflow, throughput, utilization, and pressure snapshots." },
       crashDetection: { type: "boolean", default: true, description: "Treat the crash line as a live failure trigger." },
       showChrome: { type: "boolean", default: true, description: "Draw route, socket, and graveyard chrome." },
       showProjection: { type: "boolean", default: true, description: "Draw settled viability/outcome strip." },
