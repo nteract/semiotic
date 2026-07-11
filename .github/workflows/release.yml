@@ -36,7 +36,7 @@ jobs:
           echo "Verified release tag $EXPECTED_TAG"
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Check AI instruction mirror freshness
         run: npm run check:ai-instructions
@@ -46,11 +46,6 @@ jobs:
 
       - name: Check public API surface
         run: npm run check:api-surface
-
-      - name: Check packed cold-consumer named-import baseline
-        # This check calls npm pack, so it intentionally runs here instead of
-        # inside prepublishOnly (where nested pack calls can be re-entrant).
-        run: npm run check:cold-consumer
 
       - name: Build MCP server
         run: npm run build:mcp
@@ -96,23 +91,65 @@ jobs:
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
 
-      # Pack-and-import smoke test runs BEFORE publish (not inside
-      # prepublishOnly). Running `npm pack` inside the prepublishOnly
-      # hook of `npm publish` can hit a re-entrancy edge case on some
-      # npm versions where the inner pack returns 0 without producing
-      # a tarball, breaking the smoke check (seen on Node 22 / npm 10
-      # in CI). Splitting it out keeps the validation while sidestepping
-      # the lifecycle interaction.
-      - name: Pack-and-import smoke test
-        run: npm run check:pack
+      # Construct one archive after every build/gate. All subsequent smoke,
+      # checksum/SBOM evidence, dry-run, and publication steps use this exact
+      # file; publishing the checkout would silently create a second archive.
+      - name: Create immutable release artifact
+        id: release-artifact
+        run: |
+          OUT_DIR="$RUNNER_TEMP/semiotic-release-artifact"
+          npm run release:artifact -- --out-dir "$OUT_DIR"
+          node scripts/create-release-artifact.mjs --out-dir "$OUT_DIR" --verify
+          MANIFEST=$(find "$OUT_DIR" -maxdepth 1 -name '*.provenance.json' -print -quit)
+          TARBALL=$(node -e "const fs=require('fs'); const path=require('path'); const manifest=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); process.stdout.write(path.join(path.dirname(process.argv[1]), manifest.tarball.file))" "$MANIFEST")
+          INTEGRITY=$(node -e "const fs=require('fs'); const manifest=JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); process.stdout.write(manifest.tarball.integrity)" "$MANIFEST")
+          echo "directory=$OUT_DIR" >> "$GITHUB_OUTPUT"
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
 
-      - name: Dry-run publish (validate package)
-        run: npm publish --dry-run --tag ${{ steps.dist-tag.outputs.tag }}
+      - name: Upload immutable release evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: semiotic-${{ github.ref_name }}-release-artifact
+          path: ${{ steps.release-artifact.outputs.directory }}
+          if-no-files-found: error
+
+      - name: Pack-and-import smoke test (exact tarball)
+        run: npm run check:pack -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+
+      - name: Check packed cold-consumer baseline (exact tarball)
+        run: npm run check:cold-consumer -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+
+      - name: Reverify immutable release artifact before publication
+        run: node scripts/create-release-artifact.mjs --out-dir "${{ steps.release-artifact.outputs.directory }}" --verify
+
+      - name: Check whether this exact version is already published
+        id: published-artifact
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED_INTEGRITY=$(npm view "semiotic@${VERSION}" dist.integrity 2>/dev/null || true)
+          if [ -z "$PUBLISHED_INTEGRITY" ]; then
+            echo "already-published=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$PUBLISHED_INTEGRITY" != "${{ steps.release-artifact.outputs.integrity }}" ]; then
+            echo "semiotic@${VERSION} already exists with different integrity"
+            echo "Expected: ${{ steps.release-artifact.outputs.integrity }}"
+            echo "Published: $PUBLISHED_INTEGRITY"
+            exit 1
+          fi
+          echo "semiotic@${VERSION} already has the expected integrity; treating this as an idempotent rerun"
+          echo "already-published=true" >> "$GITHUB_OUTPUT"
+
+      - name: Dry-run publish exact artifact
+        if: steps.published-artifact.outputs.already-published != 'true'
+        run: npm publish "${{ steps.release-artifact.outputs.tarball }}" --dry-run --access public --tag ${{ steps.dist-tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish to npm
-        run: npm publish --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }}
+      - name: Publish exact artifact to npm
+        if: steps.published-artifact.outputs.already-published != 'true'
+        run: npm publish "${{ steps.release-artifact.outputs.tarball }}" --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -131,10 +168,19 @@ jobs:
             sleep 15
           done
           if [ "$PUBLISHED" != "$VERSION" ]; then
-            echo "WARNING: Package not yet visible on npm registry after 75s"
-            echo "This is likely a propagation delay — check manually"
-            exit 0
+            echo "Package was not visible on npm registry after 75s"
+            exit 1
           fi
+
+          EXPECTED_INTEGRITY="${{ steps.release-artifact.outputs.integrity }}"
+          PUBLISHED_INTEGRITY=$(npm view "semiotic@${VERSION}" dist.integrity)
+          if [ "$PUBLISHED_INTEGRITY" != "$EXPECTED_INTEGRITY" ]; then
+            echo "Published package integrity does not match the immutable release artifact"
+            echo "Expected: $EXPECTED_INTEGRITY"
+            echo "Published: $PUBLISHED_INTEGRITY"
+            exit 1
+          fi
+          echo "Published npm integrity matches the immutable release artifact"
 
           # Install in a temp project and verify imports
           TMPDIR=$(mktemp -d)
@@ -219,4 +265,7 @@ jobs:
                 --verify-tag
             fi
           fi
+          gh release upload "$GITHUB_REF_NAME" \
+            "${{ steps.release-artifact.outputs.directory }}"/* \
+            --clobber
           rm -f "$NOTES_FILE"

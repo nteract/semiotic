@@ -29,12 +29,21 @@ if [ "$CURRENT_BRANCH" != "main" ]; then
   exit 1
 fi
 
+if [ -n "$(git status --porcelain)" ]; then
+  error "Working tree is not clean. Commit or stash changes before creating a release tag."
+  exit 1
+fi
+
 git pull --ff-only
-npm install
+npm ci --legacy-peer-deps
 npm run release:check
+
+# GitHub Actions is the sole production publisher. It builds one immutable
+# archive, validates its exact bytes from clean consumers, publishes it with
+# npm provenance, and records the registry integrity before creating the
+# GitHub Release. Publishing here would create a second authority/path.
 git tag -a "$RELEASE_TAG" -m "release $RELEASE_TAG"
-npm publish
 git push origin "$CURRENT_BRANCH"
 git push origin "$RELEASE_TAG"
 
-success "published $VERSION to npm and pushed $RELEASE_TAG"
+success "pushed $RELEASE_TAG; GitHub Actions will build, attest, and publish $VERSION"

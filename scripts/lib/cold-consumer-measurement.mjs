@@ -2,10 +2,11 @@
  * Packed cold-consumer bundle measurement.
  *
  * Unlike `sync-bundle-sizes.mjs`, this module does not quote Semiotic's own
- * first-party artifacts. It packs the package, extracts that tarball into a
- * fresh consumer's node_modules directory, then asks esbuild to bundle a
- * retained named import from each stable public export. That makes package
- * export resolution and consumer-side bundling part of the measurement.
+ * first-party artifacts. It packs the package (or accepts one supplied release
+ * tarball), extracts that archive into a fresh consumer's node_modules
+ * directory, then asks esbuild to bundle a retained named import from each
+ * stable public export. That makes package export resolution and consumer-side
+ * bundling part of the measurement.
  */
 
 import { execFileSync } from "node:child_process"
@@ -474,20 +475,27 @@ function formatValue(value) {
   return typeof value === "string" ? JSON.stringify(value) : String(value)
 }
 
-export async function measurePackedColdConsumerImports({ repoRoot = REPO_ROOT } = {}) {
+export async function measurePackedColdConsumerImports({ repoRoot = REPO_ROOT, tarball: suppliedTarball = null } = {}) {
   const rootPackage = readPackageJson(join(repoRoot, "package.json"))
-  const caseErrors = validateNamedImportCases(rootPackage)
-  if (caseErrors.length > 0) throw new Error(caseErrors.join("\n"))
-
-  assertProductionBundles(repoRoot, rootPackage)
+  const tarball = suppliedTarball ? resolveSuppliedTarball(repoRoot, suppliedTarball) : null
+  if (!tarball) {
+    const caseErrors = validateNamedImportCases(rootPackage)
+    if (caseErrors.length > 0) throw new Error(caseErrors.join("\n"))
+    assertProductionBundles(repoRoot, rootPackage)
+  }
 
   const tempRoot = mkdtempSync(join(tmpdir(), "semiotic-cold-consumer-"))
 
   try {
-    const tarball = packTarball(repoRoot, tempRoot)
+    const packedTarball = tarball ?? packTarball(repoRoot, tempRoot)
     const consumerRoot = join(tempRoot, "consumer")
-    const packageRoot = unpackConsumerPackage(tarball, consumerRoot)
+    const packageRoot = unpackConsumerPackage(packedTarball, consumerRoot)
     const packedPackage = readPackageJson(join(packageRoot, "package.json"))
+    if (packedPackage.name !== rootPackage.name || packedPackage.version !== rootPackage.version) {
+      throw new Error(
+        `Packed package identity ${packedPackage.name}@${packedPackage.version} does not match ${rootPackage.name}@${rootPackage.version}`,
+      )
+    }
     const packedCaseErrors = validateNamedImportCases(packedPackage)
     if (packedCaseErrors.length > 0) {
       throw new Error(`Packed package export validation failed:\n${packedCaseErrors.join("\n")}`)
@@ -504,6 +512,16 @@ export async function measurePackedColdConsumerImports({ repoRoot = REPO_ROOT } 
   } finally {
     rmSync(tempRoot, { recursive: true, force: true })
   }
+}
+
+function resolveSuppliedTarball(repoRoot, suppliedTarball) {
+  if (typeof suppliedTarball !== "string" || suppliedTarball.trim().length === 0) {
+    throw new Error("Supplied cold-consumer tarball must be a non-empty path")
+  }
+  const tarball = resolve(repoRoot, suppliedTarball)
+  if (!existsSync(tarball)) throw new Error(`Supplied cold-consumer tarball does not exist: ${tarball}`)
+  if (!tarball.endsWith(".tgz")) throw new Error(`Supplied cold-consumer tarball is not a .tgz file: ${tarball}`)
+  return tarball
 }
 
 function packTarball(repoRoot, destination) {
