@@ -11,8 +11,6 @@ import { ExamplesIndex, ApiIndex, RecipesIndex, PlaygroundIndex } from "./IndexP
 // RealtimeSankey has been merged into the SankeyDiagram page
 // MatrixCookbookPage removed — matrix recipe no longer supported
 
-//import ChartClinicExamplePage from "./pages/examples/ChartClinicExamplePage"
-
 import { useDocsTheme } from "./hooks/useDocsTheme"
 import ThemeToggle from "./components/ThemeToggle"
 
@@ -512,7 +510,6 @@ export default function DocsApp() {
               />
               <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
               <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
-              {/* <Route path="examples/chart-clinic" element={<ChartClinicExamplePage />} /> */}
               </Routes>
             </Suspense>
           </ExamplesLayout>

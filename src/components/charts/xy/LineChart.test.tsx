@@ -97,6 +97,68 @@ describe("LineChart", () => {
       expect(lastXYFrameProps.groupAccessor).toBe("series")
     })
 
+    it("keeps separate parent-series identity for default line-object input", () => {
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={[
+              { label: "A", coordinates: [{ x: 1, y: 10 }, { x: 2, y: 20 }] },
+              { label: "B", coordinates: [{ x: 1, y: 15 }, { x: 2, y: 25 }] },
+            ]}
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+
+      expect(lastXYFrameProps.groupAccessor).toBe("__lineObjectSeries")
+      expect(new Set(lastXYFrameProps.data.map((d: Datum) => d.__lineObjectSeries))).toEqual(
+        new Set(["line-0", "line-1"])
+      )
+    })
+
+    it("uses a parent string lineBy value as the line-object group identity", () => {
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={[
+              { series: "north", coordinates: [{ x: 1, y: 10 }, { x: 2, y: 20 }] },
+              { series: "south", coordinates: [{ x: 1, y: 15 }, { x: 2, y: 25 }] },
+            ]}
+            lineBy="series"
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+
+      expect(lastXYFrameProps.groupAccessor).toBe("__lineObjectSeries")
+      expect(new Set(lastXYFrameProps.data.map((d: Datum) => d.__lineObjectSeries))).toEqual(
+        new Set(["north", "south"])
+      )
+      expect(lastXYFrameProps.data.every((d: Datum) => d.series === d.__lineObjectSeries)).toBe(true)
+    })
+
+    it("uses a parent function lineBy value as the line-object group identity", () => {
+      const lineBy = vi.fn((line: Datum) => `${line.region}:${line.metric}`)
+      render(
+        <TooltipProvider>
+          <LineChart
+            data={[
+              { region: "west", metric: "sales", coordinates: [{ x: 1, y: 10 }, { x: 2, y: 20 }] },
+              { region: "east", metric: "sales", coordinates: [{ x: 1, y: 15 }, { x: 2, y: 25 }] },
+            ]}
+            lineBy={lineBy}
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+
+      expect(lineBy).toHaveBeenCalledWith(expect.objectContaining({ region: "west", metric: "sales" }))
+      expect(lastXYFrameProps.groupAccessor).toBe("__lineObjectSeries")
+      expect(new Set(lastXYFrameProps.data.map((d: Datum) => d.__lineObjectSeries))).toEqual(
+        new Set(["west:sales", "east:sales"])
+      )
+    })
+
     it("uses lineBy as the categorical color accessor when colorBy is omitted", () => {
       const multiSeriesData = [
         { x: 1, y: 10, series: "A" },

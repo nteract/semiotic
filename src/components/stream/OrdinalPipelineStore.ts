@@ -49,9 +49,14 @@ import type { OrdinalLayoutContext, OrdinalLayoutResult } from "./ordinalCustomL
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
+import {
+  createCustomLayoutFailureDiagnostic,
+  type CustomLayoutFailureDiagnostic
+} from "./customLayoutFailure"
 import type { MarginType } from "../types/marginType"
 import {
   compactTimestampBufferForRemoval,
+  createTimestampBufferForData,
   ensureRingBufferCapacity,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
@@ -64,6 +69,7 @@ export class OrdinalPipelineStore {
   /** Per-accessor extents for multiAxis mode */
   private rExtents: IncrementalExtent[] = []
   private config: OrdinalPipelineConfig
+  private windowSizeWarned = false
 
   private getO: (d: Datum) => string
   private getR: (d: Datum) => number
@@ -104,8 +110,14 @@ export class OrdinalPipelineStore {
   /** Overlays returned from customLayout (consumed by StreamOrdinalFrame). */
   customLayoutOverlays: import("react").ReactNode = null
   /** Most recent custom layout result for host readback (`getCustomLayout()`).
-   *  Null before the first layout, after a throw, or without a custom layout. */
+   *  Null before the first layout or without a custom layout. A failed rerun
+   *  keeps the last successful result while its scene remains recoverable. */
   lastCustomLayoutResult: OrdinalLayoutResult | null = null
+  /** Latest custom-layout failure for frame-handle readback. */
+  lastCustomLayoutFailure: CustomLayoutFailureDiagnostic | null = null
+  /** Lets `computeScene` retain a prior scene without mutating it after an
+   * exception from `buildSceneNodes`. */
+  private _customLayoutFailedThisBuild = false
   private _customLayoutDiagnosticsWarned = new Set<string>()
   /** Per-frame restyle callback from the custom layout result (see OrdinalLayoutResult.restyle). */
   private _customRestyle: OrdinalLayoutResult["restyle"] = undefined
@@ -164,6 +176,25 @@ export class OrdinalPipelineStore {
 
     if (config.pulse) {
       this.timestampBuffer = new RingBuffer(config.windowSize)
+    }
+  }
+
+  /**
+   * Keep the optional pulse timestamp ring in lockstep with the datum ring.
+   * Enabling pulse after mount must seed timestamps for retained rows; an
+   * empty ring would associate later timestamps with the wrong datum index.
+   */
+  private syncPulseTimestampBuffer(): void {
+    if (!this.config.pulse) {
+      this.timestampBuffer = null
+      return
+    }
+
+    const isAligned = this.timestampBuffer != null
+      && this.timestampBuffer.capacity === this.buffer.capacity
+      && this.timestampBuffer.size === this.buffer.size
+    if (!isAligned) {
+      this.timestampBuffer = createTimestampBufferForData(this.buffer, getTimestamp())
     }
   }
 
@@ -274,10 +305,20 @@ export class OrdinalPipelineStore {
 
   computeScene(layout: OrdinalLayout): void {
     const { config, buffer } = this
+    const previousScales = this.scales
+    const previousMultiScales = this.multiScales
+    const previousColumns = this.columns
     if (buffer.size === 0) {
       this.scales = null
+      this.multiScales = []
       this.scene = []
       this.columns = {}
+      this.customLayoutOverlays = null
+      this.lastCustomLayoutResult = null
+      this.lastCustomLayoutFailure = null
+      this._customRestyle = undefined
+      this.hasCustomRestyle = false
+      this._baseStyles = new WeakMap()
       this.version++
       return
     }
@@ -367,13 +408,31 @@ export class OrdinalPipelineStore {
     // 4. Build projected columns
     this.columns = this.buildColumns(expandedData, oExtent, oScale, projection, layout)
 
-    // Snapshot positions for transition animation
+    // 5. Build scene graph
+    this._customLayoutFailedThisBuild = false
+    const nextScene = this.buildSceneNodes(expandedData, layout)
+    if (this._customLayoutFailedThisBuild) {
+      const preservedLastGoodScene =
+        this.lastCustomLayoutFailure?.preservedLastGoodScene === true
+      if (preservedLastGoodScene) {
+        this.scales = previousScales
+        this.multiScales = previousMultiScales
+        this.columns = previousColumns
+      } else {
+        // Do not retain a built-in scene if a newly-installed custom layout
+        // fails before producing its first output.
+        this.scene = []
+        this.rebuildPointQuadtree()
+      }
+      return
+    }
+
+    // Snapshot only after a successful callback so a retained scene keeps its
+    // old transition state on recovery.
     if (this.config.transition && this.scene.length > 0) {
       this.snapshotPositions()
     }
-
-    // 5. Build scene graph
-    this.scene = this.buildSceneNodes(expandedData, layout)
+    this.scene = nextScene
     this.rebuildPointQuadtree()
 
     // Apply decay/pulse to discrete scene nodes
@@ -558,17 +617,38 @@ export class OrdinalPipelineStore {
       try {
         result = this.config.customLayout(layoutCtx)
       } catch (err) {
+        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
+        const diagnostic = createCustomLayoutFailureDiagnostic(
+          "ordinal",
+          err,
+          preservedLastGoodScene,
+          this.version
+        )
+        this.lastCustomLayoutFailure = diagnostic
+        this._customLayoutFailedThisBuild = true
         if (process.env.NODE_ENV !== "production") {
           console.error("[semiotic] ordinal customLayout threw:", err)
         }
-        this.customLayoutOverlays = null
-        this.lastCustomLayoutResult = null
-        this._customRestyle = undefined
-        this.hasCustomRestyle = false
-        return []
+        try {
+          this.config.onLayoutError?.(diagnostic)
+        } catch (callbackError) {
+          if (process.env.NODE_ENV !== "production") {
+            console.error("[semiotic] onLayoutError threw:", callbackError)
+          }
+        }
+        if (!preservedLastGoodScene) {
+          this.customLayoutOverlays = null
+          this.lastCustomLayoutResult = null
+          this._customRestyle = undefined
+          this.hasCustomRestyle = false
+          this._baseStyles = new WeakMap()
+          return []
+        }
+        return this.scene
       }
       this.customLayoutOverlays = result.overlays ?? null
       this.lastCustomLayoutResult = result
+      this.lastCustomLayoutFailure = null
       const nodes = result.nodes ?? []
       // Stash the restyle callback; snapshot base styles + apply once for the
       // current selection (these `nodes` become `this.scene`).
@@ -590,6 +670,8 @@ export class OrdinalPipelineStore {
 
     // Built-in chart types: clear stale overlays from a prior customLayout run.
     this.customLayoutOverlays = null
+    this.lastCustomLayoutResult = null
+    this.lastCustomLayoutFailure = null
     this._customRestyle = undefined
     this.hasCustomRestyle = false
 
@@ -1333,6 +1415,13 @@ export class OrdinalPipelineStore {
     this.scales = null
     this.scene = []
     this.columns = {}
+    this.multiScales = []
+    this.customLayoutOverlays = null
+    this.lastCustomLayoutResult = null
+    this.lastCustomLayoutFailure = null
+    this._customRestyle = undefined
+    this.hasCustomRestyle = false
+    this._baseStyles = new WeakMap()
     this._pointQuadtree = null
     this._maxPointRadius = 0
     // The categorical color cache must reset too, or a clear()+reload assigns
@@ -1382,8 +1471,44 @@ export class OrdinalPipelineStore {
     this.applyCustomRestyle(this.scene, selection)
   }
 
+  /**
+   * Re-derive every retained fact that depends on the category/value
+   * accessors. `updateConfig` can change an accessor without a subsequent
+   * ingest (the normal React path), so clearing only a cache would leave the
+   * next scene with an empty/stale domain against the existing buffer.
+   */
+  private rebuildAccessorDerivedState(): void {
+    this.categories.clear()
+    this.rExtent.clear()
+    for (const ext of this.rExtents) ext.clear()
+    this._categoryIndexCache = null
+
+    this.buffer.forEach(d => {
+      this.categories.add(this.getO(d))
+      this.pushValueExtent(d)
+    })
+  }
+
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
     const prev = { ...this.config }
+
+    // `windowSize` allocates the data and pulse rings in the constructor.
+    // Resizing it after mount would need coordinated category/extent and
+    // transition semantics, so keep the current mount-only contract explicit
+    // rather than silently updating only the config object.
+    if (
+      process.env.NODE_ENV !== "production" &&
+      !this.windowSizeWarned &&
+      "windowSize" in config &&
+      config.windowSize !== prev.windowSize
+    ) {
+      this.windowSizeWarned = true
+      console.warn(
+        `[Semiotic] windowSize changed after mount (${prev.windowSize} → ${config.windowSize}) ` +
+          `but it is a mount-only setting — the ring buffer keeps its original capacity. ` +
+          `Remount the chart (e.g. via a React key) to apply a new windowSize.`,
+      )
+    }
 
     // `_colorSchemeMap` falls back to `themeCategorical` and looks up colors
     // via `getColor` (derived from `colorAccessor`) — all three of those must
@@ -1410,29 +1535,42 @@ export class OrdinalPipelineStore {
 
     Object.assign(this.config, config)
 
-    // Re-resolve accessors only when the accessor source actually changed.
-    // Uses .toString() comparison to skip re-resolution for inline arrow functions
-    // that are recreated on every parent render but have identical source code.
+    // Pulse is a dynamic prop even though its timestamp resource was created
+    // in the constructor. Preserve active timestamps across style/duration
+    // changes, seed on enable, and discard them on disable.
+    if ("pulse" in config) {
+      this.syncPulseTimestampBuffer()
+    }
+
+    // Re-resolve accessors only when the accessor spec actually changed, using
+    // identity semantics (`accessorsEquivalent` — string by value, function by
+    // reference). A new function object re-resolves even if its source matches,
+    // because identical source can capture different values. Callers passing
+    // inline function accessors should memoize them; string accessors are stable.
     // `in config` rather than `!== undefined` so an explicit clear (prop removed
     // or conditionally rendered `undefined`) still reverts to the fallback.
+    let oAccessorChanged = false
     if ("categoryAccessor" in config || "oAccessor" in config) {
-      const newO = config.categoryAccessor || config.oAccessor
+      // Compare effective accessors from the merged config: a patch to the
+      // deprecated alias must not replace an active canonical accessor.
+      const nextO = this.config.categoryAccessor || this.config.oAccessor
       const prevO = prev.categoryAccessor || prev.oAccessor
-      if (!accessorsEquivalent(newO, prevO)) {
+      if (!accessorsEquivalent(nextO, prevO)) {
         this.getO = resolveStringAccessor(
           this.config.categoryAccessor || this.config.oAccessor,
           "category"
         ) as (d: Datum) => string
-        this.categories.clear()
+        oAccessorChanged = true
       }
     }
+    let rAccessorChanged = false
     if ("valueAccessor" in config || "rAccessor" in config) {
-      const newR = config.valueAccessor || config.rAccessor
+      const newR = this.config.valueAccessor || this.config.rAccessor
       const prevR = prev.valueAccessor || prev.rAccessor
       const newArr = Array.isArray(newR) ? newR : [newR]
       const prevArr = Array.isArray(prevR) ? prevR : [prevR]
-      const rChanged = newArr.length !== prevArr.length || newArr.some((acc, i) => !accessorsEquivalent(acc, prevArr[i]))
-      if (rChanged) {
+      rAccessorChanged = newArr.length !== prevArr.length || newArr.some((acc, i) => !accessorsEquivalent(acc, prevArr[i]))
+      if (rAccessorChanged) {
         const rawR = this.config.valueAccessor || this.config.rAccessor
         if (Array.isArray(rawR)) {
           this.rAccessors = rawR.map(acc => resolveAccessor(acc, "value"))
@@ -1459,6 +1597,16 @@ export class OrdinalPipelineStore {
     }
     if ("connectorAccessor" in config && !accessorsEquivalent(config.connectorAccessor, prev.connectorAccessor)) {
       this.getConnector = this.config.connectorAccessor != null ? resolveStringAccessor(this.config.connectorAccessor) : undefined
+    }
+
+    // A new accessor identity or an explicit revision bump both need to
+    // rebuild derived categories/extents from retained data immediately. React
+    // normally updates config then schedules a render; it does not re-ingest
+    // the same data merely because an accessor changed.
+    const accessorRevisionChanged =
+      "accessorRevision" in config && config.accessorRevision !== prev.accessorRevision
+    if (oAccessorChanged || rAccessorChanged || accessorRevisionChanged) {
+      this.rebuildAccessorDerivedState()
     }
   }
 }

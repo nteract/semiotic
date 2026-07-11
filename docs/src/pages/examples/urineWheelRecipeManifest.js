@@ -1,9 +1,4 @@
-import * as SemioticAI from "semiotic/ai"
-import { registerChartRecipe as registerSourceChartRecipe } from "../../../../src/components/ai/chartRecipeRegistry"
-
-const { defineChartRecipe } = SemioticAI
-const registerChartRecipe =
-  SemioticAI.registerChartRecipe || registerSourceChartRecipe
+import { defineChartRecipe, registerChartRecipe } from "semiotic/ai"
 
 function describeUrineWheel({ data }) {
   const colors = data.filter((datum) => datum.kind === "color")

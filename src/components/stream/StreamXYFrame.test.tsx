@@ -891,4 +891,16 @@ describe("StreamXYFrame", () => {
       }
     })
   })
+
+  it("forwards accessorRevision to the XY pipeline config", async () => {
+    const PipelineStoreModule = await import("./PipelineStore")
+    const updateSpy = vi.spyOn(PipelineStoreModule.PipelineStore.prototype, "updateConfig")
+    try {
+      render(<StreamXYFrame chartType="line" accessorRevision={7} />)
+      const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+      expect(lastConfig?.accessorRevision).toBe(7)
+    } finally {
+      updateSpy.mockRestore()
+    }
+  })
 })

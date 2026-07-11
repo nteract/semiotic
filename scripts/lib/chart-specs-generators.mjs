@@ -6,18 +6,29 @@
  * full files.
  */
 
-// Schema types are kept as-is from the registry, including `"function"`
-// in union types. Canonical schema entries like
-// `RidgelinePlot.tooltip: ["function", "object"]` and
-// `SwimlaneChart.onBrush: "function"` already use this convention — LLMs
-// can read the type union and choose a non-function alternative when
-// they can't supply a function value. Use `omitFromSchema: true` on a
-// spec to hide a prop from schema entirely (e.g. `frameProps`).
-function toSchemaType(typeOrTypes) {
-  if (Array.isArray(typeOrTypes)) {
-    return typeOrTypes.length === 1 ? typeOrTypes[0] : typeOrTypes
-  }
-  return typeOrTypes
+// The runtime PropType set is broader than JSON Schema's — it includes
+// `"function"` (accessors, callbacks, tooltip/format renderers), which is not a
+// value type in JSON Schema Draft 2020-12 and makes the schema fail metaschema
+// validation. `resolveSchemaType` keeps only standards-valid types in the JSON
+// Schema `type` keyword and preserves the FULL runtime type list (including
+// `"function"`) in the `x-semiotic-runtime-types` extension, so agents still
+// learn a prop accepts a function while the emitted schema stays wire-valid.
+// A prop whose only runtime type is a function emits no `type` (a schema
+// without `type` matches any value) plus the extension + description.
+// Use `omitFromSchema: true` on a spec to hide a prop entirely (e.g. `frameProps`).
+const JSON_SCHEMA_TYPES = new Set([
+  "null", "boolean", "object", "array", "number", "string", "integer",
+])
+function resolveSchemaType(typeOrTypes) {
+  const types = Array.isArray(typeOrTypes) ? typeOrTypes : [typeOrTypes]
+  const jsonTypes = types.filter((t) => JSON_SCHEMA_TYPES.has(t))
+  const hasRuntimeOnly = types.some((t) => !JSON_SCHEMA_TYPES.has(t))
+  const result = {}
+  if (jsonTypes.length === 1) result.type = jsonTypes[0]
+  else if (jsonTypes.length > 1) result.type = jsonTypes
+  // jsonTypes.length === 0 → omit `type` (a function-only prop has no wire type)
+  if (hasRuntimeOnly) result.runtimeTypes = [...types]
+  return result
 }
 
 // Annotation prop spec is a single shared blob across every chart that
@@ -53,7 +64,6 @@ export function generateSchemaToolEntry(spec, composedProps) {
   const properties = {}
   for (const [propName, propSpec] of Object.entries(composedProps)) {
     if (propSpec.omitFromSchema) continue
-    const schemaType = toSchemaType(propSpec.type)
 
     if (propName === "annotations") {
       // Use the shared annotations blob rather than the bare
@@ -63,10 +73,15 @@ export function generateSchemaToolEntry(spec, composedProps) {
       continue
     }
 
-    const entry = { type: schemaType }
+    const { type, runtimeTypes } = resolveSchemaType(propSpec.type)
+    const entry = {}
+    if (type !== undefined) entry.type = type
     if (propSpec.enum) entry.enum = [...propSpec.enum]
     if (propSpec.description) entry.description = propSpec.description
     if (propSpec.default !== undefined) entry.default = propSpec.default
+    // Runtime-only types (e.g. "function") live in an extension keyword so the
+    // JSON Schema `type` stays wire-valid but agents still see the full surface.
+    if (runtimeTypes) entry["x-semiotic-runtime-types"] = runtimeTypes
     properties[propName] = entry
   }
 

@@ -13,6 +13,10 @@ import {
 } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import {
+  createCustomLayoutFailureDiagnostic,
+  type CustomLayoutFailureDiagnostic
+} from "./customLayoutFailure"
+import {
   computeEasing,
   computeRawProgress,
   lerp,
@@ -82,8 +86,11 @@ export class NetworkPipelineStore {
   /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
   customLayoutOverlays: import("react").ReactNode = null
   /** Most recent custom layout result for host readback (`getCustomLayout()`).
-   *  Null before the first layout, after a throw, or without a custom layout. */
+   *  Null before the first layout or without a custom layout. A failed rerun
+   *  retains this last successful result when its rendered scene is reusable. */
   lastCustomLayoutResult: NetworkLayoutResult | null = null
+  /** Latest custom-layout failure for frame-handle readback. */
+  lastCustomLayoutFailure: CustomLayoutFailureDiagnostic | null = null
   /** HTML marks returned from customNetworkLayout — positioned DOM nodes the
    *  frame renders in a layer above the canvas/overlays (consumed by
    *  StreamNetworkFrame). Empty for built-in chart types. */
@@ -755,6 +762,21 @@ export class NetworkPipelineStore {
    * stays valid and no relayout/repack happens. The frame repaints the canvas
    * after calling this. No-op when the layout supplied no restyle callbacks.
    */
+  /**
+   * "Styles changed, repaint the data canvas without rebuilding the scene."
+   * Set by {@link restyleScene}; consumed once per frame by the paint loop.
+   * Deliberately separate from `_sceneNodesRevision` (the quadtree-invalidation
+   * counter) so a style-only selection change repaints without a relayout.
+   */
+  private _stylePaintPending = false
+
+  /** Consume the style-only repaint signal (see {@link _stylePaintPending}). */
+  consumeStylePaintPending(): boolean {
+    const pending = this._stylePaintPending
+    this._stylePaintPending = false
+    return pending
+  }
+
   restyleScene(selection: CustomLayoutSelection | null): void {
     if (this._customRestyle) {
       const fn = this._customRestyle
@@ -772,12 +794,10 @@ export class NetworkPipelineStore {
         edge.style = patch ? { ...base, ...patch } : base
       }
     }
+    this._stylePaintPending = true
   }
 
   buildScene(size: [number, number]): void {
-    // Any sceneNodes rebuild invalidates the lazily-built node quadtree.
-    this._sceneNodesRevision++
-
     // customLayout escape hatch — short-circuit plugin dispatch and let the
     // user emit scene primitives directly. Hit testing, decay, and SSR keep
     // working because they consume `this.sceneNodes`/`sceneEdges`.
@@ -812,15 +832,39 @@ export class NetworkPipelineStore {
       try {
         result = this.config.customNetworkLayout(ctx)
       } catch (err) {
+        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
+        const diagnostic = createCustomLayoutFailureDiagnostic(
+          "network",
+          err,
+          preservedLastGoodScene,
+          this.layoutVersion
+        )
+        this.lastCustomLayoutFailure = diagnostic
         if (process.env.NODE_ENV !== "production") {
           console.error("[semiotic] customNetworkLayout threw:", err)
         }
-        this.sceneNodes = []
-        this.sceneEdges = []
-        this.labels = []
-        this.customLayoutOverlays = null
-        this.customLayoutHtmlMarks = []
-        this.lastCustomLayoutResult = null
+        try {
+          this.config.onLayoutError?.(diagnostic)
+        } catch (callbackError) {
+          if (process.env.NODE_ENV !== "production") {
+            console.error("[semiotic] onLayoutError threw:", callbackError)
+          }
+        }
+        if (!preservedLastGoodScene) {
+          // A new custom layout must not leave a previously-built plugin scene
+          // visible when it fails before ever emitting its own result.
+          this.sceneNodes = []
+          this.sceneEdges = []
+          this.labels = []
+          this.customLayoutOverlays = null
+          this.customLayoutHtmlMarks = []
+          this.lastCustomLayoutResult = null
+          this._customRestyle = undefined
+          this._customRestyleEdge = undefined
+          this.hasCustomRestyle = false
+          this._baseStyles = new WeakMap()
+          this._sceneNodesRevision++
+        }
         return
       }
       this.sceneNodes = result.sceneNodes ?? []
@@ -829,6 +873,10 @@ export class NetworkPipelineStore {
       this.customLayoutOverlays = result.overlays ?? null
       this.customLayoutHtmlMarks = result.htmlMarks ?? []
       this.lastCustomLayoutResult = result
+      this.lastCustomLayoutFailure = null
+      // Any successful sceneNodes rebuild invalidates the lazily-built node
+      // quadtree. A recovered failure deliberately does not.
+      this._sceneNodesRevision++
       // Stash per-frame restyle callbacks. Their presence opts the chart into
       // the cheap selection path: snapshot each mark's emitted (base) style, then
       // apply the restyle once for the current selection. `restyleScene()` later
@@ -852,14 +900,20 @@ export class NetworkPipelineStore {
     this._customRestyle = undefined
     this._customRestyleEdge = undefined
     this.hasCustomRestyle = false
+    this._baseStyles = new WeakMap()
 
     // Built-in chart types: clear stale overlays / HTML marks from a prior
     // customLayout run.
     this.customLayoutOverlays = null
     this.customLayoutHtmlMarks = []
+    this.lastCustomLayoutResult = null
+    this.lastCustomLayoutFailure = null
 
     const plugin = getLayoutPlugin(this.config.chartType)
-    if (!plugin) return
+    if (!plugin) {
+      this._sceneNodesRevision++
+      return
+    }
 
     // Non-hierarchical plugins (force/sankey/chord) only read these arrays
     // (mutating node-object positions in place), so they share the per-frame
@@ -882,6 +936,7 @@ export class NetworkPipelineStore {
     this.sceneNodes = sceneNodes
     this.sceneEdges = sceneEdges
     this.labels = labels
+    this._sceneNodesRevision++
   }
 
   /**
@@ -1473,6 +1528,14 @@ export class NetworkPipelineStore {
     this.sceneNodes = []
     this.sceneEdges = []
     this.labels = []
+    this.customLayoutOverlays = null
+    this.customLayoutHtmlMarks = []
+    this.lastCustomLayoutResult = null
+    this.lastCustomLayoutFailure = null
+    this._customRestyle = undefined
+    this._customRestyleEdge = undefined
+    this.hasCustomRestyle = false
+    this._baseStyles = new WeakMap()
     this.transition = null
     this._hasRenderedOnce = false
     this.lastIngestTime = 0

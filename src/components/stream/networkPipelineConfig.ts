@@ -57,6 +57,7 @@ export type NetworkPipelineConfigSources = Pick<
   | "orbitShowRings"
   | "orbitAnimated"
   | "customNetworkLayout"
+  | "onLayoutError"
   | "layoutConfig"
 > & {
   tensionConfig: NetworkPipelineConfig["tensionConfig"]
@@ -124,6 +125,7 @@ export function buildNetworkPipelineConfig(
     orbitShowRings: sources.orbitShowRings,
     orbitAnimated: sources.orbitAnimated,
     customNetworkLayout: sources.customNetworkLayout,
+    onLayoutError: sources.onLayoutError,
     layoutConfig: sources.layoutConfig
     // layoutSelection intentionally omitted — selection uses a cheap restyle path
   }

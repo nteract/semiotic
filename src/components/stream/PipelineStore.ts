@@ -62,6 +62,10 @@ import { buildCandlestickScene } from "./xySceneBuilders/candlestickScene"
 import type { LayoutContext, LayoutResult } from "./customLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
+import {
+  createCustomLayoutFailureDiagnostic,
+  type CustomLayoutFailureDiagnostic
+} from "./customLayoutFailure"
 import type { MarginType } from "../types/marginType"
 import { resolveRibbons } from "./pipelineRibbons"
 import {
@@ -93,6 +97,7 @@ import {
 } from "./pipelineConfig"
 import {
   compactTimestampBufferForRemoval,
+  createTimestampBufferForData,
   ensureRingBufferCapacity,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
@@ -112,6 +117,7 @@ export class PipelineStore {
   private config: PipelineConfig
   private growingCap: number
   private growingCapacityWarned = false
+  private windowSizeWarned = false
 
   private getX: (d: Datum) => number
   private getY: (d: Datum) => number
@@ -195,8 +201,15 @@ export class PipelineStore {
   /** The most recent custom layout result, exposed for host readback via the
    *  frame handle's `getCustomLayout()` — so a page that needs the computed
    *  placement (stats, inspectors) doesn't re-run the layout. Null before the
-   *  first layout, after a layout throw, or when no custom layout is set. */
+   *  first layout or when no custom layout is set. A rerun failure preserves
+   *  this last successful result when it is safe to do so. */
   lastCustomLayoutResult: LayoutResult | null = null
+  /** Latest custom-layout failure for frame-handle readback. */
+  lastCustomLayoutFailure: CustomLayoutFailureDiagnostic | null = null
+  /** Set only while `buildSceneNodes` is recovering from a layout exception.
+   * `computeScene` uses it to retain the previous scene/scales without applying
+   * a new transition, pulse, or decay pass to that retained output. */
+  private _customLayoutFailedThisBuild = false
   private _customLayoutDiagnosticsWarned = new Set<string>()
   /** Per-frame restyle callback from the custom layout result (see LayoutResult.restyle). */
   private _customRestyle: LayoutResult["restyle"] = undefined
@@ -270,6 +283,26 @@ export class PipelineStore {
     }
   }
 
+  /**
+   * Keep pulse timestamps structurally coupled to the datum ring when pulse
+   * is changed after construction. A fresh timestamp ring must be seeded for
+   * already-retained data; otherwise the next push would be timestamp index 0
+   * while its datum is at the end of the data ring.
+   */
+  private syncPulseTimestampBuffer(): void {
+    if (!this.config.pulse) {
+      this.timestampBuffer = null
+      return
+    }
+
+    const isAligned = this.timestampBuffer != null
+      && this.timestampBuffer.capacity === this.buffer.capacity
+      && this.timestampBuffer.size === this.buffer.size
+    if (!isAligned) {
+      this.timestampBuffer = createTimestampBufferForData(this.buffer, getTimestamp())
+    }
+  }
+
   private pushDatumYExtent(d: Datum): void {
     if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
       this.yExtent.push(this.getHigh(d))
@@ -283,6 +316,28 @@ export class PipelineStore {
       const bottom = r.getBottom(d)
       if (Number.isFinite(top)) this.yExtent.push(top)
       if (Number.isFinite(bottom)) this.yExtent.push(bottom)
+    }
+  }
+
+  /**
+   * Remove every y-domain contribution made by {@link pushDatumYExtent}.
+   * Keeping these paths paired is important: a ribbon/band can extend the
+   * visible domain beyond the point itself, so removing or replacing that
+   * datum must evict its envelope extrema too.
+   */
+  private evictDatumYExtent(d: Datum): void {
+    if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+      this.yExtent.evict(this.getHigh(d))
+      this.yExtent.evict(this.getLow(d))
+      return
+    }
+    this.yExtent.evict(this.getY(d))
+    if (this.getY0) this.yExtent.evict(this.getY0(d))
+    for (const r of this.resolvedRibbons) {
+      const top = r.getTop(d)
+      const bottom = r.getBottom(d)
+      if (Number.isFinite(top)) this.yExtent.evict(top)
+      if (Number.isFinite(bottom)) this.yExtent.evict(bottom)
     }
   }
 
@@ -389,18 +444,7 @@ export class PipelineStore {
       for (const d of changeset.inserts) {
         pushWithTimestamp(this.buffer, d, this.timestampBuffer, now)
         this.xExtent.push(this.getX(d))
-        if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
-          this.yExtent.push(this.getHigh(d))
-          this.yExtent.push(this.getLow(d))
-        } else {
-          this.yExtent.push(this.getY(d))
-          if (this.getY0) this.yExtent.push(this.getY0(d))
-          for (const r of this.resolvedRibbons) {
-            const top = r.getTop(d); const bottom = r.getBottom(d)
-            if (Number.isFinite(top)) this.yExtent.push(top)
-            if (Number.isFinite(bottom)) this.yExtent.push(bottom)
-          }
-        }
+        this.pushDatumYExtent(d)
       }
     } else {
       // Streaming append
@@ -428,33 +472,11 @@ export class PipelineStore {
 
         const evicted = pushWithTimestamp(this.buffer, d, this.timestampBuffer, now)
         this.xExtent.push(this.getX(d))
-        if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
-          this.yExtent.push(this.getHigh(d))
-          this.yExtent.push(this.getLow(d))
-        } else {
-          this.yExtent.push(this.getY(d))
-          if (this.getY0) this.yExtent.push(this.getY0(d))
-          for (const r of this.resolvedRibbons) {
-            const top = r.getTop(d); const bottom = r.getBottom(d)
-            if (Number.isFinite(top)) this.yExtent.push(top)
-            if (Number.isFinite(bottom)) this.yExtent.push(bottom)
-          }
-        }
+        this.pushDatumYExtent(d)
 
         if (evicted != null) {
           this.xExtent.evict(this.getX(evicted))
-          if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
-            this.yExtent.evict(this.getHigh(evicted))
-            this.yExtent.evict(this.getLow(evicted))
-          } else {
-            this.yExtent.evict(this.getY(evicted))
-            if (this.getY0) this.yExtent.evict(this.getY0(evicted))
-            for (const r of this.resolvedRibbons) {
-              const top = r.getTop(evicted); const bottom = r.getBottom(evicted)
-              if (Number.isFinite(top)) this.yExtent.evict(top)
-              if (Number.isFinite(bottom)) this.yExtent.evict(bottom)
-            }
-          }
+          this.evictDatumYExtent(evicted)
         }
       }
     }
@@ -467,6 +489,8 @@ export class PipelineStore {
    */
   computeScene(layout: StreamLayout): void {
     const { config, buffer } = this
+    const previousScales = this.scales
+    const previousLastLayout = this.lastLayout
 
     // Fast path: if only layout dimensions changed (no data or config change),
     // remap existing scene node coordinates instead of rebuilding from scratch.
@@ -574,13 +598,36 @@ export class PipelineStore {
       yDomain
     })
 
-    // Snapshot positions for transition animation (before rebuild)
+    // Build scene graph based on chart type
+    this._customLayoutFailedThisBuild = false
+    const nextScene = this.buildSceneNodes(layout, bufferArray)
+    if (this._customLayoutFailedThisBuild) {
+      const preservedLastGoodScene =
+        this.lastCustomLayoutFailure?.preservedLastGoodScene === true
+      if (preservedLastGoodScene) {
+        // Keep the already-rendered custom scene, its old scales, and its
+        // overlays aligned. Applying the new decay/pulse/transition state to
+        // retained nodes would turn recovery into a subtly corrupted repaint.
+        this.scales = previousScales
+        this.lastLayout = previousLastLayout
+      } else {
+        // A custom layout newly added to a built-in chart may fail before it
+        // ever produces output. Do not leave the built-in scene visible and
+        // accidentally report it as a custom-layout recovery.
+        this.scene = []
+        this.rebuildQuadtree()
+      }
+      this.needsFullRebuild = true
+      return
+    }
+
+    // Snapshot positions for transition animation only after a successful
+    // layout attempt. A failed custom layout must leave the retained scene's
+    // animation state untouched.
     if (this.config.transition && this.scene.length > 0) {
       this.snapshotPositions()
     }
-
-    // Build scene graph based on chart type
-    this.scene = this.buildSceneNodes(layout, bufferArray)
+    this.scene = nextScene
 
     // Apply decay opacity to discrete nodes
     if (this.config.decay) {
@@ -794,18 +841,38 @@ export class PipelineStore {
       try {
         result = config.customLayout(layoutCtx)
       } catch (err) {
-        // Layouts can throw — surface in dev, fall back to empty scene in prod.
+        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
+        const diagnostic = createCustomLayoutFailureDiagnostic(
+          "xy",
+          err,
+          preservedLastGoodScene,
+          this.version
+        )
+        this.lastCustomLayoutFailure = diagnostic
+        this._customLayoutFailedThisBuild = true
         if (process.env.NODE_ENV !== "production") {
           console.error("[semiotic] customLayout threw:", err)
         }
-        this.customLayoutOverlays = null
-        this.lastCustomLayoutResult = null
-        this._customRestyle = undefined
-        this.hasCustomRestyle = false
-        return []
+        try {
+          config.onLayoutError?.(diagnostic)
+        } catch (callbackError) {
+          if (process.env.NODE_ENV !== "production") {
+            console.error("[semiotic] onLayoutError threw:", callbackError)
+          }
+        }
+        if (!preservedLastGoodScene) {
+          this.customLayoutOverlays = null
+          this.lastCustomLayoutResult = null
+          this._customRestyle = undefined
+          this.hasCustomRestyle = false
+          this._baseStyles = new WeakMap()
+          return []
+        }
+        return this.scene
       }
       this.customLayoutOverlays = result.overlays ?? null
       this.lastCustomLayoutResult = result
+      this.lastCustomLayoutFailure = null
       const nodes = result.nodes ?? []
       // Stash the per-frame restyle callback; its presence opts into the cheap
       // selection path. Snapshot base styles and apply once for the current
@@ -829,6 +896,8 @@ export class PipelineStore {
     // Built-in chart types: ensure stale overlays from a prior customLayout
     // run don't bleed through after the user removes the prop.
     this.customLayoutOverlays = null
+    this.lastCustomLayoutResult = null
+    this.lastCustomLayoutFailure = null
     this._customRestyle = undefined
     this.hasCustomRestyle = false
 
@@ -1159,13 +1228,7 @@ export class PipelineStore {
     // Evict removed values from extent tracking — mirror ingest() logic
     for (const d of removed) {
       this.xExtent.evict(this.getX(d))
-      if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
-        this.yExtent.evict(this.getHigh(d))
-        this.yExtent.evict(this.getLow(d))
-      } else {
-        this.yExtent.evict(this.getY(d))
-        if (this.getY0) this.yExtent.evict(this.getY0(d))
-      }
+      this.evictDatumYExtent(d)
     }
 
     this.needsFullRebuild = true
@@ -1201,25 +1264,13 @@ export class PipelineStore {
     // Evict old values — mirror ingest() logic for candlestick/y0
     for (const old of previous) {
       this.xExtent.evict(this.getX(old))
-      if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
-        this.yExtent.evict(this.getHigh(old))
-        this.yExtent.evict(this.getLow(old))
-      } else {
-        this.yExtent.evict(this.getY(old))
-        if (this.getY0) this.yExtent.evict(this.getY0(old))
-      }
+      this.evictDatumYExtent(old)
     }
     // Push new extents using pre-captured indices (safe if ID changed)
     this.buffer.forEach((d, i) => {
       if (matchedIndices.has(i)) {
         this.xExtent.push(this.getX(d))
-        if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
-          this.yExtent.push(this.getHigh(d))
-          this.yExtent.push(this.getLow(d))
-        } else {
-          this.yExtent.push(this.getY(d))
-          if (this.getY0) this.yExtent.push(this.getY0(d))
-        }
+        this.pushDatumYExtent(d)
       }
     })
 
@@ -1268,6 +1319,12 @@ export class PipelineStore {
     this.lastLayout = null
     this.scales = null
     this.scene = []
+    this.customLayoutOverlays = null
+    this.lastCustomLayoutResult = null
+    this.lastCustomLayoutFailure = null
+    this._customRestyle = undefined
+    this.hasCustomRestyle = false
+    this._baseStyles = new WeakMap()
     this._quadtree = null
     this._maxPointRadius = 0
     this._colorMapCache = null
@@ -1317,17 +1374,53 @@ export class PipelineStore {
   }
 
   /**
+   * "Styles changed, repaint the data canvas without rebuilding the scene."
+   * Set by {@link restyleScene}; consumed once per frame by the render loop.
+   * Kept separate from the dirty flag so a style-only selection change repaints
+   * without forcing a layout/scene rebuild (the point of the restyle fast path).
+   */
+  private _stylePaintPending = false
+
+  /** Consume the style-only repaint signal (see {@link _stylePaintPending}). */
+  consumeStylePaintPending(): boolean {
+    const pending = this._stylePaintPending
+    this._stylePaintPending = false
+    return pending
+  }
+
+  /**
    * Re-apply the custom layout's `restyle` to the existing scene for
    * `selection`, off each node's base style — no relayout, no quadtree rebuild
    * (positions are unchanged). No-op when the layout supplied no `restyle`.
+   * Flags a style-only repaint so the render loop redraws the mutated styles.
    */
   restyleScene(selection: CustomLayoutSelection | null): void {
     if (!this._customRestyle) return
     this.applyCustomRestyle(this.scene, selection)
+    this._stylePaintPending = true
   }
 
   updateConfig(config: Partial<PipelineConfig>): void {
     const prev = { ...this.config }
+
+    // `windowSize` sizes the ring buffer in the constructor and is NOT applied
+    // reactively — changing it after mount has no effect on the retained
+    // buffer. Warn once in development so the setting isn't silently ignored.
+    // (Reactive resize via RingBuffer.resize is a tracked follow-up; it has
+    // bounded-vs-streaming mode interactions that need their own contract.)
+    if (
+      process.env.NODE_ENV !== "production" &&
+      !this.windowSizeWarned &&
+      "windowSize" in config &&
+      config.windowSize !== prev.windowSize
+    ) {
+      this.windowSizeWarned = true
+      console.warn(
+        `[Semiotic] windowSize changed after mount (${prev.windowSize} → ${config.windowSize}) ` +
+          `but it is a mount-only setting — the ring buffer keeps its original capacity. ` +
+          `Remount the chart (e.g. via a React key) to apply a new windowSize.`,
+      )
+    }
 
     // Invalidate color map caches when any color-relevant config changes.
     // resolveColorMap short-circuits on _ingestVersion, so we must explicitly
@@ -1368,9 +1461,19 @@ export class PipelineStore {
 
     Object.assign(this.config, config)
 
-    // Re-resolve accessor functions only when the accessor source actually changed.
-    // Uses .toString() comparison to detect inline arrow functions that are
-    // recreated on every parent render but have identical source code.
+    // `pulse` owns a constructor-created parallel timestamp resource. React
+    // can add, remove, or replace it after mount, so synchronize that resource
+    // immediately rather than leaving the new configuration inert until a
+    // remount. Existing pulse timestamps deliberately survive color/duration
+    // tweaks; only activation (or a detected mismatch) reseeds them.
+    if ("pulse" in config) {
+      this.syncPulseTimestampBuffer()
+    }
+
+    // Re-resolve accessors only when their effective specs changed. Function
+    // accessors compare by identity; identical source can close over different
+    // values. Read the merged config below rather than the partial patch so a
+    // y-only update never accidentally treats x as cleared to its fallback.
     // Re-resolve getX/getY when accessor props change, OR when chartType/runtimeMode
     // changes (which changes which fallback defaults apply: x/y vs time/value).
     const modeChanged = ("chartType" in config && config.chartType !== prev.chartType)
@@ -1382,11 +1485,23 @@ export class PipelineStore {
     if (modeChanged
       || "xAccessor" in config || "yAccessor" in config
       || "timeAccessor" in config || "valueAccessor" in config) {
-      const xChanged = modeChanged || !accessorsEquivalent(config.xAccessor ?? config.timeAccessor, prev.xAccessor ?? prev.timeAccessor)
-      const yChanged = modeChanged || !accessorsEquivalent(config.yAccessor ?? config.valueAccessor, prev.yAccessor ?? prev.valueAccessor)
+      const isStreamingType = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
+      const useStreamingDefaults = isStreamingType || this.config.runtimeMode === "streaming"
+      const nextXAccessor = useStreamingDefaults
+        ? this.config.timeAccessor || this.config.xAccessor
+        : this.config.xAccessor
+      const prevXAccessor = useStreamingDefaults
+        ? prev.timeAccessor || prev.xAccessor
+        : prev.xAccessor
+      const nextYAccessor = useStreamingDefaults
+        ? this.config.valueAccessor || this.config.yAccessor
+        : this.config.yAccessor
+      const prevYAccessor = useStreamingDefaults
+        ? prev.valueAccessor || prev.yAccessor
+        : prev.yAccessor
+      const xChanged = modeChanged || !accessorsEquivalent(nextXAccessor, prevXAccessor)
+      const yChanged = modeChanged || !accessorsEquivalent(nextYAccessor, prevYAccessor)
       if (xChanged || yChanged) {
-        const isStreamingType = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
-        const useStreamingDefaults = isStreamingType || this.config.runtimeMode === "streaming"
         if (useStreamingDefaults) {
           this.getX = resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
           this.getY = resolveAccessor(this.config.valueAccessor || this.config.yAccessor, "value")
@@ -1461,6 +1576,16 @@ export class PipelineStore {
       this.getLow = resolveAccessor(this.config.lowAccessor, "low")
       this.getClose = hasClose ? resolveAccessor(this.config.closeAccessor, "close") : undefined
       this.config.candlestickRangeMode = !hasOpen && !hasClose
+      accessorChanged = true
+      extentAccessorChanged = true
+    }
+
+    // Escape hatch: an explicit `accessorRevision` bump forces re-derivation
+    // even when every accessor reference is unchanged. This covers a stable
+    // function accessor whose captured semantics changed without its identity
+    // changing. Resolved accessors already call the live function, so we only
+    // need to recompute derived extents and rebuild the scene.
+    if ("accessorRevision" in config && config.accessorRevision !== prev.accessorRevision) {
       accessorChanged = true
       extentAccessorChanged = true
     }

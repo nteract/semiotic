@@ -13,6 +13,7 @@ import {
   type PhysicsWorkerResponse,
   type PhysicsWorkerResponsePayload
 } from "./PhysicsWorkerProtocol"
+import { commonJsWorkerModuleUrl } from "../workerModuleUrl"
 
 interface PendingPhysicsWorkerRequest {
   cleanup: () => void
@@ -25,7 +26,12 @@ export function canUsePhysicsWorker(): boolean {
 }
 
 export function createPhysicsWorker(): Worker {
-  return new Worker(new URL("./physicsWorker.js", import.meta.url), {
+  // Retain the literal ESM URL so consumer bundlers include this asset; use
+  // the real CJS filename when tsup has erased import.meta.url.
+  const workerUrl = typeof import.meta.url === "string" && import.meta.url
+    ? new URL("./physicsWorker.js", import.meta.url)
+    : commonJsWorkerModuleUrl("physicsWorker.js")
+  return new Worker(workerUrl, {
     type: "module",
     name: "semiotic-physics"
   })

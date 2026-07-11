@@ -25,6 +25,8 @@ export interface OrdinalCustomChartProps<
   layout: OrdinalCustomLayout<TConfig>
   /** Config blob threaded through to OrdinalLayoutContext.config. */
   layoutConfig?: TConfig
+  /** Receives a structured diagnostic if the layout throws. */
+  onLayoutError?: StreamOrdinalFrameProps["onLayoutError"]
   recipe?: ChartRecipe<TDatum, TConfig>
   recipeId?: string
   /** Field name (or function) for the category. The frame builds the o-scale from these. */
@@ -93,6 +95,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     data,
     layout,
     layoutConfig,
+    onLayoutError,
     categoryAccessor = "category",
     valueAccessor = "value",
     oExtent,
@@ -167,6 +170,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
     ...(data != null && { data: safeData }),
     customLayout: layout as OrdinalCustomLayout,
     layoutConfig,
+    onLayoutError,
     ...(layoutSelection && { layoutSelection }),
     // Map our user-facing accessor names to the frame's bounded-mode prop
     // names (oAccessor/rAccessor). The frame's `categoryAccessor`/

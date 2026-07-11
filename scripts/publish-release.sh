@@ -3,6 +3,7 @@
 set -e
 
 VERSION=$(node -p -e "require('./package.json').version")
+RELEASE_TAG="v${VERSION}"
 CURRENT_BRANCH="$(git symbolic-ref --short -q HEAD)"
 
 success() {
@@ -31,9 +32,9 @@ fi
 git pull --ff-only
 npm install
 npm run release:check
-git tag -a "$VERSION" -m "release $VERSION"
+git tag -a "$RELEASE_TAG" -m "release $RELEASE_TAG"
 npm publish
 git push origin "$CURRENT_BRANCH"
-git push origin "$VERSION"
+git push origin "$RELEASE_TAG"
 
-success "published $VERSION to npm"
+success "published $VERSION to npm and pushed $RELEASE_TAG"

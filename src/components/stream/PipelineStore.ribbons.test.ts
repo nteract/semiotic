@@ -208,6 +208,64 @@ describe("PipelineStore — band prop", () => {
     expect(hi).toBe(100)
   })
 
+  it("removes band extrema when the datum carrying them is removed", () => {
+    const store = new PipelineStore({
+      chartType: "line",
+      runtimeMode: "bounded",
+      windowSize: 200,
+      windowMode: "sliding",
+      arrowOfTime: "right",
+      extentPadding: 0,
+      pointIdAccessor: "id",
+      xAccessor: "x",
+      yAccessor: "y",
+      band: { y0Accessor: "lo", y1Accessor: "hi" },
+    })
+    store.ingest({
+      inserts: [
+        { id: "ordinary", x: 0, y: 50, lo: 45, hi: 55 },
+        { id: "extreme", x: 1, y: 60, lo: 10, hi: 100 },
+      ],
+      bounded: true,
+    })
+    expect(store.getExtents()!.y).toEqual([10, 100])
+
+    store.remove("extreme")
+    store.computeScene({ width: 400, height: 200 })
+
+    // Before the paired extent eviction, stale band extrema survived this
+    // mutation and the next scene kept the old [10, 100] y-domain.
+    expect(store.scales!.y.domain()).toEqual([45, 55])
+  })
+
+  it("replaces band extrema when a datum is updated", () => {
+    const store = new PipelineStore({
+      chartType: "line",
+      runtimeMode: "bounded",
+      windowSize: 200,
+      windowMode: "sliding",
+      arrowOfTime: "right",
+      extentPadding: 0,
+      pointIdAccessor: "id",
+      xAccessor: "x",
+      yAccessor: "y",
+      band: { y0Accessor: "lo", y1Accessor: "hi" },
+    })
+    store.ingest({
+      inserts: [
+        { id: "a", x: 0, y: 50, lo: 10, hi: 100 },
+        { id: "b", x: 1, y: 55, lo: 45, hi: 65 },
+      ],
+      bounded: true,
+    })
+    expect(store.getExtents()!.y).toEqual([10, 100])
+
+    store.update("a", datum => ({ ...datum, y: 52, lo: 48, hi: 58 }))
+    store.computeScene({ width: 400, height: 200 })
+
+    expect(store.scales!.y.domain()).toEqual([45, 65])
+  })
+
   it("inherits resolveBoundsStyle (line color @ 0.2 fillOpacity) when no style is set", () => {
     const store = new PipelineStore({
       chartType: "line",

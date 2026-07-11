@@ -203,9 +203,13 @@ export interface RealtimeFrameHandle {
    *  `layout(ctx)` function) — host readback so a page that needs the computed
    *  placement (stats, inspectors) doesn't re-run the layout function itself.
    *  Null before the first layout completes or when the chart has no custom
-   *  layout. Typed as `unknown` at this shared boundary; the family frame
+   *  layout. A failed retry can retain the prior result; use
+   *  `getLayoutFailure()` to distinguish recovery. Typed as `unknown` at this shared boundary; the family frame
    *  handles narrow it to their `LayoutResult` shape. */
   getCustomLayout?(): unknown | null
+  /** Latest structured custom-layout failure. Family frame handles narrow this
+   * to `CustomLayoutFailureDiagnostic`; absent on frames without layouts. */
+  getLayoutFailure?(): unknown | null
 }
 
 export interface RealtimeScales {

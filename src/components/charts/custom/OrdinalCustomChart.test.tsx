@@ -13,6 +13,7 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 let lastOrdinalFrameProps: {
   customLayout?: OrdinalCustomLayout
   layoutConfig?: Record<string, unknown>
+  onLayoutError?: unknown
   chartType?: string
   oAccessor?: unknown
   rAccessor?: unknown
@@ -24,6 +25,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
     default: React.forwardRef((props: {
       customLayout?: OrdinalCustomLayout
       layoutConfig?: Record<string, unknown>
+      onLayoutError?: unknown
       chartType?: string
       oAccessor?: unknown
       rAccessor?: unknown
@@ -83,6 +85,20 @@ describe("OrdinalCustomChart", () => {
       </TooltipProvider>
     )
     expect(lastOrdinalFrameProps?.layoutConfig).toEqual({ showLabels: true })
+  })
+
+  it("forwards onLayoutError", () => {
+    const onLayoutError = vi.fn()
+    render(
+      <TooltipProvider>
+        <OrdinalCustomChart
+          data={[{ category: "A", value: 1 }]}
+          layout={trivialLayout}
+          onLayoutError={onLayoutError}
+        />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps?.onLayoutError).toBe(onLayoutError)
   })
 
   it("maps categoryAccessor/valueAccessor to the frame's o/r accessors", () => {

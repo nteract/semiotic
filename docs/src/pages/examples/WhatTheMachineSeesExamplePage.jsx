@@ -22,9 +22,9 @@ import {
   useNavigationSync,
   ThemeProvider,
   ChartRecipe,
+  IntentMark,
+  auditObservedScene,
 } from "semiotic/ai"
-import { IntentMark } from "../../../../src/components/ai/IntentMark"
-import { auditObservedScene } from "../../../../src/components/ai/observedSceneAudit"
 import { XYCustomChart } from "semiotic/xy"
 import { waffleLayout } from "semiotic/recipes"
 import { Link } from "react-router-dom"

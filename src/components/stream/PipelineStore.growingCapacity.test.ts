@@ -28,6 +28,20 @@ describe("PipelineStore growing-window capacity", () => {
     expect(GROWING_CAPACITY_WARN_THRESHOLD).toBe(50_000)
   })
 
+  it("warns once (dev) that windowSize is mount-only when changed after mount", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(makeGrowingConfig({ windowSize: 10 }))
+
+    store.updateConfig({ windowSize: 50 })
+    store.updateConfig({ windowSize: 99 }) // second change — must not warn again
+    // A no-op re-pass of the same windowSize must not warn.
+    store.updateConfig({ windowSize: 99 })
+
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain("windowSize")
+    expect(String(warn.mock.calls[0][0])).toContain("mount-only")
+  })
+
   it("grows the buffer until maxCapacity then slides", () => {
     const store = new PipelineStore(
       makeGrowingConfig({ windowSize: 2, maxCapacity: 4 })

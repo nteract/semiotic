@@ -122,8 +122,12 @@ npx semiotic-ai --help`}</CodeBlock>
       <CodeBlock language="bash">{`# Public app / connector profile (five tools)
 npx semiotic-mcp --profile public
 
-# Equivalent for hosted deployments
-MCP_TOOL_PROFILE=public npx semiotic-mcp --http --port 3001`}</CodeBlock>
+# Local HTTP uses loopback by default
+MCP_TOOL_PROFILE=public npx semiotic-mcp --http --port 3001
+
+# Hosted deployments must opt in to a public bind
+MCP_TOOL_PROFILE=public npx semiotic-mcp --http --host 0.0.0.0 --port 3001
+# Or: MCP_HOST=0.0.0.0 MCP_TOOL_PROFILE=public npx semiotic-mcp --http --port 3001`}</CodeBlock>
 
       <h3 id="developer-profile">Full developer profile</h3>
       <p>

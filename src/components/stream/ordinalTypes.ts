@@ -258,6 +258,14 @@ export interface OrdinalPipelineConfig {
   /** @deprecated Use valueAccessor */
   rAccessor?: string | ((d: Datum) => number) | Array<string | ((d: Datum) => number)>
 
+  /**
+   * Escape hatch for a *stable* function accessor whose captured semantics
+   * change without its identity changing. Accessor equality is identity-based,
+   * so such a change is otherwise invisible. Bump this number to force the
+   * store to re-resolve accessors, rebuild the category domain, and reset value
+   * extents. Prefer changing the accessor identity where you can. */
+  accessorRevision?: number
+
   multiAxis?: boolean
 
   // Extents
@@ -347,6 +355,10 @@ export interface OrdinalPipelineConfig {
    *  Receives an OrdinalLayoutContext (scales, dimensions, theme,
    *  resolveColor) and returns scene nodes plus optional overlays. */
   customLayout?: import("./ordinalCustomLayout").OrdinalCustomLayout
+  /** Called when `customLayout` throws. */
+  onLayoutError?: (
+    diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic
+  ) => void
   /** User-supplied config blob threaded through to OrdinalLayoutContext.config. */
   layoutConfig?: object
   /** Resolved margin — passed through so OrdinalLayoutContext.dimensions.margin
@@ -382,6 +394,13 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   oAccessor?: string | ((d: T) => string)
   /** @deprecated Use valueAccessor instead */
   rAccessor?: string | ((d: T) => number) | Array<string | ((d: T) => number)>
+
+  /**
+   * Force category/value re-derivation when a stable accessor's external
+   * semantics changed without a new function identity. Prefer changing the
+   * accessor reference where possible.
+   */
+  accessorRevision?: number
 
   // Multi-axis: each valueAccessor entry gets an independent scale
   multiAxis?: boolean
@@ -558,6 +577,10 @@ export interface StreamOrdinalFrameProps<T = Datum> {
    *  `semiotic/recipes` for reference layouts (marimekko, parallel
    *  coordinates, bullet). */
   customLayout?: import("./ordinalCustomLayout").OrdinalCustomLayout
+  /** Called when `customLayout` throws. */
+  onLayoutError?: (
+    diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic
+  ) => void
   /** User-supplied config blob threaded through to OrdinalLayoutContext.config. */
   layoutConfig?: object
   /** Resolved shared selection projected into `OrdinalLayoutContext.selection`.
@@ -593,8 +616,12 @@ export interface StreamOrdinalFrameHandle<T = Datum> {
   getScales(): OrdinalScales | null
   /** The most recent custom layout result — host readback so pages that need
    *  the computed placement don't re-run the layout. Null before the first
-   *  layout or when no custom layout is configured. */
+   *  layout or when no custom layout is configured. A failed retry retains the
+   *  prior good result; inspect `getLayoutFailure()` to distinguish recovery. */
   getCustomLayout(): import("./ordinalCustomLayout").OrdinalLayoutResult | null
+  /** The latest custom-layout failure, if any. Cleared by a successful layout,
+   * removing the custom layout, or `clear()`. */
+  getLayoutFailure(): import("./customLayoutFailure").CustomLayoutFailureDiagnostic | null
 }
 
 // ── Layout ─────────────────────────────────────────────────────────────

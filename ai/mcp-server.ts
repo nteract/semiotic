@@ -31,8 +31,11 @@
  *   }
  * }
  *
- * HTTP mode (for remote inspectors / web clients):
+ * HTTP mode (loopback-only by default):
  *   npx semiotic-mcp --http --port 3001
+ *
+ * Bind intentionally to a public interface only when needed:
+ *   npx semiotic-mcp --http --host 0.0.0.0 --port 3001
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
@@ -42,6 +45,20 @@ import { z } from "zod"
 import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
+import { resolveHTTPListenHost } from "./mcp-server-options"
+import {
+  formatMcpOperationLimitError,
+  inspectMcpOperationInput,
+  resolveMcpOperationLimits,
+} from "./mcp-operation-limits"
+import {
+  createWidgetDataPreview,
+  createWidgetEvidencePreview,
+  formatMcpOutputLimitError,
+  inspectMcpOutputLimit,
+  resolveMcpRenderOutputLimits,
+  truncateUtf8,
+} from "./mcp-render-output-limits"
 import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 import { renderChartWithEvidence } from "semiotic/server"
@@ -229,9 +246,10 @@ function parseRenderEvidence(result: ToolResult): Record<string, unknown> | null
 }
 
 function chartTitleFromProps(component: string, props: Record<string, unknown>): string {
-  return typeof props.title === "string" && props.title.trim()
+  const title = typeof props.title === "string" && props.title.trim()
     ? props.title.trim()
     : component
+  return truncateUtf8(title, resolveMcpRenderOutputLimits().maxWidgetValueBytes)
 }
 
 function chartDatumCount(props: Record<string, unknown>): number | null {
@@ -398,22 +416,26 @@ function renderSemioticChartWidgetHTML(): string {
       return { output, meta };
     }
 
-    function sampleRows(meta) {
-      const props = meta?.props || {};
-      if (Array.isArray(props.data)) return props.data.slice(0, 50);
-      if (Array.isArray(props.nodes)) return props.nodes.slice(0, 50);
-      if (Array.isArray(props.edges)) return props.edges.slice(0, 50);
-      if (Array.isArray(props.links)) return props.links.slice(0, 50);
-      return [];
+    function dataPreview(meta) {
+      const preview = meta?.dataPreview;
+      return preview && Array.isArray(preview.rows) ? preview : null;
     }
 
-    function renderTable(rows) {
+    function renderTable(preview) {
+      const rows = preview?.rows || [];
       if (!rows.length) return '<pre>No row data was provided in the widget metadata.</pre>';
       const columns = Array.from(rows.reduce((set, row) => {
         Object.keys(row || {}).forEach((key) => set.add(key));
         return set;
       }, new Set()));
-      return '<table><thead><tr>' + columns.map((col) => '<th>' + html(col) + '</th>').join('') +
+      const totalRows = Number.isFinite(preview?.totalRows) ? preview.totalRows : rows.length;
+      const collection = preview?.collection || 'data';
+      const notes = [
+        'Showing ' + rows.length + ' of ' + totalRows + ' ' + html(collection) + ' rows.',
+        preview?.truncated ? 'Preview values or rows were truncated.' : '',
+        preview?.redactedFields ? 'Sensitive fields were redacted.' : ''
+      ].filter(Boolean).join(' ');
+      return '<div class="summary">' + notes + '</div><table><thead><tr>' + columns.map((col) => '<th>' + html(col) + '</th>').join('') +
         '</tr></thead><tbody>' + rows.map((row) => '<tr>' + columns.map((col) => '<td>' + html(row?.[col]) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
     }
 
@@ -428,8 +450,8 @@ function renderSemioticChartWidgetHTML(): string {
       } else {
         chartEl.innerHTML = '<div class="empty">No SVG payload received. The model-visible chart summary is still available above.</div>';
       }
-      const rows = sampleRows(hidden);
-      dataDrawer.innerHTML = renderTable(rows);
+      const preview = dataPreview(hidden);
+      dataDrawer.innerHTML = renderTable(preview);
       evidenceText.textContent = JSON.stringify(payload.evidence || hidden.evidence || {}, null, 2);
     }
 
@@ -521,6 +543,58 @@ type ToolResult = {
   _meta?: Record<string, unknown>
 }
 
+/**
+ * A render can turn a compact request into a large SVG, PNG data URL, or Apps
+ * result. Never return a partial SVG: an explicit tool error is both safer and
+ * more useful to a caller than malformed markup or an opaque transport drop.
+ */
+function capRenderedToolResult(
+  result: ToolResult,
+  args: {
+    label: string
+    maximum: number
+    setting: "MCP_MAX_RENDER_OUTPUT_BYTES" | "MCP_MAX_WIDGET_OUTPUT_BYTES"
+  },
+): ToolResult {
+  const limit = inspectMcpOutputLimit(result, args.maximum)
+  if (limit.ok) return result
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: formatMcpOutputLimitError({
+        label: args.label,
+        limit,
+        setting: args.setting,
+      }),
+    }],
+    isError: true,
+    structuredContent: {
+      code: "OUTPUT_LIMIT_EXCEEDED",
+      maximumBytes: limit.maximum,
+      observedBytes: limit.observed,
+    },
+  }
+}
+
+function capRenderChartResult(result: ToolResult): ToolResult {
+  const limits = resolveMcpRenderOutputLimits()
+  return capRenderedToolResult(result, {
+    label: "Rendered chart",
+    maximum: limits.maxRenderOutputBytes,
+    setting: "MCP_MAX_RENDER_OUTPUT_BYTES",
+  })
+}
+
+function capInteractiveWidgetResult(result: ToolResult): ToolResult {
+  const limits = resolveMcpRenderOutputLimits()
+  return capRenderedToolResult(result, {
+    label: "Interactive widget",
+    maximum: limits.maxWidgetOutputBytes,
+    setting: "MCP_MAX_WIDGET_OUTPUT_BYTES",
+  })
+}
+
 type ToolProfile = "developer" | "public"
 const SURFACE_VERSION = `${schema.version || "3.0.0"}-ai`
 
@@ -600,32 +674,32 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   const format = args.format || "svg"
 
   if (!component) {
-    return {
+    return capRenderChartResult({
       content: [{ type: "text" as const, text: `Missing 'component' field. Provide { component: '<name>', props: { ... } }. Available: ${componentNames.join(", ")}` }],
       isError: true,
-    }
+    })
   }
 
   if (!COMPONENT_REGISTRY[component]) {
     if (schemaByComponent[component]) {
-      return {
+      return capRenderChartResult({
         content: [{ type: "text" as const, text: `Component "${component}" is known but cannot be rendered via renderChart. It requires a browser/live environment. Renderable components: ${componentNames.join(", ")}` }],
         isError: true,
-      }
+      })
     }
 
-    return {
+    return capRenderChartResult({
       content: [{ type: "text" as const, text: `Unknown component "${component}". Available: ${componentNames.join(", ")}` }],
       isError: true,
-    }
+    })
   }
 
   const result = renderHOCToSVG(component, props)
   if (result.error) {
-    return {
+    return capRenderChartResult({
       content: [{ type: "text" as const, text: result.error }],
       isError: true,
-    }
+    })
   }
 
   let svg = result.svg!
@@ -662,8 +736,16 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   // We add a <style> block inside the SVG rather than wrapping in a <div>,
   // because sharp requires pure SVG input for PNG rasterization.
   if (theme && Object.keys(theme).length > 0) {
+    // Sanitize both the key (must be a --semiotic-* custom property) AND the
+    // value before splicing it into the <style> block. A value containing
+    // `</style>`, `}`, `;`, `@`, `url(...)`, `expression(...)`, `javascript:`,
+    // or a CSS comment could break out of the rule/block, so drop any such
+    // entry rather than trust it. Legitimate color / font / size / shadow
+    // tokens use none of these characters.
+    const isUnsafeCssValue = (v: string) =>
+      /[<>{}\\;@]/.test(v) || /url\(|expression\(|javascript:|\/\*|\*\//i.test(v)
     const validVars = Object.entries(theme)
-      .filter(([k]) => k.startsWith("--semiotic-"))
+      .filter(([k, v]) => k.startsWith("--semiotic-") && typeof v === "string" && !isUnsafeCssValue(v))
       .map(([k, v]) => `${k}: ${v}`)
       .join("; ")
     if (validVars) {
@@ -679,31 +761,31 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
       const sharpFn = sharpMod.default || sharpMod
       const pngBuffer: Buffer = await sharpFn(Buffer.from(svg)).png().toBuffer()
       const base64 = pngBuffer.toString("base64")
-      return {
+      return capRenderChartResult({
         content: [
           { type: "text" as const, text: `data:image/png;base64,${base64}` },
           ...(evidenceBlock ? [evidenceBlock] : []),
         ],
-      }
+      })
     } catch (err: any) {
       if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
-        return {
+        return capRenderChartResult({
           content: [{ type: "text" as const, text: `PNG output requires the 'sharp' package. Install it with: npm install sharp\n\nFalling back to SVG output:\n\n${svg}` }],
-        }
+        })
       }
-      return {
+      return capRenderChartResult({
         content: [{ type: "text" as const, text: `PNG conversion failed: ${err.message}\n\nSVG output:\n\n${svg}` }],
         isError: true,
-      }
+      })
     }
   }
 
-  return {
+  return capRenderChartResult({
     content: [
       { type: "text" as const, text: svg },
       ...(evidenceBlock ? [evidenceBlock] : []),
     ],
-  }
+  })
 }
 
 async function renderInteractiveChartHandler(args: {
@@ -723,7 +805,9 @@ async function renderInteractiveChartHandler(args: {
   if (rendered.isError) return rendered
 
   const svg = stripUnsafeSvg(rendered.content[0]?.text ?? "")
-  const evidence = parseRenderEvidence(rendered)
+  const outputLimits = resolveMcpRenderOutputLimits()
+  const evidence = createWidgetEvidencePreview(parseRenderEvidence(rendered), outputLimits)
+  const dataPreview = createWidgetDataPreview(props, outputLimits)
   const title = chartTitleFromProps(component || "Semiotic chart", props)
   const datumCount = chartDatumCount(props)
   const summary = [
@@ -732,7 +816,7 @@ async function renderInteractiveChartHandler(args: {
     "Use the widget controls to zoom, fit width, inspect data, and inspect render evidence.",
   ].join(" ")
 
-  return {
+  return capInteractiveWidgetResult({
     content: [{
       type: "text" as const,
       text: `Rendered ${title} (${component}) as an interactive ChatGPT Apps widget.`,
@@ -745,15 +829,14 @@ async function renderInteractiveChartHandler(args: {
       evidence,
     },
     _meta: {
-      component,
+      component: component ?? "SemioticChart",
       title,
-      props,
-      theme: args.theme ?? null,
+      dataPreview,
       svg,
       evidence,
       generatedAt: new Date().toISOString(),
     },
-  }
+  })
 }
 
 function filterUsageModeDiagnoses(component: string, usageMode: "static" | "push", diagnoses: any[]) {
@@ -2157,6 +2240,27 @@ const parsedPort =
     ? parseInt(cliArgs[portFlagIndex + 1], 10)
     : NaN
 const port = Number.isFinite(parsedPort) ? parsedPort : 3001
+const host = resolveHTTPListenHost(cliArgs)
+
+function operationLimitForMcpRequest(
+  body: unknown,
+  limits: ReturnType<typeof resolveMcpOperationLimits>,
+) {
+  // JSON-RPC permits batches. Each tool call gets its own ceiling; a malformed
+  // batch member remains the transport/schema layer's responsibility.
+  const requests = Array.isArray(body) ? body : [body]
+  for (const candidate of requests) {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) continue
+    const request = candidate as Record<string, unknown>
+    if (request.method !== "tools/call") continue
+    if (!request.params || typeof request.params !== "object" || Array.isArray(request.params)) continue
+    const params = request.params as Record<string, unknown>
+    if (!("arguments" in params)) continue
+    const result = inspectMcpOperationInput(params.arguments, limits)
+    if (!result.ok) return result
+  }
+  return null
+}
 
 async function main() {
   if (httpMode) {
@@ -2180,7 +2284,79 @@ async function main() {
       .split(",")
       .map((h) => h.trim().toLowerCase())
       .filter(Boolean)
+    // Origin allowlist (browser cross-origin defense, opt-in). When set, a
+    // request carrying a disallowed `Origin` is rejected and CORS echoes only
+    // an allowed origin instead of the `*` wildcard. Leave unset for non-browser
+    // MCP clients (which send no Origin) and local dev.
+    const allowedOrigins = (process.env.MCP_ALLOWED_ORIGINS || "")
+      .split(",")
+      .map((o) => o.trim().toLowerCase())
+      .filter(Boolean)
+    // Hard request-body ceiling (DoS guard). A read-only tool can still consume
+    // unbounded CPU/memory validating or rendering a huge payload, so cap the
+    // bytes we accept before handing the body to the MCP transport. Default 4 MB;
+    // override with MCP_MAX_BODY_BYTES. A front proxy (Cloud Armor / API Gateway)
+    // should enforce rate limits on top of this.
+    const parsedMaxBody = parseInt(process.env.MCP_MAX_BODY_BYTES || "", 10)
+    const maxBodyBytes = Number.isFinite(parsedMaxBody) && parsedMaxBody > 0 ? parsedMaxBody : 4_194_304
+    // Operation ceilings complement the byte cap: compact JSON can still
+    // induce expensive profiling/layout/render work through many rows, fields,
+    // or nested containers. Apply these before constructing an MCP server.
+    const operationLimits = resolveMcpOperationLimits()
     const openaiAppsChallengeToken = (process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim()
+
+    // Read the request body into memory with a hard byte cap. Returns the parsed
+    // JSON, or a sentinel for an over-limit / malformed body. Reading it here
+    // (rather than letting the transport consume the stream) is what lets us
+    // enforce the ceiling for both Content-Length and chunked requests.
+    type BodyResult =
+      | { ok: true; body: unknown }
+      | { ok: false; status: 413 | 400; code: -32600 | -32602; message: string }
+    const readJsonBodyWithLimit = (req: import("http").IncomingMessage): Promise<BodyResult> =>
+      new Promise((resolve) => {
+        let size = 0
+        let done = false
+        const chunks: Buffer[] = []
+        const finish = (result: BodyResult) => {
+          if (done) return
+          done = true
+          resolve(result)
+        }
+        req.on("data", (chunk: Buffer) => {
+          if (done) return
+          size += chunk.length
+          if (size > maxBodyBytes) {
+            // Stop accumulating (memory is now bounded), but don't destroy the
+            // socket — the caller still needs to write the 413 response. Further
+            // inbound chunks are ignored by the `done` guard above.
+            finish({ ok: false, status: 413, code: -32600, message: "Request body too large" })
+            return
+          }
+          chunks.push(chunk)
+        })
+        req.on("end", () => {
+          if (done) return
+          const raw = Buffer.concat(chunks).toString("utf-8")
+          if (!raw) return finish({ ok: true, body: undefined })
+          try {
+            const body = JSON.parse(raw)
+            const operationLimit = operationLimitForMcpRequest(body, operationLimits)
+            if (operationLimit && !operationLimit.ok) {
+              finish({
+                ok: false,
+                status: 413,
+                code: -32602,
+                message: formatMcpOperationLimitError(operationLimit),
+              })
+              return
+            }
+            finish({ ok: true, body })
+          } catch {
+            finish({ ok: false, status: 400, code: -32600, message: "Invalid JSON body" })
+          }
+        })
+        req.on("error", () => finish({ ok: false, status: 400, code: -32600, message: "Request stream error" }))
+      })
 
     const healthBody = () =>
       JSON.stringify({
@@ -2192,8 +2368,15 @@ async function main() {
       })
 
     const httpServer = http.createServer(async (req, res) => {
-      // Public read-only server: permissive CORS for browser-based MCP clients.
-      res.setHeader("Access-Control-Allow-Origin", "*")
+      const origin = String(req.headers.origin || "").trim().toLowerCase()
+      // CORS: wildcard when no origin allowlist is configured; otherwise echo
+      // only an allowed origin (and Vary on Origin so caches don't cross wires).
+      if (allowedOrigins.length > 0) {
+        res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes(origin) ? origin : allowedOrigins[0])
+        res.setHeader("Vary", "Origin")
+      } else {
+        res.setHeader("Access-Control-Allow-Origin", "*")
+      }
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
       res.setHeader(
         "Access-Control-Allow-Headers",
@@ -2204,6 +2387,15 @@ async function main() {
       if (req.method === "OPTIONS") {
         res.writeHead(204)
         res.end()
+        return
+      }
+
+      // Origin allowlist (browser cross-origin defense). A request that presents
+      // a disallowed Origin is rejected outright. Non-browser MCP clients send
+      // no Origin header and are unaffected.
+      if (allowedOrigins.length > 0 && origin && !allowedOrigins.includes(origin)) {
+        res.writeHead(403, { "Content-Type": "application/json" })
+        res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Forbidden origin" }, id: null }))
         return
       }
 
@@ -2265,17 +2457,37 @@ async function main() {
         return
       }
 
-      // Friendly info for a human (or probe) hitting the URL in a browser.
-      // Stateless mode has no standalone SSE stream, so GET carries no MCP role.
+      // Canonical MCP transport endpoint is `/mcp`. The Streamable HTTP spec
+      // says a server that does not offer an SSE stream must answer GET with
+      // 405 — so `GET /mcp` is 405 (with Allow: POST), not a friendly 200.
+      // Root `GET /` stays a human/service information blob, which is outside
+      // the MCP transport contract.
       if (req.method === "GET") {
+        if (pathname === "/mcp") {
+          res.writeHead(405, { "Content-Type": "application/json", Allow: "POST, OPTIONS" })
+          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed (stateless server offers no SSE stream)" }, id: null }))
+          return
+        }
         res.writeHead(200, { "Content-Type": "application/json" })
         res.end(healthBody())
         return
       }
 
       if (req.method !== "POST") {
-        res.writeHead(405, { "Content-Type": "application/json" })
+        res.writeHead(405, { "Content-Type": "application/json", Allow: "POST, OPTIONS" })
         res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Method not allowed" }, id: null }))
+        return
+      }
+
+      // Enforce the hard body-size ceiling and parse the JSON ourselves, then
+      // hand the parsed body to the transport (rather than let it drain the
+      // stream unbounded).
+      const bodyResult = await readJsonBodyWithLimit(req)
+      if (!bodyResult.ok) {
+        if (!res.headersSent) {
+          res.writeHead(bodyResult.status, { "Content-Type": "application/json" })
+          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: bodyResult.code, message: bodyResult.message }, id: null }))
+        }
         return
       }
 
@@ -2303,7 +2515,7 @@ async function main() {
       res.on("close", teardown)
       try {
         await srv.connect(transport)
-        await transport.handleRequest(req, res)
+        await transport.handleRequest(req, res, bodyResult.body)
       } catch (err) {
         console.error("Request handling error:", err)
         if (!res.headersSent) {
@@ -2315,8 +2527,9 @@ async function main() {
       }
     })
 
-    httpServer.listen(port, () => {
-      console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
+    httpServer.listen(port, host, () => {
+      const displayHost = host.includes(":") ? `[${host}]` : host
+      console.error(`Semiotic MCP server (HTTP) listening on http://${displayHost}:${port}`)
       console.error(toolProfile === "public"
         ? "Tools (public profile): createChart, improveChart, explainChart, auditChart, getChartSchema"
         : "Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme")

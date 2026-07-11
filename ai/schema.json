@@ -42,7 +42,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -56,6 +57,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -155,27 +160,30 @@
               "description": "Array of data objects"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key or accessor function for x-axis values",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key or accessor function for x-axis values",
-              "default": "x"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key or accessor function for y-axis values",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key or accessor function for y-axis values",
-              "default": "y"
+              ]
             },
             "lineBy": {
-              "type": [
+              "type": "string",
+              "description": "Key to group data into separate lines",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key to group data into separate lines"
+              ]
             },
             "lineDataAccessor": {
               "type": "string",
@@ -283,7 +291,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -297,6 +306,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -396,27 +409,30 @@
               "description": "Array of data objects"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for x-axis values",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for x-axis values",
-              "default": "x"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for y-axis values",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for y-axis values",
-              "default": "y"
+              ]
             },
             "areaBy": {
-              "type": [
+              "type": "string",
+              "description": "Key to group data into separate areas",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key to group data into separate areas"
+              ]
             },
             "lineDataAccessor": {
               "type": "string",
@@ -523,7 +539,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -537,6 +554,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -636,25 +657,28 @@
               "description": "Array of data objects"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "x"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "y"
+              ]
             },
             "areaBy": {
-              "type": [
+              "type": "string",
+              "description": "Key to group data into stacked areas",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key to group data into stacked areas"
+              ]
             },
             "lineDataAccessor": {
               "type": "string",
@@ -738,7 +762,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -752,6 +777,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -851,25 +880,28 @@
               "description": "Array of data objects"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "x"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "y"
+              ]
             },
             "sizeBy": {
-              "type": [
+              "type": "string",
+              "description": "Key for variable point sizing",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for variable point sizing"
+              ]
             },
             "sizeRange": {
               "type": "array",
@@ -880,11 +912,12 @@
               ]
             },
             "symbolBy": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field → glyph shape; each mark renders as a d3-shape glyph (circle/square/triangle/diamond/star/cross/wye/chevron) instead of a circle.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field → glyph shape; each mark renders as a d3-shape glyph (circle/square/triangle/diamond/star/cross/wye/chevron) instead of a circle."
+              ]
             },
             "symbolMap": {
               "type": "object",
@@ -960,7 +993,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -974,6 +1008,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -1073,18 +1111,20 @@
               "description": "Array of data objects"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "x"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "y"
+              ]
             },
             "xCenter": {
               "type": "number",
@@ -1129,11 +1169,12 @@
               "default": 12
             },
             "sizeBy": {
-              "type": [
+              "type": "string",
+              "description": "Key for variable point sizing",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for variable point sizing"
+              ]
             },
             "sizeRange": {
               "type": "array",
@@ -1193,7 +1234,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -1206,6 +1248,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -1305,12 +1351,13 @@
               "description": "Array of data objects shared by both series"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for x values",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for x values",
-              "default": "x"
+              ]
             },
             "series": {
               "type": "array",
@@ -1369,7 +1416,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -1383,6 +1431,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -1481,41 +1533,46 @@
               "type": "array"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "x"
+              ]
             },
             "highAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Required. Upper bound (candlestick high or range top).",
+              "default": "high",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Required. Upper bound (candlestick high or range top).",
-              "default": "high"
+              ]
             },
             "lowAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Required. Lower bound (candlestick low or range bottom).",
+              "default": "low",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Required. Lower bound (candlestick low or range bottom).",
-              "default": "low"
+              ]
             },
             "openAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Optional. Pair with closeAccessor for OHLC; omit both to render a range chart.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Optional. Pair with closeAccessor for OHLC; omit both to render a range chart."
+              ]
             },
             "closeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Optional. See openAccessor.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Optional. See openAccessor."
+              ]
             },
             "candlestickStyle": {
               "type": "object",
@@ -1575,7 +1632,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -1589,6 +1647,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -1688,25 +1750,28 @@
               "description": "Array of data objects"
             },
             "sizeBy": {
-              "type": [
+              "type": "string",
+              "description": "Key for bubble size (required)",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for bubble size (required)"
+              ]
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "x"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "y"
+              ]
             },
             "sizeRange": {
               "type": "array",
@@ -1781,7 +1846,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -1798,6 +1864,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -1897,26 +1967,29 @@
               "description": "Array of data objects with x, y, and value"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "x"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "y"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for the cell value",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for the cell value",
-              "default": "value"
+              ]
             },
             "showValues": {
               "type": "boolean",
@@ -1924,7 +1997,9 @@
               "default": false
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "cellBorderColor": {
               "type": "string",
@@ -1990,7 +2065,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -2004,6 +2080,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -2103,27 +2183,30 @@
               "description": "Array of data objects"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for x-axis values",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for x-axis values",
-              "default": "x"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for y-axis values",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for y-axis values",
-              "default": "y"
+              ]
             },
             "orderAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for point ordering (number or Date field)",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for point ordering (number or Date field)"
+              ]
             },
             "orderLabel": {
               "type": "string",
@@ -2135,11 +2218,12 @@
               "default": 4
             },
             "pointIdAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Accessor for unique point IDs, used by point-anchored annotations",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Accessor for unique point IDs, used by point-anchored annotations"
+              ]
             },
             "regression": {
               "type": [
@@ -2202,7 +2286,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -2216,6 +2301,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -2293,27 +2382,31 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for category labels",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for category labels",
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for bar values",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for bar values",
-              "default": "value"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -2326,11 +2419,15 @@
             "sort": {
               "type": [
                 "boolean",
-                "string",
-                "function"
+                "string"
               ],
               "description": "Sort bars: false, true, 'asc', 'desc', or comparator function",
-              "default": false
+              "default": false,
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "string",
+                "function"
+              ]
             },
             "barPadding": {
               "type": "number",
@@ -2390,7 +2487,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -2404,6 +2502,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -2481,32 +2583,37 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "stackBy": {
-              "type": [
+              "type": "string",
+              "description": "Key to define the stacking dimension (required)",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key to define the stacking dimension (required)"
+              ]
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -2571,7 +2678,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -2585,6 +2693,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -2662,7 +2774,9 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
@@ -2680,35 +2794,39 @@
               ]
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Question/item field (ordinal axis)",
+              "default": "question",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Question/item field (ordinal axis)",
-              "default": "question"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Integer score field for raw response mode (1-based: score 1 → levels[0])",
+              "default": "score",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Integer score field for raw response mode (1-based: score 1 → levels[0])",
-              "default": "score"
+              ]
             },
             "levelAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Level name field for pre-aggregated mode. Each value must match an entry in levels.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Level name field for pre-aggregated mode. Each value must match an entry in levels."
+              ]
             },
             "countAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Count/frequency field for pre-aggregated mode",
+              "default": "count",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Count/frequency field for pre-aggregated mode",
-              "default": "count"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -2766,7 +2884,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -2780,6 +2899,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -2857,32 +2980,37 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "groupBy": {
-              "type": [
+              "type": "string",
+              "description": "Key to define the grouping dimension (required)",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key to define the grouping dimension (required)"
+              ]
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -2942,7 +3070,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -2956,6 +3085,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -3033,25 +3166,29 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -3062,11 +3199,12 @@
               "default": "vertical"
             },
             "sizeBy": {
-              "type": [
+              "type": "string",
+              "description": "Key for variable point sizing",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for variable point sizing"
+              ]
             },
             "sizeRange": {
               "type": "array",
@@ -3076,11 +3214,12 @@
               ]
             },
             "symbolBy": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field → glyph shape; each point renders as a d3-shape glyph instead of a circle.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field → glyph shape; each point renders as a d3-shape glyph instead of a circle."
+              ]
             },
             "symbolMap": {
               "type": "object",
@@ -3143,7 +3282,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -3157,6 +3297,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -3234,25 +3378,29 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -3320,7 +3468,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -3334,6 +3483,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -3411,25 +3564,29 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "bins": {
               "type": "number",
@@ -3490,7 +3647,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -3504,6 +3662,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -3581,25 +3743,29 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -3673,7 +3839,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -3687,6 +3854,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -3764,25 +3935,29 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for category grouping",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for category grouping"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for numeric values to build distributions from",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for numeric values to build distributions from"
+              ]
             },
             "bins": {
               "type": "number",
@@ -3838,7 +4013,8 @@
               "default": true
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -3852,6 +4028,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -3929,25 +4109,29 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -3960,11 +4144,15 @@
             "sort": {
               "type": [
                 "boolean",
-                "string",
-                "function"
+                "string"
               ],
               "description": "Sort dots: true, false, 'asc', 'desc'",
-              "default": true
+              "default": true,
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "string",
+                "function"
+              ]
             },
             "dotRadius": {
               "type": "number",
@@ -4027,7 +4215,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -4041,6 +4230,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -4116,18 +4309,20 @@
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "startAngle": {
               "type": "number",
@@ -4179,7 +4374,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -4193,6 +4389,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -4268,18 +4468,20 @@
               "description": "Array of data objects"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "innerRadius": {
               "type": "number",
@@ -4343,7 +4545,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -4357,6 +4560,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -4478,7 +4685,9 @@
               "description": "Fallback fill color used when no thresholds are defined"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "showScaleLabels": {
               "type": "boolean",
@@ -4529,7 +4738,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -4543,6 +4753,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -4622,44 +4836,52 @@
               "description": "Array of edge objects with source and target"
             },
             "nodeIDAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for node unique identifier",
+              "default": "id",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for node unique identifier",
-              "default": "id"
+              ]
             },
             "sourceAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for edge source node ID",
+              "default": "source",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for edge source node ID",
-              "default": "source"
+              ]
             },
             "targetAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for edge target node ID",
+              "default": "target",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for edge target node ID",
-              "default": "target"
+              ]
             },
             "nodeLabel": {
-              "type": [
+              "type": "string",
+              "description": "Key or accessor for node labels",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key or accessor for node labels"
+              ]
             },
             "nodeSize": {
               "type": [
                 "number",
-                "string",
-                "function"
+                "string"
               ],
               "description": "Fixed node radius or key for variable sizing",
-              "default": 8
+              "default": 8,
+              "x-semiotic-runtime-types": [
+                "number",
+                "string",
+                "function"
+              ]
             },
             "nodeSizeRange": {
               "type": "array",
@@ -4671,11 +4893,15 @@
             "edgeWidth": {
               "type": [
                 "number",
-                "string",
-                "function"
+                "string"
               ],
               "description": "Fixed edge width or key for variable width",
-              "default": 1
+              "default": 1,
+              "x-semiotic-runtime-types": [
+                "number",
+                "string",
+                "function"
+              ]
             },
             "edgeColor": {
               "type": "string",
@@ -4754,7 +4980,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -4768,6 +4995,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -4847,46 +5078,51 @@
               "description": "Optional array of node objects (auto-derived from edges if omitted)"
             },
             "sourceAccessor": {
-              "type": [
+              "type": "string",
+              "default": "source",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "source"
+              ]
             },
             "targetAccessor": {
-              "type": [
+              "type": "string",
+              "default": "target",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "target"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for edge flow value",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for edge flow value",
-              "default": "value"
+              ]
             },
             "nodeIdAccessor": {
-              "type": [
+              "type": "string",
+              "default": "id",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "id"
+              ]
             },
             "edgeColorBy": {
-              "type": [
-                "string",
-                "function"
-              ],
+              "type": "string",
               "enum": [
                 "source",
                 "target",
                 "gradient"
               ],
               "description": "How to color edges",
-              "default": "source"
+              "default": "source",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -4915,11 +5151,12 @@
               "default": 15
             },
             "nodeLabel": {
-              "type": [
+              "type": "string",
+              "description": "Key for node labels",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for node labels"
+              ]
             },
             "showLabels": {
               "type": "boolean",
@@ -4974,7 +5211,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -4988,6 +5226,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -5067,43 +5309,48 @@
               "description": "Optional array of node objects"
             },
             "sourceAccessor": {
-              "type": [
+              "type": "string",
+              "default": "source",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "source"
+              ]
             },
             "targetAccessor": {
-              "type": [
+              "type": "string",
+              "default": "target",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "target"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "nodeIdAccessor": {
-              "type": [
+              "type": "string",
+              "default": "id",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "id"
+              ]
             },
             "edgeColorBy": {
-              "type": [
-                "string",
-                "function"
-              ],
+              "type": "string",
               "enum": [
                 "source",
                 "target"
               ],
-              "default": "source"
+              "default": "source",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
             },
             "padAngle": {
               "type": "number",
@@ -5114,7 +5361,8 @@
               "default": 20
             },
             "nodeLabel": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -5172,7 +5420,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -5186,6 +5435,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -5281,26 +5534,29 @@
               "default": "vertical"
             },
             "childrenAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for the children array in each node",
+              "default": "children",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for the children array in each node",
-              "default": "children"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "nodeIdAccessor": {
-              "type": [
+              "type": "string",
+              "default": "name",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "name"
+              ]
             },
             "colorByDepth": {
               "type": "boolean",
@@ -5316,7 +5572,8 @@
               "default": "curve"
             },
             "nodeLabel": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -5374,7 +5631,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -5388,6 +5646,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -5463,25 +5725,28 @@
               "description": "Root node object with nested children"
             },
             "childrenAccessor": {
-              "type": [
+              "type": "string",
+              "default": "children",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "children"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "nodeIdAccessor": {
-              "type": [
+              "type": "string",
+              "default": "name",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "name"
+              ]
             },
             "colorByDepth": {
               "type": "boolean",
@@ -5492,7 +5757,8 @@
               "default": true
             },
             "nodeLabel": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -5542,7 +5808,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -5556,6 +5823,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -5631,25 +5902,28 @@
               "description": "Root node object with nested children"
             },
             "childrenAccessor": {
-              "type": [
+              "type": "string",
+              "default": "children",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "children"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "nodeIdAccessor": {
-              "type": [
+              "type": "string",
+              "default": "name",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "name"
+              ]
             },
             "colorByDepth": {
               "type": "boolean",
@@ -5660,7 +5934,8 @@
               "default": true
             },
             "nodeLabel": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -5714,7 +5989,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -5728,6 +6004,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -5803,20 +6083,22 @@
               "description": "Hierarchical root object with children: { name: 'root', children: [...] }"
             },
             "childrenAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key to access children from each datum",
+              "default": "children",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key to access children from each datum",
-              "default": "children"
+              ]
             },
             "nodeIdAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key to identify each node",
+              "default": "name",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key to identify each node",
-              "default": "name"
+              ]
             },
             "colorByDepth": {
               "type": "boolean",
@@ -5832,12 +6114,13 @@
               "default": "flat"
             },
             "orbitSize": {
-              "type": [
+              "type": "number",
+              "description": "Ring size divisor per depth",
+              "default": 2.95,
+              "x-semiotic-runtime-types": [
                 "number",
                 "function"
-              ],
-              "description": "Ring size divisor per depth",
-              "default": 2.95
+              ]
             },
             "speed": {
               "type": "number",
@@ -5845,12 +6128,13 @@
               "default": 0.25
             },
             "eccentricity": {
-              "type": [
+              "type": "number",
+              "description": "Vertical squash for elliptical orbits (1 = circle)",
+              "default": 1,
+              "x-semiotic-runtime-types": [
                 "number",
                 "function"
-              ],
-              "description": "Vertical squash for elliptical orbits (1 = circle)",
-              "default": 1
+              ]
             },
             "showRings": {
               "type": "boolean",
@@ -5858,12 +6142,13 @@
               "default": true
             },
             "nodeRadius": {
-              "type": [
+              "type": "number",
+              "description": "Node radius",
+              "default": 6,
+              "x-semiotic-runtime-types": [
                 "number",
                 "function"
-              ],
-              "description": "Node radius",
-              "default": 6
+              ]
             },
             "showLabels": {
               "type": "boolean",
@@ -5909,18 +6194,20 @@
               "type": "string"
             },
             "timeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for time/x values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for time/x values"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for y values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for y values"
+              ]
             },
             "windowSize": {
               "type": "number",
@@ -5962,11 +6249,12 @@
               ]
             },
             "tooltip": {
-              "type": [
+              "type": "object",
+              "description": "Tooltip content function or config",
+              "x-semiotic-runtime-types": [
                 "function",
                 "object"
-              ],
-              "description": "Tooltip content function or config"
+              ]
             },
             "annotations": {
               "type": "array",
@@ -6080,18 +6368,20 @@
               "type": "string"
             },
             "timeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for time/x values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for time/x values"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for y values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for y values"
+              ]
             },
             "windowSize": {
               "type": "number",
@@ -6133,11 +6423,12 @@
               ]
             },
             "tooltip": {
-              "type": [
+              "type": "object",
+              "description": "Tooltip content function or config",
+              "x-semiotic-runtime-types": [
                 "function",
                 "object"
-              ],
-              "description": "Tooltip content function or config"
+              ]
             },
             "annotations": {
               "type": "array",
@@ -6220,11 +6511,12 @@
               "default": "up"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for category grouping",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for category grouping"
+              ]
             },
             "colors": {
               "type": "object",
@@ -6251,8 +6543,10 @@
               "description": "Enable brush selection. true defaults to { dimension: \"x\", snap: \"bin\" }. String: \"x\". Object: { dimension, snap: \"continuous\"|\"bin\", snapDuring }."
             },
             "onBrush": {
-              "type": "function",
-              "description": "Callback when brush extent changes: (extent | null) => void"
+              "description": "Callback when brush extent changes: (extent | null) => void",
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "linkedBrush": {
               "type": [
@@ -6299,18 +6593,20 @@
               "type": "string"
             },
             "timeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for time/x values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for time/x values"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for y values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for y values"
+              ]
             },
             "windowSize": {
               "type": "number",
@@ -6352,11 +6648,12 @@
               ]
             },
             "tooltip": {
-              "type": [
+              "type": "object",
+              "description": "Tooltip content function or config",
+              "x-semiotic-runtime-types": [
                 "function",
                 "object"
-              ],
-              "description": "Tooltip content function or config"
+              ]
             },
             "annotations": {
               "type": "array",
@@ -6426,7 +6723,8 @@
               "description": "Staleness config: { threshold, dimOpacity, showBadge }"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -6494,18 +6792,20 @@
               "type": "string"
             },
             "timeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for time/x values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for time/x values"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for y values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for y values"
+              ]
             },
             "windowSize": {
               "type": "number",
@@ -6547,11 +6847,12 @@
               ]
             },
             "tooltip": {
-              "type": [
+              "type": "object",
+              "description": "Tooltip content function or config",
+              "x-semiotic-runtime-types": [
                 "function",
                 "object"
-              ],
-              "description": "Tooltip content function or config"
+              ]
             },
             "annotations": {
               "type": "array",
@@ -6677,18 +6978,20 @@
               "type": "string"
             },
             "timeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for time/x values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for time/x values"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for y values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for y values"
+              ]
             },
             "windowSize": {
               "type": "number",
@@ -6730,11 +7033,12 @@
               ]
             },
             "tooltip": {
-              "type": [
+              "type": "object",
+              "description": "Tooltip content function or config",
+              "x-semiotic-runtime-types": [
                 "function",
                 "object"
-              ],
-              "description": "Tooltip content function or config"
+              ]
             },
             "annotations": {
               "type": "array",
@@ -6860,7 +7164,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -6874,6 +7179,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -6951,34 +7260,39 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects with step and value fields"
             },
             "stepAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for funnel step/stage name",
+              "default": "step",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for funnel step/stage name",
-              "default": "step"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for numeric value per step",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for numeric value per step",
-              "default": "value"
+              ]
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key to split each step into mirrored categories (optional)",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key to split each step into mirrored categories (optional)"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -7056,7 +7370,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7070,6 +7385,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -7147,34 +7466,39 @@
               "type": "string"
             },
             "valueFormat": {
-              "type": "function"
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "data": {
               "type": "array",
               "description": "Array of data objects. Omit for push API mode."
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for lane categories (swim lanes)",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for lane categories (swim lanes)",
-              "default": "category"
+              ]
             },
             "subcategoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for item subcategory (color grouping within lanes). Required. Duplicate subcategories in the same lane stack sequentially.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for item subcategory (color grouping within lanes). Required. Duplicate subcategories in the same lane stack sequentially."
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for item size/duration along the value axis",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for item size/duration along the value axis",
-              "default": "value"
+              ]
             },
             "orientation": {
               "type": "string",
@@ -7199,8 +7523,10 @@
               "description": "Enable value-axis brush selection"
             },
             "onBrush": {
-              "type": "function",
-              "description": "Callback with { r: [min, max] } or null when brush clears"
+              "description": "Callback with { r: [min, max] } or null when brush clears",
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "linkedBrush": {
               "type": [
@@ -7270,7 +7596,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7284,6 +7611,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -7406,7 +7737,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7420,6 +7752,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -7538,7 +7874,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7551,6 +7888,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -7629,7 +7970,8 @@
               "description": "GeoJSON features or reference geography name"
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7683,7 +8025,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7697,6 +8040,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -7771,21 +8118,24 @@
               "type": "array"
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "default": "lon",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "lon"
+              ]
             },
             "yAccessor": {
-              "type": [
+              "type": "string",
+              "default": "lat",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "lat"
+              ]
             },
             "sizeBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7841,7 +8191,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7855,6 +8206,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -7932,13 +8287,15 @@
               "type": "array"
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
             },
             "lineIdAccessor": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -7988,7 +8345,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -8002,6 +8360,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -8079,7 +8441,8 @@
               "type": "array"
             },
             "costAccessor": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -8129,7 +8492,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -8143,6 +8507,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -8230,60 +8598,68 @@
               "description": "Optional [{ date, label }] tick array for the time axis."
             },
             "sourceAccessor": {
-              "type": [
+              "type": "string",
+              "default": "source",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "source"
+              ]
             },
             "targetAccessor": {
-              "type": [
+              "type": "string",
+              "default": "target",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "target"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "value"
+              ]
             },
             "nodeIdAccessor": {
-              "type": [
+              "type": "string",
+              "default": "id",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "id"
+              ]
             },
             "startTimeAccessor": {
-              "type": [
+              "type": "string",
+              "default": "startTime",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "startTime"
+              ]
             },
             "endTimeAccessor": {
-              "type": [
+              "type": "string",
+              "default": "endTime",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "endTime"
+              ]
             },
             "xExtentAccessor": {
-              "type": [
+              "type": "string",
+              "default": "xExtent",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "xExtent"
+              ]
             },
             "edgeIdAccessor": {
-              "type": [
+              "type": "string",
+              "default": "id",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "default": "id"
+              ]
             },
             "legendPosition": {
               "type": "string",
@@ -8405,7 +8781,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -8419,6 +8796,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -8518,28 +8899,31 @@
               "description": "Array of `{x, a, b}` objects. Omit for push API mode."
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for x values",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for x values",
-              "default": "x"
+              ]
             },
             "seriesAAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for series A values",
+              "default": "a",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for series A values",
-              "default": "a"
+              ]
             },
             "seriesBAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for series B values",
+              "default": "b",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for series B values",
-              "default": "b"
+              ]
             },
             "seriesALabel": {
               "type": "string",
@@ -8613,11 +8997,12 @@
               "description": "Fixed y domain `[min, max]`. Either bound may be `undefined`."
             },
             "pointIdAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Stable ID for push-mode remove()/update()",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Stable ID for push-mode remove()/update()"
+              ]
             },
             "windowSize": {
               "type": "number",
@@ -8664,18 +9049,20 @@
               "type": "string"
             },
             "timeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for time/x values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for time/x values"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for y values",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for y values"
+              ]
             },
             "direction": {
               "type": "string",
@@ -8687,11 +9074,12 @@
               "default": "up"
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for category grouping",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for category grouping"
+              ]
             },
             "colors": {
               "type": "object",
@@ -8719,11 +9107,12 @@
               ]
             },
             "tooltip": {
-              "type": [
+              "type": "object",
+              "description": "Tooltip content function or config",
+              "x-semiotic-runtime-types": [
                 "function",
                 "object"
-              ],
-              "description": "Tooltip content function or config"
+              ]
             },
             "annotations": {
               "type": "array",
@@ -8863,10 +9252,7 @@
               "description": "Secondary descriptor, smaller, below the label"
             },
             "format": {
-              "type": [
-                "string",
-                "function"
-              ],
+              "type": "string",
               "enum": [
                 "number",
                 "currency",
@@ -8875,7 +9261,11 @@
                 "duration"
               ],
               "description": "Number-format shortcut or custom (value) => string",
-              "default": "number"
+              "default": "number",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
             },
             "locale": {
               "type": "string",
@@ -8916,10 +9306,7 @@
               "description": "Explicit delta override; bypasses comparison-derived subtraction"
             },
             "deltaFormat": {
-              "type": [
-                "string",
-                "function"
-              ],
+              "type": "string",
               "enum": [
                 "number",
                 "currency",
@@ -8927,7 +9314,11 @@
                 "compact",
                 "duration"
               ],
-              "description": "Format the delta; defaults to format"
+              "description": "Format the delta; defaults to format",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
             },
             "showDeltaPercent": {
               "type": "boolean",
@@ -9077,11 +9468,12 @@
               "type": "boolean"
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field or accessor used to color simulated bodies.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field or accessor used to color simulated bodies."
+              ]
             },
             "seed": {
               "type": "number",
@@ -9103,18 +9495,23 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "function",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Numeric field used to assign bodies to Galton bins.",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Numeric field used to assign bodies to Galton bins.",
-              "default": "value"
+              ]
             },
             "valueExtent": {
               "type": "array",
@@ -9200,11 +9597,12 @@
               "type": "boolean"
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field or accessor used to color simulated bodies.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field or accessor used to color simulated bodies."
+              ]
             },
             "seed": {
               "type": "number",
@@ -9226,37 +9624,44 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "function",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object"
+              ]
             },
             "timeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Event-time field used to assign drops to windows.",
+              "default": "time",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Event-time field used to assign drops to windows.",
-              "default": "time"
+              ]
             },
             "arrivalAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Arrival-time field used to pace event ingestion.",
+              "default": "arrivalTime",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Arrival-time field used to pace event ingestion.",
-              "default": "arrivalTime"
+              ]
             },
             "windows": {
               "type": "object",
               "description": "Windowing config, currently { size, gapPolicy? }."
             },
             "watermark": {
-              "type": [
+              "type": "object",
+              "description": "Watermark config: { delay }, { value }, or a function of latest event time.",
+              "x-semiotic-runtime-types": [
                 "object",
                 "function"
-              ],
-              "description": "Watermark config: { delay }, { value }, or a function of latest event time."
+              ]
             },
             "timeExtent": {
               "type": "array",
@@ -9311,11 +9716,12 @@
               "type": "boolean"
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field or accessor used to color simulated bodies.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field or accessor used to color simulated bodies."
+              ]
             },
             "seed": {
               "type": "number",
@@ -9337,26 +9743,32 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "function",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object"
+              ]
             },
             "categoryAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field that chooses the pile / bin.",
+              "default": "category",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field that chooses the pile / bin.",
-              "default": "category"
+              ]
             },
             "valueAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Numeric field converted into repeated unit bodies.",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Numeric field converted into repeated unit bodies.",
-              "default": "value"
+              ]
             },
             "mode": {
               "type": "string",
@@ -9431,11 +9843,12 @@
               "type": "boolean"
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field or accessor used to color simulated bodies.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field or accessor used to color simulated bodies."
+              ]
             },
             "seed": {
               "type": "number",
@@ -9457,32 +9870,39 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "function",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object"
+              ]
             },
             "xAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Quantitative field that anchors each body along the x-axis.",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Quantitative field that anchors each body along the x-axis.",
-              "default": "x"
+              ]
             },
             "groupAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Optional categorical field that creates separate swarm lanes.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Optional categorical field that creates separate swarm lanes."
+              ]
             },
             "radiusAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Optional numeric field used as per-body radius in pixels.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Optional numeric field used as per-body radius in pixels."
+              ]
             },
             "pointRadius": {
               "type": "number",
@@ -9550,7 +9970,8 @@
               "default": false
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
               ]
@@ -9564,6 +9985,10 @@
             },
             "tooltip": {
               "type": [
+                "boolean",
+                "object"
+              ],
+              "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
                 "object"
@@ -9655,60 +10080,67 @@
               "description": "Alias for links when using chart-generator style data props."
             },
             "nodeIdAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Key for node unique identifier.",
+              "default": "id",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Key for node unique identifier.",
-              "default": "id"
+              ]
             },
             "nodeXAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Node x-coordinate. Use 0-1 normalized values by default.",
+              "default": "x",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Node x-coordinate. Use 0-1 normalized values by default.",
-              "default": "x"
+              ]
             },
             "nodeYAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Node y-coordinate. Use 0-1 normalized values by default.",
+              "default": "y",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Node y-coordinate. Use 0-1 normalized values by default.",
-              "default": "y"
+              ]
             },
             "sourceAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Link source node id.",
+              "default": "source",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Link source node id.",
-              "default": "source"
+              ]
             },
             "targetAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Link target node id.",
+              "default": "target",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Link target node id.",
-              "default": "target"
+              ]
             },
             "throughputAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Numeric throughput field that controls pipe width and packet count.",
+              "default": "value",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Numeric throughput field that controls pipe width and packet count.",
-              "default": "value"
+              ]
             },
             "pathAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Optional link path as [{x,y}, ...] or [[x,y], ...].",
+              "default": "path",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Optional link path as [{x,y}, ...] or [[x,y], ...].",
-              "default": "path"
+              ]
             },
             "coordinateMode": {
               "type": "string",
@@ -9820,11 +10252,12 @@
               "type": "boolean"
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field or accessor used to color simulated bodies.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field or accessor used to color simulated bodies."
+              ]
             },
             "seed": {
               "type": "number",
@@ -9846,10 +10279,14 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "function",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object"
+              ]
             },
             "positiveProperties": {
               "type": "array",
@@ -9865,22 +10302,26 @@
               "description": "Named process gates along the route, with optional shared FIFO capacity."
             },
             "events": {
-              "type": [
+              "type": "array",
+              "description": "Timed gate effects that add/pop properties and set outcomes.",
+              "x-semiotic-runtime-types": [
                 "array",
                 "function"
-              ],
-              "description": "Timed gate effects that add/pop properties and set outcomes."
+              ]
             },
             "startTimeAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Optional per-project simulation second used as the local event-timeline origin.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Optional per-project simulation second used as the local event-timeline origin."
+              ]
             },
             "onCapacityChange": {
-              "type": "function",
-              "description": "Receives visit-aware queue work, wait, overflow, throughput, utilization, and pressure snapshots."
+              "description": "Receives visit-aware queue work, wait, overflow, throughput, utilization, and pressure snapshots.",
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
             },
             "crashDetection": {
               "type": "boolean",
@@ -9963,11 +10404,12 @@
               "type": "boolean"
             },
             "colorBy": {
-              "type": [
+              "type": "string",
+              "description": "Categorical field or accessor used to color simulated bodies.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Categorical field or accessor used to color simulated bodies."
+              ]
             },
             "seed": {
               "type": "number",
@@ -9990,57 +10432,67 @@
             "tooltip": {
               "type": [
                 "boolean",
-                "function",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips."
+              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object"
+              ]
             },
             "stages": {
               "type": "array",
               "description": "Ordered process stages: { id, label?, force?, damping?, capacity?, pressure?, portal?, absorb? }."
             },
             "stageAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Field or accessor for each work item's current stage id.",
+              "default": "stage",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Field or accessor for each work item's current stage id.",
-              "default": "stage"
+              ]
             },
             "idAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Stable work-item id.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Stable work-item id."
+              ]
             },
             "groupBy": {
-              "type": [
+              "type": "string",
+              "description": "Optional feature/group key. Groups complete when all members reach an absorb stage.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Optional feature/group key. Groups complete when all members reach an absorb stage."
+              ]
             },
             "groupLabelAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Display label for group anchors.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Display label for group anchors."
+              ]
             },
             "workAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Work-units field stamped for capacity metadata.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Work-units field stamped for capacity metadata."
+              ]
             },
             "radiusAccessor": {
-              "type": [
+              "type": "string",
+              "description": "Optional per-body radius in pixels.",
+              "x-semiotic-runtime-types": [
                 "string",
                 "function"
-              ],
-              "description": "Optional per-body radius in pixels."
+              ]
             },
             "groupCompletion": {
               "type": "string",

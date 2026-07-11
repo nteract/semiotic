@@ -134,8 +134,12 @@ describe("useFrameImperativeHandle — xy variant", () => {
     expect(handle.getScales!()).toBeNull()
   })
 
-  it("delegates getCustomLayout and null-defaults it when the frame lacks the method", () => {
+  it("delegates custom-layout result/failure readback and null-defaults it when absent", () => {
     const layoutResult = { nodes: [{ type: "point", x: 1, y: 2 }] }
+    const failure = {
+      code: "CUSTOM_LAYOUT_ERROR",
+      recovery: "empty-scene",
+    }
     const frame = {
       push: vi.fn(),
       pushMany: vi.fn(),
@@ -145,9 +149,11 @@ describe("useFrameImperativeHandle — xy variant", () => {
       getData: vi.fn(() => []),
       getScales: vi.fn(() => null),
       getCustomLayout: vi.fn(() => layoutResult),
+      getLayoutFailure: vi.fn(() => failure),
     }
     const handle = makeXYHarness(frame as XYFakeFrame).current!
     expect(handle.getCustomLayout!()).toBe(layoutResult)
+    expect(handle.getLayoutFailure!()).toBe(failure)
 
     const bare: XYFakeFrame = {
       push: vi.fn(),
@@ -159,6 +165,7 @@ describe("useFrameImperativeHandle — xy variant", () => {
       getScales: vi.fn(() => null),
     }
     expect(makeXYHarness(bare).current!.getCustomLayout!()).toBeNull()
+    expect(makeXYHarness(bare).current!.getLayoutFailure!()).toBeNull()
   })
 
   it("overrides replace specific methods while keeping defaults for the rest", () => {

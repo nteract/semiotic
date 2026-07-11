@@ -33,6 +33,8 @@ export interface GeoCustomChartProps<
   layout: GeoCustomLayout<TConfig>
   /** User configuration threaded to `GeoLayoutContext.config`. */
   layoutConfig?: TConfig
+  /** Receives a structured diagnostic if the layout throws. */
+  onLayoutError?: StreamGeoFrameProps["onLayoutError"]
   recipe?: ChartRecipe<TDatum, TConfig>
   recipeId?: string
   /** Projection resolved before the custom layout runs. @default "equirectangular" */
@@ -83,6 +85,7 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
     lines,
     layout,
     layoutConfig,
+    onLayoutError,
     projection = "equirectangular",
     xAccessor = "lon",
     yAccessor = "lat",
@@ -188,6 +191,7 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
     }),
     customLayout: layout as unknown as GeoCustomLayout,
     layoutConfig,
+    onLayoutError,
     layoutSelection,
     colorBy: colorBy as StreamGeoFrameProps["colorBy"],
     colorScheme,

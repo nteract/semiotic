@@ -1,3 +1,5 @@
+import { EXAMPLES } from "../examplesManifest.js"
+
 /**
  * A deliberately editorial map of Semiotic's architecture.
  *
@@ -709,11 +711,11 @@ const rhizomeEdges = SEMIOTIC_ARCHITECTURE_NODES.filter((node) => node.supports)
 
 export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 
-// Ordered to match the examples section's narrative order (see examplesManifest
-// EXAMPLES). The architecture example maps itself onto the tree too — a small,
-// deliberate recursion: tracing it highlights the very NetworkCustomChart,
-// custom layout, and shared-state machinery you are looking at.
-export const SEMIOTIC_EXAMPLE_PROFILES = [
+// Profiles are keyed by the examples manifest routes. The exported selector is
+// ordered from that manifest below. The architecture example maps itself onto
+// the tree too — a small, deliberate recursion: tracing it highlights the very
+// NetworkCustomChart, custom layout, and shared-state machinery you are looking at.
+const EXPLICIT_EXAMPLE_PROFILES = [
   {
     id: "watermarks",
     label: "Watermarks, Made Physical",
@@ -1185,7 +1187,203 @@ export const SEMIOTIC_EXAMPLE_PROFILES = [
       "feature-canvas-svg",
     ],
   },
+  {
+    id: "stakeholder-journey",
+    label: "The Stakeholder Journey",
+    shortLabel: "Stakeholder Journey",
+    path: "/examples/stakeholder-journey",
+    note:
+      "A controlled StreamPhysicsFrame comparison uses stage regions, force fields, a journey ledger, and an accessible explanation of how the two cohorts diverge.",
+    uses: [
+      "input-static",
+      "hoc-physics-custom",
+      "feature-accessors",
+      "feature-custom-overlays",
+      "feature-physics-sensors",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "queue-weather",
+    label: "Player Support Capacity",
+    shortLabel: "Player Support",
+    path: "/examples/queue-weather",
+    note:
+      "A StreamPhysicsFrame models planned player-support demand, finite agents, service-level deadlines, and a recovery dependency with a deterministic reference trace.",
+    uses: [
+      "input-static",
+      "hoc-physics-custom",
+      "feature-accessors",
+      "feature-custom-overlays",
+      "feature-physics-sensors",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "merge-pressure",
+    label: "Merge Pressure",
+    path: "/examples/merge-pressure",
+    note:
+      "A GauntletChart runs compound pull requests through shared human review and CI capacity, tracking attached risks and feature-level completion.",
+    uses: [
+      "input-static",
+      "hoc-gauntlet",
+      "feature-accessors",
+      "feature-custom-overlays",
+      "feature-physics-sensors",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "not-in-my-backyard",
+    label: "Not in MY Backyard",
+    shortLabel: "NIMBY",
+    path: "/examples/not-in-my-backyard",
+    note:
+      "A GauntletChart turns housing approval into a compound civic process: gates change the proposal, burdens accumulate, and procedural loops remain visible.",
+    uses: [
+      "input-static",
+      "hoc-gauntlet",
+      "feature-accessors",
+      "feature-custom-overlays",
+      "feature-physics-sensors",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "hot-dog-contest-variations",
+    label: "Nathan's Hot Dog Contest, Four Ways",
+    shortLabel: "Hot Dog Contest",
+    path: "/examples/hot-dog-contest-variations",
+    note:
+      "A source-audited contest history combines a temporal histogram, custom XY trajectories, an ordinal race, and ISOTYPE marks while preserving the event's changing rules.",
+    uses: [
+      "input-static",
+      "hoc-xy-custom",
+      "hoc-ordinal-custom",
+      "hoc-temporal-histogram",
+      "feature-accessors",
+      "feature-axes",
+      "feature-custom-layout",
+      "feature-custom-overlays",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "dataviz-people",
+    label: "The 12 Kinds of Data Visualization People",
+    shortLabel: "Dataviz People",
+    path: "/examples/dataviz-people",
+    note:
+      "A persona selector switches among line, bar, scatter, funnel, candlestick, Sankey, and tree views while keeping the editorial chart grammar inspectable.",
+    uses: [
+      "input-static",
+      "hoc-xy-lines",
+      "hoc-xy-points",
+      "hoc-ordinal-bars",
+      "hoc-network-flow",
+      "hoc-tree",
+      "feature-accessors",
+      "feature-axes",
+      "feature-tooltips",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "distant-reading",
+    label: "Can You Know a Book Better Without Reading It?",
+    shortLabel: "Distant Reading",
+    path: "/examples/distant-reading",
+    note:
+      "A distant-reading room pairs chapter signal lines, phase bars, and narrative-flow Sankeys across four public-domain novels.",
+    uses: [
+      "input-static",
+      "hoc-xy-lines",
+      "hoc-bar",
+      "hoc-network-flow",
+      "feature-accessors",
+      "feature-axes",
+      "feature-tooltips",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "world-of-funnels",
+    label: "We Live in a World of Funnels",
+    shortLabel: "World of Funnels",
+    path: "/examples/world-of-funnels",
+    note:
+      "A Pop Art funnel essay contrasts ordered conversion stages with branching Sankey and process-flow paths, including the information a single funnel leaves out.",
+    uses: [
+      "input-static",
+      "hoc-ordinal-bars",
+      "hoc-network-flow",
+      "feature-accessors",
+      "feature-axes",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
+    id: "mobile-data-visualization",
+    label: "Mobile Data Visualization That Works",
+    shortLabel: "Mobile Visualization",
+    path: "/examples/mobile-data-visualization",
+    note:
+      "A mobile-first field guide uses responsive XY and ordinal frames to demonstrate density budgets, touch targets, small multiples, and explicit mobile adaptations.",
+    uses: [
+      "input-static",
+      "hoc-xy-lines",
+      "hoc-ordinal-bars",
+      "feature-accessors",
+      "feature-axes",
+      "feature-custom-overlays",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
 ]
+
+// Keep the selector in the same order as the examples overview. The profile
+// details remain deliberately editorial, while route order comes from the
+// manifest that drives overview cards and previous/next navigation.
+const exampleOrder = new Map(EXAMPLES.map((example, index) => [example.path, index]))
+
+export const SEMIOTIC_EXAMPLE_PROFILES = [...EXPLICIT_EXAMPLE_PROFILES].sort(
+  (left, right) => exampleOrder.get(left.path) - exampleOrder.get(right.path),
+)
 
 const nodeById = new Map(SEMIOTIC_ARCHITECTURE_NODES.map((node) => [node.id, node]))
 

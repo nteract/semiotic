@@ -112,7 +112,7 @@ export default function HotDogContestVariationsExamplePage() {
   }
 
   return (
-    <ExamplePageLayout title="Nathan's Hot Dog Contest, four ways">
+    <ExamplePageLayout title="Nathan's Hot Dog Contest, Four Ways">
       <p className="hotdog-page__lede">
         Four source-audited remakes of the supplied Nathan&apos;s hot dog contest chart. The
         direction is deliberately system-native: clear hierarchy, stable spacing, restrained

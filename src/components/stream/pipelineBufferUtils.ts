@@ -1,4 +1,4 @@
-import type { RingBuffer } from "../realtime/RingBuffer"
+import { RingBuffer } from "../realtime/RingBuffer"
 
 /**
  * Resize a data buffer and its optional timestamp companion to fit a bounded
@@ -14,6 +14,24 @@ export function ensureRingBufferCapacity<T>(
   if (timestampBuffer && targetSize > timestampBuffer.capacity) {
     timestampBuffer.resize(targetSize)
   }
+}
+
+/**
+ * Create a timestamp companion for data that predates pulse tracking.
+ *
+ * A pulse buffer is indexed in lockstep with the datum buffer. When pulse is
+ * enabled after mount, an empty companion would make the next inserted datum
+ * line up with the *oldest* retained datum. Seed every retained row at the
+ * activation time instead, so the two rings start aligned and the newly
+ * enabled encoding has a coherent first frame.
+ */
+export function createTimestampBufferForData<T>(
+  buffer: RingBuffer<T>,
+  timestamp: number
+): RingBuffer<number> {
+  const timestamps = new RingBuffer<number>(buffer.capacity)
+  buffer.forEach(() => timestamps.push(timestamp))
+  return timestamps
 }
 
 /**

@@ -127,9 +127,30 @@ describe("semiotic-ai CLI", () => {
       { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
     )
 
-    expect(result.status).toBe(0)
+    // A missing required prop is an error — doctor must exit nonzero so CI/agents
+    // can gate on it (previously it always exited 0, hiding the failure).
+    expect(result.status).toBe(1)
     expect(result.stdout).toContain("GaugeChart: schema-only validation failed")
     expect(result.stdout).toContain('"value" is required for GaugeChart')
+  })
+
+  it("--doctor --json emits a stable machine-readable report and exits nonzero on error", () => {
+    const bad = runCLI(
+      ["--doctor", "--json", JSON.stringify({ component: "GaugeChart", props: {} })],
+      { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
+    )
+    expect(bad.status).toBe(1)
+    const report = JSON.parse(bad.stdout) as { component: string; ok: boolean; errors: string[] }
+    expect(report.component).toBe("GaugeChart")
+    expect(report.ok).toBe(false)
+    expect(report.errors.some((e) => e.includes("value"))).toBe(true)
+
+    const good = runCLI(
+      ["--doctor", "--json", JSON.stringify({ component: "GaugeChart", props: { value: 72 } })],
+      { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
+    )
+    expect(good.status).toBe(0)
+    expect((JSON.parse(good.stdout) as { ok: boolean }).ok).toBe(true)
   })
 
   it("--doctor includes behavior contracts from structured metadata", () => {
@@ -184,7 +205,8 @@ describe("semiotic-ai CLI", () => {
       { SEMIOTIC_AI_SCHEMA_ONLY: "1" }
     )
 
-    expect(result.status).toBe(0)
+    // Static mode requires data; its absence is an error, so doctor exits nonzero.
+    expect(result.status).toBe(1)
     expect(result.stdout).toContain("LineChart: schema-only validation failed")
     expect(result.stdout).toContain('"data" is required for LineChart')
   })

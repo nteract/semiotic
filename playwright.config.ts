@@ -3,15 +3,11 @@ import { PlaywrightTestConfig } from "@playwright/test"
 export default {
   testDir: "integration-tests/",
   testMatch: "**/*.spec.ts",
-  // Default to "missing" so a fresh OS×browser combination writes its
-  // baseline on first run instead of failing. Existing baselines still
-  // gate as regressions — diffs above `maxDiffPixels` fail loudly. The
-  // CI workflow uploads `playwright-snapshots/` regardless of pass/fail
-  // so maintainers can periodically commit the freshly-written
-  // baselines to make the gate denser. Override with
-  // `PWTEST_UPDATE_SNAPSHOTS=none` (or `--update-snapshots=none`) for a
-  // strict pre-release pass.
-  updateSnapshots: "missing",
+  // Local bootstrap may write a proposed missing baseline, but CI must never
+  // create visual contracts during a test run: a new snapshot has to be
+  // reviewed and committed before a pull request passes. An explicit
+  // `--update-snapshots=missing` still supports the local bootstrap command.
+  updateSnapshots: process.env.CI ? "none" : "missing",
   use: {
     headless: true, // Always run headless to avoid disrupting work
     screenshot: "on",

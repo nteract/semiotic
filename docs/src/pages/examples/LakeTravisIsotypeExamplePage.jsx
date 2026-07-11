@@ -202,7 +202,7 @@ export default function LakeTravisIsotypeExamplePage() {
   )
 
   return (
-    <ExamplePageLayout title="Lake Travis, in signs">
+    <ExamplePageLayout title="Lake Travis, in Signs">
       <p className="lake-isotype__lede">
         A live lake dashboard remade with the visual grammar of ISOTYPE: repeated symbols instead
         of enlarged ones, a small printing palette, direct labels, and diagrams that read as

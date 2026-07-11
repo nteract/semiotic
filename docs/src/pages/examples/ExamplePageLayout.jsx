@@ -44,7 +44,10 @@ export default function ExamplePageLayout({
   useEffect(() => {
     let cancelled = false
     setSourceCode("")
-    if (!sourceLoader) return undefined
+    // The raw page source is a large second representation of the story. Only
+    // fetch it after the reader explicitly switches to Full Code, rather than
+    // paying for it on every example route visit.
+    if (!blocksMode || !hasFullCodeFallback || !sourceLoader) return undefined
 
     sourceLoader()
       .then((source) => {
@@ -57,7 +60,7 @@ export default function ExamplePageLayout({
     return () => {
       cancelled = true
     }
-  }, [sourceLoader])
+  }, [blocksMode, hasFullCodeFallback, sourceLoader])
   const pageClassName = [
     "example-page",
     blocksMode ? "blocks-view-mode" : "",

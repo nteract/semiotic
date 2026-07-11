@@ -54,16 +54,20 @@ if (!SERVER_DEPS_READY) {
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /** Spawn the MCP server process. */
-function spawnServer(args: string[] = []): ChildProcess {
+function spawnServer(args: string[] = [], env: NodeJS.ProcessEnv = {}): ChildProcess {
   return spawn("node", [SERVER_PATH, ...args], {
     stdio: ["pipe", "pipe", "pipe"],
-    env: { ...process.env, NODE_ENV: "test" },
+    env: { ...process.env, NODE_ENV: "test", ...env },
   })
 }
 
 /** Spawn the MCP server process in Streamable HTTP mode. */
-function spawnHTTPServer(port: number, env: NodeJS.ProcessEnv = {}): ChildProcess {
-  return spawn("node", [SERVER_PATH, "--http", "--port", String(port)], {
+function spawnHTTPServer(
+  port: number,
+  env: NodeJS.ProcessEnv = {},
+  args: string[] = []
+): ChildProcess {
+  return spawn("node", [SERVER_PATH, "--http", "--port", String(port), ...args], {
     stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env, NODE_ENV: "test", ...env },
   })
@@ -186,12 +190,17 @@ function waitForProcessExit(proc: ChildProcess): Promise<void> {
   })
 }
 
-async function sendHTTPRPC(port: number, message: Datum, sessionId?: string): Promise<{
+async function sendHTTPRPC(
+  port: number,
+  message: Datum,
+  sessionId?: string,
+  pathName = "/"
+): Promise<{
   body?: any
   response: Response
   text: string
 }> {
-  const response = await fetch(`http://127.0.0.1:${port}`, {
+  const response = await fetch(`http://127.0.0.1:${port}${pathName}`, {
     method: "POST",
     headers: {
       "Accept": "application/json, text/event-stream",
@@ -259,12 +268,15 @@ function requestHTTP(port: number, pathName: string, options: {
   })
 }
 
-async function spawnReadyHTTPServer(env: NodeJS.ProcessEnv = {}): Promise<{ proc: ChildProcess; port: number }> {
+async function spawnReadyHTTPServer(
+  env: NodeJS.ProcessEnv = {},
+  args: string[] = []
+): Promise<{ proc: ChildProcess; port: number }> {
   let lastError: unknown
 
   for (let attempt = 0; attempt < HTTP_START_RETRIES; attempt++) {
     const port = await getOpenPort()
-    const proc = spawnHTTPServer(port, env)
+    const proc = spawnHTTPServer(port, env, args)
     try {
       await waitForHTTPServer(proc)
       return { proc, port }
@@ -489,6 +501,8 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(content.mimeType).toBe("text/html;profile=mcp-app")
     expect(content.text).toContain("ui/notifications/tool-result")
     expect(content.text).toContain("Rendered Semiotic chart")
+    expect(content.text).toContain("dataPreview")
+    expect(content.text).not.toContain("meta?.props")
     expect(content._meta.ui.prefersBorder).toBe(true)
     expect(content._meta.ui.csp.connectDomains).toEqual([])
     expect(content._meta["openai/widgetDescription"]).toContain("Semiotic chart")
@@ -829,8 +843,8 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
         props: {
           title: "Revenue by Region",
           data: [
-            { region: "North", revenue: 10 },
-            { region: "South", revenue: 18 },
+            { region: "North", revenue: 10, accessToken: "not-for-widget" },
+            { region: "South", revenue: 18, accessToken: "also-not-for-widget" },
           ],
           categoryAccessor: "region",
           valueAccessor: "revenue",
@@ -848,7 +862,57 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(result.result.structuredContent.datumCount).toBe(2)
     expect(result.result.structuredContent.evidence).toBeTruthy()
     expect(result.result._meta.svg).toContain("<svg")
-    expect(result.result._meta.props.data).toHaveLength(2)
+    expect(result.result._meta.props).toBeUndefined()
+    expect(result.result._meta.theme).toBeUndefined()
+    expect(result.result._meta.dataPreview).toMatchObject({
+      collection: "data",
+      totalRows: 2,
+      returnedRows: 2,
+    })
+    expect(result.result._meta.dataPreview.rows[0].accessToken).toBe("[redacted]")
+    expect(JSON.stringify(result.result._meta)).not.toContain("not-for-widget")
+  })
+
+  it("returns explicit errors when static or widget render responses exceed their caps", async () => {
+    const chartArgs = {
+      component: "BarChart",
+      props: {
+        data: [
+          { region: "North", revenue: 10 },
+          { region: "South", revenue: 18 },
+        ],
+        categoryAccessor: "region",
+        valueAccessor: "revenue",
+        width: 320,
+        height: 220,
+      },
+    }
+    const renderCapped = spawnServer([], { MCP_MAX_RENDER_OUTPUT_BYTES: "1" })
+    const widgetCapped = spawnServer([], { MCP_MAX_WIDGET_OUTPUT_BYTES: "1" })
+
+    try {
+      await initializeServer(renderCapped)
+      const staticResult = await sendRequest(renderCapped, "tools/call", {
+        name: "renderChart",
+        arguments: chartArgs,
+      }, "render-output-cap")
+      expect(staticResult.result.isError).toBe(true)
+      expect(staticResult.result.content[0].text).toContain("MCP_MAX_RENDER_OUTPUT_BYTES")
+
+      await initializeServer(widgetCapped)
+      const widgetResult = await sendRequest(widgetCapped, "tools/call", {
+        name: "renderInteractiveChart",
+        arguments: chartArgs,
+      }, "widget-output-cap")
+      expect(widgetResult.result.isError).toBe(true)
+      expect(widgetResult.result.content[0].text).toContain("MCP_MAX_WIDGET_OUTPUT_BYTES")
+      expect(widgetResult.result._meta).toBeUndefined()
+    } finally {
+      renderCapped.kill("SIGTERM")
+      widgetCapped.kill("SIGTERM")
+      await waitForProcessExit(renderCapped)
+      await waitForProcessExit(widgetCapped)
+    }
   })
 
   it("renderInteractiveChart advertises its Apps SDK widget template", async () => {
@@ -1175,7 +1239,19 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     expect(names).toContain("renderChart")
   })
 
-  it("serves stateless health/info JSON and clean 404s for discovery probes", async () => {
+  it("treats /mcp as the canonical transport endpoint and rejects its unsupported GET", async () => {
+    const mcpGet = await requestHTTP(port, "/mcp")
+
+    expect(mcpGet.status).toBe(405)
+    expect(mcpGet.headers.allow).toBe("POST, OPTIONS")
+    expect(mcpGet.headers["content-type"]).toContain("application/json")
+    expect(mcpGet.body).toMatchObject({
+      jsonrpc: "2.0",
+      error: { message: expect.stringContaining("Method not allowed") },
+    })
+  })
+
+  it("serves stateless health/root info and cleanly 404s discovery probes", async () => {
     const health = await requestHTTP(port, "/healthz")
     const healthBody = health.body as Record<string, unknown>
 
@@ -1188,7 +1264,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     })
     expect(String(healthBody.version)).toMatch(/^\d+\.\d+\.\d+/)
 
-    const info = await requestHTTP(port, "/mcp")
+    const info = await requestHTTP(port, "/")
     const infoBody = info.body as Record<string, unknown>
     expect(info.status).toBe(200)
     expect(infoBody.transport).toBe("streamable-http")
@@ -1197,6 +1273,157 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     const probe = await requestHTTP(port, "/.well-known/oauth-protected-resource")
     expect(probe.status).toBe(404)
     expect(probe.body).toEqual({ error: "Not found" })
+  })
+
+  it("accepts an allowlisted Origin and rejects a disallowed one", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+
+    const allowedOrigin = "https://trusted.example"
+    const server = await spawnReadyHTTPServer({ MCP_ALLOWED_ORIGINS: allowedOrigin })
+    proc = server.proc
+    port = server.port
+
+    const initialize = {
+      jsonrpc: "2.0",
+      id: "origin-allowed",
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-03-26",
+        capabilities: {},
+        clientInfo: { name: "origin-contract-test", version: "1.0.0" },
+      },
+    }
+    const allowed = await requestHTTP(port, "/mcp", {
+      method: "POST",
+      body: initialize,
+      headers: { Origin: allowedOrigin },
+    })
+    expect(allowed.status).toBe(200)
+    expect(allowed.headers["access-control-allow-origin"]).toBe(allowedOrigin)
+    expect(allowed.headers.vary).toBe("Origin")
+    expect(allowed.body).toMatchObject({ result: { serverInfo: { name: "semiotic" } } })
+
+    const rejected = await requestHTTP(port, "/mcp", {
+      method: "POST",
+      body: { ...initialize, id: "origin-rejected" },
+      headers: { Origin: "https://untrusted.example" },
+    })
+    expect(rejected.status).toBe(403)
+    expect(rejected.headers["access-control-allow-origin"]).not.toBe("https://untrusted.example")
+    expect(rejected.body).toMatchObject({
+      jsonrpc: "2.0",
+      error: { message: "Forbidden origin" },
+      id: null,
+    })
+  })
+
+  it("returns 413 before MCP dispatch when a request exceeds MCP_MAX_BODY_BYTES", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+
+    const server = await spawnReadyHTTPServer({ MCP_MAX_BODY_BYTES: "512" })
+    proc = server.proc
+    port = server.port
+
+    const oversized = await requestHTTP(port, "/mcp", {
+      method: "POST",
+      body: {
+        jsonrpc: "2.0",
+        id: "oversized-request",
+        method: "initialize",
+        params: { padding: "x".repeat(2048) },
+      },
+    })
+    expect(oversized.status).toBe(413)
+    expect(oversized.headers["content-type"]).toContain("application/json")
+    expect(oversized.body).toEqual({
+      jsonrpc: "2.0",
+      error: { code: -32600, message: "Request body too large" },
+      id: null,
+    })
+  })
+
+  it("rejects over-limit tool arguments before MCP dispatch", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+
+    const server = await spawnReadyHTTPServer({ MCP_MAX_ROWS: "2" })
+    proc = server.proc
+    port = server.port
+
+    const rejected = await requestHTTP(port, "/mcp", {
+      method: "POST",
+      body: {
+        jsonrpc: "2.0",
+        id: "over-limit-render",
+        method: "tools/call",
+        params: {
+          name: "renderChart",
+          arguments: {
+            component: "BarChart",
+            props: {
+              data: [
+                { region: "North", revenue: 10 },
+                { region: "South", revenue: 18 },
+                { region: "West", revenue: 24 },
+              ],
+            },
+          },
+        },
+      },
+    })
+
+    expect(rejected.status).toBe(413)
+    expect(rejected.headers["content-type"]).toContain("application/json")
+    expect(rejected.body).toEqual({
+      jsonrpc: "2.0",
+      error: {
+        code: -32602,
+        message: expect.stringContaining("MCP_MAX_ROWS"),
+      },
+      id: null,
+    })
+  })
+
+  it("discovers only the hosted public profile tools over canonical /mcp", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+
+    const server = await spawnReadyHTTPServer({}, ["--profile", "public"])
+    proc = server.proc
+    port = server.port
+
+    const initialize = await sendHTTPRPC(port, {
+      jsonrpc: "2.0",
+      id: "http-public-profile-initialize",
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "http-public-profile-test", version: "1.0.0" },
+      },
+    }, undefined, "/mcp")
+    expect(initialize.response.status).toBe(200)
+
+    const tools = await sendHTTPRPC(port, {
+      jsonrpc: "2.0",
+      id: "http-public-profile-tools",
+      method: "tools/list",
+      params: {},
+    }, undefined, "/mcp")
+    expect(tools.response.status).toBe(200)
+    expect(tools.body.result.tools.map((tool: { name: string }) => tool.name).sort()).toEqual([
+      "auditChart",
+      "createChart",
+      "explainChart",
+      "getChartSchema",
+      "improveChart",
+    ])
   })
 
   it("serves the OpenAI Apps domain challenge token when configured", async () => {

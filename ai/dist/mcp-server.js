@@ -3206,11 +3206,11 @@ var require_utils = __commonJS({
       output.address = address.join("");
       return output;
     }
-    function normalizeIPv6(host) {
-      if (findToken(host, ":") < 2) {
-        return { host, isIPV6: false };
+    function normalizeIPv6(host2) {
+      if (findToken(host2, ":") < 2) {
+        return { host: host2, isIPV6: false };
       }
-      const ipv63 = getIPV6(host);
+      const ipv63 = getIPV6(host2);
       if (!ipv63.error) {
         let newHost = ipv63.address;
         let escapedHost = ipv63.address;
@@ -3220,7 +3220,7 @@ var require_utils = __commonJS({
         }
         return { host: newHost, isIPV6: true, escapedHost };
       } else {
-        return { host, isIPV6: false };
+        return { host: host2, isIPV6: false };
       }
     }
     function findToken(str, token) {
@@ -3308,10 +3308,10 @@ var require_utils = __commonJS({
     var HOST_DELIMS = { "@": "%40", "/": "%2F", "?": "%3F", "#": "%23", ":": "%3A" };
     var HOST_DELIM_RE = /[@/?#:]/g;
     var HOST_DELIM_NO_COLON_RE = /[@/?#]/g;
-    function reescapeHostDelimiters(host, isIP) {
+    function reescapeHostDelimiters(host2, isIP) {
       const re = isIP ? HOST_DELIM_NO_COLON_RE : HOST_DELIM_RE;
       re.lastIndex = 0;
-      return host.replace(re, (ch) => HOST_DELIMS[ch]);
+      return host2.replace(re, (ch) => HOST_DELIMS[ch]);
     }
     function normalizePercentEncoding(input, decodeUnreserved = false) {
       if (input.indexOf("%") === -1) {
@@ -3384,16 +3384,16 @@ var require_utils = __commonJS({
         uriTokens.push("@");
       }
       if (component.host !== void 0) {
-        let host = unescape(component.host);
-        if (!isIPv4(host)) {
-          const ipV6res = normalizeIPv6(host);
+        let host2 = unescape(component.host);
+        if (!isIPv4(host2)) {
+          const ipV6res = normalizeIPv6(host2);
           if (ipV6res.isIPV6 === true) {
-            host = `[${ipV6res.escapedHost}]`;
+            host2 = `[${ipV6res.escapedHost}]`;
           } else {
-            host = reescapeHostDelimiters(host, false);
+            host2 = reescapeHostDelimiters(host2, false);
           }
         }
-        uriTokens.push(host);
+        uriTokens.push(host2);
       }
       if (typeof component.port === "number" || typeof component.port === "string") {
         uriTokens.push(":");
@@ -14335,13 +14335,13 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
     }
     return propValues;
   });
-  const isObject2 = isObject;
+  const isObject3 = isObject;
   const catchall = def.catchall;
   let value;
   inst._zod.parse = (payload, ctx) => {
     value ?? (value = _normalized.value);
     const input = payload.value;
-    if (!isObject2(input)) {
+    if (!isObject3(input)) {
       payload.issues.push({
         expected: "object",
         code: "invalid_type",
@@ -14439,7 +14439,7 @@ var $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) =>
     return (payload, ctx) => fn(shape, payload, ctx);
   };
   let fastpass;
-  const isObject2 = isObject;
+  const isObject3 = isObject;
   const jit = !globalConfig.jitless;
   const allowsEval2 = allowsEval;
   const fastEnabled = jit && allowsEval2.value;
@@ -14448,7 +14448,7 @@ var $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) =>
   inst._zod.parse = (payload, ctx) => {
     value ?? (value = _normalized.value);
     const input = payload.value;
-    if (!isObject2(input)) {
+    if (!isObject3(input)) {
       payload.issues.push({
         expected: "object",
         code: "invalid_type",
@@ -31214,8 +31214,8 @@ var newRequest = (incoming, defaultHostname) => {
     }
     return req;
   }
-  const host = (incoming instanceof import_http22.Http2ServerRequest ? incoming.authority : incoming.headers.host) || defaultHostname;
-  if (!host) {
+  const host2 = (incoming instanceof import_http22.Http2ServerRequest ? incoming.authority : incoming.headers.host) || defaultHostname;
+  if (!host2) {
     throw new RequestError("Missing host header");
   }
   let scheme;
@@ -31227,8 +31227,8 @@ var newRequest = (incoming, defaultHostname) => {
   } else {
     scheme = incoming.socket && incoming.socket.encrypted ? "https" : "http";
   }
-  const url2 = new URL(`${scheme}://${host}${incomingUrl}`);
-  if (url2.hostname.length !== host.length && url2.hostname !== host.replace(/:\d+$/, "")) {
+  const url2 = new URL(`${scheme}://${host2}${incomingUrl}`);
+  if (url2.hostname.length !== host2.length && url2.hostname !== host2.replace(/:\d+$/, "")) {
     throw new RequestError("Invalid host header");
   }
   req[urlKey] = url2.href;
@@ -32366,6 +32366,364 @@ var fs = __toESM(require("fs"));
 var path = __toESM(require("path"));
 var http = __toESM(require("http"));
 
+// ai/mcp-server-options.ts
+var DEFAULT_HTTP_HOST = "127.0.0.1";
+function getFlagValue(args, flag) {
+  const inlinePrefix = `${flag}=`;
+  for (let index = 0; index < args.length; index++) {
+    const argument = args[index];
+    if (argument.startsWith(inlinePrefix)) return argument.slice(inlinePrefix.length);
+    if (argument !== flag) continue;
+    const next = args[index + 1];
+    return next && !next.startsWith("--") ? next : void 0;
+  }
+  return void 0;
+}
+function resolveHTTPListenHost(args, env = process.env) {
+  return getFlagValue(args, "--host")?.trim() || env.MCP_HOST?.trim() || DEFAULT_HTTP_HOST;
+}
+
+// ai/mcp-operation-limits.ts
+var DEFAULT_MCP_MAX_ROWS = 1e4;
+var DEFAULT_MCP_MAX_CELLS = 1e5;
+var DEFAULT_MCP_MAX_NESTING_DEPTH = 64;
+function positiveInteger(value, fallback) {
+  const parsed = Number.parseInt(value || "", 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+function resolveMcpOperationLimits(env = process.env) {
+  return {
+    maxRows: positiveInteger(env.MCP_MAX_ROWS, DEFAULT_MCP_MAX_ROWS),
+    maxCells: positiveInteger(env.MCP_MAX_CELLS, DEFAULT_MCP_MAX_CELLS),
+    maxNestingDepth: positiveInteger(
+      env.MCP_MAX_NESTING_DEPTH,
+      DEFAULT_MCP_MAX_NESTING_DEPTH
+    )
+  };
+}
+function isObject2(value) {
+  return value !== null && typeof value === "object";
+}
+function inspectMcpOperationInput(input, limits) {
+  let rows = 0;
+  let cells = 0;
+  let nestingDepth = 0;
+  const seen = /* @__PURE__ */ new WeakSet();
+  const stack = [{ value: input, depth: 0 }];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    const { value, depth } = current;
+    if (!isObject2(value) || seen.has(value)) continue;
+    seen.add(value);
+    nestingDepth = Math.max(nestingDepth, depth);
+    if (nestingDepth > limits.maxNestingDepth) {
+      return {
+        ok: false,
+        limit: "nestingDepth",
+        observed: nestingDepth,
+        maximum: limits.maxNestingDepth
+      };
+    }
+    if (Array.isArray(value)) {
+      rows += value.length;
+      if (rows > limits.maxRows) {
+        return { ok: false, limit: "rows", observed: rows, maximum: limits.maxRows };
+      }
+      for (let index = value.length - 1; index >= 0; index--) {
+        stack.push({ value: value[index], depth: depth + 1 });
+      }
+      continue;
+    }
+    const keys = Object.keys(value);
+    cells += keys.length;
+    if (cells > limits.maxCells) {
+      return { ok: false, limit: "cells", observed: cells, maximum: limits.maxCells };
+    }
+    for (let index = keys.length - 1; index >= 0; index--) {
+      stack.push({ value: value[keys[index]], depth: depth + 1 });
+    }
+  }
+  return { ok: true, rows, cells, nestingDepth };
+}
+function formatMcpOperationLimitError(result) {
+  if (result.ok) return "";
+  switch (result.limit) {
+    case "rows":
+      return `Tool arguments exceed the collection-entry limit (${result.observed} > ${result.maximum}; set MCP_MAX_ROWS to adjust).`;
+    case "cells":
+      return `Tool arguments exceed the object-field limit (${result.observed} > ${result.maximum}; set MCP_MAX_CELLS to adjust).`;
+    case "nestingDepth":
+      return `Tool arguments exceed the nesting-depth limit (${result.observed} > ${result.maximum}; set MCP_MAX_NESTING_DEPTH to adjust).`;
+  }
+}
+
+// ai/mcp-render-output-limits.ts
+var DEFAULT_MCP_MAX_RENDER_OUTPUT_BYTES = 2 * 1024 * 1024;
+var DEFAULT_MCP_MAX_WIDGET_OUTPUT_BYTES = 2 * 1024 * 1024;
+var DEFAULT_MCP_MAX_WIDGET_METADATA_BYTES = 64 * 1024;
+var DEFAULT_MCP_MAX_WIDGET_ROWS = 50;
+var DEFAULT_MCP_MAX_WIDGET_COLUMNS = 16;
+var DEFAULT_MCP_MAX_WIDGET_VALUE_BYTES = 256;
+var WIDGET_COLUMN_LABEL_BYTES = 96;
+var WIDGET_EVIDENCE_ARRAY_ITEMS = 32;
+var WIDGET_EVIDENCE_OBJECT_KEYS = 16;
+function positiveInteger2(value, fallback) {
+  const parsed = Number.parseInt(value || "", 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+function resolveMcpRenderOutputLimits(env = process.env) {
+  return {
+    maxRenderOutputBytes: positiveInteger2(
+      env.MCP_MAX_RENDER_OUTPUT_BYTES,
+      DEFAULT_MCP_MAX_RENDER_OUTPUT_BYTES
+    ),
+    maxWidgetOutputBytes: positiveInteger2(
+      env.MCP_MAX_WIDGET_OUTPUT_BYTES,
+      DEFAULT_MCP_MAX_WIDGET_OUTPUT_BYTES
+    ),
+    maxWidgetMetadataBytes: positiveInteger2(
+      env.MCP_MAX_WIDGET_METADATA_BYTES,
+      DEFAULT_MCP_MAX_WIDGET_METADATA_BYTES
+    ),
+    maxWidgetRows: positiveInteger2(env.MCP_MAX_WIDGET_ROWS, DEFAULT_MCP_MAX_WIDGET_ROWS),
+    maxWidgetColumns: positiveInteger2(env.MCP_MAX_WIDGET_COLUMNS, DEFAULT_MCP_MAX_WIDGET_COLUMNS),
+    maxWidgetValueBytes: positiveInteger2(
+      env.MCP_MAX_WIDGET_VALUE_BYTES,
+      DEFAULT_MCP_MAX_WIDGET_VALUE_BYTES
+    )
+  };
+}
+function utf8ByteLength(value) {
+  return Buffer.byteLength(value, "utf8");
+}
+function serializedMcpOutputBytes(value) {
+  const serialized = JSON.stringify(value);
+  return utf8ByteLength(serialized === void 0 ? "" : serialized);
+}
+function truncateUtf8(value, maximumBytes) {
+  if (maximumBytes <= 0 || !value) return "";
+  if (utf8ByteLength(value) <= maximumBytes) return value;
+  const marker = "\u2026";
+  const markerBytes = utf8ByteLength(marker);
+  if (maximumBytes < markerBytes) return "";
+  const targetBytes = maximumBytes - markerBytes;
+  let output = "";
+  let usedBytes = 0;
+  for (const character of value) {
+    const characterBytes = utf8ByteLength(character);
+    if (usedBytes + characterBytes > targetBytes) break;
+    output += character;
+    usedBytes += characterBytes;
+  }
+  return `${output}${marker}`;
+}
+function inspectMcpOutputLimit(value, maximum) {
+  const observed = serializedMcpOutputBytes(value);
+  return observed <= maximum ? { ok: true, observed, maximum } : { ok: false, observed, maximum };
+}
+function formatMcpOutputLimitError(args) {
+  return `${args.label} output exceeds the configured response limit (${args.limit.observed} > ${args.limit.maximum} bytes; set ${args.setting} to adjust). Reduce chart data or request a smaller render.`;
+}
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+function isSensitiveField(name) {
+  return /password|passwd|secret|token|api[-_]?key|authorization|cookie|credential|private[-_]?key/i.test(name);
+}
+function previewColumnLabel(key, used) {
+  const base = truncateUtf8(key || "value", WIDGET_COLUMN_LABEL_BYTES) || "value";
+  let label = base;
+  let suffix = 2;
+  while (used.has(label)) {
+    label = `${base} (${suffix})`;
+    suffix += 1;
+  }
+  used.add(label);
+  return label;
+}
+function selectPreviewCollection(props) {
+  for (const collection of ["data", "nodes", "edges", "links"]) {
+    if (Array.isArray(props[collection])) {
+      return { collection, rows: props[collection] };
+    }
+  }
+  return { collection: null, rows: [] };
+}
+function collectPreviewColumns(rows, limits) {
+  const keys = [];
+  const seen = /* @__PURE__ */ new Set();
+  let truncated = false;
+  for (const row of rows) {
+    if (isRecord(row)) {
+      for (const key of Object.keys(row)) {
+        if (seen.has(key)) continue;
+        if (keys.length >= limits.maxWidgetColumns) {
+          truncated = true;
+          break;
+        }
+        seen.add(key);
+        keys.push(key);
+      }
+    } else if (!seen.has("value")) {
+      if (keys.length >= limits.maxWidgetColumns) {
+        truncated = true;
+      } else {
+        seen.add("value");
+        keys.push("value");
+      }
+    }
+    if (keys.length >= limits.maxWidgetColumns && truncated) break;
+  }
+  const usedLabels = /* @__PURE__ */ new Set();
+  return {
+    columns: keys.map((key) => ({ key, label: previewColumnLabel(key, usedLabels) })),
+    truncated
+  };
+}
+function previewCell(value, fieldName, limits) {
+  if (isSensitiveField(fieldName)) {
+    return { value: "[redacted]", redacted: true, truncated: false };
+  }
+  if (value === null || value === void 0) {
+    return { value: null, redacted: false, truncated: false };
+  }
+  if (typeof value === "string") {
+    const bounded = truncateUtf8(value, limits.maxWidgetValueBytes);
+    return { value: bounded, redacted: false, truncated: bounded !== value };
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? { value, redacted: false, truncated: false } : { value: String(value), redacted: false, truncated: false };
+  }
+  if (typeof value === "boolean") return { value, redacted: false, truncated: false };
+  if (Array.isArray(value)) {
+    return { value: `[array: ${value.length} items]`, redacted: false, truncated: true };
+  }
+  if (typeof value === "object") {
+    return { value: "[object]", redacted: false, truncated: true };
+  }
+  return {
+    value: truncateUtf8(String(value), limits.maxWidgetValueBytes),
+    redacted: false,
+    truncated: true
+  };
+}
+function createWidgetDataPreview(props, limits = resolveMcpRenderOutputLimits()) {
+  const selected = selectPreviewCollection(props);
+  const inputRows = selected.rows.slice(0, limits.maxWidgetRows);
+  const columnSelection = collectPreviewColumns(inputRows, limits);
+  const rows = [];
+  let redactedFields = 0;
+  let truncatedValues = 0;
+  let metadataBoundReached = false;
+  for (const input of inputRows) {
+    const row = {};
+    let rowRedactedFields = 0;
+    let rowTruncatedValues = 0;
+    for (const column of columnSelection.columns) {
+      const hasValue = isRecord(input) ? Object.prototype.hasOwnProperty.call(input, column.key) : column.key === "value";
+      const value = isRecord(input) ? input[column.key] : input;
+      if (!hasValue) {
+        row[column.label] = null;
+        continue;
+      }
+      const cell = previewCell(value, column.key, limits);
+      row[column.label] = cell.value;
+      if (cell.redacted) rowRedactedFields += 1;
+      if (cell.truncated) rowTruncatedValues += 1;
+    }
+    const candidate = {
+      collection: selected.collection,
+      totalRows: selected.rows.length,
+      returnedRows: rows.length + 1,
+      returnedColumns: columnSelection.columns.length,
+      rows: [...rows, row],
+      redactedFields: redactedFields + rowRedactedFields,
+      truncatedValues: truncatedValues + rowTruncatedValues,
+      truncated: true
+    };
+    if (serializedMcpOutputBytes(candidate) > limits.maxWidgetMetadataBytes) {
+      metadataBoundReached = true;
+      break;
+    }
+    rows.push(row);
+    redactedFields += rowRedactedFields;
+    truncatedValues += rowTruncatedValues;
+  }
+  const truncated = metadataBoundReached || columnSelection.truncated || selected.rows.length > rows.length || truncatedValues > 0;
+  return {
+    collection: selected.collection,
+    totalRows: selected.rows.length,
+    returnedRows: rows.length,
+    returnedColumns: columnSelection.columns.length,
+    rows,
+    redactedFields,
+    truncatedValues,
+    truncated
+  };
+}
+function finiteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+}
+function boundedEvidenceStrings(value, limits) {
+  if (!Array.isArray(value)) return void 0;
+  const values = value.slice(0, WIDGET_EVIDENCE_ARRAY_ITEMS).map((item) => truncateUtf8(String(item), limits.maxWidgetValueBytes));
+  return { values, truncated: value.length > values.length };
+}
+function createWidgetEvidencePreview(evidence, limits = resolveMcpRenderOutputLimits()) {
+  if (!evidence) return null;
+  const preview = {};
+  for (const key of ["component", "frameType", "status", "ariaLabel"]) {
+    if (typeof evidence[key] === "string") {
+      preview[key] = truncateUtf8(evidence[key], limits.maxWidgetValueBytes);
+    }
+  }
+  if (typeof evidence.empty === "boolean") preview.empty = evidence.empty;
+  for (const key of [
+    "markCount",
+    "width",
+    "height",
+    "nodeCount",
+    "edgeCount",
+    "legendItems",
+    "annotationCount"
+  ]) {
+    const value = finiteNumber(evidence[key]);
+    if (value !== void 0) preview[key] = value;
+  }
+  for (const key of ["xDomain", "yDomain"]) {
+    const domain2 = evidence[key];
+    if (Array.isArray(domain2) && domain2.length === 2) {
+      const values = domain2.map(finiteNumber);
+      if (values[0] !== void 0 && values[1] !== void 0) preview[key] = values;
+    }
+  }
+  const categories = boundedEvidenceStrings(evidence.categories, limits);
+  if (categories) {
+    preview.categories = categories.values;
+    if (categories.truncated) preview.categoriesTruncated = true;
+  }
+  const warnings = boundedEvidenceStrings(evidence.warnings, limits);
+  if (warnings) {
+    preview.warnings = warnings.values;
+    if (warnings.truncated) preview.warningsTruncated = true;
+  }
+  if (isRecord(evidence.markCountByType)) {
+    const markCountByType = {};
+    const entries = Object.entries(evidence.markCountByType).sort(([left], [right]) => left.localeCompare(right)).slice(0, WIDGET_EVIDENCE_OBJECT_KEYS);
+    for (const [key, value] of entries) {
+      const count = finiteNumber(value);
+      if (count !== void 0) {
+        markCountByType[truncateUtf8(key, WIDGET_COLUMN_LABEL_BYTES)] = count;
+      }
+    }
+    preview.markCountByType = markCountByType;
+    if (Object.keys(evidence.markCountByType).length > entries.length) {
+      preview.markCountByTypeTruncated = true;
+    }
+  }
+  return preview;
+}
+
 // ai/renderHOCToSVG.tsx
 var React = __toESM(require("react"));
 var ReactDOMServer = __toESM(require("react-dom/server"));
@@ -32556,7 +32914,8 @@ function parseRenderEvidence(result) {
   }
 }
 function chartTitleFromProps(component, props) {
-  return typeof props.title === "string" && props.title.trim() ? props.title.trim() : component;
+  const title = typeof props.title === "string" && props.title.trim() ? props.title.trim() : component;
+  return truncateUtf8(title, resolveMcpRenderOutputLimits().maxWidgetValueBytes);
 }
 function chartDatumCount(props) {
   if (Array.isArray(props.data)) return props.data.length;
@@ -32721,22 +33080,26 @@ function renderSemioticChartWidgetHTML() {
       return { output, meta };
     }
 
-    function sampleRows(meta) {
-      const props = meta?.props || {};
-      if (Array.isArray(props.data)) return props.data.slice(0, 50);
-      if (Array.isArray(props.nodes)) return props.nodes.slice(0, 50);
-      if (Array.isArray(props.edges)) return props.edges.slice(0, 50);
-      if (Array.isArray(props.links)) return props.links.slice(0, 50);
-      return [];
+    function dataPreview(meta) {
+      const preview = meta?.dataPreview;
+      return preview && Array.isArray(preview.rows) ? preview : null;
     }
 
-    function renderTable(rows) {
+    function renderTable(preview) {
+      const rows = preview?.rows || [];
       if (!rows.length) return '<pre>No row data was provided in the widget metadata.</pre>';
       const columns = Array.from(rows.reduce((set, row) => {
         Object.keys(row || {}).forEach((key) => set.add(key));
         return set;
       }, new Set()));
-      return '<table><thead><tr>' + columns.map((col) => '<th>' + html(col) + '</th>').join('') +
+      const totalRows = Number.isFinite(preview?.totalRows) ? preview.totalRows : rows.length;
+      const collection = preview?.collection || 'data';
+      const notes = [
+        'Showing ' + rows.length + ' of ' + totalRows + ' ' + html(collection) + ' rows.',
+        preview?.truncated ? 'Preview values or rows were truncated.' : '',
+        preview?.redactedFields ? 'Sensitive fields were redacted.' : ''
+      ].filter(Boolean).join(' ');
+      return '<div class="summary">' + notes + '</div><table><thead><tr>' + columns.map((col) => '<th>' + html(col) + '</th>').join('') +
         '</tr></thead><tbody>' + rows.map((row) => '<tr>' + columns.map((col) => '<td>' + html(row?.[col]) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
     }
 
@@ -32751,8 +33114,8 @@ function renderSemioticChartWidgetHTML() {
       } else {
         chartEl.innerHTML = '<div class="empty">No SVG payload received. The model-visible chart summary is still available above.</div>';
       }
-      const rows = sampleRows(hidden);
-      dataDrawer.innerHTML = renderTable(rows);
+      const preview = dataPreview(hidden);
+      dataDrawer.innerHTML = renderTable(preview);
       evidenceText.textContent = JSON.stringify(payload.evidence || hidden.evidence || {}, null, 2);
     }
 
@@ -32815,6 +33178,42 @@ function renderSemioticChartWidgetHTML() {
   </script>
 </body>
 </html>`.trim();
+}
+function capRenderedToolResult(result, args) {
+  const limit = inspectMcpOutputLimit(result, args.maximum);
+  if (limit.ok) return result;
+  return {
+    content: [{
+      type: "text",
+      text: formatMcpOutputLimitError({
+        label: args.label,
+        limit,
+        setting: args.setting
+      })
+    }],
+    isError: true,
+    structuredContent: {
+      code: "OUTPUT_LIMIT_EXCEEDED",
+      maximumBytes: limit.maximum,
+      observedBytes: limit.observed
+    }
+  };
+}
+function capRenderChartResult(result) {
+  const limits = resolveMcpRenderOutputLimits();
+  return capRenderedToolResult(result, {
+    label: "Rendered chart",
+    maximum: limits.maxRenderOutputBytes,
+    setting: "MCP_MAX_RENDER_OUTPUT_BYTES"
+  });
+}
+function capInteractiveWidgetResult(result) {
+  const limits = resolveMcpRenderOutputLimits();
+  return capRenderedToolResult(result, {
+    label: "Interactive widget",
+    maximum: limits.maxWidgetOutputBytes,
+    setting: "MCP_MAX_WIDGET_OUTPUT_BYTES"
+  });
 }
 var SURFACE_VERSION = `${schema.version || "3.0.0"}-ai`;
 function profileResult(result) {
@@ -32886,29 +33285,29 @@ async function renderChartHandler(args) {
   const theme = args.theme;
   const format = args.format || "svg";
   if (!component) {
-    return {
+    return capRenderChartResult({
       content: [{ type: "text", text: `Missing 'component' field. Provide { component: '<name>', props: { ... } }. Available: ${componentNames.join(", ")}` }],
       isError: true
-    };
+    });
   }
   if (!COMPONENT_REGISTRY[component]) {
     if (schemaByComponent[component]) {
-      return {
+      return capRenderChartResult({
         content: [{ type: "text", text: `Component "${component}" is known but cannot be rendered via renderChart. It requires a browser/live environment. Renderable components: ${componentNames.join(", ")}` }],
         isError: true
-      };
+      });
     }
-    return {
+    return capRenderChartResult({
       content: [{ type: "text", text: `Unknown component "${component}". Available: ${componentNames.join(", ")}` }],
       isError: true
-    };
+    });
   }
   const result = renderHOCToSVG(component, props);
   if (result.error) {
-    return {
+    return capRenderChartResult({
       content: [{ type: "text", text: result.error }],
       isError: true
-    };
+    });
   }
   let svg = result.svg;
   let evidenceBlock = null;
@@ -32927,7 +33326,8 @@ ${JSON.stringify(evidence, null, 2)}`
     };
   }
   if (theme && Object.keys(theme).length > 0) {
-    const validVars = Object.entries(theme).filter(([k]) => k.startsWith("--semiotic-")).map(([k, v]) => `${k}: ${v}`).join("; ");
+    const isUnsafeCssValue = (v) => /[<>{}\\;@]/.test(v) || /url\(|expression\(|javascript:|\/\*|\*\//i.test(v);
+    const validVars = Object.entries(theme).filter(([k, v]) => k.startsWith("--semiotic-") && typeof v === "string" && !isUnsafeCssValue(v)).map(([k, v]) => `${k}: ${v}`).join("; ");
     if (validVars) {
       svg = svg.replace(/<svg([^>]*)>/, `<svg$1><style>:root { ${validVars} }</style>`);
     }
@@ -32938,38 +33338,38 @@ ${JSON.stringify(evidence, null, 2)}`
       const sharpFn = sharpMod.default || sharpMod;
       const pngBuffer = await sharpFn(Buffer.from(svg)).png().toBuffer();
       const base643 = pngBuffer.toString("base64");
-      return {
+      return capRenderChartResult({
         content: [
           { type: "text", text: `data:image/png;base64,${base643}` },
           ...evidenceBlock ? [evidenceBlock] : []
         ]
-      };
+      });
     } catch (err) {
       if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
-        return {
+        return capRenderChartResult({
           content: [{ type: "text", text: `PNG output requires the 'sharp' package. Install it with: npm install sharp
 
 Falling back to SVG output:
 
 ${svg}` }]
-        };
+        });
       }
-      return {
+      return capRenderChartResult({
         content: [{ type: "text", text: `PNG conversion failed: ${err.message}
 
 SVG output:
 
 ${svg}` }],
         isError: true
-      };
+      });
     }
   }
-  return {
+  return capRenderChartResult({
     content: [
       { type: "text", text: svg },
       ...evidenceBlock ? [evidenceBlock] : []
     ]
-  };
+  });
 }
 async function renderInteractiveChartHandler(args) {
   const component = args.component;
@@ -32982,7 +33382,9 @@ async function renderInteractiveChartHandler(args) {
   });
   if (rendered.isError) return rendered;
   const svg = stripUnsafeSvg(rendered.content[0]?.text ?? "");
-  const evidence = parseRenderEvidence(rendered);
+  const outputLimits = resolveMcpRenderOutputLimits();
+  const evidence = createWidgetEvidencePreview(parseRenderEvidence(rendered), outputLimits);
+  const dataPreview = createWidgetDataPreview(props, outputLimits);
   const title = chartTitleFromProps(component || "Semiotic chart", props);
   const datumCount = chartDatumCount(props);
   const summary = [
@@ -32990,7 +33392,7 @@ async function renderInteractiveChartHandler(args) {
     datumCount == null ? "No row count was inferred from props." : `${datumCount} input row${datumCount === 1 ? "" : "s"} available in the widget data drawer.`,
     "Use the widget controls to zoom, fit width, inspect data, and inspect render evidence."
   ].join(" ");
-  return {
+  return capInteractiveWidgetResult({
     content: [{
       type: "text",
       text: `Rendered ${title} (${component}) as an interactive ChatGPT Apps widget.`
@@ -33003,15 +33405,14 @@ async function renderInteractiveChartHandler(args) {
       evidence
     },
     _meta: {
-      component,
+      component: component ?? "SemioticChart",
       title,
-      props,
-      theme: args.theme ?? null,
+      dataPreview,
       svg,
       evidence,
       generatedAt: (/* @__PURE__ */ new Date()).toISOString()
     }
-  };
+  });
 }
 function filterUsageModeDiagnoses(component, usageMode, diagnoses) {
   if (dataRequiredForUsageMode(component, usageMode)) return diagnoses;
@@ -34175,10 +34576,70 @@ var toolProfile = requestedProfile === "public" ? "public" : "developer";
 var portFlagIndex = cliArgs.indexOf("--port");
 var parsedPort = portFlagIndex !== -1 && cliArgs[portFlagIndex + 1] != null ? parseInt(cliArgs[portFlagIndex + 1], 10) : NaN;
 var port = Number.isFinite(parsedPort) ? parsedPort : 3001;
+var host = resolveHTTPListenHost(cliArgs);
+function operationLimitForMcpRequest(body, limits) {
+  const requests = Array.isArray(body) ? body : [body];
+  for (const candidate of requests) {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) continue;
+    const request = candidate;
+    if (request.method !== "tools/call") continue;
+    if (!request.params || typeof request.params !== "object" || Array.isArray(request.params)) continue;
+    const params = request.params;
+    if (!("arguments" in params)) continue;
+    const result = inspectMcpOperationInput(params.arguments, limits);
+    if (!result.ok) return result;
+  }
+  return null;
+}
 async function main() {
   if (httpMode) {
     const allowedHosts = (process.env.MCP_ALLOWED_HOSTS || "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+    const allowedOrigins = (process.env.MCP_ALLOWED_ORIGINS || "").split(",").map((o) => o.trim().toLowerCase()).filter(Boolean);
+    const parsedMaxBody = parseInt(process.env.MCP_MAX_BODY_BYTES || "", 10);
+    const maxBodyBytes = Number.isFinite(parsedMaxBody) && parsedMaxBody > 0 ? parsedMaxBody : 4194304;
+    const operationLimits = resolveMcpOperationLimits();
     const openaiAppsChallengeToken = (process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim();
+    const readJsonBodyWithLimit = (req) => new Promise((resolve2) => {
+      let size = 0;
+      let done = false;
+      const chunks = [];
+      const finish = (result) => {
+        if (done) return;
+        done = true;
+        resolve2(result);
+      };
+      req.on("data", (chunk) => {
+        if (done) return;
+        size += chunk.length;
+        if (size > maxBodyBytes) {
+          finish({ ok: false, status: 413, code: -32600, message: "Request body too large" });
+          return;
+        }
+        chunks.push(chunk);
+      });
+      req.on("end", () => {
+        if (done) return;
+        const raw = Buffer.concat(chunks).toString("utf-8");
+        if (!raw) return finish({ ok: true, body: void 0 });
+        try {
+          const body = JSON.parse(raw);
+          const operationLimit = operationLimitForMcpRequest(body, operationLimits);
+          if (operationLimit && !operationLimit.ok) {
+            finish({
+              ok: false,
+              status: 413,
+              code: -32602,
+              message: formatMcpOperationLimitError(operationLimit)
+            });
+            return;
+          }
+          finish({ ok: true, body });
+        } catch {
+          finish({ ok: false, status: 400, code: -32600, message: "Invalid JSON body" });
+        }
+      });
+      req.on("error", () => finish({ ok: false, status: 400, code: -32600, message: "Request stream error" }));
+    });
     const healthBody = () => JSON.stringify({
       status: "ok",
       name: "semiotic-mcp",
@@ -34187,7 +34648,13 @@ async function main() {
       mode: "stateless"
     });
     const httpServer = http.createServer(async (req, res) => {
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      const origin = String(req.headers.origin || "").trim().toLowerCase();
+      if (allowedOrigins.length > 0) {
+        res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
+        res.setHeader("Vary", "Origin");
+      } else {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+      }
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
       res.setHeader(
         "Access-Control-Allow-Headers",
@@ -34197,6 +34664,11 @@ async function main() {
       if (req.method === "OPTIONS") {
         res.writeHead(204);
         res.end();
+        return;
+      }
+      if (allowedOrigins.length > 0 && origin && !allowedOrigins.includes(origin)) {
+        res.writeHead(403, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Forbidden origin" }, id: null }));
         return;
       }
       const pathname = (() => {
@@ -34234,13 +34706,26 @@ async function main() {
         return;
       }
       if (req.method === "GET") {
+        if (pathname === "/mcp") {
+          res.writeHead(405, { "Content-Type": "application/json", Allow: "POST, OPTIONS" });
+          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Method not allowed (stateless server offers no SSE stream)" }, id: null }));
+          return;
+        }
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(healthBody());
         return;
       }
       if (req.method !== "POST") {
-        res.writeHead(405, { "Content-Type": "application/json" });
+        res.writeHead(405, { "Content-Type": "application/json", Allow: "POST, OPTIONS" });
         res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Method not allowed" }, id: null }));
+        return;
+      }
+      const bodyResult = await readJsonBodyWithLimit(req);
+      if (!bodyResult.ok) {
+        if (!res.headersSent) {
+          res.writeHead(bodyResult.status, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: bodyResult.code, message: bodyResult.message }, id: null }));
+        }
         return;
       }
       const srv = createServer2(toolProfile);
@@ -34260,7 +34745,7 @@ async function main() {
       res.on("close", teardown);
       try {
         await srv.connect(transport);
-        await transport.handleRequest(req, res);
+        await transport.handleRequest(req, res, bodyResult.body);
       } catch (err) {
         console.error("Request handling error:", err);
         if (!res.headersSent) {
@@ -34271,8 +34756,9 @@ async function main() {
         teardown();
       }
     });
-    httpServer.listen(port, () => {
-      console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
+    httpServer.listen(port, host, () => {
+      const displayHost = host.includes(":") ? `[${host}]` : host;
+      console.error(`Semiotic MCP server (HTTP) listening on http://${displayHost}:${port}`);
       console.error(toolProfile === "public" ? "Tools (public profile): createChart, improveChart, explainChart, auditChart, getChartSchema" : "Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme");
       console.error("Resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html");
     });

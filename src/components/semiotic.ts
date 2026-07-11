@@ -306,6 +306,11 @@ export type {
   UseForceLayoutResult
 } from "./charts/network/useForceLayout"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
+export type {
+  CustomLayoutFailureDiagnostic,
+  CustomLayoutFailureRecovery,
+  CustomLayoutFamily
+} from "./stream/customLayoutFailure"
 
 export type {
   UseSelectionOptions,

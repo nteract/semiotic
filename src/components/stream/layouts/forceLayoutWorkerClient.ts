@@ -6,6 +6,7 @@ import type {
   RealtimeNode
 } from "../networkTypes"
 import { resolveNodeSizeFn } from "./forceLayoutPlugin"
+import { commonJsWorkerModuleUrl } from "../workerModuleUrl"
 
 export type ForceLayoutExecution = "auto" | "worker" | "sync"
 
@@ -73,7 +74,13 @@ export function canUseForceWorker(): boolean {
 }
 
 export function createForceLayoutWorker(): Worker {
-  return new Worker(new URL("./forceLayoutWorker.js", import.meta.url), {
+  // Keep the literal ESM URL expression for Vite/Webpack worker-asset
+  // discovery. tsup's CJS output has no import.meta.url, so resolve from the
+  // emitted CJS filename there instead.
+  const workerUrl = typeof import.meta.url === "string" && import.meta.url
+    ? new URL("./forceLayoutWorker.js", import.meta.url)
+    : commonJsWorkerModuleUrl("forceLayoutWorker.js")
+  return new Worker(workerUrl, {
     type: "module",
     name: "semiotic-force-layout"
   })

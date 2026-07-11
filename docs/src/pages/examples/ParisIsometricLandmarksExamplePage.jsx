@@ -256,7 +256,9 @@ export default function ParisIsometricLandmarksExamplePage() {
   )
 
   return (
-    <ExamplePageLayout title={`Isometric ${city.label}`}>
+    <ExamplePageLayout
+      title={cityKey === "paris" ? "Paris, Isometric City of Lights" : `Isometric ${city.label}`}
+    >
       <nav aria-label="Choose a center city" style={styles.cityPicker}>
         <span style={styles.cityPickerLabel}>Center city</span>
         <div role="group" aria-label="Available cities" style={styles.cityOptions}>

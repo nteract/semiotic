@@ -91,6 +91,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       timeAccessor,
       valueAccessor,
       categoryAccessor,
+      accessorRevision,
       projection = "vertical",
       size: sizeProp = [600, 400],
       responsiveWidth,
@@ -169,6 +170,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       description,
       summary,
       customLayout,
+      onLayoutError,
       layoutConfig,
       layoutSelection,
     } = props
@@ -282,6 +284,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       projection,
       oAccessor: isStreaming ? undefined : oAccessor,
       rAccessor: isStreaming ? undefined : rAccessor,
+      accessorRevision,
       colorAccessor,
       symbolAccessor,
       symbolMap,
@@ -329,11 +332,12 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       introAnimation: introEnabled,
       staleness,
       customLayout,
+      onLayoutError,
       layoutConfig,
       layoutMargin: margin,
     }), [
       chartType, windowSize, windowMode, extentPadding, projection,
-      oAccessor, rAccessor, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis,
+      oAccessor, rAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis,
       timeAccessor, valueAccessor, categoryAccessor,
       rExtent, oExtent, axisExtent, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle,
       dynamicColumnWidth,
@@ -341,7 +345,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       pieceStyle, summaryStyle, colorScheme, barColors,
       decay, pulse, transition?.duration, transition?.easing, introEnabled, staleness,
       isStreaming, currentTheme,
-      customLayout, layoutConfig, margin,
+      customLayout, onLayoutError, layoutConfig, margin,
     ])
 
     // Stabilize the config reference so inline-object / inline-array
@@ -478,7 +482,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         return storeRef.current?.getData() ?? []
       },
       getScales: () => storeRef.current?.scales ?? null,
-      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null
+      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
+      getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null
     }), [pushPoint, pushManyPoints, replaceData, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────

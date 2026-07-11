@@ -191,6 +191,7 @@ const StreamNetworkFrame = memo(forwardRef<
     orbitShowRings,
     orbitAnimated,
     customNetworkLayout,
+    onLayoutError,
     layoutConfig,
     layoutSelection
   } = props
@@ -316,6 +317,7 @@ const StreamNetworkFrame = memo(forwardRef<
         orbitShowRings,
         orbitAnimated,
         customNetworkLayout,
+        onLayoutError,
         layoutConfig,
         currentTheme
       }),
@@ -373,6 +375,7 @@ const StreamNetworkFrame = memo(forwardRef<
       orbitAnimated,
       currentTheme,
       customNetworkLayout,
+      onLayoutError,
       layoutConfig
     ]
   )
@@ -805,6 +808,7 @@ const StreamNetworkFrame = memo(forwardRef<
       getTopology: () =>
         storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] },
       getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
+      getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null,
       getTopologyDiff: () => {
         const store = storeRef.current
         if (!store)

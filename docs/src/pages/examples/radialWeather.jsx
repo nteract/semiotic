@@ -1,6 +1,6 @@
 import React, { useMemo } from "react"
-import { OrdinalCustomChart } from "../../../../src/components/charts/custom/OrdinalCustomChart"
-import { TemporalHistogram } from "../../../../src/components/charts/realtime/RealtimeHistogram"
+import { OrdinalCustomChart } from "semiotic/ordinal"
+import { TemporalHistogram } from "semiotic/realtime"
 // CircularBrush: the accessible cyclical range-brush control (keyboard +
 // wrap-around drag), now a first-class Semiotic control instead of ~200 lines of
 // hand-rolled SVG + pointer math.

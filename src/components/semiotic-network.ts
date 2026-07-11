@@ -33,6 +33,11 @@ export type {
 } from "./charts/shared/responsiveRules"
 export { useCustomLayoutSelection } from "./stream/customLayoutSelection"
 export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
+export type {
+  CustomLayoutFailureDiagnostic,
+  CustomLayoutFailureRecovery,
+  CustomLayoutFamily
+} from "./stream/customLayoutFailure"
 // hitTarget — invisible, interaction-bearing scene node for custom network
 // layouts (keyboard nav + focus ring, pointId annotation anchoring,
 // onObservation, shared selection). See also semiotic/recipes.

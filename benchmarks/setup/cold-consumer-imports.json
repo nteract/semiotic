@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "package": {
+    "name": "semiotic",
+    "version": "3.8.0"
+  },
+  "method": {
+    "artifact": "npm pack --ignore-scripts tarball",
+    "resolution": "fresh temporary consumer/node_modules/semiotic",
+    "bundler": {
+      "name": "esbuild",
+      "version": "0.28.1",
+      "format": "esm",
+      "minify": true,
+      "treeShaking": true
+    },
+    "gzip": {
+      "algorithm": "gzip",
+      "level": 9
+    },
+    "externalizedRuntimePackages": [
+      "react",
+      "react-dom",
+      "react-dom/*",
+      "matter-js",
+      "@dimforge/rapier2d-compat",
+      "world-atlas",
+      "sharp",
+      "gifenc"
+    ],
+    "dependencyResolution": "Runtime dependency closure copied from the workspace node_modules into the fresh consumer; CI installs that workspace from the lockfile before this gate.",
+    "note": "Each row retains one named import from a public package export. The result includes Semiotic and its resolved runtime dependencies, but excludes host React/React DOM peers and optional adapter packages."
+  },
+  "excludedExports": [
+    "./experimental",
+    "./package.json"
+  ],
+  "measurements": [
+    {
+      "exportKey": ".",
+      "importPath": "semiotic",
+      "symbol": "LineChart",
+      "platform": "browser",
+      "rawBytes": 1001701,
+      "gzipBytes": 293605,
+      "packedPackageInputFiles": 3
+    },
+    {
+      "exportKey": "./xy",
+      "importPath": "semiotic/xy",
+      "symbol": "LineChart",
+      "platform": "browser",
+      "rawBytes": 440789,
+      "gzipBytes": 139685,
+      "packedPackageInputFiles": 3
+    },
+    {
+      "exportKey": "./ordinal",
+      "importPath": "semiotic/ordinal",
+      "symbol": "BarChart",
+      "platform": "browser",
+      "rawBytes": 379497,
+      "gzipBytes": 115150,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./network",
+      "importPath": "semiotic/network",
+      "symbol": "SankeyDiagram",
+      "platform": "browser",
+      "rawBytes": 377235,
+      "gzipBytes": 120703,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./realtime",
+      "importPath": "semiotic/realtime",
+      "symbol": "RealtimeLineChart",
+      "platform": "browser",
+      "rawBytes": 504616,
+      "gzipBytes": 158481,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./physics",
+      "importPath": "semiotic/physics",
+      "symbol": "GaltonBoardChart",
+      "platform": "browser",
+      "rawBytes": 306680,
+      "gzipBytes": 103058,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./physics/matter",
+      "importPath": "semiotic/physics/matter",
+      "symbol": "MATTER_PHYSICS_CAPABILITIES",
+      "platform": "browser",
+      "rawBytes": 269,
+      "gzipBytes": 211,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./physics/rapier",
+      "importPath": "semiotic/physics/rapier",
+      "symbol": "RAPIER_PHYSICS_CAPABILITIES",
+      "platform": "browser",
+      "rawBytes": 295,
+      "gzipBytes": 226,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./server",
+      "importPath": "semiotic/server",
+      "symbol": "renderChart",
+      "platform": "node",
+      "rawBytes": 786137,
+      "gzipBytes": 251216,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./ai",
+      "importPath": "semiotic/ai",
+      "symbol": "suggestCharts",
+      "platform": "browser",
+      "rawBytes": 1391636,
+      "gzipBytes": 419725,
+      "packedPackageInputFiles": 3
+    },
+    {
+      "exportKey": "./ai/core",
+      "importPath": "semiotic/ai/core",
+      "symbol": "suggestCharts",
+      "platform": "browser",
+      "rawBytes": 175374,
+      "gzipBytes": 43907,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./data",
+      "importPath": "semiotic/data",
+      "symbol": "bin",
+      "platform": "browser",
+      "rawBytes": 587,
+      "gzipBytes": 395,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./geo",
+      "importPath": "semiotic/geo",
+      "symbol": "ChoroplethMap",
+      "platform": "browser",
+      "rawBytes": 315853,
+      "gzipBytes": 104946,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./themes",
+      "importPath": "semiotic/themes",
+      "symbol": "resolveThemePreset",
+      "platform": "browser",
+      "rawBytes": 12435,
+      "gzipBytes": 3494,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./utils",
+      "importPath": "semiotic/utils",
+      "symbol": "validateProps",
+      "platform": "browser",
+      "rawBytes": 94049,
+      "gzipBytes": 20852,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./recipes",
+      "importPath": "semiotic/recipes",
+      "symbol": "waffleLayout",
+      "platform": "browser",
+      "rawBytes": 3014,
+      "gzipBytes": 1338,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./value",
+      "importPath": "semiotic/value",
+      "symbol": "BigNumber",
+      "platform": "browser",
+      "rawBytes": 16410,
+      "gzipBytes": 5767,
+      "packedPackageInputFiles": 1
+    }
+  ]
+}

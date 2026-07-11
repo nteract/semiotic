@@ -33,14 +33,24 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
     expect(store.getOAccessor()({ label: "X" })).toBe("X")
   })
 
-  it("does not re-resolve oAccessor for equivalent inline arrows", () => {
+  it("re-resolves oAccessor for a new inline-arrow identity (identity semantics)", () => {
     const store = new OrdinalPipelineStore(makeConfig({
       oAccessor: (d: Datum) => d.name
     }))
     const originalGetO = store.getOAccessor()
 
-    // Simulate React re-render: new function, same source
+    // Simulate React re-render passing a NEW function object with the same
+    // source. Identity semantics can't prove equivalence, so it re-resolves.
     store.updateConfig({ oAccessor: (d: Datum) => d.name })
+    expect(store.getOAccessor()).not.toBe(originalGetO)
+  })
+
+  it("does not re-resolve oAccessor when the SAME function reference is re-passed", () => {
+    const oAccessor = (d: Datum) => d.name
+    const store = new OrdinalPipelineStore(makeConfig({ oAccessor }))
+    const originalGetO = store.getOAccessor()
+
+    store.updateConfig({ oAccessor })
     expect(store.getOAccessor()).toBe(originalGetO)
   })
 
@@ -62,14 +72,15 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
     expect(store.getRAccessor()).toBe(originalGetR)
   })
 
-  it("does not re-resolve rAccessor for equivalent function", () => {
+  it("re-resolves rAccessor for a new function identity (identity semantics)", () => {
     const store = new OrdinalPipelineStore(makeConfig({
       rAccessor: (d: Datum) => d.count
     }))
     const originalGetR = store.getRAccessor()
 
+    // New inline-arrow identity → re-resolve (source text is not consulted).
     store.updateConfig({ rAccessor: (d: Datum) => d.count })
-    expect(store.getRAccessor()).toBe(originalGetR)
+    expect(store.getRAccessor()).not.toBe(originalGetR)
   })
 
   it("does not re-resolve stackBy for equivalent string", () => {
@@ -88,21 +99,61 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
     expect(store.scene.length).toBeGreaterThan(0)
   })
 
-  it("does not re-resolve colorAccessor for equivalent function", () => {
+  it("re-resolves colorAccessor for a new function identity and the store still works", () => {
     const store = new OrdinalPipelineStore(makeConfig({
       colorAccessor: (d: Datum) => d.type
     }))
 
-    // Simulate re-render
+    // Simulate re-render passing a new function object
     store.updateConfig({ colorAccessor: (d: Datum) => d.type })
 
-    // Verify store still works
+    // Verify store still works after re-resolution
     store.ingest({
       inserts: [{ category: "A", value: 10, type: "primary" }],
       bounded: true
     })
     store.computeScene({ width: 200, height: 200 })
     expect(store.scene.length).toBeGreaterThan(0)
+  })
+
+  it("rebuilds the ordinal domain from retained data when a same-source oAccessor closure captures a new value", () => {
+    // Ordinal analogue of the XY closure-capture regression: two closures with
+    // identical source text but different captured prefixes must produce
+    // different category domains. Source-text equality retained the stale domain.
+    const makeO = (prefix: string) => (d: Datum) => `${prefix}-${d.k as string}`
+    const store = new OrdinalPipelineStore(makeConfig({ oAccessor: makeO("a") }))
+    store.ingest({ inserts: [{ k: "x", value: 1 }, { k: "y", value: 2 }], bounded: true })
+    store.computeScene({ width: 200, height: 200 })
+    expect(store.scales!.o.domain().sort()).toEqual(["a-x", "a-y"])
+
+    // Same source (`d => \`${prefix}-${d.k}\``), different captured prefix.
+    // React updates configuration and renders; it does not ingest the same
+    // data again, so this must rebuild from the existing buffer.
+    store.updateConfig({ oAccessor: makeO("b") })
+    store.computeScene({ width: 200, height: 200 })
+    expect(store.scales!.o.domain().sort()).toEqual(["b-x", "b-y"])
+  })
+
+  it("rebuilds the value extent from retained data when rAccessor changes", () => {
+    const makeR = (multiplier: number) => (d: Datum) => (d.value as number) * multiplier
+    const store = new OrdinalPipelineStore(makeConfig({
+      chartType: "bar",
+      extentPadding: 0,
+      oSort: false,
+      rAccessor: makeR(1),
+    }))
+    store.ingest({
+      inserts: [{ category: "a", value: 10 }, { category: "b", value: 20 }],
+      bounded: true,
+    })
+    store.computeScene({ width: 200, height: 200 })
+    expect(store.scales!.r.domain()).toEqual([0, 20])
+
+    // Same source (`d => d.value * multiplier`), new captured multiplier;
+    // no new ingest occurs before the next render.
+    store.updateConfig({ rAccessor: makeR(10) })
+    store.computeScene({ width: 200, height: 200 })
+    expect(store.scales!.r.domain()).toEqual([0, 200])
   })
 
   it("categoryAccessor alias follows same equivalence rules", () => {
@@ -114,6 +165,27 @@ describe("OrdinalPipelineStore — Accessor Stability", () => {
 
     store.updateConfig({ categoryAccessor: "region" })
     expect(store.getOAccessor()).toBe(originalGetO)
+  })
+
+  it("accessorRevision re-derives the domain when a stable oAccessor's capture changed", () => {
+    // Stable reference (identity never changes) reading external mutable state.
+    let prefix = "a"
+    const oAccessor = (d: Datum) => `${prefix}-${d.k as string}`
+    const store = new OrdinalPipelineStore(makeConfig({ oAccessor }))
+    store.ingest({ inserts: [{ k: "x", value: 1 }], bounded: true })
+    store.computeScene({ width: 200, height: 200 })
+    expect(store.scales!.o.domain()).toEqual(["a-x"])
+
+    // Mutate the capture; re-passing the same reference is a no-op.
+    prefix = "b"
+    store.updateConfig({ oAccessor })
+    store.computeScene({ width: 200, height: 200 })
+    expect(store.scales!.o.domain()).toEqual(["a-x"]) // still stale — by design
+
+    // Bumping accessorRevision forces re-derivation against the live accessor.
+    store.updateConfig({ accessorRevision: 1 })
+    store.computeScene({ width: 200, height: 200 })
+    expect(store.scales!.o.domain()).toEqual(["b-x"])
   })
 
   // ── Explicit-clear regression ──────────────────────────────────────

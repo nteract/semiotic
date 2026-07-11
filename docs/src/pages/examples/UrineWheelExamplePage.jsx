@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { ChartContainer, NetworkCustomChart, useSelectionActions } from "semiotic"
-import { IntentMark } from "../../../../src/components/ai/IntentMark"
-import { intentManifestFromRecipe } from "../../../../src/components/ai/intentManifest"
+import { IntentMark, intentManifestFromRecipe } from "semiotic/ai"
 // Custom-network kit: the radial coordinate helpers (0 = up, clockwise), the
 // transparent hit-target node that earns the layout its accessibility +
 // annotation anchoring for free, and the datum unwrapper for onObservation.

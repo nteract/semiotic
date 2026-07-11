@@ -13,9 +13,9 @@
  *   1. Run `npx vitest bench` on PR head → raw vitest JSON
  *   2. `git worktree add` origin/main into a fresh dir
  *   3. `npm install` in the worktree (fast with warm npm cache on CI)
- *   4. Run `npx vitest bench` in the worktree → raw vitest JSON
- *   5. Normalize both (vitest emits sibling-compare benchmarks without `mean`
- *      — drop those) and hand to compare-bench-baseline.mjs
+ *   4. Overlay the PR's `benchmarks/` manifest into the main worktree
+ *   5. Run `npx vitest bench` there → raw vitest JSON for main runtime
+ *   6. Normalize and validate both, then hand them to compare-bench-baseline.mjs
  *
  * The orchestrator runs from the PR branch and never assumes its sibling
  * scripts exist in the main worktree — main may not yet have them merged.
@@ -25,6 +25,11 @@ import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from "no
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { tmpdir } from "node:os"
+import {
+  collectVitestBenchmarks,
+  printBenchmarkValidationErrors,
+} from "./lib/bench-results.mjs"
+import { overlayBenchmarkManifest } from "./lib/bench-manifest.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -43,25 +48,12 @@ function captureBench(cwd, outputPath) {
 
 function normalize(rawJsonPath, label) {
   const raw = JSON.parse(readFileSync(rawJsonPath, "utf8"))
-  const benchmarks = {}
-  let total = 0
-  let skipped = 0
-  for (const file of raw.files || []) {
-    for (const group of file.groups || []) {
-      for (const b of group.benchmarks || []) {
-        total++
-        // Vitest emits sibling-compare benchmarks (multiple `bench()` calls
-        // inside one `describe`) with id/name/rank/rme but no numeric `mean`.
-        // Skip them rather than write entries that would NaN out comparisons.
-        if (!Number.isFinite(b.mean)) {
-          skipped++
-          continue
-        }
-        benchmarks[b.name] = { mean: b.mean, unit: "ms" }
-      }
-    }
+  const { benchmarks, errors } = collectVitestBenchmarks(raw, `${label} Vitest output`)
+  if (errors.length > 0) {
+    printBenchmarkValidationErrors(errors)
+    throw new Error(`${label} benchmark capture is incomplete`)
   }
-  console.log(`  [${label}] ${Object.keys(benchmarks).length} benchmarks (${skipped}/${total} skipped — no numeric mean)`)
+  console.log(`  [${label}] ${Object.keys(benchmarks).length} valid benchmarks`)
   return {
     timestamp: new Date().toISOString(),
     git_commit: label,
@@ -91,9 +83,16 @@ try {
   console.log("▶ installing deps in main worktree (fresh node_modules)")
   runInherit("npm install --prefer-offline --no-audit --no-fund --silent", { cwd: worktree })
 
-  console.log("▶ capturing main bench")
+  // Benchmark source is the measurement manifest: it controls the cases,
+  // names, and fixtures, but imports `../../src/...` relative to this
+  // worktree. Overlay the PR manifest so both captures have exact membership
+  // while the second capture still executes origin/main's runtime.
+  console.log("▶ overlaying PR benchmark manifest onto main runtime")
+  overlayBenchmarkManifest(repoRoot, worktree)
+
+  console.log("▶ capturing main runtime with PR benchmark manifest")
   captureBench(worktree, mainRaw)
-  writeFileSync(mainNorm, JSON.stringify(normalize(mainRaw, "origin/main"), null, 2))
+  writeFileSync(mainNorm, JSON.stringify(normalize(mainRaw, "origin/main runtime"), null, 2))
 
   console.log("▶ comparing PR vs main (CI-native baseline)")
   runInherit(`node scripts/compare-bench-baseline.mjs --baseline="${mainNorm}" --current="${prNorm}"`)
