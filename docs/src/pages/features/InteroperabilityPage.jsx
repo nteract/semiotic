@@ -47,7 +47,7 @@ const GROUPS = [
   {
     heading: "Agent integration — an LLM ↔ a trustworthy chart",
     blurb:
-      "Wrap chart generation in a deterministic loop so an agent ships a guaranteed-renderable chart or precise reasons to retry — never a broken one.",
+      "Wrap chart generation in a deterministic loop so an agent ships a validated chart (and, with render evidence, a proven non-empty scene) or precise reasons to retry — never an unchecked one.",
     items: [
       { title: "Generative-UI Trust Layer", path: "/interoperability/generative-ui", what: "prepareChart + framework-agnostic tool definitions (no vendor SDK)." },
     ],

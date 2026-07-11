@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest"
 import type { RenderEvidence } from "../server/renderEvidence"
 import { renderChartWithEvidence } from "../server/renderToStaticSVG"
+import type { ChartToolDefinition } from "./generativeChart"
 import {
   chartGenerationTool,
   createChartToolHandler,
   prepareChart,
   toAnthropicTool,
   toOpenAITool,
+  toOpenAIResponsesTool,
 } from "./generativeChart"
 
 const BARS = [
@@ -185,6 +187,60 @@ describe("chart tool definitions", () => {
     expect(openai.type).toBe("function")
     expect(openai.function.parameters).toBe(tool.inputSchema)
     expect(openai.function.name).toBe(tool.name)
+
+    const responses = toOpenAIResponsesTool(tool)
+    expect(responses).toMatchObject({
+      type: "function",
+      name: tool.name,
+      parameters: tool.inputSchema,
+      strict: false,
+    })
+  })
+
+  it("supports strict Responses tools only for closed JSON schemas", () => {
+    expect(() => toOpenAIResponsesTool(chartGenerationTool(), { strict: true })).toThrow(
+      /strict mode requires a top-level object schema/
+    )
+
+    for (const inputSchema of [null, [], "not-a-schema", { type: "string" }]) {
+      expect(() =>
+        toOpenAIResponsesTool(
+          { name: "invalid", description: "Invalid strict schema", inputSchema } as unknown as ChartToolDefinition,
+          { strict: true }
+        )
+      ).toThrow(/top-level object schema/)
+    }
+
+    expect(() =>
+      toOpenAIResponsesTool(
+        {
+          name: "invalid_nested",
+          description: "Invalid nested schema",
+          inputSchema: {
+            type: "object",
+            additionalProperties: false,
+            required: ["component"],
+            properties: { component: "not-a-schema" },
+          },
+        } as unknown as ChartToolDefinition,
+        { strict: true }
+      )
+    ).toThrow(/top-level object schema/)
+
+    const closed = {
+      name: "closed_chart",
+      description: "A closed tool schema",
+      inputSchema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["component", "title"],
+        properties: {
+          component: { type: "string" },
+          title: { type: ["string", "null"] },
+        },
+      },
+    }
+    expect(toOpenAIResponsesTool(closed, { strict: true }).strict).toBe(true)
   })
 
   it("createChartToolHandler runs the trust loop on tool input", () => {

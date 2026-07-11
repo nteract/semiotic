@@ -122,7 +122,7 @@ function Body() {
         hand-written chart code breaks on first paint, and a plausible-looking chart for the wrong
         data misleads exactly the reader who can't tell. Semiotic's new generative-UI trust layer is
         the deterministic gate between a model's confidence and the user's screen — it turns a
-        proposal into a result that's either guaranteed renderable or comes back with precise
+        proposal into a result that's validated and diagnosed (and, with a renderer, proven to paint) or comes back with precise
         reasons and ranked alternatives to retry with.
       </p>
 
@@ -154,7 +154,7 @@ const result = prepareChart(
 )
 
 if (result.ok) {
-  stream(result.jsx)                  // guaranteed-renderable JSX / result.config
+  stream(result.jsx)                  // validated JSX / result.config
 } else {
   retry(result.reasons, result.repair) // precise reasons + alternatives — never paint
 }`}</pre>
@@ -235,7 +235,7 @@ export default {
   slug: "generation-is-cheap-trust-is-scarce",
   title: "Generation Is Cheap; Trust Is Scarce",
   subtitle:
-    "Semiotic's generative-UI trust layer turns an LLM's chart proposal into a result that's either guaranteed renderable or comes back with precise reasons and ranked alternatives — validate, diagnose, repair, prove — so an agent never ships a chart it hasn't earned.",
+    "Semiotic's generative-UI trust layer turns an LLM's chart proposal into a result that's validated and diagnosed — and, with a renderer, proven to paint — or comes back with precise reasons and ranked alternatives: validate, diagnose, repair, prove.",
   author: "Elijah Meeks",
   date: "2026-06-21",
   tags: ["case-study", "ai"],

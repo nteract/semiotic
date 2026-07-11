@@ -1,7 +1,7 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes eighteen tools, six resources, and two prompts:
+ * Exposes eighteen tools, seven resources, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — legacy sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
@@ -521,13 +521,20 @@ type ToolResult = {
   _meta?: Record<string, unknown>
 }
 
+type ToolProfile = "developer" | "public"
+const SURFACE_VERSION = `${schema.version || "3.0.0"}-ai`
+
+function profileResult<T extends Record<string, unknown>>(result: T): T & { surfaceVersion: string } {
+  return { ...result, surfaceVersion: SURFACE_VERSION }
+}
+
 async function getSchemaHandler(args: { component?: string }): Promise<ToolResult> {
   const component = args.component
 
   if (!component) {
     const list = allComponentNames.map(name => metadataForComponent(name).renderable ? `${name} [renderable]` : name)
     return {
-      content: [{ type: "text" as const, text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
+      content: [{ type: "text" as const, text: `Available components (${allComponentNames.length}):\n${list.join(", ")}\n\nComponents marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.\n\nFor full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.\n\nAll charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.\n\nPass { component: '<name>' } to get the prop schema for a specific component.` }],
     }
   }
 
@@ -1406,6 +1413,142 @@ async function groundChartHandler(args: {
   }
 }
 
+function compactPublicChartProps(props: Record<string, unknown>): Record<string, unknown> {
+  const compact = { ...props }
+  delete compact.data
+  delete compact.nodes
+  delete compact.edges
+  return compact
+}
+
+function compactPublicSuggestion<T extends { props: Record<string, unknown> }>(
+  suggestion: T
+): Omit<T, "props"> & { props: Record<string, unknown> } {
+  return { ...suggestion, props: compactPublicChartProps(suggestion.props) }
+}
+
+async function createChartHandler(args: {
+  data: Record<string, unknown>[]
+  intent?: string | string[]
+  audience?: AudienceProfile
+  component?: string
+  props?: Record<string, unknown>
+  theme?: Record<string, string>
+}): Promise<ToolResult> {
+  const intent = (Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : undefined) as IntentId[] | undefined
+  const suggestions = suggestChartsFromCapabilities(args.data, { intent, audience: args.audience, maxResults: 40 })
+    .filter((suggestion) => metadataForComponent(suggestion.component).renderable)
+    .slice(0, 8)
+  const selected = args.component
+    ? suggestions.find((suggestion) => suggestion.component === args.component)
+    : suggestions[0]
+  if (!selected) {
+    return {
+      content: [{ type: "text", text: "No renderable Semiotic chart was suggested for this data. Use getChartSchema for code-level guidance." }],
+      isError: true,
+      structuredContent: profileResult({
+        status: "no-suggestion",
+        suggestions: suggestions.map(compactPublicSuggestion),
+        dataRowCount: args.data.length,
+      }),
+    }
+  }
+  // Keep capability-built data shapes (for example hierarchy roots or
+  // nodes/edges) and explicit caller overrides. args.data is the profiling
+  // input, not necessarily the final component's `data` prop shape.
+  const props = { data: args.data, ...selected.props, ...args.props }
+  const publicProps = compactPublicChartProps(props)
+  const publicSuggestion = compactPublicSuggestion(selected)
+  const diagnosis = diagnoseConfig(selected.component, props)
+  const blocking = diagnosis.diagnoses.filter((item: any) => item.severity === "error")
+  if (blocking.length) {
+    return {
+      content: [{ type: "text", text: `Selected ${selected.component}, but blocking diagnostics require repair before rendering.` }],
+      isError: true,
+      structuredContent: profileResult({
+        status: "blocked",
+        component: selected.component,
+        props: publicProps,
+        dataRowCount: args.data.length,
+        suggestion: publicSuggestion,
+        diagnostics: diagnosis.diagnoses,
+      }),
+    }
+  }
+  const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme })
+  if (rendered.isError) {
+    return {
+      ...rendered,
+      structuredContent: profileResult({
+        status: "blocked",
+        component: selected.component,
+        props: publicProps,
+        dataRowCount: args.data.length,
+        suggestion: publicSuggestion,
+        diagnostics: diagnosis.diagnoses,
+        render: rendered.structuredContent ?? null,
+      }),
+    }
+  }
+  const output = rendered.structuredContent ?? {}
+  return {
+    ...rendered,
+    structuredContent: profileResult({
+      status: "render-proven",
+      component: selected.component,
+      props: publicProps,
+      dataRowCount: args.data.length,
+      suggestion: publicSuggestion,
+      diagnostics: diagnosis.diagnoses,
+      render: output,
+    }),
+  }
+}
+
+async function improveChartHandler(args: {
+  component: string
+  props: Record<string, unknown>
+  data?: Record<string, unknown>[]
+  intent?: string | string[]
+}): Promise<ToolResult> {
+  const data = args.data ?? (Array.isArray(args.props.data) ? args.props.data as Record<string, unknown>[] : [])
+  const intent = (Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : undefined) as IntentId[] | undefined
+  const diagnosis = diagnoseConfig(args.component, args.props)
+  const repair = repairChartConfigFromCapabilities(args.component, data, { intent })
+  const capability = getCapability(args.component)
+  const variants = capability ? proposeVariant(args.component, capability, { profile: profileData(data), intent }) : []
+  return {
+    content: [{ type: "text", text: `Improvement analysis for ${args.component}: ${diagnosis.diagnoses.length} diagnosis item(s), repair status ${repair.status}, ${variants.length} variant proposal(s).` }],
+    structuredContent: profileResult({ status: repair.status === "ok" ? "reviewed" : "repair-needed", component: args.component, diagnostics: diagnosis.diagnoses, repair, variants }),
+  }
+}
+
+async function explainChartHandler(args: { component: string; props: Record<string, unknown> }): Promise<ToolResult> {
+  const grounded = await groundChartHandler(args)
+  return {
+    ...grounded,
+    structuredContent: grounded.structuredContent
+      ? profileResult({ status: "grounded", grounding: grounded.structuredContent })
+      : undefined,
+  }
+}
+
+async function auditChartHandler(args: {
+  component: string
+  props: Record<string, unknown>
+  viewportWidth?: number
+}): Promise<ToolResult> {
+  const diagnosis = diagnoseConfig(args.component, args.props)
+  const accessibility = auditAccessibility(args.component, args.props, { inChartContainer: true, describe: true, navigable: true })
+  const mobile = auditMobileVisualization(args.component, args.props, { viewportWidth: args.viewportWidth, inChartContainer: true })
+  const blocking = diagnosis.diagnoses.some((item: any) => item.severity === "error") || !accessibility.ok || !mobile.ok
+  return {
+    content: [{ type: "text", text: `Audit for ${args.component}: ${blocking ? "blocking findings need attention" : "no blocking findings"}.` }],
+    isError: blocking,
+    structuredContent: profileResult({ status: blocking ? "findings" : "passed", component: args.component, diagnostics: diagnosis.diagnoses, accessibility, mobile }),
+  }
+}
+
 // Every Semiotic MCP tool is a pure computation over its arguments — nothing is
 // mutated, persisted, or fetched over the network (reportIssue only builds a
 // GitHub URL string; it never posts). OpenAI's MCP review requires
@@ -1422,10 +1565,12 @@ const READ_ONLY_TOOL_ANNOTATIONS = {
 // HTTP mode needs one instance per session (McpServer can only connect to one transport).
 // Stdio mode uses a single instance.
 
-function createServer(): McpServer {
+function createServer(profile: ToolProfile = "developer"): McpServer {
   const srv = new McpServer({
     name: "semiotic",
     version: schema.version || "3.0.0",
+    description:
+      "Deterministic Semiotic chart selection, validation, rendering, and non-visual chart grounding. Use suggestCharts, getSchema, diagnoseConfig, and renderChart in that order for static chart generation.",
   })
 
   srv.registerResource(
@@ -1448,6 +1593,17 @@ function createServer(): McpServer {
       mimeType: "application/json",
     },
     (uri) => textResource(uri, "application/json", componentIndexJSON())
+  )
+
+  srv.registerResource(
+    "semiotic-surface-manifest",
+    "semiotic://surface-manifest",
+    {
+      title: "Semiotic AI Surface Manifest",
+      description: "Generated inventory of schema components, AI exports, MCP renderability, tools, resources, and prompts.",
+      mimeType: "application/json",
+    },
+    (uri) => textResource(uri, "application/json", readAIFile("surface-manifest.json"))
   )
 
   srv.registerResource(
@@ -1570,6 +1726,52 @@ function createServer(): McpServer {
       "Return the smallest safe fix first, then mention any follow-up cleanup or issue-reporting step.",
     ].join("\n"))
   )
+
+  if (profile === "public") {
+    srv.registerTool("createChart", {
+      title: "Create and prove a chart",
+      description: "Select, validate, diagnose, render, and prove a static-data Semiotic chart. This is the default public workflow.",
+      inputSchema: {
+        data: z.array(z.record(z.string(), z.unknown())).min(1),
+        intent: z.union([z.string(), z.array(z.string())]).optional(),
+        audience: z.object({ name: z.string().optional(), receptionModality: z.enum(["visual", "screen-reader", "sonified", "agent"]).optional() }).passthrough().optional(),
+        component: z.string().optional().describe("Optional chart preference; the fit-ranked result remains authoritative."),
+        props: z.record(z.string(), z.unknown()).optional().describe("Optional props to merge over the selected chart recipe."),
+        theme: z.record(z.string(), z.string()).optional(),
+      },
+      outputSchema: { status: z.enum(["render-proven", "blocked", "no-suggestion"]), component: z.string().optional(), surfaceVersion: z.string() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
+      _meta: { ui: { resourceUri: SEMIOTIC_CHART_WIDGET_URI }, "openai/outputTemplate": SEMIOTIC_CHART_WIDGET_URI },
+    }, createChartHandler)
+    srv.registerTool("improveChart", {
+      title: "Improve an existing chart",
+      description: "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
+      inputSchema: { component: z.string(), props: z.record(z.string(), z.unknown()), data: z.array(z.record(z.string(), z.unknown())).optional(), intent: z.union([z.string(), z.array(z.string())]).optional() },
+      outputSchema: { status: z.enum(["reviewed", "repair-needed"]), component: z.string(), surfaceVersion: z.string() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
+    }, improveChartHandler)
+    srv.registerTool("explainChart", {
+      title: "Explain a chart without pixels",
+      description: "Return reader grounding: chart description, communicative intent, and navigable data structure.",
+      inputSchema: { component: z.string(), props: z.record(z.string(), z.unknown()) },
+      outputSchema: { status: z.literal("grounded"), grounding: z.record(z.string(), z.unknown()), surfaceVersion: z.string() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
+    }, explainChartHandler)
+    srv.registerTool("auditChart", {
+      title: "Audit chart quality and accessibility",
+      description: "Run design diagnostics plus accessibility and mobile audits, returning prioritized structured findings.",
+      inputSchema: { component: z.string(), props: z.record(z.string(), z.unknown()), viewportWidth: z.number().int().min(240).max(1600).optional() },
+      outputSchema: { status: z.enum(["passed", "findings"]), component: z.string(), surfaceVersion: z.string() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
+    }, auditChartHandler)
+    srv.registerTool("getChartSchema", {
+      title: "Get a chart schema",
+      description: "Return canonical Semiotic prop-schema guidance for code editing and advanced configuration.",
+      inputSchema: { component: z.string().optional() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
+    }, getSchemaHandler)
+    return srv
+  }
 
   srv.tool(
     "getSchema",
@@ -1721,14 +1923,25 @@ function createServer(): McpServer {
     interrogateChartHandler
   )
 
-  srv.tool(
+  srv.registerTool(
     "groundChart",
-    "Build the agent-reader grounding payload for a Semiotic chart: the layered L1–L3 natural-language description, the L4 communicative-act sentence (what the chart is asking the reader to do — 'this is an alerting chart; the spike warrants a closer look'), and a structured navigation tree (chart → axes/series → datum). This is the documented thing an LLM reads to interpret a chart faithfully without seeing the pixels — the reader-side complement to a capability descriptor. The L4 act is resolved from the chart's registered capability. Returns prose plus the full structured payload (description/intent/structure/text).",
     {
-      component: z.string().describe("Chart component name, e.g. 'LineChart'"),
-      props: z.record(z.string(), z.unknown()).describe("The full chart props including data"),
+      title: "Ground a Semiotic chart for a non-visual reader",
+      description: "Build the agent-reader grounding payload for a Semiotic chart: the layered L1–L3 natural-language description, the L4 communicative-act sentence (what the chart is asking the reader to do), and a structured navigation tree (chart → axes/series → datum). Use this to interpret a chart faithfully without pixels.",
+      inputSchema: {
+        component: z.string().describe("Chart component name, e.g. 'LineChart'"),
+        props: z.record(z.string(), z.unknown()).describe("The full chart props including data"),
+      },
+      outputSchema: {
+        component: z.string(),
+        description: z.record(z.string(), z.unknown()),
+        intent: z.record(z.string(), z.unknown()).optional(),
+        structure: z.record(z.string(), z.unknown()).optional(),
+        physics: z.record(z.string(), z.unknown()).optional(),
+        text: z.string(),
+      },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
     },
-    READ_ONLY_TOOL_ANNOTATIONS,
     groundChartHandler
   )
 
@@ -1820,19 +2033,30 @@ function createServer(): McpServer {
     suggestStretchChartsHandler
   )
 
-  srv.tool(
+  srv.registerTool(
     "repairChartConfig",
-    "Validate that a chart component is a sensible choice for a dataset, and if not, propose alternatives that fit. Use when a user asks for a specific chart and you want to confirm it's appropriate, or when you've drafted a config and want to verify it. Returns either ok (no change needed), alternative (chart doesn't fit; here are ranked replacements with rationale), or unknown (no capability registered).",
     {
-      component: z.string().describe("Chart component name to validate, e.g. 'PieChart'"),
-      data: z.array(z.record(z.string(), z.unknown())).describe("Row data — array of objects."),
-      intent: z
-        .union([z.string(), z.array(z.string())])
-        .optional()
-        .describe("User intent — informs ranking of alternatives when the chart doesn't fit."),
-      maxAlternatives: z.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3)."),
+      title: "Repair an unsuitable chart choice",
+      description: "Validate that a chart component is a sensible choice for a dataset, and if not, propose ranked alternatives that fit. Returns a structured status of ok, alternative, or unknown.",
+      inputSchema: {
+        component: z.string().describe("Chart component name to validate, e.g. 'PieChart'"),
+        data: z.array(z.record(z.string(), z.unknown())).describe("Row data — array of objects."),
+        intent: z
+          .union([z.string(), z.array(z.string())])
+          .optional()
+          .describe("User intent — informs ranking of alternatives when the chart doesn't fit."),
+        maxAlternatives: z.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3)."),
+      },
+      outputSchema: {
+        status: z.enum(["ok", "alternative", "unknown"]),
+        component: z.string(),
+        reason: z.string().optional(),
+        alternatives: z.array(z.unknown()).optional(),
+        profile: z.record(z.string(), z.unknown()),
+        repairs: z.array(z.string()).optional(),
+      },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
     },
-    READ_ONLY_TOOL_ANNOTATIONS,
     repairChartConfigHandler
   )
 
@@ -1875,42 +2099,46 @@ function createServer(): McpServer {
     proposeChartVariantsHandler
   )
 
-  srv.tool(
+  srv.registerTool(
     "suggestCharts",
-    "Recommend Semiotic charts for a dataset using heuristic capability descriptors. Each chart declares which data shapes it serves and which intents (trend, compare-categories, distribution, correlation, part-to-whole, etc.) it answers — the engine returns a ranked list with scores, reasons, caveats, and ready-to-use props. Heuristic only; no LLM call. Use the result as structured context when answering 'what chart should I use?' or generating chart code.",
     {
-      data: z.array(z.record(z.string(), z.unknown())).describe("Row data — array of objects."),
-      intent: z
-        .union([z.string(), z.array(z.string())])
-        .optional()
-        .describe("Ranking intent. One of: trend, compare-series, compare-categories, rank, part-to-whole, distribution, correlation, flow, hierarchy, geo, outlier-detection, composition-over-time, change-detection. Custom intents accepted."),
-      maxResults: z.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
-      allow: z.array(z.string()).optional().describe("Restrict to these component names."),
-      deny: z.array(z.string()).optional().describe("Exclude these component names."),
-      audience: z
-        .object({
-          name: z.string().optional(),
-          familiarity: z.record(z.string(), z.number()).optional(),
-          targets: z
-            .record(
-              z.string(),
-              z.object({
-                direction: z.enum(["increase", "decrease"]),
-                weight: z.number().int().min(1).max(3).optional(),
-                reason: z.string().optional(),
-              }),
-            )
-            .optional(),
-          exposureLevel: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
-          receptionModality: z
-            .enum(["visual", "screen-reader", "sonified", "agent"])
-            .optional()
-            .describe("Reception channel. A non-visual value down-ranks charts the audience can't receive in that channel (e.g. a many-slice pie for a screen reader) and adds receivability caveats."),
-        })
-        .optional()
-        .describe("Audience profile — familiarity, adoption targets, exposure level, and reception modality."),
+      title: "Recommend Semiotic charts",
+      description: "Recommend Semiotic charts for a dataset using heuristic capability descriptors. Returns ranked, structured suggestions with scores, reasons, caveats, and ready-to-use props; no LLM call is made.",
+      inputSchema: {
+        data: z.array(z.record(z.string(), z.unknown())).describe("Row data — array of objects."),
+        intent: z
+          .union([z.string(), z.array(z.string())])
+          .optional()
+          .describe("Ranking intent. One of: trend, compare-series, compare-categories, rank, part-to-whole, distribution, correlation, flow, hierarchy, geo, outlier-detection, composition-over-time, change-detection. Custom intents accepted."),
+        maxResults: z.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
+        allow: z.array(z.string()).optional().describe("Restrict to these component names."),
+        deny: z.array(z.string()).optional().describe("Exclude these component names."),
+        audience: z
+          .object({
+            name: z.string().optional(),
+            familiarity: z.record(z.string(), z.number()).optional(),
+            targets: z
+              .record(
+                z.string(),
+                z.object({
+                  direction: z.enum(["increase", "decrease"]),
+                  weight: z.number().int().min(1).max(3).optional(),
+                  reason: z.string().optional(),
+                }),
+              )
+              .optional(),
+            exposureLevel: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
+            receptionModality: z
+              .enum(["visual", "screen-reader", "sonified", "agent"])
+              .optional()
+              .describe("Reception channel. A non-visual value down-ranks charts the audience can't receive in that channel and adds receivability caveats."),
+          })
+          .optional()
+          .describe("Audience profile — familiarity, adoption targets, exposure level, and reception modality."),
+      },
+      outputSchema: { suggestions: z.array(z.unknown()) },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
     },
-    READ_ONLY_TOOL_ANNOTATIONS,
     suggestChartsHandler
   )
 
@@ -1920,6 +2148,9 @@ function createServer(): McpServer {
 // ── Startup ──────────────────────────────────────────────────────────────
 const cliArgs = process.argv.slice(2)
 const httpMode = cliArgs.includes("--http")
+const profileFlagIndex = cliArgs.indexOf("--profile")
+const requestedProfile = profileFlagIndex !== -1 ? cliArgs[profileFlagIndex + 1] : process.env.MCP_TOOL_PROFILE
+const toolProfile: ToolProfile = requestedProfile === "public" ? "public" : "developer"
 const portFlagIndex = cliArgs.indexOf("--port")
 const parsedPort =
   portFlagIndex !== -1 && cliArgs[portFlagIndex + 1] != null
@@ -2050,7 +2281,7 @@ async function main() {
 
       // Stateless: one ephemeral server+transport for this request only. Reusing
       // a stateless transport across requests is a known SDK bug, so we never do.
-      const srv = createServer()
+      const srv = createServer(toolProfile)
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
@@ -2086,12 +2317,14 @@ async function main() {
 
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`)
-      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme")
-      console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html")
+      console.error(toolProfile === "public"
+        ? "Tools (public profile): createChart, improveChart, explainChart, auditChart, getChartSchema"
+        : "Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme")
+      console.error("Resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html")
     })
   } else {
     // Default: stdio mode for Claude Desktop, Claude Code, Cursor, etc.
-    const srv = createServer()
+    const srv = createServer(toolProfile)
     const transport = new StdioServerTransport()
     await srv.connect(transport)
   }

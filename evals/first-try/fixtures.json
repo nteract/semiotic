@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "id": "valid-bar",
+      "proposal": { "component": "BarChart", "props": { "data": [{ "region": "North", "value": 12 }, { "region": "South", "value": 8 }], "categoryAccessor": "region", "valueAccessor": "value", "title": "Revenue by region" } },
+      "expect": { "validated": true, "renderProven": true }
+    },
+    {
+      "id": "missing-stacking",
+      "proposal": { "component": "StackedBarChart", "props": { "data": [{ "region": "North", "value": 12 }], "categoryAccessor": "region", "valueAccessor": "value" } },
+      "expect": { "validated": false }
+    },
+    {
+      "id": "invented-component",
+      "proposal": { "component": "ImaginaryChart", "props": { "data": [] } },
+      "expect": { "validated": false }
+    }
+  ]
+}

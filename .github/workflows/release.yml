@@ -49,6 +49,9 @@ jobs:
       - name: Check capability matrix freshness
         run: npm run check:capabilities
 
+      - name: Check generated AI surface manifest freshness
+        run: npm run check:ai-surface
+
       - name: Check blog metadata registry freshness
         run: npm run check:blog-entries
 

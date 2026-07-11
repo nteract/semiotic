@@ -12,7 +12,7 @@ workflow for producing one.
 
 The cardinal rule: **do not hand-write chart JSX and hope it paints.** Emit a
 `{ component, props }` proposal and run it through the trust loop, which is
-guaranteed-renderable or returns reasons and ranked alternatives to retry with.
+validated and diagnosed; when a renderer is available, proven to paint. Otherwise it returns reasons and ranked alternatives to retry with.
 
 ## The trust loop — generate → validate → diagnose → repair → prove
 
@@ -43,9 +43,11 @@ render evidence (mark count, domains, ARIA label) — the first-try oracle.
 ### As an agent tool
 
 `chartGenerationTool()` returns a framework-agnostic JSON-Schema tool definition;
-`toAnthropicTool` / `toOpenAITool` shape it for those APIs (Vercel AI SDK and
-LangChain accept the same JSON Schema). `createChartToolHandler(optionsFor)` is the
-execute step. No vendor SDK is required.
+`toAnthropicTool`, `toOpenAITool` (Chat Completions), and
+`toOpenAIResponsesTool` (Responses API) shape it for provider APIs. Vercel AI SDK
+and LangChain accept the same JSON Schema. `createChartToolHandler(optionsFor)` is
+the execute step. No vendor SDK is required. For backend-only use, import these
+helpers from `semiotic/ai/core` to avoid the chart-HOC catalog.
 
 ### Picking a chart for a dataset
 
@@ -120,11 +122,18 @@ const note = withProvenance(
 - **MCP server:** `npx semiotic-mcp` — tools for `renderChart` (SVG + render
   evidence), `suggestCharts`, `groundChart`, `diagnoseConfig`, `repairChartConfig`,
   `proposeChartVariants`, and more. Prefer these over guessing.
+- **Public app profile:** `npx semiotic-mcp --profile public` exposes the five
+  task-oriented tools `createChart`, `improveChart`, `explainChart`,
+  `auditChart`, and `getChartSchema`; use it when tool discovery matters more
+  than expert-level control.
 - **CLI gate:** `npx semiotic-ai --doctor` validates a `{ component, props }` JSON
   (`--audit-a11y` for an accessibility audit). Run it before shipping generated code.
 - **Machine-readable docs:** the published `llms.txt` is the chart catalog with
   per-chart communicative-act labels; read it for the full surface rather than
   guessing component names.
+- **Portable install:** `npx semiotic-ai --skill` prints this packaged skill so a
+  compatible agent host can install it at its documented skill location. The
+  npm package includes `agent-skill/semiotic-charts/SKILL.md` for offline use.
 
 ## Don't
 

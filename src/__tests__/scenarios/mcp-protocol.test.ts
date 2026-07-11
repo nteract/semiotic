@@ -54,8 +54,8 @@ if (!SERVER_DEPS_READY) {
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /** Spawn the MCP server process. */
-function spawnServer(): ChildProcess {
-  return spawn("node", [SERVER_PATH], {
+function spawnServer(args: string[] = []): ChildProcess {
+  return spawn("node", [SERVER_PATH, ...args], {
     stdio: ["pipe", "pipe", "pipe"],
     env: { ...process.env, NODE_ENV: "test" },
   })
@@ -426,6 +426,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
       "semiotic://components",
       "semiotic://examples",
       "semiotic://schema",
+      "semiotic://surface-manifest",
       "semiotic://system-prompt",
       "ui://semiotic/chart-widget.html",
     ])
@@ -464,6 +465,18 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(ids).toContain("color.category-precedence")
     expect(ids).toContain("streaming.push-mode-data")
     expect(ids).toContain("props.required-combinations")
+  })
+
+  it("resources/read returns the generated AI surface manifest", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "semiotic://surface-manifest",
+    }, "resources-read-surface-manifest")
+
+    expect(result.result).toBeDefined()
+    const manifest = JSON.parse(result.result.contents[0].text)
+    expect(manifest.__generated).toBe(true)
+    expect(manifest.components.schema).toBeGreaterThan(0)
+    expect(manifest.mcp.tools).toContain("suggestCharts")
   })
 
   it("resources/read returns the ChatGPT Apps chart widget", async () => {
@@ -1037,6 +1050,78 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
 
     // MCP SDK returns an error for unknown tools
     expect(result.error || result.result?.isError).toBeTruthy()
+  })
+})
+
+describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
+  it("exposes the five task-oriented public tools", async () => {
+    const publicProc = spawnServer(["--profile", "public"])
+    try {
+      await sendRequest(publicProc, "initialize", {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "semiotic-public-profile-test", version: "1.0.0" },
+      }, "public-profile-initialize")
+      const result = await sendRequest(publicProc, "tools/list", {}, "public-profile-tools")
+      expect(result.result.tools.map((tool: { name: string }) => tool.name).sort()).toEqual([
+        "auditChart",
+        "createChart",
+        "explainChart",
+        "getChartSchema",
+        "improveChart",
+      ])
+    } finally {
+      publicProc.kill()
+    }
+  })
+
+  it("creates only renderable charts without echoing bulk data", async () => {
+    const publicProc = spawnServer(["--profile", "public"])
+    try {
+      await sendRequest(publicProc, "initialize", {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "semiotic-public-create-test", version: "1.0.0" },
+      }, "public-create-initialize")
+
+      const rows = [
+        { category: "A", value: 2 },
+        { category: "B", value: 3 },
+      ]
+      const created = await sendRequest(publicProc, "tools/call", {
+        name: "createChart",
+        arguments: { data: rows, intent: "compare-categories" },
+      }, "public-create-chart")
+      expect(created.result.isError).not.toBe(true)
+      expect(created.result.structuredContent).toMatchObject({
+        status: "render-proven",
+        dataRowCount: 2,
+      })
+      expect(created.result.structuredContent.props.data).toBeUndefined()
+      expect(created.result.structuredContent.suggestion.props.data).toBeUndefined()
+
+      const trendRows = [
+        { time: 1, value: 2 },
+        { time: 2, value: 4 },
+        { time: 3, value: 3 },
+      ]
+      const browserOnly = await sendRequest(publicProc, "tools/call", {
+        name: "createChart",
+        arguments: { data: trendRows, intent: "trend", component: "BigNumber" },
+      }, "public-create-browser-only")
+      expect(browserOnly.result.isError).toBe(true)
+      expect(browserOnly.result.structuredContent.status).toBe("no-suggestion")
+      expect(browserOnly.result.structuredContent.suggestions).not.toContainEqual(
+        expect.objectContaining({ component: "BigNumber" })
+      )
+      expect(
+        browserOnly.result.structuredContent.suggestions.every(
+          (suggestion: { props: Record<string, unknown> }) => suggestion.props.data === undefined
+        )
+      ).toBe(true)
+    } finally {
+      publicProc.kill()
+    }
   })
 })
 

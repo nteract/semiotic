@@ -69,6 +69,7 @@ const BLURBS = {
   "./physics/matter": "Matter.js migration helpers + optional peer guard (no chart components)",
   "./physics/rapier": "Rapier peer guard + adapter decision metadata (no chart components)",
   "./ai":       "All schema-backed charts + validation — optimized for LLM code generation",
+  "./ai/core":  "suggestCharts, validateProps, describeChart, repairChartConfig, tool adapters — no chart components",
 }
 
 // Display order — independent of `package.json` key order so the
@@ -78,7 +79,7 @@ const BLURBS = {
 const ORDER = [
   "./xy", "./ordinal", "./network", "./geo", "./realtime", "./server",
   "./utils", "./recipes", "./themes", "./data", "./value", "./physics",
-  "./physics/matter", "./physics/rapier", "./ai", ".",
+  "./physics/matter", "./physics/rapier", "./ai", "./ai/core", ".",
 ]
 
 // `./` → "semiotic", "./xy" → "semiotic/xy", "." → "semiotic".
