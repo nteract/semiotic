@@ -385,6 +385,7 @@ Semiotic ships 12 entry points. **Don't import from `"semiotic"` unless you need
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
 | `semiotic/ai` | **386 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai/core` | **77 KB** | suggestCharts, validateProps, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic` | **250 KB** | Everything below (full bundle) |
 
 <!-- semiotic-bundle-sizes:end -->
