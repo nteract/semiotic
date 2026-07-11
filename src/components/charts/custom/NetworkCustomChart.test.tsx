@@ -16,6 +16,7 @@ import { symbolRadius } from "../../stream/symbolPath"
 let lastNetworkFrameProps: {
   customNetworkLayout?: NetworkCustomLayout
   layoutConfig?: Record<string, unknown>
+  onLayoutError?: unknown
   chartType?: string
   nodes?: unknown[]
   edges?: unknown[]
@@ -32,6 +33,7 @@ vi.mock("../../stream/StreamNetworkFrame", () => {
     default: React.forwardRef((props: {
       customNetworkLayout?: NetworkCustomLayout
       layoutConfig?: Record<string, unknown>
+      onLayoutError?: unknown
       chartType?: string
       nodes?: unknown[]
       edges?: unknown[]
@@ -100,6 +102,16 @@ describe("NetworkCustomChart", () => {
     expect(lastNetworkFrameProps?.nodeIDAccessor).toBe("key")
     expect(lastNetworkFrameProps?.sourceAccessor).toBe("from")
     expect(lastNetworkFrameProps?.targetAccessor).toBe("to")
+  })
+
+  it("forwards onLayoutError", () => {
+    const onLayoutError = vi.fn()
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart nodes={nodes} edges={edges} layout={trivialLayout} onLayoutError={onLayoutError} />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps?.onLayoutError).toBe(onLayoutError)
   })
 
   it("forwards colorBy to the network frame", () => {

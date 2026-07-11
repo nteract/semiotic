@@ -24,6 +24,7 @@ import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { MarginType } from "../types/marginType"
 import type { GeoCustomLayout } from "./geoCustomLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
+import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 
 // ── Projection prop ──────────────────────────────────────────────────
 
@@ -174,6 +175,8 @@ export interface GeoPipelineConfig {
   layoutConfig?: object
   layoutMargin?: MarginType
   layoutSelection?: CustomLayoutSelection | null
+  /** Receives structured information if `customLayout` throws. */
+  onLayoutError?: (diagnostic: CustomLayoutFailureDiagnostic) => void
   themeCategorical?: string[]
 }
 
@@ -203,6 +206,9 @@ export interface StreamGeoFrameProps<T = Datum> {
   layoutConfig?: object
   /** Shared-selection projection supplied by `GeoCustomChart`. */
   layoutSelection?: CustomLayoutSelection | null
+  /** Receives structured information if `customLayout` throws. The prior
+   *  successful scene remains visible when one is available. */
+  onLayoutError?: (diagnostic: CustomLayoutFailureDiagnostic) => void
 
   // ── Accessors ──
   xAccessor?: string | ((d: T) => number)
@@ -347,6 +353,10 @@ export interface StreamGeoFrameHandle {
   getData(): Datum[]
   /** The most recent custom layout result — host readback so pages that need
    *  the computed placement don't re-run the layout. Null before the first
-   *  layout or when no custom layout is configured. */
+   *  layout or when no custom layout is configured. A failed retry retains the
+   *  prior good result; inspect `getLayoutFailure()` to distinguish recovery. */
   getCustomLayout(): import("./geoCustomLayout").GeoLayoutResult | null
+  /** The most recent custom-layout failure, or null after a successful retry,
+   *  clear, or explicit removal of `customLayout`. */
+  getLayoutFailure(): CustomLayoutFailureDiagnostic | null
 }

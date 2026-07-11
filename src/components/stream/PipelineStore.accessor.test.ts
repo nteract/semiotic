@@ -63,7 +63,28 @@ describe("PipelineStore — Accessor Stability", () => {
     expect(store.getExtents()).toEqual({ x: [100, 200], y: [1000, 2000] })
   })
 
-  it("does not set needsFullRebuild for functionally equivalent inline arrows", () => {
+  it("keeps the existing x accessor when a partial update changes only y", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "x1",
+      yAccessor: "y1",
+    }))
+    store.ingest({
+      inserts: [
+        { x1: 1, y1: 10, y2: 100 },
+        { x1: 2, y1: 20, y2: 200 },
+      ],
+      bounded: true,
+    })
+
+    store.updateConfig({ yAccessor: "y2" })
+
+    expect(store.getXAccessor()({ x: 999, x1: 7 })).toBe(7)
+    expect(store.getExtents()).toEqual({ x: [1, 2], y: [100, 200] })
+  })
+
+  it("sets needsFullRebuild for a new inline-arrow accessor identity (identity semantics)", () => {
     const store = new PipelineStore(makeConfig({
       xAccessor: (d: Datum) => d.time,
       yAccessor: (d: Datum) => d.value
@@ -72,12 +93,46 @@ describe("PipelineStore — Accessor Stability", () => {
     store.computeScene({ width: 100, height: 100 })
     rebuildFlag(store).needsFullRebuild = false
 
-    // Simulate a React re-render: new function objects with identical source
+    // Simulate a React re-render passing NEW function objects. The library can
+    // no longer prove these are semantically identical to the old closures
+    // (identical source can still capture different values), so it rebuilds.
     store.updateConfig({
       xAccessor: (d: Datum) => d.time,
       yAccessor: (d: Datum) => d.value
     })
+    expect(rebuildFlag(store).needsFullRebuild).toBe(true)
+  })
+
+  it("does not set needsFullRebuild when the SAME function reference is re-passed", () => {
+    const xAccessor = (d: Datum) => d.time
+    const yAccessor = (d: Datum) => d.value
+    const store = new PipelineStore(makeConfig({ xAccessor, yAccessor }))
+    store.ingest({ inserts: [{ time: 1, value: 2 }], bounded: false })
+    store.computeScene({ width: 100, height: 100 })
+    rebuildFlag(store).needsFullRebuild = false
+
+    // Stable references (as a `useCallback`-memoized accessor would produce).
+    store.updateConfig({ xAccessor, yAccessor })
     expect(rebuildFlag(store).needsFullRebuild).toBe(false)
+  })
+
+  it("re-resolves derived extents when a same-source closure captures a new value", () => {
+    // The P0 correctness regression, exercised end-to-end at the store level.
+    const makeY = (mult: number) => (d: Datum) => (d.value as number) * mult
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      runtimeMode: "bounded",
+      xAccessor: "t",
+      yAccessor: makeY(1),
+    }))
+    store.ingest({ inserts: [{ t: 0, value: 10 }, { t: 1, value: 20 }], bounded: true })
+    expect(store.getExtents()!.y).toEqual([10, 20])
+
+    // Same source text (`d => d.value * mult`), different captured `mult`.
+    // `updateConfig` rebuilds extents in place from the existing buffer.
+    store.updateConfig({ yAccessor: makeY(10) })
+    // Old behaviour retained [10, 20]; identity semantics rebuild to ×10.
+    expect(store.getExtents()!.y).toEqual([100, 200])
   })
 
   it("sets needsFullRebuild when function accessor source changes", () => {
@@ -101,13 +156,34 @@ describe("PipelineStore — Accessor Stability", () => {
     expect(rebuildFlag(store).needsFullRebuild).toBe(false)
   })
 
-  it("does not set needsFullRebuild for equivalent colorAccessor", () => {
-    const store = new PipelineStore(makeConfig({
-      colorAccessor: (d: Datum) => d.category
-    }))
+  it("accessorRevision forces extent re-derivation when a stable accessor's capture changed", () => {
+    // A `useCallback([])`-style stable accessor that reads external mutable
+    // state. Its identity never changes, so identity comparison can't see the
+    // change — accessorRevision is the documented escape hatch.
+    let mult = 1
+    const yAccessor = (d: Datum) => (d.value as number) * mult
+    // Re-pass the full accessor set each render, as the frame does.
+    const accessors = { chartType: "line" as const, runtimeMode: "bounded" as const, xAccessor: "t", yAccessor }
+    const store = new PipelineStore(makeConfig(accessors))
+    store.ingest({ inserts: [{ t: 0, value: 10 }, { t: 1, value: 20 }], bounded: true })
+    expect(store.getExtents()!.y).toEqual([10, 20])
+
+    // Mutate the captured value; re-passing the SAME references is a no-op.
+    mult = 10
+    store.updateConfig({ ...accessors })
+    expect(store.getExtents()!.y).toEqual([10, 20]) // still stale — by design
+
+    // Bumping accessorRevision forces re-derivation against the live accessor.
+    store.updateConfig({ ...accessors, accessorRevision: 1 })
+    expect(store.getExtents()!.y).toEqual([100, 200])
+  })
+
+  it("does not set needsFullRebuild for a re-passed stable colorAccessor reference", () => {
+    const colorAccessor = (d: Datum) => d.category
+    const store = new PipelineStore(makeConfig({ colorAccessor }))
     rebuildFlag(store).needsFullRebuild = false
 
-    store.updateConfig({ colorAccessor: (d: Datum) => d.category })
+    store.updateConfig({ colorAccessor })
     expect(rebuildFlag(store).needsFullRebuild).toBe(false)
   })
 
@@ -139,7 +215,7 @@ describe("PipelineStore — Accessor Stability", () => {
     expect(rebuildFlag(store).needsFullRebuild).toBe(false)
   })
 
-  it("resolved accessor functions still work after skipping re-resolution", () => {
+  it("resolved accessor functions still work after re-resolution from new identities", () => {
     const store = new PipelineStore(makeConfig({
       xAccessor: (d: Datum) => d.ts,
       yAccessor: (d: Datum) => d.val,
@@ -148,7 +224,8 @@ describe("PipelineStore — Accessor Stability", () => {
     store.ingest({ inserts: [{ ts: 10, val: 20 }], bounded: true })
     store.computeScene({ width: 100, height: 100 })
 
-    // Pass equivalent functions — should NOT re-resolve
+    // Pass new function objects with identical source — under identity semantics
+    // these re-resolve the accessors; the scene must remain valid afterwards.
     store.updateConfig({
       xAccessor: (d: Datum) => d.ts,
       yAccessor: (d: Datum) => d.val

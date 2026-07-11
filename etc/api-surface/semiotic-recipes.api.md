@@ -215,6 +215,7 @@ interface CollisionBox
 interface ComposedPhysicsControllers
 interface CubicCurve
 interface CurvedEdgeOptions
+interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface CustomTooltipEntry
 interface CustomTooltipEntryOptions
@@ -358,6 +359,8 @@ type AxisOrient
 type BandScale
 type CalloutConnector
 type CustomLayout
+type CustomLayoutFailureRecovery
+type CustomLayoutFamily
 type EdgeOrientation
 type HighlightMatch
 type IsometricTerrainKind

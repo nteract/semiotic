@@ -26,6 +26,7 @@ function useForceLayout
 function validateProcessSankey
 interface ChordDiagramProps
 interface CirclePackProps
+interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface ForceDirectedGraphProps
 interface GlyphDef
@@ -57,6 +58,8 @@ interface ThresholdAlertConfig
 interface TreeDiagramProps
 interface TreemapProps
 interface UseForceLayoutResult
+type CustomLayoutFailureRecovery
+type CustomLayoutFamily
 type ForceLayoutStatus
 type NetworkChartType
 type NetworkCustomLayout

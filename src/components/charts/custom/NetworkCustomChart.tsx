@@ -30,6 +30,8 @@ export interface NetworkCustomChartProps<
   layout: NetworkCustomLayout<TConfig>
   /** Config blob threaded through to NetworkLayoutContext.config. */
   layoutConfig?: TConfig
+  /** Receives a structured diagnostic if the layout throws. */
+  onLayoutError?: StreamNetworkFrameProps["onLayoutError"]
   recipe?: ChartRecipe<TNode, TConfig>
   recipeId?: string
   /** Field name (or function) for the node id. @default "id" */
@@ -104,6 +106,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     edges,
     layout,
     layoutConfig,
+    onLayoutError,
     nodeIDAccessor = "id",
     sourceAccessor = "source",
     targetAccessor = "target",
@@ -182,6 +185,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     ...(edges != null && { edges: safeEdges }),
     customNetworkLayout: layout as NetworkCustomLayout,
     layoutConfig,
+    onLayoutError,
     nodeIDAccessor,
     sourceAccessor,
     targetAccessor,

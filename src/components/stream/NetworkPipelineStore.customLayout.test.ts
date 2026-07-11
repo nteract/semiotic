@@ -1,7 +1,7 @@
 import { afterEach, describe, it, expect, vi } from "vitest"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import type { NetworkPipelineConfig, NetworkCircleNode, NetworkLineEdge } from "./networkTypes"
-import type { NetworkLayoutContext } from "./networkCustomLayout"
+import type { NetworkLayoutContext, NetworkLayoutResult } from "./networkCustomLayout"
 
 function baseConfig(extra: Partial<NetworkPipelineConfig> = {}): NetworkPipelineConfig {
   return {
@@ -269,10 +269,72 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.customLayoutHtmlMarks).toEqual([])
   })
 
-  it("renders empty scene when layout throws", () => {
-    const layout = () => { throw new Error("boom") }
+  it("preserves the last good custom scene/result/overlays when a re-layout throws", () => {
+    const overlay = { _sentinel: "last-good" } as unknown as React.ReactNode
+    let shouldThrow = false
+    let result: NetworkLayoutResult | null = null
+    const onLayoutError = vi.fn()
+    const layout = (ctx: NetworkLayoutContext): NetworkLayoutResult => {
+      if (shouldThrow) throw new Error("network exploded")
+      result = {
+        sceneNodes: ctx.nodes.map<NetworkCircleNode>((node) => ({
+          type: "circle",
+          cx: 20,
+          cy: 30,
+          r: 6,
+          style: { fill: "#123456", opacity: 1 },
+          datum: node,
+          id: node.id,
+        })),
+        overlays: overlay,
+        htmlMarks: [{ id: "a", x: 1, y: 2, width: 20, height: 10, content: null }],
+        restyle: () => ({ opacity: 0.5 }),
+      }
+      return result
+    }
     const store = new NetworkPipelineStore(baseConfig({
       customNetworkLayout: layout,
+      onLayoutError,
+    }))
+    store.ingestBounded([{ id: "a" }], [], [100, 100])
+    store.buildScene([100, 100])
+    const lastGoodNodes = store.sceneNodes
+    const lastGoodEdges = store.sceneEdges
+
+    vi.spyOn(console, "error").mockImplementation(() => undefined)
+    shouldThrow = true
+    store.buildScene([240, 160])
+
+    expect(store.sceneNodes).toBe(lastGoodNodes)
+    expect(store.sceneEdges).toBe(lastGoodEdges)
+    expect(store.customLayoutOverlays).toBe(overlay)
+    expect(store.customLayoutHtmlMarks).toEqual([{ id: "a", x: 1, y: 2, width: 20, height: 10, content: null }])
+    expect(store.lastCustomLayoutResult).toBe(result)
+    expect(store.hasCustomRestyle).toBe(true)
+    expect(store.lastCustomLayoutFailure).toMatchObject({
+      code: "CUSTOM_LAYOUT_ERROR",
+      severity: "error",
+      phase: "layout",
+      component: "network",
+      source: "customNetworkLayout",
+      error: { name: "Error", message: "network exploded" },
+      recovery: "preserved-last-good-scene",
+      preservedLastGoodScene: true,
+      affectedRevision: 1,
+    })
+    expect(onLayoutError).toHaveBeenCalledWith(store.lastCustomLayoutFailure)
+
+    shouldThrow = false
+    store.buildScene([240, 160])
+    expect(store.lastCustomLayoutFailure).toBeNull()
+  })
+
+  it("reports an empty-scene recovery when the first custom layout attempt throws", () => {
+    const layout = () => { throw new Error("boom") }
+    const onLayoutError = vi.fn()
+    const store = new NetworkPipelineStore(baseConfig({
+      customNetworkLayout: layout,
+      onLayoutError,
     }))
     store.ingestBounded([{ id: "a" }], [], [100, 100])
     store.buildScene([100, 100])
@@ -281,6 +343,13 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.sceneEdges).toEqual([])
     expect(store.labels).toEqual([])
     expect(store.customLayoutHtmlMarks).toEqual([])
+    expect(store.lastCustomLayoutResult).toBeNull()
+    expect(store.lastCustomLayoutFailure).toMatchObject({
+      recovery: "empty-scene",
+      preservedLastGoodScene: false,
+      error: { name: "Error", message: "boom" },
+    })
+    expect(onLayoutError).toHaveBeenCalledWith(store.lastCustomLayoutFailure)
   })
 
   it("wraps raw nodes in RealtimeNode with user data on `node.data`", () => {

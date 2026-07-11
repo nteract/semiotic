@@ -157,7 +157,7 @@ export default function DataCentersIsotypeExamplePage() {
   }, [])
 
   return (
-    <ExamplePageLayout title="The buildings behind AI">
+    <ExamplePageLayout title="The Buildings Behind AI">
       <p className="dc-isotype__lede">
         Data centers did not begin with generative AI. This explainer separates the installed cloud
         base from facilities opened after ChatGPT, active construction, and announcements—and

@@ -92,13 +92,77 @@ describe("OrdinalPipelineStore customLayout", () => {
     expect(store.customLayoutOverlays).toBeNull()
   })
 
-  it("renders empty scene when layout throws", () => {
+  it("preserves the last good custom scene/result and reports a structured failure", () => {
+    const overlay = { _sentinel: "last-good" } as unknown as React.ReactNode
+    const result = {
+      nodes: [{
+        type: "rect" as const,
+        x: 12,
+        y: 18,
+        w: 20,
+        h: 10,
+        style: { fill: "#123456", opacity: 1 },
+        datum: { category: "A", value: 1 },
+      }],
+      overlays: overlay,
+      restyle: () => ({ opacity: 0.5 }),
+    }
+    let shouldThrow = false
+    const onLayoutError = vi.fn()
+    const store = new OrdinalPipelineStore(baseConfig({
+      customLayout: () => {
+        if (shouldThrow) throw new Error("ordinal exploded")
+        return result
+      },
+      onLayoutError,
+    }))
+    store.ingest({ inserts: [{ category: "A", value: 1 }], bounded: true })
+    store.computeScene({ width: 100, height: 100 })
+    const lastGoodScene = store.scene
+    const lastGoodScales = store.scales
+
+    vi.spyOn(console, "error").mockImplementation(() => undefined)
+    shouldThrow = true
+    store.computeScene({ width: 240, height: 160 })
+
+    expect(store.scene).toBe(lastGoodScene)
+    expect(store.scales).toBe(lastGoodScales)
+    expect(store.customLayoutOverlays).toBe(overlay)
+    expect(store.lastCustomLayoutResult).toBe(result)
+    expect(store.hasCustomRestyle).toBe(true)
+    expect(store.lastCustomLayoutFailure).toMatchObject({
+      code: "CUSTOM_LAYOUT_ERROR",
+      severity: "error",
+      phase: "layout",
+      component: "ordinal",
+      source: "customLayout",
+      error: { name: "Error", message: "ordinal exploded" },
+      recovery: "preserved-last-good-scene",
+      preservedLastGoodScene: true,
+      affectedRevision: 1,
+    })
+    expect(onLayoutError).toHaveBeenCalledWith(store.lastCustomLayoutFailure)
+
+    shouldThrow = false
+    store.computeScene({ width: 240, height: 160 })
+    expect(store.lastCustomLayoutFailure).toBeNull()
+  })
+
+  it("reports an empty-scene recovery when the first custom layout attempt throws", () => {
     const layout = () => { throw new Error("boom") }
-    const store = new OrdinalPipelineStore(baseConfig({ customLayout: layout }))
+    const onLayoutError = vi.fn()
+    const store = new OrdinalPipelineStore(baseConfig({ customLayout: layout, onLayoutError }))
     store.ingest({ inserts: [{ category: "A", value: 1 }], bounded: true })
     store.computeScene({ width: 100, height: 100 })
 
     expect(store.scene).toEqual([])
+    expect(store.lastCustomLayoutResult).toBeNull()
+    expect(store.lastCustomLayoutFailure).toMatchObject({
+      recovery: "empty-scene",
+      preservedLastGoodScene: false,
+      error: { name: "Error", message: "boom" },
+    })
+    expect(onLayoutError).toHaveBeenCalledWith(store.lastCustomLayoutFailure)
   })
 
   it("resolveColor honors named d3 schemes (e.g. tableau10)", () => {

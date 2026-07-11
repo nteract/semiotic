@@ -650,6 +650,10 @@ export interface NetworkPipelineConfig {
   /** When provided, replaces both layout dispatch and scene building.
    *  Receives raw nodes/edges and returns positioned scene primitives. */
   customNetworkLayout?: import("./networkCustomLayout").NetworkCustomLayout
+  /** Called when `customNetworkLayout` throws. */
+  onLayoutError?: (
+    diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic
+  ) => void
   /** User-supplied config blob threaded through to NetworkLayoutContext.config. */
   layoutConfig?: object
   /** Resolved shared-selection predicate, surfaced to a custom layout as
@@ -807,6 +811,10 @@ export interface StreamNetworkFrameProps<T = Datum> {
    *  Receives raw nodes/edges + dimensions/theme, returns positioned scene
    *  primitives. See `semiotic/recipes` for reference layouts (flextree, dagre). */
   customNetworkLayout?: import("./networkCustomLayout").NetworkCustomLayout
+  /** Called when `customNetworkLayout` throws. */
+  onLayoutError?: (
+    diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic
+  ) => void
   /** User-supplied config blob threaded through to NetworkLayoutContext.config. */
   layoutConfig?: object
   /** Resolved shared-selection predicate, surfaced to a custom layout as
@@ -836,8 +844,12 @@ export interface StreamNetworkFrameHandle {
   /** The most recent custom layout result (sceneNodes/sceneEdges/overlays as
    *  returned by `customNetworkLayout`) — host readback so pages that need the
    *  computed placement don't re-run the layout. Null before the first layout
-   *  or when no custom layout is configured. */
+   *  or when no custom layout is configured. A failed retry retains the prior
+   *  good result; inspect `getLayoutFailure()` to distinguish recovery. */
   getCustomLayout(): import("./networkCustomLayout").NetworkLayoutResult | null
+  /** The latest custom-layout failure, if any. Cleared by a successful layout,
+   * removing the custom layout, or `clear()`. */
+  getLayoutFailure(): import("./customLayoutFailure").CustomLayoutFailureDiagnostic | null
 }
 
 // ── Canvas renderer function type ───────────────────────────────────

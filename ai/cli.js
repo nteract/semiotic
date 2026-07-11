@@ -50,6 +50,7 @@ Usage:
   npx semiotic-ai --examples   Print ai/examples.md (copy-paste examples)
   npx semiotic-ai --skill      Print the portable Semiotic Agent Skill
   npx semiotic-ai --doctor     Validate { component, props, usageMode? } JSON from stdin
+                                (exits nonzero on errors; add --json for a machine-readable report)
   npx semiotic-ai --audit-a11y Audit { component, props, inChartContainer?, describe?, navigable? }
   npx semiotic-ai --audit-mobile Audit { component, props, viewportWidth?, targetSize?, inChartContainer? }
                                 JSON against Chartability (POUR-CAF) accessibility heuristics
@@ -189,8 +190,15 @@ function validatePropsWithSchema(componentName, props, usageMode = "static") {
       continue
     }
 
-    if (propSchema.type && !schemaTypeMatches(value, propSchema.type)) {
-      const expected = Array.isArray(propSchema.type) ? propSchema.type.join(" | ") : propSchema.type
+    // Prefer the full runtime type surface (`x-semiotic-runtime-types`, e.g.
+    // ["string","function"]) over the wire-only `type` ("string"), so a valid
+    // function value for a prop like `colorBy`/`onBrush` is still accepted. The
+    // wire `type` keyword is standards-valid JSON Schema and never lists
+    // "function"; the runtime extension carries it. Falls back to `type` for
+    // props with no runtime-only alternatives.
+    const effectiveType = propSchema["x-semiotic-runtime-types"] || propSchema.type
+    if (effectiveType && !schemaTypeMatches(value, effectiveType)) {
+      const expected = Array.isArray(effectiveType) ? effectiveType.join(" | ") : effectiveType
       errors.push(`"${propName}" should be ${expected}, got ${describeActualType(value)}.`)
     }
 
@@ -205,6 +213,8 @@ function validatePropsWithSchema(componentName, props, usageMode = "static") {
   }
 }
 
+// Returns true when the schema-only validation passed, so the caller can set
+// the process exit code (nonzero on failure — this is a CI gate).
 function printSchemaOnlyDoctorResult(component, props, usageMode) {
   const result = validatePropsWithSchema(component, props, usageMode)
   if (usageMode === "push") {
@@ -219,6 +229,7 @@ function printSchemaOnlyDoctorResult(component, props, usageMode) {
     }
   }
   printDoctorBehaviorContracts(component, props)
+  return result.valid
 }
 
 function printDoctorBehaviorContracts(component, props) {
@@ -232,8 +243,11 @@ function printDoctorBehaviorContracts(component, props) {
 }
 
 function readJSONInput(usage) {
-  if (process.argv[3]) {
-    return process.argv.slice(3).join(" ")
+  // Skip flag tokens (e.g. `--json`) so `--doctor --json` still reads the JSON
+  // from stdin rather than trying to parse the flag as the input.
+  const positional = process.argv.slice(3).filter((arg) => !arg.startsWith("--"))
+  if (positional.length > 0) {
+    return positional.join(" ")
   }
   if (!process.stdin.isTTY) {
     return fs.readFileSync(0, "utf-8")
@@ -280,10 +294,15 @@ if (flag === "--suggest") {
 if (flag === "--doctor") {
   const input = readJSONInput("Usage: npx semiotic-ai --doctor '{\"component\":\"LineChart\",\"props\":{\"data\":[...]},\"usageMode\":\"static\"}'\n       echo '{\"component\":\"LineChart\",\"props\":{\"xAccessor\":\"x\",\"yAccessor\":\"y\"},\"usageMode\":\"push\"}' | npx semiotic-ai --doctor")
 
+  // `--json` emits a stable machine-readable report instead of the human text.
+  const asJson = process.argv.includes("--json")
+
   try {
     const { component, props, usageMode: rawUsageMode } = JSON.parse(input)
     if (!component || !props) {
-      console.error("Input must be JSON with { component, props } fields.")
+      const msg = "Input must be JSON with { component, props } fields."
+      if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+      else console.error(msg)
       process.exit(1)
     }
     const usageMode = normalizeUsageMode(rawUsageMode)
@@ -302,68 +321,88 @@ if (flag === "--doctor") {
       // packaged schema so the CLI still catches basic agent mistakes.
     }
 
-    if (!diagnoseConfig && !validateProps) {
-      printSchemaOnlyDoctorResult(component, props, usageMode)
-      process.exit(0)
-    }
+    // Tracks whether the doctor found any error-level problem. The process
+    // MUST exit nonzero when this is false so CI/agents can gate on it.
+    let ok
 
-    if (diagnoseConfig) {
+    if (!diagnoseConfig && !validateProps) {
+      if (asJson) {
+        const result = validatePropsWithSchema(component, props, usageMode)
+        ok = result.valid
+        console.log(JSON.stringify({ component, usageMode, mode: "schema-only", ok, errors: result.errors }, null, 2))
+      } else {
+        ok = printSchemaOnlyDoctorResult(component, props, usageMode)
+      }
+    } else if (diagnoseConfig) {
       // Use the full anti-pattern detector
       const result = diagnoseConfig(component, props)
       const diagnoses = usageMode === "push"
         ? result.diagnoses.filter((d) => d.code !== "VALIDATION" || !shouldSkipMissingRequiredProp(component, "data", usageMode) || d.message !== `"data" is required for ${component}.`)
         : result.diagnoses
-      const ok = diagnoses.every((d) => d.severity === "warning")
+      ok = diagnoses.every((d) => d.severity === "warning")
 
-      if (usageMode === "push") {
-        console.log(`  Usage mode: push (data prop may be omitted; use a ref to push data)`)
-      }
-
-      // Show data shape summary
-      if (props.data && Array.isArray(props.data) && props.data.length > 0) {
-        const sample = props.data[0]
-        console.log(`  Data shape: ${props.data.length} items, keys: [${Object.keys(sample).join(", ")}]`)
-      }
-
-      if (ok && diagnoses.length === 0) {
-        console.log(`✓ ${component}: configuration looks good.`)
-      } else if (ok) {
-        console.log(`✓ ${component}: configuration OK with warnings:`)
-        for (const d of diagnoses) {
-          console.log(`  ⚠ [${d.code}] ${d.message}`)
-          if (d.fix) console.log(`    Fix: ${d.fix}`)
-        }
+      if (asJson) {
+        console.log(JSON.stringify({ component, usageMode, mode: "diagnose", ok, diagnoses }, null, 2))
       } else {
-        console.log(`✗ ${component}: issues detected.`)
-        for (const d of diagnoses) {
-          const icon = d.severity === "error" ? "✗" : "⚠"
-          console.log(`  ${icon} [${d.code}] ${d.message}`)
-          if (d.fix) console.log(`    Fix: ${d.fix}`)
+        if (usageMode === "push") {
+          console.log(`  Usage mode: push (data prop may be omitted; use a ref to push data)`)
         }
+
+        // Show data shape summary
+        if (props.data && Array.isArray(props.data) && props.data.length > 0) {
+          const sample = props.data[0]
+          console.log(`  Data shape: ${props.data.length} items, keys: [${Object.keys(sample).join(", ")}]`)
+        }
+
+        if (ok && diagnoses.length === 0) {
+          console.log(`✓ ${component}: configuration looks good.`)
+        } else if (ok) {
+          console.log(`✓ ${component}: configuration OK with warnings:`)
+          for (const d of diagnoses) {
+            console.log(`  ⚠ [${d.code}] ${d.message}`)
+            if (d.fix) console.log(`    Fix: ${d.fix}`)
+          }
+        } else {
+          console.log(`✗ ${component}: issues detected.`)
+          for (const d of diagnoses) {
+            const icon = d.severity === "error" ? "✗" : "⚠"
+            console.log(`  ${icon} [${d.code}] ${d.message}`)
+            if (d.fix) console.log(`    Fix: ${d.fix}`)
+          }
+        }
+        printDoctorBehaviorContracts(component, props)
       }
-      printDoctorBehaviorContracts(component, props)
     } else {
       // Fallback to validateProps only
       const result = validateProps(component, props)
       const errors = filterUsageModeErrors(component, result.errors, usageMode)
-      if (usageMode === "push") {
-        console.log(`  Usage mode: push (data prop may be omitted; use a ref to push data)`)
-      }
-      if (errors.length === 0) {
-        console.log(`✓ ${component}: props are valid.`)
+      ok = errors.length === 0
+      if (asJson) {
+        console.log(JSON.stringify({ component, usageMode, mode: "validate", ok, errors }, null, 2))
       } else {
-        console.log(`✗ ${component}: validation failed.`)
-        for (const err of errors) {
-          console.log(`  • ${err}`)
+        if (usageMode === "push") {
+          console.log(`  Usage mode: push (data prop may be omitted; use a ref to push data)`)
         }
+        if (ok) {
+          console.log(`✓ ${component}: props are valid.`)
+        } else {
+          console.log(`✗ ${component}: validation failed.`)
+          for (const err of errors) {
+            console.log(`  • ${err}`)
+          }
+        }
+        printDoctorBehaviorContracts(component, props)
       }
-      printDoctorBehaviorContracts(component, props)
     }
+
+    // Exit nonzero when an error-level problem was found (warnings still exit 0).
+    process.exit(ok ? 0 : 1)
   } catch (err) {
-    console.error(`Failed to parse input: ${errorMessage(err)}`)
+    const msg = `Failed to parse input: ${errorMessage(err)}`
+    if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+    else console.error(msg)
     process.exit(1)
   }
-  process.exit(0)
 }
 
 // --audit-a11y: grade component + props against Chartability heuristics

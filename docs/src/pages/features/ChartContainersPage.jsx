@@ -530,7 +530,7 @@ const notifications = report.findings
         own store or telemetry. Mark-level findings belong on the plot as{" "}
         <Link to="/annotations/overview">annotations</Link>; notifications are
         for everything that describes the chart as a whole. See the{" "}
-        <Link to="/examples/chart-clinic">Chart Clinic</Link> example for the
+        <Link to="/examples/what-the-machine-sees">What the Machine Sees</Link> example for the
         two surfaces working together on a real audit report.
       </p>
 

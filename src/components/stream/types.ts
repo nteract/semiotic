@@ -708,6 +708,12 @@ export interface StreamXYFrameProps<T = Datum> {
   // ── Accessors ────────────────────────────────────
   xAccessor?: string | ((d: T) => CoercibleNumber)
   yAccessor?: string | ((d: T) => CoercibleNumber)
+  /**
+   * Force domain/scene re-derivation when a stable function accessor's
+   * external semantics changed without receiving a new function identity.
+   * Prefer changing the accessor reference where possible.
+   */
+  accessorRevision?: number
   colorAccessor?: string | ((d: T) => string)
   sizeAccessor?: string | ((d: T) => CoercibleNumber)
   /** Categorical accessor → glyph shape (scatter/bubble). */
@@ -990,6 +996,11 @@ export interface StreamXYFrameProps<T = Datum> {
    *  returns SceneNode[] + optional overlays. See `semiotic/recipes` for
    *  reference layouts (waffle, calendar, horizon). */
   customLayout?: import("./customLayout").CustomLayout
+  /** Called when `customLayout` throws. See `getLayoutFailure()` for the
+   * latest structured failure diagnostic. */
+  onLayoutError?: (
+    diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic
+  ) => void
   /** User-supplied config blob threaded through to LayoutContext.config.
    *  Typed as `object` so caller-defined interfaces (without an index
    *  signature) flow through without casts; layouts narrow via their
@@ -1017,8 +1028,12 @@ export interface StreamXYFrameHandle<T = Datum> {
   /** The most recent custom layout result (nodes/overlays as returned by the
    *  `customLayout` function) — host readback so pages that need the computed
    *  placement don't re-run the layout. Null before the first layout or when
-   *  no custom layout is configured. */
+   *  no custom layout is configured. A failed retry retains the prior good
+   *  result; inspect `getLayoutFailure()` to distinguish that recovery. */
   getCustomLayout(): import("./customLayout").LayoutResult | null
+  /** The latest custom-layout failure, if any. Cleared by the next successful
+   * layout, by removing the custom layout, or by `clear()`. */
+  getLayoutFailure(): import("./customLayoutFailure").CustomLayoutFailureDiagnostic | null
 }
 
 // ── Canvas renderer function type ──────────────────────────────────────

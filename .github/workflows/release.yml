@@ -25,17 +25,32 @@ jobs:
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Verify release tag matches package version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          EXPECTED_TAG="v${VERSION}"
+          if [ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]; then
+            echo "Release tag mismatch: expected $EXPECTED_TAG for package.json version $VERSION, got $GITHUB_REF_NAME"
+            exit 1
+          fi
+          echo "Verified release tag $EXPECTED_TAG"
+
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
       - name: Build library
-        run: npm run dist
+        run: npm run dist:prod
+
+      - name: Check packed cold-consumer named-import baseline
+        # This check calls npm pack, so it intentionally runs here instead of
+        # inside prepublishOnly (where nested pack calls can be re-entrant).
+        run: npm run check:cold-consumer
 
       - name: Build MCP server
         run: npm run build:mcp
 
       - name: Run tests with coverage
-        run: npx vitest run --coverage
+        run: npm run test:coverage
 
       - name: Run type check
         run: npm run typescript

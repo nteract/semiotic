@@ -59,6 +59,16 @@ export interface PipelineConfig {
   groupAccessor?: string | ((d: Datum) => string)
   categoryAccessor?: string | ((d: Datum) => string)
   lineDataAccessor?: string
+  /**
+   * Escape hatch for the unusual case where a *stable* function accessor's
+   * captured semantics change without its identity changing (e.g. a
+   * `useCallback([])`-memoized closure that reads external mutable state).
+   * Accessor equality is identity-based, so such a change is invisible to the
+   * store. Bump this number to force the store to re-derive domains and rebuild
+   * the scene against the current accessor. Prefer changing the accessor
+   * identity (add the captured value to the `useCallback` dependency array);
+   * reach for `accessorRevision` only when you cannot. */
+  accessorRevision?: number
 
   // Scale types
   xScaleType?: "linear" | "log" | "time"
@@ -171,6 +181,12 @@ export interface PipelineConfig {
    *  Receives a LayoutContext (scales, dimensions, theme, resolveColor)
    *  and returns scene nodes plus optional overlays. */
   customLayout?: CustomLayout
+  /** Called when `customLayout` throws. The previous successful custom scene
+   * remains visible when one exists; inspect the diagnostic's `recovery` to
+   * distinguish that case from an initial empty-scene failure. */
+  onLayoutError?: (
+    diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic
+  ) => void
   /** User-supplied config blob threaded through to LayoutContext.config. */
   layoutConfig?: object
   /** Resolved margin — passed through so LayoutContext.dimensions.margin reflects what the frame actually used. */
@@ -192,4 +208,3 @@ export const DEFAULT_GROWING_MAX_CAPACITY = 100_000
 export const GROWING_CAPACITY_WARN_THRESHOLD = 50_000
 
 // ── PipelineStore ──────────────────────────────────────────────────────
-

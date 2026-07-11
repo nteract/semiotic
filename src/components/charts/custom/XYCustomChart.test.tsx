@@ -11,6 +11,7 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 let lastXYFrameProps: {
   customLayout?: CustomLayout
   layoutConfig?: Record<string, unknown>
+  onLayoutError?: unknown
   chartType?: string
   colorAccessor?: unknown
 } | null = null
@@ -20,6 +21,7 @@ vi.mock("../../stream/StreamXYFrame", () => {
     default: React.forwardRef((props: {
       customLayout?: CustomLayout
       layoutConfig?: Record<string, unknown>
+      onLayoutError?: unknown
       chartType?: string
       colorAccessor?: unknown
     }, _ref: unknown) => {
@@ -76,6 +78,16 @@ describe("XYCustomChart", () => {
       </TooltipProvider>
     )
     expect(lastXYFrameProps?.layoutConfig).toEqual({ rows: 5, columns: 5 })
+  })
+
+  it("forwards onLayoutError", () => {
+    const onLayoutError = vi.fn()
+    render(
+      <TooltipProvider>
+        <XYCustomChart data={[{ value: 1 }]} layout={trivialLayout} onLayoutError={onLayoutError} />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps?.onLayoutError).toBe(onLayoutError)
   })
 
   it("maps colorBy to the frame colorAccessor", () => {

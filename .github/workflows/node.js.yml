@@ -49,8 +49,11 @@ jobs:
       - name: Build MCP server
         run: npm run build:mcp
 
+      - name: Check Cloud Run deployment manifest
+        run: npm run check:cloud-run-manifest
+
       - name: Run tests with coverage
-        run: npx vitest run --coverage
+        run: npm run test:coverage
 
       - name: Run type check
         run: npm run typescript
@@ -117,6 +120,9 @@ jobs:
 
       - name: Check bundle-size docs (README + CLAUDE.md + ai/system-prompt.md)
         run: npm run check:bundle-sizes
+
+      - name: Check packed cold-consumer named-import baseline
+        run: npm run check:cold-consumer
 
       - name: Pack smoke test (verify all entry points resolve)
         run: npm run check:pack
@@ -285,21 +291,11 @@ jobs:
         run: npm run dist
 
       - name: Run E2E tests
-        # `--update-snapshots=missing` (playwright 1.42+) writes a baseline
-        # only when the spec×browser×OS combination has none. Existing
-        # baselines stay locked in — diff failures still fail the build,
-        # so the regression gate is intact for everything that's been
-        # bootstrapped. New tests / new OS-browser combos get their
-        # baseline on first run instead of failing. The freshly-written
-        # baselines flow into the `playwright-snapshots` artifact below;
-        # maintainers commit them periodically to make the gate denser.
-        #
-        # Replaces a prior HAVE_LINUX binary gate that ran a full
-        # `--update-snapshots` (no value, overwrites everything) the
-        # first time and skipped on subsequent runs — which left
-        # single-test misses (a flaky run, a renamed test) permanently
-        # failing CI because no second bootstrap pass would fire.
-        run: node scripts/run-playwright-missing-snapshot-bootstrap.mjs
+        # CI is the visual regression gate: a missing baseline is an
+        # unreviewed visual contract, not a reason to create one during a
+        # pull request. Maintainers can use `test:visual:bootstrap` locally
+        # to generate a proposed baseline, then commit it with review.
+        run: npx playwright test --update-snapshots=none
 
       - name: Upload snapshot baselines
         if: always()

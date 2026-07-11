@@ -6,15 +6,48 @@
  * real-world streaming rates without memory leaks or frame budget overruns.
  */
 
-import { describe, bench, beforeAll } from "vitest"
+import { describe, bench } from "vitest"
 import { RingBuffer } from "../../src/components/realtime/RingBuffer"
-import { PipelineStore } from "../../src/components/stream/PipelineStore"
-import seedrandom from "seedrandom"
+import {
+  PipelineStore,
+  type PipelineConfig,
+} from "../../src/components/stream/PipelineStore"
 
-const rng = seedrandom("streaming-load")
+const SCENE_LAYOUT = { width: 600, height: 400 }
 
 function makeDatum(i: number) {
-  return { x: i, y: rng() * 100, time: Date.now() + i }
+  // Keep the load shape reproducible. Date.now() and a shared RNG made
+  // successive samples describe slightly different scenes.
+  return {
+    x: i,
+    y: ((i * 48_271) % 2_147_483_647) / 2_147_483_647 * 100,
+    time: i,
+  }
+}
+
+function makeStreamingStore(
+  chartType: "line" | "scatter",
+  windowSize: number,
+): PipelineStore {
+  const config: PipelineConfig = {
+    chartType,
+    runtimeMode: "streaming",
+    windowSize,
+    windowMode: "sliding",
+    arrowOfTime: "right",
+    extentPadding: 0.05,
+    timeAccessor: "time",
+    valueAccessor: "y",
+  }
+  return new PipelineStore(config)
+}
+
+function ingestRange(store: PipelineStore, start: number, end: number): void {
+  for (let i = start; i < end; i++) {
+    // PipelineStore's public streaming API accepts changesets, not individual
+    // `push` calls. One-datum changesets mirror a high-frequency source.
+    store.ingest({ inserts: [makeDatum(i)], bounded: false })
+  }
 }
 
 // ── RingBuffer sustained push ────────────────────────────────────────────
@@ -45,67 +78,28 @@ describe("RingBuffer sustained push", () => {
 // ── PipelineStore sustained ingest + scene rebuild ────────────────────────
 
 describe("PipelineStore sustained streaming", () => {
-  let store: PipelineStore
-
-  beforeAll(() => {
-    store = new PipelineStore()
-    store.updateConfig({
-      xAccessor: "x",
-      yAccessor: "y",
-      chartType: "line",
-      windowSize: 2000,
-    })
-  })
-
-  bench("push 1k points + computeScene (simulates 1s at 1kHz)", () => {
-    const localStore = new PipelineStore()
-    localStore.updateConfig({
-      xAccessor: "x",
-      yAccessor: "y",
-      chartType: "line",
-      windowSize: 2000,
-    })
-    // Simulate sustained push
-    for (let i = 0; i < 1000; i++) {
-      localStore.push(makeDatum(i))
-    }
+  bench("ingest 1k points + computeScene (simulates 1s at 1kHz)", () => {
+    const localStore = makeStreamingStore("line", 2000)
+    ingestRange(localStore, 0, 1000)
     // Scene rebuild (the expensive part)
-    localStore.computeScene([600, 400])
+    localStore.computeScene(SCENE_LAYOUT)
   })
 
-  bench("push 5k points + computeScene (simulates 5s burst)", () => {
-    const localStore = new PipelineStore()
-    localStore.updateConfig({
-      xAccessor: "x",
-      yAccessor: "y",
-      chartType: "scatter",
-      windowSize: 5000,
-    })
-    for (let i = 0; i < 5000; i++) {
-      localStore.push(makeDatum(i))
-    }
-    localStore.computeScene([600, 400])
+  bench("ingest 5k points + computeScene (simulates 5s burst)", () => {
+    const localStore = makeStreamingStore("scatter", 5000)
+    ingestRange(localStore, 0, 5000)
+    localStore.computeScene(SCENE_LAYOUT)
   })
 
-  bench("incremental push (100 points) + scene rebuild (hot path)", () => {
+  bench("incremental ingest (100 points) + scene rebuild (hot path)", () => {
     // Pre-fill the store
-    const localStore = new PipelineStore()
-    localStore.updateConfig({
-      xAccessor: "x",
-      yAccessor: "y",
-      chartType: "line",
-      windowSize: 2000,
-    })
-    for (let i = 0; i < 1900; i++) {
-      localStore.push(makeDatum(i))
-    }
-    localStore.computeScene([600, 400])
+    const localStore = makeStreamingStore("line", 2000)
+    ingestRange(localStore, 0, 1900)
+    localStore.computeScene(SCENE_LAYOUT)
 
-    // Measure incremental push + rebuild (the per-frame hot path)
-    for (let i = 1900; i < 2000; i++) {
-      localStore.push(makeDatum(i))
-    }
-    localStore.computeScene([600, 400])
+    // Measure incremental ingest + rebuild (the per-frame hot path)
+    ingestRange(localStore, 1900, 2000)
+    localStore.computeScene(SCENE_LAYOUT)
   })
 })
 

@@ -11,6 +11,7 @@ const PREVIEW_COMPONENTS = {
   "queue-weather": MiniQueueWeatherPreview,
   "merge-pressure": MiniMergePressurePreview,
   nimby: MiniNimbyPreview,
+  combined: () => <MiniRadialPreview combined />,
   climate: MiniClimatePreview,
   "lake-isotype": MiniLakeIsotypePreview,
   "hotdog-variations": MiniHotDogPreview,
@@ -40,7 +41,26 @@ const PREVIEW_COMPONENTS = {
 
 export function ExamplePreview({ preview }) {
   const Preview = PREVIEW_COMPONENTS[preview]
-  return Preview ? <Preview /> : <MiniRadialPreview combined={preview === "combined"} />
+  return Preview ? <Preview /> : <MissingExamplePreview preview={preview} />
+}
+
+function MissingExamplePreview({ preview }) {
+  const label = preview ? `Missing example preview: ${preview}` : "Missing example preview"
+  return (
+    <svg
+      viewBox="0 0 242 96"
+      style={styles.preview}
+      role="img"
+      aria-label={label}
+      data-example-preview-missing="true"
+    >
+      <rect width="242" height="96" rx="6" fill="var(--surface-1)" />
+      <path d="M20 76 90 16l54 48 28-26 50 38" fill="none" stroke="var(--text-secondary)" strokeWidth="2" />
+      <text x="121" y="86" textAnchor="middle" fill="var(--text-secondary)" fontSize="9">
+        Preview unavailable
+      </text>
+    </svg>
+  )
 }
 
 export default function ExamplesOverviewPage() {

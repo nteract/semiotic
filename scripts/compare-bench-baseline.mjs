@@ -12,6 +12,12 @@ import { readFileSync, existsSync, rmSync } from "node:fs"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { tmpdir } from "node:os"
+import {
+  collectCapturedBenchmarks,
+  collectVitestBenchmarks,
+  exactBenchmarkMembershipErrors,
+  printBenchmarkValidationErrors,
+} from "./lib/bench-results.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -54,25 +60,19 @@ if (!existsSync(baselinePath)) {
   process.exit(2)
 }
 
-const baseline = JSON.parse(readFileSync(baselinePath, "utf8"))
-console.log(`▶ comparing against baseline ${baseline.git_commit} (${new Date(baseline.timestamp).toLocaleString()})`)
+const baselineCapture = JSON.parse(readFileSync(baselinePath, "utf8"))
+const baselineResult = collectCapturedBenchmarks(baselineCapture, `baseline ${baselinePath}`)
+if (baselineResult.errors.length > 0) {
+  printBenchmarkValidationErrors(baselineResult.errors)
+  process.exit(2)
+}
+const baseline = baselineResult.benchmarks
+console.log(`▶ comparing against baseline ${baselineCapture.git_commit} (${new Date(baselineCapture.timestamp).toLocaleString()})`)
 
 // Either consume a pre-captured `--current` JSON (PR-vs-main orchestrator)
 // or run vitest bench inline. Both paths produce the same `current` shape:
-// `{ [benchmarkName]: meanMs }`.
-const current = {}
-const collectCurrent = (raw) => {
-  for (const file of raw.files || []) {
-    for (const group of file.groups || []) {
-      for (const b of group.benchmarks || []) {
-        // Only record benchmarks vitest actually timed — siblings without a
-        // mean (see comment in save-bench-baseline.mjs) would otherwise read
-        // back as `undefined` and silently disable the gate for that name.
-        if (Number.isFinite(b.mean)) current[b.name] = b.mean
-      }
-    }
-  }
-}
+// `{ [benchmarkName]: { mean, sampleCount, unit } }`.
+let currentResult
 
 if (currentPath) {
   if (!existsSync(currentPath)) {
@@ -80,15 +80,13 @@ if (currentPath) {
     process.exit(2)
   }
   // The orchestrator passes the output of save-bench-baseline.mjs which is
-  // a `{ benchmarks: { [name]: { mean, unit } } }` object, not vitest's raw
+  // a `{ benchmarks: { [name]: { mean, sampleCount, unit } } }` object, not Vitest's raw
   // JSON. Handle both shapes.
   const captured = JSON.parse(readFileSync(currentPath, "utf8"))
   if (captured.benchmarks && !captured.files) {
-    for (const [name, entry] of Object.entries(captured.benchmarks)) {
-      if (Number.isFinite(entry?.mean)) current[name] = entry.mean
-    }
+    currentResult = collectCapturedBenchmarks(captured, `current capture ${currentPath}`)
   } else {
-    collectCurrent(captured)
+    currentResult = collectVitestBenchmarks(captured, `current Vitest output ${currentPath}`)
   }
 } else {
   const tmpJson = join(tmpdir(), `semiotic-bench-${Date.now()}.json`)
@@ -102,30 +100,34 @@ if (currentPath) {
   } finally {
     try { rmSync(tmpJson, { force: true }) } catch { /* best-effort */ }
   }
-  collectCurrent(raw)
+  currentResult = collectVitestBenchmarks(raw)
+}
+
+if (currentResult.errors.length > 0) {
+  printBenchmarkValidationErrors(currentResult.errors)
+  process.exit(2)
+}
+const current = currentResult.benchmarks
+
+const membershipErrors = exactBenchmarkMembershipErrors(baseline, current)
+if (membershipErrors.length > 0) {
+  printBenchmarkValidationErrors(membershipErrors)
+  console.error("Benchmark comparison stopped because baseline membership is not exact.")
+  process.exit(1)
 }
 
 const catastrophic = []  // single-benchmark hard fails
 const warns = []         // count toward systemic-regression detection
 const improvements = []
-const skipped = []
+const belowNoiseFloor = []
 
-for (const name of Object.keys(baseline.benchmarks)) {
-  const baseMean = baseline.benchmarks[name].mean
-  const currMean = current[name]
-  // Defensive guard: an incomplete baseline entry (mean missing/non-finite)
-  // would otherwise silently disable the gate for that benchmark via NaN
-  // comparison short-circuiting. Surface it explicitly instead.
-  if (!Number.isFinite(baseMean)) {
-    skipped.push(`${name}: baseline mean is missing or non-numeric — regenerate baseline`)
-    continue
-  }
-  if (!Number.isFinite(currMean)) {
-    skipped.push(`${name}: baseline has it but current run produced no result`)
-    continue
-  }
+for (const name of Object.keys(baseline)) {
+  const baseMean = baseline[name].mean
+  const currMean = current[name].mean
   if (baseMean < MIN_MEAN_MS) {
-    // Skip noise-prone sub-ms benchmarks rather than fire false positives.
+    // These values are still validated and membership-checked above. They are
+    // simply outside the relative-performance threshold due to runner noise.
+    belowNoiseFloor.push({ name, baseMean, currMean })
     continue
   }
   const pct = ((currMean - baseMean) / baseMean) * 100
@@ -135,7 +137,6 @@ for (const name of Object.keys(baseline.benchmarks)) {
   else if (pct <= -WARN_PCT) improvements.push(row)
 }
 
-const newBenchmarks = Object.keys(current).filter((n) => !(n in baseline.benchmarks))
 const systemic = warns.length >= FAIL_GROUP_COUNT
 
 console.log("")
@@ -158,13 +159,11 @@ if (catastrophic.length > 0) {
   console.log(`🔴 catastrophic regressions (${catastrophic.length}, >${CATASTROPHIC_PCT}% slower — gate fail):`)
   for (const r of catastrophic) console.log(fmt(r))
 }
-if (skipped.length > 0) {
-  console.log(`ℹ skipped (${skipped.length}):`)
-  for (const s of skipped) console.log(`  ${s}`)
-}
-if (newBenchmarks.length > 0) {
-  console.log(`ℹ new benchmarks not in baseline (${newBenchmarks.length}):`)
-  for (const n of newBenchmarks) console.log(`  ${n}`)
+if (belowNoiseFloor.length > 0) {
+  console.log(
+    `ℹ ${belowNoiseFloor.length} benchmarks are below the ${MIN_MEAN_MS}ms ` +
+    "relative-regression floor (validity and membership checked).",
+  )
 }
 
 if (catastrophic.length > 0 || systemic) {

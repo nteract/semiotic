@@ -11,8 +11,8 @@ const installSnippet = `# React 18.1+ or 19 — Semiotic v3's peer-dep range is 
 npm install semiotic@latest react@^18.1.0 react-dom@^18.1.0
 npm uninstall @types/semiotic   # built-in types ship with v3`
 
-const aliasSnippet = `// Both work in v3 — XYFrame is aliased to StreamXYFrame
-import { XYFrame } from "semiotic"
+const aliasSnippet = `// v3 renamed the frames — the legacy names are NOT exported.
+// v2: import { XYFrame } from "semiotic"
 import { StreamXYFrame } from "semiotic"`
 
 const lineFrameBefore = `import { XYFrame } from "semiotic"
@@ -248,10 +248,10 @@ export default function MigrationPage() {
       <p>
         This guide walks you through upgrading an existing Semiotic 1.x or 2.x codebase to Semiotic
         3. The legacy frame names (<code>XYFrame</code>, <code>OrdinalFrame</code>,{" "}
-        <code>NetworkFrame</code>) are still exported — most apps compile after a single{" "}
-        <code>npm install</code> bump. Past that, the work is incremental: pick up the chart HOCs as
-        you touch each chart, switch to sub-path imports for smaller bundles, and adopt streaming or
-        SSR features when you need them.
+        <code>NetworkFrame</code>) are <strong>not</strong> exported in v3 — start with a mechanical
+        rename to the <code>Stream*</code> names. Past that, the work is incremental: pick up the
+        chart HOCs as you touch each chart, switch to sub-path imports for smaller bundles, and adopt
+        streaming or SSR features when you need them.
       </p>
 
       <Tip>
@@ -326,7 +326,7 @@ export default function MigrationPage() {
             </td>
             <td style={tdStyle}>
               Canvas-first <code>StreamXYFrame</code>, <code>StreamOrdinalFrame</code>,{" "}
-              <code>StreamNetworkFrame</code> (legacy names aliased)
+              <code>StreamNetworkFrame</code> (rename required — legacy names removed)
             </td>
           </tr>
           <tr>
@@ -431,8 +431,9 @@ export default function MigrationPage() {
       <h3 id="step-3">3. Re-run your app</h3>
 
       <p>
-        Most v1/v2 codebases compile and render at this point. The legacy Frame names are aliased,
-        prop signatures are largely backwards compatible, and existing chart code continues to work.
+        Once the Frame imports are renamed to the <code>Stream*</code> names, most v1/v2 codebases
+        compile and render at this point. Prop signatures are largely backwards compatible and
+        existing chart code continues to work.
       </p>
 
       <Tip>
@@ -612,8 +613,8 @@ npx prettier --write ./src`}
       </h3>
 
       <p>
-        Direct rename. The export still works as an alias if you prefer not to touch existing files;
-        new code should use <code>StreamNetworkFrame</code> for clarity.
+        Direct rename. The <code>RealtimeNetworkFrame</code> export no longer exists in v3, so update
+        the import to <code>StreamNetworkFrame</code>.
       </p>
 
       <h3 id="facet-controller">
@@ -711,9 +712,9 @@ npx prettier --write ./src`}
 
       <p>
         <code>ResponsiveXYFrame</code>, <code>ResponsiveOrdinalFrame</code>, and{" "}
-        <code>ResponsiveNetworkFrame</code> are aliased to the base Stream Frames. Pass{" "}
-        <code>responsiveWidth</code> / <code>responsiveHeight</code> on a frame, or omit dimensions
-        on an HOC — both measure the container automatically.
+        <code>ResponsiveNetworkFrame</code> are removed (not aliased). Pass{" "}
+        <code>responsiveWidth</code> / <code>responsiveHeight</code> on a base <code>Stream*Frame</code>,
+        or omit dimensions on an HOC — both measure the container automatically.
       </p>
 
       {/* ---------------------------------------------------------------- */}
@@ -777,20 +778,21 @@ npx prettier --write ./src`}
       {/* ---------------------------------------------------------------- */}
       <h2 id="faq">FAQ</h2>
 
-      <h3 id="faq-keep-frames">Do I have to migrate off the legacy Frame imports?</h3>
+      <h3 id="faq-keep-frames">Do I have to rename the legacy Frame imports?</h3>
 
       <p>
-        No. <code>XYFrame</code>, <code>OrdinalFrame</code>, <code>NetworkFrame</code>, and the
-        responsive variants are aliased to the v3 Stream Frames. Existing imports compile, existing
-        prop names keep working, and existing accessors still resolve. The recommendation is to
-        switch to the chart HOCs as you touch each chart — not to do a big-bang rewrite.
+        Yes. <code>XYFrame</code>, <code>OrdinalFrame</code>, <code>NetworkFrame</code>, and the
+        responsive variants are <strong>not</strong> exported in v3, so those imports fail to resolve
+        until you rename them to the <code>Stream*</code> names — a mechanical find-and-replace. Once
+        renamed, prop names largely keep working and accessors still resolve. Past that, switch to the
+        chart HOCs as you touch each chart rather than doing a big-bang rewrite.
       </p>
 
-      <h3 id="faq-mix">Can I mix legacy frames and v3 HOCs?</h3>
+      <h3 id="faq-mix">Can I mix Stream Frames and v3 HOCs?</h3>
 
       <p>
-        Yes. The HOCs wrap Stream Frames internally, and Stream Frames live alongside any aliased
-        legacy frame on the same page. There's no runtime conflict.
+        Yes. The HOCs wrap Stream Frames internally, and Stream Frames can live alongside HOCs on the
+        same page. There's no runtime conflict.
       </p>
 
       <h3 id="faq-v2">What happened to v2?</h3>

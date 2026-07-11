@@ -23,6 +23,8 @@ export interface XYCustomChartProps<
   layout: CustomLayout<TConfig>
   /** Config blob threaded through to LayoutContext.config. */
   layoutConfig?: TConfig
+  /** Receives a structured diagnostic if the layout throws. */
+  onLayoutError?: StreamXYFrameProps["onLayoutError"]
   /** Optional meaning/intelligence contract for description, navigation, and audit surfaces. */
   recipe?: ChartRecipe<TDatum, TConfig>
   /** Registered recipe id; portable alternative to embedding the manifest object. */
@@ -79,6 +81,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     data,
     layout,
     layoutConfig,
+    onLayoutError,
     xExtent,
     yExtent,
     showAxes = false,
@@ -149,6 +152,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
     // Pass through as-is — coercing to a fresh {} when omitted breaks the
     // pipelineConfig useMemo identity and forces a store rebuild every render.
     layoutConfig,
+    onLayoutError,
     ...(layoutSelection && { layoutSelection }),
     xExtent,
     yExtent,

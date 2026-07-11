@@ -22,12 +22,20 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      reporter: ['text-summary'],
+      // Coverage must use a fixed production denominator. Without `include`,
+      // Vitest reports only modules imported by a particular test run, which
+      // lets an untested production module disappear from the percentage.
+      include: ['src/components/**/*.{ts,tsx,js,jsx}'],
+      reporter: ['text-summary', 'json'],
       exclude: [
         'node_modules/**',
         'dist/**',
         'integration-tests/**',
         'codemod/**',
+        // Vitest matches coverage include globs against a filename substring;
+        // without this exclusion, `docs/src/components/**` also matches the
+        // production root pattern above.
+        'docs/**',
       ],
       thresholds: {
         // Global floors raised toward the measured aggregate (~78/68/81/80) so

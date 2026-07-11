@@ -67,8 +67,23 @@ describe("PipelineStore customLayout integration", () => {
     expect(store.customLayoutOverlays).toBe(sentinel)
   })
 
-  it("stashes the layout result for host readback, and clears it on a throw", () => {
-    const result = { nodes: [], overlays: null }
+  it("preserves the last good custom scene/result and reports a structured failure", () => {
+    const overlay = { _sentinel: "last-good" } as unknown as React.ReactNode
+    const result = {
+      nodes: [{
+        type: "rect" as const,
+        x: 12,
+        y: 18,
+        w: 20,
+        h: 10,
+        style: { fill: "#123456", opacity: 1 },
+        datum: { x: 1, y: 1 },
+      }],
+      overlays: overlay,
+      restyle: () => ({ opacity: 0.5 }),
+    }
+    let shouldThrow = false
+    const onLayoutError = vi.fn()
     const store = new PipelineStore({
       chartType: "custom",
       windowSize: 100,
@@ -77,21 +92,45 @@ describe("PipelineStore customLayout integration", () => {
       extentPadding: 0,
       xAccessor: "x",
       yAccessor: "y",
-      customLayout: () => result,
+      customLayout: () => {
+        if (shouldThrow) throw new Error("xy exploded")
+        return result
+      },
+      onLayoutError,
     })
     expect(store.lastCustomLayoutResult).toBeNull()
     store.ingest({ inserts: [{ x: 1, y: 1 }], bounded: true })
     store.computeScene({ width: 100, height: 100 })
     expect(store.lastCustomLayoutResult).toBe(result)
+    const lastGoodScene = store.scene
+    expect(store.hasCustomRestyle).toBe(true)
 
     vi.spyOn(console, "error").mockImplementation(() => {})
-    store.updateConfig({
-      customLayout: () => {
-        throw new Error("boom")
-      },
+    shouldThrow = true
+    // A resize is a useful recovery regression: the last-good scene must not
+    // be proportionally remapped or have its matching overlay replaced.
+    store.computeScene({ width: 240, height: 160 })
+
+    expect(store.scene).toBe(lastGoodScene)
+    expect(store.customLayoutOverlays).toBe(overlay)
+    expect(store.lastCustomLayoutResult).toBe(result)
+    expect(store.hasCustomRestyle).toBe(true)
+    expect(store.lastCustomLayoutFailure).toMatchObject({
+      code: "CUSTOM_LAYOUT_ERROR",
+      severity: "error",
+      phase: "layout",
+      component: "xy",
+      source: "customLayout",
+      error: { name: "Error", message: "xy exploded" },
+      recovery: "preserved-last-good-scene",
+      preservedLastGoodScene: true,
+      affectedRevision: 1,
     })
-    store.computeScene({ width: 100, height: 100 })
-    expect(store.lastCustomLayoutResult).toBeNull()
+    expect(onLayoutError).toHaveBeenCalledWith(store.lastCustomLayoutFailure)
+
+    shouldThrow = false
+    store.computeScene({ width: 240, height: 160 })
+    expect(store.lastCustomLayoutFailure).toBeNull()
   })
 
   it("re-runs the layout (regenerating overlays) on a dimension-only change", () => {
@@ -192,8 +231,9 @@ describe("PipelineStore customLayout integration", () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("every scene-node datum is null"))
   })
 
-  it("renders empty scene when layout throws", () => {
+  it("reports an empty-scene recovery when the first custom layout attempt throws", () => {
     const layout = () => { throw new Error("boom") }
+    const onLayoutError = vi.fn()
     const store = new PipelineStore({
       chartType: "custom",
       windowSize: 100,
@@ -203,11 +243,19 @@ describe("PipelineStore customLayout integration", () => {
       xAccessor: "x",
       yAccessor: "y",
       customLayout: layout,
+      onLayoutError,
     })
     store.ingest({ inserts: [{ x: 1, y: 1 }], bounded: true })
     store.computeScene({ width: 100, height: 100 })
 
     expect(store.scene).toEqual([])
+    expect(store.lastCustomLayoutResult).toBeNull()
+    expect(store.lastCustomLayoutFailure).toMatchObject({
+      recovery: "empty-scene",
+      preservedLastGoodScene: false,
+      error: { name: "Error", message: "boom" },
+    })
+    expect(onLayoutError).toHaveBeenCalledWith(store.lastCustomLayoutFailure)
   })
 
   it("runs customLayout even with empty data", () => {

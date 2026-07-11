@@ -115,12 +115,16 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     (animate !== false && store.hasActiveTopologyDiff) ||
     store.hasActivePulses ||
     store.hasActiveThresholds
+  // A custom-layout restyle mutates scene styles in place (no rebuild, above)
+  // and asks for a repaint via this flag — folded into the paint gate only.
+  const stylePaintPending = store.consumeStylePaintPending()
   const needsDataRepaint = needsDataCanvasPaint({
     dirtyOrRebuilt: wasDirty,
     transitioning: isTransitioning,
     animationTicked,
     continuous: particlesWanted || isContinuous,
-    liveEncoding
+    liveEncoding,
+    forced: stylePaintPending
   })
 
   const staleThreshold = staleness?.threshold ?? 5000

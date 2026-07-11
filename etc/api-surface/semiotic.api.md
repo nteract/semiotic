@@ -152,6 +152,7 @@ interface CircularBrushValue
 interface ConnectedScatterplotProps
 interface ContextLayoutProps
 interface CrosshairStyle
+interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface DetailsPanelProps
 interface DifferenceChartProps
@@ -288,6 +289,8 @@ type ChartNotificationLevel
 type ChartObservation
 type CopyFormat
 type CurveType
+type CustomLayoutFailureRecovery
+type CustomLayoutFamily
 type ForceLayoutStatus
 type LegendInteractionMode
 type LinkedBrushProp

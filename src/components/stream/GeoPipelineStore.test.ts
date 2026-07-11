@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoAreaSceneNode, GeoLineSceneNode, GeoPipelineConfig, GeoSceneNode } from "./geoTypes"
 import type { PointSceneNode } from "./types"
@@ -252,6 +252,109 @@ describe("GeoPipelineStore", () => {
       expect(invocations).toBe(1)
       expect(store.scene[0].style.opacity).toBe(0.2)
       expect(store.scene[0].style.fill).toBe("#123456")
+    })
+
+    it("preserves the last good scene, result, overlays, and restyle state when a re-layout throws", () => {
+      const overlay = { kind: "last-good-overlay" } as unknown as React.ReactNode
+      const result: import("./geoCustomLayout").GeoLayoutResult = {
+        nodes: [{
+          type: "point",
+          x: 20,
+          y: 30,
+          r: 6,
+          style: { fill: "#123456", opacity: 1 },
+          datum: cities[0],
+        }],
+        overlays: overlay,
+        restyle: (_node, selection) => ({ opacity: selection?.isActive ? 0.25 : 1 }),
+      }
+      let shouldThrow = false
+      const onLayoutError = vi.fn()
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined)
+      const store = new GeoPipelineStore(makeConfig({
+        customLayout: () => {
+          if (shouldThrow) throw new Error("geography exploded")
+          return result
+        },
+        onLayoutError,
+      }))
+
+      try {
+        store.setPoints(cities)
+        store.computeScene({ width: 100, height: 80 })
+        const lastGoodScene = store.scene
+        const lastGoodScales = store.scales
+
+        shouldThrow = true
+        store.computeScene({ width: 240, height: 160 })
+
+        // The fallback is intentionally the exact prior render. In particular,
+        // a resize must not proportionally mutate its custom geometry.
+        expect(store.scene).toBe(lastGoodScene)
+        expect(store.scene).toEqual(result.nodes)
+        expect(store.scales).toBe(lastGoodScales)
+        expect(store.customLayoutOverlays).toBe(overlay)
+        expect(store.lastCustomLayoutResult).toBe(result)
+        expect(store.hasCustomRestyle).toBe(true)
+        expect(store.version).toBe(1)
+        expect(store.lastCustomLayoutFailure).toMatchObject({
+          code: "CUSTOM_LAYOUT_ERROR",
+          severity: "error",
+          phase: "layout",
+          component: "geo",
+          source: "customLayout",
+          error: { name: "Error", message: "geography exploded" },
+          recovery: "preserved-last-good-scene",
+          preservedLastGoodScene: true,
+          // The failed invocation is recorded against the current store
+          // revision; the compute attempt increments it after the diagnostic.
+          affectedRevision: 1,
+        })
+        expect(onLayoutError).toHaveBeenCalledWith(store.lastCustomLayoutFailure)
+        expect(consoleError).toHaveBeenCalledWith(
+          "[semiotic] geo customLayout threw:",
+          expect.any(Error)
+        )
+
+        // A good retry replaces the failure readback.
+        shouldThrow = false
+        store.computeScene({ width: 240, height: 160 })
+        expect(store.lastCustomLayoutFailure).toBeNull()
+      } finally {
+        consoleError.mockRestore()
+      }
+    })
+
+    it("reports an empty-scene recovery when the first custom layout attempt throws", () => {
+      const onLayoutError = vi.fn()
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined)
+      const store = new GeoPipelineStore(makeConfig({
+        customLayout: () => { throw new Error("first attempt failed") },
+        onLayoutError,
+      }))
+
+      try {
+        store.computeScene({ width: 100, height: 80 })
+
+        expect(store.scene).toEqual([])
+        expect(store.customLayoutOverlays).toBeNull()
+        expect(store.lastCustomLayoutResult).toBeNull()
+        expect(store.version).toBe(0)
+        expect(store.lastCustomLayoutFailure).toMatchObject({
+          recovery: "empty-scene",
+          preservedLastGoodScene: false,
+          affectedRevision: 0,
+        })
+        expect(onLayoutError).toHaveBeenCalledWith(store.lastCustomLayoutFailure)
+
+        store.updateConfig({ customLayout: undefined })
+        expect(store.lastCustomLayoutFailure).toBeNull()
+
+        store.clear()
+        expect(store.lastCustomLayoutFailure).toBeNull()
+      } finally {
+        consoleError.mockRestore()
+      }
     })
   })
 

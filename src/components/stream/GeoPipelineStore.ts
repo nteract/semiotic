@@ -40,6 +40,10 @@ import {
 } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
 import {
+  createCustomLayoutFailureDiagnostic,
+  type CustomLayoutFailureDiagnostic
+} from "./customLayoutFailure"
+import {
   resolveProjection,
   makeGeoNumericAccessor as makeAccessor,
   makeLineDataAccessor,
@@ -70,12 +74,18 @@ export class GeoPipelineStore {
   /** SVG overlays returned from the active custom layout. */
   customLayoutOverlays: import("react").ReactNode = null
   /** Most recent custom layout result for host readback (`getCustomLayout()`).
-   *  Null before the first layout, after a throw, or without a custom layout. */
+   *  Null before the first layout or without a custom layout. A failed
+   *  re-layout retains the prior good result alongside its diagnostic. */
   lastCustomLayoutResult: GeoLayoutResult | null = null
+  /** Most recent exception from a custom layout invocation, for host readback. */
+  lastCustomLayoutFailure: CustomLayoutFailureDiagnostic | null = null
   private _customLayoutDiagnosticsWarned = new Set<string>()
   private _customRestyle: GeoLayoutResult["restyle"] = undefined
   hasCustomRestyle = false
   private _baseStyles = new WeakMap<object, Style>()
+  /** Set only while a custom-layout invocation throws. The rebuild callers use
+   *  it to retain the previous scene and projection state without mutating it. */
+  private _customLayoutFailedThisBuild = false
 
   // Spatial index for point hit testing (built when point count exceeds threshold)
   private static readonly QUADTREE_THRESHOLD = 500
@@ -128,6 +138,12 @@ export class GeoPipelineStore {
 
   updateConfig(config: Partial<GeoPipelineConfig>): void {
     this.config = { ...this.config, ...config }
+    // An explicit removal dismisses the old failure rather than surfacing an
+    // error for a callback the caller no longer uses. The next built-in scene
+    // build clears the remaining custom-layout output.
+    if ("customLayout" in config && !config.customLayout) {
+      this.lastCustomLayoutFailure = null
+    }
   }
 
   // ── Data ingestion ───────────────────────────────────────────────
@@ -278,14 +294,31 @@ export class GeoPipelineStore {
     this._quadtree = null
     this._maxPointRadius = 0
     this.customLayoutOverlays = null
+    this.lastCustomLayoutResult = null
+    this.lastCustomLayoutFailure = null
     this._customRestyle = undefined
     this.hasCustomRestyle = false
     this._baseStyles = new WeakMap()
+    this._customLayoutFailedThisBuild = false
     this.version++
   }
 
   setLayoutSelection(selection: CustomLayoutSelection | null): void {
     this.config.layoutSelection = selection
+  }
+
+  /**
+   * "Styles changed, repaint the data canvas without rebuilding the scene."
+   * Set by {@link restyleScene}; consumed once per frame by the paint loop, so a
+   * style-only selection change repaints without a projection/scene recompute.
+   */
+  private _stylePaintPending = false
+
+  /** Consume the style-only repaint signal (see {@link _stylePaintPending}). */
+  consumeStylePaintPending(): boolean {
+    const pending = this._stylePaintPending
+    this._stylePaintPending = false
+    return pending
   }
 
   restyleScene(selection: CustomLayoutSelection | null): void {
@@ -296,12 +329,20 @@ export class GeoPipelineStore {
       const patch = fn(node, selection)
       node.style = patch ? { ...base, ...patch } : base
     }
+    this._stylePaintPending = true
   }
 
   // ── Projection pipeline ──────────────────────────────────────────
 
   computeScene(layout: StreamLayout): void {
     const { config } = this
+    const previousProjection = this.projection
+    const previousGeoPath = this.geoPath
+    const previousScales = this.scales
+    const previousBaseScale = this.baseScale
+    const previousBaseTranslate = [...this.baseTranslate] as [number, number]
+    const previousBaseRotation = [...this.baseRotation] as [number, number, number]
+    const prevScene = this.scene
 
     // Step 1: Resolve projection
     this.projection = resolveProjection(config.projection)
@@ -330,8 +371,31 @@ export class GeoPipelineStore {
     }
 
     // Step 4: Build scene nodes
-    const prevScene = this.scene
-    this.scene = this.buildSceneNodes(layout)
+    this._customLayoutFailedThisBuild = false
+    const nextScene = this.buildSceneNodes(layout)
+    if (this._customLayoutFailedThisBuild) {
+      const preservedLastGoodScene =
+        this.lastCustomLayoutFailure?.preservedLastGoodScene === true
+      if (preservedLastGoodScene) {
+        // The callback saw a freshly fitted projection, but the retained scene
+        // was produced against the prior one. Restore the complete geographic
+        // scale bundle so drawing, annotation anchoring, and imperative
+        // readback continue to describe the visible last-good scene.
+        this.projection = previousProjection
+        this.geoPath = previousGeoPath
+        this.scales = previousScales
+        this.baseScale = previousBaseScale
+        this.baseTranslate = previousBaseTranslate
+        this.baseRotation = previousBaseRotation
+      } else {
+        // A newly installed custom layout must not leave an unrelated built-in
+        // scene visible when it fails before producing any custom output.
+        this.scene = []
+        this.rebuildQuadtree()
+      }
+      return
+    }
+    this.scene = nextScene
     this.rebuildQuadtree()
 
     // Step 5: Apply distance cartogram transform
@@ -358,6 +422,7 @@ export class GeoPipelineStore {
         this.startTransition(syntheticPrev)
       }
     }
+
     this._hasRenderedOnce = true
 
     // Step 8: Data-change transition
@@ -466,6 +531,11 @@ export class GeoPipelineStore {
   applyZoomTransform(transform: ZoomTransform, layout: StreamLayout): void {
     const proj = this.projection
     if (!proj) return
+    const previousGeoPath = this.geoPath
+    const previousScales = this.scales
+    const previousScale = proj.scale()
+    const previousTranslate = [...proj.translate()] as [number, number]
+    const previousZoom = this.currentZoom
 
     // Apply zoom transform to the base projection state
     proj.scale(this.baseScale * transform.k)
@@ -495,7 +565,22 @@ export class GeoPipelineStore {
     }
 
     // Rebuild scene nodes with zoomed projection (skip re-fitting)
-    this.scene = this.buildSceneNodes(layout)
+    this._customLayoutFailedThisBuild = false
+    const nextScene = this.buildSceneNodes(layout)
+    if (this._customLayoutFailedThisBuild) {
+      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) {
+        proj.scale(previousScale)
+        proj.translate(previousTranslate)
+        this.currentZoom = previousZoom
+        this.geoPath = previousGeoPath
+        this.scales = previousScales
+      } else {
+        this.scene = []
+        this.rebuildQuadtree()
+      }
+      return
+    }
+    this.scene = nextScene
     this.rebuildQuadtree()
 
     // Apply cartogram transform if configured
@@ -513,6 +598,11 @@ export class GeoPipelineStore {
   applyZoomScale(k: number, layout: StreamLayout): void {
     const proj = this.projection
     if (!proj) return
+    const previousGeoPath = this.geoPath
+    const previousScales = this.scales
+    const previousScale = proj.scale()
+    const previousTranslate = [...proj.translate()] as [number, number]
+    const previousZoom = this.currentZoom
 
     proj.scale(this.baseScale * k)
     // Keep translate at base center — no shift
@@ -535,7 +625,22 @@ export class GeoPipelineStore {
       }
     }
 
-    this.scene = this.buildSceneNodes(layout)
+    this._customLayoutFailedThisBuild = false
+    const nextScene = this.buildSceneNodes(layout)
+    if (this._customLayoutFailedThisBuild) {
+      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) {
+        proj.scale(previousScale)
+        proj.translate(previousTranslate)
+        this.currentZoom = previousZoom
+        this.geoPath = previousGeoPath
+        this.scales = previousScales
+      } else {
+        this.scene = []
+        this.rebuildQuadtree()
+      }
+      return
+    }
+    this.scene = nextScene
     this.rebuildQuadtree()
     if (this.config.projectionTransform) {
       this.applyCartogramTransform(this.config.projectionTransform, layout)
@@ -550,6 +655,9 @@ export class GeoPipelineStore {
   applyRotation(rotation: [number, number, number], layout: StreamLayout): void {
     const proj = this.projection
     if (!proj || !proj.rotate) return
+    const previousGeoPath = this.geoPath
+    const previousScales = this.scales
+    const previousRotation = [...proj.rotate()] as [number, number, number]
 
     proj.rotate(rotation)
 
@@ -570,7 +678,20 @@ export class GeoPipelineStore {
     }
 
     // Rebuild scene
-    this.scene = this.buildSceneNodes(layout)
+    this._customLayoutFailedThisBuild = false
+    const nextScene = this.buildSceneNodes(layout)
+    if (this._customLayoutFailedThisBuild) {
+      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) {
+        proj.rotate(previousRotation)
+        this.geoPath = previousGeoPath
+        this.scales = previousScales
+      } else {
+        this.scene = []
+        this.rebuildQuadtree()
+      }
+      return
+    }
+    this.scene = nextScene
     this.rebuildQuadtree()
     if (this.config.projectionTransform) {
       this.applyCartogramTransform(this.config.projectionTransform, layout)
@@ -652,6 +773,7 @@ export class GeoPipelineStore {
   }
 
   private buildSceneNodes(layout: StreamLayout): GeoSceneNode[] {
+    this._customLayoutFailedThisBuild = false
     const { config } = this
     const proj = this.projection!
     const path = this.geoPath!
@@ -689,19 +811,43 @@ export class GeoPipelineStore {
       try {
         result = config.customLayout(layoutContext)
       } catch (err) {
+        // Do not blank a working custom chart just because its next layout
+        // attempt failed. A successful result is the proof that the current
+        // scene/overlays/restyle callback belong together and can be retained.
+        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
+        const diagnostic = createCustomLayoutFailureDiagnostic(
+          "geo",
+          err,
+          preservedLastGoodScene,
+          this.version
+        )
+        this.lastCustomLayoutFailure = diagnostic
+        this._customLayoutFailedThisBuild = true
         if (process.env.NODE_ENV !== "production") {
           console.error("[semiotic] geo customLayout threw:", err)
         }
-        this.customLayoutOverlays = null
-        this.lastCustomLayoutResult = null
-        this._customRestyle = undefined
-        this.hasCustomRestyle = false
-        return []
+        try {
+          config.onLayoutError?.(diagnostic)
+        } catch (callbackError) {
+          if (process.env.NODE_ENV !== "production") {
+            console.error("[semiotic] onLayoutError threw:", callbackError)
+          }
+        }
+        if (!preservedLastGoodScene) {
+          this.customLayoutOverlays = null
+          this.lastCustomLayoutResult = null
+          this._customRestyle = undefined
+          this.hasCustomRestyle = false
+          this._baseStyles = new WeakMap()
+          return []
+        }
+        return this.scene
       }
 
       const nodes = result.nodes ?? []
       this.customLayoutOverlays = result.overlays ?? null
       this.lastCustomLayoutResult = result
+      this.lastCustomLayoutFailure = null
       this._customRestyle = result.restyle
       this.hasCustomRestyle = !!result.restyle
       this._baseStyles = new WeakMap()
@@ -719,6 +865,8 @@ export class GeoPipelineStore {
     }
 
     this.customLayoutOverlays = null
+    this.lastCustomLayoutResult = null
+    this.lastCustomLayoutFailure = null
     this._customRestyle = undefined
     this.hasCustomRestyle = false
     this._baseStyles = new WeakMap()

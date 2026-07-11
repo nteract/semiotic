@@ -1,28 +1,38 @@
 // ── Accessor resolution ────────────────────────────────────────────────
 
 /**
- * Compare two accessor specs for equivalence.
- * - Same reference: always equivalent (`===`)
- * - String accessors: exact string match
- * - Function accessors: `.toString()` comparison (catches inline arrow functions
- *   like `d => d.value` that are recreated on every render but have identical source)
- * - Mismatched types or undefined vs defined: not equivalent
+ * Compare two accessor specs for equivalence, using **identity** semantics.
+ * - String accessors: compared by value (`"value" === "value"`).
+ * - Function accessors: compared by reference. Two distinct function objects are
+ *   NOT equivalent, even when their source text matches.
+ * - Mismatched types or `undefined` vs defined: not equivalent.
  *
- * **Known limitation**: `.toString()` compares source text, not closure bindings.
- * Two functions with identical source but different captured variables will appear
- * equivalent. For closures that depend on changing values, use `useCallback` with
- * the variable in the dependency array so the reference changes when behavior changes.
+ * **Why identity, not source text.** A previous implementation compared
+ * `a.toString() === b.toString()` to treat re-created inline arrows
+ * (`d => d.value`) as equivalent across renders. That was a correctness bug:
+ * `.toString()` compares source text, not captured variables, so two closures
+ * with identical source but different bindings — `makeAccessor(1)` vs
+ * `makeAccessor(10)` — compared equal, and the store retained a stale
+ * domain/scene against a genuinely different accessor. Identity comparison also
+ * matches how the frames already decide a config changed
+ * (`useStableShallow` compares function props by identity), so the store no
+ * longer second-guesses a change the frame already detected.
+ *
+ * **Consumer contract.** Passing a *new* function accessor (a fresh inline
+ * arrow every render) now triggers a rebuild, because the library can no longer
+ * prove the new closure is semantically identical. Use a string accessor
+ * (always referentially stable) or memoize the function with `useCallback`. For
+ * the rare case where a stable function's captured semantics change *without*
+ * its identity changing, bump the pipeline config's `accessorRevision` to force
+ * re-derivation.
  */
 export function accessorsEquivalent(
   a: string | ((...args: any[]) => any) | undefined,
   b: string | ((...args: any[]) => any) | undefined
 ): boolean {
-  if (a === b) return true
-  if (typeof a !== typeof b) return false
-  if (typeof a === "function" && typeof b === "function") {
-    return a.toString() === b.toString()
-  }
-  return false
+  // Value equality for strings, reference equality for functions, and correct
+  // handling of `undefined`/type-mismatch all collapse to a single `===`.
+  return a === b
 }
 
 export type CoercibleNumber = number | Date | string

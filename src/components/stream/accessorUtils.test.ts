@@ -16,16 +16,30 @@ describe("accessorsEquivalent", () => {
     expect(accessorsEquivalent(fn, fn)).toBe(true)
   })
 
-  it("returns true for functions with identical source (inline arrow)", () => {
+  it("returns FALSE for distinct functions with identical source (identity semantics)", () => {
+    // Two inline arrows with the same source text are still different objects.
+    // Source-text equality (the old behaviour) treated these as equivalent,
+    // which retained stale derived state against a genuinely new accessor.
     const fn1 = (d: Datum) => d.value
     const fn2 = (d: Datum) => d.value
-    expect(accessorsEquivalent(fn1, fn2)).toBe(true)
+    expect(accessorsEquivalent(fn1, fn2)).toBe(false)
   })
 
   it("returns false for functions with different source", () => {
     const fn1 = (d: Datum) => d.x
     const fn2 = (d: Datum) => d.y
     expect(accessorsEquivalent(fn1, fn2)).toBe(false)
+  })
+
+  it("returns FALSE for same-source closures that capture different values (the correctness bug)", () => {
+    // `.toString()` is identical for both — the source text is the same — but
+    // they compute different results. Identity comparison catches this; the old
+    // source-text comparison did not, which was the P0 correctness bug.
+    const makeAccessor = (mult: number) => (d: Datum) => (d.value as number) * mult
+    const times1 = makeAccessor(1)
+    const times10 = makeAccessor(10)
+    expect(times1.toString()).toBe(times10.toString())
+    expect(accessorsEquivalent(times1, times10)).toBe(false)
   })
 
   it("returns false for string vs function", () => {

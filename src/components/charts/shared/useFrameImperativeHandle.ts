@@ -35,6 +35,7 @@ interface XYOrdinalFrameLike {
   getData(): Datum[]
   getScales(): unknown | null
   getCustomLayout?(): unknown | null
+  getLayoutFailure?(): unknown | null
 }
 
 /** Minimal shape the helper expects of a network frame ref. */
@@ -51,6 +52,7 @@ interface NetworkFrameLike {
   clear(): void
   getTopology(): { nodes: Array<{ id: string; data?: Datum | null }> } | null
   getCustomLayout?(): unknown | null
+  getLayoutFailure?(): unknown | null
 }
 
 /** Minimal shape the helper expects of a geo (point-only) frame ref. */
@@ -61,6 +63,7 @@ interface GeoPointsFrameLike {
   clear(): void
   getData(): Datum[]
   getCustomLayout?(): unknown | null
+  getLayoutFailure?(): unknown | null
 }
 
 /** Minimal shape the helper expects of a geo (line/flow) frame ref. */
@@ -71,6 +74,7 @@ interface GeoLinesFrameLike {
   getLines(): Datum[]
   clear(): void
   getCustomLayout?(): unknown | null
+  getLayoutFailure?(): unknown | null
 }
 
 type FrameVariant = "xy" | "network" | "geo-points" | "geo-lines"
@@ -144,6 +148,7 @@ function makeVariantDefaults(
       getData: () => r.current?.getData() ?? [],
       getScales: () => r.current?.getScales() ?? null,
       getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
+      getLayoutFailure: () => r.current?.getLayoutFailure?.() ?? null,
     }
   }
   if (variant === "network") {
@@ -190,6 +195,7 @@ function makeVariantDefaults(
       getData: () =>
         (r.current?.getTopology()?.nodes?.map((n) => n.data) as Datum[] | undefined) ?? [],
       getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
+      getLayoutFailure: () => r.current?.getLayoutFailure?.() ?? null,
     }
   }
   if (variant === "geo-points") {
@@ -212,6 +218,7 @@ function makeVariantDefaults(
       clear: () => r.current?.clear(),
       getData: () => r.current?.getData() ?? [],
       getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
+      getLayoutFailure: () => r.current?.getLayoutFailure?.() ?? null,
     }
   }
   // variant === "geo-lines"
@@ -237,5 +244,6 @@ function makeVariantDefaults(
     clear: () => r.current?.clear(),
     getData: () => r.current?.getLines() ?? [],
     getCustomLayout: () => r.current?.getCustomLayout?.() ?? null,
+    getLayoutFailure: () => r.current?.getLayoutFailure?.() ?? null,
   }
 }

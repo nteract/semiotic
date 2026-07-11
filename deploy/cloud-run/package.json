@@ -7,11 +7,11 @@
     "node": "22"
   },
   "scripts": {
-    "start": "semiotic-mcp --http --port ${PORT:-8080}"
+    "start": "semiotic-mcp --http --host 0.0.0.0 --port ${PORT:-8080} --profile public"
   },
   "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "semiotic": "^3.8.0"
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "semiotic": "3.8.0"
   }
 }

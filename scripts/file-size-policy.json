@@ -61,7 +61,7 @@
     },
     {
       "path": "src/components/charts/shared/auditAccessibility.ts",
-      "maxLines": 1416,
+      "maxLines": 1352,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
@@ -81,8 +81,8 @@
     },
     {
       "path": "src/components/charts/xy/LineChart.tsx",
-      "maxLines": 1014,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1081,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening."
     },
     {
       "path": "src/components/charts/xy/ScatterplotMatrix.tsx",
@@ -96,7 +96,7 @@
     },
     {
       "path": "src/components/recipes/processPhysics.ts",
-      "maxLines": 1040,
+      "maxLines": 1023,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
@@ -116,22 +116,22 @@
     },
     {
       "path": "src/components/stream/GeoPipelineStore.ts",
-      "maxLines": 1218,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1257,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +39 (2026-07-11): custom-layout failure recovery (preserve last-good scene, lastCustomLayoutFailure, onLayoutError) + a restyle-only repaint flag (_stylePaintPending)."
     },
     {
       "path": "src/components/stream/NetworkPipelineStore.ts",
-      "maxLines": 1504,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1562,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +58 (2026-07-11): custom-layout failure recovery (lastCustomLayoutFailure, onLayoutError, preserved-scene fallback) + a restyle-only repaint flag (_stylePaintPending)."
     },
     {
       "path": "src/components/stream/networkTypes.ts",
-      "maxLines": 850,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 862,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +12 (2026-07-11): onLayoutError type on both pipeline config and props, plus getLayoutFailure() on the frame handle, for custom-layout failure recovery."
     },
     {
       "path": "src/components/stream/OrdinalPipelineStore.ts",
-      "maxLines": 1638,
+      "maxLines": 1612,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
@@ -141,12 +141,12 @@
     },
     {
       "path": "src/components/stream/physics/PhysicsKernel.ts",
-      "maxLines": 1201,
+      "maxLines": 1199,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
       "path": "src/components/stream/physics/PhysicsPipelineStore.ts",
-      "maxLines": 970,
+      "maxLines": 968,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
@@ -156,8 +156,8 @@
     },
     {
       "path": "src/components/stream/PipelineStore.ts",
-      "maxLines": 1498,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1610,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +112 (2026-07-11): custom-layout failure recovery, pushDatumYExtent/evictDatumYExtent extraction (dedupes 3 copies of the candlestick/ribbon y-extent branch), and pulse-timestamp-buffer resync on config change."
     },
     {
       "path": "src/components/stream/SceneToSVG.tsx",
@@ -166,23 +166,23 @@
     },
     {
       "path": "src/components/stream/StreamGeoFrame.tsx",
-      "maxLines": 1479,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1483,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +4 (2026-07-11): onLayoutError prop plumbing, getLayoutFailure() handle, and consuming the restyle-only repaint flag."
     },
     {
       "path": "src/components/stream/StreamNetworkFrame.tsx",
-      "maxLines": 1704,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1708,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +4 (2026-07-11): onLayoutError prop plumbing + getLayoutFailure() handle."
     },
     {
       "path": "src/components/stream/StreamOrdinalFrame.tsx",
-      "maxLines": 1194,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1199,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +5 (2026-07-11): accessorRevision + onLayoutError prop plumbing + getLayoutFailure() handle."
     },
     {
       "path": "src/components/stream/StreamXYFrame.tsx",
-      "maxLines": 1521,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1530,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +9 (2026-07-11): accessorRevision + onLayoutError prop plumbing, getLayoutFailure() handle, and consuming the restyle-only repaint flag."
     },
     {
       "path": "src/components/stream/SVGOverlay.tsx",
@@ -191,8 +191,8 @@
     },
     {
       "path": "src/components/stream/types.ts",
-      "maxLines": 1052,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
+      "maxLines": 1067,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +15 (2026-07-11): accessorRevision escape hatch for stable-reference accessors, plus onLayoutError + getLayoutFailure() for custom-layout failure recovery."
     }
   ]
 }

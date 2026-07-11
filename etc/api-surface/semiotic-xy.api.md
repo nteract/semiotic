@@ -32,6 +32,7 @@ interface BubbleChartProps
 interface CandlestickChartProps
 interface CenterlineStyle
 interface ConnectedScatterplotProps
+interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface DifferenceChartProps
 interface GlyphDef
@@ -60,6 +61,8 @@ interface StreamXYFrameHandle
 interface StreamXYFrameProps
 interface XYCustomChartProps
 type CustomLayout
+type CustomLayoutFailureRecovery
+type CustomLayoutFamily
 type QuadrantsConfigOverride
 type ResponsiveOrientation
 ```

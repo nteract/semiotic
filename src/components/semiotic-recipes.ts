@@ -225,6 +225,11 @@ export type {
   OrdinalLayoutContext,
   OrdinalLayoutResult,
 } from "./stream/ordinalCustomLayout"
+export type {
+  CustomLayoutFailureDiagnostic,
+  CustomLayoutFailureRecovery,
+  CustomLayoutFamily
+} from "./stream/customLayoutFailure"
 
 // Glyph + color helpers for multi-channel custom layouts (and matching legends).
 export { shade, makeShade, readField, groupBy } from "./recipes/recipeUtils"

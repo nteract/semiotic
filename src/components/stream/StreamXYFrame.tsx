@@ -89,6 +89,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       chunkSize,
       xAccessor,
       yAccessor,
+      accessorRevision,
       colorAccessor,
       sizeAccessor,
       symbolAccessor,
@@ -194,6 +195,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       linkedCrosshairName,
       linkedCrosshairSourceId,
       customLayout,
+      onLayoutError,
       layoutConfig,
       layoutSelection,
     } = props
@@ -373,6 +375,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // y resolved to `d.value` (= undefined → NaN).
       xAccessor,
       yAccessor,
+      accessorRevision,
       timeAccessor: isStreaming ? timeAccessor : undefined,
       valueAccessor,
       colorAccessor,
@@ -433,11 +436,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       themeSequential: currentTheme?.colors?.sequential,
       themeDiverging: currentTheme?.colors?.diverging,
       customLayout,
+      onLayoutError,
       layoutConfig,
       layoutMargin: margin,
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent,
-      xAccessor, yAccessor, timeAccessor, valueAccessor,
+      xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor,
       xScaleType, yScaleType,
       colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder,
@@ -448,7 +452,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation, heatmapXBins, heatmapYBins,
       showValues, heatmapValueFormat,
       isStreaming, pointIdAccessor, curve, currentTheme,
-      customLayout, layoutConfig, margin
+      customLayout, onLayoutError, layoutConfig, margin
     ])
 
     // Stabilize the config reference so inline-object / inline-array
@@ -568,7 +572,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       },
       getScales: () => storeRef.current?.scales ?? null,
       getExtents: () => storeRef.current?.getExtents() ?? null,
-      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null
+      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
+      getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null
     }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
 
     // ── Controlled data prop ─────────────────────────────────────────────
@@ -914,6 +919,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Determine if data canvas needs repaint (data/props changed or animating).
       // Use transitionActive so reduced-motion fast-forwarded transitions still repaint.
       const needsDataRepaint = dirtyRef.current || transitionActive || dimsChanged
+      // A custom-layout restyle mutates scene styles in place (no rebuild) and
+      // asks for a repaint via this flag — OR'd into the paint gate below, but
+      // NOT into the scene-recompute gate, so the restyle isn't overwritten.
+      const stylePaintPending = store.consumeStylePaintPending()
       let computedSceneThisFrame = false
 
       // Compute scene graph (scales + scene nodes) — when data changed, or when
@@ -937,8 +946,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const resolvedStaleness = resolveStaleness(staleness, idleMs)
       const currentlyStale = staleness && resolvedStaleness.isStale
 
-      // ── Data canvas: only repaint when data/props changed ─────────────
-      if (needsDataRepaint) {
+      // ── Data canvas: repaint when data/props changed or a restyle is pending ─
+      if (needsDataRepaint || stylePaintPending) {
         const ctx = prepareCanvas(canvas, size, margin, dpr)
         if (ctx) {
           ctx.clearRect(-margin.left, -margin.top, size[0], size[1])

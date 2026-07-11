@@ -9,7 +9,7 @@
  * These benchmarks exercise the real production code paths, not simplified proxies.
  */
 
-import { describe, bench, beforeAll } from 'vitest'
+import { describe, bench } from 'vitest'
 import { generateScatterData, generateXYData } from '../setup/data-generators'
 import { buildPointScene } from '../../src/components/stream/xySceneBuilders/pointScene'
 import { buildLineScene } from '../../src/components/stream/xySceneBuilders/lineScene'
@@ -247,17 +247,19 @@ describe('RingBuffer — Push Throughput', () => {
   })
 })
 
+function makePopulatedBuffer(size: number): RingBuffer<{ x: number; y: number }> {
+  const buffer = new RingBuffer<{ x: number; y: number }>(size)
+  for (let i = 0; i < size; i++) buffer.push({ x: i, y: i * 2 })
+  return buffer
+}
+
 describe('RingBuffer — Iteration', () => {
-  let buf10k: RingBuffer<any>
-  let buf50k: RingBuffer<any>
-
-  beforeAll(() => {
-    buf10k = new RingBuffer<any>(10_000)
-    for (let i = 0; i < 10_000; i++) buf10k.push({ x: i, y: i * 2 })
-
-    buf50k = new RingBuffer<any>(50_000)
-    for (let i = 0; i < 50_000; i++) buf50k.push({ x: i, y: i * 2 })
-  })
+  // Vitest's benchmark runner invokes benchmark callbacks directly and does
+  // not run suite hooks. Build these read-only fixtures during collection so
+  // every iteration measures real RingBuffer work instead of an undefined
+  // buffer access that produces an untimed result.
+  const buf10k = makePopulatedBuffer(10_000)
+  const buf50k = makePopulatedBuffer(50_000)
 
   bench('toArray-10k', () => {
     buf10k.toArray()

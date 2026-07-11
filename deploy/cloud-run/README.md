@@ -8,8 +8,17 @@ There is **no Dockerfile**. Cloud Run builds this folder's `package.json` direct
 source (Cloud Buildpacks) and runs `npm start`, which launches:
 
 ```
-semiotic-mcp --http --port $PORT
+semiotic-mcp --http --host 0.0.0.0 --port $PORT --profile public
 ```
+
+`--profile public` exposes exactly the five task-oriented tools (`createChart`,
+`improveChart`, `explainChart`, `auditChart`, `getChartSchema`) — the documented public
+surface. Without it the server defaults to the full developer tool set, which should not
+be exposed on an unauthenticated public endpoint.
+
+The MCP binary otherwise binds HTTP to `127.0.0.1`. This wrapper deliberately passes
+`--host 0.0.0.0`, because Cloud Run's ingress proxy must reach the process over its
+container network.
 
 The server runs in **stateless** mode: each request gets a fresh MCP server instance and
 holds no session state. Every tool is an independent read-only request/response, so there
@@ -18,7 +27,33 @@ session affinity or single-instance pin.
 
 The wrapper depends on the **published** `semiotic` package from npm — it does not build
 from this repo's source. Improvements to the MCP server ship to the live endpoint only
-after a new `semiotic` version is published to npm.
+after a new `semiotic` version is published to npm. The dependency is pinned to an **exact**
+version (not a caret range) so a redeploy can't silently pick up a different release; bump
+it deliberately when upgrading.
+
+### Lockfile status
+
+The wrapper is pinned to `semiotic@3.8.0`, but that version is not currently published to
+the public npm registry (the resolver returned `ETARGET` on 2026-07-11; the latest public
+version was `3.7.5`). A `package-lock.json` is therefore deliberately **not** committed: a
+made-up lockfile would make the Cloud Run deployment look reproducible while still failing
+to install. The ignored local `node_modules` directory is stale (`3.7.1`) and is never sent
+to Cloud Build.
+
+Do not deploy this wrapper until `3.8.0` is published. Once it is available, generate and
+verify a real lock from this directory, then commit it. `.gcloudignore` intentionally keeps
+the lockfile in the build context:
+
+```sh
+npm install --package-lock-only --ignore-scripts --registry=https://registry.npmjs.org
+npm ci --ignore-scripts
+cd ../..
+npm run check:cloud-run-lock
+```
+
+From the repository root, `npm run check:cloud-run-manifest` always verifies the public-host,
+port, profile, exact dependency, and build-context contract; `check:cloud-run-lock` additionally
+fails until a fully resolved lockfile is present.
 
 ## Deploy
 
@@ -36,7 +71,7 @@ answer yes. The command prints the service URL when it finishes.
 
 | Flag | Reason |
 |---|---|
-| `--allow-unauthenticated` | Public endpoint. The server is read-only (every tool is `readOnlyHint: true`), but you should still add request size caps + rate limiting (e.g. Cloud Armor / API Gateway) to prevent abuse and unexpected rendering cost. |
+| `--allow-unauthenticated` | Public endpoint. The server is read-only (every tool is `readOnlyHint: true`) and now enforces a request-body ceiling (`MCP_MAX_BODY_BYTES`, default 4 MB), but you should still add rate limiting (e.g. Cloud Armor / API Gateway) to prevent abuse and unexpected rendering cost. |
 | `--memory 1Gi` | Headroom for `sharp` PNG rendering. |
 | `MCP_ALLOWED_HOSTS=...` | DNS-rebinding defense — the server rejects requests whose `Host` header isn't in this list. Set it to your Cloud Run hostname (and any custom domain, comma-separated). |
 
@@ -65,8 +100,9 @@ deployment* → Build type: buildpacks, Build context directory: `/deploy/cloud-
 
 | Path | Method | Behavior |
 |---|---|---|
-| `/` , `/mcp` | POST | MCP Streamable HTTP (JSON-RPC). `/mcp` is the canonical URL to give clients. Returns a JSON response. |
-| `/` , `/mcp` | GET | 200 JSON info blob (for humans/browsers — stateless mode has no session SSE stream). |
+| `/` , `/mcp` | POST | MCP Streamable HTTP (JSON-RPC). `/mcp` is the canonical URL to give clients; `POST /` is a compatibility alias. Returns a JSON response. Bodies or nested tool arguments over their configured limits get 413. |
+| `/mcp` | GET | **405** (`Allow: POST`). Per the Streamable HTTP spec, a stateless server with no SSE stream rejects GET on the transport endpoint. |
+| `/` | GET | 200 JSON info blob (human/service info — outside the MCP transport contract). |
 | `/healthz`, `/health` | GET | 200 health JSON (for uptime checks). |
 | `/.well-known/openai-apps-challenge` | GET | 200 plain-text OpenAI Apps domain verification token when `OPENAI_APPS_CHALLENGE_TOKEN` is set. |
 | anything else (`/favicon.ico`, other `/.well-known/*` probes) | any | 404. The 404 on `/.well-known/oauth-protected-resource` is the correct signal that this is an unauthenticated server. |
@@ -76,7 +112,14 @@ deployment* → Build type: buildpacks, Build context directory: `/deploy/cloud-
 | Var | Default | Purpose |
 |---|---|---|
 | `PORT` | `8080` (Cloud Run sets this) | Listen port. |
-| `MCP_ALLOWED_HOSTS` | unset (disabled) | Comma-separated `Host` allowlist. Unset → no host check (fine for local dev). Set in production. |
+| `MCP_HOST` | `127.0.0.1` | HTTP listen host. The start command deliberately overrides this with `--host 0.0.0.0` for Cloud Run ingress. |
+| `MCP_TOOL_PROFILE` | `developer` | Tool surface. `--profile public` (set in `npm start`) overrides this to the five-tool public set. Prefer the flag; this env var is the fallback. |
+| `MCP_ALLOWED_HOSTS` | unset (disabled) | Comma-separated `Host` allowlist (DNS-rebinding defense). Unset → no host check (fine for local dev). Set in production. |
+| `MCP_ALLOWED_ORIGINS` | unset (disabled) | Comma-separated browser `Origin` allowlist. When set, a disallowed `Origin` is rejected (403) and CORS echoes only an allowed origin instead of `*`. Non-browser clients send no Origin and are unaffected. |
+| `MCP_MAX_BODY_BYTES` | `4194304` (4 MB) | Hard request-body ceiling; larger bodies get 413 before any tool runs. |
+| `MCP_MAX_ROWS` | `10000` | Maximum combined entries across all nested array-valued tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
+| `MCP_MAX_CELLS` | `100000` | Maximum combined object fields across nested tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
+| `MCP_MAX_NESTING_DEPTH` | `64` | Maximum nested argument depth. Requests over the ceiling get 413 before MCP dispatch. |
 | `OPENAI_APPS_CHALLENGE_TOKEN` | unset | Raw token shown by ChatGPT Apps domain verification. When set, the server serves it from `/.well-known/openai-apps-challenge`. |
 
 ## Verify a ChatGPT Apps domain
@@ -112,5 +155,6 @@ ChatGPT: add it as a connector / app using the `/mcp` URL.
 
 ## Updating
 
-When a new `semiotic` is published, re-run the same `gcloud run deploy` command — the
-build does a fresh `npm install` and picks up the latest `^3.8.0`-compatible release.
+When a new `semiotic` is published, bump the pinned `semiotic` version in `package.json`,
+generate and verify the lockfile as above, then re-run the same `gcloud run deploy` command.
+Cloud Buildpacks will receive the committed lockfile and install the exact dependency graph.

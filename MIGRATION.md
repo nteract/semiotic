@@ -13,17 +13,17 @@ This guide covers upgrading from Semiotic v1.x or v2.x to v3.
 
 | Area | Impact |
 |---|---|
-| Core Frames | `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame` replace the legacy SVG frames. Legacy names (`XYFrame`, `OrdinalFrame`, `NetworkFrame`) are aliased for backwards compatibility. |
+| Core Frames | `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame` replace the legacy SVG frames. The legacy `XYFrame`/`OrdinalFrame`/`NetworkFrame` names are **not** exported in v3 — rename your imports to the `Stream*` names. |
 | React version | **React 18.1+ or 19** required (was 16+ in v1, 17+ in v2). Peer-dep range is `^18.1.0 \|\| ^19.0.0`. |
 | Rendering | All frames are **canvas-first** with SVG overlays for axes, labels, and annotations |
 | Streaming | Every frame supports a ref-based push API for high-frequency data |
 | Removed components | `RealtimeSankey`, `RealtimeNetworkFrame`, `ProcessViz`, `Mark`, `SpanOrDiv`, `FacetController` |
 | Removed props | `baseMarkProps` removed from all Frames |
-| New features | 27 chart HOCs, streaming support on all chart types, SSR, code splitting |
+| New features | 50+ chart HOCs, streaming support on all chart types, SSR, code splitting |
 | TypeScript | Built-in types ship with the package |
 | Bundle size | 62% smaller (minified), up to 78% smaller with code splitting |
 
-**For most users:** install v3, replace bare Frame imports with the Stream versions (or use the chart HOCs), and your code works. The legacy `XYFrame`, `OrdinalFrame`, and `NetworkFrame` names are aliased to the Stream versions for backwards compatibility.
+**For most users:** install v3, replace bare Frame imports with the Stream versions (or use the chart HOCs), and your code works. The legacy `XYFrame`, `OrdinalFrame`, and `NetworkFrame` names are **not** exported in v3 — you must rename them to `StreamXYFrame`, `StreamOrdinalFrame`, and `StreamNetworkFrame` (a mechanical find-and-replace).
 
 ---
 
@@ -50,17 +50,18 @@ npm install semiotic@3.0.0
 
 All frames are now canvas-first:
 
-| Legacy (aliased) | Current | Purpose |
+| Legacy name (removed) | Current name | Purpose |
 |---|---|---|
-| `StreamXYFrame` | Line, area, scatter, heatmap, candlestick charts |
-| `StreamOrdinalFrame` | Bar, pie, boxplot, violin, swarm charts |
-| `StreamNetworkFrame` | Force, sankey, chord, tree, treemap, circlepack |
+| `XYFrame` | `StreamXYFrame` | Line, area, scatter, heatmap, candlestick charts |
+| `OrdinalFrame` | `StreamOrdinalFrame` | Bar, pie, boxplot, violin, swarm charts |
+| `NetworkFrame` | `StreamNetworkFrame` | Force, sankey, chord, tree, treemap, circlepack |
 
-The legacy names are exported as aliases, so existing imports continue to work:
+The legacy names are **not** exported in v3. Rename your imports to the `Stream*` names:
 
 ```jsx
-// Both of these work — they resolve to the same component
+// v2 — no longer works
 import { XYFrame } from "semiotic"
+// v3 — rename to the Stream version
 import { StreamXYFrame } from "semiotic"
 ```
 
@@ -68,7 +69,7 @@ import { StreamXYFrame } from "semiotic"
 
 - **Canvas rendering** — data marks are drawn on canvas instead of SVG. Axes, labels, annotations, and legends remain in an SVG overlay.
 - **Push API** — every frame exposes `ref.current.push(datum)` for streaming data.
-- **No more `ResponsiveXYFrame`** — all frames handle responsive sizing via container measurement. `ResponsiveXYFrame` is aliased to `StreamXYFrame`.
+- **No more `ResponsiveXYFrame`** — all frames handle responsive sizing via container measurement (`responsiveWidth`/`responsiveHeight`). The `Responsive*Frame` wrappers are removed, not aliased — use the `Stream*Frame` directly.
 
 ### NetworkFrame → StreamNetworkFrame
 
@@ -133,7 +134,7 @@ The push API is identical: `ref.current.push({ source, target, value })`.
 
 ### `RealtimeNetworkFrame` (removed)
 
-Alias for `StreamNetworkFrame` — the export still works but the component is gone:
+Superseded by `StreamNetworkFrame` — the `RealtimeNetworkFrame` export no longer exists, so rename the import:
 
 ```diff
 - import { RealtimeNetworkFrame } from "semiotic"
@@ -382,11 +383,11 @@ const svg = renderToStaticSVG("xy", {
 
 ### Do I need to change my existing Frame code?
 
-The legacy names (`XYFrame`, `OrdinalFrame`, `NetworkFrame`) are aliased to the Stream versions, so existing imports work. However, there are behavioral differences:
+Yes — rename the legacy `XYFrame`/`OrdinalFrame`/`NetworkFrame` imports to `StreamXYFrame`/`StreamOrdinalFrame`/`StreamNetworkFrame`. Those legacy names are **not** exported in v3, so the import fails to resolve until you rename it (a mechanical find-and-replace). There are also behavioral differences:
 
 - Rendering is now canvas-based (marks are painted on canvas, not SVG elements)
 - Custom `nodeStyle`/`edgeStyle` functions on network charts receive `RealtimeNode` objects where user data is on `d.data` instead of directly on `d`
-- `ResponsiveXYFrame` and similar responsive wrappers are aliased to the base Stream frames (responsive sizing is built in)
+- `ResponsiveXYFrame` and similar responsive wrappers are removed (not aliased) — use the base `Stream*Frame` with `responsiveWidth`/`responsiveHeight`
 
 ### Should I switch from Frames to Chart components?
 

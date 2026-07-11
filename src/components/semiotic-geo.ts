@@ -49,6 +49,11 @@ export type {
   GeoLayoutContext,
   GeoLayoutResult
 } from "./stream/geoCustomLayout"
+export type {
+  CustomLayoutFailureDiagnostic,
+  CustomLayoutFailureRecovery,
+  CustomLayoutFamily
+} from "./stream/customLayoutFailure"
 
 // Particle types
 export type { GeoParticleStyle } from "./stream/GeoParticlePool"

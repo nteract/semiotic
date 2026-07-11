@@ -22,15 +22,19 @@ export default function PerformancePage() {
         </p>
         <ul>
           <li><strong>String accessors</strong> — compared by value (<code>"x" === "x"</code>)</li>
-          <li><strong>Same function reference</strong> — identical (<code>fn === fn</code>)</li>
-          <li><strong>Inline arrows with identical source</strong> — compared via <code>.toString()</code></li>
-          <li><strong>Different types</strong> — always treated as changed</li>
+          <li><strong>Function accessors</strong> — compared by <em>reference</em> (<code>fn === fn</code>)</li>
+          <li><strong>Different types or references</strong> — always treated as changed</li>
         </ul>
         <p>
-          This means <code>{"xAccessor={d => d.time}"}</code> written inline in JSX will
-          <em>not</em> trigger a scene rebuild on re-render, as long as the source code
-          is identical each time. However, string accessors remain the most reliable and
-          efficient option.
+          Accessor equality is <strong>identity-based</strong>. A <em>new</em> inline arrow
+          (<code>{"xAccessor={d => d.time}"}</code> written fresh in JSX each render) is a new
+          function object, so it <em>does</em> trigger a rebuild on every re-render. This is
+          deliberate: a previous version compared source text with <code>.toString()</code>, but
+          identical source can still close over different values
+          (<code>makeAccessor(1)</code> vs <code>makeAccessor(10)</code>), and treating those as
+          equal let a stale domain or scene survive a real change. Prefer a
+          <strong>string accessor</strong> (always stable) or memoize the function with
+          <code>useCallback</code>.
         </p>
 
         <h3>Accessor preference order</h3>
@@ -50,28 +54,38 @@ function MyChart({ divisor }) {
   return <LineChart xAccessor={getX} yAccessor="value" />
 }
 
-// 4. Inline arrow (OK) — caught by .toString() heuristic
+// 4. Inline arrow (works, but rebuilds every render — new identity each time)
 <LineChart xAccessor={d => d.timestamp / 1000} yAccessor="value" />`}
         </CodeBlock>
 
-        <h3>When .toString() does not help</h3>
+        <h3>Closures over changing variables</h3>
         <p>
-          The <code>.toString()</code> comparison catches inline arrows with identical source text.
-          It does <strong>not</strong> help when the function body is the same but it closes over a
-          changing variable:
+          Because equality is identity-based, a function that closes over a changing variable
+          must change its <em>reference</em> when that variable changes — otherwise the store
+          keeps deriving against the old value:
         </p>
-        <CodeBlock>{`// WARNING: multiplier changes but the source text is always "d => d.value * multiplier"
-// .toString() sees them as equal even though behavior changed
+        <CodeBlock>{`// WARNING: multiplier changes but the accessor reference does not,
+// so the store can't tell the behavior changed.
 function MyChart({ multiplier }) {
-  return <LineChart yAccessor={d => d.value * multiplier} />
+  const getY = useCallback((d) => d.value * multiplier, []) // empty deps — stale!
+  return <LineChart yAccessor={getY} />
 }
 
-// FIX: use useCallback with multiplier in the dependency array
+// FIX: put multiplier in the dependency array so the reference changes with it
 function MyChart({ multiplier }) {
   const getY = useCallback((d) => d.value * multiplier, [multiplier])
   return <LineChart yAccessor={getY} />
 }`}
         </CodeBlock>
+
+        <h3>Escape hatch: accessorRevision (Stream Frames)</h3>
+        <p>
+          For the rare case where you genuinely cannot change the accessor reference — a stable
+          closure reading external mutable state — bump the pipeline config's
+          <code>accessorRevision</code> to force the store to re-derive domains and rebuild the
+          scene against the current accessor. Prefer changing the reference where you can; reach
+          for this only when you cannot.
+        </p>
 
         <h3>diagnoseConfig warning</h3>
         <p>

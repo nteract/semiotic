@@ -76,6 +76,21 @@ describe("GeoCustomChart", () => {
     expect(lastGeoFrameProps?.yAccessor).toBe("latitude")
   })
 
+  it("forwards onLayoutError to the geo frame", () => {
+    const onLayoutError = vi.fn()
+    render(
+      <TooltipProvider>
+        <GeoCustomChart
+          points={[{ id: "paris", lon: 2.35, lat: 48.86 }]}
+          layout={layout}
+          onLayoutError={onLayoutError}
+        />
+      </TooltipProvider>
+    )
+
+    expect(lastGeoFrameProps?.onLayoutError).toBe(onLayoutError)
+  })
+
   it("forwards colorBy to the geo frame", () => {
     render(
       <TooltipProvider>

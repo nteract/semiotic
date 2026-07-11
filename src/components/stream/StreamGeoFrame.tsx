@@ -90,6 +90,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       customLayout,
       layoutConfig,
       layoutSelection,
+      onLayoutError,
 
       // Accessors
       xAccessor,
@@ -260,12 +261,13 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       lineIdAccessor,
       customLayout,
       layoutConfig,
+      onLayoutError,
       layoutMargin: margin
     }), [
       projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
       lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
       projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, lineIdAccessor, currentTheme,
-      customLayout, layoutConfig, margin
+      customLayout, layoutConfig, onLayoutError, margin
     ])
 
     // Stabilize the config reference so inline-object / inline-array
@@ -455,6 +457,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,
       getCartogramLayout: () => storeRef.current?.cartogramLayout ?? null,
       getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
+      getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null,
       getZoom: () => zoomTransformRef.current.k,
       resetZoom: () => {
         const container = containerRef.current
@@ -777,12 +780,16 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       // interaction layer (same pattern as StreamXYFrame / Network).
       const particlesWanted =
         showParticles && !reducedMotionRef.current && !!particlePoolRef.current
+      // A custom-layout restyle mutates scene styles in place (no scene
+      // recompute, which stays gated on dirtyRef above) and asks for a repaint
+      // via this flag — folded into the paint gate only.
+      const stylePaintPending = store.consumeStylePaintPending()
       const needsDataRepaint = needsDataCanvasPaint({
         dirtyOrRebuilt: computedSceneThisFrame,
         transitioning: isTransitioning,
         continuous: particlesWanted,
         liveEncoding: store.hasActivePulses,
-        forced: rotationApplied
+        forced: rotationApplied || stylePaintPending
       })
 
       // ── Tile canvas (behind data canvas) ──
