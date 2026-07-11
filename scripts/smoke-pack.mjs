@@ -13,7 +13,9 @@
  * and worker URLs that silently fall back in one module format.
  *
  * Run locally via `npm run check:pack`. Requires the dist bundles to be
- * built (`npm run dist`). Exits non-zero on any import failure.
+ * built (`npm run dist`). Pass `--tarball <path>` to validate one already
+ * created archive instead of packing the checkout. Exits non-zero on any
+ * import failure.
  */
 import { execSync } from "node:child_process"
 import { cpSync, mkdtempSync, mkdirSync, rmSync, writeFileSync, readdirSync, existsSync, readFileSync } from "node:fs"
@@ -25,10 +27,43 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
 const packedConsumerFixture = join(__dirname, "fixtures", "packed-typescript-consumer")
 const publicNpmRegistry = process.env.SEMIOTIC_PACK_REGISTRY || "https://registry.npmjs.org"
+// Release CI sets this to the single immutable tarball it will publish. The
+// default continues to pack the checkout for ordinary local/package checks.
+const cliArgs = process.argv.slice(2)
+const tarballOption = optionValue(cliArgs, "--tarball")
+if (cliArgs.some((arg) => arg !== "--tarball" && arg !== tarballOption)) {
+  throw new Error("Usage: node scripts/smoke-pack.mjs [--tarball <path>]")
+}
+const environmentTarball = process.env.SEMIOTIC_PACK_TARBALL?.trim() || null
+if (
+  tarballOption &&
+  environmentTarball &&
+  resolve(repoRoot, tarballOption) !== resolve(repoRoot, environmentTarball)
+) {
+  throw new Error("Use either --tarball or SEMIOTIC_PACK_TARBALL, not two different tarballs")
+}
+const suppliedTarball = tarballOption || environmentTarball
 const sourcePackage = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"))
+const tmp = mkdtempSync(join(tmpdir(), "semiotic-smoke-"))
+const npmCache = join(tmp, "npm-cache")
 
-function run(cmd, opts = {}) {
-  return execSync(cmd, { stdio: "pipe", encoding: "utf8", ...opts })
+function optionValue(args, option) {
+  const index = args.indexOf(option)
+  if (index === -1) return null
+  const value = args[index + 1]
+  if (!value || value.startsWith("--") || args.indexOf(option, index + 1) !== -1) {
+    throw new Error(`Missing value for ${option}`)
+  }
+  return value
+}
+
+function run(cmd, { env, ...opts } = {}) {
+  return execSync(cmd, {
+    stdio: "pipe",
+    encoding: "utf8",
+    ...opts,
+    env: { ...process.env, npm_config_cache: npmCache, ...env },
+  })
 }
 
 // `execSync` errors carry `stderr`/`stdout` as Buffers when no encoding is
@@ -340,23 +375,30 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
   }
 }
 
-const tmp = mkdtempSync(join(tmpdir(), "semiotic-smoke-"))
 console.log(`▶ smoke dir: ${tmp}`)
 
 let exitCode = 0
 const failures = []
 
 try {
-  // Pack the working repo into a tarball inside the temp dir.
-  // `--pack-destination` lands the tarball next to our temp consumer
-  // project; capturing combined output keeps CI logs useful when npm
-  // pack exits 0 but produces nothing (rare, but seen on some runners
-  // when --pack-destination is silently ignored).
-  console.log("▶ npm pack")
-  const packOut = run(`npm pack --pack-destination "${tmp}" 2>&1`, { cwd: repoRoot })
-  if (packOut?.trim()) console.log(packOut.trim().split("\n").map((l) => `  ${l}`).join("\n"))
-  const tarball = findTarball(tmp)
-  console.log(`  tarball: ${tarball}`)
+  let tarball
+  if (suppliedTarball) {
+    tarball = resolve(repoRoot, suppliedTarball)
+    if (!existsSync(tarball)) throw new Error(`Supplied tarball does not exist: ${tarball}`)
+    if (!tarball.endsWith(".tgz")) throw new Error(`Supplied tarball is not a .tgz file: ${tarball}`)
+    console.log(`▶ using supplied tarball: ${tarball}`)
+  } else {
+    // Pack the working repo into a tarball inside the temp dir.
+    // `--pack-destination` lands the tarball next to our temp consumer
+    // project; capturing combined output keeps CI logs useful when npm
+    // pack exits 0 but produces nothing (rare, but seen on some runners
+    // when --pack-destination is silently ignored).
+    console.log("▶ npm pack")
+    const packOut = run(`npm pack --pack-destination "${tmp}" 2>&1`, { cwd: repoRoot })
+    if (packOut?.trim()) console.log(packOut.trim().split("\n").map((l) => `  ${l}`).join("\n"))
+    tarball = findTarball(tmp)
+    console.log(`  tarball: ${tarball}`)
+  }
 
   // Set up a throwaway project that consumes it. Use Node's mkdir rather
   // than spawning a shell builtin so this runs on Windows too.
@@ -401,6 +443,11 @@ try {
   // Verify each entry resolves under ESM and CJS, and that its `types`
   // file (per package.json `exports`) actually exists on disk.
   const pkg = JSON.parse(run(`node -e "console.log(JSON.stringify(require('semiotic/package.json')))"`, { cwd: proj }))
+  if (pkg.name !== sourcePackage.name || pkg.version !== sourcePackage.version) {
+    failures.push(
+      `installed tarball identity ${pkg.name}@${pkg.version} does not match ${sourcePackage.name}@${sourcePackage.version}`,
+    )
+  }
   const packageRoot = join(proj, "node_modules/semiotic")
   const {
     modules: entryPoints,

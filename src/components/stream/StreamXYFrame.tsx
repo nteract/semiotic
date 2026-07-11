@@ -1167,7 +1167,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     useEffect(() => {
       dirtyRef.current = true
       scheduleRender()
-    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, lineStyle, canvasPreRenderers, scheduleRender])
+    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, lineStyle, canvasPreRenderers, scheduleRender])
 
     // Staleness check timer
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)

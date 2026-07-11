@@ -7,6 +7,7 @@
  *   node scripts/measure-cold-consumer.mjs --write
  *   node scripts/measure-cold-consumer.mjs --check
  *   node scripts/measure-cold-consumer.mjs --print
+ *   node scripts/measure-cold-consumer.mjs --check --tarball path/to/semiotic.tgz
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
@@ -22,19 +23,24 @@ import {
   validateColdConsumerReport,
 } from "./lib/cold-consumer-measurement.mjs"
 
-const args = new Set(process.argv.slice(2))
+const rawArgs = process.argv.slice(2)
+const tarball = optionValue(rawArgs, "--tarball")
+const args = new Set(rawArgs.filter((arg) => arg !== "--tarball" && arg !== tarball))
 const write = args.has("--write")
 const check = args.has("--check")
 const print = args.has("--print")
 const baselinePath = resolve(REPO_ROOT, "benchmarks/setup/cold-consumer-imports.json")
 const readmePath = resolve(REPO_ROOT, "README.md")
 
+if ([...args].some((arg) => !["--write", "--check", "--print"].includes(arg))) {
+  throw new Error("Usage: node scripts/measure-cold-consumer.mjs [--write|--check|--print] [--tarball <path>]")
+}
 if ([write, check, print].filter(Boolean).length > 1) {
   throw new Error("Use one of --write, --check, or --print")
 }
 
 const baseline = check ? readBaselineReport(baselinePath) : null
-const report = await measurePackedColdConsumerImports()
+const report = await measurePackedColdConsumerImports({ tarball })
 const reportText = serializeReport(report)
 
 if (print || (!write && !check)) {
@@ -123,4 +129,14 @@ function formatSizeDifference({ importPath, symbol, metric, baselineBytes, curre
   const signedDelta = delta >= 0 ? `+${delta}` : String(delta)
   const percentage = baselineBytes === 0 ? "n/a" : `${((delta / baselineBytes) * 100).toFixed(3)}%`
   return `${importPath} (${symbol}) ${metric}: ${baselineBytes} B → ${currentBytes} B (${signedDelta} B, ${percentage}; allowed ±${tolerance} B)`
+}
+
+function optionValue(args, option) {
+  const index = args.indexOf(option)
+  if (index === -1) return null
+  const value = args[index + 1]
+  if (!value || value.startsWith("--") || args.indexOf(option, index + 1) !== -1) {
+    throw new Error(`Missing value for ${option}`)
+  }
+  return value
 }
