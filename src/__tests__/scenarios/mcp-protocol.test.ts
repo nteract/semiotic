@@ -1074,6 +1074,55 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
       publicProc.kill()
     }
   })
+
+  it("creates only renderable charts without echoing bulk data", async () => {
+    const publicProc = spawnServer(["--profile", "public"])
+    try {
+      await sendRequest(publicProc, "initialize", {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "semiotic-public-create-test", version: "1.0.0" },
+      }, "public-create-initialize")
+
+      const rows = [
+        { category: "A", value: 2 },
+        { category: "B", value: 3 },
+      ]
+      const created = await sendRequest(publicProc, "tools/call", {
+        name: "createChart",
+        arguments: { data: rows, intent: "compare-categories" },
+      }, "public-create-chart")
+      expect(created.result.isError).not.toBe(true)
+      expect(created.result.structuredContent).toMatchObject({
+        status: "render-proven",
+        dataRowCount: 2,
+      })
+      expect(created.result.structuredContent.props.data).toBeUndefined()
+      expect(created.result.structuredContent.suggestion.props.data).toBeUndefined()
+
+      const trendRows = [
+        { time: 1, value: 2 },
+        { time: 2, value: 4 },
+        { time: 3, value: 3 },
+      ]
+      const browserOnly = await sendRequest(publicProc, "tools/call", {
+        name: "createChart",
+        arguments: { data: trendRows, intent: "trend", component: "BigNumber" },
+      }, "public-create-browser-only")
+      expect(browserOnly.result.isError).toBe(true)
+      expect(browserOnly.result.structuredContent.status).toBe("no-suggestion")
+      expect(browserOnly.result.structuredContent.suggestions).not.toContainEqual(
+        expect.objectContaining({ component: "BigNumber" })
+      )
+      expect(
+        browserOnly.result.structuredContent.suggestions.every(
+          (suggestion: { props: Record<string, unknown> }) => suggestion.props.data === undefined
+        )
+      ).toBe(true)
+    } finally {
+      publicProc.kill()
+    }
+  })
 })
 
 describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {

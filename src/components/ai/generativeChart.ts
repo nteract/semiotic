@@ -295,11 +295,15 @@ export interface OpenAIResponsesToolOptions {
   strict?: boolean
 }
 
-function isStrictOpenAICompatibleSchema(schema: unknown): boolean {
-  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return true
+function isStrictOpenAICompatibleSchema(schema: unknown, root = true): boolean {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return false
   const record = schema as Record<string, unknown>
   const types = Array.isArray(record.type) ? record.type : [record.type]
   const isObject = types.includes("object") || Boolean(record.properties)
+
+  // Function parameters must be a top-level object. Scalar schemas remain
+  // valid for nested properties.
+  if (root && !isObject) return false
 
   if (isObject) {
     if (record.additionalProperties !== false) return false
@@ -307,10 +311,20 @@ function isStrictOpenAICompatibleSchema(schema: unknown): boolean {
     if (!properties || typeof properties !== "object" || Array.isArray(properties)) return false
     const required = new Set(Array.isArray(record.required) ? record.required : [])
     if (Object.keys(properties).some((name) => !required.has(name))) return false
-    return Object.values(properties as Record<string, unknown>).every(isStrictOpenAICompatibleSchema)
+    if (!Object.values(properties as Record<string, unknown>).every((value) => isStrictOpenAICompatibleSchema(value, false))) return false
   }
 
-  if (record.items) return isStrictOpenAICompatibleSchema(record.items)
+  if (types.includes("array")) {
+    if (!record.items || !isStrictOpenAICompatibleSchema(record.items, false)) return false
+  }
+
+  for (const keyword of ["anyOf", "oneOf", "allOf"] as const) {
+    if (record[keyword] === undefined) continue
+    const branches = record[keyword]
+    if (!Array.isArray(branches) || branches.length === 0) return false
+    if (!branches.every((branch) => isStrictOpenAICompatibleSchema(branch, false))) return false
+  }
+
   return true
 }
 
@@ -327,7 +341,7 @@ export function toOpenAIResponsesTool(
   const strict = options.strict ?? false
   if (strict && !isStrictOpenAICompatibleSchema(def.inputSchema)) {
     throw new Error(
-      "OpenAI strict mode requires closed object schemas with every property required. " +
+      "OpenAI strict mode requires a top-level object schema, closed object schemas, and every property required. " +
         "chartGenerationTool() intentionally leaves props open for chart-specific props; " +
         "use strict: false or pass a component-specific closed schema."
     )

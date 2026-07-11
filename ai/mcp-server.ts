@@ -1413,6 +1413,20 @@ async function groundChartHandler(args: {
   }
 }
 
+function compactPublicChartProps(props: Record<string, unknown>): Record<string, unknown> {
+  const compact = { ...props }
+  delete compact.data
+  delete compact.nodes
+  delete compact.edges
+  return compact
+}
+
+function compactPublicSuggestion<T extends { props: Record<string, unknown> }>(
+  suggestion: T
+): Omit<T, "props"> & { props: Record<string, unknown> } {
+  return { ...suggestion, props: compactPublicChartProps(suggestion.props) }
+}
+
 async function createChartHandler(args: {
   data: Record<string, unknown>[]
   intent?: string | string[]
@@ -1422,7 +1436,9 @@ async function createChartHandler(args: {
   theme?: Record<string, string>
 }): Promise<ToolResult> {
   const intent = (Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : undefined) as IntentId[] | undefined
-  const suggestions = suggestChartsFromCapabilities(args.data, { intent, audience: args.audience, maxResults: 8 })
+  const suggestions = suggestChartsFromCapabilities(args.data, { intent, audience: args.audience, maxResults: 40 })
+    .filter((suggestion) => metadataForComponent(suggestion.component).renderable)
+    .slice(0, 8)
   const selected = args.component
     ? suggestions.find((suggestion) => suggestion.component === args.component)
     : suggestions[0]
@@ -1430,17 +1446,33 @@ async function createChartHandler(args: {
     return {
       content: [{ type: "text", text: "No renderable Semiotic chart was suggested for this data. Use getChartSchema for code-level guidance." }],
       isError: true,
-      structuredContent: profileResult({ status: "no-suggestion", suggestions }),
+      structuredContent: profileResult({
+        status: "no-suggestion",
+        suggestions: suggestions.map(compactPublicSuggestion),
+        dataRowCount: args.data.length,
+      }),
     }
   }
+  // Keep capability-built data shapes (for example hierarchy roots or
+  // nodes/edges) and explicit caller overrides. args.data is the profiling
+  // input, not necessarily the final component's `data` prop shape.
   const props = { data: args.data, ...selected.props, ...args.props }
+  const publicProps = compactPublicChartProps(props)
+  const publicSuggestion = compactPublicSuggestion(selected)
   const diagnosis = diagnoseConfig(selected.component, props)
   const blocking = diagnosis.diagnoses.filter((item: any) => item.severity === "error")
   if (blocking.length) {
     return {
       content: [{ type: "text", text: `Selected ${selected.component}, but blocking diagnostics require repair before rendering.` }],
       isError: true,
-      structuredContent: profileResult({ status: "blocked", component: selected.component, props, suggestion: selected, diagnostics: diagnosis.diagnoses }),
+      structuredContent: profileResult({
+        status: "blocked",
+        component: selected.component,
+        props: publicProps,
+        dataRowCount: args.data.length,
+        suggestion: publicSuggestion,
+        diagnostics: diagnosis.diagnoses,
+      }),
     }
   }
   const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme })
@@ -1450,8 +1482,9 @@ async function createChartHandler(args: {
     structuredContent: profileResult({
       status: "render-proven",
       component: selected.component,
-      props,
-      suggestion: selected,
+      props: publicProps,
+      dataRowCount: args.data.length,
+      suggestion: publicSuggestion,
       diagnostics: diagnosis.diagnoses,
       render: output,
     }),

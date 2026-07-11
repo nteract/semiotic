@@ -33546,25 +33546,48 @@ async function groundChartHandler(args) {
     structuredContent: grounding
   };
 }
+function compactPublicChartProps(props) {
+  const compact = { ...props };
+  delete compact.data;
+  delete compact.nodes;
+  delete compact.edges;
+  return compact;
+}
+function compactPublicSuggestion(suggestion) {
+  return { ...suggestion, props: compactPublicChartProps(suggestion.props) };
+}
 async function createChartHandler(args) {
   const intent = Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : void 0;
-  const suggestions = (0, import_ai3.suggestCharts)(args.data, { intent, audience: args.audience, maxResults: 8 });
+  const suggestions = (0, import_ai3.suggestCharts)(args.data, { intent, audience: args.audience, maxResults: 40 }).filter((suggestion) => metadataForComponent(suggestion.component).renderable).slice(0, 8);
   const selected = args.component ? suggestions.find((suggestion) => suggestion.component === args.component) : suggestions[0];
   if (!selected) {
     return {
       content: [{ type: "text", text: "No renderable Semiotic chart was suggested for this data. Use getChartSchema for code-level guidance." }],
       isError: true,
-      structuredContent: profileResult({ status: "no-suggestion", suggestions })
+      structuredContent: profileResult({
+        status: "no-suggestion",
+        suggestions: suggestions.map(compactPublicSuggestion),
+        dataRowCount: args.data.length
+      })
     };
   }
   const props = { data: args.data, ...selected.props, ...args.props };
+  const publicProps = compactPublicChartProps(props);
+  const publicSuggestion = compactPublicSuggestion(selected);
   const diagnosis = (0, import_ai3.diagnoseConfig)(selected.component, props);
   const blocking = diagnosis.diagnoses.filter((item) => item.severity === "error");
   if (blocking.length) {
     return {
       content: [{ type: "text", text: `Selected ${selected.component}, but blocking diagnostics require repair before rendering.` }],
       isError: true,
-      structuredContent: profileResult({ status: "blocked", component: selected.component, props, suggestion: selected, diagnostics: diagnosis.diagnoses })
+      structuredContent: profileResult({
+        status: "blocked",
+        component: selected.component,
+        props: publicProps,
+        dataRowCount: args.data.length,
+        suggestion: publicSuggestion,
+        diagnostics: diagnosis.diagnoses
+      })
     };
   }
   const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme });
@@ -33574,8 +33597,9 @@ async function createChartHandler(args) {
     structuredContent: profileResult({
       status: "render-proven",
       component: selected.component,
-      props,
-      suggestion: selected,
+      props: publicProps,
+      dataRowCount: args.data.length,
+      suggestion: publicSuggestion,
       diagnostics: diagnosis.diagnoses,
       render: output
     })
