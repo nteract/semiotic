@@ -520,11 +520,22 @@ export function fromVegaLiteResult(
     message,
   }))
   const lossReport = errors.map(({ code, message, path }) => ({ code, message, path }))
+  // In lossy mode, strict-subset failures describe approximated or discarded
+  // semantics rather than a refusal. Keep them in `lossReport`, but surface
+  // them as warnings so callers can use error-level diagnostics as a reliable
+  // refusal signal.
+  const surfacedDiagnostics = options.mode === "lossy"
+    ? diagnostics.map((diagnostic) => (
+      diagnostic.severity === "error"
+        ? { ...diagnostic, severity: "warning" as const }
+        : diagnostic
+    ))
+    : diagnostics
 
   return {
     status: lossReport.length > 0 ? "lossy" : "success",
     config,
-    diagnostics: [...diagnostics, ...warningDiagnostics],
+    diagnostics: [...surfacedDiagnostics, ...warningDiagnostics],
     lossReport,
     provenance,
   }

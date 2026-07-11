@@ -533,6 +533,10 @@ describe("strict Vega-Lite import", () => {
     expect(result.status).toBe("lossy")
     expect(result.config?.component).toBe("Scatterplot")
     expect(result.lossReport[0]?.code).toBe("UNSUPPORTED_MARK")
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "UNSUPPORTED_MARK", severity: "warning" }),
+    ]))
+    expect(result.diagnostics.some((diagnostic) => diagnostic.severity === "error")).toBe(false)
   })
 })
 

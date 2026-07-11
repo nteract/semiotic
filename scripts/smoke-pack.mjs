@@ -114,7 +114,7 @@ function assertLocalChunksExist(packageRoot, entryRel, failures) {
 function splitExports(exportsMap, failures) {
   if (!exportsMap || typeof exportsMap !== "object") {
     failures.push("package.json: missing exports map")
-    return { modules: [], packageJson: null }
+    return { modules: [], packageJson: null, resources: [] }
   }
 
   const modules = []
@@ -462,7 +462,7 @@ try {
 
   checkTypeScriptConsumer(proj, packageRoot, failures)
 } catch (err) {
-  console.error("✗ smoke test crashed:", err.message)
+  console.error("✗ smoke test crashed:", firstLine(err))
   exitCode = 2
 } finally {
   // Clean up — best-effort.

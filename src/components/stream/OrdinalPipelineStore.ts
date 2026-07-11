@@ -29,10 +29,8 @@ import type {
 } from "./ordinalTypes"
 import type { Changeset, Style, PointSceneNode } from "./types"
 import { buildDatumIndexMap, computeDecayOpacity } from "./pipelineDecay"
-import {
-  computePulseIntensity,
-  hasActivePulses as hasActivePulsesShared
-} from "./pipelinePulse"
+import { hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
+import { applyOrdinalPulse } from "./ordinalPulse"
 import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
@@ -60,50 +58,6 @@ import {
   ensureRingBufferCapacity,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
-
-/**
- * Update fields owned by the ordinal pulse encoding. Callers invoke this only
- * after matching a scene node to source data, so custom-layout nodes without a
- * datum match keep any user-authored underscore fields untouched.
- */
-function setOrdinalPulseState(
-  node: OrdinalSceneNode,
-  intensity: number,
-  pulseColor: string,
-  glowRadius?: number
-): boolean {
-  let changed = false
-
-  if (intensity > 0) {
-    if (node._pulseIntensity !== intensity) {
-      node._pulseIntensity = intensity
-      changed = true
-    }
-    if (node._pulseColor !== pulseColor) {
-      node._pulseColor = pulseColor
-      changed = true
-    }
-    if (node._pulseGlowRadius !== glowRadius) {
-      node._pulseGlowRadius = glowRadius
-      changed = true
-    }
-    return changed
-  }
-
-  if (node._pulseIntensity !== 0) {
-    node._pulseIntensity = 0
-    changed = true
-  }
-  if (node._pulseColor !== undefined) {
-    node._pulseColor = undefined
-    changed = true
-  }
-  if (node._pulseGlowRadius !== undefined) {
-    node._pulseGlowRadius = undefined
-    changed = true
-  }
-  return changed
-}
 
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
@@ -961,45 +915,14 @@ export class OrdinalPipelineStore {
 
   private applyPulse(nodes: OrdinalSceneNode[], data: Datum[], now = getTimestamp()): boolean {
     if (!this.config.pulse || !this.timestampBuffer) return false
-    const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
-    const glowRadius = this.config.pulse.glowRadius ?? 4
-    let changed = false
-
-    const indexMap = this.getDatumIndexMap(data)
-    let categoryIndex: Map<string, number[]> | null = null
-
-    for (const node of nodes) {
-      if (node.type === "connector" || node.type === "violin" || node.type === "boxplot") continue
-
-      // Wedge nodes: datum is a representative point for the category.
-      // Pulse the wedge when any data point in that category was recently inserted.
-      if (node.type === "wedge") {
-        const cat = node.category
-        if (!cat) continue
-        if (!categoryIndex) categoryIndex = this.getCategoryIndexMap(data)
-        const indices = categoryIndex.get(cat)
-        if (!indices) continue
-        let bestIntensity = 0
-        for (let j = 0; j < indices.length; j++) {
-          const insertTime = this.timestampBuffer.get(indices[j])
-          if (insertTime == null) continue
-          const intensity = computePulseIntensity(this.config.pulse, insertTime, now)
-          if (intensity > bestIntensity) bestIntensity = intensity
-        }
-        changed = setOrdinalPulseState(node, bestIntensity, pulseColor) || changed
-        continue
-      }
-
-      const idx = indexMap.get(node.datum)
-      if (idx == null) continue
-      const insertTime = this.timestampBuffer.get(idx)
-      const intensity = insertTime == null
-        ? 0
-        : computePulseIntensity(this.config.pulse, insertTime, now)
-      changed = setOrdinalPulseState(node, intensity, pulseColor, glowRadius) || changed
-    }
-
-    return changed
+    return applyOrdinalPulse(
+      this.config.pulse,
+      nodes,
+      this.timestampBuffer,
+      this.getDatumIndexMap(data),
+      category => this.getCategoryIndexMap(data).get(category),
+      now
+    )
   }
 
   /**

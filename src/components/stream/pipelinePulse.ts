@@ -88,7 +88,7 @@ export function applyPulse(
  * which do not map back to a datum are left entirely alone, including any
  * user-owned underscore fields they may carry.
  */
-function setPulseState(
+export function setPulseState(
   node: {
     _pulseIntensity?: number
     _pulseColor?: string

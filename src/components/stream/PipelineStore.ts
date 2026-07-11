@@ -992,41 +992,22 @@ export class PipelineStore {
   }
 
   // ── Pulse (delegated to pipelinePulse.ts) ──────────────────────────
+  private applyPulse = (nodes: SceneNode[], data: Datum[], now?: number): boolean =>
+    this.config.pulse && this.timestampBuffer
+      ? applyPulseFn(this.config.pulse, nodes, data, this.timestampBuffer, this.getDatumIndexMap(data), now)
+      : false
 
-  private applyPulse(nodes: SceneNode[], data: Datum[], now?: number): boolean {
-    if (!this.config.pulse || !this.timestampBuffer) return false
-    return applyPulseFn(
-      this.config.pulse,
-      nodes,
-      data,
-      this.timestampBuffer,
-      this.getDatumIndexMap(data),
-      now
-    )
-  }
-
-  /**
-   * Refresh pulse-derived scene fields without rebuilding scales, layout, or
-   * custom-layout overlays. StreamXYFrame calls this on idle animation frames
-   * so a new point's glow visibly decays and receives one final clear at
-   * expiry.
-   */
+  /** Refresh pulse fields without rebuilding layout; retained custom scenes stay immutable. */
   refreshPulse(now: number): boolean {
-    // A failed custom-layout rerun intentionally retains the prior scene as a
-    // last-known-good snapshot. Do not mutate that retained scene in an idle
-    // animation pass; it may no longer correspond to the current data.
     if (this.lastCustomLayoutFailure?.preservedLastGoodScene === true) return false
     return this.applyPulse(this.scene, this.getBufferArray(), now)
   }
 
   hasActivePulsesAt(now: number): boolean {
-    if (!this.config.pulse) return false
-    return hasActivePulsesFn(this.config.pulse, this.timestampBuffer, now)
+    return !!this.config.pulse && hasActivePulsesFn(this.config.pulse, this.timestampBuffer, now)
   }
 
-  get hasActivePulses(): boolean {
-    return this.hasActivePulsesAt(getTimestamp())
-  }
+  get hasActivePulses(): boolean { return this.hasActivePulsesAt(getTimestamp()) }
 
   // ── Transitions (delegated to pipelineTransitions.ts) ──────────────
 
