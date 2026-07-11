@@ -28,6 +28,7 @@ const FILES = {
   "--schema": path.join(__dirname, "schema.json"),
   "--compact": path.join(__dirname, "system-prompt.md"),
   "--examples": path.join(__dirname, "examples.md"),
+  "--skill": path.join(pkgRoot, "agent-skill", "semiotic-charts", "SKILL.md"),
 }
 
 function errorMessage(err) {
@@ -47,6 +48,7 @@ Usage:
   npx semiotic-ai --suggest     Recommend charts from { data, intent? } JSON
   npx semiotic-ai --compact    Print ai/system-prompt.md (compact prompt)
   npx semiotic-ai --examples   Print ai/examples.md (copy-paste examples)
+  npx semiotic-ai --skill      Print the portable Semiotic Agent Skill
   npx semiotic-ai --doctor     Validate { component, props, usageMode? } JSON from stdin
   npx semiotic-ai --audit-a11y Audit { component, props, inChartContainer?, describe?, navigable? }
   npx semiotic-ai --audit-mobile Audit { component, props, viewportWidth?, targetSize?, inChartContainer? }
@@ -253,6 +255,11 @@ if (flag === "--list") {
 
 if (flag === "--schema" && process.argv[3]) {
   printSingleComponentSchema(process.argv[3])
+  process.exit(0)
+}
+
+if (flag === "--skill") {
+  console.log(fs.readFileSync(FILES["--skill"], "utf-8"))
   process.exit(0)
 }
 

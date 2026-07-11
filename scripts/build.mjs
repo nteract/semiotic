@@ -177,7 +177,7 @@ function buildDeclarations() {
   // module resolution (TypeScript with `moduleResolution: "node"`) can follow
   // the re-export graph through the leaf declaration files.
   const entryPoints = [
-    "semiotic", "semiotic-ai", "semiotic-data", "semiotic-xy",
+    "semiotic", "semiotic-ai", "semiotic-ai-core", "semiotic-data", "semiotic-xy",
     "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
     "semiotic-geo", "semiotic-physics", "semiotic-physics-matter", "semiotic-physics-rapier", "semiotic-themes", "semiotic-utils", "semiotic-recipes",
     "semiotic-experimental", "semiotic-value"
@@ -281,6 +281,7 @@ async function build() {
     // Component (`renderChart` throws "X is on the client").
     { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify, serverOnly: true },
     { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-ai-core.ts", name: "semiotic-ai-core", analyze: false, minify, serverOnly: true },
     { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
     { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify, clientOnly: true },
     // `semiotic-themes` and `semiotic-utils` are *mixed* bundles — most

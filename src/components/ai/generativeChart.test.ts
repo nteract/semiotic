@@ -7,6 +7,7 @@ import {
   prepareChart,
   toAnthropicTool,
   toOpenAITool,
+  toOpenAIResponsesTool,
 } from "./generativeChart"
 
 const BARS = [
@@ -185,6 +186,35 @@ describe("chart tool definitions", () => {
     expect(openai.type).toBe("function")
     expect(openai.function.parameters).toBe(tool.inputSchema)
     expect(openai.function.name).toBe(tool.name)
+
+    const responses = toOpenAIResponsesTool(tool)
+    expect(responses).toMatchObject({
+      type: "function",
+      name: tool.name,
+      parameters: tool.inputSchema,
+      strict: false,
+    })
+  })
+
+  it("supports strict Responses tools only for closed JSON schemas", () => {
+    expect(() => toOpenAIResponsesTool(chartGenerationTool(), { strict: true })).toThrow(
+      /strict mode requires closed object schemas/
+    )
+
+    const closed = {
+      name: "closed_chart",
+      description: "A closed tool schema",
+      inputSchema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["component", "title"],
+        properties: {
+          component: { type: "string" },
+          title: { type: ["string", "null"] },
+        },
+      },
+    }
+    expect(toOpenAIResponsesTool(closed, { strict: true }).strict).toBe(true)
   })
 
   it("createChartToolHandler runs the trust loop on tool input", () => {

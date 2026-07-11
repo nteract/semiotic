@@ -330,6 +330,7 @@ export {
   chartGenerationTool,
   toAnthropicTool,
   toOpenAITool,
+  toOpenAIResponsesTool,
   createChartToolHandler
 } from "./ai/generativeChart"
 export type {
@@ -338,7 +339,9 @@ export type {
   PrepareChartOptions,
   PrepareChartResult,
   ChartToolDefinition,
-  ChartToolOptions
+  ChartToolOptions,
+  OpenAIResponsesTool,
+  OpenAIResponsesToolOptions
 } from "./ai/generativeChart"
 export {
   buildNavigationTree,

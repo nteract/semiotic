@@ -111,7 +111,25 @@ npx semiotic-ai --help`}</CodeBlock>
         MCP-aware assistant at it and the model can call Semiotic&rsquo;s capabilities directly rather
         than guessing at the API.
       </p>
-      <p>The server exposes these tools:</p>
+      <h3 id="public-profile">Public task profile</h3>
+      <p>
+        For an in-conversation app or a user-facing connector, start the focused profile instead
+        of loading every expert tool. It exposes five task-oriented tools: <code>createChart</code>,{" "}
+        <code>improveChart</code>, <code>explainChart</code>, <code>auditChart</code>, and{" "}
+        <code>getChartSchema</code>. <code>createChart</code> composes selection, validation,
+        diagnosis, interactive rendering, and render evidence in one call.
+      </p>
+      <CodeBlock language="bash">{`# Public app / connector profile (five tools)
+npx semiotic-mcp --profile public
+
+# Equivalent for hosted deployments
+MCP_TOOL_PROFILE=public npx semiotic-mcp --http --port 3001`}</CodeBlock>
+
+      <h3 id="developer-profile">Full developer profile</h3>
+      <p>
+        The default profile retains the complete expert surface for coding agents, CI, and chart
+        debugging. Key tools include:
+      </p>
       <ul>
         <li>
           <code>renderChart</code> — render a component + props to a static SVG/PNG snapshot. The

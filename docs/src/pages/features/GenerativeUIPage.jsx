@@ -101,9 +101,9 @@ export default function GenerativeUIPage() {
         chart for the wrong data misleads exactly the reader who can't tell. The
         generative-UI trust layer is what an AI framework wraps around chart
         generation. It turns a model's <em>proposal</em> — a component name and props —
-        into a result that is either <strong>guaranteed renderable</strong> or
-        accompanied by precise reasons and ranked alternatives to retry with. Never a
-        broken chart.
+        into a result that is <strong>validated and diagnosed</strong> — and, when a
+        server renderer is injected, proven to paint — or accompanied by precise
+        reasons and ranked alternatives to retry with. Never an unchecked chart.
       </p>
 
       <h2>Why this matters</h2>
@@ -210,7 +210,7 @@ const result = prepareChart(
 )
 
 if (result.ok) {
-  stream(result.jsx)                   // guaranteed-renderable JSX / result.config
+  stream(result.jsx)                   // validated JSX / result.config
 } else {
   retry(result.reasons, result.repair) // precise reasons + ranked alternatives — never paint
 }`}
@@ -230,7 +230,8 @@ if (result.ok) {
       </p>
       <CodeBlock language="ts">
 {`import {
-  chartGenerationTool, toAnthropicTool, toOpenAITool, createChartToolHandler,
+  chartGenerationTool, toAnthropicTool, toOpenAITool, toOpenAIResponsesTool,
+  createChartToolHandler,
 } from "semiotic/ai"
 
 const def = chartGenerationTool()
@@ -239,8 +240,13 @@ const handler = createChartToolHandler((input) => ({ data, render }))
 // Anthropic Messages API
 const anthropicTools = [toAnthropicTool(def)]            // { name, description, input_schema }
 
-// OpenAI / function calling
-const openaiTools = [toOpenAITool(def)]                   // { type: "function", function: {...} }
+// OpenAI Chat Completions function calling
+const chatCompletionsTools = [toOpenAITool(def)]          // { type: "function", function: {...} }
+
+// OpenAI Responses API function calling (flat tool shape)
+const responsesTools = [toOpenAIResponsesTool(def)]       // { type: "function", name, parameters, strict: false }
+// The generic props object is intentionally open. For strict: true, provide a
+// component-specific schema that closes every object and requires every field.
 
 // Vercel AI SDK — the same JSON Schema, via its jsonSchema() helper:
 //   tool({ description: def.description, parameters: jsonSchema(def.inputSchema),

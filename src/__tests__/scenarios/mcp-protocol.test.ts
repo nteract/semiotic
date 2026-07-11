@@ -54,8 +54,8 @@ if (!SERVER_DEPS_READY) {
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /** Spawn the MCP server process. */
-function spawnServer(): ChildProcess {
-  return spawn("node", [SERVER_PATH], {
+function spawnServer(args: string[] = []): ChildProcess {
+  return spawn("node", [SERVER_PATH, ...args], {
     stdio: ["pipe", "pipe", "pipe"],
     env: { ...process.env, NODE_ENV: "test" },
   })
@@ -426,6 +426,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
       "semiotic://components",
       "semiotic://examples",
       "semiotic://schema",
+      "semiotic://surface-manifest",
       "semiotic://system-prompt",
       "ui://semiotic/chart-widget.html",
     ])
@@ -464,6 +465,18 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(ids).toContain("color.category-precedence")
     expect(ids).toContain("streaming.push-mode-data")
     expect(ids).toContain("props.required-combinations")
+  })
+
+  it("resources/read returns the generated AI surface manifest", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "semiotic://surface-manifest",
+    }, "resources-read-surface-manifest")
+
+    expect(result.result).toBeDefined()
+    const manifest = JSON.parse(result.result.contents[0].text)
+    expect(manifest.__generated).toBe(true)
+    expect(manifest.components.schema).toBeGreaterThan(0)
+    expect(manifest.mcp.tools).toContain("suggestCharts")
   })
 
   it("resources/read returns the ChatGPT Apps chart widget", async () => {
@@ -1037,6 +1050,29 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
 
     // MCP SDK returns an error for unknown tools
     expect(result.error || result.result?.isError).toBeTruthy()
+  })
+})
+
+describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
+  it("exposes the five task-oriented public tools", async () => {
+    const publicProc = spawnServer(["--profile", "public"])
+    try {
+      await sendRequest(publicProc, "initialize", {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "semiotic-public-profile-test", version: "1.0.0" },
+      }, "public-profile-initialize")
+      const result = await sendRequest(publicProc, "tools/list", {}, "public-profile-tools")
+      expect(result.result.tools.map((tool: { name: string }) => tool.name).sort()).toEqual([
+        "auditChart",
+        "createChart",
+        "explainChart",
+        "getChartSchema",
+        "improveChart",
+      ])
+    } finally {
+      publicProc.kill()
+    }
   })
 })
 

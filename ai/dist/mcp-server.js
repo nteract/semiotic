@@ -32816,6 +32816,10 @@ function renderSemioticChartWidgetHTML() {
 </body>
 </html>`.trim();
 }
+var SURFACE_VERSION = `${schema.version || "3.0.0"}-ai`;
+function profileResult(result) {
+  return { ...result, surfaceVersion: SURFACE_VERSION };
+}
 async function getSchemaHandler(args) {
   const component = args.component;
   if (!component) {
@@ -32826,7 +32830,7 @@ ${list.join(", ")}
 
 Components marked [renderable] can be rendered to SVG via renderChart (pass theme parameter for styled output). Others (Realtime*) require a browser environment.
 
-For full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.
+For full agent context, read MCP resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples.
 
 All charts support CSS custom properties for theming (--semiotic-bg, --semiotic-text, --semiotic-grid, etc.) and <ThemeProvider>. Use COLOR_BLIND_SAFE_CATEGORICAL (import from semiotic/themes) for accessible color palettes.
 
@@ -33542,16 +33546,82 @@ async function groundChartHandler(args) {
     structuredContent: grounding
   };
 }
+async function createChartHandler(args) {
+  const intent = Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : void 0;
+  const suggestions = (0, import_ai3.suggestCharts)(args.data, { intent, audience: args.audience, maxResults: 8 });
+  const selected = args.component ? suggestions.find((suggestion) => suggestion.component === args.component) : suggestions[0];
+  if (!selected) {
+    return {
+      content: [{ type: "text", text: "No renderable Semiotic chart was suggested for this data. Use getChartSchema for code-level guidance." }],
+      isError: true,
+      structuredContent: profileResult({ status: "no-suggestion", suggestions })
+    };
+  }
+  const props = { data: args.data, ...selected.props, ...args.props };
+  const diagnosis = (0, import_ai3.diagnoseConfig)(selected.component, props);
+  const blocking = diagnosis.diagnoses.filter((item) => item.severity === "error");
+  if (blocking.length) {
+    return {
+      content: [{ type: "text", text: `Selected ${selected.component}, but blocking diagnostics require repair before rendering.` }],
+      isError: true,
+      structuredContent: profileResult({ status: "blocked", component: selected.component, props, suggestion: selected, diagnostics: diagnosis.diagnoses })
+    };
+  }
+  const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme });
+  const output = rendered.structuredContent ?? {};
+  return {
+    ...rendered,
+    structuredContent: profileResult({
+      status: "render-proven",
+      component: selected.component,
+      props,
+      suggestion: selected,
+      diagnostics: diagnosis.diagnoses,
+      render: output
+    })
+  };
+}
+async function improveChartHandler(args) {
+  const data = args.data ?? (Array.isArray(args.props.data) ? args.props.data : []);
+  const intent = Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : void 0;
+  const diagnosis = (0, import_ai3.diagnoseConfig)(args.component, args.props);
+  const repair = (0, import_ai3.repairChartConfig)(args.component, data, { intent });
+  const capability = (0, import_ai3.getCapability)(args.component);
+  const variants = capability ? (0, import_ai3.proposeVariant)(args.component, capability, { profile: (0, import_ai3.profileData)(data), intent }) : [];
+  return {
+    content: [{ type: "text", text: `Improvement analysis for ${args.component}: ${diagnosis.diagnoses.length} diagnosis item(s), repair status ${repair.status}, ${variants.length} variant proposal(s).` }],
+    structuredContent: profileResult({ status: repair.status === "ok" ? "reviewed" : "repair-needed", component: args.component, diagnostics: diagnosis.diagnoses, repair, variants })
+  };
+}
+async function explainChartHandler(args) {
+  const grounded = await groundChartHandler(args);
+  return {
+    ...grounded,
+    structuredContent: grounded.structuredContent ? profileResult({ status: "grounded", grounding: grounded.structuredContent }) : void 0
+  };
+}
+async function auditChartHandler(args) {
+  const diagnosis = (0, import_ai3.diagnoseConfig)(args.component, args.props);
+  const accessibility = (0, import_ai3.auditAccessibility)(args.component, args.props, { inChartContainer: true, describe: true, navigable: true });
+  const mobile = (0, import_ai3.auditMobileVisualization)(args.component, args.props, { viewportWidth: args.viewportWidth, inChartContainer: true });
+  const blocking = diagnosis.diagnoses.some((item) => item.severity === "error") || !accessibility.ok || !mobile.ok;
+  return {
+    content: [{ type: "text", text: `Audit for ${args.component}: ${blocking ? "blocking findings need attention" : "no blocking findings"}.` }],
+    isError: blocking,
+    structuredContent: profileResult({ status: blocking ? "findings" : "passed", component: args.component, diagnostics: diagnosis.diagnoses, accessibility, mobile })
+  };
+}
 var READ_ONLY_TOOL_ANNOTATIONS = {
   readOnlyHint: true,
   destructiveHint: false,
   idempotentHint: true,
   openWorldHint: false
 };
-function createServer2() {
+function createServer2(profile = "developer") {
   const srv = new McpServer({
     name: "semiotic",
-    version: schema.version || "3.0.0"
+    version: schema.version || "3.0.0",
+    description: "Deterministic Semiotic chart selection, validation, rendering, and non-visual chart grounding. Use suggestCharts, getSchema, diagnoseConfig, and renderChart in that order for static chart generation."
   });
   srv.registerResource(
     "semiotic-schema",
@@ -33572,6 +33642,16 @@ function createServer2() {
       mimeType: "application/json"
     },
     (uri) => textResource(uri, "application/json", componentIndexJSON())
+  );
+  srv.registerResource(
+    "semiotic-surface-manifest",
+    "semiotic://surface-manifest",
+    {
+      title: "Semiotic AI Surface Manifest",
+      description: "Generated inventory of schema components, AI exports, MCP renderability, tools, resources, and prompts.",
+      mimeType: "application/json"
+    },
+    (uri) => textResource(uri, "application/json", readAIFile("surface-manifest.json"))
   );
   srv.registerResource(
     "semiotic-behavior-contracts",
@@ -33688,6 +33768,51 @@ function createServer2() {
       "Return the smallest safe fix first, then mention any follow-up cleanup or issue-reporting step."
     ].join("\n"))
   );
+  if (profile === "public") {
+    srv.registerTool("createChart", {
+      title: "Create and prove a chart",
+      description: "Select, validate, diagnose, render, and prove a static-data Semiotic chart. This is the default public workflow.",
+      inputSchema: {
+        data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).min(1),
+        intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional(),
+        audience: external_exports3.object({ name: external_exports3.string().optional(), receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional() }).passthrough().optional(),
+        component: external_exports3.string().optional().describe("Optional chart preference; the fit-ranked result remains authoritative."),
+        props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Optional props to merge over the selected chart recipe."),
+        theme: external_exports3.record(external_exports3.string(), external_exports3.string()).optional()
+      },
+      outputSchema: { status: external_exports3.enum(["render-proven", "blocked", "no-suggestion"]), component: external_exports3.string().optional(), surfaceVersion: external_exports3.string() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS,
+      _meta: { ui: { resourceUri: SEMIOTIC_CHART_WIDGET_URI }, "openai/outputTemplate": SEMIOTIC_CHART_WIDGET_URI }
+    }, createChartHandler);
+    srv.registerTool("improveChart", {
+      title: "Improve an existing chart",
+      description: "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
+      inputSchema: { component: external_exports3.string(), props: external_exports3.record(external_exports3.string(), external_exports3.unknown()), data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).optional(), intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional() },
+      outputSchema: { status: external_exports3.enum(["reviewed", "repair-needed"]), component: external_exports3.string(), surfaceVersion: external_exports3.string() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS
+    }, improveChartHandler);
+    srv.registerTool("explainChart", {
+      title: "Explain a chart without pixels",
+      description: "Return reader grounding: chart description, communicative intent, and navigable data structure.",
+      inputSchema: { component: external_exports3.string(), props: external_exports3.record(external_exports3.string(), external_exports3.unknown()) },
+      outputSchema: { status: external_exports3.literal("grounded"), grounding: external_exports3.record(external_exports3.string(), external_exports3.unknown()), surfaceVersion: external_exports3.string() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS
+    }, explainChartHandler);
+    srv.registerTool("auditChart", {
+      title: "Audit chart quality and accessibility",
+      description: "Run design diagnostics plus accessibility and mobile audits, returning prioritized structured findings.",
+      inputSchema: { component: external_exports3.string(), props: external_exports3.record(external_exports3.string(), external_exports3.unknown()), viewportWidth: external_exports3.number().int().min(240).max(1600).optional() },
+      outputSchema: { status: external_exports3.enum(["passed", "findings"]), component: external_exports3.string(), surfaceVersion: external_exports3.string() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS
+    }, auditChartHandler);
+    srv.registerTool("getChartSchema", {
+      title: "Get a chart schema",
+      description: "Return canonical Semiotic prop-schema guidance for code editing and advanced configuration.",
+      inputSchema: { component: external_exports3.string().optional() },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS
+    }, getSchemaHandler);
+    return srv;
+  }
   srv.tool(
     "getSchema",
     `Return the prop schema for a Semiotic chart component. Pass { component: '<name>' } to get its props, or omit component to list all available components. Components marked [renderable] can be passed to renderChart for static SVG output.`,
@@ -33828,14 +33953,25 @@ function createServer2() {
     READ_ONLY_TOOL_ANNOTATIONS,
     interrogateChartHandler
   );
-  srv.tool(
+  srv.registerTool(
     "groundChart",
-    "Build the agent-reader grounding payload for a Semiotic chart: the layered L1\u2013L3 natural-language description, the L4 communicative-act sentence (what the chart is asking the reader to do \u2014 'this is an alerting chart; the spike warrants a closer look'), and a structured navigation tree (chart \u2192 axes/series \u2192 datum). This is the documented thing an LLM reads to interpret a chart faithfully without seeing the pixels \u2014 the reader-side complement to a capability descriptor. The L4 act is resolved from the chart's registered capability. Returns prose plus the full structured payload (description/intent/structure/text).",
     {
-      component: external_exports3.string().describe("Chart component name, e.g. 'LineChart'"),
-      props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).describe("The full chart props including data")
+      title: "Ground a Semiotic chart for a non-visual reader",
+      description: "Build the agent-reader grounding payload for a Semiotic chart: the layered L1\u2013L3 natural-language description, the L4 communicative-act sentence (what the chart is asking the reader to do), and a structured navigation tree (chart \u2192 axes/series \u2192 datum). Use this to interpret a chart faithfully without pixels.",
+      inputSchema: {
+        component: external_exports3.string().describe("Chart component name, e.g. 'LineChart'"),
+        props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).describe("The full chart props including data")
+      },
+      outputSchema: {
+        component: external_exports3.string(),
+        description: external_exports3.record(external_exports3.string(), external_exports3.unknown()),
+        intent: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional(),
+        structure: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional(),
+        physics: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional(),
+        text: external_exports3.string()
+      },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    READ_ONLY_TOOL_ANNOTATIONS,
     groundChartHandler
   );
   srv.tool(
@@ -33910,16 +34046,27 @@ function createServer2() {
     READ_ONLY_TOOL_ANNOTATIONS,
     suggestStretchChartsHandler
   );
-  srv.tool(
+  srv.registerTool(
     "repairChartConfig",
-    "Validate that a chart component is a sensible choice for a dataset, and if not, propose alternatives that fit. Use when a user asks for a specific chart and you want to confirm it's appropriate, or when you've drafted a config and want to verify it. Returns either ok (no change needed), alternative (chart doesn't fit; here are ranked replacements with rationale), or unknown (no capability registered).",
     {
-      component: external_exports3.string().describe("Chart component name to validate, e.g. 'PieChart'"),
-      data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
-      intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("User intent \u2014 informs ranking of alternatives when the chart doesn't fit."),
-      maxAlternatives: external_exports3.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3).")
+      title: "Repair an unsuitable chart choice",
+      description: "Validate that a chart component is a sensible choice for a dataset, and if not, propose ranked alternatives that fit. Returns a structured status of ok, alternative, or unknown.",
+      inputSchema: {
+        component: external_exports3.string().describe("Chart component name to validate, e.g. 'PieChart'"),
+        data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
+        intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("User intent \u2014 informs ranking of alternatives when the chart doesn't fit."),
+        maxAlternatives: external_exports3.number().int().min(1).max(10).optional().describe("Cap on alternatives returned (default 3).")
+      },
+      outputSchema: {
+        status: external_exports3.enum(["ok", "alternative", "unknown"]),
+        component: external_exports3.string(),
+        reason: external_exports3.string().optional(),
+        alternatives: external_exports3.array(external_exports3.unknown()).optional(),
+        profile: external_exports3.record(external_exports3.string(), external_exports3.unknown()),
+        repairs: external_exports3.array(external_exports3.string()).optional()
+      },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    READ_ONLY_TOOL_ANNOTATIONS,
     repairChartConfigHandler
   );
   srv.tool(
@@ -33949,37 +34096,44 @@ function createServer2() {
     READ_ONLY_TOOL_ANNOTATIONS,
     proposeChartVariantsHandler
   );
-  srv.tool(
+  srv.registerTool(
     "suggestCharts",
-    "Recommend Semiotic charts for a dataset using heuristic capability descriptors. Each chart declares which data shapes it serves and which intents (trend, compare-categories, distribution, correlation, part-to-whole, etc.) it answers \u2014 the engine returns a ranked list with scores, reasons, caveats, and ready-to-use props. Heuristic only; no LLM call. Use the result as structured context when answering 'what chart should I use?' or generating chart code.",
     {
-      data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
-      intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("Ranking intent. One of: trend, compare-series, compare-categories, rank, part-to-whole, distribution, correlation, flow, hierarchy, geo, outlier-detection, composition-over-time, change-detection. Custom intents accepted."),
-      maxResults: external_exports3.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
-      allow: external_exports3.array(external_exports3.string()).optional().describe("Restrict to these component names."),
-      deny: external_exports3.array(external_exports3.string()).optional().describe("Exclude these component names."),
-      audience: external_exports3.object({
-        name: external_exports3.string().optional(),
-        familiarity: external_exports3.record(external_exports3.string(), external_exports3.number()).optional(),
-        targets: external_exports3.record(
-          external_exports3.string(),
-          external_exports3.object({
-            direction: external_exports3.enum(["increase", "decrease"]),
-            weight: external_exports3.number().int().min(1).max(3).optional(),
-            reason: external_exports3.string().optional()
-          })
-        ).optional(),
-        exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional(),
-        receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel. A non-visual value down-ranks charts the audience can't receive in that channel (e.g. a many-slice pie for a screen reader) and adds receivability caveats.")
-      }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality.")
+      title: "Recommend Semiotic charts",
+      description: "Recommend Semiotic charts for a dataset using heuristic capability descriptors. Returns ranked, structured suggestions with scores, reasons, caveats, and ready-to-use props; no LLM call is made.",
+      inputSchema: {
+        data: external_exports3.array(external_exports3.record(external_exports3.string(), external_exports3.unknown())).describe("Row data \u2014 array of objects."),
+        intent: external_exports3.union([external_exports3.string(), external_exports3.array(external_exports3.string())]).optional().describe("Ranking intent. One of: trend, compare-series, compare-categories, rank, part-to-whole, distribution, correlation, flow, hierarchy, geo, outlier-detection, composition-over-time, change-detection. Custom intents accepted."),
+        maxResults: external_exports3.number().int().min(1).max(40).optional().describe("Cap on suggestions returned (default 8)."),
+        allow: external_exports3.array(external_exports3.string()).optional().describe("Restrict to these component names."),
+        deny: external_exports3.array(external_exports3.string()).optional().describe("Exclude these component names."),
+        audience: external_exports3.object({
+          name: external_exports3.string().optional(),
+          familiarity: external_exports3.record(external_exports3.string(), external_exports3.number()).optional(),
+          targets: external_exports3.record(
+            external_exports3.string(),
+            external_exports3.object({
+              direction: external_exports3.enum(["increase", "decrease"]),
+              weight: external_exports3.number().int().min(1).max(3).optional(),
+              reason: external_exports3.string().optional()
+            })
+          ).optional(),
+          exposureLevel: external_exports3.union([external_exports3.literal(0), external_exports3.literal(1), external_exports3.literal(2)]).optional(),
+          receptionModality: external_exports3.enum(["visual", "screen-reader", "sonified", "agent"]).optional().describe("Reception channel. A non-visual value down-ranks charts the audience can't receive in that channel and adds receivability caveats.")
+        }).optional().describe("Audience profile \u2014 familiarity, adoption targets, exposure level, and reception modality.")
+      },
+      outputSchema: { suggestions: external_exports3.array(external_exports3.unknown()) },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    READ_ONLY_TOOL_ANNOTATIONS,
     suggestChartsHandler
   );
   return srv;
 }
 var cliArgs = process.argv.slice(2);
 var httpMode = cliArgs.includes("--http");
+var profileFlagIndex = cliArgs.indexOf("--profile");
+var requestedProfile = profileFlagIndex !== -1 ? cliArgs[profileFlagIndex + 1] : process.env.MCP_TOOL_PROFILE;
+var toolProfile = requestedProfile === "public" ? "public" : "developer";
 var portFlagIndex = cliArgs.indexOf("--port");
 var parsedPort = portFlagIndex !== -1 && cliArgs[portFlagIndex + 1] != null ? parseInt(cliArgs[portFlagIndex + 1], 10) : NaN;
 var port = Number.isFinite(parsedPort) ? parsedPort : 3001;
@@ -34051,7 +34205,7 @@ async function main() {
         res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Method not allowed" }, id: null }));
         return;
       }
-      const srv = createServer2();
+      const srv = createServer2(toolProfile);
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: void 0,
         enableJsonResponse: true
@@ -34081,11 +34235,11 @@ async function main() {
     });
     httpServer.listen(port, () => {
       console.error(`Semiotic MCP server (HTTP) listening on http://localhost:${port}`);
-      console.error("Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme");
-      console.error("Resources: semiotic://schema, semiotic://components, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html");
+      console.error(toolProfile === "public" ? "Tools (public profile): createChart, improveChart, explainChart, auditChart, getChartSchema" : "Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme");
+      console.error("Resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html");
     });
   } else {
-    const srv = createServer2();
+    const srv = createServer2(toolProfile);
     const transport = new StdioServerTransport();
     await srv.connect(transport);
   }

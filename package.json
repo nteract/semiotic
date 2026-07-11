@@ -2,7 +2,7 @@
   "name": "semiotic",
   "version": "3.8.0",
   "mcpName": "io.github.nteract/semiotic",
-  "description": "React data visualization library with built-in MCP server for AI-assisted chart generation",
+  "description": "Verified generative visualization for React and agents, with deterministic chart validation, repair, rendering evidence, and MCP.",
   "main": "dist/semiotic.min.js",
   "module": "dist/semiotic.module.min.js",
   "types": "dist/semiotic.d.ts",
@@ -72,6 +72,12 @@
       "require": "./dist/semiotic-ai.min.js",
       "default": "./dist/semiotic-ai.module.min.js"
     },
+    "./ai/core": {
+      "types": "./dist/semiotic-ai-core.d.ts",
+      "import": "./dist/semiotic-ai-core.module.min.js",
+      "require": "./dist/semiotic-ai-core.min.js",
+      "default": "./dist/semiotic-ai-core.module.min.js"
+    },
     "./data": {
       "types": "./dist/semiotic-data.d.ts",
       "import": "./dist/semiotic-data.module.min.js",
@@ -124,6 +130,7 @@
     "dist/forceLayoutWorker.js",
     "dist/physicsWorker.js",
     "ai/schema.json",
+    "ai/surface-manifest.json",
     "ai/system-prompt.md",
     "ai/examples.md",
     "ai/componentMetadata.cjs",
@@ -131,6 +138,7 @@
     "ai/chartSuggestions.cjs",
     "ai/cli.js",
     "ai/dist/*.js",
+    "agent-skill/semiotic-charts/SKILL.md",
     "CLAUDE.md",
     "README.md",
     "LICENSE"
@@ -186,10 +194,14 @@
     "check:api-surface": "node scripts/check-api-surface.mjs",
     "docs:api-surface": "node scripts/generate-api-surface.mjs",
     "docs:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs",
+    "docs:ai-surface": "node scripts/generate-ai-surface-manifest.mjs",
     "check:claude-md-coverage": "node scripts/check-claude-md-coverage.js",
     "check:context7": "node scripts/check-context7.mjs",
     "check:mcp-registry": "node scripts/check-mcp-registry.mjs",
     "check:surface": "node scripts/check-surface-parity.js",
+    "check:ai-surface": "node scripts/generate-ai-surface-manifest.mjs --check",
+    "check:agent-skill": "node scripts/check-agent-skill.mjs",
+    "eval:ai": "node scripts/run-ai-evals.mjs",
     "check:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs --check",
     "check:ssr": "node scripts/check-ssr-alignment.js",
     "check:capabilities": "node scripts/check-capabilities.mjs",
@@ -215,8 +227,8 @@
     "docs:bundle-sizes": "node scripts/sync-bundle-sizes.mjs",
     "docs:readme-dashboard": "npx tsx scripts/generate-readme-dashboard.tsx",
     "check:readme-dashboard": "npx tsx scripts/generate-readme-dashboard.tsx --check",
-    "release:check": "npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
-    "prepublishOnly": "npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run size"
+    "release:check": "npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-surface && npm run check:agent-skill && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run dist:prod && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run size && npm run check:pack && npm pack --dry-run",
+    "prepublishOnly": "npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run build:mcp && npm run test && npm run check:chart-specs && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:claude-md-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-surface && npm run check:agent-skill && npm run check:ai-contracts && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && rm -rf dist && npm run dist:prod && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run size"
   },
   "repository": {
     "type": "git",

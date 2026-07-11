@@ -1,0 +1,200 @@
+{
+  "__generated": true,
+  "__source": [
+    "package.json",
+    "ai/schema.json",
+    "ai/componentMetadata.cjs",
+    "src/components/semiotic-ai.ts",
+    "ai/mcp-server.ts"
+  ],
+  "version": "3.8.0",
+  "components": {
+    "schema": 54,
+    "aiChartExports": 51,
+    "mcpRenderable": 48,
+    "browserOnly": 6,
+    "categories": {
+      "xy": [
+        "AreaChart",
+        "BubbleChart",
+        "CandlestickChart",
+        "ConnectedScatterplot",
+        "DifferenceChart",
+        "Heatmap",
+        "LineChart",
+        "MinimapChart",
+        "MultiAxisLineChart",
+        "QuadrantChart",
+        "Scatterplot",
+        "ScatterplotMatrix",
+        "StackedAreaChart"
+      ],
+      "ordinal": [
+        "BarChart",
+        "BoxPlot",
+        "DonutChart",
+        "DotPlot",
+        "FunnelChart",
+        "GaugeChart",
+        "GroupedBarChart",
+        "Histogram",
+        "LikertChart",
+        "PieChart",
+        "RidgelinePlot",
+        "StackedBarChart",
+        "SwarmPlot",
+        "SwimlaneChart",
+        "ViolinPlot"
+      ],
+      "network": [
+        "ChordDiagram",
+        "CirclePack",
+        "ForceDirectedGraph",
+        "OrbitDiagram",
+        "ProcessSankey",
+        "SankeyDiagram",
+        "TreeDiagram",
+        "Treemap"
+      ],
+      "geo": [
+        "ChoroplethMap",
+        "DistanceCartogram",
+        "FlowMap",
+        "ProportionalSymbolMap"
+      ],
+      "realtime": [
+        "RealtimeHeatmap",
+        "RealtimeHistogram",
+        "RealtimeLineChart",
+        "RealtimeSwarmChart",
+        "RealtimeWaterfallChart",
+        "TemporalHistogram"
+      ],
+      "physics": [
+        "CollisionSwarmChart",
+        "EventDropChart",
+        "GaltonBoardChart",
+        "GauntletChart",
+        "PhysicalFlowChart",
+        "PhysicsPileChart",
+        "ProcessFlowChart"
+      ],
+      "value": [
+        "BigNumber"
+      ]
+    },
+    "aiChartExportNames": [
+      "AreaChart",
+      "BarChart",
+      "BigNumber",
+      "BoxPlot",
+      "BubbleChart",
+      "CandlestickChart",
+      "ChordDiagram",
+      "CirclePack",
+      "CollisionSwarmChart",
+      "ConnectedScatterplot",
+      "DifferenceChart",
+      "DonutChart",
+      "DotPlot",
+      "EventDropChart",
+      "ForceDirectedGraph",
+      "FunnelChart",
+      "GaltonBoardChart",
+      "GaugeChart",
+      "GauntletChart",
+      "GroupedBarChart",
+      "Heatmap",
+      "Histogram",
+      "LikertChart",
+      "LineChart",
+      "MinimapChart",
+      "MultiAxisLineChart",
+      "OrbitDiagram",
+      "PhysicalFlowChart",
+      "PhysicsCustomChart",
+      "PhysicsPileChart",
+      "PieChart",
+      "ProcessFlowChart",
+      "ProcessSankey",
+      "QuadrantChart",
+      "RealtimeHeatmap",
+      "RealtimeHistogram",
+      "RealtimeLineChart",
+      "RealtimeSwarmChart",
+      "RealtimeWaterfallChart",
+      "RidgelinePlot",
+      "SankeyDiagram",
+      "Scatterplot",
+      "ScatterplotMatrix",
+      "StackedAreaChart",
+      "StackedBarChart",
+      "SwarmPlot",
+      "SwimlaneChart",
+      "TemporalHistogram",
+      "TreeDiagram",
+      "Treemap",
+      "ViolinPlot"
+    ],
+    "geoExcludedFromAIExports": [
+      "ChoroplethMap",
+      "DistanceCartogram",
+      "FlowMap",
+      "ProportionalSymbolMap"
+    ]
+  },
+  "mcp": {
+    "toolCount": 23,
+    "tools": [
+      "applyTheme",
+      "auditAccessibility",
+      "auditChart",
+      "auditMobileVisualization",
+      "createChart",
+      "diagnoseConfig",
+      "explainChart",
+      "getChartSchema",
+      "getSchema",
+      "groundChart",
+      "improveChart",
+      "interrogateChart",
+      "proposeChartVariants",
+      "renderChart",
+      "renderInteractiveChart",
+      "repairChartConfig",
+      "reportIssue",
+      "suggestChart",
+      "suggestCharts",
+      "suggestDashboard",
+      "suggestStreamCharts",
+      "suggestStretchCharts",
+      "suggestTokenEncoding"
+    ],
+    "publicProfile": {
+      "toolCount": 5,
+      "tools": [
+        "createChart",
+        "improveChart",
+        "explainChart",
+        "auditChart",
+        "getChartSchema"
+      ],
+      "activation": "semiotic-mcp --profile public or MCP_TOOL_PROFILE=public"
+    },
+    "resourceCount": 7,
+    "resources": [
+      "semiotic-behavior-contracts",
+      "semiotic-chatgpt-chart-widget",
+      "semiotic-components",
+      "semiotic-examples",
+      "semiotic-schema",
+      "semiotic-surface-manifest",
+      "semiotic-system-prompt"
+    ],
+    "promptCount": 2,
+    "prompts": [
+      "build-semiotic-chart",
+      "debug-semiotic-chart"
+    ]
+  }
+}

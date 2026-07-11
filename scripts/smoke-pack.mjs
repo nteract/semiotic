@@ -31,6 +31,7 @@ const ENTRY_POINTS = [
   "./physics/rapier",
   "./server",
   "./ai",
+  "./ai/core",
   "./data",
   "./geo",
   "./themes",

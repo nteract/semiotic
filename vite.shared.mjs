@@ -3,6 +3,7 @@ import { resolve } from "node:path"
 export function semioticSourceAliases(repoRoot) {
   return [
     { find: /^semiotic\/ai$/, replacement: resolve(repoRoot, "src/components/semiotic-ai.ts") },
+    { find: /^semiotic\/ai\/core$/, replacement: resolve(repoRoot, "src/components/semiotic-ai-core.ts") },
     { find: /^semiotic\/data$/, replacement: resolve(repoRoot, "src/components/semiotic-data.ts") },
     { find: /^semiotic\/experimental$/, replacement: resolve(repoRoot, "src/components/semiotic-experimental.ts") },
     { find: /^semiotic\/geo$/, replacement: resolve(repoRoot, "src/components/semiotic-geo.ts") },

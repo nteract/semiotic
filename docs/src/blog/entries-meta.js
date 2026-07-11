@@ -34,12 +34,12 @@ export const allBlogEntriesMeta = [
     slug: "release-3-8-0",
     title: "Semiotic 3.8.0",
     subtitle:
-      "Chart-level notifications, worker-backed force layouts, x-band annotations, sturdier interval lanes, custom-layout readback, and explicit experimental boundaries for DataPitfalls and GoFish adapters.",
+      "StreamPhysicsFrame, faster streaming and worker-backed layouts, whole-chart notifications, a smaller default bundle, and a focused deterministic surface for chart agents.",
     author: "AI-Generated",
-    date: "2026-07-05",
+    date: "2026-07-11",
     tags: ["release"],
     excerpt:
-      "3.8.0 adds ChartContainer notifications for whole-chart findings, moves expensive ForceDirectedGraph layouts into a worker path, improves interval and x-band annotation handling, exposes custom-layout readback, and keeps the DataPitfalls and GoFish adapters on the unstable experimental endpoint.",
+      "Semiotic 3.8.0 introduces StreamPhysicsFrame and its evidence-first process runtime, alongside bounded streaming work, selective canvas painting, persistent workers, chart-level findings, slimmer imports, stronger layouts, and a chart-free AI core with a focused public MCP profile.",
   },
   {
     slug: "release-gates-for-fast-prs",
@@ -93,7 +93,7 @@ export const allBlogEntriesMeta = [
     slug: "generation-is-cheap-trust-is-scarce",
     title: "Generation Is Cheap; Trust Is Scarce",
     subtitle:
-      "Semiotic's generative-UI trust layer turns an LLM's chart proposal into a result that's either guaranteed renderable or comes back with precise reasons and ranked alternatives — validate, diagnose, repair, prove — so an agent never ships a chart it hasn't earned.",
+      "Semiotic's generative-UI trust layer turns an LLM's chart proposal into a result that's validated and diagnosed — and, with a renderer, proven to paint — or comes back with precise reasons and ranked alternatives: validate, diagnose, repair, prove.",
     author: "Elijah Meeks",
     date: "2026-06-21",
     tags: ["case-study", "ai"],

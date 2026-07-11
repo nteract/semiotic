@@ -97,6 +97,9 @@ jobs:
       - name: Check AI/MCP surface parity
         run: npm run check:surface
 
+      - name: Check generated AI surface manifest freshness
+        run: npm run check:ai-surface
+
       - name: Check SSR alignment
         run: npm run check:ssr
 

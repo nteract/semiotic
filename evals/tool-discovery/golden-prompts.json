@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "profile": "public",
+  "cases": [
+    { "id": "create-comparison", "prompt": "Show revenue by region as a chart.", "expectedTools": ["createChart"] },
+    { "id": "create-trend", "prompt": "Visualize weekly active users over time.", "expectedTools": ["createChart"] },
+    { "id": "repair-existing", "prompt": "My PieChart has twelve categories. Help improve it.", "expectedTools": ["improveChart"] },
+    { "id": "explain-accessibly", "prompt": "Explain this chart to someone who cannot see it.", "expectedTools": ["explainChart"] },
+    { "id": "audit-mobile", "prompt": "Check whether this chart is accessible and works on a phone.", "expectedTools": ["auditChart"] },
+    { "id": "schema-code", "prompt": "What props does LineChart accept?", "expectedTools": ["getChartSchema"] },
+    { "id": "negative-writing", "prompt": "Rewrite this paragraph for clarity; do not make a chart.", "expectedTools": [] },
+    { "id": "negative-calculation", "prompt": "What is 17 times 23?", "expectedTools": [] }
+  ]
+}

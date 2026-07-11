@@ -6,8 +6,9 @@
  * chart for the wrong data misleads exactly the reader who can't tell. This
  * module is the trust layer an AI framework wraps around chart generation: it
  * turns an LLM's *proposal* (a component name + props) into a result that is
- * either guaranteed-renderable or accompanied by structured reasons and ranked
- * alternatives to retry with — never a broken chart.
+ * either validated and diagnosed (and, when a renderer is injected, proven to
+ * paint) or accompanied by structured reasons and ranked alternatives to retry
+ * with — never an unchecked chart.
  *
  * It composes the already-shipped surface into the documented loop —
  * **generate → validate → diagnose → repair → render+prove** — and rides
@@ -232,8 +233,8 @@ export function chartGenerationTool(options: ChartToolOptions = {}): ChartToolDe
     description:
       "Render a Semiotic chart from a component name and props. The result is " +
       "validated, diagnosed for anti-patterns, and (when data is supplied) checked " +
-      "for fit against the data, so it is guaranteed renderable or returns reasons " +
-      "and ranked alternatives to retry with.",
+      "for fit against the data. Inject a renderer to prove it paints; otherwise " +
+      "the result returns validation and repair reasons plus ranked alternatives.",
     inputSchema: {
       type: "object",
       additionalProperties: false,
@@ -264,7 +265,7 @@ export function toAnthropicTool(def: ChartToolDefinition): {
   return { name: def.name, description: def.description, input_schema: def.inputSchema }
 }
 
-/** Shape a tool definition for the OpenAI / function-calling `tools` array. */
+/** Shape a tool definition for the OpenAI Chat Completions `tools` array. */
 export function toOpenAITool(def: ChartToolDefinition): {
   type: "function"
   function: { name: string; description: string; parameters: Record<string, unknown> }
@@ -272,6 +273,72 @@ export function toOpenAITool(def: ChartToolDefinition): {
   return {
     type: "function",
     function: { name: def.name, description: def.description, parameters: def.inputSchema },
+  }
+}
+
+/** A flat function-tool shape for the OpenAI Responses API. */
+export interface OpenAIResponsesTool {
+  type: "function"
+  name: string
+  description: string
+  parameters: Record<string, unknown>
+  strict: boolean
+}
+
+export interface OpenAIResponsesToolOptions {
+  /**
+   * Enable OpenAI strict mode. The definition must use closed objects and
+   * declare every property as required (nullable properties are supported).
+   * The generic chart tool intentionally leaves `props` open, so use a
+   * component-specific definition before setting this to true.
+   */
+  strict?: boolean
+}
+
+function isStrictOpenAICompatibleSchema(schema: unknown): boolean {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return true
+  const record = schema as Record<string, unknown>
+  const types = Array.isArray(record.type) ? record.type : [record.type]
+  const isObject = types.includes("object") || Boolean(record.properties)
+
+  if (isObject) {
+    if (record.additionalProperties !== false) return false
+    const properties = record.properties
+    if (!properties || typeof properties !== "object" || Array.isArray(properties)) return false
+    const required = new Set(Array.isArray(record.required) ? record.required : [])
+    if (Object.keys(properties).some((name) => !required.has(name))) return false
+    return Object.values(properties as Record<string, unknown>).every(isStrictOpenAICompatibleSchema)
+  }
+
+  if (record.items) return isStrictOpenAICompatibleSchema(record.items)
+  return true
+}
+
+/**
+ * Shape a tool definition for the OpenAI Responses API `tools` array.
+ *
+ * This is deliberately separate from {@link toOpenAITool}: Chat Completions
+ * nests the function under `function`, whereas Responses uses a flat object.
+ */
+export function toOpenAIResponsesTool(
+  def: ChartToolDefinition,
+  options: OpenAIResponsesToolOptions = {}
+): OpenAIResponsesTool {
+  const strict = options.strict ?? false
+  if (strict && !isStrictOpenAICompatibleSchema(def.inputSchema)) {
+    throw new Error(
+      "OpenAI strict mode requires closed object schemas with every property required. " +
+        "chartGenerationTool() intentionally leaves props open for chart-specific props; " +
+        "use strict: false or pass a component-specific closed schema."
+    )
+  }
+
+  return {
+    type: "function",
+    name: def.name,
+    description: def.description,
+    parameters: def.inputSchema,
+    strict,
   }
 }
 

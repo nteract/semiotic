@@ -157,7 +157,7 @@ if (errors.length) {
   for (const msg of errors) console.error(`  - ${msg}`)
   console.error(
     "\nFix the cross-references between server.json, package.json, and README.md " +
-      "before running the `mcp-publisher publish` step. See DISCOVERABILITY.md Task 1.",
+      "before running the `mcp-publisher publish` step. See docs/strategy/ai-support-and-community-strategy.md for the release transaction.",
   )
   process.exit(1)
 }

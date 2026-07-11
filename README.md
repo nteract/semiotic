@@ -50,7 +50,7 @@ generate correct code without examples.
 Semiotic ships with everything an AI coding assistant needs to generate
 correct visualizations without trial and error:
 
-- **`semiotic/ai`** — a single import with the 47-chart capability catalog (XY, ordinal, network, realtime, geo, value), optimized for LLM code generation. Note: the published entry files are pre-bundled, so importing one chart from `semiotic/ai` still ships most of the bundle — treat it as a codegen/tooling surface and use family subpaths (`semiotic/xy`, `semiotic/geo`, `semiotic/value`, …) in production code, at roughly half the single-chart cost.
+- **`semiotic/ai`** — a single import with the schema-backed chart capability catalog (XY, ordinal, network, realtime, geo, value), optimized for LLM code generation. See `ai/surface-manifest.json` for the generated current inventory. Note: the published entry files are pre-bundled, so importing one chart from `semiotic/ai` still ships most of the bundle — treat it as a codegen/tooling surface and use family subpaths (`semiotic/xy`, `semiotic/geo`, `semiotic/value`, …) in production code, at roughly half the single-chart cost.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
@@ -485,7 +485,7 @@ host-header allowlisting. For ChatGPT Apps domain verification, set
 |------|-------------|
 | **`renderChart`** | Render a Semiotic chart to static SVG. Supports the components returned by `getSchema` that are marked `[renderable]`. Pass `{ component: "LineChart", props: { data: [...], xAccessor: "x", yAccessor: "y" } }`. Returns SVG string plus a "Render evidence" JSON block (mark counts by scene type, resolved axis domains, empty flag, annotation count, accessible name) so agents can verify the chart drew data marks, or validation errors with fix suggestions. |
 | **`renderInteractiveChart`** | Render a static-data chart as a ChatGPT Apps widget. Uses the same Semiotic server render path as `renderChart`, then hydrates an iframe UI with fit, zoom, data, hover, and render-evidence controls. |
-| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list all 47 chart schemas. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
+| **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list the complete schema-backed catalog. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
 | **`suggestChart`** | Legacy sample-row recommender. Pass `{ data: [{...}, ...] }` with 1–5 sample objects plus optional broad intent/capability filters. |
 | **`suggestCharts`** | Capability-based recommender for bounded row data. Returns ranked chart suggestions with scores, reasons, caveats, import paths, and ready-to-use props. |
 | **`suggestStreamCharts`** | Recommend realtime charts from a stream schema, throughput, and retention hints. |
@@ -503,6 +503,7 @@ host-header allowlisting. For ChatGPT Apps domain verification, set
 |----------|-------------|
 | **`semiotic://schema`** | Full machine-readable component schema JSON. |
 | **`semiotic://components`** | Component index showing renderable/browser-only status and MCP categories. |
+| **`semiotic://surface-manifest`** | Generated inventory of the current AI schema, exports, renderability, tools, resources, and prompts. |
 | **`semiotic://behavior-contracts`** | Agent-visible semantic rules for color precedence, required prop combinations, push refs, and renderability. |
 | **`semiotic://system-prompt`** | Compact AI instructions with import rules, chart props, SSR guidance, and pitfalls. |
 | **`semiotic://examples`** | Copy-paste chart examples by data shape. |
@@ -625,7 +626,7 @@ Semiotic is indexed by AI-coding-agent documentation tools so your assistant (Cl
 
 Agent-facing API surface:
 
-- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface (47 charts); `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
+- **`CLAUDE.md`**, **`ai/schema.json`**, **`ai/surface-manifest.json`**, **`ai/behaviorContracts.cjs`** — bundled in the npm tarball (see `package.json#files`); agents that install Semiotic locally read these directly. `CLAUDE.md` is the quick-start cheat sheet (HOC props, push API, theming, usage notes); `ai/schema.json` is the JSON Schema for every chart's prop surface; `ai/surface-manifest.json` is the generated inventory; `ai/behaviorContracts.cjs` carries the agent-visible semantic rules (color precedence, push-mode requirements, ID-accessor contracts).
 - [**`semiotic.nteract.io/llms.txt`**](https://semiotic.nteract.io/llms.txt) + [**`/llms-full.txt`**](https://semiotic.nteract.io/llms-full.txt) — deployed at the docs site per the [llms.txt standard](https://llmstxt.org). Agents fetch the navigation map (`llms.txt`) or the full inlined docs (`llms-full.txt`) over HTTP; they're not part of the npm package itself.
 
 ## Documentation

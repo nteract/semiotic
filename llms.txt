@@ -1,6 +1,6 @@
 # Semiotic
 
-> React data visualization library with 30+ chart types, streaming canvas rendering, coordinated views, and a built-in MCP server for AI-assisted chart generation.
+> React data visualization library with a schema-backed chart catalog, streaming canvas rendering, coordinated views, and a built-in MCP server for AI-assisted chart generation.
 
 Semiotic provides two tiers: HOC Charts (simple props, sensible defaults) and Stream Frames (full control). Always prefer HOC charts unless you need low-level access. TypeScript strict mode throughout.
 
