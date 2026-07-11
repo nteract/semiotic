@@ -119,12 +119,12 @@ export const allBlogEntriesMeta = [
     slug: "metadata-that-travels",
     title: "Metadata That Travels",
     subtitle:
-      "An adapter shouldn't just reproduce a format — it should export the ideas the format is missing. The IDID portability spec writes three of them (chart capability, audience profile, annotation provenance) as library-neutral JSON Schemas, with bidirectional Vega-Lite as the proof.",
+      "An adapter shouldn't just reproduce a format — it should export the ideas the format is missing. The IDID portability spec writes three of them (chart capability, audience profile, annotation provenance) as library-neutral JSON Schemas, with a strict Vega-Lite supported-subset round trip as the proof.",
     author: "Elijah Meeks",
     date: "2026-06-21",
     tags: ["case-study"],
     excerpt:
-      "A chart an AI can pick correctly, a screen reader can receive, and that carries its own provenance is worth more than one that merely looks right — and those properties are metadata, portable in a way a renderer is not. The portability spec standardizes three of them as JSON Schemas, and toVegaLite round-trips a chart through the dominant interchange format with the metadata preserved.",
+      "A chart an AI can pick correctly, a screen reader can receive, and that carries its own provenance is worth more than one that merely looks right — and those properties are metadata, portable in a way a renderer is not. The portability spec standardizes three of them as JSON Schemas, with a strict Vega-Lite supported-subset round trip and typed refusals for unsupported semantics.",
     ogChart: { component: "BarChart" },
     draft: true,
   },

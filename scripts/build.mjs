@@ -1,5 +1,5 @@
 import { execSync } from "child_process"
-import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "fs"
+import { existsSync, readFileSync, rmSync, writeFileSync } from "fs"
 import { build as tsupBuild } from "tsup"
 
 const args = process.argv.slice(2)
@@ -210,46 +210,12 @@ function buildDeclarations() {
   console.log("\u2705 declarations emitted")
 }
 
-/** Sync CLAUDE.md to all AI instruction files */
-function syncAIInstructions() {
-  const source = "CLAUDE.md"
-  const targets = [
-    ".cursorrules",
-    ".github/copilot-instructions.md",
-    ".windsurfrules",
-    "docs/public/llms-full.txt",
-    ".clinerules",
-  ]
-  for (const target of targets) {
-    try { copyFileSync(source, target) } catch { /* ignore if .github doesn't exist */ }
-  }
-  console.log("\u2705 AI instruction files synced from CLAUDE.md")
-}
-
 function cleanDist() {
   rmSync("dist", { recursive: true, force: true })
   console.log("\u2705 dist cleaned")
 }
 
-/** Copy .min.js → .js for backwards compatibility with consumers that
- *  reference the old (pre-.min) filenames (e.g. webpack aliases). */
-function createLegacyAliases(bundles) {
-  for (const b of bundles) {
-    const minESM = `dist/${b.name}.module.min.js`
-    const legacyESM = `dist/${b.name}.module.js`
-    const minCJS = `dist/${b.name}.min.js`
-    const legacyCJS = `dist/${b.name}.js`
-    for (const [src, dst] of [[minESM, legacyESM], [minCJS, legacyCJS]]) {
-      if (existsSync(src)) {
-        try { copyFileSync(src, dst) } catch { /* non-fatal */ }
-      }
-    }
-  }
-  console.log("\u2705 legacy filename aliases created")
-}
-
 async function build() {
-  syncAIInstructions()
   cleanDist()
 
   const minify = isProduction
@@ -320,8 +286,6 @@ async function build() {
   await createForceLayoutWorkerBundle({ minify })
   await createPhysicsWorkerBundle({ minify })
 
-  createLegacyAliases(bundles)
-
   assertDirectivePlacement(bundles)
 }
 
@@ -360,7 +324,7 @@ function assertDirectivePlacement(bundles) {
     // Both ESM and CJS variants must be checked — a missed directive
     // in either would still break the consumer that picks that
     // condition from the exports map.
-    for (const suffix of [".module.min.js", ".module.js", ".min.js", ".js"]) {
+    for (const suffix of [".module.min.js", ".min.js"]) {
       const path = `dist/${b.name}${suffix}`
       if (!existsSync(path)) continue
       const head = readFileSync(path, "utf8").slice(0, 64)

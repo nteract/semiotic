@@ -61,6 +61,50 @@ import {
   pushWithTimestamp
 } from "./pipelineBufferUtils"
 
+/**
+ * Update fields owned by the ordinal pulse encoding. Callers invoke this only
+ * after matching a scene node to source data, so custom-layout nodes without a
+ * datum match keep any user-authored underscore fields untouched.
+ */
+function setOrdinalPulseState(
+  node: OrdinalSceneNode,
+  intensity: number,
+  pulseColor: string,
+  glowRadius?: number
+): boolean {
+  let changed = false
+
+  if (intensity > 0) {
+    if (node._pulseIntensity !== intensity) {
+      node._pulseIntensity = intensity
+      changed = true
+    }
+    if (node._pulseColor !== pulseColor) {
+      node._pulseColor = pulseColor
+      changed = true
+    }
+    if (node._pulseGlowRadius !== glowRadius) {
+      node._pulseGlowRadius = glowRadius
+      changed = true
+    }
+    return changed
+  }
+
+  if (node._pulseIntensity !== 0) {
+    node._pulseIntensity = 0
+    changed = true
+  }
+  if (node._pulseColor !== undefined) {
+    node._pulseColor = undefined
+    changed = true
+  }
+  if (node._pulseGlowRadius !== undefined) {
+    node._pulseGlowRadius = undefined
+    changed = true
+  }
+  return changed
+}
+
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
 export class OrdinalPipelineStore {
@@ -128,6 +172,8 @@ export class OrdinalPipelineStore {
   version = 0
   /** Bumped whenever the buffer is mutated. Used to invalidate per-frame caches. */
   private _dataVersion = 0
+  /** Materialized source data, cached for pulse/decay animation frames. */
+  private _bufferArrayCache: { version: number; data: Datum[] } | null = null
   // Spatial index for point hit testing (built when point count exceeds threshold)
   private static readonly QUADTREE_THRESHOLD = 500
   private _pointQuadtree: Quadtree<PointSceneNode> | null = null
@@ -328,7 +374,7 @@ export class OrdinalPipelineStore {
       this.rExtent.recalculate(buffer, this.getR)
     }
 
-    const data = buffer.toArray()
+    const data = this.getBufferArray()
     const projection = config.projection || "vertical"
 
     // 1. Resolve category extent
@@ -913,11 +959,11 @@ export class OrdinalPipelineStore {
 
   // ── Pulse ───────────────────────────────────────────────────────────
 
-  private applyPulse(nodes: OrdinalSceneNode[], data: Datum[]): void {
-    if (!this.config.pulse || !this.timestampBuffer) return
+  private applyPulse(nodes: OrdinalSceneNode[], data: Datum[], now = getTimestamp()): boolean {
+    if (!this.config.pulse || !this.timestampBuffer) return false
     const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
     const glowRadius = this.config.pulse.glowRadius ?? 4
-    const now = getTimestamp()
+    let changed = false
 
     const indexMap = this.getDatumIndexMap(data)
     let categoryIndex: Map<string, number[]> | null = null
@@ -940,29 +986,38 @@ export class OrdinalPipelineStore {
           const intensity = computePulseIntensity(this.config.pulse, insertTime, now)
           if (intensity > bestIntensity) bestIntensity = intensity
         }
-        if (bestIntensity > 0) {
-          node._pulseIntensity = bestIntensity
-          node._pulseColor = pulseColor
-        }
+        changed = setOrdinalPulseState(node, bestIntensity, pulseColor) || changed
         continue
       }
 
       const idx = indexMap.get(node.datum)
       if (idx == null) continue
       const insertTime = this.timestampBuffer.get(idx)
-      if (insertTime == null) continue
-      const intensity = computePulseIntensity(this.config.pulse, insertTime, now)
-      if (intensity > 0) {
-        node._pulseIntensity = intensity
-        node._pulseColor = pulseColor
-        node._pulseGlowRadius = glowRadius
-      }
+      const intensity = insertTime == null
+        ? 0
+        : computePulseIntensity(this.config.pulse, insertTime, now)
+      changed = setOrdinalPulseState(node, intensity, pulseColor, glowRadius) || changed
     }
+
+    return changed
+  }
+
+  /**
+   * Refresh only pulse-derived fields on the existing scene. This deliberately
+   * avoids a scene/layout rebuild on every rAF pulse tick.
+   */
+  refreshPulse(now: number): boolean {
+    if (this.lastCustomLayoutFailure?.preservedLastGoodScene === true) return false
+    return this.applyPulse(this.scene, this.getBufferArray(), now)
+  }
+
+  hasActivePulsesAt(now: number): boolean {
+    if (!this.config.pulse) return false
+    return hasActivePulsesShared(this.config.pulse, this.timestampBuffer, now)
   }
 
   get hasActivePulses(): boolean {
-    if (!this.config.pulse) return false
-    return hasActivePulsesShared(this.config.pulse, this.timestampBuffer)
+    return this.hasActivePulsesAt(getTimestamp())
   }
 
   // ── Transitions ─────────────────────────────────────────────────────
@@ -1320,9 +1375,27 @@ export class OrdinalPipelineStore {
     this.activeTransition = null
   }
 
+  /**
+   * Materialize the ring buffer at most once per data version. Pulse decay
+   * ticks reuse this array and the datum/category index caches rather than
+   * allocating a fresh copy at animation-frame frequency.
+   */
+  private getBufferArray(): Datum[] {
+    if (this._bufferArrayCache?.version !== this._dataVersion) {
+      this._bufferArrayCache = {
+        version: this._dataVersion,
+        data: this.buffer.toArray()
+      }
+    }
+    return this._bufferArrayCache.data
+  }
+
   // ── Public accessors ─────────────────────────────────────────────────
 
   getData(): Datum[] {
+    // Keep this public accessor's historical copy-on-read behavior. The
+    // private cache above is only for internal frame-time pulse/scene work;
+    // callers must not be able to mutate the array those paths rely on.
     return this.buffer.toArray()
   }
 

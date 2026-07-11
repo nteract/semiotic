@@ -30,8 +30,8 @@ the source never had. That is the difference between a chart that renders and a 
 
 ## The `x-idid-status` field convention
 
-Each property carries an `x-idid-status` annotation so a reader can tell what is real today from
-what the spec reserves for the future:
+Public domain properties carry an `x-idid-status` annotation so a reader can tell what is real
+today from what the spec reserves for the future:
 
 - **`shipped`** — the field exists in a reference implementation's runtime types today
   (Semiotic ships all v0.1 fields). Safe to depend on.
@@ -60,8 +60,10 @@ changes bump the minor (pre-1.0) or major (post-1.0) version into a new director
 remain resolvable by their `$id`. A document may declare the version it targets via the optional
 `specVersion: "0.1"` property.
 
-The `$id` URIs (`https://semiotic.dev/spec/v0.1/…`) are stable identifiers, not fetch targets —
-validate against the local copies in this directory.
+The `$id` URIs (`https://semiotic.dev/spec/v0.1/…`) are stable identifiers, not fetch targets.
+The canonical files ship in the `semiotic` npm tarball and are exposed as
+`semiotic/spec/v0.1/<schema-name>` resource paths; they also remain available in this directory
+for repository consumers.
 
 ## Validation
 
@@ -137,13 +139,14 @@ is added.
 
 ### Round-tripping
 
-The binding is designed to survive a round trip: a chart → Vega-Lite spec (with IDID metadata in
-`usermeta`) → back to a chart loses nothing the spec can express. Round-tripping through the
-dominant interchange format *with the IDID metadata preserved* is the portability claim in
-runnable form.
+The binding is designed for a tested supported single-view subset: a chart → Vega-Lite spec (with
+IDID metadata in `usermeta`) → back to a chart preserves the supported mark, data, and encoding
+semantics. Unsupported composition or chart semantics must return a typed refusal rather than a
+plausible fallback. IDID-enriched annotation layers recover their one base view, while arbitrary
+Vega-Lite layer composition remains deliberately unsupported.
 
 ---
 
-*This directory is the canonical, published copy of the schemas. A reference implementation may
-embed copies for its own validators; those copies are kept byte-for-byte in sync with these files
-by a test, so this directory is always authoritative.*
+*This directory is the canonical published copy of the schemas and is packed unchanged into npm.
+A reference implementation may embed copies for its own validators; those copies are kept
+byte-for-byte in sync with these files by a test, so this directory is always authoritative.*

@@ -38,8 +38,14 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Check AI instruction mirror freshness
+        run: npm run check:ai-instructions
+
       - name: Build library
         run: npm run dist:prod
+
+      - name: Check public API surface
+        run: npm run check:api-surface
 
       - name: Check packed cold-consumer named-import baseline
         # This check calls npm pack, so it intentionally runs here instead of

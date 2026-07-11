@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
+import Ajv2020 from "ajv/dist/2020.js"
 import { describe, expect, it } from "vitest"
-import { fromVegaLite } from "../fromVegaLite"
+import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
 import {
   IDID_SPEC_VERSION,
@@ -16,12 +17,18 @@ import {
   readIDID,
   readIDIDAnnotations,
   toVegaLite,
+  toVegaLiteResult,
 } from "./vegaLite"
 
 function loadSchema(name: string): any {
   // vitest runs with cwd at the repo root, where /spec lives.
   const path = join(process.cwd(), "spec", "v0.1", name)
   return JSON.parse(readFileSync(path, "utf8"))
+}
+
+function createSchemaValidator() {
+  const Constructor = (Ajv2020 as any).default ?? Ajv2020
+  return new Constructor({ strict: false, allErrors: true, validateFormats: false })
 }
 
 // ── Published schemas: structure + sync with the runtime surface ─────────────
@@ -35,6 +42,14 @@ describe("published JSON Schemas (/spec/v0.1)", () => {
     for (const schema of [capability, audience, annotation]) {
       expect(schema.$schema).toBe("https://json-schema.org/draft/2020-12/schema")
       expect(schema.$id).toMatch(/^https:\/\/semiotic\.dev\/spec\/v0\.1\//)
+    }
+  })
+
+  it("compile as Draft 2020-12 schemas", () => {
+    const ajv = createSchemaValidator()
+    for (const schema of [capability, audience, annotation]) {
+      expect(ajv.validateSchema(schema)).toBe(true)
+      expect(() => ajv.compile(schema)).not.toThrow()
     }
   })
 
@@ -83,6 +98,48 @@ describe("published JSON Schemas (/spec/v0.1)", () => {
     }
     ;[capability, audience, annotation].forEach(walk)
   })
+
+  it("agrees with runtime validators on scalar constraints", () => {
+    const cases = [
+      {
+        schema: capability,
+        validate: validatePortableCapability,
+        values: [
+          { component: "BarChart", rubric: { familiarity: 5, accuracy: 4, precision: 3 } },
+          { component: "BarChart", rubric: { familiarity: 1.5, accuracy: 4, precision: 3 } },
+          { component: "", rubric: { familiarity: 5, accuracy: 4, precision: 3 } },
+          { component: "BarChart", rubric: { familiarity: 5, accuracy: 4, precision: 3 }, intentScores: { rank: 5.1 } },
+        ],
+      },
+      {
+        schema: audience,
+        validate: validatePortableAudienceProfile,
+        values: [
+          { familiarity: { BarChart: 4 }, targets: { PieChart: { direction: "increase", weight: 2 } } },
+          { familiarity: { BarChart: 4.5 } },
+          { targets: { PieChart: { direction: "increase", weight: 1.5 } } },
+          { exposureLevel: 1.5 },
+        ],
+      },
+      {
+        schema: annotation,
+        validate: validatePortableAnnotation,
+        values: [
+          { provenance: { confidence: 0.7 }, lifecycle: { status: "accepted", ttlHint: "P7D" } },
+          { provenance: { confidence: 1.1 } },
+          { lifecycle: { status: "unknown" } },
+        ],
+      },
+    ]
+
+    for (const { schema, validate, values } of cases) {
+      const ajv = createSchemaValidator()
+      const validateSchema = ajv.compile(schema)
+      for (const value of values) {
+        expect(validate(value).valid).toBe(validateSchema(value))
+      }
+    }
+  })
 })
 
 // ── Validators ───────────────────────────────────────────────────────────────
@@ -123,6 +180,13 @@ describe("validatePortableCapability", () => {
     })
     expect(result.valid).toBe(false)
   })
+
+  it("rejects fractional rubric axes required to be integers by the schema", () => {
+    expect(validatePortableCapability({
+      component: "BarChart",
+      rubric: { familiarity: 4.5, accuracy: 5, precision: 4 },
+    }).valid).toBe(false)
+  })
 })
 
 describe("validatePortableAudienceProfile", () => {
@@ -143,6 +207,11 @@ describe("validatePortableAudienceProfile", () => {
     expect(validatePortableAudienceProfile({ targets: { X: { direction: "increase", weight: 9 } } }).valid).toBe(false)
     expect(validatePortableAudienceProfile({ exposureLevel: 5 as any }).valid).toBe(false)
     expect(validatePortableAudienceProfile({ receptionModality: "telepathy" as any }).valid).toBe(false)
+  })
+
+  it("rejects fractional familiarity and target weights", () => {
+    expect(validatePortableAudienceProfile({ familiarity: { BarChart: 2.5 } }).valid).toBe(false)
+    expect(validatePortableAudienceProfile({ targets: { BarChart: { direction: "increase", weight: 1.5 } } }).valid).toBe(false)
   })
 })
 
@@ -242,13 +311,15 @@ describe("toVegaLite round-trips with fromVegaLite", () => {
     it(`preserves mark, accessors, and data through ${name} round-trip`, () => {
       const config = fromVegaLite(spec)
       const back = toVegaLite(config)
-      const backMark = typeof back.mark === "string" ? back.mark : back.mark.type
+      expect(back).toBeDefined()
+      const supportedBack = back!
+      const backMark = typeof supportedBack.mark === "string" ? supportedBack.mark : supportedBack.mark.type
       expect(backMark).toBe(markType)
       // Data survives the round trip unchanged.
-      expect(back.data?.values).toEqual(spec.data!.values)
+      expect(supportedBack.data?.values).toEqual(spec.data!.values)
       // Field references survive (the chart still reads the same columns).
       const originalFields = collectFields(spec.encoding)
-      const roundTripFields = collectFields(back.encoding)
+      const roundTripFields = collectFields(supportedBack.encoding)
       for (const f of originalFields) {
         expect(roundTripFields).toContain(f)
       }
@@ -265,20 +336,52 @@ describe("toVegaLite round-trips with fromVegaLite", () => {
       encoding: { x: { field: "cat", type: "nominal" }, y: { field: "val", type: "quantitative" } },
     })
     const back = toVegaLite(config)
-    expect(back.title).toBe("Q3 sales")
-    expect(back.width).toBe(500)
-    expect(back.height).toBe(300)
+    expect(back).toBeDefined()
+    expect(back!.title).toBe("Q3 sales")
+    expect(back!.width).toBe(500)
+    expect(back!.height).toBe(300)
   })
 
-  it("warns rather than mistranslating an unsupported component", () => {
-    const back = toVegaLite({
+  it("refuses unsupported components instead of emitting a point placeholder", () => {
+    const input = {
       component: "SankeyDiagram",
       props: { nodes: [], edges: [] },
       version: "1",
       createdAt: new Date().toISOString(),
+    }
+    const result = toVegaLiteResult(input)
+    expect(result.status).toBe("refused")
+    expect(result.spec).toBeUndefined()
+    expect(result.diagnostics[0]).toMatchObject({ code: "UNSUPPORTED_COMPONENT", severity: "error" })
+    expect(toVegaLite(input)).toBeUndefined()
+  })
+
+  it("requires an explicit opt-in for known grouped-bar loss", () => {
+    const input = {
+      component: "GroupedBarChart",
+      props: { categoryAccessor: "category", valueAccessor: "value", groupBy: "group" },
+      version: "1",
+      createdAt: new Date().toISOString(),
+    }
+    expect(toVegaLiteResult(input).status).toBe("refused")
+    const lossy = toVegaLiteResult(input, { allowLossy: true })
+    expect(lossy.status).toBe("lossy")
+    expect(lossy.spec?.mark).toBe("bar")
+    expect(lossy.lossReport[0]?.code).toBe("GROUPED_BAR_APPROXIMATION")
+  })
+
+  it("refuses function accessors instead of placing runtime values in a wire spec", () => {
+    const result = toVegaLiteResult({
+      component: "LineChart",
+      props: { xAccessor: (d: { x: number }) => d.x, yAccessor: "value" },
+      version: "1",
+      createdAt: new Date().toISOString(),
     })
-    expect(back.warnings && back.warnings.length).toBeGreaterThan(0)
-    expect(back.warnings![0]).toContain("SankeyDiagram")
+    expect(result.status).toBe("refused")
+    expect(result.spec).toBeUndefined()
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "UNSERIALIZABLE_ACCESSOR", path: "/props/xAccessor" }),
+    ]))
   })
 })
 
@@ -352,6 +455,15 @@ describe("attachIDIDAnnotations / readIDIDAnnotations", () => {
     expect(meta?.annotations).toEqual(annotations)
   })
 
+  it("preserves annotations when descriptor metadata is attached second", () => {
+    const withAnnotations = attachIDIDAnnotations({ mark: "line", encoding: {} }, annotations)
+    const enriched = attachIDID(withAnnotations, {
+      capability: { component: "LineChart", rubric: { familiarity: 5, accuracy: 4, precision: 3 } },
+    })
+    expect(readIDIDAnnotations(enriched)).toEqual(annotations)
+    expect(readIDID(enriched)?.capability?.component).toBe("LineChart")
+  })
+
   it("adds no empty layer when no annotation is representable", () => {
     const spec: VegaLiteSpec = { mark: "line", encoding: {} }
     const enriched = attachIDIDAnnotations(spec, [
@@ -367,6 +479,60 @@ describe("attachIDIDAnnotations / readIDIDAnnotations", () => {
     attachIDIDAnnotations(spec, annotations)
     expect((spec as any).usermeta).toBeUndefined()
     expect((spec as any).layer).toBeUndefined()
+  })
+})
+
+describe("strict Vega-Lite import", () => {
+  const base: VegaLiteSpec = {
+    mark: "line",
+    data: { values: [{ t: 1, value: 3 }, { t: 2, value: 5 }] },
+    encoding: {
+      x: { field: "t", type: "quantitative" },
+      y: { field: "value", type: "quantitative" },
+    },
+  }
+  const annotations = [{
+    type: "y-threshold",
+    value: 4,
+    provenance: { source: "rule", stableId: "threshold-4" },
+  }]
+
+  it("recovers the base chart from an IDID-enriched annotation layer", () => {
+    const enriched = attachIDIDAnnotations(
+      attachIDID(base, { capability: { component: "LineChart", rubric: { familiarity: 5, accuracy: 4, precision: 3 } } }),
+      annotations,
+    )
+
+    expect(() => fromVegaLite(enriched)).not.toThrow()
+    const legacy = fromVegaLite(enriched)
+    expect(legacy.component).toBe("LineChart")
+    expect(legacy.props.data).toEqual(base.data?.values)
+    expect(legacy.props.xAccessor).toBe("t")
+    expect(legacy.props.yAccessor).toBe("value")
+
+    const result = fromVegaLiteResult(enriched)
+    expect(result.status).toBe("success")
+    expect(result.config?.component).toBe("LineChart")
+    expect(result.provenance.metadata?.idid).toMatchObject({ annotations })
+  })
+
+  it("refuses arbitrary layered composition rather than guessing a base view", () => {
+    const result = fromVegaLiteResult({
+      mark: "line",
+      layer: [base, { mark: "point" }],
+    } as VegaLiteSpec)
+    expect(result.status).toBe("refused")
+    expect(result.config).toBeUndefined()
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "UNSUPPORTED_COMPOSITION", severity: "error" }),
+    ]))
+  })
+
+  it("can expose legacy fallback behavior only through an explicit lossy mode", () => {
+    const result = fromVegaLiteResult({ mark: "geoshape" } as VegaLiteSpec, { mode: "lossy" })
+    expect(result.status).toBe("lossy")
+    expect(result.config?.component).toBe("Scatterplot")
+    expect(result.lossReport[0]?.code).toBe("UNSUPPORTED_MARK")
   })
 })
 
@@ -387,7 +553,7 @@ describe("standalone /spec/bindings/vega-lite.mjs", () => {
     value: 1000,
     label: "SLA",
     provenance: { source: "ai", basis: "rule", confidence: 0.7 },
-    lifecycle: { ttlHint: "P7D", status: "proposed" },
+    lifecycle: { ttlHint: "P7D", status: "proposed" as const },
   }
 
   it("round-trips capability/audience and annotations with no Semiotic import", async () => {
@@ -414,5 +580,16 @@ describe("standalone /spec/bindings/vega-lite.mjs", () => {
     // Annotation metadata reads identically across the two implementations.
     const a = m.attachIdidAnnotations(base, [note])
     expect(readIDIDAnnotations(a as VegaLiteSpec)).toEqual([note])
+
+    const standaloneReverse = m.attachIdid(
+      m.attachIdidAnnotations(base, [note]),
+      { capability, audience },
+    )
+    const semioticReverse = attachIDID(
+      attachIDIDAnnotations(base, [note]),
+      { capability, audience },
+    )
+    expect(standaloneReverse).toEqual(semioticReverse)
+    expect(m.readIdidAnnotations(standaloneReverse)).toEqual([note])
   })
 })

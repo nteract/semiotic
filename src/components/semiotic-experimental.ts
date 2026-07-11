@@ -92,10 +92,27 @@ export {
   validatePortableAudienceProfile as unstable_validatePortableAudienceProfile,
   validatePortableAnnotation as unstable_validatePortableAnnotation,
   toVegaLite as unstable_toVegaLite,
+  toVegaLiteResult as unstable_toVegaLiteResult,
+  fromVegaLiteResult as unstable_fromVegaLiteResult,
+  unwrapIDIDEnrichedVegaLiteSpec as unstable_unwrapIDIDEnrichedVegaLiteSpec,
   attachIDID as unstable_attachIDID,
   readIDID as unstable_readIDID,
   attachIDIDAnnotations as unstable_attachIDIDAnnotations,
   readIDIDAnnotations as unstable_readIDIDAnnotations
+} from "./data/portability"
+export type {
+  FromVegaLiteOptions as UnstableFromVegaLiteOptions,
+  PortabilityDiagnostic as UnstablePortabilityDiagnostic,
+  PortabilityDiagnosticSeverity as UnstablePortabilityDiagnosticSeverity,
+  PortabilityExportResult as UnstablePortabilityExportResult,
+  PortabilityImportResult as UnstablePortabilityImportResult,
+  PortabilityLoss as UnstablePortabilityLoss,
+  PortabilityProvenance as UnstablePortabilityProvenance,
+  PortabilityResult as UnstablePortabilityResult,
+  PortabilityStatus as UnstablePortabilityStatus,
+  ToVegaLiteOptions as UnstableToVegaLiteOptions,
+  VegaLiteExportResult as UnstableVegaLiteExportResult,
+  VegaLiteImportResult as UnstableVegaLiteImportResult,
 } from "./data/portability"
 // Observable Plot → ChartConfig adapter (§5.1). A sibling to the stable
 // `fromVegaLite`, staged behind `unstable_` while the imperative-JS → declarative

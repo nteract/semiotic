@@ -1,3 +1,4 @@
+import { afterEach, vi } from "vitest"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "./ordinalTypes"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -20,6 +21,10 @@ function makeData(categories: string[], valuesPerCat: number[]) {
 }
 
 describe("OrdinalPipelineStore", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   // ── Configuration and initialization ─────────────────────────────────
 
   describe("configuration and initialization", () => {
@@ -607,6 +612,33 @@ describe("OrdinalPipelineStore", () => {
       })
       store.computeScene({ width: 400, height: 300 })
       expect(store.hasActivePulses).toBe(true)
+    })
+
+    it("refreshes wedge pulses through expiry without rebuilding the ordinal scene", () => {
+      vi.spyOn(performance, "now").mockReturnValue(1000)
+      const store = new OrdinalPipelineStore(makeConfig({
+        chartType: "pie",
+        projection: "radial",
+        pulse: { duration: 100, color: "orange" }
+      }))
+      store.ingest({
+        inserts: makeData(["A", "B"], [10, 20]),
+        bounded: true
+      })
+      store.computeScene({ width: 400, height: 300 })
+      const wedge = store.scene.find(n => n.type === "wedge")
+      expect(wedge?._pulseIntensity).toBe(1)
+
+      const computeScene = vi.spyOn(store, "computeScene")
+      expect(store.refreshPulse(1050)).toBe(true)
+      expect(wedge?._pulseIntensity).toBe(0.5)
+      expect(wedge?._pulseColor).toBe("orange")
+      expect(computeScene).not.toHaveBeenCalled()
+
+      expect(store.refreshPulse(1100)).toBe(true)
+      expect(wedge?._pulseIntensity).toBe(0)
+      expect(wedge?._pulseColor).toBeUndefined()
+      expect(wedge?._pulseGlowRadius).toBeUndefined()
     })
   })
 

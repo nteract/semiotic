@@ -1,5 +1,5 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
-import { unitize } from "../../dist/semiotic-recipes.module.js"
+import { unitize } from "../../dist/semiotic-recipes.module.min.js"
 import React, { useState } from "react"
 import { createRoot } from "react-dom/client"
 

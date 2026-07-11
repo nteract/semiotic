@@ -32,7 +32,7 @@ export function readIdid(spec) {
  * Returns a new spec; the input is not mutated.
  */
 export function attachIdid(spec, { capability, audience } = {}) {
-  const idid = { specVersion: IDID_SPEC_VERSION, ...readIdid(spec) }
+  const idid = { ...readIdid(spec), specVersion: IDID_SPEC_VERSION }
   if (capability) idid.capability = capability
   if (audience) idid.audience = audience
   return { ...spec, usermeta: { ...(spec && spec.usermeta), idid } }
@@ -45,7 +45,7 @@ export function attachIdid(spec, { capability, audience } = {}) {
  * Returns a new spec; the input is not mutated.
  */
 export function attachIdidAnnotations(spec, annotations = []) {
-  const idid = { specVersion: IDID_SPEC_VERSION, ...readIdid(spec), annotations: [...annotations] }
+  const idid = { ...readIdid(spec), specVersion: IDID_SPEC_VERSION, annotations: [...annotations] }
 
   const courtesy = annotations.map(annotationToMark).filter(Boolean)
   if (courtesy.length === 0) {

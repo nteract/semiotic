@@ -41,9 +41,32 @@ export type {
 } from "./spec"
 export {
   toVegaLite,
+  toVegaLiteResult,
   attachIDID,
   readIDID,
   attachIDIDAnnotations,
   readIDIDAnnotations,
 } from "./vegaLite"
-export type { IDIDVegaLiteMeta } from "./vegaLite"
+export type {
+  IDIDVegaLiteMeta,
+  ToVegaLiteOptions,
+  VegaLiteExportResult,
+} from "./vegaLite"
+export {
+  fromVegaLiteResult,
+  unwrapIDIDEnrichedVegaLiteSpec,
+} from "../fromVegaLite"
+export type {
+  FromVegaLiteOptions,
+  VegaLiteImportResult,
+} from "../fromVegaLite"
+export type {
+  PortabilityStatus,
+  PortabilityDiagnosticSeverity,
+  PortabilityDiagnostic,
+  PortabilityLoss,
+  PortabilityProvenance,
+  PortabilityResult,
+  PortabilityImportResult,
+  PortabilityExportResult,
+} from "./result"

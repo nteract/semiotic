@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import { BarChart } from "semiotic"
 import { fromVegaLite } from "semiotic/data"
 import {
-  unstable_toVegaLite as toVegaLite,
+  unstable_toVegaLiteResult as toVegaLiteResult,
   unstable_attachIDID as attachIDID,
   unstable_attachIDIDAnnotations as attachIDIDAnnotations,
 } from "semiotic/experimental"
@@ -78,6 +78,12 @@ const preStyle = {
   margin: "16px 0",
 }
 
+function supportedVegaLiteSpec(config) {
+  const result = toVegaLiteResult(config)
+  if (!result.spec) throw new Error(result.diagnostics.map((diagnostic) => diagnostic.message).join(" "))
+  return result.spec
+}
+
 function RoundTripDemo() {
   const config = useMemo(() => fromVegaLite(VEGA_SPEC), [])
   return (
@@ -85,8 +91,8 @@ function RoundTripDemo() {
       <BarChart {...config.props} title="Revenue by region" width={560} height={280} />
       <p style={{ fontSize: 12, color: "var(--text-2)", margin: "4px 6px 0" }}>
         This chart was built from a Vega-Lite bar spec via <code>fromVegaLite()</code>. Run{" "}
-        <code>toVegaLite()</code> on the result and you get the spec back — the round trip is
-        lossless for everything the format can express.
+        <code>toVegaLiteResult()</code> on the result and you get the spec back for the
+        tested supported single-view subset; unsupported semantics return a typed refusal.
       </p>
     </div>
   )
@@ -95,7 +101,7 @@ function RoundTripDemo() {
 function EnrichedDemo() {
   const enriched = useMemo(() => {
     const config = fromVegaLite(VEGA_SPEC)
-    let spec = toVegaLite(config)
+    let spec = supportedVegaLiteSpec(config)
     spec = attachIDID(spec, { capability: CAPABILITY, audience: AUDIENCE })
     spec = attachIDIDAnnotations(spec, [NOTE])
     return spec
@@ -151,43 +157,48 @@ function Body() {
         distinct from a stale-but-accepted one.
       </p>
       <p>
-        Every field is labelled with <code>x-idid-status</code> so a reader can tell what's real
+        Public domain fields are labelled with <code>x-idid-status</code> so a reader can tell what's real
         today from what the spec reserves for later. Open string unions (an annotation's{" "}
         <code>source</code>) stay open with a recognized-values list; genuinely closed unions (
         <code>freshness</code>, <code>status</code>, <code>anchor</code>) use a strict enum. The
-        schemas are the stable artifact; they live in the repository's <code>/spec/v0.1</code>{" "}
-        directory.
+        schemas are the stable artifact; they ship in the npm package under <code>/spec/v0.1</code>{" "}
+        and live in the repository at the same path.
       </p>
 
       <h2 id="bidirectional">Bidirectional Vega-Lite — the proof</h2>
       <p>
         Vega-Lite is the closest thing the ecosystem has to a neutral chart interchange format.
         Semiotic already reads it (<code>fromVegaLite</code>); the spec adds the inverse (
-        <code>toVegaLite</code>), so a chart can round-trip through the dominant format and come
-        back whole. Here's a chart built from a Vega-Lite spec — and it converts straight back to
-        one:
+        <code>toVegaLiteResult</code>), so the tested supported single-view subset can round-trip
+        through the dominant format. Unsupported semantics refuse with structured diagnostics.
+        Here's a chart built from a Vega-Lite spec — and it converts straight back to one:
       </p>
       <RoundTripDemo />
       <pre style={preStyle}>{`import { fromVegaLite } from "semiotic/data"
-import { unstable_toVegaLite as toVegaLite } from "semiotic/experimental"
+import { unstable_toVegaLiteResult as toVegaLiteResult } from "semiotic/experimental"
 
 const config = fromVegaLite(vegaSpec)   // Vega-Lite  -> Semiotic ChartConfig
-const back   = toVegaLite(config)        // ChartConfig -> Vega-Lite  (lossless)`}</pre>
+const result = toVegaLiteResult(config)  // ChartConfig -> Vega-Lite
+if (result.status === "refused") throw new Error(result.diagnostics[0].message)
+const back = result.spec                 // supported subset`}</pre>
 
       <h2 id="carrying">Carrying the metadata on the spec</h2>
       <p>
-        The round trip loses nothing the format can express — but plain Vega-Lite has no place for
+        The tested supported round trip preserves its mark, data, and encoding subset — but plain Vega-Lite has no place for
         capability, audience, or provenance. The binding rides them under <code>usermeta.idid</code>
         , a key every Vega-Lite renderer ignores, so the spec and its meaning travel together.
         Attach a capability, an audience, and a provenanced annotation, and the metadata appears
         alongside the chart:
       </p>
       <pre style={preStyle}>{`import {
+  unstable_toVegaLiteResult as toVegaLiteResult,
   unstable_attachIDID as attachIDID,
   unstable_attachIDIDAnnotations as attachIDIDAnnotations,
 } from "semiotic/experimental"
 
-let spec = toVegaLite(config)
+const result = toVegaLiteResult(config)
+if (result.status === "refused") throw new Error(result.diagnostics[0].message)
+let spec = result.spec
 spec = attachIDID(spec, { capability, audience })       // ride under usermeta.idid
 spec = attachIDIDAnnotations(spec, [provenancedNote])   // + a note with its evidence`}</pre>
       <p>The enriched spec's metadata block, computed live:</p>
@@ -256,12 +267,12 @@ export default {
   slug: "metadata-that-travels",
   title: "Metadata That Travels",
   subtitle:
-    "An adapter shouldn't just reproduce a format — it should export the ideas the format is missing. The IDID portability spec writes three of them (chart capability, audience profile, annotation provenance) as library-neutral JSON Schemas, with bidirectional Vega-Lite as the proof.",
+    "An adapter shouldn't just reproduce a format — it should export the ideas the format is missing. The IDID portability spec writes three of them (chart capability, audience profile, annotation provenance) as library-neutral JSON Schemas, with a strict Vega-Lite supported-subset round trip as the proof.",
   author: "Elijah Meeks",
   date: "2026-06-21",
   tags: ["case-study"],
   excerpt:
-    "A chart an AI can pick correctly, a screen reader can receive, and that carries its own provenance is worth more than one that merely looks right — and those properties are metadata, portable in a way a renderer is not. The portability spec standardizes three of them as JSON Schemas, and toVegaLite round-trips a chart through the dominant interchange format with the metadata preserved.",
+    "A chart an AI can pick correctly, a screen reader can receive, and that carries its own provenance is worth more than one that merely looks right — and those properties are metadata, portable in a way a renderer is not. The portability spec standardizes three of them as JSON Schemas, with a strict Vega-Lite supported-subset round trip and typed refusals for unsupported semantics.",
   component: Body,
   ogChart: { component: "BarChart" },
   draft: true,

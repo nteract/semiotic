@@ -13,7 +13,7 @@ const GROUPS = [
       {
         title: "Portability Spec",
         path: "/interoperability/portability-spec",
-        what: "The standard itself + bidirectional Vega-Lite (toVegaLite) and the IDID-over-Vega-Lite binding.",
+        what: "The standard itself + strict Vega-Lite supported-subset translation (toVegaLiteResult) and the IDID-over-Vega-Lite binding.",
       },
     ],
   },
@@ -106,9 +106,9 @@ export default function InteroperabilityPage() {
         Most adapters are <em>inbound</em> — a foreign spec, dataset, or quality
         signal comes in and becomes a Semiotic chart or annotation. The{" "}
         <Link to="/interoperability/portability-spec">portability spec</Link> also
-        goes <em>outbound</em>: <code>toVegaLite</code> round-trips a chart back
-        through the dominant interchange format with its metadata intact, which
-        is the portability claim in runnable form. New formats slot into the same
+        goes <em>outbound</em>: <code>toVegaLiteResult</code> round-trips the tested
+        supported single-view subset back through the dominant interchange format
+        with its metadata intact, and refuses unsupported semantics. New formats slot into the same
         framework — each is a pure function returning an inspectable object, so it
         is testable, SSR-safe, and usable server-side and in notebooks.
       </p>
