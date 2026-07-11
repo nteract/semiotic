@@ -8,7 +8,7 @@ const skill = path.join(root, "agent-skill/semiotic-charts/SKILL.md")
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"))
 const text = fs.readFileSync(skill, "utf8")
 
-if (!text.startsWith("---\n") || !/^name:\s*semiotic-charts$/m.test(text) || !/^description:\s*.+$/m.test(text)) {
+if (!/^---\r?\n/.test(text) || !/^name:\s*semiotic-charts$/m.test(text) || !/^description:\s*.+$/m.test(text)) {
   throw new Error("Agent Skill requires YAML frontmatter with name: semiotic-charts and a description.")
 }
 if (!/^#\s+Generating charts with Semiotic$/m.test(text)) {

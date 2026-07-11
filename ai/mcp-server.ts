@@ -1476,6 +1476,20 @@ async function createChartHandler(args: {
     }
   }
   const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme })
+  if (rendered.isError) {
+    return {
+      ...rendered,
+      structuredContent: profileResult({
+        status: "blocked",
+        component: selected.component,
+        props: publicProps,
+        dataRowCount: args.data.length,
+        suggestion: publicSuggestion,
+        diagnostics: diagnosis.diagnoses,
+        render: rendered.structuredContent ?? null,
+      }),
+    }
+  }
   const output = rendered.structuredContent ?? {}
   return {
     ...rendered,
