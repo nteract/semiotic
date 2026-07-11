@@ -229,6 +229,7 @@ function summarizeData
 function summarizeIntentManifest
 function toAnthropicTool
 function toConfig
+function toOpenAIResponsesTool
 function toOpenAITool
 function toURL
 function tokenTaskIntentToCapabilityIntents
@@ -381,6 +382,8 @@ interface NavTreeNode
 interface NumericFieldSummary
 interface ObservedAuditFinding
 interface ObservedSceneAuditResult
+interface OpenAIResponsesTool
+interface OpenAIResponsesToolOptions
 interface PerCapabilityScore
 interface PerFixtureScore
 interface PhysicsReaderGrounding

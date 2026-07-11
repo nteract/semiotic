@@ -31,6 +31,7 @@ const ENTRIES = {
   "semiotic-realtime": "dist/semiotic-realtime.d.ts",
   "semiotic-server": "dist/semiotic-server.d.ts",
   "semiotic-ai": "dist/semiotic-ai.d.ts",
+  "semiotic-ai-core": "dist/semiotic-ai-core.d.ts",
   "semiotic-data": "dist/semiotic-data.d.ts",
   "semiotic-geo": "dist/semiotic-geo.d.ts",
   "semiotic-physics": "dist/semiotic-physics.d.ts",
