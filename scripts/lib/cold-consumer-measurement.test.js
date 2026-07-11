@@ -68,6 +68,31 @@ describe("cold-consumer named import manifest", () => {
     })
   })
 
+  it("allows observed zlib gzip variation without relaxing raw bundle checks", () => {
+    const baseline = sampleReport()
+    baseline.measurements[0].rawBytes = 1001699
+    baseline.measurements[0].gzipBytes = 293604
+    const linuxMeasurement = copy(baseline)
+    linuxMeasurement.measurements[0].gzipBytes = 294807
+    const atGzipBoundary = copy(baseline)
+    const overGzipBoundary = copy(baseline)
+    const gzipTolerance = coldConsumerSizeTolerance("gzipBytes", 293604)
+    atGzipBoundary.measurements[0].gzipBytes += gzipTolerance
+    overGzipBoundary.measurements[0].gzipBytes += gzipTolerance + 1
+
+    expect(coldConsumerSizeTolerance("rawBytes", 1001699)).toBe(1002)
+    expect(gzipTolerance).toBe(2937)
+    expect(compareColdConsumerReports(baseline, linuxMeasurement)).toMatchObject({
+      current: true,
+      structuralErrors: [],
+      sizeDeltas: [],
+    })
+    expect(compareColdConsumerReports(baseline, atGzipBoundary).current).toBe(true)
+    expect(compareColdConsumerReports(baseline, overGzipBoundary).sizeDeltas).toEqual([
+      expect.objectContaining({ metric: "gzipBytes", delta: gzipTolerance + 1 }),
+    ])
+  })
+
   it("reports row-level byte differences beyond the allowed variance", () => {
     const baseline = sampleReport()
     const current = copy(baseline)

@@ -33,12 +33,13 @@ export const REPORT_SCHEMA_VERSION = 1
 export const README_MARKER_START = "<!-- semiotic-cold-consumer:start -->"
 export const README_MARKER_END = "<!-- semiotic-cold-consumer:end -->"
 
-// Packed output can vary by a few bytes across supported operating systems and
-// native bundler builds. Keep that variance narrow enough to catch a genuine
-// bundle regression while avoiding a baseline rewrite solely for the runner.
+// Raw bundles are expected to be nearly identical across supported runners.
+// gzip output can differ more substantially as Node's bundled zlib changes,
+// even for identical input bytes. Keep each allowance narrow enough to catch
+// a genuine bundle regression while avoiding a runner-only baseline rewrite.
 export const COLD_CONSUMER_SIZE_TOLERANCE = Object.freeze({
   rawBytes: Object.freeze({ minimumBytes: 32, relative: 0.001 }),
-  gzipBytes: Object.freeze({ minimumBytes: 16, relative: 0.001 }),
+  gzipBytes: Object.freeze({ minimumBytes: 16, relative: 0.01 }),
 })
 
 // `./experimental` is intentionally unpublished as a stable contract. The
