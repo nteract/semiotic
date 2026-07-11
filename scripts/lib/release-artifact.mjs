@@ -182,7 +182,10 @@ export function buildReleaseArtifact({ repoRoot, outDir, env = process.env }) {
   mkdirSync(directory, { recursive: true })
 
   const npmCache = mkdtempSync(join(tmpdir(), "semiotic-release-artifact-cache-"))
-  const npmEnvironment = { ...process.env, npm_config_cache: npmCache }
+  // `env` is injectable for source provenance and command-level tests. Keep
+  // the host environment as a base so a partial override cannot drop PATH,
+  // then make the isolated cache authoritative for artifact construction.
+  const npmEnvironment = { ...process.env, ...env, npm_config_cache: npmCache }
   let packed
   let sbomText
   let npmVersion

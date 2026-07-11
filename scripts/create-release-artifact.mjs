@@ -10,8 +10,15 @@ const args = process.argv.slice(2)
 const verify = args.includes("--verify")
 const outDirIndex = args.indexOf("--out-dir")
 const outDir = outDirIndex === -1 ? null : args[outDirIndex + 1]
+const validArgs = new Set(["--out-dir", "--verify", outDir])
 
-if (!outDir || args.some((arg, index) => arg === "--out-dir" && !args[index + 1])) {
+if (
+  !outDir ||
+  outDir.startsWith("--") ||
+  outDirIndex !== args.lastIndexOf("--out-dir") ||
+  args.filter((arg) => arg === "--verify").length > 1 ||
+  args.some((arg) => !validArgs.has(arg))
+) {
   throw new Error("Usage: node scripts/create-release-artifact.mjs --out-dir <directory> [--verify]")
 }
 
