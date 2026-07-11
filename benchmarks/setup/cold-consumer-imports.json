@@ -41,8 +41,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 1001701,
-      "gzipBytes": 293605,
+      "rawBytes": 1001699,
+      "gzipBytes": 293604,
       "packedPackageInputFiles": 3
     },
     {
@@ -68,8 +68,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 377235,
-      "gzipBytes": 120703,
+      "rawBytes": 377233,
+      "gzipBytes": 120702,
       "packedPackageInputFiles": 1
     },
     {
@@ -77,8 +77,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 504616,
-      "gzipBytes": 158481,
+      "rawBytes": 504614,
+      "gzipBytes": 158479,
       "packedPackageInputFiles": 1
     },
     {
@@ -86,7 +86,7 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 306680,
+      "rawBytes": 306678,
       "gzipBytes": 103058,
       "packedPackageInputFiles": 1
     },
@@ -113,8 +113,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 786137,
-      "gzipBytes": 251216,
+      "rawBytes": 786135,
+      "gzipBytes": 251215,
       "packedPackageInputFiles": 1
     },
     {
@@ -122,8 +122,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 1391636,
-      "gzipBytes": 419725,
+      "rawBytes": 1391634,
+      "gzipBytes": 419724,
       "packedPackageInputFiles": 3
     },
     {
