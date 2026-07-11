@@ -13,7 +13,7 @@ export function commonJsWorkerModuleUrl(assetName: string): URL {
     // drive path. This branch only exists in CommonJS output.
     const filename = __filename.replace(/\\/g, "/")
     const absoluteFilename = filename.startsWith("/") ? filename : `/${filename}`
-    return new URL(`./${assetName}`, `file://${absoluteFilename}`)
+    return new URL(`./${assetName}`, `file:${absoluteFilename}`)
   }
 
   throw new Error(`Cannot resolve module worker asset: ${assetName}`)
