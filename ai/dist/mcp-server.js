@@ -32931,7 +32931,7 @@ var MCP_APP_MIME_TYPE = "text/html;profile=mcp-app";
 var DEFAULT_MCP_SUPPORTED_PROTOCOL_VERSION = "2024-11-05";
 var DEFAULT_MCP_MAX_RENDER_WORK_MS = 2500;
 var DEFAULT_MCP_MAX_PNG_CONVERSION_MS = 4e3;
-var DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS = 1e3;
+var DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS = 3e3;
 function writeJsonRpcError(res, status, code, message) {
   res.writeHead(status, { "Content-Type": "application/json" });
   res.end(JSON.stringify({
@@ -33229,11 +33229,18 @@ function sanitizeSvgNode(node, doc) {
   }
   return safe;
 }
+var jsdomModulePromise = null;
+function loadJsdomModule() {
+  if (!jsdomModulePromise) jsdomModulePromise = import("jsdom");
+  return jsdomModulePromise;
+}
+void loadJsdomModule().catch(() => {
+});
 async function sanitizeSvgForWidget(svg) {
   const trimmed = svg.trim();
   if (!trimmed) return "";
   try {
-    const { JSDOM } = await import("jsdom");
+    const { JSDOM } = await loadJsdomModule();
     const parsed = new JSDOM(trimmed, { contentType: "image/svg+xml" });
     const parsedDocument = parsed.window.document;
     const sourceRoot = parsedDocument.documentElement;
