@@ -578,8 +578,8 @@ async function sanitizeSvgForWidget(svg: string): Promise<string> {
 }
 
 function parseRenderEvidence(result: ToolResult): Record<string, unknown> | null {
-  const evidenceText = result.content.find((block) =>
-    block.type === "text" && block.text.startsWith("Render evidence:\n")
+  const evidenceText = result.content.find(
+    (block): block is ToolTextContent => block.type === "text" && block.text.startsWith("Render evidence:\n")
   )?.text
   if (!evidenceText) return null
   try {
