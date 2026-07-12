@@ -55,6 +55,9 @@ controls: [{
   domain: [0, 100],
   step: 1,
   label: "Priority threshold",
+  valueText: "Priority threshold: {value}",
+  keyboard: "slider",
+  minimumTargetSize: 24,
   alternatives: ["number-input", "mobile-standard-control"],
   observations: ["control-start", "control-change", "control-end"],
 }]`

@@ -1,9 +1,6 @@
 import * as React from "react"
 import { useRef } from "react"
-import {
-  createControlObservationAdapter,
-  VISUALIZATION_CONTROL_TYPES,
-} from "./controls/controlContract"
+import { createControlObservationAdapter } from "./controls/controlContract"
 import type {
   ControlObservationCallback,
   VisualizationControlType,
@@ -172,9 +169,10 @@ export function DirectManipulationControl({
   const onKeyDown = (event: React.KeyboardEvent<SVGGElement>) => {
     if (disabled) return
     const increment = event.shiftKey ? largeStep : step
-    let next = null
-    if (event.key === "ArrowLeft" || event.key === "ArrowDown") next = value - increment
-    if (event.key === "ArrowRight" || event.key === "ArrowUp") next = value + increment
+    const base = currentValue.current
+    let next: number | null = null
+    if (event.key === "ArrowLeft" || event.key === "ArrowDown") next = base - increment
+    if (event.key === "ArrowRight" || event.key === "ArrowUp") next = base + increment
     if (event.key === "Home") next = min
     if (event.key === "End") next = max
     if (next === null) return
@@ -209,7 +207,7 @@ export function DirectManipulationControl({
       onPointerCancel={endDrag}
       onLostPointerCapture={endDrag}
       onKeyDown={onKeyDown}
-      style={{ cursor: disabled ? "default" : "grab" }}
+      style={{ cursor: disabled ? "default" : "grab", touchAction: "none" }}
     >
       <circle className="semiotic-direct-manipulation-control__hit" cx={x} cy={y} r={radius + 10} fill="transparent" />
       <circle className="semiotic-direct-manipulation-control__handle" cx={x} cy={y} r={radius} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />

@@ -227,7 +227,8 @@ function StreamGeoMaupMap({ result, threshold, onSeam, width, compact = false, p
               onChange={onSeam}
               pointerToValue={(event) => {
                 if (!projection.invert) return null
-                const [x] = fromCedarBendCoordinate(projection.invert([overlayPoint(event).x, overlayPoint(event).y]))
+                const p = overlayPoint(event)
+                const [x] = fromCedarBendCoordinate(projection.invert([p.x, p.y]))
                 return (x - seamIndex / result.columns) / 0.1
               }}
               label="Featured district border"
