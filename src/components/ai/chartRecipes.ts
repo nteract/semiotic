@@ -5,6 +5,8 @@ import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { NavTreeNode } from "./navigationTree"
 import type { IntentId } from "./intents"
+import { auditVisualizationControls } from "../controls/controlAudit"
+import type { VisualizationControlDefinition } from "../controls/controlContract"
 
 /**
  * A frame identifies the rendering/runtime substrate a recipe expects. It does
@@ -339,6 +341,8 @@ export interface ChartRecipe<
   accessibility: AccessibilityExpectations
   /** Phone-specific contract consumed by audits, agents, and portable adapters. */
   mobile?: MobileDesignDefinition
+  /** Portable controls expose state semantics, never frame-specific handlers. */
+  controls?: ReadonlyArray<VisualizationControlDefinition>
 
   description?: DescriptionStrategy<TDatum, TConfig>
   navigation?: NavigationStrategy<TDatum, TConfig> | PortableNavigationStrategy
@@ -397,6 +401,15 @@ export function validateChartRecipe<
   }
   if (!recipe.accessibility || typeof recipe.accessibility !== "object") {
     throw new Error(`Chart recipe "${recipe.id}" requires accessibility expectations.`)
+  }
+  if (recipe.controls !== undefined) {
+    const controlAudit = auditVisualizationControls({ controls: recipe.controls })
+    const failures = controlAudit.findings.filter((finding) => finding.status === "fail")
+    if (failures.length > 0) {
+      throw new Error(
+        `Chart recipe "${recipe.id}" has invalid controls: ${failures.map((finding) => finding.message).join(" ")}`,
+      )
+    }
   }
 
   if (recipe.portability === "portable") {

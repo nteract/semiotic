@@ -254,6 +254,7 @@ export default function ObservationHooksPage() {
   yAccessor="y"
   onObservation={(obs) => {
     // obs.type: "hover" | "hover-end" | "brush" | "brush-end" | "selection" | "selection-end"
+    //         | "control-start" | "control-change" | "control-end"
     // obs.datum: the data point being hovered
     // obs.timestamp: Date.now()
     // obs.chartType: "Scatterplot"
@@ -306,7 +307,7 @@ export default function ObservationHooksPage() {
       <h2 id="event-types">Event Types</h2>
 
       <p>
-        Six event types cover the full range of chart interactions:
+        Chart events cover hover, click, brush, selection, and direct-control interactions:
       </p>
 
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
@@ -348,6 +349,21 @@ export default function ObservationHooksPage() {
             <td style={tdStyle}>Selection cleared</td>
             <td style={tdStyle}><code>selection.name</code></td>
           </tr>
+          <tr style={trStyle}>
+            <td style={tdCodeStyle}><code>control-start</code></td>
+            <td style={tdStyle}>A direct control begins a pointer interaction</td>
+            <td style={tdStyle}><code>controlType</code>, <code>controlId</code>, <code>value</code></td>
+          </tr>
+          <tr style={trStyle}>
+            <td style={tdCodeStyle}><code>control-change</code></td>
+            <td style={tdStyle}>A control changes through pointer or keyboard input</td>
+            <td style={tdStyle}><code>controlType</code>, <code>value</code>, <code>source</code></td>
+          </tr>
+          <tr style={trStyle}>
+            <td style={tdCodeStyle}><code>control-end</code></td>
+            <td style={tdStyle}>A direct-control pointer interaction ends</td>
+            <td style={tdStyle}><code>controlType</code>, <code>controlId</code>, <code>value</code></td>
+          </tr>
         </tbody>
       </table>
 
@@ -356,6 +372,25 @@ export default function ObservationHooksPage() {
         <code>chartType</code> (e.g. "Scatterplot"), and optionally{" "}
         <code>chartId</code> (your custom identifier).
       </p>
+
+      <CodeBlock
+        code={`import { DirectManipulationControl } from "semiotic/controls"
+
+<DirectManipulationControl
+  controlId="priority-threshold"
+  controlType="threshold"
+  chartType="XYCustomChart"
+  chartId="priority-chart"
+  value={threshold}
+  min={0}
+  max={100}
+  label="Priority threshold"
+  onChange={setThreshold}
+  onObservation={onObservation}
+  pointerToValue={pointerToThreshold}
+/>`}
+        language="jsx"
+      />
 
       {/* ----------------------------------------------------------------- */}
       {/* useChartObserver */}

@@ -621,6 +621,14 @@ export type {
   ObservedAuditStatus,
   ObservedSceneAuditResult
 } from "./ai/observedSceneAudit"
+export { auditVisualizationControls } from "./controls/controlAudit"
+export type {
+  AuditVisualizationControlsOptions,
+  ControlAuditFinding,
+  ControlAuditResult,
+  ControlAuditStatus,
+} from "./controls/controlAudit"
+export type { VisualizationControlDefinition } from "./controls/controlContract"
 export { IntentMark } from "./ai/IntentMark"
 export type { IntentMarkProps } from "./ai/IntentMark"
 export {

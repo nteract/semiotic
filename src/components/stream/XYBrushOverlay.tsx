@@ -22,6 +22,7 @@ import { useRef, useEffect, useMemo } from "react"
 import { select as d3Select } from "d3-selection"
 import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { StreamScales } from "./types"
+import { useBrushAccessibility, type BrushKeyboardAction } from "./brushAccessibility"
 
 export interface XYBrushOverlayProps {
   width: number
@@ -39,6 +40,26 @@ export interface XYBrushOverlayProps {
   /** When true, snap during drag (not just on release). Default false. */
   snapDuring?: boolean
   streaming?: boolean
+}
+
+function boundedRange(
+  range: [number, number],
+  domain: [number, number],
+  direction: -1 | 1,
+  resize: boolean,
+): [number, number] {
+  const [minimum, maximum] = [Math.min(...domain), Math.max(...domain)]
+  const amount = (maximum - minimum) / 20
+  let [start, end] = range
+  if (resize) {
+    if (direction < 0) start = Math.max(minimum, start - amount)
+    else end = Math.min(maximum, end + amount)
+  } else {
+    const width = end - start
+    start = Math.max(minimum, Math.min(maximum - width, start + direction * amount))
+    end = start + width
+  }
+  return [start, end]
 }
 
 /** Binary search for the largest boundary <= value (floor). */
@@ -108,6 +129,55 @@ export function XYBrushOverlay({
 
   const isProgrammaticMoveRef = useRef(false)
   const activeBrushExtentRef = useRef<{ x: [number, number]; y: [number, number] } | null>(null)
+
+  const handleKeyboardAction = (action: BrushKeyboardAction) => {
+    const s = scalesRef.current
+    const brush = brushRef.current
+    if (!s || !brush || !svgRef.current) return
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+    if (action.type === "clear") {
+      isProgrammaticMoveRef.current = true
+      g.call(brush.move, null)
+      isProgrammaticMoveRef.current = false
+      activeBrushExtentRef.current = null
+      onBrushRef.current(null)
+      return
+    }
+
+    const xDomain = s.x.domain() as [number, number]
+    const yDomain = s.y.domain() as [number, number]
+    const existing = activeBrushExtentRef.current
+    let xRange: [number, number] = existing?.x ?? [
+      xDomain[0] + (xDomain[1] - xDomain[0]) * 0.4,
+      xDomain[0] + (xDomain[1] - xDomain[0]) * 0.6,
+    ]
+    let yRange: [number, number] = existing?.y ?? [
+      yDomain[0] + (yDomain[1] - yDomain[0]) * 0.4,
+      yDomain[0] + (yDomain[1] - yDomain[0]) * 0.6,
+    ]
+    const horizontal = action.direction === "left" || action.direction === "right"
+    const direction = action.direction === "left" || action.direction === "down" ? -1 : 1
+    if (horizontal && dimension !== "y") xRange = boundedRange(xRange, xDomain, direction, action.resize)
+    if (!horizontal && dimension !== "x") yRange = boundedRange(yRange, yDomain, direction, action.resize)
+    if ((horizontal && dimension === "y") || (!horizontal && dimension === "x")) return
+
+    const extent = { x: xRange, y: yRange }
+    isProgrammaticMoveRef.current = true
+    if (dimension === "x") {
+      g.call(brush.move, [s.x(xRange[0]), s.x(xRange[1])])
+    } else if (dimension === "y") {
+      g.call(brush.move, [s.y(yRange[1]), s.y(yRange[0])])
+    } else {
+      g.call(brush.move, [[s.x(xRange[0]), s.y(yRange[1])], [s.x(xRange[1]), s.y(yRange[0])]])
+    }
+    isProgrammaticMoveRef.current = false
+    activeBrushExtentRef.current = extent
+    onBrushRef.current(extent)
+  }
+  const brushA11y = useBrushAccessibility({
+    label: dimension === "xy" ? "Two-dimensional data range brush" : `${dimension.toUpperCase()} data range brush`,
+    onAction: handleKeyboardAction,
+  })
 
   useEffect(() => {
     if (!svgRef.current) return
@@ -275,6 +345,7 @@ export function XYBrushOverlay({
       ref={svgRef}
       width={totalWidth}
       height={totalHeight}
+      {...brushA11y.svgProps}
       style={{
         position: "absolute",
         top: 0,
@@ -282,6 +353,8 @@ export function XYBrushOverlay({
         pointerEvents: "all"
       }}
     >
+      <title>{brushA11y.svgProps["aria-label"]}</title>
+      <desc id={brushA11y.descriptionId}>{brushA11y.description}</desc>
       <g className="brush-g" transform={`translate(${margin.left},${margin.top})`} />
     </svg>
   )
