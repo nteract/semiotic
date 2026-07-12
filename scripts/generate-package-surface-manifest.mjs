@@ -149,7 +149,6 @@ function classifySubpath(subpath, value) {
 
   const jsLike = artifacts.some(({ path }) => path.endsWith(".js") || path.endsWith(".mjs"))
   const hasTypes = artifacts.some(({ kind }) => kind === "types")
-  const kinds = artifacts.map(({ kind }) => kind)
   return {
     kind: jsLike ? "javascript-module" : "metadata",
     subpath,
@@ -160,7 +159,7 @@ function classifySubpath(subpath, value) {
     artifacts,
     esm,
     cjs,
-    types: kinds.includes("types") ? normalizeExportTarget(value.types) : undefined,
+    types: hasTypes ? normalizeExportTarget(value.types) : undefined,
   }
 }
 
