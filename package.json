@@ -434,7 +434,6 @@
     "globals": "^17.7.0",
     "gofish-graphics": "^0.1.0-nightly.20260624",
     "gofish-ir": "^0.1.0-nightly.20260624",
-    "jsdom": "^29.0.2",
     "marked": "^18.0.6",
     "marked-gfm-heading-id": "^4.1.4",
     "playwright-chromium": "^1.61.1",
@@ -475,6 +474,7 @@
   },
   "optionalDependencies": {
     "gifenc": "^1.0.3",
+    "jsdom": "^29.0.2",
     "sharp": "^0.35.3"
   },
   "dependencies": {

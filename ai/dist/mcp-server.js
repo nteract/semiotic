@@ -32383,19 +32383,99 @@ function resolveHTTPListenHost(args, env = process.env) {
   return getFlagValue(args, "--host")?.trim() || env.MCP_HOST?.trim() || DEFAULT_HTTP_HOST;
 }
 
+// ai/mcp-request-limits.ts
+var DEFAULT_MCP_MAX_CONCURRENT_REQUESTS = 16;
+var DEFAULT_MCP_MAX_REQUESTS_PER_WINDOW = 240;
+var DEFAULT_MCP_REQUEST_WINDOW_MS = 6e4;
+function positiveInteger(value, fallback) {
+  const parsed = Number.parseInt(value || "", 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+function resolveMcpRequestLimits(env = process.env) {
+  return {
+    maxConcurrentRequests: positiveInteger(
+      env.MCP_MAX_CONCURRENT_REQUESTS,
+      DEFAULT_MCP_MAX_CONCURRENT_REQUESTS
+    ),
+    maxRequestsPerWindow: positiveInteger(
+      env.MCP_MAX_REQUESTS_PER_WINDOW,
+      DEFAULT_MCP_MAX_REQUESTS_PER_WINDOW
+    ),
+    requestWindowMs: positiveInteger(env.MCP_REQUEST_WINDOW_MS, DEFAULT_MCP_REQUEST_WINDOW_MS)
+  };
+}
+function defaultWindowStart(now) {
+  return now <= 0 ? 1 : now;
+}
+function createMcpRequestLimiter(limits) {
+  let activeRequests = 0;
+  let requestWindowStart = defaultWindowStart(Date.now());
+  let requestsInWindow = 0;
+  const resetWindowIfExpired = (now) => {
+    const elapsed = now - requestWindowStart;
+    if (elapsed >= limits.requestWindowMs || elapsed < 0) {
+      requestWindowStart = now;
+      requestsInWindow = 0;
+    }
+  };
+  const snapshot = () => ({
+    activeRequests,
+    requestWindowStart,
+    requestsInWindow
+  });
+  const tryAcquire = (now = Date.now()) => {
+    resetWindowIfExpired(now);
+    if (activeRequests >= limits.maxConcurrentRequests) {
+      return {
+        ok: false,
+        code: "MCP_REQUEST_CONCURRENCY",
+        message: `Request concurrency limit exceeded. Set MCP_MAX_CONCURRENT_REQUESTS to raise the live limit.`,
+        retryAfterMs: 1e3
+      };
+    }
+    if (requestsInWindow >= limits.maxRequestsPerWindow) {
+      const retryAfterMs = Math.max(
+        0,
+        requestWindowStart + limits.requestWindowMs - now
+      );
+      return {
+        ok: false,
+        code: "MCP_REQUEST_RATE",
+        message: `Request rate limit exceeded. Set MCP_MAX_REQUESTS_PER_WINDOW / MCP_REQUEST_WINDOW_MS to raise the rate window/capacity.`,
+        retryAfterMs
+      };
+    }
+    activeRequests++;
+    requestsInWindow++;
+    let released = false;
+    return {
+      ok: true,
+      release: () => {
+        if (released) return;
+        released = true;
+        activeRequests = Math.max(0, activeRequests - 1);
+      }
+    };
+  };
+  return {
+    snapshot,
+    tryAcquire
+  };
+}
+
 // ai/mcp-operation-limits.ts
 var DEFAULT_MCP_MAX_ROWS = 1e4;
 var DEFAULT_MCP_MAX_CELLS = 1e5;
 var DEFAULT_MCP_MAX_NESTING_DEPTH = 64;
-function positiveInteger(value, fallback) {
+function positiveInteger2(value, fallback) {
   const parsed = Number.parseInt(value || "", 10);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 function resolveMcpOperationLimits(env = process.env) {
   return {
-    maxRows: positiveInteger(env.MCP_MAX_ROWS, DEFAULT_MCP_MAX_ROWS),
-    maxCells: positiveInteger(env.MCP_MAX_CELLS, DEFAULT_MCP_MAX_CELLS),
-    maxNestingDepth: positiveInteger(
+    maxRows: positiveInteger2(env.MCP_MAX_ROWS, DEFAULT_MCP_MAX_ROWS),
+    maxCells: positiveInteger2(env.MCP_MAX_CELLS, DEFAULT_MCP_MAX_CELLS),
+    maxNestingDepth: positiveInteger2(
       env.MCP_MAX_NESTING_DEPTH,
       DEFAULT_MCP_MAX_NESTING_DEPTH
     )
@@ -32467,27 +32547,27 @@ var DEFAULT_MCP_MAX_WIDGET_VALUE_BYTES = 256;
 var WIDGET_COLUMN_LABEL_BYTES = 96;
 var WIDGET_EVIDENCE_ARRAY_ITEMS = 32;
 var WIDGET_EVIDENCE_OBJECT_KEYS = 16;
-function positiveInteger2(value, fallback) {
+function positiveInteger3(value, fallback) {
   const parsed = Number.parseInt(value || "", 10);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 function resolveMcpRenderOutputLimits(env = process.env) {
   return {
-    maxRenderOutputBytes: positiveInteger2(
+    maxRenderOutputBytes: positiveInteger3(
       env.MCP_MAX_RENDER_OUTPUT_BYTES,
       DEFAULT_MCP_MAX_RENDER_OUTPUT_BYTES
     ),
-    maxWidgetOutputBytes: positiveInteger2(
+    maxWidgetOutputBytes: positiveInteger3(
       env.MCP_MAX_WIDGET_OUTPUT_BYTES,
       DEFAULT_MCP_MAX_WIDGET_OUTPUT_BYTES
     ),
-    maxWidgetMetadataBytes: positiveInteger2(
+    maxWidgetMetadataBytes: positiveInteger3(
       env.MCP_MAX_WIDGET_METADATA_BYTES,
       DEFAULT_MCP_MAX_WIDGET_METADATA_BYTES
     ),
-    maxWidgetRows: positiveInteger2(env.MCP_MAX_WIDGET_ROWS, DEFAULT_MCP_MAX_WIDGET_ROWS),
-    maxWidgetColumns: positiveInteger2(env.MCP_MAX_WIDGET_COLUMNS, DEFAULT_MCP_MAX_WIDGET_COLUMNS),
-    maxWidgetValueBytes: positiveInteger2(
+    maxWidgetRows: positiveInteger3(env.MCP_MAX_WIDGET_ROWS, DEFAULT_MCP_MAX_WIDGET_ROWS),
+    maxWidgetColumns: positiveInteger3(env.MCP_MAX_WIDGET_COLUMNS, DEFAULT_MCP_MAX_WIDGET_COLUMNS),
+    maxWidgetValueBytes: positiveInteger3(
       env.MCP_MAX_WIDGET_VALUE_BYTES,
       DEFAULT_MCP_MAX_WIDGET_VALUE_BYTES
     )
@@ -32848,6 +32928,87 @@ var componentNames = Object.keys(COMPONENT_REGISTRY).sort();
 var REPO = "nteract/semiotic";
 var SEMIOTIC_CHART_WIDGET_URI = "ui://semiotic/chart-widget.html";
 var MCP_APP_MIME_TYPE = "text/html;profile=mcp-app";
+var DEFAULT_MCP_SUPPORTED_PROTOCOL_VERSION = "2024-11-05";
+var DEFAULT_MCP_MAX_RENDER_WORK_MS = 2500;
+var DEFAULT_MCP_MAX_PNG_CONVERSION_MS = 4e3;
+var DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS = 1e3;
+function writeJsonRpcError(res, status, code, message) {
+  res.writeHead(status, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({
+    jsonrpc: "2.0",
+    error: { code, message },
+    id: null
+  }));
+}
+function isAuthorizedRequest(req, token, scheme) {
+  if (!token) return true;
+  const authorization = req.headers.authorization;
+  if (typeof authorization !== "string") return false;
+  const [providedScheme, providedToken] = authorization.split(/\s+/, 2);
+  return providedScheme?.toLowerCase() === scheme.toLowerCase() && Boolean(providedToken) && providedToken === token;
+}
+function hasSupportedAccept(acceptHeader) {
+  if (!acceptHeader) return true;
+  const lower = acceptHeader.toLowerCase();
+  return lower.includes("*/*") || lower.includes("application/json") || lower.includes("text/event-stream");
+}
+function isSupportedProtocolVersion(protocolVersion, supported) {
+  if (!protocolVersion || supported.length === 0) return true;
+  return supported.includes(protocolVersion);
+}
+function sanitizeHeadersForLog(headers) {
+  const output = {};
+  for (const [name, value] of Object.entries(headers)) {
+    if (!value) continue;
+    const sample = Array.isArray(value) ? value[0] : value;
+    if (typeof sample !== "string") continue;
+    output[name] = name.toLowerCase() === "authorization" ? "***redacted***" : sample;
+  }
+  return output;
+}
+function parsePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(value || "", 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+function resolveMcpRenderExecutionLimits(env = process.env) {
+  return {
+    maxRenderWorkMs: parsePositiveInteger(env.MCP_MAX_RENDER_WORK_MS, DEFAULT_MCP_MAX_RENDER_WORK_MS),
+    maxPngConversionMs: parsePositiveInteger(env.MCP_MAX_PNG_CONVERSION_MS, DEFAULT_MCP_MAX_PNG_CONVERSION_MS),
+    maxInteractiveSanitizeMs: parsePositiveInteger(env.MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS, DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS)
+  };
+}
+function makeRenderExecutionError(code, label, limitMs, observedMs) {
+  const text = code === "MCP_RENDER_TIMEOUT" ? `${label} exceeded ${limitMs} ms timeout budget (${observedMs ?? 0} ms). Set ${label === "PNG conversion" ? "MCP_MAX_PNG_CONVERSION_MS" : label.includes("sanitize") ? "MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS" : "MCP_MAX_RENDER_WORK_MS"} to adjust.` : `${label} was canceled before completion.`;
+  const error48 = new Error(text);
+  error48.code = code;
+  return error48;
+}
+function throwIfRequestCanceled(signal, label = "render work") {
+  if (signal?.aborted) {
+    throw makeRenderExecutionError("MCP_RENDER_CANCELLED", label, 0);
+  }
+}
+async function runRenderStep(label, limitMs, signal, work) {
+  throwIfRequestCanceled(signal, label);
+  const started = Date.now();
+  const result = await Promise.resolve(work());
+  if (signal?.aborted) throw makeRenderExecutionError("MCP_RENDER_CANCELLED", label, 0);
+  const elapsed = Date.now() - started;
+  if (limitMs > 0 && elapsed > limitMs) {
+    throw makeRenderExecutionError("MCP_RENDER_TIMEOUT", label, limitMs, elapsed);
+  }
+  return result;
+}
+function isRenderExecutionError(error48) {
+  return !!error48 && typeof error48 === "object" && (error48.code === "MCP_RENDER_TIMEOUT" || error48.code === "MCP_RENDER_CANCELLED");
+}
+function renderExecutionErrorResult(message, code) {
+  return {
+    content: [{ type: "text", text: message }],
+    isError: true,
+    structuredContent: { code }
+  };
+}
 function aiFilePath(fileName) {
   return path.resolve(__dirname, "..", fileName);
 }
@@ -32901,11 +33062,196 @@ function promptMessage(text) {
     }]
   };
 }
-function stripUnsafeSvg(svg) {
-  return svg.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "").replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "").replace(/\s(href|xlink:href)\s*=\s*(["'])\s*javascript:[^"']*\2/gi, "");
+var SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+var SAFE_SVG_ELEMENTS = /* @__PURE__ */ new Set([
+  "svg",
+  "g",
+  "path",
+  "line",
+  "polyline",
+  "polygon",
+  "rect",
+  "circle",
+  "ellipse",
+  "text",
+  "tspan",
+  "title",
+  "desc",
+  "defs",
+  "style",
+  "linearGradient",
+  "radialGradient",
+  "stop",
+  "clipPath",
+  "mask",
+  "pattern",
+  "filter",
+  "marker",
+  "use",
+  "symbol"
+]);
+var SAFE_SVG_ATTRIBUTES = /* @__PURE__ */ new Set([
+  "alignment-baseline",
+  "alignmentadjust",
+  "aria-hidden",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "clip-path",
+  "cx",
+  "cy",
+  "d",
+  "dx",
+  "dy",
+  "dominant-baseline",
+  "fill",
+  "fill-opacity",
+  "fill-rule",
+  "font-family",
+  "font-size",
+  "font-style",
+  "font-weight",
+  "gradientunits",
+  "gradienttransform",
+  "height",
+  "id",
+  "marker-height",
+  "marker-units",
+  "marker-width",
+  "marker-end",
+  "marker-mid",
+  "marker-start",
+  "offset",
+  "opacity",
+  "orientation",
+  "pattern-content-units",
+  "pattern-transform",
+  "pattern-units",
+  "preserveaspectratio",
+  "r",
+  "rx",
+  "ry",
+  "role",
+  "shape-rendering",
+  "spreadmethod",
+  "startoffset",
+  "stroke",
+  "stroke-linecap",
+  "stroke-linejoin",
+  "stroke-opacity",
+  "stroke-width",
+  "style",
+  "text-anchor",
+  "transform",
+  "viewbox",
+  "width",
+  "x",
+  "x1",
+  "x2",
+  "xmlns",
+  "xmlns:xlink",
+  "y",
+  "y1",
+  "y2",
+  "xml:space",
+  "class"
+]);
+var SAFE_URL_ATTR_PREFIXES = [
+  "http://",
+  "https://",
+  "#",
+  "/",
+  "./",
+  "../",
+  "mailto:",
+  "tel:",
+  "data:image/"
+];
+function isSafeUrlValue(value) {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return true;
+  if (/^(javascript|vbscript|file):/i.test(trimmed)) return false;
+  return SAFE_URL_ATTR_PREFIXES.some((prefix) => trimmed.startsWith(prefix));
+}
+function sanitizeStyleValue(value) {
+  return value.replace(/\/\*[\s\S]*?\*\//g, "").replace(/@import[^;]*;/gi, "").replace(/expression\s*\([^)]*\)/gi, "").replace(/url\(\s*["']?\s*([^)"']+)\s*["']?\s*\)/gi, (_match, rawUrl) => {
+    const safeUrl = String(rawUrl || "").trim().toLowerCase();
+    if (safeUrl && !isSafeUrlValue(safeUrl)) return "url()";
+    return `url(${rawUrl})`;
+  });
+}
+function isAllowedSvgAttribute(name) {
+  const lower = name.toLowerCase();
+  if (lower.startsWith("on")) return false;
+  if (lower.startsWith("data-")) return true;
+  if (lower.startsWith("aria-")) return true;
+  if (lower.startsWith("xml:")) return true;
+  if (lower === "xmlns" || lower.startsWith("xmlns:")) return true;
+  if (SAFE_SVG_ATTRIBUTES.has(lower)) return true;
+  return /^[a-z][a-z0-9-_:.]*$/.test(lower);
+}
+function sanitizeSvgAttribute(name, value) {
+  const lower = name.toLowerCase();
+  if (!isAllowedSvgAttribute(name)) return null;
+  if ((lower === "href" || lower === "xlink:href" || lower === "src") && !isSafeUrlValue(value)) {
+    return null;
+  }
+  if (lower === "style") return sanitizeStyleValue(value);
+  return value;
+}
+function sanitizeSvgNode(node, doc) {
+  if (node.nodeType === 3 || node.nodeType === 4) {
+    const text = node.textContent ?? "";
+    return text ? doc.createTextNode(text) : null;
+  }
+  if (node.nodeType !== 1) return null;
+  const source = node;
+  const tag = source.tagName;
+  if (!SAFE_SVG_ELEMENTS.has(tag)) return null;
+  const safe = doc.createElementNS(SVG_NAMESPACE, tag);
+  const isStyleTag = tag === "style";
+  if (!isStyleTag) {
+    for (const attribute of Array.from(source.attributes)) {
+      const safeValue = sanitizeSvgAttribute(attribute.name, attribute.value);
+      if (safeValue == null) continue;
+      safe.setAttribute(attribute.name, safeValue);
+    }
+  } else {
+    const styleText = sanitizeStyleValue(source.textContent ?? "");
+    if (styleText) {
+      safe.appendChild(doc.createTextNode(styleText));
+    }
+    return safe;
+  }
+  for (const child of Array.from(source.childNodes)) {
+    const sanitized = sanitizeSvgNode(child, doc);
+    if (sanitized) safe.appendChild(sanitized);
+  }
+  return safe;
+}
+async function sanitizeSvgForWidget(svg) {
+  const trimmed = svg.trim();
+  if (!trimmed) return "";
+  try {
+    const { JSDOM } = await import("jsdom");
+    const parsed = new JSDOM(trimmed, { contentType: "image/svg+xml" });
+    const parsedDocument = parsed.window.document;
+    const sourceRoot = parsedDocument.documentElement;
+    if (!sourceRoot || sourceRoot.tagName.toLowerCase() !== "svg") return "";
+    if (parsedDocument.getElementsByTagName("parsererror")[0]) return "";
+    const cleanDocument = parsedDocument.implementation.createDocument(SVG_NAMESPACE, null, null);
+    const safeRoot = sanitizeSvgNode(sourceRoot, cleanDocument);
+    if (!safeRoot) return "";
+    cleanDocument.appendChild(safeRoot);
+    return new parsed.window.XMLSerializer().serializeToString(safeRoot);
+  } catch {
+    return "";
+  }
 }
 function parseRenderEvidence(result) {
-  const evidenceText = result.content.find((block) => block.text.startsWith("Render evidence:\n"))?.text;
+  const evidenceText = result.content.find(
+    (block) => block.type === "text" && block.text.startsWith("Render evidence:\n")
+  )?.text;
   if (!evidenceText) return null;
   try {
     return JSON.parse(evidenceText.replace(/^Render evidence:\n/, ""));
@@ -33279,7 +33625,9 @@ async function suggestChartHandler(args) {
   }
   return { content, structuredContent: result };
 }
-async function renderChartHandler(args) {
+async function renderChartHandler(args, context = {}) {
+  const limits = context.limits ?? resolveMcpRenderExecutionLimits();
+  const signal = context.signal;
   const component = args.component;
   const props = args.props ?? {};
   const theme = args.theme;
@@ -33302,7 +33650,20 @@ async function renderChartHandler(args) {
       isError: true
     });
   }
-  const result = renderHOCToSVG(component, props);
+  let result;
+  try {
+    result = await runRenderStep(
+      "render work",
+      limits.maxRenderWorkMs,
+      signal,
+      () => renderHOCToSVG(component, props)
+    );
+  } catch (err) {
+    if (isRenderExecutionError(err)) {
+      return capRenderChartResult(renderExecutionErrorResult(err.message, err.code));
+    }
+    throw err;
+  }
   if (result.error) {
     return capRenderChartResult({
       content: [{ type: "text", text: result.error }],
@@ -33312,40 +33673,72 @@ async function renderChartHandler(args) {
   let svg = result.svg;
   let evidenceBlock = null;
   try {
-    const { svg: evidenceSvg, evidence } = (0, import_server2.renderChartWithEvidence)(component, props);
+    const { svg: evidenceSvg, evidence } = await runRenderStep(
+      "layout/render evidence",
+      limits.maxRenderWorkMs,
+      signal,
+      () => (0, import_server2.renderChartWithEvidence)(component, props)
+    );
     svg = evidenceSvg;
     evidenceBlock = {
       type: "text",
       text: `Render evidence:
 ${JSON.stringify(evidence, null, 2)}`
     };
-  } catch {
+  } catch (err) {
+    if (isRenderExecutionError(err)) {
+      return capRenderChartResult(renderExecutionErrorResult(err.message, err.code));
+    }
     evidenceBlock = {
       type: "text",
       text: `Render evidence: unavailable for ${component} (no server render config). The SVG above is the validated React render; mark-count / domain evidence is only produced for components with a server render path.`
     };
   }
   if (theme && Object.keys(theme).length > 0) {
-    const isUnsafeCssValue = (v) => /[<>{}\\;@]/.test(v) || /url\(|expression\(|javascript:|\/\*|\*\//i.test(v);
-    const validVars = Object.entries(theme).filter(([k, v]) => k.startsWith("--semiotic-") && typeof v === "string" && !isUnsafeCssValue(v)).map(([k, v]) => `${k}: ${v}`).join("; ");
-    if (validVars) {
-      svg = svg.replace(/<svg([^>]*)>/, `<svg$1><style>:root { ${validVars} }</style>`);
+    try {
+      svg = await runRenderStep(
+        "theme application",
+        limits.maxRenderWorkMs,
+        signal,
+        () => {
+          const isUnsafeCssValue = (v) => /<|>|{|}|@|expression\(|javascript:|url\(|\*\//i.test(v);
+          const validVars = Object.entries(theme).filter(([k, v]) => k.startsWith("--semiotic-") && typeof v === "string" && !isUnsafeCssValue(v)).map(([k, v]) => `${k}: ${v}`).join("; ");
+          if (!validVars) return svg;
+          return svg.replace(/<svg([^>]*)>/, `<svg$1><style>:root { ${validVars} }</style>`);
+        }
+      );
+    } catch (err) {
+      if (isRenderExecutionError(err)) {
+        return capRenderChartResult(renderExecutionErrorResult(err.message, err.code));
+      }
+      throw err;
     }
   }
   if (format === "png") {
     try {
-      const sharpMod = await Function('return import("sharp")')();
-      const sharpFn = sharpMod.default || sharpMod;
-      const pngBuffer = await sharpFn(Buffer.from(svg)).png().toBuffer();
+      const pngBuffer = await runRenderStep(
+        "PNG conversion",
+        limits.maxPngConversionMs,
+        signal,
+        async () => {
+          const sharpMod = await Function('return import("sharp")')();
+          const sharpFn = sharpMod.default || sharpMod;
+          return sharpFn(Buffer.from(svg)).png().toBuffer();
+        }
+      );
       const base643 = pngBuffer.toString("base64");
       return capRenderChartResult({
         content: [
-          { type: "text", text: `data:image/png;base64,${base643}` },
+          { type: "image", data: base643, mimeType: "image/png" },
           ...evidenceBlock ? [evidenceBlock] : []
         ]
       });
     } catch (err) {
-      if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
+      if (isRenderExecutionError(err)) {
+        return capRenderChartResult(renderExecutionErrorResult(err.message, err.code));
+      }
+      const typedErr = err;
+      if (typedErr.code === "MODULE_NOT_FOUND" || typedErr.code === "ERR_MODULE_NOT_FOUND") {
         return capRenderChartResult({
           content: [{ type: "text", text: `PNG output requires the 'sharp' package. Install it with: npm install sharp
 
@@ -33355,7 +33748,7 @@ ${svg}` }]
         });
       }
       return capRenderChartResult({
-        content: [{ type: "text", text: `PNG conversion failed: ${err.message}
+        content: [{ type: "text", text: `PNG conversion failed: ${typedErr.message || "unknown error"}
 
 SVG output:
 
@@ -33371,7 +33764,9 @@ ${svg}` }],
     ]
   });
 }
-async function renderInteractiveChartHandler(args) {
+async function renderInteractiveChartHandler(args, context = {}) {
+  const limits = context.limits ?? resolveMcpRenderExecutionLimits();
+  const signal = context.signal;
   const component = args.component;
   const props = args.props ?? {};
   const rendered = await renderChartHandler({
@@ -33379,9 +33774,28 @@ async function renderInteractiveChartHandler(args) {
     props,
     theme: args.theme,
     format: "svg"
-  });
+  }, context);
   if (rendered.isError) return rendered;
-  const svg = stripUnsafeSvg(rendered.content[0]?.text ?? "");
+  const svgBlock = rendered.content.find(
+    (block) => block.type === "text" && block.text.trimStart().startsWith("<")
+  );
+  let svg;
+  try {
+    svg = await runRenderStep(
+      "interactive SVG sanitization",
+      limits.maxInteractiveSanitizeMs,
+      signal,
+      () => sanitizeSvgForWidget(svgBlock?.text ?? "")
+    );
+  } catch (err) {
+    if (isRenderExecutionError(err)) {
+      return capInteractiveWidgetResult(renderExecutionErrorResult(err.message, err.code));
+    }
+    return capInteractiveWidgetResult({
+      content: [{ type: "text", text: "Interactive SVG sanitization failed." }],
+      isError: true
+    });
+  }
   const outputLimits = resolveMcpRenderOutputLimits();
   const evidence = createWidgetEvidencePreview(parseRenderEvidence(rendered), outputLimits);
   const dataPreview = createWidgetDataPreview(props, outputLimits);
@@ -33957,7 +34371,7 @@ function compactPublicChartProps(props) {
 function compactPublicSuggestion(suggestion) {
   return { ...suggestion, props: compactPublicChartProps(suggestion.props) };
 }
-async function createChartHandler(args) {
+async function createChartHandler(args, context = {}) {
   const intent = Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : void 0;
   const suggestions = (0, import_ai3.suggestCharts)(args.data, { intent, audience: args.audience, maxResults: 40 }).filter((suggestion) => metadataForComponent(suggestion.component).renderable).slice(0, 8);
   const selected = args.component ? suggestions.find((suggestion) => suggestion.component === args.component) : suggestions[0];
@@ -33991,7 +34405,7 @@ async function createChartHandler(args) {
       })
     };
   }
-  const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme });
+  const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme }, context);
   if (rendered.isError) {
     return {
       ...rendered,
@@ -34056,7 +34470,11 @@ var READ_ONLY_TOOL_ANNOTATIONS = {
   idempotentHint: true,
   openWorldHint: false
 };
-function createServer2(profile = "developer") {
+function createServer2(profile = "developer", options = {}) {
+  const serverRenderContext = {
+    signal: options.signal,
+    limits: options.limits ?? resolveMcpRenderExecutionLimits()
+  };
   const srv = new McpServer({
     name: "semiotic",
     version: schema.version || "3.0.0",
@@ -34222,7 +34640,7 @@ function createServer2(profile = "developer") {
       outputSchema: { status: external_exports3.enum(["render-proven", "blocked", "no-suggestion"]), component: external_exports3.string().optional(), surfaceVersion: external_exports3.string() },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
       _meta: { ui: { resourceUri: SEMIOTIC_CHART_WIDGET_URI }, "openai/outputTemplate": SEMIOTIC_CHART_WIDGET_URI }
-    }, createChartHandler);
+    }, (args) => createChartHandler(args, serverRenderContext));
     srv.registerTool("improveChart", {
       title: "Improve an existing chart",
       description: "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
@@ -34282,15 +34700,15 @@ function createServer2(profile = "developer") {
   );
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image, plus a "Render evidence" JSON block (mark counts by type, resolved axis domains, empty flag, annotation count, accessible name) \u2014 read the evidence instead of parsing the SVG to verify the chart actually rendered data marks. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG text by default or an image/png artifact when format='png', plus a "Render evidence" JSON block (mark counts by type, resolved axis domains, empty flag, annotation count, accessible name) \u2014 read the evidence instead of parsing the SVG to verify the chart actually rendered data marks. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
     {
       component: external_exports3.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: external_exports3.record(external_exports3.string(), external_exports3.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
       theme: external_exports3.record(external_exports3.string(), external_exports3.string()).optional().describe("CSS custom properties for theming, e.g. { '--semiotic-bg': '#1a1a2e', '--semiotic-text': '#ededed' }. Only --semiotic-* variables are applied."),
-      format: external_exports3.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns a Base64-encoded PNG image. PNG requires the 'sharp' package.")
+      format: external_exports3.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns image/png artifact data. PNG requires the 'sharp' package.")
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    renderChartHandler
+    (args) => renderChartHandler(args, serverRenderContext)
   );
   srv.registerTool(
     "renderInteractiveChart",
@@ -34322,7 +34740,7 @@ function createServer2(profile = "developer") {
         "openai/toolInvocation/invoked": "Rendered Semiotic chart."
       }
     },
-    renderInteractiveChartHandler
+    (args) => renderInteractiveChartHandler(args, serverRenderContext)
   );
   srv.tool(
     "diagnoseConfig",
@@ -34599,6 +35017,13 @@ async function main() {
     const maxBodyBytes = Number.isFinite(parsedMaxBody) && parsedMaxBody > 0 ? parsedMaxBody : 4194304;
     const operationLimits = resolveMcpOperationLimits();
     const openaiAppsChallengeToken = (process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim();
+    const renderExecutionLimits = resolveMcpRenderExecutionLimits();
+    const requestLimits = resolveMcpRequestLimits();
+    const requestLimiter = createMcpRequestLimiter(requestLimits);
+    const protocolVersions = (process.env.MCP_SUPPORTED_PROTOCOL_VERSIONS || "").split(",").map((version2) => version2.trim()).filter(Boolean);
+    const protocolVersion = protocolVersions[0] || DEFAULT_MCP_SUPPORTED_PROTOCOL_VERSION;
+    const authToken = (process.env.MCP_AUTH_TOKEN || "").trim();
+    const authScheme = (process.env.MCP_AUTH_SCHEME || "Bearer").trim() || "Bearer";
     const readJsonBodyWithLimit = (req) => new Promise((resolve2) => {
       let size = 0;
       let done = false;
@@ -34648,6 +35073,10 @@ async function main() {
       mode: "stateless"
     });
     const httpServer = http.createServer(async (req, res) => {
+      const requestAbortController = new AbortController();
+      const abortRequest = () => requestAbortController.abort();
+      req.on("aborted", abortRequest);
+      req.on("close", abortRequest);
       const origin = String(req.headers.origin || "").trim().toLowerCase();
       if (allowedOrigins.length > 0) {
         res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
@@ -34678,6 +35107,7 @@ async function main() {
           return "/";
         }
       })();
+      res.setHeader("MCP-Protocol-Version", protocolVersion);
       if (allowedHosts.length > 0) {
         const rawHost = String(req.headers.host || "").trim().toLowerCase();
         const normalizedHost = rawHost.startsWith("[") ? rawHost.replace(/^\[([^\]]+)\](?::\d+)?$/, "$1") : rawHost.split(":")[0];
@@ -34720,40 +35150,103 @@ async function main() {
         res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Method not allowed" }, id: null }));
         return;
       }
-      const bodyResult = await readJsonBodyWithLimit(req);
-      if (!bodyResult.ok) {
-        if (!res.headersSent) {
-          res.writeHead(bodyResult.status, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: bodyResult.code, message: bodyResult.message }, id: null }));
-        }
+      if (!hasSupportedAccept(String(req.headers.accept || ""))) {
+        console.warn("MCP request rejected", {
+          reason: "unsupported_accept",
+          method: req.method,
+          path: pathname,
+          headers: sanitizeHeadersForLog(req.headers)
+        });
+        writeJsonRpcError(
+          res,
+          406,
+          -32e3,
+          "Not Acceptable: this endpoint supports JSON transport only"
+        );
         return;
       }
-      const srv = createServer2(toolProfile);
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: void 0,
-        enableJsonResponse: true
-      });
-      let torndown = false;
-      const teardown = () => {
-        if (torndown) return;
-        torndown = true;
-        Promise.resolve(transport.close()).catch(() => {
+      if (!isSupportedProtocolVersion(
+        String(req.headers["mcp-protocol-version"] || ""),
+        protocolVersions
+      )) {
+        console.warn("MCP request rejected", {
+          reason: "unsupported_protocol_version",
+          method: req.method,
+          path: pathname,
+          protocolVersion: req.headers["mcp-protocol-version"]
         });
-        Promise.resolve(srv.close()).catch(() => {
+        writeJsonRpcError(
+          res,
+          400,
+          -32e3,
+          "Unsupported MCP protocol version"
+        );
+        return;
+      }
+      if (authToken && !isAuthorizedRequest(req, authToken, authScheme)) {
+        console.warn("MCP request rejected", {
+          reason: "unauthorized",
+          method: req.method,
+          path: pathname,
+          headers: sanitizeHeadersForLog(req.headers)
         });
-      };
-      res.on("close", teardown);
+        res.setHeader("WWW-Authenticate", `${authScheme} realm="semiotic-mcp"`);
+        writeJsonRpcError(res, 401, -32e3, "Unauthorized");
+        return;
+      }
+      const requestSlot = requestLimiter.tryAcquire();
+      if (!requestSlot.ok) {
+        res.setHeader("Retry-After", String(Math.max(1, Math.ceil(requestSlot.retryAfterMs / 1e3))));
+        console.warn("MCP request rejected", {
+          reason: requestSlot.code,
+          method: req.method,
+          path: pathname,
+          headers: sanitizeHeadersForLog(req.headers)
+        });
+        writeJsonRpcError(res, 429, -32e3, requestSlot.message);
+        return;
+      }
       try {
-        await srv.connect(transport);
-        await transport.handleRequest(req, res, bodyResult.body);
-      } catch (err) {
-        console.error("Request handling error:", err);
-        if (!res.headersSent) {
-          res.writeHead(500, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }));
+        const bodyResult = await readJsonBodyWithLimit(req);
+        if (!bodyResult.ok) {
+          if (!res.headersSent) {
+            res.writeHead(bodyResult.status, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: bodyResult.code, message: bodyResult.message }, id: null }));
+          }
+          return;
+        }
+        const srv = createServer2(toolProfile, {
+          signal: requestAbortController.signal,
+          limits: renderExecutionLimits
+        });
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: void 0,
+          enableJsonResponse: true
+        });
+        let torndown = false;
+        const teardown = () => {
+          if (torndown) return;
+          torndown = true;
+          Promise.resolve(transport.close()).catch(() => {
+          });
+          Promise.resolve(srv.close()).catch(() => {
+          });
+        };
+        res.on("close", teardown);
+        try {
+          await srv.connect(transport);
+          await transport.handleRequest(req, res, bodyResult.body);
+        } catch (err) {
+          console.error("Request handling error:", err);
+          if (!res.headersSent) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }));
+          }
+        } finally {
+          teardown();
         }
       } finally {
-        teardown();
+        requestSlot.release();
       }
     });
     httpServer.listen(port, host, () => {
