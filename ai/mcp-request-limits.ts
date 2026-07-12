@@ -78,7 +78,12 @@ export function createMcpRequestLimiter(limits: McpRequestLimits) {
 
   const resetWindowIfExpired = (now: number) => {
     const elapsed = now - requestWindowStart
-    if (elapsed >= limits.requestWindowMs) {
+    // Reset on window expiry, and also when `now` predates the anchor: the
+    // anchor is seeded from Date.now() at construction, but callers may drive
+    // tryAcquire() with an injected clock (deterministic tests) or a wall clock
+    // that stepped backward (NTP adjustment). A negative elapsed means the
+    // anchor is stale relative to the caller's timeline — start a fresh window.
+    if (elapsed >= limits.requestWindowMs || elapsed < 0) {
       requestWindowStart = now
       requestsInWindow = 0
     }
