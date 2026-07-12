@@ -47,6 +47,10 @@ import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
 import {
+  createMcpRequestLimiter,
+  resolveMcpRequestLimits,
+} from "./mcp-request-limits"
+import {
   formatMcpOperationLimitError,
   inspectMcpOperationInput,
   resolveMcpOperationLimits,
@@ -164,6 +168,147 @@ const componentNames = Object.keys(COMPONENT_REGISTRY).sort()
 const REPO = "nteract/semiotic"
 const SEMIOTIC_CHART_WIDGET_URI = "ui://semiotic/chart-widget.html"
 const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app"
+const DEFAULT_MCP_SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
+const DEFAULT_MCP_MAX_RENDER_WORK_MS = 2500
+const DEFAULT_MCP_MAX_PNG_CONVERSION_MS = 4000
+const DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS = 3000
+
+type McpRenderExecutionLimits = {
+  maxRenderWorkMs: number
+  maxPngConversionMs: number
+  maxInteractiveSanitizeMs: number
+}
+
+type RenderContext = {
+  signal?: AbortSignal
+  limits?: McpRenderExecutionLimits
+}
+
+type McpExecutionErrorCode = "MCP_RENDER_CANCELLED" | "MCP_RENDER_TIMEOUT"
+
+function writeJsonRpcError(
+  res: http.ServerResponse,
+  status: number,
+  code: number,
+  message: string,
+): void {
+  res.writeHead(status, { "Content-Type": "application/json" })
+  res.end(JSON.stringify({
+    jsonrpc: "2.0",
+    error: { code, message },
+    id: null,
+  }))
+}
+
+function isAuthorizedRequest(
+  req: import("http").IncomingMessage,
+  token: string,
+  scheme: string,
+): boolean {
+  if (!token) return true
+  const authorization = req.headers.authorization
+  if (typeof authorization !== "string") return false
+  const [providedScheme, providedToken] = authorization.split(/\s+/, 2)
+  return (
+    providedScheme?.toLowerCase() === scheme.toLowerCase() &&
+    Boolean(providedToken) &&
+    providedToken === token
+  )
+}
+
+function hasSupportedAccept(acceptHeader: string): boolean {
+  if (!acceptHeader) return true
+  const lower = acceptHeader.toLowerCase()
+  return lower.includes("*/*") || lower.includes("application/json") || lower.includes("text/event-stream")
+}
+
+function isSupportedProtocolVersion(
+  protocolVersion: string,
+  supported: string[],
+): boolean {
+  if (!protocolVersion || supported.length === 0) return true
+  return supported.includes(protocolVersion)
+}
+
+function sanitizeHeadersForLog(headers: http.IncomingHttpHeaders): Record<string, string> {
+  const output: Record<string, string> = {}
+  for (const [name, value] of Object.entries(headers)) {
+    if (!value) continue
+    const sample = Array.isArray(value) ? value[0] : value
+    if (typeof sample !== "string") continue
+    output[name] = name.toLowerCase() === "authorization" ? "***redacted***" : sample
+  }
+  return output
+}
+
+function parsePositiveInteger(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value || "", 10)
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback
+}
+
+function resolveMcpRenderExecutionLimits(
+  env: Record<string, string | undefined> = process.env,
+): McpRenderExecutionLimits {
+  return {
+    maxRenderWorkMs: parsePositiveInteger(env.MCP_MAX_RENDER_WORK_MS, DEFAULT_MCP_MAX_RENDER_WORK_MS),
+    maxPngConversionMs: parsePositiveInteger(env.MCP_MAX_PNG_CONVERSION_MS, DEFAULT_MCP_MAX_PNG_CONVERSION_MS),
+    maxInteractiveSanitizeMs: parsePositiveInteger(env.MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS, DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS),
+  }
+}
+
+function makeRenderExecutionError(
+  code: McpExecutionErrorCode,
+  label: string,
+  limitMs: number,
+  observedMs?: number,
+): Error {
+  const text = code === "MCP_RENDER_TIMEOUT"
+    ? `${label} exceeded ${limitMs} ms timeout budget (${observedMs ?? 0} ms). Set ${label === "PNG conversion" ? "MCP_MAX_PNG_CONVERSION_MS" : label.includes("sanitize") ? "MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS" : "MCP_MAX_RENDER_WORK_MS"} to adjust.`
+    : `${label} was canceled before completion.`
+  const error = new Error(text)
+  ;(error as any).code = code
+  return error
+}
+
+function throwIfRequestCanceled(signal?: AbortSignal, label = "render work"): void {
+  if (signal?.aborted) {
+    throw makeRenderExecutionError("MCP_RENDER_CANCELLED", label, 0)
+  }
+}
+
+async function runRenderStep<T>(
+  label: string,
+  limitMs: number,
+  signal: AbortSignal | undefined,
+  work: () => Promise<T> | T,
+): Promise<T> {
+  throwIfRequestCanceled(signal, label)
+  const started = Date.now()
+  const result = await Promise.resolve(work())
+  if (signal?.aborted) throw makeRenderExecutionError("MCP_RENDER_CANCELLED", label, 0)
+  const elapsed = Date.now() - started
+  if (limitMs > 0 && elapsed > limitMs) {
+    throw makeRenderExecutionError("MCP_RENDER_TIMEOUT", label, limitMs, elapsed)
+  }
+  return result
+}
+
+function isRenderExecutionError(error: unknown): error is { code: McpExecutionErrorCode; message: string } {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    (((error as { code?: unknown }).code === "MCP_RENDER_TIMEOUT") ||
+      ((error as { code?: unknown }).code === "MCP_RENDER_CANCELLED"))
+  )
+}
+
+function renderExecutionErrorResult(message: string, code: McpExecutionErrorCode): ToolResult {
+  return {
+    content: [{ type: "text" as const, text: message }],
+    isError: true,
+    structuredContent: { code },
+  }
+}
 
 function aiFilePath(fileName: string): string {
   return path.resolve(__dirname, "..", fileName)
@@ -224,19 +369,230 @@ function promptMessage(text: string) {
   }
 }
 
-function stripUnsafeSvg(svg: string): string {
-  // Defense-in-depth before the SVG is injected into the widget iframe via
-  // innerHTML: drop script elements, inline event handlers, and javascript:
-  // URLs. Semiotic's renderer never emits any of these, so stripping is safe.
-  return svg
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "")
-    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "")
-    .replace(/\s(href|xlink:href)\s*=\s*(["'])\s*javascript:[^"']*\2/gi, "")
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg"
+
+const SAFE_SVG_ELEMENTS = new Set([
+  "svg",
+  "g",
+  "path",
+  "line",
+  "polyline",
+  "polygon",
+  "rect",
+  "circle",
+  "ellipse",
+  "text",
+  "tspan",
+  "title",
+  "desc",
+  "defs",
+  "style",
+  "linearGradient",
+  "radialGradient",
+  "stop",
+  "clipPath",
+  "mask",
+  "pattern",
+  "filter",
+  "marker",
+  "use",
+  "symbol",
+])
+
+const SAFE_SVG_ATTRIBUTES = new Set([
+  "alignment-baseline",
+  "alignmentadjust",
+  "aria-hidden",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "clip-path",
+  "cx",
+  "cy",
+  "d",
+  "dx",
+  "dy",
+  "dominant-baseline",
+  "fill",
+  "fill-opacity",
+  "fill-rule",
+  "font-family",
+  "font-size",
+  "font-style",
+  "font-weight",
+  "gradientunits",
+  "gradienttransform",
+  "height",
+  "id",
+  "marker-height",
+  "marker-units",
+  "marker-width",
+  "marker-end",
+  "marker-mid",
+  "marker-start",
+  "offset",
+  "opacity",
+  "orientation",
+  "pattern-content-units",
+  "pattern-transform",
+  "pattern-units",
+  "preserveaspectratio",
+  "r",
+  "rx",
+  "ry",
+  "role",
+  "shape-rendering",
+  "spreadmethod",
+  "startoffset",
+  "stroke",
+  "stroke-linecap",
+  "stroke-linejoin",
+  "stroke-opacity",
+  "stroke-width",
+  "style",
+  "text-anchor",
+  "transform",
+  "viewbox",
+  "width",
+  "x",
+  "x1",
+  "x2",
+  "xmlns",
+  "xmlns:xlink",
+  "y",
+  "y1",
+  "y2",
+  "xml:space",
+  "class",
+])
+
+const SAFE_URL_ATTR_PREFIXES = [
+  "http://",
+  "https://",
+  "#",
+  "/",
+  "./",
+  "../",
+  "mailto:",
+  "tel:",
+  "data:image/",
+]
+
+function isSafeUrlValue(value: string): boolean {
+  const trimmed = value.trim().toLowerCase()
+  if (!trimmed) return true
+  if (/^(javascript|vbscript|file):/i.test(trimmed)) return false
+  return SAFE_URL_ATTR_PREFIXES.some(prefix => trimmed.startsWith(prefix))
+}
+
+function sanitizeStyleValue(value: string): string {
+  return value
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/@import[^;]*;/gi, "")
+    .replace(/expression\s*\([^)]*\)/gi, "")
+    .replace(/url\(\s*["']?\s*([^)"']+)\s*["']?\s*\)/gi, (_match, rawUrl: string) => {
+      const safeUrl = String(rawUrl || "").trim().toLowerCase()
+      if (safeUrl && !isSafeUrlValue(safeUrl)) return "url()"
+      return `url(${rawUrl})`
+    })
+}
+
+function isAllowedSvgAttribute(name: string): boolean {
+  const lower = name.toLowerCase()
+  if (lower.startsWith("on")) return false
+  if (lower.startsWith("data-")) return true
+  if (lower.startsWith("aria-")) return true
+  if (lower.startsWith("xml:")) return true
+  if (lower === "xmlns" || lower.startsWith("xmlns:")) return true
+  if (SAFE_SVG_ATTRIBUTES.has(lower)) return true
+  return /^[a-z][a-z0-9-_:.]*$/.test(lower)
+}
+
+function sanitizeSvgAttribute(name: string, value: string): string | null {
+  const lower = name.toLowerCase()
+  if (!isAllowedSvgAttribute(name)) return null
+  if ((lower === "href" || lower === "xlink:href" || lower === "src") && !isSafeUrlValue(value)) {
+    return null
+  }
+  if (lower === "style") return sanitizeStyleValue(value)
+  return value
+}
+
+function sanitizeSvgNode(node: ChildNode, doc: Document): Node | null {
+  if (node.nodeType === 3 || node.nodeType === 4) {
+    const text = node.textContent ?? ""
+    return text ? doc.createTextNode(text) : null
+  }
+  if (node.nodeType !== 1) return null
+
+  const source = node as Element
+  const tag = source.tagName
+  if (!SAFE_SVG_ELEMENTS.has(tag)) return null
+
+  const safe = doc.createElementNS(SVG_NAMESPACE, tag)
+  const isStyleTag = tag === "style"
+
+  if (!isStyleTag) {
+    for (const attribute of Array.from(source.attributes)) {
+      const safeValue = sanitizeSvgAttribute(attribute.name, attribute.value)
+      if (safeValue == null) continue
+      safe.setAttribute(attribute.name, safeValue)
+    }
+  } else {
+    const styleText = sanitizeStyleValue(source.textContent ?? "")
+    if (styleText) {
+      safe.appendChild(doc.createTextNode(styleText))
+    }
+    return safe
+  }
+
+  for (const child of Array.from(source.childNodes)) {
+    const sanitized = sanitizeSvgNode(child, doc)
+    if (sanitized) safe.appendChild(sanitized)
+  }
+
+  return safe
+}
+
+// jsdom is an optional dependency loaded lazily so servers that never render
+// interactive widgets don't pay its load cost. Kick the import off eagerly
+// (module load, not the first request) and memoize it, so the one-time
+// cost of loading it is amortized in the background instead of being
+// charged against the first widget render's sanitize-step timeout budget.
+let jsdomModulePromise: Promise<typeof import("jsdom")> | null = null
+function loadJsdomModule(): Promise<typeof import("jsdom")> {
+  if (!jsdomModulePromise) jsdomModulePromise = import("jsdom")
+  return jsdomModulePromise
+}
+void loadJsdomModule().catch(() => {})
+
+async function sanitizeSvgForWidget(svg: string): Promise<string> {
+  const trimmed = svg.trim()
+  if (!trimmed) return ""
+  try {
+    const { JSDOM } = await loadJsdomModule()
+    const parsed = new JSDOM(trimmed, { contentType: "image/svg+xml" })
+    const parsedDocument = parsed.window.document
+    const sourceRoot = parsedDocument.documentElement
+
+    if (!sourceRoot || sourceRoot.tagName.toLowerCase() !== "svg") return ""
+    if (parsedDocument.getElementsByTagName("parsererror")[0]) return ""
+
+    const cleanDocument = parsedDocument.implementation.createDocument(SVG_NAMESPACE, null, null)
+    const safeRoot = sanitizeSvgNode(sourceRoot, cleanDocument) as Element | null
+    if (!safeRoot) return ""
+
+    cleanDocument.appendChild(safeRoot)
+    return new parsed.window.XMLSerializer().serializeToString(safeRoot)
+  } catch {
+    return ""
+  }
 }
 
 function parseRenderEvidence(result: ToolResult): Record<string, unknown> | null {
-  const evidenceText = result.content.find((block) => block.text.startsWith("Render evidence:\n"))?.text
+  const evidenceText = result.content.find(
+    (block): block is ToolTextContent => block.type === "text" && block.text.startsWith("Render evidence:\n")
+  )?.text
   if (!evidenceText) return null
   try {
     return JSON.parse(evidenceText.replace(/^Render evidence:\n/, ""))
@@ -536,15 +892,28 @@ type SuggestChartResult =
       }>
     }
 
+type ToolTextContent = {
+  type: "text"
+  text: string
+}
+
+type ToolImageContent = {
+  type: "image"
+  data: string
+  mimeType: "image/png"
+}
+
+type ToolContent = ToolTextContent | ToolImageContent
+
 type ToolResult = {
-  content: Array<{ type: "text"; text: string }>
+  content: ToolContent[]
   isError?: boolean
   structuredContent?: Record<string, unknown>
   _meta?: Record<string, unknown>
 }
 
 /**
- * A render can turn a compact request into a large SVG, PNG data URL, or Apps
+ * A render can turn a compact request into SVG, PNG image output, or Apps
  * result. Never return a partial SVG: an explicit tool error is both safer and
  * more useful to a caller than malformed markup or an opaque transport drop.
  */
@@ -667,7 +1036,12 @@ async function suggestChartHandler(args: {
   return { content, structuredContent: result }
 }
 
-async function renderChartHandler(args: { component?: string; props?: Record<string, any>; theme?: Record<string, string>; format?: string }): Promise<ToolResult> {
+async function renderChartHandler(
+  args: { component?: string; props?: Record<string, any>; theme?: Record<string, string>; format?: string },
+  context: RenderContext = {},
+): Promise<ToolResult> {
+  const limits = context.limits ?? resolveMcpRenderExecutionLimits()
+  const signal = context.signal
   const component = args.component
   const props: Record<string, any> = args.props ?? {}
   const theme = args.theme
@@ -694,7 +1068,20 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
     })
   }
 
-  const result = renderHOCToSVG(component, props)
+  let result: ReturnType<typeof renderHOCToSVG>
+  try {
+    result = await runRenderStep(
+      "render work",
+      limits.maxRenderWorkMs,
+      signal,
+      () => renderHOCToSVG(component, props),
+    )
+  } catch (err) {
+    if (isRenderExecutionError(err)) {
+      return capRenderChartResult(renderExecutionErrorResult(err.message, err.code))
+    }
+    throw err
+  }
   if (result.error) {
     return capRenderChartResult({
       content: [{ type: "text" as const, text: result.error }],
@@ -713,15 +1100,23 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   // handful of MCP-renderable charts) keep the React-SSR SVG from
   // renderHOCToSVG above — which also already ran prop validation — and
   // simply omit the evidence block.
-  let evidenceBlock: { type: "text"; text: string } | null = null
+  let evidenceBlock: ToolTextContent | null = null
   try {
-    const { svg: evidenceSvg, evidence } = renderChartWithEvidence(component as never, props)
+    const { svg: evidenceSvg, evidence } = await runRenderStep(
+      "layout/render evidence",
+      limits.maxRenderWorkMs,
+      signal,
+      () => renderChartWithEvidence(component as never, props),
+    )
     svg = evidenceSvg
     evidenceBlock = {
       type: "text" as const,
       text: `Render evidence:\n${JSON.stringify(evidence, null, 2)}`,
     }
-  } catch {
+  } catch (err) {
+    if (isRenderExecutionError(err)) {
+      return capRenderChartResult(renderExecutionErrorResult(err.message, (err as any).code))
+    }
     // No server render config for this component — say so explicitly rather
     // than silently omitting the block, so an agent can distinguish "no
     // evidence is produced for this component" from "evidence was forgotten".
@@ -736,45 +1131,62 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   // We add a <style> block inside the SVG rather than wrapping in a <div>,
   // because sharp requires pure SVG input for PNG rasterization.
   if (theme && Object.keys(theme).length > 0) {
-    // Sanitize both the key (must be a --semiotic-* custom property) AND the
-    // value before splicing it into the <style> block. A value containing
-    // `</style>`, `}`, `;`, `@`, `url(...)`, `expression(...)`, `javascript:`,
-    // or a CSS comment could break out of the rule/block, so drop any such
-    // entry rather than trust it. Legitimate color / font / size / shadow
-    // tokens use none of these characters.
-    const isUnsafeCssValue = (v: string) =>
-      /[<>{}\\;@]/.test(v) || /url\(|expression\(|javascript:|\/\*|\*\//i.test(v)
-    const validVars = Object.entries(theme)
-      .filter(([k, v]) => k.startsWith("--semiotic-") && typeof v === "string" && !isUnsafeCssValue(v))
-      .map(([k, v]) => `${k}: ${v}`)
-      .join("; ")
-    if (validVars) {
-      svg = svg.replace(/<svg([^>]*)>/, `<svg$1><style>:root { ${validVars} }</style>`)
+    try {
+      svg = await runRenderStep(
+        "theme application",
+        limits.maxRenderWorkMs,
+        signal,
+        () => {
+          const isUnsafeCssValue = (v: string) =>
+            /<|>|{|}|@|expression\(|javascript:|url\(|\*\//i.test(v)
+          const validVars = Object.entries(theme)
+            .filter(([k, v]) => k.startsWith("--semiotic-") && typeof v === "string" && !isUnsafeCssValue(v))
+            .map(([k, v]) => `${k}: ${v}`)
+            .join("; ")
+          if (!validVars) return svg
+          return svg.replace(/<svg([^>]*)>/, `<svg$1><style>:root { ${validVars} }</style>`)
+        },
+      )
+    } catch (err) {
+      if (isRenderExecutionError(err)) {
+        return capRenderChartResult(renderExecutionErrorResult(err.message, (err as any).code))
+      }
+      throw err
     }
   }
 
   // PNG rasterization via sharp (optional dependency)
   if (format === "png") {
     try {
-      // Dynamic import — sharp is an optional dependency
-      const sharpMod = await (Function('return import("sharp")')() as Promise<any>)
-      const sharpFn = sharpMod.default || sharpMod
-      const pngBuffer: Buffer = await sharpFn(Buffer.from(svg)).png().toBuffer()
+      const pngBuffer: Buffer = await runRenderStep(
+        "PNG conversion",
+        limits.maxPngConversionMs,
+        signal,
+        async () => {
+          const sharpMod = await (Function("return import(\"sharp\")")() as Promise<any>)
+          const sharpFn = sharpMod.default || sharpMod
+          return sharpFn(Buffer.from(svg)).png().toBuffer()
+        },
+      )
       const base64 = pngBuffer.toString("base64")
       return capRenderChartResult({
         content: [
-          { type: "text" as const, text: `data:image/png;base64,${base64}` },
+          { type: "image", data: base64, mimeType: "image/png" },
           ...(evidenceBlock ? [evidenceBlock] : []),
         ],
       })
-    } catch (err: any) {
-      if (err.code === "MODULE_NOT_FOUND" || err.code === "ERR_MODULE_NOT_FOUND") {
+    } catch (err: unknown) {
+      if (isRenderExecutionError(err)) {
+        return capRenderChartResult(renderExecutionErrorResult((err as any).message, (err as any).code))
+      }
+      const typedErr = err as { code?: string; message?: string }
+      if (typedErr.code === "MODULE_NOT_FOUND" || typedErr.code === "ERR_MODULE_NOT_FOUND") {
         return capRenderChartResult({
           content: [{ type: "text" as const, text: `PNG output requires the 'sharp' package. Install it with: npm install sharp\n\nFalling back to SVG output:\n\n${svg}` }],
         })
       }
       return capRenderChartResult({
-        content: [{ type: "text" as const, text: `PNG conversion failed: ${err.message}\n\nSVG output:\n\n${svg}` }],
+        content: [{ type: "text" as const, text: `PNG conversion failed: ${typedErr.message || "unknown error"}\n\nSVG output:\n\n${svg}` }],
         isError: true,
       })
     }
@@ -788,11 +1200,16 @@ async function renderChartHandler(args: { component?: string; props?: Record<str
   })
 }
 
-async function renderInteractiveChartHandler(args: {
-  component?: string
-  props?: Record<string, any>
-  theme?: Record<string, string>
-}): Promise<ToolResult> {
+async function renderInteractiveChartHandler(
+  args: {
+    component?: string
+    props?: Record<string, any>
+    theme?: Record<string, string>
+  },
+  context: RenderContext = {},
+): Promise<ToolResult> {
+  const limits = context.limits ?? resolveMcpRenderExecutionLimits()
+  const signal = context.signal
   const component = args.component
   const props: Record<string, any> = args.props ?? {}
   const rendered = await renderChartHandler({
@@ -800,11 +1217,30 @@ async function renderInteractiveChartHandler(args: {
     props,
     theme: args.theme,
     format: "svg",
-  })
+  }, context)
 
   if (rendered.isError) return rendered
 
-  const svg = stripUnsafeSvg(rendered.content[0]?.text ?? "")
+  const svgBlock = rendered.content.find((block): block is ToolTextContent =>
+    block.type === "text" && block.text.trimStart().startsWith("<")
+  )
+  let svg: string
+  try {
+    svg = await runRenderStep(
+      "interactive SVG sanitization",
+      limits.maxInteractiveSanitizeMs,
+      signal,
+      () => sanitizeSvgForWidget(svgBlock?.text ?? ""),
+    )
+  } catch (err) {
+    if (isRenderExecutionError(err)) {
+      return capInteractiveWidgetResult(renderExecutionErrorResult(err.message, (err as any).code))
+    }
+    return capInteractiveWidgetResult({
+      content: [{ type: "text" as const, text: "Interactive SVG sanitization failed." }],
+      isError: true,
+    })
+  }
   const outputLimits = resolveMcpRenderOutputLimits()
   const evidence = createWidgetEvidencePreview(parseRenderEvidence(rendered), outputLimits)
   const dataPreview = createWidgetDataPreview(props, outputLimits)
@@ -1510,14 +1946,17 @@ function compactPublicSuggestion<T extends { props: Record<string, unknown> }>(
   return { ...suggestion, props: compactPublicChartProps(suggestion.props) }
 }
 
-async function createChartHandler(args: {
-  data: Record<string, unknown>[]
-  intent?: string | string[]
-  audience?: AudienceProfile
-  component?: string
-  props?: Record<string, unknown>
-  theme?: Record<string, string>
-}): Promise<ToolResult> {
+async function createChartHandler(
+  args: {
+    data: Record<string, unknown>[]
+    intent?: string | string[]
+    audience?: AudienceProfile
+    component?: string
+    props?: Record<string, unknown>
+    theme?: Record<string, string>
+  },
+  context: RenderContext = {},
+): Promise<ToolResult> {
   const intent = (Array.isArray(args.intent) ? args.intent : args.intent ? [args.intent] : undefined) as IntentId[] | undefined
   const suggestions = suggestChartsFromCapabilities(args.data, { intent, audience: args.audience, maxResults: 40 })
     .filter((suggestion) => metadataForComponent(suggestion.component).renderable)
@@ -1558,7 +1997,7 @@ async function createChartHandler(args: {
       }),
     }
   }
-  const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme })
+  const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme }, context)
   if (rendered.isError) {
     return {
       ...rendered,
@@ -1648,7 +2087,16 @@ const READ_ONLY_TOOL_ANNOTATIONS = {
 // HTTP mode needs one instance per session (McpServer can only connect to one transport).
 // Stdio mode uses a single instance.
 
-function createServer(profile: ToolProfile = "developer"): McpServer {
+type McpServerOptions = {
+  signal?: AbortSignal
+  limits?: McpRenderExecutionLimits
+}
+
+function createServer(profile: ToolProfile = "developer", options: McpServerOptions = {}): McpServer {
+  const serverRenderContext: RenderContext = {
+    signal: options.signal,
+    limits: options.limits ?? resolveMcpRenderExecutionLimits(),
+  }
   const srv = new McpServer({
     name: "semiotic",
     version: schema.version || "3.0.0",
@@ -1825,7 +2273,7 @@ function createServer(profile: ToolProfile = "developer"): McpServer {
       outputSchema: { status: z.enum(["render-proven", "blocked", "no-suggestion"]), component: z.string().optional(), surfaceVersion: z.string() },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
       _meta: { ui: { resourceUri: SEMIOTIC_CHART_WIDGET_URI }, "openai/outputTemplate": SEMIOTIC_CHART_WIDGET_URI },
-    }, createChartHandler)
+    }, (args) => createChartHandler(args, serverRenderContext))
     srv.registerTool("improveChart", {
       title: "Improve an existing chart",
       description: "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
@@ -1888,15 +2336,15 @@ function createServer(profile: ToolProfile = "developer"): McpServer {
 
   srv.tool(
     "renderChart",
-    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG string (default) or Base64-encoded PNG image, plus a "Render evidence" JSON block (mark counts by type, resolved axis domains, empty flag, annotation count, accessible name) — read the evidence instead of parsing the SVG to verify the chart actually rendered data marks. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
+    `Render a Semiotic chart to static SVG or PNG. This is a static snapshot path: props must include data immediately, and ref/push-mode charts cannot be rendered through this tool. Returns SVG text by default or an image/png artifact when format='png', plus a "Render evidence" JSON block (mark counts by type, resolved axis domains, empty flag, annotation count, accessible name) — read the evidence instead of parsing the SVG to verify the chart actually rendered data marks. Optionally pass theme CSS custom properties (--semiotic-bg, --semiotic-text, etc.) to style the output. PNG requires the 'sharp' package to be installed. Available components: ${componentNames.join(", ")}.`,
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
       props: z.record(z.string(), z.unknown()).optional().describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
       theme: z.record(z.string(), z.string()).optional().describe("CSS custom properties for theming, e.g. { '--semiotic-bg': '#1a1a2e', '--semiotic-text': '#ededed' }. Only --semiotic-* variables are applied."),
-      format: z.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns a Base64-encoded PNG image. PNG requires the 'sharp' package."),
+      format: z.enum(["svg", "png"]).optional().describe("Output format: 'svg' (default) returns SVG markup, 'png' returns image/png artifact data. PNG requires the 'sharp' package."),
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    renderChartHandler
+    (args) => renderChartHandler(args, serverRenderContext),
   )
 
   srv.registerTool(
@@ -1929,7 +2377,7 @@ function createServer(profile: ToolProfile = "developer"): McpServer {
         "openai/toolInvocation/invoked": "Rendered Semiotic chart.",
       },
     },
-    renderInteractiveChartHandler
+    (args) => renderInteractiveChartHandler(args, serverRenderContext),
   )
 
   srv.tool(
@@ -2304,6 +2752,16 @@ async function main() {
     // or nested containers. Apply these before constructing an MCP server.
     const operationLimits = resolveMcpOperationLimits()
     const openaiAppsChallengeToken = (process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim()
+    const renderExecutionLimits = resolveMcpRenderExecutionLimits()
+    const requestLimits = resolveMcpRequestLimits()
+    const requestLimiter = createMcpRequestLimiter(requestLimits)
+    const protocolVersions = (process.env.MCP_SUPPORTED_PROTOCOL_VERSIONS || "")
+      .split(",")
+      .map((version) => version.trim())
+      .filter(Boolean)
+    const protocolVersion = protocolVersions[0] || DEFAULT_MCP_SUPPORTED_PROTOCOL_VERSION
+    const authToken = (process.env.MCP_AUTH_TOKEN || "").trim()
+    const authScheme = (process.env.MCP_AUTH_SCHEME || "Bearer").trim() || "Bearer"
 
     // Read the request body into memory with a hard byte cap. Returns the parsed
     // JSON, or a sentinel for an over-limit / malformed body. Reading it here
@@ -2368,6 +2826,11 @@ async function main() {
       })
 
     const httpServer = http.createServer(async (req, res) => {
+      const requestAbortController = new AbortController()
+      const abortRequest = () => requestAbortController.abort()
+      req.on("aborted", abortRequest)
+      req.on("close", abortRequest)
+
       const origin = String(req.headers.origin || "").trim().toLowerCase()
       // CORS: wildcard when no origin allowlist is configured; otherwise echo
       // only an allowed origin (and Vary on Origin so caches don't cross wires).
@@ -2406,6 +2869,7 @@ async function main() {
           return "/"
         }
       })()
+      res.setHeader("MCP-Protocol-Version", protocolVersion)
 
       // Host-header allowlist (DNS-rebinding defense). Opt-in via env.
       // req.headers.host usually carries a port (localhost:3001) and may be
@@ -2479,51 +2943,118 @@ async function main() {
         return
       }
 
-      // Enforce the hard body-size ceiling and parse the JSON ourselves, then
-      // hand the parsed body to the transport (rather than let it drain the
-      // stream unbounded).
-      const bodyResult = await readJsonBodyWithLimit(req)
-      if (!bodyResult.ok) {
-        if (!res.headersSent) {
-          res.writeHead(bodyResult.status, { "Content-Type": "application/json" })
-          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: bodyResult.code, message: bodyResult.message }, id: null }))
-        }
+      if (!hasSupportedAccept(String(req.headers.accept || ""))) {
+        console.warn("MCP request rejected", {
+          reason: "unsupported_accept",
+          method: req.method,
+          path: pathname,
+          headers: sanitizeHeadersForLog(req.headers),
+        })
+        writeJsonRpcError(
+          res,
+          406,
+          -32000,
+          "Not Acceptable: this endpoint supports JSON transport only",
+        )
         return
       }
 
-      // Stateless: one ephemeral server+transport for this request only. Reusing
-      // a stateless transport across requests is a known SDK bug, so we never do.
-      const srv = createServer(toolProfile)
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: undefined,
-        enableJsonResponse: true,
-      })
-      // Tear down exactly once. enableJsonResponse returns a single JSON body,
-      // so a normal request is done the moment handleRequest resolves — close
-      // in finally rather than waiting on res "close", which may not fire
-      // promptly on keep-alive connections and would otherwise leak a
-      // connected server+transport per request. The close handler stays for
-      // aborted requests that never reach finally; the guard makes the two
-      // paths idempotent.
-      let torndown = false
-      const teardown = () => {
-        if (torndown) return
-        torndown = true
-        Promise.resolve(transport.close()).catch(() => {})
-        Promise.resolve(srv.close()).catch(() => {})
+      if (!isSupportedProtocolVersion(
+        String(req.headers["mcp-protocol-version"] || ""),
+        protocolVersions,
+      )) {
+        console.warn("MCP request rejected", {
+          reason: "unsupported_protocol_version",
+          method: req.method,
+          path: pathname,
+          protocolVersion: req.headers["mcp-protocol-version"],
+        })
+        writeJsonRpcError(
+          res,
+          400,
+          -32000,
+          "Unsupported MCP protocol version",
+        )
+        return
       }
-      res.on("close", teardown)
+
+      if (authToken && !isAuthorizedRequest(req, authToken, authScheme)) {
+        console.warn("MCP request rejected", {
+          reason: "unauthorized",
+          method: req.method,
+          path: pathname,
+          headers: sanitizeHeadersForLog(req.headers),
+        })
+        res.setHeader("WWW-Authenticate", `${authScheme} realm="semiotic-mcp"`)
+        writeJsonRpcError(res, 401, -32000, "Unauthorized")
+        return
+      }
+
+      const requestSlot = requestLimiter.tryAcquire()
+      if (!requestSlot.ok) {
+        res.setHeader("Retry-After", String(Math.max(1, Math.ceil(requestSlot.retryAfterMs / 1000))))
+        console.warn("MCP request rejected", {
+          reason: requestSlot.code,
+          method: req.method,
+          path: pathname,
+          headers: sanitizeHeadersForLog(req.headers),
+        })
+        writeJsonRpcError(res, 429, -32000, requestSlot.message)
+        return
+      }
+
       try {
-        await srv.connect(transport)
-        await transport.handleRequest(req, res, bodyResult.body)
-      } catch (err) {
-        console.error("Request handling error:", err)
-        if (!res.headersSent) {
-          res.writeHead(500, { "Content-Type": "application/json" })
-          res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }))
+        // Enforce the hard body-size ceiling and parse the JSON ourselves, then
+        // hand the parsed body to the transport (rather than let it drain the
+        // stream unbounded).
+        const bodyResult = await readJsonBodyWithLimit(req)
+        if (!bodyResult.ok) {
+          if (!res.headersSent) {
+            res.writeHead(bodyResult.status, { "Content-Type": "application/json" })
+            res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: bodyResult.code, message: bodyResult.message }, id: null }))
+          }
+          return
+        }
+
+        // Stateless: one ephemeral server+transport for this request only. Reusing
+        // a stateless transport across requests is a known SDK bug, so we never do.
+        const srv = createServer(toolProfile, {
+          signal: requestAbortController.signal,
+          limits: renderExecutionLimits,
+        })
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: undefined,
+          enableJsonResponse: true,
+        })
+        // Tear down exactly once. enableJsonResponse returns a single JSON body,
+        // so a normal request is done the moment handleRequest resolves — close
+        // in finally rather than waiting on res "close", which may not fire
+        // promptly on keep-alive connections and would otherwise leak a
+        // connected server+transport per request. The close handler stays for
+        // aborted requests that never reach finally; the guard makes the two
+        // paths idempotent.
+        let torndown = false
+        const teardown = () => {
+          if (torndown) return
+          torndown = true
+          Promise.resolve(transport.close()).catch(() => {})
+          Promise.resolve(srv.close()).catch(() => {})
+        }
+        res.on("close", teardown)
+        try {
+          await srv.connect(transport)
+          await transport.handleRequest(req, res, bodyResult.body)
+        } catch (err) {
+          console.error("Request handling error:", err)
+          if (!res.headersSent) {
+            res.writeHead(500, { "Content-Type": "application/json" })
+            res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }))
+          }
+        } finally {
+          teardown()
         }
       } finally {
-        teardown()
+        requestSlot.release()
       }
     })
 

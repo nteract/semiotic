@@ -50,11 +50,6 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
-      "path": "src/components/charts/physics/PhysicsCharts.test.tsx",
-      "maxLines": 1510,
-      "reason": "Grandfathered test file above hard limit (1500). Split on meaningful touch; do not grow past maxLines."
-    },
-    {
       "path": "src/components/charts/shared/annotationRules.tsx",
       "maxLines": 1073,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
@@ -102,11 +97,6 @@
     {
       "path": "src/components/recipes/tokenEncoding.ts",
       "maxLines": 860,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
-    },
-    {
-      "path": "src/components/semiotic-themes.ts",
-      "maxLines": 812,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {

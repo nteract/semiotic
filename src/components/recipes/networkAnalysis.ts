@@ -43,6 +43,53 @@ export function buildAdjacency(
   return adj
 }
 
+/**
+ * Build a **directed** adjacency map: node id → set of successor ids, following
+ * `source → target` only. The directed sibling of {@link buildAdjacency}, for
+ * DAG / flow / dependency graphs where edge direction carries meaning.
+ */
+export function buildDirectedAdjacency(
+  nodes: ReadonlyArray<GraphNode>,
+  edges: ReadonlyArray<GraphEdge>
+): Map<string, Set<string>> {
+  const adj = new Map<string, Set<string>>()
+  for (const n of nodes) adj.set(n.id, new Set())
+  for (const e of edges) {
+    if (!adj.has(e.source)) adj.set(e.source, new Set())
+    if (!adj.has(e.target)) adj.set(e.target, new Set())
+    adj.get(e.source)!.add(e.target)
+  }
+  return adj
+}
+
+/**
+ * The set of nodes reachable from `start` by following the adjacency (BFS).
+ * Works on either an undirected ({@link buildAdjacency}) or directed
+ * ({@link buildDirectedAdjacency}) adjacency map.
+ *
+ * `start` itself is excluded unless it is reachable via a cycle, or
+ * `includeStart` is set — so on a DAG this is exactly the descendant set, and
+ * on a cyclic graph a node that can reach itself is reported as such.
+ */
+export function reachableFrom(
+  adjacency: Map<string, Set<string>>,
+  start: string,
+  options: { includeStart?: boolean } = {}
+): Set<string> {
+  const reached = new Set<string>()
+  const queue: string[] = [...(adjacency.get(start) ?? [])]
+  let head = 0
+  while (head < queue.length) {
+    const cur = queue[head]
+    head += 1
+    if (reached.has(cur)) continue
+    reached.add(cur)
+    for (const nb of adjacency.get(cur) ?? []) queue.push(nb)
+  }
+  if (options.includeStart) reached.add(start)
+  return reached
+}
+
 /** Degree (neighbor count) per node id. */
 export function degree(
   nodes: ReadonlyArray<GraphNode>,

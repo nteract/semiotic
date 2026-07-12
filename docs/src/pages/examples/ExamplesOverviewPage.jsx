@@ -3,12 +3,10 @@ import { Link } from "react-router-dom"
 import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
 import "./ExamplesOverviewPage.css"
 
-
 const PREVIEW_COMPONENTS = {
+  "insight-forge": MiniInsightForgePreview,
   watermarks: MiniWatermarksPreview,
-  "plinko-quantile": MiniPlinkoQuantilePreview,
   "stakeholder-journey": MiniStakeholderJourneyPreview,
-  "queue-weather": MiniQueueWeatherPreview,
   "merge-pressure": MiniMergePressurePreview,
   nimby: MiniNimbyPreview,
   combined: () => <MiniRadialPreview combined />,
@@ -55,7 +53,12 @@ function MissingExamplePreview({ preview }) {
       data-example-preview-missing="true"
     >
       <rect width="242" height="96" rx="6" fill="var(--surface-1)" />
-      <path d="M20 76 90 16l54 48 28-26 50 38" fill="none" stroke="var(--text-secondary)" strokeWidth="2" />
+      <path
+        d="M20 76 90 16l54 48 28-26 50 38"
+        fill="none"
+        stroke="var(--text-secondary)"
+        strokeWidth="2"
+      />
       <text x="121" y="86" textAnchor="middle" fill="var(--text-secondary)" fontSize="9">
         Preview unavailable
       </text>
@@ -71,9 +74,9 @@ export default function ExamplesOverviewPage() {
       EXAMPLES.filter(
         (example) =>
           (frame === "all" || example.frames?.includes(frame)) &&
-          (topic === "all" || example.topics?.includes(topic))
+          (topic === "all" || example.topics?.includes(topic)),
       ),
-    [frame, topic]
+    [frame, topic],
   )
   const hasActiveFilters = frame !== "all" || topic !== "all"
 
@@ -83,7 +86,7 @@ export default function ExamplesOverviewPage() {
         (kind !== "frames" || value === "all" || example.frames?.includes(value)) &&
         (kind !== "topics" || value === "all" || example.topics?.includes(value)) &&
         (kind === "frames" || frame === "all" || example.frames?.includes(frame)) &&
-        (kind === "topics" || topic === "all" || example.topics?.includes(topic))
+        (kind === "topics" || topic === "all" || example.topics?.includes(topic)),
     ).length
 
   return (
@@ -92,8 +95,8 @@ export default function ExamplesOverviewPage() {
         <div style={styles.eyebrow}>Semiotic in practice</div>
         <h1 style={styles.title}>Examples</h1>
         <p style={styles.lede}>
-          Complete visual experiences that combine charts, annotations,
-          controls, interaction, and editorial polish.
+          Complete visual experiences that combine charts, annotations, controls, interaction, and
+          editorial polish.
         </p>
       </div>
 
@@ -140,7 +143,9 @@ export default function ExamplesOverviewPage() {
               {example.badges?.length > 0 && (
                 <div style={styles.badges} aria-label="Example capabilities">
                   {example.badges.map((badge) => (
-                    <span key={badge} style={styles.badge}>{badge}</span>
+                    <span key={badge} style={styles.badge}>
+                      {badge}
+                    </span>
                   ))}
                 </div>
               )}
@@ -159,7 +164,11 @@ export default function ExamplesOverviewPage() {
 
 function ExampleFilterGroup({ label, options, selected, onSelect, countForOption }) {
   return (
-    <div className="examples-filter-group" role="group" aria-label={`Filter by ${label.toLowerCase()}`}>
+    <div
+      className="examples-filter-group"
+      role="group"
+      aria-label={`Filter by ${label.toLowerCase()}`}
+    >
       <span className="examples-filter-label">{label}</span>
       <div className="examples-filter-options">
         <FilterOption
@@ -198,9 +207,15 @@ function FilterOption({ label, count, selected, onClick }) {
 
 function MiniWatermarksPreview() {
   const events = [
-    [24, 25, "#244f72"], [45, 31, "#244f72"], [66, 53, "#23735d"],
-    [89, 42, "#23735d"], [112, 63, "#a73b45"], [137, 36, "#244f72"],
-    [160, 67, "#a73b45"], [185, 48, "#23735d"], [206, 71, "#a73b45"],
+    [24, 25, "#244f72"],
+    [45, 31, "#244f72"],
+    [66, 53, "#23735d"],
+    [89, 42, "#23735d"],
+    [112, 63, "#a73b45"],
+    [137, 36, "#244f72"],
+    [160, 67, "#a73b45"],
+    [185, 48, "#23735d"],
+    [206, 71, "#a73b45"],
   ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
@@ -222,73 +237,50 @@ function MiniWatermarksPreview() {
               stroke="#b8c3c9"
             />
             {closed && (
-              <line x1={x + 4} x2={x + 32} y1="42" y2="42" stroke="#a73b45" strokeWidth="4" strokeLinecap="round" />
+              <line
+                x1={x + 4}
+                x2={x + 32}
+                y1="42"
+                y2="42"
+                stroke="#a73b45"
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
             )}
           </g>
         )
       })}
-      <line x1="137" x2="137" y1="20" y2="83" stroke="#d39b2a" strokeWidth="3" strokeDasharray="6 4" />
+      <line
+        x1="137"
+        x2="137"
+        y1="20"
+        y2="83"
+        stroke="#d39b2a"
+        strokeWidth="3"
+        strokeDasharray="6 4"
+      />
       {events.map(([x, y, fill], index) => (
-        <circle key={index} cx={x} cy={y} r={index % 3 === 0 ? 4.4 : 3.6} fill={fill} stroke="#ffffff" strokeWidth="1" />
-      ))}
-      <path d="M200 29h26v49h-26z" fill="#f5e1e3" stroke="#a73b45" strokeWidth="1.2" />
-      <text x="213" y="24" textAnchor="middle" fill="#a73b45" fontSize="8" fontWeight="800" fontFamily="sans-serif">
-        LATE
-      </text>
-    </svg>
-  )
-}
-
-function MiniPlinkoQuantilePreview() {
-  const dots = Array.from({ length: 54 }, (_, index) => {
-    const column = index % 18
-    const row = Math.floor(index / 18)
-    const x = 22 + column * 11
-    const y = 71 - row * 7 - Math.max(0, Math.abs(column - 9) - 5) * 1.8
-    const win = column >= 9
-    return [x, y, win]
-  })
-  const pegs = []
-  for (let row = 0; row < 5; row += 1) {
-    for (let column = 0; column < row + 6; column += 1) {
-      pegs.push([80 + column * 12 - row * 5.5, 24 + row * 8])
-    }
-  }
-  return (
-    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
-      <rect width="242" height="96" fill="#eef4f1" />
-      <text x="12" y="18" fill="#1d2730" fontSize="11" fontWeight="900" fontFamily="sans-serif">
-        PLINKO POSTERIOR
-      </text>
-      <line x1="124" x2="124" y1="20" y2="82" stroke="#b0454c" strokeWidth="2.2" strokeDasharray="5 4" />
-      {pegs.map(([x, y], index) => (
-        <circle key={index} cx={x} cy={y} r="2.1" fill="#738d90" opacity="0.6" />
-      ))}
-      {[0, 1, 2, 3, 4, 5].map((index) => (
-        <line
-          key={index}
-          x1={51 + index * 30}
-          x2={51 + index * 30}
-          y1="56"
-          y2="82"
-          stroke="#9eadac"
-          strokeWidth="1"
-        />
-      ))}
-      {dots.map(([x, y, win], index) => (
         <circle
           key={index}
           cx={x}
           cy={y}
-          r="3.1"
-          fill={win ? "#76b7b2" : "#f28e2b"}
-          stroke="#1d2730"
-          strokeWidth="0.6"
+          r={index % 3 === 0 ? 4.4 : 3.6}
+          fill={fill}
+          stroke="#ffffff"
+          strokeWidth="1"
         />
       ))}
-      <path d="M28 82H213" stroke="#1d2730" strokeWidth="1.4" />
-      <text x="136" y="30" fill="#8f3038" fontSize="8" fontWeight="800" fontFamily="sans-serif">
-        50%
+      <path d="M200 29h26v49h-26z" fill="#f5e1e3" stroke="#a73b45" strokeWidth="1.2" />
+      <text
+        x="213"
+        y="24"
+        textAnchor="middle"
+        fill="#a73b45"
+        fontSize="8"
+        fontWeight="800"
+        fontFamily="sans-serif"
+      >
+        LATE
       </text>
     </svg>
   )
@@ -313,18 +305,29 @@ function MiniHotDogPreview() {
       {[18, 34, 50, 66].map((y) => (
         <line key={y} x1="12" x2="230" y1={y} y2={y} stroke="#d7c59d" strokeWidth="1" />
       ))}
+      <path d="M129 14v68M201 14v68" stroke="#c74733" strokeWidth="5" opacity="0.18" />
       <path
-        d="M129 14v68M201 14v68"
-        stroke="#c74733"
+        d={line}
+        fill="none"
+        stroke="#d7a02f"
         strokeWidth="5"
-        opacity="0.18"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <path d={line} fill="none" stroke="#d7a02f" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
       {[0, 1, 2, 3, 4, 5].map((row) =>
         [0, 1, 2, 3, 4, 5, 6].map((col) => (
-          <g key={`${row}-${col}`} transform={`translate(${16 + col * 10} ${44 + row * 6}) scale(.42 .42)`}>
-            <path d="M1.2 7.2C1.2 4.6 3.4 2.6 6.1 2.6h5.8c2.7 0 4.9 2 4.9 4.6s-2.2 4.6-4.9 4.6H6.1c-2.7 0-4.9-2-4.9-4.6Z" fill="#f0c987" />
-            <path d="M2.7 6.4C2.7 4.8 4 3.7 5.7 3.7h6.6c1.7 0 3 1.1 3 2.7s-1.3 2.7-3 2.7H5.7c-1.7 0-3-1.1-3-2.7Z" fill={row === 1 && col === 0 ? "#c94f6f" : "#c74733"} />
+          <g
+            key={`${row}-${col}`}
+            transform={`translate(${16 + col * 10} ${44 + row * 6}) scale(.42 .42)`}
+          >
+            <path
+              d="M1.2 7.2C1.2 4.6 3.4 2.6 6.1 2.6h5.8c2.7 0 4.9 2 4.9 4.6s-2.2 4.6-4.9 4.6H6.1c-2.7 0-4.9-2-4.9-4.6Z"
+              fill="#f0c987"
+            />
+            <path
+              d="M2.7 6.4C2.7 4.8 4 3.7 5.7 3.7h6.6c1.7 0 3 1.1 3 2.7s-1.3 2.7-3 2.7H5.7c-1.7 0-3-1.1-3-2.7Z"
+              fill={row === 1 && col === 0 ? "#c94f6f" : "#c74733"}
+            />
           </g>
         )),
       )}
@@ -354,8 +357,12 @@ function MiniDataCentersIsotypePreview() {
         strokeWidth="1"
       />
       {[
-        [42, 45, "#34383b"], [67, 55, "#34383b"], [112, 49, "#4f8999"],
-        [135, 60, "#d72f3f"], [158, 47, "#d72f3f"], [184, 55, "#d8ad43"],
+        [42, 45, "#34383b"],
+        [67, 55, "#34383b"],
+        [112, 49, "#4f8999"],
+        [135, 60, "#d72f3f"],
+        [158, 47, "#d72f3f"],
+        [184, 55, "#d8ad43"],
       ].map(([x, y, fill], index) => (
         <rect key={index} x={x} y={y} width="7" height="11" fill={fill} />
       ))}
@@ -375,13 +382,27 @@ function MiniDataCentersIsotypePreview() {
 
 function MiniCreativeContoursPreview() {
   const cells = [
-    [122, 26, "#214d62", 0], [101, 36, "#2d788d", 1], [123, 38, "#53a5a0", 1],
-    [145, 36, "#bad263", 2], [80, 48, "#40846a", 1], [102, 48, "#82a95f", 2],
-    [124, 50, "#d6bd55", 4], [146, 48, "#dd7644", 3], [168, 48, "#c64667", 2],
-    [59, 59, "#1f594e", 0], [81, 60, "#40846a", 1], [103, 62, "#82a95f", 3],
-    [125, 63, "#d6bd55", 5], [147, 62, "#dd7644", 4], [169, 60, "#c64667", 3],
-    [191, 59, "#6f4aa8", 2], [82, 72, "#244f51", 0], [104, 74, "#427b5c", 1],
-    [126, 75, "#83a05a", 2], [148, 74, "#d5b653", 2], [170, 72, "#ef8b44", 1],
+    [122, 26, "#214d62", 0],
+    [101, 36, "#2d788d", 1],
+    [123, 38, "#53a5a0", 1],
+    [145, 36, "#bad263", 2],
+    [80, 48, "#40846a", 1],
+    [102, 48, "#82a95f", 2],
+    [124, 50, "#d6bd55", 4],
+    [146, 48, "#dd7644", 3],
+    [168, 48, "#c64667", 2],
+    [59, 59, "#1f594e", 0],
+    [81, 60, "#40846a", 1],
+    [103, 62, "#82a95f", 3],
+    [125, 63, "#d6bd55", 5],
+    [147, 62, "#dd7644", 4],
+    [169, 60, "#c64667", 3],
+    [191, 59, "#6f4aa8", 2],
+    [82, 72, "#244f51", 0],
+    [104, 74, "#427b5c", 1],
+    [126, 75, "#83a05a", 2],
+    [148, 74, "#d5b653", 2],
+    [170, 72, "#ef8b44", 1],
   ]
   const diamond = (x, y) => `M${x},${y - 8}L${x + 16},${y}L${x},${y + 8}L${x - 16},${y}Z`
   return (
@@ -396,9 +417,22 @@ function MiniCreativeContoursPreview() {
         {cells.map(([x, y, fill, lift], index) => (
           <g key={index}>
             <path d={diamond(x, y + 7)} fill="#233329" opacity="0.16" />
-            <path d={`M${x - 16},${y}L${x},${y + 8}L${x},${y + 8 + lift}L${x - 16},${y + lift}Z`} fill="#2c3c31" opacity="0.42" />
-            <path d={`M${x + 16},${y}L${x},${y + 8}L${x},${y + 8 + lift}L${x + 16},${y + lift}Z`} fill="#43513b" opacity="0.32" />
-            <path d={diamond(x, y - lift)} fill={fill} stroke="rgba(32,34,27,0.28)" strokeWidth="0.7" />
+            <path
+              d={`M${x - 16},${y}L${x},${y + 8}L${x},${y + 8 + lift}L${x - 16},${y + lift}Z`}
+              fill="#2c3c31"
+              opacity="0.42"
+            />
+            <path
+              d={`M${x + 16},${y}L${x},${y + 8}L${x},${y + 8 + lift}L${x + 16},${y + lift}Z`}
+              fill="#43513b"
+              opacity="0.32"
+            />
+            <path
+              d={diamond(x, y - lift)}
+              fill={fill}
+              stroke="rgba(32,34,27,0.28)"
+              strokeWidth="0.7"
+            />
           </g>
         ))}
       </g>
@@ -416,7 +450,12 @@ function MiniCreativeContoursPreview() {
         strokeWidth="1.4"
         opacity="0.74"
       />
-      {[[76, 48], [125, 46], [171, 51], [146, 69]].map(([x, y], index) => (
+      {[
+        [76, 48],
+        [125, 46],
+        [171, 51],
+        [146, 69],
+      ].map(([x, y], index) => (
         <circle
           key={index}
           cx={x}
@@ -454,7 +493,15 @@ function MiniDiscretePreview() {
         fill="#d8edf7"
         opacity="0.95"
       />
-      <line x1="126" x2="126" y1="14" y2="76" stroke="#c93d3d" strokeWidth="2" strokeDasharray="5 4" />
+      <line
+        x1="126"
+        x2="126"
+        y1="14"
+        y2="76"
+        stroke="#c93d3d"
+        strokeWidth="2"
+        strokeDasharray="5 4"
+      />
       {dots.map((dot, index) => (
         <circle
           key={index}
@@ -467,10 +514,31 @@ function MiniDiscretePreview() {
       ))}
       {[0, 1, 2, 3].map((index) => (
         <g key={index} transform={`translate(${153 + index * 18} 29)`}>
-          <rect x="-8" y="-8" width="16" height="12" rx="2" fill={index === 3 ? "#c93d3d" : "#287f68"} />
+          <rect
+            x="-8"
+            y="-8"
+            width="16"
+            height="12"
+            rx="2"
+            fill={index === 3 ? "#c93d3d" : "#287f68"}
+          />
           <rect x="-5" y="-5" width="10" height="4" fill="#ffffff" opacity="0.9" />
-          <circle cx="-4" cy="5" r="2.2" fill={index === 3 ? "#c93d3d" : "#287f68"} stroke="#ffffff" strokeWidth="1" />
-          <circle cx="5" cy="5" r="2.2" fill={index === 3 ? "#c93d3d" : "#287f68"} stroke="#ffffff" strokeWidth="1" />
+          <circle
+            cx="-4"
+            cy="5"
+            r="2.2"
+            fill={index === 3 ? "#c93d3d" : "#287f68"}
+            stroke="#ffffff"
+            strokeWidth="1"
+          />
+          <circle
+            cx="5"
+            cy="5"
+            r="2.2"
+            fill={index === 3 ? "#c93d3d" : "#287f68"}
+            stroke="#ffffff"
+            strokeWidth="1"
+          />
         </g>
       ))}
       <rect x="148" y="72" width="68" height="8" fill="#cfe7df" />
@@ -500,36 +568,115 @@ function MiniLakeIsotypePreview() {
           <circle cx="9.5" cy="10" r="1.6" fill={index < 8 ? "#4f8999" : "#d6cfbc"} />
         </g>
       ))}
-      <path d="M12 85 C44 78 65 86 92 76 S142 83 166 70 S208 75 230 61" fill="none" stroke="#d72f3f" strokeWidth="3" />
+      <path
+        d="M12 85 C44 78 65 86 92 76 S142 83 166 70 S208 75 230 61"
+        fill="none"
+        stroke="#d72f3f"
+        strokeWidth="3"
+      />
     </svg>
   )
 }
 
 function MiniOregonTrailPreview() {
-  const carets = [[70, 30], [86, 26], [150, 34], [166, 30], [110, 60], [128, 66], [50, 44]]
+  const carets = [
+    [70, 30],
+    [86, 26],
+    [150, 34],
+    [166, 30],
+    [110, 60],
+    [128, 66],
+    [50, 44],
+  ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" fill="#1a1ae0" />
       <rect x="7" y="7" width="228" height="82" fill="#b9b9b9" />
       {/* coastline on the left */}
-      <path d="M30,9 L26,24 L34,36 L24,50 L32,66 L22,82 L30,88" fill="none" stroke="#101010" strokeWidth="1.4" />
+      <path
+        d="M30,9 L26,24 L34,36 L24,50 L32,66 L22,82 L30,88"
+        fill="none"
+        stroke="#101010"
+        strokeWidth="1.4"
+      />
       {/* a blue river */}
-      <path d="M210,20 Q150,26 138,44 Q128,58 70,60 Q48,62 40,74" fill="none" stroke="#2b3bff" strokeWidth="1.4" />
+      <path
+        d="M210,20 Q150,26 138,44 Q128,58 70,60 Q48,62 40,74"
+        fill="none"
+        stroke="#2b3bff"
+        strokeWidth="1.4"
+      />
       {/* mountains */}
       {carets.map(([x, y], i) => (
-        <path key={i} d={`M${x - 5},${y + 3} L${x},${y - 4} L${x + 5},${y + 3}`} fill="none" stroke="#101010" strokeWidth="1.2" />
+        <path
+          key={i}
+          d={`M${x - 5},${y + 3} L${x},${y - 4} L${x + 5},${y + 3}`}
+          fill="none"
+          stroke="#101010"
+          strokeWidth="1.2"
+        />
       ))}
       {/* the route */}
-      <path d="M206,64 L168,58 L138,54 L104,46 L70,44 L44,40" fill="none" stroke="#101010" strokeWidth="2" />
+      <path
+        d="M206,64 L168,58 L138,54 L104,46 L70,44 L44,40"
+        fill="none"
+        stroke="#101010"
+        strokeWidth="2"
+      />
       {/* forts */}
-      {[[168, 58], [104, 46]].map(([x, y], i) => (
-        <rect key={i} x={x - 4} y={y - 4} width="8" height="8" fill="#b9b9b9" stroke="#101010" strokeWidth="1.4" />
+      {[
+        [168, 58],
+        [104, 46],
+      ].map(([x, y], i) => (
+        <rect
+          key={i}
+          x={x - 4}
+          y={y - 4}
+          width="8"
+          height="8"
+          fill="#b9b9b9"
+          stroke="#101010"
+          strokeWidth="1.4"
+        />
       ))}
       {/* START + FINISH */}
       <rect x="206" y="58" width="30" height="13" fill="#c26a12" stroke="#101010" strokeWidth="1" />
-      <text x="221" y="68" textAnchor="middle" fontSize="8" fontWeight="700" fontFamily="monospace" fill="#101010">START</text>
-      <text x="44" y="34" textAnchor="middle" fontSize="8" fontWeight="700" fontFamily="monospace" fill="#101010">★</text>
-      <text x="121" y="20" textAnchor="middle" fontSize="10" fontWeight="700" fontFamily="monospace" fill="#f2f2f2" stroke="#101010" strokeWidth="2.4" paintOrder="stroke">OREGON TRAIL</text>
+      <text
+        x="221"
+        y="68"
+        textAnchor="middle"
+        fontSize="8"
+        fontWeight="700"
+        fontFamily="monospace"
+        fill="#101010"
+      >
+        START
+      </text>
+      <text
+        x="44"
+        y="34"
+        textAnchor="middle"
+        fontSize="8"
+        fontWeight="700"
+        fontFamily="monospace"
+        fill="#101010"
+      >
+        ★
+      </text>
+      <text
+        x="121"
+        y="20"
+        textAnchor="middle"
+        fontSize="10"
+        fontWeight="700"
+        fontFamily="monospace"
+        fill="#f2f2f2"
+        stroke="#101010"
+        strokeWidth="2.4"
+        paintOrder="stroke"
+      >
+        OREGON TRAIL
+      </text>
     </svg>
   )
 }
@@ -546,8 +693,15 @@ function MiniNetworkVizPreview() {
     [120, 72, "#6b7233"],
   ]
   const edges = [
-    [0, 1, true], [0, 2, true], [1, 3, false], [2, 3, false],
-    [3, 4, false], [4, 5, false], [5, 6, false], [2, 7, false], [3, 5, false],
+    [0, 1, true],
+    [0, 2, true],
+    [1, 3, false],
+    [2, 3, false],
+    [3, 4, false],
+    [4, 5, false],
+    [5, 6, false],
+    [2, 7, false],
+    [3, 5, false],
   ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
@@ -580,7 +734,13 @@ function MiniNetworkVizPreview() {
       {[0, 1, 2, 3, 4].map((i) => (
         <circle key={`b${i}`} cx={150 + i * 18} cy={84} r="2.4" fill="#2a241d" />
       ))}
-      <path d="M150,84 Q177,68 204,84 M168,84 Q186,72 204,84" fill="none" stroke="#8a2b22" strokeWidth="1" opacity="0.7" />
+      <path
+        d="M150,84 Q177,68 204,84 M168,84 Q186,72 204,84"
+        fill="none"
+        stroke="#8a2b22"
+        strokeWidth="1"
+        opacity="0.7"
+      />
     </svg>
   )
 }
@@ -596,13 +756,30 @@ function MiniGestaltPreview() {
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" fill="#f1e7d2" />
       <rect x="0" y="0" width="242" height="7" fill="#1a1610" />
-      <rect x="10" y="14" width="42" height="62" fill="none" stroke="#1a1610" strokeWidth="1.5" strokeDasharray="4 2" />
+      <rect
+        x="10"
+        y="14"
+        width="42"
+        height="62"
+        fill="none"
+        stroke="#1a1610"
+        strokeWidth="1.5"
+        strokeDasharray="4 2"
+      />
       {dots.map(([x, y, active], index) =>
         active ? (
-          <rect key={index} x={x - 5} y={y - 5} width="10" height="10" fill="#df2b1f" stroke="#1a1610" />
+          <rect
+            key={index}
+            x={x - 5}
+            y={y - 5}
+            width="10"
+            height="10"
+            fill="#df2b1f"
+            stroke="#1a1610"
+          />
         ) : (
           <circle key={index} cx={x} cy={y} r="5" fill="#b1a78f" stroke="#1a1610" />
-        )
+        ),
       )}
       <rect x="0" y="89" width="81" height="7" fill="#df2b1f" />
       <rect x="81" y="89" width="80" height="7" fill="#2a4cad" />
@@ -614,8 +791,12 @@ function MiniGestaltPreview() {
 function MiniMobileVisPreview() {
   const bars = [46, 68, 35, 82, 55]
   const dots = [
-    [30, 28, "#f25f3a"], [54, 38, "#f25f3a"], [78, 24, "#f25f3a"],
-    [122, 62, "#1f8a70"], [148, 48, "#1f8a70"], [174, 58, "#1f8a70"],
+    [30, 28, "#f25f3a"],
+    [54, 38, "#f25f3a"],
+    [78, 24, "#f25f3a"],
+    [122, 62, "#1f8a70"],
+    [148, 48, "#1f8a70"],
+    [174, 58, "#1f8a70"],
     [202, 36, "#26334a"],
   ]
   return (
@@ -664,10 +845,18 @@ function MiniPortReplayPreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#07171d" />
-      <path d="M0 18H242M0 42H242M0 66H242M34 0V96M82 0V96M130 0V96M178 0V96M226 0V96" stroke="#19343b" strokeWidth="1" />
+      <path
+        d="M0 18H242M0 42H242M0 66H242M34 0V96M82 0V96M130 0V96M178 0V96M226 0V96"
+        stroke="#19343b"
+        strokeWidth="1"
+      />
       <rect x="14" y="12" width="48" height="8" fill="#ff7043" />
-      <text x="14" y="34" fill="#f5ecdc" fontSize="13" fontWeight="800" fontFamily="sans-serif">BOXES</text>
-      <text x="14" y="48" fill="#f5ecdc" fontSize="13" fontWeight="800" fontFamily="sans-serif">WAIT</text>
+      <text x="14" y="34" fill="#f5ecdc" fontSize="13" fontWeight="800" fontFamily="sans-serif">
+        BOXES
+      </text>
+      <text x="14" y="48" fill="#f5ecdc" fontSize="13" fontWeight="800" fontFamily="sans-serif">
+        WAIT
+      </text>
       {routes.map((route, index) => (
         <g key={route.color}>
           <path
@@ -688,10 +877,18 @@ function MiniPortReplayPreview() {
 
 function MiniScrollTellPreview() {
   const beats = [
-    [14, 70, "#5bd6c0"], [30, 67, "#5bd6c0"], [46, 65, "#5bd6c0"],
-    [62, 69, "#5bd6c0"], [80, 74, "#7f8ba0"], [98, 83, "#ff5fb0"],
-    [110, 85, "#ff5fb0"], [128, 69, "#5bd6c0"], [150, 65, "#5bd6c0"],
-    [172, 67, "#5bd6c0"], [196, 64, "#5bd6c0"], [220, 66, "#5bd6c0"],
+    [14, 70, "#5bd6c0"],
+    [30, 67, "#5bd6c0"],
+    [46, 65, "#5bd6c0"],
+    [62, 69, "#5bd6c0"],
+    [80, 74, "#7f8ba0"],
+    [98, 83, "#ff5fb0"],
+    [110, 85, "#ff5fb0"],
+    [128, 69, "#5bd6c0"],
+    [150, 65, "#5bd6c0"],
+    [172, 67, "#5bd6c0"],
+    [196, 64, "#5bd6c0"],
+    [220, 66, "#5bd6c0"],
   ]
   const trace = "M8,52 C40,46 58,20 84,22 C100,23 104,34 114,30 C150,14 196,10 234,7"
   return (
@@ -737,14 +934,37 @@ function MiniDatavizPeoplePreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" fill="#fff8dd" />
-      <rect x="7" y="7" width="228" height="82" rx="6" fill="#fffaf0" stroke="#151515" strokeWidth="2" />
-      <path d="M14 75C54 24 82 36 112 52S168 73 220 20" fill="none" stroke="#151515" strokeWidth="2.4" />
+      <rect
+        x="7"
+        y="7"
+        width="228"
+        height="82"
+        rx="6"
+        fill="#fffaf0"
+        stroke="#151515"
+        strokeWidth="2"
+      />
+      <path
+        d="M14 75C54 24 82 36 112 52S168 73 220 20"
+        fill="none"
+        stroke="#151515"
+        strokeWidth="2.4"
+      />
       {colors.map((color, index) => {
         const x = 24 + (index % 6) * 36
         const y = 24 + Math.floor(index / 6) * 24
         return (
           <g key={color} transform={`translate(${x} ${y})`}>
-            <rect x="-8" y="-8" width="16" height="16" rx="4" fill={color} stroke="#151515" strokeWidth="1.6" />
+            <rect
+              x="-8"
+              y="-8"
+              width="16"
+              height="16"
+              rx="4"
+              fill={color}
+              stroke="#151515"
+              strokeWidth="1.6"
+            />
             <circle cx="0" cy="-1" r="4" fill="#fff8dd" stroke="#151515" strokeWidth="1" />
             <path d="M-4 7Q0 4 4 7" fill="none" stroke="#fff8dd" strokeWidth="2" />
           </g>
@@ -759,7 +979,13 @@ function MiniDatavizPeoplePreview() {
         ))}
       </g>
       <g transform="translate(130 54)">
-        <path d="M0 28C18 0 36 28 54 4S82 20 94 8" fill="none" stroke="#2f6f88" strokeWidth="4" strokeLinecap="round" />
+        <path
+          d="M0 28C18 0 36 28 54 4S82 20 94 8"
+          fill="none"
+          stroke="#2f6f88"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
         <circle cx="54" cy="4" r="5" fill="#e0a92f" stroke="#151515" strokeWidth="1.4" />
       </g>
       <text x="18" y="20" fill="#151515" fontSize="9" fontWeight="950" fontFamily="sans-serif">
@@ -787,7 +1013,14 @@ function MiniDistantReadingPreview() {
       <rect x="7" y="7" width="228" height="82" fill="#fff8e8" stroke="#1f2528" strokeWidth="1.4" />
       {[0, 1, 2, 3].map((index) => (
         <g key={index} transform={`translate(${18 + index * 21} 18)`}>
-          <rect width="15" height="58" rx="2" fill={["#486a8f", "#8f5b73", "#7f3046", "#6d7340"][index]} stroke="#1f2528" strokeWidth="1" />
+          <rect
+            width="15"
+            height="58"
+            rx="2"
+            fill={["#486a8f", "#8f5b73", "#7f3046", "#6d7340"][index]}
+            stroke="#1f2528"
+            strokeWidth="1"
+          />
           <rect x="3" y="8" width="9" height="4" rx="2" fill="#fff8e8" opacity="0.85" />
           <rect x="4" y="20" width="7" height="28" fill="#fff8e8" opacity="0.18" />
         </g>
@@ -795,12 +1028,33 @@ function MiniDistantReadingPreview() {
       <path d="M110 77H208" stroke="#1f2528" strokeWidth="1.1" />
       <path d="M110 22V77" stroke="#1f2528" strokeWidth="1.1" />
       {bars.map(([color, x, y], index) => (
-        <rect key={color} x={x + 78} y={y} width="7" height={77 - y} fill={color} opacity={index === 2 ? 1 : 0.72} />
+        <rect
+          key={color}
+          x={x + 78}
+          y={y}
+          width="7"
+          height={77 - y}
+          fill={color}
+          opacity={index === 2 ? 1 : 0.72}
+        />
       ))}
-      <path d="M110,61 C128,52 140,66 158,42 C174,20 190,24 216,16" fill="none" stroke="#4f6fb3" strokeWidth="2.4" />
+      <path
+        d="M110,61 C128,52 140,66 158,42 C174,20 190,24 216,16"
+        fill="none"
+        stroke="#4f6fb3"
+        strokeWidth="2.4"
+      />
       <circle cx="216" cy="16" r="3.2" fill="#4f6fb3" />
       {flows.map(([sx, sy, tx, ty, color]) => (
-        <path key={color} d={`M${sx},${sy} C${138},${sy} ${144},${ty} ${tx},${ty}`} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" opacity="0.72" />
+        <path
+          key={color}
+          d={`M${sx},${sy} C${138},${sy} ${144},${ty} ${tx},${ty}`}
+          fill="none"
+          stroke={color}
+          strokeWidth="3"
+          strokeLinecap="round"
+          opacity="0.72"
+        />
       ))}
       <text x="17" y="86" fill="#1f2528" fontSize="9" fontWeight="900" fontFamily="serif">
         DISTANT READING ROOM
@@ -858,7 +1112,14 @@ function MiniMachinePreview() {
     [18, "#5a4fb0", false],
     [12, "#473f86", false],
   ]
-  const dots = [[152, 70], [168, 56], [184, 60], [200, 44], [216, 50], [230, 33]]
+  const dots = [
+    [152, 70],
+    [168, 56],
+    [184, 60],
+    [200, 44],
+    [216, 50],
+    [230, 33],
+  ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#14121f" />
@@ -878,7 +1139,13 @@ function MiniMachinePreview() {
           <rect x="52" y="4" width={meter} height="4" rx="2" fill={color} />
         </g>
       ))}
-      <path d="M110,19 C126,19 126,42 140,44" fill="none" stroke="#7c6cf0" strokeWidth="1.2" strokeDasharray="2 2" />
+      <path
+        d="M110,19 C126,19 126,42 140,44"
+        fill="none"
+        stroke="#7c6cf0"
+        strokeWidth="1.2"
+        strokeDasharray="2 2"
+      />
       <path d="M140,44 l-6,-3 l1,5 z" fill="#7c6cf0" />
       <line x1="146" y1="78" x2="234" y2="78" stroke="#2a2740" strokeWidth="0.8" />
       <line x1="146" y1="20" x2="146" y2="78" stroke="#2a2740" strokeWidth="0.8" />
@@ -896,15 +1163,24 @@ function MiniArchitecturePreview() {
       x: x + (row % 2 === 0 ? -10 : 10),
       y: 15 + row * 16 + (group % 2) * 2,
       group,
-    }))
+    })),
   )
   const roots = [
-    [42, 82], [82, 90], [122, 80], [162, 90], [202, 82],
+    [42, 82],
+    [82, 90],
+    [122, 80],
+    [162, 90],
+    [202, 82],
   ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#18251f" />
-      <path d="M0,68 C50,64 85,71 121,68 S192,64 242,68" fill="none" stroke="#756246" strokeWidth="1" />
+      <path
+        d="M0,68 C50,64 85,71 121,68 S192,64 242,68"
+        fill="none"
+        stroke="#756246"
+        strokeWidth="1"
+      />
       {branchX.map((x, index) => (
         <path
           key={x}
@@ -916,15 +1192,43 @@ function MiniArchitecturePreview() {
       ))}
       {leaves.map((leaf, index) => (
         <g key={index}>
-          <path d={`M${branchX[leaf.group]},45 C${branchX[leaf.group]},34 ${leaf.x},34 ${leaf.x},${leaf.y + 5}`} fill="none" stroke="#6ca77b" strokeWidth=".7" opacity=".8" />
-          <rect x={leaf.x - 8} y={leaf.y} width="16" height="7" rx="3.5" fill={index % 5 === 0 ? "#dfb348" : "#6ca77b"} />
+          <path
+            d={`M${branchX[leaf.group]},45 C${branchX[leaf.group]},34 ${leaf.x},34 ${leaf.x},${leaf.y + 5}`}
+            fill="none"
+            stroke="#6ca77b"
+            strokeWidth=".7"
+            opacity=".8"
+          />
+          <rect
+            x={leaf.x - 8}
+            y={leaf.y}
+            width="16"
+            height="7"
+            rx="3.5"
+            fill={index % 5 === 0 ? "#dfb348" : "#6ca77b"}
+          />
         </g>
       ))}
       <rect x="107" y="52" width="28" height="15" rx="4" fill="#b57945" stroke="#dfb348" />
       {roots.map(([x, y], index) => (
         <g key={x}>
-          <path d={`M121,67 C121,75 ${x},72 ${x},${y}`} fill="none" stroke="#5191a2" strokeWidth=".7" strokeDasharray="2 2" />
-          <rect x={x - 13} y={y - 4} width="26" height="8" rx="3" fill="#243a3c" stroke="#5191a2" strokeWidth=".5" />
+          <path
+            d={`M121,67 C121,75 ${x},72 ${x},${y}`}
+            fill="none"
+            stroke="#5191a2"
+            strokeWidth=".7"
+            strokeDasharray="2 2"
+          />
+          <rect
+            x={x - 13}
+            y={y - 4}
+            width="26"
+            height="8"
+            rx="3"
+            fill="#243a3c"
+            stroke="#5191a2"
+            strokeWidth=".5"
+          />
         </g>
       ))}
     </svg>
@@ -948,7 +1252,15 @@ function MiniOctopusPreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" fill="#f4eddb" />
-      <text x="121" y="14" textAnchor="middle" fill="#191512" fontSize="11" fontWeight="900" fontFamily="serif">
+      <text
+        x="121"
+        y="14"
+        textAnchor="middle"
+        fill="#191512"
+        fontSize="11"
+        fontWeight="900"
+        fontFamily="serif"
+      >
         FREIHEIT DER MEERE
       </text>
       <path
@@ -974,8 +1286,22 @@ function MiniOctopusPreview() {
       <path d="M20,82 H222" stroke="#191512" strokeWidth="1" />
       {frames.map(([x, y, color], index) => (
         <g key={color}>
-          <path d={`M121,62 C121,75 ${x},61 ${x},${y}`} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
-          <ellipse cx={x} cy={y - 5} rx="8" ry="9" fill="#fff8e9" stroke={color} strokeWidth="1.8" />
+          <path
+            d={`M121,62 C121,75 ${x},61 ${x},${y}`}
+            fill="none"
+            stroke={color}
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <ellipse
+            cx={x}
+            cy={y - 5}
+            rx="8"
+            ry="9"
+            fill="#fff8e9"
+            stroke={color}
+            strokeWidth="1.8"
+          />
           {[0, 1, 2].map((bar) => (
             <rect
               key={bar}
@@ -988,7 +1314,15 @@ function MiniOctopusPreview() {
           ))}
         </g>
       ))}
-      <text x="121" y="91" textAnchor="middle" fill="#191512" fontSize="10" fontWeight="900" fontFamily="sans-serif">
+      <text
+        x="121"
+        y="91"
+        textAnchor="middle"
+        fill="#191512"
+        fontSize="10"
+        fontWeight="900"
+        fontFamily="sans-serif"
+      >
         SEMIOTIC IS AN OCTOPUS
       </text>
     </svg>
@@ -1008,11 +1342,17 @@ function MiniIsometricPreview() {
           fill={(row + column) % 3 === 0 ? "#86a568" : "#739b58"}
           stroke="#314936"
           strokeWidth="0.8"
-        />
+        />,
       )
     }
   }
-  const resources = [[82, 38], [142, 38], [102, 68], [162, 68], [121, 82]]
+  const resources = [
+    [82, 38],
+    [142, 38],
+    [102, 68],
+    [162, 68],
+    [121, 82],
+  ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#17241d" />
@@ -1030,11 +1370,27 @@ function MiniIsometricPreview() {
 
 function MiniArtPreview() {
   const nodes = [
-    [36, 15, "red"], [112, 11, "ink"], [196, 19, "ink"],
-    [70, 42, "ink"], [146, 39, "red"], [205, 49, "ink"],
-    [39, 70, "ink"], [116, 65, "ink"], [184, 76, "ink"],
+    [36, 15, "red"],
+    [112, 11, "ink"],
+    [196, 19, "ink"],
+    [70, 42, "ink"],
+    [146, 39, "red"],
+    [205, 49, "ink"],
+    [39, 70, "ink"],
+    [116, 65, "ink"],
+    [184, 76, "ink"],
   ]
-  const edges = [[0, 3], [1, 3], [1, 4], [2, 5], [3, 6], [3, 7], [4, 7], [4, 8], [5, 8]]
+  const edges = [
+    [0, 3],
+    [1, 3],
+    [1, 4],
+    [2, 5],
+    [3, 6],
+    [3, 7],
+    [4, 7],
+    [4, 8],
+    [5, 8],
+  ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#d5d0bc" />
@@ -1052,13 +1408,26 @@ function MiniArtPreview() {
           />
         )
       })}
-      {nodes.map(([x, y, type], index) => (
+      {nodes.map(([x, y, type], index) =>
         type === "red" ? (
-          <rect key={index} x={x - 10} y={y - 4} width="20" height="8" fill="none" stroke="#a52928" />
+          <rect
+            key={index}
+            x={x - 10}
+            y={y - 4}
+            width="20"
+            height="8"
+            fill="none"
+            stroke="#a52928"
+          />
         ) : (
-          <path key={index} d={`M${x - 11},${y - 2} Q${x},${y + 9} ${x + 11},${y - 2}`} fill="none" stroke="#25211d" />
-        )
-      ))}
+          <path
+            key={index}
+            d={`M${x - 11},${y - 2} Q${x},${y + 9} ${x + 11},${y - 2}`}
+            fill="none"
+            stroke="#25211d"
+          />
+        ),
+      )}
       <rect y="86" width="242" height="10" fill="#a52928" />
     </svg>
   )
@@ -1066,9 +1435,22 @@ function MiniArtPreview() {
 
 function MiniUrinePreview() {
   const palette = [
-    "#d99a2b", "#cc7d22", "#b3531c", "#9e3318", "#8c1410", "#5e1518",
-    "#3b2f4a", "#4f6f33", "#45495a", "#595a5c", "#211c1a", "#f1ecdc",
-    "#d2d6c4", "#dcc8a0", "#ecca6a", "#e8b021",
+    "#d99a2b",
+    "#cc7d22",
+    "#b3531c",
+    "#9e3318",
+    "#8c1410",
+    "#5e1518",
+    "#3b2f4a",
+    "#4f6f33",
+    "#45495a",
+    "#595a5c",
+    "#211c1a",
+    "#f1ecdc",
+    "#d2d6c4",
+    "#dcc8a0",
+    "#ecca6a",
+    "#e8b021",
   ]
   const cx = 121
   const cy = 48
@@ -1078,7 +1460,13 @@ function MiniUrinePreview() {
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#efe5cb" />
       {/* tree of health */}
-      <path d={`M${cx},${cy + 22} C${cx - 4},${cy + 4} ${cx + 4},${cy - 8} ${cx},${cy - 24}`} fill="none" stroke="#4d7a35" strokeWidth="2.4" strokeLinecap="round" />
+      <path
+        d={`M${cx},${cy + 22} C${cx - 4},${cy + 4} ${cx + 4},${cy - 8} ${cx},${cy - 24}`}
+        fill="none"
+        stroke="#4d7a35"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
       <circle cx={cx} cy={cy - 24} r="3" fill="#a9791f" />
       {palette.map((hex, i) => {
         const a = (i / palette.length) * Math.PI * 2 - Math.PI / 2
@@ -1101,7 +1489,13 @@ function MiniUrinePreview() {
 
 function MiniEriePreview() {
   const root = [121, 86]
-  const tips = [[19, 16], [70, 9], [121, 6], [174, 10], [224, 19]]
+  const tips = [
+    [19, 16],
+    [70, 9],
+    [121, 6],
+    [174, 10],
+    [224, 19],
+  ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <rect width="242" height="96" rx="6" fill="#eee9dc" />
@@ -1218,8 +1612,20 @@ function MiniLocalGovernmentPreview() {
     [220, 78, "#b7a66a", 3],
   ]
   const edges = [
-    [0, 1], [0, 2], [1, 3], [1, 4], [1, 5], [2, 6], [2, 7],
-    [3, 4], [4, 6], [4, 8], [3, 9], [6, 10], [6, 11], [7, 12],
+    [0, 1],
+    [0, 2],
+    [1, 3],
+    [1, 4],
+    [1, 5],
+    [2, 6],
+    [2, 7],
+    [3, 4],
+    [4, 6],
+    [4, 8],
+    [3, 9],
+    [6, 10],
+    [6, 11],
+    [7, 12],
   ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
@@ -1247,11 +1653,45 @@ function MiniLocalGovernmentPreview() {
 
 function MiniWarsPreview() {
   const rows = [
-    { color: "#96abb1", spans: [[8, 42], [55, 65], [163, 188]] },
-    { color: "#313746", spans: [[10, 58], [78, 132], [145, 154]] },
-    { color: "#b0909d", spans: [[30, 50], [88, 127], [170, 222]] },
-    { color: "#687a97", spans: [[72, 110], [132, 164], [205, 232]] },
-    { color: "#8a6f55", spans: [[44, 63], [95, 114]] },
+    {
+      color: "#96abb1",
+      spans: [
+        [8, 42],
+        [55, 65],
+        [163, 188],
+      ],
+    },
+    {
+      color: "#313746",
+      spans: [
+        [10, 58],
+        [78, 132],
+        [145, 154],
+      ],
+    },
+    {
+      color: "#b0909d",
+      spans: [
+        [30, 50],
+        [88, 127],
+        [170, 222],
+      ],
+    },
+    {
+      color: "#687a97",
+      spans: [
+        [72, 110],
+        [132, 164],
+        [205, 232],
+      ],
+    },
+    {
+      color: "#8a6f55",
+      spans: [
+        [44, 63],
+        [95, 114],
+      ],
+    },
   ]
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
@@ -1368,7 +1808,13 @@ function MiniClimatePreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
       <defs>
-        <pattern id="examples-preview-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <pattern
+          id="examples-preview-hatch"
+          width="7"
+          height="7"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
           <line x1="0" y1="0" x2="0" y2="7" stroke="currentColor" strokeWidth="1" />
         </pattern>
       </defs>
@@ -1379,10 +1825,34 @@ function MiniClimatePreview() {
         color="rgba(148, 163, 184, 0.28)"
         stroke="rgba(148, 163, 184, 0.35)"
       />
-      <path d={`${mean} L242,74 C210,70 176,70 132,66 C88,61 44,59 0,62 Z`} fill="rgba(239, 68, 68, 0.55)" />
-      <path d={mean} fill="none" stroke="rgba(100, 116, 139, 0.8)" strokeWidth="2" strokeDasharray="4 5" />
-      <path d={line} fill="none" stroke="var(--text-primary)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="205" x2="205" y1="12" y2="88" stroke="rgba(148, 163, 184, 0.7)" strokeWidth="2" strokeDasharray="6 6" />
+      <path
+        d={`${mean} L242,74 C210,70 176,70 132,66 C88,61 44,59 0,62 Z`}
+        fill="rgba(239, 68, 68, 0.55)"
+      />
+      <path
+        d={mean}
+        fill="none"
+        stroke="rgba(100, 116, 139, 0.8)"
+        strokeWidth="2"
+        strokeDasharray="4 5"
+      />
+      <path
+        d={line}
+        fill="none"
+        stroke="var(--text-primary)"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="205"
+        x2="205"
+        y1="12"
+        y2="88"
+        stroke="rgba(148, 163, 184, 0.7)"
+        strokeWidth="2"
+        strokeDasharray="6 6"
+      />
       <circle cx="205" cy="70" r="5" fill="var(--text-primary)" />
     </svg>
   )
@@ -1400,58 +1870,81 @@ function MiniStakeholderJourneyPreview() {
     [394, 146, "#1f63a8"],
   ]
   return (
-    <svg style={styles.preview} viewBox="0 0 500 200" role="img" aria-label="Mini stakeholder journey bowtie preview">
+    <svg
+      style={styles.preview}
+      viewBox="0 0 500 200"
+      role="img"
+      aria-label="Mini stakeholder journey bowtie preview"
+    >
       <rect width="500" height="200" fill="#fffaf0" />
-      <text x="34" y="25" fill="#22304a" fontSize="12" fontWeight="900">STACKED BOWTIES</text>
-      <path d="M 24 38 L 196 61 L 196 79 L 24 100 Z" fill="#ffffff" stroke="#22304a" strokeWidth="2.2" />
+      <text x="34" y="25" fill="#22304a" fontSize="12" fontWeight="900">
+        STACKED BOWTIES
+      </text>
+      <path
+        d="M 24 38 L 196 61 L 196 79 L 24 100 Z"
+        fill="#ffffff"
+        stroke="#22304a"
+        strokeWidth="2.2"
+      />
       <path d="M 196 61 L 236 61 L 236 79 L 196 79 Z" fill="#087895" opacity="0.72" />
-      <path d="M 236 61 L 342 38 L 342 100 L 236 79 Z" fill="#ffe8a8" stroke="#22304a" strokeWidth="2.2" />
-      <path d="M 24 110 L 196 132 L 196 150 L 24 172 Z" fill="#ffffff" stroke="#22304a" strokeWidth="2.2" />
+      <path
+        d="M 236 61 L 342 38 L 342 100 L 236 79 Z"
+        fill="#ffe8a8"
+        stroke="#22304a"
+        strokeWidth="2.2"
+      />
+      <path
+        d="M 24 110 L 196 132 L 196 150 L 24 172 Z"
+        fill="#ffffff"
+        stroke="#22304a"
+        strokeWidth="2.2"
+      />
       <path d="M 196 132 L 236 132 L 236 150 L 196 150 Z" fill="#087895" opacity="0.4" />
-      <path d="M 236 132 L 342 110 L 342 172 L 236 150 Z" fill="#d8dee6" stroke="#22304a" strokeWidth="2.2" />
+      <path
+        d="M 236 132 L 342 110 L 342 172 L 236 150 Z"
+        fill="#d8dee6"
+        stroke="#22304a"
+        strokeWidth="2.2"
+      />
       {[78, 124, 170].map((x) => (
-        <path key={x} d={`M ${x} 42 C ${x + 8} 58, ${x - 8} 82, ${x} 98`} fill="none" stroke="#b63832" strokeWidth="5" strokeLinecap="round" opacity="0.55" />
+        <path
+          key={x}
+          d={`M ${x} 42 C ${x + 8} 58, ${x - 8} 82, ${x} 98`}
+          fill="none"
+          stroke="#b63832"
+          strokeWidth="5"
+          strokeLinecap="round"
+          opacity="0.55"
+        />
       ))}
       {[78, 124, 170].map((x) => (
-        <path key={`b-${x}`} d={`M ${x} 114 C ${x + 12} 128, ${x - 12} 154, ${x} 168`} fill="none" stroke="#7b8491" strokeWidth="7" strokeLinecap="round" opacity="0.38" />
+        <path
+          key={`b-${x}`}
+          d={`M ${x} 114 C ${x + 12} 128, ${x - 12} 154, ${x} 168`}
+          fill="none"
+          stroke="#7b8491"
+          strokeWidth="7"
+          strokeLinecap="round"
+          opacity="0.38"
+        />
       ))}
       <rect x="366" y="38" width="42" height="48" fill="none" stroke="#287a48" strokeWidth="3" />
       <rect x="414" y="38" width="42" height="48" fill="none" stroke="#b63832" strokeWidth="3" />
       <rect x="366" y="94" width="90" height="76" fill="none" stroke="#1f63a8" strokeWidth="3" />
       {bodies.map(([x, y, fill], index) => (
-        <circle key={`${x}-${y}-${index}`} cx={x} cy={y} r={index > 5 ? 8 : 7} fill={fill} stroke="#22304a" strokeWidth="2" />
+        <circle
+          key={`${x}-${y}-${index}`}
+          cx={x}
+          cy={y}
+          r={index > 5 ? 8 : 7}
+          fill={fill}
+          stroke="#22304a"
+          strokeWidth="2"
+        />
       ))}
       <text x="412" y="187" textAnchor="middle" fill="#22304a" fontSize="12" fontWeight="900">
         OSE CANVAS FIELD
       </text>
-    </svg>
-  )
-}
-
-function MiniQueueWeatherPreview() {
-  const queue = [
-    [122, 72, "#ef8354"],
-    [148, 104, "#4f9da6"],
-    [174, 82, "#f2c14e"],
-    [202, 112, "#ef8354"],
-    [228, 70, "#4f9da6"],
-    [254, 96, "#f2c14e"],
-  ]
-  const trace = "M 32 174 L 72 166 L 112 169 L 152 145 L 192 152 L 232 112 L 272 124 L 312 88 L 352 103 L 392 72 L 458 86"
-  return (
-    <svg style={styles.preview} viewBox="0 0 500 200" role="img" aria-label="Mini Queue Weather preview">
-      <rect width="500" height="200" fill="#f7f9f8" />
-      <text x="28" y="28" fill="#17242b" fontSize="12" fontWeight="900">PLAYER SUPPORT</text>
-      <rect x="28" y="42" width="294" height="94" rx="6" fill="#16262b" stroke="#617b80" strokeWidth="2" />
-      <rect x="102" y="52" width="160" height="74" fill="#ef8354" fillOpacity="0.1" stroke="#ef8354" strokeDasharray="5 5" />
-      <text x="182" y="65" textAnchor="middle" fill="#f6d8cb" fontSize="9" fontWeight="800">FINITE SUPPORT TEAM</text>
-      {queue.map(([x, y, fill], index) => (
-        <circle key={`${x}-${y}`} cx={x} cy={y} r={7 + (index % 3)} fill={fill} stroke="#f7f9f8" strokeWidth="1.5" />
-      ))}
-      <path d="M 338 152 C 370 126, 398 150, 464 98 L 464 150 C 410 168, 374 146, 338 178 Z" fill="#147d86" fillOpacity="0.18" />
-      <path d={trace} fill="none" stroke="#df653c" strokeWidth="4" strokeLinejoin="round" />
-      <line x1="338" x2="464" y1="132" y2="116" stroke="#147d86" strokeWidth="2" strokeDasharray="5 5" />
-      <text x="400" y="188" textAnchor="middle" fill="#147d86" fontSize="10" fontWeight="900">ORDINARY RANGE</text>
     </svg>
   )
 }
@@ -1467,25 +1960,98 @@ function MiniMergePressurePreview() {
     [324, 118, "#d8f5ee"],
   ]
   return (
-    <svg style={styles.preview} viewBox="0 0 500 200" role="img" aria-label="Mini merge pressure preview">
+    <svg
+      style={styles.preview}
+      viewBox="0 0 500 200"
+      role="img"
+      aria-label="Mini merge pressure preview"
+    >
       <rect width="500" height="200" fill="#f8fbfc" />
-      <text x="38" y="30" fill="#233148" fontSize="12" fontWeight="900">CODING</text>
-      <text x="178" y="30" fill="#233148" fontSize="12" fontWeight="900">FEATURES</text>
-      <text x="286" y="30" fill="#b63832" fontSize="12" fontWeight="900">REVIEW DAM</text>
-      <text x="410" y="30" fill="#233148" fontSize="12" fontWeight="900">APP</text>
-      <path d="M 38 102 C 118 78, 178 116, 238 98 S 342 70, 424 102" fill="none" stroke="#8fa3af" strokeWidth="5" strokeLinecap="round" strokeDasharray="2 11" />
-      <rect x="260" y="44" width="72" height="118" rx="14" fill="#fff0d6" stroke="#b63832" strokeWidth="3" strokeDasharray="7 6" />
+      <text x="38" y="30" fill="#233148" fontSize="12" fontWeight="900">
+        CODING
+      </text>
+      <text x="178" y="30" fill="#233148" fontSize="12" fontWeight="900">
+        FEATURES
+      </text>
+      <text x="286" y="30" fill="#b63832" fontSize="12" fontWeight="900">
+        REVIEW DAM
+      </text>
+      <text x="410" y="30" fill="#233148" fontSize="12" fontWeight="900">
+        APP
+      </text>
+      <path
+        d="M 38 102 C 118 78, 178 116, 238 98 S 342 70, 424 102"
+        fill="none"
+        stroke="#8fa3af"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeDasharray="2 11"
+      />
+      <rect
+        x="260"
+        y="44"
+        width="72"
+        height="118"
+        rx="14"
+        fill="#fff0d6"
+        stroke="#b63832"
+        strokeWidth="3"
+        strokeDasharray="7 6"
+      />
       {[62, 88, 114].map((y, index) => (
         <g key={y}>
-          <line x1="162" y1={y} x2="394" y2={y} stroke="#50677a" strokeWidth="2" strokeDasharray="4 6" opacity={index === 1 ? 0.85 : 0.28} />
-          <rect x="154" y={y - 15} width="82" height="30" rx="9" fill="#ffffff" stroke={index === 1 ? "#b63832" : "#64748b"} strokeWidth="2" />
-          <rect x="390" y={y - 14} width="54" height="28" rx="7" fill={index === 0 ? "#f1c75b" : "#ffffff"} stroke={index === 1 ? "#b63832" : "#64748b"} strokeWidth="2" />
+          <line
+            x1="162"
+            y1={y}
+            x2="394"
+            y2={y}
+            stroke="#50677a"
+            strokeWidth="2"
+            strokeDasharray="4 6"
+            opacity={index === 1 ? 0.85 : 0.28}
+          />
+          <rect
+            x="154"
+            y={y - 15}
+            width="82"
+            height="30"
+            rx="9"
+            fill="#ffffff"
+            stroke={index === 1 ? "#b63832" : "#64748b"}
+            strokeWidth="2"
+          />
+          <rect
+            x="390"
+            y={y - 14}
+            width="54"
+            height="28"
+            rx="7"
+            fill={index === 0 ? "#f1c75b" : "#ffffff"}
+            stroke={index === 1 ? "#b63832" : "#64748b"}
+            strokeWidth="2"
+          />
         </g>
       ))}
       {prs.map(([x, y, fill], index) => (
-        <circle key={`${x}-${y}-${index}`} cx={x} cy={y} r={index > 4 ? 8 : 7} fill={fill} stroke={index > 3 ? "#9f2f2f" : "#244f72"} strokeWidth="2" />
+        <circle
+          key={`${x}-${y}-${index}`}
+          cx={x}
+          cy={y}
+          r={index > 4 ? 8 : 7}
+          fill={fill}
+          stroke={index > 3 ? "#9f2f2f" : "#244f72"}
+          strokeWidth="2"
+        />
       ))}
-      <text x="250" y="182" textAnchor="middle" fill="#233148" fontSize="13" fontWeight="900" letterSpacing="1.4">
+      <text
+        x="250"
+        y="182"
+        textAnchor="middle"
+        fill="#233148"
+        fontSize="13"
+        fontWeight="900"
+        letterSpacing="1.4"
+      >
         PR COUNT IS NOT PRODUCT VELOCITY
       </text>
     </svg>
@@ -1509,38 +2075,254 @@ function MiniNimbyPreview() {
     [286, 95],
   ]
   return (
-    <svg style={styles.preview} viewBox="0 0 500 200" role="img" aria-label="Mini not in my backyard preview">
+    <svg
+      style={styles.preview}
+      viewBox="0 0 500 200"
+      role="img"
+      aria-label="Mini not in my backyard preview"
+    >
       <rect width="500" height="200" fill="#f7fafb" />
-      <path d="M 42 100 C 126 50, 184 148, 246 100 S 340 56, 430 100" fill="none" stroke="#9eb4c0" strokeWidth="6" strokeLinecap="round" strokeDasharray="12 10" />
+      <path
+        d="M 42 100 C 126 50, 184 148, 246 100 S 340 56, 430 100"
+        fill="none"
+        stroke="#9eb4c0"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeDasharray="12 10"
+      />
       {["ZONING", "DESIGN", "PARKING", "REVIEW", "COUNCIL"].map((label, index) => {
         const x = 126 + index * 68
         return (
           <g key={label}>
-            <rect x={x - 21} y="44" width="42" height="112" rx="8" fill={index === 2 ? "#fff2cc" : index === 3 ? "#ffe4e6" : "#edf7f6"} stroke={index === 3 ? "#b63832" : "#287a74"} strokeWidth="2" strokeDasharray="5 5" />
-            <text x={x} y="34" textAnchor="middle" fill="#233148" fontSize="8" fontWeight="900">{label}</text>
+            <rect
+              x={x - 21}
+              y="44"
+              width="42"
+              height="112"
+              rx="8"
+              fill={index === 2 ? "#fff2cc" : index === 3 ? "#ffe4e6" : "#edf7f6"}
+              stroke={index === 3 ? "#b63832" : "#287a74"}
+              strokeWidth="2"
+              strokeDasharray="5 5"
+            />
+            <text x={x} y="34" textAnchor="middle" fill="#233148" fontSize="8" fontWeight="900">
+              {label}
+            </text>
           </g>
         )
       })}
-      <ellipse cx="330" cy="102" rx="54" ry="48" fill="none" stroke="#b63832" strokeWidth="2.5" strokeDasharray="6 5" />
-      <rect x="414" y="66" width="58" height="70" rx="9" fill="#e3f7ec" stroke="#287a48" strokeWidth="2.5" />
-      <text x="443" y="55" textAnchor="middle" fill="#287a48" fontSize="9" fontWeight="900">SOCKET</text>
+      <ellipse
+        cx="330"
+        cy="102"
+        rx="54"
+        ry="48"
+        fill="none"
+        stroke="#b63832"
+        strokeWidth="2.5"
+        strokeDasharray="6 5"
+      />
+      <rect
+        x="414"
+        y="66"
+        width="58"
+        height="70"
+        rx="9"
+        fill="#e3f7ec"
+        stroke="#287a48"
+        strokeWidth="2.5"
+      />
+      <text x="443" y="55" textAnchor="middle" fill="#287a48" fontSize="9" fontWeight="900">
+        SOCKET
+      </text>
       <circle cx="84" cy="88" r="27" fill="#0f8f82" stroke="#233148" strokeWidth="2.4" />
-      <text x="84" y="92" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="900">84</text>
+      <text x="84" y="92" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="900">
+        84
+      </text>
       {features.map(([x, y, fill, label], index) => (
         <g key={`${label}-${index}`}>
-          <line x1={index > 3 ? 330 : 84} y1={index > 3 ? 118 : 88} x2={x} y2={y} stroke="#64748b" strokeWidth="1.5" strokeDasharray="3 4" />
+          <line
+            x1={index > 3 ? 330 : 84}
+            y1={index > 3 ? 118 : 88}
+            x2={x}
+            y2={y}
+            stroke="#64748b"
+            strokeWidth="1.5"
+            strokeDasharray="3 4"
+          />
           <circle cx={x} cy={y} r="10" fill={fill} stroke="#233148" strokeWidth="1.6" />
-          <text x={x} y={y + 3} textAnchor="middle" fill="#172033" fontSize="8" fontWeight="900">{label}</text>
+          <text x={x} y={y + 3} textAnchor="middle" fill="#172033" fontSize="8" fontWeight="900">
+            {label}
+          </text>
         </g>
       ))}
       {dollars.map(([x, y], index) => (
         <g key={`${x}-${y}`}>
-          <circle cx={x} cy={y} r={index === 4 ? 8 : 7} fill="#d94a45" stroke="#7f1d1d" strokeWidth="1.5" />
-          <text x={x} y={y + 3} textAnchor="middle" fill="#fff7ed" fontSize="10" fontWeight="900">$</text>
+          <circle
+            cx={x}
+            cy={y}
+            r={index === 4 ? 8 : 7}
+            fill="#d94a45"
+            stroke="#7f1d1d"
+            strokeWidth="1.5"
+          />
+          <text x={x} y={y + 3} textAnchor="middle" fill="#fff7ed" fontSize="10" fontWeight="900">
+            $
+          </text>
         </g>
       ))}
       <rect x="314" y="154" width="96" height="24" rx="7" fill="#fff1f2" stroke="#b63832" />
-      <text x="362" y="171" textAnchor="middle" fill="#b63832" fontSize="9" fontWeight="900">LOST FEATURES</text>
+      <text x="362" y="171" textAnchor="middle" fill="#b63832" fontSize="9" fontWeight="900">
+        LOST FEATURES
+      </text>
+    </svg>
+  )
+}
+
+function MiniInsightForgePreview() {
+  const rooms = [62, 103, 144, 185, 226]
+  const line = [
+    [32, 105],
+    [49, 101],
+    [67, 103],
+    [85, 98],
+    [103, 94],
+    [121, 70],
+    [139, 53],
+    [157, 59],
+    [175, 76],
+    [193, 82],
+    [211, 91],
+    [229, 95],
+  ]
+  const artifacts = [
+    [310, 62, "#b34c3d"],
+    [351, 62, "#c59837"],
+    [392, 62, "#557d85"],
+    [433, 62, "#497054"],
+    [310, 103, "#d2a43e"],
+    [351, 103, "#9b493d"],
+    [392, 144, "#477359"],
+  ]
+  return (
+    <svg
+      style={styles.preview}
+      viewBox="0 0 500 200"
+      role="img"
+      aria-label="Mini Insight Forge analytical inventory preview"
+    >
+      <rect width="500" height="200" fill="#28332f" />
+      <rect
+        x="8"
+        y="8"
+        width="484"
+        height="184"
+        rx="4"
+        fill="#e8d9b5"
+        stroke="#bc9147"
+        strokeWidth="3"
+      />
+      <rect x="10" y="10" width="480" height="31" fill="#46564f" />
+      <path d="M10 39H490" stroke="#2b342f" strokeWidth="3" />
+      <text x="24" y="29" fill="#f0d28a" fontSize="13" fontWeight="900" letterSpacing="1.5">
+        THE INSIGHT FORGE
+      </text>
+      <text x="476" y="28" textAnchor="end" fill="#d5d2be" fontSize="8" fontWeight="800">
+        CASE OF THE SHATTERED LANTERNS
+      </text>
+
+      {rooms.map((x, index) => (
+        <g key={x}>
+          {index > 0 && (
+            <path d={`M${rooms[index - 1] + 11} 52H${x - 11}`} stroke="#9a7240" strokeWidth="2" />
+          )}
+          <circle
+            cx={x}
+            cy="52"
+            r="8"
+            fill={index < 3 ? "#52725d" : "#6a604d"}
+            stroke="#d3aa55"
+            strokeWidth="1.4"
+          />
+          <text x={x} y="55" textAnchor="middle" fill="#fff0c9" fontSize="7" fontWeight="900">
+            {index + 1}
+          </text>
+        </g>
+      ))}
+
+      <rect x="22" y="65" width="223" height="91" fill="#f5ead0" stroke="#79694f" strokeWidth="2" />
+      <rect x="27" y="72" width="12" height="76" fill="#d5c399" />
+      <path d="M40 142H235M40 119H235M40 96H235" stroke="#b7a581" strokeWidth="1" />
+      <path
+        d={line.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x},${y}`).join(" ")}
+        fill="none"
+        stroke="#a94739"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path d="M118 73V148" stroke="#c49332" strokeWidth="2" strokeDasharray="4 3" />
+      <rect x="118" y="72" width="55" height="76" fill="#a94739" opacity="0.09" />
+      <text x="44" y="150" fill="#6e604d" fontSize="6" fontWeight="800">
+        30-DAY RETURN RATE
+      </text>
+
+      <rect
+        x="260"
+        y="47"
+        width="217"
+        height="112"
+        fill="#3a2c25"
+        stroke="#9e7545"
+        strokeWidth="3"
+      />
+      <text x="270" y="60" fill="#e7c46f" fontSize="8" fontWeight="900" letterSpacing="0.8">
+        ANALYST&apos;S SATCHEL
+      </text>
+      {[0, 1, 2, 3].map((row) =>
+        [0, 1, 2, 3].map((column) => (
+          <rect
+            key={`${row}-${column}`}
+            x={271 + column * 41}
+            y={66 + row * 25}
+            width="37"
+            height="21"
+            fill={row === 3 ? "#334638" : row === 2 ? "#493b30" : "#33403a"}
+            stroke="#75664d"
+          />
+        )),
+      )}
+      {artifacts.map(([x, y, fill], index) => (
+        <g key={`${x}-${y}`}>
+          <rect
+            x={x - 12}
+            y={y + 6}
+            width="24"
+            height="17"
+            rx="2"
+            fill="#ead7aa"
+            stroke={fill}
+            strokeWidth={index === 6 ? 2.5 : 1.5}
+            strokeDasharray={index === 5 ? "3 2" : undefined}
+          />
+          <path d={`M${x} ${y + 8}l4 6-4 6-4-6Z`} fill={fill} />
+        </g>
+      ))}
+
+      <rect
+        x="22"
+        y="164"
+        width="455"
+        height="19"
+        fill="#384640"
+        stroke="#252d29"
+        strokeWidth="2"
+      />
+      <rect x="154" y="167" width="67" height="13" fill="#2a2521" stroke="#c39748" />
+      <rect x="279" y="167" width="67" height="13" fill="#2a2521" stroke="#c39748" />
+      <path d="M237 178c8-19 16-19 24 0" fill="#d95e36" stroke="#f0bd50" strokeWidth="2" />
+      <path d="M221 173h15M263 173h15" stroke="#d1a34d" strokeWidth="2" />
+      <text x="372" y="177" fill="#f0d28a" fontSize="7" fontWeight="900">
+        CRAFT EVIDENCE, NOT SCREENSHOTS
+      </text>
     </svg>
   )
 }

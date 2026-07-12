@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { RealtimeFrameHandle } from "../../realtime/types"
 import StreamPhysicsFrame, {
   type PhysicsBodySelection,
   type PhysicsBodyStyleContext,
@@ -36,7 +35,7 @@ import {
   type ProcessFlowProjectionMetadata,
   type ProcessFlowStageDef
 } from "./physicsChartUtils"
-import { usePhysicsHocHandle } from "./physicsHocHandle"
+import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -288,7 +287,7 @@ function processFlowProjectionOverlay(
  */
 export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
   TDatum extends Datum = Datum
->(props: ProcessFlowChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+>(props: ProcessFlowChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
     ballRadius = 6,
     chromeOptions,

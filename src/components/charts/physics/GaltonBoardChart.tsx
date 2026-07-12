@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
-import type { RealtimeFrameHandle } from "../../realtime/types"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle,
   type StreamPhysicsFrameProps
@@ -18,7 +17,7 @@ import {
   projectionRowsToSemanticItems,
   styleFromColorAccessor
 } from "./physicsChartUtils"
-import { usePhysicsHocHandle } from "./physicsHocHandle"
+import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -255,7 +254,7 @@ function galtonBoardOverlay(
  */
 export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
   TDatum extends Datum = Datum
->(props: GaltonBoardChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+>(props: GaltonBoardChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
     data,
     valueAccessor = "value" as ChartAccessor<TDatum, number>,

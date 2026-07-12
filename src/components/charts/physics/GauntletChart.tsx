@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
-import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import type { Style } from "../../stream/types"
 import StreamPhysicsFrame, {
   type PhysicsBodySemanticItemAccessor,
@@ -155,7 +155,7 @@ const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] = []
  */
 export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Datum = Datum>(
   props: GauntletChartProps<TDatum>,
-  ref: React.Ref<RealtimeFrameHandle>
+  ref: React.Ref<PhysicsFrameHandle>
 ) {
   const {
     bodyGroups,
@@ -689,7 +689,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
 }) as unknown as {
   <TDatum extends Datum = Datum>(
     props: GauntletChartProps<TDatum> &
-      React.RefAttributes<RealtimeFrameHandle>
+      React.RefAttributes<PhysicsFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }

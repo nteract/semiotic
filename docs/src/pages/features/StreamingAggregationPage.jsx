@@ -337,6 +337,8 @@ export default function StreamingAggregationPage() {
         { label: "Features", path: "/features" },
         { label: "Streaming Aggregation", path: "/features/streaming-aggregation" },
       ]}
+      prevPage={{ title: "Physics Encoding", path: "/features/physics-encoding" }}
+      nextPage={{ title: "Chart Container", path: "/features/chart-container" }}
     >
       <p>
         Most front-end streaming charts buffer raw records and redraw them — so

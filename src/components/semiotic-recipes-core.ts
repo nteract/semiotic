@@ -1,0 +1,486 @@
+/**
+ * Recipes entry point — curated layout functions for use with `XYCustomChart`.
+ *
+ * Import from "semiotic/recipes" instead of the full bundle. Recipes are
+ * pure CustomLayout functions that emit standard SceneNodes; they get hit
+ * testing, transitions, decay, theme cascade, and SSR for free.
+ */
+
+export { waffleLayout, allocateCells } from "./recipes/waffle"
+// unitize: the pictogram/tally allocator — value → repeated unit signs with a
+// fractional final sign (allocateCells divides fixed cells; unitize counts).
+export { unitize, unitizeRange } from "./recipes/unitize"
+export type {
+  UnitSign,
+  RangeUnitSign,
+  UnitizeOptions,
+  UnitizeResult,
+  UnitizeRangeResult,
+} from "./recipes/unitize"
+export {
+  generateTokens,
+  layoutTokenGrid,
+  normalizeTokenEncoding,
+  diagnoseTokenEncoding,
+  suggestTokenEncoding,
+  tokenTaskIntentToCapabilityIntents,
+} from "./recipes/tokenEncoding"
+export type {
+  TokenType,
+  TokenSemantics,
+  TokenCountStrategy,
+  TokenLayout,
+  TokenLabelPolicy,
+  TokenTaskIntent,
+  TokenCapabilityIntent,
+  TokenEncoding,
+  TokenGeneratorInput,
+  VisualToken,
+  TokenDiagnosticCode,
+  TokenDiagnostic,
+  TokenDiagnosticsContext,
+  TokenSet,
+  TokenGridOptions,
+  PositionedToken,
+  TokenEncodingSuggestion,
+  SuggestTokenEncodingInput,
+} from "./recipes/tokenEncoding"
+export { tokenLayer } from "./recipes/tokenLayer"
+export type {
+  TokenLayerOptions,
+  TokenLayerConfig,
+  TokenLayerResult,
+  TokenLayerInput,
+  TokenLayerValue,
+  TokenPosition,
+} from "./recipes/tokenLayer"
+export type { WaffleConfig, CellWeight, AllocatedCells, AllocateCellsOptions } from "./recipes/waffle"
+
+export { calendarLayout } from "./recipes/calendar"
+export type { CalendarConfig } from "./recipes/calendar"
+
+export {
+  isometricLandmarkLayout,
+  selectIsometricLandmarks,
+  DEFAULT_ISOMETRIC_SPRITE_SIZES,
+} from "./recipes/isometricLandmarks"
+export type {
+  IsometricLandmarkConfig,
+  IsometricLandmarkTile,
+  IsometricTerrainCell,
+  IsometricTerrainKind,
+  LandmarkKind,
+} from "./recipes/isometricLandmarks"
+
+// ── Network recipes (use with StreamNetworkFrame's customNetworkLayout) ──
+export { flextreeLayout } from "./recipes/flextree"
+export type { FlextreeConfig } from "./recipes/flextree"
+
+export { dagreLayout } from "./recipes/dagre"
+export type { DagreConfig } from "./recipes/dagre"
+
+export { lineageDagLayout } from "./recipes/lineageDag"
+export type { LineageDagConfig, LineageLod, LineageStoreSlot } from "./recipes/lineageDag"
+
+export { mermaidDagLayout } from "./recipes/mermaidDag"
+export type { MermaidDagConfig } from "./recipes/mermaidDag"
+
+export { packedClusterMatrix } from "./recipes/packedClusterMatrix"
+export type { PackedClusterMatrixConfig } from "./recipes/packedClusterMatrix"
+
+// ── Ordinal recipes (use with OrdinalCustomChart's customLayout) ──
+export { marimekkoLayout } from "./recipes/marimekko"
+export type { MarimekkoConfig } from "./recipes/marimekko"
+
+export { bulletLayout } from "./recipes/bullet"
+export type { BulletConfig } from "./recipes/bullet"
+
+export { parallelCoordinatesLayout } from "./recipes/parallelCoordinates"
+export type { ParallelCoordinatesConfig } from "./recipes/parallelCoordinates"
+
+export { bobaLayout } from "./recipes/boba"
+export type { BobaConfig } from "./recipes/boba"
+
+export { annotationLayout } from "./recipes/annotationLayout"
+export type {
+  AnnotationLayoutConfig,
+  AnnotationLayoutOptions,
+  AutoPlaceAnnotations,
+  AutoPlaceAnnotationsConfig,
+  AnnotationCohesion,
+  AnnotationAudience,
+  AnnotationMobileConfig,
+} from "./recipes/annotationLayout"
+
+export { annotationDensity, annotationBudget, DEFAULT_AREA_PER_ANNOTATION } from "./recipes/annotationDensity"
+export type {
+  AnnotationDensityConfig,
+  AnnotationDensityOptions,
+  AnnotationDensityResult,
+} from "./recipes/annotationDensity"
+
+export { intervalLanesLayout } from "./recipes/intervalLanes"
+export type { IntervalLanesConfig } from "./recipes/intervalLanes"
+
+export { axisFixedForceLayout, axisFixedForcePositions, rectCollide } from "./recipes/axisFixedForce"
+export type {
+  AxisFixedForceConfig,
+  AxisFixedForceResult,
+  PositionedNode,
+  CollisionBox,
+  RectCollideOptions,
+} from "./recipes/axisFixedForce"
+
+// ── Custom-chart authoring kit ───────────────────────────────────────────
+// hitTarget: the invisible, interaction-bearing scene node that earns a custom
+// layout keyboard nav + focus ring (accessibility), pointId anchoring
+// (annotations), onObservation/selection (AI), and transition identity (chart
+// modes) — for free. The flagship custom-chart primitive.
+export {
+  hitTargetPoint,
+  hitTargetRect,
+  networkHitTarget,
+  geoHitTarget,
+  geoAreaHitTarget,
+  DEFAULT_HIT_RADIUS,
+} from "./stream/hitTarget"
+export type {
+  GeoAreaHitTargetProps,
+  HitTargetPointProps,
+  HitTargetRectProps,
+  NetworkHitTargetCircleProps,
+  NetworkHitTargetRectProps,
+} from "./stream/hitTarget"
+
+// Run-length encoding — collapse a per-step categorical/boolean series into
+// drawable runs (condition strips, status timelines, calendar ribbons).
+export { runs, runLengthEncode } from "./recipes/runs"
+export type { Run, RunOptions } from "./recipes/runs"
+
+// Cyclical (wrap-around) interval math for any periodic axis (day-of-year,
+// hour-of-day, compass bearing) — the math a radial/circular brush re-derives.
+export { wrapValue, shortestArcDelta, cyclicRangeContains, selectCyclicRange } from "./recipes/cyclical"
+
+// Interval (Gantt/timeline) packing + temporal density.
+export { packIntervals, activeCountOverDomain } from "./recipes/intervals"
+export type {
+  PackedInterval,
+  PackIntervalsResult,
+  PackIntervalsOptions,
+  ActiveCount,
+  ActiveCountOptions,
+} from "./recipes/intervals"
+
+// Radial coordinate kit — angle ⟂ radius primitives for bespoke radial charts.
+export { polarToXY, xyToAngle, angleScale, radiusScale, ringArcPath, TAU } from "./recipes/radialCoords"
+export type { Point, PolarOptions, AngleScaleOptions, RingArcOptions } from "./recipes/radialCoords"
+
+// Edge-router kit — SVG-path builders for custom-network edges, plus cubic
+// Bézier evaluation (sample a point/tangent along a curve to place marks).
+export {
+  curvedEdgePath,
+  orthogonalEdgePath,
+  boxEdgeAnchors,
+  fanOutBend,
+  cubicPoint,
+  cubicTangent,
+  cubicPath,
+} from "./recipes/edgeRouter"
+export type {
+  CenteredBox,
+  EdgeOrientation,
+  CurvedEdgeOptions,
+  BoxEdgeAnchorOptions,
+  FanOutBendOptions,
+  CubicCurve,
+} from "./recipes/edgeRouter"
+
+// 2D vector kit — point add/subtract/scale/magnitude/normalize for any custom
+// layout positioning marks in Cartesian space (composes with the radial + edge kits).
+export {
+  addPoints,
+  subtractPoints,
+  scalePoint,
+  pointMagnitude,
+  normalizePoint,
+} from "./recipes/vector"
+
+// Unwrap the raw user datum from a frame node / observation wrapper.
+export { unwrapDatum } from "./recipes/recipeUtils"
+
+// Re-export the layout types so recipe authors don't need a second import.
+export type {
+  CustomLayout,
+  LayoutContext,
+  LayoutResult,
+} from "./stream/customLayout"
+export type {
+  NetworkCustomLayout,
+  NetworkLayoutContext,
+  NetworkLayoutResult,
+  NetworkHtmlMark,
+} from "./stream/networkCustomLayout"
+export type {
+  OrdinalCustomLayout,
+  OrdinalLayoutContext,
+  OrdinalLayoutResult,
+} from "./stream/ordinalCustomLayout"
+export type {
+  CustomLayoutFailureDiagnostic,
+  CustomLayoutFailureRecovery,
+  CustomLayoutFamily
+} from "./stream/customLayoutFailure"
+
+// Glyph + color helpers for multi-channel custom layouts (and matching legends).
+export { shade, makeShade, readField, groupBy } from "./recipes/recipeUtils"
+// Interaction + caching helpers shared by custom-layout recipes.
+export { dimFor, matchesHighlight, signatureKey, LayoutCache } from "./recipes/recipeUtils"
+// Small numeric/color utilities every hand-built layout re-declares.
+export { clamp, mean, nonNegativeFinite, withAlpha } from "./recipes/recipeUtils"
+export type { DimOptions, HighlightMatch } from "./recipes/recipeUtils"
+export { symbolPathString, symbolRadius, symbolExtent, SYMBOL_SEQUENCE } from "./stream/symbolPath"
+export type { NetworkSymbolName } from "./stream/symbolPath"
+// Composite pictograms — the `glyph` scene node's definition format plus the
+// placement/extent math a layout needs to stack, pack, or label them. Pair
+// with `unitize` for ISOTYPE unit charts (fraction ↔ partial glyph fill).
+export {
+  glyphPlacement,
+  glyphExtent,
+  glyphFractionClipRect,
+  DEFAULT_GLYPH_VIEWBOX,
+  DEFAULT_GLYPH_ANCHOR,
+} from "./stream/glyphDef"
+export type { GlyphDef, GlyphPart, GlyphPlacement } from "./stream/glyphDef"
+export {
+  isotypeInk,
+  isotypePaper,
+  isotypeGhost,
+  isotypeServerGlyph,
+  isotypeChipGlyph,
+  isotypeBoltGlyph,
+  isotypeBusGlyph,
+  isotypePersonPath,
+  isotypePersonGlyph,
+  isotypeNetworkGlyphs,
+} from "./recipes/isotypeGlyphs"
+
+// Recipe chrome kit — group enclosures, band labels, and mark callouts that
+// custom-layout recipes draw in their `overlays` layer.
+export { roundedEnclosure, boundsOf, bandLabel, markCallout, linearAxis, hatchFill } from "./recipes/recipeChrome"
+export type {
+  RoundedEnclosureProps,
+  BandLabelProps,
+  MarkCalloutProps,
+  CalloutConnector,
+  LinearAxisProps,
+  AxisOrient,
+  HatchFillOptions,
+} from "./recipes/recipeChrome"
+
+// Legend builder — the LegendGroup[] a custom layout passes through frameProps.legend.
+export { legendGroupsFrom, legendSwatches } from "./recipes/recipeLegend"
+export type { LegendGroupsInput, LegendSwatch, LegendSwatchesProps } from "./recipes/recipeLegend"
+
+// Selection channel selection API is exported from the React split entry.
+
+export {
+  buildTooltipEntries,
+  extractTooltipDatum,
+  formatTooltipValue,
+} from "./recipes/customTooltip"
+export type {
+  CustomTooltipEntry,
+  CustomTooltipEntryOptions,
+} from "./recipes/customTooltip"
+
+// ── Network analysis (pure graph algorithms: pathfinding, centrality, ego,
+//    clustering, and the "spatial problem" layout diagnostic). ──
+export {
+  buildAdjacency,
+  degree,
+  bfsDistances,
+  shortestPath,
+  egoNetwork,
+  betweenness,
+  closeness,
+  clustering,
+  normalizeScores,
+  proximityProblem,
+} from "./recipes/networkAnalysis"
+export type {
+  GraphNode,
+  GraphEdge,
+  ProximityProblemOptions,
+  ProximityProblemResult,
+} from "./recipes/networkAnalysis"
+
+// ── Seeded, deterministic force layout for NetworkCustomChart. ──
+export { forceLayout, mulberry32 } from "./recipes/forceLayout"
+export type { ForceLayoutOptions } from "./recipes/forceLayout"
+export { forceLayoutAsync } from "./recipes/forceLayoutAsync"
+export type { ForceLayoutAsyncOptions } from "./recipes/forceLayoutAsync"
+
+// ── Physics recipes (use with PhysicsCustomChart / StreamPhysicsFrame) ──
+export {
+  absorbRegion,
+  aggregateRegionCounts,
+  arrivalReplay,
+  bodyGroupSpec,
+  capacitatedRegion,
+  chargeGateRegion,
+  collidersFromScales,
+  composePhysicsControllers,
+  createCapacityQueueController,
+  createDependencyGateController,
+  createPortalController,
+  createServiceLevelController,
+  createServiceResourcePoolController,
+  createProcessJourneyLedger,
+  comparePhysicsTrace,
+  forceFieldRegion,
+  processChrome,
+  galtonPegs,
+  groupCompletionRows,
+  membraneRegion,
+  portalRegion,
+  pressureFieldRegion,
+  processLaneWalls,
+  processJourneyRows,
+  processStageLayout,
+  processStageRegions,
+  processVolumePolygons,
+  physicsReferenceEnvelope,
+  regionCountsToProjectionRows,
+  routeSurfaceRegion,
+  sedimentBake,
+  spawnFromTokens,
+  stageTargetInVolume,
+  updateProcessJourney,
+} from "./recipes/physics"
+export type {
+  ArrivalReplayOptions,
+  BandScale,
+  BodyGroupSpec,
+  BodyGroupSpecOptions,
+  CapacityQueueAbandonedInfo,
+  CapacityQueueAgeSummary,
+  CapacityQueueBlockedInfo,
+  CapacityQueueControllerOptions,
+  CapacityQueueProcessedInfo,
+  CapacityQueueSnapshot,
+  CapacityQueueVisitInfo,
+  CapacityQueueWindowSnapshot,
+  ComposedPhysicsControllers,
+  DependencyGateController,
+  DependencyGateOptions,
+  DependencyGateSnapshot,
+  GaltonPegsOptions,
+  ProcessChromeGroup,
+  ProcessChromeLayout,
+  ProcessChromeOptions,
+  ProcessChromeStage,
+  NumericScale,
+  PhysicsBandColliderOptions,
+  PhysicsColliderSpec,
+  PhysicsPlotBounds,
+  PhysicsQueuedSpawn,
+  PhysicsReferenceBandSelector,
+  PhysicsReferenceEnvelope,
+  PhysicsReferenceEnvelopeOptions,
+  PhysicsReferenceEnvelopePoint,
+  PhysicsReferenceSampleGrid,
+  PhysicsReferenceTrace,
+  PhysicsScalarTraceSample,
+  PhysicsScaleColliderOptions,
+  PhysicsSedimentBinSnapshot,
+  PhysicsSedimentColumn,
+  PhysicsSedimentHeightfieldOptions,
+  PhysicsSpawnPacingOptions,
+  PhysicsTraceAccessor,
+  PhysicsTraceComparison,
+  PhysicsTraceComparisonOptions,
+  PhysicsTraceComparisonPoint,
+  PhysicsTraceComparisonStatus,
+  PhysicsTraceInterpolation,
+  PhysicsTraceOutsideDomain,
+  ProcessMembraneDef,
+  ProcessJourneyEntityState,
+  ProcessJourneyLedger,
+  ProcessJourneyRow,
+  ProcessJourneyStage,
+  ProcessJourneyUpdateOptions,
+  ProcessRegionBaseOptions,
+  ProcessStageRegionOptions,
+  ProcessStageDef,
+  ProcessVolumeLayout,
+  ProcessVolumeLayoutOptions,
+  ProcessVolumeMembraneBand,
+  ProcessVolumePoint,
+  ProcessVolumePolygon,
+  ProcessVolumePolygonRole,
+  PhysicsController,
+  PhysicsControllerTickContext,
+  ServiceLevelCaseInfo,
+  ServiceLevelCaseState,
+  ServiceLevelController,
+  ServiceLevelControllerOptions,
+  ServiceLevelSnapshot,
+  ServiceResourceAssignment,
+  ServiceResourceDefinition,
+  ServiceResourcePoolController,
+  ServiceResourcePoolOptions,
+  ServiceResourcePoolSnapshot,
+  ProcessVolumeShape,
+  ProcessVolumeStageBand,
+  RegionCountBucket,
+  RegionCountMap,
+  SedimentBakeOptions,
+  SedimentBakeResult,
+  SpawnFromTokensOptions,
+} from "./recipes/physics"
+
+// ── Static network layouts (arc diagram / adjacency matrix / circular). ──
+export {
+  orderByGroupDegree,
+  arcLayout,
+  arcPath,
+  circularLayout,
+  adjacencyMatrix,
+} from "./recipes/networkLayouts"
+export type {
+  ArcLayoutOptions,
+  CircularLayoutOptions,
+  MatrixCell,
+  AdjacencyMatrix,
+  AdjacencyMatrixOptions,
+} from "./recipes/networkLayouts"
+
+export {
+  mobileAnnotationStrategy
+} from "./recipes/mobileAnnotationStrategy"
+export type {
+  MobileAnnotationCalloutItem,
+  MobileAnnotationStrategyConfig,
+  MobileAnnotationStrategyMode,
+  MobileAnnotationStrategyResult
+} from "./recipes/mobileAnnotationStrategy"
+
+export {
+  mobileAreaChartRecipe,
+  mobileChartFamilyRecipe,
+  mobileGeoChartRecipe,
+  mobileLineChartRecipe,
+  mobileNetworkChartRecipe,
+  mobileOrdinalChartRecipe,
+  mobileScatterplotRecipe,
+  mobileSmallMultipleRecipe
+} from "./recipes/mobileChartFamilyRecipes"
+export type {
+  MobileChartFamily,
+  MobileChartFamilyRecipe,
+  MobileChartFamilyRecipeOptions
+} from "./recipes/mobileChartFamilyRecipes"
+export {
+  mobileBrushAlternatives,
+  type MobileBrushAlternativeOptions,
+} from "./recipes/mobileChartFamilyRecipes"

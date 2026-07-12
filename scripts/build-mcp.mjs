@@ -16,6 +16,12 @@ await build({
     "semiotic/ai",
     "semiotic/geo",
     "semiotic/server",
+    // jsdom must stay external: it self-references internal files via
+    // require.resolve("./xhr-sync-worker.js"), which breaks once bundled into a
+    // single file (the worker path no longer resolves), so `new JSDOM(...)`
+    // throws at runtime and interactive-SVG sanitization silently yields "".
+    // Requires jsdom to be resolvable at runtime (see package.json deps).
+    "jsdom",
   ],
   banner: {
     js: "#!/usr/bin/env node",

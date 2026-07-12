@@ -1,8 +1,7 @@
 import * as React from "react"
 import { fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import type { RealtimeFrameHandle } from "../../realtime/types"
-import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { EventDropChart } from "./EventDropChart"
@@ -470,7 +469,7 @@ describe("physics chart HOCs", () => {
   })
 
   it("renders GaltonBoardChart and exposes row push", () => {
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     const { container, getAllByTestId, getByTestId, getByText } = render(
       <GaltonBoardChart
         ref={ref}
@@ -543,7 +542,7 @@ describe("physics chart HOCs", () => {
   })
 
   it("renders ProcessFlowChart with stage chrome and push", () => {
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     const { container, getByTestId } = render(
       <ProcessFlowChart
         ref={ref}
@@ -585,7 +584,7 @@ describe("physics chart HOCs", () => {
   })
 
   it("renders CollisionSwarmChart with projection overlay and exposes row push", () => {
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     const { container, getByTestId, getByText } = render(
       <CollisionSwarmChart
         ref={ref}
@@ -622,7 +621,7 @@ describe("physics chart HOCs", () => {
     expect(raw.x).toBeGreaterThan(leftLimit + 10)
     expect(raw.x).toBeLessThan(layout.width - GAUNTLET_WALL.rightInset)
 
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     render(
       <GauntletChart
         ref={ref}
@@ -676,7 +675,7 @@ describe("physics chart HOCs", () => {
   })
 
   it("renders GauntletChart from declarative properties and exposes project push", () => {
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     const { container, getByText } = render(
       <GauntletChart
         ref={ref}
@@ -801,7 +800,7 @@ describe("physics chart HOCs", () => {
 
 
   it("renders PhysicalFlowChart with static pipes, sensors, and row push", () => {
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     const { container, getAllByTestId } = render(
       <PhysicalFlowChart
         ref={ref}
@@ -877,8 +876,8 @@ describe("physics chart HOCs", () => {
   })
 
   it("renders EventDropChart and PhysicsPileChart without the full Semiotic bundle", () => {
-    const eventRef = React.createRef<RealtimeFrameHandle>()
-    const pileRef = React.createRef<RealtimeFrameHandle>()
+    const eventRef = React.createRef<PhysicsFrameHandle>()
+    const pileRef = React.createRef<PhysicsFrameHandle>()
     const { container } = render(
       <>
         <EventDropChart
@@ -1046,7 +1045,7 @@ describe("physics chart HOCs", () => {
   })
 
   it("remove/update work on static initial rows without a prior push", () => {
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     render(
       <CollisionSwarmChart
         ref={ref}
@@ -1112,7 +1111,7 @@ describe("physics chart HOCs", () => {
     expect(queryByTestId("process-flow-chrome")).toBeNull()
   })
 
-  it("exposes the full RealtimeFrameHandle push API on every physics HOC (push-only mount)", () => {
+  it("exposes the full PhysicsFrameHandle API (push + popBodies) on every physics HOC (push-only mount)", () => {
     const processStages = [
       { id: "coding", label: "Coding", force: 10 },
       { id: "done", label: "Done", absorb: true }
@@ -1144,7 +1143,7 @@ describe("physics chart HOCs", () => {
 
     const cases: Array<{
       name: string
-      render: (ref: React.RefObject<RealtimeFrameHandle | null>) => React.ReactElement
+      render: (ref: React.RefObject<PhysicsFrameHandle | null>) => React.ReactElement
       row: Record<string, unknown>
       more: Record<string, unknown>[]
     }> = [
@@ -1264,7 +1263,7 @@ describe("physics chart HOCs", () => {
     ]
 
     for (const entry of cases) {
-      const ref = React.createRef<RealtimeFrameHandle>()
+      const ref = React.createRef<PhysicsFrameHandle>()
       const { unmount, container } = render(entry.render(ref))
       expect(
         container.querySelector(".stream-physics-frame canvas"),
@@ -1280,6 +1279,10 @@ describe("physics chart HOCs", () => {
       expect(typeof handle!.clear).toBe("function")
       expect(typeof handle!.getData).toBe("function")
       expect(handle!.getScales?.()).toBeNull()
+      // Physics-only exit-emphasis burst — present on every physics HOC handle,
+      // delegates to the frame, and returns the removed-body ids (empty here).
+      expect(typeof handle!.popBodies).toBe("function")
+      expect(Array.isArray(handle!.popBodies(["__no_such_body__"]))).toBe(true)
 
       handle!.push(entry.row)
       expect(
@@ -1333,7 +1336,7 @@ describe("physics chart HOCs", () => {
   it("renders PhysicsCustomChart with world context, overlays, and row push", () => {
     type LaneDatum = { id: string; lane: string }
     let captured: PhysicsCustomLayoutContext<LaneDatum> | null = null
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     const layout: PhysicsCustomLayout<LaneDatum> = (ctx) => {
       captured = ctx
       return {
@@ -1375,136 +1378,5 @@ describe("physics chart HOCs", () => {
     expect(captured!.world).toBeInstanceOf(PhysicsPipelineStore)
     ref.current?.push({ id: "b", lane: "B" })
     expect(ref.current?.getData().some((datum) => datum.id === "b")).toBe(true)
-  })
-})
-
-describe("physics chart server rendering", () => {
-  it("renders settled physics SVG with evidence", () => {
-    const { svg, evidence } = renderChartWithEvidence("GaltonBoardChart", {
-      data: [
-        { id: "a", value: 1 },
-        { id: "b", value: 2 },
-        { id: "c", value: 3 }
-      ],
-      valueAccessor: "value",
-      bins: 3,
-      width: 260,
-      height: 160,
-      title: "Galton"
-    })
-
-    expect(svg).toContain("<svg")
-    expect(evidence.component).toBe("GaltonBoardChart")
-    expect(evidence.frameType).toBe("physics")
-    expect(evidence.empty).toBe(false)
-    expect(evidence.markCount).toBeGreaterThan(0)
-  })
-
-  it("server-renders mechanical GaltonBoardChart without input data", () => {
-    const { svg, evidence } = renderChartWithEvidence("GaltonBoardChart", {
-      mode: "mechanical",
-      bins: 9,
-      pegRows: 8,
-      mechanicalCount: 32,
-      branchProbability: 0.35,
-      width: 260,
-      height: 160,
-      title: "Mechanical Galton"
-    })
-
-    expect(svg).toContain("<svg")
-    expect(evidence.component).toBe("GaltonBoardChart")
-    expect(evidence.empty).toBe(false)
-    expect(evidence.markCount).toBeGreaterThan(0)
-  })
-
-  it("server-renders mechanical PhysicsPileChart without input data", () => {
-    const { svg, evidence } = renderChartWithEvidence("PhysicsPileChart", {
-      mode: "mechanical",
-      mechanicalCategories: ["Backlog", "Active", "Done"],
-      mechanicalCount: 36,
-      width: 260,
-      height: 160,
-      title: "Mechanical pile"
-    })
-
-    expect(svg).toContain("<svg")
-    expect(evidence.component).toBe("PhysicsPileChart")
-    expect(evidence.empty).toBe(false)
-    expect(evidence.markCount).toBeGreaterThan(3)
-  })
-
-  it("server-renders CollisionSwarmChart as settled physics SVG", () => {
-    const { svg, evidence } = renderChartWithEvidence("CollisionSwarmChart", {
-      data: [
-        { id: "a", x: 12, group: "A" },
-        { id: "b", x: 14, group: "A" },
-        { id: "c", x: 26, group: "B" }
-      ],
-      xAccessor: "x",
-      groupAccessor: "group",
-      xExtent: [0, 40],
-      width: 260,
-      height: 160,
-      title: "Collision swarm"
-    })
-
-    expect(svg).toContain("<svg")
-    expect(evidence.component).toBe("CollisionSwarmChart")
-    expect(evidence.empty).toBe(false)
-    expect(evidence.markCount).toBeGreaterThan(0)
-  })
-
-
-  it("server-renders PhysicalFlowChart as settled packet SVG", () => {
-    const { svg, evidence } = renderChartWithEvidence("PhysicalFlowChart", {
-      nodes: [
-        { id: "A", x: 0.1, y: 0.5 },
-        { id: "B", x: 0.9, y: 0.5 }
-      ],
-      links: [{ id: "flow", source: "A", target: "B", value: 50 }],
-      width: 280,
-      height: 170,
-      title: "Physical flow"
-    })
-
-    expect(svg).toContain("<svg")
-    expect(evidence.component).toBe("PhysicalFlowChart")
-    expect(evidence.frameType).toBe("physics")
-    expect(evidence.empty).toBe(false)
-    expect(evidence.markCount).toBeGreaterThan(0)
-  })
-
-  it("server-renders PhysicsCustomChart by running the user layout once", () => {
-    const layout = (ctx: PhysicsCustomLayoutContext) => ({
-      bodies: ctx.data.map((datum, index) => ({
-        id: String(datum.id),
-        x: 40 + index * 30,
-        y: 20,
-        mass: 1,
-        shape: { type: "circle" as const, radius: 6 },
-        datum
-      })),
-      colliders: [
-        {
-          id: "floor",
-          shape: { type: "aabb" as const, x: 100, y: 150, width: 200, height: 12 }
-        }
-      ]
-    })
-
-    const { svg, evidence } = renderChartWithEvidence("PhysicsCustomChart", {
-      data: [{ id: "a" }, { id: "b" }, { id: "c" }],
-      layout,
-      width: 240,
-      height: 160,
-      title: "Custom physics"
-    })
-
-    expect(svg).toContain("<svg")
-    expect(evidence.component).toBe("PhysicsCustomChart")
-    expect(evidence.frameType).toBe("physics")
-    expect(evidence.empty).toBe(false)
-    expect(evidence.markCount).toBe(3)
   })
 })

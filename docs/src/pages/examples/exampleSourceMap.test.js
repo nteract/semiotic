@@ -44,7 +44,7 @@ export default function Example() {
     expect(getExampleSourceLoader("/examples/watermarks")).toBe(
       getExampleSourceLoader("/examples/watermarks"),
     )
-    expect(getExampleSourceLoader("/examples/plinko-quantile-dotplot")).not.toBe(
+    expect(getExampleSourceLoader("/examples/stakeholder-journey")).not.toBe(
       getExampleSourceLoader("/examples/watermarks"),
     )
   })

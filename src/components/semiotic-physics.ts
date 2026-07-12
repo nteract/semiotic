@@ -9,6 +9,10 @@ import { PhysicsPileChart } from "./charts/physics/PhysicsPileChart"
 import { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
 import { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
 import {
+  compilePhysicsEncoding,
+  createPhysicsEncodingLayout
+} from "./charts/physics/physicsEncoding"
+import {
   GauntletChart,
   GuantletChart,
   planGauntletPropertyWork,
@@ -105,11 +109,13 @@ export {
   capacitatedRegion,
   chargeGateRegion,
   collidersFromScales,
+  compilePhysicsEncoding,
   composePhysicsControllers,
   createCapacityQueueController,
   createDependencyGateController,
   createDefaultPhysicsEngineAdapter,
   createPortalController,
+  createPhysicsEncodingLayout,
   createServiceLevelController,
   createServiceResourcePoolController,
   createProcessJourneyLedger,
@@ -188,6 +194,24 @@ export type {
   PhysicsCustomSpawnDatumResult
 } from "./charts/physics/PhysicsCustomChart"
 export type { PhysicsPileChartProps } from "./charts/physics/PhysicsPileChart"
+export type {
+  CompilePhysicsEncodingOptions,
+  CreatePhysicsEncodingLayoutOptions,
+  PhysicsAccessibleEncoding,
+  PhysicsAppearanceEncoding,
+  PhysicsDynamicsEncoding,
+  PhysicsEncoding,
+  PhysicsEncodingAccessor,
+  PhysicsEncodingCompilation,
+  PhysicsEncodingConstant,
+  PhysicsEncodingDefaults,
+  PhysicsEncodingLayoutExtension,
+  PhysicsKinematicsEncoding,
+  PhysicsPlacementEncoding,
+  PhysicsProcessEncoding,
+  PhysicsTimeEncoding,
+  ResolvedPhysicsEncodingRow
+} from "./charts/physics/physicsEncoding"
 export type {
   PhysicsChartLayout,
   CollisionSwarmPhysicsOptions,
@@ -284,6 +308,9 @@ export type {
   SedimentBakeResult,
   SpawnFromTokensOptions
 } from "./recipes/physics"
+// The imperative handle every physics HOC exposes (push/remove/update + the
+// `popBodies` exit-emphasis burst).
+export type { PhysicsFrameHandle } from "./charts/physics/physicsHocHandle"
 export type {
   StreamPhysicsFrameHandle,
   StreamPhysicsFrameProps,
@@ -361,3 +388,79 @@ export type {
   PhysicsKernelOptions,
   PhysicsSpringSpec
 } from "./stream/physics/PhysicsKernel"
+
+// Dependency enactment and directed blocker reachability.
+export { ChainReactionChart } from "./charts/physics/ChainReactionChart"
+export type {
+  ChainReactionChartProps,
+  ChainReactionChartHandle,
+  ChainReactionMode,
+  ChainReactionInsight,
+  ChainReactionObservation,
+  ChainReactionMachineState
+} from "./charts/physics/ChainReactionChart"
+export {
+  compileDependencyMachine,
+  routeDependencyTracks,
+  createLogicalJoin,
+  replayStateTransitions,
+  calculateBlockerAmplification
+} from "./charts/physics/dependencyMachine"
+export type {
+  DependencyAccessor,
+  DependencyTaskStatus,
+  DependencyMachineAccessors,
+  CompileDependencyMachineOptions,
+  DependencyMachineDiagnosticCode,
+  DependencyMachineDiagnostic,
+  DependencyMachineNode,
+  DependencyMachineEdge,
+  DependencyMachine,
+  DependencyPoint,
+  DependencyTrackDimensions,
+  DependencyTrackOptions,
+  DependencyTaskPlacement,
+  DependencySocketPlacement,
+  DependencyTrackRoute,
+  DependencyTrackLayout,
+  LogicalJoinSnapshot,
+  LogicalJoin,
+  DependencyReplayEvent,
+  DependencyReplayClock,
+  DependencyReplayState,
+  BlockerAmplification,
+  BlockerAmplificationOptions
+} from "./charts/physics/dependencyMachine"
+
+// Re-export the neutral core so physics consumers can compose one encoding
+// without importing the root entry as a second dependency.
+export {
+  compileMotionEncoding,
+  resolveMotionAccessor,
+  resolveMotionAge,
+  opacityFromAge,
+  resolveMotionVector,
+  deriveMotionVector
+} from "./charts/shared/motionEncoding"
+export type {
+  MotionEncodingConstant,
+  MotionEncodingAccessor,
+  MotionTimeBasis,
+  MotionTimeUnit,
+  MotionCoordinateSpace,
+  MotionTimeEncoding,
+  MotionPlacementEncoding,
+  MotionKinematicsEncoding,
+  MotionProcessEncoding,
+  MotionAccessibleEncoding,
+  MotionEncoding,
+  ResolvedMotionEncodingRow,
+  MotionEncodingCompilation,
+  CompileMotionEncodingOptions,
+  ResolveMotionAgeOptions,
+  ResolvedMotionAge,
+  MotionAgeOpacityType,
+  MotionAgeOpacityOptions,
+  MotionPoint,
+  ResolvedMotionVector
+} from "./charts/shared/motionEncoding"

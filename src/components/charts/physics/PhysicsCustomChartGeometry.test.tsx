@@ -1,7 +1,7 @@
 import * as React from "react"
 import { render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import {
   PhysicsCustomChart,
@@ -23,7 +23,7 @@ describe("PhysicsCustomChart live geometry", () => {
     type GeometryDatum = { id: string }
     type GeometryConfig = { wallOffset: number }
     const offsets: number[] = []
-    const ref = React.createRef<RealtimeFrameHandle>()
+    const ref = React.createRef<PhysicsFrameHandle>()
     const layout: PhysicsCustomLayout<GeometryDatum, GeometryConfig> = (ctx) => {
       offsets.push(ctx.config.wallOffset)
       return {

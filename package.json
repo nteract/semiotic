@@ -42,6 +42,18 @@
       "require": "./dist/realtime.min.js",
       "default": "./dist/realtime.module.min.js"
     },
+    "./realtime/core": {
+      "types": "./dist/semiotic-realtime-core.d.ts",
+      "import": "./dist/semiotic-realtime-core.module.min.js",
+      "require": "./dist/semiotic-realtime-core.min.js",
+      "default": "./dist/semiotic-realtime-core.module.min.js"
+    },
+    "./realtime/react": {
+      "types": "./dist/semiotic-realtime-react.d.ts",
+      "import": "./dist/semiotic-realtime-react.module.min.js",
+      "require": "./dist/semiotic-realtime-react.min.js",
+      "default": "./dist/semiotic-realtime-react.module.min.js"
+    },
     "./physics": {
       "types": "./dist/semiotic-physics.d.ts",
       "import": "./dist/physics.module.min.js",
@@ -65,6 +77,18 @@
       "import": "./dist/server.module.min.js",
       "require": "./dist/server.min.js",
       "default": "./dist/server.module.min.js"
+    },
+    "./server/node": {
+      "types": "./dist/semiotic-server-node.d.ts",
+      "import": "./dist/semiotic-server-node.module.min.js",
+      "require": "./dist/semiotic-server-node.min.js",
+      "default": "./dist/semiotic-server-node.module.min.js"
+    },
+    "./server/edge": {
+      "types": "./dist/semiotic-server-edge.d.ts",
+      "import": "./dist/semiotic-server-edge.module.min.js",
+      "require": "./dist/semiotic-server-edge.min.js",
+      "default": "./dist/semiotic-server-edge.module.min.js"
     },
     "./ai": {
       "types": "./dist/semiotic-ai.d.ts",
@@ -96,17 +120,53 @@
       "require": "./dist/semiotic-themes.min.js",
       "default": "./dist/semiotic-themes.module.min.js"
     },
+    "./themes/core": {
+      "types": "./dist/semiotic-themes-core.d.ts",
+      "import": "./dist/semiotic-themes-core.module.min.js",
+      "require": "./dist/semiotic-themes-core.min.js",
+      "default": "./dist/semiotic-themes-core.module.min.js"
+    },
+    "./themes/react": {
+      "types": "./dist/semiotic-themes-react.d.ts",
+      "import": "./dist/semiotic-themes-react.module.min.js",
+      "require": "./dist/semiotic-themes-react.min.js",
+      "default": "./dist/semiotic-themes-react.module.min.js"
+    },
     "./utils": {
       "types": "./dist/semiotic-utils.d.ts",
       "import": "./dist/semiotic-utils.module.min.js",
       "require": "./dist/semiotic-utils.min.js",
       "default": "./dist/semiotic-utils.module.min.js"
     },
+    "./utils/core": {
+      "types": "./dist/semiotic-utils-core.d.ts",
+      "import": "./dist/semiotic-utils-core.module.min.js",
+      "require": "./dist/semiotic-utils-core.min.js",
+      "default": "./dist/semiotic-utils-core.module.min.js"
+    },
+    "./utils/react": {
+      "types": "./dist/semiotic-utils-react.d.ts",
+      "import": "./dist/semiotic-utils-react.module.min.js",
+      "require": "./dist/semiotic-utils-react.min.js",
+      "default": "./dist/semiotic-utils-react.module.min.js"
+    },
     "./recipes": {
       "types": "./dist/semiotic-recipes.d.ts",
       "import": "./dist/semiotic-recipes.module.min.js",
       "require": "./dist/semiotic-recipes.min.js",
       "default": "./dist/semiotic-recipes.module.min.js"
+    },
+    "./recipes/core": {
+      "types": "./dist/semiotic-recipes-core.d.ts",
+      "import": "./dist/semiotic-recipes-core.module.min.js",
+      "require": "./dist/semiotic-recipes-core.min.js",
+      "default": "./dist/semiotic-recipes-core.module.min.js"
+    },
+    "./recipes/react": {
+      "types": "./dist/semiotic-recipes-react.d.ts",
+      "import": "./dist/semiotic-recipes-react.module.min.js",
+      "require": "./dist/semiotic-recipes-react.min.js",
+      "default": "./dist/semiotic-recipes-react.module.min.js"
     },
     "./experimental": {
       "types": "./dist/semiotic-experimental.d.ts",
@@ -158,6 +218,8 @@
     "test:dist": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
     "test:visual:bootstrap": "playwright test --update-snapshots=missing",
+    "test:visual:update:docker": "node scripts/run-playwright-linux-bootstrap.mjs --update-snapshots=all",
+    "test:visual:bootstrap:docker": "node scripts/run-playwright-linux-bootstrap.mjs --update-snapshots=missing",
     "bench": "vitest bench",
     "bench:ui": "vitest bench --ui",
     "bench:baseline": "node scripts/save-bench-baseline.mjs",
@@ -199,6 +261,7 @@
     "check:pack": "node scripts/smoke-pack.mjs",
     "check:api-surface": "node scripts/check-api-surface.mjs",
     "docs:api-surface": "node scripts/generate-api-surface.mjs",
+    "docs:package-surface": "node scripts/generate-package-surface-manifest.mjs",
     "docs:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs",
     "docs:ai-instructions": "node scripts/sync-ai-instructions.mjs",
     "docs:ai-surface": "node scripts/generate-ai-surface-manifest.mjs",
@@ -206,6 +269,7 @@
     "check:context7": "node scripts/check-context7.mjs",
     "check:mcp-registry": "node scripts/check-mcp-registry.mjs",
     "check:surface": "node scripts/check-surface-parity.js",
+    "check:package-surface": "node scripts/generate-package-surface-manifest.mjs --check",
     "check:ai-surface": "node scripts/generate-ai-surface-manifest.mjs --check",
     "check:agent-skill": "node scripts/check-agent-skill.mjs",
     "eval:ai": "node scripts/run-ai-evals.mjs",
@@ -370,7 +434,6 @@
     "globals": "^17.7.0",
     "gofish-graphics": "^0.1.0-nightly.20260624",
     "gofish-ir": "^0.1.0-nightly.20260624",
-    "jsdom": "^29.0.2",
     "marked": "^18.0.6",
     "marked-gfm-heading-id": "^4.1.4",
     "playwright-chromium": "^1.61.1",
@@ -411,6 +474,7 @@
   },
   "optionalDependencies": {
     "gifenc": "^1.0.3",
+    "jsdom": "^29.0.2",
     "sharp": "^0.35.3"
   },
   "dependencies": {

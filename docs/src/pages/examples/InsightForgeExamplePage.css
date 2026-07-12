@@ -1,0 +1,2537 @@
+.insight-forge {
+  --forge-ink: #29221d;
+  --forge-ink-soft: #5d5145;
+  --forge-paper: #f0e4c2;
+  --forge-paper-deep: #ddc994;
+  --forge-paper-pale: #f8f0d8;
+  --forge-stone: #44504b;
+  --forge-stone-dark: #242d2a;
+  --forge-wood: #66442f;
+  --forge-wood-dark: #38271e;
+  --forge-gold: #c69a42;
+  --forge-gold-light: #efd07d;
+  --forge-red: #a54136;
+  --forge-green: #456f54;
+  --forge-teal: #4f7880;
+  --forge-blue: #55758a;
+  --forge-shadow: rgba(28, 21, 16, 0.42);
+  --semiotic-bg: transparent;
+  --semiotic-surface: transparent;
+  --semiotic-text: #332920;
+  --semiotic-text-secondary: #65584a;
+  --semiotic-border: #9d8966;
+  --semiotic-grid: rgba(83, 67, 50, 0.14);
+  --semiotic-tick-font-family: "Trebuchet MS", Arial, sans-serif;
+  --semiotic-tick-font-size: 10px;
+
+  position: relative;
+  color: var(--forge-ink);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.insight-forge::before {
+  position: absolute;
+  z-index: -1;
+  inset: -20px -22px;
+  border: 1px solid color-mix(in srgb, var(--forge-gold) 35%, transparent);
+  background:
+    radial-gradient(circle at 12% 6%, rgba(235, 202, 117, 0.08), transparent 27%),
+    linear-gradient(130deg, rgba(77, 94, 86, 0.08), transparent 46%);
+  content: "";
+  pointer-events: none;
+}
+
+.insight-forge button,
+.insight-forge summary {
+  font: inherit;
+}
+
+/* Screen-reader-only text equivalents (path-map transitions, lineage summaries). */
+.insight-forge .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.insight-forge button:focus-visible,
+.insight-forge summary:focus-visible,
+.insight-forge [tabindex]:focus-visible {
+  outline: 3px solid #f2c24f;
+  outline-offset: 3px;
+}
+
+.insight-forge__hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  overflow: hidden;
+  margin: 14px 0 0;
+  padding: 22px 24px;
+  border: 3px solid #252c29;
+  border-radius: 5px 5px 0 0;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 5px 5px,
+    linear-gradient(180deg, #4f5d56 0%, #3a4641 52%, #303a36 100%);
+  box-shadow:
+    inset 0 0 0 2px #7e8b81,
+    inset 0 -8px 20px rgba(13, 19, 17, 0.35),
+    0 10px 24px var(--forge-shadow);
+  color: #f3e8ca;
+}
+
+.insight-forge__hero::after,
+.insight-forge__rooms::after,
+.insight-forge__drawer-tabs::after {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.018) 0,
+    rgba(255, 255, 255, 0.018) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.insight-forge__hero-sigil {
+  display: grid;
+  width: 92px;
+  height: 92px;
+  place-items: center;
+  border: 2px solid #1f2925;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #d9b256 0 7%, #805f28 8% 13%, transparent 14%),
+    radial-gradient(circle at 45% 35%, #61736a, #2a3430 68%);
+  box-shadow:
+    inset 0 0 0 3px #9b7a3f,
+    inset 0 0 20px #151d1a,
+    0 2px 0 #a6b0a8;
+  color: #f2c85e;
+  filter: drop-shadow(0 3px 0 rgba(20, 16, 12, 0.5));
+}
+
+.insight-forge__hero h2 {
+  margin: 3px 0 6px;
+  color: #fff2cd;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(27px, 4vw, 44px);
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-shadow: 0 2px 0 #1d2622;
+}
+
+.insight-forge__hero p {
+  max-width: 720px;
+  margin: 0;
+  color: #d8d7c8;
+  font-size: 15px;
+  line-height: 1.52;
+}
+
+.insight-forge__overline,
+.forge-panel-heading > span,
+.forge-panel-heading > div > span,
+.insight-forge__casebar > span,
+.insight-forge__rooms-label,
+.insight-forge__artifact-preview > div > span,
+.insight-forge__interpreter summary span,
+.insight-forge__suggested-path > span,
+.insight-forge__room-controls > span,
+.insight-forge__recipe-preview > span,
+.insight-forge__quest-toolbar span,
+.insight-forge__lesson > div > span {
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.insight-forge__overline {
+  color: #dbb960;
+}
+
+.insight-forge__hero-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 122px;
+}
+
+.forge-button {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 2px solid #514534;
+  border-radius: 2px;
+  background: linear-gradient(#f2e6c5, #cdbb8e);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.7),
+    inset -2px -2px 0 rgba(86, 65, 42, 0.28),
+    0 2px 0 rgba(37, 28, 21, 0.38);
+  color: #31271f;
+  font-family: "Trebuchet MS", Arial, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.025em;
+  cursor: pointer;
+}
+
+.forge-button:hover:not(:disabled) {
+  background: linear-gradient(#fff2c9, #d9c58f);
+  transform: translateY(-1px);
+}
+
+.forge-button:active:not(:disabled) {
+  box-shadow: inset 2px 2px 3px rgba(58, 41, 28, 0.35);
+  transform: translateY(1px);
+}
+
+.forge-button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+  opacity: 0.48;
+}
+
+.forge-button--jewel {
+  border-color: #183c31;
+  background: linear-gradient(#5d8a6c, #315342);
+  color: #fff5d2;
+  text-shadow: 0 1px 0 #1e332a;
+}
+
+.forge-button--jewel:hover:not(:disabled) {
+  background: linear-gradient(#6f9a7b, #3d614d);
+}
+
+.forge-button--danger {
+  border-color: #602e28;
+  background: linear-gradient(#b85b4d, #793a32);
+  color: #fff1d6;
+}
+
+.forge-button--danger:hover:not(:disabled) {
+  background: linear-gradient(#c86c5d, #89443b);
+}
+
+.forge-button--collect {
+  border-color: #6b5022;
+  background: linear-gradient(#e6bb58, #b37f2d);
+  color: #2d2319;
+}
+
+.forge-button--craft {
+  min-width: 220px;
+  border-color: #6e2d21;
+  background: linear-gradient(#cf7147, #8f3928);
+  color: #fff0c5;
+  font-size: 12px !important;
+  text-shadow: 0 1px #4d241c;
+}
+
+.insight-forge__data-notice {
+  margin: 0;
+  padding: 9px 16px;
+  border: 1px solid #8a795b;
+  border-top: 0;
+  background: #e8dab7;
+  color: #55483b;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.insight-forge__rooms {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  padding: 10px 14px;
+  border: 3px solid #30251d;
+  border-top-width: 1px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 50%, transparent 50%) 0 0 / 4px 4px,
+    linear-gradient(#754f37, #563a2c);
+  box-shadow: inset 0 0 0 2px #9e7651;
+}
+
+.insight-forge__rooms-label {
+  position: relative;
+  z-index: 1;
+  padding-right: 10px;
+  color: #f0d798;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.insight-forge__rooms > div {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns:
+    minmax(92px, 1fr) 20px minmax(92px, 1fr) 20px minmax(92px, 1fr)
+    20px minmax(92px, 1fr) 20px minmax(92px, 1fr);
+  align-items: center;
+}
+
+.insight-forge__room-button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  min-height: 54px;
+  padding: 5px 7px;
+  border: 2px solid #2e241e;
+  border-radius: 3px;
+  background: linear-gradient(#8b684a, #604632);
+  box-shadow:
+    inset 1px 1px rgba(255, 245, 218, 0.2),
+    inset -2px -2px rgba(32, 23, 17, 0.35);
+  color: #e1d2ad;
+  text-align: left;
+  cursor: pointer;
+}
+
+.insight-forge__room-button svg {
+  grid-row: 1 / 3;
+  color: #c2b38b;
+}
+
+.insight-forge__room-button span {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insight-forge__room-button small {
+  color: #bcae90;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.insight-forge__room-button[data-visited="true"]::after {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid #243f32;
+  border-radius: 50%;
+  background: #75a079;
+  box-shadow: 0 0 5px #9ed49e;
+  content: "";
+}
+
+.insight-forge__room-button[data-active="true"] {
+  border-color: #d9af54;
+  background: linear-gradient(#526c5c, #31483c);
+  box-shadow:
+    inset 0 0 0 1px #8dac90,
+    0 0 0 2px #32271f,
+    0 0 10px rgba(225, 180, 82, 0.45);
+  color: #fff1c7;
+}
+
+.insight-forge__room-button[data-active="true"] svg {
+  color: #f0c65f;
+}
+
+.insight-forge__room-connector {
+  height: 4px;
+  border-top: 1px solid #2e231b;
+  border-bottom: 1px solid #bb8e58;
+  background: #6f4d32;
+}
+
+.insight-forge__casebar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #8f7b57;
+  border-top: 0;
+  background: linear-gradient(#f1e6c9, #dbc99e);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.insight-forge__casebar > span {
+  color: #7f6333;
+}
+
+.insight-forge__casebar > strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.insight-forge__casebar-progress {
+  display: flex;
+  gap: 4px;
+}
+
+.insight-forge__casebar-progress span {
+  width: 15px;
+  height: 7px;
+  border: 1px solid #79694f;
+  background: #b8a98b;
+}
+
+.insight-forge__casebar-progress span[data-visited="true"] {
+  border-color: #395a45;
+  background: #5f8669;
+}
+
+.insight-forge__workbench {
+  display: grid;
+  grid-template-columns: 176px minmax(0, 1fr) 316px;
+  align-items: start;
+  border: 3px solid #2c332f;
+  border-top: 0;
+  background: #28322f;
+  box-shadow: 0 16px 34px var(--forge-shadow);
+}
+
+.insight-forge__objective {
+  position: sticky;
+  top: 10px;
+  min-width: 0;
+  padding: 12px 10px 18px;
+  border-right: 3px ridge #75827a;
+  background:
+    radial-gradient(circle at 50% 0, rgba(217, 180, 92, 0.08), transparent 32%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 4px 4px,
+    #35413c;
+  color: #e8ddc1;
+}
+
+.forge-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(231, 201, 126, 0.4);
+  color: #e3be62;
+}
+
+.forge-panel-heading--satchel {
+  margin: -12px -10px 0;
+  padding: 11px 12px 9px;
+  border: 0;
+  background: linear-gradient(#5f4432, #3d2d25);
+  color: #f0d28a;
+}
+
+.forge-panel-heading--satchel > div {
+  display: grid;
+}
+
+.forge-panel-heading--satchel strong {
+  color: #d3c3a4;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.insight-forge__objective h3 {
+  margin: 12px 0 5px;
+  color: #fff0c5;
+  font-size: 19px;
+}
+
+.insight-forge__objective > p {
+  margin: 0 0 12px;
+  color: #c9c5b4;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.insight-forge__kpis {
+  display: grid;
+  gap: 5px;
+}
+
+.insight-forge__kpi {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  align-items: center;
+  min-height: 42px;
+  border: 1px solid #202824;
+  background: rgba(16, 23, 20, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(192, 211, 195, 0.08);
+}
+
+.insight-forge__kpi > div {
+  width: 70px !important;
+  height: 38px !important;
+  color: #f0cc6a !important;
+}
+
+.insight-forge__kpi > div > div {
+  padding: 2px !important;
+}
+
+.insight-forge__kpi > span {
+  color: #c9c5b4;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.insight-forge__objective-note {
+  margin-top: 12px;
+  padding: 9px;
+  border: 1px dashed #b28b45;
+  background: rgba(207, 164, 77, 0.08);
+}
+
+.insight-forge__objective-note strong,
+.insight-forge__objective-note > span {
+  display: block;
+  font-size: 11px;
+}
+
+.insight-forge__objective-note > span {
+  margin-top: 2px;
+  color: #bbb6a5;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+}
+
+.insight-forge__lantern-units {
+  display: flex;
+  gap: 3px;
+  margin-top: 7px;
+  color: #c45d4d;
+}
+
+.insight-forge__suggested-path {
+  margin-top: 13px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(231, 201, 126, 0.28);
+}
+
+.insight-forge__suggested-path > span {
+  color: #d2ae58;
+}
+
+.insight-forge__suggested-path ol {
+  margin: 7px 0 0;
+  padding-left: 18px;
+  color: #c8c2b0;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.insight-forge__chart-room {
+  min-width: 0;
+  padding: 12px;
+  background:
+    linear-gradient(rgba(95, 77, 55, 0.04) 1px, transparent 1px) 0 0 / 100% 4px,
+    #e7d9b6;
+}
+
+.insight-forge__chart-host {
+  min-width: 0;
+  overflow-x: auto;
+  border: 3px double #6f6048;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(255, 255, 255, 0.48), transparent 65%), #f4ead0;
+  box-shadow:
+    inset 0 0 18px rgba(82, 60, 35, 0.12),
+    0 4px 0 rgba(67, 48, 31, 0.16);
+}
+
+.insight-forge__chart-container {
+  min-width: 320px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.insight-forge__chart-container .semiotic-chart-header {
+  border-color: #ad9870 !important;
+  background: rgba(225, 208, 166, 0.62);
+}
+
+.insight-forge__chart-container .semiotic-chart-title {
+  color: #332920 !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: 16px !important;
+}
+
+.insight-forge__chart-container .semiotic-chart-subtitle {
+  color: #6a5b49 !important;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+.insight-forge__chart-container .semiotic-chart-action {
+  border-color: #8d7752 !important;
+  background: #e8d7ad !important;
+  color: #463729 !important;
+}
+
+.insight-forge__chart-container svg text {
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+.insight-forge__room-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 7px 9px;
+  border: 1px solid #8d7855;
+  background: #d7c49b;
+}
+
+.insight-forge__room-controls > span {
+  margin-right: auto;
+  color: #665332;
+}
+
+.insight-forge__room-controls button {
+  min-height: 29px;
+  padding: 4px 9px;
+  border: 1px solid #6f604a;
+  background: #eee0bd;
+  color: #4b3d31;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.insight-forge__room-controls button[aria-pressed="true"] {
+  border-color: #294a3a;
+  background: #486c57;
+  color: #fff1ca;
+  box-shadow: inset 0 0 0 1px #70907b;
+}
+
+.insight-forge__room-controls--status strong {
+  padding: 3px 8px;
+  border: 1px dashed #8d6b31;
+  color: #7c5c26;
+  font-size: 11px;
+}
+
+.insight-forge__room-controls--status strong[data-ready="true"] {
+  border: 3px double #3d654c;
+  color: #345741;
+}
+
+.insight-forge__scopebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border: 1px solid #927e5a;
+  background: #f1e5c6;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+.insight-forge__scopebar > div:first-child {
+  display: grid;
+  gap: 1px;
+  flex: 0 0 auto;
+}
+
+.insight-forge__scopebar span {
+  color: #756244;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.insight-forge__scopebar strong {
+  font-size: 11px;
+}
+
+.insight-forge__application-chips {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.insight-forge__application-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  max-width: 200px;
+  padding: 3px 6px;
+  border: 1px solid #4e706e;
+  background: #ccdcce;
+  color: #2e4943;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.insight-forge__application-chips button span {
+  color: #3a6a65;
+}
+
+.insight-forge__application-chips button b {
+  color: #8a392e;
+  font-size: 13px;
+}
+
+.insight-forge__translation-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 8px 0 0;
+  padding: 6px 9px;
+  border-left: 3px solid #4f797a;
+  background: rgba(79, 121, 122, 0.1);
+  color: #4c463d;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.insight-forge__translation-note svg {
+  flex: 0 0 auto;
+  color: #4f797a;
+}
+
+.insight-forge__artifact-preview {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
+  padding: 9px;
+  border: 2px solid #9e7d3f;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 35%), #ead49a;
+  box-shadow: inset 0 0 0 1px #f4e6bf;
+}
+
+.insight-forge__artifact-preview-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 2px solid #654b28;
+  background: #f6e9c6;
+  color: #a33f35;
+  box-shadow: inset 0 0 0 2px #c6a95f;
+}
+
+.insight-forge__artifact-preview > div:nth-child(2) {
+  min-width: 0;
+}
+
+.insight-forge__artifact-preview > div > span {
+  display: block;
+  color: #7e5e25;
+}
+
+.insight-forge__artifact-preview strong {
+  display: block;
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+.insight-forge__artifact-preview p {
+  margin: 0;
+  color: #5f5141;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.insight-forge__artifact-preview-actions {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.insight-forge__artifact-preview-actions small {
+  color: #765c32;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.insight-forge__interpreter {
+  margin-top: 8px;
+  border: 1px solid #8d7959;
+  background: #eee2c4;
+}
+
+.insight-forge__interpreter summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  background: #d7c398;
+  color: #665332;
+  cursor: pointer;
+}
+
+.insight-forge__interpreter summary strong {
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.insight-forge__interpreter-body {
+  padding: 9px;
+}
+
+.insight-forge__interpreter-body > div:first-child {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.insight-forge__interpreter-body button {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid #9b8967;
+  background: #f7edcf;
+  color: #5d4d3b;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.insight-forge__interpreter-body button[aria-pressed="true"] {
+  border-color: #4c6a63;
+  background: #56766b;
+  color: #fff1cf;
+}
+
+.insight-forge__interpreter-answer {
+  margin: 9px 0 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.insight-forge__grounding-excerpt {
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px dotted #a89470;
+  color: #6a5c49;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.insight-forge__grounding-excerpt span {
+  display: block;
+  color: #8c6929;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.insight-forge__feature-rack {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.insight-forge__feature-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  max-width: 210px;
+  padding: 5px 7px;
+  border: 1px solid #8b7655;
+  background: #e5d6b3;
+  color: #5c4d3b;
+  font-family: "Trebuchet MS", Arial, sans-serif !important;
+  font-size: 9px !important;
+  cursor: pointer;
+}
+
+.insight-forge__feature-token svg {
+  color: #8f4c38;
+}
+
+.insight-forge__feature-token[data-active="true"] {
+  border-color: #a33f34;
+  background: #f0d39a;
+  box-shadow: inset 0 -2px #bb783a;
+}
+
+.insight-forge__feature-token[data-collected="true"]::after {
+  color: #3d6c4d;
+  content: "✓";
+  font-weight: 900;
+}
+
+.insight-forge__satchel {
+  position: sticky;
+  top: 10px;
+  min-width: 0;
+  padding: 12px 10px;
+  border-left: 3px ridge #886245;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(221, 175, 81, 0.11), transparent 35%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 5px), #4b352a;
+  color: #f0dfb9;
+}
+
+.insight-forge__satchel-intro {
+  margin: 8px 0 5px;
+  color: #d0c1a5;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.insight-forge__inventory-axis--columns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding-left: 13px;
+}
+
+.insight-forge__inventory-axis--columns span {
+  overflow: hidden;
+  color: #d8b866;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.025em;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.insight-forge__inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(4, 86px);
+  gap: 2px;
+  margin-top: 3px;
+  padding: 4px;
+  border: 3px double #c1964d;
+  background: #241e1a;
+  box-shadow:
+    inset 0 0 16px #120f0d,
+    0 2px 0 #73523a;
+}
+
+.insight-forge__inventory-row,
+.insight-forge__drawer-tablist {
+  display: contents;
+}
+
+.insight-forge__inventory-cell {
+  position: relative;
+  min-width: 0;
+  border: 1px solid #5f5341;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 45%), #303a34;
+}
+
+.insight-forge__inventory-cell[data-row="contextualized"] {
+  background-color: #343f42;
+}
+
+.insight-forge__inventory-cell[data-row="proposed"] {
+  background-color: #443b31;
+}
+
+.insight-forge__inventory-cell[data-row="operational"] {
+  background-color: #314035;
+}
+
+.insight-forge__row-label {
+  position: absolute;
+  z-index: 0;
+  top: 2px;
+  left: 2px;
+  color: rgba(242, 210, 132, 0.55);
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.insight-forge__inventory-item {
+  position: absolute;
+  z-index: calc(2 + var(--stack-index));
+  inset: calc(11px + var(--stack-index) * 4px) calc(3px - var(--stack-index) * 2px)
+    calc(3px - var(--stack-index) * 2px) calc(3px + var(--stack-index) * 3px);
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  gap: 1px 4px;
+  overflow: hidden;
+  padding: 3px;
+  border: 1px solid #a9874d;
+  border-radius: 2px;
+  background: linear-gradient(#efe0b7, #cbb685);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
+    2px 2px 0 rgba(13, 10, 8, 0.5);
+  color: #32281f;
+  text-align: left;
+  cursor: pointer;
+}
+
+.insight-forge__inventory-item[aria-pressed="true"] {
+  z-index: 20;
+  border-color: #f1c34f;
+  box-shadow:
+    inset 0 0 0 2px #6c4c27,
+    0 0 0 2px #f1c34f,
+    0 0 9px #f1c34f;
+}
+
+.insight-forge__inventory-item:hover,
+.insight-forge__inventory-item:focus-visible {
+  z-index: 30;
+}
+
+.insight-forge__stack-picker {
+  position: absolute;
+  z-index: 40;
+  top: 1px;
+  right: 1px;
+  display: flex;
+  gap: 2px;
+}
+
+.insight-forge__stack-picker button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid #9b7943;
+  border-radius: 50%;
+  background: #2d3933;
+  color: #f2d484;
+  font-size: 8px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.insight-forge__stack-picker button[aria-pressed="true"] {
+  background: #b98a37;
+  color: #1e2522;
+}
+
+.insight-forge__inventory-item[data-status="proposed"] {
+  border-style: dashed;
+}
+
+.insight-forge__inventory-item[data-status="accepted"] {
+  border: 3px double #3c694c;
+}
+
+.insight-forge__inventory-item[data-status="disputed"] {
+  background:
+    repeating-linear-gradient(135deg, transparent 0 5px, rgba(141, 62, 51, 0.17) 5px 8px),
+    linear-gradient(#efe0b7, #cbb685);
+}
+
+.insight-forge__inventory-item[data-compatible="true"]::before {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #5aa16d;
+  box-shadow: inset 0 0 8px rgba(83, 169, 104, 0.45);
+  content: "";
+  pointer-events: none;
+}
+
+.insight-forge__inventory-glyph {
+  display: grid;
+  grid-row: 1 / 4;
+  place-items: center;
+  color: #984337;
+}
+
+.insight-forge__inventory-title {
+  overflow: hidden;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+}
+
+.insight-forge__inventory-meta {
+  color: #6c5940;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+  text-transform: uppercase;
+}
+
+.insight-forge-pips {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.insight-forge-pip {
+  width: 4px;
+  height: 4px;
+  border: 1px solid #4a3e31;
+  border-radius: 50%;
+  background: #b98632;
+}
+
+.insight-forge-pip-more {
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+}
+
+.insight-forge__compatible-rune {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  color: #23643d;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.insight-forge__status-ribbon {
+  position: absolute;
+  right: -13px;
+  bottom: 3px;
+  width: 45px;
+  background: #775c32;
+  color: #fff2ca;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 5px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(-35deg);
+}
+
+.insight-forge__inventory-item[data-status="accepted"] .insight-forge__status-ribbon {
+  background: #3e684d;
+}
+
+.insight-forge__inventory-item[data-status="proposed"] .insight-forge__status-ribbon {
+  background: #a8792e;
+}
+
+.insight-forge__archive {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 35px;
+  margin-top: 6px;
+  overflow-x: auto;
+  padding: 4px 5px;
+  border: 1px dashed #a18354;
+  background: #2d241f;
+}
+
+.insight-forge__archive > span {
+  color: #d3ae61;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.insight-forge__archive em {
+  color: #9f9482;
+  font-size: 8px;
+}
+
+.insight-forge__archive button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  max-width: 180px;
+  padding: 3px 5px;
+  border: 1px solid #7e4d43;
+  background:
+    repeating-linear-gradient(135deg, transparent 0 4px, rgba(169, 72, 58, 0.2) 4px 6px), #d3c198;
+  color: #4c302c;
+  font-size: 7px;
+  text-decoration: line-through;
+  cursor: pointer;
+}
+
+.insight-forge__archive button small {
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 5px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.insight-forge__artifact-details {
+  margin-top: 7px;
+  padding: 7px;
+  border: 2px solid #9c7448;
+  background: #e7d5aa;
+  color: #33291f;
+  box-shadow: inset 0 0 0 1px #f4e6c2;
+}
+
+.insight-forge__artifact-details--empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #675540;
+}
+
+.insight-forge__artifact-details--empty p {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.insight-forge__artifact-details > header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #a78f64;
+}
+
+.insight-forge__artifact-details > header svg {
+  color: #944437;
+}
+
+.insight-forge__artifact-details > header span {
+  color: #806737;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.insight-forge__artifact-details h4 {
+  margin: 1px 0 0;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.insight-forge__artifact-details > header > b {
+  padding: 2px 4px;
+  border: 1px dashed currentColor;
+  color: #8e6728;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+  text-transform: uppercase;
+}
+
+.insight-forge__artifact-details > header > b[data-status="accepted"] {
+  border-style: double;
+  color: #3f684c;
+}
+
+.insight-forge__detail-tabs {
+  display: flex;
+  gap: 2px;
+  margin-top: 5px;
+  overflow-x: auto;
+}
+
+.insight-forge__detail-tabs button {
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 3px 5px;
+  border: 1px solid #9a845e;
+  background: #d7c397;
+  color: #5f4e3c;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.insight-forge__detail-tabs button[aria-pressed="true"] {
+  border-color: #426452;
+  background: #557262;
+  color: #fff0c7;
+}
+
+.insight-forge__detail-copy {
+  max-height: 180px;
+  overflow: auto;
+  padding: 6px 2px 2px;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.insight-forge__detail-copy p {
+  margin: 0 0 6px;
+}
+
+.insight-forge__detail-copy dl {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  margin: 5px 0;
+}
+
+.insight-forge__detail-copy dl div {
+  padding: 3px;
+  border: 1px solid #b29d75;
+  background: #f0e3c1;
+}
+
+.insight-forge__detail-copy dt {
+  color: #78613c;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+  text-transform: uppercase;
+}
+
+.insight-forge__detail-copy dd {
+  margin: 1px 0 0;
+  font-weight: 700;
+}
+
+.insight-forge__compatibility {
+  margin-top: 6px;
+  padding: 5px;
+  border: 1px solid #8b795b;
+  background: #f5e9ca;
+}
+
+.insight-forge__compatibility strong {
+  display: block;
+  color: #67512f;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 7px;
+  text-transform: uppercase;
+}
+
+.insight-forge__compatibility ul {
+  margin: 2px 0 5px;
+  padding: 0;
+  list-style: none;
+}
+
+.insight-forge__config-preview {
+  max-height: 180px;
+  margin: 6px 0 0;
+  overflow: auto;
+  padding: 6px;
+  border: 1px solid #655542;
+  background: #292622;
+  color: #e9d9ae;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 7px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.insight-forge__finding-list,
+.insight-forge__appraisal ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.insight-forge__finding-list li,
+.insight-forge__appraisal li {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 5px;
+  margin-bottom: 3px;
+  padding: 4px;
+  border: 1px solid #aa956e;
+  background: #f2e5c4;
+}
+
+.insight-forge__finding-list li > span,
+.insight-forge__appraisal li > span {
+  align-self: start;
+  padding: 2px;
+  background: #85714e;
+  color: white;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.insight-forge__finding-list li[data-status="pass"] > span,
+.insight-forge__appraisal li[data-status="pass"] > span {
+  background: #477057;
+}
+
+.insight-forge__finding-list li[data-status="warn"] > span,
+.insight-forge__appraisal li[data-status="warn"] > span,
+.insight-forge__finding-list li[data-status="manual"] > span {
+  background: #a3732b;
+}
+
+.insight-forge__finding-list li[data-status="fail"] > span,
+.insight-forge__appraisal li[data-status="fail"] > span {
+  background: #a33f35;
+}
+
+.insight-forge__finding-list li strong,
+.insight-forge__appraisal li strong {
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 7px;
+}
+
+.insight-forge__finding-list li p,
+.insight-forge__appraisal li p {
+  margin: 1px 0 0;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+.insight-forge__detail-actions {
+  display: flex;
+  gap: 3px;
+  margin-top: 6px;
+  overflow-x: auto;
+}
+
+.insight-forge__detail-actions .forge-button {
+  flex: 0 0 auto;
+  min-height: 27px;
+  padding: 4px 6px;
+  font-size: 7px !important;
+}
+
+.insight-forge__drawer {
+  border: 3px solid #2c241e;
+  border-top: 0;
+  background: #3a2e27;
+  box-shadow: 0 12px 22px var(--forge-shadow);
+}
+
+.insight-forge__drawer-tabs {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  overflow: hidden;
+  padding: 7px 8px 0;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px) 0 0 / 5px 5px,
+    #3a4741;
+}
+
+.insight-forge__drawer-tablist > button {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 39px;
+  padding: 6px 12px;
+  border: 2px solid #252d29;
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+  background: #5a665f;
+  color: #ddd6be;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.insight-forge__drawer-tablist > button[aria-pressed="true"] {
+  background: #e8d9b5;
+  color: #372b23;
+}
+
+.insight-forge__drawer-tablist > button small {
+  display: grid;
+  min-width: 16px;
+  height: 16px;
+  place-items: center;
+  border-radius: 50%;
+  background: #b48735;
+  color: #fff4d2;
+  font-size: 8px;
+}
+
+.insight-forge__history-controls {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+  padding-bottom: 5px;
+}
+
+.insight-forge__history-controls button {
+  padding: 4px 8px;
+  border: 1px solid #26322d;
+  background: #728079;
+  color: #f2e9ce;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.insight-forge__history-controls button:disabled {
+  opacity: 0.4;
+}
+
+.insight-forge__drawer-body {
+  min-height: 230px;
+  padding: 13px;
+  border-top: 3px solid #252d29;
+  background: radial-gradient(circle at 50% 0, rgba(255, 255, 255, 0.32), transparent 62%), #e8d9b5;
+}
+
+.insight-forge__crafting {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 12px;
+}
+
+.insight-forge__forge-scene {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr) 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 150px;
+  padding: 14px;
+  border: 3px ridge #7f6f57;
+  background:
+    radial-gradient(circle at 50% 70%, rgba(238, 126, 56, 0.24), transparent 22%),
+    linear-gradient(#4b5752, #2d3733);
+  box-shadow: inset 0 0 20px #202724;
+}
+
+.insight-forge__forge-slot,
+.insight-forge__forge-result {
+  min-width: 0;
+  min-height: 112px;
+  padding: 7px;
+  border: 2px solid #a5864e;
+  background: #2b2521;
+  box-shadow:
+    inset 0 0 0 2px #594b37,
+    inset 0 0 18px #13110f;
+  color: #e0d0a8;
+}
+
+.insight-forge__forge-slot:nth-child(1) {
+  grid-column: 1;
+}
+
+.insight-forge__forge-slot:nth-child(2) {
+  grid-column: 3;
+}
+
+.insight-forge__forge-fire {
+  grid-column: 4;
+}
+
+.insight-forge__forge-result {
+  grid-column: 5;
+}
+
+.insight-forge__forge-slot > span,
+.insight-forge__forge-result > span {
+  display: block;
+  color: #d6b969;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.insight-forge__forge-slot > button,
+.insight-forge__forge-slot > div,
+.insight-forge__forge-result {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.insight-forge__forge-slot > button {
+  width: 100%;
+  min-height: 82px;
+  border: 0;
+  background: transparent;
+  color: #f0dfb1;
+  cursor: pointer;
+}
+
+.insight-forge__forge-slot > button svg,
+.insight-forge__forge-result svg {
+  color: #e5aa48;
+  filter: drop-shadow(0 0 5px rgba(237, 152, 48, 0.5));
+}
+
+.insight-forge__forge-slot strong,
+.insight-forge__forge-result strong {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 10px;
+  text-overflow: ellipsis;
+}
+
+.insight-forge__forge-slot small,
+.insight-forge__forge-slot em {
+  color: #a9a08a;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 7px;
+}
+
+.insight-forge__forge-slot[data-filled="true"] {
+  border-color: #e5b957;
+  box-shadow:
+    inset 0 0 0 2px #72552d,
+    inset 0 0 18px #13110f,
+    0 0 8px rgba(233, 178, 69, 0.35);
+}
+
+.insight-forge__forge-fire {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  height: 70px;
+}
+
+.insight-forge__forge-fire span {
+  display: block;
+  width: 13px;
+  height: 45px;
+  border-radius: 50% 50% 35% 35%;
+  background: linear-gradient(#f1cf55, #cf5f32 60%, #6e2723);
+  box-shadow: 0 0 12px #dc713c;
+  transform: rotate(8deg);
+  transform-origin: bottom;
+  animation: insight-forge-fire 1.2s ease-in-out infinite alternate;
+}
+
+.insight-forge__forge-fire span:nth-child(2) {
+  height: 61px;
+  animation-delay: -0.45s;
+  transform: rotate(-5deg);
+}
+
+.insight-forge__forge-fire span:nth-child(3) {
+  height: 38px;
+  animation-delay: -0.8s;
+  transform: rotate(13deg);
+}
+
+@keyframes insight-forge-fire {
+  to {
+    transform: scaleY(0.82) rotate(-7deg);
+    filter: hue-rotate(8deg);
+  }
+}
+
+.insight-forge__forge-result {
+  justify-content: center;
+  border-style: double;
+  background: radial-gradient(circle, #51432d, #25211e 70%);
+}
+
+.insight-forge__recipe-preview {
+  padding: 11px;
+  border: 2px solid #9d7940;
+  background: #f1e3bf;
+  box-shadow: inset 0 0 0 1px white;
+}
+
+.insight-forge__recipe-preview > span {
+  color: #8b672c;
+}
+
+.insight-forge__recipe-preview p {
+  min-height: 55px;
+  margin: 8px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.insight-forge__recipe-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+.insight-forge__recipe-list div {
+  padding: 6px;
+  border: 1px solid #a08a65;
+  background: #dac79c;
+}
+
+.insight-forge__recipe-list span,
+.insight-forge__recipe-list strong {
+  display: block;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+.insight-forge__recipe-list span {
+  color: #6f5c40;
+  font-size: 7px;
+}
+
+.insight-forge__recipe-list strong {
+  margin-top: 3px;
+  font-size: 9px;
+}
+
+.insight-forge__appraisal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.insight-forge__appraisal > section {
+  padding: 9px;
+  border: 2px solid #9f865e;
+  background: #eadbb8;
+}
+
+.insight-forge__appraisal section > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #a58e67;
+}
+
+.insight-forge__appraisal section > header svg {
+  color: #4c7469;
+}
+
+.insight-forge__appraisal section > header span,
+.insight-forge__appraisal section > header strong {
+  display: block;
+}
+
+.insight-forge__appraisal section > header span {
+  color: #806634;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.insight-forge__appraisal section > header strong {
+  font-size: 12px;
+}
+
+.insight-forge__appraisal section > p {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.insight-forge__quest-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #9c8560;
+}
+
+.insight-forge__quest-toolbar span,
+.insight-forge__quest-toolbar strong {
+  display: block;
+}
+
+.insight-forge__quest-toolbar span {
+  color: #80642f;
+}
+
+.insight-forge__quest-toolbar strong {
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.insight-forge__quest ol {
+  display: flex;
+  gap: 5px;
+  margin: 0;
+  overflow-x: auto;
+  padding: 5px 2px 12px;
+  list-style: none;
+}
+
+.insight-forge__quest li {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  flex: 0 0 145px;
+  gap: 2px 5px;
+  min-height: 62px;
+  padding: 6px;
+  border: 1px solid #8c795a;
+  background: #f0e2bf;
+}
+
+.insight-forge__quest li::after {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  width: 8px;
+  border-top: 2px solid #ae833d;
+  content: "";
+}
+
+.insight-forge__quest li > span {
+  position: absolute;
+  top: -6px;
+  left: -4px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid #5a4732;
+  border-radius: 50%;
+  background: #b88b3d;
+  color: white;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 7px;
+}
+
+.insight-forge__quest li svg {
+  grid-row: 1 / 3;
+  color: #8c4a38;
+}
+
+.insight-forge__quest li strong,
+.insight-forge__quest li small {
+  display: block;
+}
+
+.insight-forge__quest li strong {
+  font-size: 9px;
+  line-height: 1.25;
+}
+
+.insight-forge__quest li small {
+  color: #7e694a;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 6px;
+  text-transform: uppercase;
+}
+
+.insight-forge__quest-note {
+  margin: 0;
+  color: #6d5d49;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+}
+
+.insight-forge__lineage-scroll {
+  overflow-x: auto;
+  border: 2px solid #8d7857;
+  background:
+    linear-gradient(rgba(104, 84, 55, 0.08) 1px, transparent 1px) 0 0 / 100% 18px,
+    linear-gradient(90deg, rgba(104, 84, 55, 0.08) 1px, transparent 1px) 0 0 / 18px 100%,
+    #f4e8c8;
+}
+
+.insight-forge__lineage-scroll svg {
+  display: block;
+  min-width: 760px;
+  min-height: 190px;
+}
+
+.insight-forge__lineage-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 180px;
+  color: #71614d;
+}
+
+.insight-forge__lineage-empty p {
+  max-width: 460px;
+  font-size: 12px;
+}
+
+.insight-forge__live {
+  min-height: 20px;
+  padding: 5px 9px;
+  color: var(--text-secondary);
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.insight-forge__share-result {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 1px solid var(--surface-3);
+  background: var(--surface-1);
+  font-size: 10px;
+}
+
+.insight-forge__share-result code {
+  overflow: auto;
+  white-space: nowrap;
+}
+
+.insight-forge__lesson {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin: 26px 0 10px;
+}
+
+.insight-forge__lesson > div {
+  padding: 18px;
+  border: 1px solid var(--surface-3);
+  background: var(--surface-1);
+}
+
+.insight-forge__lesson > div:first-child {
+  border-left: 4px solid var(--forge-gold);
+}
+
+.insight-forge__lesson > div:last-child {
+  border-left: 4px solid var(--forge-teal);
+}
+
+.insight-forge__lesson > div > span {
+  color: var(--text-secondary);
+}
+
+.insight-forge__lesson blockquote {
+  margin: 9px 0 0;
+  color: var(--text-primary);
+  font-size: clamp(17px, 2vw, 22px);
+  font-style: italic;
+  line-height: 1.48;
+}
+
+.insight-forge__lesson p,
+.insight-forge__lesson li {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.insight-forge__lesson ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.insight-forge__lesson code {
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+.insight-forge__tooltip {
+  display: grid;
+  gap: 2px;
+  min-width: 170px;
+  max-width: 260px;
+  padding: 7px 9px;
+  border: 3px double #b48a3e;
+  background: #2d332f;
+  box-shadow: 4px 4px 0 rgba(30, 21, 16, 0.38);
+  color: #f3e5bd;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+.insight-forge__tooltip strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+}
+
+.insight-forge__tooltip span {
+  color: #c6c4b5;
+  font-size: 9px;
+}
+
+.insight-forge__tooltip b {
+  margin-top: 2px;
+  color: #f0c864;
+  font-size: 14px;
+}
+
+.insight-forge__tooltip small {
+  color: #b9b6a8;
+  font-size: 8px;
+}
+
+@media (max-width: 1060px) {
+  .insight-forge__workbench {
+    grid-template-columns: 150px minmax(0, 1fr) 276px;
+  }
+
+  .insight-forge__inventory-grid {
+    grid-template-rows: repeat(4, 80px);
+  }
+
+  .insight-forge__crafting {
+    grid-template-columns: 1fr;
+  }
+
+  .insight-forge__recipe-preview {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .insight-forge__hero {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .insight-forge__hero-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    width: auto;
+  }
+
+  .insight-forge__workbench {
+    grid-template-columns: 150px minmax(0, 1fr);
+  }
+
+  .insight-forge__satchel {
+    position: relative;
+    top: auto;
+    grid-column: 1 / -1;
+    border-top: 3px ridge #886245;
+    border-left: 0;
+  }
+
+  .insight-forge__inventory-grid {
+    grid-template-rows: repeat(4, 96px);
+  }
+
+  .insight-forge__inventory-item {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .insight-forge__recipe-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .insight-forge::before {
+    inset: -10px -8px;
+  }
+
+  .insight-forge__hero {
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .insight-forge__hero-sigil {
+    width: 64px;
+    height: 64px;
+  }
+
+  .insight-forge__hero-sigil svg {
+    width: 50px;
+    height: 50px;
+  }
+
+  .insight-forge__rooms {
+    display: block;
+    overflow-x: auto;
+    padding: 9px;
+  }
+
+  .insight-forge__rooms-label {
+    display: block;
+    margin-bottom: 5px;
+    padding: 0;
+    writing-mode: initial;
+    transform: none;
+  }
+
+  .insight-forge__rooms > div {
+    grid-template-columns: 120px 14px 120px 14px 120px 14px 120px 14px 120px;
+    min-width: 650px;
+  }
+
+  .insight-forge__casebar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .insight-forge__casebar > span {
+    grid-column: 1 / -1;
+  }
+
+  .insight-forge__workbench {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .insight-forge__chart-room {
+    order: 1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .insight-forge__objective {
+    position: relative;
+    top: auto;
+    order: 2;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 3px ridge #75827a;
+    border-right: 0;
+  }
+
+  .insight-forge__kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .insight-forge__satchel {
+    order: 3;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .insight-forge__scopebar,
+  .insight-forge__artifact-preview,
+  .insight-forge__quest-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .insight-forge__artifact-preview {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .insight-forge__artifact-preview-actions {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .insight-forge__drawer-tabs {
+    overflow-x: auto;
+  }
+
+  .insight-forge__drawer-tablist > button {
+    flex: 0 0 auto;
+  }
+
+  .insight-forge__history-controls {
+    flex: 0 0 auto;
+  }
+
+  .insight-forge__forge-scene {
+    grid-template-columns: 1fr 34px 1fr;
+  }
+
+  .insight-forge__forge-fire {
+    grid-column: 2;
+  }
+
+  .insight-forge__forge-result {
+    grid-column: 1 / -1;
+  }
+
+  .insight-forge__forge-slot:nth-child(1) {
+    grid-column: 1;
+  }
+
+  .insight-forge__forge-slot:nth-child(2) {
+    grid-column: 3;
+  }
+
+  .insight-forge__appraisal,
+  .insight-forge__lesson {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .insight-forge__hero {
+    display: block;
+  }
+
+  .insight-forge__hero-sigil {
+    float: left;
+    margin: 0 12px 6px 0;
+  }
+
+  .insight-forge__hero-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    clear: both;
+    padding-top: 12px;
+  }
+
+  .insight-forge__hero-actions .forge-button {
+    min-width: 0;
+    padding: 5px;
+    font-size: 8px !important;
+  }
+
+  .insight-forge__kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .insight-forge__drawer-tabs {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .insight-forge__drawer-tablist > button {
+    flex: 1 1 calc(50% - 4px);
+  }
+
+  .insight-forge__history-controls {
+    flex: 1 0 100%;
+    justify-content: flex-end;
+  }
+
+  .insight-forge__inventory-axis--columns {
+    padding-left: 0;
+  }
+
+  .insight-forge__inventory-axis--columns span {
+    font-size: 6px;
+  }
+
+  .insight-forge__inventory-grid {
+    grid-template-rows: repeat(4, 88px);
+  }
+
+  .insight-forge__inventory-title {
+    font-size: 7px;
+  }
+
+  .insight-forge__recipe-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .insight-forge *,
+  .insight-forge *::before,
+  .insight-forge *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ── Recipe compatibility explanation (Crafting Bench) ─────────────────── */
+.insight-forge__recipe-preview p[data-compatible="true"] {
+  color: #2f6f57;
+  font-weight: 600;
+}
+
+.insight-forge__recipe-preview p[data-compatible="false"] {
+  color: #7c4a33;
+}
+
+.insight-forge__recipe-list div[data-active="true"] {
+  border-color: #2f6f57;
+  background: #d4e4d2;
+  box-shadow: inset 0 0 0 1px #2f6f57;
+}
+
+/* ── Traveled Path Map ─────────────────────────────────────────────────── */
+.insight-forge__pathmap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight-forge__pathmap-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.insight-forge__pathmap-head > div > span {
+  display: block;
+  color: #8b672c;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.insight-forge__pathmap-head > div > strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  color: #2c241f;
+}
+
+.insight-forge__pathmap-stats {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+}
+
+.insight-forge__pathmap-stats div {
+  text-align: center;
+}
+
+.insight-forge__pathmap-stats dt {
+  color: #6f5c40;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.insight-forge__pathmap-stats dd {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #3d2f24;
+}
+
+.insight-forge__pathmap-host {
+  border: 2px solid #8d7857;
+  background:
+    linear-gradient(rgba(104, 84, 55, 0.06) 1px, transparent 1px) 0 0 / 100% 20px,
+    #f4ecd6;
+  min-width: 0;
+}
+
+.insight-forge__pathmap-summary {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 3px solid #2f6f57;
+  background: #f1e3bf;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #3d2f24;
+}
+
+.insight-forge__pathmap-team {
+  margin: 0;
+  color: #6d5d49;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+}
+
+/* ── Recipes & lineage panel ───────────────────────────────────────────── */
+.insight-forge__recipes-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.insight-forge__atlas-head {
+  margin-bottom: 8px;
+}
+
+.insight-forge__atlas-head span {
+  display: block;
+  color: #8b672c;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.insight-forge__atlas-head strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  color: #2c241f;
+}
+
+.insight-forge__atlas-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.insight-forge__atlas-steps > li {
+  padding: 8px 10px;
+  border: 1px solid #a08a65;
+  background: #efe2c0;
+}
+
+.insight-forge__atlas-steps > li[data-done="true"] {
+  border-color: #2f6f57;
+  background: #dfead9;
+}
+
+.insight-forge__atlas-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.insight-forge__atlas-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #6e4b3d;
+  color: #f4ecd6;
+  font-size: 10px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+.insight-forge__atlas-steps > li[data-done="true"] .insight-forge__atlas-num {
+  background: #2f6f57;
+}
+
+.insight-forge__atlas-io {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+}
+
+.insight-forge__atlas-chip {
+  padding: 2px 6px;
+  border: 1px solid #a08a65;
+  background: #f4ecd6;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  color: #4a3a2c;
+}
+
+.insight-forge__atlas-chip--result {
+  border-color: #6e4b3d;
+  background: #e6d4ae;
+}
+
+.insight-forge__atlas-plus {
+  color: #8b672c;
+  font-weight: 800;
+}
+
+.insight-forge__atlas-state {
+  margin-left: auto;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a7357;
+  flex: 0 0 auto;
+}
+
+.insight-forge__atlas-state[data-done="true"] {
+  color: #2f6f57;
+  font-weight: 800;
+}
+
+.insight-forge__atlas-role {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #3d2f24;
+}
+
+.insight-forge__atlas-role strong {
+  color: #6e4b3d;
+}
+
+.insight-forge__atlas-note {
+  margin: 8px 0 0;
+  color: #6d5d49;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* ── Lineage state legend ──────────────────────────────────────────────── */
+.insight-forge__lineage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.insight-forge__lineage-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 9px;
+  color: #4a3a2c;
+}
+
+.insight-forge__lineage-legend li::before {
+  content: "";
+  width: 14px;
+  height: 10px;
+  border: 1.5px solid #6e4b3d;
+  background: #eee0ba;
+}
+
+.insight-forge__lineage-legend li[data-state="accepted"]::before {
+  border-color: #42644e;
+  border-width: 2.5px;
+}
+
+.insight-forge__lineage-legend li[data-state="proposed"]::before {
+  border-color: #b48332;
+  border-style: dashed;
+}
+
+.insight-forge__lineage-legend li[data-state="superseded"]::before {
+  border-color: #7c6b8a;
+  border-style: dotted;
+}
+
+.insight-forge__lineage-legend li[data-state="retracted"]::before {
+  background: repeating-linear-gradient(45deg, #7c3d36, #7c3d36 2px, #eee0ba 2px, #eee0ba 5px);
+}

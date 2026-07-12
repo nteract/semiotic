@@ -1,0 +1,151 @@
+/* Styles for the interactive Motion Workbench demo. The page's explanatory
+   prose uses the shared docs typography (PageLayout), matching Realtime
+   Encoding; only the demo carries its own layout. */
+
+.motion-workbench {
+  --mo-pine: color-mix(in srgb, var(--text-primary) 72%, var(--surface-3));
+  --mo-rust: color-mix(in srgb, var(--text-primary) 66%, var(--surface-3));
+  margin: 22px 0;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.motion-workbench__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+  padding: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--mo-pine) 24%, transparent);
+}
+.motion-workbench__controls label {
+  display: grid;
+  gap: 4px;
+  color: var(--text-secondary);
+  font:
+    700 0.65rem ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-transform: uppercase;
+}
+.motion-workbench__controls select,
+.motion-workbench__controls button {
+  min-height: 36px;
+  border: 1px solid var(--mo-pine);
+  border-radius: 4px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-weight: 750;
+}
+.motion-workbench__controls select {
+  min-width: 170px;
+  padding: 5px 8px;
+}
+.motion-workbench__controls button {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.motion-workbench__controls button:hover,
+.motion-workbench__controls button:focus-visible {
+  background: var(--mo-pine);
+  color: var(--surface-1);
+}
+.motion-workbench__controls > div {
+  display: grid;
+  gap: 2px;
+  margin-left: auto;
+  text-align: right;
+}
+.motion-workbench__controls > div span {
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+.motion-workbench__controls > div strong {
+  color: var(--mo-rust);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.motion-workbench__panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.motion-workbench__panels > article:first-child {
+  border-right: 1px solid color-mix(in srgb, var(--mo-pine) 24%, transparent);
+}
+.motion-workbench__panels header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--mo-pine) 18%, transparent);
+  font-size: 0.68rem;
+}
+.motion-workbench__panels header span {
+  color: var(--mo-rust);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.motion-workbench__panels header strong {
+  color: var(--mo-pine);
+}
+.motion-workbench__realtime {
+  display: block;
+  width: 100%;
+  height: 310px;
+}
+.motion-workbench__inspector {
+  border-top: 1px solid color-mix(in srgb, var(--mo-pine) 24%, transparent);
+}
+.motion-workbench__inspector > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-size: 0.72rem;
+}
+.motion-workbench__inspector > div:first-child span {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+.motion-workbench__table {
+  overflow-x: auto;
+}
+.motion-workbench table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+.motion-workbench th,
+.motion-workbench td {
+  padding: 8px 12px;
+  border-top: 1px solid color-mix(in srgb, var(--mo-pine) 18%, transparent);
+  text-align: left;
+}
+.motion-workbench thead th {
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+.motion-workbench tr.is-future {
+  opacity: 0.42;
+}
+
+@media (max-width: 900px) {
+  .motion-workbench__panels {
+    grid-template-columns: 1fr;
+  }
+  .motion-workbench__panels > article:first-child {
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mo-pine) 24%, transparent);
+  }
+}
+
+@media (max-width: 620px) {
+  .motion-workbench__controls > div {
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
+  }
+}

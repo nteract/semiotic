@@ -116,6 +116,9 @@ deployment* → Build type: buildpacks, Build context directory: `/deploy/cloud-
 | `MCP_TOOL_PROFILE` | `developer` | Tool surface. `--profile public` (set in `npm start`) overrides this to the five-tool public set. Prefer the flag; this env var is the fallback. |
 | `MCP_ALLOWED_HOSTS` | unset (disabled) | Comma-separated `Host` allowlist (DNS-rebinding defense). Unset → no host check (fine for local dev). Set in production. |
 | `MCP_ALLOWED_ORIGINS` | unset (disabled) | Comma-separated browser `Origin` allowlist. When set, a disallowed `Origin` is rejected (403) and CORS echoes only an allowed origin instead of `*`. Non-browser clients send no Origin and are unaffected. |
+| `MCP_AUTH_TOKEN` | unset (disabled) | Optional bearer token required in `Authorization: Bearer <token>` for transport requests. Unset disables auth and preserves public health/challenge behavior. |
+| `MCP_AUTH_SCHEME` | `Bearer` | Optional auth scheme matcher. Keep as `Bearer` unless your front proxy rewrites credentials. |
+| `MCP_SUPPORTED_PROTOCOL_VERSIONS` | unset (disabled) | Optional comma-separated allowlist for inbound `MCP-Protocol-Version`. If unset, the server accepts any protocol value and still returns `MCP-Protocol-Version: 2024-11-05`. |
 | `MCP_MAX_BODY_BYTES` | `4194304` (4 MB) | Hard request-body ceiling; larger bodies get 413 before any tool runs. |
 | `MCP_MAX_ROWS` | `10000` | Maximum combined entries across all nested array-valued tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
 | `MCP_MAX_CELLS` | `100000` | Maximum combined object fields across nested tool arguments. Requests over the ceiling get 413 before MCP dispatch. |

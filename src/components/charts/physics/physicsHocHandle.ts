@@ -12,7 +12,19 @@ import type { Ref, RefObject } from "react"
 import type { Datum } from "../shared/datumTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { StreamPhysicsFrameHandle } from "../../stream/physics/StreamPhysicsFrame"
+import type { StreamPhysicsPopOptions } from "../../stream/physics/physicsBodyCanvas"
 import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
+
+/**
+ * The imperative handle every physics HOC exposes: the shared realtime
+ * push/remove/update surface plus the physics-only `popBodies` — a
+ * body-removal "pop" burst (expanding ring + sparks) played by the frame.
+ * The exit-emphasis counterpart to realtime `pulse`; returns the ids of the
+ * bodies actually removed.
+ */
+export interface PhysicsFrameHandle extends RealtimeFrameHandle {
+  popBodies(ids: string[], options?: StreamPhysicsPopOptions): string[]
+}
 
 export interface PhysicsDatumSpawnResult {
   datumId: string
@@ -98,7 +110,7 @@ function readBodyDatum(
 }
 
 export function usePhysicsHocHandle(
-  ref: Ref<RealtimeFrameHandle> | undefined,
+  ref: Ref<PhysicsFrameHandle> | undefined,
   options: UsePhysicsHocHandleOptions
 ): void {
   const {
@@ -140,7 +152,7 @@ export function usePhysicsHocHandle(
 
   useImperativeHandle(
     ref,
-    (): RealtimeFrameHandle => {
+    (): PhysicsFrameHandle => {
       const knownRows = knownRowsRef.current
       const bodyIdsByDatum = bodyIdsByDatumRef.current
 
@@ -265,7 +277,10 @@ export function usePhysicsHocHandle(
         },
         // Physics has no continuous scales — omit-style null like network/geo.
         getScales: () => null,
-        getCustomLayout: () => frameRef.current?.snapshot() ?? null
+        getCustomLayout: () => frameRef.current?.snapshot() ?? null,
+        // Exit-emphasis burst on body removal — the physics sibling of `pulse`.
+        popBodies: (ids, popOptions) =>
+          frameRef.current?.popBodies(ids, popOptions) ?? []
       }
     },
     [bodyIdsForSeed, frameRef, idAccessor, spawnDatum]

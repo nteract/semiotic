@@ -109,6 +109,12 @@ const SSR_EXCLUDED = new Set([
   "OrbitDiagram",
   // Geo charts with complex state
   "FlowMap", "DistanceCartogram",
+  // Interactive dependency-enactment chart — its static visual lives entirely
+  // in a foregroundGraphics overlay (task cards + dependency tracks) that the
+  // physics settled-scene SSR renderer cannot emit (it renders only settled
+  // bodies), and its dependency balls are transient with empty initialSpawns,
+  // so a settled render would be blank. Catalog/SSR integration is pending.
+  "ChainReactionChart",
 ])
 
 const VALIDATION_EXCLUDED = new Set([
@@ -118,6 +124,10 @@ const VALIDATION_EXCLUDED = new Set([
   // statically describable by the chart-spec registry.
   "XYCustomChart", "OrdinalCustomChart", "NetworkCustomChart", "GeoCustomChart",
   "PhysicsCustomChart",
+  // ChainReactionChart is a new physics chart whose chart-spec / capability /
+  // AI-surface integration is still pending; it is not yet in CHART_SPECS, so
+  // validateProps does not describe it. Remove once it is catalog-registered.
+  "ChainReactionChart",
 ])
 
 // ── 5. Check alignment ────────────────────────────────────────────────

@@ -205,11 +205,9 @@ function PhysicsThatSettlesIntoCharts() {
 
       <p>
         The second is{" "}
-        <Link to="/examples/plinko-quantile-dotplot">Plinko Quantile Dotplot</Link>. Posterior
-        samples become semantic tokens through <code style={inlineCode}>generateTokens</code>, fall
-        through <Link to="/charts/galton-board-chart">GaltonBoardChart</Link>, then settle into a
-        quantile dotplot built from the same tokens. The animation is not a separate illustration.
-        It is the sampling process that produces the final uncertainty display.
+        <Link to="/examples/stakeholder-journey">Stakeholder Journey</Link>. Competing cohorts move
+        through stage regions, constrained pathways, and evidence tables so the final chart is the
+        settled outcome, not a transient motion pass.
       </p>
 
       <PhysicsLedger />

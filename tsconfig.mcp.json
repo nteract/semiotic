@@ -26,6 +26,7 @@
     "./ai/mcp-server.ts",
     "./ai/renderHOCToSVG.tsx",
     "./ai/componentRegistry.ts",
-    "./ai/cjs-modules.d.ts"
+    "./ai/cjs-modules.d.ts",
+    "./ai/jsdom.d.ts"
   ]
 }
