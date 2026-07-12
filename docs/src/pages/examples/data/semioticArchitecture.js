@@ -359,7 +359,8 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "hoc-process-flow",
     label: "ProcessFlowChart",
-    detail: "Capacitated multi-body process lanes with stage regions and all-members group completion.",
+    detail:
+      "Capacitated multi-body process lanes with stage regions and all-members group completion.",
     layer: "leaf",
     cluster: "physics",
     parent: "frame-physics",
@@ -554,7 +555,8 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
   {
     id: "root-pipelines",
     label: "Pipeline stores",
-    detail: "XY, ordinal, network, geo, and physics stores incrementally derive layout-ready state.",
+    detail:
+      "XY, ordinal, network, geo, and physics stores incrementally derive layout-ready state.",
     layer: "root",
     order: 1,
     supports: ["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics"],
@@ -717,39 +719,44 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // NetworkCustomChart, custom layout, and shared-state machinery you are looking at.
 const EXPLICIT_EXAMPLE_PROFILES = [
   {
+    id: "insight-forge",
+    label: "The Insight Forge",
+    shortLabel: "Insight Forge",
+    path: "/examples/insight-forge",
+    note: "Five chart rooms turn observations into portable predicates, audited artifacts, non-destructive recipes, cross-chart applications, and a lineage-bearing knowledge view.",
+    uses: [
+      "input-static",
+      "hoc-xy-lines",
+      "hoc-xy-points",
+      "hoc-xy-compound",
+      "hoc-ordinal-bars",
+      "hoc-network-flow",
+      "hoc-big-number",
+      "feature-accessors",
+      "feature-axes",
+      "feature-annotations",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-container",
+      "feature-shared-state",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "watermarks",
     label: "Watermarks, Made Physical",
     shortLabel: "Watermarks",
     path: "/examples/watermarks",
-    note:
-      "A physics-backed EventDropChart turns event-time windows into bounded bins: the watermark closes old windows, late arrivals collect in a gutter, and observation/status copy keeps the process readable.",
+    note: "A physics-backed EventDropChart turns event-time windows into bounded bins: the watermark closes old windows, late arrivals collect in a gutter, and observation/status copy keeps the process readable.",
     uses: [
       "input-static",
       "hoc-event-drop",
       "feature-accessors",
       "feature-custom-overlays",
       "feature-stream-windows",
-      "feature-physics-sensors",
-      "feature-tooltips",
-      "feature-observation",
-      "feature-accessibility",
-      "feature-responsive",
-      "feature-theme",
-      "feature-canvas-svg",
-    ],
-  },
-  {
-    id: "plinko-quantile-dotplot",
-    label: "Plinko Quantile Dotplot",
-    shortLabel: "Plinko Quantiles",
-    path: "/examples/plinko-quantile-dotplot",
-    note:
-      "Posterior draws become semantic tokens, fall through a GaltonBoardChart process, and settle into a quantile dotplot with physics structure, hover, accessibility, and generated status narration.",
-    uses: [
-      "input-static",
-      "hoc-galton-board",
-      "feature-accessors",
-      "feature-custom-overlays",
       "feature-physics-sensors",
       "feature-tooltips",
       "feature-observation",
@@ -1192,28 +1199,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     label: "The Stakeholder Journey",
     shortLabel: "Stakeholder Journey",
     path: "/examples/stakeholder-journey",
-    note:
-      "A controlled StreamPhysicsFrame comparison uses stage regions, force fields, a journey ledger, and an accessible explanation of how the two cohorts diverge.",
-    uses: [
-      "input-static",
-      "hoc-physics-custom",
-      "feature-accessors",
-      "feature-custom-overlays",
-      "feature-physics-sensors",
-      "feature-observation",
-      "feature-accessibility",
-      "feature-responsive",
-      "feature-theme",
-      "feature-canvas-svg",
-    ],
-  },
-  {
-    id: "queue-weather",
-    label: "Player Support Capacity",
-    shortLabel: "Player Support",
-    path: "/examples/queue-weather",
-    note:
-      "A StreamPhysicsFrame models planned player-support demand, finite agents, service-level deadlines, and a recovery dependency with a deterministic reference trace.",
+    note: "A controlled StreamPhysicsFrame comparison uses stage regions, force fields, a journey ledger, and an accessible explanation of how the two cohorts diverge.",
     uses: [
       "input-static",
       "hoc-physics-custom",
@@ -1231,8 +1217,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     id: "merge-pressure",
     label: "Merge Pressure",
     path: "/examples/merge-pressure",
-    note:
-      "A GauntletChart runs compound pull requests through shared human review and CI capacity, tracking attached risks and feature-level completion.",
+    note: "A GauntletChart runs compound pull requests through shared human review and CI capacity, tracking attached risks and feature-level completion.",
     uses: [
       "input-static",
       "hoc-gauntlet",
@@ -1251,8 +1236,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     label: "Not in MY Backyard",
     shortLabel: "NIMBY",
     path: "/examples/not-in-my-backyard",
-    note:
-      "A GauntletChart turns housing approval into a compound civic process: gates change the proposal, burdens accumulate, and procedural loops remain visible.",
+    note: "A GauntletChart turns housing approval into a compound civic process: gates change the proposal, burdens accumulate, and procedural loops remain visible.",
     uses: [
       "input-static",
       "hoc-gauntlet",
@@ -1271,8 +1255,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     label: "Nathan's Hot Dog Contest, Four Ways",
     shortLabel: "Hot Dog Contest",
     path: "/examples/hot-dog-contest-variations",
-    note:
-      "A source-audited contest history combines a temporal histogram, custom XY trajectories, an ordinal race, and ISOTYPE marks while preserving the event's changing rules.",
+    note: "A source-audited contest history combines a temporal histogram, custom XY trajectories, an ordinal race, and ISOTYPE marks while preserving the event's changing rules.",
     uses: [
       "input-static",
       "hoc-xy-custom",
@@ -1295,8 +1278,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     label: "The 12 Kinds of Data Visualization People",
     shortLabel: "Dataviz People",
     path: "/examples/dataviz-people",
-    note:
-      "A persona selector switches among line, bar, scatter, funnel, candlestick, Sankey, and tree views while keeping the editorial chart grammar inspectable.",
+    note: "A persona selector switches among line, bar, scatter, funnel, candlestick, Sankey, and tree views while keeping the editorial chart grammar inspectable.",
     uses: [
       "input-static",
       "hoc-xy-lines",
@@ -1317,8 +1299,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     label: "Can You Know a Book Better Without Reading It?",
     shortLabel: "Distant Reading",
     path: "/examples/distant-reading",
-    note:
-      "A distant-reading room pairs chapter signal lines, phase bars, and narrative-flow Sankeys across four public-domain novels.",
+    note: "A distant-reading room pairs chapter signal lines, phase bars, and narrative-flow Sankeys across four public-domain novels.",
     uses: [
       "input-static",
       "hoc-xy-lines",
@@ -1337,8 +1318,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     label: "We Live in a World of Funnels",
     shortLabel: "World of Funnels",
     path: "/examples/world-of-funnels",
-    note:
-      "A Pop Art funnel essay contrasts ordered conversion stages with branching Sankey and process-flow paths, including the information a single funnel leaves out.",
+    note: "A Pop Art funnel essay contrasts ordered conversion stages with branching Sankey and process-flow paths, including the information a single funnel leaves out.",
     uses: [
       "input-static",
       "hoc-ordinal-bars",
@@ -1357,8 +1337,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     label: "Mobile Data Visualization That Works",
     shortLabel: "Mobile Visualization",
     path: "/examples/mobile-data-visualization",
-    note:
-      "A mobile-first field guide uses responsive XY and ordinal frames to demonstrate density budgets, touch targets, small multiples, and explicit mobile adaptations.",
+    note: "A mobile-first field guide uses responsive XY and ordinal frames to demonstrate density budgets, touch targets, small multiples, and explicit mobile adaptations.",
     uses: [
       "input-static",
       "hoc-xy-lines",

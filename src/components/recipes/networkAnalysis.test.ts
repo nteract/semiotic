@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest"
 import {
   buildAdjacency,
+  buildDirectedAdjacency,
+  reachableFrom,
   degree,
   bfsDistances,
   shortestPath,
@@ -146,5 +148,44 @@ describe("static network layouts", () => {
       expect(m.cells.some((c) => c.row === cell.col && c.col === cell.row)).toBe(true)
     }
     expect(m.maxValue).toBe(1)
+  })
+})
+
+describe("directed reachability", () => {
+  const nodes = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }]
+  // a → b → d ; a → c (d has no successors)
+  const edges = [
+    { source: "a", target: "b" },
+    { source: "b", target: "d" },
+    { source: "a", target: "c" },
+  ]
+
+  it("buildDirectedAdjacency follows source→target only", () => {
+    const adj = buildDirectedAdjacency(nodes, edges)
+    expect([...adj.get("a")!].sort()).toEqual(["b", "c"])
+    expect([...adj.get("b")!]).toEqual(["d"])
+    expect([...adj.get("d")!]).toEqual([]) // no back-edge from the undirected version
+  })
+
+  it("reachableFrom returns the descendant set on a DAG (excludes start)", () => {
+    const adj = buildDirectedAdjacency(nodes, edges)
+    expect([...reachableFrom(adj, "a")].sort()).toEqual(["b", "c", "d"])
+    expect([...reachableFrom(adj, "b")]).toEqual(["d"])
+    expect([...reachableFrom(adj, "d")]).toEqual([])
+    expect([...reachableFrom(adj, "a", { includeStart: true })].sort()).toEqual([
+      "a",
+      "b",
+      "c",
+      "d",
+    ])
+  })
+
+  it("reachableFrom reports a node that can reach itself through a cycle", () => {
+    const cyclic = buildDirectedAdjacency(nodes, [
+      { source: "a", target: "b" },
+      { source: "b", target: "a" },
+    ])
+    // a → b → a: a is reachable from itself, so it appears without includeStart.
+    expect([...reachableFrom(cyclic, "a")].sort()).toEqual(["a", "b"])
   })
 })

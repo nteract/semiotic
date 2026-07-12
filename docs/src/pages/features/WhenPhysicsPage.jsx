@@ -198,9 +198,9 @@ export default function WhenPhysicsPage() {
         </p>
         <ul>
           <li>
-            <Link to="/examples/plinko-quantile-dotplot">Plinko Quantile Dotplot</Link>{" "}
-            drops posterior samples through a board, then reads the same tokens as a
-            quantile dotplot.
+            <Link to="/examples/stakeholder-journey">Stakeholder Journey</Link> lets
+            competing cohorts move through process stages and settle into accessible stage-level
+            projections.
           </li>
           <li>
             <Link to="/examples/watermarks">Watermarks, Made Physical</Link>{" "}

@@ -223,7 +223,7 @@ export default function RealtimeEncodingPage() {
         { label: "Realtime Encoding", path: "/features/realtime-encoding" },
       ]}
       prevPage={{ title: "Legends", path: "/features/legends" }}
-      nextPage={null}
+      nextPage={{ title: "Motion Encodings", path: "/features/motion-encodings" }}
     >
       <p>
         When visualizing streaming data, the chart needs to communicate not just
@@ -420,6 +420,10 @@ export default function RealtimeEncodingPage() {
       <h2 id="related">Related</h2>
 
       <ul>
+        <li>
+          <Link to="/features/motion-encodings">Motion Encodings</Link> --
+          the shared vocabulary for transition, trajectory, causality, and evidence
+        </li>
         <li>
           <Link to="/charts/realtime-line-chart">RealtimeLineChart</Link> --
           streaming line chart

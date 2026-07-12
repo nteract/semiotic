@@ -123,6 +123,22 @@ jobs:
       - name: Reverify immutable release artifact before publication
         run: node scripts/create-release-artifact.mjs --out-dir "${{ steps.release-artifact.outputs.directory }}" --verify
 
+      - name: Release diagnostics: coverage-risk
+        run: npm run check:coverage-risk
+        continue-on-error: true
+
+      - name: Release diagnostics: visual baseline capabilities
+        run: npm run check:visual-baseline-capabilities
+        continue-on-error: true
+
+      - name: Release diagnostics: deployment lockfile
+        run: npm run check:cloud-run-lock
+        continue-on-error: true
+
+      - name: Release diagnostics: benchmark comparison
+        run: npm run bench:compare
+        continue-on-error: true
+
       - name: Check whether this exact version is already published
         id: published-artifact
         run: |
@@ -213,6 +229,40 @@ jobs:
             console.log('All smoke tests passed — 8 entry points verified');
           "
           rm -rf "$TMPDIR"
+
+      - name: Verify published package registry provenance metadata
+        env:
+          EXPECTED_INTEGRITY: ${{ steps.release-artifact.outputs.integrity }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          node - <<'NODE'
+            const { execSync } = require("node:child_process")
+
+            const packageName = "semiotic"
+            const version = process.env.VERSION
+            const expectedIntegrity = process.env.EXPECTED_INTEGRITY
+
+            const payload = execSync(`npm view ${packageName}@${version} --json`, {
+              encoding: "utf8",
+            })
+            const manifest = JSON.parse(payload)
+
+            if (manifest["dist.integrity"] !== expectedIntegrity) {
+              throw new Error(`Published dist.integrity (${manifest["dist.integrity"]}) does not match expected integrity (${expectedIntegrity})`)
+            }
+
+            const asArray = (value) => (Array.isArray(value) ? value : value ? [value] : [])
+            const signatures = asArray(manifest["dist.signatures"])
+            const attestations = asArray(manifest["dist.attestations"])
+
+            if (signatures.length === 0) {
+              throw new Error("Published package is missing dist.signatures")
+            }
+            if (attestations.length === 0) {
+              throw new Error("Published package is missing dist.attestations")
+            }
+            console.log(`Verified registry provenance for ${packageName}@${version}: ${signatures.length} signature(s), ${attestations.length} attestation(s)`)
+          NODE
 
       - name: Create or update GitHub Release
         # Pulls the matching CHANGELOG section so the GH release page

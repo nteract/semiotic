@@ -64,8 +64,18 @@ const BLURBS = {
   "./realtime": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts",
   "./server":   "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
   "./utils":    "ThemeProvider, validators, serialization — no chart components",
+  "./utils/core": "Theme helpers and serialization utilities",
+  "./utils/react": "ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus",
   "./recipes":  "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
+  "./recipes/core": "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
+  "./recipes/react": "Glyph and React layout-selection helpers",
   "./themes":   "Theme presets only (tufte, carbon, etc.)",
+  "./themes/core": "Theme presets and token helpers",
+  "./themes/react": "ThemeProvider/useTheme and hooks",
+  "./realtime/core": "Streaming chart types, HOCs, and buffer helpers",
+  "./realtime/react": "Stream status and synced push hooks",
+  "./server/node": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
+  "./server/edge": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard",
   "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
   "./value":    "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)",
   "./physics":  "GaltonBoardChart, EventDropChart, PhysicsPileChart, CollisionSwarmChart, PhysicalFlowChart, PhysicsCustomChart",
@@ -80,8 +90,10 @@ const BLURBS = {
 // (XY, ordinal, network, geo, realtime, server) so the "pick the
 // smallest sub-path that fits your charts" message lands clearly.
 const ORDER = [
-  "./xy", "./ordinal", "./network", "./geo", "./realtime", "./server",
-  "./utils", "./recipes", "./themes", "./data", "./value", "./physics",
+  "./xy", "./ordinal", "./network", "./geo", "./realtime", "./realtime/core", "./realtime/react", "./server",
+  "./server/node", "./server/edge",
+  "./utils", "./utils/core", "./utils/react", "./recipes", "./recipes/core", "./recipes/react", "./themes", "./themes/core", "./themes/react",
+  "./data", "./value", "./physics",
   "./physics/matter", "./physics/rapier", "./ai", "./ai/core", ".",
 ]
 

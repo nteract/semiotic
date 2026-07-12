@@ -5,65 +5,88 @@ _Edit dist/semiotic-realtime.d.ts's sources, then re-run `npm run docs:api-surfa
 
 ```
 class IncrementalExtent
-class ReorderBuffer
-class RingBuffer
+class ReorderBuffer<T>
+class RingBuffer<T>
 class RunningStats
 class WindowAccumulator
-const DEFAULT_LIFECYCLE_THRESHOLDS
-function RealtimeHeatmap
-function RealtimeHistogram
-function RealtimeLineChart
-function RealtimeSwarmChart
-function RealtimeWaterfallChart
-function StreamNetworkFrame
-function StreamXYFrame
-function TemporalHistogram
-function bandBounds
-function bandFromAge
-function parseWindowDuration
-function statValue
-function syncPushBuffer
-function useStreamStatus
-function useSyncedPushData
+const DEFAULT_LIFECYCLE_THRESHOLDS: Required<LifecycleBandThresholds>
+function RealtimeHeatmap<TDatum extends Datum = Datum>(props: RealtimeHeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function RealtimeHistogram<TDatum extends Datum = Datum>(props: RealtimeHistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: RealtimeLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: RealtimeSwarmChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: RealtimeWaterfallChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function StreamNetworkFrame(: import("../../../dist/semiotic-network").StreamNetworkFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-network").StreamNetworkFrameHandle>): React.ReactNode
+function StreamXYFrame(: import("../../../dist/semiotic-realtime-core").StreamXYFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-realtime-core").StreamXYFrameHandle<import("../../../dist/components/stream/networkColorAccessors").Datum>>): React.ReactNode
+function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>): React.JSX.Element
+function bandBounds(w: AggregatedWindow, band: AggregateBand, stat: AggregateStat, sigma?: number | undefined): [number, number] | null
+function bandFromAge(ageMs: number, ttlMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
+function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
+function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
+function opacityFromAge(options: MotionAgeOpacityOptions): number
+function parseWindowDuration(spec: string | number): number | null
+function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
+function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
+function statValue(w: AggregatedWindow, stat: AggregateStat): number
+function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
+function useStreamStatus<THandle extends RealtimeFrameHandle = RealtimeFrameHandle>(options?: StreamStatusOptions | undefined): StreamStatusResult<THandle>
+function useSyncedPushData<T = Datum>(ref: import("react").RefObject<SyncedPushHandle<T> | null>, data: readonly T[], options?: SyncedPushDataOptions<T> | undefined): void
 interface AggregateConfig
 interface AggregatedWindow
 interface AnnotationContext
 interface BarStyle
+interface CompileMotionEncodingOptions<TDatum extends Datum = Datum>
 interface CrosshairStyle
 interface EventTimeConfig
 interface HoverAnnotationConfig
 interface HoverData
 interface LifecycleBandThresholds
 interface LineStyle
-interface RealtimeHeatmapProps
-interface RealtimeHistogramProps
-interface RealtimeLineChartProps
-interface RealtimeSwarmChartProps
-interface RealtimeWaterfallChartProps
-interface ReorderBufferConfig
-interface ReorderResult
+interface MotionAccessibleEncoding<TDatum>
+interface MotionAgeOpacityOptions
+interface MotionEncoding<TDatum extends Datum = Datum>
+interface MotionEncodingCompilation<TDatum extends Datum = Datum>
+interface MotionEncodingConstant<TValue>
+interface MotionKinematicsEncoding<TDatum>
+interface MotionPlacementEncoding<TDatum>
+interface MotionPoint
+interface MotionProcessEncoding<TDatum>
+interface MotionTimeEncoding<TDatum>
+interface RealtimeHeatmapProps<TDatum extends Datum = Datum>
+interface RealtimeHistogramProps<TDatum extends Datum = Datum>
+interface RealtimeLineChartProps<TDatum extends Datum = Datum>
+interface RealtimeSwarmChartProps<TDatum extends Datum = Datum>
+interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum>
+interface ReorderBufferConfig<T>
+interface ReorderResult<T>
+interface ResolvedMotionEncodingRow<TDatum extends Datum = Datum>
+interface ResolvedMotionVector
 interface StreamNetworkFrameHandle
-interface StreamNetworkFrameProps
+interface StreamNetworkFrameProps<T = Datum>
 interface StreamStatusOptions
-interface StreamStatusResult
-interface StreamXYFrameHandle
-interface StreamXYFrameProps
+interface StreamStatusResult<THandle extends RealtimeFrameHandle = RealtimeFrameHandle>
+interface StreamXYFrameHandle<T = Datum>
+interface StreamXYFrameProps<T = Datum>
 interface SwarmStyle
-interface SyncedPushDataOptions
-interface SyncedPushHandle
-interface TemporalHistogramProps
+interface SyncedPushDataOptions<T = Datum>
+interface SyncedPushHandle<T = Datum>
+interface TemporalHistogramProps<TDatum extends Datum = Datum>
 interface WaterfallStyle
 interface WindowAccumulatorConfig
-type AggregateBand
-type AggregateStat
-type ArrowOfTime
-type LatePolicy
-type LifecycleBand
-type NetworkChartType
-type PushIdAccessor
-type StreamChartType
-type StreamStatus
-type ThresholdType
-type WindowMode
-type WindowType
+type AggregateBand = "stddev" | "minmax" | "none"
+type AggregateStat = "mean" | "sum" | "min" | "max" | "count"
+type ArrowOfTime = "up" | "down" | "left" | "right"
+type LatePolicy = "drop" | "keep"
+type LifecycleBand = "fresh" | "aging" | "stale" | "expired"
+type MotionAgeOpacityType = "linear" | "exponential" | "step"
+type MotionCoordinateSpace = "data" | "world" | "screen"
+type MotionEncodingAccessor<TDatum, TValue> = keyof TDatum | ((datum: TDatum, index: number) => TValue) | MotionEncodingConstant<TValue>
+type MotionTimeBasis = "event" | "ingest" | "simulation" | "presentation" | "buffer-index"
+type MotionTimeUnit = "milliseconds" | "seconds" | "frames" | "index"
+type NetworkChartType = "force" | "sankey" | "chord" | "tree" | "cluster" | "treemap" | "circlepack" | "orbit" | "partition"
+type PushIdAccessor<T> = keyof T | ((datum: T, index: number) => string | number | null | undefined)
+type StreamChartType = "line" | "area" | "stackedarea" | "mixed" | "scatter" | "bubble" | "heatmap" | "bar" | "swarm" | "waterfall" | "candlestick" | "custom"
+type StreamStatus = "idle" | "active" | "stale"
+type ThresholdType = "greater" | "lesser"
+type WindowMode = "sliding" | "growing"
+type WindowType = "tumbling" | "hopping" | "session"
 ```

@@ -644,7 +644,7 @@ export default function PhysicsProcessGuidePage() {
       <ReferenceEnvelopeDemo />
       <CodeBlock language="jsx" code={referenceEnvelopeCode} />
       <p>
-        See both contracts used together in <Link to="/examples/queue-weather">Player Support Capacity</Link>.
+        See both contracts used together in <Link to="/examples/stakeholder-journey">Stakeholder Journey</Link>.
       </p>
 
       <h2>Finite service resources and external dependencies</h2>
@@ -666,7 +666,7 @@ export default function PhysicsProcessGuidePage() {
         <code>processChrome</code> stages can also use a reader-facing <code>capacityLabel</code>
         and per-stage <code>showBadge</code> flag, so a process can say “5 agents” instead of
         exposing an unexplained implementation rate. See the complete interaction in{" "}
-        <Link to="/examples/queue-weather">Player Support Capacity</Link>.
+        <Link to="/examples/stakeholder-journey">Stakeholder Journey</Link>.
       </p>
 
       <h2>Journey and settled evidence</h2>
@@ -728,11 +728,10 @@ export default function PhysicsProcessGuidePage() {
       <p>
         Flagship demos:{" "}
         <Link to="/examples/watermarks">Watermarks</Link>,{" "}
-        <Link to="/examples/plinko-quantile-dotplot">Plinko</Link>,{" "}
-        <Link to="/examples/queue-weather">Player Support Capacity</Link>,{" "}
+        <Link to="/examples/stakeholder-journey">Stakeholder Journey</Link>,{" "}
         <Link to="/examples/merge-pressure">Merge Pressure</Link>,{" "}
         <Link to="/examples/not-in-my-backyard">NIMBY</Link>,{" "}
-        <Link to="/examples/stakeholder-journey">Stakeholder Journey</Link>.
+        <Link to="/examples/port-congestion-replay">Long Way Around</Link>.
       </p>
 
       <h2>Contracts we test</h2>

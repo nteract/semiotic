@@ -490,3 +490,35 @@ export type {
 
 export { MobileAnnotationCalloutList } from "./MobileAnnotationCalloutList"
 export type { MobileAnnotationCalloutListProps } from "./MobileAnnotationCalloutList"
+
+// Runtime-neutral motion encodings shared by realtime and physics adapters.
+export {
+  compileMotionEncoding,
+  resolveMotionAccessor,
+  resolveMotionAge,
+  opacityFromAge,
+  resolveMotionVector,
+  deriveMotionVector
+} from "./charts/shared/motionEncoding"
+export type {
+  MotionEncodingConstant,
+  MotionEncodingAccessor,
+  MotionTimeBasis,
+  MotionTimeUnit,
+  MotionCoordinateSpace,
+  MotionTimeEncoding,
+  MotionPlacementEncoding,
+  MotionKinematicsEncoding,
+  MotionProcessEncoding,
+  MotionAccessibleEncoding,
+  MotionEncoding,
+  ResolvedMotionEncodingRow,
+  MotionEncodingCompilation,
+  CompileMotionEncodingOptions,
+  ResolveMotionAgeOptions,
+  ResolvedMotionAge,
+  MotionAgeOpacityType,
+  MotionAgeOpacityOptions,
+  MotionPoint,
+  ResolvedMotionVector
+} from "./charts/shared/motionEncoding"

@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
-import type { RealtimeFrameHandle } from "../../realtime/types"
 import StreamPhysicsFrame, {
   type PhysicsSemanticItem,
   type StreamPhysicsFrameHandle,
@@ -17,7 +16,7 @@ import {
   styleFromColorAccessor,
   type CollisionSwarmProjectionMetadata
 } from "./physicsChartUtils"
-import { usePhysicsHocHandle } from "./physicsHocHandle"
+import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -204,7 +203,7 @@ function collisionSwarmSemanticItems(
  */
 export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
   TDatum extends Datum = Datum
->(props: CollisionSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+>(props: CollisionSwarmChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
     colorBy,
     collisionIterations,

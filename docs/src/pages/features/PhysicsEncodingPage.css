@@ -1,0 +1,135 @@
+/* Styles for the interactive Encoding Lab demo. The page's explanatory prose
+   uses the shared docs typography (PageLayout), matching Realtime Encoding;
+   only the demo carries its own layout. */
+
+.physics-encoding__lab {
+  --pe-pine: color-mix(in srgb, var(--text-primary) 70%, var(--surface-3));
+  --pe-rust: color-mix(in srgb, var(--text-primary) 66%, var(--surface-3));
+  --pe-ink: var(--text-primary);
+  --pe-rule: color-mix(in srgb, var(--pe-pine) 24%, transparent);
+  margin: 22px 0;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.physics-encoding__lab-controls {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  border-bottom: 1px solid var(--pe-rule);
+}
+.physics-encoding__lab-controls button {
+  min-height: 48px;
+  padding: 8px 6px;
+  border: 0;
+  border-right: 1px solid var(--pe-rule);
+  background: transparent;
+  color: var(--pe-ink);
+  cursor: pointer;
+  font:
+    700 0.66rem ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+.physics-encoding__lab-controls button:last-child {
+  border-right: 0;
+}
+.physics-encoding__lab-controls button:hover,
+.physics-encoding__lab-controls button:focus-visible,
+.physics-encoding__lab-controls button.is-active {
+  background: var(--pe-pine);
+  color: var(--surface-1);
+}
+.physics-encoding__lab-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+}
+.physics-encoding__lab-canvas {
+  min-width: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--pe-rule);
+}
+
+.physics-encoding__lab-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 22px;
+  background: color-mix(in srgb, var(--surface-1) 65%, transparent);
+}
+.physics-encoding__lab-readout > span {
+  color: var(--pe-rust);
+  font:
+    800 0.64rem ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.physics-encoding__lab-readout h3 {
+  margin: 0;
+  font-size: 1.65rem;
+  color: var(--text-primary);
+}
+.physics-encoding__lab-readout code {
+  color: var(--pe-pine);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.physics-encoding__lab-readout p {
+  margin: 0;
+  line-height: 1.48;
+}
+.physics-encoding__lab-readout dl {
+  display: grid;
+  gap: 7px;
+  margin: auto 0 0;
+}
+.physics-encoding__lab-readout dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 7px;
+  border-top: 1px solid var(--pe-rule);
+  font-size: 0.7rem;
+}
+.physics-encoding__lab-readout dt {
+  color: var(--text-secondary);
+}
+.physics-encoding__lab-readout dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 750;
+}
+.physics-encoding__lab-readout button {
+  min-height: 38px;
+  margin-top: 6px;
+  border: 1px solid var(--pe-pine);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--pe-pine);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+@media (max-width: 900px) {
+  .physics-encoding__lab-controls {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .physics-encoding__lab-body {
+    grid-template-columns: 1fr;
+  }
+  .physics-encoding__lab-canvas {
+    border-right: 0;
+    border-bottom: 1px solid var(--pe-rule);
+  }
+}
+
+@media (max-width: 620px) {
+  .physics-encoding__lab-controls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

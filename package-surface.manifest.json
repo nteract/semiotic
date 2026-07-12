@@ -1,0 +1,1150 @@
+{
+  "schemaVersion": 1,
+  "declarationRollupSchemaVersion": 1,
+  "__generated": true,
+  "generatedBy": "scripts/generate-package-surface-manifest.mjs",
+  "package": {
+    "name": "semiotic",
+    "version": "3.8.0",
+    "types": "dist/semiotic.d.ts",
+    "module": "dist/semiotic.module.min.js",
+    "main": "dist/semiotic.min.js"
+  },
+  "blockedDeepPaths": [],
+  "entries": [
+    {
+      "kind": "javascript-module",
+      "subpath": ".",
+      "path": "dist/semiotic.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./ai",
+      "path": "dist/semiotic-ai.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-ai.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-ai.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-ai.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-ai.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-ai.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./ai/core",
+      "path": "dist/semiotic-ai-core.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-ai-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-ai-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-ai-core.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-ai-core.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-ai-core.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./data",
+      "path": "dist/semiotic-data.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-data.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-data.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-data.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-data.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-data.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./experimental",
+      "path": "dist/semiotic-experimental.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-experimental.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-experimental.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-experimental.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-experimental.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-experimental.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./geo",
+      "path": "dist/geo.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/geo.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/geo.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/geo.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-geo.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-geo.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./network",
+      "path": "dist/network.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/network.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/network.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/network.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-network.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-network.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./ordinal",
+      "path": "dist/ordinal.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/ordinal.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/ordinal.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/ordinal.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-ordinal.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-ordinal.d.ts"
+    },
+    {
+      "kind": "metadata",
+      "subpath": "./package.json",
+      "path": "package.json",
+      "reason": "Explicit package metadata export",
+      "artifacts": [
+        {
+          "kind": "types",
+          "path": "package.json",
+          "sourceMap": false
+        }
+      ],
+      "esm": false,
+      "cjs": false
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./physics",
+      "path": "dist/physics.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/physics.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/physics.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/physics.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-physics.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-physics.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./physics/matter",
+      "path": "dist/physics-matter.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/physics-matter.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/physics-matter.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/physics-matter.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-physics-matter.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-physics-matter.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./physics/rapier",
+      "path": "dist/physics-rapier.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/physics-rapier.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/physics-rapier.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/physics-rapier.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-physics-rapier.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-physics-rapier.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./realtime",
+      "path": "dist/realtime.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/realtime.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/realtime.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/realtime.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-realtime.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-realtime.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./realtime/core",
+      "path": "dist/semiotic-realtime-core.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-realtime-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-realtime-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-realtime-core.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-realtime-core.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-realtime-core.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./realtime/react",
+      "path": "dist/semiotic-realtime-react.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-realtime-react.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-realtime-react.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-realtime-react.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-realtime-react.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-realtime-react.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./recipes",
+      "path": "dist/semiotic-recipes.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-recipes.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-recipes.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-recipes.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-recipes.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-recipes.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./recipes/core",
+      "path": "dist/semiotic-recipes-core.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-recipes-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-recipes-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-recipes-core.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-recipes-core.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-recipes-core.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./recipes/react",
+      "path": "dist/semiotic-recipes-react.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-recipes-react.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-recipes-react.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-recipes-react.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-recipes-react.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-recipes-react.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./server",
+      "path": "dist/server.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/server.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/server.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/server.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-server.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-server.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./server/edge",
+      "path": "dist/semiotic-server-edge.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-server-edge.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-server-edge.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-server-edge.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-server-edge.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-server-edge.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./server/node",
+      "path": "dist/semiotic-server-node.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-server-node.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-server-node.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-server-node.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-server-node.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-server-node.d.ts"
+    },
+    {
+      "kind": "json-schema-resource",
+      "subpath": "./spec/*",
+      "path": "spec/*",
+      "reason": "JSON schema resource pattern export",
+      "artifacts": [
+        {
+          "kind": "schema",
+          "path": "spec/*",
+          "sourceMap": false
+        }
+      ],
+      "esm": false,
+      "cjs": false,
+      "blockedForNamedImport": true
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./themes",
+      "path": "dist/semiotic-themes.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-themes.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-themes.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-themes.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-themes.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-themes.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./themes/core",
+      "path": "dist/semiotic-themes-core.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-themes-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-themes-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-themes-core.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-themes-core.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-themes-core.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./themes/react",
+      "path": "dist/semiotic-themes-react.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-themes-react.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-themes-react.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-themes-react.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-themes-react.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-themes-react.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./utils",
+      "path": "dist/semiotic-utils.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-utils.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-utils.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-utils.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-utils.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-utils.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./utils/core",
+      "path": "dist/semiotic-utils-core.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-utils-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-utils-core.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-utils-core.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-utils-core.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-utils-core.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./utils/react",
+      "path": "dist/semiotic-utils-react.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-utils-react.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-utils-react.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-utils-react.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-utils-react.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-utils-react.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./value",
+      "path": "dist/semiotic-value.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-value.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-value.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-value.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-value.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-value.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./xy",
+      "path": "dist/xy.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/xy.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "default",
+          "path": "dist/xy.module.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "require",
+          "path": "dist/xy.min.js",
+          "sourceMap": true
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-xy.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-xy.d.ts"
+    },
+    {
+      "kind": "worker-asset",
+      "subpath": "dist/forceLayoutWorker.js",
+      "path": "dist/forceLayoutWorker.js",
+      "reason": "Bundled worker asset generated by scripts/build.mjs",
+      "artifacts": [
+        {
+          "kind": "worker",
+          "path": "dist/forceLayoutWorker.js",
+          "sourceMap": false
+        }
+      ],
+      "esm": false,
+      "cjs": false
+    },
+    {
+      "kind": "worker-asset",
+      "subpath": "dist/physicsWorker.js",
+      "path": "dist/physicsWorker.js",
+      "reason": "Bundled worker asset generated by scripts/build.mjs",
+      "artifacts": [
+        {
+          "kind": "worker",
+          "path": "dist/physicsWorker.js",
+          "sourceMap": false
+        }
+      ],
+      "esm": false,
+      "cjs": false
+    }
+  ],
+  "declarationRollup": {
+    "pathToExports": [
+      {
+        "path": "dist/semiotic-ai-core.d.ts",
+        "exports": [
+          "./ai/core"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-ai.d.ts",
+        "exports": [
+          "./ai"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-data.d.ts",
+        "exports": [
+          "./data"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-experimental.d.ts",
+        "exports": [
+          "./experimental"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-geo.d.ts",
+        "exports": [
+          "./geo"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-network.d.ts",
+        "exports": [
+          "./network"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-ordinal.d.ts",
+        "exports": [
+          "./ordinal"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-physics-matter.d.ts",
+        "exports": [
+          "./physics/matter"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-physics-rapier.d.ts",
+        "exports": [
+          "./physics/rapier"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-physics.d.ts",
+        "exports": [
+          "./physics"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-realtime-core.d.ts",
+        "exports": [
+          "./realtime/core"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-realtime-react.d.ts",
+        "exports": [
+          "./realtime/react"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-realtime.d.ts",
+        "exports": [
+          "./realtime"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-recipes-core.d.ts",
+        "exports": [
+          "./recipes/core"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-recipes-react.d.ts",
+        "exports": [
+          "./recipes/react"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-recipes.d.ts",
+        "exports": [
+          "./recipes"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-server-edge.d.ts",
+        "exports": [
+          "./server/edge"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-server-node.d.ts",
+        "exports": [
+          "./server/node"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-server.d.ts",
+        "exports": [
+          "./server"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-themes-core.d.ts",
+        "exports": [
+          "./themes/core"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-themes-react.d.ts",
+        "exports": [
+          "./themes/react"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-themes.d.ts",
+        "exports": [
+          "./themes"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-utils-core.d.ts",
+        "exports": [
+          "./utils/core"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-utils-react.d.ts",
+        "exports": [
+          "./utils/react"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-utils.d.ts",
+        "exports": [
+          "./utils"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-value.d.ts",
+        "exports": [
+          "./value"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-xy.d.ts",
+        "exports": [
+          "./xy"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic.d.ts",
+        "exports": [
+          "."
+        ],
+        "reason": "Public type entry from `exports` map"
+      }
+    ],
+    "prunedDeclarationPaths": [],
+    "excludedInternalTrees": [
+      "dist/components/test-utils",
+      "dist/components/internal"
+    ]
+  }
+}

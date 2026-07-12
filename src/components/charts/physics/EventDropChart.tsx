@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
-import type { RealtimeFrameHandle } from "../../realtime/types"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle,
   type StreamPhysicsFrameProps
@@ -19,7 +18,7 @@ import {
   type EventDropProjectionMetadata,
   type EventDropWindowOptions
 } from "./physicsChartUtils"
-import { usePhysicsHocHandle } from "./physicsHocHandle"
+import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -321,7 +320,7 @@ function eventDropSemanticItems(
  */
 export const EventDropChart = forwardRef(function EventDropChart<
   TDatum extends Datum = Datum
->(props: EventDropChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+>(props: EventDropChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
     arrivalAccessor = "arrivalTime" as ChartAccessor<TDatum, number>,
     ballRadius = 7,

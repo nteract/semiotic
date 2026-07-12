@@ -49,9 +49,17 @@ const ENTRIES = {
   "semiotic-physics-matter": "dist/semiotic-physics-matter.d.ts",
   "semiotic-physics-rapier": "dist/semiotic-physics-rapier.d.ts",
   "semiotic-themes": "dist/semiotic-themes.d.ts",
+  "semiotic-themes-core": "dist/semiotic-themes-core.d.ts",
+  "semiotic-themes-react": "dist/semiotic-themes-react.d.ts",
   "semiotic-utils": "dist/semiotic-utils.d.ts",
+  "semiotic-utils-core": "dist/semiotic-utils-core.d.ts",
+  "semiotic-utils-react": "dist/semiotic-utils-react.d.ts",
   "semiotic-recipes": "dist/semiotic-recipes.d.ts",
+  "semiotic-recipes-core": "dist/semiotic-recipes-core.d.ts",
+  "semiotic-recipes-react": "dist/semiotic-recipes-react.d.ts",
   "semiotic-value": "dist/semiotic-value.d.ts",
+  "semiotic-server-node": "dist/semiotic-server-node.d.ts",
+  "semiotic-server-edge": "dist/semiotic-server-edge.d.ts",
 }
 
 // CI passes a temporary directory so surface verification never modifies
@@ -67,57 +75,145 @@ if (missingDist.length > 0) {
   process.exit(2)
 }
 
-// One program per entry — the .d.ts re-exports may overlap, but each entry's
-// surface is what consumers see when they import from that path.
-function describeSymbol(symbol, checker) {
-  const name = symbol.getName()
-  // Re-exports can chain (entry → barrel → leaf). Walk the alias chain
-  // until we hit a real declaration so the kind reflects the underlying
-  // type/value rather than a synthesized transient property.
+const TYPE_FORMAT_FLAGS =
+  ts.TypeFormatFlags.NoTruncation |
+  ts.TypeFormatFlags.NoTypeReduction |
+  ts.TypeFormatFlags.WriteTypeArgumentsOfSignature
+
+function sourceFileForLocation(location) {
+  return location && typeof location.getSourceFile === "function" ? location.getSourceFile() : location
+}
+
+function formatType(type, checker, location) {
+  return checker.typeToString(type, sourceFileForLocation(location), TYPE_FORMAT_FLAGS)
+}
+
+function resolveExportSymbol(symbol, checker) {
   let resolved = symbol
   let hops = 0
   while ((resolved.getFlags() & ts.SymbolFlags.Alias) && hops < 32) {
     try {
-      resolved = checker.getAliasedSymbol(resolved)
-    } catch { break }
-    hops++
+      const aliased = checker.getAliasedSymbol(resolved)
+      if (!aliased || aliased === resolved) break
+      resolved = aliased
+      hops++
+    } catch {
+      break
+    }
   }
-  // Some re-export chains land on a transient `Property` symbol (kind
-  // bits 0x2000004) instead of the leaf declaration. Walk the
-  // declarations array if available — it points at the original node.
   if (resolved.declarations?.length === 0 && resolved.exportSymbol) {
     resolved = resolved.exportSymbol
   }
+  return resolved
+}
+
+function formatTypeParameter(typeParameter, checker, location) {
+  if (!typeParameter) return "T"
+  const name = typeParameter.symbol?.name || "T"
+  const constraint = typeParameter.getConstraint()
+  const defaultType = typeParameter.getDefault()
+  const constraintText = constraint ? ` extends ${formatType(constraint, checker, location)}` : ""
+  const defaultText = defaultType ? ` = ${formatType(defaultType, checker, location)}` : ""
+  return `${name}${constraintText}${defaultText}`
+}
+
+function formatTypeParametersFromTypes(typeParameters, checker, location) {
+  if (!typeParameters?.length) return ""
+  return `<${typeParameters.map((typeParameter) => formatTypeParameter(typeParameter, checker, location)).join(", ")}>`
+}
+
+function formatTypeParametersFromNodes(typeParameters, location) {
+  if (!typeParameters?.length) return ""
+  const sourceFile = sourceFileForLocation(location)
+  return `<${typeParameters.map((typeParameter) => typeParameter.getText(sourceFile)).join(", ")}>`
+}
+
+function formatParameterSymbol(parameter, checker, location) {
+  if (parameter.valueDeclaration && ts.isParameter(parameter.valueDeclaration)) {
+    const declaration = parameter.valueDeclaration
+    const type = checker.getTypeOfSymbolAtLocation(parameter, declaration)
+    const name = declaration.name.getText(sourceFileForLocation(location))
+    const isRest = Boolean(declaration.dotDotDotToken)
+    const isOptional = Boolean(declaration.questionToken || declaration.initializer)
+    const typeText = formatType(type, checker, declaration)
+    return `${isRest ? "..." : ""}${name}${isOptional ? "?" : ""}: ${typeText}`
+  }
+
+  const type = checker.getTypeOfSymbolAtLocation(parameter, location)
+  return `${parameter.getName()}: ${formatType(type, checker, location)}`
+}
+
+function formatFunctionLines(name, checker, location, symbol) {
+  const symbolType = checker.getTypeOfSymbolAtLocation(symbol, location)
+  const callSignatures = symbolType.getCallSignatures()
+  if (callSignatures.length === 0) return []
+
+  return callSignatures.map((signature) => {
+    const typeParameters = formatTypeParametersFromTypes(signature.typeParameters, checker, location)
+    const params = signature.parameters
+      .map((parameter) => formatParameterSymbol(parameter, checker, location))
+      .join(", ")
+    const returnType = formatType(signature.getReturnType(), checker, location)
+    return `function ${name}${typeParameters}(${params}): ${returnType}`
+  })
+}
+
+function formatHeritage(node) {
+  if (!node.heritageClauses?.length) return ""
+  const chunks = node.heritageClauses.map((clause) => {
+    const keyword = clause.token === ts.SyntaxKind.ExtendsKeyword ? "extends" : "implements"
+    const values = clause.types.map((typeNode) => typeNode.getText(sourceFileForLocation(node))).join(", ")
+    return `${keyword} ${values}`
+  })
+  return ` ${chunks.join(" ")}`
+}
+
+function describeSymbol(symbol, checker) {
+  const name = symbol.getName()
+  const resolved = resolveExportSymbol(symbol, checker)
+  const declaration = resolved.valueDeclaration || resolved.declarations?.[0]
   const flags = resolved.getFlags()
-  // Prefer declaration syntax kinds when available — they're the most
-  // accurate signal for what the export actually is.
-  const decl = resolved.valueDeclaration || resolved.declarations?.[0]
-  if (decl) {
-    if (ts.isClassDeclaration(decl)) return ["class", name]
-    if (ts.isInterfaceDeclaration(decl)) return ["interface", name]
-    if (ts.isTypeAliasDeclaration(decl)) return ["type", name]
-    if (ts.isEnumDeclaration(decl)) return ["enum", name]
-    if (ts.isFunctionDeclaration(decl)) return ["function", name]
-    if (ts.isModuleDeclaration(decl)) return ["namespace", name]
-    if (ts.isVariableDeclaration(decl)) {
-      try {
-        const type = checker.getTypeOfSymbolAtLocation(resolved, decl)
-        if (type.getCallSignatures().length > 0 || type.getConstructSignatures().length > 0) {
-          return ["function", name]
-        }
-      } catch { /* fall through */ }
-      return ["const", name]
+
+  if (declaration) {
+    const callLines = formatFunctionLines(name, checker, declaration, resolved)
+    if (callLines.length > 0) return callLines
+
+    if (ts.isClassDeclaration(declaration)) {
+      return [`class ${name}${formatTypeParametersFromNodes(declaration.typeParameters, declaration)}${formatHeritage(declaration)}`]
+    }
+    if (ts.isInterfaceDeclaration(declaration)) {
+      return [`interface ${name}${formatTypeParametersFromNodes(declaration.typeParameters, declaration)}`]
+    }
+    if (ts.isTypeAliasDeclaration(declaration)) {
+      const rhs = declaration.type?.getText(declaration.getSourceFile()) ?? formatType(
+        checker.getTypeOfSymbolAtLocation(resolved, declaration),
+        checker,
+        declaration,
+      )
+      return [`type ${name}${formatTypeParametersFromNodes(declaration.typeParameters, declaration)} = ${rhs}`]
+    }
+    if (ts.isEnumDeclaration(declaration)) return [`enum ${name}`]
+    if (ts.isModuleDeclaration(declaration)) return [`namespace ${name}`]
+    if (ts.isFunctionDeclaration(declaration)) {
+      return formatFunctionLines(name, checker, declaration, resolved)
+    }
+    if (ts.isVariableDeclaration(declaration) || ts.isPropertyDeclaration(declaration)) {
+      const symbolType = checker.getTypeOfSymbolAtLocation(resolved, declaration)
+      const lines = formatFunctionLines(name, checker, declaration, resolved)
+      if (lines.length > 0) return lines
+      const typeText = formatType(symbolType, checker, declaration)
+      return [`const ${name}: ${typeText}`]
     }
   }
-  // Flag-based fallback for symbols without resolved declarations.
-  if (flags & ts.SymbolFlags.Class) return ["class", name]
-  if (flags & ts.SymbolFlags.Interface) return ["interface", name]
-  if (flags & ts.SymbolFlags.TypeAlias) return ["type", name]
-  if (flags & ts.SymbolFlags.Enum) return ["enum", name]
-  if (flags & ts.SymbolFlags.Function) return ["function", name]
-  if (flags & ts.SymbolFlags.Variable) return ["const", name]
-  if (flags & ts.SymbolFlags.Namespace) return ["namespace", name]
-  return ["export", name]
+
+  if (flags & ts.SymbolFlags.Class) return [`class ${name}`]
+  if (flags & ts.SymbolFlags.Interface) return [`interface ${name}`]
+  if (flags & ts.SymbolFlags.TypeAlias) return [`type ${name}`]
+  if (flags & ts.SymbolFlags.Enum) return [`enum ${name}`]
+  if (flags & ts.SymbolFlags.Function) return [`function ${name}`]
+  if (flags & ts.SymbolFlags.Variable) return [`const ${name}`]
+  if (flags & ts.SymbolFlags.Namespace) return [`namespace ${name}`]
+  return [`export ${name}`]
 }
 
 // Pre-glob every .d.ts under dist so TypeScript sees the full re-export
@@ -159,8 +255,7 @@ function snapshotEntry(entryFile) {
 
   const exports = checker.getExportsOfModule(moduleSymbol)
   const lines = exports
-    .map((s) => describeSymbol(s, checker))
-    .map(([kind, name]) => `${kind} ${name}`)
+    .flatMap((s) => describeSymbol(s, checker))
     .sort()
 
   // De-dupe — a name can be exported as both a value and a type (e.g. classes).

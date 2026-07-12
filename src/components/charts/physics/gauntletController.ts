@@ -7,7 +7,7 @@
  * dependency-array semantics are unchanged from before extraction.
  */
 import type { Datum } from "../shared/datumTypes"
-import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
 import {
   createCapacityQueueController,
@@ -130,7 +130,7 @@ export function buildGauntletImperativeHandle<TDatum extends Datum>(deps: {
   negativeById: Map<string, GauntletPropertyDefinition>
   coreBody: GauntletCoreBodyFn<TDatum> | undefined
   createState: (datum: TDatum, index: number, defaultStartedAt?: number) => GauntletProjectState<TDatum>
-}): RealtimeFrameHandle {
+}): PhysicsFrameHandle {
   const {
     statesRef,
     setStates,
@@ -269,7 +269,8 @@ export function buildGauntletImperativeHandle<TDatum extends Datum>(deps: {
     },
     getData: () => statesRef.current.map((state) => state.datum),
     getScales: () => null,
-    getCustomLayout: () => frameRef.current?.snapshot() ?? null
+    getCustomLayout: () => frameRef.current?.snapshot() ?? null,
+    popBodies: (ids, popOptions) => frameRef.current?.popBodies(ids, popOptions) ?? []
   }
 }
 

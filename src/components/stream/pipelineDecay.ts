@@ -3,42 +3,46 @@ import type { Datum } from "../charts/shared/datumTypes"
  * Shared decay encoding utilities for all pipeline stores.
  *
  * `computeDecayOpacity()` — core algorithm used by all four pipeline stores
- * (XY, Ordinal, Network, Geo) to compute age-based opacity.
+ * (XY, Ordinal, Network, Geo) to compute age-based opacity. It is the
+ * buffer-index projection of the runtime-neutral `opacityFromAge` age→opacity
+ * ramp: streaming decay is just "age measured in buffer positions", where the
+ * oldest surviving datum sits `bufferSize - 1` positions behind the newest.
+ * Keeping one ramp implementation means the streaming runtime, physics
+ * bodies, and any future age-based encoding share the exact same curves.
  *
  * `applyDecay()` — XY-specific application that handles per-vertex decay
  * for line/area nodes. Other stores call `computeDecayOpacity()` directly
  * with their own node iteration logic.
  */
 import type { SceneNode, DecayConfig } from "./types"
+import { opacityFromAge } from "../charts/shared/motionEncoding"
 
 /**
  * Compute decay opacity for a datum at `bufferIndex` out of `bufferSize` items.
  * Index 0 = oldest, bufferSize-1 = newest. Returns 0–1.
+ *
+ * Delegates to the shared {@link opacityFromAge} ramp with age expressed in
+ * buffer positions (`age = 0` at the newest datum, `extent = bufferSize - 1`
+ * at the oldest). The buffer-based half-life / step defaults are passed
+ * explicitly so the streaming ramp is unchanged from its standalone form.
  */
 export function computeDecayOpacity(decay: DecayConfig, bufferIndex: number, bufferSize: number): number {
   if (bufferSize <= 1) return 1
 
-  const minOpacity = decay.minOpacity ?? 0.1
+  const extent = bufferSize - 1
   // age: 0 = newest, bufferSize-1 = oldest
-  const age = bufferSize - 1 - bufferIndex
+  const age = extent - bufferIndex
 
-  switch (decay.type) {
-    case "linear": {
-      const t = 1 - age / (bufferSize - 1)
-      return minOpacity + t * (1 - minOpacity)
-    }
-    case "exponential": {
-      const halfLife = decay.halfLife ?? bufferSize / 2
-      const t = Math.pow(0.5, age / halfLife)
-      return minOpacity + t * (1 - minOpacity)
-    }
-    case "step": {
-      const threshold = decay.stepThreshold ?? bufferSize * 0.5
-      return age < threshold ? 1 : minOpacity
-    }
-    default:
-      return 1
-  }
+  return opacityFromAge({
+    age,
+    extent,
+    type: decay.type,
+    // Preserve the buffer-sized defaults (opacityFromAge would otherwise
+    // default to extent-based values, shifting the ramp by half a position).
+    halfLife: decay.halfLife ?? bufferSize / 2,
+    threshold: decay.stepThreshold ?? bufferSize * 0.5,
+    minOpacity: decay.minOpacity ?? 0.1
+  })
 }
 
 /**

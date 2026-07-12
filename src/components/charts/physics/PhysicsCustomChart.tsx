@@ -4,7 +4,6 @@ import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
 import type { ReactNode } from "react"
 import { scaleLinear, type ScaleLinear } from "d3-scale"
-import type { RealtimeFrameHandle } from "../../realtime/types"
 import {
   buildResolveColor,
   resolveCustomLayoutPalette,
@@ -42,6 +41,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { physicsChartArea, type PhysicsChartArea } from "./physicsChartUtils"
 import {
   type PhysicsDatumSpawnResult,
+  type PhysicsFrameHandle,
   usePhysicsHocHandle
 } from "./physicsHocHandle"
 import {
@@ -346,7 +346,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
   TConfig extends object = Record<string, unknown>
 >(
   props: PhysicsCustomChartProps<TDatum, TConfig>,
-  ref: React.Ref<RealtimeFrameHandle>
+  ref: React.Ref<PhysicsFrameHandle>
 ) {
   const {
     chartId,
@@ -625,7 +625,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     TConfig extends object = Record<string, unknown>
   >(
     props: PhysicsCustomChartProps<TDatum, TConfig> &
-      React.RefAttributes<RealtimeFrameHandle>
+      React.RefAttributes<PhysicsFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }

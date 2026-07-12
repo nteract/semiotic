@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
-import type { RealtimeFrameHandle } from "../../realtime/types"
 import StreamPhysicsFrame, {
   type PhysicsSemanticItem,
   type StreamPhysicsFrameHandle,
@@ -25,7 +24,7 @@ import {
   type PhysicalFlowProjectionMetadata,
   type PhysicalFlowRawPath
 } from "./physicsChartUtils"
-import { usePhysicsHocHandle } from "./physicsHocHandle"
+import { usePhysicsHocHandle, type PhysicsFrameHandle } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -490,7 +489,7 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
   TLink extends Datum = Datum
 >(
   props: PhysicalFlowChartProps<TNode, TLink>,
-  ref: React.Ref<RealtimeFrameHandle>
+  ref: React.Ref<PhysicsFrameHandle>
 ) {
   const {
     chartId,
@@ -747,7 +746,7 @@ export const PhysicalFlowChart = forwardRef(function PhysicalFlowChart<
 }) as unknown as {
   <TNode extends Datum = Datum, TLink extends Datum = Datum>(
     props: PhysicalFlowChartProps<TNode, TLink> &
-      React.RefAttributes<RealtimeFrameHandle>
+      React.RefAttributes<PhysicsFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }

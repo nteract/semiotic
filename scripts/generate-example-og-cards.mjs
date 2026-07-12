@@ -206,6 +206,9 @@ async function loadPreviewRenderer() {
     format: "esm",
     platform: "node",
     jsx: "automatic",
+    loader: {
+      ".css": "empty",
+    },
     logLevel: "silent",
   })
   const code = bundled.outputFiles[0].text

@@ -5,62 +5,61 @@ _Edit dist/semiotic-utils.d.ts's sources, then re-run `npm run docs:api-surface`
 
 ```
 class IncrementalExtent
-class RingBuffer
-const CARBON_ALERT
-const CARBON_CATEGORICAL_14
-const COLOR_BLIND_SAFE_CATEGORICAL
-const DARK_THEME
-const HIGH_CONTRAST_THEME
-const LIGHT_THEME
-const THEME_PRESETS
-function MultiPointTooltip
-function ThemeProvider
-function accessibilityCaveats
-function adaptiveTimeTicks
-function auditAccessibility
-function auditMobileVisualization
-function auditObservedScene
-function buildNavigationTree
-function buildReaderGrounding
-function communicativeActForIntent
-function computeArcBoundingBox
-function configToJSX
-function copyConfig
-function countNodes
-function createHatchPattern
-function darkenColor
-function describeChart
-function deserializeSelections
-function diagnoseConfig
-function exportChart
-function flattenVisible
-function formatAccessibilityAudit
-function formatMobileVisualizationAudit
-function fromConfig
-function fromURL
-function fromVegaLite
-function getHitRadius
-function lightenColor
-function mobileVisualizationCaveats
-function normalizeTooltip
-function resolveCommunicativeAct
-function resolveResponsiveRules
-function resolveThemePreset
-function responsiveRuleMatches
-function serializeSelections
-function smartTickFormat
-function sweepToAngles
-function themeToCSS
-function themeToTokens
-function toConfig
-function toURL
-function unwrapDatum
-function useHighContrast
-function useReducedMotion
-function useStreamStatus
-function useTheme
-function validateProps
-function valueToAngle
+class RingBuffer<T>
+const CARBON_ALERT: { readonly danger: "#da1e28"; readonly warning: "#f1c21b"; readonly success: "#24a148"; readonly info: "#0043ce"; }
+const CARBON_CATEGORICAL_14: string[]
+const COLOR_BLIND_SAFE_CATEGORICAL: string[]
+const DARK_THEME: SemioticTheme
+const HIGH_CONTRAST_THEME: SemioticTheme
+const LIGHT_THEME: SemioticTheme
+const THEME_PRESETS: Record<string, SemioticTheme>
+function MultiPointTooltip(): TooltipContentFn
+function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Element
+function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
+function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: any, index?: number, allTicks?: number[]) => string
+function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
+function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
+function auditObservedScene(input: AuditObservedSceneInput): ObservedSceneAuditResult
+function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
+function buildReaderGrounding(component: string, props: Datum, options?: ChartReaderGroundingOptions | undefined): ChartReaderGrounding
+function communicativeActForIntent(intent: IntentId): CommunicativeAct | undefined
+function computeArcBoundingBox(sweepDegrees?: number | undefined): ArcBoundingBox
+function configToJSX(config: ChartConfig): string
+function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
+function countNodes(root: NavTreeNode): number
+function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | null
+function darkenColor(hex: string, factor?: number | undefined): string
+function describeChart(component: string, props: Datum, options?: DescribeChartOptions | undefined): DescribeChartResult
+function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>
+function diagnoseConfig(componentName: string, props: Datum): DiagnosisResult
+function exportChart(container: HTMLElement, options?: { format?: "svg" | "png"; filename?: string; scale?: number; background?: string; } | undefined): Promise<void>
+function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
+function formatAccessibilityAudit(result: AccessibilityAuditResult): string
+function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
+function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
+function fromURL(urlString: string): ChartConfig
+function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[]; }
+function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined): number
+function lightenColor(hex: string, factor?: number | undefined): string
+function mobileVisualizationCaveats(): string[]
+function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
+function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
+function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
+function resolveThemePreset(name: string): SemioticTheme | undefined
+function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
+function serializeSelections(selections: Map<string, Selection>): SerializedSelections
+function smartTickFormat(value: any): string
+function sweepToAngles(sweepDegrees?: number | undefined): SweepAngles
+function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
+function themeToTokens(theme: SemioticTheme): Datum
+function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
+function toURL(config: ChartConfig): string
+function unwrapDatum<T = Datum>(value: unknown): T | null
+function useHighContrast(): boolean
+function useReducedMotion(): boolean
+function useTheme(): SemioticTheme
+function validateProps(componentName: string, props: Datum): ValidationResult
+function valueToAngle(value: number, min: number, max: number, sweepRad: number, offsetRad: number): number
 interface A11yFinding
 interface AccessibilityAuditResult
 interface ArcBoundingBox
@@ -92,31 +91,34 @@ interface PhysicsReaderGroundingGeometry
 interface PhysicsReaderGroundingInput
 interface PhysicsReaderGroundingSediment
 interface PhysicsReaderGroundingSimulation
-interface ResponsiveRule
+interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
 interface ResponsiveRuleContext
-interface ResponsiveRuleMatch
-interface ResponsiveRuleResult
+interface ResponsiveRuleMatch<TProps extends Record<string, unknown> = Record<string, unknown>>
+interface ResponsiveRuleResult<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface SemioticTheme
 interface SerializedSelection
-interface StreamStatusOptions
-interface StreamStatusResult
 interface SweepAngles
 interface ToConfigOptions
 interface VegaLiteEncoding
 interface VegaLiteSpec
-type A11yPrinciple
-type A11yStatus
-type CommunicativeAct
-type CopyFormat
-type DescribeLevel
-type MobileAuditCategory
-type MobileAuditImpact
-type MobileAuditStatus
-type NavTreeRole
-type ResponsiveOrientation
-type SerializedFieldSelection
-type SerializedSelections
-type StreamStatus
-type ThemePresetName
+type A11yPrinciple = "perceivable" | "operable" | "understandable" | "robust" | "compromising" | "assistive" | "flexible"
+type A11yStatus = "pass" | "fail" | "warn" | "manual" | "not-applicable"
+type CommunicativeAct = "alerting" | "tracking" | "comparing" | "ranking" | "apportioning" | "characterizing" | "relating" | "tracing" | "nesting" | "locating" | "presenting"
+type CopyFormat = "json" | "jsx"
+type DescribeLevel = "l1" | "l2" | "l3" | "l4"
+type MobileAuditCategory = "layout" | "density" | "interaction" | "annotation" | "semantics"
+type MobileAuditImpact = "high" | "medium" | "low"
+type MobileAuditStatus = "pass" | "warn" | "manual" | "not-applicable"
+type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
+type ResponsiveOrientation = "portrait" | "landscape"
+type SerializedFieldSelection = {
+    type: "point";
+    values: unknown[];
+} | {
+    type: "interval";
+    range: [number, number];
+}
+type SerializedSelections = Record<string, SerializedSelection>
+type ThemePresetName = keyof typeof THEME_PRESETS
 ```

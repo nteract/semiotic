@@ -121,6 +121,238 @@ async function createBundlesWithConcurrency(bundles, concurrency) {
   await Promise.all(workers)
 }
 
+const generatedBundleMetadata = {
+  semiotic: {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  xy: {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  ordinal: {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  network: {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-realtime": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-realtime-core": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-realtime-react": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  physics: {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-physics-matter": {
+    platform: "neutral",
+    rsc: false,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-physics-rapier": {
+    platform: "neutral",
+    rsc: false,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  server: {
+    platform: "node",
+    rsc: false,
+    edge: false,
+    native: true,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-server-node": {
+    platform: "node",
+    rsc: false,
+    edge: false,
+    native: true,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-server-edge": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-ai": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-ai-core": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-data": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  geo: {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-themes": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-themes-core": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-themes-react": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-utils": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-utils-core": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-utils-react": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-recipes": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-recipes-core": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-recipes-react": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+  "semiotic-experimental": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "experimental",
+    loading: "eager",
+  },
+  "semiotic-value": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
+}
+
+function applyGeneratedMetadata(bundle) {
+  const metadata = generatedBundleMetadata[bundle.name]
+  return metadata ? { ...bundle, ...metadata } : bundle
+}
+
 async function createForceLayoutWorkerBundle({ minify = false } = {}) {
   await tsupBuild({
     entry: { forceLayoutWorker: "src/components/stream/layouts/forceLayoutWorker.js" },
@@ -178,8 +410,10 @@ function buildDeclarations() {
   // the re-export graph through the leaf declaration files.
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-ai-core", "semiotic-data", "semiotic-xy",
-    "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-server",
-    "semiotic-geo", "semiotic-physics", "semiotic-physics-matter", "semiotic-physics-rapier", "semiotic-themes", "semiotic-utils", "semiotic-recipes",
+    "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-realtime-core", "semiotic-realtime-react",
+    "semiotic-server", "semiotic-server-node", "semiotic-server-edge", "semiotic-geo", "semiotic-physics",
+    "semiotic-physics-matter", "semiotic-physics-rapier", "semiotic-themes", "semiotic-themes-core", "semiotic-themes-react",
+    "semiotic-utils", "semiotic-utils-core", "semiotic-utils-react", "semiotic-recipes", "semiotic-recipes-core", "semiotic-recipes-react",
     "semiotic-experimental", "semiotic-value"
   ]
   for (const name of entryPoints) {
@@ -237,6 +471,8 @@ async function build() {
     { input: "src/components/semiotic-ordinal.ts", name: "ordinal", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-realtime-core.ts", name: "semiotic-realtime-core", analyze: false, minify },
+    { input: "src/components/semiotic-realtime-react.ts", name: "semiotic-realtime-react", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-physics.ts", name: "physics", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-physics-matter.ts", name: "physics-matter", analyze: false, minify },
     { input: "src/components/semiotic-physics-rapier.ts", name: "physics-rapier", analyze: false, minify },
@@ -246,25 +482,24 @@ async function build() {
     // entry point, which Next.js then refuses to call from a Server
     // Component (`renderChart` throws "X is on the client").
     { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify, serverOnly: true },
+    { input: "src/components/semiotic-server-node.ts", name: "semiotic-server-node", analyze: false, minify, serverOnly: true },
+    { input: "src/components/semiotic-server-edge.ts", name: "semiotic-server-edge", analyze: false, minify },
     { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-ai-core.ts", name: "semiotic-ai-core", analyze: false, minify, serverOnly: true },
     { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
     { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify, clientOnly: true },
-    // `semiotic-themes` and `semiotic-utils` are *mixed* bundles — most
-    // of their exports are pure (theme constants, formatters, color
-    // helpers, RingBuffer, IncrementalExtent, fromVegaLite) but they
-    // also re-export React-flavored APIs (ThemeProvider, useTheme,
-    // useReducedMotion, useHighContrast, MultiPointTooltip,
-    // exportChart). The `"use client"` directive lands on the bundle
-    // via the React-only re-exports' transitive imports, but
-    // unconditionally asserting clientOnly would make Server Component
-    // consumers think they can't import the pure exports — and they
-    // can't, because the directive is file-level. Tracked as a
-    // structural follow-up; until then we don't
-    // gate either way.
+    // `semiotic-themes`, `semiotic-utils`, and `semiotic-recipes` are split
+    // into core and react slices so pure-only consumers can avoid React-hook
+    // imports while preserving old facades.
     { input: "src/components/semiotic-themes.ts", name: "semiotic-themes", analyze: false, minify },
+    { input: "src/components/semiotic-themes-core.ts", name: "semiotic-themes-core", analyze: false, minify },
+    { input: "src/components/semiotic-themes-react.ts", name: "semiotic-themes-react", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-utils.ts", name: "semiotic-utils", analyze: false, minify },
+    { input: "src/components/semiotic-utils-core.ts", name: "semiotic-utils-core", analyze: false, minify },
+    { input: "src/components/semiotic-utils-react.ts", name: "semiotic-utils-react", analyze: false, minify, clientOnly: true },
     { input: "src/components/semiotic-recipes.ts", name: "semiotic-recipes", analyze: false, minify },
+    { input: "src/components/semiotic-recipes-core.ts", name: "semiotic-recipes-core", analyze: false, minify },
+    { input: "src/components/semiotic-recipes-react.ts", name: "semiotic-recipes-react", analyze: false, minify, clientOnly: true },
     // Unstable preview surface for adapters such as GoFish. It is packaged so
     // collaborators can test it, but CI/docs gates intentionally ignore it as a
     // stable API contract.
@@ -275,6 +510,8 @@ async function build() {
     { input: "src/components/semiotic-value.ts", name: "semiotic-value", analyze: false, minify, clientOnly: true }
   ]
 
+  const bundledEntries = bundles.map(applyGeneratedMetadata)
+
   buildDeclarations()
 
   // Each tsup build keeps an esbuild graph plus post-processing state. Starting
@@ -282,11 +519,11 @@ async function build() {
   // preview bundle is added, so keep peak memory bounded while allowing local
   // callers to opt into more parallelism.
   console.log(`Bundling ${bundles.length} entry points with concurrency ${bundleConcurrency}`)
-  await createBundlesWithConcurrency(bundles, bundleConcurrency)
+  await createBundlesWithConcurrency(bundledEntries, bundleConcurrency)
   await createForceLayoutWorkerBundle({ minify })
   await createPhysicsWorkerBundle({ minify })
 
-  assertDirectivePlacement(bundles)
+  assertDirectivePlacement(bundledEntries)
 }
 
 /**

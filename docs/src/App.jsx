@@ -91,7 +91,9 @@ const AccessibilityPage = lazy(() => import("./pages/accessibility/Accessibility
 const AccessibilityAuditPage = lazy(() => import("./pages/accessibility/AccessibilityAuditPage"))
 const DescribeChartPage = lazy(() => import("./pages/accessibility/DescribeChartPage"))
 const NavigationTreePage = lazy(() => import("./pages/accessibility/NavigationTreePage"))
-const AnchoringComplexChartsPage = lazy(() => import("./pages/accessibility/AnchoringComplexChartsPage"))
+const AnchoringComplexChartsPage = lazy(
+  () => import("./pages/accessibility/AnchoringComplexChartsPage"),
+)
 const SmallMultiplesPage = lazy(() => import("./pages/features/SmallMultiplesPage"))
 const StylingPage = lazy(() => import("./pages/features/StylingPage"))
 const ThemingPage = lazy(() => import("./pages/features/ThemingPage"))
@@ -99,6 +101,8 @@ const ThemeExplorerPage = lazy(() => import("./pages/theming/ThemeExplorerPage")
 const SemanticColorsPage = lazy(() => import("./pages/theming/SemanticColorsPage"))
 const LegendsPage = lazy(() => import("./pages/features/LegendsPage"))
 const RealtimeEncodingPage = lazy(() => import("./pages/features/RealtimeEncodingPage"))
+const MotionEncodingsPage = lazy(() => import("./pages/features/MotionEncodingsPage"))
+const PhysicsEncodingPage = lazy(() => import("./pages/features/PhysicsEncodingPage"))
 const StreamingAggregationPage = lazy(() => import("./pages/features/StreamingAggregationPage"))
 const ChartContainersPage = lazy(() => import("./pages/features/ChartContainersPage"))
 const ChartStatesPage = lazy(() => import("./pages/features/ChartStatesPage"))
@@ -162,23 +166,14 @@ const TimelineCookbookPage = lazy(() => import("./pages/cookbook/TimelinePage"))
 const RadarPlotPage = lazy(() => import("./pages/cookbook/RadarPlotPage"))
 const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
+const InsightForgeExamplePage = lazy(() => import("./pages/examples/InsightForgeExamplePage"))
 const ClimateAnomalyExamplePage = lazy(() => import("./pages/examples/ClimateAnomalyExamplePage"))
 const WatermarksExamplePage = lazy(() => import("./pages/examples/WatermarksExamplePage"))
-const PlinkoQuantileDotplotExamplePage = lazy(
-  () => import("./pages/examples/PlinkoQuantileDotplotExamplePage"),
-)
 const StakeholderJourneyExamplePage = lazy(
   () => import("./pages/examples/StakeholderJourneyExamplePage"),
 )
-const QueueWeatherExamplePage = lazy(
-  () => import("./pages/examples/QueueWeatherExamplePage"),
-)
-const MergePressureExamplePage = lazy(
-  () => import("./pages/examples/MergePressureExamplePage"),
-)
-const NimbyExamplePage = lazy(
-  () => import("./pages/examples/NimbyExamplePage"),
-)
+const MergePressureExamplePage = lazy(() => import("./pages/examples/MergePressureExamplePage"))
+const NimbyExamplePage = lazy(() => import("./pages/examples/NimbyExamplePage"))
 const ClimateRadialWeatherExamplePage = lazy(
   () => import("./pages/examples/ClimateRadialWeatherExamplePage"),
 )
@@ -221,24 +216,16 @@ const PortCongestionReplayExamplePage = lazy(
 const ScrollYoureTellingExamplePage = lazy(
   () => import("./pages/examples/ScrollYoureTellingExamplePage"),
 )
-const DatavizPeopleExamplePage = lazy(
-  () => import("./pages/examples/DatavizPeopleExamplePage"),
-)
-const DistantReadingExamplePage = lazy(
-  () => import("./pages/examples/DistantReadingExamplePage"),
-)
-const WorldOfFunnelsExamplePage = lazy(
-  () => import("./pages/examples/WorldOfFunnelsExamplePage"),
-)
+const DatavizPeopleExamplePage = lazy(() => import("./pages/examples/DatavizPeopleExamplePage"))
+const DistantReadingExamplePage = lazy(() => import("./pages/examples/DistantReadingExamplePage"))
+const WorldOfFunnelsExamplePage = lazy(() => import("./pages/examples/WorldOfFunnelsExamplePage"))
 const WhatTheMachineSeesExamplePage = lazy(
   () => import("./pages/examples/WhatTheMachineSeesExamplePage"),
 )
 const SemioticArchitectureExamplePage = lazy(
   () => import("./pages/examples/SemioticArchitectureExamplePage"),
 )
-const OctopusMetaphorExamplePage = lazy(
-  () => import("./pages/examples/OctopusMetaphorExamplePage"),
-)
+const OctopusMetaphorExamplePage = lazy(() => import("./pages/examples/OctopusMetaphorExamplePage"))
 const GestaltPrinciplesExamplePage = lazy(
   () => import("./pages/examples/GestaltPrinciplesExamplePage"),
 )
@@ -402,114 +389,92 @@ export default function DocsApp() {
           <ExamplesLayout>
             <Suspense key={location.pathname} fallback={<ExamplesRouteFallback />}>
               <Routes>
-              <Route path="examples" element={<ExamplesOverviewPage />} />
-              <Route path="examples/watermarks" element={<WatermarksExamplePage />} />
-              <Route
-                path="examples/plinko-quantile-dotplot"
-                element={<PlinkoQuantileDotplotExamplePage />}
-              />
-              <Route
-                path="examples/stakeholder-journey"
-                element={<StakeholderJourneyExamplePage />}
-              />
-              <Route path="examples/queue-weather" element={<QueueWeatherExamplePage />} />
-              <Route
-                path="examples/merge-pressure"
-                element={<MergePressureExamplePage />}
-              />
-              <Route
-                path="examples/not-in-my-backyard"
-                element={<NimbyExamplePage />}
-              />
-              <Route path="examples/climate-anomaly" element={<ClimateAnomalyExamplePage />} />
-              <Route
-                path="examples/climate-radial-weather"
-                element={<ClimateRadialWeatherExamplePage />}
-              />
-              <Route
-                path="examples/lake-travis-isotype"
-                element={<LakeTravisIsotypeExamplePage />}
-              />
-              <Route
-                path="examples/hot-dog-contest-variations"
-                element={<HotDogContestVariationsExamplePage />}
-              />
-              <Route
-                path="examples/data-centers-isotype"
-                element={<DataCentersIsotypeExamplePage />}
-              />
-              <Route
-                path="examples/creative-contours"
-                element={<CreativeContoursExamplePage />}
-              />
-              <Route
-                path="examples/sometimes-better-discrete"
-                element={<SometimesDiscreteExamplePage />}
-              />
-              <Route path="examples/us-war-timeline" element={<USWarTimelineExamplePage />} />
-              <Route
-                path="examples/art-movement-genealogy"
-                element={<ArtMovementGenealogyExamplePage />}
-              />
-              <Route
-                path="examples/paris-isometric-landmarks"
-                element={<ParisIsometricLandmarksExamplePage />}
-              />
-              <Route path="examples/urine-wheel" element={<UrineWheelExamplePage />} />
-              <Route
-                path="examples/erie-railroad-organization"
-                element={<ErieRailroadOrganizationExamplePage />}
-              />
-              <Route
-                path="examples/wikipedia-realtime"
-                element={<WikipediaRealtimeExamplePage />}
-              />
-              <Route
-                path="examples/local-government-explorer"
-                element={<LocalGovernmentExplorerExamplePage />}
-              />
-              <Route
-                path="examples/port-congestion-replay"
-                element={<PortCongestionReplayExamplePage />}
-              />
-              <Route
-                path="examples/scroll-youre-telling"
-                element={<ScrollYoureTellingExamplePage />}
-              />
-              <Route
-                path="examples/dataviz-people"
-                element={<DatavizPeopleExamplePage />}
-              />
-              <Route
-                path="examples/distant-reading"
-                element={<DistantReadingExamplePage />}
-              />
-              <Route
-                path="examples/world-of-funnels"
-                element={<WorldOfFunnelsExamplePage />}
-              />
-              <Route
-                path="examples/what-the-machine-sees"
-                element={<WhatTheMachineSeesExamplePage />}
-              />
-              <Route
-                path="examples/semiotic-architecture"
-                element={<SemioticArchitectureExamplePage />}
-              />
-              <Route
-                path="examples/octopus-metaphor"
-                element={<OctopusMetaphorExamplePage />}
-              />
-              <Route
-                path="examples/gestalt-principles"
-                element={<GestaltPrinciplesExamplePage />}
-              />
-              <Route
-                path="examples/mobile-data-visualization"
-                element={<MobileDataVisualizationExamplePage />}
-              />
-              <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
-              <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
+                <Route path="examples" element={<ExamplesOverviewPage />} />
+                <Route path="examples/insight-forge" element={<InsightForgeExamplePage />} />
+                <Route path="examples/watermarks" element={<WatermarksExamplePage />} />
+                <Route
+                  path="examples/stakeholder-journey"
+                  element={<StakeholderJourneyExamplePage />}
+                />
+                <Route path="examples/merge-pressure" element={<MergePressureExamplePage />} />
+                <Route path="examples/not-in-my-backyard" element={<NimbyExamplePage />} />
+                <Route path="examples/climate-anomaly" element={<ClimateAnomalyExamplePage />} />
+                <Route
+                  path="examples/climate-radial-weather"
+                  element={<ClimateRadialWeatherExamplePage />}
+                />
+                <Route
+                  path="examples/lake-travis-isotype"
+                  element={<LakeTravisIsotypeExamplePage />}
+                />
+                <Route
+                  path="examples/hot-dog-contest-variations"
+                  element={<HotDogContestVariationsExamplePage />}
+                />
+                <Route
+                  path="examples/data-centers-isotype"
+                  element={<DataCentersIsotypeExamplePage />}
+                />
+                <Route
+                  path="examples/creative-contours"
+                  element={<CreativeContoursExamplePage />}
+                />
+                <Route
+                  path="examples/sometimes-better-discrete"
+                  element={<SometimesDiscreteExamplePage />}
+                />
+                <Route path="examples/us-war-timeline" element={<USWarTimelineExamplePage />} />
+                <Route
+                  path="examples/art-movement-genealogy"
+                  element={<ArtMovementGenealogyExamplePage />}
+                />
+                <Route
+                  path="examples/paris-isometric-landmarks"
+                  element={<ParisIsometricLandmarksExamplePage />}
+                />
+                <Route path="examples/urine-wheel" element={<UrineWheelExamplePage />} />
+                <Route
+                  path="examples/erie-railroad-organization"
+                  element={<ErieRailroadOrganizationExamplePage />}
+                />
+                <Route
+                  path="examples/wikipedia-realtime"
+                  element={<WikipediaRealtimeExamplePage />}
+                />
+                <Route
+                  path="examples/local-government-explorer"
+                  element={<LocalGovernmentExplorerExamplePage />}
+                />
+                <Route
+                  path="examples/port-congestion-replay"
+                  element={<PortCongestionReplayExamplePage />}
+                />
+                <Route
+                  path="examples/scroll-youre-telling"
+                  element={<ScrollYoureTellingExamplePage />}
+                />
+                <Route path="examples/dataviz-people" element={<DatavizPeopleExamplePage />} />
+                <Route path="examples/distant-reading" element={<DistantReadingExamplePage />} />
+                <Route path="examples/world-of-funnels" element={<WorldOfFunnelsExamplePage />} />
+                <Route
+                  path="examples/what-the-machine-sees"
+                  element={<WhatTheMachineSeesExamplePage />}
+                />
+                <Route
+                  path="examples/semiotic-architecture"
+                  element={<SemioticArchitectureExamplePage />}
+                />
+                <Route path="examples/octopus-metaphor" element={<OctopusMetaphorExamplePage />} />
+                <Route
+                  path="examples/gestalt-principles"
+                  element={<GestaltPrinciplesExamplePage />}
+                />
+                <Route
+                  path="examples/mobile-data-visualization"
+                  element={<MobileDataVisualizationExamplePage />}
+                />
+                <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
+                <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
               </Routes>
             </Suspense>
           </ExamplesLayout>
@@ -717,6 +682,8 @@ export default function DocsApp() {
                 <Route path="linked-charts" element={<SmallMultiplesPage />} />
                 <Route path="legends" element={<LegendsPage />} />
                 <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
+                <Route path="motion-encodings" element={<MotionEncodingsPage />} />
+                <Route path="physics-encoding" element={<PhysicsEncodingPage />} />
                 <Route path="streaming-aggregation" element={<StreamingAggregationPage />} />
                 <Route path="chart-container" element={<ChartContainersPage />} />
                 <Route path="chart-states" element={<ChartStatesPage />} />

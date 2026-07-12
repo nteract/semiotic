@@ -1,0 +1,180 @@
+.yellowstone {
+  --ys-paper: #f3ecd8;
+  --ys-ink: #203128;
+  --ys-pine: #345847;
+  --ys-water: #4e8f97;
+  --ys-ochre: #bd9134;
+  --ys-rust: #a24e3e;
+  color: var(--ys-ink);
+  padding-bottom: 72px;
+}
+
+.yellowstone h2,
+.yellowstone h3 { font-family: Georgia, "Times New Roman", serif; }
+
+.yellowstone__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px 220px;
+  gap: 24px;
+  align-items: start;
+  padding: 20px 0 30px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ys-pine) 28%, transparent);
+}
+
+.yellowstone__hero p {
+  max-width: 720px;
+  margin: 8px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.08rem, 2vw, 1.45rem);
+  line-height: 1.55;
+}
+
+.yellowstone__kicker {
+  color: var(--ys-rust);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.yellowstone__legend-note {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--ys-ochre);
+  background: color-mix(in srgb, var(--ys-paper) 82%, transparent);
+  box-shadow: 5px 5px 0 color-mix(in srgb, var(--ys-ochre) 22%, transparent);
+}
+
+.yellowstone__legend-note strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.yellowstone__legend-note span { color: var(--text-secondary); font-size: 0.8rem; line-height: 1.45; }
+
+.yellowstone__chapter {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 24px;
+  padding: 32px 0 22px;
+}
+
+.yellowstone__chapter > span {
+  color: var(--ys-rust);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.yellowstone__chapter h2 { margin: 0 0 4px; font-size: clamp(1.8rem, 4vw, 3.1rem); line-height: 1; }
+.yellowstone__chapter strong { color: var(--ys-pine); }
+.yellowstone__chapter p { max-width: 760px; margin: 8px 0 0; color: var(--text-secondary); line-height: 1.6; }
+
+.yellowstone__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--ys-pine) 8%, var(--surface-1));
+  border: 1px solid color-mix(in srgb, var(--ys-pine) 20%, transparent);
+}
+
+.yellowstone__controls button,
+.yellowstone__tables button {
+  border: 1px solid color-mix(in srgb, var(--ys-pine) 44%, transparent);
+  border-radius: 3px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: 700 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.yellowstone__controls button { min-height: 36px; padding: 7px 11px; }
+.yellowstone__controls button:hover,
+.yellowstone__controls button:focus-visible,
+.yellowstone__controls button.is-active { border-color: var(--ys-rust); background: var(--ys-rust); color: #fffaf0; }
+.yellowstone__controls button:disabled { cursor: not-allowed; opacity: 0.38; }
+
+.yellowstone__segmented { display: inline-flex; gap: 2px; padding: 2px; background: var(--ys-pine); }
+
+.yellowstone__chart-host {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ys-pine) 35%, transparent);
+  background: radial-gradient(circle at 12% 8%, rgb(255 255 255 / 58%), transparent 24%), var(--ys-paper);
+  box-shadow: 9px 10px 0 color-mix(in srgb, var(--ys-pine) 13%, transparent);
+}
+
+.yellowstone__chart-host canvas { filter: saturate(0.92) contrast(1.03); }
+.yellowstone__container-controls { display: inline-flex; gap: 10px; align-items: center; color: var(--text-secondary); font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace; }
+.yellowstone__container-controls b { color: var(--ys-rust); }
+.yellowstone__tooltip { display: grid; max-width: 260px; gap: 4px; }
+.yellowstone__tooltip small { margin-top: 4px; line-height: 1.35; }
+
+.yellowstone__inspector,
+.yellowstone__method {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1.4fr);
+  gap: 32px;
+  margin-top: 28px;
+  padding: 26px;
+  border-left: 7px solid var(--ys-rust);
+  background: color-mix(in srgb, var(--ys-paper) 72%, var(--surface-1));
+}
+
+.yellowstone__inspector h2,
+.yellowstone__method h2,
+.yellowstone__reading h2,
+.yellowstone__tables h2 { margin: 5px 0 0; font-size: clamp(1.55rem, 3vw, 2.5rem); line-height: 1.08; }
+.yellowstone__evidence-panel > strong { display: block; margin-bottom: 12px; font-family: Georgia, "Times New Roman", serif; font-size: 1.15rem; }
+.yellowstone__evidence-panel dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.yellowstone__evidence-panel dl div { display: grid; gap: 3px; padding: 9px; background: rgb(255 255 255 / 42%); }
+.yellowstone__evidence-panel dt { color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.yellowstone__evidence-panel dd { margin: 0; font-weight: 750; }
+.yellowstone__evidence-panel p { margin: 12px 0 5px; }
+.yellowstone__evidence-panel small { color: var(--text-secondary); line-height: 1.4; }
+
+.yellowstone__reading,
+.yellowstone__tables { margin-top: 52px; }
+.yellowstone__reading-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 20px; background: color-mix(in srgb, var(--ys-pine) 28%, transparent); border: 1px solid color-mix(in srgb, var(--ys-pine) 28%, transparent); }
+.yellowstone__reading-grid article { min-height: 150px; padding: 20px; background: var(--surface-1); }
+.yellowstone__reading-grid strong { color: var(--ys-rust); font: 800 0.76rem ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+.yellowstone__reading-grid p { line-height: 1.5; }
+
+.yellowstone__tables details { margin-top: 14px; border: 1px solid var(--surface-3); background: var(--surface-1); }
+.yellowstone__tables summary { cursor: pointer; padding: 14px 16px; color: var(--ys-pine); font-weight: 800; }
+.yellowstone__table-scroll { overflow-x: auto; }
+.yellowstone__tables table { width: 100%; min-width: 780px; border-collapse: collapse; font-size: 0.78rem; }
+.yellowstone__tables th,
+.yellowstone__tables td { padding: 10px 12px; border-top: 1px solid var(--surface-3); text-align: left; vertical-align: top; }
+.yellowstone__tables thead th { color: var(--text-secondary); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.yellowstone__tables button { padding: 4px 6px; }
+.yellowstone__method { margin-top: 52px; border-left-color: var(--ys-pine); }
+.yellowstone__method p { line-height: 1.6; }
+
+@media (max-width: 900px) {
+  .yellowstone__hero { grid-template-columns: 1fr 1fr; }
+  .yellowstone__hero > :first-child { grid-column: 1 / -1; }
+  .yellowstone__reading-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 640px) {
+  .yellowstone__hero,
+  .yellowstone__chapter,
+  .yellowstone__inspector,
+  .yellowstone__method { grid-template-columns: 1fr; }
+  .yellowstone__hero { gap: 14px; }
+  .yellowstone__chapter { gap: 7px; }
+  .yellowstone__controls { display: grid; grid-template-columns: 1fr 1fr; }
+  .yellowstone__segmented { grid-column: 1 / -1; }
+  .yellowstone__segmented button { flex: 1; }
+  .yellowstone__reading-grid { grid-template-columns: 1fr; }
+  .yellowstone__evidence-panel dl { grid-template-columns: 1fr; }
+  .yellowstone__inspector,
+  .yellowstone__method { padding: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yellowstone *,
+  .yellowstone *::before,
+  .yellowstone *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

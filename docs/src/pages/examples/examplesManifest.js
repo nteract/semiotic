@@ -30,6 +30,17 @@ export const EXAMPLE_FILTERS = {
 
 export const EXAMPLES = [
   {
+    title: "The Insight Forge",
+    path: "/examples/insight-forge",
+    eyebrow: "Portable analytical artifacts · five chart rooms",
+    description:
+      "Collect semantic clues from time, category, flow, and cohort views; craft filters, test a carrier hypothesis, preserve a false positive, and bind the accepted packaging insight to a durable knowledge view.",
+    preview: "insight-forge",
+    badges: ["Portable artifacts", "Deterministic recipes", "Audited lineage"],
+    frames: ["xy", "ordinal", "network"],
+    topics: ["process", "design", "accessibility", "ai"],
+  },
+  {
     title: "Watermarks, Made Physical",
     path: "/examples/watermarks",
     eyebrow: "EventDropChart · streaming lateness",
@@ -41,17 +52,6 @@ export const EXAMPLES = [
     topics: ["process", "realtime"],
   },
   {
-    title: "Plinko Quantile Dotplot",
-    path: "/examples/plinko-quantile-dotplot",
-    eyebrow: "GaltonBoardChart · posterior samples",
-    description:
-      "Posterior draws become semantic tokens, fall through a Galton-board process, and settle into a quantile dotplot so the same sample drives both motion and uncertainty reading.",
-    preview: "plinko-quantile",
-    badges: ["GaltonBoardChart", "generateTokens", "Uncertainty"],
-    frames: ["custom", "ordinal"],
-    topics: ["uncertainty", "design"],
-  },
-  {
     title: "The Stakeholder Journey",
     path: "/examples/stakeholder-journey",
     eyebrow: "StreamPhysicsFrame · controlled process comparison",
@@ -61,17 +61,6 @@ export const EXAMPLES = [
     badges: ["StreamPhysicsFrame", "Stage ledger", "Live geometry"],
     frames: ["stream-physics"],
     topics: ["process", "civic"],
-  },
-  {
-    title: "Player Support Capacity",
-    path: "/examples/queue-weather",
-    eyebrow: "StreamPhysicsFrame · planned operations + dependencies",
-    description:
-      "Known player-support demand conditions meet finite staffing, service-level deadlines, player-care credits, and a platform-recovery dependency that can make overprovisioned agents idle.",
-    preview: "queue-weather",
-    badges: ["StreamPhysicsFrame", "Capacity telemetry", "Physical baseline"],
-    frames: ["stream-physics"],
-    topics: ["process", "climate", "uncertainty"],
   },
   {
     title: "Merge Pressure",
