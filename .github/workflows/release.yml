@@ -123,19 +123,19 @@ jobs:
       - name: Reverify immutable release artifact before publication
         run: node scripts/create-release-artifact.mjs --out-dir "${{ steps.release-artifact.outputs.directory }}" --verify
 
-      - name: Release diagnostics: coverage-risk
+      - name: "Release diagnostics: coverage-risk"
         run: npm run check:coverage-risk
         continue-on-error: true
 
-      - name: Release diagnostics: visual baseline capabilities
+      - name: "Release diagnostics: visual baseline capabilities"
         run: npm run check:visual-baseline-capabilities
         continue-on-error: true
 
-      - name: Release diagnostics: deployment lockfile
+      - name: "Release diagnostics: deployment lockfile"
         run: npm run check:cloud-run-lock
         continue-on-error: true
 
-      - name: Release diagnostics: benchmark comparison
+      - name: "Release diagnostics: benchmark comparison"
         run: npm run bench:compare
         continue-on-error: true
 
