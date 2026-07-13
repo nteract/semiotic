@@ -452,7 +452,7 @@
     "size-limit": "^12.1.0",
     "terser": "^5.49.0",
     "tsup": "^8.5.1",
-    "tsx": "^4.23.0",
+    "tsx": "^4.23.1",
     "typedoc": "^0.28.20",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.63.0",
