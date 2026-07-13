@@ -543,6 +543,14 @@ export class PhysicsPipelineStore {
     return this.updateResults.last
   }
 
+  getUpdateSnapshot(): UpdateResult {
+    return this.updateResults.last
+  }
+
+  subscribeUpdateResult(listener: () => void): () => void {
+    return this.updateResults.subscribe(listener)
+  }
+
   version(): number {
     return this.revision
   }

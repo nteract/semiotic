@@ -874,7 +874,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     useEffect(() => {
       dirtyRef.current = true
       scheduleRender()
-    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, scheduleRender])
+    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, scheduleRender])
 
     // Staleness check timer
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
@@ -1144,6 +1144,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           yAccessor={annYAccessor}
           annotationData={enrichAnnotationData(storeRef.current?.getData())}
           underlayRendered
+          canvasObscuresUnderlay={background !== "transparent" && !backgroundGraphics}
         />
 
         {/* Brush overlay — not supported for radial projection (pie/donut) */}

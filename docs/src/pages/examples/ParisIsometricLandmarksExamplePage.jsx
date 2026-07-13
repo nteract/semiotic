@@ -12,6 +12,12 @@ import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import { buildTerrainGrid, CITY_LANDMARKS, CITY_OPTIONS } from "./data/cityLandmarks"
 import { fetchDbpediaLandmarks } from "./dbpediaParisLandmarks"
+import {
+  DBPEDIA_LANDMARK_DATA_ADAPTER,
+  createDbpediaMixedProvenance,
+  createDbpediaSnapshotProvenance,
+} from "./dbpediaLandmarkDataState"
+import { createLiveDataRequestVersioner } from "./liveDataAdapter"
 
 const MIN_CHART_WIDTH = 620
 const CHART_HEIGHT = 440
@@ -123,10 +129,23 @@ export default function ParisIsometricLandmarksExamplePage() {
   const zoom = ZOOM_LEVELS[zoomIndex]
   const [landmarks, setLandmarks] = useState(city.fixture)
   const [activeLandmark, setActiveLandmark] = useState(city.center)
-  const [sourceState, setSourceState] = useState({
-    kind: "checking",
-    message: `Showing the validated ${city.label} snapshot while DBpedia is checked.`,
-  })
+  const [sourceState, setSourceState] = useState(() =>
+    DBPEDIA_LANDMARK_DATA_ADAPTER.createDataAdapterState({
+      kind: "snapshot",
+      isLoading: true,
+      message: "Showing the validated " + city.label + " snapshot while DBpedia is checked.",
+      provenance: [createDbpediaSnapshotProvenance(city)],
+    }),
+  )
+  const [requestVersioner] = useState(() => createLiveDataRequestVersioner())
+  const transitionSourceState = useCallback(
+    (action) => {
+      setSourceState((current) =>
+        DBPEDIA_LANDMARK_DATA_ADAPTER.transitionDataAdapter(current, action),
+      )
+    },
+    [],
+  )
   const [chartWidth, chartHostRef] = useResponsiveWidth(MIN_CHART_WIDTH, 860)
   const cityLayoutConfig = useMemo(() => {
     const center = { lon: city.center.lon, lat: city.center.lat }
@@ -154,8 +173,14 @@ export default function ParisIsometricLandmarksExamplePage() {
   )
 
   useEffect(() => {
+    const requestId = requestVersioner.next()
     const controller = new AbortController()
     let timedOut = false
+    transitionSourceState({
+      type: "begin-load",
+      requestId,
+      message: "Showing the validated " + city.label + " snapshot while DBpedia is checked.",
+    })
     const timeout = window.setTimeout(() => {
       timedOut = true
       controller.abort()
@@ -163,7 +188,7 @@ export default function ParisIsometricLandmarksExamplePage() {
 
     fetchDbpediaLandmarks(city.center, controller.signal)
       .then((nextLandmarks) => {
-        if (controller.signal.aborted) return
+        if (controller.signal.aborted || !requestVersioner.isCurrent(requestId)) return
         const occupied = selectIsometricLandmarks(nextLandmarks, validationLayoutConfig).filter(
           (tile) => tile.landmark,
         ).length
@@ -179,26 +204,39 @@ export default function ParisIsometricLandmarksExamplePage() {
           (tile) => tile.landmark,
         ).length
         setLandmarks(merged)
-        setSourceState({
+        transitionSourceState({
+          type: "set-result",
+          requestId,
           kind: "live",
-          message: `${nextLandmarks.length - 1} current DBpedia landmarks filled ${occupied - 1} cells; the snapshot fills ${mergedOccupied - occupied} gaps.`,
+          message:
+            String(nextLandmarks.length - 1) +
+            " current DBpedia landmarks filled " +
+            String(occupied - 1) +
+            " cells; the snapshot fills " +
+            String(mergedOccupied - occupied) +
+            " gaps.",
+          provenance: createDbpediaMixedProvenance(city),
         })
       })
       .catch((error) => {
         // Switching cities aborts the previous request. It must not overwrite
         // the next city's source status with stale closure data.
+        if (!requestVersioner.isCurrent(requestId)) return
         if (controller.signal.aborted && !timedOut) return
-        if (error?.name !== "AbortError") {
-          setSourceState({
-            kind: "snapshot",
-            message: `DBpedia was incomplete or unavailable; the validated ${city.label} snapshot remains in view.`,
-          })
-        } else {
-          setSourceState({
-            kind: "snapshot",
-            message: `DBpedia exceeded the response budget; the validated ${city.label} snapshot remains in view.`,
-          })
-        }
+        transitionSourceState({
+          type: "set-result",
+          requestId,
+          kind: "snapshot",
+          message:
+            error?.name !== "AbortError"
+              ? "DBpedia was incomplete or unavailable; the validated " +
+                city.label +
+                " snapshot remains in view."
+              : "DBpedia exceeded the response budget; the validated " +
+                city.label +
+                " snapshot remains in view.",
+          provenance: [createDbpediaSnapshotProvenance(city)],
+        })
       })
       .finally(() => window.clearTimeout(timeout))
 
@@ -206,7 +244,7 @@ export default function ParisIsometricLandmarksExamplePage() {
       window.clearTimeout(timeout)
       controller.abort()
     }
-  }, [city, validationLayoutConfig])
+  }, [city, requestVersioner, transitionSourceState, validationLayoutConfig])
 
   const selectedTiles = useMemo(
     () => selectIsometricLandmarks(landmarks, layoutConfig),
@@ -247,12 +285,15 @@ export default function ParisIsometricLandmarksExamplePage() {
       setCityKey(nextKey)
       setLandmarks(nextCity.fixture)
       setActiveLandmark(nextCity.center)
-      setSourceState({
-        kind: "checking",
-        message: `Showing the validated ${nextCity.label} snapshot while DBpedia is checked.`,
+      transitionSourceState({
+        type: "set-view",
+        kind: "snapshot",
+        message:
+          "Showing the validated " + nextCity.label + " snapshot while DBpedia is checked.",
+        provenance: [createDbpediaSnapshotProvenance(nextCity)],
       })
     },
-    [cityKey],
+    [cityKey, transitionSourceState],
   )
 
   return (

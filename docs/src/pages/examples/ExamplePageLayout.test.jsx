@@ -49,4 +49,20 @@ describe("ExamplePageLayout", () => {
     expect(screen.getByRole("link", { name: /next example/i })).toBeTruthy()
     expect(sourceLoader).not.toHaveBeenCalled()
   })
+
+  it("shows lazy contract panels for non-pilot example routes", async () => {
+    render(
+      <MemoryRouter initialEntries={["/examples/insight-forge"]}>
+        <ExamplePageLayout title="The Insight Forge">
+          <p>Narrative content</p>
+        </ExamplePageLayout>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole("heading", { name: "Copy this pattern" })).toBeTruthy()
+    expect(
+      screen.getByText(/reusable implementation pattern has not been reviewed yet/i),
+    ).toBeTruthy()
+    expect(sourceLoader).not.toHaveBeenCalled()
+  })
 })

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { fetchOpenMeteoExampleData } from "./openMeteoExampleData"
+import { createLiveDataRequestVersioner } from "./liveDataAdapter"
 import {
   ADAPTER_KIND_TO_VIEW_KIND,
   createOpenMeteoDataAdapterState,
@@ -60,7 +61,10 @@ export function useOpenMeteoLoader({
     createOpenMeteoDataAdapterState(),
   )
   const requestRef = useRef(null)
-  const requestSequence = useRef(0)
+  const requestVersionerRef = useRef(null)
+  if (!requestVersionerRef.current) {
+    requestVersionerRef.current = createLiveDataRequestVersioner()
+  }
   const slowTimerRef = useRef(null)
   const timeoutTimerRef = useRef(null)
   const dataCacheRef = useRef(new Map())
@@ -91,8 +95,7 @@ export function useOpenMeteoLoader({
     requestRef.current?.controller.abort()
     clearActiveLoadTimers()
 
-    const nextId = requestSequence.current + 1
-    requestSequence.current = nextId
+    const nextId = requestVersionerRef.current.next()
     const controller = new AbortController()
     const nextRequest = { requestId: nextId, controller, timedOut: false }
     requestRef.current = nextRequest

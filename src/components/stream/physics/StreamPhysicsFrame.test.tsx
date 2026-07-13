@@ -22,7 +22,7 @@ import type {
   PhysicsWorkerRequest,
   PhysicsWorkerResponse
 } from "./PhysicsWorkerProtocol"
-import type { FrameScheduler } from "../useFrame"
+import { createFrameScheduler } from "../test-utils/frameScheduler"
 
 const quietKernel = {
   gravity: { x: 0, y: 0 },
@@ -92,39 +92,6 @@ function captureFillRectStyles(ctx: CanvasContextMock) {
     restore: () => {
       ctx.fillRect = orig
     }
-  }
-}
-
-function createFrameScheduler(firstHandle = 0) {
-  const callbacks = new Map<number, FrameRequestCallback>()
-  const requestedHandles: number[] = []
-  const cancelledHandles: number[] = []
-  let nextHandle = firstHandle
-  const scheduler: FrameScheduler = {
-    requestAnimationFrame: (callback) => {
-      const handle = nextHandle++
-      requestedHandles.push(handle)
-      callbacks.set(handle, callback)
-      return handle
-    },
-    cancelAnimationFrame: (handle) => {
-      cancelledHandles.push(handle)
-      callbacks.delete(handle)
-    },
-  }
-
-  return {
-    scheduler,
-    requestedHandles,
-    cancelledHandles,
-    get pendingCount() {
-      return callbacks.size
-    },
-    flush() {
-      const pending = [...callbacks.values()]
-      callbacks.clear()
-      for (const callback of pending) callback(performance.now())
-    },
   }
 }
 
@@ -1042,6 +1009,53 @@ describe("StreamPhysicsFrame", () => {
       Object.defineProperty(document, "hidden", originalHiddenDescriptor)
     } else {
       Reflect.deleteProperty(document, "hidden")
+    }
+  })
+
+  it("restores the visibility gate when hidden-page suspension is disabled", () => {
+    const scheduler = createFrameScheduler(10)
+    const frameRef = React.createRef<StreamPhysicsFrameHandle>()
+    const originalHiddenDescriptor = Object.getOwnPropertyDescriptor(document, "hidden")
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      get: () => true
+    })
+
+    try {
+      const { rerender } = render(
+        <StreamPhysicsFrame
+          ref={frameRef}
+          size={[200, 120]}
+          frameScheduler={scheduler.scheduler}
+          continuous
+          paused={false}
+          suspendWhenHidden
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+        />,
+      )
+      expect(frameRef.current?.snapshot().visible).toBe(false)
+
+      act(() => {
+        rerender(
+          <StreamPhysicsFrame
+            ref={frameRef}
+            size={[200, 120]}
+            frameScheduler={scheduler.scheduler}
+            continuous
+            paused={false}
+            suspendWhenHidden={false}
+            config={{ fixedDt: 0.1, kernel: quietKernel }}
+          />,
+        )
+      })
+
+      expect(frameRef.current?.snapshot().visible).toBe(true)
+    } finally {
+      if (originalHiddenDescriptor) {
+        Object.defineProperty(document, "hidden", originalHiddenDescriptor)
+      } else {
+        Reflect.deleteProperty(document, "hidden")
+      }
     }
   })
 

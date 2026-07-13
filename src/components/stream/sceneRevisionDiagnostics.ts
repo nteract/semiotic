@@ -1,6 +1,6 @@
 import type { RevisionSet, UpdateResult } from "./pipelineUpdateContract"
 
-type SceneRevisionSet = Pick<RevisionSet, "sceneGeometry" | "layout" | "domain">
+export type SceneRevisionSet = Pick<RevisionSet, "sceneGeometry" | "layout" | "domain">
 
 const EMPTY_SCENE_REVISIONS: SceneRevisionSet = {
   sceneGeometry: 0,
@@ -8,7 +8,7 @@ const EMPTY_SCENE_REVISIONS: SceneRevisionSet = {
   domain: 0
 }
 
-interface SceneRevisionCheck {
+export interface SceneRevisionCheck {
   revisions: SceneRevisionSet
   signature: string
   sawSignals: boolean
@@ -29,6 +29,14 @@ function equal(a: SceneRevisionSet, b: SceneRevisionSet): boolean {
   return a.sceneGeometry === b.sceneGeometry && a.layout === b.layout && a.domain === b.domain
 }
 
+function latest(a: SceneRevisionSet, b: SceneRevisionSet): SceneRevisionSet {
+  return {
+    sceneGeometry: Math.max(a.sceneGeometry, b.sceneGeometry),
+    layout: Math.max(a.layout, b.layout),
+    domain: Math.max(a.domain, b.domain)
+  }
+}
+
 const IS_DEV = process.env.NODE_ENV !== "production"
 
 const NOOP_CHECK: SceneRevisionCheck = {
@@ -39,15 +47,27 @@ const NOOP_CHECK: SceneRevisionCheck = {
   warnUnconsumed: false
 }
 
-/** Development-only consumption and duplicate-compute diagnostics for an XY scene host. */
+/** Development-only consumption and duplicate-compute diagnostics for a scene host. */
 export class SceneRevisionDiagnostics {
   private lastConsumed = EMPTY_SCENE_REVISIONS
+  private lastObserved = EMPTY_SCENE_REVISIONS
   private lastDuplicateWarning = ""
   private lastUnconsumedWarning = ""
 
+  /**
+   * Accept a React external-store observation without participating in frame
+   * scheduling or paint. The imperative result passed to beforeCompute remains
+   * authoritative; retaining the high-water mark only protects development
+   * diagnostics when React observes an update between frame passes.
+   */
+  observeUpdateResult(updateResult: UpdateResult): void {
+    if (!IS_DEV) return
+    this.lastObserved = latest(this.lastObserved, sceneRevisions(updateResult))
+  }
+
   beforeCompute(updateResult: UpdateResult, isTransitioning: boolean): SceneRevisionCheck {
     if (!IS_DEV) return NOOP_CHECK
-    const revisions = sceneRevisions(updateResult)
+    const revisions = latest(sceneRevisions(updateResult), this.lastObserved)
     const nextSignature = signature(revisions)
     const wasUnconsumed = !equal(revisions, this.lastConsumed)
     return {

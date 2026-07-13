@@ -12,6 +12,17 @@ import { useDocsTheme } from "../../hooks/useDocsTheme"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import "./WikipediaRealtimeExamplePage.css"
+import { createLiveDataRequestVersioner } from "./liveDataAdapter"
+import {
+  createInitialWikipediaEnrichmentState,
+  createInitialWikipediaStreamState,
+  createWikipediaEnrichmentFallbackProvenance,
+  createWikipediaEnrichmentLiveProvenance,
+  createWikipediaStreamLiveProvenance,
+  createWikipediaStreamUnavailableProvenance,
+  WIKIPEDIA_ENRICHMENT_DATA_ADAPTER,
+  WIKIPEDIA_STREAM_DATA_ADAPTER,
+} from "./wikipediaRealtimeDataState"
 
 const STREAM_URL = "https://stream.wikimedia.org/v2/stream/recentchange"
 const USERS_API = "https://en.wikipedia.org/w/api.php"
@@ -639,11 +650,22 @@ function useWikipediaEditStream(paused) {
   const adminCacheRef = useRef(new Map())
   const pendingUsersRef = useRef(new Set())
   const maxEventTimeRef = useRef(-Infinity)
+  const [streamState, setStreamState] = useState(() => createInitialWikipediaStreamState())
+  const [enrichmentState, setEnrichmentState] = useState(() =>
+    createInitialWikipediaEnrichmentState(),
+  )
+  const [streamVersioner] = useState(() => createLiveDataRequestVersioner())
+  const [enrichmentVersioner] = useState(() => createLiveDataRequestVersioner())
 
   useEffect(() => {
     let disposed = false
     let inFlight = false
     let controller = null
+    const transitionEnrichmentState = (action) => {
+      setEnrichmentState((current) =>
+        WIKIPEDIA_ENRICHMENT_DATA_ADAPTER.transitionDataAdapter(current, action),
+      )
+    }
 
     const resolveAdministrators = async () => {
       if (disposed || inFlight || pendingUsersRef.current.size === 0) return
@@ -651,6 +673,12 @@ function useWikipediaEditStream(paused) {
       users.forEach((user) => pendingUsersRef.current.delete(user))
       inFlight = true
       controller = new AbortController()
+      const requestId = enrichmentVersioner.next()
+      transitionEnrichmentState({
+        type: "begin-load",
+        requestId,
+        message: "Resolving editor group membership.",
+      })
 
       try {
         const params = new URLSearchParams({
@@ -662,8 +690,8 @@ function useWikipediaEditStream(paused) {
           usprop: "groups",
           origin: "*",
         })
-        const response = await fetch(`${USERS_API}?${params}`, { signal: controller.signal })
-        if (!response.ok) throw new Error(`Wikipedia users API returned ${response.status}`)
+        const response = await fetch(USERS_API + "?" + params, { signal: controller.signal })
+        if (!response.ok) throw new Error("Wikipedia users API returned " + response.status)
         const payload = await response.json()
         const resolved = new Map()
 
@@ -673,17 +701,35 @@ function useWikipediaEditStream(paused) {
           resolved.set(user.name, group)
         }
 
-        if (!disposed && resolved.size > 0) {
-          setEdits((current) =>
-            current.map((edit) => {
-              const group = resolved.get(edit.user)
-              return group && group !== edit.group ? { ...edit, group } : edit
-            }),
-          )
+        if (!disposed && enrichmentVersioner.isCurrent(requestId)) {
+          if (resolved.size > 0) {
+            setEdits((current) =>
+              current.map((edit) => {
+                const group = resolved.get(edit.user)
+                return group && group !== edit.group ? { ...edit, group } : edit
+              }),
+            )
+          }
+          transitionEnrichmentState({
+            type: "set-result",
+            requestId,
+            kind: "live",
+            message: "Editor group membership came from the MediaWiki users API.",
+            provenance: [createWikipediaEnrichmentLiveProvenance()],
+          })
         }
       } catch (error) {
         if (error.name !== "AbortError") {
           users.forEach((user) => adminCacheRef.current.set(user, "registered"))
+          if (!disposed && enrichmentVersioner.isCurrent(requestId)) {
+            transitionEnrichmentState({
+              type: "set-result",
+              requestId,
+              kind: "fallback",
+              message: "Using browser-side editor classification.",
+              provenance: [createWikipediaEnrichmentFallbackProvenance()],
+            })
+          }
         }
       } finally {
         inFlight = false
@@ -696,23 +742,77 @@ function useWikipediaEditStream(paused) {
       window.clearInterval(timer)
       controller?.abort()
     }
-  }, [])
+  }, [enrichmentVersioner])
 
   useEffect(() => {
+    const requestId = streamVersioner.next()
+    const transitionStreamState = (action) => {
+      setStreamState((current) =>
+        WIKIPEDIA_STREAM_DATA_ADAPTER.transitionDataAdapter(current, action),
+      )
+    }
+
     if (paused) {
       setStatus("paused")
+      transitionStreamState({
+        type: "set-message",
+        message: "Wikimedia EventStreams is paused.",
+      })
       return undefined
     }
     if (typeof EventSource === "undefined") {
       setStatus("unsupported")
+      transitionStreamState({
+        type: "set-view",
+        kind: "error",
+        message: "Wikimedia EventStreams is not available in this browser.",
+        provenance: [createWikipediaStreamUnavailableProvenance()],
+      })
       return undefined
     }
 
     const source = new EventSource(STREAM_URL)
+    let opened = false
+    transitionStreamState({
+      type: "begin-load",
+      requestId,
+      message: "Connecting to Wikimedia EventStreams.",
+    })
     setStatus("connecting")
 
-    source.onopen = () => setStatus("live")
-    source.onerror = () => setStatus("reconnecting")
+    source.onopen = () => {
+      if (!streamVersioner.isCurrent(requestId)) return
+      opened = true
+      setStatus("live")
+      transitionStreamState({
+        type: "set-result",
+        requestId,
+        forceUpdate: true,
+        kind: "live",
+        message: "Receiving Wikimedia recent-change events.",
+        provenance: [createWikipediaStreamLiveProvenance()],
+      })
+    }
+    source.onerror = () => {
+      if (!streamVersioner.isCurrent(requestId)) return
+      setStatus("reconnecting")
+      if (!opened) {
+        transitionStreamState({
+          type: "set-result",
+          requestId,
+          forceUpdate: true,
+          kind: "error",
+          message: "Wikimedia EventStreams is reconnecting.",
+          provenance: [createWikipediaStreamUnavailableProvenance()],
+        })
+        return
+      }
+      transitionStreamState({
+        type: "set-message",
+        requestId,
+        message: "Wikimedia EventStreams is reconnecting; the current event window remains visible.",
+      })
+    }
     source.onmessage = (message) => {
       try {
         const raw = JSON.parse(message.data)
@@ -738,9 +838,9 @@ function useWikipediaEditStream(paused) {
     }
 
     return () => source.close()
-  }, [paused])
+  }, [paused, streamVersioner])
 
-  return { edits, status, totalReceived }
+  return { edits, status, totalReceived, streamState, enrichmentState }
 }
 
 function normalizeEdit(raw, adminCache, maxEventTime = -Infinity) {

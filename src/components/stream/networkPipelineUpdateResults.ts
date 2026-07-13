@@ -2,7 +2,7 @@ import {
   type ChangeSet,
   type Invalidation,
   type UpdateResult,
-  UpdateResultTracker
+  UpdateResultTracker,
 } from "./pipelineUpdateContract"
 
 const DATA_INVALIDATIONS: readonly Invalidation[] = [
@@ -13,14 +13,14 @@ const DATA_INVALIDATIONS: readonly Invalidation[] = [
   "data-paint",
   "overlay",
   "accessibility",
-  "evidence"
+  "evidence",
 ]
 
 const RESTYLE_INVALIDATIONS: readonly Invalidation[] = [
   "scene-style",
   "data-paint",
   "accessibility",
-  "evidence"
+  "evidence",
 ]
 
 const CONFIG_INVALIDATIONS: readonly Invalidation[] = [
@@ -29,42 +29,31 @@ const CONFIG_INVALIDATIONS: readonly Invalidation[] = [
   "data-paint",
   "overlay",
   "accessibility",
-  "evidence"
+  "evidence",
 ]
 
-// These configuration keys directly change a categorical or quantitative
-// domain. Other config patches still conservatively report a scene rebuild,
-// because OrdinalPipelineStore rebuilds on its frame's next dirty render.
 const DOMAIN_CONFIG_KEYS = new Set([
-  "accessorRevision",
-  "axisExtent",
-  "categoryAccessor",
   "chartType",
-  "extentPadding",
-  "groupBy",
-  "multiAxis",
-  "normalize",
-  "oAccessor",
-  "oExtent",
-  "oSort",
-  "rAccessor",
-  "rExtent",
-  "runtimeMode",
-  "stackBy",
-  "timeAccessor",
-  "valueAccessor"
+  "childrenAccessor",
+  "edgeIdAccessor",
+  "hierarchySum",
+  "nodeIDAccessor",
+  "sourceAccessor",
+  "targetAccessor",
+  "valueAccessor",
 ])
 
 const STYLE_CONFIG_KEYS = new Set([
-  "barColors",
+  "colorBy",
   "colorScheme",
-  "connectorStyle",
-  "pieceStyle",
-  "summaryStyle",
+  "edgeColorBy",
+  "edgeOpacity",
+  "edgeStyle",
+  "layoutSelection",
+  "nodeStyle",
+  "particleStyle",
   "themeCategorical",
-  "themeDiverging",
   "themeSemantic",
-  "themeSequential"
 ])
 
 type DataChangeKind = Extract<
@@ -72,8 +61,8 @@ type DataChangeKind = Extract<
   "ingest" | "replace" | "remove" | "update" | "clear"
 >
 
-/** Result bookkeeping and invalidation policy for the Ordinal store pilot. */
-export class OrdinalPipelineUpdateResults {
+/** Result bookkeeping and conservative invalidation policy for Network. */
+export class NetworkPipelineUpdateResults {
   private tracker = new UpdateResultTracker()
 
   get last(): UpdateResult {
@@ -87,14 +76,14 @@ export class OrdinalPipelineUpdateResults {
   recordData(kind: DataChangeKind, count?: number): UpdateResult {
     return this.tracker.record(
       { kind, ...(count === undefined ? {} : { count }) },
-      DATA_INVALIDATIONS
+      DATA_INVALIDATIONS,
     )
   }
 
   recordNoop(kind: DataChangeKind | "restyle"): UpdateResult {
     return this.tracker.record(
       { kind, ...(kind === "restyle" ? {} : { count: 0 }) },
-      []
+      [],
     )
   }
 

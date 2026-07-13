@@ -73,6 +73,10 @@ export class PipelineStoreUpdateResults {
     return this.tracker.last
   }
 
+  subscribe(listener: () => void): () => void {
+    return this.tracker.subscribe(listener)
+  }
+
   recordData(kind: DataChangeKind, count?: number): UpdateResult {
     return this.tracker.record({ kind, ...(count === undefined ? {} : { count }) }, DATA_INVALIDATIONS)
   }

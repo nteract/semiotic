@@ -6,19 +6,53 @@ function listOrFallback(values, fallback) {
 }
 
 /**
- * A lazy, metadata-driven companion for pages participating in the incremental
- * ExampleDefinition migration. It deliberately reports declaration status
- * rather than implying that an unmeasured budget or compatibility promise has
- * already been verified.
+ * A lazy, metadata-driven companion for every ExampleDefinition. Its
+ * unassessed branch deliberately names missing review instead of borrowing
+ * concrete imports, fixtures, or compatibility claims from another page.
  */
 export default function PilotExamplePanels({ definition }) {
   const contract = definition?.contract ?? {}
   const sourceFile = definition?.sourceFile ?? "ExamplePage.jsx"
   const title = definition?.title ?? "this example"
+  const isDeclared = contract.assessment === "declared"
   const imports = listOrFallback(contract.publicImports, "semiotic")
   const dataStates = listOrFallback(contract.data?.states, "snapshot")
   const fixture = contract.data?.fixture
   const provenance = contract.provenance
+
+  if (!isDeclared) {
+    return (
+      <section className="pilot-example-panels" aria-label={`${title} implementation guidance`}>
+        <div className="pilot-example-panel">
+          <h2>Copy this pattern</h2>
+          <p>
+            This route has source code and a route entry, but its reusable implementation pattern
+            has not been reviewed yet.
+          </p>
+          <ul>
+            <li>Public imports: not assessed.</li>
+            <li>Data fixture and lifecycle: not assessed.</li>
+            <li>Use Full Code as the current reference before adapting this page into an application.</li>
+          </ul>
+        </div>
+        <div className="pilot-example-panel">
+          <h2>Production concerns</h2>
+          <ul>
+            <li>Accessibility, motion, responsive behavior, and SSR support: not assessed.</li>
+            <li>Performance status: unmeasured.</li>
+            <li>Record route-specific provenance and review before treating this page as production guidance.</li>
+          </ul>
+        </div>
+        <div className="pilot-example-panel">
+          <h2>Page source</h2>
+          <p>
+            <code>{sourceFile}</code> is the source mapped to this route. It loads only when Full
+            Code is selected; the mapping does not establish a compatibility or production guarantee.
+          </p>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="pilot-example-panels" aria-label={`${title} implementation guidance`}>

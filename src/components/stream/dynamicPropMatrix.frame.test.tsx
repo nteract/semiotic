@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import React from "react"
 import { act, fireEvent, render } from "@testing-library/react"
+import StreamGeoFrame from "./StreamGeoFrame"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import StreamXYFrame from "./StreamXYFrame"
 import type { StreamOrdinalFrameHandle } from "./ordinalTypes"
@@ -86,6 +87,49 @@ describe("dynamic-prop contract matrix — frame presentation", () => {
     // The canvas must repaint to stop covering the new SVG sibling with its
     // formerly opaque background fill.
     expect(context.clearRect).toHaveBeenCalled()
+  })
+
+  it("repaints Ordinal and Geo canvases when backgroundGraphics is added after mount", () => {
+    const cases = [
+      {
+        renderFrame: (backgroundGraphics?: React.ReactNode) => (
+          <StreamOrdinalFrame
+            chartType="point"
+            background="#ffffff"
+            backgroundGraphics={backgroundGraphics}
+            size={[200, 100]}
+          />
+        )
+      },
+      {
+        renderFrame: (backgroundGraphics?: React.ReactNode) => (
+          <StreamGeoFrame
+            projection="mercator"
+            background="#ffffff"
+            backgroundGraphics={backgroundGraphics}
+            size={[200, 100]}
+          />
+        )
+      }
+    ]
+
+    for (const { renderFrame } of cases) {
+      const { rerender, unmount } = render(renderFrame())
+      flushFrames()
+      ;(context.clearRect as ReturnType<typeof vi.fn>).mockClear()
+      ;(context.fillRect as ReturnType<typeof vi.fn>).mockClear()
+
+      rerender(
+        renderFrame(
+          <rect data-testid="dynamic-background" width="200" height="100" fill="#dbeafe" />
+        )
+      )
+      flushFrames()
+
+      expect(context.clearRect).toHaveBeenCalled()
+      expect(context.fillRect).not.toHaveBeenCalled()
+      unmount()
+    }
   })
 
   it("reflows a newly-added marginal and uses a replacement hover callback", () => {

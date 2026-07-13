@@ -21,6 +21,7 @@ import type {
 import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
+import { refreshIdlePulse } from "./pulseFrameRefresh"
 import type { GeoPipelineConfig } from "./geoTypes"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import { useFrame } from "./useFrame"
@@ -332,6 +333,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     const hoveredNodeRef = useRef<GeoSceneNode | null>(null)
     /** True when interaction canvas last painted hover content (for idle skip). */
     const interactionHasContentRef = useRef(false)
+    const pulseFramePendingRef = useRef(false)
     const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
@@ -782,11 +784,17 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       // recompute, which stays gated on dirtyRef above) and asks for a repaint
       // via this flag — folded into the paint gate only.
       const stylePaintPending = store.consumeStylePaintPending()
+      const pulseRefresh = refreshIdlePulse(
+        store,
+        now,
+        computedSceneThisFrame,
+        pulseFramePendingRef
+      )
       const needsDataRepaint = needsDataCanvasPaint({
         dirtyOrRebuilt: computedSceneThisFrame,
         transitioning: isTransitioning,
         continuous: particlesWanted,
-        liveEncoding: store.hasActivePulses,
+        liveEncoding: pulseRefresh.changed,
         forced: rotationApplied || stylePaintPending
       })
 
@@ -829,6 +837,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         if (!tileURL) {
           paintCanvasBackground(ctx, {
             background,
+            hasBackgroundGraphics: Boolean(backgroundGraphics),
             width: adjustedWidth,
             height: adjustedHeight
           })
@@ -983,7 +992,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       }
 
       // Reschedule if animating or tiles still loading
-      if (isTransitioning || store.activeTransition != null || store.hasActivePulses || needsContinuation) {
+      if (isTransitioning || store.activeTransition != null || pulseRefresh.pending || needsContinuation) {
         scheduleRender()
       }
     }
@@ -1005,7 +1014,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     useEffect(() => {
       dirtyRef.current = true
       scheduleRender()
-    }, [adjustedWidth, adjustedHeight, background, scheduleRender])
+    }, [adjustedWidth, adjustedHeight, background, backgroundGraphics, scheduleRender])
 
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 

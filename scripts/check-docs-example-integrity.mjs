@@ -33,12 +33,12 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
   validatePilotDefinitions(failures, exampleDefinitions, definitionModule.validateExampleDefinitions)
 
   const examplePaths = new Set(examples.map((example) => example.path))
-  const appRouteEntries = collectAppExampleRoutes(read(paths.appSource))
+  const appRouteEntries = collectAppExampleRoutes(read(paths.appSource), exampleDefinitions)
   const legacySourceLoaderEntries = collectSourceLoaders(read(paths.sourceMap))
   const definitionSourceLoaderEntries = collectDefinitionSourceLoaders(exampleDefinitions)
   const sourceLoaderEntries = [...legacySourceLoaderEntries, ...definitionSourceLoaderEntries]
   const previewKeyEntries = collectPreviewKeys(read(paths.previews))
-  const architectureProfileEntries = collectArchitectureProfilePaths(read(paths.architecture))
+  const architectureProfileEntries = collectArchitectureProfilePaths(read(paths.architecture), exampleDefinitions)
   const appPaths = new Set(appRouteEntries)
   const sourceLoaders = new Map(sourceLoaderEntries)
   const previewKeys = new Set(previewKeyEntries)
@@ -134,7 +134,12 @@ function validatePilotDefinitions(failures, definitions, validateDefinitions) {
 
 async function loadManifest(filePath) {
   const source = read(filePath)
-  return import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
+  const resolvedSource = source.replace(/from\s+["'](\.[^"']+)["']/g, (_, relativePath) => {
+    const extension = extname(relativePath) ? "" : ".js"
+    const resolvedPath = pathToFileURL(resolve(dirname(filePath), `${relativePath}${extension}`)).href
+    return `from ${JSON.stringify(resolvedPath)}`
+  })
+  return import(`data:text/javascript;base64,${Buffer.from(resolvedSource).toString("base64")}`)
 }
 
 function validateManifest(failures, examples, filters) {
@@ -201,12 +206,21 @@ function validateDuplicateTags(failures, path, kind, values) {
   }
 }
 
-function collectAppExampleRoutes(source) {
+function collectAppExampleRoutes(source, definitions = []) {
   const paths = []
   const uncommented = source.replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
   for (const match of uncommented.matchAll(/\bpath\s*=\s*["'](examples\/[^"']+)["']/g)) {
-    paths.push(`/${match[1]}`)
+    paths.push("/" + match[1])
   }
+
+  if (source.includes("const EXAMPLE_ROUTES = EXAMPLE_DEFINITIONS.map((definition) => ({")) {
+    paths.push(
+      ...definitions
+        .map((definition) => definition?.path)
+        .filter((path) => typeof path === "string" && path.startsWith("/examples/")),
+    )
+  }
+
   return paths
 }
 
@@ -221,7 +235,7 @@ function collectSourceLoaders(source) {
 
 function collectDefinitionSourceLoaders(definitions) {
   return definitions
-    .filter((definition) => definition?.isPilot && definition.path && definition.sourceFile)
+    .filter((definition) => definition?.path && definition.sourceFile)
     .map((definition) => [definition.path, definition.sourceFile])
 }
 
@@ -234,8 +248,20 @@ function collectPreviewKeys(source) {
   return keys
 }
 
-function collectArchitectureProfilePaths(source) {
-  return [...source.matchAll(/\bpath:\s*["'](\/examples\/[^"']+)["']/g)].map((match) => match[1])
+function collectArchitectureProfilePaths(source, definitions = []) {
+  const paths = [...source.matchAll(/\bpath:\s*["'](\/examples\/[^"']+)/g)].map(
+    (match) => match[1],
+  )
+
+  if (source.includes("const SEMIOTIC_EXAMPLE_PROFILES = EXAMPLE_DEFINITIONS.map((definition) => {")) {
+    paths.push(
+      ...definitions
+        .map((definition) => definition?.path)
+        .filter((path) => typeof path === "string" && path.startsWith("/examples/")),
+    )
+  }
+
+  return paths
 }
 
 function readStaticExamplePageTitle(source) {

@@ -26,6 +26,7 @@ import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { SceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
+import { useUpdateResultSnapshot } from "./useUpdateResultSnapshot"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
@@ -78,6 +79,26 @@ function brushTouchAction(brush: StreamXYFrameProps["brush"]): React.CSSProperti
   if (brush.dimension === "y") return "pan-x"
   return "none"
 }
+
+/**
+ * Isolates React external-store updates from the canvas host. This component
+ * has no DOM output and only enriches development diagnostics.
+ */
+const UpdateResultDiagnosticsObserver = memo(function UpdateResultDiagnosticsObserver({
+  store,
+  diagnostics
+}: {
+  store: PipelineStore
+  diagnostics: SceneRevisionDiagnostics
+}) {
+  const updateResult = useUpdateResultSnapshot(store)
+
+  useEffect(() => {
+    diagnostics.observeUpdateResult(updateResult)
+  }, [diagnostics, updateResult])
+
+  return null
+})
 
 // ── StreamXYFrame ──────────────────────────────────────────────────────
 
@@ -1348,8 +1369,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             annotationFrame={0}
             xAccessor={annXAccessor}
             yAccessor={annYAccessor}
-            annotationData={enrichAnnotationData(store?.getData())}
-            pointNodes={collectAnnotationAnchors(store?.scene)}
+            annotationData={enrichAnnotationData(storeRef.current?.getData())}
+            pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
             curve={typeof curve === "string" ? curve : undefined}
             linkedCrosshairName={linkedCrosshairName}
             linkedCrosshairSourceId={linkedCrosshairSourceId}
@@ -1378,6 +1399,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }}
         onKeyDown={onKeyDown}
       >
+        {process.env.NODE_ENV !== "production" && storeRef.current && (
+          <UpdateResultDiagnosticsObserver
+            store={storeRef.current}
+            diagnostics={sceneRevisionDiagnosticsRef.current}
+          />
+        )}
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
         <ScreenReaderSummary summary={summary} />

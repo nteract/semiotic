@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoAreaSceneNode, GeoLineSceneNode, GeoPipelineConfig, GeoSceneNode } from "./geoTypes"
 import type { PointSceneNode } from "./types"
+import { refreshIdlePulse } from "./pulseFrameRefresh"
 
 const isGeoArea = (node: GeoSceneNode): node is GeoAreaSceneNode => node.type === "geoarea"
 const isGeoLine = (node: GeoSceneNode): node is GeoLineSceneNode => node.type === "line"
@@ -93,6 +94,41 @@ describe("GeoPipelineStore", () => {
     expect(typeof sf.y).toBe("number")
     expect(isFinite(sf.y)).toBe(true)
     expect(sf.datum).toBe(cities[0])
+  })
+
+  it("refreshes and clears retained streaming pulse state at final expiry", () => {
+    const store = new GeoPipelineStore(makeConfig({
+      pulse: { duration: 1000, color: "#ef476f", glowRadius: 7 }
+    }))
+    const start = performance.now()
+    store.initStreaming(10)
+    store.pushPoint(cities[0])
+    store.computeScene({ width: 600, height: 400 })
+
+    const point = store.scene.find(isPoint)
+    if (!point) throw new Error("Expected a point scene node")
+    const pendingRef = { current: false }
+
+    const active = refreshIdlePulse(store, start + 10, false, pendingRef)
+    expect(active.pending).toBe(true)
+    expect(point._pulseIntensity).toBeGreaterThan(0)
+    expect(point._pulseColor).toBe("#ef476f")
+    expect(point._pulseGlowRadius).toBe(7)
+
+    const expired = refreshIdlePulse(store, start + 10_000, false, pendingRef)
+    expect(expired.changed).toBe(true)
+    expect(expired.pending).toBe(false)
+    expect(point._pulseIntensity).toBe(0)
+    expect(point._pulseColor).toBeUndefined()
+    expect(point._pulseGlowRadius).toBeUndefined()
+  })
+
+  it("does not report streaming pulse work without a pulse config", () => {
+    const store = new GeoPipelineStore(makeConfig())
+    store.initStreaming(10)
+    store.pushPoint(cities[0])
+
+    expect(store.hasActivePulsesAt(performance.now())).toBe(false)
   })
 
   it("builds line scene nodes from route data", () => {

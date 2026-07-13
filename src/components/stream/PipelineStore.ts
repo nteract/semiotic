@@ -1177,6 +1177,14 @@ export class PipelineStore {
     return this.updateResults.last
   }
 
+  getUpdateSnapshot(): UpdateResult {
+    return this.updateResults.last
+  }
+
+  subscribeUpdateResult(listener: () => void): () => void {
+    return this.updateResults.subscribe(listener)
+  }
+
   /**
    * Remove data points by ID. Requires pointIdAccessor to be configured.
    * Returns the removed items. Marks the store dirty for scene rebuild.

@@ -12,7 +12,7 @@ import { getExampleDefinition } from "./exampleDefinitions"
 import { getExampleSourceLoader } from "./exampleSourceMap"
 
 const SOURCE_LOAD_ERROR = "Failed to load source."
-const PilotExamplePanels = lazy(() => import("./PilotExamplePanels"))
+const ExampleContractPanels = lazy(() => import("./PilotExamplePanels"))
 
 export default function ExamplePageLayout({
   title,
@@ -145,9 +145,9 @@ export default function ExamplePageLayout({
 
         <div className="example-page-content" style={styles.content}>
           {children}
-          {exampleDefinition?.isPilot && (
+          {exampleDefinition?.contract && (
             <Suspense fallback={null}>
-              <PilotExamplePanels definition={exampleDefinition} />
+              <ExampleContractPanels definition={exampleDefinition} />
             </Suspense>
           )}
           {blocksMode && hasFullCodeFallback && (

@@ -53,6 +53,8 @@ import {
 } from "./networkRealtimeEncoding"
 import { DEFAULT_TENSION_CONFIG } from "./networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
+import { NetworkPipelineUpdateResults } from "./networkPipelineUpdateResults"
+import type { UpdateResult } from "./pipelineUpdateContract"
 
 /**
  * NetworkPipelineStore — stateful store for the StreamNetworkFrame.
@@ -144,6 +146,7 @@ export class NetworkPipelineStore {
 
   private config: NetworkPipelineConfig
   private tensionConfig: TensionConfig
+  private updateResults = new NetworkPipelineUpdateResults()
 
   // ── Transition animation ──────────────────────────────────────────────
 
@@ -227,6 +230,11 @@ export class NetworkPipelineStore {
     if (config.layoutSelection === undefined && prev.layoutSelection != null) {
       config.layoutSelection = prev.layoutSelection
     }
+    const changedConfigKeys = [...new Set([...Object.keys(prev), ...Object.keys(config)])].filter(
+      (key) =>
+        (prev as unknown as Record<string, unknown>)[key] !==
+        (config as unknown as Record<string, unknown>)[key],
+    )
     this.config = config
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,
@@ -243,6 +251,13 @@ export class NetworkPipelineStore {
     ) {
       this.particlePool = new ParticlePool(2000)
     }
+    this.updateResults.recordConfig(changedConfigKeys)
+  }
+
+  /** Additive explicit-result form of {@link updateConfig}. */
+  updateConfigWithResult(config: NetworkPipelineConfig): UpdateResult {
+    this.updateConfig(config)
+    return this.updateResults.last
   }
 
   // ── Hierarchy data ingestion ──────────────────────────────────────────
@@ -277,6 +292,7 @@ export class NetworkPipelineStore {
     this.runLayout(size)
 
     this._boundedPrevSnapshot = null
+    this.updateResults.recordData("replace", 1)
   }
 
   // ── Bounded data ingestion ────────────────────────────────────────────
@@ -408,6 +424,18 @@ export class NetworkPipelineStore {
 
     // Run layout unless a worker will provide the force positions.
     if (!options?.deferLayout) this.runLayout(size)
+    this.updateResults.recordData("replace", rawNodes.length + rawEdges.length)
+  }
+
+  /** Additive explicit-result form of {@link ingestBounded}. */
+  ingestBoundedWithResult(
+    rawNodes: any[],
+    rawEdges: any[],
+    size: [number, number],
+    options?: { deferLayout?: boolean },
+  ): UpdateResult {
+    this.ingestBounded(rawNodes, rawEdges, size, options)
+    return this.updateResults.last
   }
 
   /**
@@ -492,12 +520,20 @@ export class NetworkPipelineStore {
       topologyChanged = true
     }
 
-    return (
+    const needsRelayout = (
       isFirst ||
       topologyChanged ||
       valueChanged ||
       this.tension >= this.tensionConfig.threshold
     )
+    this.updateResults.recordData("ingest", 1)
+    return needsRelayout
+  }
+
+  /** Additive explicit-result form of {@link ingestEdge}. */
+  ingestEdgeWithResult(push: EdgePush): UpdateResult {
+    this.ingestEdge(push)
+    return this.updateResults.last
   }
 
   // ── Layout execution ──────────────────────────────────────────────────
@@ -778,6 +814,7 @@ export class NetworkPipelineStore {
   }
 
   restyleScene(selection: CustomLayoutSelection | null): void {
+    const hasCustomRestyle = Boolean(this._customRestyle || this._customRestyleEdge)
     if (this._customRestyle) {
       const fn = this._customRestyle
       for (const node of this.sceneNodes) {
@@ -795,6 +832,7 @@ export class NetworkPipelineStore {
       }
     }
     this._stylePaintPending = true
+    this.updateResults.recordRestyle(hasCustomRestyle)
   }
 
   buildScene(size: [number, number]): void {
@@ -1385,16 +1423,33 @@ export class NetworkPipelineStore {
     }
   }
 
+  /** Most recent additive update result for revision-aware hosts and tests. */
+  getLastUpdateResult(): UpdateResult {
+    return this.updateResults.last
+  }
+
+  getUpdateSnapshot(): UpdateResult {
+    return this.updateResults.last
+  }
+
+  subscribeUpdateResult(listener: () => void): () => void {
+    return this.updateResults.subscribe(listener)
+  }
+
   /**
    * Update a node's data by ID. Returns the previous data, or null if not found.
    */
   updateNode(id: string, updater: (data: Datum) => Datum): Datum | null {
     const node = this.nodes.get(id)
-    if (!node) return null
+    if (!node) {
+      this.updateResults.recordNoop("update")
+      return null
+    }
     const previous = node.data ? { ...node.data } : {}
     node.data = updater(node.data ?? {})
     this.layoutVersion++
     this.lastIngestTime = getTimestamp()
+    this.updateResults.recordData("update", 1)
     return previous
   }
 
@@ -1428,6 +1483,9 @@ export class NetworkPipelineStore {
     if (results.length > 0) {
       this.layoutVersion++
       this.lastIngestTime = getTimestamp()
+      this.updateResults.recordData("update", results.length)
+    } else {
+      this.updateResults.recordNoop("update")
     }
     return results
   }
@@ -1437,7 +1495,10 @@ export class NetworkPipelineStore {
    * Returns true if the node was found and removed.
    */
   removeNode(id: string): boolean {
-    if (!this.nodes.has(id)) return false
+    if (!this.nodes.has(id)) {
+      this.updateResults.recordNoop("remove")
+      return false
+    }
     this.nodes.delete(id)
     this.nodeTimestamps.delete(id)
     // Cascade: remove edges connected to this node
@@ -1451,6 +1512,7 @@ export class NetworkPipelineStore {
     }
     this.layoutVersion++
     this.lastIngestTime = getTimestamp()
+    this.updateResults.recordData("remove", 1)
     return true
   }
 
@@ -1503,6 +1565,9 @@ export class NetworkPipelineStore {
     if (toDelete.length > 0) {
       this.layoutVersion++
       this.lastIngestTime = getTimestamp()
+      this.updateResults.recordData("remove", toDelete.length)
+    } else {
+      this.updateResults.recordNoop("remove")
     }
     return toDelete.length > 0
   }
@@ -1558,5 +1623,6 @@ export class NetworkPipelineStore {
     if (this.particlePool) {
       this.particlePool.clear()
     }
+    this.updateResults.recordData("clear")
   }
 }

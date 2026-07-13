@@ -28,7 +28,11 @@ import {
   now as getTimestamp
 } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
-import { computePulseIntensity, hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
+import {
+  computePulseIntensity,
+  hasActivePulses as hasActivePulsesShared,
+  setPulseState
+} from "./pipelinePulse"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { GeoLayoutContext, GeoLayoutResult } from "./geoCustomLayout"
@@ -61,11 +65,14 @@ import {
   compactTimestampBufferForRemoval,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
+import { GeoPipelineUpdateResults } from "./geoPipelineUpdateResults"
+import type { UpdateResult } from "./pipelineUpdateContract"
 
 // ── GeoPipelineStore ─────────────────────────────────────────────────
 
 export class GeoPipelineStore {
   config: GeoPipelineConfig
+  private updateResults = new GeoPipelineUpdateResults()
 
   // Scene output
   scene: GeoSceneNode[] = []
@@ -137,6 +144,11 @@ export class GeoPipelineStore {
   }
 
   updateConfig(config: Partial<GeoPipelineConfig>): void {
+    const previous = this.config
+    const changedConfigKeys = Object.keys(config).filter(
+      (key) => (config as unknown as Record<string, unknown>)[key] !==
+        (previous as unknown as Record<string, unknown>)[key]
+    )
     this.config = { ...this.config, ...config }
     // An explicit removal dismisses the old failure rather than surfacing an
     // error for a callback the caller no longer uses. The next built-in scene
@@ -144,17 +156,44 @@ export class GeoPipelineStore {
     if ("customLayout" in config && !config.customLayout) {
       this.lastCustomLayoutFailure = null
     }
+    this.updateResults.recordConfig(changedConfigKeys)
+  }
+
+  /** Additive explicit-result form of {@link updateConfig}. */
+  updateConfigWithResult(config: Partial<GeoPipelineConfig>): UpdateResult {
+    this.updateConfig(config)
+    return this.updateResults.last
   }
 
   // ── Data ingestion ───────────────────────────────────────────────
 
   setAreas(features: GeoJSON.Feature[]): void {
     this.areas = features
+    this.updateResults.recordData("replace", features.length)
+  }
+
+  /** Additive explicit-result form of {@link setAreas}. */
+  setAreasWithResult(features: GeoJSON.Feature[]): UpdateResult {
+    this.setAreas(features)
+    return this.updateResults.last
   }
 
   setPoints(data: Datum[]): void {
-    this.pointData = data
+    // Bounded replacement must become the authoritative retained dataset.
+    // In particular, a prior stream cannot remain latent: otherwise the next
+    // push writes into its old ring while `streaming` is false and never shows
+    // up in a rebuild. Mirror the line boundary by owning the array shape.
+    this.pointData = data.slice()
+    this.pointBuffer = null
+    this.timestampBuffer = null
     this.streaming = false
+    this.updateResults.recordData("replace", data.length)
+  }
+
+  /** Additive explicit-result form of {@link setPoints}. */
+  setPointsWithResult(data: Datum[]): UpdateResult {
+    this.setPoints(data)
+    return this.updateResults.last
   }
 
   setLines(data: Datum[]): void {
@@ -163,6 +202,13 @@ export class GeoPipelineStore {
     // user's array reference here would let a subsequent push leak
     // into the React-owned array passed via the `lines` prop.
     this.lineData = data.slice()
+    this.updateResults.recordData("replace", data.length)
+  }
+
+  /** Additive explicit-result form of {@link setLines}. */
+  setLinesWithResult(data: Datum[]): UpdateResult {
+    this.setLines(data)
+    return this.updateResults.last
   }
 
   /** Initialize streaming mode with a ring buffer */
@@ -178,6 +224,13 @@ export class GeoPipelineStore {
     const now = getTimestamp()
     pushWithTimestamp(this.pointBuffer!, datum, this.timestampBuffer, now)
     this.lastIngestTime = now
+    this.updateResults.recordData("ingest", 1)
+  }
+
+  /** Additive explicit-result form of {@link pushPoint}. */
+  pushPointWithResult(datum: Datum): UpdateResult {
+    this.pushPoint(datum)
+    return this.updateResults.last
   }
 
   /** Push multiple streaming points */
@@ -188,6 +241,13 @@ export class GeoPipelineStore {
       pushWithTimestamp(this.pointBuffer!, d, this.timestampBuffer, now)
     }
     this.lastIngestTime = now
+    this.updateResults.recordData("ingest", data.length)
+  }
+
+  /** Additive explicit-result form of {@link pushMany}. */
+  pushManyWithResult(data: Datum[]): UpdateResult {
+    this.pushMany(data)
+    return this.updateResults.last
   }
 
   /** Append a single line/flow record (coordinates pre-resolved). Lines
@@ -197,9 +257,13 @@ export class GeoPipelineStore {
    *  because `setLines` defensive-copies on entry and `getLines`
    *  defensive-copies on exit. */
   pushLine(line: Datum): void {
-    if (line == null || typeof line !== "object") return
+    if (line == null || typeof line !== "object") {
+      this.updateResults.recordNoop("ingest")
+      return
+    }
     this.lineData.push(line)
     this.version++
+    this.updateResults.recordData("ingest", 1)
   }
 
   /** Append multiple line/flow records in one pass. Same in-place
@@ -208,11 +272,18 @@ export class GeoPipelineStore {
    *  blow the engine's argument-count limit (mirrors how `pushMany`
    *  for points iterates rather than spreads). */
   pushManyLines(lines: Datum[]): void {
-    if (!Array.isArray(lines) || lines.length === 0) return
+    if (!Array.isArray(lines) || lines.length === 0) {
+      this.updateResults.recordNoop("ingest")
+      return
+    }
     const safe = lines.filter((l) => l != null && typeof l === "object")
-    if (safe.length === 0) return
+    if (safe.length === 0) {
+      this.updateResults.recordNoop("ingest")
+      return
+    }
     for (const line of safe) this.lineData.push(line)
     this.version++
+    this.updateResults.recordData("ingest", safe.length)
   }
 
   /** Remove line records by id. Requires `lineIdAccessor`. */
@@ -233,7 +304,12 @@ export class GeoPipelineStore {
       }
       return true
     })
-    if (removed.length > 0) this.version++
+    if (removed.length > 0) {
+      this.version++
+      this.updateResults.recordData("remove", removed.length)
+    } else {
+      this.updateResults.recordNoop("remove")
+    }
     return removed
   }
 
@@ -244,6 +320,19 @@ export class GeoPipelineStore {
    *  thought was stable. */
   getLines(): Datum[] {
     return this.lineData.slice()
+  }
+
+  /** Most recent additive update result for revision-aware hosts and tests. */
+  getLastUpdateResult(): UpdateResult {
+    return this.updateResults.last
+  }
+
+  getUpdateSnapshot(): UpdateResult {
+    return this.updateResults.last
+  }
+
+  subscribeUpdateResult(listener: () => void): () => void {
+    return this.updateResults.subscribe(listener)
   }
 
   /**
@@ -264,7 +353,12 @@ export class GeoPipelineStore {
       const predicate = (item: Datum) => ids.has(String(getId(item)))
       compactTimestampBufferForRemoval(this.pointBuffer, this.timestampBuffer, predicate)
       const removed = this.pointBuffer.remove(predicate)
-      if (removed.length > 0) this.version++
+      if (removed.length > 0) {
+        this.version++
+        this.updateResults.recordData("remove", removed.length)
+      } else {
+        this.updateResults.recordNoop("remove")
+      }
       return removed
     } else {
       const removed: Datum[] = []
@@ -275,7 +369,12 @@ export class GeoPipelineStore {
         }
         return true
       })
-      if (removed.length > 0) this.version++
+      if (removed.length > 0) {
+        this.version++
+        this.updateResults.recordData("remove", removed.length)
+      } else {
+        this.updateResults.recordNoop("remove")
+      }
       return removed
     }
   }
@@ -286,6 +385,7 @@ export class GeoPipelineStore {
     this.lineData = []
     this.pointBuffer = null
     this.timestampBuffer = null
+    this.streaming = false
     this.scene = []
     this.scales = null
     this._hasRenderedOnce = false
@@ -301,6 +401,7 @@ export class GeoPipelineStore {
     this._baseStyles = new WeakMap()
     this._customLayoutFailedThisBuild = false
     this.version++
+    this.updateResults.recordData("clear")
   }
 
   setLayoutSelection(selection: CustomLayoutSelection | null): void {
@@ -323,13 +424,17 @@ export class GeoPipelineStore {
 
   restyleScene(selection: CustomLayoutSelection | null): void {
     const fn = this._customRestyle
-    if (!fn) return
+    if (!fn) {
+      this.updateResults.recordRestyle(false)
+      return
+    }
     for (const node of this.scene) {
       const base = this._baseStyles.get(node) ?? node.style
       const patch = fn(node, selection)
       node.style = patch ? { ...base, ...patch } : base
     }
     this._stylePaintPending = true
+    this.updateResults.recordRestyle(true)
   }
 
   // ── Projection pipeline ──────────────────────────────────────────
@@ -1111,34 +1216,40 @@ export class GeoPipelineStore {
 
   // ── Pulse ──────────────────────────────────────────────────────
 
-  private applyPulse(): void {
+  private applyPulse(now = getTimestamp()): boolean {
     const pulse = this.config.pulse
-    if (!pulse || !this.timestampBuffer) return
+    if (!pulse || !this.timestampBuffer) return false
 
-    const now = getTimestamp()
     const pointNodes = this.scene.filter(
       (n): n is PointSceneNode => n.type === "point"
     )
     const timestamps = this.timestampBuffer.toArray()
+    const pulseColor = pulse.color || "rgba(255,255,255,0.6)"
+    const glowRadius = pulse.glowRadius ?? 4
+    let changed = false
 
     for (let i = 0; i < pointNodes.length && i < timestamps.length; i++) {
       // Share the pulse-intensity curve with the XY/realtime pipeline so a
       // change to the fade math (pipelinePulse.computePulseIntensity) reaches
       // geo too. Behaviourally identical to the previous inline 1 - age/dur.
       const intensity = computePulseIntensity(pulse, timestamps[i], now)
-      if (intensity > 0) {
-        pointNodes[i]._pulseIntensity = intensity
-        pointNodes[i]._pulseColor = pulse.color || "rgba(255,255,255,0.6)"
-        pointNodes[i]._pulseGlowRadius = pulse.glowRadius ?? 4
-      }
+      changed = setPulseState(pointNodes[i], intensity, pulseColor, glowRadius) || changed
     }
+
+    return changed
+  }
+
+  refreshPulse(now: number): boolean {
+    if (this.lastCustomLayoutFailure?.preservedLastGoodScene === true) return false
+    return this.applyPulse(now)
+  }
+
+  hasActivePulsesAt(now: number): boolean {
+    return !!this.config.pulse && hasActivePulsesShared(this.config.pulse, this.timestampBuffer, now)
   }
 
   get hasActivePulses(): boolean {
-    // Delegate to the shared check (peek() avoids the toArray() allocation the
-    // inline version did). `?? {}` preserves the previous 500ms default when
-    // no pulse config is present.
-    return hasActivePulsesShared(this.config.pulse ?? {}, this.timestampBuffer)
+    return this.hasActivePulsesAt(getTimestamp())
   }
 
   // ── Transition ─────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { EXAMPLE_DEFINITIONS } from "../exampleDefinitions"
 import {
   SEMIOTIC_ARCHITECTURE_EDGES,
   SEMIOTIC_ARCHITECTURE_NODES,
@@ -116,5 +117,22 @@ describe("Semiotic architecture example data", () => {
       expect(highlighted).toContain("root-scene")
       expect(highlighted.size).toBeGreaterThan(profile.uses.length)
     }
+  })
+  it("derives architecture profile route and source metadata from the example registry", () => {
+    expect(
+      SEMIOTIC_EXAMPLE_PROFILES.map((profile) => ({
+        id: profile.id,
+        label: profile.label,
+        path: profile.path,
+        sourceFile: profile.sourceFile,
+      })),
+    ).toEqual(
+      EXAMPLE_DEFINITIONS.map((definition) => ({
+        id: definition.id,
+        label: definition.title,
+        path: definition.path,
+        sourceFile: definition.sourceFile,
+      })),
+    )
   })
 })

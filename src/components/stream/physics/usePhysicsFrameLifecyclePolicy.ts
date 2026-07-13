@@ -50,7 +50,19 @@ export function usePhysicsFrameLifecyclePolicy({
   }, [cancelRender, paused])
 
   useEffect(() => {
-    if (!suspendWhenHidden || typeof document === "undefined") return
+    // A previous hidden-page suspension may have left the store invisible.
+    // Disabling that policy must release only the visibility gate; an
+    // independently controlled `paused` state remains intact.
+    if (!suspendWhenHidden) {
+      const store = storeRef.current
+      if (store && !store.snapshot().visible) {
+        store.setVisible(true)
+        postWorkerCommandRef.current({ type: "setVisible", visible: true }, false)
+        requestRenderRef.current()
+      }
+      return
+    }
+    if (typeof document === "undefined") return
     const update = () => {
       const store = storeRef.current
       if (!store) return
