@@ -599,35 +599,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     [onClick]
   )
 
-  if (stateEl) return stateEl
-
-  const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
-  const sharedFrameProps = resolvePhysicsFrameSharedProps(
-    props,
-    frameProps,
-    semanticItems,
-    {
-      chartMode,
-      className: modeClassName,
-      title: modeTitle,
-      description: modeDescription,
-      summary: modeSummary,
-      accessibleTable: modeAccessibleTable,
-      enableHover: modeEnableHover,
-      margin: modeMargin
-    }
-  )
-  const projectionOverlay = showProjection ? (
-    <GauntletProjectionOverlay states={states} layout={layout} />
-  ) : undefined
-  const backgroundGraphics = composePhysicsFrameGraphics(
-    showChrome ? <GauntletChrome layout={layout} states={states} /> : undefined,
-    frameProps.backgroundGraphics
-  )
-  const foregroundGraphics = composePhysicsFrameGraphics(
-    projectionOverlay,
-    frameProps.foregroundGraphics
-  )
   const beforePaint = useCallback(
     (ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[]) => {
       frameProps.beforePaint?.(ctx, bodies)
@@ -659,6 +630,36 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
   const regionEffects = useMemo(
     () => [...gateRegionEffects, ...(frameProps.regionEffects ?? [])],
     [frameProps.regionEffects, gateRegionEffects]
+  )
+
+  if (stateEl) return stateEl
+
+  const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
+  const sharedFrameProps = resolvePhysicsFrameSharedProps(
+    props,
+    frameProps,
+    semanticItems,
+    {
+      chartMode,
+      className: modeClassName,
+      title: modeTitle,
+      description: modeDescription,
+      summary: modeSummary,
+      accessibleTable: modeAccessibleTable,
+      enableHover: modeEnableHover,
+      margin: modeMargin
+    }
+  )
+  const projectionOverlay = showProjection ? (
+    <GauntletProjectionOverlay states={states} layout={layout} />
+  ) : undefined
+  const backgroundGraphics = composePhysicsFrameGraphics(
+    showChrome ? <GauntletChrome layout={layout} states={states} /> : undefined,
+    frameProps.backgroundGraphics
+  )
+  const foregroundGraphics = composePhysicsFrameGraphics(
+    projectionOverlay,
+    frameProps.foregroundGraphics
   )
   const renderBody = frameProps.renderBody ?? drawGauntletBody
   const tooltipContent = tooltipProps.tooltipContent ?? defaultGauntletTooltipContent

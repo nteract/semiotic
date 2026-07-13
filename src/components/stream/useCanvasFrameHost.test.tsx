@@ -8,7 +8,7 @@ import {
   type CanvasFrameHostStore,
 } from "./useCanvasFrameHost"
 
-interface TestStore extends CanvasFrameHostStore {}
+type TestStore = CanvasFrameHostStore
 
 function createInput(overrides: Partial<Parameters<typeof useCanvasFrameHost<TestStore>>[0]> = {}) {
   const frameRuntime = new FrameRuntime({ clock: () => 0 })
