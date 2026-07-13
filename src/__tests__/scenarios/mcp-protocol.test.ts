@@ -89,7 +89,11 @@ function getOpenPort(): Promise<number> {
   })
 }
 
-/** Wait for the HTTP server startup log before sending requests. */
+/**
+ * Wait for the metadata-only HTTP startup event before sending requests.
+ * The server intentionally no longer writes a human-readable host/port line:
+ * all hosted-service logs use the bounded MCP metadata schema.
+ */
 function waitForHTTPServer(proc: ChildProcess): Promise<void> {
   return new Promise((resolve, reject) => {
     let stderr = ""
@@ -102,7 +106,7 @@ function waitForHTTPServer(proc: ChildProcess): Promise<void> {
 
     const onData = (chunk: Buffer) => {
       stderr += chunk.toString()
-      if (stderr.includes("Semiotic MCP server (HTTP) listening")) {
+      if (stderr.includes('"event":"service_started"')) {
         cleanup()
         resolve()
       }

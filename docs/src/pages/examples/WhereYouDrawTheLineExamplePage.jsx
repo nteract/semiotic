@@ -487,7 +487,7 @@ export default function WhereYouDrawTheLineExamplePage() {
         </section>
 
         <section className="maup-chapter maup-chapter--threshold" aria-labelledby="maup-threshold-title">
-          <div className="maup-chapter-heading"><p className="maup-step">03</p><div><h2 id="maup-threshold-title">Thresholds turn drift into decisions.</h2><p>A threshold is not MAUP. It makes partition sensitivity categorical.</p></div></div>
+          <div className="maup-chapter-heading"><p className="maup-step">03</p><div><h2 id="maup-threshold-title">A threshold makes the drift consequential.</h2><p>Once a threshold classifies districts, small border changes can switch the resulting decision.</p></div></div>
           <LiveSentence>Call a district high when its average is at least <label><input aria-label="High heat decision threshold" type="number" min="48" max="78" step="1" value={threshold} onChange={(event) => setThreshold(clamp(Number(event.target.value), 48, 78))} />.</label></LiveSentence>
           <div className="maup-threshold-panel"><div><p className="maup-threshold-value">{decimal.format(mapResult.globalMean)}</p><span>global weighted mean, unchanged by borders</span></div><div><p className="maup-threshold-value">{percent.format(mapResult.rawShare)}</p><span>raw population above the decision rule</span></div><div><p className="maup-threshold-value">{percent.format(mapResult.assignedShare)}</p><span>population assigned to high districts</span></div></div>
           <p className="maup-pullquote">The threshold stayed put. One district average crossed it. A small continuous move became a yes-or-no label.</p>

@@ -26,18 +26,24 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
   const { EXAMPLES: examples = [], EXAMPLE_FILTERS: filters = {} } = await loadManifest(
     paths.examplesManifest,
   )
+  const definitionModule = await loadManifest(paths.exampleDefinitions)
+  const exampleDefinitions = definitionModule.EXAMPLE_DEFINITIONS ?? []
 
   validateManifest(failures, examples, filters)
+  validatePilotDefinitions(failures, exampleDefinitions, definitionModule.validateExampleDefinitions)
 
   const examplePaths = new Set(examples.map((example) => example.path))
   const appRouteEntries = collectAppExampleRoutes(read(paths.appSource))
-  const sourceLoaderEntries = collectSourceLoaders(read(paths.sourceMap))
+  const legacySourceLoaderEntries = collectSourceLoaders(read(paths.sourceMap))
+  const definitionSourceLoaderEntries = collectDefinitionSourceLoaders(exampleDefinitions)
+  const sourceLoaderEntries = [...legacySourceLoaderEntries, ...definitionSourceLoaderEntries]
   const previewKeyEntries = collectPreviewKeys(read(paths.previews))
   const architectureProfileEntries = collectArchitectureProfilePaths(read(paths.architecture))
   const appPaths = new Set(appRouteEntries)
   const sourceLoaders = new Map(sourceLoaderEntries)
   const previewKeys = new Set(previewKeyEntries)
   const architecturePaths = new Set(architectureProfileEntries)
+  const examplePageFiles = new Set(readdirSync(paths.examplesDirectory))
 
   validateDuplicatePaths(failures, "App routes", appRouteEntries)
   validateDuplicatePaths(
@@ -60,8 +66,10 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
     const sourceFile = sourceLoaders.get(example.path)
     if (!sourceFile) continue
     const sourcePath = resolve(paths.examplesDirectory, sourceFile)
-    if (!existsSync(sourcePath)) {
-      failures.push(`Example ${example.path} source loader points to missing ${sourceFile}`)
+    if (!examplePageFiles.has(sourceFile) || !existsSync(sourcePath)) {
+      failures.push(
+        `Example ${example.path} source loader points to missing or case-mismatched ${sourceFile}`,
+      )
       continue
     }
 
@@ -92,12 +100,35 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
 function resolvePaths(root) {
   return {
     examplesManifest: resolve(root, "docs/src/pages/examples/examplesManifest.js"),
+    exampleDefinitions: resolve(root, "docs/src/pages/examples/exampleDefinitions.js"),
     appSource: resolve(root, "docs/src/App.jsx"),
     sourceMap: resolve(root, "docs/src/pages/examples/exampleSourceMap.js"),
     previews: resolve(root, "docs/src/pages/examples/ExamplesOverviewPage.jsx"),
     architecture: resolve(root, "docs/src/pages/examples/data/semioticArchitecture.js"),
     examplesDirectory: resolve(root, "docs/src/pages/examples"),
     docsSource: resolve(root, "docs/src"),
+  }
+}
+
+function validatePilotDefinitions(failures, definitions, validateDefinitions) {
+  if (!Array.isArray(definitions)) {
+    failures.push("Example definitions registry is not an array")
+    return
+  }
+
+  if (typeof validateDefinitions === "function") {
+    const result = validateDefinitions(definitions)
+    if (!result?.ok) {
+      for (const error of result?.errors ?? ["Example definitions registry is invalid"]) {
+        failures.push(`Example definitions registry: ${error}`)
+      }
+    }
+  }
+
+  for (const definition of definitions.filter((definition) => definition?.isPilot)) {
+    if (!definition.path || !definition.sourceFile) {
+      failures.push("Pilot example definition must declare path and sourceFile")
+    }
   }
 }
 
@@ -186,6 +217,12 @@ function collectSourceLoaders(source) {
     loaders.push([match[1], match[2]])
   }
   return loaders
+}
+
+function collectDefinitionSourceLoaders(definitions) {
+  return definitions
+    .filter((definition) => definition?.isPilot && definition.path && definition.sourceFile)
+    .map((definition) => [definition.path, definition.sourceFile])
 }
 
 function collectPreviewKeys(source) {

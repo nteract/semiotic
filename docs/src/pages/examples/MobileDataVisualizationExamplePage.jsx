@@ -48,7 +48,7 @@ const SOURCE_LINKS = [
     year: "2023",
     url: "https://arxiv.org/abs/2308.05136",
     claim:
-      "Responsive design benefits from exploring alternative chart versions rather than prematurely committing to one resized view.",
+      "Responsive design improves when you explore several chart versions before committing to a resized desktop view.",
   },
   {
     id: "breakpoints",
@@ -57,7 +57,7 @@ const SOURCE_LINKS = [
     year: "2024",
     url: "https://arxiv.org/abs/2409.01339",
     claim:
-      "Breakpoints should be triggered by visualization constraints such as label overlap, mark size, aspect ratio, and available space, not just static viewport widths.",
+      "Set breakpoints where labels overlap, marks become too small, the aspect ratio fails, or useful space runs out.",
   },
   {
     id: "wcag",
@@ -209,7 +209,7 @@ export default function MobileDataVisualizationExamplePage() {
               <SourceLink id="mobilevisfixer">MobileVisFixer</SourceLink> found
               that mobile chart failures cluster around viewport overflow,
               unreadable text, label clutter, distorted aspect ratios, and wasted
-              space. Those are layout and density failures, not just chart-type
+              space. Those failures come from layout and density; changing the chart type alone will not
               failures.
             </ReviewCard>
             <ReviewCard
@@ -709,7 +709,7 @@ function Checklist() {
           <strong>Task preservation:</strong> the mobile version preserves the intended comparison or decision, not the desktop geometry.
         </li>
         <li>
-          <strong>Touch path:</strong> primary questions are reachable through visible targets, not only hover, drag, or gestures.
+          <strong>Touch path:</strong> visible targets answer the primary questions without requiring hover, drag, or hidden gestures.
         </li>
         <li>
           <strong>Density budget:</strong> every axis, legend, and mark earns its pixels against a card, annotation, or small multiple.

@@ -89,10 +89,9 @@ export default function DistantReadingExamplePage() {
           <div className="dr-hero-copy">
             <p className="dr-kicker">A remake of the distant-reading essay</p>
             <p className="dr-lede">
-              The original essay asked whether visualization can derive meaning from a book
-              without replacing the act of reading. This example treats that as an interface:
-              chapter signals, narrative pressure, and character flows become a readable object of
-              their own.
+              This interface compares four novels through chapter signals, narrative phases, and
+              character flows. Use those views to locate structural changes, then return to the
+              text with a more specific question.
             </p>
           </div>
           <BookShelf activeId={book.id} />
@@ -121,8 +120,8 @@ export default function DistantReadingExamplePage() {
             <div>
               <h2>The book as a signal field</h2>
               <p>
-                Pick a signal, then scan the chapter map. The tallest mark is not a passage to
-                quote; it is a place to ask why the book changes shape there.
+                Pick a signal, then scan the chapter map. A tall mark identifies a chapter where
+                that signal is concentrated and gives you a place to ask what changed.
               </p>
             </div>
           </div>
@@ -222,8 +221,8 @@ export default function DistantReadingExamplePage() {
             <div>
               <h2>A distant reading still has characters</h2>
               <p>
-                The Sankey view is not a plot summary. It is a pressure map: who frames whom, what
-                forces mediate action, and which places become narrative machinery.
+                The Sankey traces who frames whom, which forces mediate action, and which places
+                organize the book. It summarizes modeled relationships rather than plot events.
               </p>
             </div>
           </div>
@@ -323,11 +322,11 @@ export default function DistantReadingExamplePage() {
           <div className="dr-section-head">
             <span>06</span>
             <div>
-              <h2>The point is not automation</h2>
+              <h2>Visualization changes the first question</h2>
               <p>
                 The data model is intentionally small: four local signal arrays, phase summaries,
-                and a network per book. The interface is the argument. Visualization does not read
-                for you; it gives you a different first question to bring back to the text.
+                and a network per book. These views prepare questions for close reading; they do
+                not interpret a passage or settle what a novel means.
               </p>
             </div>
           </div>

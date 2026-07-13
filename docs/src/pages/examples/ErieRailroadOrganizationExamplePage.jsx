@@ -211,7 +211,7 @@ export default function ErieRailroadOrganizationExamplePage() {
                 onObservation={handleObservation}
                 onClick={handleClick}
                 description="An interactive reconstruction of the New York and Erie Railroad organization diagram of 1855. The board of directors and president form the roots at the bottom. Five operating divisions radiate upward as rail lines, with stations and aggregated employee crews growing from them as botanical branches."
-                summary={`The chart contains five representative operating divisions, twenty-five stations, and ${ERIE_REPRESENTATIVE_TOTAL.toLocaleString()} representative employees grouped into station, train, track, and shop crews. Positions are generated from hierarchy and station order; the values are illustrative rather than a transcription of the original plate's statistical table.`}
+                summary={`The chart contains five representative operating divisions, twenty-five stations, and ${ERIE_REPRESENTATIVE_TOTAL.toLocaleString()} representative employees grouped into station, train, track, and shop crews. Positions come from hierarchy and station order. The illustrative values do not transcribe the original plate's statistical table.`}
                 accessibleTable
                 frameProps={{
                   background: "transparent",

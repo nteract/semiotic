@@ -28,6 +28,7 @@ describe("ExamplePageLayout", () => {
 
     const toggle = await screen.findByRole("button", { name: "Show full code view" })
     await waitFor(() => expect(toggle.disabled).toBe(false))
+    expect(await screen.findByRole("heading", { name: "Copy this pattern" })).toBeTruthy()
     expect(sourceLoader).not.toHaveBeenCalled()
 
     fireEvent.click(toggle)

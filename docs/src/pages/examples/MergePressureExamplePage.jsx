@@ -149,7 +149,7 @@ const SCENARIOS = {
     description:
       "A smaller remediation budget leaves Missing Tests attached, so CI sends the same PR back through human review.",
     lesson:
-      "Returns are not new PRs. They are repeat visits by the same compound body, adding demand to an already finite service.",
+      "A CI return sends the same PR through review again, adding repeat demand to a finite service.",
   },
   aiTests: {
     id: "aiTests",
@@ -165,7 +165,7 @@ const SCENARIOS = {
     description:
       "AI review replaces Missing Tests with Bad Tests. CI returns fall, but residual risk can merge into the Feature.",
     lesson:
-      "A faster green check is not equivalent to better code when one negative trait is transformed into another.",
+      "A faster green check can leave residual risk when review replaces one negative trait with another.",
   },
   scaledReview: {
     id: "scaledReview",
@@ -778,7 +778,7 @@ export default function MergePressureExamplePage() {
           <LegendItem title="PR core" body="Circle area grows with code points; arrivals are staggered by the scenario." swatch="core" />
           <LegendItem title="Negative trait" body="Square satellites remain attached until AI or human review transforms or removes them." swatch="trait" />
           <LegendItem title="Shared service" body="Human Review is one FIFO work queue across every compound PR core." swatch="capacity" />
-          <LegendItem title="Feature" body="The socket fills from unique merged PR points, not PR count or review activity." swatch="feature" />
+          <LegendItem title="Feature" body="The socket fills once from each merged PR's code points; review activity adds nothing." swatch="feature" />
         </section>
 
         <section className="merge-pressure__workbench">

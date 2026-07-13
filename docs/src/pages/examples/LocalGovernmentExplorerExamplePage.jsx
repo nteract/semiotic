@@ -357,8 +357,8 @@ export default function LocalGovernmentExplorerExamplePage() {
   return (
     <ExamplePageLayout title="Your Local Government Explorer">
       <p className="local-gov-lede">
-        A ZIP code is not a government boundary, but it is a good starting place. This explorer
-        resolves zip code to administrative region and then reads your county’s federal disaster
+        Start with a ZIP code, then resolve it to the government boundaries that actually organize
+        public records. This explorer reads your county’s federal disaster
         record, pulls live 311 service requests where a city publishes them, finds matching
         municipal code in LOCUS, and layers in public legislative activity. Explore the authority,
         law, people, meetings, and active matters (as long as the APIs return) of your local

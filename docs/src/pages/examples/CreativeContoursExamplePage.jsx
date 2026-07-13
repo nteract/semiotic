@@ -181,8 +181,8 @@ export default function CreativeContoursExamplePage() {
   return (
     <ExamplePageLayout title="Creative Gravity of America">
       <p className="creative-contours__lede">
-        A non-topographic surface: metro-level creative industries are sampled into contours,
-        then stacked into an isometric United States. Height is not elevation; it is the selected
+        Metro-level creative industries are sampled into contours and stacked across an isometric
+        United States. Height encodes the selected
         cultural-production signal.
       </p>
 

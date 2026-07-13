@@ -344,7 +344,7 @@ export default function LakeTravisIsotypeExamplePage() {
           <PanelHeading
             number="04"
             eyebrow="THE WATERSHED AS A PROCESS"
-            title="Rain does not fall directly into a number"
+            title="Trace rainfall through the watershed"
             note="The lake level is a network result: upstream weather, tributaries, reservoir storage, dam operations, and downstream demand. Each node and flow remains a navigable network datum."
           />
           <NetworkCustomChart

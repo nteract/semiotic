@@ -186,7 +186,7 @@ export default function ChainReactionExamplePage() {
         <section className="release-machine__question">
           <span>One analytical question</span>
           <h2>Which blocker prevents the most downstream work from becoming possible?</h2>
-          <p>Blocker amplification is directed reachability, not critical path, days saved, or a launch-date prediction.</p>
+          <p>Blocker amplification counts unfinished work reachable from a blocker. It does not estimate days saved or predict a launch date.</p>
         </section>
 
         <section className="release-machine__comparison" aria-label="Blocker amplification comparison">
@@ -331,7 +331,7 @@ export default function ChainReactionExamplePage() {
         <section className="release-machine__method">
           <div>
             <span className="release-machine__kicker">Shared functionality</span>
-            <h2>A directed machine compiler, not a bespoke contraption.</h2>
+            <h2>The machine is compiled from a dependency graph.</h2>
             <p>
               The chart extracts DAG validation, longest-path levels, lane placement, socket IDs,
               point-based track routes, logical joins, replay folding, and blocker amplification.

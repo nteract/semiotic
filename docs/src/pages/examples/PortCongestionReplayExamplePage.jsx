@@ -63,7 +63,7 @@ const FLOW_MAP_FRAME_PROPS = {
   },
 }
 
-const implementationCode = `// Three real IMF PortWatch windows, one replay shell.
+const implementationCode = `// Three IMF PortWatch periods share one replay shell.
 const [scenarioId, setScenarioId] = useState("everGiven")
 const [cursor, setCursor] = useState(scenarioDays(scenarioId))
 const currentTime = replayTimeForCursor(scenarioId, cursor)
@@ -534,7 +534,7 @@ export default function PortCongestionReplayExamplePage() {
             <PanelHeading
               number="C"
               eyebrow="Imperative event stream"
-              title="Every lost transit is a ship waiting somewhere"
+              title="Track accumulated shortfall at the selected gate"
               note="Daily bars are real transits minus this scenario's own pre-event pace at the watched gate, so the running level reads as accumulated shortfall. Selecting a corridor moves the gauge to its gate."
             />
             <div className="port-replay__chart">
@@ -588,16 +588,13 @@ export default function PortCongestionReplayExamplePage() {
         <section className="port-replay__manifest">
           <div className="port-replay__manifest-copy">
             <span>Cross-scenario analysis / Form 04</span>
-            <h3>Three seasons in one square of days</h3>
+            <h3>Compare daily traffic across all three periods</h3>
             <p>
-              Every dot is a real day — {PORT_MATRIX_ROWS.length} of them across all three
-              scenarios, measured at four gates at once. The quiet spring is the tight cloud
-              everything else is judged against. The Ever Given stretches only the Suez axis: six
-              days slide toward zero and snap back, while the other three gates never notice — a
-              one-gate accident. The Red Sea winter is a system event: Bab el-Mandeb and the Cape
-              trade places along an anti-diagonal, the whole cloud walks away from normal and stays
-              there, and Panama drifts low under drought at the same time. Click any dot to jump the
-              replay to that scenario and day.
+              Each dot is one real day measured at Suez, Bab el-Mandeb, the Cape of Good Hope, and
+              Panama. The quiet spring forms the reference cluster. The Ever Given period departs
+              mainly along the Suez axis, while the Red Sea period shifts traffic from Bab
+              el-Mandeb toward the Cape as Panama also runs below its reference pace. Select a dot
+              to open that day in the replay.
             </p>
             <dl>
               {matrixRanges.map((range) => (

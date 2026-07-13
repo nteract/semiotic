@@ -47,6 +47,10 @@ import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
 import {
+  createMcpMetadataLogger,
+  resolveMcpLoggingPolicy,
+} from "./mcp-logging"
+import {
   createMcpRequestLimiter,
   resolveMcpRequestLimits,
 } from "./mcp-request-limits"
@@ -172,6 +176,11 @@ const DEFAULT_MCP_SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
 const DEFAULT_MCP_MAX_RENDER_WORK_MS = 2500
 const DEFAULT_MCP_MAX_PNG_CONVERSION_MS = 4000
 const DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS = 3000
+// The HTTP transport must never use console directly for request logging:
+// user bodies, headers, and Error objects can carry chart data or credentials.
+// This boundary serializes only fixed, bounded operational metadata.
+const mcpLoggingPolicy = resolveMcpLoggingPolicy()
+const mcpLogger = createMcpMetadataLogger(mcpLoggingPolicy)
 
 type McpRenderExecutionLimits = {
   maxRenderWorkMs: number
@@ -228,17 +237,6 @@ function isSupportedProtocolVersion(
 ): boolean {
   if (!protocolVersion || supported.length === 0) return true
   return supported.includes(protocolVersion)
-}
-
-function sanitizeHeadersForLog(headers: http.IncomingHttpHeaders): Record<string, string> {
-  const output: Record<string, string> = {}
-  for (const [name, value] of Object.entries(headers)) {
-    if (!value) continue
-    const sample = Array.isArray(value) ? value[0] : value
-    if (typeof sample !== "string") continue
-    output[name] = name.toLowerCase() === "authorization" ? "***redacted***" : sample
-  }
-  return output
 }
 
 function parsePositiveInteger(value: string | undefined, fallback: number): number {
@@ -2768,8 +2766,14 @@ async function main() {
     // (rather than letting the transport consume the stream) is what lets us
     // enforce the ceiling for both Content-Length and chunked requests.
     type BodyResult =
-      | { ok: true; body: unknown }
-      | { ok: false; status: 413 | 400; code: -32600 | -32602; message: string }
+      | { ok: true; body: unknown; bodyBytes: number }
+      | {
+          ok: false
+          status: 413 | 400
+          code: -32600 | -32602
+          message: string
+          reason: "request_body_too_large" | "invalid_json" | "operation_limit" | "request_stream_error"
+        }
     const readJsonBodyWithLimit = (req: import("http").IncomingMessage): Promise<BodyResult> =>
       new Promise((resolve) => {
         let size = 0
@@ -2787,7 +2791,13 @@ async function main() {
             // Stop accumulating (memory is now bounded), but don't destroy the
             // socket — the caller still needs to write the 413 response. Further
             // inbound chunks are ignored by the `done` guard above.
-            finish({ ok: false, status: 413, code: -32600, message: "Request body too large" })
+            finish({
+              ok: false,
+              status: 413,
+              code: -32600,
+              message: "Request body too large",
+              reason: "request_body_too_large",
+            })
             return
           }
           chunks.push(chunk)
@@ -2795,7 +2805,7 @@ async function main() {
         req.on("end", () => {
           if (done) return
           const raw = Buffer.concat(chunks).toString("utf-8")
-          if (!raw) return finish({ ok: true, body: undefined })
+          if (!raw) return finish({ ok: true, body: undefined, bodyBytes: size })
           try {
             const body = JSON.parse(raw)
             const operationLimit = operationLimitForMcpRequest(body, operationLimits)
@@ -2805,15 +2815,28 @@ async function main() {
                 status: 413,
                 code: -32602,
                 message: formatMcpOperationLimitError(operationLimit),
+                reason: "operation_limit",
               })
               return
             }
-            finish({ ok: true, body })
+            finish({ ok: true, body, bodyBytes: size })
           } catch {
-            finish({ ok: false, status: 400, code: -32600, message: "Invalid JSON body" })
+            finish({
+              ok: false,
+              status: 400,
+              code: -32600,
+              message: "Invalid JSON body",
+              reason: "invalid_json",
+            })
           }
         })
-        req.on("error", () => finish({ ok: false, status: 400, code: -32600, message: "Request stream error" }))
+        req.on("error", () => finish({
+          ok: false,
+          status: 400,
+          code: -32600,
+          message: "Request stream error",
+          reason: "request_stream_error",
+        }))
       })
 
     const healthBody = () =>
@@ -2826,10 +2849,21 @@ async function main() {
       })
 
     const httpServer = http.createServer(async (req, res) => {
+      const requestStartedAt = Date.now()
       const requestAbortController = new AbortController()
       const abortRequest = () => requestAbortController.abort()
       req.on("aborted", abortRequest)
       req.on("close", abortRequest)
+
+      // Route extraction deliberately excludes the query string. The logging
+      // boundary further reduces it to a fixed route enum before serialization.
+      const pathname = (() => {
+        try {
+          return new URL(req.url || "/", "http://localhost").pathname
+        } catch {
+          return "/"
+        }
+      })()
 
       const origin = String(req.headers.origin || "").trim().toLowerCase()
       // CORS: wildcard when no origin allowlist is configured; otherwise echo
@@ -2857,18 +2891,17 @@ async function main() {
       // a disallowed Origin is rejected outright. Non-browser MCP clients send
       // no Origin header and are unaffected.
       if (allowedOrigins.length > 0 && origin && !allowedOrigins.includes(origin)) {
+        mcpLogger.warn("request_rejected", {
+          reason: "forbidden_origin",
+          method: req.method,
+          route: pathname,
+          status: 403,
+        })
         res.writeHead(403, { "Content-Type": "application/json" })
         res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Forbidden origin" }, id: null }))
         return
       }
 
-      const pathname = (() => {
-        try {
-          return new URL(req.url || "/", "http://localhost").pathname
-        } catch {
-          return "/"
-        }
-      })()
       res.setHeader("MCP-Protocol-Version", protocolVersion)
 
       // Host-header allowlist (DNS-rebinding defense). Opt-in via env.
@@ -2881,6 +2914,12 @@ async function main() {
           ? rawHost.replace(/^\[([^\]]+)\](?::\d+)?$/, "$1")
           : rawHost.split(":")[0]
         if (!allowedHosts.includes(rawHost) && !allowedHosts.includes(normalizedHost)) {
+          mcpLogger.warn("request_rejected", {
+            reason: "forbidden_host",
+            method: req.method,
+            route: pathname,
+            status: 403,
+          })
           res.writeHead(403, { "Content-Type": "application/json" })
           res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message: "Forbidden host" }, id: null }))
           return
@@ -2944,11 +2983,11 @@ async function main() {
       }
 
       if (!hasSupportedAccept(String(req.headers.accept || ""))) {
-        console.warn("MCP request rejected", {
+        mcpLogger.warn("request_rejected", {
           reason: "unsupported_accept",
           method: req.method,
-          path: pathname,
-          headers: sanitizeHeadersForLog(req.headers),
+          route: pathname,
+          status: 406,
         })
         writeJsonRpcError(
           res,
@@ -2963,11 +3002,14 @@ async function main() {
         String(req.headers["mcp-protocol-version"] || ""),
         protocolVersions,
       )) {
-        console.warn("MCP request rejected", {
+        mcpLogger.warn("request_rejected", {
           reason: "unsupported_protocol_version",
           method: req.method,
-          path: pathname,
-          protocolVersion: req.headers["mcp-protocol-version"],
+          route: pathname,
+          status: 400,
+          // The header's value can be attacker-controlled; presence is enough
+          // operationally and keeps it out of the log boundary.
+          protocolVersionPresent: Boolean(req.headers["mcp-protocol-version"]),
         })
         writeJsonRpcError(
           res,
@@ -2979,11 +3021,11 @@ async function main() {
       }
 
       if (authToken && !isAuthorizedRequest(req, authToken, authScheme)) {
-        console.warn("MCP request rejected", {
+        mcpLogger.warn("request_rejected", {
           reason: "unauthorized",
           method: req.method,
-          path: pathname,
-          headers: sanitizeHeadersForLog(req.headers),
+          route: pathname,
+          status: 401,
         })
         res.setHeader("WWW-Authenticate", `${authScheme} realm="semiotic-mcp"`)
         writeJsonRpcError(res, 401, -32000, "Unauthorized")
@@ -2993,11 +3035,13 @@ async function main() {
       const requestSlot = requestLimiter.tryAcquire()
       if (!requestSlot.ok) {
         res.setHeader("Retry-After", String(Math.max(1, Math.ceil(requestSlot.retryAfterMs / 1000))))
-        console.warn("MCP request rejected", {
-          reason: requestSlot.code,
+        mcpLogger.warn("request_rejected", {
+          reason: requestSlot.code === "MCP_REQUEST_CONCURRENCY"
+            ? "request_concurrency"
+            : "request_rate",
           method: req.method,
-          path: pathname,
-          headers: sanitizeHeadersForLog(req.headers),
+          route: pathname,
+          status: 429,
         })
         writeJsonRpcError(res, 429, -32000, requestSlot.message)
         return
@@ -3009,6 +3053,12 @@ async function main() {
         // stream unbounded).
         const bodyResult = await readJsonBodyWithLimit(req)
         if (!bodyResult.ok) {
+          mcpLogger.warn("request_rejected", {
+            reason: bodyResult.reason,
+            method: req.method,
+            route: pathname,
+            status: bodyResult.status,
+          })
           if (!res.headersSent) {
             res.writeHead(bodyResult.status, { "Content-Type": "application/json" })
             res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: bodyResult.code, message: bodyResult.message }, id: null }))
@@ -3044,8 +3094,28 @@ async function main() {
         try {
           await srv.connect(transport)
           await transport.handleRequest(req, res, bodyResult.body)
-        } catch (err) {
-          console.error("Request handling error:", err)
+          // Completion metrics are deliberately content-free. They make the
+          // hosted policy measurable without recording a tool name, headers,
+          // JSON-RPC id, arguments, chart output, or any raw error text.
+          mcpLogger.info("request_completed", {
+            method: req.method,
+            route: pathname,
+            status: res.statusCode,
+            durationMs: Date.now() - requestStartedAt,
+            bodyBytes: bodyResult.bodyBytes,
+          })
+        } catch {
+          // Do not serialize an SDK Error here: it can include a rejected
+          // JSON-RPC body, headers, or generated chart text. The logging
+          // boundary records the fixed category only.
+          mcpLogger.error("request_failed", {
+            reason: "request_handler_error",
+            method: req.method,
+            route: pathname,
+            status: 500,
+            durationMs: Date.now() - requestStartedAt,
+            bodyBytes: bodyResult.bodyBytes,
+          })
           if (!res.headersSent) {
             res.writeHead(500, { "Content-Type": "application/json" })
             res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }))
@@ -3059,12 +3129,12 @@ async function main() {
     })
 
     httpServer.listen(port, host, () => {
-      const displayHost = host.includes(":") ? `[${host}]` : host
-      console.error(`Semiotic MCP server (HTTP) listening on http://${displayHost}:${port}`)
-      console.error(toolProfile === "public"
-        ? "Tools (public profile): createChart, improveChart, explainChart, auditChart, getChartSchema"
-        : "Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme")
-      console.error("Resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html")
+      // Including the declared retention here lets deployment smoke/operations
+      // compare the process policy to the configured provider log bucket.
+      mcpLogger.info("service_started", {
+        profile: toolProfile,
+        retentionDays: mcpLoggingPolicy.retentionDays,
+      })
     })
   } else {
     // Default: stdio mode for Claude Desktop, Claude Code, Cursor, etc.
@@ -3074,7 +3144,9 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("MCP server error:", err)
+main().catch(() => {
+  // Startup errors can include environment- or dependency-provided text. Keep
+  // process output metadata-only for the same reason as request failures.
+  mcpLogger.error("service_fatal", { reason: "service_startup_failure" })
   process.exit(1)
 })

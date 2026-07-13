@@ -1,0 +1,45 @@
+.pilot-example-panels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 8px;
+}
+
+.pilot-example-panel {
+  padding: 14px;
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  background: var(--surface-1);
+  color: var(--text-secondary);
+}
+
+.pilot-example-panel h2 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: 1.06rem;
+}
+
+.pilot-example-panel p,
+.pilot-example-panel ul {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.pilot-example-panel ul {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  padding-left: 18px;
+}
+
+.pilot-example-panel code {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 920px) {
+  .pilot-example-panels {
+    grid-template-columns: 1fr;
+  }
+}

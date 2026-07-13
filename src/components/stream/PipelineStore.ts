@@ -17,7 +17,6 @@ import type { Datum } from "../charts/shared/datumTypes"
  *
  * Consumed by: StreamXYFrame (sole consumer).
  */
-import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import type {
@@ -25,7 +24,6 @@ import type {
   StreamScales,
   StreamLayout,
   SceneNode,
-  PointSceneNode,
   Style
 } from "./types"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
@@ -101,8 +99,17 @@ import {
   ensureRingBufferCapacity,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
+import type { UpdateResult } from "./pipelineUpdateContract"
+import { PipelineStoreUpdateResults } from "./pipelineStoreUpdateResults"
+import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
 
 export type { PipelineConfig } from "./pipelineConfig"
+export type {
+  ChangeSet,
+  Invalidation,
+  RevisionSet,
+  UpdateResult,
+} from "./pipelineUpdateContract"
 export {
   DEFAULT_GROWING_MAX_CAPACITY,
   GROWING_CAPACITY_WARN_THRESHOLD
@@ -193,6 +200,10 @@ export class PipelineStore {
   private needsFullRebuild = true
   private lastLayout: StreamLayout | null = null
 
+  // Additive M1 reference state. Existing frame paths still use their current
+  // dirty flags; new hosts can observe the same mutations as explicit results.
+  private updateResults = new PipelineStoreUpdateResults()
+
   scales: StreamScales | null = null
   scene: SceneNode[] = []
   version = 0
@@ -222,12 +233,7 @@ export class PipelineStore {
   xIsDate = false
 
   // ── Quadtree spatial index for O(log n) point hit testing ──────────
-  private _quadtree: Quadtree<PointSceneNode> | null = null
-  /** Largest visual point radius in the current scene. The hit tester uses
-   *  this to widen its quadtree query so points with big radii (bubble) don't
-   *  fall outside the search region. */
-  private _maxPointRadius = 0
-  private static readonly QUADTREE_THRESHOLD = 500
+  private spatialIndex = new PipelineSpatialIndex()
 
   constructor(config: PipelineConfig) {
     this.config = config
@@ -385,6 +391,7 @@ export class PipelineStore {
       // Same data reference — already fully ingested in a prior call.
       // Skip the buffer-clear + re-extent work; the existing scene
       // state is exactly what this call would produce.
+      this.updateResults.recordNoop("replace")
       return false
     }
     const now = getTimestamp()
@@ -481,7 +488,14 @@ export class PipelineStore {
       }
     }
 
+    this.updateResults.recordData(changeset.bounded ? "replace" : "ingest", changeset.inserts.length)
     return true
+  }
+
+  /** Additive explicit-result form of {@link ingest}; `ingest()` remains unchanged. */
+  ingestWithResult(changeset: Changeset): UpdateResult {
+    this.ingest(changeset)
+    return this.updateResults.last
   }
 
   /**
@@ -615,7 +629,7 @@ export class PipelineStore {
         // ever produces output. Do not leave the built-in scene visible and
         // accidentally report it as a custom-layout recovery.
         this.scene = []
-        this.rebuildQuadtree()
+        this.spatialIndex.rebuild(this.config.chartType, this.scene)
       }
       this.needsFullRebuild = true
       return
@@ -653,65 +667,18 @@ export class PipelineStore {
     }
 
     // Build quadtree spatial index for dense point scenes
-    this.rebuildQuadtree()
+    this.spatialIndex.rebuild(this.config.chartType, this.scene)
 
     this.needsFullRebuild = false
     this.lastLayout = { width: layout.width, height: layout.height }
     this.version++
   }
 
-  /**
-   * Build or clear the quadtree spatial index for point scene nodes.
-   * Only built for scatter/bubble/custom charts with >QUADTREE_THRESHOLD points.
-   */
-  private rebuildQuadtree(): void {
-    const ct = this.config.chartType
-    if (ct !== "scatter" && ct !== "bubble" && ct !== "custom") {
-      this._quadtree = null
-      this._maxPointRadius = 0
-      return
-    }
-
-    // Walk once to collect point nodes and track the largest radius so the
-    // hit tester can widen its query radius for variable-size bubble charts.
-    let pointCount = 0
-    let maxR = 0
-    for (const node of this.scene) {
-      if (node.type === "point") {
-        pointCount++
-        if (node.r > maxR) maxR = node.r
-      }
-    }
-    this._maxPointRadius = maxR
-
-    if (pointCount <= PipelineStore.QUADTREE_THRESHOLD) {
-      this._quadtree = null
-      return
-    }
-
-    const points: PointSceneNode[] = new Array(pointCount)
-    let i = 0
-    for (const node of this.scene) {
-      if (node.type === "point") points[i++] = node as PointSceneNode
-    }
-    this._quadtree = d3Quadtree<PointSceneNode>()
-      .x(n => n.x)
-      .y(n => n.y)
-      .addAll(points)
-  }
-
-  /**
-   * Get the quadtree spatial index, if available.
-   * Returns null when chart type is not scatter/bubble or point count is below threshold.
-   */
-  get quadtree(): Quadtree<PointSceneNode> | null {
-    return this._quadtree
-  }
+  /** Get the retained point-scene spatial index, if available. */
+  get quadtree() { return this.spatialIndex.quadtree }
 
   /** Largest visual point radius in the current scene. */
-  get maxPointRadius(): number {
-    return this._maxPointRadius
-  }
+  get maxPointRadius(): number { return this.spatialIndex.maxPointRadius }
 
   /**
    * Remap existing scene node coordinates for a new layout size.
@@ -786,7 +753,7 @@ export class PipelineStore {
     this.lastLayout = { width: layout.width, height: layout.height }
 
     // Rebuild quadtree with remapped coordinates
-    this.rebuildQuadtree()
+    this.spatialIndex.rebuild(this.config.chartType, this.scene)
 
     this.version++
   }
@@ -1205,6 +1172,11 @@ export class PipelineStore {
     return this.getBufferArray()
   }
 
+  /** Most recent additive update result for revision-aware hosts and tests. */
+  getLastUpdateResult(): UpdateResult {
+    return this.updateResults.last
+  }
+
   /**
    * Remove data points by ID. Requires pointIdAccessor to be configured.
    * Returns the removed items. Marks the store dirty for scene rebuild.
@@ -1223,7 +1195,10 @@ export class PipelineStore {
     compactTimestampBufferForRemoval(this.buffer, this.timestampBuffer, predicate)
 
     const removed = this.buffer.remove(predicate)
-    if (removed.length === 0) return removed
+    if (removed.length === 0) {
+      this.updateResults.recordNoop("remove")
+      return removed
+    }
 
     // Evict removed values from extent tracking — mirror ingest() logic
     for (const d of removed) {
@@ -1237,6 +1212,7 @@ export class PipelineStore {
     // A removal is data activity — refresh the staleness clock so a chart
     // mutated via remove() isn't flagged stale.
     this.lastIngestTime = getTimestamp()
+    this.updateResults.recordData("remove", removed.length)
     return removed
   }
 
@@ -1259,7 +1235,10 @@ export class PipelineStore {
       item => ids.has(getPointId(item)),
       updater
     )
-    if (previous.length === 0) return previous
+    if (previous.length === 0) {
+      this.updateResults.recordNoop("update")
+      return previous
+    }
 
     // Evict old values — mirror ingest() logic for candlestick/y0
     for (const old of previous) {
@@ -1280,6 +1259,7 @@ export class PipelineStore {
     // An in-place update is data activity — refresh the staleness clock so a
     // chart streamed via update() isn't flagged stale between updates.
     this.lastIngestTime = getTimestamp()
+    this.updateResults.recordData("update", previous.length)
     return previous
   }
 
@@ -1325,8 +1305,7 @@ export class PipelineStore {
     this._customRestyle = undefined
     this.hasCustomRestyle = false
     this._baseStyles = new WeakMap()
-    this._quadtree = null
-    this._maxPointRadius = 0
+    this.spatialIndex.clear()
     this._colorMapCache = null
     this._groupDataCache = null
     this._groupColorMap = new Map()
@@ -1335,6 +1314,7 @@ export class PipelineStore {
     this._binBoundaries = []
     this._stackExtentCache = null
     this.version++
+    this.updateResults.recordData("clear")
   }
 
   get size(): number {
@@ -1395,13 +1375,20 @@ export class PipelineStore {
    * Flags a style-only repaint so the render loop redraws the mutated styles.
    */
   restyleScene(selection: CustomLayoutSelection | null): void {
-    if (!this._customRestyle) return
+    if (!this._customRestyle) {
+      this.updateResults.recordRestyle(false)
+      return
+    }
     this.applyCustomRestyle(this.scene, selection)
     this._stylePaintPending = true
+    this.updateResults.recordRestyle(true)
   }
 
   updateConfig(config: Partial<PipelineConfig>): void {
     const prev = { ...this.config }
+    const changedConfigKeys = Object.keys(config).filter(
+      key => (config as Record<string, unknown>)[key] !== (prev as Record<string, unknown>)[key],
+    )
 
     // `windowSize` sizes the ring buffer in the constructor and is NOT applied
     // reactively — changing it after mount has no effect on the retained
@@ -1606,5 +1593,16 @@ export class PipelineStore {
       if (extentAccessorChanged) this.rebuildExtents()
       this.needsFullRebuild = true
     }
+    this.updateResults.recordConfig(
+      changedConfigKeys,
+      accessorChanged,
+      extentAccessorChanged
+    )
+  }
+
+  /** Additive explicit-result form of {@link updateConfig}. */
+  updateConfigWithResult(config: Partial<PipelineConfig>): UpdateResult {
+    this.updateConfig(config)
+    return this.updateResults.last
   }
 }

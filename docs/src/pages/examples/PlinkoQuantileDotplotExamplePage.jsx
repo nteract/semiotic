@@ -527,8 +527,8 @@ export default function PlinkoQuantileDotplotExamplePage() {
         <div className="plinko-example__section-heading">
           <h2>Settled Quantile Dotplot</h2>
           <p>
-            The dotplot is not a separate summary. It is laid out from the same
-            <code>posterior-sample</code> tokens that fall through the board.
+            The settled dotplot lays out the same <code>posterior-sample</code> tokens that fell
+            through the board, so every ball keeps its sample identity.
           </p>
         </div>
         <QuantileDotplot

@@ -455,7 +455,7 @@ export default function ParisIsometricLandmarksExamplePage() {
       </section>
 
       <section style={styles.editorial}>
-        <h2>Geography in, game board out</h2>
+        <h2>From coordinates to grid cells</h2>
         <p>
           The layout receives ordinary longitude and latitude records. It converts them into local
           kilometer offsets, assigns each landmark to a grid cell, and chooses one representative

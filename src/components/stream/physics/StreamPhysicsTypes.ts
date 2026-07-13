@@ -5,7 +5,7 @@
  */
 
 import type * as React from "react"
-import type { FrameGraphicsProp, FrameMargin } from "../useFrame"
+import type { FrameGraphicsProp, FrameMargin, FrameScheduler } from "../useFrame"
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { OnObservationCallback } from "../../store/ObservationStore"
@@ -239,6 +239,17 @@ export interface StreamPhysicsFrameProps {
    */
   background?: string
   backgroundGraphics?: FrameGraphicsProp
+  /**
+   * Optional rAF seam for deterministic frame-loop scheduling in tests.
+   * When omitted, the browser's requestAnimationFrame is used.
+   */
+  frameScheduler?: FrameScheduler
+  /**
+   * Monotonic milliseconds used for frame deltas, semantic throttling,
+   * pop animations, and frame-originated observation timestamps. Inject a
+   * deterministic clock for replayable tests or evidence capture.
+   */
+  clock?: () => number
   bodySemanticItemLimit?: number
   bodySemanticItems?: boolean | PhysicsBodySemanticItemAccessor
   bodySemanticUpdateMs?: number

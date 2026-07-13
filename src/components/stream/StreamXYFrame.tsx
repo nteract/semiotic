@@ -25,6 +25,7 @@ import { XYBrushOverlay } from "./XYBrushOverlay"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import { SceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
@@ -55,7 +56,7 @@ import { refreshIdlePulse } from "./pulseFrameRefresh"
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
 import { buildHoverData, getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
-import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
+import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { makeDateTickFormatter } from "./xyDateTicks"
@@ -266,6 +267,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       rafRef,
       renderFnRef,
       scheduleRender,
+      cancelRender,
     } = frame
 
     // XY post-expands margin to at least 60px on any side that has a
@@ -333,6 +335,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const themeColorCacheRef = useRef(createFrameThemeColorCache())
     /** True when the interaction canvas last painted hover/highlight content. */
     const interactionHasContentRef = useRef(false)
+    const sceneRevisionDiagnosticsRef = useRef(new SceneRevisionDiagnostics())
     const lastLegendCategoriesRef = useRef<string[]>([])
     const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
     const onCategoriesChangeRef = useRef(onCategoriesChange)
@@ -475,15 +478,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // scheduleRender comes from useFrame above.
 
-    const emitLegendCategories = useCallback(() => {
-      const accessor = legendCategoryAccessorRef.current
-      const onChange = onCategoriesChangeRef.current
-      if (!onChange || !accessor) return
-      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], accessor)
-      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
-      lastLegendCategoriesRef.current = categories
-      onChange(categories)
-    }, [])
+    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessorRef, onCategoriesChangeRef, lastLegendCategoriesRef)
 
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
@@ -893,7 +888,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // ── Render function ──────────────────────────────────────────────────
 
     renderFnRef.current = () => {
-      rafRef.current = 0
+      rafRef.current = null
       const canvas = canvasRef.current
       const interactionCanvas = interactionCanvasRef.current
       if (!canvas || !interactionCanvas) return
@@ -925,6 +920,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // NOT into the scene-recompute gate, so the restyle isn't overwritten.
       const stylePaintPending = store.consumeStylePaintPending()
       let computedSceneThisFrame = false
+      const updateResult = store.getLastUpdateResult()
+      const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(updateResult, isTransitioning)
 
       // Compute scene graph (scales + scene nodes) — when data changed, or when
       // the dimensions changed (the latter wins over an active transition).
@@ -934,6 +931,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         computedSceneThisFrame = true
         emitLegendCategories()
       }
+      sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, dimsChanged)
 
       const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       const dpr = getDevicePixelRatio()
@@ -1144,7 +1142,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Continue transitions and active pulse frames.
       const needsContinuation = isTransitioning || store.activeTransition != null || pulseRefresh.pending
       if (needsContinuation) {
-        rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+        scheduleRender()
       }
     }
 
@@ -1156,6 +1154,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       storeRef,
       dirtyRef,
       renderFnRef,
+      cancelRender,
       // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
       // is handled by useFrame. We just clear the adapter here so any
       // in-flight progressive chunking / pending push microtask can't

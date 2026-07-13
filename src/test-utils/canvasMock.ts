@@ -223,24 +223,15 @@ export function setupCanvasMock(options: SetupCanvasMockOptions = {}): () => voi
         })
         return id
       }
-      // `stubRaf === true` (default): synchronous fire. Return 0 so
-      // callers treating rAF id as a truthy "pending" flag (e.g.
-      // useFrame.scheduleRender's `if (rafRef.current) return` guard)
-      // don't see a stale assignment lock out subsequent renders. The
-      // sequence is: scheduleRender → rafRef.current = requestAnimationFrame(cb)
-      // → cb fires synchronously → renderFn resets rafRef.current = 0
-      // → impl returns 0 → assignment writes 0. Returning a non-zero id
-      // here would overwrite the reset and silently coalesce the next
-      // scheduleRender into a phantom pending rAF.
+      // `stubRaf === true` (default): synchronous fire. Return 0 to exercise
+      // the valid zero-token case; `useFrame` detects synchronous schedulers
+      // and does not retain an already-fired handle as pending.
       cb(performance.now())
       return 0
     }
     rafSpy = vi.spyOn(window, "requestAnimationFrame").mockImplementation(impl)
     cafSpy = vi.spyOn(window, "cancelAnimationFrame").mockImplementation((id) => {
-      // id 0 means "no rAF pending" in the sync-fire flavor's id
-      // contract; ignore so we don't pollute the cancelled set with
-      // sentinel values.
-      if (id) cancelled.add(id)
+      cancelled.add(id)
     })
   }
 

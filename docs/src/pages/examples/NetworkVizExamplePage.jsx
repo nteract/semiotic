@@ -99,7 +99,7 @@ export default function NetworkVizExamplePage() {
           <p className="nv-blurb">
             A node-link diagram is the easiest network picture to make and the hardest to read. This
             primer rebuilds a 2015 network-visualization workshop on Semiotic — every technique as a
-            working chart — and ends with an interactive toy for thinking with a graph rather than
+            working chart — and ends with an interactive toy for thinking with a graph instead of
             at it.
           </p>
         </div>
@@ -693,7 +693,7 @@ function ChapterStructure() {
 
   const captions = {
     0: "Community detection (here, the novel's own books) breaks the abstract whole into nameable chunks. Coloring by community is the single most useful thing you can do to a tangled graph.",
-    1: "Pull each community into its own cell and the structure becomes spatial, not just chromatic. Intrapartition links are deemphasized while interpartition links retain their original emphasis, making the connections between communities easier to trace.",
+    1: "Pull each community into its own cell and color gains a spatial counterpart. Intrapartition links recede while interpartition links retain their emphasis, making connections between communities easier to trace.",
   }
 
   return (
@@ -743,7 +743,7 @@ function ChapterStructure() {
 const BEYOND_STEPS = ["Chord", "Sankey"]
 const BEYOND_CAPTIONS = {
   0: "A chord diagram drops the nodes entirely and shows only the flow between communities — every ribbon a count of shared scenes. It answers 'which groups touch?' far better than any hairball.",
-  1: "A sankey turns the network into a readable flow: each character a ribbon into the community it anchors, width by degree. The same data, finally legible left-to-right.",
+  1: "In the Sankey, each character flows as a ribbon into its community and ribbon width records degree. The same relationships can now be read left to right.",
 }
 
 function ChapterBeyond() {
@@ -756,7 +756,7 @@ function ChapterBeyond() {
       <ChapterHead
         num="7"
         title="Beyond the Node-Link"
-        lead="The node-link diagram is one representation of a graph, not the only one. When the question is about flow or aggregate relationship rather than individual ties, abandon the dots entirely."
+        lead="A node-link diagram emphasizes individual ties. For questions about flow or aggregate relationships, abandon the dots and use a layout built for those quantities."
       />
       <p>
         The same instinct powers Semiotic&apos;s advanced network work — Sankey variants for non-tree

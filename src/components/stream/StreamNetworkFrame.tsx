@@ -230,9 +230,7 @@ const StreamNetworkFrame = memo(forwardRef<
     transition,
     introEnabled,
     tableId,
-    rafRef,
-    renderFnRef,
-    scheduleRender,
+    rafRef, renderFnRef, scheduleRender, cancelRender,
     currentTheme
   } = frame
 
@@ -451,9 +449,9 @@ const StreamNetworkFrame = memo(forwardRef<
   const canvasRef = useRef<HTMLCanvasElement>(null)
   // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
   // useFrame (above). Network's previous local scheduleRender had an
-  // isContinuous branch, but the inner `if (!rafRef.current)` guard made
-  // that branch's effect identical to the simple "bail if pending" — so
-  // the shared hook semantics preserve Network's behavior exactly.
+  // isContinuous branch, but its pending-frame guard made that branch's
+  // effect identical to the simple "bail if pending" — so the shared hook
+  // semantics preserve Network's behavior exactly.
   // rafRef + renderFnRef + scheduleRender + dirtyRef + theme-change
   // effect all destructured from useFrame above; not redeclared here.
   const lastFrameTimeRef = useRef(0)
@@ -1330,7 +1328,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // ── Render function ──────────────────────────────────────────────────
 
   renderFnRef.current = () => {
-    rafRef.current = 0
+    rafRef.current = null
     const canvas = canvasRef.current
     if (!canvas) return
     const store = storeRef.current
@@ -1360,7 +1358,7 @@ const StreamNetworkFrame = memo(forwardRef<
       lastAnnotationFrameTimeRef,
       setAnnotationFrame,
       scheduleNextFrame: () => {
-        rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+        scheduleRender()
       }
     })
   }
@@ -1372,7 +1370,8 @@ const StreamNetworkFrame = memo(forwardRef<
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
-    renderFnRef
+    renderFnRef,
+    cancelRender,
     // No frame-specific cleanup — useFrame handles the rAF/pointermove
     // refs on unmount.
   })

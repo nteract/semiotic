@@ -117,6 +117,11 @@ export function validateProps(
   // already list "data" in `required` (handled in the loop above).
   if (
     spec.dataShape === "array" &&
+    // Geo HOCs such as FlowMap declare their own array input (`flows`,
+    // `points`, or `areas`) rather than a generic `data` prop. Do not invent
+    // an unknown `data` requirement for a chart whose declared prop surface
+    // cannot satisfy it.
+    Object.prototype.hasOwnProperty.call(spec.props, "data") &&
     !spec.required.includes("data") &&
     !allowsGeneratedArrayData(componentName, props) &&
     (props.data === undefined || props.data === null)

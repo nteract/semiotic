@@ -1,8 +1,8 @@
-import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
 import {
   type PhysicsBodyState,
   type PhysicsColliderSpec,
   type PhysicsKernelEvent,
+  type PhysicsKernelOptions,
   type PhysicsSpringSpec
 } from "./PhysicsKernel"
 import {
@@ -36,23 +36,39 @@ import type {
 } from "./PhysicsPipelineTypes"
 import {
   DEFAULT_PHYSICS_PIPELINE_CONFIG,
-  bodyHitDistanceSquared,
-  bodySearchRadius,
   cloneBodyBudgetOptions,
   cloneColliders,
   cloneQueuedSpawn,
   cloneSpawn,
   normalizeObservationConfig,
-  parseSensorPairKey,
   requiredKernelOptions,
   schedulePhysicsSpawns,
-  sensorPairKey,
   sortQueue,
   type InternalQueuedSpawn,
   type NormalizedObservationConfig,
-  type PhysicsPipelineEvictionResult,
-  type PhysicsQuadtreeLeaf
+  type PhysicsPipelineEvictionResult
 } from "./physicsPipelineHelpers"
+import {
+  type UpdateResult,
+  UpdateResultTracker
+} from "../pipelineUpdateContract"
+import { PhysicsBodySpatialIndex } from "./PhysicsBodySpatialIndex"
+import { createPhysicsPipelineControls } from "./physicsPipelineControls"
+import {
+  changedPhysicsConfigKeys,
+  physicsKernelOptionsEqual,
+  PHYSICS_BODY_INVALIDATIONS,
+  PHYSICS_CONFIG_INVALIDATIONS,
+  PHYSICS_MOTION_INVALIDATIONS,
+  PHYSICS_STATE_INVALIDATIONS
+} from "./physicsPipelineUpdateResults"
+import {
+  emitPhysicsSimulationStateTransition,
+  observePhysicsKernelEvents,
+  observePhysicsSensorTransitions,
+  removePhysicsSensorPairsForBodies,
+  resolvePhysicsSimulationState
+} from "./physicsPipelineObservations"
 
 // Re-export public API for stable import paths
 export type {
@@ -83,6 +99,13 @@ export {
   collidersFromXScaleBins
 } from "./physicsPipelineHelpers"
 
+export type {
+  ChangeSet,
+  Invalidation,
+  RevisionSet,
+  UpdateResult
+} from "../pipelineUpdateContract"
+
 export class PhysicsPipelineStore {
   private activeSensorPairs = new Set<string>()
   private accumulator = 0
@@ -99,17 +122,18 @@ export class PhysicsPipelineStore {
       | "sediment"
     >
   >
+  /** Raw public config references, used only for no-op classification. */
+  private configInput: PhysicsPipelineConfig
   private engineInput?: PhysicsEngineAdapterInput
-  private bodyQuadtree: Quadtree<PhysicsBodyState> | null = null
-  private bodyQuadtreeRevision = -1
+  private bodySpatialIndex = new PhysicsBodySpatialIndex()
   private elapsedSeconds = 0
   private liveBodyOrder: string[] = []
-  private maxBodySearchRadius = 0
   private nextSequence = 0
   private observation: NormalizedObservationConfig
   private paused = false
   private queue: InternalQueuedSpawn[] = []
   private revision = 0
+  private updateResults = new UpdateResultTracker()
   private sediment: PhysicsSedimentAccumulator
   private simulationState: PhysicsSimulationState = "settled"
   private visible = true
@@ -126,6 +150,7 @@ export class PhysicsPipelineStore {
       ...storeConfig
     } = config
     this.config = { ...DEFAULT_PHYSICS_PIPELINE_CONFIG, ...storeConfig }
+    this.configInput = { ...config }
     this.bodyBudget = bodyBudget ?? {}
     this.engineInput = engine
     this.observation = normalizeObservationConfig(observation)
@@ -138,11 +163,12 @@ export class PhysicsPipelineStore {
   }
 
   updateConfig(config: PhysicsPipelineConfig): void {
+    const changedConfigKeys = changedPhysicsConfigKeys(config, this.configInput)
     const {
       colliders,
       bodyBudget,
       engine,
-      kernel: _kernel,
+      kernel,
       observation,
       sediment,
       ...storeConfig
@@ -160,6 +186,23 @@ export class PhysicsPipelineStore {
       this.world.restore(snapshot)
       this.revision += 1
     }
+    if (kernel && !physicsKernelOptionsEqual(kernel, this.configInput.kernel)) {
+      // Preserve bodies, colliders, constraints, and deterministic state while
+      // applying the effective merged kernel options. `gravity` is nested,
+      // so retain the adapter's effective vector while applying a config
+      // update rather than reconstructing the world from defaults.
+      const snapshot = this.world.snapshot()
+      const nextOptions: Required<PhysicsKernelOptions> = {
+        ...snapshot.options,
+        ...kernel,
+        gravity: {
+          ...snapshot.options.gravity,
+          ...kernel.gravity
+        }
+      }
+      this.world.restore({ ...snapshot, options: nextOptions })
+      this.revision += 1
+    }
     if (observation) {
       this.observation = normalizeObservationConfig(
         observation,
@@ -167,12 +210,32 @@ export class PhysicsPipelineStore {
       )
     }
     this.sediment.updateConfig(sediment)
-    if (colliders) this.setColliders(colliders)
+    if (colliders) {
+      // `updateConfigWithResult` should describe one config mutation rather
+      // than report an intermediate standalone collider update.
+      this.world.setColliders(cloneColliders(colliders))
+      this.revision += 1
+    }
+    this.configInput = { ...this.configInput, ...config }
+    this.updateResults.record(
+      { kind: "config", keys: changedConfigKeys },
+      changedConfigKeys.length ? PHYSICS_CONFIG_INVALIDATIONS : []
+    )
+  }
+
+  /** Additive explicit-result form of {@link updateConfig}. */
+  updateConfigWithResult(config: PhysicsPipelineConfig): UpdateResult {
+    this.updateConfig(config)
+    return this.updateResults.last
   }
 
   setColliders(colliders: PhysicsColliderSpec[]): void {
     this.world.setColliders(cloneColliders(colliders))
     this.revision += 1
+    this.updateResults.record(
+      { kind: "config", keys: ["colliders"] },
+      PHYSICS_CONFIG_INVALIDATIONS
+    )
   }
 
   enqueue(
@@ -196,6 +259,19 @@ export class PhysicsPipelineStore {
     }
     this.queue.sort(sortQueue)
     if (spawns.length > 0) this.revision += 1
+    this.updateResults.record(
+      { kind: "enqueue", count: spawns.length },
+      spawns.length ? PHYSICS_BODY_INVALIDATIONS : []
+    )
+  }
+
+  /** Additive explicit-result form of {@link enqueue}. */
+  enqueueWithResult(
+    spawn: PhysicsQueuedSpawn | PhysicsQueuedSpawn[],
+    pacing?: PhysicsSpawnPacingOptions
+  ): UpdateResult {
+    this.enqueue(spawn, pacing)
+    return this.updateResults.last
   }
 
   spawnNow(spawn: PhysicsQueuedSpawn): void {
@@ -204,6 +280,7 @@ export class PhysicsPipelineStore {
     this.observeBodyBudget()
     this.evictOverflow()
     this.revision += 1
+    this.updateResults.record({ kind: "enqueue", count: 1 }, PHYSICS_BODY_INVALIDATIONS)
   }
 
   clear(): void {
@@ -222,9 +299,11 @@ export class PhysicsPipelineStore {
     this.bodyBudgetObservationKey = "ok"
     this.revision += 1
     this.syncSimulationState()
+    this.updateResults.record({ kind: "clear" }, PHYSICS_BODY_INVALIDATIONS)
   }
 
   tick(deltaSeconds: number): PhysicsPipelineTickResult {
+    const revisionBefore = this.revision
     const spawned: string[] = []
     const evicted: string[] = []
     const sedimented: string[] = []
@@ -232,7 +311,7 @@ export class PhysicsPipelineStore {
     const observations: PhysicsObservationEvent[] = []
 
     if (this.paused || !this.visible) {
-      return this.result(
+      const result = this.result(
         0,
         spawned,
         evicted,
@@ -241,6 +320,8 @@ export class PhysicsPipelineStore {
         observations,
         false
       )
+      this.updateResults.record({ kind: "tick", count: 0 }, [])
+      return result
     }
 
     const delta =
@@ -282,7 +363,7 @@ export class PhysicsPipelineStore {
     ) {
       this.revision += 1
     }
-    return this.result(
+    const result = this.result(
       steps,
       spawned,
       evicted,
@@ -292,19 +373,34 @@ export class PhysicsPipelineStore {
       undefined,
       budget
     )
+    this.updateResults.record(
+      { kind: "tick", count: steps },
+      this.revision !== revisionBefore
+        ? spawned.length || evicted.length || sedimented.length
+          ? PHYSICS_BODY_INVALIDATIONS
+          : PHYSICS_MOTION_INVALIDATIONS
+        : []
+    )
+    return result
   }
 
   settle(maxSteps = this.config.settleStepLimit): number {
+    const revisionBefore = this.revision
     this.spawnDue([], [])
     const steps = this.world.settle(maxSteps, this.config.fixedDt)
     if (steps > 0) this.revision += 1
     this.syncSimulationState()
+    this.updateResults.record(
+      { kind: "settle", count: steps },
+      this.revision !== revisionBefore ? PHYSICS_MOTION_INVALIDATIONS : []
+    )
     return steps
   }
 
   settleWithObservations(
     maxSteps = this.config.settleStepLimit
   ): PhysicsPipelineTickResult {
+    const revisionBefore = this.revision
     const spawned: string[] = []
     const evicted: string[] = []
     const sedimented: string[] = []
@@ -312,7 +408,7 @@ export class PhysicsPipelineStore {
     const observations: PhysicsObservationEvent[] = []
 
     if (this.paused || !this.visible) {
-      return this.result(
+      const result = this.result(
         0,
         spawned,
         evicted,
@@ -321,6 +417,8 @@ export class PhysicsPipelineStore {
         observations,
         false
       )
+      this.updateResults.record({ kind: "settle", count: 0 }, [])
+      return result
     }
 
     this.spawnDue(spawned, observations)
@@ -349,7 +447,7 @@ export class PhysicsPipelineStore {
     ) {
       this.revision += 1
     }
-    return this.result(
+    const result = this.result(
       steps,
       spawned,
       evicted,
@@ -359,6 +457,15 @@ export class PhysicsPipelineStore {
       undefined,
       budget
     )
+    this.updateResults.record(
+      { kind: "settle", count: steps },
+      this.revision !== revisionBefore
+        ? spawned.length || evicted.length || sedimented.length
+          ? PHYSICS_BODY_INVALIDATIONS
+          : PHYSICS_MOTION_INVALIDATIONS
+        : []
+    )
+    return result
   }
 
   readBodies(out: PhysicsBodyState[] = []): PhysicsBodyState[] {
@@ -384,48 +491,14 @@ export class PhysicsPipelineStore {
   }
 
   hitTest(x: number, y: number, radius = 0): PhysicsBodyState | null {
-    const tree = this.ensureBodyQuadtree()
-    if (!tree) return null
-
-    let best: PhysicsBodyState | null = null
-    let bestDistanceSquared = Number.POSITIVE_INFINITY
-    const searchRadius = Math.max(0, radius) + this.maxBodySearchRadius
-    const minX = x - searchRadius
-    const maxX = x + searchRadius
-    const minY = y - searchRadius
-    const maxY = y + searchRadius
-
-    tree.visit((node, x0, y0, x1, y1) => {
-      if (x1 < minX || x0 > maxX || y1 < minY || y0 > maxY) return true
-      if (node.length) return false
-
-      let leaf: PhysicsQuadtreeLeaf | undefined = node as PhysicsQuadtreeLeaf
-      while (leaf) {
-        const body = leaf.data
-        if (body) {
-          const distanceSquared = bodyHitDistanceSquared(
-            body,
-            x,
-            y,
-            Math.max(0, radius)
-          )
-          if (
-            distanceSquared != null &&
-            (distanceSquared < bestDistanceSquared ||
-              (distanceSquared === bestDistanceSquared &&
-                this.liveBodyOrder.indexOf(body.id) >
-                  this.liveBodyOrder.indexOf(best?.id ?? "")))
-          ) {
-            best = body
-            bestDistanceSquared = distanceSquared
-          }
-        }
-        leaf = leaf.next
-      }
-      return false
-    })
-
-    return best
+    return this.bodySpatialIndex.hitTest(
+      this.world,
+      this.revision,
+      this.liveBodyOrder,
+      x,
+      y,
+      radius
+    )
   }
 
   events(): PhysicsKernelEvent[] {
@@ -461,7 +534,13 @@ export class PhysicsPipelineStore {
       chartId: chartId ?? this.observation.chartId
     }
     this.emitObservation(event)
+    this.updateResults.record({ kind: "update", count: 1 }, ["evidence"])
     return event
+  }
+
+  /** Most recent explicit update result for a revision-aware host or tool. */
+  getLastUpdateResult(): UpdateResult {
+    return this.updateResults.last
   }
 
   version(): number {
@@ -469,13 +548,20 @@ export class PhysicsPipelineStore {
   }
 
   setPaused(paused: boolean): void {
+    const changed = this.paused !== paused
     this.paused = paused
     this.syncSimulationState()
+    this.updateResults.record({ kind: "pause" }, changed ? PHYSICS_STATE_INVALIDATIONS : [])
   }
 
   setVisible(visible: boolean): void {
+    const changed = this.visible !== visible
     this.visible = visible
     this.syncSimulationState()
+    this.updateResults.record(
+      { kind: "visibility" },
+      changed ? PHYSICS_STATE_INVALIDATIONS : []
+    )
   }
 
   remove(ids: string[]): string[] {
@@ -494,23 +580,39 @@ export class PhysicsPipelineStore {
       this.revision += 1
       this.syncSimulationState()
     }
+    this.updateResults.record(
+      { kind: "remove", keys: removed, count: removed.length },
+      removed.length ? PHYSICS_BODY_INVALIDATIONS : []
+    )
     return removed
   }
 
   setConstraint(spec: PhysicsSpringSpec): string {
     const id = this.world.setConstraint(spec)
     this.revision += 1
+    this.updateResults.record(
+      { kind: "constraint", keys: [id] },
+      PHYSICS_MOTION_INVALIDATIONS
+    )
     return id
   }
 
   removeConstraint(id: string): void {
     this.world.removeConstraint(id)
     this.revision += 1
+    this.updateResults.record(
+      { kind: "constraint", keys: [id] },
+      PHYSICS_MOTION_INVALIDATIONS
+    )
   }
 
   applyImpulse(id: string, ix: number, iy: number): void {
     this.world.applyImpulse(id, ix, iy)
     this.revision += 1
+    this.updateResults.record(
+      { kind: "impulse", keys: [id] },
+      PHYSICS_MOTION_INVALIDATIONS
+    )
   }
 
   nextRandom(): number {
@@ -518,28 +620,7 @@ export class PhysicsPipelineStore {
   }
 
   controls(): PhysicsPipelineControlSurface {
-    return {
-      applyImpulse: (id, ix, iy) => this.applyImpulse(id, ix, iy),
-      clear: () => this.clear(),
-      hitTest: (x, y, radius) => this.hitTest(x, y, radius),
-      pause: () => this.setPaused(true),
-      push: (spawn, pacing) => this.enqueue(spawn, pacing),
-      pushMany: (spawns, pacing) => this.enqueue(spawns, pacing),
-      bodyBudgetStatus: () => this.bodyBudgetStatus(),
-      readBodies: (out) => this.readBodies(out),
-      readSediment: () => this.readSediment(),
-      recordObservation: (event) => this.recordObservation(event),
-      remove: (ids) => this.remove(ids),
-      restore: (snapshot) => this.restore(snapshot),
-      resume: () => this.setPaused(false),
-      settle: (maxSteps) => this.settle(maxSteps),
-      settleWithObservations: (maxSteps) =>
-        this.settleWithObservations(maxSteps),
-      snapshot: () => this.snapshot(),
-      sedimentHeightfield: (options) => this.sedimentHeightfield(options),
-      sedimentTotals: () => this.sedimentTotals(),
-      step: (deltaSeconds) => this.tick(deltaSeconds)
-    }
+    return createPhysicsPipelineControls(this)
   }
 
   snapshot(): PhysicsPipelineSnapshot {
@@ -574,6 +655,11 @@ export class PhysicsPipelineStore {
       settleStepLimit: snapshot.config.settleStepLimit,
       timeScale: snapshot.config.timeScale
     }
+    this.configInput = {
+      ...snapshot.config,
+      bodyBudget: cloneBodyBudgetOptions(snapshot.bodyBudget ?? {}),
+      kernel: requiredKernelOptions(snapshot.world.options)
+    }
     this.bodyBudget = cloneBodyBudgetOptions(snapshot.bodyBudget ?? {})
     this.bodyBudgetObservationKey = "ok"
     this.activeSensorPairs = new Set(snapshot.activeSensorPairs)
@@ -583,12 +669,18 @@ export class PhysicsPipelineStore {
     this.queue = snapshot.queue.map(cloneQueuedSpawn).sort(sortQueue)
     this.revision = snapshot.revision
     this.sediment.restore(snapshot.sediment ?? [])
-    this.simulationState = snapshot.simulationState ?? this.currentSimulationState()
+    this.simulationState = snapshot.simulationState ?? resolvePhysicsSimulationState(
+      snapshot.paused,
+      snapshot.visible,
+      snapshot.queue.length > 0,
+      snapshot.world.bodies.every((body) => body.sleeping)
+    )
     this.liveBodyOrder = snapshot.liveBodyOrder.slice()
     this.visible = snapshot.visible
     this.nextSequence =
       this.queue.reduce((max, spawn) => Math.max(max, spawn.sequence), -1) + 1
     this.world.restore(snapshot.world)
+    this.updateResults.record({ kind: "restore" }, PHYSICS_CONFIG_INVALIDATIONS)
   }
 
   private spawnDue(
@@ -669,104 +761,28 @@ export class PhysicsPipelineStore {
     events: PhysicsKernelEvent[],
     observations: PhysicsObservationEvent[]
   ): void {
-    if (events.length === 0) return
-    const bodyById = new Map(
-      this.world.readState().map((body) => [body.id, body])
-    )
-    for (const event of events) {
-      if (event.type === "sleep") {
-        const body = bodyById.get(event.bodyId)
-        this.emitObservation(
-          {
-            type: "physics-settle",
-            timestamp: this.elapsedSeconds,
-            chartType: this.observation.chartType,
-            chartId: this.observation.chartId,
-            bodyId: event.bodyId,
-            datum: body?.datum,
-            x: body?.x,
-            y: body?.y
-          },
-          observations
-        )
-      }
-    }
+    observePhysicsKernelEvents(this.world, events, this.observationContext(observations))
   }
 
   private observeSensorTransitions(
     observations: PhysicsObservationEvent[]
   ): void {
-    const currentPairs = new Set(
-      this.world
-        .activeSensorPairs()
-        .map((pair) => sensorPairKey(pair.sensorId, pair.bodyId))
-    )
-    if (currentPairs.size === 0 && this.activeSensorPairs.size === 0) return
-
-    const bodyById = new Map(
-      this.world.readState().map((body) => [body.id, body])
-    )
-
-    for (const key of Array.from(currentPairs).sort()) {
-      if (this.activeSensorPairs.has(key)) continue
-      const { sensorId, bodyId } = parseSensorPairKey(key)
-      this.emitSensorObservation(
-        "enter",
-        sensorId,
-        bodyId,
-        bodyById.get(bodyId),
-        observations
-      )
-    }
-
-    for (const key of Array.from(this.activeSensorPairs).sort()) {
-      if (currentPairs.has(key)) continue
-      const { sensorId, bodyId } = parseSensorPairKey(key)
-      this.emitSensorObservation(
-        "exit",
-        sensorId,
-        bodyId,
-        bodyById.get(bodyId),
-        observations
-      )
-    }
-
-    this.activeSensorPairs = currentPairs
-  }
-
-  private emitSensorObservation(
-    direction: "enter" | "exit",
-    sensorId: string,
-    bodyId: string,
-    body: PhysicsBodyState | undefined,
-    observations: PhysicsObservationEvent[]
-  ): void {
-    const sensor = this.observation.sensors[sensorId]
-    this.emitObservation(
-      {
-        type:
-          direction === "enter"
-            ? (sensor?.enterType ?? "physics-bin-enter")
-            : (sensor?.exitType ?? "physics-bin-exit"),
-        timestamp: this.elapsedSeconds,
-        chartType: this.observation.chartType,
-        chartId: this.observation.chartId,
-        bodyId,
-        datum: body?.datum,
-        x: body?.x,
-        y: body?.y,
-        sensorId,
-        binId: sensor?.binId ?? sensorId
-      },
-      observations
+    this.activeSensorPairs = observePhysicsSensorTransitions(
+      this.world,
+      this.activeSensorPairs,
+      this.observationContext(observations)
     )
   }
 
   private removeActiveSensorPairsForBodies(bodyIds: Set<string>): void {
-    for (const key of Array.from(this.activeSensorPairs)) {
-      if (bodyIds.has(parseSensorPairKey(key).bodyId)) {
-        this.activeSensorPairs.delete(key)
-      }
+    removePhysicsSensorPairsForBodies(this.activeSensorPairs, bodyIds)
+  }
+
+  private observationContext(observations?: PhysicsObservationEvent[]) {
+    return {
+      elapsedSeconds: this.elapsedSeconds,
+      observation: this.observation,
+      emit: (event: PhysicsObservationEvent) => this.emitObservation(event, observations)
     }
   }
 
@@ -825,46 +841,23 @@ export class PhysicsPipelineStore {
     return decision
   }
 
-  private currentSimulationState(): PhysicsSimulationState {
-    if (this.paused || !this.visible) return "paused"
-    return this.queue.length > 0 || !this.world.allSleeping()
-      ? "running"
-      : "settled"
-  }
-
   private syncSimulationState(
     observations?: PhysicsObservationEvent[]
   ): void {
-    const next = this.currentSimulationState()
+    const next = resolvePhysicsSimulationState(
+      this.paused,
+      this.visible,
+      this.queue.length > 0,
+      this.world.allSleeping()
+    )
     if (next === this.simulationState) return
     const previous = this.simulationState
     this.simulationState = next
-    this.observation.onSimulationStateChange?.(next, previous)
-    if (next === "running") {
-      this.emitObservation(
-        {
-          type: "sim-active",
-          timestamp: this.elapsedSeconds,
-          chartType: this.observation.chartType,
-          chartId: this.observation.chartId,
-          simulationState: next,
-          previousSimulationState: previous
-        },
-        observations
-      )
-    } else if (next === "settled") {
-      this.emitObservation(
-        {
-          type: "sim-idle",
-          timestamp: this.elapsedSeconds,
-          chartType: this.observation.chartType,
-          chartId: this.observation.chartId,
-          simulationState: next,
-          previousSimulationState: previous
-        },
-        observations
-      )
-    }
+    emitPhysicsSimulationStateTransition(
+      previous,
+      next,
+      this.observationContext(observations)
+    )
   }
 
   private evictOverflow(
@@ -941,28 +934,4 @@ export class PhysicsPipelineStore {
     return [...sleeping, ...awake]
   }
 
-  private ensureBodyQuadtree(): Quadtree<PhysicsBodyState> | null {
-    if (this.bodyQuadtree && this.bodyQuadtreeRevision === this.revision) {
-      return this.bodyQuadtree
-    }
-
-    const bodies = this.world.readState()
-    if (bodies.length === 0) {
-      this.bodyQuadtree = null
-      this.maxBodySearchRadius = 0
-      this.bodyQuadtreeRevision = this.revision
-      return null
-    }
-
-    this.maxBodySearchRadius = bodies.reduce(
-      (max, body) => Math.max(max, bodySearchRadius(body)),
-      0
-    )
-    this.bodyQuadtree = d3Quadtree<PhysicsBodyState>()
-      .x((body) => body.x)
-      .y((body) => body.y)
-      .addAll(bodies)
-    this.bodyQuadtreeRevision = this.revision
-    return this.bodyQuadtree
-  }
 }

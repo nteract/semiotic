@@ -25,6 +25,7 @@ function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult):
 function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
 function fromURL(urlString: string): ChartConfig
 function inferIntent(query: string): InferIntentResult | null
+function inspectChart(input: ChartClinicInput, options?: ChartClinicOptions | undefined): ChartClinicReport
 function mobileVisualizationCaveats(): string[]
 function prepareChart(input: PrepareChartInput, options?: PrepareChartOptions | undefined): PrepareChartResult
 function profileData(data: readonly Datum[] | null | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
@@ -49,6 +50,13 @@ interface AccessibilityAuditResult
 interface AuditAccessibilityOptions
 interface AuditMobileVisualizationOptions
 interface BuildNavigationTreeOptions
+interface ChartClinicBundleGuidance
+interface ChartClinicInput
+interface ChartClinicOptions
+interface ChartClinicReport
+interface ChartClinicRevisionInput
+interface ChartClinicRevisionStatus
+interface ChartClinicSceneSummary
 interface ChartConfig
 interface ChartReaderGrounding
 interface ChartReaderGroundingOptions
@@ -89,6 +97,7 @@ interface VariantProposal
 interface VariantScore
 type A11yPrinciple = "perceivable" | "operable" | "understandable" | "robust" | "compromising" | "assistive" | "flexible"
 type A11yStatus = "pass" | "fail" | "warn" | "manual" | "not-applicable"
+type ChartClinicConfig = Omit<ChartConfig, "createdAt">
 type CommunicativeAct = "alerting" | "tracking" | "comparing" | "ranking" | "apportioning" | "characterizing" | "relating" | "tracing" | "nesting" | "locating" | "presenting"
 type CopyFormat = "json" | "jsx"
 type DescribeLevel = "l1" | "l2" | "l3" | "l4"

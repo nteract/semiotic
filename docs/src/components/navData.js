@@ -335,6 +335,7 @@ const navData = [
     children: [
       { title: "SSR Gallery", path: "/ssr-gallery" },
       { title: "Render Studio", path: "/server/studio" },
+      { title: "Chart Clinic (Beta)", path: "/server/chart-clinic" },
       { title: "Theme Showcase", path: "/server/themes" },
       { title: "Dashboard Gallery", path: "/server/dashboards" },
       { title: "Email Preview", path: "/server/email" },

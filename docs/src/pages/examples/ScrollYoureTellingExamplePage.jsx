@@ -155,10 +155,9 @@ export default function ScrollYoureTellingExamplePage() {
     <ExamplePageLayout title="The Scroll You're Telling">
       <p className="scroll-tell-lede">
         Every chart below is built from one stream: <em>you</em>, reading this. The page samples
-        your scroll position eight times a second and plots it live using the same realtime
-        machinery Semiotic points at a Wikipedia edit firehose or a market’s order flow, but in this
-        case turned around to watch the most intimate stream there is. Scroll, and tell it
-        something.
+        your scroll position eight times a second and plots it with the same realtime machinery
+        used for Wikipedia edits or market orders. As you read, the charts record where you pause,
+        skim, or move backward.
       </p>
 
       <ThemeProvider theme={carbonTheme}>
@@ -335,23 +334,19 @@ export default function ScrollYoureTellingExamplePage() {
       <section className="scroll-tell-thesis">
         <div className="scroll-tell-thesis-block">
           <span className="scroll-tell-kicker">Why this is the realtime case</span>
-          <h2>A snapshot can’t hold the shape of a stream</h2>
+          <h2>A stream preserves the order of reading</h2>
           <p>
-            “You read {summary.percentRead || 80}% of this” is a number. It hides the reread, the
-            stall, or the skim. That only exists if you watch the signal unfold. Realtime
-            visualization is not a chart that redraws quickly. It is a commitment to windows, signs,
-            and order: keeping only what fits in view, distinguishing forward from backward, and
-            tolerating beats that arrive late.
+            “You read {summary.percentRead || 80}% of this” omits rereads, stalls, and skims. The
+            live signal retains those changes through a rolling window, signed direction, and
+            arrival order.
           </p>
         </div>
         <div className="scroll-tell-thesis-block">
           <span className="scroll-tell-kicker">Reader as data source</span>
           <h2>Scrollytelling reacts to you. This reads you.</h2>
           <p>
-            “Snow Fall” bound the story to your scrollbar, but the frames were authored in advance
-            and you were simply a trigger, not a contributor. Point the same streaming primitives at
-            the reader and the relationship inverts. There is nothing pre-baked here; the only
-            content of these charts is your behavior.
+            “Snow Fall” used the scrollbar to reveal frames authored in advance. Here the reader's
+            behavior supplies the chart data itself: every pause and movement changes the views.
           </p>
         </div>
       </section>

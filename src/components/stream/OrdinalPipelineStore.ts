@@ -16,7 +16,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  * Consumed by: StreamOrdinalFrame (sole consumer).
  */
 import { scaleBand, scaleLinear, type ScaleBand, type ScaleLinear } from "d3-scale"
-import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
+import type { Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import type {
@@ -54,11 +54,14 @@ import {
 import type { MarginType } from "../types/marginType"
 import {
   compactTimestampBufferForRemoval,
-  createTimestampBufferForData,
   ensureRingBufferCapacity,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
-
+import type { UpdateResult } from "./pipelineUpdateContract"
+import { buildOrdinalCategoryIndex } from "./ordinalDataIndex"
+import { OrdinalPipelineUpdateResults } from "./ordinalPipelineUpdateResults"
+import { syncOrdinalPulseTimestampBuffer } from "./ordinalPulseResources"
+import { buildOrdinalPointSpatialIndex } from "./ordinalSpatialIndex"
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
 export class OrdinalPipelineStore {
@@ -68,6 +71,7 @@ export class OrdinalPipelineStore {
   private rExtents: IncrementalExtent[] = []
   private config: OrdinalPipelineConfig
   private windowSizeWarned = false
+  private updateResults = new OrdinalPipelineUpdateResults()
 
   private getO: (d: Datum) => string
   private getR: (d: Datum) => number
@@ -129,7 +133,6 @@ export class OrdinalPipelineStore {
   /** Materialized source data, cached for pulse/decay animation frames. */
   private _bufferArrayCache: { version: number; data: Datum[] } | null = null
   // Spatial index for point hit testing (built when point count exceeds threshold)
-  private static readonly QUADTREE_THRESHOLD = 500
   private _pointQuadtree: Quadtree<PointSceneNode> | null = null
   /** Largest visual point radius in the current scene. */
   private _maxPointRadius = 0
@@ -185,17 +188,12 @@ export class OrdinalPipelineStore {
    * empty ring would associate later timestamps with the wrong datum index.
    */
   private syncPulseTimestampBuffer(): void {
-    if (!this.config.pulse) {
-      this.timestampBuffer = null
-      return
-    }
-
-    const isAligned = this.timestampBuffer != null
-      && this.timestampBuffer.capacity === this.buffer.capacity
-      && this.timestampBuffer.size === this.buffer.size
-    if (!isAligned) {
-      this.timestampBuffer = createTimestampBufferForData(this.buffer, getTimestamp())
-    }
+    this.timestampBuffer = syncOrdinalPulseTimestampBuffer(
+      Boolean(this.config.pulse),
+      this.buffer,
+      this.timestampBuffer,
+      getTimestamp()
+    )
   }
 
   // ── Data ingestion ───────────────────────────────────────────────────
@@ -251,7 +249,16 @@ export class OrdinalPipelineStore {
       }
     }
 
+    this.updateResults.recordData(
+      changeset.bounded ? "replace" : "ingest",
+      changeset.inserts.length
+    )
     return true
+  }
+
+  ingestWithResult(changeset: Changeset): UpdateResult {
+    this.ingest(changeset)
+    return this.updateResults.last
   }
 
   private pushValueExtent(d: Datum): void {
@@ -826,20 +833,10 @@ export class OrdinalPipelineStore {
     if (this._categoryIndexCache && this._categoryIndexCache.version === this._dataVersion) {
       return this._categoryIndexCache.map
     }
-    const oAcc = this.config.categoryAccessor || this.config.oAccessor
-    const isFn = typeof oAcc === "function"
-    const key = isFn ? null : (oAcc || "category")
-    const map = new Map<string, number[]>()
-    for (let i = 0; i < data.length; i++) {
-      const d = data[i]
-      const cat = isFn ? (oAcc as ((...args: any[]) => any))(d) : d[key as string]
-      let arr = map.get(cat)
-      if (!arr) {
-        arr = []
-        map.set(cat, arr)
-      }
-      arr.push(i)
-    }
+    const map = buildOrdinalCategoryIndex(
+      data,
+      this.config.categoryAccessor || this.config.oAccessor
+    )
     this._categoryIndexCache = { version: this._dataVersion, map }
     return map
   }
@@ -851,30 +848,9 @@ export class OrdinalPipelineStore {
    * tests via bbox checks.
    */
   private rebuildPointQuadtree(): void {
-    let pointCount = 0
-    let maxR = 0
-    for (const node of this.scene) {
-      if (node.type === "point") {
-        pointCount++
-        if (node.r > maxR) maxR = node.r
-      }
-    }
-    this._maxPointRadius = maxR
-
-    if (pointCount <= OrdinalPipelineStore.QUADTREE_THRESHOLD) {
-      this._pointQuadtree = null
-      return
-    }
-
-    const points: PointSceneNode[] = new Array(pointCount)
-    let i = 0
-    for (const node of this.scene) {
-      if (node.type === "point") points[i++] = node as PointSceneNode
-    }
-    this._pointQuadtree = d3Quadtree<PointSceneNode>()
-      .x(n => n.x)
-      .y(n => n.y)
-      .addAll(points)
+    const index = buildOrdinalPointSpatialIndex(this.scene)
+    this._pointQuadtree = index.quadtree
+    this._maxPointRadius = index.maxRadius
   }
 
   /** Quadtree spatial index for point hit testing, or null when below threshold. */
@@ -1322,6 +1298,11 @@ export class OrdinalPipelineStore {
     return this.buffer.toArray()
   }
 
+  /** Most recent additive update result for revision-aware hosts and tests. */
+  getLastUpdateResult(): UpdateResult {
+    return this.updateResults.last
+  }
+
   /**
    * Remove data items by ID. Requires dataIdAccessor to be configured.
    * Returns the removed items. Marks the store dirty for scene rebuild.
@@ -1339,7 +1320,10 @@ export class OrdinalPipelineStore {
     const predicate = (item: Datum) => ids.has(getDataId(item))
     compactTimestampBufferForRemoval(this.buffer, this.timestampBuffer, predicate)
     const removed = this.buffer.remove(predicate)
-    if (removed.length === 0) return removed
+    if (removed.length === 0) {
+      this.updateResults.recordNoop("remove")
+      return removed
+    }
 
     for (const d of removed) {
       this.evictValueExtent(d)
@@ -1353,6 +1337,7 @@ export class OrdinalPipelineStore {
     this.version++
     // A removal is data activity — refresh the staleness clock.
     this.lastIngestTime = getTimestamp()
+    this.updateResults.recordData("remove", removed.length)
     return removed
   }
 
@@ -1374,7 +1359,10 @@ export class OrdinalPipelineStore {
       item => ids.has(getDataId(item)),
       updater
     )
-    if (previous.length === 0) return previous
+    if (previous.length === 0) {
+      this.updateResults.recordNoop("update")
+      return previous
+    }
 
     // Evict old values using the existing extent helper (handles timeline/multiAxis)
     for (const old of previous) {
@@ -1394,6 +1382,7 @@ export class OrdinalPipelineStore {
     // An in-place update is data activity — refresh the staleness clock so a
     // chart streamed via update() (e.g. a refill demo) isn't flagged stale.
     this.lastIngestTime = getTimestamp()
+    this.updateResults.recordData("update", previous.length)
     return previous
   }
 
@@ -1428,6 +1417,7 @@ export class OrdinalPipelineStore {
     this._colorSchemeIndex = 0
     this._dataVersion++
     this.version++
+    this.updateResults.recordData("clear")
   }
 
   get size(): number {
@@ -1463,8 +1453,12 @@ export class OrdinalPipelineStore {
    * No-op when the layout supplied no `restyle`.
    */
   restyleScene(selection: CustomLayoutSelection | null): void {
-    if (!this._customRestyle) return
+    if (!this._customRestyle) {
+      this.updateResults.recordRestyle(false)
+      return
+    }
     this.applyCustomRestyle(this.scene, selection)
+    this.updateResults.recordRestyle(true)
   }
 
   /**
@@ -1487,6 +1481,10 @@ export class OrdinalPipelineStore {
 
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
     const prev = { ...this.config }
+    const changedConfigKeys = Object.keys(config).filter(
+      (key) => (config as Record<string, unknown>)[key] !==
+        (prev as Record<string, unknown>)[key]
+    )
 
     // `windowSize` allocates the data and pulse rings in the constructor.
     // Resizing it after mount would need coordinated category/extent and
@@ -1604,5 +1602,11 @@ export class OrdinalPipelineStore {
     if (oAccessorChanged || rAccessorChanged || accessorRevisionChanged) {
       this.rebuildAccessorDerivedState()
     }
+    this.updateResults.recordConfig(changedConfigKeys)
+  }
+
+  updateConfigWithResult(config: Partial<OrdinalPipelineConfig>): UpdateResult {
+    this.updateConfig(config)
+    return this.updateResults.last
   }
 }

@@ -207,8 +207,7 @@ export default function ClimateAnomalyExamplePage() {
       title="Point Climate Anomaly"
     >
       <p style={styles.lede}>
-        A static-first recreation of a point climate comparison: current-year daily
-        mean temperature against a historical daily mean, framed by a hatched
+        Compare each day this year with the historical daily mean. A hatched
         5th-95th percentile band.
       </p>
 

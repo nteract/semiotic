@@ -203,9 +203,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       transition,
       introEnabled,
       tableId,
-      rafRef,
-      renderFnRef,
-      scheduleRender,
+      rafRef, renderFnRef, scheduleRender, cancelRender,
       currentTheme,
     } = frame
 
@@ -708,7 +706,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // ── Main render function ──────────────────────────────────────────
 
     renderFnRef.current = () => {
-      rafRef.current = 0
+      rafRef.current = null
       const canvas = canvasRef.current
       const store = storeRef.current
       if (!canvas || !store) return
@@ -986,7 +984,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
       // Reschedule if animating or tiles still loading
       if (isTransitioning || store.activeTransition != null || store.hasActivePulses || needsContinuation) {
-        rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+        scheduleRender()
       }
     }
 
@@ -998,6 +996,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       storeRef,
       dirtyRef,
       renderFnRef,
+      cancelRender,
       // Geo-specific: clear the tile cache on unmount so background
       // map tiles don't leak across remounts.
       cleanup: () => tileCacheRef.current?.clear(),

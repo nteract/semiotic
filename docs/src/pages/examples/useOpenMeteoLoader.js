@@ -1,27 +1,45 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { fetchOpenMeteoExampleData } from "./openMeteoExampleData"
+import {
+  ADAPTER_KIND_TO_VIEW_KIND,
+  createOpenMeteoDataAdapterState,
+  transitionOpenMeteoDataAdapter,
+  OPEN_METEO_DEFAULT_HISTORICAL_MESSAGE,
+} from "./openMeteoDataAdapter"
 
-export const HISTORICAL_READY_MESSAGE = "A local 1991–2020 reference is ready to explore."
+export const HISTORICAL_READY_MESSAGE = OPEN_METEO_DEFAULT_HISTORICAL_MESSAGE
+
+const SLOW_TIMEOUT_MS = 2500
+const REQUEST_TIMEOUT_MS = 10_000
+
+function mapViewKindToAdapterKind(kind = "historical") {
+  if (kind === "live") return "live"
+  return "snapshot"
+}
+
+function mapAdapterStateToView(adapterState) {
+  return {
+    kind: adapterState.isLoading
+      ? "loading"
+      : ADAPTER_KIND_TO_VIEW_KIND[adapterState.kind] ?? "historical",
+    dataKind: adapterState.kind,
+    message: adapterState.message,
+  }
+}
+
+function defaultCacheKey(profile) {
+  if (typeof profile?.id === "string" && profile.id.trim()) return profile.id
+  const latitude = Number(profile?.lat)
+  const longitude = Number(profile?.lon)
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    return `${latitude.toFixed(3)},${longitude.toFixed(3)}`
+  }
+  return null
+}
 
 /**
- * The shared Open-Meteo loading state machine behind the two Climate example
- * pages (Point Climate Anomaly, Brushable Weather Rings): abortable request
- * lifecycle, a slow-request escalation after 2.5s, the historical-fallback
- * path, and browser geolocation. The pages keep what genuinely differs —
- * their fallback generators, their coordinate→profile mappings, and their
- * banner/controls art direction — and pass those in.
- *
- * @param {object} options
- * @param {object} options.initialProfile        First preset profile.
- * @param {(profile) => unknown} options.buildFallback  Local fallback payload for a profile.
- * @param {string} options.fallbackKey           Option key `fetchOpenMeteoExampleData`
- *                                               expects the fallback under
- *                                               (`"fallbackClimateRows"` / `"fallbackWeather"`).
- * @param {(lat, lon) => object} options.profileFromCoordinates  Page-specific mapping.
- * @param {string} options.loadingMessage        Copy while a direct load is in flight.
- * @param {string} options.locationLoadingMessage Copy while waiting on geolocation.
- * @param {(data) => string} options.liveMessage  Copy for a successful live load.
- * @param {string} options.failureMessage        Copy when Open-Meteo is unavailable.
+ * The shared Open-Meteo loading state machine behind the Climate example
+ * pages, extracted so request lifecycle can be tested independent of UI.
  */
 export function useOpenMeteoLoader({
   initialProfile,
@@ -32,91 +50,205 @@ export function useOpenMeteoLoader({
   locationLoadingMessage,
   liveMessage,
   failureMessage,
+  requestTimeoutMs = REQUEST_TIMEOUT_MS,
+  cacheKey = defaultCacheKey,
 }) {
   const [profile, setProfile] = useState(initialProfile)
   const [liveData, setLiveData] = useState(null)
-  const [view, setView] = useState({ kind: "historical", message: HISTORICAL_READY_MESSAGE })
-  const [isSlow, setIsSlow] = useState(false)
+  const [adapterState, dispatch] = useReducer(
+    transitionOpenMeteoDataAdapter,
+    createOpenMeteoDataAdapterState(),
+  )
   const requestRef = useRef(null)
+  const requestSequence = useRef(0)
   const slowTimerRef = useRef(null)
+  const timeoutTimerRef = useRef(null)
+  const dataCacheRef = useRef(new Map())
 
   useEffect(() => {
     return () => {
-      requestRef.current?.abort()
-      if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
+      requestRef.current?.controller?.abort()
+      clearActiveLoadTimers()
     }
   }, [])
 
-  function beginLoading(message) {
-    requestRef.current?.abort()
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
+  function clearActiveLoadTimers() {
+    if (slowTimerRef.current) {
+      window.clearTimeout(slowTimerRef.current)
+      slowTimerRef.current = null
+    }
+    if (timeoutTimerRef.current) {
+      window.clearTimeout(timeoutTimerRef.current)
+      timeoutTimerRef.current = null
+    }
+  }
 
+  function isCurrentRequest(requestId) {
+    return Boolean(requestRef.current && requestRef.current.requestId === requestId)
+  }
+
+  function beginLoad(message) {
+    requestRef.current?.controller.abort()
+    clearActiveLoadTimers()
+
+    const nextId = requestSequence.current + 1
+    requestSequence.current = nextId
     const controller = new AbortController()
-    requestRef.current = controller
-    setIsSlow(false)
-    setView({ kind: "loading", message })
+    const nextRequest = { requestId: nextId, controller, timedOut: false }
+    requestRef.current = nextRequest
+
+    dispatch({
+      type: "begin-load",
+      requestId: nextId,
+      message,
+    })
+
     slowTimerRef.current = window.setTimeout(() => {
-      if (requestRef.current === controller) setIsSlow(true)
-    }, 2500)
-    return controller
+      if (isCurrentRequest(nextId)) dispatch({ type: "set-slow", requestId: nextId })
+    }, SLOW_TIMEOUT_MS)
+
+    if (Number.isFinite(requestTimeoutMs) && requestTimeoutMs > SLOW_TIMEOUT_MS) {
+      timeoutTimerRef.current = window.setTimeout(() => {
+        if (!isCurrentRequest(nextId)) return
+        nextRequest.timedOut = true
+        nextRequest.controller.abort()
+      }, requestTimeoutMs)
+    }
+
+    return nextRequest
   }
 
-  function finishLoading(controller) {
-    if (requestRef.current !== controller) return false
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
-    slowTimerRef.current = null
+  function endLoad(requestId) {
+    if (!isCurrentRequest(requestId)) return false
+    const request = requestRef.current
+    clearActiveLoadTimers()
     requestRef.current = null
-    setIsSlow(false)
-    return true
+    return request
   }
 
-  function showHistorical(nextProfile, message = HISTORICAL_READY_MESSAGE) {
-    requestRef.current?.abort()
-    if (slowTimerRef.current) window.clearTimeout(slowTimerRef.current)
+  function abortLoad() {
+    const request = requestRef.current
+    if (!request) return
+    request.controller.abort()
     requestRef.current = null
-    slowTimerRef.current = null
-    setIsSlow(false)
+    dispatch({ type: "abort-load", requestId: request.requestId })
+    clearActiveLoadTimers()
+  }
+
+  function normalizeLoadContext(existingRequest) {
+    if (
+      existingRequest?.controller &&
+      existingRequest.requestId != null &&
+      isCurrentRequest(existingRequest.requestId)
+    ) {
+      return existingRequest
+    }
+    return beginLoad(loadingMessage)
+  }
+
+  function cacheCurrentData(nextProfile, data) {
+    const key = cacheKey(nextProfile)
+    if (key != null) dataCacheRef.current.set(key, data)
+  }
+
+  function readCachedData(nextProfile) {
+    const key = cacheKey(nextProfile)
+    return key == null ? undefined : dataCacheRef.current.get(key)
+  }
+
+  async function loadCurrentData(nextProfile, existingLoad) {
+    const load = normalizeLoadContext(existingLoad)
     setProfile(nextProfile)
     setLiveData(null)
-    setView({ kind: "historical", message })
-  }
 
-  async function loadCurrentData(nextProfile, controller = beginLoading(loadingMessage)) {
-    setProfile(nextProfile)
-    setLiveData(null)
     try {
       const data = await fetchOpenMeteoExampleData(nextProfile, {
-        signal: controller.signal,
+        signal: load.controller.signal,
         [fallbackKey]: buildFallback(nextProfile),
       })
-      if (!finishLoading(controller)) return
+
+      if (!endLoad(load.requestId)) return
+      cacheCurrentData(nextProfile, data)
+      dispatch({
+        type: "set-result",
+        requestId: load.requestId,
+        // The response still contains live observations when its historical
+        // baseline falls back to a bundled reference. Reserve `fallback` for
+        // a cached/local response used after the request itself fails.
+        kind: "live",
+        message: liveMessage(data),
+      })
       setLiveData(data)
-      setView({ kind: "live", message: liveMessage(data) })
     } catch (error) {
-      if (error.name === "AbortError" || !finishLoading(controller)) return
-      setView({ kind: "historical", message: failureMessage })
+      const completedRequest = endLoad(load.requestId)
+      if (!completedRequest) return
+      if (error?.name === "AbortError" && !completedRequest.timedOut) return
+
+      const cached = readCachedData(nextProfile)
+      if (cached) {
+        dispatch({
+          type: "set-result",
+          requestId: load.requestId,
+          kind: "fallback",
+          message: `${failureMessage} Showing the last cached response instead.`,
+        })
+        setLiveData(cached)
+        return
+      }
+
+      dispatch({
+        type: "set-result",
+        requestId: load.requestId,
+        kind: "error",
+        message: failureMessage,
+      })
     }
+  }
+
+  function showHistorical(
+    nextProfile,
+    message = OPEN_METEO_DEFAULT_HISTORICAL_MESSAGE,
+  ) {
+    abortLoad()
+    setProfile(nextProfile)
+    setLiveData(null)
+    dispatch({
+      type: "set-view",
+      requestId: requestRef.current?.requestId,
+      kind: "snapshot",
+      message,
+    })
+  }
+
+  function replayFixture(
+    nextProfile = profile,
+    message = OPEN_METEO_DEFAULT_HISTORICAL_MESSAGE,
+  ) {
+    showHistorical(nextProfile, message)
   }
 
   function requestBrowserLocation() {
     if (!navigator.geolocation) {
-      setView({
-        kind: liveData ? "live" : "historical",
+      dispatch({
+        type: "set-view",
+        kind: liveData ? "live" : "snapshot",
         message: "Browser geolocation is not available.",
       })
       return
     }
 
-    const controller = beginLoading(locationLoadingMessage)
+    const load = beginLoad(locationLoadingMessage)
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (!isCurrentRequest(load.requestId)) return
         const { latitude, longitude } = position.coords
-        loadCurrentData(profileFromCoordinates(latitude, longitude), controller)
+        loadCurrentData(profileFromCoordinates(latitude, longitude), load)
       },
       () => {
-        if (!finishLoading(controller)) return
-        setView({
-          kind: liveData ? "live" : "historical",
+        if (!endLoad(load.requestId)) return
+        dispatch({
+          type: "set-view",
+          kind: liveData ? "live" : "snapshot",
           message: "Location permission was not granted. The previous data remains in view.",
         })
       },
@@ -124,14 +256,31 @@ export function useOpenMeteoLoader({
     )
   }
 
+  function setView(view) {
+    // A manual view choice supersedes any in-flight response. Without this,
+    // a late request can update `liveData` after the reducer has already
+    // switched to snapshot/fallback, leaving the chart and its status banner
+    // describing different data sources.
+    abortLoad()
+    const nextKind = mapViewKindToAdapterKind(view.kind)
+    dispatch({
+      type: "set-view",
+      kind: nextKind,
+      message: view.message,
+    })
+  }
+
+  const view = useMemo(() => mapAdapterStateToView(adapterState), [adapterState])
+
   return {
     profile,
     liveData,
     view,
     setView,
-    isSlow,
-    isLoading: view.kind === "loading",
+    isSlow: adapterState.isSlow,
+    isLoading: adapterState.isLoading,
     showHistorical,
+    replayFixture,
     loadCurrentData,
     requestBrowserLocation,
   }

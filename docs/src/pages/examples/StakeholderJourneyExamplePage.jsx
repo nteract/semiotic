@@ -621,8 +621,8 @@ export default function StakeholderJourneyExamplePage() {
             <code> processVolumePolygons</code> now share one geometry. Meanwhile,
             <code> updateProcessJourney</code> records first entry, repeat visits,
             regressions, and furthest progress per entity. <code>processJourneyRows</code>
-            turns that evidence into the Leadership count that expands the whole
-            corridor by two pixels per participant.
+            computes the Leadership count from that evidence. Each participant expands the
+            corridor by two pixels.
           </p>
         </section>
       </div>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Semiotic browser machine baseline</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #ffffff;
+      }
+
+      #root {
+        width: 640px;
+        min-height: 360px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- This exact shell is intentionally present before JavaScript so the
+         harness measures a real hydrateRoot commit rather than a client-only
+         mount mislabeled as hydration. -->
+    <main id="root" data-semiotic-machine-baseline-root="true"><div data-semiotic-machine-baseline-shell="true">Semiotic browser baseline</div></main>
+    <script type="module" src="./index.jsx"></script>
+  </body>
+</html>

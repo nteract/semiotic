@@ -85,3 +85,15 @@ describe("validateProps — array charts require data in static usage", () => {
     })
   }
 })
+
+describe("validateProps — declared non-data array inputs", () => {
+  it("accepts FlowMap's documented flows input without inventing an unknown data prop", () => {
+    const result = validateProps("FlowMap", {
+      flows: [],
+      nodes: [],
+      lineIdAccessor: "id",
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).not.toContain('"data" is required for FlowMap.')
+  })
+})

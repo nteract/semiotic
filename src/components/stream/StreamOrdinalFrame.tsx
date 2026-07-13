@@ -205,9 +205,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       transition,
       introEnabled,
       tableId,
-      rafRef,
-      renderFnRef,
-      scheduleRender,
+      rafRef, renderFnRef, scheduleRender, cancelRender,
     } = frame
 
     // ── Hydration boundary ───────────────────────────────────────────────
@@ -717,7 +715,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     // ── Render function ──────────────────────────────────────────────────
 
     renderFnRef.current = () => {
-      rafRef.current = 0
+      rafRef.current = null
       const canvas = canvasRef.current
       if (!canvas) return
 
@@ -857,7 +855,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       // Continue transitions and active pulse frames.
       const needsContinuation = isTransitioning || store.activeTransition != null || pulseRefresh.pending
       if (needsContinuation) {
-        rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+        scheduleRender()
       }
     }
 
@@ -869,6 +867,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       storeRef,
       dirtyRef,
       renderFnRef,
+      cancelRender,
       cleanup: () => adapterRef.current?.clear(),
     })
 
