@@ -6,6 +6,53 @@ type BrowserProblem = {
   message: string
 }
 
+/**
+ * A few flagship examples intentionally fetch live third-party data on mount
+ * (civic records, weather, a public edit stream) and are designed to degrade
+ * to an explicit "unavailable" notice per source when that data can't be
+ * reached — see e.g. docs/src/pages/examples/localGovernmentData.js. Even
+ * though the app already handles the rejected fetch/EventSource, the browser
+ * itself still emits a console message for a blocked/failed cross-origin
+ * request ("blocked by CORS policy", "net::ERR_FAILED") whenever the upstream
+ * service has a hiccup — that's true regardless of app-level error handling.
+ * The generic "net::ERR_FAILED" message doesn't name the offending host, so
+ * it's matched against actual failed requests (`requestfailed`) rather than
+ * message text. Tolerate it only when the failed request itself hit a host a
+ * given route intentionally reaches, so a genuinely broken lazy import or
+ * same-origin asset failure still fails the route contract for every route.
+ */
+const NATIVE_NETWORK_FAILURE = /blocked by CORS policy|net::ERR_FAILED/
+const LIVE_EXTERNAL_DATA_HOSTS_BY_ROUTE: Record<string, string[]> = {
+  "/examples/local-government-explorer": [
+    "api.usaspending.gov",
+    "api.zippopotam.us",
+    "datasets-server.huggingface.co",
+    "geo.fcc.gov",
+    "www.fema.gov",
+    "data.seattle.gov",
+    "data.sfgov.org",
+    "data.cityofchicago.org",
+    "data.austintexas.gov",
+  ],
+  "/examples/climate-anomaly": ["api.open-meteo.com", "archive-api.open-meteo.com", "geocoding-api.open-meteo.com"],
+  "/examples/climate-radial-weather": [
+    "api.open-meteo.com",
+    "archive-api.open-meteo.com",
+    "geocoding-api.open-meteo.com",
+  ],
+  "/examples/wikipedia-realtime": ["stream.wikimedia.org"],
+}
+
+function isExpectedLiveDataNetworkProblem(
+  problem: BrowserProblem,
+  allowedHosts: string[],
+  failedRequestHosts: string[],
+): boolean {
+  if (problem.kind !== "console" || !NATIVE_NETWORK_FAILURE.test(problem.message)) return false
+  if (allowedHosts.some((host) => problem.message.includes(host))) return true
+  return failedRequestHosts.some((host) => allowedHosts.includes(host))
+}
+
 // A cold Vite process transforms many large lazy route modules on first use.
 // Keep each assertion batch small enough to localize a slow page while
 // preserving one server/module cache for the complete manifest walk.
@@ -37,6 +84,7 @@ test.describe("docs example source route smoke", () => {
       `mounts example source routes ${batchIndex + 1}/${EXAMPLE_ROUTE_BATCHES.length} (${firstPath} through ${lastPath})`,
       async ({ page }) => {
         const problems: BrowserProblem[] = []
+        const failedRequestHosts: string[] = []
 
         page.on("console", (message) => {
           if (message.type() === "error") {
@@ -46,9 +94,17 @@ test.describe("docs example source route smoke", () => {
         page.on("pageerror", (error) => {
           problems.push({ kind: "pageerror", message: error.message })
         })
+        page.on("requestfailed", (request) => {
+          try {
+            failedRequestHosts.push(new URL(request.url()).host)
+          } catch {
+            // Malformed/opaque request URL — nothing to correlate against.
+          }
+        })
 
         for (const example of examples) {
           const before = problems.length
+          const hostsBefore = failedRequestHosts.length
           await test.step(example.path, async () => {
             await page.goto(example.path, { waitUntil: "domcontentloaded" })
 
@@ -64,7 +120,11 @@ test.describe("docs example source route smoke", () => {
             })
           })
 
-          const routeProblems = problems.slice(before)
+          const allowedHosts = LIVE_EXTERNAL_DATA_HOSTS_BY_ROUTE[example.path] ?? []
+          const routeFailedHosts = failedRequestHosts.slice(hostsBefore)
+          const routeProblems = problems
+            .slice(before)
+            .filter((problem) => !isExpectedLiveDataNetworkProblem(problem, allowedHosts, routeFailedHosts))
           expect(routeProblems, `source route ${example.path} emitted browser errors`).toEqual([])
         }
       },
