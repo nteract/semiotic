@@ -70,9 +70,9 @@ export default function SemioticArchitectureExamplePage() {
   return (
     <ExamplePageLayout title="The Living System of Semiotic">
       <p className="architecture-lede">
-        Semiotic presents a crown of charts and controls, but those visible forms grow from five
-        frame models, two ways of receiving data, and a rhizomatic implementation beneath the
-        surface. Choose an example to trace the exact branch, settings, trunk, and roots it uses.
+        This map connects Semiotic's visible charts and controls to five frame models, two data
+        paths, and the internal systems they share. Choose an example to highlight only the parts
+        used by that composition.
       </p>
 
       <section className="architecture-controls" aria-labelledby="architecture-example-heading">
@@ -159,7 +159,7 @@ export default function SemioticArchitectureExamplePage() {
       <section className="architecture-explanation">
         <div>
           <span className="architecture-kicker">How to read it</span>
-          <h2>A diagram of diagrammatic functionality</h2>
+          <h2>How public charts connect to shared internals</h2>
         </div>
         <div className="architecture-explanation-grid">
           <p>

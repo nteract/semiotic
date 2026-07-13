@@ -93,7 +93,7 @@ const LINEAGE = [
     year: "1995",
     title: "Natural frequencies",
     who: "Gigerenzer & Hoffrage",
-    line: "“18 of 100 commuters” beats “18%” — risk as visible cases.",
+    line: "Show risk as 18 visible cases among 100 commuters.",
     motif: "frequency",
   },
   {
@@ -1226,7 +1226,7 @@ function SometimesDiscreteExamplePage() {
           <ChartPanel
             eyebrow="01 · Continuous"
             title="Area is the answer"
-            note="A density curve has the right math, but reading interval probability means integrating shaded area by eye. Commit to a guess before revealing — that felt effort is the lesson."
+            note="A density curve represents the probability correctly, but the reader must estimate a shaded area. Commit to a guess before revealing the count so you can compare the two tasks."
             metric={revealed ? `${actualPct}%` : "?"}
             recommended={recommendedPanel === "density"}
             actions={
@@ -1470,7 +1470,7 @@ function SometimesDiscreteExamplePage() {
         <section className="discrete-example__code">
           <div>
             <div className="discrete-example__eyebrow">Implementation</div>
-            <h2>The example is not drawing icons by hand.</h2>
+            <h2>TokenLayer generates the countable marks.</h2>
             <p>
               Semantics first, then placement, then marks: <code>generateTokens</code> decides what
               each token means, the <code>dotplot</code> layout Wilkinson-stacks the quantiles, and{" "}

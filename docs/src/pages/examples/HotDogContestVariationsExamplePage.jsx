@@ -114,10 +114,9 @@ export default function HotDogContestVariationsExamplePage() {
   return (
     <ExamplePageLayout title="Nathan's Hot Dog Contest, Four Ways">
       <p className="hotdog-page__lede">
-        Four source-audited remakes of the supplied Nathan&apos;s hot dog contest chart. The
-        direction is deliberately system-native: clear hierarchy, stable spacing, restrained
-        palette, explicit source caveats, and chart forms that could ship as real Semiotic examples
-        rather than one-off poster art.
+        Four views of the same source-audited Nathan&apos;s contest record. Compare annual winners,
+        count totals in five-HDB units, inspect rule changes, and separate eating pace from contest
+        duration.
       </p>
 
       <div className="hotdog" ref={pageRef}>
@@ -184,8 +183,8 @@ export default function HotDogContestVariationsExamplePage() {
         <VariationSection
           number="02"
           eyebrow="ISOTYPE ledger · one sign equals five HDB"
-          title="Replace magnitude theater with countable units"
-          note="The ISOTYPE treatment makes every winner countable and keeps gender visible without turning two female winners into a decorative color footnote."
+          title="Count each winning total in five-HDB units"
+          note="The ISOTYPE treatment makes every winner countable and gives the men's and women's records separate rows."
         >
           <IsotypeLedger />
         </VariationSection>
@@ -193,7 +192,7 @@ export default function HotDogContestVariationsExamplePage() {
         <VariationSection
           number="03"
           eyebrow="Audited remake · line plus event bands"
-          title="Keep the reference chart, but make the evidence cleaner"
+          title="Clean up the evidence in the reference chart"
           note="This version preserves the familiar upward trace, adds the documented gaps and rule events, and labels the 2010 source discrepancy directly."
         >
           <TrajectoryChart />

@@ -145,8 +145,8 @@ export default function OregonTrailExamplePage() {
       <section className="ot-sankey-section">
         <h2 className="ot-sankey-heading">Every fork in the trail</h2>
         <p className="ot-sankey-intro">
-          The map is a line, but the <em>game</em> is a series of decisions. Reconstructing the
-          branch points from the trail's logic: how you cross each river, which way you turn at
+          The map shows the route; the <em>game</em> asks you to make decisions along it. This flow
+          reconstructs the branch points: how you cross each river, which way you turn at
           South Pass, and the last gamble at The Dalles. Here a cohort of {OT.SANKEY_START_COUNT}{" "}
           wagon parties flows west through those forks; a ribbon bleeds off to{" "}
           <strong>Perished</strong> at the deadliest points.

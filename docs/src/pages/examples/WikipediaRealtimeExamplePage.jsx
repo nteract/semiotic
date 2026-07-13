@@ -266,7 +266,7 @@ export default function WikipediaRealtimeExamplePage() {
         <div className="wiki-realtime-control-heading">
           <div>
             <span className="wiki-realtime-kicker">Ask the stream</span>
-            <h2>Turn the firehose into a question</h2>
+            <h2>Choose which edits to follow</h2>
           </div>
           <div className="wiki-realtime-stream-actions">
             <button

@@ -165,7 +165,7 @@ const SCENARIOS = [
     short: "Before restoration",
     title: "Wolves absent",
     chapter: "A simplified system already carrying history",
-    narrative: "Elk browsing is prominent, but the system is not a two-species fable. Hydrology, harvest, other predators, and legacy conditions are already present.",
+    narrative: "Elk browsing is prominent within a larger system that already includes hydrology, harvest, other predators, and legacy conditions.",
     values: { wolves: 0, elk: 100, coyotes: 84, scavengers: 34, "woody-plants": 25, beavers: 18, wetlands: 30, biodiversity: 38, harvest: 55, climate: 42, bison: 26 },
   },
   {
@@ -453,8 +453,8 @@ export default function YellowstoneExamplePage() {
             <span className="yellowstone__kicker">Constraint topology as a field-guide mobile</span>
             <p>
               Restore wolves and watch a signed ecological topology seek a new equilibrium.
-              The movement is an explanation of dependencies, not a claim that ecosystems are
-              literal springs. Every plate keeps its identity while its index, evidence, and
+              Spring movement keeps the dependencies legible; it does not encode a literal
+              ecosystem. Every plate keeps its identity while its index, evidence, and
               constraints change by chapter.
             </p>
           </div>
@@ -597,11 +597,11 @@ export default function YellowstoneExamplePage() {
         <section className="yellowstone__reading" aria-labelledby="yellowstone-reading-title">
           <div>
             <span className="yellowstone__kicker">How to read the mobile</span>
-            <h2 id="yellowstone-reading-title">Motion is a process channel, not a hidden measure.</h2>
+            <h2 id="yellowstone-reading-title">Motion shows the topology settling after a change.</h2>
           </div>
           <div className="yellowstone__reading-grid">
             <article><strong>Value</strong><p>Repeated glyphs and printed index expose quantity. Collision envelopes stay fixed.</p></article>
-            <article><strong>Relation</strong><p>Green plus and rust minus wires expose curated topology. Stiffness is not effect size.</p></article>
+            <article><strong>Relation</strong><p>Green plus and rust minus wires expose curated topology. Stiffness controls legibility only.</p></article>
             <article><strong>Scenario</strong><p>Stable IDs reheat from their prior positions. New glyphs bud locally instead of becoming new flying objects.</p></article>
             <article><strong>Uncertainty</strong><p>Dashed wires, evidence notes, lags, and caveats stay visible in the static reading.</p></article>
           </div>

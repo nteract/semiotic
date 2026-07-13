@@ -135,8 +135,8 @@ export default function UrineWheelExamplePage() {
       </p>
       <p style={styles.recipeContract}>
         Inspectable recipe contract: <code>{urineWheelRecipeManifest.id}</code>. This is a{" "}
-        <strong>situated explanatory chart</strong>, not a comparison chart wearing a historical
-        theme: the wheel preserves the worldview that organized colors into diagnoses.
+        <strong>situated explanatory chart</strong>: the wheel preserves the historical worldview
+        that organized colors into diagnoses.
       </p>
       <IntentMark
         manifest={intentManifestFromRecipe(urineWheelRecipeManifest, {
@@ -230,7 +230,7 @@ export default function UrineWheelExamplePage() {
       <section style={styles.editorial}>
         <h2>Reading the wheel</h2>
         <p>
-          The colors are not arranged arbitrarily. They form a single spectrum that wraps the ring:
+          The color order follows a single spectrum that wraps the ring:
           the two pathological extremes — <em>Albus</em> (white, the raw, uncooked humor) and{" "}
           <em>Niger</em> (black, the humor burnt to death) — meet at the bottom, while{" "}
           <em>Rufus</em> and the golds, the urines of perfect coction, crown the top. Read clockwise
@@ -260,12 +260,12 @@ export default function UrineWheelExamplePage() {
           hand-drawn diagram is a first-class Semiotic chart. It is fully keyboard navigable (Tab
           into the wheel, then arrow between marks); it carries a screen-reader data table and a
           layered description; the physician&apos;s notes are real <code>annotations</code> anchored
-          to nodes by id and carrying provenance (a human gloss, not an inference); and the
+          to nodes by id and carrying provenance as a sourced human gloss; and the
           toolbar&apos;s export button writes the whole wheel to SVG or PNG. The Latin/English
           toggle rides the cheap <code>layoutConfig</code> path (the layout re-runs without
           re-ingesting the graph), while the highlight interaction is cheaper still: it flows
           through the shared selection store and the overlay restyles via{" "}
-          <code>useCustomLayoutSelection</code> — no relayout at all.
+          <code>useCustomLayoutSelection</code>, updating styles without running the layout again.
         </p>
 
         <p style={styles.sourceNote}>

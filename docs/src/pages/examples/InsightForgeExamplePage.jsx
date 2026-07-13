@@ -134,7 +134,7 @@ const ROOMS = [
     icon: "route",
     componentName: "SankeyDiagram",
     question: "Through which fulfillment path did it travel?",
-    note: "A ribbon is not portable. Collect the row predicate behind the full route.",
+    note: "Collect the row predicate behind the full route so the evidence can travel to another chart.",
     fields: [
       "product.id",
       "fulfillment.warehouse",
@@ -1201,8 +1201,8 @@ export function InsightForgeWorkbench() {
         <div>
           <span>Final lesson</span>
           <blockquote>
-            The charts did not agree because they looked alike. They agreed because the same
-            semantic evidence survived translation from time, to categories, to flows, to cohorts.
+            Each chart applies a different layout to the same scoped evidence. The incident window,
+            cohort definition, and denominator remain attached as you move between rooms.
           </blockquote>
         </div>
         <div>
@@ -2670,7 +2670,7 @@ function InterpreterDrawer({ activeQuestion, onQuestion, answer, grounding }) {
     <details className="insight-forge__interpreter">
       <summary>
         <span>Rule-based interpreter</span>
-        <strong>Grounding, not a model call</strong>
+        <strong>Rule-based grounding</strong>
       </summary>
       <div className="insight-forge__interpreter-body">
         <div role="group" aria-label="Interpreter questions">

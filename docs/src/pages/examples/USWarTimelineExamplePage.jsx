@@ -228,8 +228,8 @@ export default function USWarTimelineExamplePage() {
         <h2>Concurrency makes continuity visible</h2>
         <p>
           The line beneath the lanes counts active conflicts in each year. Long-running campaigns
-          overlap many shorter actions, making the timeline read less like isolated episodes and
-          more like overlapping systems of military activity.
+          overlap many shorter actions, showing military activity as concurrent systems instead of
+          isolated episodes.
         </p>
       </section>
 
@@ -274,8 +274,8 @@ export default function USWarTimelineExamplePage() {
             categorized timeline
           </a>
           . The historical list begins with the source&apos;s 2015 snapshot and is extended through
-          July 1, 2026 from official Defense Department, combatant-command, and NATO records. It
-          remains one contestable perspective, not an authoritative taxonomy.
+          July 1, 2026 from official Defense Department, combatant-command, and NATO records. Its
+          categories are a contestable editorial perspective.
         </p>
       </section>
     </ExamplePageLayout>
