@@ -234,7 +234,7 @@ jobs:
         env:
           EXPECTED_INTEGRITY: ${{ steps.release-artifact.outputs.integrity }}
         run: |
-          VERSION=$(node -p "require('./package.json').version")
+          export VERSION=$(node -p "require('./package.json').version")
           node - <<'NODE'
             const { execSync } = require("node:child_process")
 
@@ -246,14 +246,15 @@ jobs:
               encoding: "utf8",
             })
             const manifest = JSON.parse(payload)
+            const dist = manifest.dist || {}
 
-            if (manifest["dist.integrity"] !== expectedIntegrity) {
-              throw new Error(`Published dist.integrity (${manifest["dist.integrity"]}) does not match expected integrity (${expectedIntegrity})`)
+            if (dist.integrity !== expectedIntegrity) {
+              throw new Error(`Published dist.integrity (${dist.integrity}) does not match expected integrity (${expectedIntegrity})`)
             }
 
             const asArray = (value) => (Array.isArray(value) ? value : value ? [value] : [])
-            const signatures = asArray(manifest["dist.signatures"])
-            const attestations = asArray(manifest["dist.attestations"])
+            const signatures = asArray(dist.signatures)
+            const attestations = asArray(dist.attestations)
 
             if (signatures.length === 0) {
               throw new Error("Published package is missing dist.signatures")
