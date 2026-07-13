@@ -1,4 +1,4 @@
-import { useEffect, type MutableRefObject, type RefObject } from "react"
+import { useEffect, useRef, type MutableRefObject, type RefObject } from "react"
 import type { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import type { PhysicsWorkerCommand } from "./PhysicsWorkerProtocol"
 
@@ -26,6 +26,14 @@ export function usePhysicsFrameLifecyclePolicy({
   storeRef,
   suspendWhenHidden
 }: PhysicsFrameLifecyclePolicyInput): void {
+  // Mirrored into refs so the persistent visibilitychange listener below
+  // always invokes the latest closures instead of the ones captured when
+  // the listener was registered.
+  const postWorkerCommandRef = useRef(postWorkerCommand)
+  postWorkerCommandRef.current = postWorkerCommand
+  const requestRenderRef = useRef(requestRender)
+  requestRenderRef.current = requestRender
+
   useEffect(() => {
     const store = storeRef.current
     if (!store) return
@@ -34,10 +42,10 @@ export function usePhysicsFrameLifecyclePolicy({
       lastFrameTimeRef.current = null
       cancelRender()
     }
-    postWorkerCommand({ type: "setPaused", paused }, false)
-    requestRender()
-    // The callbacks intentionally remain event-time references; pause alone
-    // controls this effect's lifecycle.
+    postWorkerCommandRef.current({ type: "setPaused", paused }, false)
+    requestRenderRef.current()
+    // Pause alone controls this effect's lifecycle; callbacks are read via
+    // ref so they're never stale.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cancelRender, paused])
 
@@ -52,14 +60,14 @@ export function usePhysicsFrameLifecyclePolicy({
         lastFrameTimeRef.current = null
         cancelRender()
       }
-      postWorkerCommand({ type: "setVisible", visible }, false)
-      requestRender()
+      postWorkerCommandRef.current({ type: "setVisible", visible }, false)
+      requestRenderRef.current()
     }
     update()
     document.addEventListener("visibilitychange", update)
     return () => document.removeEventListener("visibilitychange", update)
-    // Visibility alone controls listener registration; callbacks are read at
-    // event time to avoid restarting the policy on ordinary frame changes.
+    // Visibility alone controls listener registration; callbacks are read via
+    // ref at event time to avoid restarting the policy on ordinary frame changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cancelRender, suspendWhenHidden])
 }

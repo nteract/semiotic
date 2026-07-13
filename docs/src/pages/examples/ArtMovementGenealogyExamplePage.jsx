@@ -150,7 +150,7 @@ export default function ArtMovementGenealogyExamplePage() {
       </section>
 
       <section style={styles.editorial}>
-        <h2>Constraint, not tracing</h2>
+        <h2>How the layout is constrained</h2>
         <p>
           The year attached to each entity fixes only its vertical coordinate. Horizontal
           coordinates begin from a deterministic spread, then settle through repeated edge
@@ -163,7 +163,7 @@ export default function ArtMovementGenealogyExamplePage() {
           Movement nodes receive the cover&apos;s curved underline treatment. External sources and
           the machine aesthetic are boxed in red. Solid and dashed arrows retain the source
           graph&apos;s distinction, while the paired red year axes and paper-like ground make
-          chronology part of the composition rather than separate chart furniture.
+          chronology directly into the composition.
         </p>
 
         <CodeBlock language="jsx" showCopyButton code={implementationCode} />

@@ -210,7 +210,7 @@ export default function DataCentersIsotypeExamplePage() {
           <PanelHeading
             number="01"
             eyebrow="ALTITUDE AND DATA CENTERS, UNITED STATES"
-            title="Operating is not the same as announced"
+            title="Operating, under construction, and announced"
             note="Five west-to-east relief sections carry the sites at their longitudes, after the 1943 ISOTYPE altitude spread. This is an auditable sample, not a census: city signs mark markets that predate ChatGPT; repeated server signs appear only where an operator or government source discloses capacity."
           />
 

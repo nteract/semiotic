@@ -483,11 +483,11 @@ export default function WhatTheMachineSeesExamplePage() {
       <section className="machine-custom-recipe">
         <div className="machine-section-heading machine-section-heading--custom">
           <span className="machine-kicker">Custom recipe contract · v0</span>
-          <h2>This is not just a custom chart. It has an inspectable intent contract.</h2>
+          <h2>The chart exposes the intent behind its design.</h2>
           <p>
             The frame knows how to render rectangles. The recipe manifest states that they mean
             repeated units, that the analytical intent is part-to-whole, and that readers should
-            navigate category summaries rather than one hundred undifferentiated cells.
+            navigate category summaries before moving into the one hundred individual cells.
           </p>
         </div>
 

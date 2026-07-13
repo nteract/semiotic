@@ -96,8 +96,8 @@ export default function ExamplesOverviewPage() {
         <div style={styles.eyebrow}>Semiotic in practice</div>
         <h1 style={styles.title}>Examples</h1>
         <p style={styles.lede}>
-          Complete visual experiences that combine charts, annotations, controls, interaction, and
-          editorial polish.
+          Each example starts with a visual question and shows how data, layout, annotation, and
+          interaction work together to answer it.
         </p>
       </div>
 

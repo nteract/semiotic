@@ -920,8 +920,14 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // NOT into the scene-recompute gate, so the restyle isn't overwritten.
       const stylePaintPending = store.consumeStylePaintPending()
       let computedSceneThisFrame = false
-      const updateResult = store.getLastUpdateResult()
-      const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(updateResult, isTransitioning)
+      // SceneRevisionDiagnostics is development-only; skip the per-frame
+      // signature/allocation work entirely in production builds.
+      const isDev = process.env.NODE_ENV !== "production"
+      let sceneRevisionCheck: ReturnType<typeof sceneRevisionDiagnosticsRef.current.beforeCompute> | null = null
+      if (isDev) {
+        const updateResult = store.getLastUpdateResult()
+        sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(updateResult, isTransitioning)
+      }
 
       // Compute scene graph (scales + scene nodes) — when data changed, or when
       // the dimensions changed (the latter wins over an active transition).
@@ -931,7 +937,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         computedSceneThisFrame = true
         emitLegendCategories()
       }
-      sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, dimsChanged)
+      if (isDev && sceneRevisionCheck) {
+        sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, dimsChanged)
+      }
 
       const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       const dpr = getDevicePixelRatio()

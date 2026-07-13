@@ -83,7 +83,7 @@ const scenarioCases = [
       { source: "Checkout", target: "Returned candy", value: 120, detour: true },
     ],
     findings: [
-      "Search is not just discovery. It is also repair after Product fails.",
+      "Search handles discovery and repairs paths that Product fails to complete.",
       "Cart sends 720 shoppers backward, which a collapsed funnel calls abandonment.",
       "Support is late enough to look small and early enough to change outcomes.",
     ],
@@ -665,7 +665,7 @@ export default function WorldOfFunnelsExamplePage() {
         <div ref={chartRef} className="wof-chart-host">
           <PopPanel label="01" title={`${selectedCase.label}: the funnel as evidence`} variant="lead">
             <p>
-              A simple funnel turns a process into comparable widths. It is direct,
+              A simple funnel compares each stage of a process by width. It is direct,
               boardroom-friendly, and useful for a first pass. It is also a decision to
               treat all off-path behavior as loss.
             </p>

@@ -88,8 +88,8 @@ export default function DatavizPeopleExamplePage() {
               <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
                 The 7 Kinds of Data Visualization People
               </a>
-              . Expanded to twelve here, with new interface art rather than the original Susie Lu
-              cartoons.
+              . This version expands the cast to twelve and uses new interface art in place of the
+              original Susie Lu cartoons.
             </p>
           </div>
           <PersonaConstellation activeId={activeId} />

@@ -172,8 +172,8 @@ export default function ClimateRadialWeatherExamplePage() {
   return (
     <ExamplePageLayout title="Brushable Weather Rings">
       <p style={styles.lede}>
-        Years are cycles, and weather patterns make more sense when you can see the cyclical nature
-        of weather patterns mapped to years. But it still helps to see it as a straight line, so
+        The rings align the same dates across years, making seasonal timing and unusual spells easy
+        to compare. Brush a span to inspect those days on a straight timeline, where
         here's a radial brush to get that, too.
       </p>
 

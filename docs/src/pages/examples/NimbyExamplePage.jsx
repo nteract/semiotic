@@ -1171,7 +1171,7 @@ export default function NimbyExamplePage() {
             <h2>The example is now a declarative gauntlet.</h2>
           </div>
           <p>
-            The page supplies <code>data</code>, positive and negative property definitions, gate definitions, and gate events. <code>GauntletChart</code> turns those declarations into core bodies, lift balloons, drag particles, gate regions, pops, route state, and event state.
+            The page supplies <code>data</code>, positive and negative property definitions, gate definitions, and gate events. From those declarations, <code>GauntletChart</code> builds the bodies, forces, gates, routes, and event state.
           </p>
           <p>
             The failure mode switch separates physical failure, per-gate checkpoint failure, and the original end-only outcome check. That lets the same plan either crash when the particles pull it down, stop at the first failed gate, or run every gate before the final decision.

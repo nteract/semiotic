@@ -34,7 +34,7 @@ export const EXAMPLES = [
     path: "/examples/insight-forge",
     eyebrow: "Portable analytical artifacts · five chart rooms",
     description:
-      "Collect semantic clues from time, category, flow, and cohort views; craft filters, test a carrier hypothesis, preserve a false positive, and bind the accepted packaging insight to a durable knowledge view.",
+      "Investigate a packaging failure across five chart rooms. Evidence you accept becomes a portable artifact that can filter and annotate the next view.",
     preview: "insight-forge",
     badges: ["Portable artifacts", "Deterministic recipes", "Audited lineage"],
     frames: ["xy", "ordinal", "network"],
@@ -56,7 +56,7 @@ export const EXAMPLES = [
     path: "/examples/stakeholder-journey",
     eyebrow: "StreamPhysicsFrame · controlled process comparison",
     description:
-      "One deterministic cohort begins from the same path through Habit; a stage ledger measures the invitation relay and feeds Leadership reach back into synchronized process geometry.",
+      "Compare how two systems move the same cohort from first use to leadership. A stage ledger drives the width of each process corridor.",
     preview: "stakeholder-journey",
     badges: ["StreamPhysicsFrame", "Stage ledger", "Live geometry"],
     frames: ["stream-physics"],
@@ -89,7 +89,7 @@ export const EXAMPLES = [
     path: "/examples/climate-radial-weather",
     eyebrow: "Point controls + radial weather",
     description:
-      "Combines point climate controls with a radial custom ordinal chart and stacked temporal detail.",
+      "Align daily weather around annual rings, brush a seasonal interval, and inspect the selected days on a straight timeline.",
     preview: "combined",
     badges: ["Custom chart", "Accessible navigation"],
     frames: ["ordinal", "custom"],
@@ -111,7 +111,7 @@ export const EXAMPLES = [
     path: "/examples/hot-dog-contest-variations",
     eyebrow: "TemporalHistogram · ISOTYPE · source audit",
     description:
-      "A source-audited remake of the classic Nathan's winning-count chart as a streaming temporal histogram, annual ISOTYPE ledger, event-banded line chart, and duration-normalized pace mirror.",
+      "Read Nathan's winning counts four ways, then use the pace view to see how contest-duration changes alter the historical comparison.",
     preview: "hotdog-variations",
     badges: ["TemporalHistogram", "ISOTYPE", "Source-audited"],
     frames: ["xy", "ordinal", "custom"],
@@ -122,7 +122,7 @@ export const EXAMPLES = [
     path: "/examples/data-centers-isotype",
     eyebrow: "Altitude sections · evidence ledger",
     description:
-      "An ISOTYPE account of the AI build-out: relief sections carry data centers across the U.S. map, arrow units trace power and water, unit grids count capacity and compute—and every claim keeps its denominator and source.",
+      "Count the physical scale of AI infrastructure through relief maps and repeated units for power, water, capacity, and compute. Every claim keeps its denominator and source.",
     preview: "data-centers-isotype",
     badges: ["Custom chart", "Local", "Agent-readable"],
     frames: ["geo", "custom"],
@@ -144,7 +144,7 @@ export const EXAMPLES = [
     path: "/examples/sometimes-better-discrete",
     eyebrow: "TokenLayer · task-aware ISOTYPE",
     description:
-      "Guess the area, then count the buses: a bus-waiting decision rebuilt as a density curve, a Kay/Hullman quantile dotplot, animated hypothetical outcomes, a 100-commuter risk array, and a hybrid tokenized bar — with IDID recommending the encoding for the reader's task and a live design critic flagging sabotaged versions.",
+      "Estimate a bus-waiting probability, reveal the count, and compare how density curves, quantile dots, hypothetical outcomes, and commuter icons support different tasks.",
     preview: "discrete",
     badges: ["TokenLayer", "Quantile dotplot", "HOPs", "Design critic"],
     frames: ["xy", "ordinal", "custom"],
@@ -242,7 +242,7 @@ export const EXAMPLES = [
     path: "/examples/port-congestion-replay",
     eyebrow: "Real chokepoint data, four-frame replay",
     description:
-      "Real IMF PortWatch container transits replay three seasons of the global ocean — a quiet spring, the Ever Given blockage, and the Red Sea detour — across a flow map, a temporal process flow, a push-driven deviation waterfall, and a cross-scenario scatterplot matrix.",
+      "Replay three periods of IMF PortWatch traffic: a quiet spring, the Ever Given blockage, and the Red Sea detour. Four linked views show where routes and transit times diverged.",
     preview: "port-replay",
     frames: ["xy", "ordinal", "geo", "custom"],
     topics: ["realtime", "geography", "history", "process"],
@@ -252,7 +252,7 @@ export const EXAMPLES = [
     path: "/examples/scroll-youre-telling",
     eyebrow: "Realtime reader telemetry",
     description:
-      "A scrollytelling essay on the evolution of data journalism that records your own scroll, velocity, and dwell as a live stream and plots it back — the reader as the data source.",
+      "Read a short history of data journalism while the page plots your scroll position, velocity, and dwell time alongside the essay.",
     preview: "scroll-tell",
     badges: ["Custom chart", "Local", "Intent-aware"],
     frames: ["xy", "custom"],
@@ -366,7 +366,7 @@ export const EXAMPLES = [
     path: "/examples/network-visualization",
     eyebrow: "Eight chapters + an interactive toy",
     description:
-      "A mid-century 'visual primer' that rebuilds a 2015 network-visualization workshop on Semiotic — arc diagrams, adjacency matrices, the force-directed hairball, edge and node encodings, communities, Sankey and chord — and ends with a hands-on network-analysis toy (pathfinding, centrality, ego networks, the spatial problem).",
+      "Work through eight ways to draw and inspect a network, from arc diagrams and matrices to communities, Sankey, and chord. The final playground adds pathfinding, centrality, and ego-network tools.",
     preview: "networkviz",
     frames: ["network", "xy", "ordinal", "custom"],
     topics: ["design", "accessibility"],

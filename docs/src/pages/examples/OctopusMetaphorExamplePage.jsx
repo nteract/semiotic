@@ -91,7 +91,7 @@ export default function OctopusMetaphorExamplePage() {
           a system can also make every remote event look controlled by a single hidden body.
         </p>
         <p>
-          This example turns that metaphor back into Semiotic data. It begins with the moral
+          This example reconstructs that metaphor with Semiotic data. It begins with the moral
           network from the old national-waste octopus, moves through the imperial octopus map,
           and ends with the joke from{" "}
           <a href={ANIMALIA_ARTICLE_URL} target="_blank" rel="noopener noreferrer">
@@ -127,7 +127,7 @@ export default function OctopusMetaphorExamplePage() {
               enableHover
               onObservation={handleWasteObservation}
               description="A network remake of a historical octopus diagram. A central octopus labelled as national waste reaches five named targets: coffee, tea, war, liquor, and tobacco."
-              summary="The diagram has one central system node and five target nodes. Each target is connected by a curved tentacle path rather than a straight line."
+              summary="The diagram connects one central system node to five targets. Curved tentacle paths give each connection the grasping shape used by the original metaphor."
               accessibleTable
               frameProps={{
                 background: "transparent",
@@ -147,9 +147,9 @@ export default function OctopusMetaphorExamplePage() {
           <span className="octo-kicker">Geographic metaphor</span>
           <h2 id="map-heading">The octopus map as persuasive cartography</h2>
           <p>
-            Octopus maps turn geography into indictment: distance becomes reach, routes become
+            Octopus maps use geography as an indictment: distance reads as reach and routes as
             grasp, and the map&apos;s empty water is filled with red arms. Recent visualization
-            research has described the genre as a visual argument, not just a decorative map. This
+            research describes the genre as a visual argument. This
             remake uses a <code>GeoCustomChart</code>: Natural Earth countries are projected by
             GeoFrame, while the red routes are generated from the dated possession list below.
           </p>

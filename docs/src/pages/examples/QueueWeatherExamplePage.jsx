@@ -567,7 +567,7 @@ export default function QueueWeatherExamplePage() {
           </dl>
         </section>
 
-        <section className="queue-weather__method" aria-labelledby="player-support-method-heading"><div><span>Reusable operations controllers</span><h2 id="player-support-method-heading">Resources, service levels, and dependencies remain composable</h2></div><p><code>createServiceResourcePoolController</code> makes finite staff visible and assignable. <code>createServiceLevelController</code> keeps deadline, protection, and late-resolution states deterministic. <code>createDependencyGateController</code> holds externally blocked work until a known or live condition opens. They compose with the existing FIFO queue and reference envelope rather than replacing them.</p></section>
+        <section className="queue-weather__method" aria-labelledby="player-support-method-heading"><div><span>Reusable operations controllers</span><h2 id="player-support-method-heading">Resources, service levels, and dependencies remain composable</h2></div><p><code>createServiceResourcePoolController</code> makes finite staff visible and assignable. <code>createServiceLevelController</code> keeps deadline, protection, and late-resolution states deterministic. <code>createDependencyGateController</code> holds externally blocked work until a known or live condition opens. Each controller adds one operational rule to the existing FIFO queue and reference envelope.</p></section>
         <CodeBlock language="jsx" code={implementationCode} />
       </div>
     </ExamplePageLayout>
