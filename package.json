@@ -114,6 +114,12 @@
       "require": "./dist/geo.min.js",
       "default": "./dist/geo.module.min.js"
     },
+    "./controls": {
+      "types": "./dist/semiotic-controls.d.ts",
+      "import": "./dist/controls.module.min.js",
+      "require": "./dist/controls.min.js",
+      "default": "./dist/controls.module.min.js"
+    },
     "./themes": {
       "types": "./dist/semiotic-themes.d.ts",
       "import": "./dist/semiotic-themes.module.min.js",

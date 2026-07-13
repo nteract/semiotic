@@ -151,6 +151,17 @@ export const EXAMPLES = [
     topics: ["uncertainty", "design", "accessibility"],
   },
   {
+    title: "Where You Draw the Line",
+    path: "/examples/where-you-draw-the-line",
+    eyebrow: "Explorable MAUP laboratory",
+    description:
+      "Move one border across an unchanged field, then watch the aggregate answer move through a 1D transect, a constructed city, and a 2D-plus-time reporting stack.",
+    preview: "maup",
+    badges: ["Direct manipulation", "Continuous field", "Sensitivity analysis"],
+    frames: ["xy", "geo", "custom"],
+    topics: ["geography", "uncertainty", "design", "accessibility"],
+  },
+  {
     title: "All the Wars of the United States",
     path: "/examples/us-war-timeline",
     eyebrow: "Custom ordinal timeline",

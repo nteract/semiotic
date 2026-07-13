@@ -85,6 +85,7 @@ const AnnotationFlowPage = lazy(() => import("./pages/features/AnnotationFlowPag
 const AnnotationProvenancePage = lazy(() => import("./pages/features/AnnotationProvenancePage"))
 const TooltipsPage = lazy(() => import("./pages/features/TooltipsPage"))
 const InteractionPage = lazy(() => import("./pages/features/InteractionPage"))
+const VisualizationControlsPage = lazy(() => import("./pages/features/VisualizationControlsPage"))
 const ResponsivePage = lazy(() => import("./pages/features/ResponsivePage"))
 const CompositionPage = lazy(() => import("./pages/features/CompositionPage"))
 const AccessibilityPage = lazy(() => import("./pages/accessibility/AccessibilityPage"))
@@ -191,6 +192,9 @@ const CreativeContoursExamplePage = lazy(
 )
 const SometimesDiscreteExamplePage = lazy(
   () => import("./pages/examples/SometimesDiscreteExamplePage"),
+)
+const WhereYouDrawTheLineExamplePage = lazy(
+  () => import("./pages/examples/WhereYouDrawTheLineExamplePage"),
 )
 const ExamplesLayout = lazy(() => import("./pages/examples/ExamplesLayout"))
 const USWarTimelineExamplePage = lazy(() => import("./pages/examples/USWarTimelineExamplePage"))
@@ -422,6 +426,10 @@ export default function DocsApp() {
                 <Route
                   path="examples/sometimes-better-discrete"
                   element={<SometimesDiscreteExamplePage />}
+                />
+                <Route
+                  path="examples/where-you-draw-the-line"
+                  element={<WhereYouDrawTheLineExamplePage />}
                 />
                 <Route path="examples/us-war-timeline" element={<USWarTimelineExamplePage />} />
                 <Route
@@ -676,6 +684,7 @@ export default function DocsApp() {
                 <Route path="axes" element={<AxesPage />} />
                 <Route path="tooltips" element={<TooltipsPage />} />
                 <Route path="interaction" element={<InteractionPage />} />
+                <Route path="controls" element={<VisualizationControlsPage />} />
                 <Route path="responsive" element={<ResponsivePage />} />
                 <Route path="composition" element={<CompositionPage />} />
                 <Route path="small-multiples" element={<SmallMultiplesPage />} />

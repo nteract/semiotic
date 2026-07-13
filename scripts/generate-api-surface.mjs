@@ -60,6 +60,7 @@ const ENTRIES = {
   "semiotic-value": "dist/semiotic-value.d.ts",
   "semiotic-server-node": "dist/semiotic-server-node.d.ts",
   "semiotic-server-edge": "dist/semiotic-server-edge.d.ts",
+  "semiotic-controls": "dist/semiotic-controls.d.ts",
 }
 
 // CI passes a temporary directory so surface verification never modifies

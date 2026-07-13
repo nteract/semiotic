@@ -14,6 +14,6 @@ describe("docs example integrity", () => {
       }
     )
 
-    expect(stdout).toContain("31 examples, 31 routes, 31 previews, 31 profiles")
+    expect(stdout).toContain("32 examples, 32 routes, 32 previews, 32 profiles")
   })
 })

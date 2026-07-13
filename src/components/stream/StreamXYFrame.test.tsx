@@ -691,6 +691,96 @@ describe("StreamXYFrame", () => {
       const brushG = container.querySelector(".brush-g")
       expect(brushG).toBeFalsy()
     })
+
+    describe("keyboard accessibility", () => {
+      const data = [
+        { x: 0, y: 0 },
+        { x: 10, y: 20 },
+      ]
+
+      function renderBrush(dimension: "x" | "y" | "xy", onBrush = vi.fn()) {
+        const result = render(
+          <StreamXYFrame
+            chartType="scatter"
+            data={data}
+            xAccessor="x"
+            yAccessor="y"
+            xExtent={[0, 10]}
+            yExtent={[0, 20]}
+            brush={{ dimension }}
+            onBrush={onBrush}
+          />
+        )
+        const region = result.container.querySelector('svg[role="region"]') as SVGSVGElement
+        return { ...result, region, onBrush }
+      }
+
+      it("nudges an x-dimension brush left/right and ignores vertical arrows", () => {
+        const { region, onBrush } = renderBrush("x")
+        fireEvent.keyDown(region, { key: "ArrowRight" })
+        expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ x: expect.any(Array) }))
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowLeft" })
+        expect(onBrush).toHaveBeenCalled()
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowUp" })
+        fireEvent.keyDown(region, { key: "ArrowDown" })
+        expect(onBrush).not.toHaveBeenCalled()
+      })
+
+      it("resizes an x-dimension brush with shift+arrow in both directions", () => {
+        const { region, onBrush } = renderBrush("x")
+        fireEvent.keyDown(region, { key: "ArrowRight", shiftKey: true })
+        expect(onBrush).toHaveBeenCalled()
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowLeft", shiftKey: true })
+        expect(onBrush).toHaveBeenCalled()
+      })
+
+      it("nudges a y-dimension brush up/down and ignores horizontal arrows", () => {
+        const { region, onBrush } = renderBrush("y")
+        fireEvent.keyDown(region, { key: "ArrowUp" })
+        expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ y: expect.any(Array) }))
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowDown", shiftKey: true })
+        expect(onBrush).toHaveBeenCalled()
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowLeft" })
+        fireEvent.keyDown(region, { key: "ArrowRight" })
+        expect(onBrush).not.toHaveBeenCalled()
+      })
+
+      it("nudges and resizes a two-dimensional brush on any arrow", () => {
+        const { region, onBrush } = renderBrush("xy")
+        fireEvent.keyDown(region, { key: "ArrowRight" })
+        fireEvent.keyDown(region, { key: "ArrowUp", shiftKey: true })
+        expect(onBrush).toHaveBeenCalledTimes(2)
+      })
+
+      it("clears the brush extent on Escape after a prior nudge", () => {
+        const { region, onBrush } = renderBrush("xy")
+        fireEvent.keyDown(region, { key: "ArrowRight" })
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "Escape" })
+        expect(onBrush).toHaveBeenCalledWith(null)
+      })
+
+      it("ignores unrelated keys", () => {
+        const { region, onBrush } = renderBrush("x")
+        fireEvent.keyDown(region, { key: "Tab" })
+        expect(onBrush).not.toHaveBeenCalled()
+      })
+
+      it("exposes an aria-label and matching description element for the brush dimension", () => {
+        const { region } = renderBrush("y")
+        expect(region.getAttribute("aria-label")).toBe("Y data range brush")
+        const describedBy = region.getAttribute("aria-describedby")
+        const description = describedBy ? region.querySelector(`#${describedBy}`) : null
+        expect(description?.textContent).toBe(
+          "Use arrow keys to move the selected range, Shift plus an arrow key to resize it, and Escape to clear it."
+        )
+      })
+    })
   })
 
   // ── Chart type variants ───────────────────────────────────────────────

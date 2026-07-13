@@ -83,6 +83,7 @@ const BLURBS = {
   "./physics/rapier": "Rapier peer guard + adapter decision metadata (no chart components)",
   "./ai":       "All schema-backed charts + validation — optimized for LLM code generation",
   "./ai/core":  "suggestCharts, validateProps, describeChart, repairChartConfig, tool adapters — no chart components",
+  "./controls": "DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer",
 }
 
 // Display order — independent of `package.json` key order so the
@@ -94,7 +95,7 @@ const ORDER = [
   "./server/node", "./server/edge",
   "./utils", "./utils/core", "./utils/react", "./recipes", "./recipes/core", "./recipes/react", "./themes", "./themes/core", "./themes/react",
   "./data", "./value", "./physics",
-  "./physics/matter", "./physics/rapier", "./ai", "./ai/core", ".",
+  "./physics/matter", "./physics/rapier", "./ai", "./ai/core", "./controls", ".",
 ]
 
 // `./` → "semiotic", "./xy" → "semiotic/xy", "." → "semiotic".

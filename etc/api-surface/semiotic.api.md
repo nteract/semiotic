@@ -14,6 +14,7 @@ const DARK_THEME: SemioticTheme
 const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme>
+const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
 function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId }: AccessibleNavTreeProps): React.JSX.Element
 function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -30,6 +31,7 @@ function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScat
 function ContextLayout({ children, context, position, contextSize, mobilePosition, mobileBreakpoint, gap, className, style, }: ContextLayoutProps): React.JSX.Element
 function DetailsPanel({ children, position, size, trigger, chartId, observation: directObservation, dismissOnEmpty, showClose, onToggle, className, style, }: DetailsPanelProps): React.JSX.Element | null
 function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -80,11 +82,13 @@ function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React
 function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: XYCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: any, index?: number, allTicks?: number[]) => string
+function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
 function configToJSX(config: ChartConfig): string
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
+function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
 function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | null
 function darkenColor(hex: string, factor?: number | undefined): string
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
@@ -132,6 +136,7 @@ interface AnnotationContext
 interface AnnotationLifecycle
 interface AnnotationProvenance
 interface AreaChartProps<TDatum extends Datum = Datum>
+interface AuditVisualizationControlsOptions
 interface AxisConfig
 interface BandConfig<T = Datum>
 interface BarChartProps<TDatum extends Datum = Datum>
@@ -158,11 +163,16 @@ interface CircularBrushValue
 interface CompileMotionEncodingOptions<TDatum extends Datum = Datum>
 interface ConnectedScatterplotProps<TDatum extends Datum = Datum>
 interface ContextLayoutProps
+interface ControlAuditFinding
+interface ControlAuditResult
+interface ControlObservation
+interface ControlObservationAdapterOptions
 interface CrosshairStyle
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface DetailsPanelProps
 interface DifferenceChartProps<TDatum extends Datum = Datum>
+interface DirectManipulationControlProps
 interface DonutChartProps<TDatum extends Datum = Datum>
 interface DotPlotProps<TDatum extends Datum = Datum>
 interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
@@ -290,6 +300,7 @@ interface UseSelectionResult
 interface VegaLiteEncoding
 interface VegaLiteSpec
 interface ViolinPlotProps<TDatum extends Datum = Datum>
+interface VisualizationControlDefinition
 interface WaterfallStyle
 interface XYFrameAxisConfig
 type Accessor<T = any> = string | ((d: any, i?: number) => T)
@@ -310,7 +321,11 @@ type CategoryColorMap = Record<string, string>
 type ChartAccessor<TDatum, T> = (keyof TDatum & string) | ((d: Datum, i?: number) => T)
 type ChartMode = "primary" | "context" | "sparkline" | "mobile"
 type ChartNotificationLevel = "info" | "success" | "warning" | "error" | "neutral"
-type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | LateDataObservation
+type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | ControlObservation | LateDataObservation
+type ControlAuditStatus = "pass" | "warn" | "fail"
+type ControlInputSource = "pointer" | "keyboard" | "programmatic"
+type ControlObservationCallback = (observation: ControlObservation) => void
+type ControlObservationPhase = "control-start" | "control-change" | "control-end"
 type CopyFormat = "json" | "jsx"
 type CurveType = "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | "basis" | "cardinal" | "catmullRom" | "natural"
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
@@ -371,5 +386,7 @@ type StreamRendererFn = (ctx: CanvasRenderingContext2D, nodes: SceneNode[], scal
 type ThemePresetName = keyof typeof THEME_PRESETS
 type ThresholdType = "greater" | "lesser"
 type TooltipProp = boolean | "multi" | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig
+type VisualizationControlType = (typeof VISUALIZATION_CONTROL_TYPES)[number]
+type VisualizationControlValue = number | [number, number]
 type WindowMode = "sliding" | "growing"
 ```

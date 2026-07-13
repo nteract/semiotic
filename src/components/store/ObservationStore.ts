@@ -1,6 +1,9 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { ControlObservation } from "../controls/controlContract"
 import { createStore } from "./createStore"
+
+export type { ControlObservation } from "../controls/controlContract"
 
 // ── Observation Event Types ──────────────────────────────────────────────
 
@@ -80,6 +83,7 @@ export type ChartObservation =
   | SelectionEndObservation
   | ClickObservation
   | ClickEndObservation
+  | ControlObservation
   | LateDataObservation
 
 export type OnObservationCallback = (observation: ChartObservation) => void

@@ -95,6 +95,7 @@ export const NAMED_IMPORT_CASES = Object.freeze([
   { exportKey: "./recipes/core", symbol: "waffleLayout", platform: "browser" },
   { exportKey: "./recipes/react", symbol: "Glyph", platform: "browser" },
   { exportKey: "./value", symbol: "BigNumber", platform: "browser" },
+  { exportKey: "./controls", symbol: "DirectManipulationControl", platform: "browser" },
 ])
 
 export function importPathFor(exportKey) {

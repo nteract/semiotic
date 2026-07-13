@@ -20,6 +20,7 @@ import { useRef, useEffect } from "react"
 import { select as d3Select } from "d3-selection"
 import { brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { OrdinalScales } from "./ordinalTypes"
+import { useBrushAccessibility, type BrushKeyboardAction } from "./brushAccessibility"
 
 interface OrdinalBrushOverlayProps {
   width: number
@@ -58,6 +59,51 @@ export function OrdinalBrushOverlay({
   const isHorizontal = scales?.projection === "horizontal"
   const isHorizontalRef = useRef(isHorizontal)
   isHorizontalRef.current = isHorizontal
+
+  const handleKeyboardAction = (action: BrushKeyboardAction) => {
+    const s = scalesRef.current
+    const brush = brushRef.current
+    if (!s || !brush || !svgRef.current) return
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+    if (action.type === "clear") {
+      isProgrammaticMoveRef.current = true
+      g.call(brush.move, null)
+      isProgrammaticMoveRef.current = false
+      activeBrushExtentRef.current = null
+      onBrushRef.current(null)
+      return
+    }
+    const horizontalAction = action.direction === "left" || action.direction === "right"
+    if (horizontalAction !== !!isHorizontalRef.current) return
+    const domain = s.r.domain() as [number, number]
+    const [minimum, maximum] = [Math.min(...domain), Math.max(...domain)]
+    const amount = (maximum - minimum) / 20
+    const existing = activeBrushExtentRef.current?.r ?? [
+      minimum + (maximum - minimum) * 0.4,
+      minimum + (maximum - minimum) * 0.6,
+    ] as [number, number]
+    const direction = action.direction === "left" || action.direction === "down" ? -1 : 1
+    let [start, end] = existing
+    if (action.resize) {
+      if (direction < 0) start = Math.max(minimum, start - amount)
+      else end = Math.min(maximum, end + amount)
+    } else {
+      const range = end - start
+      start = Math.max(minimum, Math.min(maximum - range, start + direction * amount))
+      end = start + range
+    }
+    const extent = { r: [start, end] as [number, number] }
+    isProgrammaticMoveRef.current = true
+    if (isHorizontalRef.current) g.call(brush.move, [s.r(start), s.r(end)])
+    else g.call(brush.move, [s.r(end), s.r(start)])
+    isProgrammaticMoveRef.current = false
+    activeBrushExtentRef.current = extent
+    onBrushRef.current(extent)
+  }
+  const brushA11y = useBrushAccessibility({
+    label: "Ordinal value range brush",
+    onAction: handleKeyboardAction,
+  })
 
   useEffect(() => {
     if (!svgRef.current) return
@@ -139,6 +185,7 @@ export function OrdinalBrushOverlay({
       ref={svgRef}
       width={totalWidth}
       height={totalHeight}
+      {...brushA11y.svgProps}
       style={{
         position: "absolute",
         top: 0,
@@ -146,6 +193,8 @@ export function OrdinalBrushOverlay({
         pointerEvents: "none"
       }}
     >
+      <title>{brushA11y.svgProps["aria-label"]}</title>
+      <desc id={brushA11y.descriptionId}>{brushA11y.description}</desc>
       <g className="brush-g" transform={`translate(${margin.left},${margin.top})`} style={{ pointerEvents: "all" }} />
     </svg>
   )

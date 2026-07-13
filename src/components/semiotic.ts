@@ -44,6 +44,7 @@ import { ChartGrid } from "./ChartGrid"
 import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import { ContextLayout } from "./ContextLayout"
 import { CircularBrush } from "./CircularBrush"
+import { DirectManipulationControl, VISUALIZATION_CONTROL_TYPES } from "./DirectManipulationControl"
 
 // ── Details panel ────────────────────────────────────────────────────
 import { DetailsPanel } from "./DetailsPanel"
@@ -141,6 +142,9 @@ export {
   ContextLayout,
   // Cyclical range brush control
   CircularBrush,
+  // Direct chart-overlay control
+  DirectManipulationControl,
+  VISUALIZATION_CONTROL_TYPES,
   // Details panel
   DetailsPanel,
   // Tooltip
@@ -168,6 +172,26 @@ export {
 // ── Chart HOC prop types ───────────────────────────────────────────────
 
 export type { LegendLayout } from "./types/legendTypes"
+export type { DirectManipulationControlProps, VisualizationControlType } from "./DirectManipulationControl"
+export {
+  createControlObservationAdapter,
+} from "./controls/controlContract"
+export { auditVisualizationControls } from "./controls/controlAudit"
+export type {
+  ControlInputSource,
+  ControlObservation,
+  ControlObservationAdapterOptions,
+  ControlObservationCallback,
+  ControlObservationPhase,
+  VisualizationControlDefinition,
+  VisualizationControlValue,
+} from "./controls/controlContract"
+export type {
+  AuditVisualizationControlsOptions,
+  ControlAuditFinding,
+  ControlAuditResult,
+  ControlAuditStatus,
+} from "./controls/controlAudit"
 
 export type {
   ScatterplotProps,

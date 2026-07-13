@@ -35,6 +35,7 @@ const PREVIEW_COMPONENTS = {
   mobilevis: MiniMobileVisPreview,
   networkviz: MiniNetworkVizPreview,
   oregontrail: MiniOregonTrailPreview,
+  maup: MiniMaupPreview,
 }
 
 export function ExamplePreview({ preview }) {
@@ -1647,6 +1648,39 @@ function MiniLocalGovernmentPreview() {
       ))}
       <rect x="8" y="7" width="46" height="7" rx="3.5" fill="#54a9a1" opacity="0.8" />
       <rect x="188" y="7" width="45" height="7" rx="3.5" fill="#33414d" />
+    </svg>
+  )
+}
+
+function MiniMaupPreview() {
+  const cellSize = 17
+  const cols = 14
+  const rows = 5
+  const cells = []
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const t = col / (cols - 1)
+      const fill = t < 0.5 ? "#4d83a8" : "#db9b55"
+      cells.push({ x: 7 + col * cellSize, y: 7 + row * cellSize, fill })
+    }
+  }
+  const seamX = 7 + 7.4 * cellSize
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#101820" />
+      {cells.map((cell, index) => (
+        <rect
+          key={index}
+          x={cell.x}
+          y={cell.y}
+          width={cellSize - 1}
+          height={cellSize - 1}
+          fill={cell.fill}
+          opacity="0.85"
+        />
+      ))}
+      <line x1={seamX} y1="4" x2={seamX} y2="92" stroke="#ffffff" strokeWidth="2" strokeDasharray="5 3" />
+      <circle cx={seamX} cy="48" r="7" fill="#101820" stroke="#ffffff" strokeWidth="2.5" />
     </svg>
   )
 }
