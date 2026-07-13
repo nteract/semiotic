@@ -100,10 +100,7 @@ import {
   pushWithTimestamp
 } from "./pipelineBufferUtils"
 import type { UpdateResult } from "./pipelineUpdateContract"
-import {
-  attachUpdateResultStore,
-  type UpdateResultStore
-} from "./pipelineUpdateStore"
+import { attachUpdateResultStore, type UpdateResultStore } from "./pipelineUpdateStore"
 import { PipelineStoreUpdateResults } from "./pipelineStoreUpdateResults"
 import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
 
@@ -1339,12 +1336,6 @@ export class PipelineStore {
 
   getCategoryAccessor(): ((d: Datum) => string) | undefined {
     return this.getCategory
-  }
-
-  /** Update the selection the layout reads at the next rebuild, without
-   *  triggering one. The frame then either repaints (restyle) or rebuilds. */
-  setLayoutSelection(selection: CustomLayoutSelection | null): void {
-    this.config.layoutSelection = selection
   }
 
   private applyCustomRestyle(nodes: SceneNode[], selection: CustomLayoutSelection | null): void {

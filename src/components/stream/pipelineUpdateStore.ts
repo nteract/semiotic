@@ -1,4 +1,5 @@
 import type { UpdateResult } from "./pipelineUpdateContract"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 
 export type { UpdateResult } from "./pipelineUpdateContract"
 
@@ -13,6 +14,7 @@ export interface UpdateResultStore {
   getLastUpdateResult(): UpdateResult
   getUpdateSnapshot(): UpdateResult
   subscribeUpdateResult(listener: () => void): () => void
+  setLayoutSelection(selection: CustomLayoutSelection | null): void
   markStylePaintPending(): void
   consumeStylePaintPending(): boolean
 }
@@ -38,6 +40,13 @@ function subscribeUpdateResult(
   return this.updateResults.subscribe(listener)
 }
 
+function setLayoutSelection(
+  this: { config: { layoutSelection?: CustomLayoutSelection | null } },
+  selection: CustomLayoutSelection | null
+): void {
+  this.config.layoutSelection = selection
+}
+
 function markStylePaintPending(this: object): void {
   stylePaintPending.set(this, true)
 }
@@ -54,6 +63,7 @@ export function attachUpdateResultStore(target: { prototype: object }): void {
     getLastUpdateResult,
     getUpdateSnapshot,
     subscribeUpdateResult,
+    setLayoutSelection,
     markStylePaintPending,
     consumeStylePaintPending
   })

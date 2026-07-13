@@ -45,11 +45,7 @@ import {
 import { DEFAULT_TENSION_CONFIG } from "./networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import { NetworkPipelineUpdateResults } from "./networkPipelineUpdateResults"
-import {
-  attachUpdateResultStore,
-  type UpdateResult,
-  type UpdateResultStore
-} from "./pipelineUpdateStore"
+import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
 import { runNetworkCustomLayout } from "./networkCustomLayoutRunner"
 import {
   restyleNetworkCustomScene,
@@ -787,13 +783,6 @@ export class NetworkPipelineStore {
   /**
    * Build the scene graph from current layout positions.
    */
-  /** Update the selection the layout reads at the next `buildScene`, without
-   *  triggering a rebuild. The frame calls this on selection change; whether it
-   *  then repaints (restyle) or rebuilds is the frame's decision. */
-  setLayoutSelection(selection: CustomLayoutSelection | null): void {
-    this.config.layoutSelection = selection
-  }
-
   /**
    * Re-apply the custom layout's `restyle`/`restyleEdge` to the existing scene
    * for `selection`, mutating styles **in place** off each mark's base style.

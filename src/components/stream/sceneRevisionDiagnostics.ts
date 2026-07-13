@@ -21,6 +21,10 @@ export interface SceneRevisionCheck {
   warnUnconsumed: boolean
 }
 
+interface SceneRevisionStore extends UpdateResultStore {
+  getLastUpdateResult(): UpdateResult
+}
+
 function sceneRevisions(updateResult: UpdateResult): SceneRevisionSet {
   const { domain, layout, sceneGeometry } = updateResult.revisions
   return { domain, layout, sceneGeometry }
@@ -128,7 +132,7 @@ export function useSceneRevisionDiagnostics(hostName: string) {
 /** Wrap an unconditional scene build with the common revision accounting. */
 export function runSceneBuild(
   diagnostics: SceneRevisionDiagnostics,
-  store: UpdateResultStore,
+  store: SceneRevisionStore,
   build: () => void,
   isTransitioning = false,
   dimsChanged = false,

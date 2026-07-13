@@ -57,11 +57,7 @@ import {
   ensureRingBufferCapacity,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
-import {
-  attachUpdateResultStore,
-  type UpdateResult,
-  type UpdateResultStore
-} from "./pipelineUpdateStore"
+import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
 import { buildOrdinalCategoryIndex } from "./ordinalDataIndex"
 import { OrdinalPipelineUpdateResults } from "./ordinalPipelineUpdateResults"
 import { syncOrdinalPulseTimestampBuffer } from "./ordinalPulseResources"
@@ -1434,11 +1430,6 @@ export class OrdinalPipelineStore {
 
   getRAccessor(): (d: Datum) => number {
     return this.getR
-  }
-
-  /** Update the selection the layout reads at the next rebuild, without one. */
-  setLayoutSelection(selection: CustomLayoutSelection | null): void {
-    this.config.layoutSelection = selection
   }
 
   private applyCustomRestyle(nodes: OrdinalSceneNode[], selection: CustomLayoutSelection | null): void {

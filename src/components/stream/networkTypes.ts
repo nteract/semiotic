@@ -8,6 +8,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { NetworkSymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
+import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 
 // ── Tension configuration ──────────────────────────────────────────────
 

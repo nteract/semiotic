@@ -51,11 +51,7 @@ import {
   pushWithTimestamp
 } from "./pipelineBufferUtils"
 import { GeoPipelineUpdateResults } from "./geoPipelineUpdateResults"
-import {
-  attachUpdateResultStore,
-  type UpdateResult,
-  type UpdateResultStore
-} from "./pipelineUpdateStore"
+import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
 import { buildBuiltInGeoScene } from "./geoSceneBuilder"
 
 // ── GeoPipelineStore ─────────────────────────────────────────────────
@@ -460,10 +456,6 @@ export class GeoPipelineStore {
     this._customLayoutFailedThisBuild = false
     this.version++
     this.updateResults.recordData("clear")
-  }
-
-  setLayoutSelection(selection: CustomLayoutSelection | null): void {
-    this.config.layoutSelection = selection
   }
 
   restyleScene(selection: CustomLayoutSelection | null): void {
