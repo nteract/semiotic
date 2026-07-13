@@ -771,11 +771,14 @@ describe("StreamXYFrame", () => {
         expect(onBrush).not.toHaveBeenCalled()
       })
 
-      it("exposes an aria-label and description matching the brush dimension", () => {
+      it("exposes an aria-label and matching description element for the brush dimension", () => {
         const { region } = renderBrush("y")
         expect(region.getAttribute("aria-label")).toBe("Y data range brush")
         const describedBy = region.getAttribute("aria-describedby")
-        expect(describedBy).toBeTruthy()
+        const description = describedBy ? region.querySelector(`#${describedBy}`) : null
+        expect(description?.textContent).toBe(
+          "Use arrow keys to move the selected range, Shift plus an arrow key to resize it, and Escape to clear it."
+        )
       })
     })
   })

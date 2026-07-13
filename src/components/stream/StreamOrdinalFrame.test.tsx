@@ -942,10 +942,14 @@ describe("StreamOrdinalFrame", () => {
         expect(onBrush).toHaveBeenCalledWith(null)
       })
 
-      it("exposes an aria-label for the ordinal brush region", () => {
+      it("exposes an aria-label and matching description element for the ordinal brush region", () => {
         const { region } = renderBrush("vertical")
         expect(region.getAttribute("aria-label")).toBe("Ordinal value range brush")
-        expect(region.getAttribute("aria-describedby")).toBeTruthy()
+        const describedBy = region.getAttribute("aria-describedby")
+        const description = describedBy ? region.querySelector(`#${describedBy}`) : null
+        expect(description?.textContent).toBe(
+          "Use arrow keys to move the selected range, Shift plus an arrow key to resize it, and Escape to clear it."
+        )
       })
     })
   })
