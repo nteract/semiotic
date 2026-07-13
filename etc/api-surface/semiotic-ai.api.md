@@ -127,6 +127,7 @@ function applyScaleBias(capability: ChartCapability, profile: ChartDataProfile, 
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
 function auditObservedScene(input: AuditObservedSceneInput): ObservedSceneAuditResult
+function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
 function bandFromAge(ageMs: number, ttlMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function buildReaderGrounding(component: string, props: Datum, options?: ChartReaderGroundingOptions | undefined): ChartReaderGrounding
@@ -277,6 +278,7 @@ interface AudienceTarget
 interface AuditAccessibilityOptions
 interface AuditMobileVisualizationOptions
 interface AuditObservedSceneInput
+interface AuditVisualizationControlsOptions
 interface BrushEndObservation
 interface BrushObservation
 interface BuildNavigationTreeOptions
@@ -309,6 +311,8 @@ interface ClickEndObservation
 interface ClickObservation
 interface ComputeAnnotationFreshnessOptions
 interface ContextLayoutProps
+interface ControlAuditFinding
+interface ControlAuditResult
 interface ConversationArcSink
 interface ConversationArcStorageLike
 interface ConversationArcStore
@@ -481,6 +485,7 @@ interface VariantScore
 interface VegaLiteEncoding
 interface VegaLiteSpec
 interface VisualToken<D = unknown>
+interface VisualizationControlDefinition
 interface WebhookConversationArcSinkOptions
 interface WhyCustomExplanation
 type A11yPrinciple = "perceivable" | "operable" | "understandable" | "robust" | "compromising" | "assistive" | "flexible"
@@ -503,10 +508,11 @@ type ChartCandidateKind = "built-in" | "recipe"
 type ChartFamily = "time-series" | "categorical" | "distribution" | "relationship" | "flow" | "network" | "hierarchy" | "geo" | "realtime" | "value" | "custom"
 type ChartImportPath = "semiotic/xy" | "semiotic/ordinal" | "semiotic/network" | "semiotic/geo" | "semiotic/realtime" | "semiotic/physics" | "semiotic/value" | "semiotic/ai" | "semiotic"
 type ChartNotificationLevel = "info" | "success" | "warning" | "error" | "neutral"
-type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | LateDataObservation
+type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | ControlObservation | LateDataObservation
 type ChartRecipeFrameFamily = "XYFrame" | "OrdinalFrame" | "NetworkFrame" | "GeoFrame" | "XYCustomChart" | "NetworkCustomChart" | "OrdinalCustomChart" | "GeoCustomChart" | "Other"
 type ChartRecipePortability = "portable" | "local"
 type CommunicativeAct = "alerting" | "tracking" | "comparing" | "ranking" | "apportioning" | "characterizing" | "relating" | "tracing" | "nesting" | "locating" | "presenting"
+type ControlAuditStatus = "pass" | "warn" | "fail"
 type ConversationArcEvent = SuggestionShownEvent | SuggestionChosenEvent | AudienceSetEvent | ChartRenderedEvent | ChartEditedEvent | ChartReplacedEvent | ChartExportedEvent | ChartAbandonedEvent | InterrogationAskedEvent | InterrogationAnsweredEvent | NavNodeFocusedEvent | NavBranchExpandedEvent | AnnotationStatusChangedEvent
 type ConversationArcEventInput = ConversationArcEvent extends infer E ? E extends ConversationArcEvent ? Omit<E, "timestamp" | "sessionId"> & Partial<Pick<E, "timestamp" | "sessionId">> : never : never
 type ConversationArcEventType = "suggestion-shown" | "suggestion-chosen" | "audience-set" | "chart-rendered" | "chart-edited" | "chart-replaced" | "chart-exported" | "chart-abandoned" | "interrogation-asked" | "interrogation-answered" | "nav-node-focused" | "nav-branch-expanded" | "annotation-status-changed"
