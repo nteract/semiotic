@@ -439,7 +439,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.10",
     "@vitest/ui": "^4.1.10",
-    "ajv": "^8.18.0",
+    "ajv": "^8.20.0",
     "d3-dsv": "^3.0.1",
     "d3-flextree-v4": "^1.0.1",
     "esbuild": "0.28.1",
