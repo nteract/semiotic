@@ -57,7 +57,11 @@ import {
   ensureRingBufferCapacity,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
-import type { UpdateResult } from "./pipelineUpdateContract"
+import {
+  attachUpdateResultStore,
+  type UpdateResult,
+  type UpdateResultStore
+} from "./pipelineUpdateStore"
 import { buildOrdinalCategoryIndex } from "./ordinalDataIndex"
 import { OrdinalPipelineUpdateResults } from "./ordinalPipelineUpdateResults"
 import { syncOrdinalPulseTimestampBuffer } from "./ordinalPulseResources"
@@ -71,7 +75,7 @@ export class OrdinalPipelineStore {
   private rExtents: IncrementalExtent[] = []
   private config: OrdinalPipelineConfig
   private windowSizeWarned = false
-  private updateResults = new OrdinalPipelineUpdateResults()
+  protected updateResults = new OrdinalPipelineUpdateResults()
 
   private getO: (d: Datum) => string
   private getR: (d: Datum) => number
@@ -1303,19 +1307,6 @@ export class OrdinalPipelineStore {
     return this.buffer.toArray()
   }
 
-  /** Most recent additive update result for revision-aware hosts and tests. */
-  getLastUpdateResult(): UpdateResult {
-    return this.updateResults.last
-  }
-
-  getUpdateSnapshot(): UpdateResult {
-    return this.updateResults.last
-  }
-
-  subscribeUpdateResult(listener: () => void): () => void {
-    return this.updateResults.subscribe(listener)
-  }
-
   /**
    * Remove data items by ID. Requires dataIdAccessor to be configured.
    * Returns the removed items. Marks the store dirty for scene rebuild.
@@ -1623,3 +1614,6 @@ export class OrdinalPipelineStore {
     return this.updateResults.last
   }
 }
+
+export interface OrdinalPipelineStore extends UpdateResultStore {}
+attachUpdateResultStore(OrdinalPipelineStore)

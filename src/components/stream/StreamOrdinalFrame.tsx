@@ -38,12 +38,11 @@ import type {
   OrdinalLayout,
   HoverData
 } from "./ordinalTypes"
-import type { FrameGraphicsContext, FrameGraphicsProp } from "./types"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import {
-  SceneRevisionDiagnostics,
-  SceneRevisionDiagnosticsObserver
+  SceneRevisionDiagnosticsObserver,
+  useSceneRevisionDiagnostics
 } from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
@@ -63,7 +62,7 @@ import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableL
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
-import { CanvasFrameBackground, useCanvasFrameHost } from "./useCanvasFrameHost"
+import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -71,7 +70,8 @@ import { filterSparseArray } from "../charts/shared/sparseArray"
 // Canvas setup / hover
 import { getDevicePixelRatio } from "./canvasSetup"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
-import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
+import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
+import { resolveFrameGraphics } from "./frameGraphics"
 
 import { ORDINAL_CANVAS_RENDERERS as RENDERERS } from "./ordinalCanvasRenderers"
 import { DefaultOrdinalTooltip } from "./ordinalDefaultTooltip"
@@ -222,7 +222,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       transition,
       introEnabled,
       tableId,
-      rafRef, renderFnRef, scheduleRender, cancelRender, frameRuntime,
+      rafRef, renderFnRef, scheduleRender, frameRuntime,
     } = frame
 
     // ── Hydration boundary ───────────────────────────────────────────────
@@ -244,40 +244,19 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     // ── Refs ─────────────────────────────────────────────────────────────
 
     const hoverRef = useRef<HoverData | null>(null)
-    const lastLegendCategoriesRef = useRef<string[]>([])
-    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
-    const onCategoriesChangeRef = useRef(onCategoriesChange)
-    legendCategoryAccessorRef.current = legendCategoryAccessor
-    onCategoriesChangeRef.current = onCategoriesChange
-
     // ── State ────────────────────────────────────────────────────────────
 
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [currentScales, setCurrentScales] = useState<OrdinalScales | null>(null)
 
-    // Resolve foreground/background graphics with the frame's resolved
-    // `{o, r, projection}` scales threaded into the callback, so a bespoke SVG
-    // overlay anchors to the same scales the chart drew (§ resolved scales in
-    // graphics callbacks). `currentScales` is null on first render (callback
-    // falls back to its own mapping) then populated after the first layout; the
-    // SSR branch re-resolves with its synchronous scales below.
-    const resolveFrameGraphics = (
-      graphics: FrameGraphicsProp<OrdinalScales>,
-      scales: OrdinalScales | null,
-    ): React.ReactNode =>
-      typeof graphics === "function"
-        ? (graphics as (ctx: FrameGraphicsContext<OrdinalScales>) => React.ReactNode)({ size, margin, scales })
-        : graphics
-    const resolvedForeground = resolveFrameGraphics(foregroundGraphics, currentScales)
-    const resolvedBackground = resolveFrameGraphics(backgroundGraphics, currentScales)
+    const resolvedForeground = resolveFrameGraphics(foregroundGraphics, size, margin, currentScales)
+    const resolvedBackground = resolveFrameGraphics(backgroundGraphics, size, margin, currentScales)
     const [annotationFrame, setAnnotationFrame] = useState(0)
     const lastAnnotationFrameTimeRef = useRef(0)
     const [isStale, setIsStale] = useState(false)
     const lastSceneDimsRef = useRef({ w: -1, h: -1 })
     const pulseFramePendingRef = useRef(false)
-    const sceneRevisionDiagnosticsRef = useRef(
-      new SceneRevisionDiagnostics("StreamOrdinalFrame")
-    )
+    const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamOrdinalFrame")
     // customLayout overlays are read straight from store.customLayoutOverlays at
     // render time (see the foregroundGraphics composition below) — same pattern
     // as StreamXYFrame / StreamNetworkFrame. The render loop's `setAnnotationFrame`
@@ -380,15 +359,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
     // scheduleRender comes from useFrame above.
 
-    const emitLegendCategories = useCallback(() => {
-      const accessor = legendCategoryAccessorRef.current
-      const onChange = onCategoriesChangeRef.current
-      if (!onChange || !accessor) return
-      const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], accessor)
-      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
-      lastLegendCategoriesRef.current = categories
-      onChange(categories)
-    }, [])
+    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange, store => store.getData())
 
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
@@ -512,25 +483,13 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       adapterRef.current?.setBoundedData(safeData)
     }, [data, safeData])
 
-    const { canvasRef } = useCanvasFrameHost({
+    const { canvasRef } = useFrameCanvasHost(frame, {
       storeRef,
       dirtyRef,
-      renderFnRef,
-      scheduleRender,
-      cancelRender,
-      frameRuntime,
       hydrated,
       wasHydratingFromSSR,
       cleanup: () => adapterRef.current?.clear(),
-      canvasPaintDependencies: [
-        chartType,
-        adjustedWidth,
-        adjustedHeight,
-        showAxes,
-        background,
-        backgroundGraphics,
-        scheduleRender,
-      ],
+      canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, scheduleRender],
     })
 
     // ── Hover handlers ───────────────────────────────────────────────────
@@ -973,8 +932,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       const scales = store?.scales ?? null
       // SSR has no `currentScales` state — re-resolve graphics with the scene's
       // synchronously-computed scales so server overlays anchor correctly too.
-      const ssrForeground = resolveFrameGraphics(foregroundGraphics, scales)
-      const ssrBackground = resolveFrameGraphics(backgroundGraphics, scales)
+      const ssrForeground = resolveFrameGraphics(foregroundGraphics, size, margin, scales)
+      const ssrBackground = resolveFrameGraphics(backgroundGraphics, size, margin, scales)
       const isRadial = projection === "radial"
       const translateX = isRadial ? margin.left + adjustedWidth / 2 : margin.left
       const translateY = isRadial ? margin.top + adjustedHeight / 2 : margin.top

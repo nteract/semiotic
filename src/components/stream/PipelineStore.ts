@@ -100,6 +100,10 @@ import {
   pushWithTimestamp
 } from "./pipelineBufferUtils"
 import type { UpdateResult } from "./pipelineUpdateContract"
+import {
+  attachUpdateResultStore,
+  type UpdateResultStore
+} from "./pipelineUpdateStore"
 import { PipelineStoreUpdateResults } from "./pipelineStoreUpdateResults"
 import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
 
@@ -207,7 +211,7 @@ export class PipelineStore {
 
   // Additive M1 reference state. Existing frame paths still use their current
   // dirty flags; new hosts can observe the same mutations as explicit results.
-  private updateResults = new PipelineStoreUpdateResults()
+  protected updateResults = new PipelineStoreUpdateResults()
 
   scales: StreamScales | null = null
   scene: SceneNode[] = []
@@ -1177,19 +1181,6 @@ export class PipelineStore {
     return this.getBufferArray()
   }
 
-  /** Most recent additive update result for revision-aware hosts and tests. */
-  getLastUpdateResult(): UpdateResult {
-    return this.updateResults.last
-  }
-
-  getUpdateSnapshot(): UpdateResult {
-    return this.updateResults.last
-  }
-
-  subscribeUpdateResult(listener: () => void): () => void {
-    return this.updateResults.subscribe(listener)
-  }
-
   /**
    * Remove data points by ID. Requires pointIdAccessor to be configured.
    * Returns the removed items. Marks the store dirty for scene rebuild.
@@ -1367,21 +1358,6 @@ export class PipelineStore {
   }
 
   /**
-   * "Styles changed, repaint the data canvas without rebuilding the scene."
-   * Set by {@link restyleScene}; consumed once per frame by the render loop.
-   * Kept separate from the dirty flag so a style-only selection change repaints
-   * without forcing a layout/scene rebuild (the point of the restyle fast path).
-   */
-  private _stylePaintPending = false
-
-  /** Consume the style-only repaint signal (see {@link _stylePaintPending}). */
-  consumeStylePaintPending(): boolean {
-    const pending = this._stylePaintPending
-    this._stylePaintPending = false
-    return pending
-  }
-
-  /**
    * Re-apply the custom layout's `restyle` to the existing scene for
    * `selection`, off each node's base style — no relayout, no quadtree rebuild
    * (positions are unchanged). No-op when the layout supplied no `restyle`.
@@ -1393,7 +1369,7 @@ export class PipelineStore {
       return
     }
     this.applyCustomRestyle(this.scene, selection)
-    this._stylePaintPending = true
+    this.markStylePaintPending()
     this.updateResults.recordRestyle(true)
   }
 
@@ -1615,3 +1591,6 @@ export class PipelineStore {
     return this.updateResults.last
   }
 }
+
+export interface PipelineStore extends UpdateResultStore {}
+attachUpdateResultStore(PipelineStore)

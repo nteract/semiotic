@@ -1,9 +1,4 @@
-import {
-  geoPath as d3GeoPath,
-  geoGraticule,
-  geoDistance,
-  geoInterpolate
-} from "d3-geo"
+import { geoPath as d3GeoPath } from "d3-geo"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
@@ -11,8 +6,6 @@ import type {
   GeoPipelineConfig,
   GeoScales,
   GeoSceneNode,
-  GeoLineSceneNode,
-  GraticuleConfig,
   DistanceCartogramConfig
 } from "./geoTypes"
 import type {
@@ -50,15 +43,7 @@ import {
 import {
   resolveProjection,
   makeGeoNumericAccessor as makeAccessor,
-  makeLineDataAccessor,
-  resolveGeoStyle as resolveStyle,
-  themedDefaultArea,
-  themedDefaultPoint,
-  themedDefaultLine,
-  splitAntiMeridianPath,
-  buildArcPath,
-  buildOffsetGeoPath,
-  buildOffsetPath
+  makeLineDataAccessor
 } from "./geoPipelineHelpers"
 import { applyDistanceCartogram } from "./geoCartogram"
 import {
@@ -66,7 +51,12 @@ import {
   pushWithTimestamp
 } from "./pipelineBufferUtils"
 import { GeoPipelineUpdateResults } from "./geoPipelineUpdateResults"
-import type { UpdateResult } from "./pipelineUpdateContract"
+import {
+  attachUpdateResultStore,
+  type UpdateResult,
+  type UpdateResultStore
+} from "./pipelineUpdateStore"
+import { buildBuiltInGeoScene } from "./geoSceneBuilder"
 
 // ── GeoPipelineStore ─────────────────────────────────────────────────
 
@@ -74,7 +64,7 @@ const DEFAULT_STREAM_WINDOW_SIZE = 500
 
 export class GeoPipelineStore {
   config: GeoPipelineConfig
-  private updateResults = new GeoPipelineUpdateResults()
+  protected updateResults = new GeoPipelineUpdateResults()
 
   // Scene output
   scene: GeoSceneNode[] = []
@@ -403,19 +393,6 @@ export class GeoPipelineStore {
     return this.lineData.slice()
   }
 
-  /** Most recent additive update result for revision-aware hosts and tests. */
-  getLastUpdateResult(): UpdateResult {
-    return this.updateResults.last
-  }
-
-  getUpdateSnapshot(): UpdateResult {
-    return this.updateResults.last
-  }
-
-  subscribeUpdateResult(listener: () => void): () => void {
-    return this.updateResults.subscribe(listener)
-  }
-
   /**
    * Remove points by ID. Requires pointIdAccessor to be configured.
    * Returns the removed items.
@@ -489,20 +466,6 @@ export class GeoPipelineStore {
     this.config.layoutSelection = selection
   }
 
-  /**
-   * "Styles changed, repaint the data canvas without rebuilding the scene."
-   * Set by {@link restyleScene}; consumed once per frame by the paint loop, so a
-   * style-only selection change repaints without a projection/scene recompute.
-   */
-  private _stylePaintPending = false
-
-  /** Consume the style-only repaint signal (see {@link _stylePaintPending}). */
-  consumeStylePaintPending(): boolean {
-    const pending = this._stylePaintPending
-    this._stylePaintPending = false
-    return pending
-  }
-
   restyleScene(selection: CustomLayoutSelection | null): void {
     const fn = this._customRestyle
     if (!fn) {
@@ -514,7 +477,7 @@ export class GeoPipelineStore {
       const patch = fn(node, selection)
       node.style = patch ? { ...base, ...patch } : base
     }
-    this._stylePaintPending = true
+    this.markStylePaintPending()
     this.updateResults.recordRestyle(true)
   }
 
@@ -963,9 +926,6 @@ export class GeoPipelineStore {
     const { config } = this
     const proj = this.projection!
     const path = this.geoPath!
-    const xAcc = makeAccessor(config.xAccessor, "lon")
-    const yAcc = makeAccessor(config.yAccessor, "lat")
-
     if (config.customLayout && this.scales) {
       const margin = config.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
       const palette = resolveCustomLayoutPalette(
@@ -1057,206 +1017,15 @@ export class GeoPipelineStore {
     this.hasCustomRestyle = false
     this._baseStyles = new WeakMap()
 
-    const nodes: GeoSceneNode[] = []
-
-    // Resolve themed defaults once per scene build. Cheap to precompute,
-    // expensive to rebuild per-feature for large GeoJSON inputs.
-    const areaDefault = themedDefaultArea(config)
-    const lineDefault = themedDefaultLine(config)
-    const pointDefault = themedDefaultPoint(config)
-
-    // Graticule (drawn first, behind everything)
-    if (config.graticule) {
-      const gratConfig: GraticuleConfig = config.graticule === true
-        ? {}
-        : config.graticule
-      const generator = geoGraticule()
-      if (gratConfig.step) generator.step(gratConfig.step)
-
-      const pathData = path(generator()) || ""
-      if (pathData) {
-        nodes.push({
-          type: "geoarea",
-          pathData,
-          centroid: [layout.width / 2, layout.height / 2],
-          bounds: [[0, 0], [layout.width, layout.height]],
-          screenArea: 0,
-          style: {
-            fill: "none",
-            stroke: gratConfig.stroke || "#e0e0e0",
-            strokeWidth: gratConfig.strokeWidth || 0.5,
-            strokeDasharray: gratConfig.strokeDasharray || "2,2"
-          },
-          datum: null,
-          interactive: false
-        })
-      }
-    }
-
-    // Areas (choropleth polygons)
-    for (const feature of this.areas) {
-      const pathData = path(feature)
-      if (!pathData) continue
-
-      const centroid = path.centroid(feature)
-      const featureBounds = path.bounds(feature)
-      const featureArea = path.area(feature)
-
-      const style = resolveStyle(config.areaStyle, feature, areaDefault)
-
-      nodes.push({
-        type: "geoarea",
-        pathData,
-        centroid: centroid as [number, number],
-        bounds: featureBounds as [[number, number], [number, number]],
-        screenArea: featureArea,
-        style,
-        datum: feature,
-        interactive: true
-      })
-    }
-
-    // Lines
-    const lineDataAcc = makeLineDataAccessor(config.lineDataAccessor)
-
-    for (const line of this.lineData) {
-      const coords = lineDataAcc(line)
-      if (!coords || coords.length < 2) continue
-
-      // Project lon/lat coords directly into a screen path, skipping unprojectable points.
-      // For "geo" lines, densify along great-circle arcs between each pair of points.
-      let screenPath: [number, number][] = []
-
-      if (config.lineType === "geo") {
-        // We need lineCoords to compute geoDistance/geoInterpolate, but we
-        // project on the fly to avoid a second array allocation.
-        const lineCoords: [number, number][] = new Array(coords.length)
-        for (let i = 0; i < coords.length; i++) {
-          lineCoords[i] = [xAcc(coords[i]), yAcc(coords[i])]
-        }
-        for (let i = 0; i < lineCoords.length - 1; i++) {
-          const start = lineCoords[i]
-          const end = lineCoords[i + 1]
-          const dist = geoDistance(start, end) || 0
-          const steps = Math.max(2, Math.ceil(dist / (Math.PI / 180)))
-          const interpolate = geoInterpolate(start, end)
-          for (let s = 0; s <= steps; s++) {
-            if (i > 0 && s === 0) continue // avoid duplicate at segment joins
-            const projected = proj(interpolate(s / steps) as [number, number])
-            if (projected != null) screenPath.push(projected as [number, number])
-          }
-        }
-      } else {
-        // Straight-line segments in projected space — fused project + filter.
-        for (let i = 0; i < coords.length; i++) {
-          const d = coords[i]
-          const projected = proj([xAcc(d), yAcc(d)])
-          if (projected != null) screenPath.push(projected as [number, number])
-        }
-      }
-
-      if (screenPath.length < 2) continue
-
-      const style = resolveStyle(config.lineStyle, line, lineDefault) as Style
-      const resolvedStrokeWidth =
-        typeof style.strokeWidth === "number" ? style.strokeWidth : 1
-
-      // Apply flow style transformation (only for simple 2-point source→target flows;
-      // multi-point polylines keep their full geometry).
-      if (coords.length === 2 && screenPath.length >= 2 && config.flowStyle === "arc") {
-        screenPath = buildArcPath(screenPath[0], screenPath[screenPath.length - 1])
-      } else if (coords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset") {
-        if (config.lineType === "geo") {
-          // Offset each point along its local normal to preserve great-circle curvature
-          screenPath = buildOffsetGeoPath(screenPath, resolvedStrokeWidth)
-        } else {
-          screenPath = buildOffsetPath(screenPath[0], screenPath[screenPath.length - 1], line, this.lineData, resolvedStrokeWidth)
-        }
-      }
-
-      // Split lines that wrap around the anti-meridian into separate segments.
-      // Each segment that doesn't span the full viewport is rendered independently.
-      // Lines that jump across the projection edge (>40% of viewport width between
-      // consecutive points) are split and each segment fades at the clipped end.
-      const segments = splitAntiMeridianPath(screenPath, layout.width)
-
-      if (segments.length <= 1) {
-        // No anti-meridian crossing — render as a single line
-        const lineNode: GeoLineSceneNode = {
-          type: "line",
-          path: screenPath.length >= 2 ? screenPath : segments[0] || screenPath,
-          style,
-          datum: line
-        }
-        nodes.push(lineNode)
-      } else {
-        // Anti-meridian crossing detected — render each segment with edge fade
-        for (const segment of segments) {
-          if (segment.length < 2) continue
-          const lineNode: GeoLineSceneNode = {
-            type: "line",
-            path: segment,
-            style: { ...style, _edgeFade: true },
-            datum: line
-          }
-          nodes.push(lineNode)
-        }
-      }
-    }
-
-    // Points
-    const points = this.getPoints()
-    const pointIdAcc = config.pointIdAccessor
-      ? (typeof config.pointIdAccessor === "function"
-        ? config.pointIdAccessor
-        : (d: Datum) => d[config.pointIdAccessor as string])
-      : null
-
-    // For projections with a clip angle (e.g. orthographic), cull points
-    // on the far side. geoProjection still returns screen coords for
-    // backface points — we must check angular distance ourselves.
-    const clipAngle = proj.clipAngle ? (proj.clipAngle() ?? 0) : 0
-    const clipRadians = clipAngle > 0 ? (clipAngle * Math.PI) / 180 : null
-    const rotation = proj.rotate ? proj.rotate() : [0, 0, 0]
-    const center = typeof proj.center === "function" ? proj.center() : [0, 0]
-    const projCenter: [number, number] = [
-      (center[0] ?? 0) - rotation[0],
-      (center[1] ?? 0) - rotation[1]
-    ]
-
-    for (let i = 0; i < points.length; i++) {
-      const d = points[i]
-      const lon = xAcc(d)
-      const lat = yAcc(d)
-
-      // Backface culling: skip points beyond the clip angle
-      if (clipRadians != null) {
-        const dist = geoDistance([lon, lat], projCenter)
-        if (dist > clipRadians) continue
-      }
-
-      const projected = proj([lon, lat])
-      if (!projected) continue
-
-      const baseStyle = config.pointStyle
-        ? config.pointStyle(d)
-        : { ...pointDefault }
-
-      const r = baseStyle.r || 4
-
-      const pointNode: PointSceneNode = {
-        type: "point",
-        x: projected[0],
-        y: projected[1],
-        r,
-        style: baseStyle,
-        datum: d,
-        pointId: pointIdAcc ? String(pointIdAcc(d)) : undefined
-      }
-      nodes.push(pointNode)
-    }
-
-    return nodes
+    return buildBuiltInGeoScene({
+      config,
+      projection: proj,
+      path,
+      areas: this.areas,
+      points: this.getPoints(),
+      lines: this.lineData,
+      layout
+    })
   }
 
   // ── Distance cartogram transform ──────────────────────────────
@@ -1447,3 +1216,6 @@ export class GeoPipelineStore {
     return true
   }
 }
+
+export interface GeoPipelineStore extends UpdateResultStore {}
+attachUpdateResultStore(GeoPipelineStore)

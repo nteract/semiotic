@@ -18,16 +18,15 @@ import type {
   HoverData,
   HoverAnnotationConfig,
   SceneNode,
-  StreamScales,
-  FrameGraphicsContext
+  StreamScales
 } from "./types"
 import { XYBrushOverlay } from "./XYBrushOverlay"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import {
-  SceneRevisionDiagnostics,
-  SceneRevisionDiagnosticsObserver
+  SceneRevisionDiagnosticsObserver,
+  useSceneRevisionDiagnostics
 } from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
@@ -54,8 +53,9 @@ import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableL
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
-import { CanvasFrameBackground, useCanvasFrameHost } from "./useCanvasFrameHost"
+import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
+import { resolveFrameGraphics } from "./frameGraphics"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -283,7 +283,6 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       rafRef,
       renderFnRef,
       scheduleRender,
-      cancelRender,
       frameRuntime,
     } = frame
 
@@ -323,21 +322,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Scales state: updated after each scene computation so SVGOverlay re-renders
     const [currentScales, setCurrentScales] = useState<StreamScales | null>(null)
 
-    // Resolve foreground/background graphics, threading the resolved scales into
-    // the callback so a bespoke SVG overlay anchors to the same x/y the chart
-    // drew (§ "resolved scales in graphics callbacks"). `currentScales` is null
-    // on the very first render (callback falls back to its own mapping) and is
-    // populated after the first layout, triggering a re-resolve. The SSR branch
-    // re-resolves with its synchronously-computed scales below.
-    const resolveFrameGraphics = (
-      graphics: typeof foregroundGraphics,
-      scales: StreamScales | null,
-    ): React.ReactNode =>
-      typeof graphics === "function"
-        ? (graphics as (ctx: FrameGraphicsContext) => React.ReactNode)({ size, margin, scales })
-        : graphics
-    const resolvedForeground = resolveFrameGraphics(foregroundGraphics, currentScales)
-    const resolvedBackground = resolveFrameGraphics(backgroundGraphics, currentScales)
+    const resolvedForeground = resolveFrameGraphics(foregroundGraphics, size, margin, currentScales)
+    const resolvedBackground = resolveFrameGraphics(backgroundGraphics, size, margin, currentScales)
 
     // Hover state: ref for canvas (sync), React state for tooltip (async)
     const hoverRef = useRef<HoverData | null>(null)
@@ -351,14 +337,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const themeColorCacheRef = useRef(createFrameThemeColorCache())
     /** True when the interaction canvas last painted hover/highlight content. */
     const interactionHasContentRef = useRef(false)
-    const sceneRevisionDiagnosticsRef = useRef(
-      new SceneRevisionDiagnostics("StreamXYFrame")
-    )
-    const lastLegendCategoriesRef = useRef<string[]>([])
-    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
-    const onCategoriesChangeRef = useRef(onCategoriesChange)
-    legendCategoryAccessorRef.current = legendCategoryAccessor
-    onCategoriesChangeRef.current = onCategoriesChange
+    const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamXYFrame")
 
     // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
@@ -497,7 +476,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // scheduleRender comes from useFrame above.
 
-    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessorRef, onCategoriesChangeRef, lastLegendCategoriesRef)
+    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange, store => store.getData())
 
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
@@ -623,27 +602,13 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       adapterRef.current?.setBoundedData(safeData)
     }, [data, safeData, lineDataAccessor])
 
-    const { canvasRef, interactionCanvasRef } = useCanvasFrameHost({
+    const { canvasRef, interactionCanvasRef } = useFrameCanvasHost(frame, {
       storeRef,
       dirtyRef,
-      renderFnRef,
-      scheduleRender,
-      cancelRender,
-      frameRuntime,
       hydrated,
       wasHydratingFromSSR,
       cleanup: () => adapterRef.current?.clear(),
-      canvasPaintDependencies: [
-        chartType,
-        adjustedWidth,
-        adjustedHeight,
-        showAxes,
-        background,
-        backgroundGraphics,
-        lineStyle,
-        canvasPreRenderers,
-        scheduleRender,
-      ],
+      canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, lineStyle, canvasPreRenderers, scheduleRender],
     })
 
     // ── Hover handlers ───────────────────────────────────────────────────
@@ -1281,8 +1246,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const scales = store?.scales ?? null
       // SSR has no `currentScales` state — re-resolve graphics with the scene's
       // synchronously-computed scales so server overlays anchor correctly too.
-      const ssrForeground = resolveFrameGraphics(foregroundGraphics, scales)
-      const ssrBackground = resolveFrameGraphics(backgroundGraphics, scales)
+      const ssrForeground = resolveFrameGraphics(foregroundGraphics, size, margin, scales)
+      const ssrBackground = resolveFrameGraphics(backgroundGraphics, size, margin, scales)
 
       // SSR: compute date format from SSR-computed scales (currentScales is null in SSR)
       const ssrXFormat: StreamXYFrameProps["xFormat"] = effectiveXFormat || ((): StreamXYFrameProps["xFormat"] => {

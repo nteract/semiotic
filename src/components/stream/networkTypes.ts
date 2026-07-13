@@ -846,32 +846,7 @@ export interface StreamNetworkFrameProps<T = Datum> {
 
 // ── Ref handle ──────────────────────────────────────────────────────
 
-export interface StreamNetworkFrameHandle {
-  push(edge: EdgePush): void
-  pushMany(edges: EdgePush[]): void
-  /** Remove a node by ID. Also removes connected edges. */
-  removeNode(id: string): boolean
-  /** Remove edges by source+target, or by edge ID when edgeIdAccessor is configured. */
-  removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean
-  /** Update a node's data by ID. Returns previous data. */
-  updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
-  /** Update all edges between source+target. Returns array of previous data. */
-  updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
-  clear(): void
-  getTopology(): { nodes: RealtimeNode[]; edges: RealtimeEdge[] }
-  getTopologyDiff(): { addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[] }
-  relayout(): void
-  getTension(): number
-  /** The most recent custom layout result (sceneNodes/sceneEdges/overlays as
-   *  returned by `customNetworkLayout`) — host readback so pages that need the
-   *  computed placement don't re-run the layout. Null before the first layout
-   *  or when no custom layout is configured. A failed retry retains the prior
-   *  good result; inspect `getLayoutFailure()` to distinguish recovery. */
-  getCustomLayout(): import("./networkCustomLayout").NetworkLayoutResult | null
-  /** The latest custom-layout failure, if any. Cleared by a successful layout,
-   * removing the custom layout, or `clear()`. */
-  getLayoutFailure(): import("./customLayoutFailure").CustomLayoutFailureDiagnostic | null
-}
+export type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 
 // ── Canvas renderer function type ───────────────────────────────────
 

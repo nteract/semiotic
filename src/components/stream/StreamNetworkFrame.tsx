@@ -25,8 +25,9 @@ import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { DEFAULT_TENSION_CONFIG, DEFAULT_PARTICLE_STYLE } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import {
-  SceneRevisionDiagnostics,
-  SceneRevisionDiagnosticsObserver
+  SceneRevisionDiagnosticsObserver,
+  runSceneBuild,
+  useSceneRevisionDiagnostics
 } from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
@@ -55,7 +56,7 @@ import {
   useHydration,
   useWasHydratingFromSSR
 } from "./useHydration"
-import { CanvasFrameBackground, useCanvasFrameHost } from "./useCanvasFrameHost"
+import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
 import {
   NetworkAccessibleDataTable,
@@ -246,7 +247,7 @@ const StreamNetworkFrame = memo(forwardRef<
     transition,
     introEnabled,
     tableId,
-    rafRef, renderFnRef, scheduleRender, cancelRender, frameRuntime,
+    rafRef, renderFnRef, scheduleRender, frameRuntime,
     currentTheme
   } = frame
 
@@ -468,66 +469,16 @@ const StreamNetworkFrame = memo(forwardRef<
     })
   )
 
-  // ── Refs ─────────────────────────────────────────────────────────────
-
-  // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
-  // useFrame (above). Network's previous local scheduleRender had an
-  // isContinuous branch, but its pending-frame guard made that branch's
-  // effect identical to the simple "bail if pending" — so the shared hook
-  // semantics preserve Network's behavior exactly.
-  // rafRef + renderFnRef + scheduleRender + dirtyRef + theme-change
-  // effect all destructured from useFrame above; not redeclared here.
   const lastFrameTimeRef = useRef(0)
-  // Throttle the rAF-driven `setAnnotationFrame((f) => f + 1)` below.
-  // Continuous-animation chart types (orbit, pulse-driven, particle
-  // sankey) keep `animationTicked`/`hasActivePulses` true on every
-  // frame, so an unguarded setAnnotationFrame would fire 60 React
-  // re-renders per second per chart instance. When a parent component
-  // *also* re-renders the page on its own cadence (PageLayout's
-  // IntersectionObserver firing on scroll, for instance, hands fresh
-  // inline-arrow function refs through to OrbitDiagram, which the
-  // stabilizer can't absorb because functions aren't shallow-equal),
-  // the two update streams compound and trip React 19's max-update-
-  // depth guard. ~30 Hz is plenty for label-position updates that
-  // track a moving scene; the canvas itself paints every frame.
   const lastAnnotationFrameTimeRef = useRef(0)
-  // Set when the throttle gate blocks a `setAnnotationFrame` and the
-  // chart isn't already in a continuous-rAF mode. The next-frame
-  // continuation below honors this so a one-shot push never drops its
-  // SVG-layer reconciliation just because it landed inside the 33 ms
-  // gate of a recent fire.
   const pendingAnnotationFrameRef = useRef(false)
-
-  // ── Store ────────────────────────────────────────────────────────────
 
   const storeRef = useRef<NetworkPipelineStore | null>(null)
   if (!storeRef.current) {
     storeRef.current = new NetworkPipelineStore(stablePipelineConfig)
   }
-  const sceneRevisionDiagnosticsRef = useRef(
-    new SceneRevisionDiagnostics("StreamNetworkFrame")
-  )
-  const buildSceneWithDiagnostics = useCallback(
-    (
-      store: NetworkPipelineStore,
-      sceneSize: [number, number],
-      isTransitioning = false
-    ) => {
-      const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(
-        store.getLastUpdateResult(),
-        isTransitioning
-      )
-      store.buildScene(sceneSize)
-      sceneRevisionDiagnosticsRef.current.afterCompute(
-        sceneRevisionCheck,
-        true,
-        false
-      )
-    },
-    []
-  )
-
-  // ── State ────────────────────────────────────────────────────────────
+  const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamNetworkFrame")
+  const buildSceneWithDiagnostics = useCallback((store: NetworkPipelineStore, sceneSize: [number, number], isTransitioning = false) => runSceneBuild(sceneRevisionDiagnosticsRef.current, store, () => store.buildScene(sceneSize), isTransitioning), [])
 
   const [hoverData, setHoverData] = useState<HoverData | null>(null)
   const [_layoutVersion, setLayoutVersion] = useState(0)
@@ -1430,27 +1381,12 @@ const StreamNetworkFrame = memo(forwardRef<
     })
   }
 
-  // ── Shared canvas-host lifecycle ─────────────────────────────────────
-
-  const { canvasRef } = useCanvasFrameHost({
+  const { canvasRef } = useFrameCanvasHost(frame, {
     hydrated,
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
-    renderFnRef,
-    scheduleRender,
-    cancelRender,
-    frameRuntime,
-    // Network owns layout, hit testing, and canvas paint. The host owns only
-    // retained-canvas refs, hydration, runtime cancellation, and invalidation.
-    canvasPaintDependencies: [
-      chartType,
-      adjustedWidth,
-      adjustedHeight,
-      background,
-      backgroundGraphics,
-      scheduleRender,
-    ],
+    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, scheduleRender],
   })
 
   // ── Staleness timer ─────────────────────────────────────────────────

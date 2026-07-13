@@ -18,7 +18,7 @@ import type {
   ReactNode,
   RefObject,
 } from "react"
-import type { FrameMargin } from "./useFrame"
+import type { FrameMargin, UseFrameResult } from "./useFrame"
 import { useHydrationLifecycle } from "./useHydration"
 
 export interface CanvasFrameHostRuntime {
@@ -71,6 +71,16 @@ export interface CanvasFrameHostResult {
   /** Optional family use for hover/crosshair/highlight canvas content. */
   interactionCanvasRef: RefObject<HTMLCanvasElement | null>
 }
+
+type FrameCanvasHost = Pick<
+  UseFrameResult,
+  "renderFnRef" | "scheduleRender" | "cancelRender" | "frameRuntime"
+>
+
+type FrameCanvasHostInput<TStore extends object> = Omit<
+  UseCanvasFrameHostInput<TStore>,
+  "renderFnRef" | "scheduleRender" | "cancelRender" | "frameRuntime"
+>
 
 /**
  * Installs common canvas-host lifecycle without absorbing family render work.
@@ -131,6 +141,20 @@ export function useCanvasFrameHost<TStore extends object>(
   }, input.canvasPaintDependencies)
 
   return { canvasRef, interactionCanvasRef }
+}
+
+/** Bind a family-owned store to the common scheduling runtime from useFrame. */
+export function useFrameCanvasHost<TStore extends object>(
+  frame: FrameCanvasHost,
+  input: FrameCanvasHostInput<TStore>,
+): CanvasFrameHostResult {
+  return useCanvasFrameHost({
+    ...input,
+    renderFnRef: frame.renderFnRef,
+    scheduleRender: frame.scheduleRender,
+    cancelRender: frame.cancelRender,
+    frameRuntime: frame.frameRuntime,
+  })
 }
 
 export interface CanvasFrameBackgroundProps {

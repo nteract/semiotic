@@ -1,21 +1,12 @@
-import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
 import type {
-  NetworkLayoutContext,
   NetworkLayoutResult,
   NetworkHtmlMark
 } from "./networkCustomLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
-import {
-  resolveCustomLayoutPalette,
-  buildResolveColor
-} from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
-import {
-  createCustomLayoutFailureDiagnostic,
-  type CustomLayoutFailureDiagnostic
-} from "./customLayoutFailure"
+import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 import {
   computeEasing,
   computeRawProgress,
@@ -54,7 +45,16 @@ import {
 import { DEFAULT_TENSION_CONFIG } from "./networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import { NetworkPipelineUpdateResults } from "./networkPipelineUpdateResults"
-import type { UpdateResult } from "./pipelineUpdateContract"
+import {
+  attachUpdateResultStore,
+  type UpdateResult,
+  type UpdateResultStore
+} from "./pipelineUpdateStore"
+import { runNetworkCustomLayout } from "./networkCustomLayoutRunner"
+import {
+  restyleNetworkCustomScene,
+  snapshotNetworkCustomStyles
+} from "./networkCustomRestyle"
 
 /**
  * NetworkPipelineStore — stateful store for the StreamNetworkFrame.
@@ -146,7 +146,7 @@ export class NetworkPipelineStore {
 
   private config: NetworkPipelineConfig
   private tensionConfig: TensionConfig
-  private updateResults = new NetworkPipelineUpdateResults()
+  protected updateResults = new NetworkPipelineUpdateResults()
 
   /** Keep ingest, live encodings, staleness, and transitions on one clock. */
   private currentTime(): number {
@@ -794,14 +794,6 @@ export class NetworkPipelineStore {
     this.config.layoutSelection = selection
   }
 
-  /** Snapshot each mark's as-emitted style so {@link restyleScene} can re-apply
-   *  patches from the original rather than compounding. */
-  private snapshotBaseStyles(): void {
-    this._baseStyles = new WeakMap()
-    for (const node of this.sceneNodes) this._baseStyles.set(node, node.style)
-    for (const edge of this.sceneEdges) this._baseStyles.set(edge, edge.style)
-  }
-
   /**
    * Re-apply the custom layout's `restyle`/`restyleEdge` to the existing scene
    * for `selection`, mutating styles **in place** off each mark's base style.
@@ -809,40 +801,16 @@ export class NetworkPipelineStore {
    * stays valid and no relayout/repack happens. The frame repaints the canvas
    * after calling this. No-op when the layout supplied no restyle callbacks.
    */
-  /**
-   * "Styles changed, repaint the data canvas without rebuilding the scene."
-   * Set by {@link restyleScene}; consumed once per frame by the paint loop.
-   * Deliberately separate from `_sceneNodesRevision` (the quadtree-invalidation
-   * counter) so a style-only selection change repaints without a relayout.
-   */
-  private _stylePaintPending = false
-
-  /** Consume the style-only repaint signal (see {@link _stylePaintPending}). */
-  consumeStylePaintPending(): boolean {
-    const pending = this._stylePaintPending
-    this._stylePaintPending = false
-    return pending
-  }
-
   restyleScene(selection: CustomLayoutSelection | null): void {
-    const hasCustomRestyle = Boolean(this._customRestyle || this._customRestyleEdge)
-    if (this._customRestyle) {
-      const fn = this._customRestyle
-      for (const node of this.sceneNodes) {
-        const base = this._baseStyles.get(node) ?? node.style
-        const patch = fn(node, selection)
-        node.style = patch ? { ...base, ...patch } : base
-      }
-    }
-    if (this._customRestyleEdge) {
-      const fn = this._customRestyleEdge
-      for (const edge of this.sceneEdges) {
-        const base = this._baseStyles.get(edge) ?? edge.style
-        const patch = fn(edge, selection)
-        edge.style = patch ? { ...base, ...patch } : base
-      }
-    }
-    this._stylePaintPending = true
+    const hasCustomRestyle = restyleNetworkCustomScene({
+      nodes: this.sceneNodes,
+      edges: this.sceneEdges,
+      restyle: this._customRestyle,
+      restyleEdge: this._customRestyleEdge,
+      baseStyles: this._baseStyles,
+      selection
+    })
+    this.markStylePaintPending()
     this.updateResults.recordRestyle(hasCustomRestyle)
   }
 
@@ -851,55 +819,18 @@ export class NetworkPipelineStore {
     // user emit scene primitives directly. Hit testing, decay, and SSR keep
     // working because they consume `this.sceneNodes`/`sceneEdges`.
     if (this.config.customNetworkLayout) {
-      // User code may freely read or mutate these — always hand it fresh arrays.
-      const nodesArr = Array.from(this.nodes.values())
-      const edgesArr = Array.from(this.edges.values())
-      // Palette + resolveColor share the same shape across network and
-      // ordinal customLayout escape hatches — see `customLayoutPalette.ts`.
-      const palette = resolveCustomLayoutPalette(
-        this.config.colorScheme,
-        this.config.themeCategorical,
-        schemeCategory10 as readonly string[]
-      )
-      const ctx: NetworkLayoutContext = {
-        nodes: nodesArr,
-        edges: edgesArr,
-        dimensions: {
-          width: size[0],
-          height: size[1],
-          plot: { x: 0, y: 0, width: size[0], height: size[1] }
-        },
-        theme: {
-          semantic: this.config.themeSemantic ?? {},
-          categorical: [...palette]
-        },
-        resolveColor: buildResolveColor(palette, this.config.colorScheme),
-        config: (this.config.layoutConfig ?? {}) as Record<string, unknown>,
-        selection: this.config.layoutSelection ?? null
-      }
-      let result
-      try {
-        result = this.config.customNetworkLayout(ctx)
-      } catch (err) {
-        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
-        const diagnostic = createCustomLayoutFailureDiagnostic(
-          "network",
-          err,
-          preservedLastGoodScene,
-          this.layoutVersion
-        )
-        this.lastCustomLayoutFailure = diagnostic
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[semiotic] customNetworkLayout threw:", err)
-        }
-        try {
-          this.config.onLayoutError?.(diagnostic)
-        } catch (callbackError) {
-          if (process.env.NODE_ENV !== "production") {
-            console.error("[semiotic] onLayoutError threw:", callbackError)
-          }
-        }
-        if (!preservedLastGoodScene) {
+      const outcome = runNetworkCustomLayout({
+        config: this.config,
+        customLayout: this.config.customNetworkLayout,
+        size,
+        nodes: Array.from(this.nodes.values()),
+        edges: Array.from(this.edges.values()),
+        previousResult: this.lastCustomLayoutResult,
+        revision: this.layoutVersion
+      })
+      if (outcome.kind === "failure") {
+        this.lastCustomLayoutFailure = outcome.diagnostic
+        if (!outcome.preservedLastGoodScene) {
           // A new custom layout must not leave a previously-built plugin scene
           // visible when it fails before ever emitting its own result.
           this.sceneNodes = []
@@ -916,6 +847,7 @@ export class NetworkPipelineStore {
         }
         return
       }
+      const result = outcome.result
       this.sceneNodes = result.sceneNodes ?? []
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
@@ -934,7 +866,7 @@ export class NetworkPipelineStore {
       this._customRestyleEdge = result.restyleEdge
       this.hasCustomRestyle = !!(result.restyle || result.restyleEdge)
       if (this.hasCustomRestyle) {
-        this.snapshotBaseStyles()
+        this._baseStyles = snapshotNetworkCustomStyles(this.sceneNodes, this.sceneEdges)
         this.restyleScene(this.config.layoutSelection ?? null)
       }
       warnCustomLayoutDiagnostics({
@@ -1434,19 +1366,6 @@ export class NetworkPipelineStore {
     }
   }
 
-  /** Most recent additive update result for revision-aware hosts and tests. */
-  getLastUpdateResult(): UpdateResult {
-    return this.updateResults.last
-  }
-
-  getUpdateSnapshot(): UpdateResult {
-    return this.updateResults.last
-  }
-
-  subscribeUpdateResult(listener: () => void): () => void {
-    return this.updateResults.subscribe(listener)
-  }
-
   /**
    * Update a node's data by ID. Returns the previous data, or null if not found.
    */
@@ -1637,3 +1556,6 @@ export class NetworkPipelineStore {
     this.updateResults.recordData("clear")
   }
 }
+
+export interface NetworkPipelineStore extends UpdateResultStore {}
+attachUpdateResultStore(NetworkPipelineStore)

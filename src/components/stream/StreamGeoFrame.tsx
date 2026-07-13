@@ -22,8 +22,8 @@ import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./ty
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import {
-  SceneRevisionDiagnostics,
-  SceneRevisionDiagnosticsObserver
+  SceneRevisionDiagnosticsObserver,
+  useSceneRevisionDiagnostics
 } from "./sceneRevisionDiagnostics"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import type { GeoPipelineConfig } from "./geoTypes"
@@ -36,12 +36,12 @@ import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
-import { CanvasFrameBackground, useCanvasFrameHost } from "./useCanvasFrameHost"
+import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasBackground } from "./canvasBackground"
 import { needsDataCanvasPaint, needsInteractionCanvasPaint } from "./paintNeeds"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
-import { extractCategoryDomain, sameCategoryDomain } from "./categoryDomain"
+import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { extractGeoNavPoints, nextIndex } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
@@ -223,7 +223,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       introEnabled,
       tableId,
       frameRuntime,
-      rafRef, renderFnRef, scheduleRender, cancelRender,
+      rafRef, renderFnRef, scheduleRender,
       currentTheme,
     } = frame
 
@@ -323,11 +323,6 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     const isZoomingRef = useRef(false)
     const containerRef = useRef<HTMLDivElement | null>(null)
 
-    // Combine responsive + container refs. Hoisted above the SSR
-    // early-return so the hook count stays equal across renders —
-    // before this lived inside the canvas branch, which made the
-    // SVG-branch first render call fewer hooks than the canvas-branch
-    // re-render and tripped React's rules-of-hooks check.
     const combinedRef = useCallback((el: HTMLDivElement | null) => {
       containerRef.current = el
       if (responsiveRef && typeof responsiveRef === "object") {
@@ -354,9 +349,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     /** True when interaction canvas last painted hover content (for idle skip). */
     const interactionHasContentRef = useRef(false)
     const pulseFramePendingRef = useRef(false)
-    const sceneRevisionDiagnosticsRef = useRef(
-      new SceneRevisionDiagnostics("StreamGeoFrame")
-    )
+    const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamGeoFrame")
     const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
@@ -365,29 +358,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // Staleness
     const [isStale, setIsStale] = useState(false)
 
-    // ── Push-mode legend category emission ───────────────────────────
-    // Mirrors StreamXYFrame: keep the latest accessor + callback in
-    // refs so the renderFn closure (recomputed via dirtyRef) reads
-    // current values without rebinding. Each rebuild of the scene
-    // diffs the discovered category list against the last emit and
-    // fires `onCategoriesChange` only on change. Empty data, missing
-    // accessor, or no callback are all no-ops; this is safe to call
-    // unconditionally inside the render loop.
-    const lastLegendCategoriesRef = useRef<string[]>([])
-    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
-    const onCategoriesChangeRef = useRef(onCategoriesChange)
-    legendCategoryAccessorRef.current = legendCategoryAccessor
-    onCategoriesChangeRef.current = onCategoriesChange
-
-    const emitLegendCategories = useCallback(() => {
-      const accessor = legendCategoryAccessorRef.current
-      const onChange = onCategoriesChangeRef.current
-      if (!onChange || !accessor) return
-      const categories = extractCategoryDomain(storeRef.current?.getPoints() ?? [], accessor)
-      if (sameCategoryDomain(categories, lastLegendCategoriesRef.current)) return
-      lastLegendCategoriesRef.current = categories
-      onChange(categories)
-    }, [])
+    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange, store => store.getPoints())
 
     // scheduleRender comes from useFrame above.
 
@@ -1030,27 +1001,13 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       }
     }
 
-    // ── Shared canvas-host lifecycle ───────────────────────────────────
-
-    const { canvasRef, interactionCanvasRef } = useCanvasFrameHost({
+    const { canvasRef, interactionCanvasRef } = useFrameCanvasHost(frame, {
       hydrated,
       wasHydratingFromSSR,
       storeRef,
       dirtyRef,
-      renderFnRef,
-      scheduleRender,
-      cancelRender,
-      frameRuntime,
-      // Geo-specific: clear the tile cache on unmount so background
-      // map tiles don't leak across remounts.
       cleanup: () => tileCacheRef.current?.clear(),
-      canvasPaintDependencies: [
-        adjustedWidth,
-        adjustedHeight,
-        background,
-        backgroundGraphics,
-        scheduleRender,
-      ],
+      canvasPaintDependencies: [adjustedWidth, adjustedHeight, background, backgroundGraphics, scheduleRender],
     })
 
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)

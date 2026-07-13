@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react"
+import { memo, useEffect, useRef } from "react"
 import type {
   RevisionSet,
   UpdateResult,
@@ -118,6 +118,24 @@ export class SceneRevisionDiagnostics {
       this.lastDuplicateWarning = ""
     }
   }
+}
+
+/** Keep a frame's development-only revision tracker stable across renders. */
+export function useSceneRevisionDiagnostics(hostName: string) {
+  return useRef(new SceneRevisionDiagnostics(hostName))
+}
+
+/** Wrap an unconditional scene build with the common revision accounting. */
+export function runSceneBuild(
+  diagnostics: SceneRevisionDiagnostics,
+  store: UpdateResultStore,
+  build: () => void,
+  isTransitioning = false,
+  dimsChanged = false,
+): void {
+  const check = diagnostics.beforeCompute(store.getLastUpdateResult(), isTransitioning)
+  build()
+  diagnostics.afterCompute(check, true, dimsChanged)
 }
 
 /**

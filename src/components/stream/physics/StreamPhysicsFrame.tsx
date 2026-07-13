@@ -16,7 +16,7 @@ import {
   useHydration,
   useWasHydratingFromSSR
 } from "../useHydration"
-import { CanvasFrameBackground, useCanvasFrameHost } from "../useCanvasFrameHost"
+import { CanvasFrameBackground, useFrameCanvasHost } from "../useCanvasFrameHost"
 import { isServerEnvironment } from "../SceneToSVG"
 import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -42,10 +42,9 @@ import {
   type PhysicsObservationEvent,
   type PhysicsPipelineSnapshot,
   type PhysicsPipelineTickResult,
-  type PhysicsQueuedSpawn,
-  type PhysicsSpawnPacingOptions,
   type PhysicsSimulationState
 } from "./PhysicsPipelineStore"
+import { createPhysicsFrameStore, defaultPhysicsFrameClock } from "./physicsFrameSetup"
 import { renderPhysicsSettledSVG } from "./PhysicsSettledSVG"
 import { composePhysicsControllers } from "./PhysicsControllers"
 import {
@@ -63,8 +62,8 @@ import {
 } from "./usePhysicsFrameLifecyclePolicy"
 import { FocusRing } from "../FocusRing"
 import {
-  SceneRevisionDiagnostics,
-  SceneRevisionDiagnosticsObserver
+  SceneRevisionDiagnosticsObserver,
+  useSceneRevisionDiagnostics
 } from "../sceneRevisionDiagnostics"
 import {
   AriaLiveTooltip,
@@ -139,33 +138,9 @@ import {
 
 const DEFAULT_SIZE: [number, number] = [640, 360]
 const DEFAULT_MARGIN: FrameMargin = { top: 0, right: 0, bottom: 0, left: 0 }
-const NAV_KEYS = new Set([
-  "ArrowRight",
-  "ArrowLeft",
-  "ArrowUp",
-  "ArrowDown",
-  "Home",
-  "End",
-  "PageUp",
-  "PageDown"
-])
-function createStore(
-  config: PhysicsPipelineConfig | undefined,
-  initialSpawns: PhysicsQueuedSpawn[] | undefined,
-  initialSpawnPacing: PhysicsSpawnPacingOptions | undefined
-): PhysicsPipelineStore {
-  const store = new PhysicsPipelineStore(config)
-  if (initialSpawns?.length) {
-    store.enqueue(initialSpawns, initialSpawnPacing)
-  }
-  return store
-}
+const NAV_KEYS = new Set(["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"])
 
 const CHART_TYPE = "StreamPhysicsFrame"
-
-function defaultFrameClock(): number {
-  return typeof performance !== "undefined" ? performance.now() : Date.now()
-}
 
 export const StreamPhysicsFrame = memo(forwardRef<
   StreamPhysicsFrameHandle,
@@ -323,8 +298,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
   )
   const hasRuntimeBodyForces = Boolean(composedBodyForces)
   const storeRef = useRef<PhysicsPipelineStore | null>(null)
-  const wallClockRef = useRef<() => number>(clock ?? defaultFrameClock)
-  wallClockRef.current = clock ?? defaultFrameClock
+  const wallClockRef = useRef<() => number>(clock ?? defaultPhysicsFrameClock)
+  wallClockRef.current = clock ?? defaultPhysicsFrameClock
 
   const applyRegionImpulse = useCallback(
     (
@@ -437,9 +412,6 @@ export const StreamPhysicsFrame = memo(forwardRef<
   }, [annotations, chartId, sizeProp])
 
   const augmentedConfig = React.useMemo(() => {
-    // Preserve the established kernel configuration surface. The common
-    // frame-level seed is a compatibility default only; a declared kernel
-    // seed remains authoritative for deterministic simulation snapshots.
     const effectiveConfig =
       seed === undefined || config?.kernel?.seed !== undefined
         ? config
@@ -517,23 +489,16 @@ export const StreamPhysicsFrame = memo(forwardRef<
   ])
 
   if (!storeRef.current) {
-    const store = createStore(augmentedConfig, initialSpawns, initialSpawnPacing)
-    // Seed pause/visibility before the post-commit effects request work. That
-    // avoids a one-frame continuous simulation request while an initially
-    // paused or hidden frame is still being mounted.
+    const store = createPhysicsFrameStore(augmentedConfig, initialSpawns, initialSpawnPacing)
     store.setPaused(paused)
     if (suspendWhenHidden) store.setVisible(isPhysicsDocumentVisible())
     storeRef.current = store
   }
 
   const semanticFocusIndexRef = useRef(-1)
-  // `0` is a valid injected-clock value, so use null as the "no previous
-  // frame" sentinel rather than making deterministic clocks lose a delta.
   const lastFrameTimeRef = useRef<number | null>(null)
   const dirtyRef = useRef(true)
-  const sceneRevisionDiagnosticsRef = useRef(
-    new SceneRevisionDiagnostics("StreamPhysicsFrame")
-  )
+  const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamPhysicsFrame")
   const executionStateKeyRef = useRef("")
   const svgInstanceId = useId().replace(/:/g, "")
   const workerActiveRef = useRef(false)
@@ -869,18 +834,11 @@ export const StreamPhysicsFrame = memo(forwardRef<
     const canvas = canvasRef.current
     const store = storeRef.current
     if (!canvas || !store) return
-    const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(
-      store.getLastUpdateResult(),
-      false
-    )
+    const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(store.getLastUpdateResult(), false)
     const dpr = getDevicePixelRatio()
     const ctx = prepareCanvas(canvas, size, margin, dpr)
     if (!ctx) {
-      sceneRevisionDiagnosticsRef.current.afterCompute(
-        sceneRevisionCheck,
-        false,
-        false
-      )
+      sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, false, false)
       return
     }
 
@@ -888,7 +846,6 @@ export const StreamPhysicsFrame = memo(forwardRef<
     ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
     if (!backgroundGraphics) {
       if (background === "transparent") {
-        // leave cleared (compositing over siblings)
       } else {
         ctx.fillStyle = background ?? theme.background
         ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
@@ -961,11 +918,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
       popAnimationsRef.current,
       logicalClockRef.current()
     )
-    sceneRevisionDiagnosticsRef.current.afterCompute(
-      sceneRevisionCheck,
-      true,
-      false
-    )
+    sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, true, false)
     dirtyRef.current = false
   }, [
     afterPaint,
@@ -1220,10 +1173,6 @@ export const StreamPhysicsFrame = memo(forwardRef<
   ])
 
   const renderFrame = useCallback(() => {
-    // A direct (hydration / imperative) render takes ownership from any
-    // queued frame. The scheduler callback has already released its token,
-    // so this is a no-op in the normal rAF path but prevents a stale callback
-    // from racing a synchronous paint.
     cancelRender()
     rafRef.current = null
     const store = storeRef.current
@@ -1324,28 +1273,14 @@ export const StreamPhysicsFrame = memo(forwardRef<
 
   renderFnRef.current = renderFrame
 
-  const { canvasRef } = useCanvasFrameHost({
+  const { canvasRef } = useFrameCanvasHost(frame, {
     hydrated,
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
-    renderFnRef,
-    scheduleRender,
-    cancelRender,
-    frameRuntime,
-    // Physics retains its worker-aware pause/visibility policy below so the
-    // worker and retained store transition together. The host still owns the
-    // canvas refs, hydration boundary, and dependency-change repaint handoff.
     manageFrameRuntime: false,
     skipInitialCanvasPaintInvalidation: true,
-    // Physics's local paint effect already handles size, margin, and body
-    // styling changes synchronously. The host only needs the SVG-background
-    // composition inputs that can otherwise leave an opaque canvas behind.
-    canvasPaintDependencies: [
-      background,
-      backgroundGraphics,
-      scheduleRender,
-    ],
+    canvasPaintDependencies: [background, backgroundGraphics, scheduleRender],
   })
 
   useEffect(() => {
@@ -1355,16 +1290,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
     }
     storeRef.current?.updateConfig(augmentedConfig ?? {})
     requestRender()
-    // requestRender depends on paint/layout callbacks; config changes are the
-    // intentional trigger here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [augmentedConfig, stopWorker])
 
   useEffect(() => {
     workerFailedRef.current = false
     requestRender()
-    // requestRender depends on paint/layout callbacks; hydration and execution
-    // settings are the intentional triggers here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, simulationExecution, workerBodyThreshold])
 
@@ -1552,7 +1483,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
 
   if (serverLikeRender) {
     const store =
-      storeRef.current ?? createStore(augmentedConfig, initialSpawns, initialSpawnPacing)
+      storeRef.current ?? createPhysicsFrameStore(augmentedConfig, initialSpawns, initialSpawnPacing)
     const titleText = typeof title === "string" ? title : undefined
     const { svg } = renderPhysicsSettledSVG(store, {
       width: size[0],
