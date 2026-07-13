@@ -4,6 +4,7 @@ import { act, render } from "@testing-library/react"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamNetworkFrameHandle } from "./networkTypes"
+import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 // ResizeObserver is polyfilled globally in src/setupTests.ts.
 
@@ -262,6 +263,72 @@ describe("StreamNetworkFrame", () => {
       const after = ref.current!.getTopology()
       expect(after.edges.length).toBeGreaterThan(0)
       expect(after.nodes.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe("frame runtime policy", () => {
+    it("freezes logical time and cancels scheduled paints while paused", async () => {
+      const scheduler = createFrameScheduler(0)
+      let wallTime = 0
+      const clock = () => wallTime
+      const StoreModule = await import("./NetworkPipelineStore")
+      const advanceSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "advanceTransition")
+
+      try {
+        const props = {
+          chartType: "sankey" as const,
+          nodes: [{ id: "a" }, { id: "b" }],
+          edges: [{ source: "a", target: "b", value: 1 }],
+          frameScheduler: scheduler.scheduler,
+          clock,
+        }
+        const { rerender } = render(<StreamNetworkFrame {...props} paused />)
+
+        await act(async () => {
+          rerender(<StreamNetworkFrame {...props} paused={false} />)
+        })
+        expect(scheduler.pendingCount).toBe(1)
+
+        await act(async () => {
+          rerender(<StreamNetworkFrame {...props} paused />)
+        })
+        expect(scheduler.cancelledHandles).toContain(0)
+        expect(scheduler.pendingCount).toBe(0)
+
+        wallTime = 10_000
+        await act(async () => {
+          rerender(<StreamNetworkFrame {...props} paused={false} />)
+        })
+        expect(scheduler.pendingCount).toBe(1)
+
+        await act(async () => {
+          scheduler.flush(wallTime)
+        })
+        expect(advanceSpy).toHaveBeenCalled()
+        expect(advanceSpy.mock.calls.at(-1)?.[0]).toBe(0)
+      } finally {
+        advanceSpy.mockRestore()
+      }
+    })
+
+    it("forwards an injected random source to the force pipeline config", async () => {
+      const random = () => 0.25
+      const StoreModule = await import("./NetworkPipelineStore")
+      const updateSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "updateConfig")
+      try {
+        render(
+          <StreamNetworkFrame
+            chartType="force"
+            nodes={[{ id: "a" }, { id: "b" }]}
+            edges={[{ source: "a", target: "b", value: 1 }]}
+            random={random}
+          />
+        )
+        const lastConfig = updateSpy.mock.calls.at(-1)?.[0]
+        expect(lastConfig?.random).toBe(random)
+      } finally {
+        updateSpy.mockRestore()
+      }
     })
   })
 })

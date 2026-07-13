@@ -66,7 +66,8 @@ export function spawnNetworkParticles(
   pool: ParticlePool,
   edges: RealtimeEdge[],
   deltaTime: number,
-  style: ParticleStyle
+  style: ParticleStyle,
+  random: () => number = Math.random
 ): void {
   const spawnRate = style.spawnRate ?? DEFAULT_PARTICLE_STYLE.spawnRate
   const maxPerEdge = style.maxPerEdge ?? DEFAULT_PARTICLE_STYLE.maxPerEdge
@@ -85,11 +86,11 @@ export function spawnNetworkParticles(
     const frac = rate - whole
 
     let toSpawn = whole
-    if (Math.random() < frac) toSpawn++
+    if (random() < frac) toSpawn++
 
     for (let j = 0; j < toSpawn; j++) {
       if (pool.countForEdge(i) >= maxPerEdge) break
-      pool.spawn(i)
+      pool.spawn(i, random)
     }
   }
 }

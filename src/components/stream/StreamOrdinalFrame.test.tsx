@@ -5,6 +5,7 @@ import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import type { StreamOrdinalFrameHandle } from "./ordinalTypes"
 import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvasMock"
 import type { Datum } from "../charts/shared/datumTypes"
+import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 // Mock ResizeObserver for jsdom
 const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
@@ -1009,5 +1010,49 @@ describe("StreamOrdinalFrame", () => {
     } finally {
       updateSpy.mockRestore()
     }
+  })
+
+  describe("frame runtime policy", () => {
+    it("freezes logical time and cancels scheduled paints while paused", async () => {
+      const scheduler = createFrameScheduler(0)
+      let wallTime = 0
+      const clock = () => wallTime
+      const StoreModule = await import("./OrdinalPipelineStore")
+      const advanceSpy = vi.spyOn(StoreModule.OrdinalPipelineStore.prototype, "advanceTransition")
+
+      try {
+        const props = {
+          chartType: "bar" as const,
+          frameScheduler: scheduler.scheduler,
+          clock,
+        }
+        const { rerender } = render(<StreamOrdinalFrame {...props} paused />)
+
+        await act(async () => {
+          rerender(<StreamOrdinalFrame {...props} paused={false} />)
+        })
+        expect(scheduler.pendingCount).toBe(1)
+
+        await act(async () => {
+          rerender(<StreamOrdinalFrame {...props} paused />)
+        })
+        expect(scheduler.cancelledHandles).toContain(0)
+        expect(scheduler.pendingCount).toBe(0)
+
+        wallTime = 10_000
+        await act(async () => {
+          rerender(<StreamOrdinalFrame {...props} paused={false} />)
+        })
+        expect(scheduler.pendingCount).toBe(1)
+
+        await act(async () => {
+          scheduler.flush(wallTime)
+        })
+        expect(advanceSpy).toHaveBeenCalled()
+        expect(advanceSpy.mock.calls.at(-1)?.[0]).toBe(0)
+      } finally {
+        advanceSpy.mockRestore()
+      }
+    })
   })
 })

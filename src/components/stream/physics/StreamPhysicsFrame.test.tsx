@@ -1097,6 +1097,83 @@ describe("StreamPhysicsFrame", () => {
     expect(frameRef.current?.snapshot().elapsedSeconds).toBeCloseTo(0.1)
   })
 
+  it("freezes logical simulation time across imperative pause and resume", () => {
+    const scheduler = createFrameScheduler(0)
+    const frameRef = React.createRef<StreamPhysicsFrameHandle>()
+    let now = 0
+
+    render(
+      <StreamPhysicsFrame
+        ref={frameRef}
+        size={[200, 120]}
+        frameScheduler={scheduler.scheduler}
+        clock={() => now}
+        continuous
+        initialSpawns={[circle("paused-clock")]}
+        config={{
+          fixedDt: 0.1,
+          kernel: {
+            gravity: { x: 0, y: 0 },
+            sleepAfter: 999,
+            velocityDamping: 1
+          }
+        }}
+      />
+    )
+
+    act(() => {
+      scheduler.flush()
+    })
+    now = 100
+    act(() => {
+      scheduler.flush()
+    })
+    expect(frameRef.current?.snapshot().elapsedSeconds).toBeCloseTo(0.1)
+
+    act(() => {
+      frameRef.current?.pause()
+    })
+    expect(scheduler.pendingCount).toBe(0)
+
+    now = 1_000
+    act(() => {
+      frameRef.current?.resume()
+      scheduler.flush()
+    })
+    expect(frameRef.current?.snapshot().elapsedSeconds).toBeCloseTo(0.1)
+
+    now = 1_100
+    act(() => {
+      scheduler.flush()
+    })
+    expect(frameRef.current?.snapshot().elapsedSeconds).toBeCloseTo(0.2)
+  })
+
+  it("uses the compatibility seed unless the kernel declares its own seed", () => {
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    const { rerender } = render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 120]}
+        seed={17}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+      />
+    )
+
+    expect(ref.current?.snapshot().world.options.seed).toBe(17)
+
+    rerender(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 120]}
+        seed={17}
+        config={{ fixedDt: 0.1, kernel: { ...quietKernel, seed: 23 } }}
+      />
+    )
+
+    expect(ref.current?.snapshot().world.options.seed).toBe(23)
+  })
+
   it("step() runs the shared post-tick pipeline including controllers", () => {
     const ticks: number[] = []
     const ref = React.createRef<StreamPhysicsFrameHandle>()

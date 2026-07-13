@@ -958,6 +958,20 @@ export interface StreamXYFrameProps<T = Datum> {
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
 
+  // ── Frame runtime policy ───────────────────────────
+  /** Optional rAF seam for deterministic host scheduling. */
+  frameScheduler?: import("./useFrame").FrameScheduler
+  /** Monotonic wall-clock seam for deterministic replay, tests, or evidence capture. */
+  clock?: import("./FrameRuntime").FrameClock
+  /** Injectable random source for frame-local stochastic work. */
+  random?: import("./FrameRuntime").FrameRandom
+  /** Serializable deterministic random seed. Ignored when `random` is supplied. */
+  seed?: number
+  /** Freeze logical animation time and cancel queued work while paused. */
+  paused?: boolean
+  /** Freeze logical animation time while the page is hidden. Defaults to true for XY frames. */
+  suspendWhenHidden?: boolean
+
   // ── Marginal graphics ────────────────────────────────
   /** Marginal distribution plots in axis margins (histogram, violin, ridgeline, boxplot) */
   marginalGraphics?: MarginalGraphicsConfig

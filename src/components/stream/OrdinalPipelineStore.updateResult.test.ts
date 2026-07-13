@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
+import {
+  classifyOrdinalConfigPatch,
+  ORDINAL_CONFIG_PATCH_DEPENDENCIES,
+} from "./ordinalPipelineUpdateResults"
 import type { OrdinalPipelineConfig } from "./ordinalTypes"
 
 function makeConfig(
@@ -107,5 +111,29 @@ describe("OrdinalPipelineStore update-result reference path", () => {
     expect(cleared.changeSet).toEqual({ kind: "clear" })
     expect(cleared.changed.has("data")).toBe(true)
     expect(cleared.revisions.data).toBe(1)
+  })
+
+  it("declares retained-data, order, style, and future-only config patch effects", () => {
+    const store = new OrdinalPipelineStore(makeConfig())
+
+    const accessor = store.updateConfigWithResult({ valueAccessor: "nextValue" })
+    expect(classifyOrdinalConfigPatch(accessor.changeSet.keys ?? []).retainedData).toBe("rebuild")
+    expect(ORDINAL_CONFIG_PATCH_DEPENDENCIES.valueAccessor.retainedData).toBe("rebuild")
+    expect(accessor.changed.has("domain")).toBe(true)
+    expect(accessor.changed.has("layout")).toBe(true)
+
+    const order = store.updateConfigWithResult({ oSort: "desc" })
+    expect(classifyOrdinalConfigPatch(order.changeSet.keys ?? []).retainedData).toBe("preserve")
+    expect(order.changed.has("layout")).toBe(true)
+    expect(order.changed.has("domain")).toBe(false)
+
+    const style = store.updateConfigWithResult({ pieceStyle: () => ({ fill: "steelblue" }) })
+    expect(style.changed.has("scene-style")).toBe(true)
+    expect(style.changed.has("layout")).toBe(false)
+
+    const futureOnly = store.updateConfigWithResult({ clock: () => 0 })
+    expect(futureOnly.changeSet).toEqual({ kind: "config", keys: ["clock"] })
+    expect(futureOnly.changed.size).toBe(0)
+    expect(futureOnly.revisions).toEqual(style.revisions)
   })
 })

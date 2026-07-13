@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import {
+  classifyXYConfigPatch,
+  XY_CONFIG_PATCH_DEPENDENCIES,
+} from "./pipelineStoreUpdateResults"
 
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
@@ -81,5 +85,29 @@ describe("PipelineStore update-result reference path", () => {
     expect(result.changed.has("scene-style")).toBe(true)
     expect(result.changed.has("data-paint")).toBe(true)
     expect(result.revisions.sceneStyle).toBe(1)
+  })
+
+  it("declares retained-data, scale, style, and future-only config patch effects", () => {
+    const store = new PipelineStore(makeConfig())
+
+    const accessor = store.updateConfigWithResult({ yAccessor: "nextY" })
+    expect(classifyXYConfigPatch(accessor.changeSet.keys ?? []).retainedData).toBe("rebuild")
+    expect(XY_CONFIG_PATCH_DEPENDENCIES.yAccessor.retainedData).toBe("rebuild")
+    expect(accessor.changed.has("domain")).toBe(true)
+    expect(accessor.changed.has("layout")).toBe(true)
+
+    const scale = store.updateConfigWithResult({ xExtent: [0, 10] })
+    expect(classifyXYConfigPatch(scale.changeSet.keys ?? []).retainedData).toBe("preserve")
+    expect(scale.changed.has("domain")).toBe(true)
+    expect(scale.changed.has("scene-geometry")).toBe(true)
+
+    const style = store.updateConfigWithResult({ lineStyle: { stroke: "steelblue" } })
+    expect(style.changed.has("scene-style")).toBe(true)
+    expect(style.changed.has("layout")).toBe(false)
+
+    const futureOnly = store.updateConfigWithResult({ maxCapacity: 100 })
+    expect(futureOnly.changeSet).toEqual({ kind: "config", keys: ["maxCapacity"] })
+    expect(futureOnly.changed.size).toBe(0)
+    expect(futureOnly.revisions).toEqual(style.revisions)
   })
 })

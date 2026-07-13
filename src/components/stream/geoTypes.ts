@@ -157,6 +157,10 @@ export interface GeoPipelineConfig {
   projectionTransform?: DistanceCartogramConfig
 
   // Realtime encodings
+  /** Maximum retained points and lines after the store enters streaming mode. @default 500 */
+  windowSize?: number
+  /** Logical clock used for Geo pulse and transition work. */
+  clock?: import("./FrameRuntime").FrameClock
   decay?: DecayConfig
   pulse?: PulseConfig
   transition?: TransitionConfig
@@ -258,6 +262,8 @@ export interface StreamGeoFrameProps<T = Datum> {
   className?: string
   background?: string
   runtimeMode?: "bounded" | "streaming"
+  /** Maximum retained points and lines after imperative streaming begins. @default 500 */
+  windowSize?: number
 
   // ── Style ──
   areaStyle?: Style | ((d: Datum) => Style)
@@ -298,6 +304,20 @@ export interface StreamGeoFrameProps<T = Datum> {
    *  Set `{ intro: false }` to disable the intro animation. */
   animate?: AnimateProp
   staleness?: StalenessConfig
+
+  // ── Frame runtime policy ───────────────────────────
+  /** Optional rAF seam for deterministic host scheduling. */
+  frameScheduler?: import("./useFrame").FrameScheduler
+  /** Monotonic wall-clock seam for deterministic replay, tests, or evidence capture. */
+  clock?: import("./FrameRuntime").FrameClock
+  /** Injectable random source for frame-local stochastic work. */
+  random?: import("./FrameRuntime").FrameRandom
+  /** Serializable deterministic random seed. Ignored when `random` is supplied. */
+  seed?: number
+  /** Freeze logical animation time and cancel queued work while paused. */
+  paused?: boolean
+  /** Freeze logical animation time while the page is hidden. Defaults to true for Geo frames. */
+  suspendWhenHidden?: boolean
 
   // ── Rendering ──
   backgroundGraphics?: ReactNode

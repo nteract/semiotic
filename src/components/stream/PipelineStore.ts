@@ -160,6 +160,11 @@ export class PipelineStore {
   // ── Staleness tracking ──────────────────────────────────────────────
   lastIngestTime = 0
 
+  /** Keep ingest, pulse, staleness, and transition timestamps on one clock. */
+  private currentTime(): number {
+    return this.config.clock?.() ?? getTimestamp()
+  }
+
   // ── Color map caching ──────────────────────────────────────────────
   /** Unified color map cache keyed by sorted category set — shared across point, swarm, etc. */
   private _colorMapCache: { key: string; map: Map<string, string>; version: number } | null = null
@@ -305,7 +310,7 @@ export class PipelineStore {
       && this.timestampBuffer.capacity === this.buffer.capacity
       && this.timestampBuffer.size === this.buffer.size
     if (!isAligned) {
-      this.timestampBuffer = createTimestampBufferForData(this.buffer, getTimestamp())
+      this.timestampBuffer = createTimestampBufferForData(this.buffer, this.currentTime())
     }
   }
 
@@ -394,7 +399,7 @@ export class PipelineStore {
       this.updateResults.recordNoop("replace")
       return false
     }
-    const now = getTimestamp()
+    const now = this.currentTime()
     this.lastIngestTime = now
     this.needsFullRebuild = true
     this._bufferDirty = true
@@ -650,7 +655,7 @@ export class PipelineStore {
 
     // Apply pulse glow to discrete nodes
     if (this.config.pulse) {
-      this.applyPulse(this.scene, bufferArray)
+      this.applyPulse(this.scene, bufferArray, this.currentTime())
     }
 
     // Intro animation: synthesize zero-state on first render
@@ -974,7 +979,7 @@ export class PipelineStore {
     return !!this.config.pulse && hasActivePulsesFn(this.config.pulse, this.timestampBuffer, now)
   }
 
-  get hasActivePulses(): boolean { return this.hasActivePulsesAt(getTimestamp()) }
+  get hasActivePulses(): boolean { return this.hasActivePulsesAt(this.currentTime()) }
 
   // ── Transitions (delegated to pipelineTransitions.ts) ──────────────
 
@@ -1036,7 +1041,7 @@ export class PipelineStore {
     const state = startTransitionFn(
       this.transitionContext, this.config.transition,
       { scene: this.scene, exitNodes: this.exitNodes, activeTransition: this.activeTransition },
-      this.prevPositionMap, this.prevPathMap
+      this.prevPositionMap, this.prevPathMap, this.currentTime()
     )
     this.scene = state.scene
     this.exitNodes = state.exitNodes
@@ -1219,7 +1224,7 @@ export class PipelineStore {
     this._ingestVersion++
     // A removal is data activity — refresh the staleness clock so a chart
     // mutated via remove() isn't flagged stale.
-    this.lastIngestTime = getTimestamp()
+    this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("remove", removed.length)
     return removed
   }
@@ -1266,7 +1271,7 @@ export class PipelineStore {
     this._ingestVersion++
     // An in-place update is data activity — refresh the staleness clock so a
     // chart streamed via update() isn't flagged stale between updates.
-    this.lastIngestTime = getTimestamp()
+    this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("update", previous.length)
     return previous
   }
@@ -1601,11 +1606,7 @@ export class PipelineStore {
       if (extentAccessorChanged) this.rebuildExtents()
       this.needsFullRebuild = true
     }
-    this.updateResults.recordConfig(
-      changedConfigKeys,
-      accessorChanged,
-      extentAccessorChanged
-    )
+    this.updateResults.recordConfig(changedConfigKeys)
   }
 
   /** Additive explicit-result form of {@link updateConfig}. */

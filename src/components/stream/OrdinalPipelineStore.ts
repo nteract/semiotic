@@ -192,14 +192,19 @@ export class OrdinalPipelineStore {
       Boolean(this.config.pulse),
       this.buffer,
       this.timestampBuffer,
-      getTimestamp()
+      this.currentTime()
     )
+  }
+
+  /** Keep ingest, pulse, staleness, and transition timestamps on one clock. */
+  private currentTime(): number {
+    return this.config.clock?.() ?? getTimestamp()
   }
 
   // ── Data ingestion ───────────────────────────────────────────────────
 
   ingest(changeset: Changeset): boolean {
-    const now = getTimestamp()
+    const now = this.currentTime()
     this.lastIngestTime = now
     this._dataVersion++
 
@@ -889,7 +894,7 @@ export class OrdinalPipelineStore {
 
   // ── Pulse ───────────────────────────────────────────────────────────
 
-  private applyPulse(nodes: OrdinalSceneNode[], data: Datum[], now = getTimestamp()): boolean {
+  private applyPulse(nodes: OrdinalSceneNode[], data: Datum[], now = this.currentTime()): boolean {
     if (!this.config.pulse || !this.timestampBuffer) return false
     return applyOrdinalPulse(
       this.config.pulse,
@@ -916,7 +921,7 @@ export class OrdinalPipelineStore {
   }
 
   get hasActivePulses(): boolean {
-    return this.hasActivePulsesAt(getTimestamp())
+    return this.hasActivePulsesAt(this.currentTime())
   }
 
   // ── Transitions ─────────────────────────────────────────────────────
@@ -1152,7 +1157,7 @@ export class OrdinalPipelineStore {
 
     if (hasChanges) {
       this.activeTransition = {
-        startTime: getTimestamp(),
+        startTime: this.currentTime(),
         duration
       }
     }
@@ -1344,7 +1349,7 @@ export class OrdinalPipelineStore {
     this._dataVersion++
     this.version++
     // A removal is data activity — refresh the staleness clock.
-    this.lastIngestTime = getTimestamp()
+    this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("remove", removed.length)
     return removed
   }
@@ -1389,7 +1394,7 @@ export class OrdinalPipelineStore {
     this.version++
     // An in-place update is data activity — refresh the staleness clock so a
     // chart streamed via update() (e.g. a refill demo) isn't flagged stale.
-    this.lastIngestTime = getTimestamp()
+    this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("update", previous.length)
     return previous
   }

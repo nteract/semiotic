@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import {
+  classifyNetworkConfigPatch,
+  NETWORK_CONFIG_PATCH_DEPENDENCIES,
+} from "./networkPipelineUpdateResults"
 import type { NetworkPipelineConfig } from "./networkTypes"
 
 function makeConfig(overrides: Partial<NetworkPipelineConfig> = {}): NetworkPipelineConfig {
@@ -65,5 +69,36 @@ describe("NetworkPipelineStore update-result reference path", () => {
     expect(noOp.changeSet).toEqual({ kind: "config", keys: [] })
     expect(noOp.changed.size).toBe(0)
     expect(noOp.revisions).toEqual(changed.revisions)
+  })
+
+  it("declares retained-data, layout, style, and exact no-op patch effects", () => {
+    const store = new NetworkPipelineStore(makeConfig())
+    const order = (a: unknown, b: unknown) => String(a).localeCompare(String(b))
+    const nodeStyle = () => ({ fill: "steelblue" })
+
+    const accessor = store.updateConfigWithResult({ valueAccessor: "weight" })
+    expect(accessor.changeSet).toEqual({ kind: "config", keys: ["valueAccessor"] })
+    expect(classifyNetworkConfigPatch(accessor.changeSet.keys ?? []).retainedData).toBe("rebuild")
+    expect(NETWORK_CONFIG_PATCH_DEPENDENCIES.valueAccessor.retainedData).toBe("rebuild")
+    expect(accessor.changed).toEqual(expect.any(Set))
+    expect(accessor.changed.has("domain")).toBe(true)
+    expect(accessor.changed.has("layout")).toBe(true)
+    expect(accessor.changed.has("scene-geometry")).toBe(true)
+    expect(accessor.changed.has("data-paint")).toBe(true)
+
+    const layout = store.updateConfigWithResult({ edgeSort: order })
+    expect(classifyNetworkConfigPatch(layout.changeSet.keys ?? []).retainedData).toBe("preserve")
+    expect(layout.changed.has("layout")).toBe(true)
+    expect(layout.changed.has("domain")).toBe(false)
+
+    const style = store.updateConfigWithResult({ nodeStyle })
+    expect(style.changed.has("scene-style")).toBe(true)
+    expect(style.changed.has("data-paint")).toBe(true)
+    expect(style.changed.has("layout")).toBe(false)
+
+    const exactNoOp = store.updateConfigWithResult({ nodeStyle })
+    expect(exactNoOp.changeSet).toEqual({ kind: "config", keys: [] })
+    expect(exactNoOp.changed.size).toBe(0)
+    expect(exactNoOp.revisions).toEqual(style.revisions)
   })
 })

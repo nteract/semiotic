@@ -70,6 +70,8 @@ import type { UpdateResult } from "./pipelineUpdateContract"
 
 // ── GeoPipelineStore ─────────────────────────────────────────────────
 
+const DEFAULT_STREAM_WINDOW_SIZE = 500
+
 export class GeoPipelineStore {
   config: GeoPipelineConfig
   private updateResults = new GeoPipelineUpdateResults()
@@ -143,20 +145,74 @@ export class GeoPipelineStore {
     this.config = config
   }
 
+  /** Keep Geo transitions and pulse lifecycle on the host's logical clock
+   *  when one is supplied, while preserving the existing wall-clock default. */
+  private currentTime(): number {
+    return this.config.clock?.() ?? getTimestamp()
+  }
+
+  /** Resolve the one configuration-owned retention bound for both streaming
+   *  points and flow lines. Keeping it here prevents imperative push paths
+   *  from silently allocating a differently sized window. */
+  private getConfiguredWindowSize(): number {
+    const windowSize = this.config.windowSize ?? DEFAULT_STREAM_WINDOW_SIZE
+    if (!Number.isInteger(windowSize) || windowSize < 1) {
+      throw new Error("GeoPipelineStore windowSize must be a positive integer")
+    }
+    return windowSize
+  }
+
+  /** Trim the array-backed line collection only while it participates in a
+   *  stream. Bounded `setLines` snapshots remain complete until conversion. */
+  private retainNewestLines(windowSize = this.getConfiguredWindowSize()): void {
+    if (this.lineData.length > windowSize) {
+      this.lineData = this.lineData.slice(-windowSize)
+    }
+  }
+
+  /** Rebuild both point resources from the same retained suffix so pulse
+   *  timestamps remain indexed to their matching point after a resize. */
+  private resizeStreamingWindow(windowSize: number): void {
+    if (this.pointBuffer) {
+      const points = this.pointBuffer.toArray()
+      const timestamps = this.timestampBuffer?.toArray() ?? []
+      const retainedPoints = points.slice(-windowSize)
+      const retainedTimestamps = timestamps.slice(-retainedPoints.length)
+      const fallbackTimestamp = this.currentTime()
+
+      this.pointBuffer = new RingBuffer<Datum>(windowSize)
+      this.timestampBuffer = new RingBuffer<number>(windowSize)
+      retainedPoints.forEach((point, index) => {
+        this.pointBuffer!.push(point)
+        this.timestampBuffer!.push(retainedTimestamps[index] ?? fallbackTimestamp)
+      })
+    }
+    this.retainNewestLines(windowSize)
+  }
+
   updateConfig(config: Partial<GeoPipelineConfig>): void {
     const previous = this.config
+    const previousWindowSize = this.getConfiguredWindowSize()
     const changedConfigKeys = Object.keys(config).filter(
       (key) => (config as unknown as Record<string, unknown>)[key] !==
         (previous as unknown as Record<string, unknown>)[key]
     )
     this.config = { ...this.config, ...config }
+    const nextWindowSize = this.getConfiguredWindowSize()
+    const resizedRetainedData = this.streaming && nextWindowSize !== previousWindowSize
+    if (resizedRetainedData) {
+      this.resizeStreamingWindow(nextWindowSize)
+      this.version++
+    }
     // An explicit removal dismisses the old failure rather than surfacing an
     // error for a callback the caller no longer uses. The next built-in scene
     // build clears the remaining custom-layout output.
     if ("customLayout" in config && !config.customLayout) {
       this.lastCustomLayoutFailure = null
     }
-    this.updateResults.recordConfig(changedConfigKeys)
+    this.updateResults.recordConfig(changedConfigKeys, {
+      retainedDataChanged: resizedRetainedData
+    })
   }
 
   /** Additive explicit-result form of {@link updateConfig}. */
@@ -202,6 +258,7 @@ export class GeoPipelineStore {
     // user's array reference here would let a subsequent push leak
     // into the React-owned array passed via the `lines` prop.
     this.lineData = data.slice()
+    if (this.streaming) this.retainNewestLines()
     this.updateResults.recordData("replace", data.length)
   }
 
@@ -211,17 +268,37 @@ export class GeoPipelineStore {
     return this.updateResults.last
   }
 
-  /** Initialize streaming mode with a ring buffer */
-  initStreaming(windowSize = 500): void {
-    this.pointBuffer = new RingBuffer<Datum>(windowSize)
-    this.timestampBuffer = new RingBuffer<number>(windowSize)
+  /**
+   * Enter streaming mode while retaining the newest configured window from a
+   * bounded snapshot. The optional legacy argument is immediately reflected
+   * in config so the config remains the sole owner of the active capacity.
+   */
+  initStreaming(windowSize?: number): void {
+    if (windowSize !== undefined && windowSize !== this.config.windowSize) {
+      this.config = { ...this.config, windowSize }
+    }
+    const configuredWindowSize = this.getConfiguredWindowSize()
+    const points = this.pointBuffer ? this.pointBuffer.toArray() : this.pointData
+    const timestamps = this.timestampBuffer?.toArray() ?? []
+    const retainedPoints = points.slice(-configuredWindowSize)
+    const retainedTimestamps = timestamps.slice(-retainedPoints.length)
+    const fallbackTimestamp = this.currentTime()
+
+    this.pointBuffer = new RingBuffer<Datum>(configuredWindowSize)
+    this.timestampBuffer = new RingBuffer<number>(configuredWindowSize)
+    retainedPoints.forEach((point, index) => {
+      this.pointBuffer!.push(point)
+      this.timestampBuffer!.push(retainedTimestamps[index] ?? fallbackTimestamp)
+    })
+    this.pointData = []
+    this.retainNewestLines(configuredWindowSize)
     this.streaming = true
   }
 
   /** Push a single streaming point */
   pushPoint(datum: Datum): void {
     if (!this.pointBuffer) this.initStreaming()
-    const now = getTimestamp()
+    const now = this.currentTime()
     pushWithTimestamp(this.pointBuffer!, datum, this.timestampBuffer, now)
     this.lastIngestTime = now
     this.updateResults.recordData("ingest", 1)
@@ -236,7 +313,7 @@ export class GeoPipelineStore {
   /** Push multiple streaming points */
   pushMany(data: Datum[]): void {
     if (!this.pointBuffer) this.initStreaming()
-    const now = getTimestamp()
+    const now = this.currentTime()
     for (const d of data) {
       pushWithTimestamp(this.pointBuffer!, d, this.timestampBuffer, now)
     }
@@ -251,7 +328,7 @@ export class GeoPipelineStore {
   }
 
   /** Append a single line/flow record (coordinates pre-resolved). Lines
-   *  aren't ring-buffered — the bounded set is the geography.
+   *  use array storage, then retain the active configured window in streaming mode.
    *  Mutates `lineData` in place to avoid the O(n) GC churn of an
    *  array spread per push. The mutation is invisible to callers
    *  because `setLines` defensive-copies on entry and `getLines`
@@ -261,7 +338,9 @@ export class GeoPipelineStore {
       this.updateResults.recordNoop("ingest")
       return
     }
+    if (!this.streaming) this.initStreaming()
     this.lineData.push(line)
+    this.retainNewestLines()
     this.version++
     this.updateResults.recordData("ingest", 1)
   }
@@ -281,7 +360,9 @@ export class GeoPipelineStore {
       this.updateResults.recordNoop("ingest")
       return
     }
+    if (!this.streaming) this.initStreaming()
     for (const line of safe) this.lineData.push(line)
+    this.retainNewestLines()
     this.version++
     this.updateResults.recordData("ingest", safe.length)
   }
@@ -1216,7 +1297,7 @@ export class GeoPipelineStore {
 
   // ── Pulse ──────────────────────────────────────────────────────
 
-  private applyPulse(now = getTimestamp()): boolean {
+  private applyPulse(now = this.currentTime()): boolean {
     const pulse = this.config.pulse
     if (!pulse || !this.timestampBuffer) return false
 
@@ -1249,7 +1330,7 @@ export class GeoPipelineStore {
   }
 
   get hasActivePulses(): boolean {
-    return this.hasActivePulsesAt(getTimestamp())
+    return this.hasActivePulsesAt(this.currentTime())
   }
 
   // ── Transition ─────────────────────────────────────────────────
@@ -1304,7 +1385,7 @@ export class GeoPipelineStore {
 
     if (hasMovement) {
       this.activeTransition = {
-        startTime: getTimestamp(),
+        startTime: this.currentTime(),
         duration
       }
     }

@@ -26,6 +26,8 @@ import type { MarginType } from "../types/marginType"
 export interface PipelineConfig {
   chartType: StreamChartType
   runtimeMode?: "streaming" | "bounded"
+  /** Optional monotonic clock owned by a frame runtime or embedding host. */
+  clock?: () => number
   windowSize: number
   windowMode: WindowMode
   arrowOfTime: ArrowOfTime

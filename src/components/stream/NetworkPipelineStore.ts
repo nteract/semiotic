@@ -148,6 +148,11 @@ export class NetworkPipelineStore {
   private tensionConfig: TensionConfig
   private updateResults = new NetworkPipelineUpdateResults()
 
+  /** Keep ingest, live encodings, staleness, and transitions on one clock. */
+  private currentTime(): number {
+    return this.config.clock?.() ?? getTimestamp()
+  }
+
   // ── Transition animation ──────────────────────────────────────────────
 
   transition: ActiveTransition | null = null
@@ -218,35 +223,41 @@ export class NetworkPipelineStore {
 
   // ── Config update ─────────────────────────────────────────────────────
 
-  updateConfig(config: NetworkPipelineConfig): void {
+  updateConfig(config: Partial<NetworkPipelineConfig>): void {
     // Preserve plugin state stored on the config object across updates
     const prev = this.config
-    if (prev.__orbitState) config.__orbitState = prev.__orbitState
-    if (prev.__hierarchyRoot) config.__hierarchyRoot = prev.__hierarchyRoot
+    // Network historically received a full frame config, while direct store
+    // callers need the same merged-effective-config patch semantics as the
+    // other pipeline stores. Copy before preserving internal plugin state so
+    // a partial accessor patch compares against the active, not absent,
+    // sibling accessors.
+    const nextConfig = { ...prev, ...config } as NetworkPipelineConfig
+    if (prev.__orbitState) nextConfig.__orbitState = prev.__orbitState
+    if (prev.__hierarchyRoot) nextConfig.__hierarchyRoot = prev.__hierarchyRoot
     // `layoutSelection` is owned by a dedicated frame effect (so a selection
     // change can repaint via restyleScene instead of forcing a rebuild), and is
     // intentionally not part of the rebuild-triggering pipelineConfig — preserve
     // it across other config updates.
     if (config.layoutSelection === undefined && prev.layoutSelection != null) {
-      config.layoutSelection = prev.layoutSelection
+      nextConfig.layoutSelection = prev.layoutSelection
     }
-    const changedConfigKeys = [...new Set([...Object.keys(prev), ...Object.keys(config)])].filter(
+    const changedConfigKeys = [...new Set([...Object.keys(prev), ...Object.keys(nextConfig)])].filter(
       (key) =>
         (prev as unknown as Record<string, unknown>)[key] !==
-        (config as unknown as Record<string, unknown>)[key],
+        (nextConfig as unknown as Record<string, unknown>)[key],
     )
-    this.config = config
+    this.config = nextConfig
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,
-      ...config.tensionConfig
+      ...nextConfig.tensionConfig
     }
 
     // Create particle pool on demand; keep it alive when toggled off
     // so that toggling showParticles false→true doesn't lose canvas state.
     // Gate matches the constructor — sankey OR customNetworkLayout.
     if (
-      config.showParticles &&
-      (config.chartType === "sankey" || !!config.customNetworkLayout) &&
+      nextConfig.showParticles &&
+      (nextConfig.chartType === "sankey" || !!nextConfig.customNetworkLayout) &&
       !this.particlePool
     ) {
       this.particlePool = new ParticlePool(2000)
@@ -255,7 +266,7 @@ export class NetworkPipelineStore {
   }
 
   /** Additive explicit-result form of {@link updateConfig}. */
-  updateConfigWithResult(config: NetworkPipelineConfig): UpdateResult {
+  updateConfigWithResult(config: Partial<NetworkPipelineConfig>): UpdateResult {
     this.updateConfig(config)
     return this.updateResults.last
   }
@@ -479,7 +490,7 @@ export class NetworkPipelineStore {
     const { source, target, value } = push
     const isFirst = this.nodes.size === 0
     let topologyChanged = false
-    const now = getTimestamp()
+    const now = this.currentTime()
     this.lastIngestTime = now
     this._decaySortedNodes = null; this._networkDecayCache = null
 
@@ -711,14 +722,14 @@ export class NetworkPipelineStore {
       }
       this.restorePreviousPositions()
       this.transition = {
-        startTime: getTimestamp(),
+        startTime: this.currentTime(),
         duration: transitionDuration
       }
     } else if (hasOldPositions && transitionDuration > 0) {
       // Data-change transition: reset to previous positions (animation starts from here)
       this.restorePreviousPositions()
       this.transition = {
-        startTime: getTimestamp(),
+        startTime: this.currentTime(),
         duration: transitionDuration
       }
     }
@@ -766,7 +777,7 @@ export class NetworkPipelineStore {
       this.addedEdges.size > 0 ||
       this.removedEdges.size > 0
     ) {
-      this.lastTopologyChangeTime = getTimestamp()
+      this.lastTopologyChangeTime = this.currentTime()
     }
 
     this.previousNodeIds = currentNodeIds
@@ -1448,7 +1459,7 @@ export class NetworkPipelineStore {
     const previous = node.data ? { ...node.data } : {}
     node.data = updater(node.data ?? {})
     this.layoutVersion++
-    this.lastIngestTime = getTimestamp()
+    this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("update", 1)
     return previous
   }
@@ -1482,7 +1493,7 @@ export class NetworkPipelineStore {
     }
     if (results.length > 0) {
       this.layoutVersion++
-      this.lastIngestTime = getTimestamp()
+      this.lastIngestTime = this.currentTime()
       this.updateResults.recordData("update", results.length)
     } else {
       this.updateResults.recordNoop("update")
@@ -1511,7 +1522,7 @@ export class NetworkPipelineStore {
       }
     }
     this.layoutVersion++
-    this.lastIngestTime = getTimestamp()
+    this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("remove", 1)
     return true
   }
@@ -1564,7 +1575,7 @@ export class NetworkPipelineStore {
     }
     if (toDelete.length > 0) {
       this.layoutVersion++
-      this.lastIngestTime = getTimestamp()
+      this.lastIngestTime = this.currentTime()
       this.updateResults.recordData("remove", toDelete.length)
     } else {
       this.updateResults.recordNoop("remove")

@@ -49,6 +49,7 @@ import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { TransitionConfig } from "./types"
 import { clearCSSColorCache } from "./renderers/resolveCSSColor"
 import type { HoverPointerCoords } from "./hoverUtils"
+import { FrameRuntime, type FrameClock, type FrameRandom } from "./FrameRuntime"
 
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -141,6 +142,16 @@ export interface UseFrameInput {
    * use the browser's `requestAnimationFrame` / `cancelAnimationFrame`.
    */
   frameScheduler?: FrameScheduler
+  /** Monotonic wall-clock seam used by the frame runtime. */
+  clock?: FrameClock
+  /** Injectable random seam. A serializable `seed` takes effect when omitted. */
+  random?: FrameRandom
+  /** Serializable deterministic random seed for frame-local stochastic work. */
+  seed?: number
+  /** Freeze logical frame time while paused. Opt-in so existing frame families retain their policy. */
+  paused?: boolean
+  /** Freeze logical frame time while the document is hidden. Opt-in per frame family. */
+  suspendWhenHidden?: boolean
   /**
    * Frame's `dirtyRef` (the flag that forces a full canvas redraw on the
    * next paint). When provided, useFrame installs a theme-change effect
@@ -188,6 +199,8 @@ export interface UseFrameResult {
   introEnabled: boolean
   /** Stable id for the AccessibleDataTable region (hash-suffixed). */
   tableId: string
+  /** Shared logical clock, pause/visibility policy, and RNG seam for this host. */
+  frameRuntime: FrameRuntime
 
   // ── rAF-coalesced render scheduling ──────────────────────────────────
   // The frame body assigns its render closure to `renderFnRef.current`;
@@ -293,6 +306,26 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   const reactId = React.useId()
   const tableId = `semiotic-table-${reactId}`
 
+  // ── Logical time, visibility, and seeded randomness ──────────────────
+  // Construct once so the logical clock and seeded generator retain state
+  // across React renders. `configure` only replaces sources when their
+  // identity/seed changes; it never replays elapsed hidden/paused wall time.
+  const frameRuntimeRef = useRef<FrameRuntime | null>(null)
+  if (!frameRuntimeRef.current) {
+    const initiallyVisible = input.suspendWhenHidden
+      ? typeof document === "undefined" || !document.hidden
+      : true
+    frameRuntimeRef.current = new FrameRuntime({
+      clock: input.clock,
+      random: input.random,
+      seed: input.seed,
+      paused: input.paused,
+      visible: initiallyVisible,
+    })
+  }
+  const frameRuntime = frameRuntimeRef.current
+  frameRuntime.configure({ clock: input.clock, random: input.random, seed: input.seed })
+
   // ── rAF-coalesced render scheduling ──────────────────────────────────
   // Owned here so any future tweak to the coalescing semantics (deferred
   // commits, scheduler integration, etc.) is one source of truth.
@@ -342,6 +375,24 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     rafRef.current = null
     pendingRafSchedulerRef.current = null
   }, [])
+
+  // Pausing records elapsed active time before the freeze. The layout effect
+  // prevents a queued paint from advancing an animation after a committed
+  // paused prop change.
+  useIsomorphicLayoutEffect(() => {
+    frameRuntime.setPaused(input.paused === true)
+  }, [frameRuntime, input.paused])
+
+  useEffect(() => {
+    if (!input.suspendWhenHidden || typeof document === "undefined") {
+      frameRuntime.setVisible(true)
+      return
+    }
+    const updateVisibility = () => frameRuntime.setVisible(!document.hidden)
+    updateVisibility()
+    document.addEventListener("visibilitychange", updateVisibility)
+    return () => document.removeEventListener("visibilitychange", updateVisibility)
+  }, [frameRuntime, input.suspendWhenHidden])
 
   // Cancel any pending rAF on unmount. Frames may still install their own
   // unmount cleanup for things the hook doesn't own (pointermove
@@ -438,6 +489,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     transition,
     introEnabled,
     tableId,
+    frameRuntime,
     rafRef,
     renderFnRef,
     scheduleRender,

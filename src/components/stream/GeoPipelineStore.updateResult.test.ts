@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { GeoPipelineStore } from "./GeoPipelineStore"
+import {
+  classifyGeoConfigPatch,
+  GEO_CONFIG_PATCH_DEPENDENCIES,
+} from "./geoPipelineUpdateResults"
 import type { GeoPipelineConfig } from "./geoTypes"
 
 function makeConfig(overrides: Partial<GeoPipelineConfig> = {}): GeoPipelineConfig {
@@ -64,5 +68,46 @@ describe("GeoPipelineStore update-result reference path", () => {
     expect(noOp.changeSet).toEqual({ kind: "restyle" })
     expect(noOp.changed.size).toBe(0)
     expect(noOp.revisions).toEqual(config.revisions)
+  })
+
+  it("declares retained accessor, style, and exact no-op patch effects", () => {
+    const store = new GeoPipelineStore(makeConfig())
+    const style = () => ({ fill: "steelblue" })
+
+    const accessor = store.updateConfigWithResult({ xAccessor: "nextLon" })
+    expect(accessor.changeSet).toEqual({ kind: "config", keys: ["xAccessor"] })
+    expect(classifyGeoConfigPatch(accessor.changeSet.keys ?? []).retainedData).toBe("rebuild")
+    expect(GEO_CONFIG_PATCH_DEPENDENCIES.xAccessor.retainedData).toBe("rebuild")
+    expect(accessor.changed.has("domain")).toBe(true)
+    expect(accessor.changed.has("layout")).toBe(true)
+    expect(accessor.changed.has("scene-geometry")).toBe(true)
+    expect(accessor.changed.has("data-paint")).toBe(true)
+
+    const styleResult = store.updateConfigWithResult({ pointStyle: style })
+    expect(styleResult.changed.has("scene-style")).toBe(true)
+    expect(styleResult.changed.has("scene-geometry")).toBe(true)
+    expect(styleResult.changed.has("layout")).toBe(false)
+
+    const exactNoOp = store.updateConfigWithResult({ pointStyle: style })
+    expect(exactNoOp.changeSet).toEqual({ kind: "config", keys: [] })
+    expect(exactNoOp.changed.size).toBe(0)
+    expect(exactNoOp.revisions).toEqual(styleResult.revisions)
+  })
+
+  it("records a streaming window resize as retained-data work without calling it an ingest", () => {
+    const store = new GeoPipelineStore(makeConfig({ windowSize: 3 }))
+    store.setPoints([
+      { id: "one", lon: 1, lat: 1 },
+      { id: "two", lon: 2, lat: 2 },
+      { id: "three", lon: 3, lat: 3 },
+    ])
+    store.initStreaming()
+
+    const resized = store.updateConfigWithResult({ windowSize: 2 })
+    expect(resized.changeSet).toEqual({ kind: "config", keys: ["windowSize"] })
+    expect(classifyGeoConfigPatch(resized.changeSet.keys ?? []).retainedData).toBe("rebuild")
+    expect(resized.changed.has("data")).toBe(true)
+    expect(resized.changed.has("domain")).toBe(true)
+    expect(store.getPoints().map((point) => point.id)).toEqual(["two", "three"])
   })
 })

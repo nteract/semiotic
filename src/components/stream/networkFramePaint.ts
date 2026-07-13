@@ -17,6 +17,7 @@ import {
 } from "./renderers/networkParticleRenderer"
 import { computeNetworkAriaLabel } from "./AccessibleDataTable"
 import type { NetworkPipelineStore } from "./NetworkPipelineStore"
+import type { SceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import type {
   NetworkPipelineConfig,
   ParticleStyle,
@@ -28,13 +29,20 @@ import type { DecayConfig, PulseConfig, StalenessConfig } from "./types"
 export interface NetworkFramePaintContext {
   canvas: HTMLCanvasElement
   store: NetworkPipelineStore
+  sceneRevisionDiagnostics?: SceneRevisionDiagnostics
   size: [number, number]
   margin: MarginType
   adjustedWidth: number
   adjustedHeight: number
   background?: string
+  /** Skip opaque canvas fill when an SVG backgroundGraphics layer is present. */
+  hasBackgroundGraphics?: boolean
   dirtyRef: { current: boolean }
   lastFrameTimeRef: { current: number }
+  /** FrameRuntime logical timestamp for this paint. */
+  now: number
+  /** FrameRuntime random source for particle placement/spawn sampling. */
+  random: () => number
   reducedMotion: boolean
   showParticles: boolean
   isContinuous: boolean
@@ -60,13 +68,17 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   const {
     canvas,
     store,
+    sceneRevisionDiagnostics,
     size,
     margin,
     adjustedWidth,
     adjustedHeight,
     background,
+    hasBackgroundGraphics = false,
     dirtyRef,
     lastFrameTimeRef,
+    now,
+    random,
     reducedMotion,
     showParticles,
     isContinuous,
@@ -86,7 +98,6 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   const c2d = canvas.getContext("2d")
   if (!c2d) return
 
-  const now = performance.now()
   const deltaTime = lastFrameTimeRef.current
     ? Math.min((now - lastFrameTimeRef.current) / 1000, 0.1)
     : 0.016
@@ -102,8 +113,16 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
 
   const wasDirty = dirtyRef.current
-  if (transitionActive || wasDirty || animationTicked) {
+  const sceneRevisionCheck = sceneRevisionDiagnostics?.beforeCompute(
+    store.getLastUpdateResult(),
+    isTransitioning
+  )
+  const computedScene = transitionActive || wasDirty || animationTicked
+  if (computedScene) {
     store.buildScene([adjustedWidth, adjustedHeight])
+  }
+  if (sceneRevisionCheck) {
+    sceneRevisionDiagnostics?.afterCompute(sceneRevisionCheck, computedScene, false)
   }
 
   const particlesWanted =
@@ -140,6 +159,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
 
     paintCanvasBackground(c2d, {
       background,
+      hasBackgroundGraphics,
       width: adjustedWidth,
       height: adjustedHeight
     })
@@ -167,7 +187,8 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
           store.particlePool!,
           edges,
           deltaTime,
-          particleStyle
+          particleStyle,
+          random
         )
         const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
 

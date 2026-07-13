@@ -24,6 +24,10 @@ import type { HoverData } from "../realtime/types"
 import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
 import { DEFAULT_TENSION_CONFIG, DEFAULT_PARTICLE_STYLE } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import {
+  SceneRevisionDiagnostics,
+  SceneRevisionDiagnosticsObserver
+} from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
@@ -49,9 +53,9 @@ import {
 } from "./SceneToSVG"
 import {
   useHydration,
-  useWasHydratingFromSSR,
-  useHydrationLifecycle
+  useWasHydratingFromSSR
 } from "./useHydration"
+import { CanvasFrameBackground, useCanvasFrameHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
 import {
   NetworkAccessibleDataTable,
@@ -178,6 +182,12 @@ const StreamNetworkFrame = memo(forwardRef<
     transition: transitionProp,
     animate,
     staleness,
+    frameScheduler,
+    clock: clockProp,
+    random: randomProp,
+    seed,
+    paused = false,
+    suspendWhenHidden = true,
     thresholds,
     accessibleTable = true,
     description,
@@ -216,6 +226,12 @@ const StreamNetworkFrame = memo(forwardRef<
     backgroundGraphics,
     animate,
     transitionProp,
+    frameScheduler,
+    clock: clockProp,
+    random: randomProp,
+    seed,
+    paused,
+    suspendWhenHidden,
     themeDirtyRef: dirtyRef
   })
   const {
@@ -230,7 +246,7 @@ const StreamNetworkFrame = memo(forwardRef<
     transition,
     introEnabled,
     tableId,
-    rafRef, renderFnRef, scheduleRender, cancelRender,
+    rafRef, renderFnRef, scheduleRender, cancelRender, frameRuntime,
     currentTheme
   } = frame
 
@@ -264,6 +280,9 @@ const StreamNetworkFrame = memo(forwardRef<
     (): NetworkPipelineConfig =>
       buildNetworkPipelineConfig({
         chartType,
+        clock: frameRuntime.now,
+        random: randomProp ?? frameRuntime.random,
+        seed,
         nodeIDAccessor,
         sourceAccessor,
         targetAccessor,
@@ -371,6 +390,9 @@ const StreamNetworkFrame = memo(forwardRef<
       orbitEccentricity,
       orbitShowRings,
       orbitAnimated,
+      randomProp,
+      seed,
+      frameRuntime,
       currentTheme,
       customNetworkLayout,
       onLayoutError,
@@ -436,6 +458,8 @@ const StreamNetworkFrame = memo(forwardRef<
       edgeType,
       padding,
       paddingTop,
+      random: randomProp ?? frameRuntime.random,
+      seed,
       tensionConfig,
       customNetworkLayout,
       orbitMode,
@@ -446,7 +470,6 @@ const StreamNetworkFrame = memo(forwardRef<
 
   // ── Refs ─────────────────────────────────────────────────────────────
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   // rafRef + renderFnRef + scheduleRender + cancel-on-unmount come from
   // useFrame (above). Network's previous local scheduleRender had an
   // isContinuous branch, but its pending-frame guard made that branch's
@@ -481,6 +504,28 @@ const StreamNetworkFrame = memo(forwardRef<
   if (!storeRef.current) {
     storeRef.current = new NetworkPipelineStore(stablePipelineConfig)
   }
+  const sceneRevisionDiagnosticsRef = useRef(
+    new SceneRevisionDiagnostics("StreamNetworkFrame")
+  )
+  const buildSceneWithDiagnostics = useCallback(
+    (
+      store: NetworkPipelineStore,
+      sceneSize: [number, number],
+      isTransitioning = false
+    ) => {
+      const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(
+        store.getLastUpdateResult(),
+        isTransitioning
+      )
+      store.buildScene(sceneSize)
+      sceneRevisionDiagnosticsRef.current.afterCompute(
+        sceneRevisionCheck,
+        true,
+        false
+      )
+    },
+    []
+  )
 
   // ── State ────────────────────────────────────────────────────────────
 
@@ -616,7 +661,7 @@ const StreamNetworkFrame = memo(forwardRef<
   useEffect(() => {
     const store = storeRef.current
     if (!store) return
-    store.buildScene([adjustedWidth, adjustedHeight])
+    buildSceneWithDiagnostics(store, [adjustedWidth, adjustedHeight])
     colorIndexRef.current = syncNetworkNodeColorMap({
       sceneNodes: store.sceneNodes,
       nodes: store.nodes.values(),
@@ -625,7 +670,13 @@ const StreamNetworkFrame = memo(forwardRef<
     })
     dirtyRef.current = true
     scheduleRender()
-  }, [currentTheme, adjustedWidth, adjustedHeight, scheduleRender])
+  }, [
+    currentTheme,
+    adjustedWidth,
+    adjustedHeight,
+    buildSceneWithDiagnostics,
+    scheduleRender
+  ])
 
   // ── Layout execution ─────────────────────────────────────────────────
 
@@ -634,7 +685,7 @@ const StreamNetworkFrame = memo(forwardRef<
     if (!store) return
 
     store.runLayout([adjustedWidth, adjustedHeight])
-    store.buildScene([adjustedWidth, adjustedHeight])
+    buildSceneWithDiagnostics(store, [adjustedWidth, adjustedHeight])
     dirtyRef.current = true
 
     colorIndexRef.current = syncNetworkNodeColorMap({
@@ -650,7 +701,13 @@ const StreamNetworkFrame = memo(forwardRef<
       const { nodes, edges } = store.getLayoutData()
       onTopologyChange(nodes, edges)
     }
-  }, [adjustedWidth, adjustedHeight, onTopologyChange, colorScheme])
+  }, [
+    adjustedWidth,
+    adjustedHeight,
+    buildSceneWithDiagnostics,
+    onTopologyChange,
+    colorScheme
+  ])
 
   // ── Push API ─────────────────────────────────────────────────────────
 
@@ -864,7 +921,7 @@ const StreamNetworkFrame = memo(forwardRef<
       // synchronous paths — a chart-type/data switch away from a pending
       // worker layout must not leave consumers stuck on "pending".
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
-      store.buildScene([adjustedWidth, adjustedHeight])
+      buildSceneWithDiagnostics(store, [adjustedWidth, adjustedHeight])
       setLayoutPending(false)
       onLayoutStateChangeRef.current?.("ready")
       dirtyRef.current = true
@@ -898,6 +955,10 @@ const StreamNetworkFrame = memo(forwardRef<
         chartType === "force" &&
         !customNetworkLayout &&
         canUseForceWorker() &&
+        // A callback cannot cross the worker boundary. A serializable seed
+        // does, so seeded layouts retain worker execution while injected
+        // randomness deliberately uses the synchronous plugin path.
+        !randomProp &&
         shouldUseForceWorker(
           layoutExecution,
           rawNodes.length,
@@ -943,7 +1004,7 @@ const StreamNetworkFrame = memo(forwardRef<
           .then(({ positions }) => {
             if (requestId !== layoutRequestRef.current) return
             store.applyForceLayoutPositions(positions, size)
-            store.buildScene(size)
+            buildSceneWithDiagnostics(store, size)
 
             // Keep the hover/particle color cache in parity with the normal
             // synchronous layout path. Scene fills are authoritative because
@@ -967,7 +1028,7 @@ const StreamNetworkFrame = memo(forwardRef<
             // Worker construction/runtime failures retain correctness through
             // the established synchronous plugin path.
             store.runLayout(size)
-            store.buildScene(size)
+            buildSceneWithDiagnostics(store, size)
             colorIndexRef.current = syncNetworkNodeColorMap({
               sceneNodes: store.sceneNodes,
               nodes: store.nodes.values(),
@@ -985,7 +1046,7 @@ const StreamNetworkFrame = memo(forwardRef<
       }
 
       store.ingestBounded(rawNodes, rawEdges, size)
-      store.buildScene(size)
+      buildSceneWithDiagnostics(store, size)
       setLayoutPending(false)
       onLayoutStateChangeRef.current?.("ready")
 
@@ -1023,6 +1084,7 @@ const StreamNetworkFrame = memo(forwardRef<
     wasHydratingFromSSR,
     chartType,
     customNetworkLayout,
+    randomProp,
     scheduleRender,
     clearAll,
     colorScheme
@@ -1329,6 +1391,7 @@ const StreamNetworkFrame = memo(forwardRef<
 
   renderFnRef.current = () => {
     rafRef.current = null
+    if (!frameRuntime.isActive) return
     const canvas = canvasRef.current
     if (!canvas) return
     const store = storeRef.current
@@ -1337,13 +1400,17 @@ const StreamNetworkFrame = memo(forwardRef<
     paintNetworkFrame({
       canvas,
       store,
+      sceneRevisionDiagnostics: sceneRevisionDiagnosticsRef.current,
       size,
       margin,
       adjustedWidth,
       adjustedHeight,
       background,
+      hasBackgroundGraphics: Boolean(backgroundGraphics),
       dirtyRef,
       lastFrameTimeRef,
+      now: frameRuntime.now(),
+      random: frameRuntime.random,
       reducedMotion: !!reducedMotionRef.current,
       showParticles,
       isContinuous,
@@ -1363,23 +1430,28 @@ const StreamNetworkFrame = memo(forwardRef<
     })
   }
 
-  // ── Lifecycle ────────────────────────────────────────────────────────
+  // ── Shared canvas-host lifecycle ─────────────────────────────────────
 
-  useHydrationLifecycle({
+  const { canvasRef } = useCanvasFrameHost({
     hydrated,
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
     renderFnRef,
+    scheduleRender,
     cancelRender,
-    // No frame-specific cleanup — useFrame handles the rAF/pointermove
-    // refs on unmount.
+    frameRuntime,
+    // Network owns layout, hit testing, and canvas paint. The host owns only
+    // retained-canvas refs, hydration, runtime cancellation, and invalidation.
+    canvasPaintDependencies: [
+      chartType,
+      adjustedWidth,
+      adjustedHeight,
+      background,
+      backgroundGraphics,
+      scheduleRender,
+    ],
   })
-
-  useEffect(() => {
-    dirtyRef.current = true
-    scheduleRender()
-  }, [chartType, adjustedWidth, adjustedHeight, background, scheduleRender])
 
   // ── Staleness timer ─────────────────────────────────────────────────
 
@@ -1561,6 +1633,12 @@ const StreamNetworkFrame = memo(forwardRef<
       }}
       onKeyDown={onKeyDown}
     >
+      {process.env.NODE_ENV !== "production" && storeRef.current && (
+        <SceneRevisionDiagnosticsObserver
+          store={storeRef.current}
+          diagnostics={sceneRevisionDiagnosticsRef.current}
+        />
+      )}
       {accessibleTable && <SkipToTableLink tableId={tableId} />}
       {accessibleTable && (
         <NetworkAccessibleDataTable
@@ -1602,24 +1680,9 @@ const StreamNetworkFrame = memo(forwardRef<
             )}
           </div>
         )}
-        {resolvedBackground && (
-          <svg
-            overflow="visible"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: size[0],
-              height: size[1],
-              pointerEvents: "none",
-              overflow: "visible"
-            }}
-          >
-            <g transform={`translate(${margin.left},${margin.top})`}>
-              {resolvedBackground}
-            </g>
-          </svg>
-        )}
+        <CanvasFrameBackground size={size} margin={margin} overflowVisible>
+          {resolvedBackground}
+        </CanvasFrameBackground>
 
         <canvas
           ref={canvasRef}

@@ -303,8 +303,22 @@ jobs:
         # to generate a proposed baseline, then commit it with review.
         run: npx playwright test --update-snapshots=none
 
-      - name: Smoke-test every docs example from source
+      - name: Capture docs example source and local Chromium contract evidence
         run: npm run test:examples:source
+
+      # The contract test validates this complete local-only capture before it
+      # writes the JSON. Retain it for review, but do not compare it against a
+      # committed baseline: capture time and runner geometry are per-run facts.
+      # It records reduced-motion and browser-emitted visibility behavior without
+      # claiming policy-specific animation, performance, or cross-browser parity.
+      - name: Upload local docs example contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-example-local-contract-evidence
+          path: test-results/**/docs-example-local-contract-evidence.v2.json
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Upload snapshot baselines
         if: always()

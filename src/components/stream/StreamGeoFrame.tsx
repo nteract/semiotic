@@ -21,6 +21,10 @@ import type {
 import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
+import {
+  SceneRevisionDiagnostics,
+  SceneRevisionDiagnosticsObserver
+} from "./sceneRevisionDiagnostics"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import type { GeoPipelineConfig } from "./geoTypes"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
@@ -31,7 +35,8 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay } from "./SVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
-import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
+import { useHydration, useWasHydratingFromSSR } from "./useHydration"
+import { CanvasFrameBackground, useCanvasFrameHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasBackground } from "./canvasBackground"
 import { needsDataCanvasPaint, needsInteractionCanvasPaint } from "./paintNeeds"
@@ -128,6 +133,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       className,
       background,
       runtimeMode: _runtimeMode,
+      windowSize = 500,
 
       // Style
       areaStyle,
@@ -151,6 +157,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       transition: transitionProp,
       animate,
       staleness,
+      frameScheduler,
+      clock: clockProp,
+      random: randomProp,
+      seed,
+      paused = false,
+      suspendWhenHidden = true,
 
       // Rendering
       backgroundGraphics,
@@ -190,6 +202,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       backgroundGraphics,
       animate,
       transitionProp,
+      frameScheduler,
+      clock: clockProp,
+      random: randomProp,
+      seed,
+      paused,
+      suspendWhenHidden,
       themeDirtyRef: dirtyRef,
     })
     const {
@@ -204,6 +222,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       transition,
       introEnabled,
       tableId,
+      frameRuntime,
       rafRef, renderFnRef, scheduleRender, cancelRender,
       currentTheme,
     } = frame
@@ -251,6 +270,8 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       themeCategorical: currentTheme?.colors?.categorical,
       graticule,
       projectionTransform,
+      windowSize,
+      clock: frameRuntime.now,
       decay,
       pulse,
       transition,
@@ -265,7 +286,8 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     }), [
       projection, projectionExtent, fitPadding, xAccessor, yAccessor, lineDataAccessor,
       lineType, flowStyle, areaStyle, pointStyle, lineStyle, colorScheme, graticule,
-      projectionTransform, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, lineIdAccessor, currentTheme,
+      projectionTransform, windowSize, decay, pulse, transition?.duration, transition?.easing, introEnabled, annotations, pointIdAccessor, lineIdAccessor, currentTheme,
+      frameRuntime,
       customLayout, layoutConfig, onLayoutError, margin
     ])
 
@@ -285,8 +307,6 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     // ── Refs ──────────────────────────────────────────────────────────
 
     const tileCanvasRef = useRef<HTMLCanvasElement>(null)
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-    const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
     const hitCanvasRef = useRef<HTMLCanvasElement | OffscreenCanvas | null>(null)
     const tileCacheRef = useRef<TileCache | null>(null)
     if (tileURL && !tileCacheRef.current) {
@@ -334,6 +354,9 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     /** True when interaction canvas last painted hover content (for idle skip). */
     const interactionHasContentRef = useRef(false)
     const pulseFramePendingRef = useRef(false)
+    const sceneRevisionDiagnosticsRef = useRef(
+      new SceneRevisionDiagnostics("StreamGeoFrame")
+    )
     const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
@@ -709,11 +732,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
     renderFnRef.current = () => {
       rafRef.current = null
+      if (!frameRuntime.isActive) return
       const canvas = canvasRef.current
       const store = storeRef.current
       if (!canvas || !store) return
 
-      const now = performance.now()
+      const now = frameRuntime.now()
       let needsContinuation = false
 
       // Apply pending drag-rotation (coalesced from pointer events)
@@ -731,6 +755,10 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       // are applied immediately and transition state is cleared properly
       const transitionActive = store.advanceTransition(reducedMotionRef.current ? now + 1e6 : now)
       const isTransitioning = reducedMotionRef.current ? false : transitionActive
+      const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(
+        store.getLastUpdateResult(),
+        isTransitioning
+      )
 
       // Recompute scene when dirty
       let computedSceneThisFrame = false
@@ -772,6 +800,11 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         // just drew.
         emitLegendCategories()
       }
+      sceneRevisionDiagnosticsRef.current.afterCompute(
+        sceneRevisionCheck,
+        computedSceneThisFrame,
+        false
+      )
 
       const dpr = getDevicePixelRatio()
 
@@ -885,8 +918,8 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
             // Spawn particles
             for (let li = 0; li < lineNodes.length; li++) {
-              if (Math.random() < spawnRate && pool.countForLine(li) < maxPerLine) {
-                pool.spawn(li)
+              if (frameRuntime.random() < spawnRate && pool.countForLine(li) < maxPerLine) {
+                pool.spawn(li, frameRuntime.random)
               }
             }
 
@@ -997,24 +1030,28 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       }
     }
 
-    // ── Lifecycle ─────────────────────────────────────────────────────
+    // ── Shared canvas-host lifecycle ───────────────────────────────────
 
-    useHydrationLifecycle({
+    const { canvasRef, interactionCanvasRef } = useCanvasFrameHost({
       hydrated,
       wasHydratingFromSSR,
       storeRef,
       dirtyRef,
       renderFnRef,
+      scheduleRender,
       cancelRender,
+      frameRuntime,
       // Geo-specific: clear the tile cache on unmount so background
       // map tiles don't leak across remounts.
       cleanup: () => tileCacheRef.current?.clear(),
+      canvasPaintDependencies: [
+        adjustedWidth,
+        adjustedHeight,
+        background,
+        backgroundGraphics,
+        scheduleRender,
+      ],
     })
-
-    useEffect(() => {
-      dirtyRef.current = true
-      scheduleRender()
-    }, [adjustedWidth, adjustedHeight, background, backgroundGraphics, scheduleRender])
 
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
@@ -1332,6 +1369,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         }}
         onKeyDown={onKeyDown}
       >
+        {process.env.NODE_ENV !== "production" && storeRef.current && (
+          <SceneRevisionDiagnosticsObserver
+            store={storeRef.current}
+            diagnostics={sceneRevisionDiagnosticsRef.current}
+          />
+        )}
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
         <ScreenReaderSummary summary={summary} />
@@ -1347,20 +1390,9 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           onPointerDown={effectiveHoverAnnotation || customClickBehavior ? onPointerDown : undefined}
           onClick={customClickBehavior ? onClick : undefined}
         >
-        {resolvedBackground && (
-          <svg
-            style={{
-              position: "absolute",
-              left: 0, top: 0,
-              width: size[0], height: size[1],
-              pointerEvents: "none"
-            }}
-          >
-            <g transform={`translate(${margin.left},${margin.top})`}>
-              {resolvedBackground}
-            </g>
-          </svg>
-        )}
+        <CanvasFrameBackground size={size} margin={margin}>
+          {resolvedBackground}
+        </CanvasFrameBackground>
         {tileURL && (
           <canvas
             ref={tileCanvasRef}

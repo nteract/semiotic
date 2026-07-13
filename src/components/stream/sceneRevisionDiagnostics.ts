@@ -1,4 +1,9 @@
-import type { RevisionSet, UpdateResult } from "./pipelineUpdateContract"
+import { memo, useEffect } from "react"
+import type {
+  RevisionSet,
+  UpdateResult,
+  UpdateResultStore
+} from "./pipelineUpdateContract"
 
 export type SceneRevisionSet = Pick<RevisionSet, "sceneGeometry" | "layout" | "domain">
 
@@ -49,6 +54,8 @@ const NOOP_CHECK: SceneRevisionCheck = {
 
 /** Development-only consumption and duplicate-compute diagnostics for a scene host. */
 export class SceneRevisionDiagnostics {
+  constructor(private readonly hostName = "scene host") {}
+
   private lastConsumed = EMPTY_SCENE_REVISIONS
   private lastObserved = EMPTY_SCENE_REVISIONS
   private lastDuplicateWarning = ""
@@ -91,7 +98,7 @@ export class SceneRevisionDiagnostics {
     if (computedScene && check.wasUnconsumed) this.lastConsumed = check.revisions
     if (check.warnUnconsumed && !computedScene) {
       console.warn(
-        `[semiotic] StreamXYFrame observed scene-affecting revisions without a scene rebuild: ${check.signature}.`
+        `[semiotic] ${this.hostName} observed scene-affecting revisions without a scene rebuild: ${check.signature}.`
       )
       this.lastUnconsumedWarning = check.signature
       return
@@ -104,7 +111,7 @@ export class SceneRevisionDiagnostics {
       this.lastDuplicateWarning !== check.signature
     ) {
       console.warn(
-        `[semiotic] StreamXYFrame performed scene rebuild with unchanged scene revisions: ${check.signature}.`
+        `[semiotic] ${this.hostName} performed scene rebuild with unchanged scene revisions: ${check.signature}.`
       )
       this.lastDuplicateWarning = check.signature
     } else if (computedScene && !check.sawSignals) {
@@ -112,3 +119,27 @@ export class SceneRevisionDiagnostics {
     }
   }
 }
+
+/**
+ * Observes external-store revisions without putting diagnostics on a React
+ * render path. Stores can record non-invalidating operational results during
+ * host effects, so a useSyncExternalStore subscription here could feed those
+ * diagnostics back into the host's render cycle.
+ */
+export const SceneRevisionDiagnosticsObserver = memo(
+  function SceneRevisionDiagnosticsObserver({
+    store,
+    diagnostics
+  }: {
+    store: UpdateResultStore
+    diagnostics: SceneRevisionDiagnostics
+  }) {
+    useEffect(() => {
+      const observe = () => diagnostics.observeUpdateResult(store.getUpdateSnapshot())
+      observe()
+      return store.subscribeUpdateResult(observe)
+    }, [diagnostics, store])
+
+    return null
+  }
+)

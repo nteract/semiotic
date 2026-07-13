@@ -538,6 +538,13 @@ export interface ThresholdAlertConfig {
 export interface NetworkPipelineConfig {
   chartType: NetworkChartType
 
+  /** Frame-owned logical clock for ingest, live encodings, and transitions. */
+  clock?: import("./FrameRuntime").FrameClock
+  /** Frame-local random source used by synchronous force layout. */
+  random?: import("./FrameRuntime").FrameRandom
+  /** Serializable deterministic seed, including the force-worker protocol. */
+  seed?: number
+
   // ── Accessors ────────────────────────────────────
   nodeIDAccessor?: string | ((d: Datum) => string)
   sourceAccessor?: string | ((d: Datum) => string)
@@ -784,6 +791,20 @@ export interface StreamNetworkFrameProps<T = Datum> {
    *  Set `{ intro: false }` to disable the intro animation. */
   animate?: AnimateProp
   staleness?: StalenessConfig
+
+  // ── Frame runtime policy ───────────────────────────
+  /** Optional rAF seam for deterministic host scheduling. */
+  frameScheduler?: import("./useFrame").FrameScheduler
+  /** Monotonic wall-clock seam used to derive logical frame time. */
+  clock?: import("./FrameRuntime").FrameClock
+  /** Injectable random source for force layout and particles. */
+  random?: import("./FrameRuntime").FrameRandom
+  /** Serializable deterministic random seed. Ignored when `random` is supplied. */
+  seed?: number
+  /** Freeze logical animation time and cancel queued work while paused. */
+  paused?: boolean
+  /** Freeze logical animation time while the document is hidden. Defaults to true. */
+  suspendWhenHidden?: boolean
 
   // ── Threshold alerting ────────────────────────────
   thresholds?: ThresholdAlertConfig

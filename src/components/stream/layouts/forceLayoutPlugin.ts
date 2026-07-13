@@ -10,6 +10,7 @@ import {
 import { scaleLinear } from "d3-scale"
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
 import { getMinMax } from "../../charts/shared/minMax"
+import { createSeededFrameRandom } from "../FrameRuntime"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {
   NetworkLayoutPlugin,
@@ -218,7 +219,11 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       // Build simulation — parameterizing forceSimulation + forceManyBody with
       // RealtimeNode lets d3-force thread the node type through charge callbacks
       // without per-call casts.
+      const random = config.random ?? (
+        config.seed === undefined ? Math.random : createSeededFrameRandom(config.seed)
+      )
       const simulation = forceSimulation<RealtimeNode>()
+        .randomSource(random)
         .force(
           "charge",
           forceManyBody<RealtimeNode>().strength((d) => {

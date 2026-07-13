@@ -46,6 +46,7 @@ import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
+import { createMcpRequestCancellationSignal } from "./mcp-request-cancellation"
 import {
   createMcpMetadataLogger,
   resolveMcpLoggingPolicy,
@@ -2850,10 +2851,7 @@ async function main() {
 
     const httpServer = http.createServer(async (req, res) => {
       const requestStartedAt = Date.now()
-      const requestAbortController = new AbortController()
-      const abortRequest = () => requestAbortController.abort()
-      req.on("aborted", abortRequest)
-      req.on("close", abortRequest)
+      const requestAbortSignal = createMcpRequestCancellationSignal(req, res)
 
       // Route extraction deliberately excludes the query string. The logging
       // boundary further reduces it to a fixed route enum before serialization.
@@ -3069,7 +3067,7 @@ async function main() {
         // Stateless: one ephemeral server+transport for this request only. Reusing
         // a stateless transport across requests is a known SDK bug, so we never do.
         const srv = createServer(toolProfile, {
-          signal: requestAbortController.signal,
+          signal: requestAbortSignal,
           limits: renderExecutionLimits,
         })
         const transport = new StreamableHTTPServerTransport({

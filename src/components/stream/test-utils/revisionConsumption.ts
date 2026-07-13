@@ -18,8 +18,9 @@ export interface UnconsumedSceneRevisionProbe {
 export function assertUnconsumedSceneRevisionSurvivesLaterUpdate(
   initialResult: UpdateResult,
   laterResult: UpdateResult,
+  hostName = "scene host",
 ): UnconsumedSceneRevisionProbe {
-  const diagnostics = new SceneRevisionDiagnostics()
+  const diagnostics = new SceneRevisionDiagnostics(hostName)
   const initial = diagnostics.beforeCompute(initialResult, false)
   if (!initial.sawSignals || !initial.wasUnconsumed) {
     throw new Error("Expected the initial result to contain an unconsumed scene revision")

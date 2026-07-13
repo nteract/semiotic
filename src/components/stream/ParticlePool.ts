@@ -36,13 +36,13 @@ export class ParticlePool {
    * Spawn a new particle on the given edge.
    * Returns the particle if a free slot was found, null otherwise.
    */
-  spawn(edgeIndex: number): Particle | null {
+  spawn(edgeIndex: number, random: () => number = Math.random): Particle | null {
     const idx = this._freeIndices.pop()
     if (idx === undefined) return null
     const p = this.particles[idx]
     p.active = true
     p.t = 0
-    p.offset = Math.random() - 0.5 // [-0.5, 0.5]
+    p.offset = random() - 0.5 // [-0.5, 0.5]
     p.edgeIndex = edgeIndex
     p.x = 0
     p.y = 0
