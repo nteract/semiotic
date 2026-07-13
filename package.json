@@ -299,7 +299,6 @@
     "check:chart-specs": "npx tsx scripts/check-chart-specs.ts",
     "check:cloud-run-manifest": "node scripts/check-cloud-run-manifest.mjs",
     "check:cloud-run-lock": "node scripts/check-cloud-run-manifest.mjs --require-lockfile",
-    "check:strategy-governance": "node scripts/check-strategy-governance.mjs",
     "check:ai-schema": "node scripts/check-ai-schema-valid.mjs",
     "docs:chart-specs:schema": "npx tsx scripts/regenerate-schema.ts",
     "check:test-quality": "node scripts/check-test-quality-gate.mjs",

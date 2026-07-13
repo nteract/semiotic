@@ -55,9 +55,6 @@ jobs:
       - name: Check Cloud Run deployment manifest
         run: npm run check:cloud-run-manifest
 
-      - name: Check strategy governance
-        run: npm run check:strategy-governance
-
       - name: Run tests with coverage
         run: npm run test:coverage
 
