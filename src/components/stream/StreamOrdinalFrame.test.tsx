@@ -890,6 +890,64 @@ describe("StreamOrdinalFrame", () => {
       const brushG = container.querySelector(".brush-g")
       expect(brushG).toBeFalsy()
     })
+
+    describe("keyboard accessibility", () => {
+      function renderBrush(projection: "vertical" | "horizontal", onBrush = vi.fn()) {
+        const result = render(
+          <StreamOrdinalFrame
+            chartType="bar"
+            data={[{ cat: "A", val: 10 }, { cat: "B", val: 20 }]}
+            oAccessor="cat"
+            rAccessor="val"
+            projection={projection}
+            brush={{ dimension: "r" }}
+            onBrush={onBrush}
+          />
+        )
+        const region = result.container.querySelector('svg[role="region"]') as SVGSVGElement
+        return { ...result, region, onBrush }
+      }
+
+      it("nudges a vertical (default) brush with up/down and ignores left/right", () => {
+        const { region, onBrush } = renderBrush("vertical")
+        fireEvent.keyDown(region, { key: "ArrowUp" })
+        expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ r: expect.any(Array) }))
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowDown", shiftKey: true })
+        expect(onBrush).toHaveBeenCalled()
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowLeft" })
+        fireEvent.keyDown(region, { key: "ArrowRight" })
+        expect(onBrush).not.toHaveBeenCalled()
+      })
+
+      it("nudges a horizontal brush with left/right and ignores up/down", () => {
+        const { region, onBrush } = renderBrush("horizontal")
+        fireEvent.keyDown(region, { key: "ArrowRight" })
+        expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ r: expect.any(Array) }))
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowLeft", shiftKey: true })
+        expect(onBrush).toHaveBeenCalled()
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "ArrowUp" })
+        fireEvent.keyDown(region, { key: "ArrowDown" })
+        expect(onBrush).not.toHaveBeenCalled()
+      })
+
+      it("clears the brush extent on Escape after a prior nudge", () => {
+        const { region, onBrush } = renderBrush("vertical")
+        fireEvent.keyDown(region, { key: "ArrowUp" })
+        onBrush.mockClear()
+        fireEvent.keyDown(region, { key: "Escape" })
+        expect(onBrush).toHaveBeenCalledWith(null)
+      })
+
+      it("exposes an aria-label for the ordinal brush region", () => {
+        const { region } = renderBrush("vertical")
+        expect(region.getAttribute("aria-label")).toBe("Ordinal value range brush")
+        expect(region.getAttribute("aria-describedby")).toBeTruthy()
+      })
+    })
   })
 
   // ── Regression: every declared *Style prop reaches pipelineConfig ──────
