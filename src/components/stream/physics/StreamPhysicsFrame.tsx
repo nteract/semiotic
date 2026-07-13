@@ -57,6 +57,10 @@ import {
   type PhysicsWorkerFrame,
   type PhysicsWorkerResponsePayload
 } from "./PhysicsWorkerProtocol"
+import {
+  isPhysicsDocumentVisible,
+  usePhysicsFrameLifecyclePolicy
+} from "./usePhysicsFrameLifecyclePolicy"
 import { FocusRing } from "../FocusRing"
 import {
   AriaLiveTooltip,
@@ -155,8 +159,8 @@ function createStore(
 
 const CHART_TYPE = "StreamPhysicsFrame"
 
-function documentIsVisible(): boolean {
-  return typeof document === "undefined" ? true : !document.hidden
+function defaultFrameClock(): number {
+  return typeof performance !== "undefined" ? performance.now() : Date.now()
 }
 
 export const StreamPhysicsFrame = memo(forwardRef<
@@ -176,6 +180,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
     bodyStyle,
     chartId,
     className,
+    frameScheduler,
+    clock,
     color,
     config,
     controllers,
@@ -311,6 +317,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
   )
   const hasRuntimeBodyForces = Boolean(composedBodyForces)
   const storeRef = useRef<PhysicsPipelineStore | null>(null)
+  const clockRef = useRef<() => number>(clock ?? defaultFrameClock)
+  clockRef.current = clock ?? defaultFrameClock
 
   const applyRegionImpulse = useCallback(
     (
@@ -489,12 +497,20 @@ export const StreamPhysicsFrame = memo(forwardRef<
   ])
 
   if (!storeRef.current) {
-    storeRef.current = createStore(augmentedConfig, initialSpawns, initialSpawnPacing)
+    const store = createStore(augmentedConfig, initialSpawns, initialSpawnPacing)
+    // Seed pause/visibility before the post-commit effects request work. That
+    // avoids a one-frame continuous simulation request while an initially
+    // paused or hidden frame is still being mounted.
+    store.setPaused(paused)
+    if (suspendWhenHidden) store.setVisible(isPhysicsDocumentVisible())
+    storeRef.current = store
   }
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const semanticFocusIndexRef = useRef(-1)
-  const lastFrameTimeRef = useRef(0)
+  // `0` is a valid injected-clock value, so use null as the "no previous
+  // frame" sentinel rather than making deterministic clocks lose a delta.
+  const lastFrameTimeRef = useRef<number | null>(null)
   const dirtyRef = useRef(true)
   const executionStateKeyRef = useRef("")
   const svgInstanceId = useId().replace(/:/g, "")
@@ -511,13 +527,15 @@ export const StreamPhysicsFrame = memo(forwardRef<
     userMargin: marginProp,
     marginDefault: DEFAULT_MARGIN,
     foregroundGraphics,
-    backgroundGraphics
+    backgroundGraphics,
+    frameScheduler
   })
   const {
     margin,
     rafRef,
     reducedMotionRef,
     renderFnRef,
+    cancelRender,
     resolvedBackground,
     resolvedForeground,
     responsiveRef,
@@ -543,8 +561,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
         return
       }
 
-      const now =
-        typeof performance !== "undefined" ? performance.now() : Date.now()
+      const now = clockRef.current()
       if (
         !force &&
         bodySemanticUpdateMs > 0 &&
@@ -609,7 +626,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     ) => {
       const cb = onObservationRef.current
       if (!cb) return
-      const now = Date.now()
+      const now = clockRef.current()
       if (type === "hover" || type === "click") {
         cb({
           type,
@@ -841,8 +858,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     const bodies = store.readBodies()
     syncBodySemanticItems(bodies, snapshot.simulationState)
     if (needsLiveAnnotationAnchors) {
-      const now =
-        typeof performance !== "undefined" ? performance.now() : Date.now()
+      const now = clockRef.current()
       if (now - lastAnnotationAnchorUpdateRef.current >= 100) {
         lastAnnotationAnchorUpdateRef.current = now
         const next = bodiesToAnnotationAnchors(bodies)
@@ -902,7 +918,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     drawPopAnimations(
       ctx,
       popAnimationsRef.current,
-      typeof performance !== "undefined" ? performance.now() : Date.now()
+      clockRef.current()
     )
     dirtyRef.current = false
   }, [
@@ -1020,10 +1036,10 @@ export const StreamPhysicsFrame = memo(forwardRef<
         latest.visible &&
         !reducedMotionRef.current
       ) {
-        rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+        scheduleRender()
       }
     },
-    [applyWorkerFrame, onTick, paint, rafRef, reducedMotionRef, renderFnRef]
+    [applyWorkerFrame, onTick, paint, reducedMotionRef, scheduleRender]
   )
 
   const handleWorkerError = useCallback(
@@ -1075,7 +1091,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
           latest.visible &&
           !reducedMotionRef.current
         ) {
-          lastFrameTimeRef.current = 0
+          lastFrameTimeRef.current = null
           scheduleRender()
         }
       })
@@ -1144,7 +1160,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
       return
     }
     if (usingWorker && workerStartingRef.current) return
-    lastFrameTimeRef.current = 0
+    lastFrameTimeRef.current = null
     scheduleRender()
   }, [
     composedControllers,
@@ -1158,7 +1174,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
   ])
 
   const renderFrame = useCallback(() => {
-    rafRef.current = 0
+    // A direct (hydration / imperative) render takes ownership from any
+    // queued frame. The scheduler callback has already released its token,
+    // so this is a no-op in the normal rAF path but prevents a stale callback
+    // from racing a synchronous paint.
+    cancelRender()
+    rafRef.current = null
     const store = storeRef.current
     if (!store) return
 
@@ -1166,8 +1187,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
       if (workerPendingRef.current) return
       let deltaSeconds = 0
       if (!reducedMotionRef.current) {
-        const now = performance.now()
-        deltaSeconds = lastFrameTimeRef.current
+        const now = clockRef.current()
+        deltaSeconds = lastFrameTimeRef.current !== null
           ? (now - lastFrameTimeRef.current) / 1000
           : 0
         lastFrameTimeRef.current = now
@@ -1210,8 +1231,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
     if (reducedMotionRef.current) {
       result = store.settleWithObservations()
     } else {
-      const now = performance.now()
-      const deltaSeconds = lastFrameTimeRef.current
+      const now = clockRef.current()
+      const deltaSeconds = lastFrameTimeRef.current !== null
         ? (now - lastFrameTimeRef.current) / 1000
         : 0
       lastFrameTimeRef.current = now
@@ -1243,15 +1264,16 @@ export const StreamPhysicsFrame = memo(forwardRef<
       latest.visible &&
       !reducedMotionRef.current
     ) {
-      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+      scheduleRender()
     }
   }, [
     finishWorkerFrame,
     handleWorkerError,
     paint,
-    rafRef,
+    cancelRender,
+    scheduleRender,
     reducedMotionRef,
-    renderFnRef
+    rafRef,
   ])
 
   renderFnRef.current = renderFrame
@@ -1263,7 +1285,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
       cancelIntroAnimation?: () => void
     } | null>,
     dirtyRef,
-    renderFnRef
+    renderFnRef,
+    cancelRender
   })
 
   useEffect(() => {
@@ -1286,34 +1309,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, simulationExecution, workerBodyThreshold])
 
-  useEffect(() => {
-    const store = storeRef.current
-    if (!store) return
-    store.setPaused(paused)
-    postWorkerCommand({ type: "setPaused", paused }, false)
-    requestRender()
-    // postWorkerCommand/requestRender depend on paint callbacks; paused is the
-    // intentional trigger here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paused])
-
-  useEffect(() => {
-    if (!suspendWhenHidden || typeof document === "undefined") return
-    const update = () => {
-      const store = storeRef.current
-      if (!store) return
-      const visible = documentIsVisible()
-      store.setVisible(visible)
-      postWorkerCommand({ type: "setVisible", visible }, false)
-      requestRender()
-    }
-    update()
-    document.addEventListener("visibilitychange", update)
-    return () => document.removeEventListener("visibilitychange", update)
-    // postWorkerCommand/requestRender depend on paint callbacks; visibility
-    // listener registration only follows suspendWhenHidden.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suspendWhenHidden])
+  usePhysicsFrameLifecyclePolicy({ cancelRender, lastFrameTimeRef, paused, postWorkerCommand, requestRender, storeRef, suspendWhenHidden })
 
   useEffect(() => {
     return () => stopWorker("unmount", false)
@@ -1377,7 +1373,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
         const store = storeRef.current!
         const bodyById = new Map(store.readBodies().map((body) => [body.id, body]))
         const removed = store.remove(ids)
-        const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+        const now = clockRef.current()
         for (const id of removed) {
           const body = bodyById.get(id)
           if (!body) continue

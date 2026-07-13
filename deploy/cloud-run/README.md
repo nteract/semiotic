@@ -123,7 +123,32 @@ deployment* → Build type: buildpacks, Build context directory: `/deploy/cloud-
 | `MCP_MAX_ROWS` | `10000` | Maximum combined entries across all nested array-valued tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
 | `MCP_MAX_CELLS` | `100000` | Maximum combined object fields across nested tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
 | `MCP_MAX_NESTING_DEPTH` | `64` | Maximum nested argument depth. Requests over the ceiling get 413 before MCP dispatch. |
+| `MCP_LOG_LEVEL` | `info` | Process log threshold: `info` records bounded completion metadata; `warn` records rejections/failures; `error` records failures; `silent` is an explicit process-level opt-out. |
+| `MCP_LOG_MAX_EVENT_BYTES` | `1024` | Maximum UTF-8 bytes in one process log record. Values are clamped to 256–4096 bytes. |
+| `MCP_LOG_RETENTION_DAYS` | `30` | Declared maximum retention policy, clamped to 1–90 days. This value is not self-enforcing; configure the Cloud Logging bucket/sink to match or shorten it. |
 | `OPENAI_APPS_CHALLENGE_TOKEN` | unset | Raw token shown by ChatGPT Apps domain verification. When set, the server serves it from `/.well-known/openai-apps-challenge`. |
+
+### Logging, redaction, and retention
+
+The HTTP process emits newline-delimited JSON records using the
+`semiotic-mcp-log/v1` schema. A record is deliberately limited to a fixed event
+name and normalized operational metadata: severity, route category, HTTP method
+category, status, duration, request byte count, and fixed rejection/error
+reason codes. Each record is capped by `MCP_LOG_MAX_EVENT_BYTES`.
+
+The process never serializes request headers (including `Authorization`,
+cookies, or API keys), query strings, JSON-RPC bodies/IDs, tool names or
+arguments, chart data/configuration/output, raw `Error` messages, or stack
+traces. Unknown metadata fields are dropped by the logging boundary rather than
+stringified. Semiotic does not include a telemetry exporter for these events;
+adding one requires an explicit privacy and retention review.
+
+`MCP_LOG_RETENTION_DAYS` expresses the deployment's maximum intended retention,
+but application code cannot delete records already accepted by Cloud Logging or
+other proxies. Before deployment, configure the provider's log bucket, sink,
+and any request-log product to retain these records for no longer than the
+declared value, and verify that setting operationally. Provider-level logs and
+load-balancer logs are outside this process boundary and need the same review.
 
 ## Verify a ChatGPT Apps domain
 

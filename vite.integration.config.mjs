@@ -68,6 +68,7 @@ export default defineConfig(({ mode }) => ({
         geo: resolve(integrationRoot, "geo-examples/index.html"),
         histogramThemeStroke: resolve(integrationRoot, "histogram-theme-stroke-examples/index.html"),
         hocLegend: resolve(integrationRoot, "hoc-legend-examples/index.html"),
+        machineBaseline: resolve(integrationRoot, "machine-baseline-examples/index.html"),
         mobileVisualization: resolve(integrationRoot, "mobile-visualization-examples/index.html"),
         network: resolve(integrationRoot, "network-examples/index.html"),
         ordinal: resolve(integrationRoot, "ordinal-examples/index.html"),

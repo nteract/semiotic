@@ -55,6 +55,9 @@ jobs:
       - name: Check Cloud Run deployment manifest
         run: npm run check:cloud-run-manifest
 
+      - name: Check strategy governance
+        run: npm run check:strategy-governance
+
       - name: Run tests with coverage
         run: npm run test:coverage
 
@@ -78,6 +81,9 @@ jobs:
 
       - name: Check docs coverage and per-page quality
         run: npm run check:docs-coverage
+
+      - name: Check docs example manifest and source integrity
+        run: npm run check:docs-example-integrity
 
       - name: Check prop-table drift vs chartSpecs
         run: npm run check:docs-prop-tables
@@ -299,6 +305,9 @@ jobs:
         # pull request. Maintainers can use `test:visual:bootstrap` locally
         # to generate a proposed baseline, then commit it with review.
         run: npx playwright test --update-snapshots=none
+
+      - name: Smoke-test every docs example from source
+        run: npm run test:examples:source
 
       - name: Upload snapshot baselines
         if: always()

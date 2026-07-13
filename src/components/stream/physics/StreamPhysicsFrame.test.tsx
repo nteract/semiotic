@@ -22,6 +22,7 @@ import type {
   PhysicsWorkerRequest,
   PhysicsWorkerResponse
 } from "./PhysicsWorkerProtocol"
+import type { FrameScheduler } from "../useFrame"
 
 const quietKernel = {
   gravity: { x: 0, y: 0 },
@@ -91,6 +92,39 @@ function captureFillRectStyles(ctx: CanvasContextMock) {
     restore: () => {
       ctx.fillRect = orig
     }
+  }
+}
+
+function createFrameScheduler(firstHandle = 0) {
+  const callbacks = new Map<number, FrameRequestCallback>()
+  const requestedHandles: number[] = []
+  const cancelledHandles: number[] = []
+  let nextHandle = firstHandle
+  const scheduler: FrameScheduler = {
+    requestAnimationFrame: (callback) => {
+      const handle = nextHandle++
+      requestedHandles.push(handle)
+      callbacks.set(handle, callback)
+      return handle
+    },
+    cancelAnimationFrame: (handle) => {
+      cancelledHandles.push(handle)
+      callbacks.delete(handle)
+    },
+  }
+
+  return {
+    scheduler,
+    requestedHandles,
+    cancelledHandles,
+    get pendingCount() {
+      return callbacks.size
+    },
+    flush() {
+      const pending = [...callbacks.values()]
+      callbacks.clear()
+      for (const callback of pending) callback(performance.now())
+    },
   }
 }
 
@@ -888,6 +922,165 @@ describe("StreamPhysicsFrame", () => {
     )
     // Transparent mode skips the theme background fill before paint hooks
     expect(fills.length).toBeGreaterThanOrEqual(0)
+  })
+
+  it("uses the injected frame scheduler across resume and pause boundaries", () => {
+    const scheduler = createFrameScheduler(0)
+    const frameRef = React.createRef<StreamPhysicsFrameHandle>()
+
+    const { rerender } = render(
+      <StreamPhysicsFrame
+        ref={frameRef}
+        size={[200, 120]}
+        frameScheduler={scheduler.scheduler}
+        continuous
+        paused
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+      />,
+    )
+    expect(scheduler.pendingCount).toBe(0)
+
+    act(() => {
+      frameRef.current?.push(circle("a"), { pacing: { ratePerSec: 2 }, startAt: 0 })
+    })
+    expect(scheduler.pendingCount).toBe(0)
+
+    act(() => {
+      rerender(
+        <StreamPhysicsFrame
+          ref={frameRef}
+          size={[200, 120]}
+          frameScheduler={scheduler.scheduler}
+          continuous
+          paused={false}
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+        />,
+      )
+    })
+    expect(scheduler.pendingCount).toBe(1)
+    const requestedAfterResume = scheduler.requestedHandles.length
+
+    act(() => {
+      scheduler.flush()
+    })
+    expect(scheduler.pendingCount).toBe(1)
+
+    act(() => {
+      rerender(
+        <StreamPhysicsFrame
+          ref={frameRef}
+          size={[200, 120]}
+          frameScheduler={scheduler.scheduler}
+          continuous
+          paused
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+        />,
+      )
+    })
+    expect(scheduler.pendingCount).toBe(0)
+
+    act(() => {
+      rerender(
+        <StreamPhysicsFrame
+          ref={frameRef}
+          size={[200, 120]}
+          frameScheduler={scheduler.scheduler}
+          continuous
+          paused={false}
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+        />,
+      )
+    })
+    expect(scheduler.pendingCount).toBe(1)
+    expect(scheduler.requestedHandles.length).toBeGreaterThan(requestedAfterResume)
+  })
+
+  it("does not schedule continuous renders when hidden, and resumes scheduling after visible", () => {
+    const scheduler = createFrameScheduler(10)
+    const frameRef = React.createRef<StreamPhysicsFrameHandle>()
+    const originalHiddenDescriptor = Object.getOwnPropertyDescriptor(document, "hidden")
+    const setVisibility = (hidden: boolean) => {
+      Object.defineProperty(document, "hidden", {
+        configurable: true,
+        get: () => hidden
+      })
+      document.dispatchEvent(new Event("visibilitychange"))
+    }
+
+    render(
+      <StreamPhysicsFrame
+        ref={frameRef}
+        size={[200, 120]}
+        frameScheduler={scheduler.scheduler}
+        continuous
+        paused={false}
+        config={{ fixedDt: 0.1, kernel: quietKernel }}
+      />,
+    )
+    expect(scheduler.pendingCount).toBe(1)
+
+    act(() => {
+      scheduler.flush()
+    })
+    expect(scheduler.pendingCount).toBe(1)
+
+    act(() => {
+      setVisibility(true)
+    })
+    expect(scheduler.pendingCount).toBe(0)
+
+    act(() => {
+      scheduler.flush()
+    })
+    expect(scheduler.pendingCount).toBe(0)
+
+    act(() => {
+      setVisibility(false)
+    })
+    expect(scheduler.pendingCount).toBe(1)
+    if (originalHiddenDescriptor) {
+      Object.defineProperty(document, "hidden", originalHiddenDescriptor)
+    } else {
+      Reflect.deleteProperty(document, "hidden")
+    }
+  })
+
+  it("uses an injected zero-origin clock for deterministic frame deltas", () => {
+    const scheduler = createFrameScheduler(0)
+    const frameRef = React.createRef<StreamPhysicsFrameHandle>()
+    let now = 0
+
+    render(
+      <StreamPhysicsFrame
+        ref={frameRef}
+        size={[200, 120]}
+        frameScheduler={scheduler.scheduler}
+        clock={() => now}
+        continuous
+        initialSpawns={[circle("clocked")]}
+        config={{
+          fixedDt: 0.1,
+          kernel: {
+            gravity: { x: 0, y: 0 },
+            sleepAfter: 999,
+            velocityDamping: 1
+          }
+        }}
+      />
+    )
+
+    // Prime the frame loop at a valid timestamp of zero, then advance the
+    // injected clock. The scheduler callback timestamp is intentionally not
+    // part of this assertion.
+    act(() => {
+      scheduler.flush()
+    })
+    now = 100
+    act(() => {
+      scheduler.flush()
+    })
+
+    expect(frameRef.current?.snapshot().elapsedSeconds).toBeCloseTo(0.1)
   })
 
   it("step() runs the shared post-tick pipeline including controllers", () => {

@@ -32383,6 +32383,146 @@ function resolveHTTPListenHost(args, env = process.env) {
   return getFlagValue(args, "--host")?.trim() || env.MCP_HOST?.trim() || DEFAULT_HTTP_HOST;
 }
 
+// ai/mcp-logging.ts
+var DEFAULT_MCP_LOG_LEVEL = "info";
+var DEFAULT_MCP_LOG_RETENTION_DAYS = 30;
+var DEFAULT_MCP_LOG_MAX_EVENT_BYTES = 1024;
+var MIN_MCP_LOG_MAX_EVENT_BYTES = 256;
+var MAX_MCP_LOG_MAX_EVENT_BYTES = 4096;
+var MAX_MCP_LOG_RETENTION_DAYS = 90;
+var LEVEL_RANK = {
+  error: 0,
+  warn: 1,
+  info: 2
+};
+var SAFE_EVENTS = /* @__PURE__ */ new Set([
+  "request_completed",
+  "request_failed",
+  "request_rejected",
+  "service_fatal",
+  "service_started",
+  "log_event_truncated"
+]);
+var SAFE_REASONS = /* @__PURE__ */ new Set([
+  "forbidden_host",
+  "forbidden_origin",
+  "invalid_json",
+  "operation_limit",
+  "request_body_too_large",
+  "request_concurrency",
+  "request_handler_error",
+  "request_rate",
+  "request_stream_error",
+  "service_startup_failure",
+  "unauthorized",
+  "unsupported_accept",
+  "unsupported_protocol_version"
+]);
+var SAFE_ROUTES = /* @__PURE__ */ new Set([
+  "/",
+  "/mcp",
+  "/health",
+  "/healthz",
+  "/.well-known/openai-apps-challenge"
+]);
+function boundedPositiveInteger(value, fallback, min, max) {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+function resolveMcpLoggingPolicy(env = process.env) {
+  const requestedLevel = env.MCP_LOG_LEVEL?.trim().toLowerCase();
+  const level = requestedLevel === "silent" || requestedLevel === "error" || requestedLevel === "warn" || requestedLevel === "info" ? requestedLevel : DEFAULT_MCP_LOG_LEVEL;
+  return {
+    level,
+    retentionDays: boundedPositiveInteger(
+      env.MCP_LOG_RETENTION_DAYS,
+      DEFAULT_MCP_LOG_RETENTION_DAYS,
+      1,
+      MAX_MCP_LOG_RETENTION_DAYS
+    ),
+    maxEventBytes: boundedPositiveInteger(
+      env.MCP_LOG_MAX_EVENT_BYTES,
+      DEFAULT_MCP_LOG_MAX_EVENT_BYTES,
+      MIN_MCP_LOG_MAX_EVENT_BYTES,
+      MAX_MCP_LOG_MAX_EVENT_BYTES
+    )
+  };
+}
+function safeMethod(value) {
+  if (typeof value !== "string") return "other";
+  const upper = value.toUpperCase();
+  return upper === "GET" || upper === "POST" || upper === "OPTIONS" ? upper : "other";
+}
+function safeRoute(value) {
+  return typeof value === "string" && SAFE_ROUTES.has(value) ? value : "other";
+}
+function safeCode(value, allowlist) {
+  return typeof value === "string" && allowlist.has(value) ? value : "other";
+}
+function safeInteger(value, min, max) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= min && value <= max ? value : void 0;
+}
+function sanitizeMcpLogMetadata(input = {}) {
+  const metadata = {};
+  if (input.method !== void 0) metadata.method = safeMethod(input.method);
+  if (input.route !== void 0) metadata.route = safeRoute(input.route);
+  const status = safeInteger(input.status, 100, 599);
+  if (status !== void 0) metadata.status = status;
+  if (input.reason !== void 0) metadata.reason = safeCode(input.reason, SAFE_REASONS);
+  const durationMs = safeInteger(input.durationMs, 0, 864e5);
+  if (durationMs !== void 0) metadata.durationMs = durationMs;
+  const bodyBytes = safeInteger(input.bodyBytes, 0, 1073741824);
+  if (bodyBytes !== void 0) metadata.bodyBytes = bodyBytes;
+  if (input.profile !== void 0) {
+    metadata.profile = input.profile === "public" || input.profile === "developer" ? input.profile : "other";
+  }
+  const retentionDays = safeInteger(input.retentionDays, 1, MAX_MCP_LOG_RETENTION_DAYS);
+  if (retentionDays !== void 0) metadata.retentionDays = retentionDays;
+  if (typeof input.protocolVersionPresent === "boolean") {
+    metadata.protocolVersionPresent = input.protocolVersionPresent;
+  }
+  return metadata;
+}
+function defaultMcpLogWriter(_severity, line) {
+  process.stderr.write(`${line}
+`);
+}
+function serializeBoundedRecord(record2, maxEventBytes) {
+  const serialized = JSON.stringify(record2);
+  if (Buffer.byteLength(serialized, "utf8") <= maxEventBytes) return serialized;
+  return JSON.stringify({
+    schema: "semiotic-mcp-log/v1",
+    service: "semiotic-mcp",
+    timestamp: record2.timestamp,
+    severity: record2.severity,
+    event: "log_event_truncated",
+    metadata: {}
+  });
+}
+function createMcpMetadataLogger(policy = resolveMcpLoggingPolicy(), writer = defaultMcpLogWriter) {
+  const emit = (severity, event, metadata = {}) => {
+    if (policy.level === "silent" || LEVEL_RANK[severity] > LEVEL_RANK[policy.level]) return;
+    const record2 = {
+      schema: "semiotic-mcp-log/v1",
+      service: "semiotic-mcp",
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      severity: severity.toUpperCase(),
+      event: safeCode(event, SAFE_EVENTS),
+      metadata: sanitizeMcpLogMetadata(metadata)
+    };
+    try {
+      writer(severity, serializeBoundedRecord(record2, policy.maxEventBytes));
+    } catch {
+    }
+  };
+  return {
+    error: (event, metadata) => emit("error", event, metadata),
+    warn: (event, metadata) => emit("warn", event, metadata),
+    info: (event, metadata) => emit("info", event, metadata)
+  };
+}
+
 // ai/mcp-request-limits.ts
 var DEFAULT_MCP_MAX_CONCURRENT_REQUESTS = 16;
 var DEFAULT_MCP_MAX_REQUESTS_PER_WINDOW = 240;
@@ -32932,6 +33072,8 @@ var DEFAULT_MCP_SUPPORTED_PROTOCOL_VERSION = "2024-11-05";
 var DEFAULT_MCP_MAX_RENDER_WORK_MS = 2500;
 var DEFAULT_MCP_MAX_PNG_CONVERSION_MS = 4e3;
 var DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS = 3e3;
+var mcpLoggingPolicy = resolveMcpLoggingPolicy();
+var mcpLogger = createMcpMetadataLogger(mcpLoggingPolicy);
 function writeJsonRpcError(res, status, code, message) {
   res.writeHead(status, { "Content-Type": "application/json" });
   res.end(JSON.stringify({
@@ -32955,16 +33097,6 @@ function hasSupportedAccept(acceptHeader) {
 function isSupportedProtocolVersion(protocolVersion, supported) {
   if (!protocolVersion || supported.length === 0) return true;
   return supported.includes(protocolVersion);
-}
-function sanitizeHeadersForLog(headers) {
-  const output = {};
-  for (const [name, value] of Object.entries(headers)) {
-    if (!value) continue;
-    const sample = Array.isArray(value) ? value[0] : value;
-    if (typeof sample !== "string") continue;
-    output[name] = name.toLowerCase() === "authorization" ? "***redacted***" : sample;
-  }
-  return output;
 }
 function parsePositiveInteger(value, fallback) {
   const parsed = Number.parseInt(value || "", 10);
@@ -35044,7 +35176,13 @@ async function main() {
         if (done) return;
         size += chunk.length;
         if (size > maxBodyBytes) {
-          finish({ ok: false, status: 413, code: -32600, message: "Request body too large" });
+          finish({
+            ok: false,
+            status: 413,
+            code: -32600,
+            message: "Request body too large",
+            reason: "request_body_too_large"
+          });
           return;
         }
         chunks.push(chunk);
@@ -35052,7 +35190,7 @@ async function main() {
       req.on("end", () => {
         if (done) return;
         const raw = Buffer.concat(chunks).toString("utf-8");
-        if (!raw) return finish({ ok: true, body: void 0 });
+        if (!raw) return finish({ ok: true, body: void 0, bodyBytes: size });
         try {
           const body = JSON.parse(raw);
           const operationLimit = operationLimitForMcpRequest(body, operationLimits);
@@ -35061,16 +35199,29 @@ async function main() {
               ok: false,
               status: 413,
               code: -32602,
-              message: formatMcpOperationLimitError(operationLimit)
+              message: formatMcpOperationLimitError(operationLimit),
+              reason: "operation_limit"
             });
             return;
           }
-          finish({ ok: true, body });
+          finish({ ok: true, body, bodyBytes: size });
         } catch {
-          finish({ ok: false, status: 400, code: -32600, message: "Invalid JSON body" });
+          finish({
+            ok: false,
+            status: 400,
+            code: -32600,
+            message: "Invalid JSON body",
+            reason: "invalid_json"
+          });
         }
       });
-      req.on("error", () => finish({ ok: false, status: 400, code: -32600, message: "Request stream error" }));
+      req.on("error", () => finish({
+        ok: false,
+        status: 400,
+        code: -32600,
+        message: "Request stream error",
+        reason: "request_stream_error"
+      }));
     });
     const healthBody = () => JSON.stringify({
       status: "ok",
@@ -35080,10 +35231,18 @@ async function main() {
       mode: "stateless"
     });
     const httpServer = http.createServer(async (req, res) => {
+      const requestStartedAt = Date.now();
       const requestAbortController = new AbortController();
       const abortRequest = () => requestAbortController.abort();
       req.on("aborted", abortRequest);
       req.on("close", abortRequest);
+      const pathname = (() => {
+        try {
+          return new URL(req.url || "/", "http://localhost").pathname;
+        } catch {
+          return "/";
+        }
+      })();
       const origin = String(req.headers.origin || "").trim().toLowerCase();
       if (allowedOrigins.length > 0) {
         res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
@@ -35103,22 +35262,27 @@ async function main() {
         return;
       }
       if (allowedOrigins.length > 0 && origin && !allowedOrigins.includes(origin)) {
+        mcpLogger.warn("request_rejected", {
+          reason: "forbidden_origin",
+          method: req.method,
+          route: pathname,
+          status: 403
+        });
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Forbidden origin" }, id: null }));
         return;
       }
-      const pathname = (() => {
-        try {
-          return new URL(req.url || "/", "http://localhost").pathname;
-        } catch {
-          return "/";
-        }
-      })();
       res.setHeader("MCP-Protocol-Version", protocolVersion);
       if (allowedHosts.length > 0) {
         const rawHost = String(req.headers.host || "").trim().toLowerCase();
         const normalizedHost = rawHost.startsWith("[") ? rawHost.replace(/^\[([^\]]+)\](?::\d+)?$/, "$1") : rawHost.split(":")[0];
         if (!allowedHosts.includes(rawHost) && !allowedHosts.includes(normalizedHost)) {
+          mcpLogger.warn("request_rejected", {
+            reason: "forbidden_host",
+            method: req.method,
+            route: pathname,
+            status: 403
+          });
           res.writeHead(403, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32e3, message: "Forbidden host" }, id: null }));
           return;
@@ -35158,11 +35322,11 @@ async function main() {
         return;
       }
       if (!hasSupportedAccept(String(req.headers.accept || ""))) {
-        console.warn("MCP request rejected", {
+        mcpLogger.warn("request_rejected", {
           reason: "unsupported_accept",
           method: req.method,
-          path: pathname,
-          headers: sanitizeHeadersForLog(req.headers)
+          route: pathname,
+          status: 406
         });
         writeJsonRpcError(
           res,
@@ -35176,11 +35340,14 @@ async function main() {
         String(req.headers["mcp-protocol-version"] || ""),
         protocolVersions
       )) {
-        console.warn("MCP request rejected", {
+        mcpLogger.warn("request_rejected", {
           reason: "unsupported_protocol_version",
           method: req.method,
-          path: pathname,
-          protocolVersion: req.headers["mcp-protocol-version"]
+          route: pathname,
+          status: 400,
+          // The header's value can be attacker-controlled; presence is enough
+          // operationally and keeps it out of the log boundary.
+          protocolVersionPresent: Boolean(req.headers["mcp-protocol-version"])
         });
         writeJsonRpcError(
           res,
@@ -35191,11 +35358,11 @@ async function main() {
         return;
       }
       if (authToken && !isAuthorizedRequest(req, authToken, authScheme)) {
-        console.warn("MCP request rejected", {
+        mcpLogger.warn("request_rejected", {
           reason: "unauthorized",
           method: req.method,
-          path: pathname,
-          headers: sanitizeHeadersForLog(req.headers)
+          route: pathname,
+          status: 401
         });
         res.setHeader("WWW-Authenticate", `${authScheme} realm="semiotic-mcp"`);
         writeJsonRpcError(res, 401, -32e3, "Unauthorized");
@@ -35204,11 +35371,11 @@ async function main() {
       const requestSlot = requestLimiter.tryAcquire();
       if (!requestSlot.ok) {
         res.setHeader("Retry-After", String(Math.max(1, Math.ceil(requestSlot.retryAfterMs / 1e3))));
-        console.warn("MCP request rejected", {
-          reason: requestSlot.code,
+        mcpLogger.warn("request_rejected", {
+          reason: requestSlot.code === "MCP_REQUEST_CONCURRENCY" ? "request_concurrency" : "request_rate",
           method: req.method,
-          path: pathname,
-          headers: sanitizeHeadersForLog(req.headers)
+          route: pathname,
+          status: 429
         });
         writeJsonRpcError(res, 429, -32e3, requestSlot.message);
         return;
@@ -35216,6 +35383,12 @@ async function main() {
       try {
         const bodyResult = await readJsonBodyWithLimit(req);
         if (!bodyResult.ok) {
+          mcpLogger.warn("request_rejected", {
+            reason: bodyResult.reason,
+            method: req.method,
+            route: pathname,
+            status: bodyResult.status
+          });
           if (!res.headersSent) {
             res.writeHead(bodyResult.status, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: bodyResult.code, message: bodyResult.message }, id: null }));
@@ -35243,8 +35416,22 @@ async function main() {
         try {
           await srv.connect(transport);
           await transport.handleRequest(req, res, bodyResult.body);
-        } catch (err) {
-          console.error("Request handling error:", err);
+          mcpLogger.info("request_completed", {
+            method: req.method,
+            route: pathname,
+            status: res.statusCode,
+            durationMs: Date.now() - requestStartedAt,
+            bodyBytes: bodyResult.bodyBytes
+          });
+        } catch {
+          mcpLogger.error("request_failed", {
+            reason: "request_handler_error",
+            method: req.method,
+            route: pathname,
+            status: 500,
+            durationMs: Date.now() - requestStartedAt,
+            bodyBytes: bodyResult.bodyBytes
+          });
           if (!res.headersSent) {
             res.writeHead(500, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error" }, id: null }));
@@ -35257,10 +35444,10 @@ async function main() {
       }
     });
     httpServer.listen(port, host, () => {
-      const displayHost = host.includes(":") ? `[${host}]` : host;
-      console.error(`Semiotic MCP server (HTTP) listening on http://${displayHost}:${port}`);
-      console.error(toolProfile === "public" ? "Tools (public profile): createChart, improveChart, explainChart, auditChart, getChartSchema" : "Tools: getSchema, suggestChart, suggestCharts, suggestTokenEncoding, proposeChartVariants, suggestStreamCharts, suggestDashboard, suggestStretchCharts, repairChartConfig, renderChart, renderInteractiveChart, interrogateChart, groundChart, diagnoseConfig, auditAccessibility, auditMobileVisualization, reportIssue, applyTheme");
-      console.error("Resources: semiotic://schema, semiotic://components, semiotic://surface-manifest, semiotic://behavior-contracts, semiotic://system-prompt, semiotic://examples, ui://semiotic/chart-widget.html");
+      mcpLogger.info("service_started", {
+        profile: toolProfile,
+        retentionDays: mcpLoggingPolicy.retentionDays
+      });
     });
   } else {
     const srv = createServer2(toolProfile);
@@ -35268,7 +35455,7 @@ async function main() {
     await srv.connect(transport);
   }
 }
-main().catch((err) => {
-  console.error("MCP server error:", err);
+main().catch(() => {
+  mcpLogger.error("service_fatal", { reason: "service_startup_failure" });
   process.exit(1);
 });

@@ -251,6 +251,7 @@ const BlogEntryPage = lazy(() => import("./blog/BlogEntryPage"))
 const UsingSSRPage = lazy(() => import("./pages/UsingSSRPage"))
 const SSRGalleryPage = lazy(() => import("./pages/SSRGalleryPage"))
 const RenderStudioPage = lazy(() => import("./pages/server/RenderStudioPage"))
+const ChartClinicPage = lazy(() => import("./pages/server/ChartClinicPage"))
 const ThemeShowcasePage = lazy(() => import("./pages/server/ThemeShowcasePage"))
 const DashboardGalleryPage = lazy(() => import("./pages/server/DashboardGalleryPage"))
 const EmailPreviewPage = lazy(() => import("./pages/server/EmailPreviewPage"))
@@ -840,6 +841,7 @@ export default function DocsApp() {
               <Route path="using-ssr" element={<UsingSSRPage />} />
               <Route path="ssr-gallery" element={<SSRGalleryPage />} />
               <Route path="server/studio" element={<RenderStudioPage />} />
+              <Route path="server/chart-clinic" element={<ChartClinicPage />} />
               <Route path="server/themes" element={<ThemeShowcasePage />} />
               <Route path="server/dashboards" element={<DashboardGalleryPage />} />
               <Route path="server/email" element={<EmailPreviewPage />} />

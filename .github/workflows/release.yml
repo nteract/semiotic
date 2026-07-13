@@ -135,6 +135,9 @@ jobs:
         run: npm run check:cloud-run-lock
         continue-on-error: true
 
+      - name: Release strategy status
+        run: npm run check:strategy-governance
+
       - name: Release diagnostics: benchmark comparison
         run: npm run bench:compare
         continue-on-error: true

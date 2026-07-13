@@ -130,6 +130,12 @@ export interface HydrationLifecycleOptions {
    */
   renderFnRef: MutableRefObject<() => void>
   /**
+   * Optional shared-scheduler cancellation. A hydration paint is synchronous,
+   * so it must take ownership from any queued render before invoking the
+   * frame closure.
+   */
+  cancelRender?: () => void
+  /**
    * Optional unmount cleanup. Frame-specific work the hook can't
    * generalize — e.g. clearing the streaming `DataSourceAdapter`
    * (XY/Ordinal) or the geo tile cache.
@@ -138,17 +144,26 @@ export interface HydrationLifecycleOptions {
 }
 
 export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
-  const { hydrated, wasHydratingFromSSR, storeRef, dirtyRef, renderFnRef, cleanup } = opts
+  const {
+    hydrated,
+    wasHydratingFromSSR,
+    storeRef,
+    dirtyRef,
+    renderFnRef,
+    cancelRender,
+    cleanup
+  } = opts
   useIsomorphicLayoutEffect(() => {
     if (hydrated && wasHydratingFromSSR) {
       storeRef.current?.cancelIntroAnimation?.()
     }
     dirtyRef.current = true
+    cancelRender?.()
     // Synchronous paint — see the hook's docstring for why an rAF
     // here would produce a one-frame blank-canvas flicker on SSR
     // rehydration. `renderFnRef.current` is the frame body's render
     // closure; it's idempotent and rAF-cancel-safe (resets
-    // `rafRef.current = 0` at the start), so calling it directly
+    // `rafRef.current = null` at the start), so calling it directly
     // from a layout effect doesn't conflict with the in-flight
     // scheduling that other paths use.
     renderFnRef.current()

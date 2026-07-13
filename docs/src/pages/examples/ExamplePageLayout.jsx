@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
   BLOCKS_VIEW_STYLES,
@@ -8,9 +8,11 @@ import {
 } from "../../components/BlocksView"
 import CodeBlock from "../../components/CodeBlock"
 import { EXAMPLES } from "./examplesManifest"
+import { getExampleDefinition } from "./exampleDefinitions"
 import { getExampleSourceLoader } from "./exampleSourceMap"
 
 const SOURCE_LOAD_ERROR = "Failed to load source."
+const PilotExamplePanels = lazy(() => import("./PilotExamplePanels"))
 
 export default function ExamplePageLayout({
   title,
@@ -29,6 +31,10 @@ export default function ExamplePageLayout({
   const index = EXAMPLES.findIndex((example) => example.path === normalizedPath)
   const prev = prevPage ?? (index > 0 ? EXAMPLES[index - 1] : undefined)
   const next = nextPage ?? (index >= 0 ? EXAMPLES[index + 1] : undefined)
+  const exampleDefinition = useMemo(
+    () => getExampleDefinition(normalizedPath),
+    [normalizedPath],
+  )
   const sourceLoader = useMemo(() => getExampleSourceLoader(normalizedPath), [normalizedPath])
   const [sourceCode, setSourceCode] = useState("")
   const hasFullCodeFallback = useFullCodeFallback && Boolean(sourceLoader)
@@ -139,6 +145,11 @@ export default function ExamplePageLayout({
 
         <div className="example-page-content" style={styles.content}>
           {children}
+          {exampleDefinition?.isPilot && (
+            <Suspense fallback={null}>
+              <PilotExamplePanels definition={exampleDefinition} />
+            </Suspense>
+          )}
           {blocksMode && hasFullCodeFallback && (
             <section className="blocks-example blocks-example--source">
               <h2 className="blocks-example-title">Full Code</h2>

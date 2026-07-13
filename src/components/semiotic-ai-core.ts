@@ -78,3 +78,14 @@ export type {
   OpenAIResponsesTool,
   OpenAIResponsesToolOptions,
 } from "./ai/generativeChart"
+export { inspectChart } from "./ai/chartClinic"
+export type {
+  ChartClinicConfig,
+  ChartClinicInput,
+  ChartClinicOptions,
+  ChartClinicReport,
+  ChartClinicRevisionInput,
+  ChartClinicRevisionStatus,
+  ChartClinicSceneSummary,
+  ChartClinicBundleGuidance,
+} from "./ai/chartClinic"

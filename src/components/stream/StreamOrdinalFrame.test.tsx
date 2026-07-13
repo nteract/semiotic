@@ -998,4 +998,16 @@ describe("StreamOrdinalFrame", () => {
       }
     })
   })
+
+  it("forwards accessorRevision to the ordinal pipeline config", async () => {
+    const StoreModule = await import("./OrdinalPipelineStore")
+    const updateSpy = vi.spyOn(StoreModule.OrdinalPipelineStore.prototype, "updateConfig")
+    try {
+      render(<StreamOrdinalFrame chartType="bar" accessorRevision={7} />)
+      const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+      expect(lastConfig?.accessorRevision).toBe(7)
+    } finally {
+      updateSpy.mockRestore()
+    }
+  })
 })

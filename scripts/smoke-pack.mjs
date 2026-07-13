@@ -26,6 +26,7 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
 const packedConsumerFixture = join(__dirname, "fixtures", "packed-typescript-consumer")
+const packedExampleConsumerFixture = join(__dirname, "fixtures", "packed-example-consumer")
 const publicNpmRegistry = process.env.SEMIOTIC_PACK_REGISTRY || "https://registry.npmjs.org"
 // Release CI sets this to the single immutable tarball it will publish. The
 // default continues to pack the checkout for ordinary local/package checks.
@@ -375,6 +376,25 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
   }
 }
 
+/**
+ * The public-export loop verifies that modules resolve; this fixture goes one
+ * step further and executes the three current ExampleDefinition pilot chart
+ * families from a clean installed tarball. It deliberately uses server
+ * rendering so it stays portable in the package job. Browser interaction and
+ * visual behavior are covered by the source-route Playwright gate.
+ */
+function checkPackedExampleConsumer(proj, failures) {
+  const fixtureDir = join(proj, "packed-example-consumer")
+  cpSync(packedExampleConsumerFixture, fixtureDir, { recursive: true })
+
+  try {
+    const out = runFixtureScript(fixtureDir, "run-pilot-examples.mjs")
+    console.log(`  ✓ ${out.trim()}`)
+  } catch (err) {
+    failures.push(`Packed pilot examples: ${firstLine(err)}`)
+  }
+}
+
 console.log(`▶ smoke dir: ${tmp}`)
 
 let exitCode = 0
@@ -508,6 +528,7 @@ try {
   }
 
   checkTypeScriptConsumer(proj, packageRoot, failures)
+  checkPackedExampleConsumer(proj, failures)
 } catch (err) {
   console.error("✗ smoke test crashed:", firstLine(err))
   exitCode = 2

@@ -22,7 +22,7 @@
  *    (margin defaults, dirtyRef initial value, table component) is passed
  *    in as input; the hook doesn't pick its own.
  * 4. **Output stability, where practical.** Refs and callback outputs
- *    (`rafRef`, `renderFnRef`, `hoverHandlerRef`, `scheduleRender`,
+ *    (`rafRef`, `renderFnRef`, `hoverHandlerRef`, `scheduleRender`, `cancelRender`,
  *    `onPointerMove`, `onPointerLeave`) are stable across renders.
  *    `margin` is useMemo'd. But some outputs can change identity per
  *    render: `size` is whatever `useResponsiveSize` returns (stable
@@ -52,6 +52,28 @@ import type { HoverPointerCoords } from "./hoverUtils"
 
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect
+
+/**
+ * The small scheduling surface `useFrame` needs. Keeping this separate from
+ * the browser global gives hook tests a deterministic, handle-agnostic seam
+ * without coupling the frame lifecycle to a broader scheduler abstraction.
+ */
+export interface FrameScheduler {
+  requestAnimationFrame(callback: FrameRequestCallback): number
+  cancelAnimationFrame(handle: number): void
+}
+
+const browserFrameScheduler: FrameScheduler = {
+  // `requestAnimationFrame` is a Window API. Prefer `window` when it exists
+  // rather than retaining a different test/global host at module evaluation
+  // time; this keeps the browser default and injected schedulers equivalent.
+  requestAnimationFrame: callback => (
+    typeof window === "undefined" ? globalThis : window
+  ).requestAnimationFrame(callback),
+  cancelAnimationFrame: handle => (
+    typeof window === "undefined" ? globalThis : window
+  ).cancelAnimationFrame(handle),
+}
 
 // ── Margin handling ─────────────────────────────────────────────────────────
 
@@ -114,6 +136,12 @@ export interface UseFrameInput {
   /** Frame's `transition` prop (legacy / explicit form). */
   transitionProp?: TransitionConfig
   /**
+   * Optional rAF seam for deterministic frame tests or an embedding runtime.
+   * It owns both render scheduling and pointer-move coalescing. Omit it to
+   * use the browser's `requestAnimationFrame` / `cancelAnimationFrame`.
+   */
+  frameScheduler?: FrameScheduler
+  /**
    * Frame's `dirtyRef` (the flag that forces a full canvas redraw on the
    * next paint). When provided, useFrame installs a theme-change effect
    * that bumps it to `true`, clears the CSS-var cache, and queues a
@@ -165,24 +193,27 @@ export interface UseFrameResult {
   // The frame body assigns its render closure to `renderFnRef.current`;
   // calling `scheduleRender()` queues a single rAF that invokes it. A
   // second `scheduleRender()` while a rAF is already pending is a no-op
-  // (coalescing). The frame's render closure should reset
-  // `rafRef.current = 0` at the start (before doing render work) so
-  // subsequent `scheduleRender()` calls can queue again. Resetting at
-  // the start lets a render closure call `scheduleRender()` itself —
-  // e.g. to continue an animation — without being silently coalesced
-  // into the frame that's already running.
+  // (coalescing). The scheduler releases the token immediately before an
+  // rAF-driven render runs. Frame render closures also reset
+  // `rafRef.current = null` at the start because hydration can invoke them
+  // synchronously, outside this scheduler callback. That lets either path
+  // call `scheduleRender()` itself — e.g. to continue an animation — without
+  // being silently coalesced into a frame that's already running.
   //
   // The hook installs an unmount effect that cancels any pending rAF —
   // frames no longer need their own cancel-on-unmount for this ref
   // (other unmount cleanup like move-coalesce or adapter teardown stays
   // frame-local).
 
-  /** Token of the pending rAF, or 0 if none. */
-  rafRef: React.MutableRefObject<number>
+  /** Token of the pending rAF, or `null` if none. `0` is a valid token. */
+  rafRef: React.MutableRefObject<number | null>
   /** Frame assigns its render closure here. */
   renderFnRef: React.MutableRefObject<() => void>
   /** Queue a render on the next animation frame. Coalesces. */
   scheduleRender: () => void
+  /** Cancel a queued render, if any. Direct/hydration paints use this before
+   * taking over so a stale rAF cannot race a synchronous frame. */
+  cancelRender: () => void
 
   // ── Hover / pointer event coalescing ─────────────────────────────────
   // Pointer events fire faster than the display refreshes — sometimes
@@ -265,11 +296,51 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // ── rAF-coalesced render scheduling ──────────────────────────────────
   // Owned here so any future tweak to the coalescing semantics (deferred
   // commits, scheduler integration, etc.) is one source of truth.
-  const rafRef = useRef(0)
+  // `0` is a valid requestAnimationFrame token, so pending state must use a
+  // distinct sentinel. This also makes coalescing independent of a test
+  // scheduler's choice of handle values.
+  const rafRef = useRef<number | null>(null)
+  const frameSchedulerRef = useRef<FrameScheduler>(input.frameScheduler ?? browserFrameScheduler)
+  frameSchedulerRef.current = input.frameScheduler ?? browserFrameScheduler
+  const pendingRafSchedulerRef = useRef<FrameScheduler | null>(null)
+  const synchronouslyRenderingRef = useRef(false)
   const renderFnRef = useRef<() => void>(() => {})
   const scheduleRender = useCallback(() => {
-    if (rafRef.current) return
-    rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+    // A deterministic scheduler is allowed to invoke its callback before
+    // `requestAnimationFrame` returns. A frame that requests continuation
+    // during that synchronous render must not recurse indefinitely; browser
+    // callbacks remain free to queue their normal next frame.
+    if (rafRef.current !== null || synchronouslyRenderingRef.current) return
+    const scheduler = frameSchedulerRef.current
+    // Browsers always invoke rAF asynchronously, but a useful deterministic
+    // test scheduler may flush synchronously. Do not write its already-fired
+    // handle back into `rafRef` after the callback has cleared it.
+    let firedSynchronously = false
+    let requestReturned = false
+    const handle = scheduler.requestAnimationFrame(() => {
+      firedSynchronously = true
+      const synchronous = !requestReturned
+      if (synchronous) synchronouslyRenderingRef.current = true
+      rafRef.current = null
+      pendingRafSchedulerRef.current = null
+      try {
+        renderFnRef.current()
+      } finally {
+        if (synchronous) synchronouslyRenderingRef.current = false
+      }
+    })
+    requestReturned = true
+    if (!firedSynchronously) {
+      rafRef.current = handle
+      pendingRafSchedulerRef.current = scheduler
+    }
+  }, [])
+  const cancelRender = useCallback(() => {
+    if (rafRef.current === null) return
+    const scheduler = pendingRafSchedulerRef.current ?? frameSchedulerRef.current
+    scheduler.cancelAnimationFrame(rafRef.current)
+    rafRef.current = null
+    pendingRafSchedulerRef.current = null
   }, [])
 
   // Cancel any pending rAF on unmount. Frames may still install their own
@@ -278,35 +349,45 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // now centralized.
   useEffect(() => {
     return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current)
-        rafRef.current = 0
-      }
+      cancelRender()
     }
-  }, [])
+  }, [cancelRender])
 
   // ── Pointer event coalescing (hover handler) ──────────────────────────
   const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
   const hoverLeaveRef = useRef<() => void>(() => {})
   const pendingMoveCoordsRef = useRef<HoverPointerCoords | null>(null)
-  const moveRafRef = useRef(0)
+  const moveRafRef = useRef<number | null>(null)
+  const pendingMoveSchedulerRef = useRef<FrameScheduler | null>(null)
   const flushPendingMove = useCallback(() => {
-    moveRafRef.current = 0
     const coords = pendingMoveCoordsRef.current
     pendingMoveCoordsRef.current = null
     if (coords) hoverHandlerRef.current(coords)
   }, [])
   const onPointerMove = useCallback((e: { clientX: number; clientY: number; pointerType?: string }) => {
     pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType }
-    if (moveRafRef.current === 0) {
-      moveRafRef.current = requestAnimationFrame(flushPendingMove)
+    if (moveRafRef.current === null) {
+      const scheduler = frameSchedulerRef.current
+      let firedSynchronously = false
+      const handle = scheduler.requestAnimationFrame(() => {
+        firedSynchronously = true
+        moveRafRef.current = null
+        pendingMoveSchedulerRef.current = null
+        flushPendingMove()
+      })
+      if (!firedSynchronously) {
+        moveRafRef.current = handle
+        pendingMoveSchedulerRef.current = scheduler
+      }
     }
   }, [flushPendingMove])
   const onPointerLeave = useCallback(() => {
     pendingMoveCoordsRef.current = null
-    if (moveRafRef.current !== 0) {
-      cancelAnimationFrame(moveRafRef.current)
-      moveRafRef.current = 0
+    if (moveRafRef.current !== null) {
+      const scheduler = pendingMoveSchedulerRef.current ?? frameSchedulerRef.current
+      scheduler.cancelAnimationFrame(moveRafRef.current)
+      moveRafRef.current = null
+      pendingMoveSchedulerRef.current = null
     }
     hoverLeaveRef.current()
   }, [])
@@ -315,9 +396,11 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   useEffect(() => {
     return () => {
       pendingMoveCoordsRef.current = null
-      if (moveRafRef.current !== 0) {
-        cancelAnimationFrame(moveRafRef.current)
-        moveRafRef.current = 0
+      if (moveRafRef.current !== null) {
+        const scheduler = pendingMoveSchedulerRef.current ?? frameSchedulerRef.current
+        scheduler.cancelAnimationFrame(moveRafRef.current)
+        moveRafRef.current = null
+        pendingMoveSchedulerRef.current = null
       }
     }
   }, [])
@@ -358,6 +441,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     rafRef,
     renderFnRef,
     scheduleRender,
+    cancelRender,
     hoverHandlerRef,
     hoverLeaveRef,
     onPointerMove,

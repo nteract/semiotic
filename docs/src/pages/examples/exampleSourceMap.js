@@ -1,4 +1,6 @@
-const SOURCE_LOADERS_BY_PATH = {
+import { EXAMPLE_DEFINITIONS } from "./exampleDefinitions"
+
+const LEGACY_SOURCE_LOADERS_BY_PATH = {
   "/examples/art-movement-genealogy": () =>
     import("./ArtMovementGenealogyExamplePage.jsx?raw").then((module) => module.default),
   "/examples/climate-anomaly": () =>
@@ -23,8 +25,6 @@ const SOURCE_LOADERS_BY_PATH = {
     import("./InsightForgeExamplePage.jsx?raw").then((module) => module.default),
   "/examples/lake-travis-isotype": () =>
     import("./LakeTravisIsotypeExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/merge-pressure": () =>
-    import("./MergePressureExamplePage.jsx?raw").then((module) => module.default),
   "/examples/not-in-my-backyard": () =>
     import("./NimbyExamplePage.jsx?raw").then((module) => module.default),
   "/examples/local-government-explorer": () =>
@@ -49,14 +49,10 @@ const SOURCE_LOADERS_BY_PATH = {
     import("./SometimesDiscreteExamplePage.jsx?raw").then((module) => module.default),
   "/examples/where-you-draw-the-line": () =>
     import("./WhereYouDrawTheLineExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/stakeholder-journey": () =>
-    import("./StakeholderJourneyExamplePage.jsx?raw").then((module) => module.default),
   "/examples/urine-wheel": () =>
     import("./UrineWheelExamplePage.jsx?raw").then((module) => module.default),
   "/examples/us-war-timeline": () =>
     import("./USWarTimelineExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/watermarks": () =>
-    import("./WatermarksExamplePage.jsx?raw").then((module) => module.default),
   "/examples/what-the-machine-sees": () =>
     import("./WhatTheMachineSeesExamplePage.jsx?raw").then((module) => module.default),
   "/examples/wikipedia-realtime": () =>
@@ -65,19 +61,67 @@ const SOURCE_LOADERS_BY_PATH = {
     import("./WorldOfFunnelsExamplePage.jsx?raw").then((module) => module.default),
 }
 
-export function getExampleSourceLoader(pathname) {
-  return CLEAN_SOURCE_LOADERS_BY_PATH[pathname]
+// Vite replaces the direct glob call in browser/docs builds. The prerender
+// process also imports this module through plain Node, where `import.meta`
+// exists but has no Vite `glob` helper; source panels are client-only there.
+const RAW_EXAMPLE_SOURCE_MODULES = typeof import.meta.glob === "function"
+  ? import.meta.glob("./*ExamplePage.jsx", {
+    eager: false,
+    query: "?raw",
+    import: "default",
+  })
+  : {}
+
+function toRawSourceModuleKey(definition) {
+  const sourceFile = typeof definition?.sourceFile === "string" ? definition.sourceFile.trim() : ""
+  if (!sourceFile) return null
+  const withPrefix = sourceFile.startsWith("./") ? sourceFile : `./${sourceFile}`
+  return withPrefix.replace(/\?raw$/, "")
 }
 
-export const EXAMPLE_SOURCE_PATHS = Object.keys(SOURCE_LOADERS_BY_PATH)
+function isPilotDefinition(definition) {
+  return definition?.isPilot === true
+}
 
-const NARRATIVE_CODE_NAMES = ["implementationCode", "combinedCode"]
+function cleanExampleLoader(loader) {
+  return () =>
+    loader().then((module) =>
+      typeof module === "string" ? module : module.default,
+    )
+}
+
+const EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
+  EXAMPLE_DEFINITIONS
+    .filter(isPilotDefinition)
+    .map((definition) => {
+      const key = toRawSourceModuleKey(definition)
+      if (key == null) return undefined
+      const loader = RAW_EXAMPLE_SOURCE_MODULES[key]
+      if (!loader) return undefined
+      return [definition.path, cleanExampleLoader(loader)]
+    })
+    .filter(Boolean)
+)
+
+export const SOURCE_LOADERS_BY_PATH = {
+  ...LEGACY_SOURCE_LOADERS_BY_PATH,
+  ...EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH,
+}
+
 const CLEAN_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
   Object.entries(SOURCE_LOADERS_BY_PATH).map(([path, loader]) => [
     path,
     () => loader().then(cleanExampleSourceForFullCode),
   ]),
 )
+
+export const EXAMPLE_SOURCE_PATHS = Object.keys(SOURCE_LOADERS_BY_PATH)
+
+export function getExampleSourceLoader(pathname) {
+  return CLEAN_SOURCE_LOADERS_BY_PATH[pathname]
+}
+
+const NARRATIVE_CODE_NAMES = ["implementationCode", "combinedCode"]
 
 export function cleanExampleSourceForFullCode(source) {
   let cleaned = removeNarrativeCodeConstants(source)

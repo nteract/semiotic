@@ -65,6 +65,27 @@ describe("useHydrationLifecycle cleanup", () => {
     expect(calls).toEqual(["renderFn", "cleanup"])
   })
 
+  it("cancels a queued render before synchronously painting hydration state", () => {
+    const calls: string[] = []
+    function Probe() {
+      const storeRef = useRef<{ cancelIntroAnimation?: () => void } | null>({})
+      const dirtyRef = useRef(false)
+      const renderFnRef = useRef(() => { calls.push("render") })
+      useHydrationLifecycle({
+        hydrated: true,
+        wasHydratingFromSSR: false,
+        storeRef,
+        dirtyRef,
+        renderFnRef,
+        cancelRender: () => calls.push("cancel")
+      })
+      return null
+    }
+
+    render(<Probe />)
+    expect(calls).toEqual(["cancel", "render"])
+  })
+
   it("does NOT fire cleanup when hydrated flips false→true (the regression case)", async () => {
     const calls: string[] = []
     function Probe() {

@@ -8,7 +8,11 @@ The app may receive chart data, chart configuration, labels, titles, annotations
 
 Data storage
 
-Semiotic Charts does not intentionally store user-submitted chart data, conversation content, or generated chart outputs. Server logs may contain operational metadata such as request time, response status, latency, tool name, and error information for debugging and reliability.
+Semiotic Charts does not intentionally store user-submitted chart data, conversation content, or generated chart outputs. Server logs may contain bounded operational metadata such as request time, response status, latency, route category, and fixed error/rejection category for debugging and reliability.
+
+The MCP process uses a metadata-only logging boundary. Its records are bounded and do not include request headers, credentials, cookies, query strings, JSON-RPC bodies or IDs, tool names or arguments, chart values/configuration/output, raw error messages, or stack traces. The process has no telemetry exporter.
+
+The process declares a 30-day maximum log-retention policy by default (configurable from 1 to 90 days). The hosting provider's log bucket and any proxy/request logging must be configured to enforce that period; application code cannot retroactively delete provider logs. See the deployment README for the exact logging configuration and verification requirement.
 
 Data sharing
 

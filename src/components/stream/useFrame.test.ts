@@ -9,7 +9,7 @@ import * as React from "react"
 import { act, renderHook } from "@testing-library/react"
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { useFrame } from "./useFrame"
-import type { UseFrameInput } from "./useFrame"
+import type { FrameScheduler, UseFrameInput } from "./useFrame"
 import { ThemeProvider, LIGHT_THEME, DARK_THEME, useThemeSelector } from "../store/ThemeStore"
 import { _resetCSSColorCacheForTest, resolveCSSColor } from "./renderers/resolveCSSColor"
 
@@ -23,6 +23,39 @@ const DEFAULT_INPUT: UseFrameInput = {
 
 const wrapper = ({ children }: { children: React.ReactNode }) =>
   React.createElement(ThemeProvider, null, children)
+
+function createFrameScheduler(firstHandle = 0) {
+  const callbacks = new Map<number, FrameRequestCallback>()
+  const requestedHandles: number[] = []
+  const cancelledHandles: number[] = []
+  let nextHandle = firstHandle
+  const scheduler: FrameScheduler = {
+    requestAnimationFrame: (callback) => {
+      const handle = nextHandle++
+      requestedHandles.push(handle)
+      callbacks.set(handle, callback)
+      return handle
+    },
+    cancelAnimationFrame: (handle) => {
+      cancelledHandles.push(handle)
+      callbacks.delete(handle)
+    },
+  }
+
+  return {
+    scheduler,
+    requestedHandles,
+    cancelledHandles,
+    get pendingCount() {
+      return callbacks.size
+    },
+    flush() {
+      const pending = [...callbacks.values()]
+      callbacks.clear()
+      for (const callback of pending) callback(performance.now())
+    },
+  }
+}
 
 describe("useFrame — sizing", () => {
   it("returns sizeProp as size when not responsive", () => {
@@ -211,104 +244,150 @@ describe("useFrame — table id", () => {
 })
 
 describe("useFrame — scheduleRender (rAF coalescing)", () => {
-  let rafCallbacks: Array<{ id: number; cb: FrameRequestCallback }> = []
-  let nextRafId = 1
-  let cancelledIds: number[] = []
-  const originalRAF = global.requestAnimationFrame
-  const originalCAF = global.cancelAnimationFrame
-
-  beforeEach(() => {
-    rafCallbacks = []
-    nextRafId = 1
-    cancelledIds = []
-    global.requestAnimationFrame = ((cb: FrameRequestCallback) => {
-      const id = nextRafId++
-      rafCallbacks.push({ id, cb })
-      return id
-    })
-    global.cancelAnimationFrame = ((id: number) => {
-      cancelledIds.push(id)
-      rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
-    })
-  })
-
-  afterEach(() => {
-    global.requestAnimationFrame = originalRAF
-    global.cancelAnimationFrame = originalCAF
-    _resetCSSColorCacheForTest()
-  })
-
-  function flushRafs() {
-    const pending = rafCallbacks.slice()
-    rafCallbacks = []
-    for (const { cb } of pending) cb(performance.now())
-  }
-
   it("returns a stable scheduleRender callback", () => {
-    const { result, rerender } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    const frameScheduler = createFrameScheduler()
+    const { result, rerender } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
     const fn1 = result.current.scheduleRender
     rerender()
     expect(result.current.scheduleRender).toBe(fn1)
   })
 
-  it("queues exactly one rAF for a single scheduleRender call", () => {
-    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+  it("coalesces a valid zero-valued rAF token", () => {
+    const frameScheduler = createFrameScheduler(0)
+    const { result } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
     result.current.scheduleRender()
-    expect(rafCallbacks).toHaveLength(1)
+    result.current.scheduleRender()
+    result.current.scheduleRender()
+    expect(frameScheduler.requestedHandles).toEqual([0])
+    expect(frameScheduler.pendingCount).toBe(1)
+    expect(result.current.rafRef.current).toBe(0)
   })
 
-  it("coalesces multiple scheduleRender calls before the rAF fires", () => {
-    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
-    result.current.scheduleRender()
-    result.current.scheduleRender()
-    result.current.scheduleRender()
-    expect(rafCallbacks).toHaveLength(1)
-  })
-
-  it("invokes the latest renderFnRef.current when the rAF fires", () => {
-    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+  it("invokes the latest renderFnRef.current and releases the pending token before it runs", () => {
+    const frameScheduler = createFrameScheduler()
+    const { result } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
     let calls = 0
     result.current.renderFnRef.current = () => {
-      // Stream*Frame render closures clear rafRef at the start, before
-      // doing render work, so a render that triggers another
-      // scheduleRender() (e.g. to continue an animation) can queue
-      // instead of being silently coalesced.
-      result.current.rafRef.current = 0
       calls++
     }
     result.current.scheduleRender()
-    flushRafs()
+    frameScheduler.flush()
     expect(calls).toBe(1)
+    expect(result.current.rafRef.current).toBeNull()
   })
 
-  it("after the rAF fires + frame clears rafRef at render start, scheduleRender can queue again", () => {
-    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
-    result.current.renderFnRef.current = () => {
-      result.current.rafRef.current = 0
-    }
+  it("can queue again after a flushed render without relying on the frame's rAF handle", () => {
+    const frameScheduler = createFrameScheduler()
+    const { result } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
     result.current.scheduleRender()
-    flushRafs()
+    frameScheduler.flush()
     result.current.scheduleRender()
-    expect(rafCallbacks).toHaveLength(1)
+    expect(frameScheduler.requestedHandles).toEqual([0, 1])
   })
 
-  it("cancels the pending rAF on unmount", () => {
-    const { result, unmount } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+  it("cancels a pending zero-valued rAF token on unmount", () => {
+    const frameScheduler = createFrameScheduler(0)
+    const { result, unmount } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
     result.current.scheduleRender()
-    expect(rafCallbacks).toHaveLength(1)
-    const queuedId = rafCallbacks[0].id
     unmount()
-    expect(cancelledIds).toContain(queuedId)
+    expect(frameScheduler.cancelledHandles).toEqual([0])
+    expect(frameScheduler.pendingCount).toBe(0)
+  })
+
+  it("cancels a pending render explicitly so a direct paint can take over", () => {
+    const frameScheduler = createFrameScheduler(0)
+    const { result } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
+    result.current.scheduleRender()
+    expect(result.current.rafRef.current).toBe(0)
+
+    result.current.cancelRender()
+    expect(frameScheduler.cancelledHandles).toEqual([0])
+    expect(frameScheduler.pendingCount).toBe(0)
+    expect(result.current.rafRef.current).toBeNull()
+
+    // Cancellation is idempotent and leaves the scheduler reusable.
+    result.current.cancelRender()
+    result.current.scheduleRender()
+    expect(frameScheduler.requestedHandles).toEqual([0, 1])
+  })
+
+  it("handles a synchronous test scheduler without leaving a phantom pending token", () => {
+    let calls = 0
+    const frameScheduler: FrameScheduler = {
+      requestAnimationFrame: (callback) => {
+        callback(performance.now())
+        return 0
+      },
+      cancelAnimationFrame: () => {},
+    }
+    const { result } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler }),
+      { wrapper },
+    )
+    result.current.renderFnRef.current = () => { calls++ }
+    result.current.scheduleRender()
+    result.current.scheduleRender()
+    expect(calls).toBe(2)
+    expect(result.current.rafRef.current).toBeNull()
+  })
+
+  it("does not recurse when a synchronous scheduler render asks for continuation", () => {
+    let calls = 0
+    const frameScheduler: FrameScheduler = {
+      requestAnimationFrame: (callback) => {
+        callback(performance.now())
+        return 0
+      },
+      cancelAnimationFrame: () => {},
+    }
+    const { result } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler }),
+      { wrapper },
+    )
+    result.current.renderFnRef.current = () => {
+      calls++
+      result.current.scheduleRender()
+    }
+
+    result.current.scheduleRender()
+    expect(calls).toBe(1)
+    expect(result.current.rafRef.current).toBeNull()
   })
 
   it("unmount with no pending rAF is a no-op (no cancel call)", () => {
-    const { unmount } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    const frameScheduler = createFrameScheduler()
+    const { unmount } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
     unmount()
-    expect(cancelledIds).toHaveLength(0)
+    expect(frameScheduler.cancelledHandles).toHaveLength(0)
   })
 
   it("renderFnRef and rafRef identities are stable across renders", () => {
-    const { result, rerender } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    const frameScheduler = createFrameScheduler()
+    const { result, rerender } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
     const renderFn = result.current.renderFnRef
     const rafRef = result.current.rafRef
     rerender()
@@ -410,7 +489,7 @@ describe("useFrame — theme-change effect", () => {
       expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#111111")
 
       dirtyRef.current = false
-      result.current.frame.rafRef.current = 0
+      result.current.frame.rafRef.current = null
       rafCallbacks = []
 
       act(() => {
@@ -470,6 +549,21 @@ describe("useFrame — hover coalescing", () => {
     result.current.onPointerMove({ clientX: 11, clientY: 21 })
     result.current.onPointerMove({ clientX: 12, clientY: 22 })
     expect(rafCallbacks).toHaveLength(1)
+  })
+
+  it("coalesces pointermove events when an injected scheduler returns zero", () => {
+    const frameScheduler = createFrameScheduler(0)
+    const { result } = renderHook(
+      () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
+      { wrapper },
+    )
+    result.current.onPointerMove({ clientX: 10, clientY: 20 })
+    result.current.onPointerMove({ clientX: 11, clientY: 21 })
+    expect(frameScheduler.requestedHandles).toEqual([0])
+    expect(frameScheduler.pendingCount).toBe(1)
+    frameScheduler.flush()
+    result.current.onPointerMove({ clientX: 12, clientY: 22 })
+    expect(frameScheduler.requestedHandles).toEqual([0, 1])
   })
 
   it("invokes hoverHandlerRef.current with the LATEST coords on flush", () => {

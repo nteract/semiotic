@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { render } from "@testing-library/react"
 import StreamXYFrame from "./StreamXYFrame"
+import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import StreamGeoFrame from "./StreamGeoFrame"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvasMock"
@@ -15,7 +16,9 @@ import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvas
 // dimmed marks never appeared on screen. `restyleScene` now flags a
 // style-only repaint that the three gated render loops fold into their paint
 // gate (without triggering a rebuild). Ordinal repaints unconditionally, so it
-// never had the bug and needs no case here.
+// never had the dropped-paint bug, but it still needs an integration case: the
+// selection bridge must reach its retained scene and that scheduled frame must
+// paint the resulting style.
 //
 // Assertion: after flipping `layoutSelection`, the data canvas clears and
 // repaints (a `clearRect` on the shared mock context). A programmatic
@@ -43,7 +46,9 @@ describe("custom-layout restyle-only selection repaints the data canvas", () => 
       pending = []
       for (const cb of batch) cb(performance.now())
     }
-    pending = []
+    // Do not discard a continuation that outlives this bounded test pump.
+    // The frame still holds its rAF token; dropping only our callback would
+    // create an impossible browser state and hide the next scheduled paint.
   }
 
   beforeEach(() => {
@@ -54,9 +59,9 @@ describe("custom-layout restyle-only selection repaints the data canvas", () => 
     ) as unknown as CanvasContextMock
     vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb: FrameRequestCallback) => {
       pending.push(cb)
-      // Return 0 to match the sync-fire contract the frames are built around:
-      // `useFrame.scheduleRender` coalesces on `rafRef.current`, so a non-zero
-      // id would lock out the next schedule. We drive frames manually instead.
+      // `0` is a valid rAF token. The shared scheduler must retain/coalesce it
+      // just like any other pending callback while this test drives frames
+      // manually.
       return 0
     })
     vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
@@ -85,6 +90,32 @@ describe("custom-layout restyle-only selection repaints the data canvas", () => 
 
     rerender(
       <StreamXYFrame chartType="custom" customLayout={layout as never} data={data} size={[200, 100]}
+        layoutSelection={selectA as never} />,
+    )
+    flushFrames()
+    expect((ctx.clearRect as ReturnType<typeof vi.fn>)).toHaveBeenCalled()
+  })
+
+  it("StreamOrdinalFrame", () => {
+    const data = [
+      { id: "a", category: "A", value: 1 },
+      { id: "b", category: "B", value: 2 },
+    ]
+    const layout = (c: { data: Array<{ id: string }> }) => ({
+      nodes: c.data.map((d, i) => ({
+        type: "point" as const, x: i * 10, y: 0, r: 4,
+        style: { fill: "#abc", opacity: 1 }, datum: d, pointId: d.id,
+      })),
+      restyle,
+    })
+    const { rerender } = render(
+      <StreamOrdinalFrame chartType="bar" customLayout={layout as never} data={data} size={[200, 100]} />,
+    )
+    flushFrames()
+    ;(ctx.clearRect as ReturnType<typeof vi.fn>).mockClear()
+
+    rerender(
+      <StreamOrdinalFrame chartType="bar" customLayout={layout as never} data={data} size={[200, 100]}
         layoutSelection={selectA as never} />,
     )
     flushFrames()
