@@ -1,66 +1,5 @@
 import { EXAMPLE_DEFINITIONS } from "./exampleDefinitions"
 
-const LEGACY_SOURCE_LOADERS_BY_PATH = {
-  "/examples/art-movement-genealogy": () =>
-    import("./ArtMovementGenealogyExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/climate-anomaly": () =>
-    import("./ClimateAnomalyExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/climate-radial-weather": () =>
-    import("./ClimateRadialWeatherExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/creative-contours": () =>
-    import("./CreativeContoursExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/data-centers-isotype": () =>
-    import("./DataCentersIsotypeExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/dataviz-people": () =>
-    import("./DatavizPeopleExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/distant-reading": () =>
-    import("./DistantReadingExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/erie-railroad-organization": () =>
-    import("./ErieRailroadOrganizationExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/gestalt-principles": () =>
-    import("./GestaltPrinciplesExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/hot-dog-contest-variations": () =>
-    import("./HotDogContestVariationsExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/insight-forge": () =>
-    import("./InsightForgeExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/lake-travis-isotype": () =>
-    import("./LakeTravisIsotypeExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/not-in-my-backyard": () =>
-    import("./NimbyExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/local-government-explorer": () =>
-    import("./LocalGovernmentExplorerExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/mobile-data-visualization": () =>
-    import("./MobileDataVisualizationExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/network-visualization": () =>
-    import("./NetworkVizExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/octopus-metaphor": () =>
-    import("./OctopusMetaphorExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/oregon-trail": () =>
-    import("./OregonTrailExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/paris-isometric-landmarks": () =>
-    import("./ParisIsometricLandmarksExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/port-congestion-replay": () =>
-    import("./PortCongestionReplayExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/scroll-youre-telling": () =>
-    import("./ScrollYoureTellingExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/semiotic-architecture": () =>
-    import("./SemioticArchitectureExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/sometimes-better-discrete": () =>
-    import("./SometimesDiscreteExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/where-you-draw-the-line": () =>
-    import("./WhereYouDrawTheLineExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/urine-wheel": () =>
-    import("./UrineWheelExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/us-war-timeline": () =>
-    import("./USWarTimelineExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/what-the-machine-sees": () =>
-    import("./WhatTheMachineSeesExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/wikipedia-realtime": () =>
-    import("./WikipediaRealtimeExamplePage.jsx?raw").then((module) => module.default),
-  "/examples/world-of-funnels": () =>
-    import("./WorldOfFunnelsExamplePage.jsx?raw").then((module) => module.default),
-}
-
 // Vite replaces the direct glob call in browser/docs builds. The prerender
 // process also imports this module through plain Node, where `import.meta`
 // exists but has no Vite `glob` helper; source panels are client-only there.
@@ -79,10 +18,6 @@ function toRawSourceModuleKey(definition) {
   return withPrefix.replace(/\?raw$/, "")
 }
 
-function isPilotDefinition(definition) {
-  return definition?.isPilot === true
-}
-
 function cleanExampleLoader(loader) {
   return () =>
     loader().then((module) =>
@@ -92,7 +27,6 @@ function cleanExampleLoader(loader) {
 
 const EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
   EXAMPLE_DEFINITIONS
-    .filter(isPilotDefinition)
     .map((definition) => {
       const key = toRawSourceModuleKey(definition)
       if (key == null) return undefined
@@ -103,10 +37,7 @@ const EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
     .filter(Boolean)
 )
 
-export const SOURCE_LOADERS_BY_PATH = {
-  ...LEGACY_SOURCE_LOADERS_BY_PATH,
-  ...EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH,
-}
+export const SOURCE_LOADERS_BY_PATH = EXAMPLE_DEFINITION_SOURCE_LOADERS_BY_PATH
 
 const CLEAN_SOURCE_LOADERS_BY_PATH = Object.fromEntries(
   Object.entries(SOURCE_LOADERS_BY_PATH).map(([path, loader]) => [

@@ -18,14 +18,16 @@ import type {
   HoverData,
   HoverAnnotationConfig,
   SceneNode,
-  StreamScales,
-  FrameGraphicsContext
+  StreamScales
 } from "./types"
 import { XYBrushOverlay } from "./XYBrushOverlay"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
-import { SceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
+import {
+  SceneRevisionDiagnosticsObserver,
+  useSceneRevisionDiagnostics
+} from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
@@ -37,7 +39,7 @@ import { resolveStaleness } from "./stalenessBands"
 import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
 import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
-import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
+import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasBackground } from "./canvasBackground"
 import { needsInteractionCanvasPaint } from "./paintNeeds"
@@ -51,7 +53,9 @@ import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableL
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
+import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
+import { resolveFrameGraphics } from "./frameGraphics"
 
 // Canvas setup
 import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
@@ -182,6 +186,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       transition: transitionProp,
       animate,
       staleness,
+      frameScheduler,
+      clock: clockProp,
+      random: randomProp,
+      seed,
+      paused = false,
+      suspendWhenHidden = true,
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
@@ -234,6 +244,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       marginDefault: DEFAULT_MARGIN,
       animate,
       transitionProp,
+      frameScheduler,
+      clock: clockProp,
+      random: randomProp,
+      seed,
+      paused,
+      suspendWhenHidden,
       themeDirtyRef: dirtyRef,
     })
     // ── Hydration boundary ───────────────────────────────────────────────
@@ -246,7 +262,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     //      and go straight to canvas — the SVG render would just be
     //      overwritten by the post-commit re-render anyway.
     //
-    // `useHydrationLifecycle` further down handles the post-swap
+    // `useCanvasFrameHost` further down handles the post-swap
     // paint kick from inside an isomorphic layout effect:
     // cancelIntroAnimation if rehydrating, mark dirtyRef, then
     // synchronously call `renderFnRef.current()` (no rAF — that
@@ -267,7 +283,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       rafRef,
       renderFnRef,
       scheduleRender,
-      cancelRender,
+      frameRuntime,
     } = frame
 
     // XY post-expands margin to at least 60px on any side that has a
@@ -296,10 +312,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Refs ─────────────────────────────────────────────────────────────
 
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-    const interactionCanvasRef = useRef<HTMLCanvasElement>(null)
-    // rafRef + renderFnRef + scheduleRender + cancel-on-unmount + theme-
-    // change effect all come from useFrame (above).
+    // Canvas refs and the lifecycle around them are installed below once this
+    // family has created its store and data adapter. rAF scheduling and theme
+    // change handling come from useFrame above.
 
     const [annotationFrame, setAnnotationFrame] = useState(0)
     const lastAnnotationFrameTimeRef = useRef(0)
@@ -307,21 +322,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Scales state: updated after each scene computation so SVGOverlay re-renders
     const [currentScales, setCurrentScales] = useState<StreamScales | null>(null)
 
-    // Resolve foreground/background graphics, threading the resolved scales into
-    // the callback so a bespoke SVG overlay anchors to the same x/y the chart
-    // drew (§ "resolved scales in graphics callbacks"). `currentScales` is null
-    // on the very first render (callback falls back to its own mapping) and is
-    // populated after the first layout, triggering a re-resolve. The SSR branch
-    // re-resolves with its synchronously-computed scales below.
-    const resolveFrameGraphics = (
-      graphics: typeof foregroundGraphics,
-      scales: StreamScales | null,
-    ): React.ReactNode =>
-      typeof graphics === "function"
-        ? (graphics as (ctx: FrameGraphicsContext) => React.ReactNode)({ size, margin, scales })
-        : graphics
-    const resolvedForeground = resolveFrameGraphics(foregroundGraphics, currentScales)
-    const resolvedBackground = resolveFrameGraphics(backgroundGraphics, currentScales)
+    const resolvedForeground = resolveFrameGraphics(foregroundGraphics, size, margin, currentScales)
+    const resolvedBackground = resolveFrameGraphics(backgroundGraphics, size, margin, currentScales)
 
     // Hover state: ref for canvas (sync), React state for tooltip (async)
     const hoverRef = useRef<HoverData | null>(null)
@@ -335,12 +337,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const themeColorCacheRef = useRef(createFrameThemeColorCache())
     /** True when the interaction canvas last painted hover/highlight content. */
     const interactionHasContentRef = useRef(false)
-    const sceneRevisionDiagnosticsRef = useRef(new SceneRevisionDiagnostics())
-    const lastLegendCategoriesRef = useRef<string[]>([])
-    const legendCategoryAccessorRef = useRef(legendCategoryAccessor)
-    const onCategoriesChangeRef = useRef(onCategoriesChange)
-    legendCategoryAccessorRef.current = legendCategoryAccessor
-    onCategoriesChangeRef.current = onCategoriesChange
+    const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamXYFrame")
 
     // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
@@ -428,6 +425,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       transition,
       introAnimation: introEnabled,
       staleness,
+      clock: frameRuntime.now,
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
@@ -456,7 +454,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       heatmapAggregation, heatmapXBins, heatmapYBins,
       showValues, heatmapValueFormat,
       isStreaming, pointIdAccessor, curve, currentTheme,
-      customLayout, onLayoutError, layoutConfig, margin
+      customLayout, onLayoutError, layoutConfig, margin, frameRuntime
     ])
 
     // Stabilize the config reference so inline-object / inline-array
@@ -478,7 +476,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // scheduleRender comes from useFrame above.
 
-    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessorRef, onCategoriesChangeRef, lastLegendCategoriesRef)
+    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange, store => store.getData())
 
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
@@ -603,6 +601,15 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
       adapterRef.current?.setBoundedData(safeData)
     }, [data, safeData, lineDataAccessor])
+
+    const { canvasRef, interactionCanvasRef } = useFrameCanvasHost(frame, {
+      storeRef,
+      dirtyRef,
+      hydrated,
+      wasHydratingFromSSR,
+      cleanup: () => adapterRef.current?.clear(),
+      canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, lineStyle, canvasPreRenderers, scheduleRender],
+    })
 
     // ── Hover handlers ───────────────────────────────────────────────────
     // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
@@ -889,6 +896,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     renderFnRef.current = () => {
       rafRef.current = null
+      if (!frameRuntime.isActive) return
       const canvas = canvasRef.current
       const interactionCanvas = interactionCanvasRef.current
       if (!canvas || !interactionCanvas) return
@@ -896,7 +904,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const store = storeRef.current
       if (!store) return
 
-      const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+      const now = frameRuntime.now()
 
       // Advance transition animation (before scene rebuild)
       // When reduced motion is active, skip animation — treat as instant
@@ -1146,28 +1154,6 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
     }
 
-    // ── Lifecycle ────────────────────────────────────────────────────────
-
-    useHydrationLifecycle({
-      hydrated,
-      wasHydratingFromSSR,
-      storeRef,
-      dirtyRef,
-      renderFnRef,
-      cancelRender,
-      // rafRef + pendingMoveCoordsRef + moveRafRef cancel-on-unmount
-      // is handled by useFrame. We just clear the adapter here so any
-      // in-flight progressive chunking / pending push microtask can't
-      // fire `store.ingest` after the component is gone.
-      cleanup: () => adapterRef.current?.clear(),
-    })
-
-    // Re-render when visual props change
-    useEffect(() => {
-      dirtyRef.current = true
-      scheduleRender()
-    }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, lineStyle, canvasPreRenderers, scheduleRender])
-
     // Staleness check timer
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
@@ -1260,8 +1246,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const scales = store?.scales ?? null
       // SSR has no `currentScales` state — re-resolve graphics with the scene's
       // synchronously-computed scales so server overlays anchor correctly too.
-      const ssrForeground = resolveFrameGraphics(foregroundGraphics, scales)
-      const ssrBackground = resolveFrameGraphics(backgroundGraphics, scales)
+      const ssrForeground = resolveFrameGraphics(foregroundGraphics, size, margin, scales)
+      const ssrBackground = resolveFrameGraphics(backgroundGraphics, size, margin, scales)
 
       // SSR: compute date format from SSR-computed scales (currentScales is null in SSR)
       const ssrXFormat: StreamXYFrameProps["xFormat"] = effectiveXFormat || ((): StreamXYFrameProps["xFormat"] => {
@@ -1348,8 +1334,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             annotationFrame={0}
             xAccessor={annXAccessor}
             yAccessor={annYAccessor}
-            annotationData={enrichAnnotationData(store?.getData())}
-            pointNodes={collectAnnotationAnchors(store?.scene)}
+            annotationData={enrichAnnotationData(storeRef.current?.getData())}
+            pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
             curve={typeof curve === "string" ? curve : undefined}
             linkedCrosshairName={linkedCrosshairName}
             linkedCrosshairSourceId={linkedCrosshairSourceId}
@@ -1378,6 +1364,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }}
         onKeyDown={onKeyDown}
       >
+        {process.env.NODE_ENV !== "production" && storeRef.current && (
+          <SceneRevisionDiagnosticsObserver
+            store={storeRef.current}
+            diagnostics={sceneRevisionDiagnosticsRef.current}
+          />
+        )}
         {accessibleTable && <SkipToTableLink tableId={tableId} />}
         {accessibleTable && <AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />}
         <ScreenReaderSummary summary={summary} />
@@ -1396,22 +1388,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           onPointerDown={effectiveHoverAnnotation || customClickBehavior ? onPointerDown : undefined}
           onClick={customClickBehavior ? onClick : undefined}
         >
-        {resolvedBackground && (
-          <svg
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              width: size[0],
-              height: size[1],
-              pointerEvents: "none"
-            }}
-          >
-            <g transform={`translate(${margin.left},${margin.top})`}>
-              {resolvedBackground}
-            </g>
-          </svg>
-        )}
+        <CanvasFrameBackground size={size} margin={margin}>
+          {resolvedBackground}
+        </CanvasFrameBackground>
         <SVGUnderlay
           width={adjustedWidth}
           height={adjustedHeight}

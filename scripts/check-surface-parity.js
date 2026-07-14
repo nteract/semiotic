@@ -65,11 +65,9 @@ function difference(a, b) {
   return sorted([...a].filter(value => !b.has(value)))
 }
 
-// validationMap.ts derives VALIDATION_MAP from CHART_SPECS at runtime
-// rather than declaring chart entries as literal object keys, so there's
-// nothing to scan there anymore. Walk the per-family spec files
-// chartSpecs.ts composes CHART_SPECS from instead — those still declare
-// one literal `ChartName: {` key per chart.
+// VALIDATION_MAP is generated from CHART_SPECS. Walk the per-family source
+// registry instead of parsing generated runtime data so this parity gate
+// reports the canonical chart catalog directly.
 function chartSpecFamilyFiles() {
   const indexSource = read(files.chartSpecsIndex)
   const paths = []

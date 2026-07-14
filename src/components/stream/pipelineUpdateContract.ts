@@ -140,12 +140,25 @@ export function createUpdateResult(
  * keeps revision bookkeeping out of family-specific data/layout code while
  * preserving each store's existing mutation API.
  */
+export type UpdateResultListener = () => void
+
+export interface UpdateResultStore {
+  getUpdateSnapshot(): UpdateResult
+  subscribeUpdateResult(listener: UpdateResultListener): () => void
+}
+
 export class UpdateResultTracker {
   private revisions = createRevisionSet()
   private latest = createUpdateResult({ kind: "initialize" }, [], this.revisions)
+  private listeners = new Set<UpdateResultListener>()
 
   get last(): UpdateResult {
     return this.latest
+  }
+
+  subscribe(listener: UpdateResultListener): () => void {
+    this.listeners.add(listener)
+    return () => this.listeners.delete(listener)
   }
 
   record(
@@ -155,6 +168,9 @@ export class UpdateResultTracker {
     const result = createUpdateResult(changeSet, invalidations, this.revisions)
     this.revisions = result.revisions
     this.latest = result
+    for (const listener of [...this.listeners]) {
+      listener()
+    }
     return result
   }
 }

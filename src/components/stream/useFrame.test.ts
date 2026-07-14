@@ -12,6 +12,7 @@ import { useFrame } from "./useFrame"
 import type { FrameScheduler, UseFrameInput } from "./useFrame"
 import { ThemeProvider, LIGHT_THEME, DARK_THEME, useThemeSelector } from "../store/ThemeStore"
 import { _resetCSSColorCacheForTest, resolveCSSColor } from "./renderers/resolveCSSColor"
+import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 const DEFAULT_INPUT: UseFrameInput = {
   sizeProp: [800, 600],
@@ -23,39 +24,6 @@ const DEFAULT_INPUT: UseFrameInput = {
 
 const wrapper = ({ children }: { children: React.ReactNode }) =>
   React.createElement(ThemeProvider, null, children)
-
-function createFrameScheduler(firstHandle = 0) {
-  const callbacks = new Map<number, FrameRequestCallback>()
-  const requestedHandles: number[] = []
-  const cancelledHandles: number[] = []
-  let nextHandle = firstHandle
-  const scheduler: FrameScheduler = {
-    requestAnimationFrame: (callback) => {
-      const handle = nextHandle++
-      requestedHandles.push(handle)
-      callbacks.set(handle, callback)
-      return handle
-    },
-    cancelAnimationFrame: (handle) => {
-      cancelledHandles.push(handle)
-      callbacks.delete(handle)
-    },
-  }
-
-  return {
-    scheduler,
-    requestedHandles,
-    cancelledHandles,
-    get pendingCount() {
-      return callbacks.size
-    },
-    flush() {
-      const pending = [...callbacks.values()]
-      callbacks.clear()
-      for (const callback of pending) callback(performance.now())
-    },
-  }
-}
 
 describe("useFrame — sizing", () => {
   it("returns sizeProp as size when not responsive", () => {

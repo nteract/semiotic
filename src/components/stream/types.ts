@@ -19,6 +19,7 @@ import type { CoercibleNumber } from "./accessorUtils"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { SymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
+export type { ThemeSemanticColors } from "./streamThemeTypes"
 
 export type SceneDatum = Datum | null
 export type SeriesDatum = Datum[] | null
@@ -26,31 +27,6 @@ export type AxisTickFormat =
   | ((d: number, index?: number, allTicks?: number[]) => string)
   | ((d: string, index?: number, allTicks?: number[]) => string)
   | ((d: Date, index?: number, allTicks?: number[]) => string)
-
-// ── Theme-resolved semantic role colors ──────────────────────────────
-//
-// Concrete color values (hex strings, not `var(...)`), populated by a
-// Stream Frame from the active `SemioticTheme.colors` and threaded
-// through `PipelineConfig` → scene context. Scene builders read these
-// as the default fallback before hardcoded hex literals.
-//
-// Shared between `PipelineConfig` (XY / streaming) and
-// `XYSceneConfig`/`OrdinalSceneConfig`/etc. — one type so role additions
-// don't drift across the pipeline.
-export interface ThemeSemanticColors {
-  primary?: string
-  secondary?: string
-  success?: string
-  danger?: string
-  warning?: string
-  error?: string
-  info?: string
-  text?: string
-  textSecondary?: string
-  border?: string
-  grid?: string
-  surface?: string
-}
 
 // ── Realtime encoding configs ─────────────────────────────────────────
 
@@ -957,6 +933,20 @@ export interface StreamXYFrameProps<T = Datum> {
   animate?: AnimateProp
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
+
+  // ── Frame runtime policy ───────────────────────────
+  /** Optional rAF seam for deterministic host scheduling. */
+  frameScheduler?: import("./useFrame").FrameScheduler
+  /** Monotonic wall-clock seam for deterministic replay, tests, or evidence capture. */
+  clock?: import("./FrameRuntime").FrameClock
+  /** Injectable random source for frame-local stochastic work. */
+  random?: import("./FrameRuntime").FrameRandom
+  /** Serializable deterministic random seed. Ignored when `random` is supplied. */
+  seed?: number
+  /** Freeze logical animation time and cancel queued work while paused. */
+  paused?: boolean
+  /** Freeze logical animation time while the page is hidden. Defaults to true for XY frames. */
+  suspendWhenHidden?: boolean
 
   // ── Marginal graphics ────────────────────────────────
   /** Marginal distribution plots in axis margins (histogram, violin, ridgeline, boxplot) */

@@ -250,6 +250,17 @@ export interface StreamPhysicsFrameProps {
    * deterministic clock for replayable tests or evidence capture.
    */
   clock?: () => number
+  /**
+   * Host-level random seam for frame-local visual work. It deliberately does
+   * not replace the physics kernel's deterministic random source.
+   */
+  random?: () => number
+  /**
+   * Serializable deterministic seed for frame-local work and, when
+   * `config.kernel.seed` is omitted, the built-in physics kernel. An explicit
+   * kernel seed always wins so existing simulation snapshots remain stable.
+   */
+  seed?: number
   bodySemanticItemLimit?: number
   bodySemanticItems?: boolean | PhysicsBodySemanticItemAccessor
   bodySemanticUpdateMs?: number

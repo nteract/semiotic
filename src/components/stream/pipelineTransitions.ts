@@ -174,7 +174,8 @@ export function startTransition(
   transition: TransitionConfig,
   state: TransitionState,
   prevPositionMap: Map<string, PrevPosition>,
-  prevPathMap: Map<string, PrevPath>
+  prevPathMap: Map<string, PrevPath>,
+  startTime = getTimestamp()
 ): TransitionState {
   if (prevPositionMap.size === 0 && prevPathMap.size === 0) return state
   const duration = transition.duration ?? 300
@@ -441,7 +442,7 @@ export function startTransition(
 
   if (hasChanges) {
     state.activeTransition = {
-      startTime: getTimestamp(),
+      startTime,
       duration
     }
   }

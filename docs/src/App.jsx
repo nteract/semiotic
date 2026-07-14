@@ -12,6 +12,7 @@ import { ExamplesIndex, ApiIndex, RecipesIndex, PlaygroundIndex } from "./IndexP
 // MatrixCookbookPage removed — matrix recipe no longer supported
 
 import { useDocsTheme } from "./hooks/useDocsTheme"
+import { EXAMPLE_DEFINITIONS } from "./pages/examples/exampleDefinitions"
 import ThemeToggle from "./components/ThemeToggle"
 
 const Landing = lazy(() => import("./Landing"))
@@ -238,6 +239,47 @@ const MobileDataVisualizationExamplePage = lazy(
 )
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
+const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "InsightForgeExamplePage.jsx": InsightForgeExamplePage,
+  "WatermarksExamplePage.jsx": WatermarksExamplePage,
+  "StakeholderJourneyExamplePage.jsx": StakeholderJourneyExamplePage,
+  "MergePressureExamplePage.jsx": MergePressureExamplePage,
+  "NimbyExamplePage.jsx": NimbyExamplePage,
+  "ClimateRadialWeatherExamplePage.jsx": ClimateRadialWeatherExamplePage,
+  "LakeTravisIsotypeExamplePage.jsx": LakeTravisIsotypeExamplePage,
+  "HotDogContestVariationsExamplePage.jsx": HotDogContestVariationsExamplePage,
+  "DataCentersIsotypeExamplePage.jsx": DataCentersIsotypeExamplePage,
+  "CreativeContoursExamplePage.jsx": CreativeContoursExamplePage,
+  "SometimesDiscreteExamplePage.jsx": SometimesDiscreteExamplePage,
+  "WhereYouDrawTheLineExamplePage.jsx": WhereYouDrawTheLineExamplePage,
+  "USWarTimelineExamplePage.jsx": USWarTimelineExamplePage,
+  "ArtMovementGenealogyExamplePage.jsx": ArtMovementGenealogyExamplePage,
+  "ParisIsometricLandmarksExamplePage.jsx": ParisIsometricLandmarksExamplePage,
+  "UrineWheelExamplePage.jsx": UrineWheelExamplePage,
+  "ErieRailroadOrganizationExamplePage.jsx": ErieRailroadOrganizationExamplePage,
+  "WikipediaRealtimeExamplePage.jsx": WikipediaRealtimeExamplePage,
+  "LocalGovernmentExplorerExamplePage.jsx": LocalGovernmentExplorerExamplePage,
+  "PortCongestionReplayExamplePage.jsx": PortCongestionReplayExamplePage,
+  "ScrollYoureTellingExamplePage.jsx": ScrollYoureTellingExamplePage,
+  "DatavizPeopleExamplePage.jsx": DatavizPeopleExamplePage,
+  "DistantReadingExamplePage.jsx": DistantReadingExamplePage,
+  "WorldOfFunnelsExamplePage.jsx": WorldOfFunnelsExamplePage,
+  "WhatTheMachineSeesExamplePage.jsx": WhatTheMachineSeesExamplePage,
+  "SemioticArchitectureExamplePage.jsx": SemioticArchitectureExamplePage,
+  "OctopusMetaphorExamplePage.jsx": OctopusMetaphorExamplePage,
+  "ClimateAnomalyExamplePage.jsx": ClimateAnomalyExamplePage,
+  "GestaltPrinciplesExamplePage.jsx": GestaltPrinciplesExamplePage,
+  "MobileDataVisualizationExamplePage.jsx": MobileDataVisualizationExamplePage,
+  "NetworkVizExamplePage.jsx": NetworkVizExamplePage,
+  "OregonTrailExamplePage.jsx": OregonTrailExamplePage,
+})
+
+// ExampleDefinition owns route paths and source-file identity. The lazy
+// component imports stay explicit so Vite keeps the same code-splitting graph.
+const EXAMPLE_ROUTES = EXAMPLE_DEFINITIONS.map((definition) => ({
+  path: definition.path.slice(1),
+  Component: EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE[definition.sourceFile],
+}))
 const KpiCardSparklinePage = lazy(() => import("./pages/recipes/KpiCardSparklinePage"))
 const TimeSeriesBrushPage = lazy(() => import("./pages/recipes/TimeSeriesBrushPage"))
 const NetworkExplorerPage = lazy(() => import("./pages/recipes/NetworkExplorerPage"))
@@ -395,95 +437,9 @@ export default function DocsApp() {
             <Suspense key={location.pathname} fallback={<ExamplesRouteFallback />}>
               <Routes>
                 <Route path="examples" element={<ExamplesOverviewPage />} />
-                <Route path="examples/insight-forge" element={<InsightForgeExamplePage />} />
-                <Route path="examples/watermarks" element={<WatermarksExamplePage />} />
-                <Route
-                  path="examples/stakeholder-journey"
-                  element={<StakeholderJourneyExamplePage />}
-                />
-                <Route path="examples/merge-pressure" element={<MergePressureExamplePage />} />
-                <Route path="examples/not-in-my-backyard" element={<NimbyExamplePage />} />
-                <Route path="examples/climate-anomaly" element={<ClimateAnomalyExamplePage />} />
-                <Route
-                  path="examples/climate-radial-weather"
-                  element={<ClimateRadialWeatherExamplePage />}
-                />
-                <Route
-                  path="examples/lake-travis-isotype"
-                  element={<LakeTravisIsotypeExamplePage />}
-                />
-                <Route
-                  path="examples/hot-dog-contest-variations"
-                  element={<HotDogContestVariationsExamplePage />}
-                />
-                <Route
-                  path="examples/data-centers-isotype"
-                  element={<DataCentersIsotypeExamplePage />}
-                />
-                <Route
-                  path="examples/creative-contours"
-                  element={<CreativeContoursExamplePage />}
-                />
-                <Route
-                  path="examples/sometimes-better-discrete"
-                  element={<SometimesDiscreteExamplePage />}
-                />
-                <Route
-                  path="examples/where-you-draw-the-line"
-                  element={<WhereYouDrawTheLineExamplePage />}
-                />
-                <Route path="examples/us-war-timeline" element={<USWarTimelineExamplePage />} />
-                <Route
-                  path="examples/art-movement-genealogy"
-                  element={<ArtMovementGenealogyExamplePage />}
-                />
-                <Route
-                  path="examples/paris-isometric-landmarks"
-                  element={<ParisIsometricLandmarksExamplePage />}
-                />
-                <Route path="examples/urine-wheel" element={<UrineWheelExamplePage />} />
-                <Route
-                  path="examples/erie-railroad-organization"
-                  element={<ErieRailroadOrganizationExamplePage />}
-                />
-                <Route
-                  path="examples/wikipedia-realtime"
-                  element={<WikipediaRealtimeExamplePage />}
-                />
-                <Route
-                  path="examples/local-government-explorer"
-                  element={<LocalGovernmentExplorerExamplePage />}
-                />
-                <Route
-                  path="examples/port-congestion-replay"
-                  element={<PortCongestionReplayExamplePage />}
-                />
-                <Route
-                  path="examples/scroll-youre-telling"
-                  element={<ScrollYoureTellingExamplePage />}
-                />
-                <Route path="examples/dataviz-people" element={<DatavizPeopleExamplePage />} />
-                <Route path="examples/distant-reading" element={<DistantReadingExamplePage />} />
-                <Route path="examples/world-of-funnels" element={<WorldOfFunnelsExamplePage />} />
-                <Route
-                  path="examples/what-the-machine-sees"
-                  element={<WhatTheMachineSeesExamplePage />}
-                />
-                <Route
-                  path="examples/semiotic-architecture"
-                  element={<SemioticArchitectureExamplePage />}
-                />
-                <Route path="examples/octopus-metaphor" element={<OctopusMetaphorExamplePage />} />
-                <Route
-                  path="examples/gestalt-principles"
-                  element={<GestaltPrinciplesExamplePage />}
-                />
-                <Route
-                  path="examples/mobile-data-visualization"
-                  element={<MobileDataVisualizationExamplePage />}
-                />
-                <Route path="examples/network-visualization" element={<NetworkVizExamplePage />} />
-                <Route path="examples/oregon-trail" element={<OregonTrailExamplePage />} />
+                {EXAMPLE_ROUTES.map(({ path, Component }) => (
+                  <Route key={path} path={path} element={<Component />} />
+                ))}
               </Routes>
             </Suspense>
           </ExamplesLayout>

@@ -6,9 +6,9 @@
  *   - `src/components/charts/shared/validationMap.ts`     (runtime prop validation)
  *   - `ai/componentMetadata.cjs`                          (category buckets)
  *
- * Today, `validationMap.ts` is derived directly from this registry, and
- * `ai/schema.json` is generated from it — run `npm run docs:chart-specs:schema`
- * to refresh the schema after editing a spec. `componentMetadata.cjs` is still
+ * Today, `validationMap.generated.ts` and `ai/schema.json` are generated from
+ * this registry — run `npm run docs:chart-specs:schema` to refresh both after
+ * editing a spec. `componentMetadata.cjs` is still
  * hand-edited but gated for parity by the registry: `check:chart-specs` (run
  * via `npm run check:chart-specs`) regenerates each chart's schema/
  * validation/metadata entries with the pure functions in

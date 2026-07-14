@@ -1,5 +1,5 @@
-import { useCallback, type MutableRefObject, type RefObject } from "react"
-import type { PipelineStore } from "./PipelineStore"
+import { useCallback, useRef, type RefObject } from "react"
+import type { Datum } from "../charts/shared/datumTypes"
 import {
   extractCategoryDomain,
   sameCategoryDomain,
@@ -7,19 +7,24 @@ import {
 } from "./categoryDomain"
 
 /** Keep legend-category callbacks stable while reading the latest frame props. */
-export function useLegendCategoryEmission(
-  storeRef: RefObject<PipelineStore | null>,
-  accessorRef: MutableRefObject<CategoryDomainAccessor | undefined>,
-  onChangeRef: MutableRefObject<((categories: string[]) => void) | undefined>,
-  previousRef: MutableRefObject<string[]>
+export function useLegendCategoryEmission<TStore extends object, TDatum extends Datum = Datum>(
+  storeRef: RefObject<TStore | null>,
+  accessor: CategoryDomainAccessor<TDatum> | undefined,
+  onChange: ((categories: string[]) => void) | undefined,
+  readData: (store: TStore) => TDatum[]
 ): () => void {
+  const latestRef = useRef({ accessor, onChange, readData })
+  const previousRef = useRef<string[]>([])
+  latestRef.current = { accessor, onChange, readData }
   return useCallback(() => {
-    const accessor = accessorRef.current
-    const onChange = onChangeRef.current
+    const { accessor, onChange, readData } = latestRef.current
     if (!onChange || !accessor) return
-    const categories = extractCategoryDomain(storeRef.current?.getData() ?? [], accessor)
+    const categories = extractCategoryDomain(
+      storeRef.current ? readData(storeRef.current) : [],
+      accessor
+    )
     if (sameCategoryDomain(categories, previousRef.current)) return
     previousRef.current = categories
     onChange(categories)
-  }, [accessorRef, onChangeRef, previousRef, storeRef])
+  }, [storeRef])
 }

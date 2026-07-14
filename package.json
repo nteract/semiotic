@@ -240,6 +240,9 @@
     "check:browser-baseline": "node scripts/browser-baseline.mjs --check",
     "print:browser-baseline": "node scripts/browser-baseline.mjs --print",
     "test:browser-baseline": "node --test scripts/browser-baseline.test.mjs",
+    "baseline:stream-file-sizes": "node scripts/stream-file-size-ratchet.mjs --write",
+    "report:stream-file-sizes": "node scripts/stream-file-size-ratchet.mjs",
+    "test:stream-file-size-ratchet": "node --test scripts/stream-file-size-ratchet.test.mjs",
     "serve-examples": "npm run dist && vite --config vite.integration.config.mjs --host 127.0.0.1 --port 1234",
     "serve-examples:ci": "vite --config vite.integration.config.mjs --host 127.0.0.1 --port 1234",
     "dist": "node scripts/build.mjs",
@@ -317,6 +320,7 @@
     "check:blog-entries": "node scripts/check-blog-entry-sync.mjs",
     "check:bundle-sizes": "node scripts/sync-bundle-sizes.mjs --check",
     "check:cold-consumer": "node scripts/measure-cold-consumer.mjs --check",
+    "check:fast": "npm run lint && npm run check:file-size && npm run check:test-quality && npm run check:ai-contracts && npm run check:ai-instructions && npm run dist:prod && npm run check:bundle-sizes && npm run check:cold-consumer && npm run size",
     "docs:bundle-sizes": "node scripts/sync-bundle-sizes.mjs",
     "docs:cold-consumer": "node scripts/measure-cold-consumer.mjs --write",
     "docs:readme-dashboard": "npx tsx scripts/generate-readme-dashboard.tsx",
@@ -505,7 +509,6 @@
     "d3-selection": "^3.0.0",
     "d3-shape": "^3.2.0",
     "d3-zoom": "^3.0.0",
-    "regression": "^2.0.1",
     "topojson-client": "^3.1.0"
   },
   "browserslist": {

@@ -1,9 +1,4 @@
-import {
-  geoPath as d3GeoPath,
-  geoGraticule,
-  geoDistance,
-  geoInterpolate
-} from "d3-geo"
+import { geoPath as d3GeoPath } from "d3-geo"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
 import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
@@ -11,8 +6,6 @@ import type {
   GeoPipelineConfig,
   GeoScales,
   GeoSceneNode,
-  GeoLineSceneNode,
-  GraticuleConfig,
   DistanceCartogramConfig
 } from "./geoTypes"
 import type {
@@ -28,7 +21,11 @@ import {
   now as getTimestamp
 } from "./pipelineTransitionUtils"
 import { computeDecayOpacity } from "./pipelineDecay"
-import { computePulseIntensity, hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
+import {
+  computePulseIntensity,
+  hasActivePulses as hasActivePulsesShared,
+  setPulseState
+} from "./pipelinePulse"
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { GeoLayoutContext, GeoLayoutResult } from "./geoCustomLayout"
@@ -46,26 +43,31 @@ import {
 import {
   resolveProjection,
   makeGeoNumericAccessor as makeAccessor,
-  makeLineDataAccessor,
-  resolveGeoStyle as resolveStyle,
-  themedDefaultArea,
-  themedDefaultPoint,
-  themedDefaultLine,
-  splitAntiMeridianPath,
-  buildArcPath,
-  buildOffsetGeoPath,
-  buildOffsetPath
+  makeLineDataAccessor
 } from "./geoPipelineHelpers"
 import { applyDistanceCartogram } from "./geoCartogram"
 import {
   compactTimestampBufferForRemoval,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
+import { GeoPipelineUpdateResults } from "./geoPipelineUpdateResults"
+import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
+import { buildBuiltInGeoScene } from "./geoSceneBuilder"
 
 // ── GeoPipelineStore ─────────────────────────────────────────────────
 
-export class GeoPipelineStore {
+const DEFAULT_STREAM_WINDOW_SIZE = 500
+
+export class GeoPipelineStore implements UpdateResultStore {
+  declare getLastUpdateResult: () => UpdateResult
+  declare getUpdateSnapshot: () => UpdateResult
+  declare subscribeUpdateResult: (listener: () => void) => () => void
+  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
+  declare markStylePaintPending: () => void
+  declare consumeStylePaintPending: () => boolean
+
   config: GeoPipelineConfig
+  protected updateResults = new GeoPipelineUpdateResults()
 
   // Scene output
   scene: GeoSceneNode[] = []
@@ -136,25 +138,111 @@ export class GeoPipelineStore {
     this.config = config
   }
 
+  /** Keep Geo transitions and pulse lifecycle on the host's logical clock
+   *  when one is supplied, while preserving the existing wall-clock default. */
+  private currentTime(): number {
+    return this.config.clock?.() ?? getTimestamp()
+  }
+
+  /** Resolve the one configuration-owned retention bound for both streaming
+   *  points and flow lines. Keeping it here prevents imperative push paths
+   *  from silently allocating a differently sized window. */
+  private getConfiguredWindowSize(): number {
+    const windowSize = this.config.windowSize ?? DEFAULT_STREAM_WINDOW_SIZE
+    if (!Number.isInteger(windowSize) || windowSize < 1) {
+      throw new Error("GeoPipelineStore windowSize must be a positive integer")
+    }
+    return windowSize
+  }
+
+  /** Trim the array-backed line collection only while it participates in a
+   *  stream. Bounded `setLines` snapshots remain complete until conversion. */
+  private retainNewestLines(windowSize = this.getConfiguredWindowSize()): void {
+    if (this.lineData.length > windowSize) {
+      this.lineData = this.lineData.slice(-windowSize)
+    }
+  }
+
+  /** Rebuild both point resources from the same retained suffix so pulse
+   *  timestamps remain indexed to their matching point after a resize. */
+  private resizeStreamingWindow(windowSize: number): void {
+    if (this.pointBuffer) {
+      const points = this.pointBuffer.toArray()
+      const timestamps = this.timestampBuffer?.toArray() ?? []
+      const retainedPoints = points.slice(-windowSize)
+      const retainedTimestamps = timestamps.slice(-retainedPoints.length)
+      const fallbackTimestamp = this.currentTime()
+
+      this.pointBuffer = new RingBuffer<Datum>(windowSize)
+      this.timestampBuffer = new RingBuffer<number>(windowSize)
+      retainedPoints.forEach((point, index) => {
+        this.pointBuffer!.push(point)
+        this.timestampBuffer!.push(retainedTimestamps[index] ?? fallbackTimestamp)
+      })
+    }
+    this.retainNewestLines(windowSize)
+  }
+
   updateConfig(config: Partial<GeoPipelineConfig>): void {
+    const previous = this.config
+    const previousWindowSize = this.getConfiguredWindowSize()
+    const changedConfigKeys = Object.keys(config).filter(
+      (key) => (config as unknown as Record<string, unknown>)[key] !==
+        (previous as unknown as Record<string, unknown>)[key]
+    )
     this.config = { ...this.config, ...config }
+    const nextWindowSize = this.getConfiguredWindowSize()
+    const resizedRetainedData = this.streaming && nextWindowSize !== previousWindowSize
+    if (resizedRetainedData) {
+      this.resizeStreamingWindow(nextWindowSize)
+      this.version++
+    }
     // An explicit removal dismisses the old failure rather than surfacing an
     // error for a callback the caller no longer uses. The next built-in scene
     // build clears the remaining custom-layout output.
     if ("customLayout" in config && !config.customLayout) {
       this.lastCustomLayoutFailure = null
     }
+    this.updateResults.recordConfig(changedConfigKeys, {
+      retainedDataChanged: resizedRetainedData
+    })
+  }
+
+  /** Additive explicit-result form of {@link updateConfig}. */
+  updateConfigWithResult(config: Partial<GeoPipelineConfig>): UpdateResult {
+    this.updateConfig(config)
+    return this.updateResults.last
   }
 
   // ── Data ingestion ───────────────────────────────────────────────
 
   setAreas(features: GeoJSON.Feature[]): void {
     this.areas = features
+    this.updateResults.recordData("replace", features.length)
+  }
+
+  /** Additive explicit-result form of {@link setAreas}. */
+  setAreasWithResult(features: GeoJSON.Feature[]): UpdateResult {
+    this.setAreas(features)
+    return this.updateResults.last
   }
 
   setPoints(data: Datum[]): void {
-    this.pointData = data
+    // Bounded replacement must become the authoritative retained dataset.
+    // In particular, a prior stream cannot remain latent: otherwise the next
+    // push writes into its old ring while `streaming` is false and never shows
+    // up in a rebuild. Mirror the line boundary by owning the array shape.
+    this.pointData = data.slice()
+    this.pointBuffer = null
+    this.timestampBuffer = null
     this.streaming = false
+    this.updateResults.recordData("replace", data.length)
+  }
+
+  /** Additive explicit-result form of {@link setPoints}. */
+  setPointsWithResult(data: Datum[]): UpdateResult {
+    this.setPoints(data)
+    return this.updateResults.last
   }
 
   setLines(data: Datum[]): void {
@@ -163,43 +251,91 @@ export class GeoPipelineStore {
     // user's array reference here would let a subsequent push leak
     // into the React-owned array passed via the `lines` prop.
     this.lineData = data.slice()
+    if (this.streaming) this.retainNewestLines()
+    this.updateResults.recordData("replace", data.length)
   }
 
-  /** Initialize streaming mode with a ring buffer */
-  initStreaming(windowSize = 500): void {
-    this.pointBuffer = new RingBuffer<Datum>(windowSize)
-    this.timestampBuffer = new RingBuffer<number>(windowSize)
+  /** Additive explicit-result form of {@link setLines}. */
+  setLinesWithResult(data: Datum[]): UpdateResult {
+    this.setLines(data)
+    return this.updateResults.last
+  }
+
+  /**
+   * Enter streaming mode while retaining the newest configured window from a
+   * bounded snapshot. The optional legacy argument is immediately reflected
+   * in config so the config remains the sole owner of the active capacity.
+   */
+  initStreaming(windowSize?: number): void {
+    if (windowSize !== undefined && windowSize !== this.config.windowSize) {
+      this.config = { ...this.config, windowSize }
+    }
+    const configuredWindowSize = this.getConfiguredWindowSize()
+    const points = this.pointBuffer ? this.pointBuffer.toArray() : this.pointData
+    const timestamps = this.timestampBuffer?.toArray() ?? []
+    const retainedPoints = points.slice(-configuredWindowSize)
+    const retainedTimestamps = timestamps.slice(-retainedPoints.length)
+    const fallbackTimestamp = this.currentTime()
+
+    this.pointBuffer = new RingBuffer<Datum>(configuredWindowSize)
+    this.timestampBuffer = new RingBuffer<number>(configuredWindowSize)
+    retainedPoints.forEach((point, index) => {
+      this.pointBuffer!.push(point)
+      this.timestampBuffer!.push(retainedTimestamps[index] ?? fallbackTimestamp)
+    })
+    this.pointData = []
+    this.retainNewestLines(configuredWindowSize)
     this.streaming = true
   }
 
   /** Push a single streaming point */
   pushPoint(datum: Datum): void {
     if (!this.pointBuffer) this.initStreaming()
-    const now = getTimestamp()
+    const now = this.currentTime()
     pushWithTimestamp(this.pointBuffer!, datum, this.timestampBuffer, now)
     this.lastIngestTime = now
+    this.updateResults.recordData("ingest", 1)
+  }
+
+  /** Additive explicit-result form of {@link pushPoint}. */
+  pushPointWithResult(datum: Datum): UpdateResult {
+    this.pushPoint(datum)
+    return this.updateResults.last
   }
 
   /** Push multiple streaming points */
   pushMany(data: Datum[]): void {
     if (!this.pointBuffer) this.initStreaming()
-    const now = getTimestamp()
+    const now = this.currentTime()
     for (const d of data) {
       pushWithTimestamp(this.pointBuffer!, d, this.timestampBuffer, now)
     }
     this.lastIngestTime = now
+    this.updateResults.recordData("ingest", data.length)
+  }
+
+  /** Additive explicit-result form of {@link pushMany}. */
+  pushManyWithResult(data: Datum[]): UpdateResult {
+    this.pushMany(data)
+    return this.updateResults.last
   }
 
   /** Append a single line/flow record (coordinates pre-resolved). Lines
-   *  aren't ring-buffered — the bounded set is the geography.
+   *  use array storage, then retain the active configured window in streaming mode.
    *  Mutates `lineData` in place to avoid the O(n) GC churn of an
    *  array spread per push. The mutation is invisible to callers
    *  because `setLines` defensive-copies on entry and `getLines`
    *  defensive-copies on exit. */
   pushLine(line: Datum): void {
-    if (line == null || typeof line !== "object") return
+    if (line == null || typeof line !== "object") {
+      this.updateResults.recordNoop("ingest")
+      return
+    }
+    if (!this.streaming) this.initStreaming()
     this.lineData.push(line)
+    this.retainNewestLines()
     this.version++
+    this.updateResults.recordData("ingest", 1)
   }
 
   /** Append multiple line/flow records in one pass. Same in-place
@@ -208,11 +344,20 @@ export class GeoPipelineStore {
    *  blow the engine's argument-count limit (mirrors how `pushMany`
    *  for points iterates rather than spreads). */
   pushManyLines(lines: Datum[]): void {
-    if (!Array.isArray(lines) || lines.length === 0) return
+    if (!Array.isArray(lines) || lines.length === 0) {
+      this.updateResults.recordNoop("ingest")
+      return
+    }
     const safe = lines.filter((l) => l != null && typeof l === "object")
-    if (safe.length === 0) return
+    if (safe.length === 0) {
+      this.updateResults.recordNoop("ingest")
+      return
+    }
+    if (!this.streaming) this.initStreaming()
     for (const line of safe) this.lineData.push(line)
+    this.retainNewestLines()
     this.version++
+    this.updateResults.recordData("ingest", safe.length)
   }
 
   /** Remove line records by id. Requires `lineIdAccessor`. */
@@ -233,7 +378,12 @@ export class GeoPipelineStore {
       }
       return true
     })
-    if (removed.length > 0) this.version++
+    if (removed.length > 0) {
+      this.version++
+      this.updateResults.recordData("remove", removed.length)
+    } else {
+      this.updateResults.recordNoop("remove")
+    }
     return removed
   }
 
@@ -264,7 +414,12 @@ export class GeoPipelineStore {
       const predicate = (item: Datum) => ids.has(String(getId(item)))
       compactTimestampBufferForRemoval(this.pointBuffer, this.timestampBuffer, predicate)
       const removed = this.pointBuffer.remove(predicate)
-      if (removed.length > 0) this.version++
+      if (removed.length > 0) {
+        this.version++
+        this.updateResults.recordData("remove", removed.length)
+      } else {
+        this.updateResults.recordNoop("remove")
+      }
       return removed
     } else {
       const removed: Datum[] = []
@@ -275,7 +430,12 @@ export class GeoPipelineStore {
         }
         return true
       })
-      if (removed.length > 0) this.version++
+      if (removed.length > 0) {
+        this.version++
+        this.updateResults.recordData("remove", removed.length)
+      } else {
+        this.updateResults.recordNoop("remove")
+      }
       return removed
     }
   }
@@ -286,6 +446,7 @@ export class GeoPipelineStore {
     this.lineData = []
     this.pointBuffer = null
     this.timestampBuffer = null
+    this.streaming = false
     this.scene = []
     this.scales = null
     this._hasRenderedOnce = false
@@ -301,35 +462,22 @@ export class GeoPipelineStore {
     this._baseStyles = new WeakMap()
     this._customLayoutFailedThisBuild = false
     this.version++
-  }
-
-  setLayoutSelection(selection: CustomLayoutSelection | null): void {
-    this.config.layoutSelection = selection
-  }
-
-  /**
-   * "Styles changed, repaint the data canvas without rebuilding the scene."
-   * Set by {@link restyleScene}; consumed once per frame by the paint loop, so a
-   * style-only selection change repaints without a projection/scene recompute.
-   */
-  private _stylePaintPending = false
-
-  /** Consume the style-only repaint signal (see {@link _stylePaintPending}). */
-  consumeStylePaintPending(): boolean {
-    const pending = this._stylePaintPending
-    this._stylePaintPending = false
-    return pending
+    this.updateResults.recordData("clear")
   }
 
   restyleScene(selection: CustomLayoutSelection | null): void {
     const fn = this._customRestyle
-    if (!fn) return
+    if (!fn) {
+      this.updateResults.recordRestyle(false)
+      return
+    }
     for (const node of this.scene) {
       const base = this._baseStyles.get(node) ?? node.style
       const patch = fn(node, selection)
       node.style = patch ? { ...base, ...patch } : base
     }
-    this._stylePaintPending = true
+    this.markStylePaintPending()
+    this.updateResults.recordRestyle(true)
   }
 
   // ── Projection pipeline ──────────────────────────────────────────
@@ -777,9 +925,6 @@ export class GeoPipelineStore {
     const { config } = this
     const proj = this.projection!
     const path = this.geoPath!
-    const xAcc = makeAccessor(config.xAccessor, "lon")
-    const yAcc = makeAccessor(config.yAccessor, "lat")
-
     if (config.customLayout && this.scales) {
       const margin = config.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
       const palette = resolveCustomLayoutPalette(
@@ -871,206 +1016,15 @@ export class GeoPipelineStore {
     this.hasCustomRestyle = false
     this._baseStyles = new WeakMap()
 
-    const nodes: GeoSceneNode[] = []
-
-    // Resolve themed defaults once per scene build. Cheap to precompute,
-    // expensive to rebuild per-feature for large GeoJSON inputs.
-    const areaDefault = themedDefaultArea(config)
-    const lineDefault = themedDefaultLine(config)
-    const pointDefault = themedDefaultPoint(config)
-
-    // Graticule (drawn first, behind everything)
-    if (config.graticule) {
-      const gratConfig: GraticuleConfig = config.graticule === true
-        ? {}
-        : config.graticule
-      const generator = geoGraticule()
-      if (gratConfig.step) generator.step(gratConfig.step)
-
-      const pathData = path(generator()) || ""
-      if (pathData) {
-        nodes.push({
-          type: "geoarea",
-          pathData,
-          centroid: [layout.width / 2, layout.height / 2],
-          bounds: [[0, 0], [layout.width, layout.height]],
-          screenArea: 0,
-          style: {
-            fill: "none",
-            stroke: gratConfig.stroke || "#e0e0e0",
-            strokeWidth: gratConfig.strokeWidth || 0.5,
-            strokeDasharray: gratConfig.strokeDasharray || "2,2"
-          },
-          datum: null,
-          interactive: false
-        })
-      }
-    }
-
-    // Areas (choropleth polygons)
-    for (const feature of this.areas) {
-      const pathData = path(feature)
-      if (!pathData) continue
-
-      const centroid = path.centroid(feature)
-      const featureBounds = path.bounds(feature)
-      const featureArea = path.area(feature)
-
-      const style = resolveStyle(config.areaStyle, feature, areaDefault)
-
-      nodes.push({
-        type: "geoarea",
-        pathData,
-        centroid: centroid as [number, number],
-        bounds: featureBounds as [[number, number], [number, number]],
-        screenArea: featureArea,
-        style,
-        datum: feature,
-        interactive: true
-      })
-    }
-
-    // Lines
-    const lineDataAcc = makeLineDataAccessor(config.lineDataAccessor)
-
-    for (const line of this.lineData) {
-      const coords = lineDataAcc(line)
-      if (!coords || coords.length < 2) continue
-
-      // Project lon/lat coords directly into a screen path, skipping unprojectable points.
-      // For "geo" lines, densify along great-circle arcs between each pair of points.
-      let screenPath: [number, number][] = []
-
-      if (config.lineType === "geo") {
-        // We need lineCoords to compute geoDistance/geoInterpolate, but we
-        // project on the fly to avoid a second array allocation.
-        const lineCoords: [number, number][] = new Array(coords.length)
-        for (let i = 0; i < coords.length; i++) {
-          lineCoords[i] = [xAcc(coords[i]), yAcc(coords[i])]
-        }
-        for (let i = 0; i < lineCoords.length - 1; i++) {
-          const start = lineCoords[i]
-          const end = lineCoords[i + 1]
-          const dist = geoDistance(start, end) || 0
-          const steps = Math.max(2, Math.ceil(dist / (Math.PI / 180)))
-          const interpolate = geoInterpolate(start, end)
-          for (let s = 0; s <= steps; s++) {
-            if (i > 0 && s === 0) continue // avoid duplicate at segment joins
-            const projected = proj(interpolate(s / steps) as [number, number])
-            if (projected != null) screenPath.push(projected as [number, number])
-          }
-        }
-      } else {
-        // Straight-line segments in projected space — fused project + filter.
-        for (let i = 0; i < coords.length; i++) {
-          const d = coords[i]
-          const projected = proj([xAcc(d), yAcc(d)])
-          if (projected != null) screenPath.push(projected as [number, number])
-        }
-      }
-
-      if (screenPath.length < 2) continue
-
-      const style = resolveStyle(config.lineStyle, line, lineDefault) as Style
-      const resolvedStrokeWidth =
-        typeof style.strokeWidth === "number" ? style.strokeWidth : 1
-
-      // Apply flow style transformation (only for simple 2-point source→target flows;
-      // multi-point polylines keep their full geometry).
-      if (coords.length === 2 && screenPath.length >= 2 && config.flowStyle === "arc") {
-        screenPath = buildArcPath(screenPath[0], screenPath[screenPath.length - 1])
-      } else if (coords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset") {
-        if (config.lineType === "geo") {
-          // Offset each point along its local normal to preserve great-circle curvature
-          screenPath = buildOffsetGeoPath(screenPath, resolvedStrokeWidth)
-        } else {
-          screenPath = buildOffsetPath(screenPath[0], screenPath[screenPath.length - 1], line, this.lineData, resolvedStrokeWidth)
-        }
-      }
-
-      // Split lines that wrap around the anti-meridian into separate segments.
-      // Each segment that doesn't span the full viewport is rendered independently.
-      // Lines that jump across the projection edge (>40% of viewport width between
-      // consecutive points) are split and each segment fades at the clipped end.
-      const segments = splitAntiMeridianPath(screenPath, layout.width)
-
-      if (segments.length <= 1) {
-        // No anti-meridian crossing — render as a single line
-        const lineNode: GeoLineSceneNode = {
-          type: "line",
-          path: screenPath.length >= 2 ? screenPath : segments[0] || screenPath,
-          style,
-          datum: line
-        }
-        nodes.push(lineNode)
-      } else {
-        // Anti-meridian crossing detected — render each segment with edge fade
-        for (const segment of segments) {
-          if (segment.length < 2) continue
-          const lineNode: GeoLineSceneNode = {
-            type: "line",
-            path: segment,
-            style: { ...style, _edgeFade: true },
-            datum: line
-          }
-          nodes.push(lineNode)
-        }
-      }
-    }
-
-    // Points
-    const points = this.getPoints()
-    const pointIdAcc = config.pointIdAccessor
-      ? (typeof config.pointIdAccessor === "function"
-        ? config.pointIdAccessor
-        : (d: Datum) => d[config.pointIdAccessor as string])
-      : null
-
-    // For projections with a clip angle (e.g. orthographic), cull points
-    // on the far side. geoProjection still returns screen coords for
-    // backface points — we must check angular distance ourselves.
-    const clipAngle = proj.clipAngle ? (proj.clipAngle() ?? 0) : 0
-    const clipRadians = clipAngle > 0 ? (clipAngle * Math.PI) / 180 : null
-    const rotation = proj.rotate ? proj.rotate() : [0, 0, 0]
-    const center = typeof proj.center === "function" ? proj.center() : [0, 0]
-    const projCenter: [number, number] = [
-      (center[0] ?? 0) - rotation[0],
-      (center[1] ?? 0) - rotation[1]
-    ]
-
-    for (let i = 0; i < points.length; i++) {
-      const d = points[i]
-      const lon = xAcc(d)
-      const lat = yAcc(d)
-
-      // Backface culling: skip points beyond the clip angle
-      if (clipRadians != null) {
-        const dist = geoDistance([lon, lat], projCenter)
-        if (dist > clipRadians) continue
-      }
-
-      const projected = proj([lon, lat])
-      if (!projected) continue
-
-      const baseStyle = config.pointStyle
-        ? config.pointStyle(d)
-        : { ...pointDefault }
-
-      const r = baseStyle.r || 4
-
-      const pointNode: PointSceneNode = {
-        type: "point",
-        x: projected[0],
-        y: projected[1],
-        r,
-        style: baseStyle,
-        datum: d,
-        pointId: pointIdAcc ? String(pointIdAcc(d)) : undefined
-      }
-      nodes.push(pointNode)
-    }
-
-    return nodes
+    return buildBuiltInGeoScene({
+      config,
+      projection: proj,
+      path,
+      areas: this.areas,
+      points: this.getPoints(),
+      lines: this.lineData,
+      layout
+    })
   }
 
   // ── Distance cartogram transform ──────────────────────────────
@@ -1111,34 +1065,40 @@ export class GeoPipelineStore {
 
   // ── Pulse ──────────────────────────────────────────────────────
 
-  private applyPulse(): void {
+  private applyPulse(now = this.currentTime()): boolean {
     const pulse = this.config.pulse
-    if (!pulse || !this.timestampBuffer) return
+    if (!pulse || !this.timestampBuffer) return false
 
-    const now = getTimestamp()
     const pointNodes = this.scene.filter(
       (n): n is PointSceneNode => n.type === "point"
     )
     const timestamps = this.timestampBuffer.toArray()
+    const pulseColor = pulse.color || "rgba(255,255,255,0.6)"
+    const glowRadius = pulse.glowRadius ?? 4
+    let changed = false
 
     for (let i = 0; i < pointNodes.length && i < timestamps.length; i++) {
       // Share the pulse-intensity curve with the XY/realtime pipeline so a
       // change to the fade math (pipelinePulse.computePulseIntensity) reaches
       // geo too. Behaviourally identical to the previous inline 1 - age/dur.
       const intensity = computePulseIntensity(pulse, timestamps[i], now)
-      if (intensity > 0) {
-        pointNodes[i]._pulseIntensity = intensity
-        pointNodes[i]._pulseColor = pulse.color || "rgba(255,255,255,0.6)"
-        pointNodes[i]._pulseGlowRadius = pulse.glowRadius ?? 4
-      }
+      changed = setPulseState(pointNodes[i], intensity, pulseColor, glowRadius) || changed
     }
+
+    return changed
+  }
+
+  refreshPulse(now: number): boolean {
+    if (this.lastCustomLayoutFailure?.preservedLastGoodScene === true) return false
+    return this.applyPulse(now)
+  }
+
+  hasActivePulsesAt(now: number): boolean {
+    return !!this.config.pulse && hasActivePulsesShared(this.config.pulse, this.timestampBuffer, now)
   }
 
   get hasActivePulses(): boolean {
-    // Delegate to the shared check (peek() avoids the toArray() allocation the
-    // inline version did). `?? {}` preserves the previous 500ms default when
-    // no pulse config is present.
-    return hasActivePulsesShared(this.config.pulse ?? {}, this.timestampBuffer)
+    return this.hasActivePulsesAt(this.currentTime())
   }
 
   // ── Transition ─────────────────────────────────────────────────
@@ -1193,7 +1153,7 @@ export class GeoPipelineStore {
 
     if (hasMovement) {
       this.activeTransition = {
-        startTime: getTimestamp(),
+        startTime: this.currentTime(),
         duration
       }
     }
@@ -1255,3 +1215,5 @@ export class GeoPipelineStore {
     return true
   }
 }
+
+attachUpdateResultStore(GeoPipelineStore)

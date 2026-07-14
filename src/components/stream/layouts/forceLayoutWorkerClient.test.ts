@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest"
 import {
+  createFrameForceWorkerRequest,
   _resetSharedForceLayoutSessionForTest,
   ForceLayoutWorkerSession,
   runForceLayoutWorker,
   shouldUseForceWorker,
   type ForceWorkerRequest
 } from "./forceLayoutWorkerClient"
+import type { NetworkPipelineConfig, RealtimeNode } from "../networkTypes"
 
 class MockWorker {
   static instances: MockWorker[] = []
@@ -44,6 +46,16 @@ describe("force layout worker client", () => {
     expect(shouldUseForceWorker("worker", 1, 0, 1)).toBe(true)
     expect(shouldUseForceWorker("auto", 20, 20, 100)).toBe(false)
     expect(shouldUseForceWorker("auto", 100, 100, 300)).toBe(true)
+  })
+
+  it("keeps a serializable frame seed in the worker request", () => {
+    const nodes: RealtimeNode[] = [{
+      id: "a", x: 0, y: 0, x0: 0, x1: 0, y0: 0, y1: 0,
+      width: 0, height: 0, value: 0
+    }]
+    const config: NetworkPipelineConfig = { chartType: "force", seed: 42 }
+    const request = createFrameForceWorkerRequest(nodes, [], config, [100, 100])
+    expect(request.config.seed).toBe(42)
   })
 
   it("reuses a long-lived worker across layouts and does not terminate on success", async () => {

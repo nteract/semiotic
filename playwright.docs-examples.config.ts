@@ -8,7 +8,7 @@ import { defineConfig } from "@playwright/test"
  */
 export default defineConfig({
   testDir: "./integration-tests",
-  testMatch: "docs-examples-source.spec.ts",
+  testMatch: "docs-examples-*.spec.ts",
   // Eight cold lazy docs routes per serial batch. A few stories pull large
   // topology/sprite modules on their first transform, so leave constrained CI
   // runners room to finish a legitimate cold compile without turning a hung

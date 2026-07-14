@@ -599,6 +599,39 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     [onClick]
   )
 
+  const beforePaint = useCallback(
+    (ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[]) => {
+      frameProps.beforePaint?.(ctx, bodies)
+      if (showTethers) drawTethers(ctx, bodies)
+    },
+    [frameProps.beforePaint, showTethers]
+  )
+  const physicsConfig = useMemo(
+    () => ({
+      fixedDt: 1 / 60,
+      maxSubsteps: 8,
+      kernel: {
+        gravity: { x: 0, y: 0 },
+        restitution: 0.16,
+        friction: 0.44,
+        velocityDamping: 0.982,
+        maxVelocity: 520,
+        sleepAfter: 0.8,
+        sleepSpeed: 7,
+        ...(frameProps.config?.kernel ?? {})
+      },
+      colliders: [
+        ...gauntletWallColliders(layout),
+        ...(frameProps.config?.colliders ?? [])
+      ]
+    }),
+    [frameProps.config?.colliders, frameProps.config?.kernel, layout]
+  )
+  const regionEffects = useMemo(
+    () => [...gateRegionEffects, ...(frameProps.regionEffects ?? [])],
+    [frameProps.regionEffects, gateRegionEffects]
+  )
+
   if (stateEl) return stateEl
 
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
@@ -628,10 +661,6 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
     projectionOverlay,
     frameProps.foregroundGraphics
   )
-  const beforePaint = (ctx: CanvasRenderingContext2D, bodies: PhysicsBodyState[]) => {
-    frameProps.beforePaint?.(ctx, bodies)
-    if (showTethers) drawTethers(ctx, bodies)
-  }
   const renderBody = frameProps.renderBody ?? drawGauntletBody
   const tooltipContent = tooltipProps.tooltipContent ?? defaultGauntletTooltipContent
 
@@ -651,24 +680,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       bodyStyle={bodyStyle}
       beforePaint={beforePaint}
       onClick={onClick ? gauntletOnClick : sharedFrameProps.onClick}
-      config={{
-        fixedDt: 1 / 60,
-        maxSubsteps: 8,
-        kernel: {
-          gravity: { x: 0, y: 0 },
-          restitution: 0.16,
-          friction: 0.44,
-          velocityDamping: 0.982,
-          maxVelocity: 520,
-          sleepAfter: 0.8,
-          sleepSpeed: 7,
-          ...(frameProps.config?.kernel ?? {})
-        },
-        colliders: [
-          ...gauntletWallColliders(layout),
-          ...(frameProps.config?.colliders ?? [])
-        ]
-      }}
+      config={physicsConfig}
       controllers={combinedControllers}
       enableHover={tooltipProps.enableHover ?? true}
       foregroundGraphics={foregroundGraphics}
@@ -678,7 +690,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       onBodyPointerDown={handlePointerDown}
       onTick={onTick}
       paused={paused}
-      regionEffects={[...gateRegionEffects, ...(frameProps.regionEffects ?? [])]}
+      regionEffects={regionEffects}
       renderBody={renderBody}
       responsiveHeight={responsiveHeight}
       responsiveWidth={responsiveWidth}

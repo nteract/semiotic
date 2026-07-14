@@ -40,6 +40,25 @@ describe("forceLayoutPlugin", () => {
     }
   })
 
+  it("replays seeded layouts", () => {
+    const firstNodes = [makeNode("A"), makeNode("B"), makeNode("C")]
+    const secondNodes = [makeNode("A"), makeNode("B"), makeNode("C")]
+    const firstEdges = [makeEdge("A", "B"), makeEdge("B", "C")]
+    const secondEdges = [makeEdge("A", "B"), makeEdge("B", "C")]
+    const seededConfig: NetworkPipelineConfig = {
+      chartType: "force",
+      iterations: 40,
+      seed: 42
+    }
+
+    forceLayoutPlugin.computeLayout(firstNodes, firstEdges, seededConfig, [600, 600])
+    forceLayoutPlugin.computeLayout(secondNodes, secondEdges, seededConfig, [600, 600])
+    expect(firstNodes.map(({ x, y }) => [x, y])).toEqual(
+      secondNodes.map(({ x, y }) => [x, y])
+    )
+
+  })
+
   it("resolves edge source/target to node objects", () => {
     const nodes = [makeNode("A"), makeNode("B")]
     const edges = [makeEdge("A", "B")]

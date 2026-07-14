@@ -349,6 +349,8 @@ export interface OrdinalPipelineConfig {
   /** Whether to animate elements on first render (bars grow from baseline, wedges sweep in) */
   introAnimation?: boolean
   staleness?: StalenessConfig
+  /** Frame-owned logical clock for ingest, pulse, staleness, and transitions. */
+  clock?: import("./FrameRuntime").FrameClock
 
   // ── customLayout escape hatch ────────────────────
   /** When provided, replaces chart-type dispatch in scene building.
@@ -561,6 +563,20 @@ export interface StreamOrdinalFrameProps<T = Datum> {
    *  Set `{ intro: false }` to disable the intro animation. */
   animate?: AnimateProp
   staleness?: StalenessConfig
+
+  // ── Frame runtime policy ───────────────────────────
+  /** Optional rAF seam for deterministic host scheduling. */
+  frameScheduler?: import("./useFrame").FrameScheduler
+  /** Monotonic wall-clock seam used to derive logical frame time. */
+  clock?: import("./FrameRuntime").FrameClock
+  /** Injectable frame-local random source. Ordinal rendering currently has no stochastic layout. */
+  random?: import("./FrameRuntime").FrameRandom
+  /** Serializable deterministic random seed for future ordinal stochastic work. */
+  seed?: number
+  /** Freeze logical animation time and cancel queued work while paused. */
+  paused?: boolean
+  /** Freeze logical animation time while the document is hidden. Defaults to true. */
+  suspendWhenHidden?: boolean
 
   // ── Accessibility ─────────────────────────────────
   /** Render a visually-hidden data table from the scene graph for screen readers */

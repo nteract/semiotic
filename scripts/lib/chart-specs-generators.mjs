@@ -1,6 +1,6 @@
 /**
  * Pure generators that turn a `ChartSpec` (from chartSpecs.ts) into the
- * shapes consumed by schema.json, validationMap.ts, and
+ * shapes consumed by schema.json, runtime validation, Chart Clinic, and
  * componentMetadata.cjs. Tested directly against the BarChart slice of
  * each canonical file in Phase 1; Phase 2+ will use them to overwrite
  * full files.
@@ -118,6 +118,131 @@ export function generateValidationMapEntry(spec, composedProps) {
     dataAccessors: [...spec.dataAccessors],
     props,
   }
+}
+
+/**
+ * Generate the complete runtime validation map in registry insertion order.
+ * Keeping this composition here gives the writer and drift checker one exact
+ * implementation, while the emitted runtime module remains independent of the
+ * documentation-rich chart-spec registry.
+ */
+export function generateValidationMap(chartSpecs, composeProps) {
+  const validationMap = {}
+  for (const [name, spec] of Object.entries(chartSpecs)) {
+    validationMap[name] = generateValidationMapEntry(spec, composeProps(spec))
+  }
+  return validationMap
+}
+
+/**
+ * Serialize the runtime map as a deterministic TypeScript module.
+ *
+ * The generated file intentionally uses a plain object literal rather than a
+ * compact lookup codec: Brotli already compresses the repeated prop shapes,
+ * and the literal preserves VALIDATION_MAP's existing public/runtime shape
+ * without adding decode work during module initialization. One chart is
+ * written per line to keep the generated repository artifact compact while
+ * still producing localized diffs when a chart changes.
+ */
+export function generateValidationMapModule(validationMap) {
+  const chartLines = Object.entries(validationMap).map(
+    ([name, entry]) => `  ${JSON.stringify(name)}: ${JSON.stringify(entry)}`,
+  )
+  return `/**
+ * AUTO-GENERATED from chartSpecs.ts by scripts/regenerate-schema.ts.
+ * Do not edit by hand; run \`npm run docs:chart-specs:schema\`.
+ */
+import type { ComponentSpec } from "./validateProps"
+
+export const VALIDATION_MAP: Record<string, ComponentSpec> = {
+${chartLines.join(",\n")}
+}
+`
+}
+
+/**
+ * Serialize the compact chart-name registry used by config serialization.
+ * Generating it alongside the richer artifacts keeps the root bundle lean
+ * without introducing a second hand-maintained chart catalog.
+ */
+export function generateKnownChartComponentsModule(chartSpecs) {
+  return `/**
+ * AUTO-GENERATED from chartSpecs.ts by scripts/regenerate-schema.ts.
+ * Do not edit by hand; run \`npm run docs:chart-specs:schema\`.
+ *
+ * This compact registry is intentionally separate from validation metadata:
+ * config serialization only needs chart-name membership.
+ */
+export const KNOWN_CHART_COMPONENTS = ${JSON.stringify(Object.keys(chartSpecs), null, 2)} as const
+
+const KNOWN_CHART_COMPONENT_SET: ReadonlySet<string> = new Set(
+  KNOWN_CHART_COMPONENTS,
+)
+
+export function isKnownChartComponent(componentName: string): boolean {
+  return KNOWN_CHART_COMPONENT_SET.has(componentName)
+}
+`
+}
+
+/**
+ * Generate the small metadata projection consumed by Chart Clinic bundle
+ * guidance. Pilot definitions override the general family recommendation,
+ * while non-pilot charts derive their facade and renderChart support directly
+ * from ChartSpec.
+ */
+export function generateChartClinicMetadata(chartSpecs, chartDefinitionPilot) {
+  const metadata = {}
+  for (const [name, spec] of Object.entries(chartSpecs)) {
+    const definition = chartDefinitionPilot[name]
+    if (definition) {
+      metadata[name] = {
+        category: definition.chartFamily,
+        recommendedImport: definition.runtime.implementation.module,
+        ...(definition.metadata.support.server.mode === "render-chart"
+          ? { serverImport: "semiotic/server" }
+          : {}),
+        docsRoute: definition.metadata.propDocs.route,
+        pilot: true,
+      }
+      continue
+    }
+
+    metadata[name] = {
+      category: spec.category,
+      recommendedImport: `semiotic/${spec.category}`,
+      ...(spec.capabilities.supportsSSR
+        ? { serverImport: "semiotic/server" }
+        : {}),
+    }
+  }
+  return metadata
+}
+
+/** Serialize Chart Clinic's projection as a deterministic runtime module. */
+export function generateChartClinicMetadataModule(metadata) {
+  const chartLines = Object.entries(metadata).map(
+    ([name, entry]) => `  ${JSON.stringify(name)}: ${JSON.stringify(entry)}`,
+  )
+  return `/**
+ * AUTO-GENERATED from chartSpecs.ts and chartDefinitionPilot.ts by
+ * scripts/regenerate-schema.ts.
+ * Do not edit by hand; run \`npm run docs:chart-specs:schema\`.
+ */
+import type { ChartCategory } from "../charts/shared/chartSpecs"
+
+interface ChartClinicMetadata {
+  readonly category: ChartCategory
+  readonly recommendedImport: string
+  readonly serverImport?: "semiotic/server"
+  readonly docsRoute?: string
+  readonly pilot?: true
+}
+
+export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>> = {
+${chartLines.join(",\n")}
+}
+`
 }
 
 /**

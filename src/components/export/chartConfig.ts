@@ -1,4 +1,7 @@
-import { VALIDATION_MAP } from "../charts/shared/validateProps"
+import {
+  KNOWN_CHART_COMPONENTS,
+  isKnownChartComponent,
+} from "../charts/shared/knownChartComponents"
 import type { SerializedSelections } from "./selectionSerializer"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
@@ -97,9 +100,8 @@ export function toConfig(
     return recipeToConfig(recipe, props, options)
   }
 
-  const spec = VALIDATION_MAP[componentName]
-  if (!spec) {
-    throw new Error(`Unknown component "${componentName}". Known components: ${Object.keys(VALIDATION_MAP).join(", ")}`)
+  if (!isKnownChartComponent(componentName)) {
+    throw new Error(`Unknown component "${componentName}". Known components: ${KNOWN_CHART_COMPONENTS.join(", ")}`)
   }
 
   const includeData = options?.includeData !== false
@@ -242,8 +244,7 @@ export function fromConfig(config: ChartConfig): {
     }
   }
 
-  const spec = VALIDATION_MAP[config.component]
-  if (!spec) {
+  if (!isKnownChartComponent(config.component)) {
     throw new Error(
       `Unknown component "${config.component}". This config may require a newer version of semiotic.`
     )

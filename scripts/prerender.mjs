@@ -25,7 +25,10 @@ const APP_SRC = resolve(__dirname, "../docs/src/App.jsx")
 const PUBLIC_API_DIR = resolve(__dirname, "../docs/public/api")
 const PUBLIC_BLOG_OG_DIR = resolve(__dirname, "../docs/public/blog/og")
 const PUBLIC_EXAMPLE_OG_DIR = resolve(__dirname, "../docs/public/examples/og")
-const EXAMPLES_MANIFEST = resolve(__dirname, "../docs/src/pages/examples/examplesManifest.js")
+const EXAMPLE_DEFINITIONS_FILE = resolve(
+  __dirname,
+  "../docs/src/pages/examples/exampleDefinitions.js"
+)
 const SITE_URL = "https://semiotic.nteract.io"
 const DEFAULT_OG_IMAGE = `${SITE_URL}/assets/img/semiotic-social.png`
 const ROUTE_DOCS_MANIFEST = "llms-routes.json"
@@ -312,10 +315,10 @@ export function copyExampleOgCards(publicOgDir = PUBLIC_EXAMPLE_OG_DIR, buildDir
 // same per-section meta path everything else in ROUTE_META uses.
 export async function registerExampleRouteMeta() {
   try {
-    if (!existsSync(EXAMPLES_MANIFEST)) return 0
-    const source = readFileSync(EXAMPLES_MANIFEST, "utf8")
+    if (!existsSync(EXAMPLE_DEFINITIONS_FILE)) return 0
+    const source = readFileSync(EXAMPLE_DEFINITIONS_FILE, "utf8")
     const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
-    const examples = mod.EXAMPLES || []
+    const examples = mod.EXAMPLE_DEFINITIONS || []
     let registered = 0
     for (const entry of examples) {
       const routePath = String(entry.path).replace(/^\//, "")

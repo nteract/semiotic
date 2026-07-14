@@ -33,16 +33,11 @@ it deliberately when upgrading.
 
 ### Lockfile status
 
-The wrapper is pinned to `semiotic@3.8.0`, but that version is not currently published to
-the public npm registry (the resolver returned `ETARGET` on 2026-07-11; the latest public
-version was `3.7.5`). A `package-lock.json` is therefore deliberately **not** committed: a
-made-up lockfile would make the Cloud Run deployment look reproducible while still failing
-to install. The ignored local `node_modules` directory is stale (`3.7.1`) and is never sent
-to Cloud Build.
+The wrapper pins the published `semiotic@3.8.0` release and includes a generated
+`package-lock.json`. Cloud Buildpacks receives that lockfile because `.gcloudignore` excludes
+only `node_modules`.
 
-Do not deploy this wrapper until `3.8.0` is published. Once it is available, generate and
-verify a real lock from this directory, then commit it. `.gcloudignore` intentionally keeps
-the lockfile in the build context:
+When upgrading Semiotic, generate and verify a new lock from this directory before deploying:
 
 ```sh
 npm install --package-lock-only --ignore-scripts --registry=https://registry.npmjs.org
@@ -50,6 +45,9 @@ npm ci --ignore-scripts
 cd ../..
 npm run check:cloud-run-lock
 ```
+
+The local verifier proves dependency and build-context intent. Retain Cloud Build evidence for the
+actual deployed revision to prove that its source upload and image used the committed lockfile.
 
 From the repository root, `npm run check:cloud-run-manifest` always verifies the public-host,
 port, profile, exact dependency, and build-context contract; `check:cloud-run-lock` additionally

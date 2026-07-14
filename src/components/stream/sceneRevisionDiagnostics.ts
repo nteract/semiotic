@@ -1,6 +1,11 @@
-import type { RevisionSet, UpdateResult } from "./pipelineUpdateContract"
+import { memo, useEffect, useRef } from "react"
+import type {
+  RevisionSet,
+  UpdateResult,
+  UpdateResultStore
+} from "./pipelineUpdateContract"
 
-type SceneRevisionSet = Pick<RevisionSet, "sceneGeometry" | "layout" | "domain">
+export type SceneRevisionSet = Pick<RevisionSet, "sceneGeometry" | "layout" | "domain">
 
 const EMPTY_SCENE_REVISIONS: SceneRevisionSet = {
   sceneGeometry: 0,
@@ -8,12 +13,16 @@ const EMPTY_SCENE_REVISIONS: SceneRevisionSet = {
   domain: 0
 }
 
-interface SceneRevisionCheck {
+export interface SceneRevisionCheck {
   revisions: SceneRevisionSet
   signature: string
   sawSignals: boolean
   wasUnconsumed: boolean
   warnUnconsumed: boolean
+}
+
+interface SceneRevisionStore extends UpdateResultStore {
+  getLastUpdateResult(): UpdateResult
 }
 
 function sceneRevisions(updateResult: UpdateResult): SceneRevisionSet {
@@ -29,6 +38,14 @@ function equal(a: SceneRevisionSet, b: SceneRevisionSet): boolean {
   return a.sceneGeometry === b.sceneGeometry && a.layout === b.layout && a.domain === b.domain
 }
 
+function latest(a: SceneRevisionSet, b: SceneRevisionSet): SceneRevisionSet {
+  return {
+    sceneGeometry: Math.max(a.sceneGeometry, b.sceneGeometry),
+    layout: Math.max(a.layout, b.layout),
+    domain: Math.max(a.domain, b.domain)
+  }
+}
+
 const IS_DEV = process.env.NODE_ENV !== "production"
 
 const NOOP_CHECK: SceneRevisionCheck = {
@@ -39,15 +56,29 @@ const NOOP_CHECK: SceneRevisionCheck = {
   warnUnconsumed: false
 }
 
-/** Development-only consumption and duplicate-compute diagnostics for an XY scene host. */
+/** Development-only consumption and duplicate-compute diagnostics for a scene host. */
 export class SceneRevisionDiagnostics {
+  constructor(private readonly hostName = "scene host") {}
+
   private lastConsumed = EMPTY_SCENE_REVISIONS
+  private lastObserved = EMPTY_SCENE_REVISIONS
   private lastDuplicateWarning = ""
   private lastUnconsumedWarning = ""
 
+  /**
+   * Accept a React external-store observation without participating in frame
+   * scheduling or paint. The imperative result passed to beforeCompute remains
+   * authoritative; retaining the high-water mark only protects development
+   * diagnostics when React observes an update between frame passes.
+   */
+  observeUpdateResult(updateResult: UpdateResult): void {
+    if (!IS_DEV) return
+    this.lastObserved = latest(this.lastObserved, sceneRevisions(updateResult))
+  }
+
   beforeCompute(updateResult: UpdateResult, isTransitioning: boolean): SceneRevisionCheck {
     if (!IS_DEV) return NOOP_CHECK
-    const revisions = sceneRevisions(updateResult)
+    const revisions = latest(sceneRevisions(updateResult), this.lastObserved)
     const nextSignature = signature(revisions)
     const wasUnconsumed = !equal(revisions, this.lastConsumed)
     return {
@@ -71,7 +102,7 @@ export class SceneRevisionDiagnostics {
     if (computedScene && check.wasUnconsumed) this.lastConsumed = check.revisions
     if (check.warnUnconsumed && !computedScene) {
       console.warn(
-        `[semiotic] StreamXYFrame observed scene-affecting revisions without a scene rebuild: ${check.signature}.`
+        `[semiotic] ${this.hostName} observed scene-affecting revisions without a scene rebuild: ${check.signature}.`
       )
       this.lastUnconsumedWarning = check.signature
       return
@@ -84,7 +115,7 @@ export class SceneRevisionDiagnostics {
       this.lastDuplicateWarning !== check.signature
     ) {
       console.warn(
-        `[semiotic] StreamXYFrame performed scene rebuild with unchanged scene revisions: ${check.signature}.`
+        `[semiotic] ${this.hostName} performed scene rebuild with unchanged scene revisions: ${check.signature}.`
       )
       this.lastDuplicateWarning = check.signature
     } else if (computedScene && !check.sawSignals) {
@@ -92,3 +123,45 @@ export class SceneRevisionDiagnostics {
     }
   }
 }
+
+/** Keep a frame's development-only revision tracker stable across renders. */
+export function useSceneRevisionDiagnostics(hostName: string) {
+  return useRef(new SceneRevisionDiagnostics(hostName))
+}
+
+/** Wrap an unconditional scene build with the common revision accounting. */
+export function runSceneBuild(
+  diagnostics: SceneRevisionDiagnostics,
+  store: SceneRevisionStore,
+  build: () => void,
+  isTransitioning = false,
+  dimsChanged = false,
+): void {
+  const check = diagnostics.beforeCompute(store.getLastUpdateResult(), isTransitioning)
+  build()
+  diagnostics.afterCompute(check, true, dimsChanged)
+}
+
+/**
+ * Observes external-store revisions without putting diagnostics on a React
+ * render path. Stores can record non-invalidating operational results during
+ * host effects, so a useSyncExternalStore subscription here could feed those
+ * diagnostics back into the host's render cycle.
+ */
+export const SceneRevisionDiagnosticsObserver = memo(
+  function SceneRevisionDiagnosticsObserver({
+    store,
+    diagnostics
+  }: {
+    store: UpdateResultStore
+    diagnostics: SceneRevisionDiagnostics
+  }) {
+    useEffect(() => {
+      const observe = () => diagnostics.observeUpdateResult(store.getUpdateSnapshot())
+      observe()
+      return store.subscribeUpdateResult(observe)
+    }, [diagnostics, store])
+
+    return null
+  }
+)

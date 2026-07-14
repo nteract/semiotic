@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "baselineKind": "semiotic-stream-file-size-advisory",
+  "capturedAt": "2026-07-13T00:00:00.000Z",
+  "policy": {
+    "mode": "advisory",
+    "reviewGuidance": "Report drift in the tracked stream hosts and stores. Review growth for duplicated scheduling or aggregation policy; do not impose a new hard file-size ceiling from this baseline."
+  },
+  "files": [
+    {
+      "path": "src/components/stream/GeoPipelineStore.ts",
+      "lines": 1449,
+      "bytes": 51288
+    },
+    {
+      "path": "src/components/stream/NetworkPipelineStore.ts",
+      "lines": 1639,
+      "bytes": 60671
+    },
+    {
+      "path": "src/components/stream/OrdinalPipelineStore.ts",
+      "lines": 1625,
+      "bytes": 65251
+    },
+    {
+      "path": "src/components/stream/PipelineStore.ts",
+      "lines": 1621,
+      "bytes": 67101
+    },
+    {
+      "path": "src/components/stream/StreamGeoFrame.tsx",
+      "lines": 1544,
+      "bytes": 59544
+    },
+    {
+      "path": "src/components/stream/StreamNetworkFrame.tsx",
+      "lines": 1791,
+      "bytes": 59402
+    },
+    {
+      "path": "src/components/stream/StreamOrdinalFrame.tsx",
+      "lines": 1226,
+      "bytes": 47650
+    },
+    {
+      "path": "src/components/stream/StreamXYFrame.tsx",
+      "lines": 1543,
+      "bytes": 65193
+    },
+    {
+      "path": "src/components/stream/physics/PhysicsPipelineStore.ts",
+      "lines": 945,
+      "bytes": 27675
+    },
+    {
+      "path": "src/components/stream/physics/StreamPhysicsFrame.tsx",
+      "lines": 1664,
+      "bytes": 51409
+    }
+  ]
+}

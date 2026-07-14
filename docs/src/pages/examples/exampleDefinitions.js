@@ -17,6 +17,47 @@ const EXAMPLE_CONTRACT_FIELDS = [
   "performance",
 ]
 
+const DECLARED_EXAMPLE_CONTRACT_STATUS = "declared"
+const NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS = "not-assessed"
+const UNMEASURED_EXAMPLE_PERFORMANCE_STATUS = "unmeasured"
+const EXAMPLE_PERFORMANCE_BUDGET_FIELDS = [
+  "bundle",
+  "interaction",
+  "memory",
+  "hiddenPage",
+]
+const UNASSESSED_CONTRACT_FIELD = Object.freeze({
+  status: NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS,
+})
+const UNMEASURED_EXAMPLE_PERFORMANCE_BUDGETS = Object.freeze(
+  Object.fromEntries(
+    EXAMPLE_PERFORMANCE_BUDGET_FIELDS.map((field) => [
+      field,
+      UNMEASURED_EXAMPLE_PERFORMANCE_STATUS,
+    ]),
+  ),
+)
+
+// This is a declaration of missing assessment, not a claim about a route's
+// behavior. Route-specific contracts replace it as they are reviewed.
+const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
+  assessment: NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS,
+  publicImports: UNASSESSED_CONTRACT_FIELD,
+  data: UNASSESSED_CONTRACT_FIELD,
+  provenance: UNASSESSED_CONTRACT_FIELD,
+  accessibility: UNASSESSED_CONTRACT_FIELD,
+  motion: UNASSESSED_CONTRACT_FIELD,
+  responsive: UNASSESSED_CONTRACT_FIELD,
+  ssr: Object.freeze({
+    status: NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS,
+    hydration: NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS,
+  }),
+  performance: Object.freeze({
+    status: UNMEASURED_EXAMPLE_PERFORMANCE_STATUS,
+    budgets: UNMEASURED_EXAMPLE_PERFORMANCE_BUDGETS,
+  }),
+})
+
 /**
  * @typedef {"live" | "snapshot" | "fallback" | "error"} ExampleDataState
  *
@@ -26,23 +67,30 @@ const EXAMPLE_CONTRACT_FIELDS = [
  * @property {string} title Reader-facing title.
  * @property {string} eyebrow Short chart/family label.
  * @property {string} description Overview-card copy.
+ * @property {string} preview Overview-card preview identifier.
+ * @property {readonly string[]} [badges] Overview-card capability labels.
+ * @property {readonly string[]} frames Frame-family filters.
+ * @property {readonly string[]} topics Topic filters.
  * @property {boolean} isPilot Whether this definition drives the incremental registry migration.
  * @property {string} sourceFile Page source file used by the lazy Full Code loader.
  * @property {ExampleContract} contract Public experience and maintenance contract.
  *
+ * @typedef {{ status: "not-assessed" }} UnassessedExampleContractField
+ *
  * @typedef {object} ExampleContract
- * @property {readonly string[]} publicImports Public Semiotic entry points used by the page.
- * @property {{ states: readonly ExampleDataState[], fixture: { kind: string, replay: boolean, schemaVersion: string } }} data
- * @property {{ source: string, capturedAt: string, freshnessOwner: string, reviewCadence: string }} provenance
- * @property {{ summary: string, navigation: string, keyboard: string, forcedColors: string }} accessibility
- * @property {{ reducedMotion: string, visibility: string }} motion
- * @property {{ status: string, viewports: readonly number[], selectionIdentity: string }} responsive
+ * @property {"declared" | "not-assessed"} assessment Whether the record is route-specific or explicitly unassessed.
+ * @property {readonly string[] | UnassessedExampleContractField} publicImports Public Semiotic entry points used by the page.
+ * @property {{ states: readonly ExampleDataState[], fixture: { kind: string, replay: boolean, schemaVersion: string } } | UnassessedExampleContractField} data
+ * @property {{ source: string, capturedAt: string, freshnessOwner: string, reviewCadence: string } | UnassessedExampleContractField} provenance
+ * @property {{ summary: string, navigation: string, keyboard: string, forcedColors: string } | UnassessedExampleContractField} accessibility
+ * @property {{ reducedMotion: string, visibility: string } | UnassessedExampleContractField} motion
+ * @property {{ status: string, viewports: readonly number[], selectionIdentity: string } | UnassessedExampleContractField} responsive
  * @property {{ status: string, hydration: string }} ssr
  * @property {{ status: string, budgets: Record<string, string> }} performance
  */
 
 /** @type {readonly ExampleDefinition[]} */
-export const EXAMPLE_DEFINITIONS = Object.freeze([
+const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
     id: "watermarks",
     path: "/examples/watermarks",
@@ -210,12 +258,425 @@ export const EXAMPLE_DEFINITIONS = Object.freeze([
   },
 ])
 
+const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "The Insight Forge",
+    path: "/examples/insight-forge",
+    eyebrow: "Portable analytical artifacts · five chart rooms",
+    description:
+      "Investigate a packaging failure across five chart rooms. Evidence you accept becomes a portable artifact that can filter and annotate the next view.",
+    preview: "insight-forge",
+    badges: ["Portable artifacts", "Deterministic recipes", "Audited lineage"],
+    frames: ["xy", "ordinal", "network"],
+    topics: ["process", "design", "accessibility", "ai"],
+  },
+  {
+    title: "Watermarks, Made Physical",
+    path: "/examples/watermarks",
+    eyebrow: "EventDropChart · streaming lateness",
+    description:
+      "A physics-backed remake of the flink-watermarks mechanic: event-time windows become bins, the watermark closes old windows, and late arrivals collect in a visible gutter.",
+    preview: "watermarks",
+    badges: ["EventDropChart", "Physics", "Agent-readable"],
+    frames: ["stream-physics", "xy"],
+    topics: ["process", "realtime"],
+  },
+  {
+    title: "The Stakeholder Journey",
+    path: "/examples/stakeholder-journey",
+    eyebrow: "StreamPhysicsFrame · controlled process comparison",
+    description:
+      "Compare how two systems move the same cohort from first use to leadership. A stage ledger drives the width of each process corridor.",
+    preview: "stakeholder-journey",
+    badges: ["StreamPhysicsFrame", "Stage ledger", "Live geometry"],
+    frames: ["stream-physics"],
+    topics: ["process", "civic"],
+  },
+  {
+    title: "Merge Pressure",
+    path: "/examples/merge-pressure",
+    eyebrow: "GauntletChart · compound PR stream",
+    description:
+      "Staggered compound PRs share finite human review, recirculate through CI, transform attached risks, and accumulate merged points into a Feature.",
+    preview: "merge-pressure",
+    badges: ["GauntletChart", "Shared capacity", "Weighted groups"],
+    frames: ["gauntlet"],
+    topics: ["process", "ai"],
+  },
+  {
+    title: "Not in MY Backyard",
+    path: "/examples/not-in-my-backyard",
+    eyebrow: "GauntletChart · compound process physics",
+    description:
+      "A housing approval simulator where a plan enters as a compound glyph, loses features at civic gates, gains dollar-weight burden, loops through procedural review, and may reach approval without becoming housing.",
+    preview: "nimby",
+    badges: ["GauntletChart", "bodyForces", "Compound glyphs"],
+    frames: ["gauntlet"],
+    topics: ["process", "civic"],
+  },
+  {
+    title: "Brushable Weather Rings",
+    path: "/examples/climate-radial-weather",
+    eyebrow: "Point controls + radial weather",
+    description:
+      "Align daily weather around annual rings, brush a seasonal interval, and inspect the selected days on a straight timeline.",
+    preview: "combined",
+    badges: ["Custom chart", "Accessible navigation"],
+    frames: ["ordinal", "custom"],
+    topics: ["climate", "design", "accessibility"],
+  },
+  {
+    title: "Lake Travis, in Signs",
+    path: "/examples/lake-travis-isotype",
+    eyebrow: "Four custom frames · ISOTYPE",
+    description:
+      "A lake-level and weather dashboard rebuilt with repeated pictograms across streaming XY, ordinal, network, and geographic custom layouts.",
+    preview: "lake-isotype",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
+    frames: ["xy", "ordinal", "network", "geo", "custom"],
+    topics: ["climate", "geography", "accessibility"],
+  },
+  {
+    title: "Nathan's Hot Dog Contest, Four Ways",
+    path: "/examples/hot-dog-contest-variations",
+    eyebrow: "TemporalHistogram · ISOTYPE · source audit",
+    description:
+      "Read Nathan's winning counts four ways, then use the pace view to see how contest-duration changes alter the historical comparison.",
+    preview: "hotdog-variations",
+    badges: ["TemporalHistogram", "ISOTYPE", "Source-audited"],
+    frames: ["xy", "ordinal", "custom"],
+    topics: ["culture", "design"],
+  },
+  {
+    title: "The Buildings Behind AI",
+    path: "/examples/data-centers-isotype",
+    eyebrow: "Altitude sections · evidence ledger",
+    description:
+      "Count the physical scale of AI infrastructure through relief maps and repeated units for power, water, capacity, and compute. Every claim keeps its denominator and source.",
+    preview: "data-centers-isotype",
+    badges: ["Custom chart", "Local", "Agent-readable"],
+    frames: ["geo", "custom"],
+    topics: ["ai", "geography", "climate"],
+  },
+  {
+    title: "Creative Gravity of America",
+    path: "/examples/creative-contours",
+    eyebrow: "Isometric GeoCustomChart - contours",
+    description:
+      "Metro creative-industry signals become contour shelves on a stacked isometric view of the United States: screen, sound, games, design, and research are sampled into a non-topographic terrain.",
+    preview: "creative-contours",
+    badges: ["GeoCustomChart", "Contours", "Isometric", "Custom layout"],
+    frames: ["geo", "custom"],
+    topics: ["culture", "geography", "design"],
+  },
+  {
+    title: "Sometimes it's better to be discrete",
+    path: "/examples/sometimes-better-discrete",
+    eyebrow: "TokenLayer · task-aware ISOTYPE",
+    description:
+      "Estimate a bus-waiting probability, reveal the count, and compare how density curves, quantile dots, hypothetical outcomes, and commuter icons support different tasks.",
+    preview: "discrete",
+    badges: ["TokenLayer", "Quantile dotplot", "HOPs", "Design critic"],
+    frames: ["xy", "ordinal", "custom"],
+    topics: ["uncertainty", "design", "accessibility"],
+  },
+  {
+    title: "Where You Draw the Line",
+    path: "/examples/where-you-draw-the-line",
+    eyebrow: "Explorable MAUP laboratory",
+    description:
+      "Move one border across an unchanged field, then watch the aggregate answer move through a 1D transect, a constructed city, and a 2D-plus-time reporting stack.",
+    preview: "maup",
+    badges: ["Direct manipulation", "Continuous field", "Sensitivity analysis"],
+    frames: ["xy", "geo", "custom"],
+    topics: ["geography", "uncertainty", "design", "accessibility"],
+  },
+  {
+    title: "All the Wars of the United States",
+    path: "/examples/us-war-timeline",
+    eyebrow: "Custom ordinal timeline",
+    description:
+      "A layered timeline of conflicts, geopolitical spheres, historical periods, concurrency, and the comparatively rare years of peace.",
+    preview: "wars",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
+    frames: ["ordinal", "custom"],
+    topics: ["history", "geography", "accessibility"],
+  },
+  {
+    title: "A Genealogy of Cubism and Abstract Art",
+    path: "/examples/art-movement-genealogy",
+    eyebrow: "Automatic chronological network",
+    description:
+      "A constraint-laid influence graph styled after Alfred H. Barr Jr.'s iconic 1936 Cubism and Abstract Art cover.",
+    preview: "art",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
+    frames: ["network", "custom"],
+    topics: ["history", "culture", "accessibility"],
+  },
+  {
+    title: "Paris, Isometric City of Lights",
+    path: "/examples/paris-isometric-landmarks",
+    eyebrow: "Custom isometric GeoFrame",
+    description:
+      "Five-by-five strategy-game views of Paris, Austin, San Francisco, and Tokyo, populated from DBpedia landmarks with resilient local snapshots.",
+    preview: "isometric",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
+    frames: ["geo", "custom"],
+    topics: ["geography", "culture", "accessibility"],
+  },
+  {
+    title: "The Wheel of Urines",
+    path: "/examples/urine-wheel",
+    eyebrow: "Custom radial network",
+    description:
+      "A medieval uroscopy diagnostic redrawn as a node-link diagram in a ring — twenty named urine colors, each spoked to the stage of digestion it signifies.",
+    preview: "urine",
+    badges: ["Custom recipe", "Local", "Intent-aware", "Accessible navigation", "Agent-readable"],
+    frames: ["network", "custom"],
+    topics: ["history", "culture", "accessibility"],
+  },
+  {
+    title: "The New York & Erie Railroad",
+    path: "/examples/erie-railroad-organization",
+    eyebrow: "Custom botanical hierarchy",
+    description:
+      "McCallum and Henshaw's landmark 1855 organization diagram rebuilt as computed railroad trunks, workforce boughs, and navigable roles.",
+    preview: "erie",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
+    frames: ["network", "custom"],
+    topics: ["history", "accessibility"],
+  },
+  {
+    title: "Wikipedia, as it happens",
+    path: "/examples/wikipedia-realtime",
+    eyebrow: "Five coordinated realtime swarms",
+    description:
+      "A live, filterable view of English Wikipedia edits with actor classification, signed change encodings, aggregation, and revision-level drilldown.",
+    preview: "wikipedia",
+    badges: ["Custom chart", "Local", "Intent-aware"],
+    frames: ["xy", "network", "custom"],
+    topics: ["realtime", "culture", "design"],
+  },
+  {
+    title: "Your Local Government Explorer",
+    path: "/examples/local-government-explorer",
+    eyebrow: "ZIP-driven civic data + networks",
+    description:
+      "Resolve any postal place into its county's federal disaster record and spending, live 311 service requests, LOCUS municipal law, and a network of bodies, sponsors, meetings, and active legislation.",
+    preview: "local-government",
+    frames: ["network", "geo", "custom"],
+    topics: ["civic", "geography", "realtime"],
+  },
+  {
+    title: "The Long Way Around",
+    path: "/examples/port-congestion-replay",
+    eyebrow: "Real chokepoint data, four-frame replay",
+    description:
+      "Replay three periods of IMF PortWatch traffic: a quiet spring, the Ever Given blockage, and the Red Sea detour. Four linked views show where routes and transit times diverged.",
+    preview: "port-replay",
+    frames: ["xy", "ordinal", "geo", "custom"],
+    topics: ["realtime", "geography", "history", "process"],
+  },
+  {
+    title: "The Scroll You're Telling",
+    path: "/examples/scroll-youre-telling",
+    eyebrow: "Realtime reader telemetry",
+    description:
+      "Read a short history of data journalism while the page plots your scroll position, velocity, and dwell time alongside the essay.",
+    preview: "scroll-tell",
+    badges: ["Custom chart", "Local", "Intent-aware"],
+    frames: ["xy", "custom"],
+    topics: ["realtime", "culture", "design", "accessibility"],
+  },
+  {
+    title: "The 12 Kinds of Data Visualization People",
+    path: "/examples/dataviz-people",
+    eyebrow: "Twelve personas · twelve chart grammars",
+    description:
+      "An expanded remake of the Nightingale essay: Excel brute forcers, Tableau zen masters, Accurat-style studios, news orgs, scientists, industry oracles, fun freelancers, procedural artists, finance annotators, DevOps terminal wizards, workshop nomads, and academic dissectors each get a chart body.",
+    preview: "dataviz-people",
+    badges: ["Custom chart", "Sankey", "Candlestick", "Local"],
+    frames: ["xy", "ordinal", "network", "custom"],
+    topics: ["culture", "design"],
+  },
+  {
+    title: "Can You Know a Book Better Without Reading It?",
+    path: "/examples/distant-reading",
+    eyebrow: "Distant reading · literary signals",
+    description:
+      "A rich remake of the Nightingale essay as an interactive distant-reading room: chapter signal fields, phase summaries, corpus fingerprints, and narrative-flow Sankeys for four public-domain novels.",
+    preview: "distant-reading",
+    badges: ["LineChart", "BarChart", "Sankey", "Local"],
+    frames: ["xy", "ordinal", "network"],
+    topics: ["culture", "design"],
+  },
+  {
+    title: "We Live in a World of Funnels",
+    path: "/examples/world-of-funnels",
+    eyebrow: "Funnel analysis · Pop Art flows",
+    description:
+      "An interactive remake of the funnel essay: classic conversion funnels, A/B testing, branching Sankey paths, and temporal path motifs argue through precision and accuracy.",
+    preview: "funnels",
+    badges: ["FunnelChart", "Sankey", "ProcessSankey"],
+    frames: ["ordinal", "network", "custom"],
+    topics: ["process", "design"],
+  },
+  {
+    title: "What the Machine Sees",
+    path: "/examples/what-the-machine-sees",
+    eyebrow: "The intelligence layer, end to end",
+    description:
+      "Watch Semiotic read real World Bank data with no model call: profile it, rank chart capabilities, then describe, audit, and lay out a navigable structure for the chart it chooses.",
+    preview: "machine",
+    badges: [
+      "Custom recipe",
+      "Portable",
+      "Intent-aware",
+      "Scene-audited",
+      "Accessible navigation",
+      "Agent-readable",
+    ],
+    frames: ["xy", "ordinal", "network", "custom"],
+    topics: ["ai", "design", "accessibility"],
+  },
+  {
+    title: "The Living System of Semiotic",
+    path: "/examples/semiotic-architecture",
+    eyebrow: "Interactive architecture map",
+    description:
+      "Trace each example from its visible charts and settings through the four frame models, data inputs, and the rhizomatic implementation beneath them.",
+    preview: "architecture",
+    frames: ["network", "custom"],
+    topics: ["design", "process", "accessibility"],
+  },
+  {
+    title: "The Octopus: It has its tentacles in everything",
+    path: "/examples/octopus-metaphor",
+    eyebrow: "Network + GeoCustomChart metaphor",
+    description:
+      "A history of the octopus as an information-visualization metaphor: moral networks, imperial octopus maps, and a final Semiotic-as-octopus frame diagram.",
+    preview: "octopus",
+    badges: ["Custom chart", "GeoCustomChart", "NetworkCustomChart"],
+    frames: ["network", "geo", "custom"],
+    topics: ["history", "geography", "design"],
+  },
+  {
+    title: "Point Climate Anomaly",
+    path: "/examples/climate-anomaly",
+    eyebrow: "Difference chart + uncertainty band",
+    description:
+      "A polished climate readout comparing this year's daily temperature with an adjusted historical mean and the 5th-95th percentile range.",
+    preview: "climate",
+    frames: ["xy"],
+    topics: ["climate", "uncertainty"],
+  },
+  {
+    title: "The Gestalt of Data Visualization",
+    path: "/examples/gestalt-principles",
+    eyebrow: "Five chapters · perception → Semiotic",
+    description:
+      "A chapterized remake of the 2015 Gestalt Principles essays — similarity, common fate, proximity, figure/ground, continuity — each demonstrated on a live Semiotic chart, in a Bauhaus 'perception lab' look.",
+    preview: "gestalt",
+    frames: ["xy", "ordinal", "custom"],
+    topics: ["design", "accessibility"],
+  },
+  {
+    title: "Mobile Data Visualization That Works",
+    path: "/examples/mobile-data-visualization",
+    eyebrow: "Mobile-first review · Semiotic demos",
+    description:
+      "A research-backed field guide for phone-sized visualization: density budgets, small multiples, touch-first controls, constraint breakpoints, and source-led design choices built as live Semiotic demos.",
+    preview: "mobilevis",
+    badges: ["Responsive", "Research-backed", "Touch-first"],
+    frames: ["xy", "ordinal", "custom"],
+    topics: ["design", "accessibility"],
+  },
+  {
+    title: "Drawing Networks",
+    path: "/examples/network-visualization",
+    eyebrow: "Eight chapters + an interactive toy",
+    description:
+      "Work through eight ways to draw and inspect a network, from arc diagrams and matrices to communities, Sankey, and chord. The final playground adds pathfinding, centrality, and ego-network tools.",
+    preview: "networkviz",
+    frames: ["network", "xy", "ordinal", "custom"],
+    topics: ["design", "accessibility"],
+  },
+  {
+    title: "Map of the Oregon Trail",
+    path: "/examples/oregon-trail",
+    eyebrow: "Retro cartography · GeoCustomChart",
+    description:
+      "The 1985 Oregon Trail end-game map, rebuilt with GeoCustomChart over real Washington/Oregon/Idaho geography — gray land, CGA-blue rivers, caret mountains, forts, and a wagon you can drive from START to FINISH.",
+    preview: "oregontrail",
+    badges: ["Custom chart", "Local", "Accessible navigation"],
+    frames: ["geo", "custom"],
+    topics: ["history", "geography", "accessibility"],
+  },
+]
+
+const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/art-movement-genealogy": "ArtMovementGenealogyExamplePage.jsx",
+  "/examples/climate-anomaly": "ClimateAnomalyExamplePage.jsx",
+  "/examples/climate-radial-weather": "ClimateRadialWeatherExamplePage.jsx",
+  "/examples/creative-contours": "CreativeContoursExamplePage.jsx",
+  "/examples/data-centers-isotype": "DataCentersIsotypeExamplePage.jsx",
+  "/examples/dataviz-people": "DatavizPeopleExamplePage.jsx",
+  "/examples/distant-reading": "DistantReadingExamplePage.jsx",
+  "/examples/erie-railroad-organization": "ErieRailroadOrganizationExamplePage.jsx",
+  "/examples/gestalt-principles": "GestaltPrinciplesExamplePage.jsx",
+  "/examples/hot-dog-contest-variations": "HotDogContestVariationsExamplePage.jsx",
+  "/examples/insight-forge": "InsightForgeExamplePage.jsx",
+  "/examples/lake-travis-isotype": "LakeTravisIsotypeExamplePage.jsx",
+  "/examples/not-in-my-backyard": "NimbyExamplePage.jsx",
+  "/examples/local-government-explorer": "LocalGovernmentExplorerExamplePage.jsx",
+  "/examples/mobile-data-visualization": "MobileDataVisualizationExamplePage.jsx",
+  "/examples/network-visualization": "NetworkVizExamplePage.jsx",
+  "/examples/octopus-metaphor": "OctopusMetaphorExamplePage.jsx",
+  "/examples/oregon-trail": "OregonTrailExamplePage.jsx",
+  "/examples/paris-isometric-landmarks": "ParisIsometricLandmarksExamplePage.jsx",
+  "/examples/port-congestion-replay": "PortCongestionReplayExamplePage.jsx",
+  "/examples/scroll-youre-telling": "ScrollYoureTellingExamplePage.jsx",
+  "/examples/semiotic-architecture": "SemioticArchitectureExamplePage.jsx",
+  "/examples/sometimes-better-discrete": "SometimesDiscreteExamplePage.jsx",
+  "/examples/where-you-draw-the-line": "WhereYouDrawTheLineExamplePage.jsx",
+  "/examples/urine-wheel": "UrineWheelExamplePage.jsx",
+  "/examples/us-war-timeline": "USWarTimelineExamplePage.jsx",
+  "/examples/what-the-machine-sees": "WhatTheMachineSeesExamplePage.jsx",
+  "/examples/wikipedia-realtime": "WikipediaRealtimeExamplePage.jsx",
+  "/examples/world-of-funnels": "WorldOfFunnelsExamplePage.jsx",
+})
+
+const PILOT_EXAMPLE_DEFINITIONS_BY_PATH = new Map(
+  PILOT_EXAMPLE_DEFINITIONS.map((definition) => [definition.path, definition]),
+)
+
+/**
+ * Full docs example registry. Overview metadata, navigation order, and
+ * explicit contract coverage share this list; the overview manifest is a projection.
+ */
+export const EXAMPLE_DEFINITIONS = Object.freeze(
+  EXAMPLE_REGISTRY_METADATA.map((example) => {
+    const pilot = PILOT_EXAMPLE_DEFINITIONS_BY_PATH.get(example.path)
+    return Object.freeze({
+      id: example.path.slice("/examples/".length),
+      ...example,
+      sourceFile: EXAMPLE_SOURCE_FILES_BY_PATH[example.path] ?? pilot?.sourceFile,
+      isPilot: Boolean(pilot),
+      contract: pilot
+        ? Object.freeze({
+            ...pilot.contract,
+            assessment: DECLARED_EXAMPLE_CONTRACT_STATUS,
+          })
+        : UNASSESSED_EXAMPLE_CONTRACT,
+    })
+  }),
+)
 export const EXAMPLE_DEFINITIONS_BY_PATH = Object.freeze(
   Object.fromEntries(EXAMPLE_DEFINITIONS.map((definition) => [definition.path, definition])),
 )
 
 /**
- * Resolve a pilot definition from a docs route without making consumers repeat
+ * Resolve an example definition from a docs route without making consumers repeat
  * trailing-slash normalization.
  */
 export function getExampleDefinition(pathname) {
@@ -229,9 +690,8 @@ export function getPilotExampleDefinitions() {
 }
 
 /**
- * Example definition schema for the incremental docs pilot. The existing
- * examples manifest remains the authoritative full navigation registry until
- * all examples have migrated to this richer contract.
+ * Example definition schema for the full docs registry. Every route declares
+ * either a route-specific contract or an explicit, bounded unassessed record.
  */
 const REQUIRED_DEFINITION_FIELDS = [
   "id",
@@ -245,6 +705,10 @@ const OPTIONAL_DEFINITION_FIELDS = [
   "isPilot",
   "sourceFile",
   "contract",
+  "preview",
+  "badges",
+  "frames",
+  "topics",
 ]
 
 const ALLOWED_DEFINITION_FIELDS = new Set([
@@ -254,6 +718,36 @@ const ALLOWED_DEFINITION_FIELDS = new Set([
 
 function isBoolean(value) {
   return typeof value === "boolean"
+}
+
+function isRecord(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
+}
+
+function hasExactFields(value, fields) {
+  return (
+    isRecord(value) &&
+    Object.keys(value).length === fields.length &&
+    fields.every((field) => Object.prototype.hasOwnProperty.call(value, field))
+  )
+}
+
+function isUnassessedContractField(value) {
+  return (
+    hasExactFields(value, ["status"]) &&
+    value.status === NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS
+  )
+}
+
+function isUnmeasuredPerformanceContract(value) {
+  return (
+    hasExactFields(value, ["status", "budgets"]) &&
+    value.status === UNMEASURED_EXAMPLE_PERFORMANCE_STATUS &&
+    hasExactFields(value.budgets, EXAMPLE_PERFORMANCE_BUDGET_FIELDS) &&
+    EXAMPLE_PERFORMANCE_BUDGET_FIELDS.every(
+      (field) => value.budgets[field] === UNMEASURED_EXAMPLE_PERFORMANCE_STATUS,
+    )
+  )
 }
 
 function isNonEmptyString(value) {
@@ -268,11 +762,57 @@ function isStringArray(value, { minimum = 1 } = {}) {
   )
 }
 
+function validateUnassessedExampleContract(errors, contract, label) {
+  for (const field of EXAMPLE_CONTRACT_FIELDS) {
+    if (field === "ssr" || field === "performance") continue
+    if (!isUnassessedContractField(contract[field])) {
+      errors.push(
+        `ExampleDefinition contract ${field} for "${label}" must be an explicit "not-assessed" declaration`,
+      )
+    }
+  }
+
+  const ssr = contract.ssr
+  if (
+    !hasExactFields(ssr, ["status", "hydration"]) ||
+    ssr.status !== NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS ||
+    ssr.hydration !== NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS
+  ) {
+    errors.push(
+      `ExampleDefinition contract ssr for "${label}" must preserve explicit "not-assessed" status and hydration`,
+    )
+  }
+
+  if (!isUnmeasuredPerformanceContract(contract.performance)) {
+    errors.push(
+      `ExampleDefinition contract performance for "${label}" must preserve explicit "unmeasured" budgets`,
+    )
+  }
+}
+
 function validateExampleContract(errors, definition, index) {
   const label = definition.id ?? `index ${index}`
   const contract = definition.contract
-  if (!contract || typeof contract !== "object" || Array.isArray(contract)) {
-    errors.push(`Pilot ExampleDefinition "${label}" must define a contract object`)
+  if (!isRecord(contract)) {
+    errors.push(`ExampleDefinition "${label}" must define a contract object`)
+    return
+  }
+
+  const unknownFields = Object.keys(contract).filter(
+    (field) => field !== "assessment" && !EXAMPLE_CONTRACT_FIELDS.includes(field),
+  )
+  for (const field of unknownFields) {
+    errors.push(`Unknown contract field "${field}" on ExampleDefinition "${label}"`)
+  }
+
+  if (contract.assessment === NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS) {
+    validateUnassessedExampleContract(errors, contract, label)
+    return
+  }
+  if (contract.assessment !== DECLARED_EXAMPLE_CONTRACT_STATUS) {
+    errors.push(
+      `ExampleDefinition contract assessment for "${label}" must be "${DECLARED_EXAMPLE_CONTRACT_STATUS}" or "${NOT_ASSESSED_EXAMPLE_CONTRACT_STATUS}"`,
+    )
     return
   }
 
@@ -383,7 +923,7 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
     if (isPilot && !isNonEmptyString(sourceFile)) {
       errors.push(`ExampleDefinition at index ${index} must define "sourceFile" for pilot examples`)
     }
-    if (isPilot) validateExampleContract(errors, definition, index)
+    validateExampleContract(errors, definition, index)
     if (isNonEmptyString(id)) {
       if (seenIds.has(id)) {
         errors.push(`Duplicate ExampleDefinition id "${id}"`)

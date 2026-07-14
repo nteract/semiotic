@@ -14,9 +14,9 @@ import type { FrameMargin } from "../useFrame"
 import { useFrame } from "../useFrame"
 import {
   useHydration,
-  useHydrationLifecycle,
   useWasHydratingFromSSR
 } from "../useHydration"
+import { CanvasFrameBackground, useFrameCanvasHost } from "../useCanvasFrameHost"
 import { isServerEnvironment } from "../SceneToSVG"
 import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -42,10 +42,9 @@ import {
   type PhysicsObservationEvent,
   type PhysicsPipelineSnapshot,
   type PhysicsPipelineTickResult,
-  type PhysicsQueuedSpawn,
-  type PhysicsSpawnPacingOptions,
   type PhysicsSimulationState
 } from "./PhysicsPipelineStore"
+import { createPhysicsFrameStore, defaultPhysicsFrameClock } from "./physicsFrameSetup"
 import { renderPhysicsSettledSVG } from "./PhysicsSettledSVG"
 import { composePhysicsControllers } from "./PhysicsControllers"
 import {
@@ -62,6 +61,10 @@ import {
   usePhysicsFrameLifecyclePolicy
 } from "./usePhysicsFrameLifecyclePolicy"
 import { FocusRing } from "../FocusRing"
+import {
+  SceneRevisionDiagnosticsObserver,
+  useSceneRevisionDiagnostics
+} from "../sceneRevisionDiagnostics"
 import {
   AriaLiveTooltip,
   ScreenReaderSummary,
@@ -135,33 +138,9 @@ import {
 
 const DEFAULT_SIZE: [number, number] = [640, 360]
 const DEFAULT_MARGIN: FrameMargin = { top: 0, right: 0, bottom: 0, left: 0 }
-const NAV_KEYS = new Set([
-  "ArrowRight",
-  "ArrowLeft",
-  "ArrowUp",
-  "ArrowDown",
-  "Home",
-  "End",
-  "PageUp",
-  "PageDown"
-])
-function createStore(
-  config: PhysicsPipelineConfig | undefined,
-  initialSpawns: PhysicsQueuedSpawn[] | undefined,
-  initialSpawnPacing: PhysicsSpawnPacingOptions | undefined
-): PhysicsPipelineStore {
-  const store = new PhysicsPipelineStore(config)
-  if (initialSpawns?.length) {
-    store.enqueue(initialSpawns, initialSpawnPacing)
-  }
-  return store
-}
+const NAV_KEYS = new Set(["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"])
 
 const CHART_TYPE = "StreamPhysicsFrame"
-
-function defaultFrameClock(): number {
-  return typeof performance !== "undefined" ? performance.now() : Date.now()
-}
 
 export const StreamPhysicsFrame = memo(forwardRef<
   StreamPhysicsFrameHandle,
@@ -182,6 +161,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
     className,
     frameScheduler,
     clock,
+    random,
+    seed,
     color,
     config,
     controllers,
@@ -317,8 +298,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
   )
   const hasRuntimeBodyForces = Boolean(composedBodyForces)
   const storeRef = useRef<PhysicsPipelineStore | null>(null)
-  const clockRef = useRef<() => number>(clock ?? defaultFrameClock)
-  clockRef.current = clock ?? defaultFrameClock
+  const wallClockRef = useRef<() => number>(clock ?? defaultPhysicsFrameClock)
+  wallClockRef.current = clock ?? defaultPhysicsFrameClock
 
   const applyRegionImpulse = useCallback(
     (
@@ -431,6 +412,16 @@ export const StreamPhysicsFrame = memo(forwardRef<
   }, [annotations, chartId, sizeProp])
 
   const augmentedConfig = React.useMemo(() => {
+    const effectiveConfig =
+      seed === undefined || config?.kernel?.seed !== undefined
+        ? config
+        : {
+            ...config,
+            kernel: {
+              ...config?.kernel,
+              seed
+            }
+          }
     const regionColliders: NonNullable<PhysicsPipelineConfig["colliders"]> =
       regionEffects.flatMap((region) => {
         const sensorCollider = {
@@ -455,7 +446,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     ) as NonNullable<
       NonNullable<PhysicsPipelineConfig["observation"]>["sensors"]
     >
-    const previousObservation = config?.observation
+    const previousObservation = effectiveConfig?.observation
     const hasRegionWiring = regionEffects.length > 0
     const hasExtraColliders =
       regionColliders.length > 0 || annotationColliders.length > 0
@@ -465,12 +456,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
       chartId == null &&
       !previousObservation
     ) {
-      return config
+      return effectiveConfig
     }
     return {
-      ...config,
+      ...effectiveConfig,
       colliders: [
-        ...(config?.colliders ?? []),
+        ...(effectiveConfig?.colliders ?? []),
         ...regionColliders,
         ...annotationColliders
       ],
@@ -493,25 +484,21 @@ export const StreamPhysicsFrame = memo(forwardRef<
     chartId,
     config,
     handleRegionObservation,
-    regionEffects
+    regionEffects,
+    seed
   ])
 
   if (!storeRef.current) {
-    const store = createStore(augmentedConfig, initialSpawns, initialSpawnPacing)
-    // Seed pause/visibility before the post-commit effects request work. That
-    // avoids a one-frame continuous simulation request while an initially
-    // paused or hidden frame is still being mounted.
+    const store = createPhysicsFrameStore(augmentedConfig, initialSpawns, initialSpawnPacing)
     store.setPaused(paused)
     if (suspendWhenHidden) store.setVisible(isPhysicsDocumentVisible())
     storeRef.current = store
   }
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   const semanticFocusIndexRef = useRef(-1)
-  // `0` is a valid injected-clock value, so use null as the "no previous
-  // frame" sentinel rather than making deterministic clocks lose a delta.
   const lastFrameTimeRef = useRef<number | null>(null)
   const dirtyRef = useRef(true)
+  const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamPhysicsFrame")
   const executionStateKeyRef = useRef("")
   const svgInstanceId = useId().replace(/:/g, "")
   const workerActiveRef = useRef(false)
@@ -528,7 +515,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
     marginDefault: DEFAULT_MARGIN,
     foregroundGraphics,
     backgroundGraphics,
-    frameScheduler
+    frameScheduler,
+    clock,
+    random,
+    seed,
+    paused,
+    suspendWhenHidden
   })
   const {
     margin,
@@ -540,8 +532,11 @@ export const StreamPhysicsFrame = memo(forwardRef<
     resolvedForeground,
     responsiveRef,
     scheduleRender,
-    size
+    size,
+    frameRuntime
   } = frame
+  const logicalClockRef = useRef<() => number>(frameRuntime.now)
+  logicalClockRef.current = frameRuntime.now
   const hydrated = useHydration()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
   const [focusedSemanticItem, setFocusedSemanticItem] =
@@ -561,7 +556,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
         return
       }
 
-      const now = clockRef.current()
+      const now = logicalClockRef.current()
       if (
         !force &&
         bodySemanticUpdateMs > 0 &&
@@ -626,7 +621,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     ) => {
       const cb = onObservationRef.current
       if (!cb) return
-      const now = clockRef.current()
+      const now = wallClockRef.current()
       if (type === "hover" || type === "click") {
         cb({
           type,
@@ -839,26 +834,26 @@ export const StreamPhysicsFrame = memo(forwardRef<
     const canvas = canvasRef.current
     const store = storeRef.current
     if (!canvas || !store) return
+    const sceneRevisionCheck = sceneRevisionDiagnosticsRef.current.beforeCompute(store.getLastUpdateResult(), false)
     const dpr = getDevicePixelRatio()
     const ctx = prepareCanvas(canvas, size, margin, dpr)
-    if (!ctx) return
+    if (!ctx) {
+      sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, false, false)
+      return
+    }
 
     const theme = resolvePhysicsCanvasTheme(ctx)
     ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
-    if (!backgroundGraphics) {
-      if (background === "transparent") {
-        // leave cleared (compositing over siblings)
-      } else {
-        ctx.fillStyle = background ?? theme.background
-        ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
-      }
+    if (!backgroundGraphics && background !== "transparent") {
+      ctx.fillStyle = background ?? theme.background
+      ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
     }
 
     const snapshot = store.snapshot()
     const bodies = store.readBodies()
     syncBodySemanticItems(bodies, snapshot.simulationState)
     if (needsLiveAnnotationAnchors) {
-      const now = clockRef.current()
+      const now = logicalClockRef.current()
       if (now - lastAnnotationAnchorUpdateRef.current >= 100) {
         lastAnnotationAnchorUpdateRef.current = now
         const next = bodiesToAnnotationAnchors(bodies)
@@ -918,8 +913,9 @@ export const StreamPhysicsFrame = memo(forwardRef<
     drawPopAnimations(
       ctx,
       popAnimationsRef.current,
-      clockRef.current()
+      logicalClockRef.current()
     )
+    sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, true, false)
     dirtyRef.current = false
   }, [
     afterPaint,
@@ -1174,10 +1170,6 @@ export const StreamPhysicsFrame = memo(forwardRef<
   ])
 
   const renderFrame = useCallback(() => {
-    // A direct (hydration / imperative) render takes ownership from any
-    // queued frame. The scheduler callback has already released its token,
-    // so this is a no-op in the normal rAF path but prevents a stale callback
-    // from racing a synchronous paint.
     cancelRender()
     rafRef.current = null
     const store = storeRef.current
@@ -1187,7 +1179,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
       if (workerPendingRef.current) return
       let deltaSeconds = 0
       if (!reducedMotionRef.current) {
-        const now = clockRef.current()
+        const now = logicalClockRef.current()
         deltaSeconds = lastFrameTimeRef.current !== null
           ? (now - lastFrameTimeRef.current) / 1000
           : 0
@@ -1231,7 +1223,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     if (reducedMotionRef.current) {
       result = store.settleWithObservations()
     } else {
-      const now = clockRef.current()
+      const now = logicalClockRef.current()
       const deltaSeconds = lastFrameTimeRef.current !== null
         ? (now - lastFrameTimeRef.current) / 1000
         : 0
@@ -1278,15 +1270,14 @@ export const StreamPhysicsFrame = memo(forwardRef<
 
   renderFnRef.current = renderFrame
 
-  useHydrationLifecycle({
+  const { canvasRef } = useFrameCanvasHost(frame, {
     hydrated,
     wasHydratingFromSSR,
-    storeRef: storeRef as React.RefObject<{
-      cancelIntroAnimation?: () => void
-    } | null>,
+    storeRef,
     dirtyRef,
-    renderFnRef,
-    cancelRender
+    manageFrameRuntime: false,
+    skipInitialCanvasPaintInvalidation: true,
+    canvasPaintDependencies: [background, backgroundGraphics, scheduleRender],
   })
 
   useEffect(() => {
@@ -1296,20 +1287,16 @@ export const StreamPhysicsFrame = memo(forwardRef<
     }
     storeRef.current?.updateConfig(augmentedConfig ?? {})
     requestRender()
-    // requestRender depends on paint/layout callbacks; config changes are the
-    // intentional trigger here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [augmentedConfig, stopWorker])
 
   useEffect(() => {
     workerFailedRef.current = false
     requestRender()
-    // requestRender depends on paint/layout callbacks; hydration and execution
-    // settings are the intentional triggers here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, simulationExecution, workerBodyThreshold])
 
-  usePhysicsFrameLifecyclePolicy({ cancelRender, lastFrameTimeRef, paused, postWorkerCommand, requestRender, storeRef, suspendWhenHidden })
+  usePhysicsFrameLifecyclePolicy({ cancelRender, frameRuntime, lastFrameTimeRef, paused, postWorkerCommand, requestRender, storeRef, suspendWhenHidden })
 
   useEffect(() => {
     return () => stopWorker("unmount", false)
@@ -1347,6 +1334,9 @@ export const StreamPhysicsFrame = memo(forwardRef<
           : cloneRegionStateSnapshot(regionStateRef.current),
       getStore: () => storeRef.current!,
       pause: () => {
+        frameRuntime.setPaused(true)
+        lastFrameTimeRef.current = null
+        cancelRender()
         storeRef.current!.setPaused(true)
         postWorkerCommand({ type: "setPaused", paused: true }, false)
         requestRender()
@@ -1373,7 +1363,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
         const store = storeRef.current!
         const bodyById = new Map(store.readBodies().map((body) => [body.id, body]))
         const removed = store.remove(ids)
-        const now = clockRef.current()
+        const now = logicalClockRef.current()
         for (const id of removed) {
           const body = bodyById.get(id)
           if (!body) continue
@@ -1412,6 +1402,8 @@ export const StreamPhysicsFrame = memo(forwardRef<
         requestRender()
       },
       resume: () => {
+        frameRuntime.setPaused(false)
+        lastFrameTimeRef.current = null
         storeRef.current!.setPaused(false)
         postWorkerCommand({ type: "setPaused", paused: false }, false)
         requestRender()
@@ -1445,7 +1437,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
         return result
       }
     }),
-    [paint, postWorkerCommand, requestRender, stopWorker]
+    [cancelRender, frameRuntime, paint, postWorkerCommand, requestRender, stopWorker]
   )
 
   const serverLikeRender =
@@ -1488,7 +1480,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
 
   if (serverLikeRender) {
     const store =
-      storeRef.current ?? createStore(augmentedConfig, initialSpawns, initialSpawnPacing)
+      storeRef.current ?? createPhysicsFrameStore(augmentedConfig, initialSpawns, initialSpawnPacing)
     const titleText = typeof title === "string" ? title : undefined
     const { svg } = renderPhysicsSettledSVG(store, {
       width: size[0],
@@ -1530,6 +1522,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
       }}
       onKeyDown={onKeyDown}
     >
+      {process.env.NODE_ENV !== "production" && storeRef.current && (
+        <SceneRevisionDiagnosticsObserver
+          store={storeRef.current}
+          diagnostics={sceneRevisionDiagnosticsRef.current}
+        />
+      )}
       {accessibleTable ? <SkipToTableLink tableId={tableId} /> : null}
       {accessibleTable ? (
         <PhysicsSemanticDataTable
@@ -1551,7 +1549,9 @@ export const StreamPhysicsFrame = memo(forwardRef<
         aria-label={ariaLabel}
         style={{ position: "relative", width: "100%", height: "100%" }}
       >
-        {resolvedBackground}
+        <CanvasFrameBackground size={size} margin={margin}>
+          {resolvedBackground}
+        </CanvasFrameBackground>
         <canvas
           ref={canvasRef}
           width={size[0]}

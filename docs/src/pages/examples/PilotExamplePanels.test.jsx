@@ -14,4 +14,15 @@ describe("PilotExamplePanels", () => {
     expect(screen.getByText("WatermarksExamplePage.jsx")).toBeTruthy()
     expect(screen.getByText(/Freshness owner: Semiotic maintainers/)).toBeTruthy()
   })
+
+  it("renders explicit unknowns for a route without a declared contract", () => {
+    render(<PilotExamplePanels definition={getExampleDefinition("/examples/insight-forge")} />)
+
+    expect(
+      screen.getByText(/reusable implementation pattern has not been reviewed yet/i),
+    ).toBeTruthy()
+    expect(screen.getByText("Public imports: not assessed.")).toBeTruthy()
+    expect(screen.getByText("Performance status: unmeasured.")).toBeTruthy()
+    expect(screen.getByText("InsightForgeExamplePage.jsx")).toBeTruthy()
+  })
 })

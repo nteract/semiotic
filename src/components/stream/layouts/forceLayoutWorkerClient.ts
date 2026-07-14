@@ -26,6 +26,7 @@ export interface FrameForceWorkerRequest {
     chartType: "force"
     iterations?: number
     forceStrength?: number
+    seed?: number
   }
   size: [number, number]
 }
@@ -141,7 +142,8 @@ export function createFrameForceWorkerRequest(
     config: {
       chartType: "force",
       iterations: config.iterations,
-      forceStrength: config.forceStrength
+      forceStrength: config.forceStrength,
+      seed: config.seed
     },
     size
   }

@@ -1,4 +1,4 @@
-import { EXAMPLES } from "../examplesManifest.js"
+import { EXAMPLE_DEFINITIONS } from "../exampleDefinitions.js"
 
 /**
  * A deliberately editorial map of Semiotic's architecture.
@@ -716,13 +716,11 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // Profiles are keyed by the examples manifest routes. The exported selector is
 // ordered from that manifest below. The architecture example maps itself onto
 // the tree too — a small, deliberate recursion: tracing it highlights the very
-// NetworkCustomChart, custom layout, and shared-state machinery you are looking at.
+// NetworkCustomChart, custom layout, and shared-state machinery you are using.
 const EXPLICIT_EXAMPLE_PROFILES = [
   {
     id: "insight-forge",
-    label: "The Insight Forge",
     shortLabel: "Insight Forge",
-    path: "/examples/insight-forge",
     note: "Five chart rooms turn observations into portable predicates, audited artifacts, non-destructive recipes, cross-chart applications, and a lineage-bearing knowledge view.",
     uses: [
       "input-static",
@@ -747,9 +745,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "watermarks",
-    label: "Watermarks, Made Physical",
     shortLabel: "Watermarks",
-    path: "/examples/watermarks",
     note: "A physics-backed EventDropChart turns event-time windows into bounded bins: the watermark closes old windows, late arrivals collect in a gutter, and observation/status copy keeps the process readable.",
     uses: [
       "input-static",
@@ -768,8 +764,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "climate-radial-weather",
-    label: "Brushable Weather Rings",
-    path: "/examples/climate-radial-weather",
     note: "A radial OrdinalCustomChart, layered TemporalHistograms, and a first-class CircularBrush over shared static snapshots.",
     uses: [
       "input-static",
@@ -788,8 +782,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "lake-travis-isotype",
-    label: "Lake Travis, in Signs",
-    path: "/examples/lake-travis-isotype",
     note: "One shared ISOTYPE symbol language across XYCustomChart, OrdinalCustomChart, NetworkCustomChart, and GeoCustomChart, with a pushed sensor replay and accessible hit targets.",
     uses: [
       "input-static",
@@ -810,8 +802,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "data-centers-isotype",
-    label: "The Buildings Behind AI",
-    path: "/examples/data-centers-isotype",
     note: "A sourced ISOTYPE evidence ledger using GeoCustomChart for project status, OrdinalCustomChart for regional capacity, NetworkCustomChart for resources, and XYCustomChart for model compute.",
     uses: [
       "input-static",
@@ -830,8 +820,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "creative-contours",
-    label: "Creative Gravity of America",
-    path: "/examples/creative-contours",
     note: "A GeoCustomChart samples metro creative-industry signals into a contour field, renders stacked isometric prisms as SVG overlays, and keeps transparent geoarea cells for hover, tooltips, and accessible rows.",
     uses: [
       "input-static",
@@ -848,9 +836,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "sometimes-better-discrete",
-    label: "Sometimes it's better to be discrete",
     shortLabel: "Discrete Tokens",
-    path: "/examples/sometimes-better-discrete",
     note: "A tokenization strategy example using XYCustomChart layouts, tokenLayer-generated quantile dotplots and glyphs, an animated hypothetical-outcome plot, natural-frequency risk icons, IDID task recommendations, and a live diagnoseTokenEncoding design critic.",
     uses: [
       "input-static",
@@ -867,9 +853,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "us-war-timeline",
-    label: "All the Wars of the United States",
     shortLabel: "U.S. War Timeline",
-    path: "/examples/us-war-timeline",
     note: "An OrdinalCustomChart whose interval-lane recipe composes periods, labels, a time axis, focus targets, and a concurrency line.",
     uses: [
       "input-static",
@@ -886,9 +870,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "art-movement-genealogy",
-    label: "A Genealogy of Cubism and Abstract Art",
     shortLabel: "Art Movement Genealogy",
-    path: "/examples/art-movement-genealogy",
     note: "A NetworkCustomChart with constrained chronological force placement, routed influence arcs, hover observation, and accessible hit targets.",
     uses: [
       "input-static",
@@ -902,8 +884,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "paris-isometric-landmarks",
-    label: "Paris, Isometric City of Lights",
-    path: "/examples/paris-isometric-landmarks",
     note: "A GeoCustomChart that turns projected area nodes into an isometric tile layout with selection, tooltips, and accessible canvas hit testing.",
     uses: [
       "input-static",
@@ -920,8 +900,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "urine-wheel",
-    label: "The Wheel of Urines",
-    path: "/examples/urine-wheel",
     note: "A radial NetworkCustomChart with recipe geometry, point-id annotations, custom tooltips, click-driven filtering, and an accessible table.",
     uses: [
       "input-static",
@@ -938,9 +916,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "erie-railroad-organization",
-    label: "The New York & Erie Railroad",
     shortLabel: "Erie Railroad",
-    path: "/examples/erie-railroad-organization",
     note: "A botanical NetworkCustomChart with computed Bézier trunks, annotations, view/filter controls, hover and click locking, export, and accessibility.",
     uses: [
       "input-static",
@@ -957,9 +933,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "wikipedia-realtime",
-    label: "Wikipedia, as it happens",
     shortLabel: "Wikipedia Realtime",
-    path: "/examples/wikipedia-realtime",
     note: "Realtime HOCs ingest EventSource updates through refs, mirroring the filtered Wikipedia window with push, update, and remove calls.",
     uses: [
       "input-push",
@@ -980,9 +954,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "local-government-explorer",
-    label: "Your Local Government Explorer",
     shortLabel: "Local Government",
-    path: "/examples/local-government-explorer",
     note: "Tree, force, bar, and value components share application-owned selection, theme, data accessors, chart containers, export actions, and accessible interaction.",
     uses: [
       "input-static",
@@ -1002,8 +974,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "port-congestion-replay",
-    label: "The Long Way Around",
-    path: "/examples/port-congestion-replay",
     note: "Real IMF PortWatch chokepoint transits replay three maritime seasons across geographic movement, temporal process flow, a push-driven deviation waterfall, and a cross-scenario scatterplot matrix.",
     uses: [
       "input-static",
@@ -1028,9 +998,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "scroll-youre-telling",
-    label: "The Scroll You're Telling",
     shortLabel: "Scroll You're Telling",
-    path: "/examples/scroll-youre-telling",
     note: "The reader's own scroll is the stream: a realtime line, a signed realtime swarm, and a live ordinal bar are fed one rolling telemetry buffer through the push API, with reread callouts and a replay.",
     uses: [
       "input-push",
@@ -1050,9 +1018,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "what-the-machine-sees",
-    label: "What the Machine Sees",
     shortLabel: "What the Machine Sees",
-    path: "/examples/what-the-machine-sees",
     note: "The intelligence layer reads a real dataset end to end — profiling it, ranking chart capabilities, then describing, auditing, and laying out a navigable structure for the chart it chooses, with no model call.",
     uses: [
       "input-static",
@@ -1073,9 +1039,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "semiotic-architecture",
-    label: "The Living System of Semiotic",
     shortLabel: "This Diagram (↻)",
-    path: "/examples/semiotic-architecture",
     note: "The map you are reading is itself a NetworkCustomChart: a custom layout draws the Sankey overlay onto transparent hit targets, hover and shared-selection restyle it in place, and tooltips, descriptions, and a navigable table make it accessible. Tracing it highlights its own machinery.",
     uses: [
       "input-static",
@@ -1093,9 +1057,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "octopus-metaphor",
-    label: "The Octopus: It has its tentacles in everything",
     shortLabel: "The Octopus",
-    path: "/examples/octopus-metaphor",
     note: "A history of the octopus as a system metaphor, rebuilt as a NetworkCustomChart, a GeoCustomChart, and a final NetworkCustomChart that maps Semiotic's five frame families, including physics, to their HOCs.",
     uses: [
       "input-static",
@@ -1113,8 +1075,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "climate-anomaly",
-    label: "Point Climate Anomaly",
-    path: "/examples/climate-anomaly",
     note: "A themed DifferenceChart with exact extents, axes, multi-tooltip behavior, responsive sizing, and a custom uncertainty/forecast overlay.",
     uses: [
       "input-static",
@@ -1131,9 +1091,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "gestalt-principles",
-    label: "The Gestalt of Data Visualization",
     shortLabel: "Gestalt Principles",
-    path: "/examples/gestalt-principles",
     note: "Five perception chapters span the frame models — DifferenceChart, LineChart and AreaChart, Scatterplot, an XYCustomChart, and a seeded-force NetworkCustomChart — each art-directed with fixed extents, annotations, and click-driven interaction.",
     uses: [
       "input-static",
@@ -1155,9 +1113,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "network-visualization",
-    label: "Drawing Networks",
     shortLabel: "Drawing Networks",
-    path: "/examples/network-visualization",
     note: "A network-visualization primer across the whole family — ForceDirectedGraph, TreeDiagram, ChordDiagram and SankeyDiagram, plus NetworkCustomChart arc/matrix/circular recipes — closing on an interactive analysis toy driven by observation and accessible hit targets.",
     uses: [
       "input-static",
@@ -1176,9 +1132,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "oregon-trail",
-    label: "Map of the Oregon Trail",
     shortLabel: "Oregon Trail",
-    path: "/examples/oregon-trail",
     note: "A GeoCustomChart draws the 1985 end-game map over real Pacific Northwest geography with custom sprites and accessible hit targets, paired with a SankeyDiagram, tooltips, and a wagon you drive through click and observation.",
     uses: [
       "input-static",
@@ -1196,9 +1150,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "where-you-draw-the-line",
-    label: "Where You Draw the Line",
     shortLabel: "MAUP",
-    path: "/examples/where-you-draw-the-line",
     note: "An explorable MAUP laboratory: a DirectManipulationControl drags one border across an unchanged continuous field, and an XYCustomChart transect, a GeoCustomChart-backed StreamGeoFrame city, and a TemporalHistogram reporting stack all show the aggregate answer move.",
     uses: [
       "input-static",
@@ -1216,9 +1168,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "stakeholder-journey",
-    label: "The Stakeholder Journey",
     shortLabel: "Stakeholder Journey",
-    path: "/examples/stakeholder-journey",
     note: "A controlled StreamPhysicsFrame comparison uses stage regions, force fields, a journey ledger, and an accessible explanation of how the two cohorts diverge.",
     uses: [
       "input-static",
@@ -1235,8 +1185,6 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "merge-pressure",
-    label: "Merge Pressure",
-    path: "/examples/merge-pressure",
     note: "A GauntletChart runs compound pull requests through shared human review and CI capacity, tracking attached risks and feature-level completion.",
     uses: [
       "input-static",
@@ -1253,9 +1201,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "not-in-my-backyard",
-    label: "Not in MY Backyard",
     shortLabel: "NIMBY",
-    path: "/examples/not-in-my-backyard",
     note: "A GauntletChart turns housing approval into a compound civic process: gates change the proposal, burdens accumulate, and procedural loops remain visible.",
     uses: [
       "input-static",
@@ -1272,9 +1218,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "hot-dog-contest-variations",
-    label: "Nathan's Hot Dog Contest, Four Ways",
     shortLabel: "Hot Dog Contest",
-    path: "/examples/hot-dog-contest-variations",
     note: "A source-audited contest history combines a temporal histogram, custom XY trajectories, an ordinal race, and ISOTYPE marks while preserving the event's changing rules.",
     uses: [
       "input-static",
@@ -1295,9 +1239,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "dataviz-people",
-    label: "The 12 Kinds of Data Visualization People",
     shortLabel: "Dataviz People",
-    path: "/examples/dataviz-people",
     note: "A persona selector switches among line, bar, scatter, funnel, candlestick, Sankey, and tree views while keeping the editorial chart grammar inspectable.",
     uses: [
       "input-static",
@@ -1316,9 +1258,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "distant-reading",
-    label: "Can You Know a Book Better Without Reading It?",
     shortLabel: "Distant Reading",
-    path: "/examples/distant-reading",
     note: "A distant-reading room pairs chapter signal lines, phase bars, and narrative-flow Sankeys across four public-domain novels.",
     uses: [
       "input-static",
@@ -1335,9 +1275,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "world-of-funnels",
-    label: "We Live in a World of Funnels",
     shortLabel: "World of Funnels",
-    path: "/examples/world-of-funnels",
     note: "A Pop Art funnel essay contrasts ordered conversion stages with branching Sankey and process-flow paths, including the information a single funnel leaves out.",
     uses: [
       "input-static",
@@ -1354,9 +1292,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
   {
     id: "mobile-data-visualization",
-    label: "Mobile Data Visualization That Works",
     shortLabel: "Mobile Visualization",
-    path: "/examples/mobile-data-visualization",
     note: "A mobile-first field guide uses responsive XY and ordinal frames to demonstrate density budgets, touch targets, small multiples, and explicit mobile adaptations.",
     uses: [
       "input-static",
@@ -1375,14 +1311,40 @@ const EXPLICIT_EXAMPLE_PROFILES = [
   },
 ]
 
-// Keep the selector in the same order as the examples overview. The profile
-// details remain deliberately editorial, while route order comes from the
-// manifest that drives overview cards and previous/next navigation.
-const exampleOrder = new Map(EXAMPLES.map((example, index) => [example.path, index]))
-
-export const SEMIOTIC_EXAMPLE_PROFILES = [...EXPLICIT_EXAMPLE_PROFILES].sort(
-  (left, right) => exampleOrder.get(left.path) - exampleOrder.get(right.path),
+// Profiles retain their architecture-specific notes, short labels, and direct
+// uses. ExampleDefinition supplies the canonical title, route, source file,
+// and narrative order consumed by the selector and its detail link.
+const EXPLICIT_EXAMPLE_PROFILES_BY_ID = new Map(
+  EXPLICIT_EXAMPLE_PROFILES.map((profile) => [profile.id, profile]),
 )
+
+if (EXPLICIT_EXAMPLE_PROFILES_BY_ID.size !== EXPLICIT_EXAMPLE_PROFILES.length) {
+  throw new Error("Architecture example profiles must use unique ids")
+}
+
+const EXAMPLE_DEFINITION_IDS = new Set(
+  EXAMPLE_DEFINITIONS.map((definition) => definition.id),
+)
+for (const profile of EXPLICIT_EXAMPLE_PROFILES) {
+  if (!EXAMPLE_DEFINITION_IDS.has(profile.id)) {
+    throw new Error("Architecture profile has no ExampleDefinition: " + profile.id)
+  }
+}
+
+export const SEMIOTIC_EXAMPLE_PROFILES = EXAMPLE_DEFINITIONS.map((definition) => {
+  const profile = EXPLICIT_EXAMPLE_PROFILES_BY_ID.get(definition.id)
+  if (!profile) {
+    throw new Error("ExampleDefinition has no architecture profile: " + definition.id)
+  }
+
+  return Object.freeze({
+    ...profile,
+    id: definition.id,
+    label: definition.title,
+    path: definition.path,
+    sourceFile: definition.sourceFile,
+  })
+})
 
 const nodeById = new Map(SEMIOTIC_ARCHITECTURE_NODES.map((node) => [node.id, node]))
 

@@ -33,7 +33,10 @@ import sharp from "sharp"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, "..")
 const OUT_DIR = resolve(ROOT, "docs/public/examples/og")
-const MANIFEST_FILE = resolve(ROOT, "docs/src/pages/examples/examplesManifest.js")
+const EXAMPLE_DEFINITIONS_FILE = resolve(
+  ROOT,
+  "docs/src/pages/examples/exampleDefinitions.js"
+)
 const PREVIEWS_FILE = resolve(ROOT, "docs/src/pages/examples/ExamplesOverviewPage.jsx")
 const args = process.argv.slice(2)
 const force = args.includes("--force")
@@ -222,15 +225,15 @@ async function renderPreviewPng(ExamplePreview, entry) {
   return sharp(Buffer.from(svg)).png().toBuffer()
 }
 
-// ── Manifest loader ────────────────────────────────────────────────────
+// ── Example definition loader ──────────────────────────────────────────
 //
-// examplesManifest.js is pure ESM data (no JSX), so import it through a
+// exampleDefinitions.js is pure ESM data (no JSX), so import it through a
 // data URL — the same trick prerender.mjs / generate-blog-og-cards.mjs
 // use so a typeless `.js` loads as an explicit ES module.
 async function loadExamples() {
-  const source = readFileSync(MANIFEST_FILE, "utf8")
+  const source = readFileSync(EXAMPLE_DEFINITIONS_FILE, "utf8")
   const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
-  return mod.EXAMPLES || []
+  return mod.EXAMPLE_DEFINITIONS || []
 }
 
 // ── Main ───────────────────────────────────────────────────────────────

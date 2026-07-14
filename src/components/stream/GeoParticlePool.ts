@@ -53,13 +53,13 @@ export class GeoParticlePool {
     }
   }
 
-  spawn(lineIndex: number): GeoParticle | null {
+  spawn(lineIndex: number, random: () => number = Math.random): GeoParticle | null {
     for (let i = 0; i < this.capacity; i++) {
       const p = this.particles[i]
       if (!p.active) {
         p.active = true
         p.t = 0
-        p.offset = (Math.random() - 0.5) * 0.6
+        p.offset = (random() - 0.5) * 0.6
         p.lineIndex = lineIndex
         p.x = 0
         p.y = 0

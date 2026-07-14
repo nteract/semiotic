@@ -1,21 +1,12 @@
-import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
 import type {
-  NetworkLayoutContext,
   NetworkLayoutResult,
   NetworkHtmlMark
 } from "./networkCustomLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
-import {
-  resolveCustomLayoutPalette,
-  buildResolveColor
-} from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
-import {
-  createCustomLayoutFailureDiagnostic,
-  type CustomLayoutFailureDiagnostic
-} from "./customLayoutFailure"
+import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 import {
   computeEasing,
   computeRawProgress,
@@ -53,6 +44,13 @@ import {
 } from "./networkRealtimeEncoding"
 import { DEFAULT_TENSION_CONFIG } from "./networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
+import { NetworkPipelineUpdateResults } from "./networkPipelineUpdateResults"
+import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
+import { runNetworkCustomLayout } from "./networkCustomLayoutRunner"
+import {
+  restyleNetworkCustomScene,
+  snapshotNetworkCustomStyles
+} from "./networkCustomRestyle"
 
 /**
  * NetworkPipelineStore — stateful store for the StreamNetworkFrame.
@@ -63,7 +61,14 @@ import type { Datum } from "../charts/shared/datumTypes"
  * For bounded data: ingests nodes/edges arrays, runs layout once, builds scene.
  * For streaming data: ingests edge pushes, tracks tension, relayouts on threshold.
  */
-export class NetworkPipelineStore {
+export class NetworkPipelineStore implements UpdateResultStore {
+  declare getLastUpdateResult: () => UpdateResult
+  declare getUpdateSnapshot: () => UpdateResult
+  declare subscribeUpdateResult: (listener: () => void) => () => void
+  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
+  declare markStylePaintPending: () => void
+  declare consumeStylePaintPending: () => boolean
+
   // ── Topology ──────────────────────────────────────────────────────────
 
   nodes: Map<string, RealtimeNode> = new Map()
@@ -144,6 +149,12 @@ export class NetworkPipelineStore {
 
   private config: NetworkPipelineConfig
   private tensionConfig: TensionConfig
+  protected updateResults = new NetworkPipelineUpdateResults()
+
+  /** Keep ingest, live encodings, staleness, and transitions on one clock. */
+  private currentTime(): number {
+    return this.config.clock?.() ?? getTimestamp()
+  }
 
   // ── Transition animation ──────────────────────────────────────────────
 
@@ -215,34 +226,52 @@ export class NetworkPipelineStore {
 
   // ── Config update ─────────────────────────────────────────────────────
 
-  updateConfig(config: NetworkPipelineConfig): void {
+  updateConfig(config: Partial<NetworkPipelineConfig>): void {
     // Preserve plugin state stored on the config object across updates
     const prev = this.config
-    if (prev.__orbitState) config.__orbitState = prev.__orbitState
-    if (prev.__hierarchyRoot) config.__hierarchyRoot = prev.__hierarchyRoot
+    // Network historically received a full frame config, while direct store
+    // callers need the same merged-effective-config patch semantics as the
+    // other pipeline stores. Copy before preserving internal plugin state so
+    // a partial accessor patch compares against the active, not absent,
+    // sibling accessors.
+    const nextConfig = { ...prev, ...config } as NetworkPipelineConfig
+    if (prev.__orbitState) nextConfig.__orbitState = prev.__orbitState
+    if (prev.__hierarchyRoot) nextConfig.__hierarchyRoot = prev.__hierarchyRoot
     // `layoutSelection` is owned by a dedicated frame effect (so a selection
     // change can repaint via restyleScene instead of forcing a rebuild), and is
     // intentionally not part of the rebuild-triggering pipelineConfig — preserve
     // it across other config updates.
     if (config.layoutSelection === undefined && prev.layoutSelection != null) {
-      config.layoutSelection = prev.layoutSelection
+      nextConfig.layoutSelection = prev.layoutSelection
     }
-    this.config = config
+    const changedConfigKeys = [...new Set([...Object.keys(prev), ...Object.keys(nextConfig)])].filter(
+      (key) =>
+        (prev as unknown as Record<string, unknown>)[key] !==
+        (nextConfig as unknown as Record<string, unknown>)[key],
+    )
+    this.config = nextConfig
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,
-      ...config.tensionConfig
+      ...nextConfig.tensionConfig
     }
 
     // Create particle pool on demand; keep it alive when toggled off
     // so that toggling showParticles false→true doesn't lose canvas state.
     // Gate matches the constructor — sankey OR customNetworkLayout.
     if (
-      config.showParticles &&
-      (config.chartType === "sankey" || !!config.customNetworkLayout) &&
+      nextConfig.showParticles &&
+      (nextConfig.chartType === "sankey" || !!nextConfig.customNetworkLayout) &&
       !this.particlePool
     ) {
       this.particlePool = new ParticlePool(2000)
     }
+    this.updateResults.recordConfig(changedConfigKeys)
+  }
+
+  /** Additive explicit-result form of {@link updateConfig}. */
+  updateConfigWithResult(config: Partial<NetworkPipelineConfig>): UpdateResult {
+    this.updateConfig(config)
+    return this.updateResults.last
   }
 
   // ── Hierarchy data ingestion ──────────────────────────────────────────
@@ -277,6 +306,7 @@ export class NetworkPipelineStore {
     this.runLayout(size)
 
     this._boundedPrevSnapshot = null
+    this.updateResults.recordData("replace", 1)
   }
 
   // ── Bounded data ingestion ────────────────────────────────────────────
@@ -408,6 +438,18 @@ export class NetworkPipelineStore {
 
     // Run layout unless a worker will provide the force positions.
     if (!options?.deferLayout) this.runLayout(size)
+    this.updateResults.recordData("replace", rawNodes.length + rawEdges.length)
+  }
+
+  /** Additive explicit-result form of {@link ingestBounded}. */
+  ingestBoundedWithResult(
+    rawNodes: any[],
+    rawEdges: any[],
+    size: [number, number],
+    options?: { deferLayout?: boolean },
+  ): UpdateResult {
+    this.ingestBounded(rawNodes, rawEdges, size, options)
+    return this.updateResults.last
   }
 
   /**
@@ -451,7 +493,7 @@ export class NetworkPipelineStore {
     const { source, target, value } = push
     const isFirst = this.nodes.size === 0
     let topologyChanged = false
-    const now = getTimestamp()
+    const now = this.currentTime()
     this.lastIngestTime = now
     this._decaySortedNodes = null; this._networkDecayCache = null
 
@@ -492,12 +534,20 @@ export class NetworkPipelineStore {
       topologyChanged = true
     }
 
-    return (
+    const needsRelayout = (
       isFirst ||
       topologyChanged ||
       valueChanged ||
       this.tension >= this.tensionConfig.threshold
     )
+    this.updateResults.recordData("ingest", 1)
+    return needsRelayout
+  }
+
+  /** Additive explicit-result form of {@link ingestEdge}. */
+  ingestEdgeWithResult(push: EdgePush): UpdateResult {
+    this.ingestEdge(push)
+    return this.updateResults.last
   }
 
   // ── Layout execution ──────────────────────────────────────────────────
@@ -675,14 +725,14 @@ export class NetworkPipelineStore {
       }
       this.restorePreviousPositions()
       this.transition = {
-        startTime: getTimestamp(),
+        startTime: this.currentTime(),
         duration: transitionDuration
       }
     } else if (hasOldPositions && transitionDuration > 0) {
       // Data-change transition: reset to previous positions (animation starts from here)
       this.restorePreviousPositions()
       this.transition = {
-        startTime: getTimestamp(),
+        startTime: this.currentTime(),
         duration: transitionDuration
       }
     }
@@ -730,7 +780,7 @@ export class NetworkPipelineStore {
       this.addedEdges.size > 0 ||
       this.removedEdges.size > 0
     ) {
-      this.lastTopologyChangeTime = getTimestamp()
+      this.lastTopologyChangeTime = this.currentTime()
     }
 
     this.previousNodeIds = currentNodeIds
@@ -740,21 +790,6 @@ export class NetworkPipelineStore {
   /**
    * Build the scene graph from current layout positions.
    */
-  /** Update the selection the layout reads at the next `buildScene`, without
-   *  triggering a rebuild. The frame calls this on selection change; whether it
-   *  then repaints (restyle) or rebuilds is the frame's decision. */
-  setLayoutSelection(selection: CustomLayoutSelection | null): void {
-    this.config.layoutSelection = selection
-  }
-
-  /** Snapshot each mark's as-emitted style so {@link restyleScene} can re-apply
-   *  patches from the original rather than compounding. */
-  private snapshotBaseStyles(): void {
-    this._baseStyles = new WeakMap()
-    for (const node of this.sceneNodes) this._baseStyles.set(node, node.style)
-    for (const edge of this.sceneEdges) this._baseStyles.set(edge, edge.style)
-  }
-
   /**
    * Re-apply the custom layout's `restyle`/`restyleEdge` to the existing scene
    * for `selection`, mutating styles **in place** off each mark's base style.
@@ -762,39 +797,17 @@ export class NetworkPipelineStore {
    * stays valid and no relayout/repack happens. The frame repaints the canvas
    * after calling this. No-op when the layout supplied no restyle callbacks.
    */
-  /**
-   * "Styles changed, repaint the data canvas without rebuilding the scene."
-   * Set by {@link restyleScene}; consumed once per frame by the paint loop.
-   * Deliberately separate from `_sceneNodesRevision` (the quadtree-invalidation
-   * counter) so a style-only selection change repaints without a relayout.
-   */
-  private _stylePaintPending = false
-
-  /** Consume the style-only repaint signal (see {@link _stylePaintPending}). */
-  consumeStylePaintPending(): boolean {
-    const pending = this._stylePaintPending
-    this._stylePaintPending = false
-    return pending
-  }
-
   restyleScene(selection: CustomLayoutSelection | null): void {
-    if (this._customRestyle) {
-      const fn = this._customRestyle
-      for (const node of this.sceneNodes) {
-        const base = this._baseStyles.get(node) ?? node.style
-        const patch = fn(node, selection)
-        node.style = patch ? { ...base, ...patch } : base
-      }
-    }
-    if (this._customRestyleEdge) {
-      const fn = this._customRestyleEdge
-      for (const edge of this.sceneEdges) {
-        const base = this._baseStyles.get(edge) ?? edge.style
-        const patch = fn(edge, selection)
-        edge.style = patch ? { ...base, ...patch } : base
-      }
-    }
-    this._stylePaintPending = true
+    const hasCustomRestyle = restyleNetworkCustomScene({
+      nodes: this.sceneNodes,
+      edges: this.sceneEdges,
+      restyle: this._customRestyle,
+      restyleEdge: this._customRestyleEdge,
+      baseStyles: this._baseStyles,
+      selection
+    })
+    this.markStylePaintPending()
+    this.updateResults.recordRestyle(hasCustomRestyle)
   }
 
   buildScene(size: [number, number]): void {
@@ -802,55 +815,18 @@ export class NetworkPipelineStore {
     // user emit scene primitives directly. Hit testing, decay, and SSR keep
     // working because they consume `this.sceneNodes`/`sceneEdges`.
     if (this.config.customNetworkLayout) {
-      // User code may freely read or mutate these — always hand it fresh arrays.
-      const nodesArr = Array.from(this.nodes.values())
-      const edgesArr = Array.from(this.edges.values())
-      // Palette + resolveColor share the same shape across network and
-      // ordinal customLayout escape hatches — see `customLayoutPalette.ts`.
-      const palette = resolveCustomLayoutPalette(
-        this.config.colorScheme,
-        this.config.themeCategorical,
-        schemeCategory10 as readonly string[]
-      )
-      const ctx: NetworkLayoutContext = {
-        nodes: nodesArr,
-        edges: edgesArr,
-        dimensions: {
-          width: size[0],
-          height: size[1],
-          plot: { x: 0, y: 0, width: size[0], height: size[1] }
-        },
-        theme: {
-          semantic: this.config.themeSemantic ?? {},
-          categorical: [...palette]
-        },
-        resolveColor: buildResolveColor(palette, this.config.colorScheme),
-        config: (this.config.layoutConfig ?? {}) as Record<string, unknown>,
-        selection: this.config.layoutSelection ?? null
-      }
-      let result
-      try {
-        result = this.config.customNetworkLayout(ctx)
-      } catch (err) {
-        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
-        const diagnostic = createCustomLayoutFailureDiagnostic(
-          "network",
-          err,
-          preservedLastGoodScene,
-          this.layoutVersion
-        )
-        this.lastCustomLayoutFailure = diagnostic
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[semiotic] customNetworkLayout threw:", err)
-        }
-        try {
-          this.config.onLayoutError?.(diagnostic)
-        } catch (callbackError) {
-          if (process.env.NODE_ENV !== "production") {
-            console.error("[semiotic] onLayoutError threw:", callbackError)
-          }
-        }
-        if (!preservedLastGoodScene) {
+      const outcome = runNetworkCustomLayout({
+        config: this.config,
+        customLayout: this.config.customNetworkLayout,
+        size,
+        nodes: Array.from(this.nodes.values()),
+        edges: Array.from(this.edges.values()),
+        previousResult: this.lastCustomLayoutResult,
+        revision: this.layoutVersion
+      })
+      if (outcome.kind === "failure") {
+        this.lastCustomLayoutFailure = outcome.diagnostic
+        if (!outcome.preservedLastGoodScene) {
           // A new custom layout must not leave a previously-built plugin scene
           // visible when it fails before ever emitting its own result.
           this.sceneNodes = []
@@ -867,6 +843,7 @@ export class NetworkPipelineStore {
         }
         return
       }
+      const result = outcome.result
       this.sceneNodes = result.sceneNodes ?? []
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
@@ -885,7 +862,7 @@ export class NetworkPipelineStore {
       this._customRestyleEdge = result.restyleEdge
       this.hasCustomRestyle = !!(result.restyle || result.restyleEdge)
       if (this.hasCustomRestyle) {
-        this.snapshotBaseStyles()
+        this._baseStyles = snapshotNetworkCustomStyles(this.sceneNodes, this.sceneEdges)
         this.restyleScene(this.config.layoutSelection ?? null)
       }
       warnCustomLayoutDiagnostics({
@@ -1390,11 +1367,15 @@ export class NetworkPipelineStore {
    */
   updateNode(id: string, updater: (data: Datum) => Datum): Datum | null {
     const node = this.nodes.get(id)
-    if (!node) return null
+    if (!node) {
+      this.updateResults.recordNoop("update")
+      return null
+    }
     const previous = node.data ? { ...node.data } : {}
     node.data = updater(node.data ?? {})
     this.layoutVersion++
-    this.lastIngestTime = getTimestamp()
+    this.lastIngestTime = this.currentTime()
+    this.updateResults.recordData("update", 1)
     return previous
   }
 
@@ -1427,7 +1408,10 @@ export class NetworkPipelineStore {
     }
     if (results.length > 0) {
       this.layoutVersion++
-      this.lastIngestTime = getTimestamp()
+      this.lastIngestTime = this.currentTime()
+      this.updateResults.recordData("update", results.length)
+    } else {
+      this.updateResults.recordNoop("update")
     }
     return results
   }
@@ -1437,7 +1421,10 @@ export class NetworkPipelineStore {
    * Returns true if the node was found and removed.
    */
   removeNode(id: string): boolean {
-    if (!this.nodes.has(id)) return false
+    if (!this.nodes.has(id)) {
+      this.updateResults.recordNoop("remove")
+      return false
+    }
     this.nodes.delete(id)
     this.nodeTimestamps.delete(id)
     // Cascade: remove edges connected to this node
@@ -1450,7 +1437,8 @@ export class NetworkPipelineStore {
       }
     }
     this.layoutVersion++
-    this.lastIngestTime = getTimestamp()
+    this.lastIngestTime = this.currentTime()
+    this.updateResults.recordData("remove", 1)
     return true
   }
 
@@ -1502,7 +1490,10 @@ export class NetworkPipelineStore {
     }
     if (toDelete.length > 0) {
       this.layoutVersion++
-      this.lastIngestTime = getTimestamp()
+      this.lastIngestTime = this.currentTime()
+      this.updateResults.recordData("remove", toDelete.length)
+    } else {
+      this.updateResults.recordNoop("remove")
     }
     return toDelete.length > 0
   }
@@ -1558,5 +1549,8 @@ export class NetworkPipelineStore {
     if (this.particlePool) {
       this.particlePool.clear()
     }
+    this.updateResults.recordData("clear")
   }
 }
+
+attachUpdateResultStore(NetworkPipelineStore)

@@ -56,6 +56,9 @@ export type NetworkPipelineConfigSources = Pick<
   | "orbitEccentricity"
   | "orbitShowRings"
   | "orbitAnimated"
+  | "clock"
+  | "random"
+  | "seed"
   | "customNetworkLayout"
   | "onLayoutError"
   | "layoutConfig"
@@ -72,6 +75,9 @@ export function buildNetworkPipelineConfig(
 ): NetworkPipelineConfig {
   return {
     chartType: sources.chartType,
+    clock: sources.clock,
+    random: sources.random,
+    seed: sources.seed,
     nodeIDAccessor: sources.nodeIDAccessor,
     sourceAccessor: sources.sourceAccessor,
     targetAccessor: sources.targetAccessor,
@@ -156,6 +162,8 @@ export type NetworkLayoutConfigSignature = Pick<
   | "edgeType"
   | "padding"
   | "paddingTop"
+  | "random"
+  | "seed"
   | "tensionConfig"
   | "customNetworkLayout"
 > & {
@@ -190,6 +198,8 @@ export function buildNetworkLayoutConfigSignature(
     edgeType: sources.edgeType,
     padding: sources.padding,
     paddingTop: sources.paddingTop,
+    random: sources.random,
+    seed: sources.seed,
     tensionConfig: sources.tensionConfig,
     customNetworkLayout: sources.customNetworkLayout,
     orbitMode: sources.orbitMode,

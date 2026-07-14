@@ -70,11 +70,6 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
     },
     {
-      "path": "src/components/charts/xy/DifferenceChart.tsx",
-      "maxLines": 810,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
-    },
-    {
       "path": "src/components/charts/xy/LineChart.tsx",
       "maxLines": 1081,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening."

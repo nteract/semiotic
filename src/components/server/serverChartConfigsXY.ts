@@ -1,7 +1,7 @@
 import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createColorScale, getColor } from "../charts/shared/colorUtils"
-import { computeDifferenceSegments } from "../charts/xy/DifferenceChart"
+import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
 import {
   type ChartConfig,
   accessorValue,

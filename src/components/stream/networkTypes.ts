@@ -8,6 +8,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { NetworkSymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
+import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -538,6 +539,13 @@ export interface ThresholdAlertConfig {
 export interface NetworkPipelineConfig {
   chartType: NetworkChartType
 
+  /** Frame-owned logical clock for ingest, live encodings, and transitions. */
+  clock?: import("./FrameRuntime").FrameClock
+  /** Frame-local random source used by synchronous force layout. */
+  random?: import("./FrameRuntime").FrameRandom
+  /** Serializable deterministic seed, including the force-worker protocol. */
+  seed?: number
+
   // ── Accessors ────────────────────────────────────
   nodeIDAccessor?: string | ((d: Datum) => string)
   sourceAccessor?: string | ((d: Datum) => string)
@@ -785,6 +793,20 @@ export interface StreamNetworkFrameProps<T = Datum> {
   animate?: AnimateProp
   staleness?: StalenessConfig
 
+  // ── Frame runtime policy ───────────────────────────
+  /** Optional rAF seam for deterministic host scheduling. */
+  frameScheduler?: import("./useFrame").FrameScheduler
+  /** Monotonic wall-clock seam used to derive logical frame time. */
+  clock?: import("./FrameRuntime").FrameClock
+  /** Injectable random source for force layout and particles. */
+  random?: import("./FrameRuntime").FrameRandom
+  /** Serializable deterministic random seed. Ignored when `random` is supplied. */
+  seed?: number
+  /** Freeze logical animation time and cancel queued work while paused. */
+  paused?: boolean
+  /** Freeze logical animation time while the document is hidden. Defaults to true. */
+  suspendWhenHidden?: boolean
+
   // ── Threshold alerting ────────────────────────────
   thresholds?: ThresholdAlertConfig
 
@@ -825,32 +847,7 @@ export interface StreamNetworkFrameProps<T = Datum> {
 
 // ── Ref handle ──────────────────────────────────────────────────────
 
-export interface StreamNetworkFrameHandle {
-  push(edge: EdgePush): void
-  pushMany(edges: EdgePush[]): void
-  /** Remove a node by ID. Also removes connected edges. */
-  removeNode(id: string): boolean
-  /** Remove edges by source+target, or by edge ID when edgeIdAccessor is configured. */
-  removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean
-  /** Update a node's data by ID. Returns previous data. */
-  updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
-  /** Update all edges between source+target. Returns array of previous data. */
-  updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
-  clear(): void
-  getTopology(): { nodes: RealtimeNode[]; edges: RealtimeEdge[] }
-  getTopologyDiff(): { addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[] }
-  relayout(): void
-  getTension(): number
-  /** The most recent custom layout result (sceneNodes/sceneEdges/overlays as
-   *  returned by `customNetworkLayout`) — host readback so pages that need the
-   *  computed placement don't re-run the layout. Null before the first layout
-   *  or when no custom layout is configured. A failed retry retains the prior
-   *  good result; inspect `getLayoutFailure()` to distinguish recovery. */
-  getCustomLayout(): import("./networkCustomLayout").NetworkLayoutResult | null
-  /** The latest custom-layout failure, if any. Cleared by a successful layout,
-   * removing the custom layout, or `clear()`. */
-  getLayoutFailure(): import("./customLayoutFailure").CustomLayoutFailureDiagnostic | null
-}
+export type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 
 // ── Canvas renderer function type ───────────────────────────────────
 

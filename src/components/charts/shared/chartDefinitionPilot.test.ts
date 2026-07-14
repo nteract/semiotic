@@ -17,8 +17,8 @@ import {
 } from "./chartDefinitionPilot"
 
 const root = process.cwd()
-const exampleManifest = readFileSync(
-  resolve(root, "docs/src/pages/examples/examplesManifest.js"),
+const exampleDefinitions = readFileSync(
+  resolve(root, "docs/src/pages/examples/exampleDefinitions.js"),
   "utf8",
 )
 const appRoutes = readFileSync(resolve(root, "docs/src/App.jsx"), "utf8")
@@ -131,7 +131,7 @@ describe("ChartDefinition pilot registry", () => {
           const routeLeaf = example.route.split("/").at(-1)
           expect(appRoutes.includes(`path="${routeLeaf}"`)).toBe(true)
         } else {
-          expect(exampleManifest.includes(example.route)).toBe(true)
+          expect(exampleDefinitions.includes(example.route)).toBe(true)
         }
       }
     }

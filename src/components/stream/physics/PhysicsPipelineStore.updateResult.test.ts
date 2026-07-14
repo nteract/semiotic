@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { PhysicsPipelineStore } from "./PhysicsPipelineStore"
+import {
+  classifyPhysicsConfigPatch,
+  PHYSICS_CONFIG_PATCH_DEPENDENCIES,
+} from "./physicsPipelineUpdateResults"
 
 function circle(id: string) {
   return {
@@ -100,5 +104,27 @@ describe("PhysicsPipelineStore update-result reference path", () => {
     expect(store.readBodies()[0]).toMatchObject({ id: "retained", y: 20.1 })
     expect(updated.changeSet).toEqual({ kind: "config", keys: ["kernel"] })
     expect(updated.changed.has("scene-geometry")).toBe(true)
+  })
+
+  it("declares engine, simulation, capacity, and future-only config patch effects", () => {
+    const store = new PhysicsPipelineStore({ fixedDt: 0.1 })
+
+    expect(PHYSICS_CONFIG_PATCH_DEPENDENCIES.engine.retainedData).toBe("rebuild")
+    expect(classifyPhysicsConfigPatch(["engine"]).retainedData).toBe("rebuild")
+
+    const kernel = store.updateConfigWithResult({
+      kernel: { gravity: { x: 0, y: 1 } }
+    })
+    expect(classifyPhysicsConfigPatch(kernel.changeSet.keys ?? []).retainedData).toBe("preserve")
+    expect(kernel.changed.has("scene-geometry")).toBe(true)
+    expect(kernel.changed.has("layout")).toBe(false)
+
+    const capacity = store.updateConfigWithResult({ bodyLimit: 12 })
+    expect(capacity.changed.has("layout")).toBe(true)
+
+    const futureOnly = store.updateConfigWithResult({ fixedDt: 0.2 })
+    expect(futureOnly.changeSet).toEqual({ kind: "config", keys: ["fixedDt"] })
+    expect(futureOnly.changed.size).toBe(0)
+    expect(futureOnly.revisions).toEqual(capacity.revisions)
   })
 })

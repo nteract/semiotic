@@ -29,6 +29,15 @@ import {
   unwrapChartDatum,
 } from "./localGovernmentData"
 import "./LocalGovernmentExplorerExamplePage.css"
+import { createLiveDataRequestVersioner } from "./liveDataAdapter"
+import {
+  createLocalGovernmentSourceProvenance,
+  createLocalGovernmentSourceStates,
+  localGovernmentDataKindForStatus,
+  localGovernmentSourceMessage,
+  localGovernmentSourceStatuses,
+  transitionLocalGovernmentSourceStates,
+} from "./localGovernmentDataState"
 
 const EMPTY_ACTIVITY = {
   coverage: null,
@@ -93,14 +102,11 @@ export default function LocalGovernmentExplorerExamplePage() {
   const [disasters, setDisasters] = useState(null)
   const [spending, setSpending] = useState(null)
   const [civic, setCivic] = useState(null)
-  const [sourceStatus, setSourceStatus] = useState({
-    zip: "idle",
-    locus: "idle",
-    legistar: "idle",
-    fema: "idle",
-    spending: "idle",
-    civic: "idle",
-  })
+  const [sourceStates, setSourceStates] = useState(() => createLocalGovernmentSourceStates())
+  const sourceStatus = useMemo(
+    () => localGovernmentSourceStatuses(sourceStates),
+    [sourceStates],
+  )
   const [sourceErrors, setSourceErrors] = useState({})
   const [scope, setScope] = useState("all")
   const [topic, setTopic] = useState("All")
@@ -112,21 +118,39 @@ export default function LocalGovernmentExplorerExamplePage() {
   const [docsTheme] = useDocsTheme()
   const controllerRef = useRef(null)
   const carbonTheme = docsTheme === "dark" ? "carbon-dark" : "carbon"
+  const [requestVersioner] = useState(() => createLiveDataRequestVersioner())
+  const transitionSourceStates = useCallback((actions) => {
+    setSourceStates((current) =>
+      actions.reduce(
+        (nextStates, action) => transitionLocalGovernmentSourceStates(nextStates, action),
+        current,
+      ),
+    )
+  }, [])
 
   const loadZip = useCallback(async (zip) => {
     controllerRef.current?.abort()
     const controller = new AbortController()
     controllerRef.current = controller
+    const requestId = requestVersioner.next()
+    const beginSource = (source) => ({
+      type: "begin-load",
+      source,
+      requestId,
+      message: localGovernmentSourceMessage(source, "loading"),
+    })
+    const settleSource = (source, status, options = {}) => ({
+      type: "set-result",
+      source,
+      requestId: status === "unavailable" ? 0 : requestId,
+      forceUpdate: status === "unavailable",
+      kind: localGovernmentDataKindForStatus(status),
+      message: localGovernmentSourceMessage(source, status),
+      provenance: createLocalGovernmentSourceProvenance(source, { status, ...options }),
+    })
 
     setSourceErrors({})
-    setSourceStatus({
-      zip: "loading",
-      locus: "idle",
-      legistar: "idle",
-      fema: "idle",
-      spending: "idle",
-      civic: "idle",
-    })
+    transitionSourceStates([{ type: "reset-all" }, beginSource("zip")])
     setLaws([])
     setActivity(EMPTY_ACTIVITY)
     setCounty(null)
@@ -142,25 +166,30 @@ export default function LocalGovernmentExplorerExamplePage() {
       if (controller.signal.aborted) return
       setLocation(nextLocation)
       setZipInput(nextLocation.zip)
-      setSourceStatus({
-        zip: nextLocation.sourceMode,
-        locus: "loading",
-        legistar: getLegistarCoverage(nextLocation) ? "loading" : "unavailable",
-        fema: "loading",
-        spending: "loading",
-        civic: getCivicPortal(nextLocation) ? "loading" : "unavailable",
-      })
+      const coverage = getLegistarCoverage(nextLocation)
+      const portal = getCivicPortal(nextLocation)
+      transitionSourceStates([
+        settleSource("zip", nextLocation.sourceMode, {
+          sourceLabel: nextLocation.source,
+        }),
+        beginSource("locus"),
+        coverage
+          ? beginSource("legistar")
+          : settleSource("legistar", "unavailable", {
+              sourceLabel: "No mapped public Legistar client",
+            }),
+        beginSource("fema"),
+        beginSource("spending"),
+        portal
+          ? beginSource("civic")
+          : settleSource("civic", "unavailable", {
+              sourceLabel: "No open browser-readable 311 feed",
+            }),
+      ])
     } catch (error) {
       if (error.name === "AbortError") return
       setLocation(null)
-      setSourceStatus({
-        zip: "error",
-        locus: "idle",
-        legistar: "idle",
-        fema: "idle",
-        spending: "idle",
-        civic: "idle",
-      })
+      transitionSourceStates([settleSource("zip", "error")])
       setSourceErrors({ zip: error.message })
       return
     }
@@ -169,14 +198,13 @@ export default function LocalGovernmentExplorerExamplePage() {
       .then((result) => {
         if (controller.signal.aborted) return
         setLaws(result.laws)
-        setSourceStatus((current) => ({
-          ...current,
-          locus: result.laws.length ? "live" : "no-match",
-        }))
+        transitionSourceStates([
+          settleSource("locus", result.laws.length ? "live" : "no-match"),
+        ])
       })
       .catch((error) => {
         if (error.name === "AbortError") return
-        setSourceStatus((current) => ({ ...current, locus: "error" }))
+        transitionSourceStates([settleSource("locus", "error")])
         setSourceErrors((current) => ({ ...current, locus: error.message }))
       })
 
@@ -185,11 +213,16 @@ export default function LocalGovernmentExplorerExamplePage() {
         .then((result) => {
           if (controller.signal.aborted) return
           setActivity(result)
-          setSourceStatus((current) => ({ ...current, legistar: result.sourceMode }))
+          transitionSourceStates([
+            settleSource("legistar", result.sourceMode, {
+              sourceLabel: result.coverage?.label,
+              capturedAt: result.capturedAt || null,
+            }),
+          ])
         })
         .catch((error) => {
           if (error.name === "AbortError") return
-          setSourceStatus((current) => ({ ...current, legistar: "error" }))
+          transitionSourceStates([settleSource("legistar", "error")])
           setSourceErrors((current) => ({ ...current, legistar: error.message }))
         })
     }
@@ -206,11 +239,11 @@ export default function LocalGovernmentExplorerExamplePage() {
       .then((result) => {
         if (!result || controller.signal.aborted) return
         setDisasters(result)
-        setSourceStatus((current) => ({ ...current, fema: result.sourceMode }))
+        transitionSourceStates([settleSource("fema", result.sourceMode)])
       })
       .catch((error) => {
         if (error.name === "AbortError") return
-        setSourceStatus((current) => ({ ...current, fema: "error" }))
+        transitionSourceStates([settleSource("fema", "error")])
         setSourceErrors((current) => ({ ...current, fema: error.message }))
       })
     countyPromise
@@ -221,11 +254,11 @@ export default function LocalGovernmentExplorerExamplePage() {
       .then((result) => {
         if (!result || controller.signal.aborted) return
         setSpending(result)
-        setSourceStatus((current) => ({ ...current, spending: result.sourceMode }))
+        transitionSourceStates([settleSource("spending", result.sourceMode)])
       })
       .catch((error) => {
         if (error.name === "AbortError") return
-        setSourceStatus((current) => ({ ...current, spending: "error" }))
+        transitionSourceStates([settleSource("spending", "error")])
         setSourceErrors((current) => ({ ...current, spending: error.message }))
       })
 
@@ -235,15 +268,20 @@ export default function LocalGovernmentExplorerExamplePage() {
         .then((result) => {
           if (controller.signal.aborted) return
           setCivic(result)
-          setSourceStatus((current) => ({ ...current, civic: result.sourceMode }))
+          transitionSourceStates([
+            settleSource("civic", result.sourceMode, {
+              sourceLabel: result.portal?.label,
+              sourceUrl: result.portal ? civicDatasetUrl(result.portal) : null,
+            }),
+          ])
         })
         .catch((error) => {
           if (error.name === "AbortError") return
-          setSourceStatus((current) => ({ ...current, civic: "error" }))
+          transitionSourceStates([settleSource("civic", "error")])
           setSourceErrors((current) => ({ ...current, civic: error.message }))
         })
     }
-  }, [])
+  }, [requestVersioner, transitionSourceStates])
 
   useEffect(() => {
     loadZip("98101")

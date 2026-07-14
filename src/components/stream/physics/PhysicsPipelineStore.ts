@@ -55,10 +55,10 @@ import {
 import { PhysicsBodySpatialIndex } from "./PhysicsBodySpatialIndex"
 import { createPhysicsPipelineControls } from "./physicsPipelineControls"
 import {
+  classifyPhysicsConfigPatch,
   changedPhysicsConfigKeys,
   physicsKernelOptionsEqual,
   PHYSICS_BODY_INVALIDATIONS,
-  PHYSICS_CONFIG_INVALIDATIONS,
   PHYSICS_MOTION_INVALIDATIONS,
   PHYSICS_STATE_INVALIDATIONS
 } from "./physicsPipelineUpdateResults"
@@ -217,9 +217,10 @@ export class PhysicsPipelineStore {
       this.revision += 1
     }
     this.configInput = { ...this.configInput, ...config }
+    const classification = classifyPhysicsConfigPatch(changedConfigKeys)
     this.updateResults.record(
       { kind: "config", keys: changedConfigKeys },
-      changedConfigKeys.length ? PHYSICS_CONFIG_INVALIDATIONS : []
+      classification.invalidations
     )
   }
 
@@ -234,7 +235,7 @@ export class PhysicsPipelineStore {
     this.revision += 1
     this.updateResults.record(
       { kind: "config", keys: ["colliders"] },
-      PHYSICS_CONFIG_INVALIDATIONS
+      classifyPhysicsConfigPatch(["colliders"]).invalidations
     )
   }
 
@@ -543,6 +544,14 @@ export class PhysicsPipelineStore {
     return this.updateResults.last
   }
 
+  getUpdateSnapshot(): UpdateResult {
+    return this.updateResults.last
+  }
+
+  subscribeUpdateResult(listener: () => void): () => void {
+    return this.updateResults.subscribe(listener)
+  }
+
   version(): number {
     return this.revision
   }
@@ -680,7 +689,7 @@ export class PhysicsPipelineStore {
     this.nextSequence =
       this.queue.reduce((max, spawn) => Math.max(max, spawn.sequence), -1) + 1
     this.world.restore(snapshot.world)
-    this.updateResults.record({ kind: "restore" }, PHYSICS_CONFIG_INVALIDATIONS)
+    this.updateResults.record({ kind: "restore" }, PHYSICS_BODY_INVALIDATIONS)
   }
 
   private spawnDue(

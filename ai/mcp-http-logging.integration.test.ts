@@ -140,6 +140,44 @@ function stop(proc: ChildProcess): Promise<void> {
 }
 
 describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP metadata-only logging", () => {
+  it("renders a completed stateless tools/call request without cancelling it", async () => {
+    const port = await getOpenPort()
+    const proc = spawnHTTPServer(port)
+
+    try {
+      await waitForLogEvent(proc, "service_started")
+      const rendered = await requestJson(port, "/mcp", {
+        jsonrpc: "2.0",
+        id: "render-completes",
+        method: "tools/call",
+        params: {
+          name: "renderChart",
+          arguments: {
+            component: "BarChart",
+            props: {
+              data: [
+                { category: "North", value: 8 },
+                { category: "South", value: 13 },
+              ],
+              categoryAccessor: "category",
+              valueAccessor: "value",
+            },
+          },
+        },
+      }, {
+        "MCP-Protocol-Version": "2025-03-26",
+      })
+
+      const response = JSON.stringify(rendered.body)
+      expect(rendered.status).toBe(200)
+      expect(response).toContain("<svg")
+      expect(response).toContain("Render evidence:")
+      expect(response).not.toContain("MCP_RENDER_CANCELLED")
+    } finally {
+      await stop(proc)
+    }
+  })
+
   it("redacts a live rejected request and emits bounded completion metadata", async () => {
     const port = await getOpenPort()
     const proc = spawnHTTPServer(port)

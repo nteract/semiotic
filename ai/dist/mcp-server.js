@@ -32383,6 +32383,20 @@ function resolveHTTPListenHost(args, env = process.env) {
   return getFlagValue(args, "--host")?.trim() || env.MCP_HOST?.trim() || DEFAULT_HTTP_HOST;
 }
 
+// ai/mcp-request-cancellation.ts
+function createMcpRequestCancellationSignal(req, res) {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  req.once("aborted", abort);
+  req.once("close", () => {
+    if (!req.complete) abort();
+  });
+  res.once("close", () => {
+    if (!res.writableEnded) abort();
+  });
+  return controller.signal;
+}
+
 // ai/mcp-logging.ts
 var DEFAULT_MCP_LOG_LEVEL = "info";
 var DEFAULT_MCP_LOG_RETENTION_DAYS = 30;
@@ -35232,10 +35246,7 @@ async function main() {
     });
     const httpServer = http.createServer(async (req, res) => {
       const requestStartedAt = Date.now();
-      const requestAbortController = new AbortController();
-      const abortRequest = () => requestAbortController.abort();
-      req.on("aborted", abortRequest);
-      req.on("close", abortRequest);
+      const requestAbortSignal = createMcpRequestCancellationSignal(req, res);
       const pathname = (() => {
         try {
           return new URL(req.url || "/", "http://localhost").pathname;
@@ -35396,7 +35407,7 @@ async function main() {
           return;
         }
         const srv = createServer2(toolProfile, {
-          signal: requestAbortController.signal,
+          signal: requestAbortSignal,
           limits: renderExecutionLimits
         });
         const transport = new StreamableHTTPServerTransport({

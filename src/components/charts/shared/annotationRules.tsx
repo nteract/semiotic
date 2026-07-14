@@ -5,8 +5,7 @@ import { area as d3Area, curveLinear, curveMonotoneX, curveMonotoneY, curveStep,
 import type { CurveFactory } from "d3-shape"
 import type { AnnotationContext } from "../../realtime/types"
 import { loess } from "./loess"
-// @ts-expect-error — no type declarations for regression
-import regression from "regression"
+import { linearRegression, polynomialRegression } from "./leastSquaresRegression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
 import type { Datum } from "./datumTypes"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
@@ -518,10 +517,8 @@ export function createDefaultAnnotationRules(
         } else {
           const result =
             method === "polynomial"
-              ? regression.polynomial(points, {
-                  order: ann.order || 2
-                })
-              : regression.linear(points)
+              ? polynomialRegression(points, ann.order || 2)
+              : linearRegression(points)
           trendPoints = result.points
         }
 
@@ -788,9 +785,7 @@ export function createDefaultAnnotationRules(
         let predict: (x: number) => number
 
         if (forecastMethod === "polynomial") {
-          const result = regression.polynomial(points, {
-            order: ann.order || 2
-          })
+          const result = polynomialRegression(points, ann.order || 2)
           const coeffs: number[] = result.equation
           predict = (x: number) =>
             coeffs.reduce(
