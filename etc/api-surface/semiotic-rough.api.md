@@ -9,5 +9,5 @@ function stableRoughSeed(value: unknown): number
 interface RoughRenderMode
 interface RoughRenderModeOptions
 interface SceneRenderBackend<Node = unknown>
-type SceneRenderMode<Node = unknown> = "sketchy" | SceneRenderBackend<Node> | ((datum: Datum | null, node: Node) => "sketchy" | SceneRenderBackend<Node> | undefined)
+type SceneRenderMode<Node = unknown> = "sketchy" | SceneRenderBackend<Node> | ((datum: SceneRenderDatum<Node>, node: Node) => "sketchy" | SceneRenderBackend<Node> | undefined)
 ```
