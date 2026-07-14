@@ -320,6 +320,7 @@
     "check:blog-entries": "node scripts/check-blog-entry-sync.mjs",
     "check:bundle-sizes": "node scripts/sync-bundle-sizes.mjs --check",
     "check:cold-consumer": "node scripts/measure-cold-consumer.mjs --check",
+    "check:fast": "npm run lint && npm run check:file-size && npm run check:test-quality && npm run check:ai-contracts && npm run check:ai-instructions && npm run dist:prod && npm run check:bundle-sizes && npm run check:cold-consumer",
     "docs:bundle-sizes": "node scripts/sync-bundle-sizes.mjs",
     "docs:cold-consumer": "node scripts/measure-cold-consumer.mjs --write",
     "docs:readme-dashboard": "npx tsx scripts/generate-readme-dashboard.tsx",

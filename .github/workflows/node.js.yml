@@ -7,6 +7,29 @@ on:
     branches: [main]
 
 jobs:
+  # Run freshness, size, and packed-consumer gates independently from coverage
+  # and the broader contract suite so regressions appear within the first CI
+  # job instead of after the long-running test path completes.
+  fast-contracts:
+    name: Fast feedback gates (Node 22)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run freshness and size gates
+        run: npm run check:fast
+
   # Full gate suite once on the primary LTS. Cross-Node compatibility is
   # covered by the smoke matrix below — re-running docs/AI/size checks on
   # every Node version was pure wall-clock cost with no signal.
@@ -26,25 +49,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      # Lightweight cleanliness gates first — fail fast before the dist build.
-      - name: Lint (errors only)
-        # Warnings (e.g. no-explicit-any) are staged as non-blocking; --quiet
-        # keeps the gate focused on hard errors so CI stays green while the
-        # warn backlog burns down.
-        run: npx eslint src --quiet
-
-      - name: Check source file size limits
-        run: npm run check:file-size
-
-      - name: Check test quality baseline
-        run: npm run check:test-quality
-
-      - name: Check AI behavior contracts freshness
-        run: npm run check:ai-contracts
-
-      - name: Check AI instruction mirror freshness
-        run: npm run check:ai-instructions
 
       - name: Build library
         run: npm run dist
@@ -120,15 +124,6 @@ jobs:
 
       - name: Check ai/examples.md coverage + drift
         run: npm run check:ai-examples-coverage
-
-      - name: Build production bundles
-        run: npm run dist:prod
-
-      - name: Check bundle-size docs (README + CLAUDE.md + ai/system-prompt.md)
-        run: npm run check:bundle-sizes
-
-      - name: Check packed cold-consumer named-import baseline
-        run: npm run check:cold-consumer
 
       - name: Pack smoke test (verify all entry points resolve)
         run: npm run check:pack
@@ -223,21 +218,22 @@ jobs:
   testing:
     name: testing
     runs-on: ubuntu-latest
-    needs: [testing-full, testing-matrix]
+    needs: [fast-contracts, testing-full, testing-matrix]
     if: always()
     steps:
       - name: Aggregate matrix result
         run: |
-          if [[ "${{ needs['testing-full'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" ]]; then
+          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['testing-full'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" ]]; then
             {
               echo "## Testing failed"
               echo ""
+              echo "Fast feedback gates result: \`${{ needs['fast-contracts'].result }}\`"
               echo "Full checks result: \`${{ needs['testing-full'].result }}\`"
               echo "Smoke matrix result: \`${{ needs['testing-matrix'].result }}\`"
               echo ""
               echo "Open the failed job above for the concrete error."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error title=Testing failed::Full checks: ${{ needs['testing-full'].result }}; Smoke matrix: ${{ needs['testing-matrix'].result }}"
+            echo "::error title=Testing failed::Fast feedback gates: ${{ needs['fast-contracts'].result }}; Full checks: ${{ needs['testing-full'].result }}; Smoke matrix: ${{ needs['testing-matrix'].result }}"
             exit 1
           fi
 
