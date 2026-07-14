@@ -27,7 +27,7 @@ import type {
   OrdinalLayout,
   WedgeSceneNode
 } from "./ordinalTypes"
-import type { Changeset, Style, PointSceneNode } from "./types"
+import type { Changeset, PointSceneNode } from "./types"
 import { buildDatumIndexMap, computeDecayOpacity } from "./pipelineDecay"
 import { hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
 import { applyOrdinalPulse } from "./ordinalPulse"
@@ -35,7 +35,7 @@ import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { toIdSet } from "./pipelineIdentityOps"
-import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
+import { OrdinalStyleResolver } from "./OrdinalStyleResolver"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext } from "./ordinalSceneBuilders/types"
 import { ORDINAL_SCENE_BUILDERS as SCENE_BUILDERS } from "./ordinalSceneBuilders/sceneBuilderMap"
@@ -91,9 +91,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
   private categories = new Set<string>()
   /** True once a non-bounded (push) changeset has been ingested */
   private _hasStreamingData = false
-  /** Lazy color map built from colorScheme for resolvePieceStyle */
-  private _colorSchemeMap: Map<string, string> | null = null
-  private _colorSchemeIndex = 0
+  private styleResolver = new OrdinalStyleResolver()
 
   // ── Pulse tracking ──────────────────────────────────────────────────
   private timestampBuffer: RingBuffer<number> | null = null
@@ -614,8 +612,10 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       getO: this.getO,
       multiScales: this.multiScales,
       rAccessors: this.rAccessors,
-      resolvePieceStyle: (d: Datum, category?: string) => this.resolvePieceStyle(d, category),
-      resolveSummaryStyle: (d: Datum, category?: string) => this.resolveSummaryStyle(d, category),
+      resolvePieceStyle: (d: Datum, category?: string) =>
+        this.styleResolver.resolvePieceStyle(this.config, d, category),
+      resolveSummaryStyle: (d: Datum, category?: string) =>
+        this.styleResolver.resolveSummaryStyle(this.config, d, category),
       getRawRange: (d: Datum) => this.getRawRange(d)
     }
   }
@@ -760,56 +760,6 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       config: (cfg.layoutConfig ?? {}) as Record<string, unknown>,
       selection: cfg.layoutSelection ?? null,
     }
-  }
-
-  // ── Style resolution ─────────────────────────────────────────────────
-
-  private resolvePieceStyle(d: Datum, category?: string): Style {
-    if (typeof this.config.pieceStyle === "function") {
-      const style = this.config.pieceStyle(d, category)
-      // If the function returned a style without a fill color and we have a category,
-      // fill in from the frame's color scheme. This handles push API where HOC colorScale
-      // is not yet available.
-      if (style && !style.fill && category) {
-        return { ...style, fill: this.getColorFromScheme(category) }
-      }
-      return style
-    }
-    if (this.config.pieceStyle && typeof this.config.pieceStyle === "object") {
-      return this.config.pieceStyle as unknown as Style
-    }
-    if (this.config.barColors && category) {
-      return { fill: this.config.barColors[category] || "#007bff" }
-    }
-    // Use colorScheme (or default palette) to generate colors by category
-    if (category) {
-      return { fill: this.getColorFromScheme(category) }
-    }
-    return { fill: "#007bff" }
-  }
-
-  private getColorFromScheme(key: string): string {
-    if (!this._colorSchemeMap) this._colorSchemeMap = new Map()
-    const existing = this._colorSchemeMap.get(key)
-    if (existing) return existing
-
-    const palette = Array.isArray(this.config.colorScheme)
-      ? this.config.colorScheme
-      : this.config.themeCategorical || STREAMING_PALETTE
-    const color = palette[this._colorSchemeIndex % palette.length]
-    this._colorSchemeIndex++
-    this._colorSchemeMap.set(key, color)
-    return color
-  }
-
-  private resolveSummaryStyle(d: Datum, category?: string): Style {
-    if (typeof this.config.summaryStyle === "function") {
-      return this.config.summaryStyle(d, category)
-    }
-    if (this.config.summaryStyle && typeof this.config.summaryStyle === "object") {
-      return this.config.summaryStyle as unknown as Style
-    }
-    return { fill: "#007bff", fillOpacity: 0.6, stroke: "#007bff", strokeWidth: 1 }
   }
 
   // ── Decay ────────────────────────────────────────────────────────────
