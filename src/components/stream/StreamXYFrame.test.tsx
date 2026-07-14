@@ -543,6 +543,73 @@ describe("StreamXYFrame", () => {
       fireEvent.keyDown(frame, { key: "ArrowLeft" })
       fireEvent.keyDown(frame, { key: "Escape" })
     })
+
+    it("emits additive focus and activation observations from the keyboard", async () => {
+      const ref = React.createRef<StreamXYFrameHandle>()
+      const observations: Array<{ type: string; inputType?: string }> = []
+      const { container } = render(
+        <StreamXYFrame
+          ref={ref}
+          chartType="scatter"
+          runtimeMode="streaming"
+          timeAccessor="t"
+          valueAccessor="v"
+          size={[400, 300]}
+          onObservation={(event) => observations.push(event)}
+        />
+      )
+      await act(async () => {
+        ref.current!.pushMany([{ t: 1, v: 10 }, { t: 2, v: 20 }])
+      })
+
+      const frame = container.querySelector(".stream-xy-frame")!
+      fireEvent.keyDown(frame, { key: "ArrowRight" })
+      fireEvent.keyDown(frame, { key: "Enter" })
+
+      expect(observations.map((event) => event.type)).toEqual([
+        "hover",
+        "focus",
+        "click",
+        "activate"
+      ])
+      expect(observations[1]).toMatchObject({ inputType: "keyboard" })
+      expect(observations[3]).toMatchObject({ inputType: "keyboard" })
+    })
+
+    it("does not retarget activation after the focused point is removed", async () => {
+      const ref = React.createRef<StreamXYFrameHandle>()
+      const onObservation = vi.fn()
+      const { container } = render(
+        <StreamXYFrame
+          ref={ref}
+          chartType="scatter"
+          runtimeMode="streaming"
+          pointIdAccessor="id"
+          timeAccessor="t"
+          valueAccessor="v"
+          size={[400, 300]}
+          onObservation={onObservation}
+        />
+      )
+      await act(async () => {
+        ref.current!.pushMany([
+          { id: "a", t: 1, v: 10 },
+          { id: "b", t: 2, v: 20 },
+        ])
+      })
+      const frame = container.querySelector(".stream-xy-frame")!
+      fireEvent.keyDown(frame, { key: "ArrowRight" })
+      fireEvent.keyDown(frame, { key: "ArrowRight" })
+      await act(async () => {
+        ref.current!.remove("b")
+      })
+
+      onObservation.mockClear()
+      fireEvent.keyDown(frame, { key: " " })
+      expect(onObservation).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: "activate" }),
+      )
+    })
   })
 
   // ── SVG overlay elements ──────────────────────────────────────────────

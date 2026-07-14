@@ -24,6 +24,7 @@ import {
   networkSceneEdgeToSVG,
   networkLabelToSVG
 } from "../stream/SceneToSVG"
+import { renderSceneWithBackend } from "../stream/renderBackend"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import {
   renderStaticLegend,
@@ -349,11 +350,21 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   }
 
   const edgeElements = sceneEdges
-    .map((edge, i) => networkSceneEdgeToSVG(edge, i))
+    .map((edge, i) => renderSceneWithBackend({
+      node: edge,
+      index: i,
+      renderMode: props.renderMode,
+      fallback: () => networkSceneEdgeToSVG(edge, i)
+    }))
     .filter(Boolean)
 
   const nodeElements = sceneNodes
-    .map((node, i) => networkSceneNodeToSVG(node, i))
+    .map((node, i) => renderSceneWithBackend({
+      node,
+      index: i,
+      renderMode: props.renderMode,
+      fallback: () => networkSceneNodeToSVG(node, i)
+    }))
     .filter(Boolean)
 
   const labelElements = labels
@@ -462,4 +473,3 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
 }
 
 // ── Ordinal SSR ─────────────────────────────────────────────────────────
-

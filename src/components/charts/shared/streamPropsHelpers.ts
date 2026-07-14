@@ -17,8 +17,8 @@
  * These are extractions, not abstractions. The bodies were already
  * identical across ~25 HOC sites; centralizing them eliminates ~240
  * lines of mechanical boilerplate without changing a single runtime
- * behavior. Network HOCs use a different (JSX-prop) construction
- * pattern and are intentionally NOT in scope.
+ * behavior. NetworkCustomChart shares the metadata and behavior helpers;
+ * network-specific layout and interaction props remain outside their scope.
  */
 "use client"
 import type { ReactNode } from "react"
@@ -141,6 +141,7 @@ export function buildCustomBehaviorProps(input: {
 }): {
   customHoverBehavior?: (d: Datum | null) => void
   customClickBehavior?: (d: Datum | null) => void
+  annotationObservationCallback?: OnObservationCallback
   hoverRadius?: number
 } {
   const {
@@ -160,8 +161,10 @@ export function buildCustomBehaviorProps(input: {
   const out: {
     customHoverBehavior?: (d: Datum | null) => void
     customClickBehavior?: (d: Datum | null) => void
+    annotationObservationCallback?: OnObservationCallback
     hoverRadius?: number
   } = {}
+  if (onObservation) out.annotationObservationCallback = onObservation
   const mobileHoverRadius = mobileInteraction?.enabled
     ? Math.max(
         hoverRadius ?? 30,

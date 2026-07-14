@@ -48,7 +48,6 @@ import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
-import { extractOrdinalNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
@@ -58,7 +57,7 @@ import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
-import { FocusRing, type FocusRingProps } from "./FocusRing"
+import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
@@ -73,7 +72,12 @@ import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { resolveFrameGraphics } from "./frameGraphics"
 
 import { ORDINAL_CANVAS_RENDERERS as RENDERERS } from "./ordinalCanvasRenderers"
+import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
 import { DefaultOrdinalTooltip } from "./ordinalDefaultTooltip"
+import { observationInputType } from "../charts/shared/semanticInteractions"
+import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
+import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
+import { useOrdinalKeyboardNavigation } from "./frameKeyboardNavigation"
 
 const DEFAULT_MARGIN = { top: 50, right: 40, bottom: 60, left: 70 }
 
@@ -130,6 +134,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       windowSize = 200,
       pieceStyle,
       summaryStyle,
+      renderMode,
       colorScheme,
       barColors,
       showAxes = true,
@@ -143,9 +148,13 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       enableHover = true,
       hoverAnnotation,
       tooltipContent,
-      customHoverBehavior,
-      customClickBehavior,
+      customHoverBehavior: customHoverBehaviorProp,
+      customClickBehavior: customClickBehaviorProp,
+      onObservation,
+      annotationObservationCallback,
+      chartId,
       annotations,
+      onAnnotationActivate,
       autoPlaceAnnotations,
       svgAnnotationRules,
       showGrid = false,
@@ -185,6 +194,21 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       layoutConfig,
       layoutSelection,
     } = props
+
+    const { customHoverBehavior, customClickBehavior, hasClickBehavior } =
+      useSemanticFrameInteractions<HoverData>({
+        customHoverBehavior: customHoverBehaviorProp,
+        customClickBehavior: customClickBehaviorProp,
+        onObservation,
+        chartId,
+        chartType: "StreamOrdinalFrame"
+      })
+
+    // HOC-style accessor names are the canonical public API. Resolve them
+    // once so bounded data, hover/keyboard metadata, and annotations all use
+    // the same fields as the streaming path.
+    const effectiveOAccessor = categoryAccessor ?? oAccessor
+    const effectiveRAccessor = valueAccessor ?? rAccessor
 
     // dirtyRef is declared before useFrame so it can be threaded in for
     // the theme-change effect. Initial value `true` is family-specific
@@ -298,8 +322,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       windowMode,
       extentPadding,
       projection,
-      oAccessor: isStreaming ? undefined : oAccessor,
-      rAccessor: isStreaming ? undefined : rAccessor,
+      oAccessor: isStreaming ? undefined : effectiveOAccessor,
+      rAccessor: isStreaming ? undefined : effectiveRAccessor,
       accessorRevision,
       colorAccessor,
       symbolAccessor,
@@ -308,8 +332,13 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       groupBy,
       multiAxis,
       timeAccessor: isStreaming ? timeAccessor : undefined,
-      valueAccessor: isStreaming ? (valueAccessor || (typeof rAccessor === "string" || typeof rAccessor === "function" ? rAccessor : undefined)) : undefined,
-      categoryAccessor: isStreaming ? (categoryAccessor || oAccessor) : undefined,
+      valueAccessor: isStreaming
+        ? (valueAccessor ||
+          (typeof effectiveRAccessor === "string" || typeof effectiveRAccessor === "function"
+            ? effectiveRAccessor
+            : undefined))
+        : undefined,
+      categoryAccessor: isStreaming ? effectiveOAccessor : undefined,
       rExtent,
       oExtent,
       axisExtent,
@@ -354,8 +383,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       layoutMargin: margin,
     }), [
       chartType, windowSize, windowMode, extentPadding, projection,
-      oAccessor, rAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis,
-      timeAccessor, valueAccessor, categoryAccessor,
+      effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis,
+      timeAccessor, valueAccessor,
       rExtent, oExtent, axisExtent, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle,
       dynamicColumnWidth,
       bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort,
@@ -475,7 +504,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         }
         return removed
       },
-      update: (id: string | string[], updater: (d: Datum) => any) => {
+      update: (id: string | string[], updater: (d: Datum) => Datum) => {
         adapterRef.current?.flush()
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {
@@ -508,7 +537,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       hydrated,
       wasHydratingFromSSR,
       cleanup: () => adapterRef.current?.clear(),
-      canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, scheduleRender],
+      canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, renderMode, scheduleRender],
     })
 
     // ── Hover handlers ───────────────────────────────────────────────────
@@ -559,8 +588,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       const hover: HoverData = buildHoverData(rawDatum, hit.x, hit.y, {
         ...(hit.stats && { stats: hit.stats }),
         ...(hit.category && { category: hit.category }),
-        __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
-        __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
+        __oAccessor: typeof effectiveOAccessor === "string" ? effectiveOAccessor : undefined,
+        __rAccessor: typeof effectiveRAccessor === "string" ? effectiveRAccessor : undefined,
         __chartType: chartType
       })
 
@@ -586,6 +615,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
     }
 
     const onClick = useCallback((e: React.MouseEvent) => {
+      if (isAnnotationActivationTarget(e.target)) return
       if (!customClickBehavior) return
       const canvas = canvasRef.current
       if (!canvas) {
@@ -627,10 +657,15 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       customClickBehavior(buildHoverData(rawDatum, hit.x, hit.y, {
         ...(hit.stats && { stats: hit.stats }),
         ...(hit.category && { category: hit.category }),
-        __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
-        __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
+        __oAccessor: typeof effectiveOAccessor === "string" ? effectiveOAccessor : undefined,
+        __rAccessor: typeof effectiveRAccessor === "string" ? effectiveRAccessor : undefined,
         __chartType: chartType
-      }))
+      }), {
+        type: "activate",
+        inputType: observationInputType(
+          (e.nativeEvent as MouseEvent & { pointerType?: string }).pointerType
+        )
+      })
       dirtyRef.current = true
       scheduleRender()
     }, [
@@ -639,9 +674,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       chartType,
       customClickBehavior,
       margin,
-      oAccessor,
+      effectiveOAccessor,
       projection,
-      rAccessor,
+      effectiveRAccessor,
       scheduleRender,
     ])
 
@@ -651,79 +686,18 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const kbFocusIndexRef = useRef(-1)
-    const focusedNavPointRef = useRef<{ shape?: FocusRingProps["shape"]; w?: number; h?: number } | null>(null)
-    const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
-
-    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
-      const store = storeRef.current
-      if (!store || store.scene.length === 0) return
-
-      // Cache NavGraph keyed off store.version to avoid O(n log n) rebuild per keypress
-      const storeVersion = store.version
-      let graph: NavGraph
-      if (navGraphCacheRef.current && navGraphCacheRef.current.version === storeVersion) {
-        graph = navGraphCacheRef.current.graph
-      } else {
-        const navPoints = extractOrdinalNavPoints(store.scene)
-        if (navPoints.length === 0) return
-        graph = buildNavGraph(navPoints)
-        navGraphCacheRef.current = { version: storeVersion, graph }
-      }
-
-      const current = kbFocusIndexRef.current
-
-      if (current < 0) {
-        if (e.key === "Escape") return
-        const isNav = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)
-        if (!isNav) return
-        e.preventDefault()
-        kbFocusIndexRef.current = 0
-        const point = graph.flat[0]
-        focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-        const hover: HoverData = {
-          ...navPointToHover(point),
-          __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
-          __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
-          __chartType: chartType
-        }
-        hoverRef.current = hover
-        setHoverPoint(hover)
-        if (customHoverBehavior) customHoverBehavior(hover)
-        scheduleRender()
-        return
-      }
-
-      const pos = resolvePosition(graph, current)
-      const next = nextGraphIndex(e.key, pos, graph)
-      if (next === null) return
-
-      e.preventDefault()
-
-      if (next < 0) {
-        kbFocusIndexRef.current = -1
-        focusedNavPointRef.current = null
-        hoverRef.current = null
-        setHoverPoint(null)
-        if (customHoverBehavior) customHoverBehavior(null)
-        scheduleRender()
-        return
-      }
-
-      kbFocusIndexRef.current = next
-      const point = graph.flat[next]
-      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      const hover: HoverData = {
-        ...navPointToHover(point),
-        __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
-        __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
-        __chartType: chartType
-      }
-      hoverRef.current = hover
-      setHoverPoint(hover)
-      if (customHoverBehavior) customHoverBehavior(hover)
-      scheduleRender()
-    }, [customHoverBehavior, scheduleRender])
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown } =
+      useOrdinalKeyboardNavigation({
+        storeRef,
+        hoverRef,
+        setHoverPoint,
+        customHoverBehavior,
+        customClickBehavior,
+        scheduleRender,
+        chartType,
+        oAccessor: effectiveOAccessor,
+        rAccessor: effectiveRAccessor
+      })
 
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       kbFocusIndexRef.current = -1
@@ -831,10 +805,17 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       // renderer self-filters) regardless of the declared chartType.
       const renderers = customLayout ? RENDERERS.custom : (RENDERERS[chartType] || [])
       const layout: OrdinalLayout = { width: adjustedWidth, height: adjustedHeight }
-
-      for (const renderer of renderers) {
-        renderer(ctx, store.scene, store.scales, layout)
-      }
+      paintSceneWithBackend({
+        context: ctx,
+        nodes: store.scene,
+        renderMode,
+        pixelRatio: dpr,
+        paintBuiltIn: (nodes) => {
+          for (const renderer of renderers) {
+            renderer(ctx, nodes, store.scales, layout)
+          }
+        }
+      })
 
       if (isRadial) {
         ctx.restore()
@@ -904,15 +885,29 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
     // ── Annotation accessor resolution ─────────────────────────────────
     // OrdinalSVGOverlay needs string keys to read coordinates from
-    // annotationData. When `oAccessor` / `rAccessor` are functions
+    // annotationData. When the effective ordinal/range accessors are functions
     // we bake resolved values under synthetic stable keys and
     // forward those keys as the annotation context's xAccessor /
     // yAccessor. Without this, annotation rules like `trend` would
     // see `undefined` accessors and silently fail to read the data.
     // Mirrors StreamXYFrame's same pattern; helpers shared via
     // `./annotationAccessorResolver`.
-    const xResolved = resolveAnnotationAccessor(oAccessor, undefined, "__semiotic_resolvedO", "")
-    const yResolved = resolveAnnotationAccessor(rAccessor, undefined, "__semiotic_resolvedR", "")
+    const annotationXAccessor =
+      projection === "horizontal" ? effectiveRAccessor : effectiveOAccessor
+    const annotationYAccessor =
+      projection === "horizontal" ? effectiveOAccessor : effectiveRAccessor
+    const xResolved = resolveAnnotationAccessor(
+      annotationXAccessor,
+      undefined,
+      "__semiotic_resolvedO",
+      ""
+    )
+    const yResolved = resolveAnnotationAccessor(
+      annotationYAccessor,
+      undefined,
+      "__semiotic_resolvedR",
+      ""
+    )
     const annXAccessor = xResolved.key
     const annYAccessor = yResolved.key
     const hasAnnotations = (annotations && annotations.length > 0) || false
@@ -970,7 +965,12 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
               )}
-              {scene.map((node, i) => ordinalSceneNodeToSVG(node, i, tableId)).filter(Boolean)}
+              {scene.map((node, i) => renderSceneWithBackend({
+                node,
+                index: i,
+                renderMode,
+                fallback: () => ordinalSceneNodeToSVG(node, i, tableId)
+              })).filter(Boolean)}
             </g>
           </svg>
           <OrdinalSVGOverlay
@@ -1002,6 +1002,10 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
               composeOverlays(ssrForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
             }
             annotations={annotations}
+            onAnnotationActivate={onAnnotationActivate}
+            onObservation={annotationObservationCallback ?? onObservation}
+            chartId={chartId}
+            chartType="StreamOrdinalFrame"
             autoPlaceAnnotations={autoPlaceAnnotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
@@ -1064,7 +1068,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           style={{ position: "relative", width: "100%", height: "100%" }}
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveWrapped : undefined}
           onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
-          onClick={customClickBehavior ? onClick : undefined}
+          onClick={hasClickBehavior ? onClick : undefined}
         >
         <CanvasFrameBackground size={size} margin={margin}>
           {resolvedCanvasBackground}
@@ -1125,6 +1129,10 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
             composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
           }
           annotations={annotations}
+          onAnnotationActivate={onAnnotationActivate}
+          onObservation={annotationObservationCallback ?? onObservation}
+          chartId={chartId}
+          chartType="StreamOrdinalFrame"
           autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}

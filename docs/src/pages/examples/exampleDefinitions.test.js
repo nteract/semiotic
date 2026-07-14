@@ -158,7 +158,14 @@ describe("validateExampleDefinitions", () => {
       },
     })
     expect(getExampleDefinition("/examples/unknown")).toBeUndefined()
-    expect(getPilotExampleDefinitions()).toHaveLength(3)
+    expect(getPilotExampleDefinitions().map((definition) => definition.id)).toEqual(
+      expect.arrayContaining(["sentence-structure", "analyst-adventure"]),
+    )
+    expect(
+      getPilotExampleDefinitions().every(
+        (definition) => definition.contract.assessment === "declared",
+      ),
+    ).toBe(true)
     expect(EXAMPLE_DATA_STATES).toEqual(["live", "snapshot", "fallback", "error"])
   })
 

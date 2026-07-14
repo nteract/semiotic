@@ -365,6 +365,7 @@ export function resolvePhysicsFrameSharedProps(
           }
         : frameProps?.onClick,
     onObservation: props.onObservation ?? frameProps?.onObservation,
+    onAnnotationActivate: frameProps?.onAnnotationActivate,
     opacity: props.opacity ?? frameProps?.opacity,
     semanticItems: frameProps?.semanticItems ?? semanticItems,
     stroke: props.stroke ?? frameProps?.stroke,

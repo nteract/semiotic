@@ -92,6 +92,131 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "analyst-adventure",
+    path: "/examples/analyst-adventure",
+    sourceFile: "AnalystAdventureExamplePage.jsx",
+    isPilot: true,
+    title: "Analyst Adventure: The Case of the Vanishing Visionary",
+    eyebrow: "Five Stream Frames · analytical adventure",
+    description:
+      "Investigate a missing CEO across temporal, categorical, geographic, network, and physics rooms where reading each chart determines the story.",
+    contract: {
+      publicImports: [
+        "semiotic",
+        "semiotic/ai",
+        "semiotic/utils",
+        "semiotic/xy",
+        "semiotic/ordinal",
+        "semiotic/geo",
+        "semiotic/network",
+        "semiotic/physics",
+        "semiotic/rough",
+      ],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-seed-1984-story-and-chart-fixtures",
+          replay: true,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source: "Deterministic fictional Zorkcorp fixtures derived from docs/strategy/example-cyoa.md",
+        capturedAt: "2026-07-13",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "release",
+      },
+      accessibility: {
+        summary: "Visible generated descriptions, complete data tables, and a settled physics ledger",
+        navigation: "Synchronized AccessibleNavTree data and annotations branches in every chart room",
+        keyboard: "Native choices and annotations; 1–4, H, D, R, Enter, Space, Escape, and chart arrow navigation",
+        forcedColors: "CGA panels, choices, focus rings, and chart controls retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion: "Particles and chart animation stop; physics opens on its deterministic settled projection",
+        visibility: "Stream physics suspends while hidden and ordinary chart transitions are room-scoped",
+      },
+      responsive: {
+        status: "browser-tested",
+        viewports: [320, 390, 430, 768, 1280],
+        selectionIdentity: "stable fixture datum ID and annotation stableId",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-tested",
+        hydration: "deterministic seed and browser-only effects deferred until mount",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route and tree-shakeable public entry points",
+          interaction: "memoized datasets, reader analyses, layouts, and annotations",
+          memory: "180-event conversation arc and bounded 31-body physics scene",
+          hiddenPage: "physics suspendWhenHidden enabled",
+        },
+      },
+    },
+  },
+  {
+    id: "sentence-structure",
+    path: "/examples/sentence-structure",
+    sourceFile: "SentenceStructureExamplePage.jsx",
+    isPilot: true,
+    title: "The Sentence Is Not the Words",
+    eyebrow: "Nine linked linguistic views · natural-language controls",
+    description:
+      "Follow one sentence through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relationships, and textual variants without losing the words you selected.",
+    contract: {
+      publicImports: [
+        "semiotic/controls",
+        "semiotic/network",
+        "semiotic/xy",
+        "semiotic/utils",
+      ],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-authored-linguistic-specimens-and-corpus-excerpts",
+          replay: true,
+          schemaVersion: "1",
+        },
+      },
+      provenance: {
+        source: "Curated deterministic fixtures derived from docs/strategy/example-sentence.md",
+        capturedAt: "2026-07-14",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "release",
+      },
+      accessibility: {
+        summary: "Continuous sentence names, view-specific structural summaries, source recovery, and accessible relationship tables",
+        navigation: "Native sentence-filter controls, view rail, specimen cards, token ribbon, and related-entity summaries",
+        keyboard: "Enter, Space, Escape, Arrow keys, Home, End, and native form controls",
+        forcedColors: "Editorial controls, selected tokens, diagrams, and focus rings retain system-color boundaries",
+      },
+      motion: {
+        reducedMotion: "Cross-view fades and path drawing stop while persistent selections remain visible",
+        visibility: "No timers or background simulation; authored diagrams update only from reader input",
+      },
+      responsive: {
+        status: "browser-tested",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable specimen, token, phrase, dependency, concept, and variant IDs",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-tested",
+        hydration: "deterministic fixtures and measurement-free initial sentence control output",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route with public controls, XY, network, and utility entry points",
+          interaction: "memoized fixture projections and bounded authored structures",
+          memory: "six sentence specimens and a small checked-in corpus",
+          hiddenPage: "no background work",
+        },
+      },
+    },
+  },
+  {
     id: "watermarks",
     path: "/examples/watermarks",
     sourceFile: "WatermarksExamplePage.jsx",
@@ -269,6 +394,28 @@ const EXAMPLE_REGISTRY_METADATA = [
     badges: ["Portable artifacts", "Deterministic recipes", "Audited lineage"],
     frames: ["xy", "ordinal", "network"],
     topics: ["process", "design", "accessibility", "ai"],
+  },
+  {
+    title: "Analyst Adventure: The Case of the Vanishing Visionary",
+    path: "/examples/analyst-adventure",
+    eyebrow: "Five Stream Frames · analytical adventure",
+    description:
+      "Investigate a missing CEO across temporal, categorical, geographic, network, and physics rooms where reading each chart determines the story.",
+    preview: "analyst-adventure",
+    badges: ["Deterministic story", "Keyboard playable", "Agent-readable"],
+    frames: ["xy", "ordinal", "geo", "network", "stream-physics"],
+    topics: ["process", "uncertainty", "ai", "design", "accessibility"],
+  },
+  {
+    title: "The Sentence Is Not the Words",
+    path: "/examples/sentence-structure",
+    eyebrow: "Nine linked linguistic views · natural-language controls",
+    description:
+      "Follow one sentence through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relationships, and textual variants without losing the words you selected.",
+    preview: "sentence-structure",
+    badges: ["SentenceFilter", "Shared selection", "Authored fixtures", "Accessible structure"],
+    frames: ["xy", "network", "custom"],
+    topics: ["culture", "design", "accessibility"],
   },
   {
     title: "Watermarks, Made Physical",
@@ -615,6 +762,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/analyst-adventure": "AnalystAdventureExamplePage.jsx",
   "/examples/art-movement-genealogy": "ArtMovementGenealogyExamplePage.jsx",
   "/examples/climate-anomaly": "ClimateAnomalyExamplePage.jsx",
   "/examples/climate-radial-weather": "ClimateRadialWeatherExamplePage.jsx",
@@ -636,6 +784,7 @@ const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/paris-isometric-landmarks": "ParisIsometricLandmarksExamplePage.jsx",
   "/examples/port-congestion-replay": "PortCongestionReplayExamplePage.jsx",
   "/examples/scroll-youre-telling": "ScrollYoureTellingExamplePage.jsx",
+  "/examples/sentence-structure": "SentenceStructureExamplePage.jsx",
   "/examples/semiotic-architecture": "SemioticArchitectureExamplePage.jsx",
   "/examples/sometimes-better-discrete": "SometimesDiscreteExamplePage.jsx",
   "/examples/where-you-draw-the-line": "WhereYouDrawTheLineExamplePage.jsx",

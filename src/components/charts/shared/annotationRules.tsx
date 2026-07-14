@@ -10,6 +10,7 @@ import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annot
 import type { Datum } from "./datumTypes"
 import { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 import { getMinMax } from "./minMax"
+import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
 
@@ -67,7 +68,8 @@ export function renderAnnotationPass(
 // ── Default annotation rules factory ──────────────────────────────────
 
 export function createDefaultAnnotationRules(
-  _frameType: "xy" | "ordinal" | "network"
+  _frameType: "xy" | "ordinal" | "network",
+  activation: AnnotationActivationOptions = {}
 ): (
   annotation: Datum,
   index: number,
@@ -938,6 +940,7 @@ export function createDefaultAnnotationRules(
             style={{ overflow: "visible", pointerEvents: "auto" }}
           >
             <div
+              {...annotationActivationProps(ann, activation)}
               style={{
                 width: widgetWidth,
                 height: widgetHeight,

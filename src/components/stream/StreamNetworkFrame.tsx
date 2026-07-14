@@ -46,12 +46,8 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
-import {
-  networkSceneNodeToSVG,
-  networkSceneEdgeToSVG,
-  networkLabelToSVG,
-  isServerEnvironment
-} from "./SceneToSVG"
+import { isServerEnvironment } from "./SceneToSVG"
+import { NetworkSSRFrame } from "./NetworkSSRFrame"
 import {
   useHydration,
   useWasHydratingFromSSR
@@ -93,6 +89,13 @@ import {
   syncNetworkNodeColorMap
 } from "./networkColorAccessors"
 import { resolveNetworkPointerHit } from "./networkFrameInteraction"
+import {
+  isInteractiveKeyboardTarget,
+  observationInputType
+} from "../charts/shared/semanticInteractions"
+import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
+import { useNetworkObservationBehaviors } from "./networkFrameObservations"
+import { shouldContinueNetworkAnimation } from "./networkFrameAnimation"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -140,6 +143,7 @@ const StreamNetworkFrame = memo(forwardRef<
     tensionConfig: tensionConfigProp,
     showParticles = false,
     particleStyle: particleStyleProp,
+    renderMode,
     nodeStyle,
     edgeStyle,
     colorBy,
@@ -163,9 +167,11 @@ const StreamNetworkFrame = memo(forwardRef<
     customHoverBehavior: customHoverBehaviorProp,
     customClickBehavior: customClickBehaviorProp,
     onObservation,
+    annotationObservationCallback,
     chartId,
     onTopologyChange,
     annotations,
+    onAnnotationActivate,
     autoPlaceAnnotations,
     svgAnnotationRules,
     legend,
@@ -570,21 +576,13 @@ const StreamNetworkFrame = memo(forwardRef<
     ]
   )
 
-  // scheduleRender comes from useFrame above (the previous Network-local
-  // implementation took an isContinuous flag, but it was effectively
-  // dead — see the comment by the rAF refs above).
-  // isContinuous is still used elsewhere in this file for the render
-  // loop's "should I keep ticking" decision; declared here so the
-  // existing references continue to resolve.
-  // Animation gate: keep rAF ticking for any of (a) sankey with
-  // particles, (b) customNetworkLayout charts with particles (e.g.
-  // ProcessSankey — same particle pipeline, edges carry HOC-computed
-  // bezier control points), (c) pulse encoding, (d) explicit store
-  // animation state (transitions, push-mode intro).
-  const isContinuous =
-    ((chartType === "sankey" || !!customNetworkLayout) && showParticles) ||
-    !!pulse ||
-    (storeRef.current?.isAnimating ?? false)
+  const isContinuous = shouldContinueNetworkAnimation(
+    chartType,
+    !!customNetworkLayout,
+    showParticles,
+    !!pulse,
+    storeRef.current?.isAnimating ?? false
+  )
 
   // customLayout overlays are read straight from `storeRef.current.customLayoutOverlays`
   // at render time (see the `foregroundGraphics` composition below) — the same
@@ -1056,61 +1054,13 @@ const StreamNetworkFrame = memo(forwardRef<
 
   // ── Observation wrappers ─────────────────────────────────────────────
 
-  const customHoverBehavior = useCallback(
-    (d: HoverData | null) => {
-      if (customHoverBehaviorProp) customHoverBehaviorProp(d)
-      if (onObservation) {
-        const now = Date.now()
-        if (d) {
-          onObservation({
-            type: "hover",
-            datum: d.data || {},
-            x: d.x,
-            y: d.y,
-            timestamp: now,
-            chartType: "StreamNetworkFrame",
-            chartId
-          })
-        } else {
-          onObservation({
-            type: "hover-end",
-            timestamp: now,
-            chartType: "StreamNetworkFrame",
-            chartId
-          })
-        }
-      }
-    },
-    [customHoverBehaviorProp, onObservation, chartId]
-  )
-
-  const customClickBehavior = useCallback(
-    (d: HoverData | null) => {
-      if (customClickBehaviorProp) customClickBehaviorProp(d)
-      if (onObservation) {
-        const now = Date.now()
-        if (d) {
-          onObservation({
-            type: "click",
-            datum: d.data || {},
-            x: d.x,
-            y: d.y,
-            timestamp: now,
-            chartType: "StreamNetworkFrame",
-            chartId
-          })
-        } else {
-          onObservation({
-            type: "click-end",
-            timestamp: now,
-            chartType: "StreamNetworkFrame",
-            chartId
-          })
-        }
-      }
-    },
-    [customClickBehaviorProp, onObservation, chartId]
-  )
+  const { customHoverBehavior, customClickBehavior } =
+    useNetworkObservationBehaviors({
+      customHoverBehavior: customHoverBehaviorProp,
+      customClickBehavior: customClickBehaviorProp,
+      onObservation,
+      chartId
+    })
 
   // ── Hover handlers ───────────────────────────────────────────────────
   // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
@@ -1188,6 +1138,7 @@ const StreamNetworkFrame = memo(forwardRef<
   const clickHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
 
   clickHandlerRef.current = (e: React.MouseEvent) => {
+    if (isAnnotationActivationTarget(e.target)) return
     if (!customClickBehaviorProp && !onObservation) return
     const canvas = canvasRef.current
     if (!canvas) return
@@ -1208,7 +1159,12 @@ const StreamNetworkFrame = memo(forwardRef<
     })
 
     if (result.kind === "hit") {
-      customClickBehavior(result.hover)
+      customClickBehavior(result.hover, {
+        type: "activate",
+        inputType: observationInputType(
+          (e.nativeEvent as MouseEvent & { pointerType?: string }).pointerType
+        )
+      })
     } else if (result.kind === "miss") {
       customClickBehavior(null)
     }
@@ -1231,18 +1187,50 @@ const StreamNetworkFrame = memo(forwardRef<
   const neighborIndexRef = useRef(-1)
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (isInteractiveKeyboardTarget(e)) return
       const store = storeRef.current
       if (!store) return
+      const clearFocus = () => {
+        kbFocusIndexRef.current = -1
+        focusedNavPointRef.current = null
+        neighborIndexRef.current = -1
+        hoverRef.current = null
+        setHoverData(null)
+        if (customHoverBehavior) {
+          customHoverBehavior(null)
+          dirtyRef.current = true
+        }
+        scheduleRender()
+      }
 
       // Always rebuild NavGraph from current sceneNodes — positions change during
       // force simulation ticks and transition interpolation, so caching risks stale coordinates
       const navPoints = extractNetworkNavPoints(
         store.sceneNodes as NetworkSceneNode[]
       )
-      if (navPoints.length === 0) return
+      if (navPoints.length === 0) {
+        if (kbFocusIndexRef.current >= 0) clearFocus()
+        return
+      }
       const graph: NavGraph = buildNavGraph(navPoints)
 
-      const current = kbFocusIndexRef.current
+      const requestedIndex = kbFocusIndexRef.current
+      let current = requestedIndex
+      if (current >= graph.flat.length) {
+        clearFocus()
+        current = -1
+      }
+
+      // Enter is reserved for the network-specific "follow connected edge"
+      // navigation contract. Space activates the currently focused node.
+      if (e.key === " " && current >= 0) {
+        e.preventDefault()
+        const point = graph.flat[current]
+        customClickBehavior(buildHoverData(point.datum || {}, point.x, point.y, {
+          nodeOrEdge: "node"
+        }), { type: "activate", inputType: "keyboard" })
+        return
+      }
 
       if (current < 0) {
         if (e.key === "Escape") return
@@ -1274,7 +1262,7 @@ const StreamNetworkFrame = memo(forwardRef<
         hoverRef.current = hover
         setHoverData(hover)
         if (customHoverBehavior) {
-          customHoverBehavior(hover)
+          customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
           dirtyRef.current = true
         }
         scheduleRender()
@@ -1294,16 +1282,7 @@ const StreamNetworkFrame = memo(forwardRef<
       e.preventDefault()
 
       if (next < 0) {
-        kbFocusIndexRef.current = -1
-        focusedNavPointRef.current = null
-        neighborIndexRef.current = -1
-        hoverRef.current = null
-        setHoverData(null)
-        if (customHoverBehavior) {
-          customHoverBehavior(null)
-          dirtyRef.current = true
-        }
-        scheduleRender()
+        clearFocus()
         return
       }
 
@@ -1325,12 +1304,12 @@ const StreamNetworkFrame = memo(forwardRef<
       hoverRef.current = hover
       setHoverData(hover)
       if (customHoverBehavior) {
-        customHoverBehavior(hover)
+        customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
         dirtyRef.current = true
       }
       scheduleRender()
     },
-    [customHoverBehavior, scheduleRender]
+    [customClickBehavior, customHoverBehavior, scheduleRender]
   )
 
   const onMouseMoveWrapped = useCallback(
@@ -1361,6 +1340,7 @@ const StreamNetworkFrame = memo(forwardRef<
       adjustedWidth,
       adjustedHeight,
       background,
+      renderMode,
       hasBackgroundGraphics: Boolean(backgroundGraphics),
       dirtyRef,
       lastFrameTimeRef,
@@ -1390,7 +1370,7 @@ const StreamNetworkFrame = memo(forwardRef<
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
-    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, scheduleRender],
+    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
   })
 
   // ── Staleness timer ─────────────────────────────────────────────────
@@ -1430,125 +1410,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // SSR + actual SSR-hydration only — pure CSR mounts skip the
   // wasted SVG render. See StreamXYFrame for the full rationale.
   if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
-    const store = storeRef.current
-    if (store) {
-      const isHierarchical = [
-        "tree",
-        "cluster",
-        "treemap",
-        "circlepack",
-        "partition",
-        "orbit"
-      ].includes(chartType)
-      const hierarchyRoot = isHierarchical
-        ? dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)
-        : undefined
-
-      if (isHierarchical && hierarchyRoot) {
-        store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
-        store.buildScene([adjustedWidth, adjustedHeight])
-      } else {
-        const rawNodes = safeNodes
-        const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
-        if (rawNodes.length > 0 || rawEdges.length > 0) {
-          store.ingestBounded(rawNodes, rawEdges, [
-            adjustedWidth,
-            adjustedHeight
-          ])
-          store.buildScene([adjustedWidth, adjustedHeight])
-        }
-      }
-    }
-
-    const sceneNodes = store?.sceneNodes ?? []
-    const sceneEdges = store?.sceneEdges ?? []
-    const labels = store?.labels ?? []
-
-    return (
-      <div
-        // Attached on both branches so the `ResizeObserver` in
-        // `useResponsiveSize` latches at first commit. See
-        // `StreamXYFrame.tsx` for the full rationale.
-        ref={responsiveRef}
-        className={`stream-network-frame${className ? ` ${className}` : ""}`}
-        role="img"
-        aria-label={
-          description || (typeof title === "string" ? title : "Network chart")
-        }
-        style={{
-          position: "relative",
-          width: responsiveWidth ? "100%" : size[0],
-          height: responsiveHeight ? "100%" : size[1]
-        }}
-      >
-        <ScreenReaderSummary summary={summary} />
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width={size[0]}
-          height={size[1]}
-          style={{ position: "absolute", left: 0, top: 0 }}
-        >
-          {resolvedBackground && (
-            <g transform={`translate(${margin.left},${margin.top})`}>
-              {resolvedBackground}
-            </g>
-          )}
-          <g transform={`translate(${margin.left},${margin.top})`}>
-            {background && (
-              <rect
-                x={0}
-                y={0}
-                width={adjustedWidth}
-                height={adjustedHeight}
-                fill={background}
-              />
-            )}
-            {sceneEdges
-              .map((edge, i) => networkSceneEdgeToSVG(edge, i))
-              .filter(Boolean)}
-            {sceneNodes
-              .map((node, i) => networkSceneNodeToSVG(node, i))
-              .filter(Boolean)}
-            {labels
-              .map((label, i) => networkLabelToSVG(label, i))
-              .filter(Boolean)}
-          </g>
-        </svg>
-        <NetworkSVGOverlay
-          width={adjustedWidth}
-          height={adjustedHeight}
-          totalWidth={size[0]}
-          totalHeight={size[1]}
-          margin={margin}
-          labels={labels}
-          sceneNodes={sceneNodes}
-          title={title}
-          legend={legend}
-          legendPosition={legendPosition}
-          legendLayout={legendLayout}
-          legendHoverBehavior={legendHoverBehavior}
-          legendClickBehavior={legendClickBehavior}
-          legendHighlightedCategory={legendHighlightedCategory}
-          legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={composeOverlays(
-            resolvedForeground,
-            wrapWithCustomLayoutSelection(
-              storeRef.current?.customLayoutOverlays,
-              layoutSelection ?? null
-            )
-          )}
-          annotations={annotations}
-          autoPlaceAnnotations={autoPlaceAnnotations}
-          svgAnnotationRules={svgAnnotationRules}
-          annotationFrame={0}
-        />
-        <NetworkHtmlMarksLayer
-          marks={store?.customLayoutHtmlMarks}
-          margin={margin}
-          selection={layoutSelection ?? null}
-        />
-      </div>
-    )
+    return <NetworkSSRFrame props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
   }
 
   // ── Render ───────────────────────────────────────────────────────────
@@ -1662,6 +1524,10 @@ const StreamNetworkFrame = memo(forwardRef<
             )
           )}
           annotations={annotations}
+          onAnnotationActivate={onAnnotationActivate}
+          onObservation={annotationObservationCallback ?? onObservation}
+          chartId={chartId}
+          chartType="StreamNetworkFrame"
           autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}

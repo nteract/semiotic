@@ -14,6 +14,12 @@ import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotati
 import type { AnnotationContext } from "../realtime/types"
 import { symbolRadius } from "./symbolPath"
 import { glyphHitGeometry, type GlyphDef } from "./glyphDef"
+import type { OnObservationCallback } from "../store/ObservationStore"
+import {
+  annotationActivationProps,
+  useAnnotationActivationOptions,
+  type OnAnnotationActivateCallback
+} from "../charts/shared/annotationActivation"
 
 type AnnotationAnchorNode = {
   type: string
@@ -105,6 +111,10 @@ export interface NetworkSVGOverlayProps {
 
   /** Annotations */
   annotations?: Datum[]
+  onAnnotationActivate?: OnAnnotationActivateCallback
+  onObservation?: OnObservationCallback
+  chartId?: string
+  chartType?: string
   autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
@@ -139,10 +149,20 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     foregroundGraphics,
     sceneNodes,
     annotations,
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType,
     autoPlaceAnnotations,
     svgAnnotationRules,
     annotationFrame: _annotationFrame
   } = props
+  const annotationActivation = useAnnotationActivationOptions({
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType
+  })
 
   const annotationContext = React.useMemo<NetworkAnnotationContext>(() => {
     const pointNodes = (sceneNodes || []).flatMap((node) => {
@@ -286,6 +306,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
       return (
         <div
           key={`widget-${i}`}
+          {...annotationActivationProps(annotation, annotationActivation)}
           className={isDeferred ? "annotation-deferred" : undefined}
           data-annotation-disclosure={isDeferred ? "deferred" : undefined}
           style={{

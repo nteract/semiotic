@@ -14,6 +14,11 @@ let lastXYFrameProps: {
   onLayoutError?: unknown
   chartType?: string
   colorAccessor?: unknown
+  title?: unknown
+  description?: unknown
+  summary?: unknown
+  accessibleTable?: unknown
+  animate?: unknown
 } | null = null
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
@@ -101,5 +106,51 @@ describe("XYCustomChart", () => {
       </TooltipProvider>
     )
     expect(lastXYFrameProps?.colorAccessor).toBe("category")
+  })
+
+  it("forwards shared chart metadata and animation", () => {
+    render(
+      <TooltipProvider>
+        <XYCustomChart
+          data={[{ value: 1 }]}
+          layout={trivialLayout}
+          title="XY title"
+          description="XY description"
+          summary="XY summary"
+          accessibleTable={false}
+          animate={false}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps).toMatchObject({
+      title: "XY title",
+      description: "XY description",
+      summary: "XY summary",
+      accessibleTable: false,
+      animate: false,
+    })
+  })
+
+  it("resolves responsive metadata before explicit frame overrides", () => {
+    render(
+      <TooltipProvider>
+        <XYCustomChart
+          data={[{ value: 1 }]}
+          layout={trivialLayout}
+          width={320}
+          description="Base description"
+          summary="Base summary"
+          responsiveRules={[{
+            when: { maxWidth: 400 },
+            transform: { description: "Responsive description", summary: "Responsive summary" },
+          }]}
+          frameProps={{ description: "Frame description" }}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps).toMatchObject({
+      description: "Frame description",
+      summary: "Responsive summary",
+    })
   })
 })

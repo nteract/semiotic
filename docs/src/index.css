@@ -209,46 +209,50 @@ a:hover {
    7. Header
    -------------------------------------------------------------------------- */
 
-header {
+.docs-top-bar,
+.examples-top-bar {
   position: sticky;
   top: 0;
   z-index: 300;
   background: var(--surface-1);
   border-bottom: 1px solid var(--surface-3);
-  padding: 16px 24px 16px 32px;
-  display: flex;
   align-items: center;
   width: 100%;
 }
 
-header .logo,
-header .logo img {
+.docs-top-bar {
+  display: flex;
+  padding: 16px 24px 16px 32px;
+}
+
+.docs-top-bar .logo,
+.docs-top-bar .logo img {
   max-width: 200px;
 }
 
-.logo img {
+.docs-top-bar .logo img {
   width: 200px;
 }
 
-header h1 {
+.docs-top-bar h1 {
   margin: 0;
   font-weight: 600;
   font-size: 20px;
 }
 
-header .space-between {
+.docs-top-bar .space-between {
   justify-content: space-between;
   flex-grow: 1;
   align-items: center;
 }
 
-header .github-links p {
+.docs-top-bar .github-links p {
   align-self: center;
   margin: 0;
   margin-right: 10px;
 }
 
-header .github-links a {
+.docs-top-bar .github-links a {
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 12px;
@@ -256,7 +260,7 @@ header .github-links a {
   transition: color 0.15s ease;
 }
 
-header .github-links a:hover {
+.docs-top-bar .github-links a:hover {
   color: var(--text-primary);
 }
 
@@ -766,19 +770,18 @@ div.page-image img {
     overflow-x: hidden;
   }
 
-  header {
+  .docs-top-bar {
     padding: 10px 14px;
     gap: 10px;
   }
 
-  header .logo,
-  header .logo img,
-  .logo img {
+  .docs-top-bar .logo,
+  .docs-top-bar .logo img {
     max-width: 142px;
     width: 142px;
   }
 
-  header .github-links {
+  .docs-top-bar .github-links {
     display: none;
   }
 
@@ -932,6 +935,10 @@ div.page-image img {
   }
 
   .examples-top-bar {
+    padding: 0 !important;
+  }
+
+  .examples-top-bar-inner {
     padding: 14px !important;
     gap: 10px !important;
     flex-wrap: wrap;

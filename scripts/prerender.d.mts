@@ -4,6 +4,26 @@ export function copyDocsApiAssets(publicApiDir?: string, buildDir?: string): str
 
 export function copyBlogOgCards(publicOgDir?: string, buildDir?: string): string[]
 
+export function copyExampleOgCards(publicOgDir?: string, buildDir?: string): string[]
+
+export interface ExampleDefinitionMeta {
+  path: string
+  title: string
+  description?: string
+  eyebrow?: string
+}
+
+export function loadExampleDefinitions(filePath?: string): Promise<ExampleDefinitionMeta[]>
+
+export function mergeExampleDefinitionRoutes(
+  routes?: string[],
+  examples?: ExampleDefinitionMeta[]
+): string[]
+
+export function registerExampleRouteMeta(
+  examples?: ExampleDefinitionMeta[]
+): Promise<number>
+
 export interface BlogEntryMeta {
   slug: string
   title: string

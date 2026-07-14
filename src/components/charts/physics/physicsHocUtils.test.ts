@@ -100,6 +100,7 @@ describe("resolvePhysicsTooltipProps", () => {
 describe("resolvePhysicsFrameSharedProps", () => {
   it("forwards Semiotic chrome, observation, and mode extras to the frame", () => {
     const onObservation = () => undefined
+    const onAnnotationActivate = () => undefined
     const onClick = () => undefined
     const annotations = [{ type: "label", x: 1, y: 2, label: "A" }]
     const shared = resolvePhysicsFrameSharedProps(
@@ -118,7 +119,7 @@ describe("resolvePhysicsFrameSharedProps", () => {
         onClick,
         accessibleTable: false
       },
-      { enableHover: true },
+      { enableHover: true, onAnnotationActivate },
       [{ id: "s1", label: "Stage", x: 10, y: 10 }],
       {
         chartMode: "mobile",
@@ -143,6 +144,7 @@ describe("resolvePhysicsFrameSharedProps", () => {
       { id: "s1", label: "Stage", x: 10, y: 10 }
     ])
     expect(shared.onObservation).toBe(onObservation)
+    expect(shared.onAnnotationActivate).toBe(onAnnotationActivate)
     // onClick is wrapped to drop the body field for BaseChartProps
     expect(typeof shared.onClick).toBe("function")
   })

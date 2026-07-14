@@ -334,7 +334,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1)
   }
 
-  console.log(
-    `✅ docs example integrity passed (${result.exampleCount} examples, ${result.routeCount} routes, ${result.previewCount} previews, ${result.architectureProfileCount} profiles)`,
-  )
+  if (process.argv.includes("--json")) {
+    console.log(JSON.stringify(result))
+  } else {
+    console.log(
+      `✅ docs example integrity passed (${result.exampleCount} examples, ${result.routeCount} routes, ${result.previewCount} previews, ${result.architectureProfileCount} profiles)`,
+    )
+  }
 }

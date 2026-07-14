@@ -435,6 +435,10 @@ try {
     dependencies: {
       react: sourcePackage.devDependencies.react,
       "react-dom": sourcePackage.devDependencies["react-dom"],
+      // The smoke suite imports every public entry point, including the
+      // explicitly opt-in semiotic/rough adapter. Model that consumer choice
+      // by installing its optional peer without making it a core dependency.
+      roughjs: sourcePackage.devDependencies.roughjs,
     },
     devDependencies: {
       "@types/react": sourcePackage.devDependencies["@types/react"],

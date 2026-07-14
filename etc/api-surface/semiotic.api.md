@@ -15,7 +15,7 @@ const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme>
 const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
-function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId }: AccessibleNavTreeProps): React.JSX.Element
+function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId, onObservation, onAnnotationActivate }: AccessibleNavTreeProps): React.JSX.Element
 function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -82,6 +82,7 @@ function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React
 function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: XYCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function adaptiveTimeTicks(granularity?: TimeGranularity | undefined): (value: any, index?: number, allTicks?: number[]) => string
+function annotationStableId(annotation: Datum): string | undefined
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
@@ -132,6 +133,9 @@ function useSyncedPushData<T = Datum>(ref: import("react").RefObject<SyncedPushH
 function useTheme(): SemioticTheme
 function zoomMobileRange(value: [number, number], domain: [number, number], direction: "in" | "out", step?: number | undefined, minSpan?: number | undefined): [number, number]
 interface AccessibleNavTreeProps
+interface ActivateObservation
+interface AnnotationActivateObservation
+interface AnnotationActivationEvent
 interface AnnotationContext
 interface AnnotationLifecycle
 interface AnnotationProvenance
@@ -175,6 +179,7 @@ interface DifferenceChartProps<TDatum extends Datum = Datum>
 interface DirectManipulationControlProps
 interface DonutChartProps<TDatum extends Datum = Datum>
 interface DotPlotProps<TDatum extends Datum = Datum>
+interface FocusObservation
 interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum>
 interface FunnelChartProps<TDatum extends Datum = Datum>
 interface GaugeChartProps
@@ -319,9 +324,10 @@ type ArrowOfTime = "up" | "down" | "left" | "right"
 type CanvasRendererFn = (ctx: CanvasRenderingContext2D, nodes: SceneNode[], scales: StreamScales, layout: StreamLayout) => void
 type CategoryColorMap = Record<string, string>
 type ChartAccessor<TDatum, T> = (keyof TDatum & string) | ((d: Datum, i?: number) => T)
+type ChartAnnotation = Datum
 type ChartMode = "primary" | "context" | "sparkline" | "mobile"
 type ChartNotificationLevel = "info" | "success" | "warning" | "error" | "neutral"
-type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | ControlObservation | LateDataObservation
+type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | FocusObservation | ActivateObservation | AnnotationActivateObservation | ControlObservation | LateDataObservation
 type ControlAuditStatus = "pass" | "warn" | "fail"
 type ControlInputSource = "pointer" | "keyboard" | "programmatic"
 type ControlObservationCallback = (observation: ControlObservation) => void
@@ -360,6 +366,8 @@ type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
 type NetworkChartType = "force" | "sankey" | "chord" | "tree" | "cluster" | "treemap" | "circlepack" | "orbit" | "partition"
 type NetworkSceneEdge = NetworkLineEdge | NetworkBezierEdge | NetworkRibbonEdge | NetworkCurvedEdge
 type NetworkSceneNode = NetworkCircleNode | NetworkRectNode | NetworkArcNode | NetworkSymbolNode | NetworkGlyphNode
+type ObservationInputType = "keyboard" | "pointer" | "touch" | "navigation-tree"
+type OnAnnotationActivateCallback = (event: AnnotationActivationEvent) => void
 type OnObservationCallback = (observation: ChartObservation) => void
 type OrdinalChartType = "bar" | "clusterbar" | "point" | "swarm" | "pie" | "donut" | "boxplot" | "violin" | "histogram" | "ridgeline" | "timeline" | "funnel" | "bar-funnel" | "swimlane" | "custom"
 type OrdinalSceneNode = RectSceneNode | PointSceneNode | SymbolSceneNode | GlyphSceneNode | WedgeSceneNode | BoxplotSceneNode | ViolinSceneNode | ConnectorSceneNode | TrapezoidSceneNode

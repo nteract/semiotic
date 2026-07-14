@@ -21,10 +21,13 @@ import type { SceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import type {
   NetworkPipelineConfig,
   ParticleStyle,
-  RealtimeEdge
+  RealtimeEdge,
+  NetworkSceneNode,
+  NetworkSceneEdge
 } from "./networkTypes"
 import type { MarginType } from "../types/marginType"
-import type { DecayConfig, PulseConfig, StalenessConfig } from "./types"
+import type { DecayConfig, PulseConfig, StalenessConfig, SceneRenderMode } from "./types"
+import { paintSceneWithBackend } from "./renderBackend"
 
 export interface NetworkFramePaintContext {
   canvas: HTMLCanvasElement
@@ -35,6 +38,7 @@ export interface NetworkFramePaintContext {
   adjustedWidth: number
   adjustedHeight: number
   background?: string
+  renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
   /** Skip opaque canvas fill when an SVG backgroundGraphics layer is present. */
   hasBackgroundGraphics?: boolean
   dirtyRef: { current: boolean }
@@ -74,6 +78,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     adjustedWidth,
     adjustedHeight,
     background,
+    renderMode,
     hasBackgroundGraphics = false,
     dirtyRef,
     lastFrameTimeRef,
@@ -173,12 +178,28 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       c2d.globalAlpha = staleness?.dimOpacity ?? 0.5
     }
 
-    networkEdgeRenderer(c2d, store.sceneEdges)
-    networkRectRenderer(c2d, store.sceneNodes)
-    networkCircleRenderer(c2d, store.sceneNodes)
-    networkArcRenderer(c2d, store.sceneNodes)
-    networkSymbolRenderer(c2d, store.sceneNodes)
-    networkGlyphRenderer(c2d, store.sceneNodes)
+    paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
+      context: c2d,
+      nodes: store.sceneEdges,
+      renderMode,
+      pixelRatio: dpr,
+      paintBuiltIn: (edges) => networkEdgeRenderer(c2d, edges as NetworkSceneEdge[])
+    })
+
+    paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
+      context: c2d,
+      nodes: store.sceneNodes,
+      renderMode,
+      pixelRatio: dpr,
+      paintBuiltIn: (nodes) => {
+        const builtInNodes = nodes as NetworkSceneNode[]
+        networkRectRenderer(c2d, builtInNodes)
+        networkCircleRenderer(c2d, builtInNodes)
+        networkArcRenderer(c2d, builtInNodes)
+        networkSymbolRenderer(c2d, builtInNodes)
+        networkGlyphRenderer(c2d, builtInNodes)
+      }
+    })
 
     if (particlesWanted && !currentlyStale) {
       const edges = store.edgesArray

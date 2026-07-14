@@ -2,9 +2,42 @@ import { describe, expect, it } from "vitest"
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { extractRoutesFromSource, generatePage, copyDocsApiAssets, sanitizeRouteHtml } from "../../../scripts/prerender.mjs"
+import {
+  copyDocsApiAssets,
+  extractRoutesFromSource,
+  generatePage,
+  loadExampleDefinitions,
+  mergeExampleDefinitionRoutes,
+  sanitizeRouteHtml,
+} from "../../../scripts/prerender.mjs"
 
 describe("docs prerender helpers", () => {
+  it("fails closed when the example manifest is missing or malformed", async () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), "semiotic-example-manifest-"))
+    try {
+      await expect(loadExampleDefinitions(join(tmpRoot, "missing.js"))).rejects.toThrow(
+        /manifest does not exist/,
+      )
+      const malformed = join(tmpRoot, "malformed.js")
+      writeFileSync(malformed, "export const EXAMPLE_DEFINITIONS = []\n")
+      await expect(loadExampleDefinitions(malformed)).rejects.toThrow(/non-empty array/)
+      const dynamic = join(tmpRoot, "dynamic.js")
+      writeFileSync(
+        dynamic,
+        "export const EXAMPLE_DEFINITIONS = [{ path: '/examples/:slug', title: 'Dynamic' }]\n",
+      )
+      await expect(loadExampleDefinitions(dynamic)).rejects.toThrow(/valid static path/)
+      const duplicate = join(tmpRoot, "duplicate.js")
+      writeFileSync(
+        duplicate,
+        "export const EXAMPLE_DEFINITIONS = [{ path: '/examples/same', title: 'One' }, { path: '/examples/same', title: 'Two' }]\n",
+      )
+      await expect(loadExampleDefinitions(duplicate)).rejects.toThrow(/duplicate path/)
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true })
+    }
+  })
+
   it("extracts nested docs routes without leaking the previous parent", () => {
     const source = `
       <Routes>
@@ -58,6 +91,33 @@ describe("docs prerender helpers", () => {
     expect(routes).toContain("features/styling")
     expect(routes).toContain("cookbook/timeline")
     expect(routes).not.toContain("api/styling")
+  })
+
+  it("merges definition-backed example paths omitted by dynamic JSX routes", () => {
+    const source = `
+      <Routes>
+        <Route path="examples" element={<ExamplesOverviewPage />} />
+        {EXAMPLE_ROUTES.map(({ path, Component }) => (
+          <Route key={path} path={path} element={<Component />} />
+        ))}
+      </Routes>
+    `
+
+    const extracted = extractRoutesFromSource(source)
+    const routes = mergeExampleDefinitionRoutes(extracted, [
+      { path: "/examples/insight-forge", title: "Insight Forge" },
+      { path: "/examples/analyst-adventure/", title: "Analyst Adventure" },
+      { path: "/blog/not-an-example", title: "Not an example" },
+      { path: "/examples/:slug", title: "Dynamic example" },
+    ])
+
+    expect(extracted).toEqual(["", "examples"])
+    expect(routes).toEqual([
+      "",
+      "examples",
+      "examples/insight-forge",
+      "examples/analyst-adventure",
+    ])
   })
 
   it("generates SEO metadata and a noscript fallback for the homepage", () => {

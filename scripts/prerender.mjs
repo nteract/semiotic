@@ -313,31 +313,79 @@ export function copyExampleOgCards(publicOgDir = PUBLIC_EXAMPLE_OG_DIR, buildDir
 // entry into ROUTE_META so /examples/<slug> pages emit the example's
 // name (og:title) and its generated preview card (og:image), reusing the
 // same per-section meta path everything else in ROUTE_META uses.
-export async function registerExampleRouteMeta() {
+export async function loadExampleDefinitions(filePath = EXAMPLE_DEFINITIONS_FILE) {
   try {
-    if (!existsSync(EXAMPLE_DEFINITIONS_FILE)) return 0
-    const source = readFileSync(EXAMPLE_DEFINITIONS_FILE, "utf8")
-    const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
-    const examples = mod.EXAMPLE_DEFINITIONS || []
-    let registered = 0
-    for (const entry of examples) {
-      const routePath = String(entry.path).replace(/^\//, "")
-      const slug = routePath.split("/").filter(Boolean).pop()
-      if (!routePath || !slug) continue
-      // Don't clobber a hand-curated ROUTE_META entry if one ever exists.
-      if (Object.prototype.hasOwnProperty.call(ROUTE_META, routePath)) continue
-      ROUTE_META[routePath] = {
-        title: `${entry.title} — Semiotic`,
-        description: entry.description || entry.eyebrow || "",
-        ogImage: `${SITE_URL}/examples/og/${slug}.png`,
-      }
-      registered++
+    if (!existsSync(filePath)) {
+      throw new Error(`manifest does not exist at ${filePath}`)
     }
-    return registered
+    const source = readFileSync(filePath, "utf8")
+    const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
+    const definitions = mod.EXAMPLE_DEFINITIONS
+    if (!Array.isArray(definitions) || definitions.length === 0) {
+      throw new Error("EXAMPLE_DEFINITIONS must be a non-empty array")
+    }
+    const seenPaths = new Set()
+    for (const [index, definition] of definitions.entries()) {
+      if (
+        !definition ||
+        typeof definition.path !== "string" ||
+        !/^\/examples\/[^/:?#]+(?:\/[^/:?#]+)*$/.test(definition.path) ||
+        typeof definition.title !== "string" ||
+        !definition.title.trim()
+      ) {
+        throw new Error(`EXAMPLE_DEFINITIONS[${index}] is missing a valid static path or title`)
+      }
+      if (seenPaths.has(definition.path)) {
+        throw new Error(`EXAMPLE_DEFINITIONS contains duplicate path ${definition.path}`)
+      }
+      seenPaths.add(definition.path)
+    }
+    if (typeof mod.validateExampleDefinitions === "function") {
+      const validation = mod.validateExampleDefinitions(definitions)
+      if (!validation?.ok) {
+        throw new Error(validation?.errors?.join("; ") || "EXAMPLE_DEFINITIONS failed validation")
+      }
+    }
+    return definitions
   } catch (err) {
-    console.warn("[prerender] could not load examples manifest:", err.message)
-    return 0
+    const reason = err instanceof Error ? err.message : String(err)
+    throw new Error(`[prerender] could not load examples manifest: ${reason}`, { cause: err })
   }
+}
+
+// App.jsx renders example routes from EXAMPLE_DEFINITIONS, so its JSX contains
+// only the top-level /examples route for the static route extractor to see.
+// Merge the canonical definition paths explicitly so deep example pages receive
+// their own HTML, social metadata, sitemap entries, and machine-readable docs.
+export function mergeExampleDefinitionRoutes(routes = [], examples = []) {
+  const merged = new Set(routes)
+  for (const entry of examples) {
+    const routePath = String(entry?.path || "")
+      .replace(/^\/+/, "")
+      .replace(/\/+$/, "")
+    if (!routePath.startsWith("examples/") || routePath.includes(":")) continue
+    merged.add(routePath)
+  }
+  return Array.from(merged)
+}
+
+export async function registerExampleRouteMeta(examples) {
+  const resolvedExamples = examples ?? await loadExampleDefinitions()
+  let registered = 0
+  for (const entry of resolvedExamples) {
+    const routePath = String(entry.path).replace(/^\//, "")
+    const slug = routePath.split("/").filter(Boolean).pop()
+    if (!routePath || !slug) continue
+    // Don't clobber a hand-curated ROUTE_META entry if one ever exists.
+    if (Object.prototype.hasOwnProperty.call(ROUTE_META, routePath)) continue
+    ROUTE_META[routePath] = {
+      title: `${entry.title} — Semiotic`,
+      description: entry.description || entry.eyebrow || "",
+      ogImage: `${SITE_URL}/examples/og/${slug}.png`,
+    }
+    registered++
+  }
+  return registered
 }
 
 // ── Blog metadata loader ───────────────────────────────────────────────
@@ -908,8 +956,9 @@ export async function prerender() {
   }
 
   const shellHtml = readFileSync(shellPath, "utf-8")
-  const routes = extractRoutes()
-  const exampleMetaCount = await registerExampleRouteMeta()
+  const exampleDefinitions = await loadExampleDefinitions()
+  const routes = mergeExampleDefinitionRoutes(extractRoutes(), exampleDefinitions)
+  const exampleMetaCount = await registerExampleRouteMeta(exampleDefinitions)
   const blogEntries = await loadBlogEntries()
   let renderRoute = null
   try {

@@ -18,6 +18,11 @@ let lastOrdinalFrameProps: {
   oAccessor?: unknown
   rAccessor?: unknown
   colorAccessor?: unknown
+  title?: unknown
+  description?: unknown
+  summary?: unknown
+  accessibleTable?: unknown
+  animate?: unknown
 } | null = null
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
@@ -127,5 +132,28 @@ describe("OrdinalCustomChart", () => {
       </TooltipProvider>
     )
     expect(lastOrdinalFrameProps?.colorAccessor).toBe("segment")
+  })
+
+  it("forwards shared chart metadata and animation", () => {
+    render(
+      <TooltipProvider>
+        <OrdinalCustomChart
+          data={[{ category: "A", value: 1 }]}
+          layout={trivialLayout}
+          title="Ordinal title"
+          description="Ordinal description"
+          summary="Ordinal summary"
+          accessibleTable={false}
+          animate={false}
+        />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps).toMatchObject({
+      title: "Ordinal title",
+      description: "Ordinal description",
+      summary: "Ordinal summary",
+      accessibleTable: false,
+      animate: false,
+    })
   })
 })

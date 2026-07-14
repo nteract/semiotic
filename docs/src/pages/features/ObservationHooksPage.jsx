@@ -253,7 +253,8 @@ export default function ObservationHooksPage() {
   xAccessor="x"
   yAccessor="y"
   onObservation={(obs) => {
-    // obs.type: "hover" | "hover-end" | "brush" | "brush-end" | "selection" | "selection-end"
+    // obs.type: "hover" | "hover-end" | "focus" | "click" | "click-end" | "activate"
+    //         | "annotation-activate" | "brush" | "brush-end" | "selection" | "selection-end"
     //         | "control-start" | "control-change" | "control-end"
     // obs.datum: the data point being hovered
     // obs.timestamp: Date.now()
@@ -307,7 +308,10 @@ export default function ObservationHooksPage() {
       <h2 id="event-types">Event Types</h2>
 
       <p>
-        Chart events cover hover, click, brush, selection, and direct-control interactions:
+        Chart events cover hover, semantic focus and activation, brush,
+        selection, and direct-control interactions. Semantic events are
+        additive: a keyboard activation emits the existing <code>click</code>
+        event and an <code>activate</code> event with its input channel.
       </p>
 
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
@@ -328,6 +332,21 @@ export default function ObservationHooksPage() {
             <td style={tdCodeStyle}><code>hover-end</code></td>
             <td style={tdStyle}>Mouse leaves chart or data</td>
             <td style={tdStyle}>&mdash;</td>
+          </tr>
+          <tr style={trStyle}>
+            <td style={tdCodeStyle}><code>focus</code></td>
+            <td style={tdStyle}>Keyboard or structured navigation focuses a datum</td>
+            <td style={tdStyle}><code>datum</code>, <code>inputType</code></td>
+          </tr>
+          <tr style={trStyle}>
+            <td style={tdCodeStyle}><code>activate</code></td>
+            <td style={tdStyle}>A datum is activated by pointer, touch, keyboard, or navigation tree</td>
+            <td style={tdStyle}><code>datum</code>, <code>inputType</code></td>
+          </tr>
+          <tr style={trStyle}>
+            <td style={tdCodeStyle}><code>annotation-activate</code></td>
+            <td style={tdStyle}>A stable widget annotation is activated</td>
+            <td style={tdStyle}><code>annotationId</code>, <code>inputType</code></td>
           </tr>
           <tr style={trStyle}>
             <td style={tdCodeStyle}><code>brush</code></td>
@@ -366,6 +385,15 @@ export default function ObservationHooksPage() {
           </tr>
         </tbody>
       </table>
+
+      <p>
+        Interactive widget annotations should carry <code>id</code>,{" "}
+        <code>stableId</code>, or <code>provenance.stableId</code>. Semiotic
+        never falls back to an annotation&apos;s array index for activation
+        identity. Stream Frames accept <code>onAnnotationActivate</code>;
+        chart HOCs expose the same callback through{" "}
+        <code>frameProps.onAnnotationActivate</code>.
+      </p>
 
       <p>
         All events include <code>timestamp</code> (Date.now()),{" "}

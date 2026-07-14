@@ -14,7 +14,7 @@ import { SafeRender } from "../shared/withChartWrapper"
 import { useChartSelection, resolveMobileInteraction } from "../shared/hooks"
 import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { filterSparseArray } from "../shared/sparseArray"
-import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { ChartRecipe } from "../../ai/chartRecipes"
 
 export interface NetworkCustomChartProps<
@@ -132,6 +132,9 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     height: props.height,
     enableHover: props.enableHover,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
+    accessibleTable: props.accessibleTable,
     mode: props.mode,
     mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
@@ -195,12 +198,16 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
     margin: normalizedMargin,
-    className,
-    title,
-    description,
-    summary,
-    accessibleTable,
     enableHover,
+    ...buildBaseMetadataProps({
+      title,
+      description,
+      summary,
+      accessibleTable,
+      className,
+      animate: props.animate,
+      autoPlaceAnnotations,
+    }),
     // Emit hover/click into the shared selection store (and fire
     // onObservation/onClick) only when something consumes them — mirrors
     // the built-in network HOC gating while still honoring mobile
@@ -220,7 +227,6 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     // Annotations anchor to emitted marks by `pointId` (the scene node's id);
     // `frameProps` can still override if a caller needs the raw frame prop.
     ...(annotations != null && { annotations }),
-    ...(autoPlaceAnnotations != null && { autoPlaceAnnotations }),
     // No `showLegend` pass-through: custom layouts own color resolution,
     // so the auto-legend infrastructure can't run. Pass a real legend
     // through `frameProps.legend` if you want one.

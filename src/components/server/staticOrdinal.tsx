@@ -13,6 +13,7 @@ import {
   type EvidenceSink
 } from "./renderEvidence"
 import { ordinalSceneNodeToSVG } from "../stream/SceneToSVG"
+import { renderSceneWithBackend } from "../stream/renderBackend"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import {
@@ -304,7 +305,12 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   }
 
   const dataMarks = store.scene
-    .map((node, i) => ordinalSceneNodeToSVG(node, i, idPfx))
+    .map((node, i) => renderSceneWithBackend({
+      node,
+      index: i,
+      renderMode: props.renderMode,
+      fallback: () => ordinalSceneNodeToSVG(node, i, idPfx)
+    }))
     .filter(Boolean)
 
   const showAxes = props.showAxes !== false
@@ -386,4 +392,3 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
 }
 
 // ── Geo SSR ─────────────────────────────────────────────────────────────
-

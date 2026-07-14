@@ -13,6 +13,13 @@ interface ObservationBase {
   chartId?: string
 }
 
+/** Input channel that produced a semantic chart interaction. */
+export type ObservationInputType =
+  | "keyboard"
+  | "pointer"
+  | "touch"
+  | "navigation-tree"
+
 export interface HoverObservation extends ObservationBase {
   type: "hover"
   datum: Datum
@@ -54,6 +61,27 @@ export interface ClickEndObservation extends ObservationBase {
   type: "click-end"
 }
 
+/** A datum became the reader's active focus target. */
+export interface FocusObservation extends ObservationBase {
+  type: "focus"
+  datum: Datum
+  inputType: Exclude<ObservationInputType, "touch">
+}
+
+/** A datum was deliberately activated, independent of input modality. */
+export interface ActivateObservation extends ObservationBase {
+  type: "activate"
+  datum: Datum
+  inputType: ObservationInputType
+}
+
+/** A stable, interactive annotation was deliberately activated. */
+export interface AnnotationActivateObservation extends ObservationBase {
+  type: "annotation-activate"
+  annotationId: string
+  inputType: ObservationInputType
+}
+
 /**
  * Emitted when an event-time stream receives a record outside its
  * lateness/grace window (see `ReorderBuffer`). Surfaces lateness as an
@@ -83,6 +111,9 @@ export type ChartObservation =
   | SelectionEndObservation
   | ClickObservation
   | ClickEndObservation
+  | FocusObservation
+  | ActivateObservation
+  | AnnotationActivateObservation
   | ControlObservation
   | LateDataObservation
 

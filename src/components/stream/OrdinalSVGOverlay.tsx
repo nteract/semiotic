@@ -8,6 +8,11 @@ import type { ReactNode } from "react"
 import type { LegendGroup, GradientLegendConfig, LegendLayout } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
+import type { OnObservationCallback } from "../store/ObservationStore"
+import {
+  useAnnotationActivationOptions,
+  type OnAnnotationActivateCallback
+} from "../charts/shared/annotationActivation"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 
@@ -57,6 +62,10 @@ interface OrdinalSVGOverlayProps {
 
   // Annotations
   annotations?: Datum[]
+  onAnnotationActivate?: OnAnnotationActivateCallback
+  onObservation?: OnObservationCallback
+  chartId?: string
+  chartType?: string
   autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
@@ -107,7 +116,6 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     showGrid,
     rFormat
   } = props
-
   const { rTickValues, axisExtent } = props
   const isRadial = scales?.projection === "radial"
   const isHorizontal = scales?.projection === "horizontal"
@@ -218,6 +226,10 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     legendLayout,
     foregroundGraphics,
     annotations,
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType,
     autoPlaceAnnotations,
     svgAnnotationRules,
     annotationFrame: _annotationFrame,
@@ -228,6 +240,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     canvasObscuresUnderlay = true,
     children
   } = props
+  const annotationActivation = useAnnotationActivationOptions({
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType
+  })
 
   const isRadial = scales?.projection === "radial"
   const isHorizontal = scales?.projection === "horizontal"
@@ -321,7 +339,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
 
-    const defaultRules = createDefaultAnnotationRules("ordinal")
+    const defaultRules = createDefaultAnnotationRules("ordinal", annotationActivation)
 
     // Expose both ordinal (o) and range (r) scales properly.
     // For vertical bars: x = category center (o + bandwidth/2), y = value (r)
@@ -364,7 +382,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
     // XY overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.
     return renderAnnotationPass(layoutAnnotations, defaultRules, svgAnnotationRules, context)
-  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData])
+  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData, annotationActivation])
 
   const hasContent = showAxes || title || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
   if (!hasContent) return null

@@ -1,6 +1,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
+import useElementSize from "../../hooks/useElementSize"
 import ThemeToggle from "../../components/ThemeToggle"
 
 const semioticLogo = new URL(
@@ -14,29 +15,35 @@ const semioticLogoDark = new URL(
 
 export default function ExamplesLayout({ children }) {
   const [theme, toggleTheme] = useDocsTheme()
+  const [topBarRef, topBarSize] = useElementSize({ height: 77 })
 
   return (
-    <div style={styles.shell} className="examples-shell">
-      <header style={styles.topBar} className="examples-top-bar">
-        <Link to="/" style={styles.logoLink} aria-label="Semiotic home">
-          <img
-            src={theme === "dark" ? semioticLogoDark : semioticLogo}
-            alt="Semiotic"
-            style={styles.logo}
-          />
-        </Link>
-        <Link to="/examples" style={styles.sectionLink}>Examples</Link>
-        <div style={styles.topBarRight} className="examples-top-bar-right">
-          <ThemeToggle theme={theme} onToggle={toggleTheme} />
-          <Link to="/getting-started" style={styles.utilityLink}>Docs</Link>
-          <a
-            href="https://github.com/nteract/semiotic"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={styles.utilityLink}
-          >
-            GitHub
-          </a>
+    <div
+      style={{ ...styles.shell, "--examples-sticky-offset": `${topBarSize.height}px` }}
+      className="examples-shell"
+    >
+      <header ref={topBarRef} style={styles.topBar} className="examples-top-bar">
+        <div style={styles.topBarInner} className="examples-top-bar-inner">
+          <Link to="/" style={styles.logoLink} aria-label="Semiotic home">
+            <img
+              src={theme === "dark" ? semioticLogoDark : semioticLogo}
+              alt="Semiotic"
+              style={styles.logo}
+            />
+          </Link>
+          <Link to="/examples" style={styles.sectionLink}>Examples</Link>
+          <div style={styles.topBarRight} className="examples-top-bar-right">
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            <Link to="/getting-started" style={styles.utilityLink}>Docs</Link>
+            <a
+              href="https://github.com/nteract/semiotic"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.utilityLink}
+            >
+              GitHub
+            </a>
+          </div>
         </div>
       </header>
 
@@ -62,6 +69,10 @@ const styles = {
   },
   topBar: {
     width: "100%",
+    boxSizing: "border-box",
+  },
+  topBarInner: {
+    width: "100%",
     maxWidth: 1240,
     margin: "0 auto",
     padding: "20px 28px",
@@ -69,7 +80,6 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "16px",
-    borderBottom: "1px solid var(--surface-3)",
   },
   logoLink: {
     display: "inline-flex",

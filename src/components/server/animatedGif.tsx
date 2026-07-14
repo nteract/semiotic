@@ -21,7 +21,8 @@ import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "../stream/ordinalTypes"
 import { xySceneNodeToSVG, ordinalSceneNodeToSVG } from "../stream/SceneToSVG"
-import type { SceneNode } from "../stream/types"
+import { renderSceneWithBackend } from "../stream/renderBackend"
+import type { SceneNode, SceneRenderMode } from "../stream/types"
 import type { OrdinalSceneNode } from "../stream/ordinalTypes"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import type { SemioticTheme } from "../store/ThemeStore"
@@ -458,7 +459,13 @@ function renderXYFrameSVG(
   const innerH = height - margin.top - margin.bottom
   const bg = resolveBackground(props, theme)
 
-  const dataMarks = scene.map((node, i) => xySceneNodeToSVG(node, i)).filter(Boolean)
+  const renderMode = props.renderMode as SceneRenderMode<SceneNode> | undefined
+  const dataMarks = scene.map((node, i) => renderSceneWithBackend({
+    node,
+    index: i,
+    renderMode,
+    fallback: () => xySceneNodeToSVG(node, i)
+  })).filter(Boolean)
   // Use explicit yExtent for annotation mapping, falling back to store scales
   const annots = renderFrameAnnotations(props.annotations, innerW, innerH, theme, props.yExtent, storeScales?.y)
 
@@ -505,7 +512,13 @@ function renderOrdinalFrameSVG(
   const ty = isRadial ? margin.top + (height - margin.top - margin.bottom) / 2 : margin.top
   const bg = resolveBackground(props, theme)
 
-  const dataMarks = scene.map((node, i) => ordinalSceneNodeToSVG(node, i)).filter(Boolean)
+  const renderMode = props.renderMode as SceneRenderMode<OrdinalSceneNode> | undefined
+  const dataMarks = scene.map((node, i) => renderSceneWithBackend({
+    node,
+    index: i,
+    renderMode,
+    fallback: () => ordinalSceneNodeToSVG(node, i)
+  })).filter(Boolean)
   const titleText = typeof props.title === "string" ? props.title : undefined
   const descText = typeof props.description === "string" ? props.description : undefined
   const titleId = titleText ? "semiotic-title" : undefined

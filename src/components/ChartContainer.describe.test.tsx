@@ -100,4 +100,52 @@ describe("ChartContainer describe", () => {
     expect(screen.getByRole("status", { name: "Loading chart" })).toBeInTheDocument()
     expect(screen.queryByText("weather chart")).toBeNull()
   })
+
+  it("does not clone chart-only mobile props onto an intrinsic wrapper", () => {
+    render(
+      <ChartContainer
+        title="Wrapped chart"
+        mobile={{ breakpoint: 520, semantics: { summary: true } }}
+      >
+        <div data-testid="chart-and-controls">wrapped chart and controls</div>
+      </ChartContainer>,
+    )
+
+    const wrapper = screen.getByTestId("chart-and-controls")
+    expect(wrapper).not.toHaveAttribute("mode")
+    expect(wrapper).not.toHaveAttribute("mobileInteraction")
+    expect(wrapper).not.toHaveAttribute("mobileSemantics")
+  })
+
+  it("still injects mobile props into a chart component", () => {
+    function ProbeChart(props: Record<string, unknown>) {
+      return (
+        <div
+          data-testid="probe-chart"
+          data-mode={String(props.mode)}
+          data-has-interaction={String(props.mobileInteraction != null)}
+          data-has-semantics={String(props.mobileSemantics != null)}
+        />
+      )
+    }
+
+    render(
+      <ChartContainer
+        title="Probe"
+        mobile={{ breakpoint: 520, semantics: { summary: true } }}
+      >
+        <ProbeChart />
+      </ChartContainer>,
+    )
+
+    expect(screen.getByTestId("probe-chart")).toHaveAttribute("data-mode", "mobile")
+    expect(screen.getByTestId("probe-chart")).toHaveAttribute(
+      "data-has-interaction",
+      "true",
+    )
+    expect(screen.getByTestId("probe-chart")).toHaveAttribute(
+      "data-has-semantics",
+      "true",
+    )
+  })
 })

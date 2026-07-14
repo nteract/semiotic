@@ -25,6 +25,7 @@
       "matter-js",
       "@dimforge/rapier2d-compat",
       "world-atlas",
+      "roughjs",
       "sharp",
       "gifenc"
     ],
@@ -42,8 +43,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 938648,
-      "gzipBytes": 282800,
+      "rawBytes": 946736,
+      "gzipBytes": 285475,
       "packedPackageInputFiles": 3
     },
     {
@@ -51,8 +52,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 452197,
-      "gzipBytes": 142972,
+      "rawBytes": 457601,
+      "gzipBytes": 144861,
       "packedPackageInputFiles": 3
     },
     {
@@ -60,8 +61,8 @@
       "importPath": "semiotic/ordinal",
       "symbol": "BarChart",
       "platform": "browser",
-      "rawBytes": 390111,
-      "gzipBytes": 118184,
+      "rawBytes": 395422,
+      "gzipBytes": 120091,
       "packedPackageInputFiles": 1
     },
     {
@@ -69,8 +70,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 386245,
-      "gzipBytes": 123222,
+      "rawBytes": 391825,
+      "gzipBytes": 125031,
       "packedPackageInputFiles": 1
     },
     {
@@ -78,8 +79,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 521185,
-      "gzipBytes": 163203,
+      "rawBytes": 528013,
+      "gzipBytes": 165584,
       "packedPackageInputFiles": 1
     },
     {
@@ -87,8 +88,8 @@
       "importPath": "semiotic/realtime/core",
       "symbol": "RingBuffer",
       "platform": "browser",
-      "rawBytes": 521028,
-      "gzipBytes": 163153,
+      "rawBytes": 527856,
+      "gzipBytes": 165545,
       "packedPackageInputFiles": 1
     },
     {
@@ -105,8 +106,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 336081,
-      "gzipBytes": 113208,
+      "rawBytes": 338757,
+      "gzipBytes": 114115,
       "packedPackageInputFiles": 1
     },
     {
@@ -132,8 +133,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 524125,
-      "gzipBytes": 164986,
+      "rawBytes": 525050,
+      "gzipBytes": 165417,
       "packedPackageInputFiles": 1
     },
     {
@@ -141,8 +142,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 258972,
-      "gzipBytes": 80940,
+      "rawBytes": 259725,
+      "gzipBytes": 81228,
       "packedPackageInputFiles": 1
     },
     {
@@ -150,8 +151,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 525088,
-      "gzipBytes": 165428,
+      "rawBytes": 526013,
+      "gzipBytes": 165849,
       "packedPackageInputFiles": 1
     },
     {
@@ -159,8 +160,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 1402546,
-      "gzipBytes": 416497,
+      "rawBytes": 1413163,
+      "gzipBytes": 419972,
       "packedPackageInputFiles": 3
     },
     {
@@ -168,8 +169,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 153104,
-      "gzipBytes": 31326,
+      "rawBytes": 153118,
+      "gzipBytes": 31338,
       "packedPackageInputFiles": 1
     },
     {
@@ -186,8 +187,17 @@
       "importPath": "semiotic/geo",
       "symbol": "ChoroplethMap",
       "platform": "browser",
-      "rawBytes": 309104,
-      "gzipBytes": 102533,
+      "rawBytes": 314528,
+      "gzipBytes": 104369,
+      "packedPackageInputFiles": 1
+    },
+    {
+      "exportKey": "./rough",
+      "importPath": "semiotic/rough",
+      "symbol": "createRoughRenderMode",
+      "platform": "browser",
+      "rawBytes": 8594,
+      "gzipBytes": 3373,
       "packedPackageInputFiles": 1
     },
     {
@@ -222,8 +232,8 @@
       "importPath": "semiotic/utils",
       "symbol": "validateProps",
       "platform": "browser",
-      "rawBytes": 71590,
-      "gzipBytes": 8091,
+      "rawBytes": 71605,
+      "gzipBytes": 8093,
       "packedPackageInputFiles": 1
     },
     {
@@ -231,8 +241,8 @@
       "importPath": "semiotic/utils/core",
       "symbol": "smartTickFormat",
       "platform": "browser",
-      "rawBytes": 5205,
-      "gzipBytes": 2195,
+      "rawBytes": 5219,
+      "gzipBytes": 2197,
       "packedPackageInputFiles": 1
     },
     {
@@ -285,8 +295,8 @@
       "importPath": "semiotic/controls",
       "symbol": "DirectManipulationControl",
       "platform": "browser",
-      "rawBytes": 2970,
-      "gzipBytes": 1320,
+      "rawBytes": 3059,
+      "gzipBytes": 1345,
       "packedPackageInputFiles": 1
     }
   ]

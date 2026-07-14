@@ -10,10 +10,17 @@
 import { existsSync, readFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { loadExampleDefinitions } from "./prerender.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_BUILD_DIR = resolve(__dirname, "../docs/build")
 const SITE_URL = "https://semiotic.nteract.io"
+const EXAMPLE_DEFINITIONS = await loadExampleDefinitions()
+const REQUIRED_EXAMPLE_DOCS_ROUTES = EXAMPLE_DEFINITIONS.map((definition) => ({
+  routePath: definition.path.replace(/^\/+/, ""),
+  title: `${definition.title} \u2014 Semiotic`,
+  canonicalUrl: `${SITE_URL}${definition.path}`,
+}))
 
 export const REQUIRED_DOCS_ROUTES = [
   {
@@ -49,6 +56,7 @@ export const REQUIRED_DOCS_ROUTES = [
     title: "Custom Charts \u2014 Intelligence \u2014 Semiotic",
     canonicalUrl: `${SITE_URL}/custom-charts/intelligence`,
   },
+  ...REQUIRED_EXAMPLE_DOCS_ROUTES,
 ]
 
 export const REQUIRED_API_ASSETS = [
@@ -81,6 +89,10 @@ export const REQUIRED_MACHINE_READABLE_ROUTES = [
     routePath: "blog/release-3-7-0",
     keyword: "receivability release",
   },
+  ...EXAMPLE_DEFINITIONS.map((definition) => ({
+    routePath: definition.path.replace(/^\/+/, ""),
+    keyword: definition.title,
+  })),
 ]
 
 export function routeHtmlPath(buildDir, routePath) {

@@ -27,7 +27,7 @@ import type {
   OrdinalLayout,
   WedgeSceneNode
 } from "./ordinalTypes"
-import type { Changeset, Style, PointSceneNode } from "./types"
+import type { Changeset, PointSceneNode, Style } from "./types"
 import { buildDatumIndexMap, computeDecayOpacity } from "./pipelineDecay"
 import { hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
 import { applyOrdinalPulse } from "./ordinalPulse"
@@ -36,6 +36,7 @@ import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
+import { OrdinalStyleResolver } from "./OrdinalStyleResolver"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext } from "./ordinalSceneBuilders/types"
 import { ORDINAL_SCENE_BUILDERS as SCENE_BUILDERS } from "./ordinalSceneBuilders/sceneBuilderMap"
@@ -91,9 +92,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
   private categories = new Set<string>()
   /** True once a non-bounded (push) changeset has been ingested */
   private _hasStreamingData = false
-  /** Lazy color map built from colorScheme for resolvePieceStyle */
-  private _colorSchemeMap: Map<string, string> | null = null
-  private _colorSchemeIndex = 0
+  private styleResolver = new OrdinalStyleResolver()
 
   // ── Pulse tracking ──────────────────────────────────────────────────
   private timestampBuffer: RingBuffer<number> | null = null
@@ -140,7 +139,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
   /** Largest visual point radius in the current scene. */
   private _maxPointRadius = 0
   /** Cached datum→index map for applyDecay/applyPulse. Keyed by `_dataVersion`. */
-  private _datumIndexCache: { version: number; map: Map<any, number> } | null = null
+  private _datumIndexCache: { version: number; map: Map<Datum, number> } | null = null
   /** Cached category→indices map for applyPulse wedge path. Keyed by `_dataVersion`. */
   private _categoryIndexCache: { version: number; map: Map<string, number[]> } | null = null
   private _hasRenderedOnce = false
@@ -309,7 +308,9 @@ export class OrdinalPipelineStore implements UpdateResultStore {
   private getRawRange(d: Datum): [number, number] | null {
     const acc = this.config.valueAccessor || this.config.rAccessor
     if (!acc) return null
-    const result = typeof acc === "function" ? (acc as ((...args: any[]) => any))(d) : d[acc as string]
+    const result = typeof acc === "function"
+      ? (acc as (datum: Datum) => number | readonly [number, number])(d)
+      : d[acc as string]
     if (Array.isArray(result) && result.length >= 2) {
       return [+result[0], +result[1]]
     }
@@ -612,8 +613,10 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       getO: this.getO,
       multiScales: this.multiScales,
       rAccessors: this.rAccessors,
-      resolvePieceStyle: (d: any, category?: string) => this.resolvePieceStyle(d, category),
-      resolveSummaryStyle: (d: any, category?: string) => this.resolveSummaryStyle(d, category),
+      resolvePieceStyle: (d: Datum, category?: string) =>
+        this.styleResolver.resolvePieceStyle(this.config, d, category),
+      resolveSummaryStyle: (d: Datum, category?: string) =>
+        this.styleResolver.resolveSummaryStyle(this.config, d, category),
       getRawRange: (d: Datum) => this.getRawRange(d)
     }
   }
@@ -760,56 +763,6 @@ export class OrdinalPipelineStore implements UpdateResultStore {
     }
   }
 
-  // ── Style resolution ─────────────────────────────────────────────────
-
-  private resolvePieceStyle(d: any, category?: string): Style {
-    if (typeof this.config.pieceStyle === "function") {
-      const style = this.config.pieceStyle(d, category)
-      // If the function returned a style without a fill color and we have a category,
-      // fill in from the frame's color scheme. This handles push API where HOC colorScale
-      // is not yet available.
-      if (style && !style.fill && category) {
-        return { ...style, fill: this.getColorFromScheme(category) }
-      }
-      return style
-    }
-    if (this.config.pieceStyle && typeof this.config.pieceStyle === "object") {
-      return this.config.pieceStyle as unknown as Style
-    }
-    if (this.config.barColors && category) {
-      return { fill: this.config.barColors[category] || "#007bff" }
-    }
-    // Use colorScheme (or default palette) to generate colors by category
-    if (category) {
-      return { fill: this.getColorFromScheme(category) }
-    }
-    return { fill: "#007bff" }
-  }
-
-  private getColorFromScheme(key: string): string {
-    if (!this._colorSchemeMap) this._colorSchemeMap = new Map()
-    const existing = this._colorSchemeMap.get(key)
-    if (existing) return existing
-
-    const palette = Array.isArray(this.config.colorScheme)
-      ? this.config.colorScheme
-      : this.config.themeCategorical || STREAMING_PALETTE
-    const color = palette[this._colorSchemeIndex % palette.length]
-    this._colorSchemeIndex++
-    this._colorSchemeMap.set(key, color)
-    return color
-  }
-
-  private resolveSummaryStyle(d: any, category?: string): Style {
-    if (typeof this.config.summaryStyle === "function") {
-      return this.config.summaryStyle(d, category)
-    }
-    if (this.config.summaryStyle && typeof this.config.summaryStyle === "object") {
-      return this.config.summaryStyle as unknown as Style
-    }
-    return { fill: "#007bff", fillOpacity: 0.6, stroke: "#007bff", strokeWidth: 1 }
-  }
-
   // ── Decay ────────────────────────────────────────────────────────────
 
   computeDecayOpacity(bufferIndex: number, bufferSize: number): number {
@@ -823,7 +776,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
    * `_dataVersion` so the per-frame applyDecay/applyPulse calls don't
    * rebuild it during animation when the buffer hasn't changed.
    */
-  private getDatumIndexMap(data: Datum[]): Map<any, number> {
+  private getDatumIndexMap(data: Datum[]): Map<Datum, number> {
     if (this._datumIndexCache && this._datumIndexCache.version === this._dataVersion) {
       return this._datumIndexCache.map
     }
@@ -887,6 +840,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       // aggregate); decay does not, by the same reasoning. This asymmetry is
       // deliberate, not an oversight.
       if (node.type === "connector" || node.type === "violin" || node.type === "boxplot" || node.type === "wedge") continue
+      if (!node.datum) continue
       const idx = indexMap.get(node.datum)
       if (idx == null) continue
       const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
@@ -1416,8 +1370,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
     // colors from a polluted palette index (drift) and reappearing categories
     // keep stale colors — unlike a freshly-mounted chart. Mirrors the reset in
     // updateConfig() and XY's clear() (_colorMapCache/_groupColorMap).
-    this._colorSchemeMap = null
-    this._colorSchemeIndex = 0
+    this.styleResolver.resetColors()
     this._dataVersion++
     this.version++
     this.updateResults.recordData("clear")
@@ -1502,7 +1455,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       )
     }
 
-    // `_colorSchemeMap` falls back to `themeCategorical` and looks up colors
+    // The style resolver falls back to `themeCategorical` and looks up colors
     // via `getColor` (derived from `colorAccessor`) — all three of those must
     // invalidate the cache alongside `colorScheme`. Use `in config` rather
     // than `!== undefined` so a caller explicitly clearing a field (e.g. a
@@ -1512,8 +1465,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       || ("themeCategorical" in config && config.themeCategorical !== prev.themeCategorical)
       || ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor))
     ) {
-      this._colorSchemeMap = null
-      this._colorSchemeIndex = 0
+      this.styleResolver.resetColors()
     }
 
     // `_categoryIndexCache` is keyed only on `_dataVersion`; an accessor swap

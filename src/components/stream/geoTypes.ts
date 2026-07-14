@@ -11,7 +11,8 @@ import type {
   PointSceneNode,
   GlyphSceneNode,
   ThemeSemanticColors,
-  SceneAccessibilityMetadata
+  SceneAccessibilityMetadata,
+  SceneRenderMode
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type {
@@ -25,6 +26,12 @@ import type { MarginType } from "../types/marginType"
 import type { GeoCustomLayout } from "./geoCustomLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
+import type { OnObservationCallback } from "../store/ObservationStore"
+import type {
+  SemanticClickBehavior,
+  SemanticHoverBehavior
+} from "../charts/shared/semanticInteractions"
+import type { OnAnnotationActivateCallback } from "../charts/shared/annotationActivation"
 
 // ── Projection prop ──────────────────────────────────────────────────
 
@@ -266,6 +273,8 @@ export interface StreamGeoFrameProps<T = Datum> {
   windowSize?: number
 
   // ── Style ──
+  /** Optional scene paint backend. Exact projected geometry remains interactive. */
+  renderMode?: SceneRenderMode<GeoSceneNode>
   areaStyle?: Style | ((d: Datum) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
@@ -290,9 +299,17 @@ export interface StreamGeoFrameProps<T = Datum> {
    * @default false
    */
   allowTooltipOverflow?: boolean
-  customClickBehavior?: (d: HoverData | null) => void
-  customHoverBehavior?: (d: HoverData | null) => void
+  customClickBehavior?: SemanticClickBehavior<HoverData>
+  customHoverBehavior?: SemanticHoverBehavior<HoverData>
+  /** Structured interaction observations, including semantic focus/activate. */
+  onObservation?: OnObservationCallback
+  /** @internal HOC observation callback forwarded only to annotation widgets. */
+  annotationObservationCallback?: OnObservationCallback
+  /** Chart instance identifier included in observation events. */
+  chartId?: string
   annotations?: Datum[]
+  /** Observe activation of widget annotations without replacing widget behavior. */
+  onAnnotationActivate?: OnAnnotationActivateCallback
   autoPlaceAnnotations?: AutoPlaceAnnotations
 
   // ── Realtime encoding ──

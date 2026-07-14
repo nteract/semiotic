@@ -434,6 +434,7 @@ describe("StreamPhysicsFrame", () => {
   it("keyboard-navigates semantic physics items instead of bodies", () => {
     const focused: string[] = []
     const activated: string[] = []
+    const observations: Array<{ type: string; inputType?: string }> = []
     const { container } = render(
       <StreamPhysicsFrame
         size={[200, 120]}
@@ -460,6 +461,7 @@ describe("StreamPhysicsFrame", () => {
         ]}
         onSemanticItemFocus={(item) => focused.push(item?.label ?? "none")}
         onSemanticItemActivate={(item) => activated.push(item.label)}
+        onObservation={(event) => observations.push(event)}
       />
     )
 
@@ -473,6 +475,11 @@ describe("StreamPhysicsFrame", () => {
     fireEvent.keyDown(frame, { key: "Enter" })
     expect(focused).toEqual(["Flow A", "Flow B"])
     expect(activated).toEqual(["Flow B"])
+    expect(observations.filter((event) => event.type === "focus")).toHaveLength(2)
+    expect(observations).toContainEqual(expect.objectContaining({
+      type: "activate",
+      inputType: "keyboard"
+    }))
 
     fireEvent.keyDown(frame, { key: "Escape" })
     expect(focused).toEqual(["Flow A", "Flow B", "none"])
@@ -708,6 +715,9 @@ describe("StreamPhysicsFrame", () => {
       true
     )
     expect(observations.some((o) => o.type === "click" && o.chartId === "physics-obs")).toBe(
+      true
+    )
+    expect(observations.some((o) => o.type === "activate" && o.chartId === "physics-obs")).toBe(
       true
     )
     expect(clicks[0]).toMatchObject({ id: "obs-body", value: 7 })

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest"
-import { render } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
+import { fireEvent, render } from "@testing-library/react"
 import { NetworkSVGOverlay, nodeCenter } from "./NetworkSVGOverlay"
 import { glyphHitGeometry } from "./glyphDef"
 import { symbolRadius } from "./symbolPath"
@@ -115,5 +115,45 @@ describe("NetworkSVGOverlay", () => {
     expect(css).toContain(".stream-network-frame")
     expect(css).toContain("pointer-events:none")
     expect(css).toContain("pointer-events:auto")
+  })
+
+  it("normalizes activation of an HTML widget anchored to a node", () => {
+    const onAnnotationActivate = vi.fn()
+    const onObservation = vi.fn()
+    const { getByRole } = render(
+      <NetworkSVGOverlay
+        width={200}
+        height={120}
+        totalWidth={240}
+        totalHeight={160}
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        labels={[]}
+        chartId="lineage"
+        chartType="StreamNetworkFrame"
+        sceneNodes={[
+          { type: "node", id: "daemon", cx: 100, cy: 60, datum: { id: "daemon" } }
+        ]}
+        annotations={[{
+          id: "daemon-console",
+          type: "widget",
+          nodeId: "daemon",
+          content: <button>Open daemon</button>
+        }]}
+        onAnnotationActivate={onAnnotationActivate}
+        onObservation={onObservation}
+      />
+    )
+
+    fireEvent.click(getByRole("button"), { detail: 1 })
+
+    expect(onAnnotationActivate).toHaveBeenCalledWith(expect.objectContaining({
+      annotationId: "daemon-console",
+      inputType: "pointer"
+    }))
+    expect(onObservation).toHaveBeenCalledWith(expect.objectContaining({
+      type: "annotation-activate",
+      annotationId: "daemon-console",
+      chartId: "lineage"
+    }))
   })
 })

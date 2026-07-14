@@ -56,6 +56,9 @@ interface ScaffoldOptions {
   enableHover?: boolean
   showLegend?: boolean
   title?: string
+  description?: string
+  summary?: string
+  accessibleTable?: boolean
   mobileInteraction?: MobileInteractionProp
   mobileSemantics?: MobileVisualizationContract
   responsiveRules?: ResponsiveRule[]
@@ -95,6 +98,9 @@ export function useCustomChartScaffold<TFrameHandle>(
     enableHover: options.enableHover,
     showLegend: options.showLegend,
     title: options.title,
+    description: options.description,
+    summary: options.summary,
+    accessibleTable: options.accessibleTable,
     xLabel: options.xLabel,
     yLabel: options.yLabel,
     mobileInteraction: options.mobileInteraction,

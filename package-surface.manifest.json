@@ -587,6 +587,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./rough",
+      "path": "dist/rough.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/rough.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/rough.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/rough.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-rough.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-rough.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./server",
       "path": "dist/server.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1091,6 +1122,13 @@
         "path": "dist/semiotic-recipes.d.ts",
         "exports": [
           "./recipes"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-rough.d.ts",
+        "exports": [
+          "./rough"
         ],
         "reason": "Public type entry from `exports` map"
       },

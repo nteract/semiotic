@@ -20,6 +20,7 @@ import { CanvasFrameBackground, useFrameCanvasHost } from "../useCanvasFrameHost
 import { isServerEnvironment } from "../SceneToSVG"
 import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
 import type { Datum } from "../../charts/shared/datumTypes"
+import { isInteractiveKeyboardTarget } from "../../charts/shared/semanticInteractions"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import { resolvePhysicsCanvasTheme } from "./PhysicsCanvasTheme"
 import {
@@ -32,10 +33,7 @@ import {
   type PhysicsStaticAnnotation
 } from "./PhysicsAnnotations"
 import type { PhysicsBodyState } from "./PhysicsKernel"
-import {
-  PhysicsWorkerSession,
-  canUsePhysicsWorker
-} from "./PhysicsWorkerClient"
+import { PhysicsWorkerSession, canUsePhysicsWorker } from "./PhysicsWorkerClient"
 import {
   PhysicsPipelineStore,
   type PhysicsPipelineConfig,
@@ -102,6 +100,7 @@ import type {
   StreamPhysicsRegionEvent,
   StreamPhysicsRegionVector
 } from "./StreamPhysicsTypes"
+import { usePhysicsFrameObservationEmitter } from "./physicsFrameObservations"
 
 export type {
   PhysicsBodyMark,
@@ -149,6 +148,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
   const {
     accessibleTable = true,
     annotations,
+    onAnnotationActivate,
     autoPlaceAnnotations,
     background,
     backgroundGraphics,
@@ -614,35 +614,11 @@ export const StreamPhysicsFrame = memo(forwardRef<
     onSemanticItemFocus?.(null)
   }, [onSemanticItemFocus])
 
-  const emitObservation = useCallback(
-    (
-      type: "hover" | "hover-end" | "click" | "click-end",
-      payload?: { datum?: unknown; x?: number; y?: number }
-    ) => {
-      const cb = onObservationRef.current
-      if (!cb) return
-      const now = wallClockRef.current()
-      if (type === "hover" || type === "click") {
-        cb({
-          type,
-          datum: (payload?.datum as Datum) ?? {},
-          x: payload?.x ?? 0,
-          y: payload?.y ?? 0,
-          timestamp: now,
-          chartType: CHART_TYPE,
-          chartId: chartIdRef.current
-        })
-        return
-      }
-      cb({
-        type,
-        timestamp: now,
-        chartType: CHART_TYPE,
-        chartId: chartIdRef.current
-      })
-    },
-    []
-  )
+  const emitObservation = usePhysicsFrameObservationEmitter({
+    onObservationRef,
+    chartIdRef,
+    wallClockRef
+  })
 
   const clearHover = useCallback(() => {
     setHoverData((current) => {
@@ -704,6 +680,10 @@ export const StreamPhysicsFrame = memo(forwardRef<
           datum: body.datum,
           x: body.x,
           y: body.y
+        })
+        emitObservation("activate", {
+          datum: body.datum,
+          inputType: event.pointerType === "touch" ? "touch" : "pointer"
         })
         onClick?.(body.datum ?? null, { x: body.x, y: body.y, body })
       } else {
@@ -771,6 +751,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (isInteractiveKeyboardTarget(event)) return
       if (!allSemanticItems.length) return
 
       if (event.key === "Escape") {
@@ -784,7 +765,12 @@ export const StreamPhysicsFrame = memo(forwardRef<
         semanticFocusIndexRef.current >= 0
       ) {
         event.preventDefault()
-        onSemanticItemActivate?.(allSemanticItems[semanticFocusIndexRef.current])
+        const item = allSemanticItems[semanticFocusIndexRef.current]
+        emitObservation("activate", {
+          datum: item.datum ?? { id: item.id, label: item.label },
+          inputType: "keyboard"
+        })
+        onSemanticItemActivate?.(item)
         return
       }
 
@@ -794,6 +780,11 @@ export const StreamPhysicsFrame = memo(forwardRef<
       const current = semanticFocusIndexRef.current
       if (current < 0) {
         focusSemanticItem(0)
+        const item = allSemanticItems[0]
+        emitObservation("focus", {
+          datum: item.datum ?? { id: item.id, label: item.label },
+          inputType: "keyboard"
+        })
         return
       }
 
@@ -811,9 +802,17 @@ export const StreamPhysicsFrame = memo(forwardRef<
         next = Math.max(0, current - 1)
       }
       focusSemanticItem(next)
+      if (next !== current) {
+        const item = allSemanticItems[next]
+        emitObservation("focus", {
+          datum: item.datum ?? { id: item.id, label: item.label },
+          inputType: "keyboard"
+        })
+      }
     },
     [
       clearSemanticFocus,
+      emitObservation,
       focusSemanticItem,
       onSemanticItemActivate,
       allSemanticItems
@@ -1578,6 +1577,10 @@ export const StreamPhysicsFrame = memo(forwardRef<
           legendIsolatedCategories={legendIsolatedCategories}
           pointNodes={annotationAnchors}
           annotations={annotations}
+          onAnnotationActivate={onAnnotationActivate}
+          onObservation={onObservation}
+          chartId={chartId}
+          chartType={CHART_TYPE}
           autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
         />

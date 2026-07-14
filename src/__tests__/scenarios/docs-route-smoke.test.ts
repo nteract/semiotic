@@ -1,14 +1,14 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import {
   REQUIRED_DOCS_ROUTES,
   REQUIRED_MACHINE_READABLE_ROUTES,
   type RequiredMachineReadableRoute,
   validateDocsBuild,
 } from "../../../scripts/check-docs-routes.mjs"
-import { generatePage } from "../../../scripts/prerender.mjs"
+import { generatePage, registerExampleRouteMeta } from "../../../scripts/prerender.mjs"
 
 const shell = '<html><head><title>Semiotic</title><meta property=og:url content=https://example.com><link rel=canonical href=https://example.com></head><body><noscript>old</noscript><div id="root"></div></body></html>'
 
@@ -18,6 +18,10 @@ const shell = '<html><head><title>Semiotic</title><meta property=og:url content=
 const createdDirs: string[] = []
 
 describe("docs route smoke check", () => {
+  beforeAll(async () => {
+    await registerExampleRouteMeta()
+  })
+
   afterEach(() => {
     while (createdDirs.length > 0) {
       const dir = createdDirs.pop()!

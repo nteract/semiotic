@@ -268,6 +268,32 @@ describe("useChartSelection", () => {
     expect(obs.y).toBe(20)
   })
 
+  it("adds a normalized focus observation for keyboard traversal", () => {
+    const onObservation = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onObservation, chartType: "LineChart", chartId: "trend" }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customHoverBehavior(
+        { x: 10, y: 20, data: { id: "point-a" } },
+        { type: "focus", inputType: "keyboard" }
+      )
+    })
+
+    expect(onObservation.mock.calls.map(([event]) => event.type)).toEqual([
+      "hover",
+      "focus"
+    ])
+    expect(onObservation.mock.calls[1][0]).toMatchObject({
+      type: "focus",
+      datum: { id: "point-a" },
+      inputType: "keyboard",
+      chartId: "trend"
+    })
+  })
+
   it("preserves frame-provided xValue in hover observations", () => {
     const onObservation = vi.fn()
     const { result } = renderHook(
@@ -316,6 +342,31 @@ describe("useChartSelection", () => {
     const obs = onObservation.mock.calls[0][0]
     expect(obs.type).toBe("click")
     expect(obs.datum).toEqual({ id: 1 })
+  })
+
+  it("adds a normalized touch activation without replacing click", () => {
+    const onObservation = vi.fn()
+    const { result } = renderHook(
+      () => useChartSelection({ onObservation, chartType: "Scatterplot" }),
+      { wrapper: createWrapper() }
+    )
+
+    act(() => {
+      result.current.customClickBehavior(
+        { x: 5, y: 15, data: { id: 1 } },
+        { type: "activate", inputType: "touch" }
+      )
+    })
+
+    expect(onObservation.mock.calls.map(([event]) => event.type)).toEqual([
+      "click",
+      "activate"
+    ])
+    expect(onObservation.mock.calls[1][0]).toMatchObject({
+      type: "activate",
+      datum: { id: 1 },
+      inputType: "touch"
+    })
   })
 
   it("does not call onObservation with click-end for desktop null clicks", () => {
