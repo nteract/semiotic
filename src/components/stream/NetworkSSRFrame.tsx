@@ -57,7 +57,6 @@ export function NetworkSSRFrame({
     legendClickBehavior,
     legendHighlightedCategory,
     legendIsolatedCategories,
-    foregroundGraphics,
     layoutSelection,
     annotations,
     onAnnotationActivate,
