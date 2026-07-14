@@ -2,6 +2,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { render, act, fireEvent } from "@testing-library/react"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
+import { ThemeProvider } from "../ThemeProvider"
 import type { StreamOrdinalFrameHandle } from "./ordinalTypes"
 import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvasMock"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -668,10 +669,12 @@ describe("StreamOrdinalFrame", () => {
       expect(bgRect).toBeTruthy()
     })
 
-    // Regression: overlaying one ordinal chart over another via
-    // `position: absolute` needs a way to skip the background paint
-    // so the base layer stays visible.
-    describe("background paint (overlay composition)", () => {
+    // A retained canvas cannot sit between an SVG grid and its marks if it
+    // paints an opaque background: the background hides the grid. The frame
+    // therefore owns its background in an SVG sibling below the grid, leaving
+    // the mark canvas transparent. This preserves both the intended layering
+    // and overlay composition with caller-provided background graphics.
+    describe("background and underlay composition", () => {
       // Capture fillStyle at each fillRect call + restore the original
       // method so the replacement can't leak into another test if the
       // mock's lifecycle ever changes.
@@ -693,43 +696,88 @@ describe("StreamOrdinalFrame", () => {
           "2d"
         ) as unknown as CanvasContextMock
 
-      it("paints an explicit background color via fillRect", () => {
+      const chartData = [
+        { category: "A", value: 10 },
+        { category: "B", value: 20 },
+      ]
+
+      function expectBefore(first: Element, second: Element) {
+        expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+      }
+
+      it("places an explicit background and grid below the transparent mark canvas", () => {
         const ctx = getMockCtx()
         const cap = captureFillRectStyles(ctx)
         try {
-          // `point` chartType renders via arc+fill, not fillRect — so any
-          // fillRect call is the background paint.
-          render(<StreamOrdinalFrame chartType="point" background="red" />)
-          expect(cap.styles).toContain("red")
+          // `point` renders via arc+fill, not fillRect. The chart background
+          // must therefore be SVG rather than an opaque canvas fill.
+          const { container } = render(
+            <StreamOrdinalFrame
+              chartType="point"
+              data={chartData}
+              background="red"
+              showGrid
+            />
+          )
+          const background = container.querySelector('[data-semiotic-layer="canvas-background"]')
+          const grid = container.querySelector("g.ordinal-grid")
+          const canvas = container.querySelector("canvas")
+
+          expect(background).toHaveAttribute("fill", "red")
+          expect(grid).toBeTruthy()
+          expect(canvas).toBeTruthy()
+          expectBefore(background!, grid!)
+          expectBefore(grid!, canvas!)
+          expect(cap.styles).not.toContain("red")
         } finally {
           cap.restore()
         }
       })
 
-      it("skips the background paint when background='transparent'", () => {
+      it("uses the theme background below the grid when no explicit background is supplied", () => {
+        const { container } = render(
+          <ThemeProvider theme="dark">
+            <StreamOrdinalFrame chartType="point" data={chartData} showGrid />
+          </ThemeProvider>
+        )
+        const background = container.querySelector('[data-semiotic-layer="canvas-background"]')
+        const grid = container.querySelector("g.ordinal-grid")
+        const canvas = container.querySelector("canvas")
+
+        expect(background).toHaveAttribute("fill", "var(--semiotic-bg, transparent)")
+        expect(grid).toBeTruthy()
+        expect(canvas).toBeTruthy()
+        expectBefore(background!, grid!)
+        expectBefore(grid!, canvas!)
+      })
+
+      it("omits the frame background when background='transparent'", () => {
         const ctx = getMockCtx()
         const cap = captureFillRectStyles(ctx)
         try {
-          render(<StreamOrdinalFrame chartType="point" background="transparent" />)
+          const { container } = render(
+            <StreamOrdinalFrame chartType="point" data={chartData} background="transparent" showGrid />
+          )
+          expect(container.querySelector('[data-semiotic-layer="canvas-background"]')).toBeNull()
           expect(cap.styles).toHaveLength(0)
         } finally {
           cap.restore()
         }
       })
 
-      // Regression: user-supplied `backgroundGraphics` live in an SVG
-      // behind the canvas. A full-area theme-bg fillRect would cover
-      // them. See the matching XY-frame test for the bug history.
-      it("skips the canvas theme-bg fill when backgroundGraphics is provided", () => {
+      it("lets backgroundGraphics own the background layer without a frame fill", () => {
         const ctx = getMockCtx()
         const cap = captureFillRectStyles(ctx)
         try {
-          render(
+          const { container } = render(
             <StreamOrdinalFrame
               chartType="point"
+              data={chartData}
               backgroundGraphics={<rect x={0} y={0} width={10} height={10} fill="red" />}
             />
           )
+          expect(container.querySelector('[data-semiotic-layer="canvas-background"]')).toBeNull()
+          expect(container.querySelector('rect[fill="red"]')).toBeTruthy()
           expect(cap.styles).toHaveLength(0)
         } finally {
           cap.restore()

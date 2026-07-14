@@ -6,7 +6,12 @@ export default {
   // The docs source route gate starts its own Vite server on :3000 and has an
   // explicit Chromium-only config. Do not run it through the three-browser
   // package integration suite on :1234 as well.
-  testIgnore: "**/docs-examples-source.spec.ts",
+  testIgnore: [
+    "**/docs-examples-source.spec.ts",
+    // This companion evidence capture needs the docs Vite server on :3000,
+    // and is exercised by the docs-specific Playwright configuration.
+    "**/docs-examples-contract.spec.ts",
+  ],
   // Local bootstrap may write a proposed missing baseline, but CI must never
   // create visual contracts during a test run: a new snapshot has to be
   // reviewed and committed before a pull request passes. An explicit

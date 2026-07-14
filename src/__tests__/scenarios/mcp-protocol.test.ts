@@ -57,7 +57,18 @@ if (!SERVER_DEPS_READY) {
 function spawnServer(args: string[] = [], env: NodeJS.ProcessEnv = {}): ChildProcess {
   return spawn("node", [SERVER_PATH, ...args], {
     stdio: ["pipe", "pipe", "pipe"],
-    env: { ...process.env, NODE_ENV: "test", ...env },
+    env: {
+      ...process.env,
+      NODE_ENV: "test",
+      // Stable assertions must not inherit accidental deployment provenance
+      // from a developer shell or a hosted test runner. Individual tests pass
+      // an explicit nightly identity when that is the contract under test.
+      SEMIOTIC_DEPLOYMENT_CHANNEL: "",
+      SEMIOTIC_GIT_SHA: "",
+      SEMIOTIC_BUILD_ID: "",
+      SEMIOTIC_BUILD_TIME: "",
+      ...env,
+    },
   })
 }
 
@@ -69,7 +80,15 @@ function spawnHTTPServer(
 ): ChildProcess {
   return spawn("node", [SERVER_PATH, "--http", "--port", String(port), ...args], {
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, NODE_ENV: "test", ...env },
+    env: {
+      ...process.env,
+      NODE_ENV: "test",
+      SEMIOTIC_DEPLOYMENT_CHANNEL: "",
+      SEMIOTIC_GIT_SHA: "",
+      SEMIOTIC_BUILD_ID: "",
+      SEMIOTIC_BUILD_TIME: "",
+      ...env,
+    },
   })
 }
 
@@ -439,6 +458,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     const uris = result.result.resources.map((r: { uri: string }) => r.uri).sort()
     expect(uris).toEqual([
       "semiotic://behavior-contracts",
+      "semiotic://build-info",
       "semiotic://components",
       "semiotic://examples",
       "semiotic://schema",

@@ -32392,9 +32392,48 @@ function createMcpRequestCancellationSignal(req, res) {
     if (!req.complete) abort();
   });
   res.once("close", () => {
-    if (!res.writableEnded) abort();
+    if (!res.writableFinished) abort();
   });
   return controller.signal;
+}
+
+// ai/mcp-build-info.ts
+function nonEmptyEnvValue(env, name) {
+  const value = env[name]?.trim();
+  return value || void 0;
+}
+function normalizeGitSha(value) {
+  return value && /^[0-9a-f]{40,128}$/i.test(value) ? value.toLowerCase() : void 0;
+}
+function resolveDeploymentChannel(value) {
+  return value?.toLowerCase() === "nightly" ? "nightly" : "stable";
+}
+function resolveSemioticBuildInfo(options) {
+  const env = options.env ?? process.env;
+  const commitSha = normalizeGitSha(nonEmptyEnvValue(env, "SEMIOTIC_GIT_SHA"));
+  return {
+    channel: resolveDeploymentChannel(
+      nonEmptyEnvValue(env, "SEMIOTIC_DEPLOYMENT_CHANNEL")
+    ),
+    packageVersion: options.packageVersion,
+    surfaceVersion: options.surfaceVersion,
+    ...commitSha ? { commitSha, shortCommitSha: commitSha.slice(0, 7) } : {},
+    ...nonEmptyEnvValue(env, "SEMIOTIC_BUILD_ID") ? { buildId: nonEmptyEnvValue(env, "SEMIOTIC_BUILD_ID") } : {},
+    ...nonEmptyEnvValue(env, "SEMIOTIC_BUILD_TIME") ? { builtAt: nonEmptyEnvValue(env, "SEMIOTIC_BUILD_TIME") } : {},
+    toolProfile: options.toolProfile,
+    nodeVersion: options.nodeVersion ?? process.version
+  };
+}
+function mcpServerInfoForBuild(buildInfo) {
+  if (buildInfo.channel !== "nightly") {
+    return { name: "semiotic", version: buildInfo.packageVersion };
+  }
+  const packageVersion = buildInfo.packageVersion.split("+", 1)[0];
+  const nightlyVersion = packageVersion.includes("-nightly") ? packageVersion : `${packageVersion}-nightly`;
+  return {
+    name: "semiotic-nightly",
+    version: `${nightlyVersion}+${buildInfo.shortCommitSha || "unknown"}`
+  };
 }
 
 // ai/mcp-logging.ts
@@ -33073,6 +33112,12 @@ var {
 } = import_behaviorContracts.default;
 var schemaPath = path.resolve(__dirname, "../schema.json");
 var schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
+var packageManifestPath = path.resolve(__dirname, "../../package.json");
+var packageManifest = JSON.parse(fs.readFileSync(packageManifestPath, "utf-8"));
+if (typeof packageManifest.version !== "string" || !packageManifest.version) {
+  throw new Error("Semiotic package.json must provide a package version");
+}
+var PACKAGE_VERSION = packageManifest.version;
 var schemaByComponent = {};
 for (const tool of schema.tools) {
   schemaByComponent[tool.function.name] = tool.function;
@@ -33714,7 +33759,14 @@ function capInteractiveWidgetResult(result) {
     setting: "MCP_MAX_WIDGET_OUTPUT_BYTES"
   });
 }
-var SURFACE_VERSION = `${schema.version || "3.0.0"}-ai`;
+var SURFACE_VERSION = `${PACKAGE_VERSION}-ai`;
+function buildInfoForProfile(profile) {
+  return resolveSemioticBuildInfo({
+    packageVersion: PACKAGE_VERSION,
+    surfaceVersion: SURFACE_VERSION,
+    toolProfile: profile
+  });
+}
 function profileResult(result) {
   return { ...result, surfaceVersion: SURFACE_VERSION };
 }
@@ -34624,15 +34676,25 @@ var READ_ONLY_TOOL_ANNOTATIONS = {
   openWorldHint: false
 };
 function createServer2(profile = "developer", options = {}) {
+  const buildInfo = buildInfoForProfile(profile);
   const serverRenderContext = {
     signal: options.signal,
     limits: options.limits ?? resolveMcpRenderExecutionLimits()
   };
   const srv = new McpServer({
-    name: "semiotic",
-    version: schema.version || "3.0.0",
+    ...mcpServerInfoForBuild(buildInfo),
     description: "Deterministic Semiotic chart selection, validation, rendering, and non-visual chart grounding. Use suggestCharts, getSchema, diagnoseConfig, and renderChart in that order for static chart generation."
   });
+  srv.registerResource(
+    "semiotic-build-info",
+    "semiotic://build-info",
+    {
+      title: "Semiotic Build Information",
+      description: "Read-only deployment identity for this Semiotic MCP server.",
+      mimeType: "application/json"
+    },
+    (uri) => textResource(uri, "application/json", JSON.stringify(buildInfo, null, 2))
+  );
   srv.registerResource(
     "semiotic-schema",
     "semiotic://schema",
@@ -35237,12 +35299,19 @@ async function main() {
         reason: "request_stream_error"
       }));
     });
+    const buildInfo = buildInfoForProfile(toolProfile);
     const healthBody = () => JSON.stringify({
       status: "ok",
       name: "semiotic-mcp",
-      version: schema.version || "3.0.0",
+      version: buildInfo.packageVersion,
       transport: "streamable-http",
-      mode: "stateless"
+      mode: "stateless",
+      channel: buildInfo.channel,
+      packageVersion: buildInfo.packageVersion,
+      surfaceVersion: buildInfo.surfaceVersion,
+      ...buildInfo.commitSha ? { commitSha: buildInfo.commitSha } : {},
+      ...buildInfo.buildId ? { buildId: buildInfo.buildId } : {},
+      ...buildInfo.builtAt ? { builtAt: buildInfo.builtAt } : {}
     });
     const httpServer = http.createServer(async (req, res) => {
       const requestStartedAt = Date.now();

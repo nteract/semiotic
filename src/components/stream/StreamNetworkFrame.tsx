@@ -282,7 +282,11 @@ const StreamNetworkFrame = memo(forwardRef<
       buildNetworkPipelineConfig({
         chartType,
         clock: frameRuntime.now,
-        random: randomProp ?? frameRuntime.random,
+        // Omit an implicit FrameRuntime random source here so force layouts
+        // retain d3-force's deterministic default LCG. `frameRuntime.random`
+        // remains the source for particles; force layout changes it only when
+        // a caller explicitly provides `random` or `seed`.
+        random: randomProp,
         seed,
         nodeIDAccessor,
         sourceAccessor,
@@ -459,7 +463,7 @@ const StreamNetworkFrame = memo(forwardRef<
       edgeType,
       padding,
       paddingTop,
-      random: randomProp ?? frameRuntime.random,
+      random: randomProp,
       seed,
       tensionConfig,
       customNetworkLayout,

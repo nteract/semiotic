@@ -1,0 +1,101 @@
+# Repository-built nightly deployment for the existing us-west1 Cloud Run
+# service. The trigger must use this file with the repository root as its build
+# context; do not point it at deploy/cloud-run-nightly.
+#
+# The stable published-release wrapper deliberately remains at deploy/cloud-run.
+substitutions:
+  # The existing trigger supplies its actual identifier here. Keeping a safe
+  # manual default makes an intentional local/manual build label truthful.
+  _TRIGGER_ID: manual
+
+steps:
+  - id: build-nightly-image
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        build_time="$$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        docker build \
+          --file deploy/cloud-run-nightly/Dockerfile \
+          --tag us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA \
+          --build-arg SEMIOTIC_DEPLOYMENT_CHANNEL=nightly \
+          --build-arg SEMIOTIC_GIT_SHA=$COMMIT_SHA \
+          --build-arg SEMIOTIC_BUILD_ID=$BUILD_ID \
+          --build-arg SEMIOTIC_BUILD_TIME=$$build_time \
+          .
+
+  # Verify the final image rather than only the build-stage filesystem. This
+  # repeats the image-build gate and catches an accidental final-stage copy
+  # regression before the image is pushed or a Cloud Run revision is created.
+  - id: verify-nightly-runtime-image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - run
+      - --rm
+      - --entrypoint
+      - node
+      - us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA
+      - deploy/cloud-run-nightly/verify-runtime.mjs
+      - --require-nightly-build-info
+
+  - id: push-nightly-image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA
+
+  # `services update` changes only the image and explicitly named labels. It
+  # does not use --set-env-vars, --clear-labels, or service-shaping flags, so
+  # existing MCP_ALLOWED_HOSTS, secrets, IAM, ingress, scaling, resources,
+  # concurrency, timeout, and custom-domain configuration remain intact.
+  - id: deploy-nightly-revision
+    name: gcr.io/cloud-builders/gcloud
+    args:
+      - run
+      - services
+      - update
+      - semiotic-mcp-server
+      - --project=semiotic-mcp
+      - --region=us-west1
+      - --image=us-west1-docker.pkg.dev/semiotic-mcp/cloud-run-source-deploy/semiotic/semiotic-mcp-server:$COMMIT_SHA
+      - --update-labels=commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=${_TRIGGER_ID},deployment-channel=nightly,deployment-source=repository-main
+      - --quiet
+
+  # Resolve the configured service URL without echoing configuration values.
+  # /workspace persists across Cloud Build steps but is discarded afterward.
+  - id: resolve-nightly-endpoint
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        gcloud run services describe semiotic-mcp-server \
+          --project=semiotic-mcp \
+          --region=us-west1 \
+          --format='value(status.url)' > /workspace/semiotic-nightly-endpoint
+        test -s /workspace/semiotic-nightly-endpoint
+
+  # The smoke script owns bounded revision-readiness retries and only emits a
+  # compact, secret-free result unless its explicit verbose option is used.
+  - id: smoke-nightly-deployment
+    name: node:22-bookworm-slim
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        endpoint="$$(cat /workspace/semiotic-nightly-endpoint)"
+        exec node scripts/smoke-hosted-mcp.mjs \
+          --endpoint "$$endpoint" \
+          --expected-channel nightly \
+          --expected-sha "$COMMIT_SHA" \
+          --expected-build-id "$BUILD_ID"
+
+# This permits the repository build plus Cloud Run rollout and bounded smoke
+# retries without altering the service's independent request timeout.
+timeout: 1800s
+
+options:
+  # Keep build logs in Cloud Logging. No build step prints environment values,
+  # request bodies, prompts, chart data, SVG, or authentication material.
+  logging: CLOUD_LOGGING_ONLY

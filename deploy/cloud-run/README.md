@@ -1,8 +1,12 @@
-# Semiotic MCP on Google Cloud Run
+# Stable Semiotic MCP on Google Cloud Run
 
 A thin wrapper that runs the published `semiotic-mcp` server in HTTP (Streamable HTTP)
 mode as a public, remote MCP server — consumable by ChatGPT, Claude connectors, and any
 MCP client.
+
+This is the **stable release channel** (`semiotic-mcp`). It is the official endpoint
+for public users, registries, documentation, and app directories. See
+[`../README.md`](../README.md) for the stable/nightly channel boundary.
 
 There is **no Dockerfile**. Cloud Run builds this folder's `package.json` directly from
 source (Cloud Buildpacks) and runs `npm start`, which launches:
@@ -29,7 +33,8 @@ The wrapper depends on the **published** `semiotic` package from npm — it does
 from this repo's source. Improvements to the MCP server ship to the live endpoint only
 after a new `semiotic` version is published to npm. The dependency is pinned to an **exact**
 version (not a caret range) so a redeploy can't silently pick up a different release; bump
-it deliberately when upgrading.
+it deliberately when upgrading. In particular, this service must not automatically deploy
+arbitrary commits from `main`.
 
 ### Lockfile status
 
@@ -65,6 +70,32 @@ gcloud run deploy semiotic-mcp --source . --region us-central1 \
 First run will prompt to enable the Cloud Run / Cloud Build / Artifact Registry APIs —
 answer yes. The command prints the service URL when it finishes.
 
+### Deploy an exact published release or tag
+
+Use this wrapper only from the released version that is meant to be public.
+Start from a clean checkout of that release tag, then deploy the wrapper directory
+itself — never the repository root and never an arbitrary `main` checkout:
+
+```sh
+git fetch --tags
+git switch --detach vX.Y.Z
+git status --short
+cd deploy/cloud-run
+npm ci --ignore-scripts
+npm pkg get dependencies.semiotic
+gcloud run deploy semiotic-mcp --source . --region us-central1 \
+  --allow-unauthenticated --memory 1Gi \
+  --set-env-vars "MCP_ALLOWED_HOSTS=YOUR_STABLE_HOST"
+```
+
+`git status --short` must be empty, and `npm pkg get dependencies.semiotic` must
+print the exact published release version represented by the tag (for example,
+`"3.8.0"`, never a range). If deploying from a reviewed release commit instead
+of a tag, substitute that full commit SHA for `vX.Y.Z` only after confirming
+that the wrapper's exact dependency and lockfile match the intended published
+npm artifact. This keeps npm, the stable Cloud Run revision, registry metadata,
+the surface manifest, and GitHub Release on one release identity.
+
 ### Why these flags
 
 | Flag | Reason |
@@ -78,21 +109,17 @@ scales to zero when idle (≈no cost; a few-second cold start on the next reques
 add `--max-instances N` as a cost ceiling, or `--min-instances 1` to keep it always warm
 (~$10–20/mo). Neither is required for correctness.
 
-## Continuous deployment (us-west1)
+## Separate nightly deployment
 
-In addition to the manually-deployed `us-central1` service above, a second service —
-**`semiotic-mcp-server`** in **`us-west1`** — auto-deploys on every push to `main` via a Cloud
-Build trigger (`rmgpgab-semiotic-mcp-server-…`). It builds the **same way** as the manual
-deploy — Cloud Buildpacks, no Dockerfile — so two trigger settings are load-bearing:
+`semiotic-mcp-server` in `us-west1` is the separate **nightly** channel. It is not
+this wrapper and must not share this Buildpacks configuration. Nightly now builds the
+checked-out repository root with the deterministic Dockerfile and Cloud Build YAML in
+[`../cloud-run-nightly`](../cloud-run-nightly), then updates only the image and
+deployment labels on its existing service.
 
-| Setting | Must be | Why |
-|---|---|---|
-| Build type | **Buildpacks**, not Dockerfile | There is no Dockerfile in this repo. A Dockerfile build fails immediately with `lstat /workspace/Dockerfile: no such file or directory`. |
-| Build context / source directory | **`deploy/cloud-run`**, not the repo root | The root `package.json`'s `start` script is the docs website (`parcel serve`), not the MCP server. |
-
-If the trigger is ever recreated, set both in the Cloud Run console (service → *Edit continuous
-deployment* → Build type: buildpacks, Build context directory: `/deploy/cloud-run`). The
-`us-central1` service has no trigger — deploy it manually with the command above.
+The stable `semiotic-mcp` service remains manual/tagged-release only. Its deployment
+path stays suitable for exact version parity between npm, the MCP Registry, the Cloud
+Run stable endpoint, the surface manifest, and GitHub Releases.
 
 ## Endpoints
 
@@ -125,6 +152,10 @@ deployment* → Build type: buildpacks, Build context directory: `/deploy/cloud-
 | `MCP_LOG_MAX_EVENT_BYTES` | `1024` | Maximum UTF-8 bytes in one process log record. Values are clamped to 256–4096 bytes. |
 | `MCP_LOG_RETENTION_DAYS` | `30` | Declared maximum retention policy, clamped to 1–90 days. This value is not self-enforcing; configure the Cloud Logging bucket/sink to match or shorten it. |
 | `OPENAI_APPS_CHALLENGE_TOKEN` | unset | Raw token shown by ChatGPT Apps domain verification. When set, the server serves it from `/.well-known/openai-apps-challenge`. |
+| `SEMIOTIC_DEPLOYMENT_CHANNEL` | `stable` when unset | Optional explicit build-identity channel. The released MCP server defaults any non-nightly value to stable. |
+| `SEMIOTIC_GIT_SHA` | unset | Optional full release commit SHA for `/health` and `semiotic://build-info`. |
+| `SEMIOTIC_BUILD_ID` | unset | Optional release/build identifier for build identity. |
+| `SEMIOTIC_BUILD_TIME` | unset | Optional UTC ISO build timestamp for build identity. |
 
 ### Logging, redaction, and retention
 
@@ -184,3 +215,7 @@ ChatGPT: add it as a connector / app using the `/mcp` URL.
 When a new `semiotic` is published, bump the pinned `semiotic` version in `package.json`,
 generate and verify the lockfile as above, then re-run the same `gcloud run deploy` command.
 Cloud Buildpacks will receive the committed lockfile and install the exact dependency graph.
+If release provenance is available, set the `SEMIOTIC_*` build-identity variables with an
+additive `gcloud run services update --update-env-vars ...` command after the manual stable
+release deploy; this does not require building repository source and should never make the
+stable service track `main`.
