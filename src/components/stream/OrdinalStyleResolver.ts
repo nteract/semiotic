@@ -8,6 +8,11 @@ export class OrdinalStyleResolver {
   private colorSchemeMap = new Map<string, string>()
   private colorSchemeIndex = 0
 
+  resetColors(): void {
+    this.colorSchemeMap.clear()
+    this.colorSchemeIndex = 0
+  }
+
   resolvePieceStyle(
     config: OrdinalPipelineConfig,
     datum: Datum,

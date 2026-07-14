@@ -27,7 +27,7 @@ import type {
   OrdinalLayout,
   WedgeSceneNode
 } from "./ordinalTypes"
-import type { Changeset, PointSceneNode } from "./types"
+import type { Changeset, PointSceneNode, Style } from "./types"
 import { buildDatumIndexMap, computeDecayOpacity } from "./pipelineDecay"
 import { hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
 import { applyOrdinalPulse } from "./ordinalPulse"
@@ -35,6 +35,7 @@ import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./
 import type { ActiveTransition } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { toIdSet } from "./pipelineIdentityOps"
+import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { OrdinalStyleResolver } from "./OrdinalStyleResolver"
 import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
 import type { OrdinalSceneContext } from "./ordinalSceneBuilders/types"
@@ -839,6 +840,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       // aggregate); decay does not, by the same reasoning. This asymmetry is
       // deliberate, not an oversight.
       if (node.type === "connector" || node.type === "violin" || node.type === "boxplot" || node.type === "wedge") continue
+      if (!node.datum) continue
       const idx = indexMap.get(node.datum)
       if (idx == null) continue
       const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
@@ -1368,8 +1370,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
     // colors from a polluted palette index (drift) and reappearing categories
     // keep stale colors — unlike a freshly-mounted chart. Mirrors the reset in
     // updateConfig() and XY's clear() (_colorMapCache/_groupColorMap).
-    this._colorSchemeMap = null
-    this._colorSchemeIndex = 0
+    this.styleResolver.resetColors()
     this._dataVersion++
     this.version++
     this.updateResults.recordData("clear")
@@ -1454,7 +1455,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       )
     }
 
-    // `_colorSchemeMap` falls back to `themeCategorical` and looks up colors
+    // The style resolver falls back to `themeCategorical` and looks up colors
     // via `getColor` (derived from `colorAccessor`) — all three of those must
     // invalidate the cache alongside `colorScheme`. Use `in config` rather
     // than `!== undefined` so a caller explicitly clearing a field (e.g. a
@@ -1464,8 +1465,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       || ("themeCategorical" in config && config.themeCategorical !== prev.themeCategorical)
       || ("colorAccessor" in config && !accessorsEquivalent(config.colorAccessor, prev.colorAccessor))
     ) {
-      this._colorSchemeMap = null
-      this._colorSchemeIndex = 0
+      this.styleResolver.resetColors()
     }
 
     // `_categoryIndexCache` is keyed only on `_dataVersion`; an accessor swap
