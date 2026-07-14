@@ -4,6 +4,7 @@ export function semioticSourceAliases(repoRoot) {
   return [
     { find: /^semiotic\/ai$/, replacement: resolve(repoRoot, "src/components/semiotic-ai.ts") },
     { find: /^semiotic\/ai\/core$/, replacement: resolve(repoRoot, "src/components/semiotic-ai-core.ts") },
+    { find: /^semiotic\/controls$/, replacement: resolve(repoRoot, "src/components/semiotic-controls.ts") },
     { find: /^semiotic\/data$/, replacement: resolve(repoRoot, "src/components/semiotic-data.ts") },
     { find: /^semiotic\/experimental$/, replacement: resolve(repoRoot, "src/components/semiotic-experimental.ts") },
     { find: /^semiotic\/geo$/, replacement: resolve(repoRoot, "src/components/semiotic-geo.ts") },
@@ -14,6 +15,7 @@ export function semioticSourceAliases(repoRoot) {
     { find: /^semiotic\/physics\/rapier$/, replacement: resolve(repoRoot, "src/components/semiotic-physics-rapier.ts") },
     { find: /^semiotic\/realtime$/, replacement: resolve(repoRoot, "src/components/semiotic-realtime.ts") },
     { find: /^semiotic\/recipes$/, replacement: resolve(repoRoot, "src/components/semiotic-recipes.ts") },
+    { find: /^semiotic\/rough$/, replacement: resolve(repoRoot, "src/components/semiotic-rough.ts") },
     { find: /^semiotic\/server$/, replacement: resolve(repoRoot, "src/components/semiotic-server.ts") },
     { find: /^semiotic\/themes$/, replacement: resolve(repoRoot, "src/components/semiotic-themes.ts") },
     { find: /^semiotic\/utils$/, replacement: resolve(repoRoot, "src/components/semiotic-utils.ts") },

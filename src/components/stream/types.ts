@@ -19,6 +19,9 @@ import type { CoercibleNumber } from "./accessorUtils"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { SymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
+import type { SceneRenderMode } from "./sceneRenderBackendTypes"
+import type { StreamSemanticInteractionProps } from "./streamSemanticTypes"
+export type { SceneRenderBackend, SceneRenderMode } from "./sceneRenderBackendTypes"
 export type { ThemeSemanticColors } from "./streamThemeTypes"
 
 export type SceneDatum = Datum | null
@@ -667,7 +670,8 @@ export interface XYFrameAxisConfig {
 
 // ── StreamXYFrame props ────────────────────────────────────────────────
 
-export interface StreamXYFrameProps<T = Datum> {
+export interface StreamXYFrameProps<T = Datum>
+  extends StreamSemanticInteractionProps<HoverData> {
   // ── Chart type ───────────────────────────────────
   chartType: StreamChartType
   runtimeMode?: RuntimeMode
@@ -816,6 +820,8 @@ export interface StreamXYFrameProps<T = Datum> {
   background?: string
 
   // ── Style ────────────────────────────────────────
+  /** Optional scene paint backend. Exact scene geometry remains interactive. */
+  renderMode?: SceneRenderMode<SceneNode>
   lineStyle?: LineStyle | ((d: T, group?: string) => Style)
   pointStyle?: (d: T) => Style & { r?: number }
   areaStyle?: (d: T) => Style
@@ -852,8 +858,6 @@ export interface StreamXYFrameProps<T = Datum> {
   // ── Interaction ──────────────────────────────────
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
-  customHoverBehavior?: (d: HoverData | null) => void
-  customClickBehavior?: (d: HoverData | null) => void
   enableHover?: boolean
   /** Max pixel distance for hover/click hit testing. Default 30. */
   hoverRadius?: number

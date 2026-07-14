@@ -169,6 +169,12 @@ const RadarPlotPage = lazy(() => import("./pages/cookbook/RadarPlotPage"))
 const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
 const InsightForgeExamplePage = lazy(() => import("./pages/examples/InsightForgeExamplePage"))
+const AnalystAdventureExamplePage = lazy(
+  () => import("./pages/examples/AnalystAdventureExamplePage"),
+)
+const SentenceStructureExamplePage = lazy(
+  () => import("./pages/examples/SentenceStructureExamplePage"),
+)
 const ClimateAnomalyExamplePage = lazy(() => import("./pages/examples/ClimateAnomalyExamplePage"))
 const WatermarksExamplePage = lazy(() => import("./pages/examples/WatermarksExamplePage"))
 const StakeholderJourneyExamplePage = lazy(
@@ -241,6 +247,8 @@ const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExam
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "InsightForgeExamplePage.jsx": InsightForgeExamplePage,
+  "AnalystAdventureExamplePage.jsx": AnalystAdventureExamplePage,
+  "SentenceStructureExamplePage.jsx": SentenceStructureExamplePage,
   "WatermarksExamplePage.jsx": WatermarksExamplePage,
   "StakeholderJourneyExamplePage.jsx": StakeholderJourneyExamplePage,
   "MergePressureExamplePage.jsx": MergePressureExamplePage,

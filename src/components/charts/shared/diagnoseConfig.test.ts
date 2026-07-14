@@ -600,6 +600,46 @@ describe("diagnoseConfig", () => {
     })
   })
 
+  describe("interactive annotation identity", () => {
+    const base = {
+      data: [{ x: 1, y: 2 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      title: "t"
+    }
+
+    it("warns when widget content has no durable identity", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base,
+        annotations: [{ type: "widget", x: 1, y: 2, content: "Open" }]
+      })
+      const diagnostic = result.diagnoses.find(
+        (entry) => entry.code === "ANNOTATION_INTERACTIVE_ID"
+      )
+      expect(diagnostic?.severity).toBe("warning")
+      expect(diagnostic?.fix).toContain("provenance.stableId")
+      expect(result.ok).toBe(true)
+    })
+
+    it("accepts id, stableId, and provenance.stableId", () => {
+      const result = diagnoseConfig("LineChart", {
+        ...base,
+        annotations: [
+          { type: "widget", id: "id-note", content: "Open" },
+          { type: "widget", stableId: "stable-note", content: "Open" },
+          {
+            type: "widget",
+            provenance: { stableId: "agent-note" },
+            content: "Open"
+          }
+        ]
+      })
+      expect(result.diagnoses.map((entry) => entry.code)).not.toContain(
+        "ANNOTATION_INTERACTIVE_ID"
+      )
+    })
+  })
+
   describe("annotation density (clutter)", () => {
     const base = { data: [{ x: 1, y: 2 }, { x: 3, y: 4 }], xAccessor: "x", yAccessor: "y", title: "t" }
     const notes = (n: number) =>

@@ -141,6 +141,7 @@ export function buildCustomBehaviorProps(input: {
 }): {
   customHoverBehavior?: (d: Datum | null) => void
   customClickBehavior?: (d: Datum | null) => void
+  annotationObservationCallback?: OnObservationCallback
   hoverRadius?: number
 } {
   const {
@@ -160,8 +161,10 @@ export function buildCustomBehaviorProps(input: {
   const out: {
     customHoverBehavior?: (d: Datum | null) => void
     customClickBehavior?: (d: Datum | null) => void
+    annotationObservationCallback?: OnObservationCallback
     hoverRadius?: number
   } = {}
+  if (onObservation) out.annotationObservationCallback = onObservation
   const mobileHoverRadius = mobileInteraction?.enabled
     ? Math.max(
         hoverRadius ?? 30,

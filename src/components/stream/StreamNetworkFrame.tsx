@@ -52,6 +52,7 @@ import {
   networkLabelToSVG,
   isServerEnvironment
 } from "./SceneToSVG"
+import { renderSceneWithBackend } from "./renderBackend"
 import {
   useHydration,
   useWasHydratingFromSSR
@@ -93,6 +94,12 @@ import {
   syncNetworkNodeColorMap
 } from "./networkColorAccessors"
 import { resolveNetworkPointerHit } from "./networkFrameInteraction"
+import {
+  isInteractiveKeyboardTarget,
+  observationInputType
+} from "../charts/shared/semanticInteractions"
+import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
+import { useNetworkObservationBehaviors } from "./networkFrameObservations"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -140,6 +147,7 @@ const StreamNetworkFrame = memo(forwardRef<
     tensionConfig: tensionConfigProp,
     showParticles = false,
     particleStyle: particleStyleProp,
+    renderMode,
     nodeStyle,
     edgeStyle,
     colorBy,
@@ -163,9 +171,11 @@ const StreamNetworkFrame = memo(forwardRef<
     customHoverBehavior: customHoverBehaviorProp,
     customClickBehavior: customClickBehaviorProp,
     onObservation,
+    annotationObservationCallback,
     chartId,
     onTopologyChange,
     annotations,
+    onAnnotationActivate,
     autoPlaceAnnotations,
     svgAnnotationRules,
     legend,
@@ -1056,61 +1066,13 @@ const StreamNetworkFrame = memo(forwardRef<
 
   // ── Observation wrappers ─────────────────────────────────────────────
 
-  const customHoverBehavior = useCallback(
-    (d: HoverData | null) => {
-      if (customHoverBehaviorProp) customHoverBehaviorProp(d)
-      if (onObservation) {
-        const now = Date.now()
-        if (d) {
-          onObservation({
-            type: "hover",
-            datum: d.data || {},
-            x: d.x,
-            y: d.y,
-            timestamp: now,
-            chartType: "StreamNetworkFrame",
-            chartId
-          })
-        } else {
-          onObservation({
-            type: "hover-end",
-            timestamp: now,
-            chartType: "StreamNetworkFrame",
-            chartId
-          })
-        }
-      }
-    },
-    [customHoverBehaviorProp, onObservation, chartId]
-  )
-
-  const customClickBehavior = useCallback(
-    (d: HoverData | null) => {
-      if (customClickBehaviorProp) customClickBehaviorProp(d)
-      if (onObservation) {
-        const now = Date.now()
-        if (d) {
-          onObservation({
-            type: "click",
-            datum: d.data || {},
-            x: d.x,
-            y: d.y,
-            timestamp: now,
-            chartType: "StreamNetworkFrame",
-            chartId
-          })
-        } else {
-          onObservation({
-            type: "click-end",
-            timestamp: now,
-            chartType: "StreamNetworkFrame",
-            chartId
-          })
-        }
-      }
-    },
-    [customClickBehaviorProp, onObservation, chartId]
-  )
+  const { customHoverBehavior, customClickBehavior } =
+    useNetworkObservationBehaviors({
+      customHoverBehavior: customHoverBehaviorProp,
+      customClickBehavior: customClickBehaviorProp,
+      onObservation,
+      chartId
+    })
 
   // ── Hover handlers ───────────────────────────────────────────────────
   // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
@@ -1188,6 +1150,7 @@ const StreamNetworkFrame = memo(forwardRef<
   const clickHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
 
   clickHandlerRef.current = (e: React.MouseEvent) => {
+    if (isAnnotationActivationTarget(e.target)) return
     if (!customClickBehaviorProp && !onObservation) return
     const canvas = canvasRef.current
     if (!canvas) return
@@ -1208,7 +1171,12 @@ const StreamNetworkFrame = memo(forwardRef<
     })
 
     if (result.kind === "hit") {
-      customClickBehavior(result.hover)
+      customClickBehavior(result.hover, {
+        type: "activate",
+        inputType: observationInputType(
+          (e.nativeEvent as MouseEvent & { pointerType?: string }).pointerType
+        )
+      })
     } else if (result.kind === "miss") {
       customClickBehavior(null)
     }
@@ -1231,6 +1199,7 @@ const StreamNetworkFrame = memo(forwardRef<
   const neighborIndexRef = useRef(-1)
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (isInteractiveKeyboardTarget(e)) return
       const store = storeRef.current
       if (!store) return
 
@@ -1243,6 +1212,15 @@ const StreamNetworkFrame = memo(forwardRef<
       const graph: NavGraph = buildNavGraph(navPoints)
 
       const current = kbFocusIndexRef.current
+
+      if ((e.key === "Enter" || e.key === " ") && current >= 0) {
+        e.preventDefault()
+        const point = graph.flat[current]
+        customClickBehavior(buildHoverData(point.datum || {}, point.x, point.y, {
+          nodeOrEdge: "node"
+        }), { type: "activate", inputType: "keyboard" })
+        return
+      }
 
       if (current < 0) {
         if (e.key === "Escape") return
@@ -1274,7 +1252,7 @@ const StreamNetworkFrame = memo(forwardRef<
         hoverRef.current = hover
         setHoverData(hover)
         if (customHoverBehavior) {
-          customHoverBehavior(hover)
+          customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
           dirtyRef.current = true
         }
         scheduleRender()
@@ -1325,12 +1303,12 @@ const StreamNetworkFrame = memo(forwardRef<
       hoverRef.current = hover
       setHoverData(hover)
       if (customHoverBehavior) {
-        customHoverBehavior(hover)
+        customHoverBehavior(hover, { type: "focus", inputType: "keyboard" })
         dirtyRef.current = true
       }
       scheduleRender()
     },
-    [customHoverBehavior, scheduleRender]
+    [customClickBehavior, customHoverBehavior, scheduleRender]
   )
 
   const onMouseMoveWrapped = useCallback(
@@ -1361,6 +1339,7 @@ const StreamNetworkFrame = memo(forwardRef<
       adjustedWidth,
       adjustedHeight,
       background,
+      renderMode,
       hasBackgroundGraphics: Boolean(backgroundGraphics),
       dirtyRef,
       lastFrameTimeRef,
@@ -1390,7 +1369,7 @@ const StreamNetworkFrame = memo(forwardRef<
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
-    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, scheduleRender],
+    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
   })
 
   // ── Staleness timer ─────────────────────────────────────────────────
@@ -1504,10 +1483,20 @@ const StreamNetworkFrame = memo(forwardRef<
               />
             )}
             {sceneEdges
-              .map((edge, i) => networkSceneEdgeToSVG(edge, i))
+              .map((edge, i) => renderSceneWithBackend({
+                node: edge,
+                index: i,
+                renderMode,
+                fallback: () => networkSceneEdgeToSVG(edge, i)
+              }))
               .filter(Boolean)}
             {sceneNodes
-              .map((node, i) => networkSceneNodeToSVG(node, i))
+              .map((node, i) => renderSceneWithBackend({
+                node,
+                index: i,
+                renderMode,
+                fallback: () => networkSceneNodeToSVG(node, i)
+              }))
               .filter(Boolean)}
             {labels
               .map((label, i) => networkLabelToSVG(label, i))
@@ -1538,6 +1527,10 @@ const StreamNetworkFrame = memo(forwardRef<
             )
           )}
           annotations={annotations}
+          onAnnotationActivate={onAnnotationActivate}
+          onObservation={annotationObservationCallback ?? onObservation}
+          chartId={chartId}
+          chartType="StreamNetworkFrame"
           autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={0}
@@ -1662,6 +1655,10 @@ const StreamNetworkFrame = memo(forwardRef<
             )
           )}
           annotations={annotations}
+          onAnnotationActivate={onAnnotationActivate}
+          onObservation={annotationObservationCallback ?? onObservation}
+          chartId={chartId}
+          chartType="StreamNetworkFrame"
           autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}

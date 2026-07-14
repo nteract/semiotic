@@ -43,7 +43,6 @@ import { needsDataCanvasPaint, needsInteractionCanvasPaint } from "./paintNeeds"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
-import { extractGeoNavPoints, nextIndex } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
@@ -62,6 +61,7 @@ import { getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
 import { resolveNodeColor } from "./sceneUtils"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
+import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
 
 import { collectGeoAnnotationAnchors } from "./geoAnnotationAnchors"
 import { DefaultGeoTooltip } from "./geoDefaultTooltip"
@@ -73,10 +73,13 @@ import {
   zoomButtonStyle,
   resolveProjectionName,
   ensureHitCanvasContext,
-  type GeoFeatureLike,
   type GeoZoomSelection,
   type GeoZoomControlBehavior
 } from "./geoFrameHelpers"
+import { observationInputType } from "../charts/shared/semanticInteractions"
+import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
+import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
+import { useGeoKeyboardNavigation } from "./frameKeyboardNavigation"
 
 // ── StreamGeoFrame ─────────────────────────────────────────────────────
 
@@ -136,6 +139,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       windowSize = 500,
 
       // Style
+      renderMode,
       areaStyle,
       pointStyle,
       lineStyle,
@@ -146,9 +150,13 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       hoverAnnotation,
       tooltipContent,
       allowTooltipOverflow = false,
-      customClickBehavior,
-      customHoverBehavior,
+      customClickBehavior: customClickBehaviorProp,
+      customHoverBehavior: customHoverBehaviorProp,
+      onObservation,
+      annotationObservationCallback,
+      chartId,
       annotations,
+      onAnnotationActivate,
       autoPlaceAnnotations,
 
       // Realtime
@@ -184,6 +192,15 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       description,
       summary
     } = props
+
+    const { customHoverBehavior, customClickBehavior, hasClickBehavior } =
+      useSemanticFrameInteractions<HoverData>({
+        customHoverBehavior: customHoverBehaviorProp,
+        customClickBehavior: customClickBehaviorProp,
+        onObservation,
+        chartId,
+        chartType: "StreamGeoFrame"
+      })
 
     // ── Frame composition (Tier A + B concerns; see useFrame.ts) ────────
     // Geo accepts size as either `size: [w, h]` or as separate `width`/
@@ -573,6 +590,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     }
 
     const onClick = useCallback((e: React.MouseEvent) => {
+      if (isAnnotationActivationTarget(e.target)) return
       if (!customClickBehavior) return
       const store = storeRef.current
       if (!store || !store.scene.length) {
@@ -624,6 +642,9 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           y: chartY,
           time: chartX,
           value: chartY,
+        }, {
+          type: "activate",
+          inputType: observationInputType(lastPointerTypeRef.current)
         })
         return
       }
@@ -632,59 +653,16 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const kbFocusIndexRef = useRef(-1)
-    const focusedNavPointRef = useRef<{ shape?: string; w?: number; h?: number; pathData?: string } | null>(null)
-
-    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
-      const store = storeRef.current
-      if (!store || store.scene.length === 0) return
-
-      const navPoints = extractGeoNavPoints(store.scene)
-      if (navPoints.length === 0) return
-
-      const current = kbFocusIndexRef.current
-      const next = nextIndex(e.key, current < 0 ? -1 : current, navPoints.length)
-      if (next === null) return
-
-      e.preventDefault()
-
-      if (next < 0) {
-        kbFocusIndexRef.current = -1
-        focusedNavPointRef.current = null
-        hoverRef.current = null
-        hoveredNodeRef.current = null
-        setHoverPoint(null)
-        customHoverBehavior?.(null)
-        scheduleRender()
-        return
-      }
-
-      const idx = current < 0 ? 0 : next
-      kbFocusIndexRef.current = idx
-      const point = navPoints[idx]
-      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h, pathData: point.pathData }
-      // Build the HoverData with the same shape the mouse-hover path
-      // emits — flatten GeoJSON properties to the top level so custom
-      // tooltips and `customHoverBehavior` consumers reading `d.name` /
-      // `d.population` see the same fields whether the feature was
-      // reached via the keyboard or the mouse. Without this match, a
-      // keyboard user gets a less-useful hover payload — an
-      // accessibility regression.
-      const rawDatum = point.datum as GeoFeatureLike | null
-      const hover: HoverData = {
-        ...(rawDatum || {}),
-        ...(rawDatum?.properties || {}),
-        data: rawDatum,
-        properties: rawDatum?.properties,
-        x: point.x,
-        y: point.y,
-        __semioticHoverData: true,
-      }
-      hoverRef.current = hover
-      setHoverPoint(hover)
-      customHoverBehavior?.(hover)
-      scheduleRender()
-    }, [customHoverBehavior, scheduleRender])
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown } =
+      useGeoKeyboardNavigation({
+        storeRef,
+        hoverRef,
+        hoveredNodeRef,
+        setHoverPoint,
+        customHoverBehavior,
+        customClickBehavior,
+        scheduleRender
+      })
 
     // Clear keyboard focus on mouse interaction; reuses useFrame's
     // rAF-coalesced pointermove path.
@@ -855,11 +833,17 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         const scene = store.scene
         const scales = store.scales
         const layout = { width: adjustedWidth, height: adjustedHeight }
+        const builtInScene = paintSceneWithBackend({
+          context: ctx,
+          nodes: scene,
+          renderMode,
+          pixelRatio: dpr
+        })
 
-        geoCanvasRenderer(ctx, scene, scales, layout)
-        lineCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
-        pointCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
-        glyphCanvasRenderer(ctx, scene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+        geoCanvasRenderer(ctx, builtInScene, scales, layout)
+        lineCanvasRenderer(ctx, builtInScene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+        pointCanvasRenderer(ctx, builtInScene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+        glyphCanvasRenderer(ctx, builtInScene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
 
         // ── Geo particles ── (skipped under reduced motion: decorative movement)
         if (particlesWanted && particlePoolRef.current) {
@@ -1007,7 +991,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
       storeRef,
       dirtyRef,
       cleanup: () => tileCacheRef.current?.clear(),
-      canvasPaintDependencies: [adjustedWidth, adjustedHeight, background, backgroundGraphics, scheduleRender],
+      canvasPaintDependencies: [adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender],
     })
 
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
@@ -1274,7 +1258,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
               {background && (
                 <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
               )}
-              {scene.map((node, i) => geoSceneNodeToSVG(node, i))}
+              {scene.map((node, i) => renderSceneWithBackend({
+                node,
+                index: i,
+                renderMode,
+                fallback: () => geoSceneNodeToSVG(node, i)
+              }))}
             </g>
           </svg>
           <GeoSVGOverlay
@@ -1297,6 +1286,10 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
               wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null)
             )}
             annotations={annotations}
+            onAnnotationActivate={onAnnotationActivate}
+            onObservation={annotationObservationCallback ?? onObservation}
+            chartId={chartId}
+            chartType="StreamGeoFrame"
             autoPlaceAnnotations={autoPlaceAnnotations}
             pointNodes={collectGeoAnnotationAnchors(scene)}
           />
@@ -1340,8 +1333,8 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           style={{ position: "relative", width: "100%", height: "100%" }}
           onPointerMove={effectiveHoverAnnotation ? onPointerMoveWrapped : undefined}
           onPointerLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
-          onPointerDown={effectiveHoverAnnotation || customClickBehavior ? onPointerDown : undefined}
-          onClick={customClickBehavior ? onClick : undefined}
+          onPointerDown={effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined}
+          onClick={hasClickBehavior ? onClick : undefined}
         >
         <CanvasFrameBackground size={size} margin={margin}>
           {resolvedBackground}
@@ -1381,6 +1374,10 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
             wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null)
           )}
           annotations={annotations}
+          onAnnotationActivate={onAnnotationActivate}
+          onObservation={annotationObservationCallback ?? onObservation}
+          chartId={chartId}
+          chartType="StreamGeoFrame"
           autoPlaceAnnotations={autoPlaceAnnotations}
           pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
         />

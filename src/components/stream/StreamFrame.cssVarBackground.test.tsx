@@ -152,9 +152,10 @@ describe("Stream Frame: background prop with var() syntax", () => {
     expect(spy.log).toContain(RESOLVED_BG)
   })
 
-  it("StreamOrdinalFrame resolves a var() background before assigning to fillStyle", async () => {
+  it("StreamOrdinalFrame keeps a var() background in its SVG underlay instead of assigning it to canvas", async () => {
+    let container: HTMLElement
     await act(async () => {
-      render(
+      ;({ container } = render(
         <StreamOrdinalFrame
           chartType="bar"
           data={[{ cat: "A", v: 10 }, { cat: "B", v: 20 }]}
@@ -163,10 +164,12 @@ describe("Stream Frame: background prop with var() syntax", () => {
           size={[400, 300]}
           background={VAR_BG}
         />,
-      )
+      ))
     })
     expect(spy.log).not.toContain(VAR_BG)
-    expect(spy.log).toContain(RESOLVED_BG)
+    expect(
+      container!.querySelector('[data-semiotic-layer="canvas-background"]'),
+    ).toHaveAttribute("fill", VAR_BG)
   })
 
   it("StreamGeoFrame resolves a var() background before assigning to fillStyle", async () => {

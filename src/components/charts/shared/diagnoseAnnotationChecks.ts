@@ -6,6 +6,36 @@ import {
 } from "./annotationTypes"
 import type { Datum } from "./datumTypes"
 import type { Diagnosis } from "./diagnoseTypes"
+import { annotationStableId } from "./annotationActivation"
+
+/** Interactive widgets need durable identity for replay and normalized events. */
+export function checkInteractiveAnnotationIds(
+  _component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  const annotations = Array.isArray(props.annotations)
+    ? (props.annotations as Datum[])
+    : null
+  if (!annotations) return
+  for (const annotation of annotations) {
+    if (
+      !annotation ||
+      typeof annotation !== "object" ||
+      annotationType(annotation) !== "widget" ||
+      annotation.content == null ||
+      annotationStableId(annotation)
+    ) {
+      continue
+    }
+    out.push({
+      severity: "warning",
+      code: "ANNOTATION_INTERACTIVE_ID",
+      message: "An interactive widget annotation has no stable id, so its activation cannot be normalized or replayed reliably.",
+      fix: "Add id, stableId, or provenance.stableId to the widget annotation. Do not identify interactive annotations by array index."
+    })
+  }
+}
 
 // Connector-necessity (Rahman et al.'s "Placement"): a note should sit next to
 // its target, with a connector only when proximity is infeasible. Two cheap

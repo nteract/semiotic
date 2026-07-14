@@ -158,7 +158,7 @@ describe("validateExampleDefinitions", () => {
       },
     })
     expect(getExampleDefinition("/examples/unknown")).toBeUndefined()
-    expect(getPilotExampleDefinitions()).toHaveLength(3)
+    expect(getPilotExampleDefinitions()).toHaveLength(5)
     expect(EXAMPLE_DATA_STATES).toEqual(["live", "snapshot", "fallback", "error"])
   })
 

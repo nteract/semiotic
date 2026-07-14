@@ -357,8 +357,19 @@ export type {
 
 export type {
   ChartObservation,
-  OnObservationCallback
+  OnObservationCallback,
+  ObservationInputType,
+  FocusObservation,
+  ActivateObservation,
+  AnnotationActivateObservation
 } from "./store/ObservationStore"
+
+export { annotationStableId } from "./charts/shared/annotationActivation"
+export type {
+  ChartAnnotation,
+  AnnotationActivationEvent,
+  OnAnnotationActivateCallback
+} from "./charts/shared/annotationActivation"
 
 export type {
   ResolutionMode,

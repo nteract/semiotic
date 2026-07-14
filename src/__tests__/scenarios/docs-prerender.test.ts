@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest"
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { extractRoutesFromSource, generatePage, copyDocsApiAssets, sanitizeRouteHtml } from "../../../scripts/prerender.mjs"
+import {
+  copyDocsApiAssets,
+  extractRoutesFromSource,
+  generatePage,
+  mergeExampleDefinitionRoutes,
+  sanitizeRouteHtml,
+} from "../../../scripts/prerender.mjs"
 
 describe("docs prerender helpers", () => {
   it("extracts nested docs routes without leaking the previous parent", () => {
@@ -58,6 +64,33 @@ describe("docs prerender helpers", () => {
     expect(routes).toContain("features/styling")
     expect(routes).toContain("cookbook/timeline")
     expect(routes).not.toContain("api/styling")
+  })
+
+  it("merges definition-backed example paths omitted by dynamic JSX routes", () => {
+    const source = `
+      <Routes>
+        <Route path="examples" element={<ExamplesOverviewPage />} />
+        {EXAMPLE_ROUTES.map(({ path, Component }) => (
+          <Route key={path} path={path} element={<Component />} />
+        ))}
+      </Routes>
+    `
+
+    const extracted = extractRoutesFromSource(source)
+    const routes = mergeExampleDefinitionRoutes(extracted, [
+      { path: "/examples/insight-forge" },
+      { path: "/examples/analyst-adventure/" },
+      { path: "/blog/not-an-example" },
+      { path: "/examples/:slug" },
+    ])
+
+    expect(extracted).toEqual(["", "examples"])
+    expect(routes).toEqual([
+      "",
+      "examples",
+      "examples/insight-forge",
+      "examples/analyst-adventure",
+    ])
   })
 
   it("generates SEO metadata and a noscript fallback for the homepage", () => {

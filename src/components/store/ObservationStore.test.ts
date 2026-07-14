@@ -124,12 +124,34 @@ describe("ObservationStore", () => {
         timestamp: Date.now(),
         chartType: "bar"
       })
+      store.pushObservation({
+        type: "focus",
+        datum: { id: "datum-a" },
+        inputType: "keyboard",
+        timestamp: Date.now(),
+        chartType: "line"
+      })
+      store.pushObservation({
+        type: "activate",
+        datum: { id: "datum-a" },
+        inputType: "touch",
+        timestamp: Date.now(),
+        chartType: "line"
+      })
+      store.pushObservation({
+        type: "annotation-activate",
+        annotationId: "note-a",
+        inputType: "navigation-tree",
+        timestamp: Date.now(),
+        chartType: "AccessibleNavTree"
+      })
 
-      expect(store.observations).toHaveLength(8)
+      expect(store.observations).toHaveLength(11)
       const types = store.observations.map(o => o.type)
       expect(types).toEqual([
         "hover", "hover-end", "click", "click-end",
-        "brush", "brush-end", "selection", "selection-end"
+        "brush", "brush-end", "selection", "selection-end",
+        "focus", "activate", "annotation-activate"
       ])
     })
   })

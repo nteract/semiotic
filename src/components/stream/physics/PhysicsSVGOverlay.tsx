@@ -22,6 +22,11 @@ import {
 } from "../../recipes/annotationLayout"
 import type { AnnotationContext } from "../../realtime/types"
 import type { PhysicsBodyState } from "./PhysicsKernel"
+import type { OnObservationCallback } from "../../store/ObservationStore"
+import {
+  useAnnotationActivationOptions,
+  type OnAnnotationActivateCallback
+} from "../../charts/shared/annotationActivation"
 
 export type PhysicsAnnotationAnchorNode = {
   pointId?: string
@@ -66,6 +71,10 @@ export interface PhysicsSVGOverlayProps {
   /** Live body anchors for pointId / bodyId annotations. */
   pointNodes?: PhysicsAnnotationAnchorNode[]
   annotations?: Datum[]
+  onAnnotationActivate?: OnAnnotationActivateCallback
+  onObservation?: OnObservationCallback
+  chartId?: string
+  chartType?: string
   autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
@@ -133,10 +142,20 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
     legendLayout,
     pointNodes = [],
     annotations,
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType,
     autoPlaceAnnotations,
     svgAnnotationRules,
     children
   } = props
+  const annotationActivation = useAnnotationActivationOptions({
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType
+  })
 
   const normalized = React.useMemo(
     () => normalizePhysicsAnnotations(annotations),
@@ -163,13 +182,13 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
   }, [annotationContext, autoPlaceAnnotations, normalized])
 
   const defaultAnnotationRules = React.useMemo(
-    () => createDefaultAnnotationRules("network"),
-    []
+    () => createDefaultAnnotationRules("network", annotationActivation),
+    [annotationActivation]
   )
 
   const renderedSvgAnnotations = layoutAnnotations
     ? renderAnnotationPass(
-        layoutAnnotations.filter((annotation) => annotation.type !== "widget"),
+        layoutAnnotations,
         defaultAnnotationRules,
         svgAnnotationRules,
         annotationContext

@@ -117,6 +117,73 @@ describe("AccessibleNavTree — keyboard", () => {
   })
 })
 
+describe("AccessibleNavTree — semantic observations", () => {
+  it("normalizes tree focus and activation for a datum leaf", () => {
+    const onObservation = vi.fn()
+    render(
+      <AccessibleNavTree
+        tree={singleSeries}
+        chartId="sales"
+        onObservation={onObservation}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText("Feb: 250"))
+
+    expect(onObservation.mock.calls.map(([event]) => event.type)).toEqual([
+      "focus",
+      "activate"
+    ])
+    expect(onObservation.mock.calls[1][0]).toMatchObject({
+      type: "activate",
+      datum: { month: "Feb", sales: 250 },
+      inputType: "navigation-tree",
+      chartId: "sales"
+    })
+  })
+
+  it("activates an annotation leaf by stable id with Enter", () => {
+    const onObservation = vi.fn()
+    const onAnnotationActivate = vi.fn()
+    const tree = buildNavigationTree("LineChart", {
+      data: [{ month: "Jan", sales: 100 }],
+      xAccessor: "month",
+      yAccessor: "sales",
+      annotations: [{
+        type: "widget",
+        stableId: "secret-console",
+        label: "Secret console"
+      }]
+    })
+    render(
+      <AccessibleNavTree
+        tree={tree}
+        chartId="sales"
+        onObservation={onObservation}
+        onAnnotationActivate={onAnnotationActivate}
+      />
+    )
+    fireEvent.click(screen.getByLabelText(/Annotations: one marked feature/))
+    const annotation = screen.getByLabelText(/^A widget labeled "Secret console"\.$/)
+    fireEvent.click(annotation)
+    onObservation.mockClear()
+    onAnnotationActivate.mockClear()
+
+    fireEvent.keyDown(annotation, { key: "Enter" })
+
+    expect(onAnnotationActivate).toHaveBeenCalledWith(expect.objectContaining({
+      annotationId: "secret-console",
+      inputType: "navigation-tree",
+      chartId: "sales"
+    }))
+    expect(onObservation).toHaveBeenCalledWith(expect.objectContaining({
+      type: "annotation-activate",
+      annotationId: "secret-console",
+      inputType: "navigation-tree"
+    }))
+  })
+})
+
 describe("AccessibleNavTree — reception telemetry", () => {
   beforeEach(() => getConversationArcStore().reset())
   afterEach(() => getConversationArcStore().reset())

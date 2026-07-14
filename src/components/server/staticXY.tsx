@@ -11,6 +11,7 @@ import {
   type EvidenceSink
 } from "./renderEvidence"
 import { xySceneNodeToSVG } from "../stream/SceneToSVG"
+import { renderSceneWithBackend } from "../stream/renderBackend"
 import { resolveTheme } from "./themeResolver"
 import {
   renderStaticLegend,
@@ -184,7 +185,12 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   const grid = props.showGrid ? renderGridSVG(store.scales, { width, height }, theme, idPfx) : null
 
   const dataMarks = store.scene
-    .map((node, i) => xySceneNodeToSVG(node, i, idPfx))
+    .map((node, i) => renderSceneWithBackend({
+      node,
+      index: i,
+      renderMode: props.renderMode,
+      fallback: () => xySceneNodeToSVG(node, i, idPfx)
+    }))
     .filter(Boolean)
 
   const showAxes = props.showAxes !== false
@@ -276,5 +282,4 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 }
 
 // ── Helper functions for building RealtimeNodes/Edges from props ────────
-
 

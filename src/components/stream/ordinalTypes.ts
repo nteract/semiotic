@@ -17,11 +17,18 @@ import type {
   StalenessConfig,
   ThemeSemanticColors,
   FrameGraphicsProp,
-  SceneAccessibilityMetadata
+  SceneAccessibilityMetadata,
+  SceneRenderMode
 } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { GradientLegendConfig, LegendGroup, LegendLayout } from "../types/legendTypes"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { OnObservationCallback } from "../store/ObservationStore"
+import type {
+  SemanticClickBehavior,
+  SemanticHoverBehavior
+} from "../charts/shared/semanticInteractions"
+import type { OnAnnotationActivateCallback } from "../charts/shared/annotationActivation"
 
 // ── Chart types ────────────────────────────────────────────────────────
 
@@ -479,6 +486,8 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
 
   // Style
+  /** Optional scene paint backend. Exact scene geometry remains interactive. */
+  renderMode?: SceneRenderMode<OrdinalSceneNode>
   pieceStyle?: (d: Datum, category?: string) => Style
   summaryStyle?: (d: Datum, category?: string) => Style
   colorScheme?: string | string[] | Record<string, string>
@@ -508,11 +517,19 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   enableHover?: boolean
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
-  customHoverBehavior?: (d: HoverData | null) => void
-  customClickBehavior?: (d: HoverData | null) => void
+  customHoverBehavior?: SemanticHoverBehavior<HoverData>
+  customClickBehavior?: SemanticClickBehavior<HoverData>
+  /** Structured interaction observations, including semantic focus/activate. */
+  onObservation?: OnObservationCallback
+  /** @internal HOC observation callback forwarded only to annotation widgets. */
+  annotationObservationCallback?: OnObservationCallback
+  /** Chart instance identifier included in observation events. */
+  chartId?: string
 
   // Annotations
   annotations?: Datum[]
+  /** Observe activation of widget annotations without replacing widget behavior. */
+  onAnnotationActivate?: OnAnnotationActivateCallback
   autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,

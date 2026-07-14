@@ -20,6 +20,7 @@ import {
 import {
   checkAnnotationConnectors,
   checkAnnotationDensity,
+  checkInteractiveAnnotationIds,
 } from "./diagnoseAnnotationChecks"
 import {
   checkCherryPickedWindow,
@@ -724,6 +725,7 @@ export function diagnoseConfig(
   checkTokenEncodingDiagnostics(componentName, props, diagnoses)
   checkAnnotationConnectors(componentName, props, diagnoses)
   checkAnnotationDensity(componentName, props, diagnoses)
+  checkInteractiveAnnotationIds(componentName, props, diagnoses)
 
   checkInvertedAxis(componentName, props, diagnoses)
   checkDualAxisUnlabeled(componentName, props, diagnoses)

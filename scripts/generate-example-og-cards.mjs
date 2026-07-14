@@ -123,7 +123,8 @@ function buildCardSVG(entry) {
   const previewX = 628
   const previewY = 168
   const previewPad = 18
-  const titleLines = wrapText(entry.title, 18, 3)
+  const longTitle = entry.title.length > 45
+  const titleLines = wrapText(entry.title, longTitle ? 20 : 18, 3)
   const descLines = wrapText(entry.description, 43, 3)
 
   // Brand row at the top; eyebrow, title, description flow below it.
@@ -131,7 +132,7 @@ function buildCardSVG(entry) {
 
   // Anchor the title block so the whole composition sits centered-ish
   // vertically regardless of how many title/description lines there are.
-  const titleSize = 62
+  const titleSize = longTitle ? 56 : 62
   const titleLH = 74
   const eyebrowY = 186
   const titleY = eyebrowY + 62

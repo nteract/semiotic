@@ -1,6 +1,6 @@
 import * as React from "react"
-import { describe, expect, it } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
+import { fireEvent, render, screen } from "@testing-library/react"
 import {
   PhysicsSVGOverlay,
   bodiesToAnnotationAnchors,
@@ -148,5 +148,32 @@ describe("PhysicsSVGOverlay", () => {
     expect(line?.getAttribute("x1")).toBe("80")
     expect(line?.getAttribute("x2")).toBe("80")
     expect(container.textContent).toMatch(/Gate/)
+  })
+
+  it("renders and observes body-anchored widget annotations", () => {
+    const onAnnotationActivate = vi.fn()
+    render(
+      <PhysicsSVGOverlay
+        width={200}
+        height={100}
+        totalWidth={200}
+        totalHeight={100}
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        pointNodes={[{ pointId: "mort", x: 80, y: 50, r: 8 }]}
+        annotations={[{
+          id: "mort-body",
+          type: "widget",
+          bodyId: "mort",
+          content: <button>Wake Mort</button>
+        }]}
+        onAnnotationActivate={onAnnotationActivate}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button"), { detail: 0 })
+    expect(onAnnotationActivate).toHaveBeenCalledWith(expect.objectContaining({
+      annotationId: "mort-body",
+      inputType: "keyboard"
+    }))
   })
 })

@@ -310,6 +310,8 @@ export interface StreamPhysicsFrameProps {
    * `physics: "barrier"|"sensor"` also feed colliders via PhysicsAnnotations.
    */
   annotations?: Datum[]
+  /** Observe activation of widget annotations without replacing widget behavior. */
+  onAnnotationActivate?: import("../../charts/shared/annotationActivation").OnAnnotationActivateCallback
   autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,

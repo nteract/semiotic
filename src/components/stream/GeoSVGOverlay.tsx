@@ -1,5 +1,10 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { OnObservationCallback } from "../store/ObservationStore"
+import {
+  useAnnotationActivationOptions,
+  type OnAnnotationActivateCallback
+} from "../charts/shared/annotationActivation"
 import * as React from "react"
 import { useMemo, useRef } from "react"
 import type { ReactNode } from "react"
@@ -46,6 +51,10 @@ interface GeoSVGOverlayProps {
   foregroundGraphics?: ReactNode
 
   annotations?: Datum[]
+  onAnnotationActivate?: OnAnnotationActivateCallback
+  onObservation?: OnObservationCallback
+  chartId?: string
+  chartType?: string
   autoPlaceAnnotations?: AutoPlaceAnnotations
   pointNodes?: { pointId?: string; x: number; y: number; r: number }[]
 }
@@ -76,9 +85,19 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     legendLayout,
     foregroundGraphics,
     annotations,
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType,
     autoPlaceAnnotations,
     pointNodes
   } = props
+  const annotationActivation = useAnnotationActivationOptions({
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType
+  })
 
   // Match SVGOverlay's sticky annotation lifetime: retain placements across
   // rerenders, but reset the index-keyed cache when the annotation count moves.
@@ -117,11 +136,11 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
 
     return renderAnnotationPass(
       layoutAnnotations,
-      createDefaultAnnotationRules("xy"),
+      createDefaultAnnotationRules("xy", annotationActivation),
       undefined,
       context
     )
-  }, [annotations, autoPlaceAnnotations, width, height, pointNodes])
+  }, [annotations, autoPlaceAnnotations, width, height, pointNodes, annotationActivation])
 
   const hasContent =
     showAxes ||

@@ -313,14 +313,39 @@ export function copyExampleOgCards(publicOgDir = PUBLIC_EXAMPLE_OG_DIR, buildDir
 // entry into ROUTE_META so /examples/<slug> pages emit the example's
 // name (og:title) and its generated preview card (og:image), reusing the
 // same per-section meta path everything else in ROUTE_META uses.
-export async function registerExampleRouteMeta() {
+export async function loadExampleDefinitions() {
   try {
-    if (!existsSync(EXAMPLE_DEFINITIONS_FILE)) return 0
+    if (!existsSync(EXAMPLE_DEFINITIONS_FILE)) return []
     const source = readFileSync(EXAMPLE_DEFINITIONS_FILE, "utf8")
     const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
-    const examples = mod.EXAMPLE_DEFINITIONS || []
+    return Array.isArray(mod.EXAMPLE_DEFINITIONS) ? mod.EXAMPLE_DEFINITIONS : []
+  } catch (err) {
+    console.warn("[prerender] could not load examples manifest:", err.message)
+    return []
+  }
+}
+
+// App.jsx renders example routes from EXAMPLE_DEFINITIONS, so its JSX contains
+// only the top-level /examples route for the static route extractor to see.
+// Merge the canonical definition paths explicitly so deep example pages receive
+// their own HTML, social metadata, sitemap entries, and machine-readable docs.
+export function mergeExampleDefinitionRoutes(routes = [], examples = []) {
+  const merged = new Set(routes)
+  for (const entry of examples) {
+    const routePath = String(entry?.path || "")
+      .replace(/^\/+/, "")
+      .replace(/\/+$/, "")
+    if (!routePath.startsWith("examples/") || routePath.includes(":")) continue
+    merged.add(routePath)
+  }
+  return Array.from(merged)
+}
+
+export async function registerExampleRouteMeta(examples) {
+  try {
+    const resolvedExamples = examples ?? await loadExampleDefinitions()
     let registered = 0
-    for (const entry of examples) {
+    for (const entry of resolvedExamples) {
       const routePath = String(entry.path).replace(/^\//, "")
       const slug = routePath.split("/").filter(Boolean).pop()
       if (!routePath || !slug) continue
@@ -908,8 +933,9 @@ export async function prerender() {
   }
 
   const shellHtml = readFileSync(shellPath, "utf-8")
-  const routes = extractRoutes()
-  const exampleMetaCount = await registerExampleRouteMeta()
+  const exampleDefinitions = await loadExampleDefinitions()
+  const routes = mergeExampleDefinitionRoutes(extractRoutes(), exampleDefinitions)
+  const exampleMetaCount = await registerExampleRouteMeta(exampleDefinitions)
   const blogEntries = await loadBlogEntries()
   let renderRoute = null
   try {

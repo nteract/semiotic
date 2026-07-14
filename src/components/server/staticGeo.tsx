@@ -10,6 +10,7 @@ import {
   type EvidenceSink
 } from "./renderEvidence"
 import { geoSceneNodeToSVG } from "../stream/SceneToSVG"
+import { renderSceneWithBackend } from "../stream/renderBackend"
 import { resolveTheme } from "./themeResolver"
 import {
   renderStaticLegend,
@@ -162,7 +163,12 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
   }
 
   const dataMarks = store.scene
-    .map((node, i) => geoSceneNodeToSVG(node, i))
+    .map((node, i) => renderSceneWithBackend({
+      node,
+      index: i,
+      renderMode: props.renderMode,
+      fallback: () => geoSceneNodeToSVG(node, i)
+    }))
     .filter(Boolean)
 
   // Geo annotations: `coordinates: [lon, lat]` flows through the resolved
@@ -237,4 +243,3 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     })
   )
 }
-

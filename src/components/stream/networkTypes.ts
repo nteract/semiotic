@@ -1,14 +1,13 @@
 import type { ReactNode } from "react"
-import type { OnObservationCallback } from "../store/ObservationStore"
-import type { HoverData, AnnotationContext } from "../realtime/types"
+import type { HoverData } from "../realtime/types"
 import type { LegendGroup, LegendLayout } from "../types/legendTypes"
-import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum, SceneAccessibilityMetadata } from "./types"
+import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum, SceneAccessibilityMetadata, SceneRenderMode } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { Datum } from "../charts/shared/datumTypes"
-import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { NetworkSymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
 import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
+import type { StreamNetworkInteractionProps } from "./networkInteractionTypes"
 
 // ── Tension configuration ──────────────────────────────────────────────
 
@@ -219,6 +218,9 @@ export interface RealtimeNetworkFrameProps {
   tensionConfig?: Partial<TensionConfig>
   showParticles?: boolean
   particleStyle?: ParticleStyle
+
+  /** Optional scene paint backend. Exact node and edge geometry remains interactive. */
+  renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
   colorBy?: string | ((d: RealtimeNode) => string)
   colorScheme?: string | string[] | Record<string, string>
   edgeColorBy?: "source" | "target" | ((d: RealtimeEdge) => string)
@@ -673,7 +675,8 @@ export interface NetworkPipelineConfig {
 
 // ── Component props ─────────────────────────────────────────────────
 
-export interface StreamNetworkFrameProps<T = Datum> {
+export interface StreamNetworkFrameProps<T = Datum>
+  extends StreamNetworkInteractionProps<RealtimeNode, RealtimeEdge> {
   // ── Chart type ───────────────────────────────────
   chartType: NetworkChartType
 
@@ -715,6 +718,8 @@ export interface StreamNetworkFrameProps<T = Datum> {
   groupWidth?: number
   sortGroups?: (a: unknown, b: unknown) => number
   edgeSort?: (a: unknown, b: unknown) => number
+  /** Optional scene paint backend. Exact node and edge geometry remains interactive. */
+  renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
   treeOrientation?: "vertical" | "horizontal" | "radial"
   edgeType?: "line" | "curve"
   padding?: number
@@ -750,26 +755,6 @@ export interface StreamNetworkFrameProps<T = Datum> {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   className?: string
   background?: string
-
-  // ── Interaction ──────────────────────────────────
-  enableHover?: boolean
-  tooltipContent?: (d: HoverData) => ReactNode
-  customHoverBehavior?: (d: HoverData | null) => void
-  customClickBehavior?: (d: HoverData | null) => void
-  /** Observation callback — emits hover/click events to the ObservationStore and this callback */
-  onObservation?: OnObservationCallback
-  /** Chart instance identifier for observation filtering */
-  chartId?: string
-  onTopologyChange?: (nodes: RealtimeNode[], edges: RealtimeEdge[]) => void
-
-  // ── Annotations ──────────────────────────────────
-  annotations?: Datum[]
-  autoPlaceAnnotations?: AutoPlaceAnnotations
-  svgAnnotationRules?: (
-    annotation: Datum,
-    index: number,
-    context: AnnotationContext
-  ) => ReactNode
 
   // ── Legend / title ───────────────────────────────
   legend?: ReactNode | { legendGroups: LegendGroup[] }

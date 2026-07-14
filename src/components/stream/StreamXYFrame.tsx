@@ -33,7 +33,6 @@ import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
 import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
-import { extractXYNavPoints, buildNavGraph, resolvePosition, nextGraphIndex, navPointToHover, type NavGraph } from "./keyboardNav"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { resolveStaleness } from "./stalenessBands"
 import { StalenessBadge } from "./StalenessBadge"
@@ -50,7 +49,7 @@ import {
 
 export { withAlpha } from "./frameThemeColors"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
-import { FocusRing, type FocusRingProps } from "./FocusRing"
+import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
@@ -66,8 +65,13 @@ import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotati
 import { makeDateTickFormatter } from "./xyDateTicks"
 import { collectAnnotationAnchors } from "./xyAnnotationAnchors"
 import { XY_CANVAS_RENDERERS as RENDERERS } from "./xyCanvasRenderers"
+import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
 import { drawCrosshair, drawLineHighlight } from "./xyCrosshair"
 import { DefaultTooltip } from "./xyDefaultTooltip"
+import { observationInputType } from "../charts/shared/semanticInteractions"
+import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
+import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
+import { useXYKeyboardNavigation } from "./frameKeyboardNavigation"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -123,6 +127,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       margin: marginProp,
       className,
       background,
+      renderMode,
       lineStyle,
       pointStyle,
       areaStyle,
@@ -155,12 +160,16 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       tickFormatValue,
       hoverAnnotation,
       tooltipContent,
-      customHoverBehavior,
-      customClickBehavior,
+      customHoverBehavior: customHoverBehaviorProp,
+      customClickBehavior: customClickBehaviorProp,
+      onObservation,
+      annotationObservationCallback,
+      chartId,
       enableHover,
       hoverRadius = 30,
       tooltipMode,
       annotations,
+      onAnnotationActivate,
       autoPlaceAnnotations,
       svgAnnotationRules,
       showGrid,
@@ -211,6 +220,15 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       layoutConfig,
       layoutSelection,
     } = props
+
+    const { customHoverBehavior, customClickBehavior, hasClickBehavior } =
+      useSemanticFrameInteractions<HoverData>({
+        customHoverBehavior: customHoverBehaviorProp,
+        customClickBehavior: customClickBehaviorProp,
+        onObservation,
+        chartId,
+        chartType: "StreamXYFrame"
+      })
 
     // Stable per-instance prefix for SVG ids that must be unique on the
     // page (e.g. `<clipPath id>` from area `clipRect`). React's `useId`
@@ -608,7 +626,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       hydrated,
       wasHydratingFromSSR,
       cleanup: () => adapterRef.current?.clear(),
-      canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, lineStyle, canvasPreRenderers, scheduleRender],
+      canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, lineStyle, renderMode, canvasPreRenderers, scheduleRender],
     })
 
     // ── Hover handlers ───────────────────────────────────────────────────
@@ -769,6 +787,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const clickHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
     clickHandlerRef.current = (e: React.MouseEvent) => {
+      if (isAnnotationActivationTarget(e.target)) return
       if (!customClickBehavior) return
       const canvas = canvasRef.current
       if (!canvas) return
@@ -792,7 +811,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         hit.x,
         hit.y,
         xValue != null ? { xValue, xPx: hit.x } : undefined
-      ))
+      ), {
+        type: "activate",
+        inputType: observationInputType(lastPointerTypeRef.current)
+      })
     }
     const onClick = useCallback(
       (e: React.MouseEvent) => clickHandlerRef.current(e),
@@ -801,76 +823,16 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const kbFocusIndexRef = useRef(-1)
-    const focusedNavPointRef = useRef<{ shape?: FocusRingProps["shape"]; w?: number; h?: number } | null>(null)
-    const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
-
-    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
-      const store = storeRef.current
-      if (!store || store.scene.length === 0) return
-
-      // Cache NavGraph keyed off store.version to avoid O(n log n) rebuild per keypress
-      const storeVersion = store.version
-      let graph: NavGraph
-      if (navGraphCacheRef.current && navGraphCacheRef.current.version === storeVersion) {
-        graph = navGraphCacheRef.current.graph
-      } else {
-        const navPoints = extractXYNavPoints(store.scene)
-        if (navPoints.length === 0) return
-        graph = buildNavGraph(navPoints)
-        navGraphCacheRef.current = { version: storeVersion, graph }
-      }
-
-      const current = kbFocusIndexRef.current
-
-      // First arrow press when unfocused: start at 0
-      if (current < 0) {
-        if (e.key === "Escape") return
-        const isNav = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)
-        if (!isNav) return
-        e.preventDefault()
-        kbFocusIndexRef.current = 0
-        const point = graph.flat[0]
-        focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-        // Band enrichment mirrors the pointer-hover path so keyboard
-        // users see the same `datum.band` / `datum.bands` enrichment.
-        const enrichedPoint = { ...point, datum: enrichDatumWithBand(point.datum, store.resolvedRibbons) }
-        const hover = navPointToHover(enrichedPoint)
-        hoverRef.current = hover
-        setHoverPoint(hover)
-        if (customHoverBehavior) customHoverBehavior(hover)
-        scheduleRender()
-        return
-      }
-
-      const pos = resolvePosition(graph, current)
-      const next = nextGraphIndex(e.key, pos, graph)
-      if (next === null) return // unhandled key
-
-      e.preventDefault()
-
-      if (next < 0) {
-        // Escape — clear focus
-        kbFocusIndexRef.current = -1
-        focusedNavPointRef.current = null
-        hoverRef.current = null
-        hoveredNodeRef.current = null
-        setHoverPoint(null)
-        if (customHoverBehavior) customHoverBehavior(null)
-        scheduleRender()
-        return
-      }
-
-      kbFocusIndexRef.current = next
-      const point = graph.flat[next]
-      focusedNavPointRef.current = { shape: point.shape, w: point.w, h: point.h }
-      const enrichedPoint = { ...point, datum: enrichDatumWithBand(point.datum, store.resolvedRibbons) }
-      const hover = navPointToHover(enrichedPoint)
-      hoverRef.current = hover
-      setHoverPoint(hover)
-      if (customHoverBehavior) customHoverBehavior(hover)
-      scheduleRender()
-    }, [customHoverBehavior, scheduleRender])
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown } =
+      useXYKeyboardNavigation({
+        storeRef,
+        hoverRef,
+        hoveredNodeRef,
+        setHoverPoint,
+        customHoverBehavior,
+        customClickBehavior,
+        scheduleRender
+      })
 
     // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced
     // hover path so the per-frame work cap still applies.
@@ -1008,11 +970,17 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           // regardless of chartType so a layout that emits, e.g., rects on a
           // chartType="line" frame still draws.
           const renderers = customLayout ? RENDERERS.custom : RENDERERS[chartType]
+          const builtInScene = paintSceneWithBackend({
+            context: ctx,
+            nodes: store.scene,
+            renderMode,
+            pixelRatio: dpr
+          })
           if (renderers && store.scales) {
             for (const renderer of renderers) {
               renderer(
                 ctx,
-                store.scene,
+                builtInScene,
                 store.scales,
                 { width: adjustedWidth, height: adjustedHeight }
               )
@@ -1295,7 +1263,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
               {svgPreRenderers && scales && svgPreRenderers.map((renderer, ri) => (
                 <React.Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</React.Fragment>
               ))}
-              {scene.map((node, i) => xySceneNodeToSVG(node, i, svgInstanceId)).filter(Boolean)}
+              {scene.map((node, i) => renderSceneWithBackend({
+                node,
+                index: i,
+                renderMode,
+                fallback: () => xySceneNodeToSVG(node, i, svgInstanceId)
+              })).filter(Boolean)}
             </g>
           </svg>
           <SVGOverlay
@@ -1329,6 +1302,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             xValues={[]}
             yValues={[]}
             annotations={annotations}
+            onAnnotationActivate={onAnnotationActivate}
+            onObservation={annotationObservationCallback ?? onObservation}
+            chartId={chartId}
+            chartType="StreamXYFrame"
             autoPlaceAnnotations={autoPlaceAnnotations}
             svgAnnotationRules={svgAnnotationRules}
             annotationFrame={0}
@@ -1385,8 +1362,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           onMouseMove={effectiveHoverAnnotation ? onMouseMoveFallback : undefined}
           onPointerLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
           onMouseLeave={effectiveHoverAnnotation ? onPointerLeave : undefined}
-          onPointerDown={effectiveHoverAnnotation || customClickBehavior ? onPointerDown : undefined}
-          onClick={customClickBehavior ? onClick : undefined}
+          onPointerDown={effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined}
+          onClick={hasClickBehavior ? onClick : undefined}
         >
         <CanvasFrameBackground size={size} margin={margin}>
           {resolvedBackground}
@@ -1454,6 +1431,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           xValues={marginalXValues}
           yValues={marginalYValues}
           annotations={annotations}
+          onAnnotationActivate={onAnnotationActivate}
+          onObservation={annotationObservationCallback ?? onObservation}
+          chartId={chartId}
+          chartType="StreamXYFrame"
           autoPlaceAnnotations={autoPlaceAnnotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}

@@ -4,12 +4,17 @@ import { render, act, fireEvent } from "@testing-library/react"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import { ThemeProvider } from "../ThemeProvider"
 import type { StreamOrdinalFrameHandle } from "./ordinalTypes"
-import { setupCanvasMock, type CanvasContextMock } from "../../test-utils/canvasMock"
+import {
+  setupCanvasMock,
+  type CanvasContextMock
+} from "../../test-utils/canvasMock"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 // Mock ResizeObserver for jsdom
-const resizeObserverGlobal = globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }
+const resizeObserverGlobal = globalThis as typeof globalThis & {
+  ResizeObserver?: typeof ResizeObserver
+}
 if (typeof resizeObserverGlobal.ResizeObserver === "undefined") {
   resizeObserverGlobal.ResizeObserver = class {
     constructor(_callback: ResizeObserverCallback) {}
@@ -21,35 +26,39 @@ if (typeof resizeObserverGlobal.ResizeObserver === "undefined") {
 
 describe("StreamOrdinalFrame", () => {
   let cleanup: () => void
-  beforeEach(() => { cleanup = setupCanvasMock() })
-  afterEach(() => { cleanup() })
+  beforeEach(() => {
+    cleanup = setupCanvasMock()
+  })
+  afterEach(() => {
+    cleanup()
+  })
 
   // ── Basic rendering ───────────────────────────────────────────────────
 
   describe("basic rendering", () => {
     it("mounts with minimal props and renders a canvas element", () => {
-      const { container } = render(
-        <StreamOrdinalFrame chartType="bar" />
+      const { getByRole } = render(<StreamOrdinalFrame chartType="bar" />)
+      const frame = getByRole("group", { name: "Ordinal chart" })
+      expect(frame).toHaveClass("stream-ordinal-frame")
+      expect(frame.querySelector("canvas")).toHaveAttribute(
+        "aria-label",
+        "bar chart, empty"
       )
-      const frame = container.querySelector(".stream-ordinal-frame")
-      expect(frame).toBeTruthy()
-      expect(frame?.querySelector("canvas")).toBeTruthy()
     })
 
     it("applies className prop", () => {
       const { container } = render(
         <StreamOrdinalFrame chartType="bar" className="custom-ordinal" />
       )
-      const frame = container.querySelector(".stream-ordinal-frame.custom-ordinal")
-      expect(frame).toBeTruthy()
+      const frame = container.querySelector(".stream-ordinal-frame")
+      expect(frame).toHaveClass("stream-ordinal-frame", "custom-ordinal")
     })
 
     it("sets role=img on the container", () => {
-      const { container } = render(
-        <StreamOrdinalFrame chartType="bar" />
+      const { container } = render(<StreamOrdinalFrame chartType="bar" />)
+      expect(container.querySelector("[role='img']")).toHaveAccessibleName(
+        "Ordinal chart"
       )
-      const frame = container.querySelector("[role='img']")
-      expect(frame).toBeTruthy()
     })
 
     it("uses title as aria-label when provided", () => {
@@ -61,9 +70,7 @@ describe("StreamOrdinalFrame", () => {
     })
 
     it("defaults aria-label to 'Ordinal chart' when no title", () => {
-      const { container } = render(
-        <StreamOrdinalFrame chartType="bar" />
-      )
+      const { container } = render(<StreamOrdinalFrame chartType="bar" />)
       const frame = container.querySelector("[role='img']")
       expect(frame?.getAttribute("aria-label")).toBe("Ordinal chart")
     })
@@ -72,16 +79,15 @@ describe("StreamOrdinalFrame", () => {
       const { container } = render(
         <StreamOrdinalFrame chartType="bar" size={[900, 600]} />
       )
-      const frame = container.querySelector(".stream-ordinal-frame") as HTMLElement
-      expect(frame).toBeTruthy()
+      const frame = container.querySelector(
+        ".stream-ordinal-frame"
+      ) as HTMLElement
       expect(frame.style.width).toBe("900px")
       expect(frame.style.height).toBe("600px")
     })
 
     it("sets tabIndex=0 for keyboard accessibility", () => {
-      const { container } = render(
-        <StreamOrdinalFrame chartType="bar" />
-      )
+      const { container } = render(<StreamOrdinalFrame chartType="bar" />)
       const frame = container.querySelector(".stream-ordinal-frame")
       expect(frame?.getAttribute("tabindex")).toBe("0")
     })
@@ -105,6 +111,59 @@ describe("StreamOrdinalFrame", () => {
         />
       )
       expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
+    })
+
+    it("uses canonical category and value accessors for bounded data", () => {
+      const ref = React.createRef<StreamOrdinalFrameHandle>()
+      render(
+        <StreamOrdinalFrame
+          ref={ref}
+          chartType="bar"
+          data={[
+            { department: "Sales", cancellations: 40 },
+            { department: "Corporate Archaeology", cancellations: 6 }
+          ]}
+          categoryAccessor="department"
+          valueAccessor="cancellations"
+          oSort={false}
+          size={[600, 400]}
+        />
+      )
+
+      const scales = ref.current?.getScales()
+      expect(scales?.o.domain()).toEqual(["Sales", "Corporate Archaeology"])
+      expect(scales?.r.domain()[1]).toBeGreaterThanOrEqual(40)
+    })
+
+    it("anchors horizontal widgets with canonical accessors", () => {
+      const { getByRole } = render(
+        <StreamOrdinalFrame
+          chartType="bar"
+          data={[
+            { department: "Sales", cancellations: 40 },
+            { department: "Corporate Archaeology", cancellations: 6 }
+          ]}
+          categoryAccessor="department"
+          valueAccessor="cancellations"
+          projection="horizontal"
+          oSort={false}
+          annotations={[
+            {
+              type: "widget",
+              department: "Corporate Archaeology",
+              cancellations: 6,
+              content: <button type="button">Open archive note</button>
+            }
+          ]}
+          size={[600, 400]}
+        />
+      )
+
+      const widget = getByRole("button", { name: "Open archive note" })
+      const foreignObject = widget.parentElement?.parentElement
+      expect(foreignObject?.tagName.toLowerCase()).toBe("foreignobject")
+      expect(Number(foreignObject?.getAttribute("x"))).toBeGreaterThanOrEqual(0)
+      expect(Number(foreignObject?.getAttribute("y"))).toBeGreaterThanOrEqual(0)
     })
 
     it("renders pie data without crashing", () => {
@@ -139,9 +198,7 @@ describe("StreamOrdinalFrame", () => {
 
     it("updates when data prop changes", () => {
       const ref = React.createRef<StreamOrdinalFrameHandle>()
-      const initialData = [
-        { category: "A", value: 10 }
-      ]
+      const initialData = [{ category: "A", value: 10 }]
       const { rerender } = render(
         <StreamOrdinalFrame
           ref={ref}
@@ -177,9 +234,7 @@ describe("StreamOrdinalFrame", () => {
   describe("push API", () => {
     it("exposes push, pushMany, replace, clear, getData, getScales on ref", () => {
       const ref = React.createRef<StreamOrdinalFrameHandle>()
-      render(
-        <StreamOrdinalFrame ref={ref} chartType="bar" />
-      )
+      render(<StreamOrdinalFrame ref={ref} chartType="bar" />)
       expect(ref.current).toBeTruthy()
       expect(typeof ref.current!.push).toBe("function")
       expect(typeof ref.current!.pushMany).toBe("function")
@@ -200,8 +255,12 @@ describe("StreamOrdinalFrame", () => {
           valueAccessor="val"
         />
       )
-      await act(async () => { ref.current!.push({ cat: "A", val: 10 }) })
-      await act(async () => { ref.current!.push({ cat: "B", val: 20 }) })
+      await act(async () => {
+        ref.current!.push({ cat: "A", val: 10 })
+      })
+      await act(async () => {
+        ref.current!.push({ cat: "B", val: 20 })
+      })
       expect(ref.current!.getData().length).toBe(2)
     })
 
@@ -245,21 +304,25 @@ describe("StreamOrdinalFrame", () => {
       await act(async () => {
         ref.current!.pushMany([
           { id: "a", cat: "A", val: 10 },
-          { id: "b", cat: "B", val: 20 },
+          { id: "b", cat: "B", val: 20 }
         ])
         await Promise.resolve()
       })
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["A", "B"])
 
-      await act(async () => { ref.current!.remove("b") })
+      await act(async () => {
+        ref.current!.remove("b")
+      })
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["A"])
 
       await act(async () => {
-        ref.current!.update("a", d => ({ ...d, cat: "C" }))
+        ref.current!.update("a", (d) => ({ ...d, cat: "C" }))
       })
       expect(onCategoriesChange).toHaveBeenLastCalledWith(["C"])
 
-      await act(async () => { ref.current!.clear() })
+      await act(async () => {
+        ref.current!.clear()
+      })
       expect(onCategoriesChange).toHaveBeenLastCalledWith([])
     })
 
@@ -277,7 +340,7 @@ describe("StreamOrdinalFrame", () => {
       await act(async () => {
         ref.current!.pushMany([
           { cat: "A", val: 10 },
-          { cat: "B", val: 20 },
+          { cat: "B", val: 20 }
         ])
       })
       expect(ref.current!.getData().length).toBe(2)
@@ -289,13 +352,13 @@ describe("StreamOrdinalFrame", () => {
         ref.current!.replace([
           { cat: "A", val: 99 },
           { cat: "B", val: 88 },
-          { cat: "C", val: 77 },
+          { cat: "C", val: 77 }
         ])
       })
       const after = ref.current!.getData()
       expect(after.length).toBe(3)
       expect(after.find((d: Datum) => d.val === 10)).toBeUndefined() // old datum gone
-      expect(after.find((d: Datum) => d.val === 99)).toBeTruthy()    // new datum present
+      expect(after.find((d: Datum) => d.val === 99)).toBeTruthy() // new datum present
     })
 
     it("replace preserves the position snapshot that clear() wipes", async () => {
@@ -304,7 +367,10 @@ describe("StreamOrdinalFrame", () => {
       // clear prevPositionMap in the store — whereas clear() does.
       // Aggregating HOCs need the snapshot preserved so data-change
       // transitions fire between old and new positions.
-      const data = [{ cat: "A", val: 10 }, { cat: "B", val: 20 }]
+      const data = [
+        { cat: "A", val: 10 },
+        { cat: "B", val: 20 }
+      ]
       const ref = React.createRef<StreamOrdinalFrameHandle>()
       const { rerender } = render(
         <StreamOrdinalFrame
@@ -317,7 +383,9 @@ describe("StreamOrdinalFrame", () => {
           size={[600, 400]}
         />
       )
-      await act(async () => { ref.current!.replace(data) })
+      await act(async () => {
+        ref.current!.replace(data)
+      })
       // Force a render pass so scene + snapshot exist
       rerender(
         <StreamOrdinalFrame
@@ -337,10 +405,15 @@ describe("StreamOrdinalFrame", () => {
       // the hood. If it did, clear() would drop prevPositionMap and
       // the store would have no basis for transition interpolation.
       await act(async () => {
-        ref.current!.replace([{ cat: "A", val: 50 }, { cat: "B", val: 60 }])
+        ref.current!.replace([
+          { cat: "A", val: 50 },
+          { cat: "B", val: 60 }
+        ])
       })
       expect(ref.current!.getData().length).toBe(2)
-      expect(ref.current!.getData().find((d: Datum) => d.val === 50)).toBeTruthy()
+      expect(
+        ref.current!.getData().find((d: Datum) => d.val === 50)
+      ).toBeTruthy()
     })
 
     it("replace preserves category insertion order across value-swapping updates", async () => {
@@ -356,26 +429,20 @@ describe("StreamOrdinalFrame", () => {
       // prop; it routes through replace() which flips the streaming
       // state internally via `preserveCategoryOrder`.
       const ref = React.createRef<StreamOrdinalFrameHandle>()
-      render(
-        <StreamOrdinalFrame
-          ref={ref}
-          chartType="bar"
-          size={[600, 400]}
-        />
-      )
+      render(<StreamOrdinalFrame ref={ref} chartType="bar" size={[600, 400]} />)
       await act(async () => {
         ref.current!.replace([
           { category: "Q1", value: 10 },
           { category: "Q2", value: 20 },
-          { category: "Q3", value: 15 },
+          { category: "Q3", value: 15 }
         ])
       })
       // First replacement seeds order Q1 → Q2 → Q3.
       await act(async () => {
         ref.current!.replace([
           { category: "Q1", value: 5 },
-          { category: "Q2", value: 99 },  // biggest — would sort first under value-desc
-          { category: "Q3", value: 40 },
+          { category: "Q2", value: 99 }, // biggest — would sort first under value-desc
+          { category: "Q3", value: 40 }
         ])
       })
       const scales = ref.current!.getScales()
@@ -394,16 +461,18 @@ describe("StreamOrdinalFrame", () => {
           valueAccessor="val"
         />
       )
-      await act(async () => { ref.current!.push({ cat: "A", val: 10 }) })
-      await act(async () => { ref.current!.clear() })
+      await act(async () => {
+        ref.current!.push({ cat: "A", val: 10 })
+      })
+      await act(async () => {
+        ref.current!.clear()
+      })
       expect(ref.current!.getData().length).toBe(0)
     })
 
     it("getScales returns null when no data has been processed", () => {
       const ref = React.createRef<StreamOrdinalFrameHandle>()
-      render(
-        <StreamOrdinalFrame ref={ref} chartType="bar" />
-      )
+      render(<StreamOrdinalFrame ref={ref} chartType="bar" />)
       expect(ref.current!.getScales()).toBeNull()
     })
 
@@ -461,9 +530,7 @@ describe("StreamOrdinalFrame", () => {
     })
 
     it("handles mouseLeave without crashing even with no prior hover", () => {
-      const { container } = render(
-        <StreamOrdinalFrame chartType="bar" />
-      )
+      const { container } = render(<StreamOrdinalFrame chartType="bar" />)
       const frame = container.querySelector(".stream-ordinal-frame")!
       // Leave without ever having moved — should be a no-op
       fireEvent.mouseLeave(frame)
@@ -485,14 +552,16 @@ describe("StreamOrdinalFrame", () => {
           oAccessor="category"
           rAccessor="value"
           legend={{
-            legendGroups: [{
-              label: "Groups",
-              items: [
-                { label: "Group A", color: "steelblue" },
-                { label: "Group B", color: "orange" }
-              ],
-              styleFn: () => ({})
-            }]
+            legendGroups: [
+              {
+                label: "Groups",
+                items: [
+                  { label: "Group A", color: "steelblue" },
+                  { label: "Group B", color: "orange" }
+                ],
+                styleFn: () => ({})
+              }
+            ]
           }}
         />
       )
@@ -502,9 +571,7 @@ describe("StreamOrdinalFrame", () => {
     })
 
     it("renders without legend when legend prop is omitted", () => {
-      const { container } = render(
-        <StreamOrdinalFrame chartType="bar" />
-      )
+      const { container } = render(<StreamOrdinalFrame chartType="bar" />)
       expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
     })
   })
@@ -513,11 +580,8 @@ describe("StreamOrdinalFrame", () => {
 
   describe("loading and empty states", () => {
     it("renders the frame even with no data", () => {
-      const { container } = render(
-        <StreamOrdinalFrame chartType="bar" />
-      )
+      const { container } = render(<StreamOrdinalFrame chartType="bar" />)
       expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
-      expect(container.querySelector("canvas")).toBeTruthy()
     })
 
     it("renders staleness badge when staleness config is provided", async () => {
@@ -532,7 +596,9 @@ describe("StreamOrdinalFrame", () => {
           staleness={{ threshold: 100, showBadge: true }}
         />
       )
-      await act(async () => { ref.current!.push({ cat: "X", val: 5 }) })
+      await act(async () => {
+        ref.current!.push({ cat: "X", val: 5 })
+      })
       const badge = container.querySelector(".stream-staleness-badge")
       expect(badge).toBeTruthy()
     })
@@ -542,9 +608,7 @@ describe("StreamOrdinalFrame", () => {
 
   describe("keyboard navigation", () => {
     it("handles arrow key presses without crashing when scene is empty", () => {
-      const { container } = render(
-        <StreamOrdinalFrame chartType="bar" />
-      )
+      const { container } = render(<StreamOrdinalFrame chartType="bar" />)
       const frame = container.querySelector(".stream-ordinal-frame")!
       fireEvent.keyDown(frame, { key: "ArrowRight" })
       fireEvent.keyDown(frame, { key: "ArrowLeft" })
@@ -602,7 +666,7 @@ describe("StreamOrdinalFrame", () => {
       // every label overlaps; the axis should thin to a readable subset.
       const data = Array.from({ length: 40 }, (_, i) => ({
         category: `2026-${String(i + 1).padStart(2, "0")}`,
-        value: (i % 7) + 1,
+        value: (i % 7) + 1
       }))
       const { container } = render(
         <StreamOrdinalFrame
@@ -626,7 +690,7 @@ describe("StreamOrdinalFrame", () => {
       const data = [
         { category: "A", value: 10 },
         { category: "B", value: 20 },
-        { category: "C", value: 15 },
+        { category: "C", value: 15 }
       ]
       const { container } = render(
         <StreamOrdinalFrame
@@ -662,7 +726,9 @@ describe("StreamOrdinalFrame", () => {
       const { container } = render(
         <StreamOrdinalFrame
           chartType="bar"
-          backgroundGraphics={<rect data-testid="bg-rect" width={50} height={50} fill="blue" />}
+          backgroundGraphics={
+            <rect data-testid="bg-rect" width={50} height={50} fill="blue" />
+          }
         />
       )
       const bgRect = container.querySelector("[data-testid='bg-rect']")
@@ -680,14 +746,17 @@ describe("StreamOrdinalFrame", () => {
       // mock's lifecycle ever changes.
       function captureFillRectStyles(ctx: CanvasContextMock) {
         const styles: string[] = []
-        const orig = ctx.fillRect as ((...args: unknown[]) => unknown) | undefined
+        const orig = ctx.fillRect as
+          ((...args: unknown[]) => unknown) | undefined
         ctx.fillRect = vi.fn((...args: unknown[]) => {
           styles.push(String(ctx.fillStyle))
           return orig?.apply(ctx, args)
         })
         return {
           styles,
-          restore: () => { ctx.fillRect = orig },
+          restore: () => {
+            ctx.fillRect = orig
+          }
         }
       }
       const getMockCtx = () =>
@@ -698,11 +767,14 @@ describe("StreamOrdinalFrame", () => {
 
       const chartData = [
         { category: "A", value: 10 },
-        { category: "B", value: 20 },
+        { category: "B", value: 20 }
       ]
 
       function expectBefore(first: Element, second: Element) {
-        expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+        expect(
+          first.compareDocumentPosition(second) &
+            Node.DOCUMENT_POSITION_FOLLOWING
+        ).not.toBe(0)
       }
 
       it("places an explicit background and grid below the transparent mark canvas", () => {
@@ -719,13 +791,14 @@ describe("StreamOrdinalFrame", () => {
               showGrid
             />
           )
-          const background = container.querySelector('[data-semiotic-layer="canvas-background"]')
+          const background = container.querySelector(
+            '[data-semiotic-layer="canvas-background"]'
+          )
           const grid = container.querySelector("g.ordinal-grid")
           const canvas = container.querySelector("canvas")
 
           expect(background).toHaveAttribute("fill", "red")
           expect(grid).toBeTruthy()
-          expect(canvas).toBeTruthy()
           expectBefore(background!, grid!)
           expectBefore(grid!, canvas!)
           expect(cap.styles).not.toContain("red")
@@ -740,13 +813,17 @@ describe("StreamOrdinalFrame", () => {
             <StreamOrdinalFrame chartType="point" data={chartData} showGrid />
           </ThemeProvider>
         )
-        const background = container.querySelector('[data-semiotic-layer="canvas-background"]')
+        const background = container.querySelector(
+          '[data-semiotic-layer="canvas-background"]'
+        )
         const grid = container.querySelector("g.ordinal-grid")
         const canvas = container.querySelector("canvas")
 
-        expect(background).toHaveAttribute("fill", "var(--semiotic-bg, transparent)")
+        expect(background).toHaveAttribute(
+          "fill",
+          "var(--semiotic-bg, transparent)"
+        )
         expect(grid).toBeTruthy()
-        expect(canvas).toBeTruthy()
         expectBefore(background!, grid!)
         expectBefore(grid!, canvas!)
       })
@@ -756,9 +833,16 @@ describe("StreamOrdinalFrame", () => {
         const cap = captureFillRectStyles(ctx)
         try {
           const { container } = render(
-            <StreamOrdinalFrame chartType="point" data={chartData} background="transparent" showGrid />
+            <StreamOrdinalFrame
+              chartType="point"
+              data={chartData}
+              background="transparent"
+              showGrid
+            />
           )
-          expect(container.querySelector('[data-semiotic-layer="canvas-background"]')).toBeNull()
+          expect(
+            container.querySelector('[data-semiotic-layer="canvas-background"]')
+          ).toBeNull()
           expect(cap.styles).toHaveLength(0)
         } finally {
           cap.restore()
@@ -773,10 +857,14 @@ describe("StreamOrdinalFrame", () => {
             <StreamOrdinalFrame
               chartType="point"
               data={chartData}
-              backgroundGraphics={<rect x={0} y={0} width={10} height={10} fill="red" />}
+              backgroundGraphics={
+                <rect x={0} y={0} width={10} height={10} fill="red" />
+              }
             />
           )
-          expect(container.querySelector('[data-semiotic-layer="canvas-background"]')).toBeNull()
+          expect(
+            container.querySelector('[data-semiotic-layer="canvas-background"]')
+          ).toBeNull()
           expect(container.querySelector('rect[fill="red"]')).toBeTruthy()
           expect(cap.styles).toHaveLength(0)
         } finally {
@@ -807,15 +895,31 @@ describe("StreamOrdinalFrame", () => {
   // ── Chart type variants ───────────────────────────────────────────────
 
   describe("chart type variants", () => {
-    const chartTypes: Array<"bar" | "clusterbar" | "point" | "swarm" | "pie" | "donut" | "boxplot" | "violin" | "histogram"> = [
-      "bar", "clusterbar", "point", "swarm", "pie", "donut", "boxplot", "violin", "histogram"
+    const chartTypes: Array<
+      | "bar"
+      | "clusterbar"
+      | "point"
+      | "swarm"
+      | "pie"
+      | "donut"
+      | "boxplot"
+      | "violin"
+      | "histogram"
+    > = [
+      "bar",
+      "clusterbar",
+      "point",
+      "swarm",
+      "pie",
+      "donut",
+      "boxplot",
+      "violin",
+      "histogram"
     ]
 
     for (const ct of chartTypes) {
       it(`renders chartType="${ct}" without crashing`, () => {
-        const { container } = render(
-          <StreamOrdinalFrame chartType={ct} />
-        )
+        const { container } = render(<StreamOrdinalFrame chartType={ct} />)
         expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
       })
     }
@@ -825,9 +929,11 @@ describe("StreamOrdinalFrame", () => {
 
   describe("projection variants", () => {
     it("renders vertical projection (default)", () => {
+      const ref = React.createRef<StreamOrdinalFrameHandle>()
       const data = [{ category: "A", value: 10 }]
-      const { container } = render(
+      render(
         <StreamOrdinalFrame
+          ref={ref}
           chartType="bar"
           data={data}
           oAccessor="category"
@@ -835,13 +941,15 @@ describe("StreamOrdinalFrame", () => {
           projection="vertical"
         />
       )
-      expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
+      expect(ref.current?.getScales()?.projection).toBe("vertical")
     })
 
     it("renders horizontal projection", () => {
+      const ref = React.createRef<StreamOrdinalFrameHandle>()
       const data = [{ category: "A", value: 10 }]
-      const { container } = render(
+      render(
         <StreamOrdinalFrame
+          ref={ref}
           chartType="bar"
           data={data}
           oAccessor="category"
@@ -849,16 +957,18 @@ describe("StreamOrdinalFrame", () => {
           projection="horizontal"
         />
       )
-      expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
+      expect(ref.current?.getScales()?.projection).toBe("horizontal")
     })
 
     it("renders radial projection", () => {
+      const ref = React.createRef<StreamOrdinalFrameHandle>()
       const data = [
         { category: "A", value: 30 },
         { category: "B", value: 70 }
       ]
-      const { container } = render(
+      render(
         <StreamOrdinalFrame
+          ref={ref}
           chartType="pie"
           data={data}
           oAccessor="category"
@@ -866,7 +976,7 @@ describe("StreamOrdinalFrame", () => {
           projection="radial"
         />
       )
-      expect(container.querySelector(".stream-ordinal-frame")).toBeTruthy()
+      expect(ref.current?.getScales()?.projection).toBe("radial")
     })
   })
 
@@ -877,7 +987,9 @@ describe("StreamOrdinalFrame", () => {
       const { container } = render(
         <StreamOrdinalFrame chartType="bar" responsiveWidth />
       )
-      const frame = container.querySelector(".stream-ordinal-frame") as HTMLElement
+      const frame = container.querySelector(
+        ".stream-ordinal-frame"
+      ) as HTMLElement
       expect(frame.style.width).toBe("100%")
     })
 
@@ -885,7 +997,9 @@ describe("StreamOrdinalFrame", () => {
       const { container } = render(
         <StreamOrdinalFrame chartType="bar" responsiveHeight />
       )
-      const frame = container.querySelector(".stream-ordinal-frame") as HTMLElement
+      const frame = container.querySelector(
+        ".stream-ordinal-frame"
+      ) as HTMLElement
       expect(frame.style.height).toBe("100%")
     })
   })
@@ -898,7 +1012,10 @@ describe("StreamOrdinalFrame", () => {
       const { container } = render(
         <StreamOrdinalFrame
           chartType="bar"
-          data={[{ cat: "A", val: 10 }, { cat: "B", val: 20 }]}
+          data={[
+            { cat: "A", val: 10 },
+            { cat: "B", val: 20 }
+          ]}
           oAccessor="cat"
           rAccessor="val"
           brush={{ dimension: "r" }}
@@ -941,11 +1058,17 @@ describe("StreamOrdinalFrame", () => {
     })
 
     describe("keyboard accessibility", () => {
-      function renderBrush(projection: "vertical" | "horizontal", onBrush = vi.fn()) {
+      function renderBrush(
+        projection: "vertical" | "horizontal",
+        onBrush = vi.fn()
+      ) {
         const result = render(
           <StreamOrdinalFrame
             chartType="bar"
-            data={[{ cat: "A", val: 10 }, { cat: "B", val: 20 }]}
+            data={[
+              { cat: "A", val: 10 },
+              { cat: "B", val: 20 }
+            ]}
             oAccessor="cat"
             rAccessor="val"
             projection={projection}
@@ -953,14 +1076,18 @@ describe("StreamOrdinalFrame", () => {
             onBrush={onBrush}
           />
         )
-        const region = result.container.querySelector('svg[role="region"]') as SVGSVGElement
+        const region = result.container.querySelector(
+          'svg[role="region"]'
+        ) as SVGSVGElement
         return { ...result, region, onBrush }
       }
 
       it("nudges a vertical (default) brush with up/down and ignores left/right", () => {
         const { region, onBrush } = renderBrush("vertical")
         fireEvent.keyDown(region, { key: "ArrowUp" })
-        expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ r: expect.any(Array) }))
+        expect(onBrush).toHaveBeenCalledWith(
+          expect.objectContaining({ r: expect.any(Array) })
+        )
         onBrush.mockClear()
         fireEvent.keyDown(region, { key: "ArrowDown", shiftKey: true })
         expect(onBrush).toHaveBeenCalled()
@@ -973,7 +1100,9 @@ describe("StreamOrdinalFrame", () => {
       it("nudges a horizontal brush with left/right and ignores up/down", () => {
         const { region, onBrush } = renderBrush("horizontal")
         fireEvent.keyDown(region, { key: "ArrowRight" })
-        expect(onBrush).toHaveBeenCalledWith(expect.objectContaining({ r: expect.any(Array) }))
+        expect(onBrush).toHaveBeenCalledWith(
+          expect.objectContaining({ r: expect.any(Array) })
+        )
         onBrush.mockClear()
         fireEvent.keyDown(region, { key: "ArrowLeft", shiftKey: true })
         expect(onBrush).toHaveBeenCalled()
@@ -993,9 +1122,13 @@ describe("StreamOrdinalFrame", () => {
 
       it("exposes an aria-label and matching description element for the ordinal brush region", () => {
         const { region } = renderBrush("vertical")
-        expect(region.getAttribute("aria-label")).toBe("Ordinal value range brush")
+        expect(region.getAttribute("aria-label")).toBe(
+          "Ordinal value range brush"
+        )
         const describedBy = region.getAttribute("aria-describedby")
-        const description = describedBy ? region.querySelector(`#${describedBy}`) : null
+        const description = describedBy
+          ? region.querySelector(`#${describedBy}`)
+          : null
         expect(description?.textContent).toBe(
           "Use arrow keys to move the selected range, Shift plus an arrow key to resize it, and Escape to clear it."
         )
@@ -1021,7 +1154,10 @@ describe("StreamOrdinalFrame", () => {
       const connectorStyle = { stroke: "__CONNECTOR_STYLE__", strokeWidth: 2 }
 
       const StoreModule = await import("./OrdinalPipelineStore")
-      const updateSpy = vi.spyOn(StoreModule.OrdinalPipelineStore.prototype, "updateConfig")
+      const updateSpy = vi.spyOn(
+        StoreModule.OrdinalPipelineStore.prototype,
+        "updateConfig"
+      )
 
       try {
         render(
@@ -1036,8 +1172,12 @@ describe("StreamOrdinalFrame", () => {
           />
         )
 
-        const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
-        expect(lastConfig, "updateConfig should be invoked with the initial merged config").toBeDefined()
+        const lastConfig =
+          updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+        expect(
+          lastConfig,
+          "updateConfig should be invoked with the initial merged config"
+        ).toBeDefined()
 
         expect(lastConfig.pieceStyle).toBe(pieceStyle)
         expect(lastConfig.summaryStyle).toBe(summaryStyle)
@@ -1050,10 +1190,14 @@ describe("StreamOrdinalFrame", () => {
 
   it("forwards accessorRevision to the ordinal pipeline config", async () => {
     const StoreModule = await import("./OrdinalPipelineStore")
-    const updateSpy = vi.spyOn(StoreModule.OrdinalPipelineStore.prototype, "updateConfig")
+    const updateSpy = vi.spyOn(
+      StoreModule.OrdinalPipelineStore.prototype,
+      "updateConfig"
+    )
     try {
       render(<StreamOrdinalFrame chartType="bar" accessorRevision={7} />)
-      const lastConfig = updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
+      const lastConfig =
+        updateSpy.mock.calls[updateSpy.mock.calls.length - 1]?.[0]
       expect(lastConfig?.accessorRevision).toBe(7)
     } finally {
       updateSpy.mockRestore()
@@ -1066,13 +1210,16 @@ describe("StreamOrdinalFrame", () => {
       let wallTime = 0
       const clock = () => wallTime
       const StoreModule = await import("./OrdinalPipelineStore")
-      const advanceSpy = vi.spyOn(StoreModule.OrdinalPipelineStore.prototype, "advanceTransition")
+      const advanceSpy = vi.spyOn(
+        StoreModule.OrdinalPipelineStore.prototype,
+        "advanceTransition"
+      )
 
       try {
         const props = {
           chartType: "bar" as const,
           frameScheduler: scheduler.scheduler,
-          clock,
+          clock
         }
         const { rerender } = render(<StreamOrdinalFrame {...props} paused />)
 

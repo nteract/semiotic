@@ -45,6 +45,7 @@ const ENTRIES = {
   "semiotic-ai-core": "dist/semiotic-ai-core.d.ts",
   "semiotic-data": "dist/semiotic-data.d.ts",
   "semiotic-geo": "dist/semiotic-geo.d.ts",
+  "semiotic-rough": "dist/semiotic-rough.d.ts",
   "semiotic-physics": "dist/semiotic-physics.d.ts",
   "semiotic-physics-matter": "dist/semiotic-physics-matter.d.ts",
   "semiotic-physics-rapier": "dist/semiotic-physics-rapier.d.ts",

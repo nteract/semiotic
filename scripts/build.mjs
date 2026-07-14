@@ -258,6 +258,14 @@ const generatedBundleMetadata = {
     stability: "stable",
     loading: "eager",
   },
+  rough: {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager",
+  },
   "semiotic-themes": {
     platform: "neutral",
     rsc: true,
@@ -411,7 +419,7 @@ function buildDeclarations() {
   const entryPoints = [
     "semiotic", "semiotic-ai", "semiotic-ai-core", "semiotic-data", "semiotic-xy",
     "semiotic-ordinal", "semiotic-network", "semiotic-realtime", "semiotic-realtime-core", "semiotic-realtime-react",
-    "semiotic-server", "semiotic-server-node", "semiotic-server-edge", "semiotic-geo", "semiotic-controls", "semiotic-physics",
+    "semiotic-server", "semiotic-server-node", "semiotic-server-edge", "semiotic-geo", "semiotic-rough", "semiotic-controls", "semiotic-physics",
     "semiotic-physics-matter", "semiotic-physics-rapier", "semiotic-themes", "semiotic-themes-core", "semiotic-themes-react",
     "semiotic-utils", "semiotic-utils-core", "semiotic-utils-react", "semiotic-recipes", "semiotic-recipes-core", "semiotic-recipes-react",
     "semiotic-experimental", "semiotic-value"
@@ -488,6 +496,7 @@ async function build() {
     { input: "src/components/semiotic-ai-core.ts", name: "semiotic-ai-core", analyze: false, minify, serverOnly: true },
     { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify },
     { input: "src/components/semiotic-geo.ts", name: "geo", analyze: false, minify, clientOnly: true },
+    { input: "src/components/semiotic-rough.ts", name: "rough", analyze: false, minify },
     { input: "src/components/semiotic-controls.ts", name: "controls", analyze: false, minify, clientOnly: true },
     // `semiotic-themes`, `semiotic-utils`, and `semiotic-recipes` are split
     // into core and react slices so pure-only consumers can avoid React-hook

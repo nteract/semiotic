@@ -12,7 +12,7 @@
  */
 import * as React from "react"
 import { render } from "@testing-library/react"
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { FlippingTooltip } from "./FlippingTooltip"
 import { defaultTooltipStyle } from "./Tooltip"
 
@@ -300,5 +300,45 @@ describe("FlippingTooltip — non-finite position guard", () => {
     // No React hook-order or "static flag" complaints captured.
     const reactErrors = errors.filter(e => String(e).includes("static flag") || String(e).includes("hook"))
     expect(reactErrors).toEqual([])
+  })
+})
+
+describe("FlippingTooltip — stable measurement", () => {
+  it("does not synchronously remeasure when a hover parent recreates equivalent children", () => {
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({
+        x: 0,
+        y: 0,
+        width: 184.25,
+        height: 52.5,
+        top: 0,
+        right: 184.25,
+        bottom: 52.5,
+        left: 0,
+        toJSON: () => ({}),
+      })
+
+    try {
+      const { rerender } = render(
+        <FlippingTooltip {...baseProps}>
+          <div data-hover-render="0">Equivalent telemetry tooltip</div>
+        </FlippingTooltip>,
+      )
+
+      for (let index = 1; index <= 25; index += 1) {
+        rerender(
+          <FlippingTooltip {...baseProps}>
+            <div data-hover-render={index}>Equivalent telemetry tooltip</div>
+          </FlippingTooltip>,
+        )
+      }
+
+      // A ResizeObserver handles real size changes. Referential child churn
+      // alone must not restart the synchronous layout measurement effect.
+      expect(rect).toHaveBeenCalledTimes(1)
+    } finally {
+      rect.mockRestore()
+    }
   })
 })

@@ -51,7 +51,7 @@ const ViolinPlotCapability: ChartCapability
 const analystPersona: AudienceProfile
 const dataScientistPersona: AudienceProfile
 const executivePersona: AudienceProfile
-function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId }: AccessibleNavTreeProps): React.JSX.Element
+function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId, onObservation, onAnnotationActivate }: AccessibleNavTreeProps): React.JSX.Element
 function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BigNumber(props: BigNumberProps<import("../shared/datumTypes").Datum> & { ref?: React.ForwardedRef<BigNumberHandle>; }): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -120,6 +120,7 @@ function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React
 function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: { onlyCritical?: boolean; } | undefined): string[]
 function annotationFreshnessFor<T>(annotation: Annotated<T>, nowMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
+function annotationStableId(annotation: Datum): string | undefined
 function applyAnnotationLifecycle<T>(annotations: readonly Annotated<T>[], options?: ApplyAnnotationLifecycleOptions | undefined): Annotated<T>[]
 function applyAnnotationStatus<T>(annotations: readonly Annotated<T>[], options?: AnnotationStatusTreatment | undefined): Annotated<T>[]
 function applyAudienceBias(baseScore: number, baseRubric: ChartRubric, component: string, audience: AudienceProfile | undefined, receivability?: ReceivabilitySignal | undefined): AudienceBiasResult
@@ -263,6 +264,9 @@ interface AccessibilityAuditResult
 interface AccessibilityExpectations
 interface AccessibilityTableField
 interface AccessibleNavTreeProps
+interface ActivateObservation
+interface AnnotationActivateObservation
+interface AnnotationActivationEvent
 interface AnnotationLifecycle
 interface AnnotationLifecycleTreatment
 interface AnnotationProvenance
@@ -344,6 +348,7 @@ interface EvaluateVariantProposalOptions
 interface ExplainCapabilityFitResult
 interface FieldCandidate
 interface FieldTypeChange
+interface FocusObservation
 interface ForecastConfig
 interface GEValidationResult
 interface HoverEndObservation
@@ -504,11 +509,12 @@ type ApplyAnnotationLifecycleOptions = ComputeAnnotationFreshnessOptions & Annot
 type BuiltInIntentId = "trend" | "compare-series" | "compare-categories" | "rank" | "part-to-whole" | "distribution" | "correlation" | "flow" | "hierarchy" | "geo" | "outlier-detection" | "composition-over-time" | "change-detection"
 type CardinalityBand = "low" | "medium" | "high"
 type CategoryColorMap = Record<string, string>
+type ChartAnnotation = Datum
 type ChartCandidateKind = "built-in" | "recipe"
 type ChartFamily = "time-series" | "categorical" | "distribution" | "relationship" | "flow" | "network" | "hierarchy" | "geo" | "realtime" | "value" | "custom"
 type ChartImportPath = "semiotic/xy" | "semiotic/ordinal" | "semiotic/network" | "semiotic/geo" | "semiotic/realtime" | "semiotic/physics" | "semiotic/value" | "semiotic/ai" | "semiotic"
 type ChartNotificationLevel = "info" | "success" | "warning" | "error" | "neutral"
-type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | ControlObservation | LateDataObservation
+type ChartObservation = HoverObservation | HoverEndObservation | BrushObservation | BrushEndObservation | SelectionObservation | SelectionEndObservation | ClickObservation | ClickEndObservation | FocusObservation | ActivateObservation | AnnotationActivateObservation | ControlObservation | LateDataObservation
 type ChartRecipeFrameFamily = "XYFrame" | "OrdinalFrame" | "NetworkFrame" | "GeoFrame" | "XYCustomChart" | "NetworkCustomChart" | "OrdinalCustomChart" | "GeoCustomChart" | "Other"
 type ChartRecipePortability = "portable" | "local"
 type CommunicativeAct = "alerting" | "tracking" | "comparing" | "ranking" | "apportioning" | "characterizing" | "relating" | "tracing" | "nesting" | "locating" | "presenting"
@@ -557,7 +563,9 @@ type MobileStandardControlRequest = MobileStandardControlsMode
 type MobileStandardControlsMode = boolean | "all" | MobileStandardControlKind | MobileStandardControlKind[]
 type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
 type NavigationStrategy<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (context: RecipeStrategyContext<TDatum, TConfig>) => NavTreeNode
+type ObservationInputType = "keyboard" | "pointer" | "touch" | "navigation-tree"
 type ObservedAuditStatus = "pass" | "warn" | "fail" | "manual" | "not-applicable"
+type OnAnnotationActivateCallback = (event: AnnotationActivationEvent) => void
 type OnObservationCallback = (observation: ChartObservation) => void
 type PrimaryRole = "x" | "y" | "size" | "category" | "series" | "time"
 type ProposeVariantFn = (component: string, capability: ChartCapability, context: VariantDiscoveryContext) => ReadonlyArray<VariantProposal>

@@ -5,6 +5,8 @@ import "./ExamplesOverviewPage.css"
 
 const PREVIEW_COMPONENTS = {
   "insight-forge": MiniInsightForgePreview,
+  "analyst-adventure": MiniAnalystAdventurePreview,
+  "sentence-structure": MiniSentenceStructurePreview,
   watermarks: MiniWatermarksPreview,
   "stakeholder-journey": MiniStakeholderJourneyPreview,
   "merge-pressure": MiniMergePressurePreview,
@@ -2208,6 +2210,149 @@ function MiniNimbyPreview() {
       <text x="362" y="171" textAnchor="middle" fill="#b63832" fontSize="9" fontWeight="900">
         LOST FEATURES
       </text>
+    </svg>
+  )
+}
+
+function MiniSentenceStructurePreview() {
+  const words = ["I", "saw", "the", "man", "with", "the", "telescope"]
+  const x = [42, 94, 153, 211, 279, 340, 417]
+  const arcs = [
+    { from: 1, to: 0, height: 34, label: "subject" },
+    { from: 1, to: 3, height: 48, label: "object" },
+    { from: 1, to: 4, height: 72, label: "instrument" },
+    { from: 4, to: 6, height: 38, label: "object" },
+  ]
+
+  return (
+    <svg
+      style={styles.preview}
+      viewBox="0 0 500 200"
+      role="img"
+      aria-label="A sentence with words connected by grammatical arcs"
+    >
+      <rect width="500" height="200" fill="#f1eadb" />
+      <path d="M0 22H500M0 178H500" stroke="#d4553f" strokeWidth="3" />
+      <text x="24" y="43" fill="#26312e" fontSize="10" fontWeight="900" letterSpacing="2.2">
+        THE SENTENCE IS THE STRUCTURE BETWEEN THEM
+      </text>
+      {arcs.map((arc) => {
+        const start = x[arc.from]
+        const end = x[arc.to]
+        const left = Math.min(start, end)
+        const right = Math.max(start, end)
+        const peak = 128 - arc.height
+        return (
+          <g key={`${arc.from}-${arc.to}`}>
+            <path
+              d={`M${left} 132 Q${(left + right) / 2} ${peak} ${right} 132`}
+              fill="none"
+              stroke={arc.label === "instrument" ? "#d4553f" : "#315f63"}
+              strokeWidth={arc.label === "instrument" ? 4 : 2.5}
+            />
+            <text
+              x={(left + right) / 2}
+              y={peak + 12}
+              textAnchor="middle"
+              fill="#59635f"
+              fontSize="8"
+              fontWeight="800"
+            >
+              {arc.label.toUpperCase()}
+            </text>
+          </g>
+        )
+      })}
+      <line x1="24" x2="476" y1="133" y2="133" stroke="#26312e" strokeWidth="2" />
+      {words.map((word, index) => (
+        <g key={`${word}-${index}`}>
+          <circle
+            cx={x[index]}
+            cy="133"
+            r={index === 6 ? 8 : 4}
+            fill={index === 6 ? "#d4553f" : "#f1eadb"}
+            stroke={index === 6 ? "#d4553f" : "#26312e"}
+            strokeWidth="2"
+          />
+          <text
+            x={x[index]}
+            y="157"
+            textAnchor="middle"
+            fill={index === 6 ? "#b23c2c" : "#26312e"}
+            fontSize={index === 6 ? 15 : 13}
+            fontWeight={index === 6 ? 900 : 700}
+          >
+            {word}
+          </text>
+        </g>
+      ))}
+      <text x="476" y="190" textAnchor="end" fill="#315f63" fontSize="8" fontWeight="900">
+        9 LINKED VIEWS · 1 PERSISTENT WORD
+      </text>
+    </svg>
+  )
+}
+
+function MiniAnalystAdventurePreview() {
+  const roomPanels = [
+    { x: 28, label: "XY", color: "#24d7d7" },
+    { x: 91, label: "ORD", color: "#ff4fd8" },
+    { x: 154, label: "GEO", color: "#f5f5f5" },
+    { x: 217, label: "NET", color: "#ffd84a" },
+  ]
+
+  return (
+    <svg
+      style={styles.preview}
+      viewBox="0 0 500 200"
+      role="img"
+      aria-label="Mini Analyst Adventure chart mystery preview"
+    >
+      <rect width="500" height="200" fill="#05070b" />
+      <path d="M0 16H500M0 32H500M0 48H500M0 64H500M0 80H500M0 96H500M0 112H500M0 128H500M0 144H500M0 160H500M0 176H500M0 192H500" stroke="#101827" />
+      <rect x="10" y="10" width="480" height="180" fill="none" stroke="#24d7d7" strokeWidth="3" />
+      <rect x="18" y="18" width="464" height="28" fill="#101527" stroke="#ff4fd8" strokeWidth="2" />
+      <text x="30" y="37" fill="#f5f5f5" fontSize="13" fontWeight="900" letterSpacing="1.8">
+        ANALYST ADVENTURE
+      </text>
+      <text x="469" y="36" textAnchor="end" fill="#24d7d7" fontSize="8" fontWeight="800">
+        ZORKCORP // 1984
+      </text>
+
+      {roomPanels.map(({ x, label, color }, index) => (
+        <g key={label}>
+          <rect x={x} y="59" width="49" height="45" fill="#0d1320" stroke={color} strokeWidth="2" />
+          <path
+            d={index === 0
+              ? `M${x + 7} 92L${x + 18} 78L${x + 28} 84L${x + 42} 67`
+              : index === 1
+                ? `M${x + 8} 94V78H${x + 18}V94M${x + 23} 94V68H${x + 33}V94M${x + 38} 94V83H${x + 43}V94`
+                : index === 2
+                  ? `M${x + 8} 91L${x + 19} 69L${x + 30} 84L${x + 42} 66`
+                  : `M${x + 10} 88L${x + 25} 69L${x + 40} 87M${x + 25} 69V94`}
+            fill="none"
+            stroke={color}
+            strokeWidth="2.5"
+          />
+          <text x={x + 24.5} y="116" textAnchor="middle" fill={color} fontSize="8" fontWeight="900">
+            {label}
+          </text>
+        </g>
+      ))}
+
+      <path d="M278 81H305" stroke="#ff4fd8" strokeWidth="2" strokeDasharray="4 3" />
+      <polygon points="305,81 297,76 297,86" fill="#ff4fd8" />
+      <rect x="314" y="57" width="151" height="69" fill="#0d1320" stroke="#ff4fd8" strokeWidth="2" />
+      <text x="326" y="74" fill="#ffd84a" fontSize="8" fontWeight="900">EVIDENCE DISKETTE</text>
+      <text x="326" y="91" fill="#f5f5f5" fontSize="8">01 STALE ROOF PING</text>
+      <text x="326" y="104" fill="#f5f5f5" fontSize="8">02 DENOMINATOR KEY</text>
+      <text x="326" y="117" fill="#24d7d7" fontSize="8">03 ORIGIN VECTOR_</text>
+
+      <rect x="24" y="139" width="452" height="34" fill="#080d17" stroke="#f5f5f5" strokeWidth="2" />
+      <text x="35" y="153" fill="#ff4fd8" fontSize="8" fontWeight="900">ZORKBOT-2000:</text>
+      <text x="35" y="166" fill="#f5f5f5" fontSize="9">A TIMESTAMP IS NOT NECESSARILY WHEN IT HAPPENED.</text>
+      <rect x="444" y="145" width="20" height="20" fill="#ffd84a" />
+      <text x="454" y="159" textAnchor="middle" fill="#05070b" fontSize="10" fontWeight="900">?</text>
     </svg>
   )
 }

@@ -13,6 +13,24 @@ export type {
   DirectManipulationControlProps,
 } from "./DirectManipulationControl"
 
+export { SentenceFilter } from "./controls/SentenceFilter"
+export type {
+  SentenceFilterBaseDefinition,
+  SentenceFilterChangeMeta,
+  SentenceFilterDefinition,
+  SentenceFilterMultiSelectDefinition,
+  SentenceFilterNumberDefinition,
+  SentenceFilterOption,
+  SentenceFilterPrimitive,
+  SentenceFilterProps,
+  SentenceFilterRangeDefinition,
+  SentenceFilterRenderContext,
+  SentenceFilterSelectDefinition,
+  SentenceFilterTextDefinition,
+  SentenceFilterToggleDefinition,
+  SentenceFilterValue,
+} from "./controls/SentenceFilter"
+
 export {
   createControlObservationAdapter,
   VISUALIZATION_CONTROL_TYPES,

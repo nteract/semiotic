@@ -13,6 +13,18 @@ import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotati
 import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
 import { isTimeLandmark } from "./hitTestUtils"
 import { ticksForMode } from "../charts/shared/axisExtent"
+import type { OnObservationCallback } from "../store/ObservationStore"
+import {
+  useAnnotationActivationOptions,
+  type OnAnnotationActivateCallback
+} from "../charts/shared/annotationActivation"
+import {
+  jaggedBaselinePath,
+  resolveGridDash,
+  resolveHorizontalTickAnchor,
+  resolveVerticalTickBaseline,
+  tickPixelExtent
+} from "./svgOverlayUtils"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 //
@@ -24,107 +36,6 @@ import { ticksForMode } from "../charts/shared/axisExtent"
 // name `AxisConfig` for backwards-compatibility with any internal
 // callers that import it from `SVGOverlay`.
 export type AxisConfig = XYFrameAxisConfig
-
-/** Resolve the SVG text-anchor for a horizontal-axis tick based on its
- *  pixel position. Centers everything in `"middle"` mode; in `"edges"`
- *  mode the leftmost label anchors `start` and the rightmost anchors
- *  `end`. Caller passes pre-computed `isLeftmost`/`isRightmost` flags
- *  derived from the actual tick pixel values — works regardless of
- *  array order or scale direction (a streaming `arrowOfTime: "left"`
- *  inverts the x range, so index-based logic would point the wrong way).
- */
-function resolveHorizontalTickAnchor(
-  mode: "middle" | "edges" | undefined,
-  isLeftmost: boolean,
-  isRightmost: boolean
-): "start" | "middle" | "end" {
-  if (mode === "edges") {
-    if (isLeftmost) return "start"
-    if (isRightmost) return "end"
-  }
-  return "middle"
-}
-
-/** Resolve the SVG dominant-baseline for a vertical-axis tick based on
- *  its pixel position. In `"edges"` mode the topmost tick (lowest y
- *  pixel) uses `hanging` so its label drops down from the tick line,
- *  and the bottommost (highest y pixel) uses `auto` so its label rises
- *  up — keeping both edge labels inside the plot. Pixel-based because
- *  y scales render with an inverted range (`[height, 0]`), so the
- *  array's first tick by value is the bottom-most tick by pixel. */
-function resolveVerticalTickBaseline(
-  mode: "middle" | "edges" | undefined,
-  isTopmost: boolean,
-  isBottommost: boolean
-): "hanging" | "middle" | "auto" {
-  if (mode === "edges") {
-    if (isTopmost) return "hanging"
-    if (isBottommost) return "auto"
-  }
-  return "middle"
-}
-
-/** Compute the minimum and maximum pixel value across a tick array.
- *  Returns `null` for both bounds when the array is empty. Used by the
- *  axis renderer to identify the first/last tick by pixel position
- *  (not array index) when `tickAnchor: "edges"` is active. */
-function tickPixelExtent(ticks: Array<{ pixel: number }>): { min: number | null; max: number | null } {
-  if (ticks.length === 0) return { min: null, max: null }
-  let min = Infinity
-  let max = -Infinity
-  for (const t of ticks) {
-    if (t.pixel < min) min = t.pixel
-    if (t.pixel > max) max = t.pixel
-  }
-  return { min, max }
-}
-
-function resolveGridDash(style: "dashed" | "dotted" | string | undefined): string | undefined {
-  if (!style) return undefined
-  if (style === "dashed") return "6,4"
-  if (style === "dotted") return "2,4"
-  return style
-}
-
-// ── Jagged baseline helper ────────────────────────────────────────────────
-
-function jaggedBaselinePath(
-  orient: "left" | "right" | "top" | "bottom",
-  width: number,
-  height: number
-): string {
-  const TOOTH_WIDTH = 8
-  const TOOTH_HEIGHT = 4
-
-  if (orient === "left" || orient === "right") {
-    // Horizontal zigzag along x-axis at the bottom (y = height) for "left",
-    // or top (y = 0) for "right"
-    const y = orient === "left" ? height : 0
-    const mod = orient === "left" ? -1 : 1
-    const teeth = Math.ceil(width / TOOTH_WIDTH)
-    let d = `M0,${y}`
-    for (let i = 0; i < teeth; i++) {
-      const x1 = i * TOOTH_WIDTH + TOOTH_WIDTH / 2
-      const x2 = (i + 1) * TOOTH_WIDTH
-      d += `L${Math.min(x1, width)},${y + TOOTH_HEIGHT * mod}`
-      d += `L${Math.min(x2, width)},${y}`
-    }
-    return d
-  } else {
-    // Vertical zigzag along y-axis at x = 0 for "bottom", or x = width for "top"
-    const x = orient === "bottom" ? 0 : width
-    const mod = orient === "bottom" ? 1 : -1
-    const teeth = Math.ceil(height / TOOTH_WIDTH)
-    let d = `M${x},0`
-    for (let i = 0; i < teeth; i++) {
-      const y1 = i * TOOTH_WIDTH + TOOTH_WIDTH / 2
-      const y2 = (i + 1) * TOOTH_WIDTH
-      d += `L${x + TOOTH_HEIGHT * mod},${Math.min(y1, height)}`
-      d += `L${x},${Math.min(y2, height)}`
-    }
-    return d
-  }
-}
 
 interface SVGOverlayProps {
   width: number
@@ -180,6 +91,10 @@ interface SVGOverlayProps {
 
   // Annotations
   annotations?: Datum[]
+  onAnnotationActivate?: OnAnnotationActivateCallback
+  onObservation?: OnObservationCallback
+  chartId?: string
+  chartType?: string
   autoPlaceAnnotations?: AutoPlaceAnnotations
   svgAnnotationRules?: (
     annotation: Datum,
@@ -252,7 +167,6 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     yFormat,
     axisExtent
   } = props
-
   const xTicks = useMemo(() => {
     if (!scales) return []
     const bottomAxis = axes?.find(a => a.orient === "bottom")
@@ -441,6 +355,10 @@ export function SVGOverlay(props: SVGOverlayProps) {
     xValues,
     yValues,
     annotations,
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType,
     autoPlaceAnnotations,
     svgAnnotationRules,
     annotationFrame: _annotationFrame,
@@ -455,6 +373,12 @@ export function SVGOverlay(props: SVGOverlayProps) {
     linkedCrosshairSourceId,
     children
   } = props
+  const annotationActivation = useAnnotationActivationOptions({
+    onAnnotationActivate,
+    onObservation,
+    chartId,
+    chartType
+  })
 
   // Generate axis ticks — use per-axis config, auto-reduce to prevent overlap.
   // After generating candidate ticks, filter by minimum pixel distance so labels
@@ -579,7 +503,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
 
-    const defaultRules = createDefaultAnnotationRules("xy")
+    const defaultRules = createDefaultAnnotationRules("xy", annotationActivation)
 
     const context: AnnotationContext = {
       scales: scales
@@ -608,7 +532,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
     // ordinal overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.
     return renderAnnotationPass(layoutAnnotations, defaultRules, svgAnnotationRules, context)
-  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, annXAccessor, annYAccessor, annotationData, scales, pointNodes, annCurve])
+  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, annXAccessor, annYAccessor, annotationData, scales, pointNodes, annCurve, annotationActivation])
 
   // Linked crosshair from coordinate-based hover sync
   const crosshairPos = useCrosshairPosition(linkedCrosshairName)

@@ -2,6 +2,15 @@
 import * as React from "react"
 import { flattenVisible, type NavTreeNode } from "./ai/navigationTree"
 import { getConversationArcStore } from "./ai/conversationArc"
+import {
+  useObservationSelector,
+  type ChartObservation,
+  type OnObservationCallback
+} from "./store/ObservationStore"
+import {
+  annotationStableId,
+  type OnAnnotationActivateCallback
+} from "./charts/shared/annotationActivation"
 
 /**
  * AccessibleNavTree — renders a `buildNavigationTree()` structure as a WAI-ARIA
@@ -39,6 +48,10 @@ export interface AccessibleNavTreeProps {
    * the conversation-arc store is enabled — zero-overhead otherwise.
    */
   chartId?: string
+  /** Normalized focus/activation events produced by structured navigation. */
+  onObservation?: OnObservationCallback
+  /** Observe activation of an annotation leaf in the navigation tree. */
+  onAnnotationActivate?: OnAnnotationActivateCallback
 }
 
 function buildParentMap(root: NavTreeNode): Map<string, NavTreeNode> {
@@ -53,7 +66,7 @@ function buildParentMap(root: NavTreeNode): Map<string, NavTreeNode> {
   return parents
 }
 
-export function AccessibleNavTree({ tree, label, visible = false, className, onActiveChange, activeId: controlledActiveId, chartId }: AccessibleNavTreeProps) {
+export function AccessibleNavTree({ tree, label, visible = false, className, onActiveChange, activeId: controlledActiveId, chartId, onObservation, onAnnotationActivate }: AccessibleNavTreeProps) {
   // Start with the root expanded so its direct children (axes, series) are
   // visible; deeper branches collapse until the user drills in.
   const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set([tree.id]))
@@ -62,6 +75,12 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
   const activeId = isControlled ? controlledActiveId : internalActiveId
   const containerRef = React.useRef<HTMLDivElement>(null)
   const itemRefs = React.useRef<Map<string, HTMLLIElement | null>>(new Map())
+  const pushObservation = useObservationSelector((state) => state.pushObservation)
+
+  const emitObservation = React.useCallback((observation: ChartObservation) => {
+    onObservation?.(observation)
+    pushObservation?.(observation)
+  }, [onObservation, pushObservation])
 
   const parentMap = React.useMemo(() => buildParentMap(tree), [tree])
   const order = React.useMemo(() => flattenVisible(tree, expanded), [tree, expanded])
@@ -129,7 +148,49 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
     if (!isControlled) setInternalActiveId(node.id)
     onActiveChange?.(node)
     recordNav(node, "focus")
-  }, [onActiveChange, isControlled, recordNav, activeId])
+    if (node.datum) {
+      emitObservation({
+        type: "focus",
+        datum: node.datum,
+        inputType: "navigation-tree",
+        timestamp: Date.now(),
+        chartType: "AccessibleNavTree",
+        chartId
+      })
+    }
+  }, [onActiveChange, isControlled, recordNav, activeId, emitObservation, chartId])
+
+  const activateNode = React.useCallback((node: NavTreeNode) => {
+    if (!node.datum) return
+    if (node.role === "annotation") {
+      const annotationId = annotationStableId(node.datum)
+      onAnnotationActivate?.({
+        annotation: node.datum,
+        annotationId,
+        chartId,
+        inputType: "navigation-tree"
+      })
+      if (annotationId) {
+        emitObservation({
+          type: "annotation-activate",
+          annotationId,
+          inputType: "navigation-tree",
+          timestamp: Date.now(),
+          chartType: "AccessibleNavTree",
+          chartId
+        })
+      }
+      return
+    }
+    emitObservation({
+      type: "activate",
+      datum: node.datum,
+      inputType: "navigation-tree",
+      timestamp: Date.now(),
+      chartType: "AccessibleNavTree",
+      chartId
+    })
+  }, [chartId, emitObservation, onAnnotationActivate])
 
   const expand = (node: NavTreeNode) => { setExpanded((s) => new Set(s).add(node.id)); recordNav(node, "toggle", true) }
   const collapse = (node: NavTreeNode) => { setExpanded((s) => { const n = new Set(s); n.delete(node.id); return n }); recordNav(node, "toggle", false) }
@@ -162,7 +223,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
       case "Enter":
       case " ":
         if (hasChildren) (isOpen ? collapse : expand)(node)
-        else handled = false
+        else activateNode(node)
         break
       default: handled = false
     }
@@ -188,6 +249,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
           e.stopPropagation()
           setActive(node)
           if (hasChildren) (isOpen ? collapse : expand)(node)
+          else activateNode(node)
         }}
         style={visible ? {
           listStyle: "none",

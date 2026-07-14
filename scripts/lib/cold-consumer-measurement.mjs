@@ -58,6 +58,7 @@ export const EXTERNAL_RUNTIME_PACKAGES = Object.freeze([
   "matter-js",
   "@dimforge/rapier2d-compat",
   "world-atlas",
+  "roughjs",
   "sharp",
   "gifenc",
 ])
@@ -85,6 +86,7 @@ export const NAMED_IMPORT_CASES = Object.freeze([
   { exportKey: "./ai/core", symbol: "suggestCharts", platform: "browser" },
   { exportKey: "./data", symbol: "bin", platform: "browser" },
   { exportKey: "./geo", symbol: "ChoroplethMap", platform: "browser" },
+  { exportKey: "./rough", symbol: "createRoughRenderMode", platform: "browser" },
   { exportKey: "./themes", symbol: "resolveThemePreset", platform: "browser" },
   { exportKey: "./themes/core", symbol: "resolveThemePreset", platform: "browser" },
   { exportKey: "./themes/react", symbol: "ThemeProvider", platform: "browser" },

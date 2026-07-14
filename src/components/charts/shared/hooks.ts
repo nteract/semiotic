@@ -25,35 +25,26 @@ import type { Datum } from "./datumTypes"
 import type { MobileVisualizationContract } from "./auditMobileVisualization"
 import { resolveResponsiveRules } from "./responsiveRules"
 import type { ResponsiveRule } from "./responsiveRules"
+import type {
+  SemanticClickBehavior,
+  SemanticHoverBehavior,
+  SemanticInteractionContext
+} from "./semanticInteractions"
+import {
+  emitClickObservations,
+  emitHoverObservations
+} from "./semanticInteractions"
+import {
+  hasOwnEnumerableKey,
+  observationDatum,
+  resolveHoverXPosition
+} from "./chartSelectionUtils"
 
 /**
  * Default fill color used when no colorBy is specified
  */
 export const DEFAULT_COLOR = "#007bff"
-
-function resolveHoverXPosition(d: Datum, datum: Datum | null | undefined, xField: string): number | null {
-  const candidate = d.xValue ?? datum?.[xField]
-  if (candidate == null) return null
-  const numeric = Number(candidate)
-  return Number.isFinite(numeric) ? numeric : null
-}
-
-function observationDatum(d: Datum): Datum {
-  let datum = d.data || d.datum || d
-  if (Array.isArray(datum)) datum = datum[0]
-  if (d.xValue != null && datum && typeof datum === "object" && !Array.isArray(datum) && datum.xValue == null) {
-    return { ...datum, xValue: d.xValue }
-  }
-  return datum || {}
-}
-
-function hasOwnEnumerableKey(value: object | undefined | null): boolean {
-  if (!value) return false
-  for (const key in value) {
-    if (Object.prototype.hasOwnProperty.call(value, key)) return true
-  }
-  return false
-}
+const EMPTY_FIELDS: string[] = []
 
 export const MOBILE_INTERACTION_TARGET_SIZE = 44
 export const MOBILE_INTERACTION_MIN_HIT_RADIUS = 24
@@ -295,7 +286,7 @@ export function useSortedData(
 export function useChartSelection({
   selection,
   linkedHover,
-  fallbackFields = [],
+  fallbackFields = EMPTY_FIELDS,
   unwrapData: _unwrapData = false,
   onObservation,
   chartType,
@@ -319,13 +310,16 @@ export function useChartSelection({
 }): {
   activeSelectionHook: SelectionHookResult | null
   hoverSelectionHook: SelectionHookResult | null
-  customHoverBehavior: (d: Datum | null) => void
-  customClickBehavior: (d: Datum | null) => void
+  customHoverBehavior: SemanticHoverBehavior
+  customClickBehavior: SemanticClickBehavior
   /** Stable ID for this chart instance, used to suppress linked crosshair on source chart */
   crosshairSourceId: string
 } {
   const crosshairSourceId = useId()
-  const hoverConfig = normalizeLinkedHover(linkedHover, fallbackFields)
+  const hoverConfig = useMemo(
+    () => normalizeLinkedHover(linkedHover, fallbackFields),
+    [linkedHover, fallbackFields]
+  )
 
   // Linked fields drive both the cross-filter selection predicate and the
   // hover emitter. `mode: "series"` keys off the chart's series-identity field
@@ -333,9 +327,15 @@ export function useChartSelection({
   // so authors get bar↔series highlighting without hand-wiring `fields`; an
   // explicit `seriesField` overrides. Other modes keep the configured/fallback
   // fields. Using one `linkFields` for both keeps emit and consume symmetric.
-  const linkFields = hoverConfig?.mode === "series"
-    ? [hoverConfig.seriesField || colorByField || fallbackFields[0]].filter((f): f is string => !!f)
-    : (hoverConfig?.fields || fallbackFields || [])
+  const linkFields = useMemo(
+    () =>
+      hoverConfig?.mode === "series"
+        ? [hoverConfig.seriesField || colorByField || fallbackFields[0]].filter(
+            (field): field is string => !!field
+          )
+        : hoverConfig?.fields || fallbackFields,
+    [hoverConfig, colorByField, fallbackFields]
+  )
 
   const selectionHook = useSelection({
     name: selection?.name || "__unused__",
@@ -350,6 +350,13 @@ export function useChartSelection({
   const pushObservation = useObservationSelector(
     (state: any) => state.pushObservation
   ) as ((obs: ChartObservation) => void) | undefined
+  const publishObservation = useCallback(
+    (observation: ChartObservation) => {
+      onObservation?.(observation)
+      pushObservation?.(observation)
+    },
+    [onObservation, pushObservation]
+  )
 
   const activeSelectionHook: SelectionHookResult | null = selection
     ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
@@ -374,7 +381,7 @@ export function useChartSelection({
   }, [hoverHighlight, hoveredSeriesKey, seriesField])
 
   const customHoverBehavior = useCallback(
-    (d: Datum | null) => {
+    (d: Datum | null, interaction?: SemanticInteractionContext) => {
       const preserveMobileLock =
         !d &&
         mobileHoverLockRef.current &&
@@ -424,28 +431,18 @@ export function useChartSelection({
 
       // Emit observation events
       if (onObservation || pushObservation) {
-        const now = Date.now()
-        const base = { timestamp: now, chartType: chartType || "unknown", chartId }
-
-        if (d) {
-          const datum = observationDatum(d)
-          const obs: ChartObservation = {
-            ...base,
-            type: "hover",
-            datum: datum || {},
-            x: d.x ?? 0,
-            y: d.y ?? 0,
-          }
-          if (onObservation) onObservation(obs)
-          if (pushObservation) pushObservation(obs)
-        } else {
-          const obs: ChartObservation = { ...base, type: "hover-end" }
-          if (onObservation) onObservation(obs)
-          if (pushObservation) pushObservation(obs)
-        }
+        emitHoverObservations({
+          onObservation: publishObservation,
+          datum: d ? observationDatum(d) : null,
+          x: d?.x,
+          y: d?.y,
+          chartType: chartType || "unknown",
+          chartId,
+          context: interaction
+        })
       }
     },
-    [linkedHover, linkedHoverHook, hoverConfig, crosshairSourceId, onObservation, chartType, chartId, pushObservation, hoverHighlight, seriesField, mobileInteraction]
+    [linkedHover, linkedHoverHook, hoverConfig, crosshairSourceId, onObservation, chartType, chartId, pushObservation, publishObservation, hoverHighlight, seriesField, mobileInteraction]
   )
 
   const clearMobileLock = useCallback(
@@ -478,7 +475,7 @@ export function useChartSelection({
   )
 
   const customClickBehavior = useCallback(
-    (d: Datum | null) => {
+    (d: Datum | null, interaction?: SemanticInteractionContext) => {
       const tapLocksHover =
         !!mobileInteraction?.enabled &&
         (mobileInteraction.tapToLockTooltip || mobileInteraction.tapToSelect)
@@ -534,31 +531,22 @@ export function useChartSelection({
       }
 
       if (onObservation || pushObservation) {
-        const now = Date.now()
-        const base = { timestamp: now, chartType: chartType || "unknown", chartId }
-
-        if (d) {
-          const datum = observationDatum(d)
-          const obs: ChartObservation = {
-            ...base,
-            type: "click",
-            datum: datum || {},
-            x: d.x ?? 0,
-            y: d.y ?? 0,
-          }
-          if (onObservation) onObservation(obs)
-          if (pushObservation) pushObservation(obs)
-        } else {
-          const obs: ChartObservation = { ...base, type: "click-end" }
-          if (onObservation) onObservation(obs)
-          if (pushObservation) pushObservation(obs)
-        }
+        emitClickObservations({
+          onObservation: publishObservation,
+          datum: d ? observationDatum(d) : null,
+          x: d?.x,
+          y: d?.y,
+          chartType: chartType || "unknown",
+          chartId,
+          context: interaction
+        })
       }
     },
     [
       onClick,
       onObservation,
       pushObservation,
+      publishObservation,
       chartType,
       chartId,
       hoverConfig,

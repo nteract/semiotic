@@ -779,8 +779,19 @@ export type {
   SelectionObservation,
   SelectionEndObservation,
   ClickObservation,
-  ClickEndObservation
+  ClickEndObservation,
+  ObservationInputType,
+  FocusObservation,
+  ActivateObservation,
+  AnnotationActivateObservation
 } from "./store/ObservationStore"
+
+export { annotationStableId } from "./charts/shared/annotationActivation"
+export type {
+  ChartAnnotation,
+  AnnotationActivationEvent,
+  OnAnnotationActivateCallback
+} from "./charts/shared/annotationActivation"
 
 export { MobileAnnotationCalloutList } from "./MobileAnnotationCalloutList"
 export type { MobileAnnotationCalloutListProps } from "./MobileAnnotationCalloutList"

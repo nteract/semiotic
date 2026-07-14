@@ -123,19 +123,38 @@ export function FlippingTooltip({
     height: number
   } | null>(null)
 
-  // Measure the tooltip when content or container changes
+  // Measure once on mount/container changes, then let ResizeObserver report
+  // actual content-box changes. Depending directly on `children` made a fresh
+  // tooltip React element re-run this layout effect after every parent hover
+  // render. In browsers, fractional layout jitter could then alternate the
+  // measured width by a tiny amount and synchronously set state forever.
   React.useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    const rect = el.getBoundingClientRect()
-    setMeasured((prev) => {
-      // Only update if size actually changed to avoid infinite loop
-      if (prev && prev.width === rect.width && prev.height === rect.height) {
-        return prev
-      }
-      return { width: rect.width, height: rect.height }
-    })
-  }, [children, className, containerWidth, containerHeight])
+    const measure = () => {
+      const rect = el.getBoundingClientRect()
+      if (!Number.isFinite(rect.width) || !Number.isFinite(rect.height)) return
+      setMeasured((prev) => {
+        // Sub-pixel text/layout jitter does not affect flip placement. Treat
+        // differences below half a CSS pixel as the same size so an observer
+        // cannot create a measurement → render → measurement feedback loop.
+        if (
+          prev &&
+          Math.abs(prev.width - rect.width) < 0.5 &&
+          Math.abs(prev.height - rect.height) < 0.5
+        ) {
+          return prev
+        }
+        return { width: rect.width, height: rect.height }
+      })
+    }
+
+    measure()
+    if (typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [className, containerWidth, containerHeight, positionFinite])
 
   const offset = 12
 

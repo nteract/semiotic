@@ -18,6 +18,14 @@ import {
   auditMobileVisualization,
   type MobileVisualizationContract,
 } from "./charts/shared/auditMobileVisualization"
+import {
+  canReceiveChartProps,
+  hasStandardControlsRequest,
+  isMobileStandardControlsProps,
+  standardControlsFromInteraction,
+  targetSizeFromInteraction,
+  withStandardControls,
+} from "./chartContainerMobile"
 
 const SR_ONLY: React.CSSProperties = {
   position: "absolute", width: 1, height: 1, overflow: "hidden",
@@ -89,36 +97,6 @@ export type ChartContainerMobileAudit =
   | boolean
   | "warn"
   | ChartContainerMobileAuditOptions
-
-function isMobileStandardControlsProps(
-  value: ChartContainerMobileOptions["standardControls"]
-): value is MobileStandardControlsProps {
-  return !!value && typeof value === "object" && !Array.isArray(value)
-}
-
-function standardControlsFromInteraction(
-  mobileInteraction: MobileInteractionProp | undefined
-): MobileStandardControlRequest | undefined {
-  return mobileInteraction && typeof mobileInteraction === "object"
-    ? mobileInteraction.standardControls
-    : undefined
-}
-
-function targetSizeFromInteraction(
-  mobileInteraction: MobileInteractionProp | undefined
-): number | undefined {
-  return mobileInteraction &&
-    typeof mobileInteraction === "object" &&
-    typeof mobileInteraction.targetSize === "number"
-    ? mobileInteraction.targetSize
-    : undefined
-}
-
-function hasStandardControlsRequest(
-  request: MobileStandardControlRequest | undefined
-): request is MobileStandardControlRequest {
-  return Array.isArray(request) ? request.length > 0 : !!request
-}
 
 export interface ChartContainerProps {
   /** Chart title */
@@ -839,19 +817,14 @@ export const ChartContainer = React.forwardRef<
       ? mobileStandardControlsOption
       : undefined) ??
     standardControlsFromInteraction(mobileInteractionSource)
-  const mobileInteraction =
-    hasStandardControlsRequest(mobileStandardControlsRequest)
-      ? mobileInteractionSource && typeof mobileInteractionSource === "object"
-        ? {
-            ...mobileInteractionSource,
-            standardControls: mobileStandardControlsRequest,
-          }
-        : mobileInteractionSource === false || mobileInteractionSource == null
-          ? mobileInteractionSource
-          : {
-              standardControls: mobileStandardControlsRequest,
-            }
-      : mobileInteractionSource
+  const mobileInteraction = React.useMemo(
+    () =>
+      withStandardControls(
+        mobileInteractionSource,
+        mobileStandardControlsRequest
+      ),
+    [mobileInteractionSource, mobileStandardControlsRequest]
+  )
   const mobileStandardControls =
     mobileEnabled && hasStandardControlsRequest(mobileStandardControlsRequest) ? (
       <MobileStandardControls
@@ -939,6 +912,7 @@ export const ChartContainer = React.forwardRef<
 
   const childrenWithMobileProps = React.useMemo(() => {
     if (!mobileEnabled || !React.isValidElement(children)) return children
+    if (!canReceiveChartProps(children)) return children
     const childProps = children.props as Record<string, unknown>
     const injected: Record<string, unknown> = {}
     if (mobileChartMode && childProps.mode == null) injected.mode = mobileChartMode

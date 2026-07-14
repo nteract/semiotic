@@ -8,6 +8,7 @@ const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-bo
 function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, className, style, }: CircularBrushProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
+function SentenceFilter({ sentence, filters: controlledFilters, defaultFilters, definitions, onChange, as: As, className, style, size, align, wrap, disabled, readOnly, ariaLabel, id, renderControl, onOpenChange, }: SentenceFilterProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
@@ -26,6 +27,17 @@ interface MobileStandardControlLegendItem
 interface MobileStandardControlsProps
 interface MobileStandardLegendControls
 interface MobileStandardZoomControls
+interface SentenceFilterBaseDefinition<T = SentenceFilterValue>
+interface SentenceFilterChangeMeta
+interface SentenceFilterMultiSelectDefinition
+interface SentenceFilterNumberDefinition
+interface SentenceFilterOption<T = SentenceFilterPrimitive>
+interface SentenceFilterProps
+interface SentenceFilterRangeDefinition
+interface SentenceFilterRenderContext
+interface SentenceFilterSelectDefinition
+interface SentenceFilterTextDefinition
+interface SentenceFilterToggleDefinition
 interface UseMobileRangeControlsOptions
 interface UseMobileRangeControlsResult
 interface VisualizationControlDefinition
@@ -34,6 +46,9 @@ type ControlInputSource = "pointer" | "keyboard" | "programmatic"
 type ControlObservationCallback = (observation: ControlObservation) => void
 type ControlObservationPhase = "control-start" | "control-change" | "control-end"
 type MobileStandardControlRequest = MobileStandardControlsMode
+type SentenceFilterDefinition = SentenceFilterSelectDefinition | SentenceFilterMultiSelectDefinition | SentenceFilterNumberDefinition | SentenceFilterRangeDefinition | SentenceFilterToggleDefinition | SentenceFilterTextDefinition
+type SentenceFilterPrimitive = string | number | boolean | null
+type SentenceFilterValue = SentenceFilterPrimitive | string[] | number[] | [number, number]
 type VisualizationControlType = (typeof VISUALIZATION_CONTROL_TYPES)[number]
 type VisualizationControlValue = number | [number, number]
 ```
