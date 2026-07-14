@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import { forceLayoutPlugin } from "./forceLayoutPlugin"
 import type { RealtimeNode, RealtimeEdge, NetworkPipelineConfig } from "../networkTypes"
 
@@ -57,6 +58,55 @@ describe("forceLayoutPlugin", () => {
       secondNodes.map(({ x, y }) => [x, y])
     )
 
+  })
+
+  it("retains d3-force's deterministic default random source", () => {
+    // Identical positioned nodes force d3-force to choose a jitter direction.
+    // Without an explicit source, that must use d3-force's internal LCG rather
+    // than the ambient Math.random implementation.
+    const makeGraph = () => ({
+      nodes: ["A", "B"].map((id) => ({ ...makeNode(id), x: 100, y: 100 })),
+      edges: [] as RealtimeEdge[]
+    })
+    const first = makeGraph()
+    const second = makeGraph()
+    const randomSpy = vi.spyOn(Math, "random")
+
+    try {
+      forceLayoutPlugin.computeLayout(
+        first.nodes,
+        first.edges,
+        { chartType: "force", iterations: 1 },
+        [600, 600]
+      )
+      forceLayoutPlugin.computeLayout(
+        second.nodes,
+        second.edges,
+        { chartType: "force", iterations: 1 },
+        [600, 600]
+      )
+
+      expect(randomSpy).not.toHaveBeenCalled()
+      expect(second.nodes.map(({ x, y }) => [x, y])).toEqual(
+        first.nodes.map(({ x, y }) => [x, y])
+      )
+    } finally {
+      randomSpy.mockRestore()
+    }
+  })
+
+  it("uses an explicitly supplied random source", () => {
+    const nodes = ["A", "B"].map((id) => ({ ...makeNode(id), x: 100, y: 100 }))
+    const random = vi.fn(() => 0.75)
+
+    forceLayoutPlugin.computeLayout(
+      nodes,
+      [],
+      { chartType: "force", iterations: 1, random },
+      [600, 600]
+    )
+
+    expect(random).toHaveBeenCalled()
   })
 
   it("resolves edge source/target to node objects", () => {

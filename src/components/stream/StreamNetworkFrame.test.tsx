@@ -330,5 +330,24 @@ describe("StreamNetworkFrame", () => {
         updateSpy.mockRestore()
       }
     })
+
+    it("preserves d3-force's default random source when no override is supplied", async () => {
+      const StoreModule = await import("./NetworkPipelineStore")
+      const updateSpy = vi.spyOn(StoreModule.NetworkPipelineStore.prototype, "updateConfig")
+      try {
+        render(
+          <StreamNetworkFrame
+            chartType="force"
+            nodes={[{ id: "a" }, { id: "b" }]}
+            edges={[{ source: "a", target: "b", value: 1 }]}
+          />
+        )
+        const lastConfig = updateSpy.mock.calls.at(-1)?.[0]
+        expect(lastConfig?.random).toBeUndefined()
+        expect(lastConfig?.seed).toBeUndefined()
+      } finally {
+        updateSpy.mockRestore()
+      }
+    })
   })
 })

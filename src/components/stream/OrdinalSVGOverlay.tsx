@@ -252,29 +252,36 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
 
     // Uniform spacing between adjacent category centers (band scale).
     const spacing = Math.abs(all[1].pixel - all[0].pixel) || band
-    // Measure the labels: longest string (in chars) and whether any are
-    // ReactNodes (rendered in a 60×24 foreignObject — unmeasurable text).
-    let maxChars = 0
-    let hasNodeLabel = false
-    for (const t of all) {
-      if (typeof t.label === "string") maxChars = Math.max(maxChars, t.label.length)
-      else if (typeof t.label === "number") maxChars = Math.max(maxChars, String(t.label).length)
-      else hasNodeLabel = true
+    // Estimate each label independently, then compare adjacent label
+    // footprints. Using the longest label for *both* sides of every gap
+    // over-thins ordinary mixed-length category sets (for example,
+    // Alpha/Beta/Gamma/Delta/Epsilon at 360px) even when the labels do fit.
+    // A centered label occupies half of its footprint on either side of its
+    // tick, so two adjacent labels need half of each footprint plus the
+    // desired visual gap. ReactNode labels are rendered in a 60×24
+    // foreignObject and cannot be measured here, so use that conservative
+    // footprint.
+    const footprint = (label: React.ReactNode): number => {
+      if (isHorizontal) {
+        return typeof label === "string" || typeof label === "number" ? 16 : 24
+      }
+      if (typeof label === "string" || typeof label === "number") {
+        // 6.5 px/char mirrors SVGOverlay's deterministic SSR-safe estimate.
+        return String(label).length * 6.5
+      }
+      return 60
     }
-    // Pixel footprint each label needs along the axis. Vertical bars lay
-    // horizontal labels along the bottom (footprint = text width); horizontal
-    // bars stack labels down the left axis (footprint = line height — and
-    // ReactNode labels render in a 24px-tall foreignObject, so reserve that
-    // much so the "never collides" guarantee holds for them too).
-    let needed: number
-    if (isHorizontal) {
-      needed = hasNodeLabel ? 24 : 16
-    } else {
-      // 6.5 px/char mirrors the heuristic in SVGOverlay; ReactNode labels
-      // can't be measured, so assume the 60px foreignObject width.
-      needed = Math.max(maxChars * 6.5, hasNodeLabel ? 60 : 0) + 6
-    }
+    const footprints = all.map(t => footprint(t.label))
+    const minimumGap = isHorizontal ? 0 : 6
+    const adjacentLabelsFit = footprints.every((current, index) =>
+      index === 0 || (footprints[index - 1] + current) / 2 + minimumGap <= spacing
+    )
+    if (adjacentLabelsFit) return all
 
+    // Once a real collision is detected, preserve the prior conservative
+    // every-N thinning policy. The largest selected label can then be next
+    // to another largest label, so its complete footprint is required.
+    const needed = Math.max(...footprints) + minimumGap
     const step = Math.max(1, Math.ceil(needed / spacing))
     if (step === 1) return all
     return all.filter((_, i) => i % step === 0)

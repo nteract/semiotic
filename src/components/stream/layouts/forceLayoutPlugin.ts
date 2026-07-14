@@ -219,11 +219,20 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       // Build simulation — parameterizing forceSimulation + forceManyBody with
       // RealtimeNode lets d3-force thread the node type through charge callbacks
       // without per-call casts.
-      const random = config.random ?? (
-        config.seed === undefined ? Math.random : createSeededFrameRandom(config.seed)
-      )
+      // Keep d3-force's built-in LCG when the caller has not explicitly
+      // selected a random source. The LCG is deterministic (and was the
+      // historical default here); replacing it with Math.random changes
+      // otherwise identical force layouts between renders. A custom random
+      // callback or serializable seed deliberately opts into an override.
       const simulation = forceSimulation<RealtimeNode>()
-        .randomSource(random)
+
+      if (config.random !== undefined || config.seed !== undefined) {
+        simulation.randomSource(
+          config.random ?? createSeededFrameRandom(config.seed as number)
+        )
+      }
+
+      simulation
         .force(
           "charge",
           forceManyBody<RealtimeNode>().strength((d) => {

@@ -57,7 +57,6 @@ import { OrdinalBrushOverlay } from "./OrdinalBrushOverlay"
 import { ordinalSceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
-import { paintCanvasBackground } from "./canvasBackground"
 import { AccessibleDataTable, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
@@ -251,6 +250,26 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
     const resolvedForeground = resolveFrameGraphics(foregroundGraphics, size, margin, currentScales)
     const resolvedBackground = resolveFrameGraphics(backgroundGraphics, size, margin, currentScales)
+    // Keep an opaque chart background below the SVG underlay rather than in
+    // the retained mark canvas. A canvas background would hide SVG gridlines;
+    // copying those lines into the overlay makes them visible, but incorrectly
+    // puts them on top of bars and other marks. SVG resolves both literal
+    // colors and CSS custom properties, so this preserves the former canvas
+    // fill behavior while keeping the layer order: background → grid → marks.
+    // As before, user-provided backgroundGraphics owns the entire background
+    // layer, and `background="transparent"` opts out of any frame fill.
+    const resolvedCanvasBackground =
+      !backgroundGraphics && background !== "transparent" ? (
+        <rect
+          className="semiotic-canvas-background"
+          data-semiotic-layer="canvas-background"
+          x={-margin.left}
+          y={-margin.top}
+          width={size[0]}
+          height={size[1]}
+          fill={background || "var(--semiotic-bg, transparent)"}
+        />
+      ) : null
     const [annotationFrame, setAnnotationFrame] = useState(0)
     const lastAnnotationFrameTimeRef = useRef(0)
     const [isStale, setIsStale] = useState(false)
@@ -788,26 +807,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
       }
 
-      // Background — use explicit prop, or fall back to semiotic theme background.
-      // Skip the fill when:
-      //   • `background="transparent"` — explicit opt-out for overlay composition.
-      //   • `backgroundGraphics` is provided — user supplied their own SVG
-      //     background behind the canvas; painting a themed fill would hide it.
-      // Only resolve --semiotic-bg when paintCanvasBackground will actually
-      // use it (no explicit background, no backgroundGraphics, not transparent).
-      const needsThemeBg =
-        !backgroundGraphics &&
-        background !== "transparent" &&
-        !background
-      paintCanvasBackground(ctx, {
-        background,
-        hasBackgroundGraphics: Boolean(backgroundGraphics),
-        themeBackground: needsThemeBg
-          ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
-          : "",
-        width: size[0],
-        height: size[1]
-      })
+      // Background paint deliberately lives in the SVG layer below this
+      // transparent mark canvas; see `resolvedCanvasBackground` above.
 
       const isRadial = projection === "radial"
 
@@ -1066,6 +1067,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           onClick={customClickBehavior ? onClick : undefined}
         >
         <CanvasFrameBackground size={size} margin={margin}>
+          {resolvedCanvasBackground}
           {resolvedBackground}
         </CanvasFrameBackground>
 
@@ -1130,7 +1132,10 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           yAccessor={annYAccessor}
           annotationData={enrichAnnotationData(storeRef.current?.getData())}
           underlayRendered
-          canvasObscuresUnderlay={background !== "transparent" && !backgroundGraphics}
+          // The retained mark canvas is intentionally transparent. The SVG
+          // background and underlay precede it, so no overlay grid copy is
+          // needed and gridlines remain behind the marks.
+          canvasObscuresUnderlay={false}
         />
 
         {/* Brush overlay — not supported for radial projection (pie/donut) */}
