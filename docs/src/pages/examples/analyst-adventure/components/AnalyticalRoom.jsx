@@ -147,10 +147,10 @@ function augmentNavigationTree(tree, rows, labelForDatum) {
 
 function safeAnalysis(componentName, diagnosticComponentName, props, rows, intent) {
   let description = props.description ?? props.summary ?? "Chart description unavailable."
-  let grounding = null
-  let suggestions = []
-  let diagnostics = { ok: true, diagnoses: [] }
-  let audit = { ok: true, findings: [] }
+  let grounding
+  let suggestions
+  let diagnostics
+  let audit
 
   try {
     description = describeChart(componentName, props).text

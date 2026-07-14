@@ -100,6 +100,7 @@ import {
 } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useNetworkObservationBehaviors } from "./networkFrameObservations"
+import { shouldContinueNetworkAnimation } from "./networkFrameAnimation"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -580,21 +581,13 @@ const StreamNetworkFrame = memo(forwardRef<
     ]
   )
 
-  // scheduleRender comes from useFrame above (the previous Network-local
-  // implementation took an isContinuous flag, but it was effectively
-  // dead — see the comment by the rAF refs above).
-  // isContinuous is still used elsewhere in this file for the render
-  // loop's "should I keep ticking" decision; declared here so the
-  // existing references continue to resolve.
-  // Animation gate: keep rAF ticking for any of (a) sankey with
-  // particles, (b) customNetworkLayout charts with particles (e.g.
-  // ProcessSankey — same particle pipeline, edges carry HOC-computed
-  // bezier control points), (c) pulse encoding, (d) explicit store
-  // animation state (transitions, push-mode intro).
-  const isContinuous =
-    ((chartType === "sankey" || !!customNetworkLayout) && showParticles) ||
-    !!pulse ||
-    (storeRef.current?.isAnimating ?? false)
+  const isContinuous = shouldContinueNetworkAnimation({
+    chartType,
+    hasCustomNetworkLayout: !!customNetworkLayout,
+    showParticles,
+    hasPulse: !!pulse,
+    isStoreAnimating: storeRef.current?.isAnimating ?? false
+  })
 
   // customLayout overlays are read straight from `storeRef.current.customLayoutOverlays`
   // at render time (see the `foregroundGraphics` composition below) — the same

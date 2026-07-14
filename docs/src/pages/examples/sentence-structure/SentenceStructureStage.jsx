@@ -38,10 +38,6 @@ function tokenIndexById(tokens) {
   return new Map(tokens.map((token, index) => [token.id, index]))
 }
 
-function tokenIdAt(tokens, index) {
-  return tokens[index]?.id
-}
-
 function endpointId(value) {
   const datum = raw(value)
   return typeof datum === "object" && datum !== null ? datum.id : datum
