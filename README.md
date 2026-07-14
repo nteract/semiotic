@@ -374,10 +374,10 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 |---|---|---|
 | `semiotic/xy` | **106 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
 | `semiotic/ordinal` | **86 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **90 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/network` | **91 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/geo` | **64 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
 | `semiotic/realtime` | **117 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **116 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/realtime/core` | **117 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **1 KB** | Stream status and synced push hooks |
 | `semiotic/server` | **121 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/server/node` | **121 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
@@ -398,7 +398,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
 | `semiotic/ai` | **391 KB** | All schema-backed charts + validation — optimized for LLM code generation |
 | `semiotic/ai/core` | **66 KB** | suggestCharts, validateProps, describeChart, repairChartConfig, tool adapters — no chart components |
-| `semiotic/controls` | **5 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
+| `semiotic/controls` | **10 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **3 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
 | `semiotic` | **248 KB** | Everything below (full bundle) |
 
