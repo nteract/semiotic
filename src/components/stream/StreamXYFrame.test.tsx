@@ -575,6 +575,41 @@ describe("StreamXYFrame", () => {
       expect(observations[1]).toMatchObject({ inputType: "keyboard" })
       expect(observations[3]).toMatchObject({ inputType: "keyboard" })
     })
+
+    it("does not retarget activation after the focused point is removed", async () => {
+      const ref = React.createRef<StreamXYFrameHandle>()
+      const onObservation = vi.fn()
+      const { container } = render(
+        <StreamXYFrame
+          ref={ref}
+          chartType="scatter"
+          runtimeMode="streaming"
+          pointIdAccessor="id"
+          timeAccessor="t"
+          valueAccessor="v"
+          size={[400, 300]}
+          onObservation={onObservation}
+        />
+      )
+      await act(async () => {
+        ref.current!.pushMany([
+          { id: "a", t: 1, v: 10 },
+          { id: "b", t: 2, v: 20 },
+        ])
+      })
+      const frame = container.querySelector(".stream-xy-frame")!
+      fireEvent.keyDown(frame, { key: "ArrowRight" })
+      fireEvent.keyDown(frame, { key: "ArrowRight" })
+      await act(async () => {
+        ref.current!.remove("b")
+      })
+
+      onObservation.mockClear()
+      fireEvent.keyDown(frame, { key: " " })
+      expect(onObservation).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: "activate" }),
+      )
+    })
   })
 
   // ── SVG overlay elements ──────────────────────────────────────────────

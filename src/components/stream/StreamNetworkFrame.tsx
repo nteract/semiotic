@@ -1202,18 +1202,40 @@ const StreamNetworkFrame = memo(forwardRef<
       if (isInteractiveKeyboardTarget(e)) return
       const store = storeRef.current
       if (!store) return
+      const clearFocus = () => {
+        kbFocusIndexRef.current = -1
+        focusedNavPointRef.current = null
+        neighborIndexRef.current = -1
+        hoverRef.current = null
+        setHoverData(null)
+        if (customHoverBehavior) {
+          customHoverBehavior(null)
+          dirtyRef.current = true
+        }
+        scheduleRender()
+      }
 
       // Always rebuild NavGraph from current sceneNodes — positions change during
       // force simulation ticks and transition interpolation, so caching risks stale coordinates
       const navPoints = extractNetworkNavPoints(
         store.sceneNodes as NetworkSceneNode[]
       )
-      if (navPoints.length === 0) return
+      if (navPoints.length === 0) {
+        if (kbFocusIndexRef.current >= 0) clearFocus()
+        return
+      }
       const graph: NavGraph = buildNavGraph(navPoints)
 
-      const current = kbFocusIndexRef.current
+      const requestedIndex = kbFocusIndexRef.current
+      let current = requestedIndex
+      if (current >= graph.flat.length) {
+        clearFocus()
+        current = -1
+      }
 
-      if ((e.key === "Enter" || e.key === " ") && current >= 0) {
+      // Enter is reserved for the network-specific "follow connected edge"
+      // navigation contract. Space activates the currently focused node.
+      if (e.key === " " && current >= 0) {
         e.preventDefault()
         const point = graph.flat[current]
         customClickBehavior(buildHoverData(point.datum || {}, point.x, point.y, {
@@ -1272,16 +1294,7 @@ const StreamNetworkFrame = memo(forwardRef<
       e.preventDefault()
 
       if (next < 0) {
-        kbFocusIndexRef.current = -1
-        focusedNavPointRef.current = null
-        neighborIndexRef.current = -1
-        hoverRef.current = null
-        setHoverData(null)
-        if (customHoverBehavior) {
-          customHoverBehavior(null)
-          dirtyRef.current = true
-        }
-        scheduleRender()
+        clearFocus()
         return
       }
 

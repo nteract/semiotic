@@ -1,14 +1,14 @@
 import * as React from "react"
 import type {
-  SceneDatum,
   SceneRenderBackend,
   SceneRenderMode,
   Style
 } from "./types"
+import type { SceneRenderDatum } from "./sceneRenderBackendTypes"
 
 type SceneLike = {
   type?: string
-  datum?: SceneDatum
+  datum?: unknown
   style?: Style
 }
 
@@ -30,7 +30,7 @@ export function resolveSceneRenderBackend<Node extends SceneLike>(
   node: Node
 ): SceneRenderBackend<Node> | undefined {
   const candidate = typeof renderMode === "function"
-    ? renderMode(node.datum ?? null, node)
+    ? renderMode((node.datum ?? null) as SceneRenderDatum<Node>, node)
     : renderMode
   return isBackend<Node>(candidate) ? candidate : undefined
 }
@@ -46,17 +46,26 @@ function warnFallback(backendId: string, nodeType: string): void {
   )
 }
 
-/** Paint supported nodes and return nodes for the frame's built-in renderer. */
+/** Paint nodes in scene order, delegating unsupported runs to the built-in renderer. */
 export function paintSceneWithBackend<Node extends SceneLike>(args: {
   context: CanvasRenderingContext2D
   nodes: Node[]
   renderMode: SceneRenderMode<Node> | undefined
   pixelRatio: number
-}): Node[] {
-  const { context, nodes, renderMode, pixelRatio } = args
-  if (!renderMode || renderMode === "sketchy") return nodes
+  paintBuiltIn: (nodes: Node[]) => void
+}): void {
+  const { context, nodes, renderMode, pixelRatio, paintBuiltIn } = args
+  if (!renderMode || renderMode === "sketchy") {
+    paintBuiltIn(nodes)
+    return
+  }
 
-  const fallback: Node[] = []
+  let fallback: Node[] = []
+  const flushFallback = () => {
+    if (!fallback.length) return
+    paintBuiltIn(fallback)
+    fallback = []
+  }
   for (const node of nodes) {
     const backend = resolveSceneRenderBackend(renderMode, node)
     if (!backend) {
@@ -64,6 +73,9 @@ export function paintSceneWithBackend<Node extends SceneLike>(args: {
       continue
     }
 
+    // A backend mark must not leapfrog an earlier built-in mark. Flush each
+    // contiguous fallback run before painting the next backend-supported node.
+    flushFallback()
     context.save()
     let handled: boolean
     try {
@@ -78,10 +90,10 @@ export function paintSceneWithBackend<Node extends SceneLike>(args: {
     }
     if (!handled) {
       warnFallback(backend.id, node.type ?? "unknown")
-      fallback.push(node)
+      paintBuiltIn([node])
     }
   }
-  return fallback
+  flushFallback()
 }
 
 /** Try a backend for SSR/static SVG, then invoke the existing converter. */

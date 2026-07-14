@@ -833,17 +833,18 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
         const scene = store.scene
         const scales = store.scales
         const layout = { width: adjustedWidth, height: adjustedHeight }
-        const builtInScene = paintSceneWithBackend({
+        paintSceneWithBackend({
           context: ctx,
           nodes: scene,
           renderMode,
-          pixelRatio: dpr
+          pixelRatio: dpr,
+          paintBuiltIn: (nodes) => {
+            geoCanvasRenderer(ctx, nodes, scales, layout)
+            lineCanvasRenderer(ctx, nodes as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+            pointCanvasRenderer(ctx, nodes as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+            glyphCanvasRenderer(ctx, nodes as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+          }
         })
-
-        geoCanvasRenderer(ctx, builtInScene, scales, layout)
-        lineCanvasRenderer(ctx, builtInScene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
-        pointCanvasRenderer(ctx, builtInScene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
-        glyphCanvasRenderer(ctx, builtInScene as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
 
         // ── Geo particles ── (skipped under reduced motion: decorative movement)
         if (particlesWanted && particlePoolRef.current) {

@@ -319,6 +319,7 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
 
     expect(bounds.whiteSpace).toBe("normal")
     expect(bounds.scrollWidth).toBeLessThanOrEqual(bounds.clientWidth + 1)
+    expect(bounds.pageScrollWidth).toBeLessThanOrEqual(bounds.viewportWidth + 1)
     expect(bounds.left).toBeGreaterThanOrEqual(0)
     expect(bounds.right).toBeLessThanOrEqual(bounds.viewportWidth + 1)
     expect(bounds.lastTop).toBeGreaterThan(bounds.firstTop)
@@ -333,6 +334,71 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
     expect(bounds.svgRight).toBeLessThanOrEqual(bounds.stageRight + 1)
     expect(dialogBounds.left).toBeGreaterThanOrEqual(8)
     expect(dialogBounds.right).toBeLessThanOrEqual(dialogBounds.viewportWidth - 8)
+    expect(browserErrors).toEqual([])
+  })
+
+  test("keeps the filter dock and mobile rail stacked below the measured examples header", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 568 })
+    const browserErrors = collectBrowserErrors(page)
+    await openExample(page)
+    await page.locator(".sentence-stage").scrollIntoViewIfNeeded()
+
+    const mobileStack = await page.evaluate(() => {
+      const header = document.querySelector<HTMLElement>(".examples-top-bar")!
+      const dock = document.querySelector<HTMLElement>(".sentence-filter-dock")!
+      const rail = document.querySelector<HTMLElement>(".sentence-view-rail")!
+      return {
+        headerBottom: header.getBoundingClientRect().bottom,
+        dockTop: dock.getBoundingClientRect().top,
+        dockBottom: dock.getBoundingClientRect().bottom,
+        railTop: rail.getBoundingClientRect().top,
+        headerPosition: getComputedStyle(header).position,
+        contentHeaderPosition: getComputedStyle(
+          document.querySelector<HTMLElement>(".sentence-workbench__header")!,
+        ).position,
+      }
+    })
+    expect(Math.abs(mobileStack.dockTop - mobileStack.headerBottom)).toBeLessThanOrEqual(1)
+    expect(Math.abs(mobileStack.railTop - mobileStack.dockBottom)).toBeLessThanOrEqual(1)
+    expect(mobileStack.headerPosition).toBe("sticky")
+    expect(mobileStack.contentHeaderPosition).not.toBe("sticky")
+
+    const triggers = page.locator(".sentence-explorer__filter button[data-sentence-filter-key]")
+    for (let index = 0; index < (await triggers.count()); index += 1) {
+      await triggers.nth(index).click()
+      const dialog = page.getByRole("dialog")
+      await expect(dialog).toBeVisible()
+      const box = await dialog.boundingBox()
+      expect(box?.y ?? -1).toBeGreaterThanOrEqual(0)
+      expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(568)
+      await page.keyboard.press("Escape")
+    }
+
+    await page.setViewportSize({ width: 1440, height: 760 })
+    await page.locator(".sentence-stage").scrollIntoViewIfNeeded()
+    const desktopOffsets = await page.evaluate(() => {
+      const headerBounds = document
+        .querySelector<HTMLElement>(".examples-top-bar")!
+        .getBoundingClientRect()
+      return {
+      headerBottom: headerBounds.bottom,
+      headerLeft: headerBounds.left,
+      headerRight: headerBounds.right,
+      dockTop: document
+        .querySelector<HTMLElement>(".sentence-filter-dock")!
+        .getBoundingClientRect().top,
+      }
+    })
+    expect(Math.abs(desktopOffsets.dockTop - desktopOffsets.headerBottom)).toBeLessThanOrEqual(1)
+    expect(desktopOffsets.headerLeft).toBe(0)
+    expect(desktopOffsets.headerRight).toBe(1440)
+
+    await page.goto("/getting-started")
+    const docsHeader = page.locator(".docs-top-bar")
+    await expect(docsHeader).toBeVisible()
+    expect(await docsHeader.evaluate((element) => getComputedStyle(element).position)).toBe("sticky")
     expect(browserErrors).toEqual([])
   })
 })

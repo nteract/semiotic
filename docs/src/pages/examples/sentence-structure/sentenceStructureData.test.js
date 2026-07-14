@@ -14,6 +14,7 @@ import {
   getSpecimen,
   getStructuralSummary,
   phraseRelatedEntities,
+  relatedEntityCount,
   recoverPhraseRelationshipSources,
   recoverWordTreeSources,
   resolveCorpusSelection,
@@ -398,5 +399,44 @@ describe("sentence structure accessible summaries", () => {
     const rhetoric = getStructuralSummary("rhetorical-claim", "rhetoric")
     expect(rhetoric.text).toContain("The analyst distrusted the result")
     expect(rhetoric.items).toEqual(expect.arrayContaining([expect.stringContaining("concession")]))
+  })
+
+  it("keeps summaries synchronized with interpretation, pattern, and reader rewrites", () => {
+    const possession = getStructuralSummary("attachment-ambiguity", "dependency", {
+      interpretationId: "attachment-ambiguity:parse:possession",
+    })
+    expect(possession.text).toContain("The man had the telescope")
+
+    const phraseNet = getStructuralSummary("attachment-ambiguity", "phrase-net", {
+      pattern: "X of Y",
+    })
+    expect(phraseNet.text).toContain("X of Y")
+
+    const specimen = getSpecimen("attachment-ambiguity")
+    const tokens = applyTokenRewrites(specimen.tokens, {
+      "attachment-ambiguity:t6": "notebook",
+    })
+    const variants = getStructuralSummary(specimen, "variants", {
+      tokens,
+      alignment: "lemma",
+    })
+    expect(variants.text).toContain("aligned by lemma")
+    expect(variants.text).toContain("notebook")
+    expect(variants.items).toContainEqual(expect.stringContaining("Your rewrite"))
+
+    const dependency = getStructuralSummary(specimen, "dependency", { tokens })
+    expect(dependency.items.join(" ")).toContain("notebook")
+    const constituency = getStructuralSummary(specimen, "constituency", { tokens })
+    expect(constituency.text).toContain("notebook")
+    expect(constituency.items.join(" ")).toContain("notebook")
+  })
+
+  it("counts canonical related entities without token or metadata duplication", () => {
+    const related = tokenRelatedEntities("attachment-ambiguity:t6")
+    const expected = new Set(
+      related.allEntityIds.filter((id) => !related.tokenIds.includes(id)),
+    ).size
+    expect(relatedEntityCount(related)).toBe(expected)
+    expect(relatedEntityCount(null)).toBe(0)
   })
 })

@@ -44,9 +44,23 @@ describe("createRoughRenderMode", () => {
   it("derives deterministic, non-zero seeds and distinguishes base seeds", () => {
     expect(stableRoughSeed("mort")).toBe(stableRoughSeed("mort"))
     expect(stableRoughSeed("mort")).toBeGreaterThan(0)
+    expect(stableRoughSeed(undefined)).toBe(stableRoughSeed(undefined))
+    expect(stableRoughSeed(null)).toBe(stableRoughSeed(null))
+    const circular: { self?: unknown } = {}
+    circular.self = circular
+    expect(stableRoughSeed(circular)).toBe(stableRoughSeed(circular))
     expect(svgFor(createRoughRenderMode({ seed: 1984 }))).not.toBe(
       svgFor(createRoughRenderMode({ seed: 1985 }))
     )
+  })
+
+  it("normalizes a non-finite cache size to the documented default", () => {
+    const mode = createRoughRenderMode({ cacheSize: Number.NaN })
+    for (let index = 0; index <= 1000; index += 1) {
+      const node = { ...rect, _transitionKey: `bar-${index}` }
+      mode.renderStaticSVG({ node, style: node.style, key: `mark-${index}` })
+    }
+    expect(mode.cacheEntries).toBe(1000)
   })
 
   it("reuses a drawable during Canvas repaints without mutating exact geometry", () => {
@@ -108,11 +122,44 @@ describe("renderer backend fallback contract", () => {
       renderStaticSVG: () => null
     }
     const context = createMockCanvasContext() as unknown as CanvasRenderingContext2D
+    const paintBuiltIn = vi.fn()
 
-    expect(paintSceneWithBackend({ context, nodes: [unsupported], renderMode: backend, pixelRatio: 1 })).toEqual([unsupported])
-    expect(paintSceneWithBackend({ context, nodes: [unsupported], renderMode: backend, pixelRatio: 1 })).toEqual([unsupported])
+    paintSceneWithBackend({ context, nodes: [unsupported], renderMode: backend, pixelRatio: 1, paintBuiltIn })
+    paintSceneWithBackend({ context, nodes: [unsupported], renderMode: backend, pixelRatio: 1, paintBuiltIn })
+    expect(paintBuiltIn).toHaveBeenNthCalledWith(1, [unsupported])
+    expect(paintBuiltIn).toHaveBeenNthCalledWith(2, [unsupported])
     expect(warning).toHaveBeenCalledTimes(1)
     warning.mockRestore()
+  })
+
+  it("preserves scene order across backend and built-in renderer runs", () => {
+    const order: string[] = []
+    const context = createMockCanvasContext() as unknown as CanvasRenderingContext2D
+    const nodes = ["a", "b", "c"].map((id) => ({
+      type: "rect",
+      id,
+      datum: { id },
+      style: {},
+    }))
+    const backend: SceneRenderBackend<(typeof nodes)[number]> = {
+      id: "ordered-backend",
+      cacheKey: (node) => node.id,
+      drawCanvas: ({ node }) => {
+        order.push(node.id)
+        return true
+      },
+      renderStaticSVG: () => null,
+    }
+
+    paintSceneWithBackend({
+      context,
+      nodes,
+      renderMode: (datum) => datum?.id === "b" ? undefined : backend,
+      pixelRatio: 1,
+      paintBuiltIn: (fallback) => order.push(...fallback.map((node) => node.id)),
+    })
+
+    expect(order).toEqual(["a", "b", "c"])
   })
 })
 

@@ -1,8 +1,11 @@
 import React, { useCallback, useMemo, useRef, useState } from "react"
 import { SentenceFilter } from "semiotic/controls"
 import { useReducedMotion } from "semiotic/utils"
+import useElementSize from "../../../hooks/useElementSize"
 import {
   CORPUS_OPTIONS,
+  DIRECTION_OPTIONS,
+  PHRASE_PATTERN_OPTIONS,
   SPECIMENS,
   SUBJECT_OPTIONS,
   VIEW_OPTIONS,
@@ -10,8 +13,10 @@ import {
   buildPhraseRelationships,
   buildWordTree,
   getStructuralSummary,
+  relatedEntityCount,
   resolveCorpusSelection,
   selectSpecimenForFilters,
+  surfaceText,
   tokenRelatedEntities,
 } from "./sentenceStructureData"
 import SentenceStructureStage from "./SentenceStructureStage"
@@ -128,7 +133,6 @@ const REWRITE_SUGGESTIONS = {
   analyst: ["editor", "reviewer", "scientist"],
 }
 
-const PHRASE_PATTERNS = ["X and Y", "X or Y", "X of Y", "X is Y", "X versus Y", "X becomes Y"]
 const DEFAULT_REQUESTED_AMOUNT = 20
 const DEFAULT_FILTERS = Object.freeze({
   amount: DEFAULT_REQUESTED_AMOUNT,
@@ -145,17 +149,6 @@ function optionLabel(options, value) {
   return options.find((option) => option.value === value)?.label ?? value
 }
 
-function tokenText(token) {
-  return token?.text ?? token?.label ?? ""
-}
-
-function sentenceText(tokens) {
-  return tokens
-    .map(tokenText)
-    .join(" ")
-    .replace(/\s+([.,;:!?])/g, "$1")
-}
-
 function normalizedOption(option) {
   if (typeof option === "string") return { value: option, label: option }
   return option
@@ -163,6 +156,7 @@ function normalizedOption(option) {
 
 export default function SentenceStructureExplorer() {
   const reducedMotion = useReducedMotion()
+  const [filterDockRef, filterDockSize] = useElementSize({ height: 64 })
   const normalizedViews = useMemo(() => VIEW_OPTIONS.map(normalizedOption), [])
   const normalizedSubjects = useMemo(() => SUBJECT_OPTIONS.map(normalizedOption), [])
   const normalizedCorpora = useMemo(() => CORPUS_OPTIONS.map(normalizedOption), [])
@@ -248,7 +242,9 @@ export default function SentenceStructureExplorer() {
       anchor,
       wordTree,
       phraseNet,
+      pattern: phrasePattern,
       tokens: activeTokens,
+      alignment,
     })
     if (base?.items?.length) return base
     const corpusItems =
@@ -270,6 +266,7 @@ export default function SentenceStructureExplorer() {
     return { ...base, items: corpusItems }
   }, [
     activeTokens,
+    alignment,
     anchor,
     corpusRows,
     direction,
@@ -369,7 +366,7 @@ export default function SentenceStructureExplorer() {
         const next = selected ? current.filter((id) => id !== tokenId) : [...current, tokenId]
         const token = activeTokens.find((candidate) => candidate.id === tokenId)
         const related = tokenRelatedEntities(specimen, tokenId)
-        const relatedCount = Object.values(related ?? {}).flat().length
+        const relatedCount = relatedEntityCount(related)
         setAnnouncement(
           selected
             ? `${token?.text ?? "Token"} is no longer being followed.`
@@ -425,16 +422,31 @@ export default function SentenceStructureExplorer() {
     (answer) => {
       setChallengeAnswer(answer)
       const correct = answer === "instrument"
-      if (correct) setChallengeScore((score) => score + 1)
+      if (correct && challengeAnswer === null) setChallengeScore((score) => score + 1)
       const authoredParse = specimen?.alternateDependencies?.find(
         (parse) => parse.id === answer || parse.id.endsWith(`:${answer}`),
       )
-      setSelectedInterpretationId(authoredParse?.id ?? answer)
+      if (specimen?.id === "attachment-ambiguity") {
+        setSelectedInterpretationId(authoredParse?.id ?? answer)
+      }
       setAnnouncement(
         correct
           ? "Correct. Attaching with to saw means the telescope was the instrument of seeing."
           : "That is the other valid parse: attaching with to man means the man possessed the telescope.",
       )
+    },
+    [challengeAnswer, specimen],
+  )
+
+  const chooseInterpretation = useCallback(
+    (parseId) => {
+      setSelectedInterpretationId(parseId)
+      const parse = specimen?.alternateDependencies?.find((candidate) => candidate.id === parseId)
+      if (specimen?.id === "attachment-ambiguity") {
+        if (parseId.endsWith(":instrument")) setChallengeAnswer("instrument")
+        else if (parseId.endsWith(":possession")) setChallengeAnswer("possession")
+      }
+      setAnnouncement(`Interpretation changed to ${parse?.label ?? "the selected reading"}.`)
     },
     [specimen],
   )
@@ -452,6 +464,7 @@ export default function SentenceStructureExplorer() {
   return (
     <div
       className="sentence-explorer"
+      style={{ "--sentence-filter-dock-height": `${filterDockSize.height}px` }}
       data-reduced-motion={reducedMotion ? "true" : "false"}
       data-buffalo-mode={buffaloMode ? "true" : "false"}
       data-corpus-count={corpusRows.length}
@@ -472,6 +485,18 @@ export default function SentenceStructureExplorer() {
             The words are visible. The sentence is the structure between them.
           </h2>
           <div className="sentence-hero__rule" aria-hidden="true" />
+          <p className="sentence-hero__hint">
+            The underlined words in the sentence below are the controls. Try them before reaching
+            for a toolbar.
+          </p>
+        </div>
+      </section>
+
+      <div ref={filterDockRef} className="sentence-filter-dock">
+        <div className="sentence-filter-dock__inner">
+          <span className="sentence-filter-dock__label" aria-hidden="true">
+            Live sentence
+          </span>
           <SentenceFilter
             className="sentence-explorer__filter"
             as="h3"
@@ -481,11 +506,8 @@ export default function SentenceStructureExplorer() {
             onChange={handleFilterChange}
             size="inherit"
           />
-          <p className="sentence-hero__hint">
-            The underlined words are the controls. Try the title before reaching for a toolbar.
-          </p>
         </div>
-      </section>
+      </div>
 
       <section className="sentence-workbench" aria-labelledby="structure-stage-title">
         <header className="sentence-workbench__header">
@@ -554,7 +576,7 @@ export default function SentenceStructureExplorer() {
                   rewrites={rewrites}
                   reducedMotion={reducedMotion}
                   onSelectToken={toggleToken}
-                  onSelectInterpretation={setSelectedInterpretationId}
+                  onSelectInterpretation={chooseInterpretation}
                   onSelectSource={setSelectedSourceId}
                 />
               ) : (
@@ -600,14 +622,14 @@ export default function SentenceStructureExplorer() {
                 aria-label="Word path direction"
               >
                 <span>Branch</span>
-                {["forward", "backward"].map((value) => (
+                {DIRECTION_OPTIONS.map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"
                     aria-pressed={direction === value}
                     onClick={() => setDirection(value)}
                   >
-                    {value}
+                    {label}
                   </button>
                 ))}
                 <em>from “{anchor}”</em>
@@ -621,14 +643,14 @@ export default function SentenceStructureExplorer() {
                 aria-label="Phrase pattern"
               >
                 <span>Pattern</span>
-                {PHRASE_PATTERNS.map((value) => (
+                {PHRASE_PATTERN_OPTIONS.map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"
                     aria-pressed={phrasePattern === value}
                     onClick={() => setPhrasePattern(value)}
                   >
-                    {value}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -667,10 +689,7 @@ export default function SentenceStructureExplorer() {
                     type="button"
                     className={selectedInterpretationId === parse.id ? "is-active" : ""}
                     aria-pressed={selectedInterpretationId === parse.id}
-                    onClick={() => {
-                      setSelectedInterpretationId(parse.id)
-                      setAnnouncement(`Interpretation changed to ${parse.label}.`)
-                    }}
+                    onClick={() => chooseInterpretation(parse.id)}
                   >
                     <span>0{index + 1}</span>
                     <strong>{parse.label}</strong>
@@ -694,7 +713,7 @@ export default function SentenceStructureExplorer() {
                 <ul>
                   {selectedTokens.slice(0, 2).map((token) => {
                     const related = tokenRelatedEntities(specimen, token.id)
-                    const count = Object.values(related ?? {}).flat().length
+                    const count = relatedEntityCount(related)
                     return (
                       <li key={token.id}>{count} authored relationships retain this identity</li>
                     )
@@ -801,7 +820,7 @@ export default function SentenceStructureExplorer() {
         </div>
         <div className="sentence-rewrite">
           <p className="sentence-rewrite__before">{specimen?.text}</p>
-          <p className="sentence-rewrite__after">{sentenceText(activeTokens)}</p>
+          <p className="sentence-rewrite__after">{surfaceText(activeTokens)}</p>
           <div className="sentence-rewrite__choices">
             {selectedTokens.length ? (
               selectedTokens.slice(0, 1).map((token) => {

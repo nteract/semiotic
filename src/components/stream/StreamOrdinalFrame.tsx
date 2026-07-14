@@ -805,16 +805,17 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       // renderer self-filters) regardless of the declared chartType.
       const renderers = customLayout ? RENDERERS.custom : (RENDERERS[chartType] || [])
       const layout: OrdinalLayout = { width: adjustedWidth, height: adjustedHeight }
-      const builtInScene = paintSceneWithBackend({
+      paintSceneWithBackend({
         context: ctx,
         nodes: store.scene,
         renderMode,
-        pixelRatio: dpr
+        pixelRatio: dpr,
+        paintBuiltIn: (nodes) => {
+          for (const renderer of renderers) {
+            renderer(ctx, nodes, store.scales, layout)
+          }
+        }
       })
-
-      for (const renderer of renderers) {
-        renderer(ctx, builtInScene, store.scales, layout)
-      }
 
       if (isRadial) {
         ctx.restore()

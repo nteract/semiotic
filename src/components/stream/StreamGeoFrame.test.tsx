@@ -1,6 +1,6 @@
 import * as React from "react"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
-import { act, render, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, waitFor } from "@testing-library/react"
 import StreamGeoFrame from "./StreamGeoFrame"
 import { createMockCanvasContext, setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamGeoFrameHandle } from "./geoTypes"
@@ -156,6 +156,39 @@ describe("StreamGeoFrame — legend category emission", () => {
     await waitFor(() => {
       expect(onCategoriesChange).toHaveBeenLastCalledWith([])
     })
+  })
+
+  it("clears stale keyboard focus when the projected scene shrinks", async () => {
+    const ref = React.createRef<StreamGeoFrameHandle>()
+    const onObservation = vi.fn()
+    const initialPoints = [
+      { id: "a", lon: -120, lat: 35 },
+      { id: "b", lon: -70, lat: 42 },
+    ]
+    const { container } = render(
+      <StreamGeoFrame
+        ref={ref}
+        projection="mercator"
+        points={initialPoints}
+        xAccessor="lon"
+        yAccessor="lat"
+        pointIdAccessor="id"
+        onObservation={onObservation}
+      />
+    )
+    const frame = container.querySelector<HTMLElement>(".stream-geo-frame")!
+    fireEvent.keyDown(frame, { key: "ArrowRight" })
+    fireEvent.keyDown(frame, { key: "ArrowRight" })
+
+    await act(async () => {
+      ref.current!.removePoint("b")
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    })
+    onObservation.mockClear()
+    fireEvent.keyDown(frame, { key: " " })
+    expect(onObservation).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: "activate" }),
+    )
   })
 
   // ── Push API + clear→reload lifecycle ────────────────────────────────

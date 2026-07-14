@@ -58,6 +58,14 @@ export const PHRASE_PATTERN_OPTIONS = Object.freeze([
   { value: "X becomes Y", label: "X becomes Y", connector: "becomes" },
 ])
 
+/** Reconstruct readable surface text from token records. */
+export function surfaceText(tokens = []) {
+  return tokens
+    .map((token) => token?.text ?? token?.label ?? "")
+    .join(" ")
+    .replace(/\s+([.,;:!?])/g, "$1")
+}
+
 export const POS_LABELS = Object.freeze({
   ADJ: "adjective",
   ADP: "adposition",
@@ -1826,6 +1834,13 @@ export function tokenRelatedEntities(specimenOrId, selectedTokenId) {
   })
 }
 
+/** Count unique related entities without counting the selected token itself. */
+export function relatedEntityCount(related) {
+  if (!related) return 0
+  const selectedTokenIds = new Set(related.tokenIds || [])
+  return unique(related.allEntityIds || []).filter((id) => !selectedTokenIds.has(id)).length
+}
+
 export function phraseRelatedEntities(specimenOrId, selectedPhraseId) {
   let phraseIdToFind = selectedPhraseId
   let specimen = resolveSpecimen(specimenOrId, selectedPhraseId)
@@ -1931,46 +1946,63 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
   const specimen = resolveSpecimen(specimenOrId)
   if (!specimen) return null
   const normalizedView = VIEW_TITLES[view] ? view : "dependency"
-  const root = specimen.tokens.find((token) => token.id === specimen.rootTokenId)
+  const activeTokens = options.tokens || specimen.tokens
+  const activeSentence = surfaceText(activeTokens) || specimen.text
+  const tokenById = new Map(activeTokens.map((token) => [token.id, token]))
+  const root = tokenById.get(specimen.rootTokenId) || specimen.tokens.find(
+    (token) => token.id === specimen.rootTokenId,
+  )
   let text = ""
   let items = []
 
   if (normalizedView === "reed-kellogg") {
     const baseline = specimen.sentenceDiagram.nodes
       .filter((node) => node.baseline)
-      .map((node) => node.label)
-    text = `${specimen.text} places ${baseline.join(", ")} on the main line and suspends modifiers beneath the words they describe.`
+      .map((node) => tokenById.get(node.tokenId)?.text ?? node.label)
+    text = `${activeSentence} places ${baseline.join(", ")} on the main line and suspends modifiers beneath the words they describe.`
     items = specimen.sentenceDiagram.nodes.map(
-      (node) => `${node.label}: ${node.role}${node.baseline ? ", main line" : ", modifier line"}`,
+      (node) => `${tokenById.get(node.tokenId)?.text ?? node.label}: ${node.role}${node.baseline ? ", main line" : ", modifier line"}`,
     )
   } else if (normalizedView === "constituency") {
     const majorPhrases = specimen.phrases.filter((phrase) => phrase.depth === 1)
-    text = `${specimen.text} is authored as ${specimen.phrases.length} nested phrase spans. Its largest units are ${majorPhrases.map((phrase) => phrase.label).join(", ")}.`
+    text = `${activeSentence} is authored as ${specimen.phrases.length} nested phrase spans. Its largest units are ${majorPhrases.map((phrase) => phrase.label).join(", ")}.`
     items = majorPhrases.map((phrase) => {
-      const words = specimen.tokens
+      const words = activeTokens
         .slice(phrase.tokenStart, phrase.tokenEnd)
         .map((token) => token.text)
         .join(" ")
       return `${phrase.label}: ${words}`
     })
   } else if (normalizedView === "dependency") {
-    text = `${root.text} is the authored root. ${specimen.dependencies.length} directed relationships connect governors to dependents without changing the visible word order.`
-    items = specimen.dependencies
+    const activeParse = getDependencyParse(specimen, options.interpretationId)
+    const activeRoot = activeTokens.find(
+      (token) => token.id === (activeParse?.rootTokenId || specimen.rootTokenId),
+    ) || root
+    const activeEdges = activeParse?.edges || specimen.dependencies
+    const reading = activeParse?.interpretation
+      ? ` The active interpretation is “${activeParse.label}”: ${activeParse.interpretation}.`
+      : ""
+    text = `${activeRoot.text} is the authored root. ${activeEdges.length} directed relationships connect governors to dependents without changing the visible word order.${reading}`
+    items = activeEdges
       .filter((edge) => edge.relation !== "punct")
       .map((edge) => {
-        const source = specimen.tokens.find((token) => token.id === edge.sourceTokenId)?.text
-        const target = specimen.tokens.find((token) => token.id === edge.targetTokenId)?.text
+        const source = tokenById.get(edge.sourceTokenId)?.text
+        const target = tokenById.get(edge.targetTokenId)?.text
         return `${source} → ${target}: ${edge.label}`
       })
   } else if (normalizedView === "ambiguity") {
     if (specimen.alternateDependencies.length) {
-      text = `${specimen.text} has ${specimen.alternateDependencies.length} authored interpretations in this demonstration.`
+      const activeParse = getDependencyParse(specimen, options.interpretationId)
+      const activeReading = activeParse?.interpretation
+        ? ` The active reading is “${activeParse.label}”: ${activeParse.interpretation}.`
+        : ""
+      text = `${activeSentence} has ${specimen.alternateDependencies.length} authored interpretations in this demonstration.${activeReading}`
       items = specimen.alternateDependencies.map(
         (parse) =>
           `${parse.label}${Number.isFinite(parse.probability) ? ` (${Math.round(parse.probability * 100)}%)` : ""}: ${parse.interpretation}`,
       )
     } else {
-      text = `${specimen.text} has one canonical syntactic reading here; its difficulty comes from lexical roles or semantic plausibility instead of a competing dependency tree.`
+      text = `${activeSentence} has one canonical syntactic reading here; its difficulty comes from lexical roles or semantic plausibility instead of a competing dependency tree.`
       items = specimen.lexicalAlternatives.flatMap((alternative) =>
         alternative.analyses.map((analysis) => analysis.label),
       )
@@ -1996,14 +2028,19 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
       text = `${specimen.text} is a single-sentence grammatical specimen and has no authored discourse-level rhetorical decomposition.`
     }
   } else if (normalizedView === "variants") {
-    text = `${specimen.variants.length} authored rewrite${specimen.variants.length === 1 ? "" : "s"} preserve alignments back to the canonical sentence.`
+    const readerRewrite = activeSentence !== specimen.text ? activeSentence : null
+    const alignment = options.alignment ? ` The rows are aligned by ${options.alignment}.` : ""
+    const rewrite = readerRewrite ? ` The reader rewrite currently reads “${readerRewrite}”.` : ""
+    text = `${specimen.variants.length} authored rewrite${specimen.variants.length === 1 ? "" : "s"} preserve alignments back to the canonical sentence.${alignment}${rewrite}`
     items = specimen.variants.map((variant) => `${variant.label}: ${variant.text}`)
+    if (readerRewrite) items.push(`Your rewrite: ${readerRewrite}`)
   } else if (normalizedView === "word-tree") {
     const anchor = options.anchor || root.lemma
     const tree = options.wordTree
     const pathNodes = (tree?.nodes || []).filter((node) => node.depth > 0)
+    const direction = options.direction ? `${options.direction} ` : ""
     text = tree
-      ? `${tree.matches?.length || 0} corpus use${tree.matches?.length === 1 ? "" : "s"} of “${anchor}” form ${pathNodes.length} context branch${pathNodes.length === 1 ? "" : "es"}; every branch retains its complete source sentence.`
+      ? `${tree.matches?.length || 0} corpus use${tree.matches?.length === 1 ? "" : "s"} of “${anchor}” form ${pathNodes.length} ${direction}context branch${pathNodes.length === 1 ? "" : "es"}; every branch retains its complete source sentence.`
       : `Corpus sentences containing “${anchor}” can branch outward while retaining source IDs for every path.`
     items = pathNodes.length
       ? pathNodes.map(

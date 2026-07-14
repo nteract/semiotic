@@ -26,6 +26,11 @@ let lastNetworkFrameProps: {
   colorBy?: unknown
   annotations?: unknown
   autoPlaceAnnotations?: unknown
+  title?: unknown
+  description?: unknown
+  summary?: unknown
+  accessibleTable?: unknown
+  animate?: unknown
 } | null = null
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
@@ -162,6 +167,52 @@ describe("NetworkCustomChart", () => {
     )
     expect(lastNetworkFrameProps?.annotations).toBe(annotations)
     expect(lastNetworkFrameProps?.autoPlaceAnnotations).toBe(true)
+  })
+
+  it("forwards shared chart metadata and animation", () => {
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart
+          nodes={nodes}
+          layout={trivialLayout}
+          title="Network title"
+          description="Network description"
+          summary="Network summary"
+          accessibleTable={false}
+          animate={false}
+        />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps).toMatchObject({
+      title: "Network title",
+      description: "Network description",
+      summary: "Network summary",
+      accessibleTable: false,
+      animate: false,
+    })
+  })
+
+  it("resolves responsive metadata before explicit frame overrides", () => {
+    render(
+      <TooltipProvider>
+        <NetworkCustomChart
+          nodes={nodes}
+          layout={trivialLayout}
+          width={320}
+          description="Base description"
+          summary="Base summary"
+          responsiveRules={[{
+            when: { maxWidth: 400 },
+            transform: { description: "Responsive description", summary: "Responsive summary" },
+          }]}
+          frameProps={{ summary: "Frame summary" }}
+        />
+      </TooltipProvider>
+    )
+    expect(lastNetworkFrameProps).toMatchObject({
+      description: "Responsive description",
+      summary: "Frame summary",
+    })
   })
 
   it("omits the annotations prop entirely when not supplied", () => {

@@ -8,12 +8,12 @@ export function copyExampleOgCards(publicOgDir?: string, buildDir?: string): str
 
 export interface ExampleDefinitionMeta {
   path: string
-  title?: string
+  title: string
   description?: string
   eyebrow?: string
 }
 
-export function loadExampleDefinitions(): Promise<ExampleDefinitionMeta[]>
+export function loadExampleDefinitions(filePath?: string): Promise<ExampleDefinitionMeta[]>
 
 export function mergeExampleDefinitionRoutes(
   routes?: string[],

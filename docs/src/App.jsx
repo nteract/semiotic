@@ -458,7 +458,7 @@ export default function DocsApp() {
 
   return (
     <div className="App">
-      <header className="flex">
+      <header className="docs-top-bar flex">
         <SidebarToggle onClick={() => setSidebarOpen((prev) => !prev)} />
         <div className="logo">
           <Link to="/">

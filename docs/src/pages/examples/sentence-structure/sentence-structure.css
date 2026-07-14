@@ -54,8 +54,8 @@
 .sentence-hero {
   position: relative;
   z-index: 2;
-  min-height: 560px;
-  margin: 0 calc(50% - 50vw) 72px;
+  min-height: 490px;
+  margin: 0 calc(50% - 50vw);
   padding: clamp(44px, 8vw, 94px) max(28px, calc((100vw - 1124px) / 2));
   overflow: visible;
   background:
@@ -131,15 +131,50 @@
   background: #fffaf0;
 }
 
+.sentence-filter-dock {
+  position: sticky;
+  top: var(--examples-sticky-offset, 77px);
+  z-index: 80;
+  margin: 0 calc(50% - 50vw) 72px;
+  border-top: 1px solid rgba(255, 250, 240, 0.14);
+  border-bottom: 1px solid rgba(255, 250, 240, 0.2);
+  background: #17211f;
+  background: color-mix(in srgb, #17211f 96%, transparent);
+  box-shadow: 0 12px 30px rgba(20, 29, 27, 0.2);
+  color: #fffaf0;
+  backdrop-filter: blur(14px);
+}
+
+.sentence-filter-dock__inner {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 20px;
+  align-items: baseline;
+  width: 100%;
+  max-width: 1124px;
+  margin: 0 auto;
+  padding: 14px 28px 15px;
+}
+
+.sentence-filter-dock__label {
+  color: #efad51;
+  font-family: var(--font-code, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .sentence-explorer__filter {
   position: relative;
   max-width: 980px;
   margin: 0;
   color: #fffaf0;
-  font-size: clamp(1.26rem, 3vw, 2.45rem);
+  font-size: clamp(1.08rem, 1.8vw, 1.42rem);
   font-weight: 520;
-  letter-spacing: -0.025em;
-  line-height: 1.42;
+  letter-spacing: -0.018em;
+  line-height: 1.48;
 }
 
 .sentence-explorer__filter .semiotic-sentence-filter__value {
@@ -1177,8 +1212,7 @@
 
 @media (max-width: 720px) {
   .sentence-hero {
-    min-height: 500px;
-    margin-bottom: 48px;
+    min-height: 430px;
     padding-right: 24px;
     padding-left: 24px;
   }
@@ -1194,8 +1228,22 @@
   }
 
   .sentence-explorer__filter {
-    font-size: 1.25rem;
-    line-height: 1.55;
+    max-width: none;
+    font-size: 1.08rem;
+    line-height: 1.48;
+  }
+
+  .sentence-filter-dock {
+    margin-bottom: 48px;
+  }
+
+  .sentence-filter-dock__inner {
+    display: block;
+    padding: 12px 24px 13px;
+  }
+
+  .sentence-filter-dock__label {
+    display: none;
   }
 
   .sentence-workbench__header {
@@ -1213,7 +1261,7 @@
 
   .sentence-view-rail {
     position: sticky;
-    top: 0;
+    top: calc(var(--examples-sticky-offset, 77px) + var(--sentence-filter-dock-height, 64px));
     z-index: 7;
     display: grid;
     grid-auto-columns: 92px;
@@ -1321,7 +1369,7 @@
   }
 
   .sentence-explorer__filter {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .sentence-stage-column {
@@ -1386,6 +1434,7 @@
 
 @media (forced-colors: active) {
   .sentence-hero,
+  .sentence-filter-dock,
   .sentence-lab__intro,
   .sentence-source-recovery,
   .sentence-token-ribbon__tokens button.is-selected,

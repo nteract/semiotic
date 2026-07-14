@@ -1,6 +1,6 @@
 import * as React from "react"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
-import { act, render } from "@testing-library/react"
+import { act, fireEvent, render } from "@testing-library/react"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamNetworkFrameHandle } from "./networkTypes"
@@ -263,6 +263,54 @@ describe("StreamNetworkFrame", () => {
       const after = ref.current!.getTopology()
       expect(after.edges.length).toBeGreaterThan(0)
       expect(after.nodes.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe("keyboard semantics", () => {
+    it("reserves Enter for edge traversal and Space for activation", () => {
+      const onObservation = vi.fn()
+      const { container, rerender } = render(
+        <StreamNetworkFrame
+          chartType="sankey"
+          nodes={[{ id: "a" }, { id: "b" }]}
+          edges={[{ source: "a", target: "b", value: 1 }]}
+          onObservation={onObservation}
+        />
+      )
+      const frame = container.querySelector<HTMLElement>(".stream-network-frame")!
+
+      fireEvent.keyDown(frame, { key: "ArrowRight" })
+      onObservation.mockClear()
+      fireEvent.keyDown(frame, { key: "Enter" })
+
+      expect(onObservation.mock.calls.map(([event]) => event.type)).toEqual(["hover", "focus"])
+      expect(onObservation.mock.calls.at(-1)?.[0]).toEqual(
+        expect.objectContaining({ type: "focus", datum: expect.objectContaining({ id: "b" }) }),
+      )
+      expect(onObservation).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: "activate" }),
+      )
+
+      onObservation.mockClear()
+      fireEvent.keyDown(frame, { key: " " })
+      expect(onObservation.mock.calls.map(([event]) => event.type)).toEqual(["click", "activate"])
+      expect(onObservation.mock.calls.at(-1)?.[0]).toEqual(
+        expect.objectContaining({ type: "activate", datum: expect.objectContaining({ id: "b" }) }),
+      )
+
+      rerender(
+        <StreamNetworkFrame
+          chartType="sankey"
+          nodes={[{ id: "a" }]}
+          edges={[]}
+          onObservation={onObservation}
+        />
+      )
+      onObservation.mockClear()
+      fireEvent.keyDown(frame, { key: " " })
+      expect(onObservation).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: "activate" }),
+      )
     })
   })
 

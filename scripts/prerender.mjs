@@ -313,15 +313,43 @@ export function copyExampleOgCards(publicOgDir = PUBLIC_EXAMPLE_OG_DIR, buildDir
 // entry into ROUTE_META so /examples/<slug> pages emit the example's
 // name (og:title) and its generated preview card (og:image), reusing the
 // same per-section meta path everything else in ROUTE_META uses.
-export async function loadExampleDefinitions() {
+export async function loadExampleDefinitions(filePath = EXAMPLE_DEFINITIONS_FILE) {
   try {
-    if (!existsSync(EXAMPLE_DEFINITIONS_FILE)) return []
-    const source = readFileSync(EXAMPLE_DEFINITIONS_FILE, "utf8")
+    if (!existsSync(filePath)) {
+      throw new Error(`manifest does not exist at ${filePath}`)
+    }
+    const source = readFileSync(filePath, "utf8")
     const mod = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
-    return Array.isArray(mod.EXAMPLE_DEFINITIONS) ? mod.EXAMPLE_DEFINITIONS : []
+    const definitions = mod.EXAMPLE_DEFINITIONS
+    if (!Array.isArray(definitions) || definitions.length === 0) {
+      throw new Error("EXAMPLE_DEFINITIONS must be a non-empty array")
+    }
+    const seenPaths = new Set()
+    for (const [index, definition] of definitions.entries()) {
+      if (
+        !definition ||
+        typeof definition.path !== "string" ||
+        !/^\/examples\/[^/:?#]+(?:\/[^/:?#]+)*$/.test(definition.path) ||
+        typeof definition.title !== "string" ||
+        !definition.title.trim()
+      ) {
+        throw new Error(`EXAMPLE_DEFINITIONS[${index}] is missing a valid static path or title`)
+      }
+      if (seenPaths.has(definition.path)) {
+        throw new Error(`EXAMPLE_DEFINITIONS contains duplicate path ${definition.path}`)
+      }
+      seenPaths.add(definition.path)
+    }
+    if (typeof mod.validateExampleDefinitions === "function") {
+      const validation = mod.validateExampleDefinitions(definitions)
+      if (!validation?.ok) {
+        throw new Error(validation?.errors?.join("; ") || "EXAMPLE_DEFINITIONS failed validation")
+      }
+    }
+    return definitions
   } catch (err) {
-    console.warn("[prerender] could not load examples manifest:", err.message)
-    return []
+    const reason = err instanceof Error ? err.message : String(err)
+    throw new Error(`[prerender] could not load examples manifest: ${reason}`, { cause: err })
   }
 }
 
@@ -342,27 +370,22 @@ export function mergeExampleDefinitionRoutes(routes = [], examples = []) {
 }
 
 export async function registerExampleRouteMeta(examples) {
-  try {
-    const resolvedExamples = examples ?? await loadExampleDefinitions()
-    let registered = 0
-    for (const entry of resolvedExamples) {
-      const routePath = String(entry.path).replace(/^\//, "")
-      const slug = routePath.split("/").filter(Boolean).pop()
-      if (!routePath || !slug) continue
-      // Don't clobber a hand-curated ROUTE_META entry if one ever exists.
-      if (Object.prototype.hasOwnProperty.call(ROUTE_META, routePath)) continue
-      ROUTE_META[routePath] = {
-        title: `${entry.title} — Semiotic`,
-        description: entry.description || entry.eyebrow || "",
-        ogImage: `${SITE_URL}/examples/og/${slug}.png`,
-      }
-      registered++
+  const resolvedExamples = examples ?? await loadExampleDefinitions()
+  let registered = 0
+  for (const entry of resolvedExamples) {
+    const routePath = String(entry.path).replace(/^\//, "")
+    const slug = routePath.split("/").filter(Boolean).pop()
+    if (!routePath || !slug) continue
+    // Don't clobber a hand-curated ROUTE_META entry if one ever exists.
+    if (Object.prototype.hasOwnProperty.call(ROUTE_META, routePath)) continue
+    ROUTE_META[routePath] = {
+      title: `${entry.title} — Semiotic`,
+      description: entry.description || entry.eyebrow || "",
+      ogImage: `${SITE_URL}/examples/og/${slug}.png`,
     }
-    return registered
-  } catch (err) {
-    console.warn("[prerender] could not load examples manifest:", err.message)
-    return 0
+    registered++
   }
+  return registered
 }
 
 // ── Blog metadata loader ───────────────────────────────────────────────

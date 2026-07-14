@@ -24,7 +24,11 @@ export interface SceneRenderBackend<Node = unknown> {
 }
 
 /** A backend can cover the whole scene or be selected per datum. */
+export type SceneRenderDatum<Node> = Node extends { datum?: infer NodeDatum }
+  ? Exclude<NodeDatum, undefined> | null
+  : Datum | null
+
 export type SceneRenderMode<Node = unknown> =
   | "sketchy"
   | SceneRenderBackend<Node>
-  | ((datum: Datum | null, node: Node) => "sketchy" | SceneRenderBackend<Node> | undefined)
+  | ((datum: SceneRenderDatum<Node>, node: Node) => "sketchy" | SceneRenderBackend<Node> | undefined)

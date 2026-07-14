@@ -72,19 +72,40 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
   const onKeyDown = useCallback((event: KeyboardEvent) => {
     if (isInteractiveKeyboardTarget(event)) return
     const store = storeRef.current
-    if (!store || store.scene.length === 0) return
+    if (!store) return
+    const clearFocus = () => {
+      kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
+      hoverRef.current = null
+      if (hoveredNodeRef) hoveredNodeRef.current = null
+      setHoverPoint(null)
+      customHoverBehavior(null)
+      scheduleRender()
+    }
+    if (store.scene.length === 0) {
+      if (kbFocusIndexRef.current >= 0) clearFocus()
+      return
+    }
 
     let graph: NavGraph
     if (navGraphCacheRef.current?.version === store.version) {
       graph = navGraphCacheRef.current.graph
     } else {
       const navPoints = extractPoints(store.scene)
-      if (navPoints.length === 0) return
+      if (navPoints.length === 0) {
+        if (kbFocusIndexRef.current >= 0) clearFocus()
+        return
+      }
       graph = buildNavGraph(navPoints)
       navGraphCacheRef.current = { version: store.version, graph }
     }
 
-    const current = kbFocusIndexRef.current
+    const requestedIndex = kbFocusIndexRef.current
+    let current = requestedIndex
+    if (current >= graph.flat.length) {
+      clearFocus()
+      current = -1
+    }
     if ((event.key === "Enter" || event.key === " ") && current >= 0) {
       event.preventDefault()
       customClickBehavior(toHover(graph.flat[current], store), {
@@ -118,13 +139,7 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
     event.preventDefault()
 
     if (next < 0) {
-      kbFocusIndexRef.current = -1
-      focusedNavPointRef.current = null
-      hoverRef.current = null
-      if (hoveredNodeRef) hoveredNodeRef.current = null
-      setHoverPoint(null)
-      customHoverBehavior(null)
-      scheduleRender()
+      clearFocus()
       return
     }
 
@@ -217,11 +232,31 @@ export function useGeoKeyboardNavigation({
   const onKeyDown = useCallback((event: KeyboardEvent) => {
     if (isInteractiveKeyboardTarget(event)) return
     const store = storeRef.current
-    if (!store || store.scene.length === 0) return
+    if (!store) return
+    const clearFocus = () => {
+      kbFocusIndexRef.current = -1
+      focusedNavPointRef.current = null
+      hoverRef.current = null
+      if (hoveredNodeRef) hoveredNodeRef.current = null
+      setHoverPoint(null)
+      customHoverBehavior(null)
+      scheduleRender()
+    }
+    if (store.scene.length === 0) {
+      if (kbFocusIndexRef.current >= 0) clearFocus()
+      return
+    }
     const navPoints = extractGeoNavPoints(store.scene)
-    if (navPoints.length === 0) return
+    if (navPoints.length === 0) {
+      if (kbFocusIndexRef.current >= 0) clearFocus()
+      return
+    }
 
-    const current = kbFocusIndexRef.current
+    let current = kbFocusIndexRef.current
+    if (current >= navPoints.length) {
+      clearFocus()
+      current = -1
+    }
     if ((event.key === "Enter" || event.key === " ") && current >= 0) {
       event.preventDefault()
       customClickBehavior(geoPointToHover(navPoints[current]), {
@@ -236,13 +271,7 @@ export function useGeoKeyboardNavigation({
     event.preventDefault()
 
     if (next < 0) {
-      kbFocusIndexRef.current = -1
-      focusedNavPointRef.current = null
-      hoverRef.current = null
-      if (hoveredNodeRef) hoveredNodeRef.current = null
-      setHoverPoint(null)
-      customHoverBehavior(null)
-      scheduleRender()
+      clearFocus()
       return
     }
 

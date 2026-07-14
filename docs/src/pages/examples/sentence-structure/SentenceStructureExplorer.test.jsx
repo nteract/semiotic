@@ -169,6 +169,12 @@ describe("SentenceStructureExplorer", () => {
     expect(
       screen.getByText(/Interpretation changed to The man had the telescope/i),
     ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "with → man" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
+    expect(screen.getByText(/That valid structure says the man had the telescope/i))
+      .toBeInTheDocument()
   })
 
   it("clears a prior token selection and unlocks Buffalo mode when the specimen changes", () => {
@@ -329,5 +335,15 @@ describe("SentenceStructureExplorer", () => {
       "data-active-sentence",
       expect.stringContaining("notebook"),
     )
+  })
+
+  it("scores the ambiguity challenge only once per round", () => {
+    renderExplorer()
+    const instrument = screen.getByRole("button", { name: "with → saw" })
+
+    fireEvent.click(instrument)
+    fireEvent.click(instrument)
+
+    expect(screen.getByText("Ambiguity challenge · score 1")).toBeInTheDocument()
   })
 })

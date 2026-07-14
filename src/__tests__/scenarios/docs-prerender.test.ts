@@ -6,11 +6,38 @@ import {
   copyDocsApiAssets,
   extractRoutesFromSource,
   generatePage,
+  loadExampleDefinitions,
   mergeExampleDefinitionRoutes,
   sanitizeRouteHtml,
 } from "../../../scripts/prerender.mjs"
 
 describe("docs prerender helpers", () => {
+  it("fails closed when the example manifest is missing or malformed", async () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), "semiotic-example-manifest-"))
+    try {
+      await expect(loadExampleDefinitions(join(tmpRoot, "missing.js"))).rejects.toThrow(
+        /manifest does not exist/,
+      )
+      const malformed = join(tmpRoot, "malformed.js")
+      writeFileSync(malformed, "export const EXAMPLE_DEFINITIONS = []\n")
+      await expect(loadExampleDefinitions(malformed)).rejects.toThrow(/non-empty array/)
+      const dynamic = join(tmpRoot, "dynamic.js")
+      writeFileSync(
+        dynamic,
+        "export const EXAMPLE_DEFINITIONS = [{ path: '/examples/:slug', title: 'Dynamic' }]\n",
+      )
+      await expect(loadExampleDefinitions(dynamic)).rejects.toThrow(/valid static path/)
+      const duplicate = join(tmpRoot, "duplicate.js")
+      writeFileSync(
+        duplicate,
+        "export const EXAMPLE_DEFINITIONS = [{ path: '/examples/same', title: 'One' }, { path: '/examples/same', title: 'Two' }]\n",
+      )
+      await expect(loadExampleDefinitions(duplicate)).rejects.toThrow(/duplicate path/)
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true })
+    }
+  })
+
   it("extracts nested docs routes without leaking the previous parent", () => {
     const source = `
       <Routes>
@@ -78,10 +105,10 @@ describe("docs prerender helpers", () => {
 
     const extracted = extractRoutesFromSource(source)
     const routes = mergeExampleDefinitionRoutes(extracted, [
-      { path: "/examples/insight-forge" },
-      { path: "/examples/analyst-adventure/" },
-      { path: "/blog/not-an-example" },
-      { path: "/examples/:slug" },
+      { path: "/examples/insight-forge", title: "Insight Forge" },
+      { path: "/examples/analyst-adventure/", title: "Analyst Adventure" },
+      { path: "/blog/not-an-example", title: "Not an example" },
+      { path: "/examples/:slug", title: "Dynamic example" },
     ])
 
     expect(extracted).toEqual(["", "examples"])

@@ -970,22 +970,23 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           // regardless of chartType so a layout that emits, e.g., rects on a
           // chartType="line" frame still draws.
           const renderers = customLayout ? RENDERERS.custom : RENDERERS[chartType]
-          const builtInScene = paintSceneWithBackend({
+          paintSceneWithBackend({
             context: ctx,
             nodes: store.scene,
             renderMode,
-            pixelRatio: dpr
-          })
-          if (renderers && store.scales) {
-            for (const renderer of renderers) {
-              renderer(
-                ctx,
-                builtInScene,
-                store.scales,
-                { width: adjustedWidth, height: adjustedHeight }
-              )
+            pixelRatio: dpr,
+            paintBuiltIn: (nodes) => {
+              if (!renderers || !store.scales) return
+              for (const renderer of renderers) {
+                renderer(
+                  ctx,
+                  nodes,
+                  store.scales,
+                  { width: adjustedWidth, height: adjustedHeight }
+                )
+              }
             }
-          }
+          })
 
           ctx.restore()
 

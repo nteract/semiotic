@@ -104,4 +104,27 @@ describe("GeoCustomChart", () => {
 
     expect(lastGeoFrameProps?.colorBy).toBe("group")
   })
+
+  it("forwards shared chart metadata and animation", () => {
+    render(
+      <TooltipProvider>
+        <GeoCustomChart
+          points={[{ id: "paris", lon: 2.35, lat: 48.86 }]}
+          layout={layout}
+          title="Geo title"
+          description="Geo description"
+          summary="Geo summary"
+          accessibleTable={false}
+          animate={false}
+        />
+      </TooltipProvider>
+    )
+    expect(lastGeoFrameProps).toMatchObject({
+      title: "Geo title",
+      description: "Geo description",
+      summary: "Geo summary",
+      accessibleTable: false,
+      animate: false,
+    })
+  })
 })

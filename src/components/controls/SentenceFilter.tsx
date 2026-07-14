@@ -224,6 +224,20 @@ const popoverStyle: React.CSSProperties = {
   whiteSpace: "normal",
 }
 
+interface SentenceFilterPopoverLayout {
+  offsetX: number
+  placement: "above" | "below"
+  maxHeight: number | null
+  maxWidth: number | null
+}
+
+const DEFAULT_POPOVER_LAYOUT: SentenceFilterPopoverLayout = {
+  offsetX: 0,
+  placement: "below",
+  maxHeight: null,
+  maxWidth: null,
+}
+
 const fieldStyle: React.CSSProperties = {
   boxSizing: "border-box",
   width: "100%",
@@ -835,7 +849,9 @@ export function SentenceFilter({
     [sentence],
   )
   const [open, setOpen] = React.useState<{ key: string; occurrence: number } | null>(null)
-  const [popoverOffset, setPopoverOffset] = React.useState(0)
+  const [popoverLayout, setPopoverLayout] = React.useState<SentenceFilterPopoverLayout>(
+    DEFAULT_POPOVER_LAYOUT,
+  )
   const openRef = React.useRef(open)
   openRef.current = open
   const rootRef = React.useRef<HTMLElement | null>(null)
@@ -868,7 +884,7 @@ export function SentenceFilter({
     if (!openRef.current) return
     openRef.current = null
     setOpen(null)
-    setPopoverOffset(0)
+    setPopoverLayout(DEFAULT_POPOVER_LAYOUT)
     onOpenChange?.(null)
     triggerRef.current?.focus()
   }, [onOpenChange])
@@ -907,22 +923,102 @@ export function SentenceFilter({
       const gutter = 16
       const bounds = popover.getBoundingClientRect()
       if (bounds.width <= 0) return
-      let correction = 0
-      if (bounds.right > window.innerWidth - gutter) {
-        correction -= bounds.right - (window.innerWidth - gutter)
+      const triggerBounds = triggerRef.current?.getBoundingClientRect()
+      const visualViewport = window.visualViewport
+      const viewportLeft = visualViewport?.offsetLeft ?? 0
+      const viewportTop = visualViewport?.offsetTop ?? 0
+      const viewportWidth = visualViewport?.width ?? window.innerWidth
+      const viewportHeight = visualViewport?.height ?? window.innerHeight
+      const viewportRight = viewportLeft + viewportWidth
+      const viewportBottom = viewportTop + viewportHeight
+      const computedPopoverStyle = window.getComputedStyle(popover)
+      const configuredTopInset = Number.parseFloat(
+        computedPopoverStyle.getPropertyValue("--sentence-filter-popover-viewport-inset-top"),
+      )
+      const configuredBottomInset = Number.parseFloat(
+        computedPopoverStyle.getPropertyValue("--sentence-filter-popover-viewport-inset-bottom"),
+      )
+      let usableTop = viewportTop + (Number.isFinite(configuredTopInset) ? Math.max(0, configuredTopInset) : 0)
+      let usableBottom = viewportBottom - (Number.isFinite(configuredBottomInset) ? Math.max(0, configuredBottomInset) : 0)
+
+      // A control inside a currently pinned sticky bar cannot use the bar (or
+      // anything it covers) as open space. Detect that boundary automatically;
+      // the CSS variables above remain available for sibling app chrome.
+      let ancestor = triggerRef.current?.parentElement ?? null
+      while (ancestor) {
+        const ancestorStyle = window.getComputedStyle(ancestor)
+        if (ancestorStyle.position === "sticky") {
+          const ancestorBounds = ancestor.getBoundingClientRect()
+          const stickyTop = Number.parseFloat(ancestorStyle.top)
+          const stickyBottom = Number.parseFloat(ancestorStyle.bottom)
+          if (
+            Number.isFinite(stickyTop) &&
+            Math.abs(ancestorBounds.top - (viewportTop + stickyTop)) <= 1
+          ) {
+            usableTop = Math.max(usableTop, ancestorBounds.bottom)
+          }
+          if (
+            Number.isFinite(stickyBottom) &&
+            Math.abs(ancestorBounds.bottom - (viewportBottom - stickyBottom)) <= 1
+          ) {
+            usableBottom = Math.min(usableBottom, ancestorBounds.top)
+          }
+        }
+        ancestor = ancestor.parentElement
       }
-      if (bounds.left + correction < gutter) {
-        correction += gutter - (bounds.left + correction)
+
+      // Measure from the unshifted anchor so a later viewport expansion can
+      // restore the natural alignment instead of preserving an old correction.
+      const naturalLeft = bounds.left - popoverLayout.offsetX
+      const naturalRight = bounds.right - popoverLayout.offsetX
+      let offsetX = 0
+      if (naturalRight > viewportRight - gutter) {
+        offsetX -= naturalRight - (viewportRight - gutter)
       }
-      if (Math.abs(correction) > 0.5) {
-        setPopoverOffset((current) => current + correction)
+      if (naturalLeft + offsetX < viewportLeft + gutter) {
+        offsetX += viewportLeft + gutter - (naturalLeft + offsetX)
       }
+
+      const gap = 8
+      const spaceBelow = triggerBounds
+        ? usableBottom - triggerBounds.bottom - gap - gutter
+        : usableBottom - usableTop - gutter * 2
+      const spaceAbove = triggerBounds
+        ? triggerBounds.top - usableTop - gap - gutter
+        : 0
+      const naturalHeight = Math.max(bounds.height, popover.scrollHeight)
+      const placement = spaceBelow < Math.min(naturalHeight, 160) && spaceAbove > spaceBelow
+        ? "above"
+        : "below"
+      const availableHeight = placement === "above" ? spaceAbove : spaceBelow
+      const maxHeight = Math.max(0, Math.min(384, Math.floor(availableHeight)))
+      const maxWidth = Math.max(0, Math.floor(viewportWidth - gutter * 2))
+
+      setPopoverLayout((current) => {
+        if (
+          current.offsetX === offsetX &&
+          current.placement === placement &&
+          current.maxHeight === maxHeight &&
+          current.maxWidth === maxWidth
+        ) {
+          return current
+        }
+        return { offsetX, placement, maxHeight, maxWidth }
+      })
     }
 
     keepInsideViewport()
     window.addEventListener("resize", keepInsideViewport)
-    return () => window.removeEventListener("resize", keepInsideViewport)
-  }, [open, popoverOffset])
+    window.addEventListener("scroll", keepInsideViewport, true)
+    window.visualViewport?.addEventListener("resize", keepInsideViewport)
+    window.visualViewport?.addEventListener("scroll", keepInsideViewport)
+    return () => {
+      window.removeEventListener("resize", keepInsideViewport)
+      window.removeEventListener("scroll", keepInsideViewport, true)
+      window.visualViewport?.removeEventListener("resize", keepInsideViewport)
+      window.visualViewport?.removeEventListener("scroll", keepInsideViewport)
+    }
+  }, [open, popoverLayout])
 
   React.useEffect(() => {
     if (!open) return
@@ -1051,7 +1147,7 @@ export function SentenceFilter({
                 triggerRef.current = event.currentTarget
                 const nextOpen = { key: segment.key, occurrence: currentOccurrence }
                 openRef.current = nextOpen
-                setPopoverOffset(0)
+                setPopoverLayout(DEFAULT_POPOVER_LAYOUT)
                 setOpen(nextOpen)
                 setAnnouncement(`${definition.label} control opened.`)
                 onOpenChange?.(segment.key)
@@ -1092,7 +1188,14 @@ export function SentenceFilter({
                 tabIndex={-1}
                 data-sentence-filter-popover={currentOccurrence}
                 data-sentence-filter-key={segment.key}
-                style={{ ...popoverStyle, left: popoverOffset }}
+                style={{
+                  ...popoverStyle,
+                  top: popoverLayout.placement === "below" ? "calc(100% + 0.5rem)" : "auto",
+                  bottom: popoverLayout.placement === "above" ? "calc(100% + 0.5rem)" : "auto",
+                  left: popoverLayout.offsetX,
+                  maxHeight: popoverLayout.maxHeight ?? popoverStyle.maxHeight,
+                  maxWidth: popoverLayout.maxWidth ?? popoverStyle.maxWidth,
+                }}
               >
                 <span style={{ fontWeight: 650 }}>{definition.label}</span>
                 {definition.description ? (

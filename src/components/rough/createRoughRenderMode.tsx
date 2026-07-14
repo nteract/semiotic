@@ -156,7 +156,7 @@ function stableValue(value: unknown, seen = new WeakSet<object>()): unknown {
 }
 
 function stableString(value: unknown): string {
-  return JSON.stringify(stableValue(value))
+  return JSON.stringify(stableValue(value)) ?? String(value)
 }
 
 /** Deterministic FNV-1a seed helper suitable for Rough.js's non-zero seed range. */
@@ -309,7 +309,9 @@ function drawDrawable(
  */
 export function createRoughRenderMode(options: RoughRenderModeOptions = {}): RoughRenderMode {
   const seed = normalizeSeed(options.seed)
-  const maxCacheSize = Math.max(1, Math.trunc(options.cacheSize ?? 1000))
+  const maxCacheSize = finite(options.cacheSize)
+    ? Math.max(1, Math.trunc(options.cacheSize))
+    : 1000
   const configuredOptions: Omit<Options, "seed" | "stroke" | "fill" | "strokeWidth" | "strokeLineDash"> = {
     roughness: options.roughness,
     bowing: options.bowing,

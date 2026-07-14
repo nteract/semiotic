@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from "react"
 import { NetworkCustomChart, networkHitTarget } from "semiotic/network"
 import { XYCustomChart, hitTargetPoint } from "semiotic/xy"
 import useResponsiveWidth from "../../../hooks/useResponsiveWidth"
+import { surfaceText } from "./sentenceStructureData"
 
 const XY_VIEWS = new Set(["reed-kellogg", "dependency", "ambiguity"])
 const COLORS = {
@@ -582,7 +583,7 @@ function RhetoricDiagram({ width, height, specimen, tokens, selectedTokenIds, on
           return value >= (node.tokenStart ?? 0) && value < (node.tokenEnd ?? tokens.length)
         }).map((token) => token.id)
         const selected = relatedToSelection(tokenIds, selectedTokenIds)
-        const span = tokens.filter((token) => tokenIds.includes(token.id)).map((token) => token.text).join(" ").replace(/\s+([.,;:!?])/g, "$1")
+        const span = surfaceText(tokens.filter((token) => tokenIds.includes(token.id)))
         return (
           <g key={node.id} transform={`translate(${position.x} ${position.y})`}>
             <rect width={cardWidth} height="74" rx="5" fill={selected ? COLORS.coral : node.role === "nucleus" ? COLORS.ink : COLORS.white} stroke={selected ? COLORS.coral : node.role === "nucleus" ? COLORS.ink : COLORS.violet} strokeWidth="2" />
@@ -1081,7 +1082,7 @@ export default function SentenceStructureStage({
   const [width, hostRef] = useResponsiveWidth(220, 920)
   const compact = width < 520
   const height = compact ? 430 : 500
-  const summaryText = `${specimen?.text ?? "Sentence"} shown as ${view}. ${selectedTokenIds.length ? `${selectedTokenIds.length} word selections persist.` : "No word is currently selected."}`
+  const summaryText = `${surfaceText(tokens) || specimen?.text || "Sentence"} shown as ${view}. ${selectedTokenIds.length ? `${selectedTokenIds.length} word selections persist.` : "No word is currently selected."}`
   const common = useMemo(
     () => ({
       view,
@@ -1248,10 +1249,6 @@ export default function SentenceStructureStage({
             animate={!reducedMotion}
             frameProps={{
               background: "transparent",
-              animate: !reducedMotion,
-              description: `An authored ${view} structure for ${specimen?.text}`,
-              summary: summaryText,
-              accessibleTable: true,
             }}
           />
         ) : (
@@ -1270,10 +1267,6 @@ export default function SentenceStructureStage({
             animate={!reducedMotion}
             frameProps={{
               background: "transparent",
-              animate: !reducedMotion,
-              description: `An authored ${view} structure for ${specimen?.text}`,
-              summary: summaryText,
-              accessibleTable: true,
             }}
           />
         )}

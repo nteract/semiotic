@@ -153,6 +153,90 @@ describe("SentenceFilter", () => {
     expect(trigger).toHaveFocus()
   })
 
+  it("fits above its trigger inside a shrunken visual viewport", () => {
+    const viewportDescriptor = Object.getOwnPropertyDescriptor(window, "visualViewport")
+    Object.defineProperty(window, "visualViewport", {
+      configurable: true,
+      value: {
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 240,
+        height: 220,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      },
+    })
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function mockBounds(this: HTMLElement) {
+        if (this.matches("[data-sentence-filter-popover]")) {
+          const width = Number.parseFloat(this.style.maxWidth) || 288
+          const height = Number.parseFloat(this.style.maxHeight) || 384
+          const left = 100 + (Number.parseFloat(this.style.left) || 0)
+          return {
+            x: left,
+            y: 0,
+            top: 0,
+            left,
+            right: left + width,
+            bottom: height,
+            width,
+            height,
+            toJSON: () => ({}),
+          }
+        }
+        if (this.matches("button[data-sentence-filter-key]")) {
+          return {
+            x: 100,
+            y: 180,
+            top: 180,
+            left: 100,
+            right: 140,
+            bottom: 200,
+            width: 40,
+            height: 20,
+            toJSON: () => ({}),
+          }
+        }
+        return {
+          x: 0,
+          y: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: 0,
+          height: 0,
+          toJSON: () => ({}),
+        }
+      })
+    const scrollHeight = vi.spyOn(HTMLElement.prototype, "scrollHeight", "get")
+      .mockReturnValue(384)
+
+    try {
+      render(
+        <SentenceFilter
+          sentence="About {subject}"
+          filters={{ subject: "love" }}
+          definitions={{ subject: subjectDefinition }}
+          onChange={() => undefined}
+        />,
+      )
+      fireEvent.click(screen.getByRole("button", { name: /Subject: love/ }))
+      const dialog = screen.getByRole("dialog", { name: "Subject" })
+      expect(dialog.style.bottom).toBe("calc(100% + 0.5rem)")
+      expect(dialog.style.maxHeight).toBe("156px")
+      expect(dialog.style.maxWidth).toBe("208px")
+    } finally {
+      bounds.mockRestore()
+      scrollHeight.mockRestore()
+      if (viewportDescriptor) {
+        Object.defineProperty(window, "visualViewport", viewportDescriptor)
+      } else {
+        Reflect.deleteProperty(window, "visualViewport")
+      }
+    }
+  })
+
   it("closes stale popovers after external state changes and honors disabled and read-only modes", () => {
     const { rerender } = render(
       <SentenceFilter

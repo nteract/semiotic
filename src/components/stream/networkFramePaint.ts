@@ -178,25 +178,28 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       c2d.globalAlpha = staleness?.dimOpacity ?? 0.5
     }
 
-    const builtInEdges = paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
+    paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
       context: c2d,
       nodes: store.sceneEdges,
       renderMode,
-      pixelRatio: dpr
-    }) as NetworkSceneEdge[]
-    networkEdgeRenderer(c2d, builtInEdges)
+      pixelRatio: dpr,
+      paintBuiltIn: (edges) => networkEdgeRenderer(c2d, edges as NetworkSceneEdge[])
+    })
 
-    const builtInNodes = paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
+    paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
       context: c2d,
       nodes: store.sceneNodes,
       renderMode,
-      pixelRatio: dpr
-    }) as NetworkSceneNode[]
-    networkRectRenderer(c2d, builtInNodes)
-    networkCircleRenderer(c2d, builtInNodes)
-    networkArcRenderer(c2d, builtInNodes)
-    networkSymbolRenderer(c2d, builtInNodes)
-    networkGlyphRenderer(c2d, builtInNodes)
+      pixelRatio: dpr,
+      paintBuiltIn: (nodes) => {
+        const builtInNodes = nodes as NetworkSceneNode[]
+        networkRectRenderer(c2d, builtInNodes)
+        networkCircleRenderer(c2d, builtInNodes)
+        networkArcRenderer(c2d, builtInNodes)
+        networkSymbolRenderer(c2d, builtInNodes)
+        networkGlyphRenderer(c2d, builtInNodes)
+      }
+    })
 
     if (particlesWanted && !currentlyStale) {
       const edges = store.edgesArray
