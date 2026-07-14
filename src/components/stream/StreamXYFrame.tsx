@@ -566,7 +566,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         }
         return removed
       },
-      update: (id: string | string[], updater: (d: Datum) => any) => {
+      update: (id: string | string[], updater: (d: Datum) => Datum) => {
         adapterRef.current?.flush()
         const previous = storeRef.current?.update(id, updater) ?? []
         if (previous.length > 0) {

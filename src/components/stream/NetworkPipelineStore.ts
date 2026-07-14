@@ -280,7 +280,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
    * Ingest hierarchy root data for tree/treemap/circlepack/partition layouts.
    * The hierarchy root is passed to the layout plugin via config.__hierarchyRoot.
    */
-  ingestHierarchy(rootData: any, size: [number, number]): void {
+  ingestHierarchy(rootData: Datum, size: [number, number]): void {
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
     this._boundedPrevSnapshot = new Map()
@@ -316,8 +316,8 @@ export class NetworkPipelineStore implements UpdateResultStore {
    * Clears existing topology and rebuilds from scratch.
    */
   ingestBounded(
-    rawNodes: any[],
-    rawEdges: any[],
+    rawNodes: Datum[],
+    rawEdges: Datum[],
     size: [number, number],
     options?: { deferLayout?: boolean }
   ): void {
@@ -443,8 +443,8 @@ export class NetworkPipelineStore implements UpdateResultStore {
 
   /** Additive explicit-result form of {@link ingestBounded}. */
   ingestBoundedWithResult(
-    rawNodes: any[],
-    rawEdges: any[],
+    rawNodes: Datum[],
+    rawEdges: Datum[],
     size: [number, number],
     options?: { deferLayout?: boolean },
   ): UpdateResult {

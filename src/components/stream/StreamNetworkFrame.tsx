@@ -29,6 +29,8 @@ import {
   runSceneBuild,
   useSceneRevisionDiagnostics
 } from "./sceneRevisionDiagnostics"
+import { composeOverlays } from "./composeOverlays"
+import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import {
   extractNetworkNavPoints,
@@ -42,14 +44,9 @@ import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
+import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
-import {
-  networkSceneNodeToSVG,
-  networkSceneEdgeToSVG,
-  networkLabelToSVG,
-  isServerEnvironment
-} from "./SceneToSVG"
-import { renderSceneWithBackend } from "./renderBackend"
+import { isServerEnvironment } from "./SceneToSVG"
 import { NetworkSSRFrame } from "./NetworkSSRFrame"
 import {
   useHydration,
@@ -64,6 +61,7 @@ import {
   SkipToTableLink,
   computeNetworkAriaLabel
 } from "./AccessibleDataTable"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 import { renderLoadingState } from "../charts/shared/withChartWrapper"
 import {
   canUseForceWorker,
@@ -267,6 +265,11 @@ const StreamNetworkFrame = memo(forwardRef<
   // (matches server output); pure CSR mounts skip it.
   const hydrated = useHydration()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
+  const safeNodes = useMemo(() => filterSparseArray(nodesProp), [nodesProp])
+  const safeEdges = useMemo(
+    () => (Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : edgesProp),
+    [edgesProp]
+  )
 
   const tensionConfig = useMemo(
     () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),

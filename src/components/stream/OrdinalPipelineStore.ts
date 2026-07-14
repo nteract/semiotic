@@ -140,7 +140,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
   /** Largest visual point radius in the current scene. */
   private _maxPointRadius = 0
   /** Cached datum→index map for applyDecay/applyPulse. Keyed by `_dataVersion`. */
-  private _datumIndexCache: { version: number; map: Map<any, number> } | null = null
+  private _datumIndexCache: { version: number; map: Map<Datum, number> } | null = null
   /** Cached category→indices map for applyPulse wedge path. Keyed by `_dataVersion`. */
   private _categoryIndexCache: { version: number; map: Map<string, number[]> } | null = null
   private _hasRenderedOnce = false
@@ -309,7 +309,9 @@ export class OrdinalPipelineStore implements UpdateResultStore {
   private getRawRange(d: Datum): [number, number] | null {
     const acc = this.config.valueAccessor || this.config.rAccessor
     if (!acc) return null
-    const result = typeof acc === "function" ? (acc as ((...args: any[]) => any))(d) : d[acc as string]
+    const result = typeof acc === "function"
+      ? (acc as (datum: Datum) => number | readonly [number, number])(d)
+      : d[acc as string]
     if (Array.isArray(result) && result.length >= 2) {
       return [+result[0], +result[1]]
     }
@@ -612,8 +614,8 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       getO: this.getO,
       multiScales: this.multiScales,
       rAccessors: this.rAccessors,
-      resolvePieceStyle: (d: any, category?: string) => this.resolvePieceStyle(d, category),
-      resolveSummaryStyle: (d: any, category?: string) => this.resolveSummaryStyle(d, category),
+      resolvePieceStyle: (d: Datum, category?: string) => this.resolvePieceStyle(d, category),
+      resolveSummaryStyle: (d: Datum, category?: string) => this.resolveSummaryStyle(d, category),
       getRawRange: (d: Datum) => this.getRawRange(d)
     }
   }
@@ -762,7 +764,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
 
   // ── Style resolution ─────────────────────────────────────────────────
 
-  private resolvePieceStyle(d: any, category?: string): Style {
+  private resolvePieceStyle(d: Datum, category?: string): Style {
     if (typeof this.config.pieceStyle === "function") {
       const style = this.config.pieceStyle(d, category)
       // If the function returned a style without a fill color and we have a category,
@@ -800,7 +802,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
     return color
   }
 
-  private resolveSummaryStyle(d: any, category?: string): Style {
+  private resolveSummaryStyle(d: Datum, category?: string): Style {
     if (typeof this.config.summaryStyle === "function") {
       return this.config.summaryStyle(d, category)
     }
@@ -823,7 +825,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
    * `_dataVersion` so the per-frame applyDecay/applyPulse calls don't
    * rebuild it during animation when the buffer hasn't changed.
    */
-  private getDatumIndexMap(data: Datum[]): Map<any, number> {
+  private getDatumIndexMap(data: Datum[]): Map<Datum, number> {
     if (this._datumIndexCache && this._datumIndexCache.version === this._dataVersion) {
       return this._datumIndexCache.map
     }

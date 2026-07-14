@@ -8,6 +8,12 @@ import {
   ordinalSceneNodeToSVG
 } from "./SceneToSVG"
 
+type XYSceneNode = Parameters<typeof xySceneNodeToSVG>[0]
+type NetworkSceneNode = Parameters<typeof networkSceneNodeToSVG>[0]
+type NetworkSceneEdge = Parameters<typeof networkSceneEdgeToSVG>[0]
+type NetworkLabel = Parameters<typeof networkLabelToSVG>[0]
+type OrdinalSceneNode = Parameters<typeof ordinalSceneNodeToSVG>[0]
+
 /** Helper: render a React element to static markup string for assertions */
 function markup(el: React.ReactNode): string {
   if (!el) return ""
@@ -18,12 +24,12 @@ function markup(el: React.ReactNode): string {
 
 describe("xySceneNodeToSVG — line", () => {
   it("renders a path with correct d attribute", () => {
-    const node: any = {
+    const node = {
       type: "line",
       path: [[0, 0], [50, 25], [100, 50]],
       style: { stroke: "#f00", strokeWidth: 3 }
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain("<path")
     expect(html).toContain('d="M0,0L50,25L100,50"')
     expect(html).toContain('stroke="#f00"')
@@ -32,33 +38,33 @@ describe("xySceneNodeToSVG — line", () => {
   })
 
   it("returns null for empty path", () => {
-    const node: any = { type: "line", path: [], style: {} }
-    expect(xySceneNodeToSVG(node, 0)).toBeNull()
+    const node = { type: "line", path: [], style: {} }
+    expect(xySceneNodeToSVG(node as XYSceneNode, 0)).toBeNull()
   })
 
   it("uses default stroke when not specified", () => {
-    const node: any = { type: "line", path: [[0, 0], [10, 10]], style: {} }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const node = { type: "line", path: [[0, 0], [10, 10]], style: {} }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('stroke="#4e79a7"')
   })
 
   it("includes strokeDasharray when set", () => {
-    const node: any = { type: "line", path: [[0, 0], [10, 10]], style: { strokeDasharray: "5,3" } }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const node = { type: "line", path: [[0, 0], [10, 10]], style: { strokeDasharray: "5,3" } }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('stroke-dasharray="5,3"')
   })
 })
 
 describe("xySceneNodeToSVG — point", () => {
   it("renders a circle with correct attributes", () => {
-    const node: any = {
+    const node = {
       type: "point",
       x: 42,
       y: 84,
       r: 5,
       style: { fill: "#0f0", opacity: 0.5, stroke: "#000", strokeWidth: 1 }
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain("<circle")
     expect(html).toContain('cx="42"')
     expect(html).toContain('cy="84"')
@@ -71,7 +77,7 @@ describe("xySceneNodeToSVG — point", () => {
 
 describe("xySceneNodeToSVG — symbol", () => {
   it("renders a translated glyph path (the cross-pipeline symbol mark)", () => {
-    const node: any = {
+    const node = {
       type: "symbol",
       x: 42,
       y: 84,
@@ -79,7 +85,7 @@ describe("xySceneNodeToSVG — symbol", () => {
       symbolType: "star",
       style: { fill: "#7b52c9", opacity: 0.9 },
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain("<path")
     expect(html).toContain("translate(42,84)")
     expect(html).toContain('fill="#7b52c9"')
@@ -87,7 +93,7 @@ describe("xySceneNodeToSVG — symbol", () => {
   })
 
   it("renders stroke-only glyphs unfilled (matches canvas)", () => {
-    const node: any = {
+    const node = {
       type: "symbol",
       x: 1,
       y: 2,
@@ -95,14 +101,14 @@ describe("xySceneNodeToSVG — symbol", () => {
       symbolType: "triangle",
       style: { stroke: "#fff", strokeWidth: 1 },
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('fill="none"')
   })
 })
 
 describe("ordinalSceneNodeToSVG — symbol", () => {
   it("renders a glyph path for ordinal symbolBy marks", () => {
-    const node: any = {
+    const node = {
       type: "symbol",
       x: 10,
       y: 20,
@@ -110,7 +116,7 @@ describe("ordinalSceneNodeToSVG — symbol", () => {
       symbolType: "diamond",
       style: { fill: "#abc" },
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<path")
     expect(html).toContain("translate(10,20)")
     expect(html).toContain('fill="#abc"')
@@ -119,7 +125,7 @@ describe("ordinalSceneNodeToSVG — symbol", () => {
 
 // ── glyph (composite pictogram) ───────────────────────────────────────
 
-const SERVER_SIGN: any = {
+const SERVER_SIGN = {
   viewBox: [40, 40],
   anchor: [0.5, 1],
   parts: [
@@ -130,7 +136,7 @@ const SERVER_SIGN: any = {
 
 describe("glyph scene nodes — all four converters", () => {
   it("renders parts with role paints, anchor offset, and scale (XY)", () => {
-    const node: any = {
+    const node = {
       type: "glyph",
       x: 100,
       y: 200,
@@ -140,7 +146,7 @@ describe("glyph scene nodes — all four converters", () => {
       accent: "#fffdf4",
       style: {},
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain("translate(100,200) translate(-10,-20) scale(0.5)")
     expect(html).toContain('fill="#d72f3f"')
     expect(html).toContain('fill="#fffdf4"')
@@ -148,7 +154,7 @@ describe("glyph scene nodes — all four converters", () => {
   })
 
   it("clips a partial fill and paints the ghost silhouette underneath", () => {
-    const node: any = {
+    const node = {
       type: "glyph",
       x: 0,
       y: 0,
@@ -160,7 +166,7 @@ describe("glyph scene nodes — all four converters", () => {
       style: {},
       pointId: "sign-3",
     }
-    const html = markup(xySceneNodeToSVG(node, 3))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 3))
     expect(html).toContain("<clipPath")
     expect(html).toContain('width="20"') // 0.5 × 40 viewBox units
     expect(html).toContain('fill="#e6dfca"') // ghost pass
@@ -168,7 +174,7 @@ describe("glyph scene nodes — all four converters", () => {
   })
 
   it("supports a fraction window for range boundary signs", () => {
-    const node: any = {
+    const node = {
       type: "glyph",
       x: 0,
       y: 0,
@@ -179,12 +185,12 @@ describe("glyph scene nodes — all four converters", () => {
       fractionStart: 0.56,
       style: {},
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('x="22.400000000000002"') // 0.56 × 40
   })
 
   it("renders network glyphs at cx/cy", () => {
-    const node: any = {
+    const node = {
       type: "glyph",
       cx: 30,
       cy: 60,
@@ -194,13 +200,13 @@ describe("glyph scene nodes — all four converters", () => {
       style: {},
       id: "plant",
     }
-    const html = markup(networkSceneNodeToSVG(node, 0))
+    const html = markup(networkSceneNodeToSVG(node as NetworkSceneNode, 0))
     expect(html).toContain("translate(30,60)")
     expect(html).toContain('fill="#34383b"')
   })
 
   it("falls back to style.fill when no color is set, and skips size<=0", () => {
-    const node: any = {
+    const node = {
       type: "glyph",
       x: 0,
       y: 0,
@@ -208,14 +214,14 @@ describe("glyph scene nodes — all four converters", () => {
       glyph: SERVER_SIGN,
       style: { fill: "#123456" },
     }
-    expect(markup(xySceneNodeToSVG(node, 0))).toContain('fill="#123456"')
-    expect(xySceneNodeToSVG({ ...node, size: 0 }, 0)).toBeNull()
+    expect(markup(xySceneNodeToSVG(node as XYSceneNode, 0))).toContain('fill="#123456"')
+    expect(xySceneNodeToSVG({ ...node, size: 0 } as XYSceneNode, 0)).toBeNull()
   })
 })
 
 describe("xySceneNodeToSVG — rect", () => {
   it("renders a rect with correct attributes", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 10,
       y: 20,
@@ -223,7 +229,7 @@ describe("xySceneNodeToSVG — rect", () => {
       h: 40,
       style: { fill: "blue", stroke: "black", strokeWidth: 2, opacity: 0.9 }
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain("<rect")
     expect(html).toContain('x="10"')
     expect(html).toContain('y="20"')
@@ -237,7 +243,7 @@ describe("xySceneNodeToSVG — rect", () => {
 
 describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
   it("emits a <linearGradient> and fill=\"url(#id)\" when fillGradient.colorStops is set", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 10, y: 20, w: 30, h: 40,
       roundedEdge: "top",
@@ -250,7 +256,7 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
       },
       datum: { category: "A" },
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<linearGradient")
     expect(html).toContain('gradientUnits="userSpaceOnUse"')
     expect(html).toContain('x1="10"')
@@ -263,7 +269,7 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
   })
 
   it("emits stop-opacity stops for the { topOpacity, bottomOpacity } form", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 0, y: 0, w: 20, h: 50,
       roundedEdge: "top",
@@ -271,27 +277,27 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
       fillGradient: { topOpacity: 0.8, bottomOpacity: 0.05 },
       datum: { category: "B" },
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain('stop-color="#3366cc"')
     expect(html).toContain('stop-opacity="0.8"')
     expect(html).toContain('stop-opacity="0.05"')
   })
 
   it("falls back to solid fill when fillGradient has < 2 colorStops", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 0, y: 0, w: 20, h: 50,
       style: { fill: "#abcdef" },
       fillGradient: { colorStops: [{ offset: 0, color: "#ff0000" }] },
       datum: { category: "C" },
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).not.toContain("<linearGradient")
     expect(html).toContain('fill="#abcdef"')
   })
 
   it("falls back to solid fill when NaN offsets leave < 2 valid stops", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 0, y: 0, w: 20, h: 50,
       style: { fill: "#abcdef" },
@@ -301,13 +307,13 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
       ]},
       datum: { category: "E" },
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).not.toContain("<linearGradient")
     expect(html).toContain('fill="#abcdef"')
   })
 
   it("sanitizes category names with spaces/punctuation in the gradient id", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 10, y: 20, w: 30, h: 40,
       roundedEdge: "top",
@@ -319,7 +325,7 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
       datum: { category: "Q1 2026 (revenue)" },
       category: "Q1 2026 (revenue)",
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     // The raw category never appears inside the id/url — only the sanitized form.
     expect(html).not.toMatch(/id="[^"]* [^"]*"/)  // no spaces in id
     expect(html).not.toMatch(/url\(#[^)]* [^)]*\)/)  // no spaces in url(#...)
@@ -331,7 +337,7 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
   })
 
   it("flips gradient direction for horizontal (roundedEdge=right) bars", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 10, y: 20, w: 80, h: 20,
       roundedEdge: "right",
@@ -342,7 +348,7 @@ describe("ordinalSceneNodeToSVG — rect gradientFill", () => {
       ]},
       datum: { category: "D" },
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     // Tip (right) at x+w=90 → base at x=10, y stays at 20.
     expect(html).toContain('x1="90"')
     expect(html).toContain('y1="20"')
@@ -358,7 +364,7 @@ describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
     // unrounded sectors. The clip mask handles the rounded ends so no
     // individual slice needs to fit its corner radius into its own
     // (thin) angular extent.
-    const node: any = {
+    const node = {
       type: "wedge",
       cx: 100,
       cy: 100,
@@ -373,7 +379,7 @@ describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
       datum: null,
       category: "band",
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<clipPath")
     expect(html).toContain('transform="translate(100,100)"')
     // One <path> per gradient color, each filled with that color.
@@ -386,7 +392,7 @@ describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
   })
 
   it("strokes the rounded outline when style.stroke is set", () => {
-    const node: any = {
+    const node = {
       type: "wedge",
       cx: 0, cy: 0,
       innerRadius: 30, outerRadius: 60,
@@ -398,14 +404,14 @@ describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
       datum: null,
       category: "stroked",
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain('stroke="#222"')
     expect(html).toContain('stroke-width="2"')
     expect(html).toContain('fill="none"')  // the stroke-only outline path
   })
 
   it("omits the outline stroke when style.stroke is unset or 'none'", () => {
-    const node: any = {
+    const node = {
       type: "wedge",
       cx: 0, cy: 0,
       innerRadius: 30, outerRadius: 60,
@@ -416,12 +422,12 @@ describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
       datum: null,
       category: "nostroke",
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).not.toContain('fill="none"')
   })
 
   it("renders the band even when cornerRadius is unset (clip becomes a square sector)", () => {
-    const node: any = {
+    const node = {
       type: "wedge",
       cx: 0,
       cy: 0,
@@ -435,7 +441,7 @@ describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
       datum: null,
       category: "noround",
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     // Still emits clipPath + slice paths — the rounding just degrades.
     expect(html).toContain("<clipPath")
     expect(html).toContain('fill="#000"')
@@ -445,13 +451,13 @@ describe("ordinalSceneNodeToSVG — wedge _gradientBand", () => {
 
 describe("xySceneNodeToSVG — area", () => {
   it("renders a closed path from topPath and bottomPath", () => {
-    const node: any = {
+    const node = {
       type: "area",
       topPath: [[0, 10], [50, 5], [100, 15]],
       bottomPath: [[0, 50], [50, 50], [100, 50]],
       style: { fill: "#abc", fillOpacity: 0.6 }
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain("<path")
     // top path forward, bottom path reversed, closed with Z
     expect(html).toContain("M0,10L50,5L100,15")
@@ -461,36 +467,36 @@ describe("xySceneNodeToSVG — area", () => {
   })
 
   it("returns null for empty topPath", () => {
-    const node: any = { type: "area", topPath: [], bottomPath: [], style: {} }
-    expect(xySceneNodeToSVG(node, 0)).toBeNull()
+    const node = { type: "area", topPath: [], bottomPath: [], style: {} }
+    expect(xySceneNodeToSVG(node as XYSceneNode, 0)).toBeNull()
   })
 
   it("defaults fillOpacity from style.opacity when fillOpacity absent", () => {
-    const node: any = {
+    const node = {
       type: "area",
       topPath: [[0, 0], [10, 10]],
       bottomPath: [[0, 20], [10, 20]],
       style: { opacity: 0.3 }
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('fill-opacity="0.3"')
   })
 
   it("defaults fillOpacity to 0.7 when neither fillOpacity nor opacity set", () => {
-    const node: any = {
+    const node = {
       type: "area",
       topPath: [[0, 0], [10, 10]],
       bottomPath: [[0, 20], [10, 20]],
       style: {}
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('fill-opacity="0.7"')
   })
 })
 
 describe("xySceneNodeToSVG — heatcell", () => {
   it("renders a rect with fill color", () => {
-    const node: any = {
+    const node = {
       type: "heatcell",
       x: 5,
       y: 10,
@@ -498,7 +504,7 @@ describe("xySceneNodeToSVG — heatcell", () => {
       h: 20,
       fill: "rgb(255,0,0)"
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain("<rect")
     expect(html).toContain('x="5"')
     expect(html).toContain('y="10"')
@@ -510,7 +516,7 @@ describe("xySceneNodeToSVG — heatcell", () => {
 
 describe("xySceneNodeToSVG — candlestick", () => {
   it("renders wick line and body rect", () => {
-    const node: any = {
+    const node = {
       type: "candlestick",
       x: 50,
       openY: 30,
@@ -524,7 +530,7 @@ describe("xySceneNodeToSVG — candlestick", () => {
       wickWidth: 1,
       isUp: true
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     // Wick line
     expect(html).toContain("<line")
     expect(html).toContain('y1="10"')
@@ -534,7 +540,7 @@ describe("xySceneNodeToSVG — candlestick", () => {
   })
 
   it("uses downColor when isUp is false", () => {
-    const node: any = {
+    const node = {
       type: "candlestick",
       x: 50,
       openY: 20,
@@ -548,15 +554,15 @@ describe("xySceneNodeToSVG — candlestick", () => {
       wickWidth: 1,
       isUp: false
     }
-    const html = markup(xySceneNodeToSVG(node, 0))
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
     expect(html).toContain('fill="red"')
   })
 })
 
 describe("xySceneNodeToSVG — unknown type", () => {
   it("returns null for unknown node types", () => {
-    const node: any = { type: "sparkline", style: {} }
-    expect(xySceneNodeToSVG(node, 0)).toBeNull()
+    const node = { type: "sparkline", style: {} }
+    expect(xySceneNodeToSVG(node as XYSceneNode, 0)).toBeNull()
   })
 })
 
@@ -564,14 +570,14 @@ describe("xySceneNodeToSVG — unknown type", () => {
 
 describe("networkSceneNodeToSVG", () => {
   it("renders circle node", () => {
-    const node: any = {
+    const node = {
       type: "circle",
       cx: 100,
       cy: 200,
       r: 12,
       style: { fill: "orange", stroke: "#000", strokeWidth: 2, opacity: 0.9 }
     }
-    const html = markup(networkSceneNodeToSVG(node, 0))
+    const html = markup(networkSceneNodeToSVG(node as NetworkSceneNode, 0))
     expect(html).toContain("<circle")
     expect(html).toContain('cx="100"')
     expect(html).toContain('cy="200"')
@@ -580,7 +586,7 @@ describe("networkSceneNodeToSVG", () => {
   })
 
   it("renders rect node", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 10,
       y: 20,
@@ -588,14 +594,14 @@ describe("networkSceneNodeToSVG", () => {
       h: 60,
       style: { fill: "steelblue" }
     }
-    const html = markup(networkSceneNodeToSVG(node, 0))
+    const html = markup(networkSceneNodeToSVG(node as NetworkSceneNode, 0))
     expect(html).toContain("<rect")
     expect(html).toContain('width="30"')
     expect(html).toContain('height="60"')
   })
 
   it("renders arc node with d3-arc path and transform", () => {
-    const node: any = {
+    const node = {
       type: "arc",
       cx: 150,
       cy: 150,
@@ -605,7 +611,7 @@ describe("networkSceneNodeToSVG", () => {
       endAngle: Math.PI / 2,
       style: { fill: "purple" }
     }
-    const html = markup(networkSceneNodeToSVG(node, 0))
+    const html = markup(networkSceneNodeToSVG(node as NetworkSceneNode, 0))
     expect(html).toContain("<path")
     expect(html).toContain('transform="translate(150,150)"')
     expect(html).toContain('fill="purple"')
@@ -619,7 +625,7 @@ describe("networkSceneNodeToSVG", () => {
 
 describe("networkSceneEdgeToSVG", () => {
   it("renders line edge", () => {
-    const edge: any = {
+    const edge = {
       type: "line",
       x1: 0,
       y1: 0,
@@ -627,7 +633,7 @@ describe("networkSceneEdgeToSVG", () => {
       y2: 100,
       style: { stroke: "#ccc", strokeWidth: 2 }
     }
-    const html = markup(networkSceneEdgeToSVG(edge, 0))
+    const html = markup(networkSceneEdgeToSVG(edge as NetworkSceneEdge, 0))
     expect(html).toContain("<line")
     expect(html).toContain('x1="0"')
     expect(html).toContain('x2="100"')
@@ -635,42 +641,42 @@ describe("networkSceneEdgeToSVG", () => {
   })
 
   it("renders bezier edge path", () => {
-    const edge: any = {
+    const edge = {
       type: "bezier",
       pathD: "M0,0 C10,10 20,20 30,30",
       style: { fill: "#aaa", fillOpacity: 0.5 }
     }
-    const html = markup(networkSceneEdgeToSVG(edge, 0))
+    const html = markup(networkSceneEdgeToSVG(edge as NetworkSceneEdge, 0))
     expect(html).toContain("<path")
     expect(html).toContain('d="M0,0 C10,10 20,20 30,30"')
     expect(html).toContain('fill="#aaa"')
   })
 
   it("renders ribbon edge path", () => {
-    const edge: any = {
+    const edge = {
       type: "ribbon",
       pathD: "M10,10 Q50,50 90,10",
       style: { fill: "#bbb" }
     }
-    const html = markup(networkSceneEdgeToSVG(edge, 0))
+    const html = markup(networkSceneEdgeToSVG(edge as NetworkSceneEdge, 0))
     expect(html).toContain("<path")
     expect(html).toContain('fill="#bbb"')
   })
 
   it("renders curved edge path", () => {
-    const edge: any = {
+    const edge = {
       type: "curved",
       pathD: "M0,0 C25,50 75,50 100,0",
       style: { stroke: "teal", strokeWidth: 1.5 }
     }
-    const html = markup(networkSceneEdgeToSVG(edge, 0))
+    const html = markup(networkSceneEdgeToSVG(edge as NetworkSceneEdge, 0))
     expect(html).toContain("<path")
     expect(html).toContain('stroke="teal"')
   })
 
   it("returns null for unknown edge type", () => {
-    const edge: any = { type: "dashed", style: {} }
-    expect(networkSceneEdgeToSVG(edge, 0)).toBeNull()
+    const edge = { type: "dashed", style: {} }
+    expect(networkSceneEdgeToSVG(edge as NetworkSceneEdge, 0)).toBeNull()
   })
 })
 
@@ -678,7 +684,7 @@ describe("networkSceneEdgeToSVG", () => {
 
 describe("networkLabelToSVG", () => {
   it("renders text element with all attributes", () => {
-    const label: any = {
+    const label = {
       x: 100,
       y: 200,
       text: "Node A",
@@ -688,7 +694,7 @@ describe("networkLabelToSVG", () => {
       fontWeight: "bold",
       fill: "#222"
     }
-    const html = markup(networkLabelToSVG(label, 0))
+    const html = markup(networkLabelToSVG(label as NetworkLabel, 0))
     expect(html).toContain("<text")
     expect(html).toContain('x="100"')
     expect(html).toContain('y="200"')
@@ -698,8 +704,8 @@ describe("networkLabelToSVG", () => {
   })
 
   it("uses defaults when optional props missing", () => {
-    const label: any = { x: 10, y: 20, text: "Hi" }
-    const html = markup(networkLabelToSVG(label, 0))
+    const label = { x: 10, y: 20, text: "Hi" }
+    const html = markup(networkLabelToSVG(label as NetworkLabel, 0))
     expect(html).toContain('text-anchor="middle"')
     expect(html).toContain('font-size="11"')
     // Labels default to the themeable CSS var (falls back to #333) so cascade
@@ -712,7 +718,7 @@ describe("networkLabelToSVG", () => {
 
 describe("ordinalSceneNodeToSVG", () => {
   it("renders rect (bar)", () => {
-    const node: any = {
+    const node = {
       type: "rect",
       x: 5,
       y: 10,
@@ -720,28 +726,28 @@ describe("ordinalSceneNodeToSVG", () => {
       h: 80,
       style: { fill: "coral", opacity: 0.8 }
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<rect")
     expect(html).toContain('fill="coral"')
     expect(html).toContain('opacity="0.8"')
   })
 
   it("renders point (swarm)", () => {
-    const node: any = {
+    const node = {
       type: "point",
       x: 50,
       y: 60,
       r: 4,
       style: { fill: "pink" }
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<circle")
     expect(html).toContain('cx="50"')
     expect(html).toContain('r="4"')
   })
 
   it("renders wedge (pie/donut) with d3-arc", () => {
-    const node: any = {
+    const node = {
       type: "wedge",
       cx: 100,
       cy: 100,
@@ -751,14 +757,14 @@ describe("ordinalSceneNodeToSVG", () => {
       endAngle: Math.PI,
       style: { fill: "gold" }
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<path")
     expect(html).toContain('transform="translate(100,100)"')
     expect(html).toContain('fill="gold"')
   })
 
   it("renders vertical boxplot with whiskers and median line", () => {
-    const node: any = {
+    const node = {
       type: "boxplot",
       x: 50,
       y: 0,
@@ -773,7 +779,7 @@ describe("ordinalSceneNodeToSVG", () => {
       style: { fill: "#4e79a7" },
       datum: {}
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     // Should have the group with lines and rect
     expect(html).toContain("<g")
     expect(html).toContain("<line")
@@ -783,7 +789,7 @@ describe("ordinalSceneNodeToSVG", () => {
   })
 
   it("renders horizontal boxplot", () => {
-    const node: any = {
+    const node = {
       type: "boxplot",
       x: 0,
       y: 50,
@@ -798,13 +804,13 @@ describe("ordinalSceneNodeToSVG", () => {
       style: { fill: "teal" },
       datum: {}
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<g")
     expect(html).toContain('fill="teal"')
   })
 
   it("renders violin with path", () => {
-    const node: any = {
+    const node = {
       type: "violin",
       pathString: "M0,0 C10,10 20,20 0,30 Z",
       translateX: 50,
@@ -812,7 +818,7 @@ describe("ordinalSceneNodeToSVG", () => {
       style: { fill: "orchid" },
       datum: {}
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<path")
     expect(html).toContain('d="M0,0 C10,10 20,20 0,30 Z"')
     expect(html).toContain('transform="translate(50,10)"')
@@ -820,7 +826,7 @@ describe("ordinalSceneNodeToSVG", () => {
   })
 
   it("renders violin with IQR overlay (vertical)", () => {
-    const node: any = {
+    const node = {
       type: "violin",
       pathString: "M0,0 Z",
       translateX: 0,
@@ -830,7 +836,7 @@ describe("ordinalSceneNodeToSVG", () => {
       style: {},
       datum: {}
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     // IQR line + median circle
     expect(html).toContain("<line")
     expect(html).toContain("<circle")
@@ -839,7 +845,7 @@ describe("ordinalSceneNodeToSVG", () => {
   })
 
   it("renders connector line", () => {
-    const node: any = {
+    const node = {
       type: "connector",
       x1: 10,
       y1: 20,
@@ -847,7 +853,7 @@ describe("ordinalSceneNodeToSVG", () => {
       y2: 40,
       style: { stroke: "#999", strokeWidth: 1 }
     }
-    const html = markup(ordinalSceneNodeToSVG(node, 0))
+    const html = markup(ordinalSceneNodeToSVG(node as OrdinalSceneNode, 0))
     expect(html).toContain("<line")
     expect(html).toContain('x1="10"')
     expect(html).toContain('y1="20"')
