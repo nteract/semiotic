@@ -87,6 +87,25 @@ describe("Semiotic MCP build identity", () => {
     })
   })
 
+  it("normalizes case-insensitive full Git identities beyond SHA-1 length", () => {
+    const upperSha256 = "ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789"
+    const buildInfo = resolveSemioticBuildInfo({
+      packageVersion,
+      surfaceVersion,
+      toolProfile: "public",
+      nodeVersion: "v22.16.0",
+      env: {
+        SEMIOTIC_DEPLOYMENT_CHANNEL: "nightly",
+        SEMIOTIC_GIT_SHA: upperSha256,
+      },
+    })
+
+    expect(buildInfo).toMatchObject({
+      commitSha: upperSha256.toLowerCase(),
+      shortCommitSha: "abcdef0",
+    })
+  })
+
   it("never formats an unproven nightly build as a released stable version", () => {
     const buildInfo = resolveSemioticBuildInfo({
       packageVersion,

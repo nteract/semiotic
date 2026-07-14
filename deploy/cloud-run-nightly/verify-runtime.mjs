@@ -87,14 +87,14 @@ if (requireBuildIdentity) {
   if (process.env.SEMIOTIC_DEPLOYMENT_CHANNEL !== "nightly") {
     failures.push("invalid-deployment-channel")
   }
-  if (!/^[0-9a-f]{40}$/.test(process.env.SEMIOTIC_GIT_SHA || "")) {
+  if (!/^[0-9a-f]{40,128}$/i.test(process.env.SEMIOTIC_GIT_SHA || "")) {
     failures.push("invalid-git-sha")
   }
   if (!(process.env.SEMIOTIC_BUILD_ID || "").trim()) {
     failures.push("missing-build-id")
   }
   const builtAt = process.env.SEMIOTIC_BUILD_TIME || ""
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(builtAt) || Number.isNaN(Date.parse(builtAt))) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(builtAt) || Number.isNaN(Date.parse(builtAt))) {
     failures.push("invalid-build-time")
   }
 }

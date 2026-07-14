@@ -280,7 +280,7 @@ function assertBuildIdentity(step, value, options, { requireShortSha = false, re
   const buildId = requireString(step, identity.buildId, "buildId")
   const builtAt = requireString(step, identity.builtAt, "builtAt")
 
-  if (!/^[0-9a-f]{40}$/i.test(commitSha)) {
+  if (!/^[0-9a-f]{40,128}$/i.test(commitSha)) {
     throw new SmokeFailure(step, `${step} commitSha was not a full Git SHA`)
   }
   if (!validIsoTimestamp(builtAt)) {

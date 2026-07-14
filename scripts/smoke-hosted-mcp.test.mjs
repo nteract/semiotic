@@ -18,6 +18,7 @@ const repoRoot = resolve(__dirname, "..")
 const smokeScript = resolve(__dirname, "smoke-hosted-mcp.mjs")
 const COMMIT_SHA = "0123456789abcdef0123456789abcdef01234567"
 const OTHER_SHA = "89abcdef0123456789abcdef0123456789abcdef"
+const LONG_UPPERCASE_SHA = "ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789"
 const BUILD_ID = "local-smoke-build-123"
 
 function json(res, status, body, headers = {}) {
@@ -26,7 +27,7 @@ function json(res, status, body, headers = {}) {
 }
 
 function fixtureIdentity(options) {
-  const commitSha = options.wrongSha ? OTHER_SHA : COMMIT_SHA
+  const commitSha = options.commitSha ?? (options.wrongSha ? OTHER_SHA : COMMIT_SHA)
   return {
     channel: options.wrongChannel ? "stable" : "nightly",
     packageVersion: "3.8.0",
@@ -266,6 +267,13 @@ describe("smoke-hosted-mcp", () => {
       assert.match(result.stdout, /createChart/)
       assert.doesNotMatch(result.stdout, /<svg/i)
       assert.equal(result.stderr, "")
+    })
+  })
+
+  it("accepts a case-insensitive full SHA longer than SHA-1", async () => {
+    await withFixture({ commitSha: LONG_UPPERCASE_SHA }, async (fixture) => {
+      const result = await runSmoke(fixture.endpoint, ["--expected-sha", LONG_UPPERCASE_SHA])
+      assert.equal(result.code, 0, `${result.stdout}\n${result.stderr}`)
     })
   })
 
