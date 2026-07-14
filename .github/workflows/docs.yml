@@ -31,7 +31,7 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build library and docs
-        run: npm run website:build
+        run: npm run check:website-build
 
       - name: Add 404.html for SPA routing
         run: cp docs/build/index.html docs/build/404.html

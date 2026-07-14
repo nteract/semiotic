@@ -133,6 +133,9 @@ jobs:
       - name: Check ai/examples.md coverage + drift
         run: npm run check:ai-examples-coverage
 
+      - name: Build docs site and smoke-check generated routes
+        run: npm run check:website-build
+
       - name: Pack smoke test (verify all entry points resolve)
         run: npm run check:pack
 
