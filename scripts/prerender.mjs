@@ -453,6 +453,13 @@ Object.assign(globalThis.window, {
   history: globalThis.window.history || { replaceState() {} },
 })
 
+const getComputedStyle = globalThis.getComputedStyle || (() => ({
+  getPropertyValue: () => "",
+  fontSize: "16px",
+}))
+globalThis.getComputedStyle = getComputedStyle
+globalThis.window.getComputedStyle = globalThis.window.getComputedStyle || getComputedStyle
+
 const elementStub = () => ({
   style: {},
   setAttribute() {},
@@ -960,23 +967,21 @@ export async function prerender() {
   const routes = mergeExampleDefinitionRoutes(extractRoutes(), exampleDefinitions)
   const exampleMetaCount = await registerExampleRouteMeta(exampleDefinitions)
   const blogEntries = await loadBlogEntries()
-  let renderRoute = null
-  try {
-    renderRoute = await createStaticRouteRenderer()
-  } catch (err) {
-    console.warn("[prerender] could not initialize static route renderer:", err.message)
-  }
+  const renderRoute = await createStaticRouteRenderer()
 
   const routeDocs = []
+  const routeRenderFailures = []
   const machineDocForRoute = async (route) => {
-    if (!renderRoute) return null
     try {
       const doc = sanitizeRouteHtml(await renderRoute(route), route)
       const scriptDoc = routeDocForScript(doc)
-      if (scriptDoc) routeDocs.push(scriptDoc)
+      if (!scriptDoc) throw new Error("rendered content did not produce a route document")
+      routeDocs.push(scriptDoc)
       return doc
     } catch (err) {
-      console.warn(`[prerender] could not render machine-readable content for /${route}: ${err.message}`)
+      const failure = `/${route}: ${err.message}`
+      if (!route) throw new Error(`Machine-readable root route render failed: ${failure}`, { cause: err })
+      routeRenderFailures.push(failure)
       return null
     }
   }
@@ -1002,6 +1007,12 @@ export async function prerender() {
     mkdirSync(dir, { recursive: true })
     writeFileSync(resolve(dir, "index.html"), generatePage(shellHtml, route, entry, await machineDocForRoute(route)))
     created++
+  }
+
+  if (routeRenderFailures.length) {
+    throw new Error(
+      `Machine-readable rendering failed for ${routeRenderFailures.length} route(s):\n${routeRenderFailures.map((failure) => `- ${failure}`).join("\n")}`,
+    )
   }
 
   const routeUrls = routes
