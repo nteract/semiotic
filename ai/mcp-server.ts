@@ -1,7 +1,7 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes eighteen tools, seven resources, and two prompts:
+ * Exposes eighteen tools, eight resources, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — legacy sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
@@ -47,6 +47,11 @@ import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
 import { createMcpRequestCancellationSignal } from "./mcp-request-cancellation"
+import {
+  mcpServerInfoForBuild,
+  resolveSemioticBuildInfo,
+  type McpToolProfile,
+} from "./mcp-build-info"
 import {
   createMcpMetadataLogger,
   resolveMcpLoggingPolicy,
@@ -161,6 +166,15 @@ const {
 // Load schema.json for version info
 const schemaPath = path.resolve(__dirname, "../schema.json")
 const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"))
+// The package manifest is the release authority for deployment identity. The
+// AI schema is a generated surface artifact and can otherwise lag a package
+// version bump, which would make a stable deployment report the wrong release.
+const packageManifestPath = path.resolve(__dirname, "../../package.json")
+const packageManifest = JSON.parse(fs.readFileSync(packageManifestPath, "utf-8"))
+if (typeof packageManifest.version !== "string" || !packageManifest.version) {
+  throw new Error("Semiotic package.json must provide a package version")
+}
+const PACKAGE_VERSION = packageManifest.version
 
 // Build component name → schema lookup from schema.json
 const schemaByComponent: Record<string, any> = {}
@@ -963,8 +977,16 @@ function capInteractiveWidgetResult(result: ToolResult): ToolResult {
   })
 }
 
-type ToolProfile = "developer" | "public"
-const SURFACE_VERSION = `${schema.version || "3.0.0"}-ai`
+type ToolProfile = McpToolProfile
+const SURFACE_VERSION = `${PACKAGE_VERSION}-ai`
+
+function buildInfoForProfile(profile: ToolProfile) {
+  return resolveSemioticBuildInfo({
+    packageVersion: PACKAGE_VERSION,
+    surfaceVersion: SURFACE_VERSION,
+    toolProfile: profile,
+  })
+}
 
 function profileResult<T extends Record<string, unknown>>(result: T): T & { surfaceVersion: string } {
   return { ...result, surfaceVersion: SURFACE_VERSION }
@@ -2092,16 +2114,27 @@ type McpServerOptions = {
 }
 
 function createServer(profile: ToolProfile = "developer", options: McpServerOptions = {}): McpServer {
+  const buildInfo = buildInfoForProfile(profile)
   const serverRenderContext: RenderContext = {
     signal: options.signal,
     limits: options.limits ?? resolveMcpRenderExecutionLimits(),
   }
   const srv = new McpServer({
-    name: "semiotic",
-    version: schema.version || "3.0.0",
+    ...mcpServerInfoForBuild(buildInfo),
     description:
       "Deterministic Semiotic chart selection, validation, rendering, and non-visual chart grounding. Use suggestCharts, getSchema, diagnoseConfig, and renderChart in that order for static chart generation.",
   })
+
+  srv.registerResource(
+    "semiotic-build-info",
+    "semiotic://build-info",
+    {
+      title: "Semiotic Build Information",
+      description: "Read-only deployment identity for this Semiotic MCP server.",
+      mimeType: "application/json",
+    },
+    (uri) => textResource(uri, "application/json", JSON.stringify(buildInfo, null, 2))
+  )
 
   srv.registerResource(
     "semiotic-schema",
@@ -2840,13 +2873,20 @@ async function main() {
         }))
       })
 
+    const buildInfo = buildInfoForProfile(toolProfile)
     const healthBody = () =>
       JSON.stringify({
         status: "ok",
         name: "semiotic-mcp",
-        version: schema.version || "3.0.0",
+        version: buildInfo.packageVersion,
         transport: "streamable-http",
         mode: "stateless",
+        channel: buildInfo.channel,
+        packageVersion: buildInfo.packageVersion,
+        surfaceVersion: buildInfo.surfaceVersion,
+        ...(buildInfo.commitSha ? { commitSha: buildInfo.commitSha } : {}),
+        ...(buildInfo.buildId ? { buildId: buildInfo.buildId } : {}),
+        ...(buildInfo.builtAt ? { builtAt: buildInfo.builtAt } : {}),
       })
 
     const httpServer = http.createServer(async (req, res) => {

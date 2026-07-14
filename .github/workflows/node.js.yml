@@ -59,6 +59,14 @@ jobs:
       - name: Check Cloud Run deployment manifest
         run: npm run check:cloud-run-manifest
 
+      - name: Check repository-built nightly Cloud Run deployment
+        run: npm run check:cloud-run-nightly
+
+      - name: Test nightly deployment config and hosted smoke runner
+        run: |
+          npm run test:cloud-run-nightly
+          npm run test:smoke-hosted-mcp
+
       - name: Run tests with coverage
         run: npm run test:coverage
 

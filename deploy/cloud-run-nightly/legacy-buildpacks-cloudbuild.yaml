@@ -1,0 +1,58 @@
+# Exact inline-build rollback payload for the existing nightly trigger
+# `rmgpgab-semiotic-mcp-server-us-west1-nteract-semiotic--mafcz`.
+#
+# This is not a stable deployment path. It is retained solely so an operator
+# can restore the trigger's prior generated Buildpacks behavior with
+# `gcloud builds triggers update github ... --inline-config=...` if the checked
+# in repository-built nightly configuration must be rolled back.
+steps:
+  - id: Build
+    name: gcr.io/k8s-skaffold/pack
+    entrypoint: pack
+    args:
+      - build
+      - $_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - --builder=gcr.io/buildpacks/builder:google-22
+      - --network=cloudbuild
+      - --path=deploy/cloud-run
+
+  - id: Push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - $_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+
+  - id: Deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - $_SERVICE_NAME
+      - --platform=managed
+      - --image=$_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID
+      - --region=$_DEPLOY_REGION
+      - --quiet
+
+images:
+  - $_AR_HOSTNAME/$_AR_PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitutionOption: ALLOW_LOOSE
+
+substitutions:
+  _AR_HOSTNAME: us-west1-docker.pkg.dev
+  _AR_PROJECT_ID: semiotic-mcp
+  _AR_REPOSITORY: cloud-run-source-deploy
+  _DEPLOY_REGION: us-west1
+  _PLATFORM: managed
+  _SERVICE_NAME: semiotic-mcp-server
+  _TRIGGER_ID: 36c05cdd-221d-4c1b-a383-a8117cea4556
+
+tags:
+  - gcp-cloud-build-deploy-cloud-run
+  - gcp-cloud-build-deploy-cloud-run-managed
+  - semiotic-mcp-server
