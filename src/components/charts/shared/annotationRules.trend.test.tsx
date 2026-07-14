@@ -190,6 +190,48 @@ describe("trend annotation — ordinal frame", () => {
     })
   })
 
+  describe("polynomial fits", () => {
+    const xyRules = createDefaultAnnotationRules("xy")
+    const data = Array.from({ length: 5 }, (_, x) => ({
+      x,
+      y: 2 * x * x + 3 * x + 4,
+    }))
+    const ctx: AnnotationContext = {
+      data,
+      xAccessor: "x",
+      yAccessor: "y",
+      frameType: "xy",
+      width: 200,
+      height: 200,
+      scales: {
+        x: makeLinearScale([0, 200], [0, 200]),
+        y: makeLinearScale([0, 200], [0, 200]),
+      },
+    }
+
+    it("renders the dependency-compatible rounded quadratic points", () => {
+      const result = xyRules(
+        { type: "trend", method: "polynomial", order: 2 },
+        0,
+        ctx
+      )
+      const html = renderToStaticMarkup(result as React.ReactElement)
+      expect(html).toContain('points="0,4 1,9 2,18 3,31 4,48"')
+    })
+
+    it("preserves polynomial equation ordering in forecast annotations", () => {
+      const result = xyRules(
+        { type: "forecast", method: "polynomial", order: 2, steps: 2 },
+        0,
+        ctx
+      )
+      const html = renderToStaticMarkup(result as React.ReactElement)
+      // The historical result shape stores [x², x, constant]. The forecast
+      // consumer reads that array in index order, so retain the same output.
+      expect(html).toContain('points="4,78 5,117 6,164"')
+    })
+  })
+
   describe("guards", () => {
     const baseCtx: AnnotationContext = {
       xAccessor: "cat",

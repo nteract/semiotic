@@ -75,11 +75,9 @@ while ((match = configRegex.exec(ssrSource))) {
 
 // ── 3. Extract validation map chart names ──────────────────────────────
 //
-// validationMap.ts derives VALIDATION_MAP from CHART_SPECS at runtime
-// (`Object.fromEntries(Object.entries(CHART_SPECS)...)`) rather than listing
-// charts as literal object keys, so there's nothing left to scan there.
-// Instead walk the family spec files chartSpecs.ts composes CHART_SPECS
-// from — those still declare one literal `ChartName: {` key per chart.
+// VALIDATION_MAP is generated from CHART_SPECS. Walk the family source
+// registry instead of parsing generated runtime data so this alignment gate
+// reports the canonical chart catalog directly.
 
 const chartSpecsIndexSource = fs.readFileSync(CHART_SPECS_INDEX, "utf8")
 const validationNames = new Set()

@@ -28,11 +28,9 @@ function info(msg) {
 }
 
 console.log("\n[1/2] Parsing validationMap.ts VALIDATION_MAP...")
-// validationMap.ts derives VALIDATION_MAP from CHART_SPECS at runtime
-// (`Object.fromEntries(Object.entries(CHART_SPECS)...)`) rather than
-// declaring chart entries as literal object keys, so walk the per-family
-// spec files chartSpecs.ts composes CHART_SPECS from instead — those
-// still declare one literal `ChartName: {` key per chart.
+// VALIDATION_MAP is generated from CHART_SPECS. Walk the per-family source
+// registry instead of parsing generated runtime data so this coverage gate
+// reports the canonical chart catalog directly.
 const chartSpecsIndexPath = path.join(ROOT, "src", "components", "charts", "shared", "chartSpecs.ts")
 const chartSpecsDir = path.join(ROOT, "src", "components", "charts", "shared")
 const validationComponents = new Set()

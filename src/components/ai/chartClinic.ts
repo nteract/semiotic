@@ -8,17 +8,13 @@
  * caller's chart props or store.
  */
 import type { Datum } from "../charts/shared/datumTypes"
-import { CHART_SPECS } from "../charts/shared/chartSpecs"
 import type { ChartCategory } from "../charts/shared/chartSpecs"
-import {
-  CHART_DEFINITION_PILOT,
-  type ChartDefinitionPilotId,
-} from "../charts/shared/chartDefinitionPilot"
 import type { Diagnosis } from "../charts/shared/diagnoseConfig"
 import type { ValidationResult } from "../charts/shared/validateProps"
 import type { ChartConfig } from "../export/chartConfig"
 import type { RenderEvidence } from "../server/renderEvidence"
 import type { RevisionSet } from "../stream/pipelineUpdateContract"
+import { CHART_CLINIC_METADATA } from "./chartClinicMetadata.generated"
 import { prepareChart, type RenderFn } from "./generativeChart"
 
 /**
@@ -96,49 +92,22 @@ export interface ChartClinicReport {
   readonly ok: boolean
 }
 
-const FAMILY_IMPORTS: Readonly<Record<ChartCategory, string>> = {
-  xy: "semiotic/xy",
-  ordinal: "semiotic/ordinal",
-  network: "semiotic/network",
-  geo: "semiotic/geo",
-  realtime: "semiotic/realtime",
-  physics: "semiotic/physics",
-  value: "semiotic/value",
-}
-
-function pilotFor(component: string) {
-  if (!(component in CHART_DEFINITION_PILOT)) return undefined
-  return CHART_DEFINITION_PILOT[component as ChartDefinitionPilotId]
-}
-
 function bundleGuidance(component: string): ChartClinicBundleGuidance {
-  const definition = pilotFor(component)
-  if (definition) {
-    return {
-      category: definition.chartFamily,
-      recommendedImport: definition.runtime.implementation.module,
-      ...(definition.metadata.support.server.mode === "render-chart"
-        ? { serverImport: "semiotic/server" as const }
-        : {}),
-      docsRoute: definition.metadata.propDocs.route,
-      note:
-        "This chart is in the ChartDefinition pilot. Its module and server support are explicit; existing family facades remain compatible.",
-    }
-  }
-
-  const spec = CHART_SPECS[component]
-  if (!spec) {
+  const metadata = CHART_CLINIC_METADATA[component]
+  if (!metadata) {
     return {
       note: "Unknown chart component: no package or server guidance can be determined.",
     }
   }
 
   return {
-    category: spec.category,
-    recommendedImport: FAMILY_IMPORTS[spec.category],
-    ...(spec.capabilities.supportsSSR ? { serverImport: "semiotic/server" as const } : {}),
-    note:
-      "Use the family facade today. Granular chart modules are a later package-boundary migration, so this recommendation does not claim a smaller per-chart bundle.",
+    category: metadata.category,
+    recommendedImport: metadata.recommendedImport,
+    ...(metadata.serverImport ? { serverImport: metadata.serverImport } : {}),
+    ...(metadata.docsRoute ? { docsRoute: metadata.docsRoute } : {}),
+    note: metadata.pilot
+      ? "This chart is in the ChartDefinition pilot. Its module and server support are explicit; existing family facades remain compatible."
+      : "Use the family facade today. Granular chart modules are a later package-boundary migration, so this recommendation does not claim a smaller per-chart bundle.",
   }
 }
 

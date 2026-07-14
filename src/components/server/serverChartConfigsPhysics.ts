@@ -9,8 +9,8 @@ import {
   generatePhysicsPileMechanicalSamples,
   styleFromColorAccessor
 } from "../charts/physics/physicsChartUtils"
-import { resolveCustomLayout } from "../charts/physics/PhysicsCustomChart"
-import { buildGauntletPhysics } from "../charts/physics/GauntletChart"
+import { resolveCustomLayout } from "../charts/physics/physicsCustomLayout"
+import { buildGauntletPhysics } from "../charts/physics/gauntletPhysics"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { LIGHT_THEME, resolveThemeSemanticColors } from "../store/ThemeStore"
 

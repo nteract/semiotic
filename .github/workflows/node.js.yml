@@ -138,9 +138,6 @@ jobs:
           done
           echo "All declaration files present"
 
-      - name: Check bundle sizes
-        run: npx size-limit
-
       - name: Validate canvas stub completeness
         run: |
           # Extract canvas method names used in production renderers

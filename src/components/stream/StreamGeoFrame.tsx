@@ -33,7 +33,7 @@ import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { resolveThemeSemanticColors } from "../store/ThemeStore"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
-import { SVGOverlay } from "./SVGOverlay"
+import { GeoSVGOverlay } from "./GeoSVGOverlay"
 import { isServerEnvironment, geoSceneNodeToSVG } from "./SceneToSVG"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
@@ -352,7 +352,7 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
     const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamGeoFrame")
     const lastPointerTypeRef = useRef<string | undefined>(undefined)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
-    const [annotationFrame, setAnnotationFrame] = useState(0)
+    const [, setAnnotationFrame] = useState(0)
     const lastAnnotationFrameTimeRef = useRef(0)
 
     // Staleness
@@ -1277,13 +1277,12 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
               {scene.map((node, i) => geoSceneNodeToSVG(node, i))}
             </g>
           </svg>
-          <SVGOverlay
+          <GeoSVGOverlay
             width={adjustedWidth}
             height={adjustedHeight}
             totalWidth={size[0]}
             totalHeight={size[1]}
             margin={margin}
-            scales={null}
             showAxes={false}
             title={title}
             legend={legend}
@@ -1299,9 +1298,6 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
             )}
             annotations={annotations}
             autoPlaceAnnotations={autoPlaceAnnotations}
-            annotationFrame={0}
-            xValues={[]}
-            yValues={[]}
             pointNodes={collectGeoAnnotationAnchors(scene)}
           />
         </div>
@@ -1365,14 +1361,13 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           ref={interactionCanvasRef}
           style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
         />
-        <SVGOverlay
+        <GeoSVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}
           totalWidth={size[0]}
           totalHeight={size[1]}
           margin={margin}
-          scales={null}
-          showAxes={showAxes ?? false}
+          showAxes={showAxes}
           title={title}
           legend={legend}
           legendPosition={legendPosition}
@@ -1387,9 +1382,6 @@ const StreamGeoFrame = memo(forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps
           )}
           annotations={annotations}
           autoPlaceAnnotations={autoPlaceAnnotations}
-          annotationFrame={annotationFrame}
-          xValues={[]}
-          yValues={[]}
           pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
         />
         {staleness?.showBadge && (

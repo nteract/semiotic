@@ -61,6 +61,32 @@ describe("Chart Clinic read-only inspection", () => {
     })
   })
 
+  it("uses generated family/server guidance for a non-pilot chart", () => {
+    const report = inspectChart({
+      component: "AreaChart",
+      props: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },
+    })
+
+    expect(report.bundle).toEqual({
+      category: "xy",
+      recommendedImport: "semiotic/xy",
+      serverImport: "semiotic/server",
+      note:
+        "Use the family facade today. Granular chart modules are a later package-boundary migration, so this recommendation does not claim a smaller per-chart bundle.",
+    })
+  })
+
+  it("preserves explicit pilot exclusions from renderChart guidance", () => {
+    const report = inspectChart({ component: "BigNumber", props: {} })
+
+    expect(report.bundle).toMatchObject({
+      category: "value",
+      recommendedImport: "semiotic/value",
+      docsRoute: "/charts/big-number",
+    })
+    expect(report.bundle).not.toHaveProperty("serverImport")
+  })
+
   it("omits the generated export timestamp so identical inspection reports are deterministic", () => {
     const input = {
       component: "BarChart",

@@ -2,9 +2,9 @@
  * Chart-specs round-trip gate (direct check).
  *
  * Asserts every entry in `CHART_SPECS` produces the same shape as the
- * canonical `ai/schema.json`, `validationMap.ts`, and
- * `ai/componentMetadata.cjs` entries — and that the *name sets* across
- * the four sources match exactly. With the schema/validation parity
+ * canonical `ai/schema.json`, the generated runtime validation/Chart Clinic
+ * maps, and `ai/componentMetadata.cjs` entries — and that the *name sets* across
+ * downstream sources match exactly. With the schema/validation parity
  * gates removed, this script is the single guarantee that a chart can't
  * land in one source while skipping the registry.
  *
@@ -16,8 +16,9 @@
  *   - schema drift  → edit `chartSpecs.ts`, then run
  *                      `npm run docs:chart-specs:schema` to refresh
  *                      `ai/schema.json` from the registry.
- *   - validationMap → edit `chartSpecs.ts`; `validationMap.ts` is derived
- *                      from `composeProps()`.
+ *   - validationMap → edit `chartSpecs.ts`, then run
+ *                      `npm run docs:chart-specs:schema` to refresh the
+ *                      generated runtime artifact.
  *   - componentMetadata
  *                   → edit `ai/componentMetadata.cjs` so the chart appears
  *                      under the bucket named by `spec.category`.
@@ -29,11 +30,17 @@ import { fileURLToPath } from "node:url"
 import { isDeepStrictEqual } from "node:util"
 
 import { CHART_SPECS, composeProps } from "../src/components/charts/shared/chartSpecs"
+import { CHART_DEFINITION_PILOT } from "../src/components/charts/shared/chartDefinitionPilot"
 import { VALIDATION_MAP } from "../src/components/charts/shared/validationMap"
+import { KNOWN_CHART_COMPONENTS } from "../src/components/charts/shared/knownChartComponents"
 // @ts-expect-error — generators emit `any`-typed schema fragments
 import {
   generateSchemaToolEntry,
-  generateValidationMapEntry,
+  generateChartClinicMetadata,
+  generateChartClinicMetadataModule,
+  generateKnownChartComponentsModule,
+  generateValidationMap,
+  generateValidationMapModule,
   generateMetadataEntry,
 } from "./lib/chart-specs-generators.mjs"
 
@@ -55,14 +62,70 @@ const schema: Schema = JSON.parse(readFileSync(join(repoRoot, "ai/schema.json"),
 const componentMetadata = require(join(repoRoot, "ai/componentMetadata.cjs")) as {
   COMPONENTS_BY_CATEGORY: Record<string, string[]>
 }
+const validationMapGeneratedPath = join(
+  repoRoot,
+  "src/components/charts/shared/validationMap.generated.ts",
+)
+const knownChartComponentsPath = join(
+  repoRoot,
+  "src/components/charts/shared/knownChartComponents.ts",
+)
+const chartClinicMetadataGeneratedPath = join(
+  repoRoot,
+  "src/components/ai/chartClinicMetadata.generated.ts",
+)
 
 const errors: string[] = []
 const fail = (msg: string) => errors.push(msg)
 
-// 1. Set parity across all four sources.
+// The structural checks below make runtime behavior explicit. This byte-level
+// check additionally guarantees that chartSpecs edits are paired with a
+// committed regeneration, rather than silently rebuilding the rich registry at
+// runtime or leaving a semantically equivalent hand-edited artifact behind.
+const generatedValidationMap = generateValidationMap(CHART_SPECS, composeProps)
+const expectedValidationMapModule = generateValidationMapModule(generatedValidationMap)
+const actualValidationMapModule = readFileSync(validationMapGeneratedPath, "utf8")
+if (actualValidationMapModule !== expectedValidationMapModule) {
+  fail(
+    "validationMap.generated.ts drifted from CHART_SPECS " +
+      "(run `npm run docs:chart-specs:schema`)",
+  )
+}
+const expectedKnownChartComponentsModule =
+  generateKnownChartComponentsModule(CHART_SPECS)
+const actualKnownChartComponentsModule = readFileSync(
+  knownChartComponentsPath,
+  "utf8",
+)
+if (actualKnownChartComponentsModule !== expectedKnownChartComponentsModule) {
+  fail(
+    "knownChartComponents.ts drifted from CHART_SPECS " +
+      "(run `npm run docs:chart-specs:schema`)",
+  )
+}
+const generatedChartClinicMetadata = generateChartClinicMetadata(
+  CHART_SPECS,
+  CHART_DEFINITION_PILOT,
+)
+const expectedChartClinicMetadataModule = generateChartClinicMetadataModule(
+  generatedChartClinicMetadata,
+)
+const actualChartClinicMetadataModule = readFileSync(
+  chartClinicMetadataGeneratedPath,
+  "utf8",
+)
+if (actualChartClinicMetadataModule !== expectedChartClinicMetadataModule) {
+  fail(
+    "chartClinicMetadata.generated.ts drifted from CHART_SPECS/CHART_DEFINITION_PILOT " +
+      "(run `npm run docs:chart-specs:schema`)",
+  )
+}
+
+// 1. Set parity across all five sources.
 const registryNames = new Set(Object.keys(CHART_SPECS))
 const schemaNames = new Set(schema.tools.map((t) => t.function.name))
 const validationNames = new Set(Object.keys(VALIDATION_MAP))
+const knownComponentNames = new Set<string>(KNOWN_CHART_COMPONENTS)
 const metadataNames = new Set(Object.values(componentMetadata.COMPONENTS_BY_CATEGORY).flat())
 
 function diffSets(label: string, actual: Set<string>, expected: Set<string>) {
@@ -74,7 +137,11 @@ function diffSets(label: string, actual: Set<string>, expected: Set<string>) {
 
 diffSets("ai/schema.json (vs CHART_SPECS)", schemaNames, registryNames)
 diffSets("validationMap.ts (vs CHART_SPECS)", validationNames, registryNames)
+diffSets("knownChartComponents.ts (vs CHART_SPECS)", knownComponentNames, registryNames)
 diffSets("ai/componentMetadata.cjs (vs CHART_SPECS)", metadataNames, registryNames)
+if (!isDeepStrictEqual([...KNOWN_CHART_COMPONENTS], [...registryNames])) {
+  fail("knownChartComponents.ts order differs from CHART_SPECS")
+}
 
 // 2. Per-chart structural equivalence.
 let checked = 0
@@ -89,7 +156,7 @@ for (const [name, spec] of Object.entries(CHART_SPECS)) {
     fail(`${name}: schema entry drift (regenerate ai/schema.json)`)
   }
 
-  const generatedValidation = generateValidationMapEntry(spec, composed)
+  const generatedValidation = generatedValidationMap[name]
   const canonicalValidation = VALIDATION_MAP[name]
   if (!canonicalValidation) {
     fail(`${name}: missing from VALIDATION_MAP`)
@@ -141,7 +208,9 @@ if (errors.length) {
   console.error(
     "\nFix:" +
       "\n  - schema drift           → edit chartSpecs.ts, then run `npm run docs:chart-specs:schema`" +
-      "\n  - validationMap drift    → edit chartSpecs.ts; validationMap.ts is derived from composeProps()" +
+      "\n  - validationMap drift    → edit chartSpecs.ts, then run `npm run docs:chart-specs:schema`" +
+      "\n  - known chart names drift → edit chartSpecs.ts, then run `npm run docs:chart-specs:schema`" +
+      "\n  - Chart Clinic drift     → edit its source registry, then run `npm run docs:chart-specs:schema`" +
       "\n  - componentMetadata drift → edit ai/componentMetadata.cjs to bucket the chart under spec.category\n",
   )
   process.exit(1)
