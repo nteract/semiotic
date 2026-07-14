@@ -581,13 +581,13 @@ const StreamNetworkFrame = memo(forwardRef<
     ]
   )
 
-  const isContinuous = shouldContinueNetworkAnimation({
+  const isContinuous = shouldContinueNetworkAnimation(
     chartType,
-    hasCustomNetworkLayout: !!customNetworkLayout,
+    !!customNetworkLayout,
     showParticles,
-    hasPulse: !!pulse,
-    isStoreAnimating: storeRef.current?.isAnimating ?? false
-  })
+    !!pulse,
+    storeRef.current?.isAnimating ?? false
+  )
 
   // customLayout overlays are read straight from `storeRef.current.customLayoutOverlays`
   // at render time (see the `foregroundGraphics` composition below) — the same
