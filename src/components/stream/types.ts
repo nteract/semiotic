@@ -19,8 +19,6 @@ import type { CoercibleNumber } from "./accessorUtils"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { SymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
-import type { ThemeSemanticColors } from "./streamThemeTypes"
-
 export type { ThemeSemanticColors } from "./streamThemeTypes"
 
 export type SceneDatum = Datum | null

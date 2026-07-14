@@ -118,7 +118,14 @@ export {
 
 // ── PipelineStore config ───────────────────────────────────────────────
 
-export class PipelineStore {
+export class PipelineStore implements UpdateResultStore {
+  declare getLastUpdateResult: () => UpdateResult
+  declare getUpdateSnapshot: () => UpdateResult
+  declare subscribeUpdateResult: (listener: () => void) => () => void
+  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
+  declare markStylePaintPending: () => void
+  declare consumeStylePaintPending: () => boolean
+
   private buffer: RingBuffer<Datum>
   private xExtent = new IncrementalExtent()
   private yExtent = new IncrementalExtent()
@@ -1583,5 +1590,4 @@ export class PipelineStore {
   }
 }
 
-export interface PipelineStore extends UpdateResultStore {}
 attachUpdateResultStore(PipelineStore)

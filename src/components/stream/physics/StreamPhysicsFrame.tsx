@@ -844,12 +844,9 @@ export const StreamPhysicsFrame = memo(forwardRef<
 
     const theme = resolvePhysicsCanvasTheme(ctx)
     ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
-    if (!backgroundGraphics) {
-      if (background === "transparent") {
-      } else {
-        ctx.fillStyle = background ?? theme.background
-        ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
-      }
+    if (!backgroundGraphics && background !== "transparent") {
+      ctx.fillStyle = background ?? theme.background
+      ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
     }
 
     const snapshot = store.snapshot()

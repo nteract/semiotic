@@ -64,7 +64,14 @@ import { syncOrdinalPulseTimestampBuffer } from "./ordinalPulseResources"
 import { buildOrdinalPointSpatialIndex } from "./ordinalSpatialIndex"
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
-export class OrdinalPipelineStore {
+export class OrdinalPipelineStore implements UpdateResultStore {
+  declare getLastUpdateResult: () => UpdateResult
+  declare getUpdateSnapshot: () => UpdateResult
+  declare subscribeUpdateResult: (listener: () => void) => () => void
+  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
+  declare markStylePaintPending: () => void
+  declare consumeStylePaintPending: () => boolean
+
   private buffer: RingBuffer<Datum>
   private rExtent = new IncrementalExtent()
   /** Per-accessor extents for multiAxis mode */
@@ -1606,5 +1613,4 @@ export class OrdinalPipelineStore {
   }
 }
 
-export interface OrdinalPipelineStore extends UpdateResultStore {}
 attachUpdateResultStore(OrdinalPipelineStore)

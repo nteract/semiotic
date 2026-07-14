@@ -61,7 +61,14 @@ import {
  * For bounded data: ingests nodes/edges arrays, runs layout once, builds scene.
  * For streaming data: ingests edge pushes, tracks tension, relayouts on threshold.
  */
-export class NetworkPipelineStore {
+export class NetworkPipelineStore implements UpdateResultStore {
+  declare getLastUpdateResult: () => UpdateResult
+  declare getUpdateSnapshot: () => UpdateResult
+  declare subscribeUpdateResult: (listener: () => void) => () => void
+  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
+  declare markStylePaintPending: () => void
+  declare consumeStylePaintPending: () => boolean
+
   // ── Topology ──────────────────────────────────────────────────────────
 
   nodes: Map<string, RealtimeNode> = new Map()
@@ -1546,5 +1553,4 @@ export class NetworkPipelineStore {
   }
 }
 
-export interface NetworkPipelineStore extends UpdateResultStore {}
 attachUpdateResultStore(NetworkPipelineStore)

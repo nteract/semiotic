@@ -58,7 +58,14 @@ import { buildBuiltInGeoScene } from "./geoSceneBuilder"
 
 const DEFAULT_STREAM_WINDOW_SIZE = 500
 
-export class GeoPipelineStore {
+export class GeoPipelineStore implements UpdateResultStore {
+  declare getLastUpdateResult: () => UpdateResult
+  declare getUpdateSnapshot: () => UpdateResult
+  declare subscribeUpdateResult: (listener: () => void) => () => void
+  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
+  declare markStylePaintPending: () => void
+  declare consumeStylePaintPending: () => boolean
+
   config: GeoPipelineConfig
   protected updateResults = new GeoPipelineUpdateResults()
 
@@ -1209,5 +1216,4 @@ export class GeoPipelineStore {
   }
 }
 
-export interface GeoPipelineStore extends UpdateResultStore {}
 attachUpdateResultStore(GeoPipelineStore)
