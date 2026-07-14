@@ -29,8 +29,6 @@ import {
   runSceneBuild,
   useSceneRevisionDiagnostics
 } from "./sceneRevisionDiagnostics"
-import { composeOverlays } from "./composeOverlays"
-import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import {
   extractNetworkNavPoints,
@@ -44,7 +42,6 @@ import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
-import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import {
   networkSceneNodeToSVG,
@@ -53,6 +50,7 @@ import {
   isServerEnvironment
 } from "./SceneToSVG"
 import { renderSceneWithBackend } from "./renderBackend"
+import { NetworkSSRFrame } from "./NetworkSSRFrame"
 import {
   useHydration,
   useWasHydratingFromSSR
@@ -66,7 +64,6 @@ import {
   SkipToTableLink,
   computeNetworkAriaLabel
 } from "./AccessibleDataTable"
-import { filterSparseArray } from "../charts/shared/sparseArray"
 import { renderLoadingState } from "../charts/shared/withChartWrapper"
 import {
   canUseForceWorker,
@@ -270,11 +267,6 @@ const StreamNetworkFrame = memo(forwardRef<
   // (matches server output); pure CSR mounts skip it.
   const hydrated = useHydration()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
-  const safeNodes = useMemo(() => filterSparseArray(nodesProp), [nodesProp])
-  const safeEdges = useMemo(
-    () => (Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : edgesProp),
-    [edgesProp]
-  )
 
   const tensionConfig = useMemo(
     () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),
@@ -1415,139 +1407,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // SSR + actual SSR-hydration only — pure CSR mounts skip the
   // wasted SVG render. See StreamXYFrame for the full rationale.
   if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
-    const store = storeRef.current
-    if (store) {
-      const isHierarchical = [
-        "tree",
-        "cluster",
-        "treemap",
-        "circlepack",
-        "partition",
-        "orbit"
-      ].includes(chartType)
-      const hierarchyRoot = isHierarchical
-        ? dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)
-        : undefined
-
-      if (isHierarchical && hierarchyRoot) {
-        store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
-        store.buildScene([adjustedWidth, adjustedHeight])
-      } else {
-        const rawNodes = safeNodes
-        const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
-        if (rawNodes.length > 0 || rawEdges.length > 0) {
-          store.ingestBounded(rawNodes, rawEdges, [
-            adjustedWidth,
-            adjustedHeight
-          ])
-          store.buildScene([adjustedWidth, adjustedHeight])
-        }
-      }
-    }
-
-    const sceneNodes = store?.sceneNodes ?? []
-    const sceneEdges = store?.sceneEdges ?? []
-    const labels = store?.labels ?? []
-
-    return (
-      <div
-        // Attached on both branches so the `ResizeObserver` in
-        // `useResponsiveSize` latches at first commit. See
-        // `StreamXYFrame.tsx` for the full rationale.
-        ref={responsiveRef}
-        className={`stream-network-frame${className ? ` ${className}` : ""}`}
-        role="img"
-        aria-label={
-          description || (typeof title === "string" ? title : "Network chart")
-        }
-        style={{
-          position: "relative",
-          width: responsiveWidth ? "100%" : size[0],
-          height: responsiveHeight ? "100%" : size[1]
-        }}
-      >
-        <ScreenReaderSummary summary={summary} />
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width={size[0]}
-          height={size[1]}
-          style={{ position: "absolute", left: 0, top: 0 }}
-        >
-          {resolvedBackground && (
-            <g transform={`translate(${margin.left},${margin.top})`}>
-              {resolvedBackground}
-            </g>
-          )}
-          <g transform={`translate(${margin.left},${margin.top})`}>
-            {background && (
-              <rect
-                x={0}
-                y={0}
-                width={adjustedWidth}
-                height={adjustedHeight}
-                fill={background}
-              />
-            )}
-            {sceneEdges
-              .map((edge, i) => renderSceneWithBackend({
-                node: edge,
-                index: i,
-                renderMode,
-                fallback: () => networkSceneEdgeToSVG(edge, i)
-              }))
-              .filter(Boolean)}
-            {sceneNodes
-              .map((node, i) => renderSceneWithBackend({
-                node,
-                index: i,
-                renderMode,
-                fallback: () => networkSceneNodeToSVG(node, i)
-              }))
-              .filter(Boolean)}
-            {labels
-              .map((label, i) => networkLabelToSVG(label, i))
-              .filter(Boolean)}
-          </g>
-        </svg>
-        <NetworkSVGOverlay
-          width={adjustedWidth}
-          height={adjustedHeight}
-          totalWidth={size[0]}
-          totalHeight={size[1]}
-          margin={margin}
-          labels={labels}
-          sceneNodes={sceneNodes}
-          title={title}
-          legend={legend}
-          legendPosition={legendPosition}
-          legendLayout={legendLayout}
-          legendHoverBehavior={legendHoverBehavior}
-          legendClickBehavior={legendClickBehavior}
-          legendHighlightedCategory={legendHighlightedCategory}
-          legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={composeOverlays(
-            resolvedForeground,
-            wrapWithCustomLayoutSelection(
-              storeRef.current?.customLayoutOverlays,
-              layoutSelection ?? null
-            )
-          )}
-          annotations={annotations}
-          onAnnotationActivate={onAnnotationActivate}
-          onObservation={annotationObservationCallback ?? onObservation}
-          chartId={chartId}
-          chartType="StreamNetworkFrame"
-          autoPlaceAnnotations={autoPlaceAnnotations}
-          svgAnnotationRules={svgAnnotationRules}
-          annotationFrame={0}
-        />
-        <NetworkHtmlMarksLayer
-          marks={store?.customLayoutHtmlMarks}
-          margin={margin}
-          selection={layoutSelection ?? null}
-        />
-      </div>
-    )
+    return <NetworkSSRFrame props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
   }
 
   // ── Render ───────────────────────────────────────────────────────────
