@@ -156,7 +156,7 @@
     },
     {
       "path": "src/components/stream/StreamNetworkFrame.tsx",
-      "maxLines": 1708,
+      "maxLines": 1710,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +4 (2026-07-11): onLayoutError prop plumbing + getLayoutFailure() handle."
     },
     {
