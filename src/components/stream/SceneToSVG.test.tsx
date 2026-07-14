@@ -38,8 +38,13 @@ describe("xySceneNodeToSVG — line", () => {
   })
 
   it("returns null for empty path", () => {
-    const node = { type: "line", path: [], style: {} }
-    expect(xySceneNodeToSVG(node as XYSceneNode, 0)).toBeNull()
+    const node: Extract<XYSceneNode, { type: "line" }> = {
+      type: "line",
+      path: [],
+      style: {},
+      datum: []
+    }
+    expect(xySceneNodeToSVG(node, 0)).toBeNull()
   })
 
   it("uses default stroke when not specified", () => {
@@ -467,8 +472,14 @@ describe("xySceneNodeToSVG — area", () => {
   })
 
   it("returns null for empty topPath", () => {
-    const node = { type: "area", topPath: [], bottomPath: [], style: {} }
-    expect(xySceneNodeToSVG(node as XYSceneNode, 0)).toBeNull()
+    const node: Extract<XYSceneNode, { type: "area" }> = {
+      type: "area",
+      topPath: [],
+      bottomPath: [],
+      style: {},
+      datum: []
+    }
+    expect(xySceneNodeToSVG(node, 0)).toBeNull()
   })
 
   it("defaults fillOpacity from style.opacity when fillOpacity absent", () => {
