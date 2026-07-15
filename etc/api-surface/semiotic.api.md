@@ -16,6 +16,7 @@ const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme>
 const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
 function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId, onObservation, onAnnotationActivate }: AccessibleNavTreeProps): React.JSX.Element
+function AnnotationLabel(props: AnnotationLabelProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -87,6 +88,7 @@ function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisua
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
+function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function configToJSX(config: ChartConfig): string
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
@@ -94,23 +96,38 @@ function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx
 function darkenColor(hex: string, factor?: number | undefined): string
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>
+function estimateLabelWidth(text: string | number, fontSize: number): number
 function exportChart(container: HTMLElement, options?: { format?: "svg" | "png"; filename?: string; scale?: number; background?: string; } | undefined): Promise<void>
 function fromConfig(config: ChartConfig): { componentName: string; props: Datum; }
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[]; }
+function hatchFillId(prefix: string, h: HatchFill): string
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function intentManifestFromRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>, options: IntentManifestFromRecipeOptions): IntentManifest
+function isHatchFill(fill: unknown): boolean
 function lightenColor(hex: string, factor?: number | undefined): string
+function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
+function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function makeStyleRuleStyleFn(rules: readonly StyleRule[] | undefined, buildContext: (d: Datum, arg?: string) => StyleRuleContext, userStyleFn?: MarkStyleFn | undefined): MarkStyleFn | undefined
+function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function normalizeTooltip(tooltip: TooltipProp | undefined): false | TooltipContentFn | undefined
 function opacityFromAge(options: MotionAgeOpacityOptions): number
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
+function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
+function resolveSvgFill(fill: string | CanvasPattern | HatchFill | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function resolveThemePreset(name: string): SemioticTheme | undefined
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
+function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
 function smartTickFormat(value: string | number | Date | null | undefined): string
 function smartTooltipEntries(raw: Datum | null | undefined, options?: { maxEntries?: number; skipPositional?: boolean; } | undefined): SmartTooltipResult
+function styleRulesToNodeStyle(rules: readonly StyleRule[] | undefined, colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor: string | ((d: Datum) => unknown) | undefined, userNodeStyle?: ((d: Datum, arg?: number) => Datum) | undefined): ((d: Datum, arg?: number) => Datum) | undefined
+function styleRulesToPieceStyle(rules: readonly StyleRule[] | undefined, valueAccessor: string | ((d: Datum) => unknown) | undefined, userPieceStyle?: MarkStyleFn | undefined): MarkStyleFn | undefined
+function styleRulesToXYStyle(rules: readonly StyleRule[] | undefined, xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined, userStyle?: MarkStyleFn | undefined): MarkStyleFn | undefined
 function summarizeIntentManifest(manifest: IntentManifest): string
 function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
@@ -137,6 +154,8 @@ interface ActivateObservation
 interface AnnotationActivateObservation
 interface AnnotationActivationEvent
 interface AnnotationContext
+interface AnnotationLabelBackgroundConfig
+interface AnnotationLabelProps
 interface AnnotationLifecycle
 interface AnnotationProvenance
 interface AreaChartProps<TDatum extends Datum = Datum>
@@ -185,6 +204,7 @@ interface FunnelChartProps<TDatum extends Datum = Datum>
 interface GaugeChartProps
 interface GaugeThreshold
 interface GroupedBarChartProps<TDatum extends Datum = Datum>
+interface HatchFill
 interface HatchPatternOptions
 interface HeatmapProps<TDatum extends Datum = Datum>
 interface HistogramProps<TDatum extends Datum = Datum>
@@ -276,6 +296,10 @@ interface StreamOrdinalFrameProps<T = Datum>
 interface StreamScales
 interface StreamXYFrameHandle<T = Datum>
 interface StreamXYFrameProps<T = Datum>
+interface StyleRule
+interface StyleRuleContext
+interface StyleRuleStyle
+interface StyleRuleThreshold
 interface SwarmPlotProps<TDatum extends Datum = Datum>
 interface SwarmStyle
 interface SwimlaneChartProps<TDatum extends Datum = Datum>
@@ -318,6 +342,7 @@ type AnnotationAnchor = "fixed" | "latest" | "sticky" | "semantic"
 type AnnotationAnchorMode = AnnotationAnchor
 type AnnotationBasis = "human-note" | "statistical-test" | "rule" | "llm-inference" | "external-source" | "computed" | (string & {})
 type AnnotationFreshness = LifecycleBand
+type AnnotationLabelBackground = boolean | "halo" | "box" | "none" | AnnotationLabelBackgroundConfig
 type AnnotationSource = "user" | "ai" | "agent" | "import" | "computed" | "system" | (string & {})
 type AnnotationStatus = "proposed" | "accepted" | "disputed" | "retracted"
 type ArrowOfTime = "up" | "down" | "left" | "right"
@@ -391,6 +416,7 @@ type SerializedSelections = Record<string, SerializedSelection>
 type SmallMultipleExtent = [number, number]
 type StreamChartType = "line" | "area" | "stackedarea" | "mixed" | "scatter" | "bubble" | "heatmap" | "bar" | "swarm" | "waterfall" | "candlestick" | "custom"
 type StreamRendererFn = (ctx: CanvasRenderingContext2D, nodes: SceneNode[], scales: StreamScales, layout: StreamLayout) => void
+type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = keyof typeof THEME_PRESETS
 type ThresholdType = "greater" | "lesser"
 type TooltipProp = boolean | "multi" | ((data: Record<string, unknown>) => React.ReactNode) | ReturnType<typeof Tooltip> | ReturnType<typeof MultiLineTooltip> | TooltipConfig

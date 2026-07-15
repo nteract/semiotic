@@ -5,6 +5,7 @@ _Edit dist/semiotic-ordinal.d.ts's sources, then re-run `npm run docs:api-surfac
 
 ```
 const DEFAULT_HIT_RADIUS: 8
+function AnnotationLabel(props: AnnotationLabelProps): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
@@ -22,14 +23,29 @@ function StreamOrdinalFrame(: import("../../../dist/semiotic-ordinal").StreamOrd
 function SwarmPlot<TDatum extends Datum = Datum>(props: SwarmPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function SwimlaneChart<TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | null
+function estimateLabelWidth(text: string | number, fontSize: number): number
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
+function hatchFillId(prefix: string, h: HatchFill): string
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
 function hitTargetRect(props: HitTargetRectProps): RectSceneNode
+function isHatchFill(fill: unknown): boolean
+function makeNodeRuleContext(colorBy: string | ((d: Datum) => unknown) | undefined, valueAccessor?: string | ((d: Datum) => unknown) | undefined): (raw: Datum) => StyleRuleContext
+function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function makeStyleRuleStyleFn(rules: readonly StyleRule[] | undefined, buildContext: (d: Datum, arg?: string) => StyleRuleContext, userStyleFn?: MarkStyleFn | undefined): MarkStyleFn | undefined
+function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
+function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
+function resolveSvgFill(fill: string | CanvasPattern | HatchFill | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
+function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function useCustomLayoutSelection(): CustomLayoutSelection
+interface AnnotationLabelBackgroundConfig
+interface AnnotationLabelProps
 interface BarChartProps<TDatum extends Datum = Datum>
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
@@ -41,6 +57,7 @@ interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
 interface GroupedBarChartProps<TDatum extends Datum = Datum>
+interface HatchFill
 interface HatchPatternOptions
 interface HitTargetPointProps
 interface HitTargetRectProps
@@ -59,11 +76,17 @@ interface SceneAccessibilityMetadata
 interface StackedBarChartProps<TDatum extends Datum = Datum>
 interface StreamOrdinalFrameHandle<T = Datum>
 interface StreamOrdinalFrameProps<T = Datum>
+interface StyleRule
+interface StyleRuleContext
+interface StyleRuleStyle
+interface StyleRuleThreshold
 interface SwimlaneChartProps<TDatum extends Datum = Datum>
+type AnnotationLabelBackground = boolean | "halo" | "box" | "none" | AnnotationLabelBackgroundConfig
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
 type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
 type OrdinalChartType = "bar" | "clusterbar" | "point" | "swarm" | "pie" | "donut" | "boxplot" | "violin" | "histogram" | "ridgeline" | "timeline" | "funnel" | "bar-funnel" | "swimlane" | "custom"
 type OrdinalCustomLayout<C extends object = Record<string, unknown>> = (ctx: OrdinalLayoutContext<C>) => OrdinalLayoutResult
 type OrdinalSceneNode = RectSceneNode | PointSceneNode | SymbolSceneNode | GlyphSceneNode | WedgeSceneNode | BoxplotSceneNode | ViolinSceneNode | ConnectorSceneNode | TrapezoidSceneNode
 type ResponsiveOrientation = "portrait" | "landscape"
+type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 ```

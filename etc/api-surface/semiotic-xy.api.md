@@ -20,12 +20,22 @@ function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatri
 function StackedAreaChart<TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
 function StreamXYFrame(: import("../../../dist/semiotic-realtime-core").StreamXYFrameProps<import("../../../dist/components/stream/networkColorAccessors").Datum> & React.RefAttributes<import("../../../dist/semiotic-realtime-core").StreamXYFrameHandle<import("../../../dist/components/stream/networkColorAccessors").Datum>>): React.ReactNode
 function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: XYCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | null
+function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
+function hatchFillId(prefix: string, h: HatchFill): string
+function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
 function hitTargetRect(props: HitTargetRectProps): RectSceneNode
+function isHatchFill(fill: unknown): boolean
+function makeRuleValueResolver(accessor: string | ((d: Datum) => unknown) | undefined): (d: Datum) => number | undefined
+function makeXYRuleContext(xAccessor: string | ((d: Datum) => unknown) | undefined, yAccessor: string | ((d: Datum) => unknown) | undefined): (d: Datum, category?: string) => StyleRuleContext
+function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
+function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
+function resolveSvgFill(fill: string | HatchFill | CanvasPattern | null | undefined, idBase: string, fallback?: string | undefined): { fill: string; def?: React.ReactElement; }
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
+function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
 function useCustomLayoutSelection(): CustomLayoutSelection
 interface AreaChartProps<TDatum extends Datum = Datum>
 interface BubbleChartProps<TDatum extends Datum = Datum>
@@ -38,6 +48,7 @@ interface DifferenceChartProps<TDatum extends Datum = Datum>
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
+interface HatchFill
 interface HeatmapProps<TDatum extends Datum = Datum>
 interface HitTargetPointProps
 interface HitTargetRectProps
@@ -59,6 +70,10 @@ interface SemanticGradientStop
 interface StackedAreaChartProps<TDatum extends Datum = Datum>
 interface StreamXYFrameHandle<T = Datum>
 interface StreamXYFrameProps<T = Datum>
+interface StyleRule
+interface StyleRuleContext
+interface StyleRuleStyle
+interface StyleRuleThreshold
 interface XYCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "preserved-last-good-scene" | "empty-scene"
@@ -67,4 +82,5 @@ type QuadrantsConfigOverride = {
     [TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>;
 }
 type ResponsiveOrientation = "portrait" | "landscape"
+type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 ```
