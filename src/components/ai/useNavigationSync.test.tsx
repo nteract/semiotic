@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { render, act } from "@testing-library/react"
 import * as React from "react"
-import { useNavigationSync } from "./useNavigationSync"
+import { useNavigationSync, type UseNavigationSyncResult } from "./useNavigationSync"
 import { buildNavigationTree, type NavTreeNode } from "./navigationTree"
 import { useSelection } from "../store/useSelection"
-import { ObservationProvider, useObservationSelector } from "../store/ObservationStore"
+import { ObservationProvider, useObservationSelector, type ObservationStoreState } from "../store/ObservationStore"
 import { SelectionProvider } from "../store/SelectionStore"
 
 const tree = buildNavigationTree("LineChart", {
@@ -19,15 +19,21 @@ function findLeaf(node: NavTreeNode, pred: (n: NavTreeNode) => boolean): NavTree
 }
 const febLeaf = findLeaf(tree, (n) => n.label === "Feb: 250")!
 
+interface NavigationHarnessApi {
+  sync: UseNavigationSyncResult
+  sel: ReturnType<typeof useSelection>
+  push: ObservationStoreState["pushObservation"]
+}
+
 // Harness exposes the live hook + a sibling selection consumer + the store's
 // push. Wrapped in fresh Providers so each test gets isolated stores (the
 // module-global fallback stores would otherwise leak state across tests).
 function makeHarness() {
-  const api: any = {}
+  const api = {} as NavigationHarnessApi
   function Inner() {
     api.sync = useNavigationSync({ tree, chartId: "c1", matchFields: ["month"], selectionName: "nav-test" })
     api.sel = useSelection({ name: "nav-test", fields: ["month"] })
-    api.push = useObservationSelector((s: any) => s.pushObservation)
+    api.push = useObservationSelector((state) => state.pushObservation)
     return null
   }
   function Harness() {
@@ -102,10 +108,10 @@ describe("useNavigationSync — canvas → tree", () => {
   })
 
   it("does not jump when matchFields is empty (would otherwise collapse to the first leaf)", () => {
-    const api: any = {}
+    const api = {} as Pick<NavigationHarnessApi, "sync" | "push">
     function Inner() {
       api.sync = useNavigationSync({ tree, chartId: "c1", matchFields: [], selectionName: "nav-empty" })
-      api.push = useObservationSelector((s: any) => s.pushObservation)
+      api.push = useObservationSelector((state) => state.pushObservation)
       return null
     }
     render(<SelectionProvider><ObservationProvider><Inner /></ObservationProvider></SelectionProvider>)
@@ -117,7 +123,7 @@ describe("useNavigationSync — canvas → tree", () => {
   })
 
   it("resets the active node to root when the tree is rebuilt", () => {
-    const api: any = {}
+    const api = {} as Pick<NavigationHarnessApi, "sync">
     function Inner({ t }: { t: NavTreeNode }) {
       api.sync = useNavigationSync({ tree: t, chartId: "c1", matchFields: ["month"], selectionName: "nav-rebuild" })
       return null
@@ -165,7 +171,7 @@ describe("useNavigationSync — annotation anchors", () => {
   const marLeaf = findLeaf(tree, (n) => n.label === "Mar: 180")!
 
   function makeAnnotatedHarness() {
-    const api: any = {}
+    const api = {} as Pick<NavigationHarnessApi, "sync" | "sel">
     function Inner() {
       api.sync = useNavigationSync({ tree, chartId: "c1", matchFields: ["month"], selectionName: "nav-ann", annotations })
       api.sel = useSelection({ name: "nav-ann", fields: ["month"] })

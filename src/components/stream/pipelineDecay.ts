@@ -1,4 +1,4 @@
-import type { Datum } from "../charts/shared/datumTypes"
+import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 /**
  * Shared decay encoding utilities for all pipeline stores.
  *
@@ -68,7 +68,7 @@ export function applyDecay(
   decay: DecayConfig,
   nodes: SceneNode[],
   data: Datum[],
-  indexMap: Map<any, number> = buildDatumIndexMap(data)
+  indexMap: Map<DatumValue, number> = buildDatumIndexMap(data)
 ): void {
   const bufferSize = data.length
   if (bufferSize <= 1) return

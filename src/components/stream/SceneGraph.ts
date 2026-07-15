@@ -1,5 +1,6 @@
 import type {
   SceneNode,
+  SceneDatum,
   LineSceneNode,
   AreaSceneNode,
   PointSceneNode,
@@ -399,7 +400,7 @@ export function buildRectNode(
   w: number,
   h: number,
   style: Style,
-  datum: any,
+  datum: SceneDatum,
   group?: string
 ): RectSceneNode {
   return { type: "rect", x, y, w, h, style, datum, group }
@@ -411,7 +412,7 @@ export function buildHeatcellNode(
   w: number,
   h: number,
   fill: string,
-  datum: any,
+  datum: Datum,
   options?: { value?: number; showValues?: boolean; valueFormat?: (v: number) => string }
 ): HeatcellSceneNode {
   const node: HeatcellSceneNode = { type: "heatcell", x, y, w, h, fill, datum }

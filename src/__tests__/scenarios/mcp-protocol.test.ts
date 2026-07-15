@@ -1,4 +1,5 @@
 import type { Datum } from "../../components/charts/shared/datumTypes"
+import type { JsonRpcResponse, ListedMcpTool } from "./mcpProtocolTypes"
 /**
  * MCP protocol compliance tests.
  *
@@ -146,7 +147,7 @@ function waitForHTTPServer(proc: ChildProcess): Promise<void> {
   })
 }
 
-function parseSSEJSON(text: string): any {
+function parseSSEJSON(text: string): JsonRpcResponse {
   const events = text.split(/\r?\n\r?\n/)
   for (const event of events) {
     const data = event
@@ -159,7 +160,7 @@ function parseSSEJSON(text: string): any {
   throw new Error(`No SSE data line found: ${text}`)
 }
 
-function parseHTTPRPCBody(text: string, contentType: string | null): any {
+function parseHTTPRPCBody(text: string, contentType: string | null): JsonRpcResponse | undefined {
   if (!text) return undefined
   if (contentType?.includes("application/json")) return JSON.parse(text)
   if (contentType?.includes("text/event-stream")) return parseSSEJSON(text)
@@ -219,7 +220,7 @@ async function sendHTTPRPC(
   sessionId?: string,
   pathName = "/"
 ): Promise<{
-  body?: any
+  body?: JsonRpcResponse
   response: Response
   text: string
 }> {
@@ -319,7 +320,7 @@ function sendRequest(
   method: string,
   params: Datum = {},
   id: string | number = 1
-): Promise<any> {
+): Promise<JsonRpcResponse> {
   return new Promise((resolve, reject) => {
     let buffer = ""
 
@@ -374,7 +375,7 @@ function sendRequest(
 }
 
 /** Send initialize + initialized handshake, return the initialize result. */
-async function initializeServer(proc: ChildProcess): Promise<any> {
+async function initializeServer(proc: ChildProcess): Promise<JsonRpcResponse> {
   const initResult = await sendRequest(proc, "initialize", {
     protocolVersion: "2025-03-26",
     capabilities: {},
@@ -735,7 +736,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     const sc = result.result.structuredContent
     expect(sc.ok).toBe(true)
     // Scatterplot satisfies push + ssr — should be in the filtered set.
-    expect(sc.suggestions.some((s: any) => s.component === "Scatterplot")).toBe(true)
+    expect((sc.suggestions as Datum[]).some((suggestion) => suggestion.component === "Scatterplot")).toBe(true)
     expect(sc.capabilities).toEqual({ push: true, ssr: true })
   })
 
@@ -942,7 +943,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
   it("renderInteractiveChart advertises its Apps SDK widget template", async () => {
     const result = await sendRequest(proc, "tools/list", {}, "list-app-render-shape")
 
-    const tools = result.result.tools as Array<{ name: string; _meta?: Record<string, any>; annotations?: Record<string, unknown> }>
+    const tools = result.result.tools as ListedMcpTool[]
     const render = tools.find((t) => t.name === "renderInteractiveChart")!
     expect(render._meta?.ui).toEqual({ resourceUri: "ui://semiotic/chart-widget.html" })
     expect(render._meta?.["openai/outputTemplate"]).toBe("ui://semiotic/chart-widget.html")
@@ -1242,7 +1243,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     })
 
     expect(init.response.status).toBe(200)
-    expect(init.body.result.serverInfo.name).toBe("semiotic")
+    expect(init.body!.result.serverInfo.name).toBe("semiotic")
 
     // Stateless mode issues no session: the server uses an ephemeral
     // server+transport per request, so no mcp-session-id header comes back
@@ -1257,7 +1258,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     })
 
     expect(tools.response.status).toBe(200)
-    const names = tools.body.result.tools.map((tool: { name: string }) => tool.name)
+    const names = tools.body!.result.tools.map((tool: { name: string }) => tool.name)
     expect(names).toContain("getSchema")
     expect(names).toContain("suggestChart")
     expect(names).toContain("renderChart")
@@ -1441,7 +1442,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
       params: {},
     }, undefined, "/mcp")
     expect(tools.response.status).toBe(200)
-    expect(tools.body.result.tools.map((tool: { name: string }) => tool.name).sort()).toEqual([
+    expect(tools.body!.result.tools.map((tool: { name: string }) => tool.name).sort()).toEqual([
       "auditChart",
       "createChart",
       "explainChart",

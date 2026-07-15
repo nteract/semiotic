@@ -13,10 +13,11 @@ import { resolveCustomLayout } from "../charts/physics/physicsCustomLayout"
 import { buildGauntletPhysics } from "../charts/physics/gauntletPhysics"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { LIGHT_THEME, resolveThemeSemanticColors } from "../store/ThemeStore"
+import type { PhysicsQueuedSpawn } from "../stream/physics/PhysicsPipelineTypes"
 
 // ── Physics Charts ─────────────────────────────────────────────────────
 
-function allAtOnce(spawns: any[]): any[] {
+function allAtOnce(spawns: PhysicsQueuedSpawn[]): PhysicsQueuedSpawn[] {
   return spawns.map((spawn) => ({ ...spawn, spawnAt: undefined }))
 }
 

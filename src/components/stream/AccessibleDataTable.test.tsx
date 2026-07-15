@@ -333,8 +333,8 @@ describe("extractAllRows — surfaces raw data, not pixels", () => {
 
 describe("extractAllRows — data shape resilience (never throws)", () => {
   it("returns [] for a non-array scene", () => {
-    expect(extractAllRows(null as any)).toEqual([])
-    expect(extractAllRows("nope" as any)).toEqual([])
+    expect(Reflect.apply(extractAllRows, null, [null])).toEqual([])
+    expect(Reflect.apply(extractAllRows, null, ["nope"])).toEqual([])
   })
 
   it("skips nodes with null datum", () => {
@@ -375,15 +375,25 @@ describe("extractAllRows — data shape resilience (never throws)", () => {
 // ── computeFieldStats logic ─────────────────────────────────────────────
 
 describe("computeFieldStats resilience", () => {
+  interface TestFieldStats {
+    name: string
+    count: number
+    numeric: boolean
+    min?: number
+    max?: number
+    mean?: number
+    uniqueValues?: string[]
+  }
+
   // Replicate the production logic for direct testing
-  function computeFieldStats(rows: Array<{ values?: Datum } | null>): any[] {
+  function computeFieldStats(rows: Array<{ values?: Datum } | null>): TestFieldStats[] {
     if (!rows || rows.length === 0) return []
     const fieldNames = new Set<string>()
     for (const r of rows) {
       if (!r || !r.values) continue
       for (const k of Object.keys(r.values)) fieldNames.add(k)
     }
-    const stats: any[] = []
+    const stats: TestFieldStats[] = []
     for (const name of fieldNames) {
       const nums: number[] = []
       const strs = new Set<string>()
@@ -544,8 +554,8 @@ describe("computeFieldStats resilience", () => {
       { values: { a: 3 } },
     ]
     const stats = computeFieldStats(rows)
-    const aStats = stats.find((s: any) => s.name === "a")
-    const bStats = stats.find((s: any) => s.name === "b")
+    const aStats = stats.find((s) => s.name === "a")
+    const bStats = stats.find((s) => s.name === "b")
     expect(aStats!.count).toBe(2) // only 2 rows have 'a'
     expect(bStats!.count).toBe(2) // only 2 rows have 'b'
   })

@@ -9,7 +9,7 @@
  * `StreamOrdinalFrame` (and any future frame with the same need)
  * can share the same plumbing rather than re-implementing it.
  */
-import type { Datum } from "../charts/shared/datumTypes"
+import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 
 export interface ResolvedAnnotationAccessor {
   /** String key the annotation context will read on each datum. */
@@ -17,7 +17,7 @@ export interface ResolvedAnnotationAccessor {
   /** Accessor function when the user supplied one (synthetic key
    *  gets baked from this); `null` when the user supplied a string
    *  or nothing. */
-  fn: ((d: Datum) => any) | null
+  fn: ((d: Datum) => DatumValue) | null
 }
 
 /**
@@ -37,9 +37,9 @@ export function resolveAnnotationAccessor(
   fallbackKey: string,
 ): ResolvedAnnotationAccessor {
   if (typeof primary === "string") return { key: primary, fn: null }
-  if (typeof primary === "function") return { key: resolvedKey, fn: primary as (d: Datum) => any }
+  if (typeof primary === "function") return { key: resolvedKey, fn: primary as (d: Datum) => DatumValue }
   if (typeof fallback === "string") return { key: fallback, fn: null }
-  if (typeof fallback === "function") return { key: fallbackKey, fn: fallback as (d: Datum) => any }
+  if (typeof fallback === "function") return { key: fallbackKey, fn: fallback as (d: Datum) => DatumValue }
   return { key: undefined, fn: null }
 }
 

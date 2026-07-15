@@ -111,8 +111,8 @@ export function useStreamingLegend({
 
   /** Wrap pushMany to intercept data for category discovery */
   const wrapPushMany = useCallback(
-    (originalPushMany: (d: any[]) => void) => {
-      return (data: any[]) => {
+    (originalPushMany: (data: Datum[]) => void) => {
+      return (data: Datum[]) => {
         processData(data)
         originalPushMany(data)
       }

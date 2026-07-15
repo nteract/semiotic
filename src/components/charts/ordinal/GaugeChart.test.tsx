@@ -1,3 +1,5 @@
+import type { CapturedOrdinalFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -6,11 +8,11 @@ import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
 
 // Mock OrdinalFrame to capture props
-let lastOrdinalFrameProps: any = null
+let lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamOrdinalFrameHandle>, CapturedOrdinalFrameProps>((props, _ref) => {
       lastOrdinalFrameProps = props
       return <div className="stream-ordinal-frame"><svg /></div>
     })
@@ -19,7 +21,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
 
 describe("GaugeChart", () => {
   beforeEach(() => {
-    lastOrdinalFrameProps = null
+    lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
   })
 
   it("renders without crashing", () => {
@@ -48,8 +50,8 @@ describe("GaugeChart", () => {
       </TooltipProvider>
     )
     const data = lastOrdinalFrameProps.data
-    const fillSegment = data.find((d: Datum) => d._isFill)
-    const bgSegment = data.find((d: Datum) => !d._isFill)
+    const fillSegment = data.find((d: Datum) => d._isFill)!
+    const bgSegment = data.find((d: Datum) => !d._isFill)!
     expect(fillSegment).toBeTruthy()
     expect(bgSegment).toBeTruthy()
     // Data sums to 1.0 — pieScene uses sweepAngle to limit the arc
@@ -117,7 +119,7 @@ describe("GaugeChart", () => {
       </TooltipProvider>
     )
     const annotations = lastOrdinalFrameProps.annotations
-    const needle = annotations?.find((a: any) => a.type === "gauge-needle")
+    const needle = annotations?.find((a) => a.type === "gauge-needle")
     expect(needle).toBeTruthy()
   })
 
@@ -128,7 +130,7 @@ describe("GaugeChart", () => {
       </TooltipProvider>
     )
     const annotations = lastOrdinalFrameProps.annotations || []
-    const needle = annotations.find((a: any) => a.type === "gauge-needle")
+    const needle = annotations.find((a) => a.type === "gauge-needle")
     expect(needle).toBeFalsy()
   })
 
@@ -146,7 +148,7 @@ describe("GaugeChart", () => {
       </TooltipProvider>
     )
     const annotations = lastOrdinalFrameProps.annotations || []
-    const labels = annotations.filter((a: any) => a.type === "gauge-label")
+    const labels = annotations.filter((a) => a.type === "gauge-label")
     // Should have labels at 33 and 66 (not 100 since it equals max)
     expect(labels.length).toBe(2)
     expect(labels[0].value).toBe(33)
@@ -374,7 +376,7 @@ describe("GaugeChart", () => {
         </TooltipProvider>
       )
       const data = lastOrdinalFrameProps.data || []
-      const band = data.find((d: Datum) => d._gradientBand)
+      const band = data.find((d: Datum) => d._gradientBand)!
       expect(band).toBeTruthy()
       const colors: string[] = band?._gradientBand?.colors || []
       expect(colors.length).toBeGreaterThan(3)
@@ -400,7 +402,7 @@ describe("GaugeChart", () => {
       )
       const data = lastOrdinalFrameProps.data || []
       const track = data[0]
-      const band = data.find((d: Datum) => d._gradientBand)
+      const band = data.find((d: Datum) => d._gradientBand)!
 
       // Track is the grey backdrop, rounded on both ends — sits in the
       // gauge's gap-bottom convention behind the gradient band.
@@ -443,7 +445,7 @@ describe("GaugeChart", () => {
       // renderer reads them directly without going through pieceStyle,
       // so unparseable values flow through verbatim and CSS-var fills
       // still resolve in canvas/SVG paint.
-      const band = (lastOrdinalFrameProps.data || []).find((d: Datum) => d._gradientBand)
+      const band = (lastOrdinalFrameProps.data || []).find((d: Datum) => d._gradientBand)!
       const colors: string[] = band?._gradientBand?.colors || []
       const colorSet = new Set(colors)
       expect(colorSet.has("#808080")).toBe(false)
@@ -470,7 +472,7 @@ describe("GaugeChart", () => {
           />
         </TooltipProvider>
       )
-      const band = (lastOrdinalFrameProps.data || []).find((d: Datum) => d._gradientBand)
+      const band = (lastOrdinalFrameProps.data || []).find((d: Datum) => d._gradientBand)!
       expect(band?._gradientBand?.colors.length).toBeLessThanOrEqual(240)
     })
   })

@@ -46,8 +46,8 @@ async function chooseFilterOption(
   await dialog.getByRole("option", { name: optionName, exact: true }).click()
 }
 
-test.describe("The Sentence Is Not the Words authored source interactions", () => {
-  test("preserves a token through all nine views and distinguishes the telescope parses", async ({
+test.describe("The Sentence Is Not the Words corpus-derived interactions", () => {
+  test("preserves one Shakespeare sentence and token through all nine views", async ({
     page,
   }) => {
     const browserErrors = collectBrowserErrors(page)
@@ -76,35 +76,40 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
     expect(await recoveredSource.locator("cite").textContent()).toMatch(/\S/)
 
     const tokenRibbon = page.locator(".sentence-token-ribbon__tokens")
-    const telescope = tokenRibbon.getByRole("button", { name: /^telescope\b/i })
-    await telescope.click()
-    await expect(telescope).toHaveAttribute("aria-pressed", "true")
+    const familiar = tokenRibbon.getByRole("button", { name: /^familiar\b/i })
+    await familiar.click()
+    await expect(familiar).toHaveAttribute("aria-pressed", "true")
     await expect(page.getByText("1 followed", { exact: true })).toBeVisible()
 
+    const explorer = page.locator(".sentence-explorer")
+    await expect(explorer).toHaveAttribute(
+      "data-corpus-sentence-id",
+      "shakespeare:loves-labors-lost:1-2:love-familiar-devil",
+    )
     const stage = page.locator(".sentence-stage")
     for (const [label, view] of STRUCTURAL_VIEWS) {
       await navigation.getByRole("button", { name: new RegExp(label, "i") }).click()
       await expect(stage).toHaveAttribute("data-view", view)
-      await expect(tokenRibbon.getByRole("button", { name: /^telescope\b/i })).toHaveAttribute(
+      await expect(tokenRibbon.getByRole("button", { name: /^familiar\b/i })).toHaveAttribute(
         "aria-pressed",
         "true",
+      )
+      await expect(explorer).toHaveAttribute(
+        "data-corpus-sentence-id",
+        "shakespeare:loves-labors-lost:1-2:love-familiar-devil",
       )
     }
 
     await navigation.getByRole("button", { name: /possible interpretations/i }).click()
     const interpretations = page.getByRole("group", { name: "Choose an interpretation" })
     await expect(interpretations.getByRole("button")).toHaveCount(2)
-    const instrument = interpretations.getByRole("button", { name: /I used the telescope/i })
-    const possession = interpretations.getByRole("button", {
-      name: /The man had the telescope/i,
-    })
-    await expect(instrument).toHaveAttribute("aria-pressed", "true")
-    await expect(possession).toHaveAttribute("aria-pressed", "false")
-    await possession.click()
-    await expect(possession).toHaveAttribute("aria-pressed", "true")
-    await expect(page.locator(".sentence-summary")).toContainText(
-      /The man had the telescope.*prepositional phrase modifies “man”/i,
-    )
+    const primary = interpretations.getByRole("button", { name: /Primary attachment/i })
+    const alternative = interpretations.getByRole("button", { name: /Alternative attachment/i })
+    await expect(primary).toHaveAttribute("aria-pressed", "true")
+    await expect(alternative).toHaveAttribute("aria-pressed", "false")
+    await alternative.click()
+    await expect(alternative).toHaveAttribute("aria-pressed", "true")
+    await expect(page.locator(".sentence-summary")).toContainText(/alternative attachment/i)
 
     await page.evaluate(async () => {
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
@@ -113,31 +118,32 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
     expect(browserErrors).toEqual([])
   })
 
-  test("switches specimens, clears stale selection, and exposes Buffalo structure accessibly", async ({
+  test("switches the canonical corpus row and clears stale structural state", async ({
     page,
   }) => {
     const browserErrors = collectBrowserErrors(page)
     await openExample(page)
 
     const tokenRibbon = page.locator(".sentence-token-ribbon__tokens")
-    await tokenRibbon.getByRole("button", { name: /^telescope\b/i }).click()
+    await tokenRibbon.getByRole("button", { name: /^familiar\b/i }).click()
 
     const specimenGrid = page.locator(".sentence-specimens__grid")
-    const buffalo = specimenGrid.getByRole("button", { name: /Buffalo mode/i })
-    await buffalo.click()
+    const venus = specimenGrid.getByRole("button", { name: /Venus and Adonis/i })
+    await venus.click()
 
     const explorer = page.locator(".sentence-explorer")
-    await expect(explorer).toHaveAttribute("data-buffalo-mode", "true")
-    await expect(buffalo).toHaveAttribute("aria-pressed", "true")
-    await expect(page.getByText("BUFFALO MODE", { exact: true })).toBeVisible()
+    await expect(explorer).toHaveAttribute(
+      "data-corpus-sentence-id",
+      "shakespeare:venus-and-adonis:149:love-spirit",
+    )
+    await expect(venus).toHaveAttribute("aria-pressed", "true")
     await expect(page.getByText("no word followed", { exact: true })).toBeVisible()
     await expect(page.locator(".sentence-explorer__filter")).toHaveAttribute(
       "aria-label",
-      "Explore 2 sentences about power from the grammar lab, shown as word paths.",
+      FILTER_TITLE,
     )
-    await expect(
-      tokenRibbon.getByRole("button", { name: /^buffalo\b/i }),
-    ).toHaveCount(8)
+    await expect(tokenRibbon.getByRole("button", { name: /^spirit\b/i })).toBeVisible()
+    await expect(tokenRibbon.getByRole("button", { name: /^familiar\b/i })).toHaveCount(0)
 
     const navigation = page.getByRole("navigation", { name: "Sentence structures" })
     await navigation.getByRole("button", { name: /word relationships/i }).click()
@@ -147,12 +153,12 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
     await expect(summary.getByRole("heading", { level: 2 })).toHaveText("Word relationships")
     await summary.locator("summary").click()
     expect(await summary.locator("li").count()).toBeGreaterThan(0)
-    await expect(summary).toContainText(/authored root/i)
+    await expect(summary).toContainText(/structural root/i)
 
     expect(browserErrors).toEqual([])
   })
 
-  test("keeps the title, filtered working set, active specimen, and summary coherent", async ({
+  test("keeps the filtered Shakespeare set, canonical row, and summary coherent", async ({
     page,
   }) => {
     const browserErrors = collectBrowserErrors(page)
@@ -164,40 +170,28 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
 
     await expect(page.locator(".sentence-explorer__filter")).toHaveAttribute(
       "aria-label",
-      "Explore 0 sentences about ambiguity from Shakespeare, shown as phrase relationships.",
+      "Explore 2 sentences about ambiguity from Shakespeare, shown as phrase relationships.",
     )
-    const emptySummary = page.locator(".sentence-summary")
-    await expect(emptySummary).toContainText(
+    await expect(page.locator(".sentence-summary")).toContainText(
       "No matching phrase relationships in the current corpus selection.",
     )
     await expect(page.locator(".sentence-stage__empty")).toContainText(
-      /No matching sentences.*empty intersection/i,
+      /No matching structure.*No matching phrase relationships/i,
     )
     await expect(page.locator(".sentence-diagram--phrase-net")).toHaveCount(0)
-    await expect(
-      page.locator('.sentence-stage [role="button"][aria-label*="recover a source phrase"]'),
-    ).toHaveCount(0)
-
-    await chooseFilterOption(page, /Subject: ambiguity/i, "Subject", "rhetoric")
-    await chooseFilterOption(page, /Corpus: Shakespeare/i, "Corpus", "the grammar lab")
     await navigation.getByRole("button", { name: /word relationships/i }).click()
 
     await expect(page.locator(".sentence-explorer__filter")).toHaveAttribute(
       "aria-label",
-      "Explore 1 sentence about rhetoric from the grammar lab, shown as word relationships.",
+      "Explore 2 sentences about ambiguity from Shakespeare, shown as word relationships.",
     )
-    const rhetoricalSpecimen = page
-      .locator(".sentence-specimens__grid")
-      .getByRole("button", { name: /Evidence, claim, and concession/i })
-    await expect(rhetoricalSpecimen).toHaveAttribute("aria-pressed", "true")
-    await expect(page.locator(".sentence-token-ribbon__tokens")).toContainText("analyst")
-    await expect(
-      page.locator(".sentence-token-ribbon__tokens").getByRole("button", {
-        name: /^telescope\b/i,
-      }),
-    ).toHaveCount(0)
+    await expect(page.locator(".sentence-explorer")).toHaveAttribute(
+      "data-corpus-sentence-id",
+      "shakespeare:hamlet:3-4:cruel-kind",
+    )
+    await expect(page.locator(".sentence-token-ribbon__tokens")).toContainText("cruel")
     await expect(page.locator(".sentence-summary")).toContainText(
-      /distrusted is the authored root/i,
+      /be is the structural root/i,
     )
     await expect(page.locator(".sentence-source-recovery")).toHaveCount(0)
 
@@ -211,17 +205,15 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
     await openExample(page)
 
     const tokenRibbon = page.locator(".sentence-token-ribbon__tokens")
-    await tokenRibbon.getByRole("button", { name: /^telescope\b/i }).click()
-    await page.getByRole("button", { name: "notebook", exact: true }).click()
+    await tokenRibbon.getByRole("button", { name: /^Love\b/ }).first().click()
+    await page.getByRole("button", { name: "desire", exact: true }).click()
 
     await expect(page.locator(".sentence-rewrite__before")).toHaveText(
-      "I saw the man with the telescope.",
+      "Love is a familiar; love is a devil.",
     )
-    await expect(page.locator(".sentence-rewrite__after")).toHaveText(
-      "I saw the man with the notebook.",
-    )
+    await expect(page.locator(".sentence-rewrite__after")).toContainText("desire")
     await expect(page.getByRole("group", { name: "Word path direction" })).toContainText(
-      "from “notebook”",
+      "from “desire”",
     )
 
     const navigation = page.getByRole("navigation", { name: "Sentence structures" })
@@ -230,8 +222,8 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
     await expect(variants).toBeVisible()
     await expect(variants.locator("text", { hasText: "CANONICAL SENTENCE" })).toHaveCount(1)
     await expect(variants.locator("text", { hasText: "YOUR REWRITE" })).toHaveCount(1)
-    await expect(variants.locator("text", { hasText: "telescope" }).first()).toBeVisible()
-    await expect(variants.locator("text", { hasText: "notebook" }).first()).toBeVisible()
+    await expect(variants.locator("text", { hasText: "Love" }).first()).toBeVisible()
+    await expect(variants.locator("text", { hasText: "desire" }).first()).toBeVisible()
 
     expect(browserErrors).toEqual([])
   })
@@ -245,7 +237,7 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
     const networkFrame = page.locator(".sentence-stage .stream-network-frame")
     await expect(networkFrame).toHaveAttribute(
       "aria-label",
-      /authored (word-tree|word paths) structure/i,
+      /deterministic corpus-derived word path structure/i,
     )
     const dataSummaryTrigger = networkFrame.getByRole("button", {
       name: /View data summary \(\d+ nodes, [1-9]\d* edges\)/,
@@ -256,6 +248,9 @@ test.describe("The Sentence Is Not the Words authored source interactions", () =
     await expect(networkFrame.locator(".semiotic-accessible-data-table-summary")).toContainText(
       /\d+ nodes, [1-9]\d* edges/i,
     )
+    await expect(page.locator(".sentence-diagram--word-tree")).toContainText("Love")
+    await expect(page.locator(".sentence-diagram--word-tree")).toContainText("is")
+    await expect(page.locator(".sentence-diagram--word-tree")).toContainText("a")
 
     expect(browserErrors).toEqual([])
   })

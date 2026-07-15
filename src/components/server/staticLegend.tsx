@@ -604,7 +604,7 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
  * Extract unique categories from data using an accessor.
  */
 export function extractCategories(
-  data: any[],
+  data: Datum[],
   accessor: string | ((d: Datum) => string) | undefined
 ): string[] {
   if (!accessor || !data || data.length === 0) return []

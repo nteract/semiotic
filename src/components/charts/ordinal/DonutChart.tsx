@@ -160,7 +160,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
   const innerRadius = userInnerRadius ?? Math.max(2, Math.min(width, height) * 0.15)
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated piece-style — same recipe as PieChart with
   // per-slice color cycling enabled. Previously had a stroke-only

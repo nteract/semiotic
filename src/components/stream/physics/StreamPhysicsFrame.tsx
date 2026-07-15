@@ -829,6 +829,16 @@ export const StreamPhysicsFrame = memo(forwardRef<
       (ann) => ann.pointId != null || ann.bodyId != null || ann.anchor === "latest"
     )
 
+  const { canvasRef } = useFrameCanvasHost(frame, {
+    hydrated,
+    wasHydratingFromSSR,
+    storeRef,
+    dirtyRef,
+    manageFrameRuntime: false,
+    skipInitialCanvasPaintInvalidation: true,
+    canvasPaintDependencies: [background, backgroundGraphics, scheduleRender],
+  })
+
   const paint = useCallback(() => {
     const canvas = canvasRef.current
     const store = storeRef.current
@@ -916,22 +926,7 @@ export const StreamPhysicsFrame = memo(forwardRef<
     )
     sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, true, false)
     dirtyRef.current = false
-  }, [
-    afterPaint,
-    background,
-    backgroundGraphics,
-    beforePaint,
-    bodyStyle,
-    margin,
-    needsLiveAnnotationAnchors,
-    regionById,
-    renderBodyProp,
-    selectedBodyStyle,
-    selection,
-    stylePrimitives,
-    syncBodySemanticItems,
-    size
-  ])
+  }, [canvasRef, sceneRevisionDiagnosticsRef, size, margin, backgroundGraphics, background, syncBodySemanticItems, needsLiveAnnotationAnchors, beforePaint, afterPaint, bodyStyle, selectedBodyStyle, selection, stylePrimitives, renderBodyProp, regionById])
 
   const reportExecutionState = useCallback(
     (execution: "sync" | "worker", reason?: string) => {
@@ -1268,16 +1263,6 @@ export const StreamPhysicsFrame = memo(forwardRef<
   ])
 
   renderFnRef.current = renderFrame
-
-  const { canvasRef } = useFrameCanvasHost(frame, {
-    hydrated,
-    wasHydratingFromSSR,
-    storeRef,
-    dirtyRef,
-    manageFrameRuntime: false,
-    skipInitialCanvasPaintInvalidation: true,
-    canvasPaintDependencies: [background, backgroundGraphics, scheduleRender],
-  })
 
   useEffect(() => {
     workerFailedRef.current = false

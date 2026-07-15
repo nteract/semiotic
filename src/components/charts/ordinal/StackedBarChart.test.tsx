@@ -1,3 +1,5 @@
+import type { CapturedOrdinalFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -7,11 +9,11 @@ import { STACKED_SAMPLE, type StackedBarDatum } from "../../../test-utils/ordina
 import type { Datum } from "../shared/datumTypes"
 
 // Mock OrdinalFrame to capture props
-let lastOrdinalFrameProps: any = null
+let lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamOrdinalFrameHandle>, CapturedOrdinalFrameProps>((props, _ref) => {
       lastOrdinalFrameProps = props
       return <div className="stream-ordinal-frame"><svg /></div>
     })
@@ -23,7 +25,7 @@ type StackByAccessor = StackedBarChartProps<StackedBarDatum>["stackBy"]
 
 describe("StackedBarChart", () => {
   beforeEach(() => {
-    lastOrdinalFrameProps = null
+    lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
   })
 
   // Guards against confusing null-deref failures when an early-return
@@ -34,7 +36,7 @@ describe("StackedBarChart", () => {
       lastOrdinalFrameProps,
       "mocked StreamOrdinalFrame did not capture props — StackedBarChart likely hit an early-return path"
     ).not.toBeNull()
-    return lastOrdinalFrameProps as Record<string, any>
+    return lastOrdinalFrameProps
   }
 
   it("forwards data + accessors and the stack accessor to the frame", () => {
@@ -139,7 +141,7 @@ describe("StackedBarChart", () => {
     )
     expect(typeof frameProps().pieceStyle).toBe("function")
     const labels = frameProps().legend?.legendGroups?.[0]?.items?.map(
-      (i: { label: string }) => i.label,
+      (i) => i.label,
     )
     expect(labels).toEqual(expect.arrayContaining(["Q1", "Q2"]))
     expect(labels).not.toEqual(expect.arrayContaining(["A"])) // stackBy values shouldn't bleed in
@@ -178,7 +180,7 @@ describe("StackedBarChart", () => {
       )
 
       expect(frameProps().enableHover).toBe(true)
-      expect(frameProps().pieceHoverAnnotation).toBeUndefined()
+      expect("pieceHoverAnnotation" in frameProps()).toBe(false)
     })
 
     it("disables enableHover when enableHover is false", () => {

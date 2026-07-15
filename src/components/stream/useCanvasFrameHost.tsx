@@ -116,13 +116,7 @@ export function useCanvasFrameHost<TStore extends object>(
       input.dirtyRef.current = true
       input.scheduleRender()
     })
-  }, [
-    input.cancelRender,
-    input.dirtyRef,
-    input.frameRuntime,
-    input.manageFrameRuntime,
-    input.scheduleRender,
-  ])
+  }, [input, input.cancelRender, input.dirtyRef, input.frameRuntime, input.manageFrameRuntime, input.scheduleRender])
 
   // Overlay/background changes can alter whether opaque canvas paint hides an
   // SVG underlay. Each family provides its own precise dependency list so the

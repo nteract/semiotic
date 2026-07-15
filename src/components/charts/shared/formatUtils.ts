@@ -99,7 +99,7 @@ export function formatAxis(
  */
 export function createTooltip(
   fields: string[],
-  formatters?: Record<string, (v: any) => string>,
+  formatters?: Record<string, (value: string | number | Date) => string>,
   labels?: Record<string, string>
 ): (d: Datum) => React.JSX.Element {
   return (d: Datum) => {
@@ -161,7 +161,7 @@ export function formatLargeNumber(value: number, decimals: number = 1): string {
  *
  * Used as the default axis tickFormat when no explicit format is provided.
  */
-export function smartTickFormat(value: any): string {
+export function smartTickFormat(value: string | number | Date | null | undefined): string {
   if (value == null) return ""
   if (typeof value !== "number") return String(value)
   if (!isFinite(value)) return String(value)
@@ -326,11 +326,11 @@ function deltaLabel(d: Date, prev: Date, granularity: TimeGranularity): string {
  */
 export function adaptiveTimeTicks(
   granularity?: TimeGranularity
-): (value: any, index?: number, allTicks?: number[]) => string {
+): (value: string | number | Date, index?: number, allTicks?: number[]) => string {
   let resolved: TimeGranularity | undefined = granularity
   let lastTicksRef: number[] | undefined
 
-  return (value: any, index?: number, allTicks?: number[]): string => {
+  return (value: string | number | Date, index?: number, allTicks?: number[]): string => {
     const d = value instanceof Date ? value : new Date(value)
 
     // Re-detect granularity when ticks change (responsive resize, zoom/pan)

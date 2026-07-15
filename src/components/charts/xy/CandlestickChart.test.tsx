@@ -1,14 +1,16 @@
+import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { CandlestickChart, type CandlestickChartProps } from "./CandlestickChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
-let lastXYFrameProps: any = null
+let lastXYFrameProps = {} as CapturedXYFrameProps
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
       lastXYFrameProps = props
       return <div className="stream-xy-frame"><svg /></div>
     })
@@ -26,7 +28,7 @@ const range = [
 ]
 
 describe("CandlestickChart", () => {
-  beforeEach(() => { lastXYFrameProps = null })
+  beforeEach(() => { lastXYFrameProps = {} as CapturedXYFrameProps })
 
   it("renders without crashing with full OHLC", () => {
     const { container } = render(
@@ -240,14 +242,14 @@ describe("CandlestickChart", () => {
 
   describe("push API", () => {
     it("ref exposes push/pushMany/clear/getData", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof CandlestickChart>>()
       render(<TooltipProvider><CandlestickChart ref={ref} xAccessor="t"
         highAccessor="max" lowAccessor="min" /></TooltipProvider>)
       expect(ref.current).toBeTruthy()
-      expect(typeof ref.current.push).toBe("function")
-      expect(typeof ref.current.pushMany).toBe("function")
-      expect(typeof ref.current.clear).toBe("function")
-      expect(typeof ref.current.getData).toBe("function")
+      expect(typeof ref.current!.push).toBe("function")
+      expect(typeof ref.current!.pushMany).toBe("function")
+      expect(typeof ref.current!.clear).toBe("function")
+      expect(typeof ref.current!.getData).toBe("function")
     })
   })
 })

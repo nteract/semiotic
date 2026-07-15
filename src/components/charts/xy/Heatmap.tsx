@@ -66,7 +66,7 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
   /**
    * Format function for x-axis tick labels
    */
-  xFormat?: (d: any, index?: number, allTicks?: number[]) => string
+  xFormat?: (d: string | number | Date, index?: number, allTicks?: number[]) => string
 
   /**
    * Format function for y-axis tick labels
@@ -90,7 +90,7 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
    * customColorScale={scaleSequential(interpolatePlasma).domain([0, 100])}
    * ```
    */
-  customColorScale?: any
+  customColorScale?: (value: number) => string
 
   /**
    * Show values in cells

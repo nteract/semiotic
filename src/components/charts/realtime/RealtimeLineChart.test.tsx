@@ -22,59 +22,59 @@ describe("RealtimeLineChart", () => {
   })
 
   it("ref exposes push, pushMany, getData, and clear", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeLineChart>>()
     render(
       <TooltipProvider>
         <RealtimeLineChart ref={ref} />
       </TooltipProvider>
     )
     expect(ref.current).toBeTruthy()
-    expect(typeof ref.current.push).toBe("function")
-    expect(typeof ref.current.pushMany).toBe("function")
-    expect(typeof ref.current.getData).toBe("function")
-    expect(typeof ref.current.clear).toBe("function")
+    expect(typeof ref.current!.push).toBe("function")
+    expect(typeof ref.current!.pushMany).toBe("function")
+    expect(typeof ref.current!.getData).toBe("function")
+    expect(typeof ref.current!.clear).toBe("function")
   })
 
   it("push adds data retrievable via getData", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeLineChart>>()
     render(
       <TooltipProvider>
         <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
-    act(() => { ref.current.push({ t: 1, v: 10 }) })
-    act(() => { ref.current.push({ t: 2, v: 20 }) })
-    const data = ref.current.getData()
+    act(() => { ref.current!.push({ t: 1, v: 10 }) })
+    act(() => { ref.current!.push({ t: 2, v: 20 }) })
+    const data = ref.current!.getData()
     expect(data.length).toBe(2)
   })
 
   it("clear empties the data buffer", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeLineChart>>()
     render(
       <TooltipProvider>
         <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
-    act(() => { ref.current.push({ t: 1, v: 10 }) })
-    act(() => { ref.current.clear() })
-    expect(ref.current.getData().length).toBe(0)
+    act(() => { ref.current!.push({ t: 1, v: 10 }) })
+    act(() => { ref.current!.clear() })
+    expect(ref.current!.getData().length).toBe(0)
   })
 
   it("pushMany adds multiple points", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof RealtimeLineChart>>()
     render(
       <TooltipProvider>
         <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
     act(() => {
-      ref.current.pushMany([
+      ref.current!.pushMany([
         { t: 1, v: 10 },
         { t: 2, v: 20 },
         { t: 3, v: 30 }
       ])
     })
-    expect(ref.current.getData().length).toBe(3)
+    expect(ref.current!.getData().length).toBe(3)
   })
 
   it("accepts all line-specific props without crashing", () => {

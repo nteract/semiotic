@@ -12,7 +12,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
 import { getSequentialInterpolator, SEQUENTIAL_INTERPOLATORS } from "../../charts/shared/colorPalettes"
 import type { HeatcellSceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
-import { resolveAccessor, resolveRawAccessor } from "../accessorUtils"
+import { resolveAccessor, resolveRawAccessor, type CoercibleNumber } from "../accessorUtils"
 import type { XYSceneContext } from "./types"
 
 // Precomputed color LUT: 256 entries per scheme, built lazily and cached.
@@ -42,15 +42,15 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   if (data.length === 0) return []
 
   const getVal = resolveAccessor(ctx.config.valueAccessor, "value")
-  const getRawX = resolveRawAccessor(ctx.config.xAccessor, "x")
-  const getRawY = resolveRawAccessor(ctx.config.yAccessor, "y")
+  const getRawX = resolveRawAccessor<Datum, CoercibleNumber>(ctx.config.xAccessor, "x")
+  const getRawY = resolveRawAccessor<Datum, CoercibleNumber>(ctx.config.yAccessor, "y")
 
   // Build index maps: raw value → integer index (avoids string key allocation)
   // Cache raw values so non-stable accessors (e.g. returning new Date) work correctly
-  const xIndex = new Map<any, number>()
-  const yIndex = new Map<any, number>()
-  const rawXs = new Array(data.length)
-  const rawYs = new Array(data.length)
+  const xIndex = new Map<CoercibleNumber, number>()
+  const yIndex = new Map<CoercibleNumber, number>()
+  const rawXs: CoercibleNumber[] = new Array(data.length)
+  const rawYs: CoercibleNumber[] = new Array(data.length)
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
     const rx = getRawX(d)
@@ -72,12 +72,12 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const yNumeric = yKeys.every(v => typeof v === "number" && !isNaN(v))
 
   if (xNumeric) {
-    xKeys.sort((a, b) => a - b)
+    xKeys.sort((a, b) => Number(a) - Number(b))
     xIndex.clear()
     for (let i = 0; i < xKeys.length; i++) xIndex.set(xKeys[i], i)
   }
   if (yNumeric) {
-    yKeys.sort((a, b) => a - b)
+    yKeys.sort((a, b) => Number(a) - Number(b))
     yIndex.clear()
     for (let i = 0; i < yKeys.length; i++) yIndex.set(yKeys[i], i)
   }
@@ -86,7 +86,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   // Float64Array for keys: safe for sparse grids where yi * xCount + xi > 2^32
   const cellKeys = new Float64Array(data.length)
   const cellVals = new Float64Array(data.length)
-  const cellDatums: any[] = new Array(data.length)
+  const cellDatums: Datum[] = new Array(data.length)
   // Track occupied cells to deduplicate (last write wins, same as old Map behavior)
   const occupied = new Map<number, number>() // key → index in parallel arrays
   let cellCount = 0

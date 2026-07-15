@@ -163,7 +163,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
   })
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated piece-style — same recipe as BarChart/PieChart
   // (base fill, user overlay, primitive props, selection wrap).

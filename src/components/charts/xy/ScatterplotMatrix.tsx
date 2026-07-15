@@ -4,7 +4,7 @@ import * as React from "react"
 import { useMemo, useCallback, useState, useRef, useEffect } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameHandle, HoverData, Style } from "../../stream/types"
-import { brush as d3Brush } from "d3-brush"
+import { brush as d3Brush, type D3BrushEvent } from "d3-brush"
 import { select as d3Select } from "d3-selection"
 import { getColor } from "../shared/colorUtils"
 import { getMax, getMinMax } from "../shared/minMax"
@@ -15,6 +15,10 @@ import { LinkedCharts } from "../../LinkedCharts"
 import { useSelection, useBrushSelection } from "../../store/useSelection"
 import { useSelectionSelector } from "../../store/SelectionStore"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import {
+  isTwoDimensionalBrushSelection,
+  type ScatterplotMatrixHoverInfo,
+} from "./scatterplotMatrixInteractionTypes"
 
 // Internal field used to identify datums across cells
 const SPLOM_IDX = "__splomIdx"
@@ -95,11 +99,11 @@ function CellBrushOverlay({ frameRef, cellSize, xField: _xField, yField: _yField
     const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
     const brush = d3Brush()
       .extent([[0, 0], [chartW, chartH]])
-      .on("brush end", (event: any) => {
+      .on("brush end", (event: D3BrushEvent<Datum>) => {
         const scales = frameRef.current?.getScales()
         if (!scales) return
 
-        if (!event.selection) {
+        if (!isTwoDimensionalBrushSelection(event.selection)) {
           onBrush(null)
           return
         }
@@ -148,7 +152,7 @@ interface CellProps {
   cellSize: number
   pointRadius: number
   pointOpacity: number
-  colorBy?: ChartAccessor<any, string>
+  colorBy?: ChartAccessor<Datum, string>
   colorScale?: (v: string) => string
   brushSelectionName: string
   hoverSelectionName: string
@@ -285,7 +289,7 @@ function ScatterplotCell({
 
       return style
     },
-    [colorBy, colorScale, pointOpacity, pointRadius, mode, brushSelectionHook.isActive, brushSelectionHook.predicate, hoverHook.isActive, hoverHook.predicate, unselectedOpacity]
+    [pointOpacity, pointRadius, colorBy, mode, colorScale, hoverHook, brushSelectionHook, unselectedOpacity]
   )
 
   return (
@@ -331,7 +335,7 @@ interface DiagonalCellProps {
   label: string
   cellSize: number
   bins: number
-  colorBy?: ChartAccessor<any, string>
+  colorBy?: ChartAccessor<Datum, string>
   colorScale?: (v: string) => string
   brushSelectionName: string
   hoverSelectionName: string
@@ -605,18 +609,8 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   const cellMode: "brush" | "hover" = hoverMode ? "hover" : (brushMode ? "brush" : "hover")
 
   // Grid-level hover state — single tooltip for the entire matrix
-  const clearSelection = useSelectionSelector((s: any) => s.clearSelection)
-  const [hoveredInfo, setHoveredInfo] = useState<{
-    datum: Datum
-    xField: string
-    yField: string
-    colIndex: number
-    rowIndex: number
-    /** Pixel x of the point within its cell */
-    px: number
-    /** Pixel y of the point within its cell */
-    py: number
-  } | null>(null)
+  const clearSelection = useSelectionSelector((state) => state.clearSelection)
+  const [hoveredInfo, setHoveredInfo] = useState<ScatterplotMatrixHoverInfo | null>(null)
 
   // Clear all hover state when mouse leaves the grid
   const handleGridMouseLeave = useCallback(() => {
@@ -825,11 +819,11 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
         const xFieldLabel = fieldLabels[hoveredInfo.xField] || hoveredInfo.xField
         const yFieldLabel = fieldLabels[hoveredInfo.yField] || hoveredInfo.yField
         const colorLabel = colorBy
-          ? typeof colorBy === "function" ? (colorBy as ((...args: any[]) => any))(d) : d[colorBy as string]
+          ? typeof colorBy === "function" ? colorBy(d as TDatum) : d[colorBy]
           : null
         // Resolve ID for header
         const idLabel = idAccessor
-          ? (typeof idAccessor === "function" ? (idAccessor as ((...args: any[]) => any))(d) : d[idAccessor as string])
+          ? (typeof idAccessor === "function" ? idAccessor(d as TDatum) : d[idAccessor])
           : `Row ${d[SPLOM_IDX]}`
         // Cell origin in grid coordinates
         const cellLeft = labelWidth + hoveredInfo.colIndex * (cellSize + cellGap)

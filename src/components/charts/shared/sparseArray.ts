@@ -25,7 +25,9 @@
  */
 export const EMPTY_ARRAY: readonly unknown[] = Object.freeze([])
 
-export function filterSparseArray<T>(input: readonly T[] | undefined | null): T[] {
+export function filterSparseArray<T extends object>(
+  input: readonly (T | null | undefined)[] | undefined | null
+): T[] {
   if (!input) return EMPTY_ARRAY as T[]
   let hasInvalid = false
   for (let i = 0; i < input.length; i++) {

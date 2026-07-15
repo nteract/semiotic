@@ -24,7 +24,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
     resolveColorMap: () => new Map(),
     resolveGroupColor: () => null,
     groupData: (data) => {
-      const map = new Map<string, any[]>()
+      const map = new Map<string, Datum[]>()
       for (const d of data) {
         const key = d.group ?? "default"
         if (!map.has(key)) map.set(key, [])
@@ -39,8 +39,8 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
 function makeBandRibbon(overrides: Partial<ResolvedRibbon> = {}): ResolvedRibbon {
   return {
     kind: "band",
-    getTop: (d: any) => d.hi,
-    getBottom: (d: any) => d.lo,
+    getTop: (d: Datum) => d.hi,
+    getBottom: (d: Datum) => d.lo,
     perSeries: true,
     interactive: false,
     ...overrides,
@@ -52,16 +52,16 @@ function makeBandRibbon(overrides: Partial<ResolvedRibbon> = {}): ResolvedRibbon
  *  production resolution in PipelineStore.resolveRibbons (null/NaN y
  *  yields NaN top/bottom so the scene builder skips the datum). */
 function makeBoundsRibbon(offsetGet: (d: Datum) => number, overrides: Partial<ResolvedRibbon> = {}): ResolvedRibbon {
-  const rawY = (d: any) => d.y == null ? Number.NaN : +d.y
+    const rawY = (d: Datum) => d.y == null ? Number.NaN : Number(d.y)
   return {
     kind: "bounds",
-    getTop: (d: any) => {
+      getTop: (d: Datum) => {
       const y = rawY(d)
       if (!Number.isFinite(y)) return Number.NaN
       const o = offsetGet(d)
       return Number.isFinite(o) && o !== 0 ? y + o : y
     },
-    getBottom: (d: any) => {
+      getBottom: (d: Datum) => {
       const y = rawY(d)
       if (!Number.isFinite(y)) return Number.NaN
       const o = offsetGet(d)
@@ -128,7 +128,7 @@ describe("buildRibbonForGroup — common primitive", () => {
 
   it("calls style function with the first datum and group key", () => {
     let receivedGroup: string | undefined
-    let receivedDatum: any
+    let receivedDatum: Datum | undefined
     const data = [
       { x: 1, lo: 0, hi: 10, label: "first" },
       { x: 2, lo: 1, hi: 11, label: "second" },
@@ -181,7 +181,7 @@ describe("buildRibbonForGroup — bounds (symmetric)", () => {
       { x: 20, y: 60, offset: 15 },
       { x: 30, y: 70, offset: 5 },
     ]
-    const node = buildRibbonForGroup(ctx, data, "default", makeBoundsRibbon(d => (d as any).offset))!
+    const node = buildRibbonForGroup(ctx, data, "default", makeBoundsRibbon(d => d.offset))!
     expect(node.topPath).toEqual([[10, 60], [20, 75], [30, 75]])
     expect(node.bottomPath).toEqual([[10, 40], [20, 45], [30, 65]])
   })

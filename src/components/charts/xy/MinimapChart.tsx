@@ -3,10 +3,10 @@ import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useState, useRef, useEffect, useMemo, useCallback } from "react"
-import { brushX, brushY } from "d3-brush"
+import { brushX, brushY, type D3BrushEvent } from "d3-brush"
 import { select } from "d3-selection"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps, StreamScales } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, StreamScales } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
@@ -138,7 +138,7 @@ function BrushOverlay({
   onBrush
 }: BrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const brushRef = useRef<any>(null)
+  const moveBrushRef = useRef<((selection: [number, number] | null) => void) | null>(null)
   const isUpdatingRef = useRef(false)
 
   const totalWidth = width + margin.left + margin.right
@@ -153,11 +153,11 @@ function BrushOverlay({
       ? brushX().extent([[0, 0], [width, height]])
       : brushY().extent([[0, 0], [width, height]])
 
-    brush.on("brush end", (event: any) => {
+    brush.on("brush end", (event: D3BrushEvent<SVGElement>) => {
       if (isUpdatingRef.current) return
       if (!event.sourceEvent) return // programmatic — skip
 
-      const sel = event.selection
+      const sel = event.selection as [number, number] | null
       if (!sel) {
         onBrush(null)
         return
@@ -175,7 +175,9 @@ function BrushOverlay({
     })
 
     g.call(brush)
-    brushRef.current = brush
+    moveBrushRef.current = (selection) => {
+      g.call(brush.move, selection)
+    }
 
     // Style the brush selection
     g.select(".selection")
@@ -185,23 +187,22 @@ function BrushOverlay({
       .attr("stroke-width", 1)
 
     return () => {
+      moveBrushRef.current = null
       brush.on("brush end", null)
     }
   }, [scales, width, height, brushDirection, onBrush])
 
   // Sync controlled extent to brush position
   useEffect(() => {
-    if (!brushRef.current || !scales || !svgRef.current) return
-
-    const g = select(svgRef.current).select(".brush-group")
+    if (!moveBrushRef.current || !scales || !svgRef.current) return
     const scale = brushDirection === "x" ? scales.x : scales.y
 
     isUpdatingRef.current = true
     if (extent) {
       const pixelExtent: [number, number] = [scale(extent[0]), scale(extent[1])]
-      g.call(brushRef.current.move, pixelExtent)
+      moveBrushRef.current(pixelExtent)
     } else {
-      g.call(brushRef.current.move, null)
+      moveBrushRef.current(null)
     }
     isUpdatingRef.current = false
   }, [extent, scales, brushDirection])
@@ -341,7 +342,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
   )
 
   // ── Overview ref to get scales ──────────────────────────────────────
-  const overviewRef = useRef<any>(null)
+  const overviewRef = useRef<StreamXYFrameHandle>(null)
   const [overviewScales, setOverviewScales] = useState<StreamScales | null>(null)
 
   // Poll for scales after mount (overview sets them async via rAF).

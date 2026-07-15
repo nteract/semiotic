@@ -20,7 +20,7 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
     it("hits inside a rect", () => {
       const result = findNearestOrdinalNode([rect], 140, 150)
       expect(result).not.toBeNull()
-      expect(result!.datum.category).toBe("A")
+      expect(result!.datum!.category).toBe("A")
       expect(result!.distance).toBe(0)
       expect(result!.category).toBe("A")
     })
@@ -66,7 +66,7 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
     it("hits inside a point", () => {
       const result = findNearestOrdinalNode([point], 203, 102)
       expect(result).not.toBeNull()
-      expect(result!.datum.id).toBe("p1")
+      expect(result!.datum!.id).toBe("p1")
       expect(result!.distance).toBeCloseTo(Math.sqrt(9 + 4), 1)
     })
 
@@ -199,7 +199,7 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
       const result = findNearestOrdinalNode(rects, 140, 120)
       expect(result).not.toBeNull()
       // Both rects contain this point, first found wins (distance=0 for both)
-      expect(result!.datum.id).toBe("big")
+      expect(result!.datum!.id).toBe("big")
     })
 
     it("prefers the nearer point when two points overlap", () => {
@@ -217,7 +217,7 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
       // Point at (110, 100): distance to "far" = 10, distance to "near" = 2
       const result = findNearestOrdinalNode(points, 110, 100)
       expect(result).not.toBeNull()
-      expect(result!.datum.id).toBe("near")
+      expect(result!.datum!.id).toBe("near")
     })
 
     it("respects maxDistance: skips far elements", () => {

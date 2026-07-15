@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { buildAreaScene, buildStackedAreaScene } from "./areaScene"
 import type { XYSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /** Minimal identity scales for testing — no pixel transform */
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
@@ -17,7 +18,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
     resolveColorMap: () => new Map(),
     resolveGroupColor: () => null,
     groupData: (data) => {
-      const map = new Map<string, any[]>()
+      const map = new Map<string, Datum[]>()
       for (const d of data) {
         const key = d.group ?? "default"
         if (!map.has(key)) map.set(key, [])
@@ -71,10 +72,10 @@ describe("buildStackedAreaScene", () => {
     // Groups sorted by key: A first, then B stacks on top
     // Group A: x=1→y=10, x=2→y=20 (baseline 0)
     // Group B: x=1→y=10+5=15, x=2→y=20+15=35
-    const pointsAtX1 = pointNodes.filter((n: any) => n.x === 1)
-    const pointsAtX2 = pointNodes.filter((n: any) => n.x === 2)
-    expect(pointsAtX1.map((n: any) => n.y).sort()).toEqual([10, 15])
-    expect(pointsAtX2.map((n: any) => n.y).sort()).toEqual([20, 35])
+    const pointsAtX1 = pointNodes.filter((n) => n.x === 1)
+    const pointsAtX2 = pointNodes.filter((n) => n.x === 2)
+    expect(pointsAtX1.map((n) => n.y).sort()).toEqual([10, 15])
+    expect(pointsAtX2.map((n) => n.y).sort()).toEqual([20, 35])
   })
 
   it("uses normalized Y when normalize is true", () => {
@@ -87,8 +88,8 @@ describe("buildStackedAreaScene", () => {
 
     // At x=1: total=15. A=10/15≈0.667, B=(10+5)/15=1.0
     // At x=2: total=35. A=20/35≈0.571, B=(20+15)/35=1.0
-    const pointsAtX1 = pointNodes.filter((n: any) => n.x === 1)
-    const bTopAtX1 = Math.max(...pointsAtX1.map((n: any) => n.y))
+    const pointsAtX1 = pointNodes.filter((n) => n.x === 1)
+    const bTopAtX1 = Math.max(...pointsAtX1.map((n) => n.y))
     expect(bTopAtX1).toBeCloseTo(1.0, 5)
   })
 
@@ -121,13 +122,13 @@ describe("buildStackedAreaScene", () => {
     const pointNodes = nodes.filter((n) => n.type === "point")
 
     // Group A at x=1: aggregated y=5+3=8, both datums get stacked Y=8
-    const groupAPoints = pointNodes.filter((n: any) => n.datum.group === "A")
+    const groupAPoints = pointNodes.filter((n) => n.datum?.group === "A")
     expect(groupAPoints.length).toBe(2)
     expect(groupAPoints[0].y).toBe(groupAPoints[1].y)
     expect(groupAPoints[0].y).toBe(8)
 
     // Group B at x=1: stacked on top of 8, y=8+10=18
-    const groupBPoints = pointNodes.filter((n: any) => n.datum.group === "B")
+    const groupBPoints = pointNodes.filter((n) => n.datum?.group === "B")
     expect(groupBPoints[0].y).toBe(18)
   })
 

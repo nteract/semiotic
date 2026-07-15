@@ -37,7 +37,7 @@ import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 
 export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Flow edges with source/target/value */
-  flows?: { source: string; target: string; value?: number; [key: string]: any }[]
+  flows?: Array<Datum & { source: string; target: string; value?: number }>
   /** Geographic nodes with coordinates */
   nodes?: TDatum[]
   /** Node ID accessor @default "id" */
@@ -61,7 +61,7 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
   /** Background area style */
   areaStyle?: Style
   /** Edge color accessor */
-  edgeColorBy?: ChartAccessor<any, string>
+  edgeColorBy?: ChartAccessor<Datum, string>
   /** Edge opacity @default 0.6 */
   edgeOpacity?: number
   /** Min/max pixel width for proportional edge width @default [1, 8] */
@@ -297,7 +297,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
   })
 
   const pushObservation = useObservationSelector(
-    (state: any) => state.pushObservation
+    (state) => state.pushObservation
   ) as ((obs: ChartObservation) => void) | undefined
 
   // Build node lookup

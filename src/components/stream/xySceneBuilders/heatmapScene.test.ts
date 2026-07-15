@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { buildHeatmapScene } from "./heatmapScene"
 import type { XYSceneContext } from "./types"
 import type { StreamLayout } from "../types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
@@ -17,7 +18,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
     resolveColorMap: () => new Map(),
     resolveGroupColor: () => null,
     groupData: (data) => {
-      const map = new Map<string, any[]>()
+      const map = new Map<string, Datum[]>()
       for (const d of data) {
         const key = d.group ?? "default"
         if (!map.has(key)) map.set(key, [])
@@ -217,7 +218,7 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
 
   it("large dataset with many unique cells produces correct count", () => {
     // 100 unique x * 10 unique y = 1000 cells
-    const data: any[] = []
+    const data: Datum[] = []
     for (let x = 0; x < 100; x++) {
       for (let y = 0; y < 10; y++) {
         data.push({ x, y, value: x + y })
@@ -260,7 +261,7 @@ describe("buildStreamingHeatmapScene", () => {
       resolveColorMap: () => new Map(),
       resolveGroupColor: () => null,
       groupData: (data) => {
-        const map = new Map<string, any[]>()
+      const map = new Map<string, Datum[]>()
         for (const d of data) {
           const key = d.group ?? "default"
           if (!map.has(key)) map.set(key, [])

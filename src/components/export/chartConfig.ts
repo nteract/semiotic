@@ -81,9 +81,9 @@ function shouldExcludeDataProp(key: string, value: unknown): boolean {
   return true
 }
 
-const deepClone = typeof structuredClone === "function"
+const deepClone: <T>(obj: T) => T = typeof structuredClone === "function"
   ? structuredClone
-  : (obj: any) => JSON.parse(JSON.stringify(obj))
+  : <T>(obj: T): T => JSON.parse(JSON.stringify(obj)) as T
 
 // ── toConfig ────────────────────────────────────────────────────────────
 

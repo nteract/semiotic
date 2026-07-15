@@ -79,7 +79,7 @@ export interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends B
 
 function computeExtent(
   data: Datum[],
-  accessor: ChartAccessor<any, number>
+  accessor: ChartAccessor<Datum, number>
 ): [number, number] {
   let min = Infinity
   let max = -Infinity
@@ -334,7 +334,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       for (const d of safeData) {
         for (let i = 0; i < series.length; i++) {
           const s = series[i]
-          const fn = typeof s.yAccessor === "function" ? s.yAccessor : (dd: any) => dd[s.yAccessor as string]
+          const fn = typeof s.yAccessor === "function" ? s.yAccessor : (datum: Datum) => datum[s.yAccessor as string]
           const val = fn(d)
           if (val == null) continue
           result.push({
@@ -351,7 +351,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     for (const d of safeData) {
       for (let i = 0; i < 2; i++) {
         const s = series[i]
-        const fn = typeof s.yAccessor === "function" ? s.yAccessor : (dd: any) => dd[s.yAccessor as string]
+        const fn = typeof s.yAccessor === "function" ? s.yAccessor : (datum: Datum) => datum[s.yAccessor as string]
         const val = fn(d)
         if (val == null) continue
         result.push({

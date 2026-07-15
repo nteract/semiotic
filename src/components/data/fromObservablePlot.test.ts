@@ -3,6 +3,7 @@ import { fromConfig } from "../export/chartConfig"
 import { validateProps } from "../charts/shared/validateProps"
 import { fromObservablePlot } from "./fromObservablePlot"
 import type { ObservablePlotSpec } from "./fromObservablePlot"
+import type { Datum } from "../charts/shared/datumTypes"
 
 // Silence the adapter's console.warn during the warning-path tests.
 vi.spyOn(console, "warn").mockImplementation(() => {})
@@ -155,7 +156,7 @@ describe("fromObservablePlot — skips chrome, refuses cleanly (D7)", () => {
 
   it("warns on a function accessor instead of silently dropping it", () => {
     const config = fromObservablePlot({
-      marks: [{ type: "dot", data: ROWS, options: { x: "date", y: (d: any) => d.value * 2 } }],
+        marks: [{ type: "dot", data: ROWS, options: { x: "date", y: (d: Datum) => Number(d.value) * 2 } }],
     })
     expect(config.warnings!.some((w) => /function accessor/.test(w))).toBe(true)
   })

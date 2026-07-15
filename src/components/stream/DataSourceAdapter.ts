@@ -26,7 +26,7 @@ const CHUNK_SIZE = 5000
 
 export type ChangesetCallback<T> = (changeset: Changeset<T>) => void
 
-export class DataSourceAdapter<T = Datum> {
+export class DataSourceAdapter<T extends object = Datum> {
   private callback: ChangesetCallback<T>
   private lastBoundedData: T[] | null = null
   private chunkTimer: number = 0

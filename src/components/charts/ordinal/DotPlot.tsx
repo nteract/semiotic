@@ -170,7 +170,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
   const sortedData = useSortedData(safeData, sort, valueAccessor)
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated piece-style. `r` and `fillOpacity` are mark-shape
   // defaults flowed in via `baseStyleExtras` so they sit BEFORE the

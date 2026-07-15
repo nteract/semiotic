@@ -266,7 +266,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
   }, [safeData, valueAccessor])
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated summary-style — same recipe as BoxPlot/ViolinPlot/
   // RidgelinePlot.

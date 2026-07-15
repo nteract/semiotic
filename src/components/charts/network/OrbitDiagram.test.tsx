@@ -1,13 +1,15 @@
+import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { vi } from "vitest"
 import { render } from "@testing-library/react"
 import { OrbitDiagram } from "./OrbitDiagram"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock NetworkFrame to capture props
-let lastNetworkFrameProps: any = null
+let lastNetworkFrameProps = {} as StreamNetworkFrameProps
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
-    default: (props: any) => {
+    default: (props: StreamNetworkFrameProps) => {
       lastNetworkFrameProps = props
       return (
         <div className={`stream-network-frame${props.className ? ` ${props.className}` : ""}`}>
@@ -21,7 +23,7 @@ vi.mock("../../stream/StreamNetworkFrame", () => {
 
 describe("OrbitDiagram", () => {
   beforeEach(() => {
-    lastNetworkFrameProps = null
+    lastNetworkFrameProps = {} as StreamNetworkFrameProps
   })
 
   const sampleData = {
@@ -95,7 +97,7 @@ describe("OrbitDiagram", () => {
   })
 
   it("passes nodeRadius function as nodeSize", () => {
-    const radiusFn = (node: any) => node.depth === 0 ? 20 : 5
+    const radiusFn = (node: Datum) => node.depth === 0 ? 20 : 5
     render(<OrbitDiagram data={sampleData} nodeRadius={radiusFn} animated={false} />)
     expect(lastNetworkFrameProps.nodeSize).toBe(radiusFn)
   })
@@ -171,7 +173,7 @@ describe("OrbitDiagram", () => {
   })
 
   it("passes revolution function as orbitRevolution", () => {
-    const revFn = (n: any) => 1 / (n.depth + 2)
+    const revFn = (n: Datum) => 1 / (Number(n.depth) + 2)
     render(<OrbitDiagram data={sampleData} revolution={revFn} animated={false} />)
     expect(lastNetworkFrameProps.orbitRevolution).toBe(revFn)
   })

@@ -1,18 +1,21 @@
+import type { CapturedNetworkFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import React, { useRef, useEffect } from "react"
 import { render } from "@testing-library/react"
 import { ProcessSankey } from "./ProcessSankey"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock the inner StreamNetworkFrame so we can capture the layoutConfig
 // the HOC produces — keeps these tests focused on the HOC's own
 // pre-compute / push-API surface, separate from the algorithm tests.
-let lastFrameProps: any = null
+let lastFrameProps: CapturedNetworkFrameProps | null = null
 vi.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamNetworkFrameHandle>, CapturedNetworkFrameProps>((props, _ref) => {
       lastFrameProps = props
       return <div className="stream-network-frame" data-testid="frame"><svg /></div>
     }),
@@ -42,11 +45,12 @@ describe("ProcessSankey HOC", () => {
       </TooltipProvider>,
     )
     expect(lastFrameProps).not.toBeNull()
+    if (!lastFrameProps) throw new Error("Expected StreamNetworkFrame to render")
     expect(lastFrameProps.layoutConfig.bands).toHaveLength(sampleNodes.length)
     expect(lastFrameProps.layoutConfig.ribbons).toHaveLength(sampleEdges.length)
     // Each band carries its source datum + a derived label position
     // (used by the SVG label overlay).
-    const alice = lastFrameProps.layoutConfig.bands.find((b: any) => b.id === "Alice")
+    const alice = lastFrameProps.layoutConfig.bands.find((band) => band.id === "Alice")!
     expect(alice.rawDatum).toMatchObject({ id: "Alice", category: "Person" })
     expect(typeof alice.labelX).toBe("number")
     expect(typeof alice.labelY).toBe("number")
@@ -78,7 +82,7 @@ describe("ProcessSankey HOC", () => {
   // method returned, the array was still empty. Synchronous derivation
   // against the closure's view of `pushedEdges` fixes it.
   it("remove() returns the removed records synchronously", () => {
-    let capturedRemoved: any[] = []
+    let capturedRemoved: Datum[] = []
     function Harness() {
       const ref = useRef<RealtimeFrameHandle>(null)
       useEffect(() => {
@@ -103,13 +107,13 @@ describe("ProcessSankey HOC", () => {
   })
 
   it("update() returns the previous records synchronously", () => {
-    let capturedPrevious: any[] = []
+    let capturedPrevious: Datum[] = []
     function Harness() {
       const ref = useRef<RealtimeFrameHandle>(null)
       useEffect(() => {
         if (!ref.current) return
         ref.current.push({ id: "e1", source: "A", target: "B", value: 1, startTime: 0, endTime: 1 })
-        capturedPrevious = ref.current.update("e1", (e: any) => ({ ...e, value: 99 }))
+        capturedPrevious = ref.current.update("e1", (e) => ({ ...e, value: 99 }))
       }, [])
       return (
         <ProcessSankey ref={ref}

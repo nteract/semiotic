@@ -613,9 +613,9 @@ export class OrdinalPipelineStore implements UpdateResultStore {
       getO: this.getO,
       multiScales: this.multiScales,
       rAccessors: this.rAccessors,
-      resolvePieceStyle: (d: Datum, category?: string) =>
+      resolvePieceStyle: (d: Datum | null, category?: string) =>
         this.styleResolver.resolvePieceStyle(this.config, d, category),
-      resolveSummaryStyle: (d: Datum, category?: string) =>
+      resolveSummaryStyle: (d: Datum | null, category?: string) =>
         this.styleResolver.resolveSummaryStyle(this.config, d, category),
       getRawRange: (d: Datum) => this.getRawRange(d)
     }

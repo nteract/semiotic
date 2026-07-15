@@ -20,7 +20,7 @@ describe("CanvasHitTester — findNearestNode", () => {
 
     const result = findNearestNode([line], 50, 30)
     expect(result).not.toBeNull()
-    expect(result!.datum.x).toBe(5) // closest to px=50
+    expect(result!.datum!.x).toBe(5) // closest to px=50
     expect(result!.distance).toBeCloseTo(0, 5)
   })
 
@@ -36,7 +36,7 @@ describe("CanvasHitTester — findNearestNode", () => {
     // Hit near the last point
     const result = findNearestNode([line], 98, 2)
     expect(result).not.toBeNull()
-    expect(result!.datum.id).toBe("last")
+    expect(result!.datum!.id).toBe("last")
   })
 
   it("finds nearest point in scatter", () => {
@@ -48,7 +48,7 @@ describe("CanvasHitTester — findNearestNode", () => {
 
     const result = findNearestNode(points, 62, 42)
     expect(result).not.toBeNull()
-    expect(result!.datum.id).toBe("b")
+    expect(result!.datum!.id).toBe("b")
   })
 
   it("respects maxDistance threshold", () => {
@@ -109,7 +109,7 @@ describe("CanvasHitTester — findNearestNode", () => {
 
     const result = findNearestNode(points, 52, 48, 30, qt)
     expect(result).not.toBeNull()
-    expect(result!.datum.id).toBe("b")
+    expect(result!.datum!.id).toBe("b")
     expect(result!.distance).toBeLessThan(10)
   })
 
@@ -135,7 +135,7 @@ describe("CanvasHitTester — findNearestNode", () => {
 
     const result = findNearestNode(points, 115, 100, 30, qt)
     expect(result).not.toBeNull()
-    expect(result!.datum.id).toBe("b")
+    expect(result!.datum!.id).toBe("b")
   })
 
   it("widens the quadtree query radius when maxPointRadius is provided", () => {
@@ -160,7 +160,7 @@ describe("CanvasHitTester — findNearestNode", () => {
     // maxPointRadius=80 → query radius = 85 → big within range → hit
     const hit = findNearestNode(scene, 50, 0, 30, qt, 80)
     expect(hit).not.toBeNull()
-    expect(hit!.datum.id).toBe("big")
+    expect(hit!.datum!.id).toBe("big")
   })
 
   it("quadtree does not interfere with non-point node types", () => {
@@ -189,12 +189,12 @@ describe("CanvasHitTester — findNearestNode", () => {
     // The rect should be hit via linear scan despite the quadtree being present.
     const rectResult = findNearestNode(scene, 55, 55, 30, qt)
     expect(rectResult).not.toBeNull()
-    expect(rectResult!.datum.id).toBe("rect")
+    expect(rectResult!.datum!.id).toBe("rect")
 
     // Query near the line path at (50, 5) — outside the rect, near line's first point (50,10)
     const lineResult = findNearestNode(scene, 50, 5, 30, qt)
     expect(lineResult).not.toBeNull()
-    expect(lineResult!.datum.id).toBe("l1")
+    expect(lineResult!.datum!.id).toBe("l1")
   })
 
   it("skips non-interactive rect nodes with null datum", () => {
@@ -219,7 +219,7 @@ describe("CanvasHitTester — findNearestNode", () => {
 
     const hit = findNearestNode([track, dataRect], 50, 50)
     expect(hit).not.toBeNull()
-    expect(hit!.datum.id).toBe("data")
+    expect(hit!.datum!.id).toBe("data")
 
     const trackOnly = findNearestNode([track], 70, 50)
     expect(trackOnly).toBeNull()

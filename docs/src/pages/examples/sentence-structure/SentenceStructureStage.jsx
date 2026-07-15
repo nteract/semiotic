@@ -4,7 +4,18 @@ import { XYCustomChart, hitTargetPoint } from "semiotic/xy"
 import useResponsiveWidth from "../../../hooks/useResponsiveWidth"
 import { surfaceText } from "./sentenceStructureData"
 
-const XY_VIEWS = new Set(["reed-kellogg", "dependency", "ambiguity"])
+const XY_VIEWS = new Set(["dependency", "ambiguity"])
+const VIEW_NAMES = {
+  "reed-kellogg": "Reed–Kellogg",
+  constituency: "phrase structure",
+  dependency: "dependency",
+  ambiguity: "ambiguity",
+  semantics: "meaning graph",
+  rhetoric: "rhetorical",
+  "word-tree": "word path",
+  "phrase-net": "phrase relationship",
+  variants: "variant",
+}
 const COLORS = {
   ink: "#23302d",
   muted: "#6f7771",
@@ -184,10 +195,18 @@ function DiagramLabel({ x = 18, y = 24, children, accent = COLORS.coral, align =
 function ReedKelloggDiagram({ width, height, tokens, selectedTokenIds, onSelectToken }) {
   const baselineY = Math.max(190, height * 0.5)
   const positions = tokenPositions(tokens, width, baselineY - 23)
-  const rootIndex = Math.max(1, tokens.findIndex((token) => token.role === "root" || token.partOfSpeech === "VERB"))
-  const objectIndex = tokens.findIndex((token) => /object|patient/i.test(token.role ?? ""))
   const subjectIndices = tokens.map((token, index) => ({ token, index })).filter(({ token }) => /subject|agent/i.test(token.role ?? ""))
   const modifierIndices = tokens.map((token, index) => ({ token, index })).filter(({ token }) => /modifier|determiner|case|adverb|instrument|possess/i.test(token.role ?? ""))
+  const dividers = tokens
+    .map((token, index) => ({
+      index,
+      label: /predicate/i.test(token.role ?? "")
+        ? "PREDICATE"
+        : /object|patient|complement/i.test(token.role ?? "")
+          ? "OBJECT"
+          : null,
+    }))
+    .filter(({ index, label }) => index > 0 && label)
   const contentTokens = tokens.filter((token) => !/^[.,;:!?]$/.test(tokenLabel(token)))
   const firstX = positions.get(contentTokens[0]?.id)?.x ?? 40
   const lastX = positions.get(contentTokens.at(-1)?.id)?.x ?? width - 40
@@ -195,18 +214,18 @@ function ReedKelloggDiagram({ width, height, tokens, selectedTokenIds, onSelectT
   return (
     <g className="sentence-diagram sentence-diagram--reed">
       <DiagramDefs />
-      <DiagramLabel>REED–KELLOGG / AUTHORED PLATE</DiagramLabel>
+      <DiagramLabel>REED–KELLOGG / CORPUS-DERIVED PLATE</DiagramLabel>
       <text x={width - 18} y="24" textAnchor="end" fill={COLORS.muted} fontSize="9">roles become rails</text>
       <line x1={firstX - 30} x2={lastX + 30} y1={baselineY} y2={baselineY} stroke={COLORS.ink} strokeWidth="3" />
-      {[rootIndex, objectIndex].filter((index) => index > 0).map((index, divider) => {
+      {dividers.map(({ index, label }) => {
         const left = positions.get(tokens[index - 1]?.id)?.x ?? 0
         const right = positions.get(tokens[index]?.id)?.x ?? left
         const x = (left + right) / 2
         return (
-          <g key={`${index}-${divider}`}>
-            <line x1={x} x2={x} y1={baselineY - (divider ? 18 : 28)} y2={baselineY + 28} stroke={COLORS.coral} strokeWidth="3" />
+          <g key={`${index}-${label}`}>
+            <line x1={x} x2={x} y1={baselineY - (label === "OBJECT" ? 18 : 28)} y2={baselineY + 28} stroke={COLORS.coral} strokeWidth="3" />
             <text x={x + 6} y={baselineY + 25} fill={COLORS.coral} fontSize="8" fontWeight="900">
-              {divider ? "OBJECT" : "PREDICATE"}
+              {label}
             </text>
           </g>
         )
@@ -253,7 +272,7 @@ function ReedKelloggDiagram({ width, height, tokens, selectedTokenIds, onSelectT
         )
       })}
       <text x="18" y={height - 20} fill={COLORS.muted} fontSize="9">
-        Curated geometry — arbitrary sentence diagramming is intentionally out of scope.
+        Deterministic geometry derived from the active corpus sentence and its token roles.
       </text>
     </g>
   )
@@ -396,7 +415,7 @@ function DependencyDiagram({ width, height, specimen, tokens, selectedTokenIds, 
       <DiagramDefs />
       <DiagramLabel accent={COLORS.teal}>DEPENDENCIES / GOVERNOR → DEPENDENT</DiagramLabel>
       <text x={width - 18} y="24" textAnchor="end" fill={COLORS.coral} fontSize="9" fontWeight="850">
-        {activeParse?.interpretation ?? activeParse?.label ?? "authored dependency analysis"}
+        {activeParse?.interpretation ?? activeParse?.label ?? "corpus-derived dependency analysis"}
       </text>
       <DependencyArcSet edges={edges} positions={positions} baselineY={baselineY} selectedTokenIds={selectedTokenIds} />
       <TokenStrip tokens={tokens} positions={positions} selectedTokenIds={selectedTokenIds} onSelectToken={onSelectToken} y={baselineY} showPos dimUnselected />
@@ -449,7 +468,7 @@ function AmbiguityDiagram({ width, height, specimen, tokens, selectedTokenIds, i
               {String(parseIndex + 1).padStart(2, "0")} · {parse.label}
             </text>
             <text x={width - 18} y={rowTop + 12} textAnchor="end" fill={COLORS.muted} fontSize="8">
-              {parse.probability != null ? `${Math.round(parse.probability * 100)}% authored confidence` : parse.interpretation}
+              {parse.probability != null ? `${Math.round(parse.probability * 100)}% analysis weight` : parse.interpretation}
             </text>
             <DependencyArcSet edges={parse.edges ?? []} positions={positions} baselineY={baselineY} selectedTokenIds={selectedTokenIds} disputedIds={disputed} />
             {tokens.map((token) => {
@@ -614,32 +633,414 @@ function normalizeTree(wordTree) {
   return flattenTrie(wordTree?.root)
 }
 
-function wordTreePositions(width, height, nodes, direction) {
-  const byDepth = new Map()
-  for (const node of nodes) {
-    const depth = node.depth ?? 0
-    if (!byDepth.has(depth)) byDepth.set(depth, [])
-    byDepth.get(depth).push(node)
+const WORD_TREE_NODE_BUDGET = 40
+
+function numericWordTreeValue(value) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : 0
+}
+
+function wordTreeTopology(nodes, edges) {
+  const records = nodes.map((node, index) => ({
+    id: node.id ?? `word-tree-node-${index}`,
+    index,
+    node,
+  }))
+  const recordById = new Map(records.map((record) => [record.id, record]))
+  const incoming = new Map(records.map((record) => [record.id, []]))
+  const outgoing = new Map(records.map((record) => [record.id, []]))
+  const seenConnections = new Set()
+
+  function connect(source, target) {
+    if (!recordById.has(source) || !recordById.has(target) || source === target) return
+    const connectionId = `${String(source)}\u0000${String(target)}`
+    if (seenConnections.has(connectionId)) return
+    seenConnections.add(connectionId)
+    outgoing.get(source).push(target)
+    incoming.get(target).push(source)
   }
-  const maxDepth = Math.max(1, ...byDepth.keys())
+
+  for (const edge of edges) connect(endpointId(edge.source), endpointId(edge.target))
+  for (const record of records) {
+    if (record.node.parentId != null) connect(record.node.parentId, record.id)
+  }
+
+  const compareSourceOrder = (left, right) => {
+    const indexDifference = recordById.get(left).index - recordById.get(right).index
+    return indexDifference || String(left).localeCompare(String(right))
+  }
+  for (const connections of incoming.values()) connections.sort(compareSourceOrder)
+  for (const connections of outgoing.values()) connections.sort(compareSourceOrder)
+
+  const indegree = new Map(records.map((record) => [record.id, incoming.get(record.id).length]))
+  const roots = records
+    .filter((record) => indegree.get(record.id) === 0)
+    .map((record) => record.id)
+    .sort(compareSourceOrder)
+  const ready = [...roots]
+  const topologicalOrder = []
+  const remainingIndegree = new Map(indegree)
+  while (ready.length) {
+    const id = ready.shift()
+    topologicalOrder.push(id)
+    for (const target of outgoing.get(id)) {
+      const nextIndegree = remainingIndegree.get(target) - 1
+      remainingIndegree.set(target, nextIndegree)
+      if (nextIndegree === 0) {
+        ready.push(target)
+        ready.sort(compareSourceOrder)
+      }
+    }
+  }
+  const orderedIds = new Set(topologicalOrder)
+  for (const record of records) {
+    if (!orderedIds.has(record.id)) topologicalOrder.push(record.id)
+  }
+
+  const layerById = new Map()
+  for (const id of topologicalOrder) {
+    const parentLayers = incoming.get(id)
+      .map((parentId) => layerById.get(parentId))
+      .filter((layer) => layer != null)
+    const declaredDepth = numericWordTreeValue(recordById.get(id).node.depth)
+    const calculatedDepth = parentLayers.length ? Math.max(...parentLayers) + 1 : 0
+    layerById.set(id, parentLayers.length ? Math.max(calculatedDepth, declaredDepth) : 0)
+  }
+
+  const longestRemaining = new Map(records.map((record) => [record.id, 0]))
+  const sharedRun = new Map(records.map((record) => [record.id, 0]))
+  const mergeDownstream = new Map(records.map((record) => [record.id, false]))
+  for (const id of [...topologicalOrder].reverse()) {
+    const forwardChildren = outgoing.get(id).filter(
+      (childId) => layerById.get(childId) > layerById.get(id),
+    )
+    longestRemaining.set(
+      id,
+      forwardChildren.length
+        ? 1 + Math.max(...forwardChildren.map((childId) => longestRemaining.get(childId)))
+        : 0,
+    )
+    const frequency = numericWordTreeValue(recordById.get(id).node.count)
+    const sharedChildren = forwardChildren.filter(
+      (childId) => numericWordTreeValue(recordById.get(childId).node.count) > 1,
+    )
+    sharedRun.set(
+      id,
+      frequency > 1
+        ? 1 + Math.max(0, ...sharedChildren.map((childId) => sharedRun.get(childId)))
+        : 0,
+    )
+    mergeDownstream.set(
+      id,
+      forwardChildren.some(
+        (childId) => incoming.get(childId).length > 1 || mergeDownstream.get(childId),
+      ),
+    )
+  }
+
+  function comparePriority(left, right) {
+    const leftNode = recordById.get(left).node
+    const rightNode = recordById.get(right).node
+    const leftPriority = [
+      mergeDownstream.get(left) ? 1 : 0,
+      sharedRun.get(left),
+      longestRemaining.get(left),
+      incoming.get(left).length + outgoing.get(left).length,
+      numericWordTreeValue(leftNode.count),
+    ]
+    const rightPriority = [
+      mergeDownstream.get(right) ? 1 : 0,
+      sharedRun.get(right),
+      longestRemaining.get(right),
+      incoming.get(right).length + outgoing.get(right).length,
+      numericWordTreeValue(rightNode.count),
+    ]
+    for (let index = 0; index < leftPriority.length; index += 1) {
+      if (leftPriority[index] !== rightPriority[index]) {
+        return rightPriority[index] - leftPriority[index]
+      }
+    }
+    return compareSourceOrder(left, right)
+  }
+
+  return {
+    comparePriority,
+    compareSourceOrder,
+    incoming,
+    layerById,
+    longestRemaining,
+    mergeDownstream,
+    outgoing,
+    recordById,
+    records,
+    roots,
+    sharedRun,
+    topologicalOrder,
+  }
+}
+
+/**
+ * Choose a compact but structurally representative word-path subgraph. Unlike
+ * a prefix slice, this keeps several root branches, follows their strongest
+ * shared continuations, and reserves room for split/rejoin structures.
+ */
+export function selectWordTreeGraph(wordTree, nodeBudget = WORD_TREE_NODE_BUDGET) {
+  const normalized = normalizeTree(wordTree)
+  const nodes = normalized.nodes ?? []
+  const edges = normalized.edges ?? []
+  const budget = Math.max(0, Math.floor(numericWordTreeValue(nodeBudget)))
+  if (!nodes.length || budget === 0) return { nodes: [], edges: [] }
+
+  const topology = wordTreeTopology(nodes, edges)
+  const validNodeIds = new Set(topology.records.map((record) => record.id))
+  const validEdges = edges.filter((edge) =>
+    validNodeIds.has(endpointId(edge.source)) && validNodeIds.has(endpointId(edge.target)),
+  )
+  if (nodes.length <= budget) return { nodes, edges: validEdges }
+
+  const selectedIds = new Set()
+  const roots = topology.roots.length
+    ? [...topology.roots]
+    : topology.topologicalOrder.slice(0, 1)
+  for (const rootId of roots) {
+    if (selectedIds.size >= budget) break
+    selectedIds.add(rootId)
+  }
+
+  function pathToRoot(id) {
+    const reversedPath = []
+    const visited = new Set()
+    let currentId = id
+    while (currentId != null && !visited.has(currentId)) {
+      visited.add(currentId)
+      reversedPath.push(currentId)
+      const parents = [...topology.incoming.get(currentId)].sort((left, right) => {
+        const selectedDifference = Number(selectedIds.has(right)) - Number(selectedIds.has(left))
+        return selectedDifference || topology.comparePriority(left, right)
+      })
+      currentId = parents[0]
+    }
+    return reversedPath.reverse()
+  }
+
+  function preferredPathFrom(id) {
+    const path = []
+    const visited = new Set()
+    let currentId = id
+    while (currentId != null && !visited.has(currentId)) {
+      visited.add(currentId)
+      path.push(currentId)
+      const children = [...topology.outgoing.get(currentId)]
+        .filter((childId) => topology.layerById.get(childId) > topology.layerById.get(currentId))
+        .sort(topology.comparePriority)
+      currentId = children[0]
+    }
+    return path
+  }
+
+  function missingIds(paths) {
+    const missing = []
+    const seen = new Set(selectedIds)
+    for (const path of paths) {
+      for (const id of path) {
+        if (!validNodeIds.has(id) || seen.has(id)) continue
+        seen.add(id)
+        missing.push(id)
+      }
+    }
+    return missing
+  }
+
+  function addPaths(paths) {
+    const missing = missingIds(paths)
+    if (selectedIds.size + missing.length > budget) return false
+    for (const id of missing) selectedIds.add(id)
+    return true
+  }
+
+  // A merge is only expressive when at least two of its incoming routes are
+  // visible. Add those routes as a unit before general branch expansion.
+  const convergenceIds = topology.records
+    .filter((record) => topology.incoming.get(record.id).length > 1)
+    .map((record) => record.id)
+    .sort((left, right) => {
+      const indegreeDifference = topology.incoming.get(right).length - topology.incoming.get(left).length
+      const depthDifference = topology.layerById.get(right) - topology.layerById.get(left)
+      return indegreeDifference || depthDifference || topology.comparePriority(left, right)
+    })
+  const convergenceLimit = Math.min(budget, Math.max(8, Math.floor(budget * 0.7)))
+  for (const convergenceId of convergenceIds) {
+    if (selectedIds.size >= convergenceLimit) break
+    const parents = [...topology.incoming.get(convergenceId)].sort(topology.comparePriority)
+    const incomingPaths = parents.slice(0, 3).map((parentId) => [
+      ...pathToRoot(parentId),
+      convergenceId,
+    ])
+    if (incomingPaths.length < 2) continue
+    const required = missingIds(incomingPaths)
+    if (selectedIds.size + required.length > convergenceLimit) continue
+    if (!addPaths(incomingPaths)) continue
+    const downstream = preferredPathFrom(convergenceId).slice(1)
+    for (const id of downstream) {
+      if (selectedIds.has(id)) continue
+      if (selectedIds.size >= convergenceLimit || selectedIds.size >= budget) break
+      selectedIds.add(id)
+    }
+  }
+
+  const rootBranches = roots.flatMap((rootId) =>
+    topology.outgoing.get(rootId).map((childId) => ({ childId, rootId })),
+  ).sort((left, right) =>
+    topology.comparePriority(left.childId, right.childId) ||
+    topology.compareSourceOrder(left.rootId, right.rootId),
+  )
+  const branchLimit = Math.min(rootBranches.length, 8)
+  const branchPaths = rootBranches
+    .slice(0, branchLimit)
+    .map(({ childId }) => preferredPathFrom(childId))
+
+  // Round-robin across root branches so a deep first branch cannot crowd all
+  // of the other sentence shapes out of the visual budget.
+  const branchOffsets = branchPaths.map(() => 0)
+  let expandedBranch = true
+  while (selectedIds.size < budget && expandedBranch) {
+    expandedBranch = false
+    for (let branchIndex = 0; branchIndex < branchPaths.length; branchIndex += 1) {
+      const path = branchPaths[branchIndex]
+      while (branchOffsets[branchIndex] < path.length && selectedIds.has(path[branchOffsets[branchIndex]])) {
+        branchOffsets[branchIndex] += 1
+      }
+      if (branchOffsets[branchIndex] >= path.length) continue
+      selectedIds.add(path[branchOffsets[branchIndex]])
+      branchOffsets[branchIndex] += 1
+      expandedBranch = true
+      if (selectedIds.size >= budget) break
+    }
+  }
+
+  // Spend any remaining room on nearby splits and alternate merge inputs. The
+  // frontier keeps the selected subgraph connected to structure already shown.
+  while (selectedIds.size < budget) {
+    const candidates = new Map()
+    for (const selectedId of selectedIds) {
+      for (const targetId of topology.outgoing.get(selectedId)) {
+        if (!selectedIds.has(targetId)) {
+          const candidate = candidates.get(targetId) ?? { id: targetId, closesMerge: 0, deepSplit: 0 }
+          candidate.deepSplit = Math.max(
+            candidate.deepSplit,
+            topology.layerById.get(selectedId) > 0 && topology.outgoing.get(selectedId).length > 1 ? 1 : 0,
+          )
+          candidates.set(targetId, candidate)
+        }
+      }
+      for (const sourceId of topology.incoming.get(selectedId)) {
+        if (!selectedIds.has(sourceId)) {
+          const candidate = candidates.get(sourceId) ?? { id: sourceId, closesMerge: 0, deepSplit: 0 }
+          candidate.closesMerge = Math.max(
+            candidate.closesMerge,
+            topology.incoming.get(selectedId).length > 1 ? 1 : 0,
+          )
+          candidates.set(sourceId, candidate)
+        }
+      }
+    }
+    const orderedCandidates = [...candidates.values()].sort((left, right) =>
+      right.closesMerge - left.closesMerge ||
+      right.deepSplit - left.deepSplit ||
+      topology.comparePriority(left.id, right.id),
+    )
+    const nextId = orderedCandidates[0]?.id ?? topology.topologicalOrder.find((id) => !selectedIds.has(id))
+    if (nextId == null) break
+    selectedIds.add(nextId)
+  }
+
+  return {
+    nodes: nodes.filter((node, index) => selectedIds.has(node.id ?? `word-tree-node-${index}`)),
+    edges: validEdges.filter((edge) =>
+      selectedIds.has(endpointId(edge.source)) && selectedIds.has(endpointId(edge.target)),
+    ),
+  }
+}
+
+function normalizedLayerRank(id, levels, rankById, layerById) {
+  const level = levels.get(layerById.get(id)) ?? []
+  return rankById.get(id) / Math.max(1, level.length - 1)
+}
+
+export function wordTreePositions(width, height, nodes, direction, edges = []) {
+  const topology = wordTreeTopology(nodes, edges)
+  const levels = new Map()
+  for (const record of topology.records) {
+    const layer = topology.layerById.get(record.id)
+    if (!levels.has(layer)) levels.set(layer, [])
+    levels.get(layer).push(record.id)
+  }
+  for (const level of levels.values()) level.sort(topology.compareSourceOrder)
+  const orderedLayers = [...levels.keys()].sort((left, right) => left - right)
+
+  function sweep(layerOrder, neighborsFor) {
+    const rankById = new Map()
+    for (const level of levels.values()) {
+      level.forEach((id, index) => rankById.set(id, index))
+    }
+    for (const layer of layerOrder) {
+      const level = levels.get(layer)
+      const barycenter = new Map(level.map((id) => {
+        const neighbors = neighborsFor(id).filter((neighborId) => rankById.has(neighborId))
+        return [
+          id,
+          neighbors.length
+            ? neighbors.reduce(
+              (total, neighborId) => total + normalizedLayerRank(neighborId, levels, rankById, topology.layerById),
+              0,
+            ) / neighbors.length
+            : null,
+        ]
+      }))
+      level.sort((left, right) => {
+        const leftCenter = barycenter.get(left)
+        const rightCenter = barycenter.get(right)
+        if (leftCenter != null && rightCenter != null && leftCenter !== rightCenter) {
+          return leftCenter - rightCenter
+        }
+        return topology.compareSourceOrder(left, right)
+      })
+      level.forEach((id, index) => rankById.set(id, index))
+    }
+  }
+
+  // Alternating barycentric sweeps reduce crossings while source order remains
+  // the deterministic tie-breaker. Finish forward so convergence nodes center
+  // themselves on their visible incoming routes.
+  for (let iteration = 0; iteration < 3; iteration += 1) {
+    sweep(orderedLayers.slice(1), (id) => topology.incoming.get(id))
+    sweep([...orderedLayers].reverse().slice(1), (id) => topology.outgoing.get(id))
+  }
+  sweep(orderedLayers.slice(1), (id) => topology.incoming.get(id))
+
+  const maxLayer = Math.max(1, ...orderedLayers)
+  const horizontalSpan = Math.max(0, width - 140)
+  const verticalSpan = Math.max(0, height - 78)
   const positions = new Map()
-  for (const [depth, level] of byDepth) {
-    level.forEach((node, index) => {
-      const progress = depth / maxDepth
-      const x = direction === "backward" ? width - 70 - progress * (width - 140) : 70 + progress * (width - 140)
-      const y = 65 + ((index + 1) / (level.length + 1)) * (height - 110)
-      positions.set(node.id, { x, y })
+  for (const layer of orderedLayers) {
+    const level = levels.get(layer)
+    level.forEach((id, index) => {
+      const progress = layer / maxLayer
+      const x = direction === "backward"
+        ? width - 70 - progress * horizontalSpan
+        : 70 + progress * horizontalSpan
+      const y = 48 + ((index + 1) / (level.length + 1)) * verticalSpan
+      positions.set(id, { x, y })
     })
   }
   return positions
 }
 
 function WordTreeDiagram({ width, height, wordTree, direction, selectedTokenIds, onSelectSource }) {
-  const normalized = normalizeTree(wordTree)
-  const nodes = normalized.nodes.slice(0, 34)
-  const nodeIds = new Set(nodes.map((node) => node.id))
-  const edges = normalized.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
-  const positions = wordTreePositions(width, height, nodes, direction)
+  const { nodes, edges } = selectWordTreeGraph(wordTree)
+  const positions = wordTreePositions(width, height, nodes, direction, edges)
+  const nodesById = new Map(nodes.map((node) => [node.id, node]))
+  const nonRootIds = new Set(edges.map((edge) => endpointId(edge.target)))
   return (
     <g className="sentence-diagram sentence-diagram--word-tree">
       <DiagramDefs />
@@ -648,11 +1049,13 @@ function WordTreeDiagram({ width, height, wordTree, direction, selectedTokenIds,
         line weight = frequency · leaf = recoverable source
       </text>
       {edges.map((edge) => {
-        const source = positions.get(edge.source)
-        const target = positions.get(edge.target)
+        const sourceNodeId = endpointId(edge.source)
+        const targetNodeId = endpointId(edge.target)
+        const source = positions.get(sourceNodeId)
+        const target = positions.get(targetNodeId)
         if (!source || !target) return null
-        const targetNode = nodes.find((node) => node.id === edge.target)
-        const sourceNode = nodes.find((node) => node.id === edge.source)
+        const targetNode = nodesById.get(targetNodeId)
+        const sourceNode = nodesById.get(sourceNodeId)
         const sourceId = sourceIdFor(edge)
         const weight = Math.max(1.2, Math.min(8, Number(edge.count ?? targetNode?.count ?? 1)))
         const bend = (source.x + target.x) / 2
@@ -660,7 +1063,7 @@ function WordTreeDiagram({ width, height, wordTree, direction, selectedTokenIds,
         const targetLabel = targetNode?.label ?? targetNode?.token ?? edge.target
         return (
           <g
-            key={edge.id ?? `${edge.source}-${edge.target}`}
+            key={edge.id ?? `${sourceNodeId}-${targetNodeId}`}
             role={sourceId ? "button" : undefined}
             tabIndex={sourceId ? "0" : undefined}
             aria-label={sourceId ? `${sourceLabel} to ${targetLabel}. Activate to recover a source sentence.` : undefined}
@@ -676,7 +1079,7 @@ function WordTreeDiagram({ width, height, wordTree, direction, selectedTokenIds,
         const position = positions.get(node.id)
         const label = node.label ?? node.token ?? node.word ?? node.id
         const sourceId = sourceIdFor(node)
-        const root = (node.depth ?? 0) === 0
+        const root = !nonRootIds.has(node.id)
         const selected = node.tokenIds?.some((id) => selectedTokenIds.includes(id))
         const w = labelWidth(label, root ? 72 : 40)
         return (
@@ -912,6 +1315,20 @@ function variantStageGraph(specimen, tokens, rewrites) {
 }
 
 function stageGraph(view, specimen, tokens, wordTree, phraseNet, rewrites) {
+  if (view === "reed-kellogg") {
+    return {
+      nodes: (specimen?.sentenceDiagram?.nodes ?? []).map((node) => ({
+        ...node,
+        label: node.label ?? tokens.find((token) => token.id === node.tokenId)?.text ?? node.id,
+        selectTokenId: node.tokenId,
+        entityType: "sentence-diagram-token",
+      })),
+      edges: (specimen?.sentenceDiagram?.edges ?? []).map((edge) => ({
+        ...edge,
+        entityType: "sentence-diagram-relationship",
+      })),
+    }
+  }
   if (view === "constituency") {
     const flattened = flattenConstituency(specimen?.constituency)
     const phrases = flattened.length ? flattened : specimen?.phrases ?? []
@@ -977,15 +1394,7 @@ function stageGraph(view, specimen, tokens, wordTree, phraseNet, rewrites) {
     }
   }
   if (view === "word-tree") {
-    const normalized = normalizeTree(wordTree)
-    const nodes = normalized.nodes.slice(0, 34)
-    const ids = new Set(nodes.map((node) => node.id))
-    return {
-      nodes,
-      edges: normalized.edges.filter(
-        (edge) => ids.has(endpointId(edge.source)) && ids.has(endpointId(edge.target)),
-      ),
-    }
+    return selectWordTreeGraph(wordTree)
   }
   if (view === "phrase-net") {
     return { nodes: phraseNet?.nodes ?? [], edges: phraseNet?.edges ?? [] }
@@ -1008,6 +1417,9 @@ function fallbackNetworkPositions(width, height, nodes) {
 
 function networkHitGeometry(view, width, nodes, node) {
   const label = node.label ?? node.text ?? node.token ?? node.id
+  if (view === "reed-kellogg") {
+    return { width: labelWidth(label, 38), height: 30 }
+  }
   if (view === "constituency") {
     return { width: labelWidth(label, 36), height: 28 }
   }
@@ -1032,7 +1444,17 @@ function networkHitGeometry(view, width, nodes, node) {
   return { r: 18 }
 }
 
-function networkNodePositions(view, width, height, nodes, common) {
+function networkNodePositions(view, width, height, nodes, common, edges = []) {
+  if (view === "reed-kellogg") {
+    const baselineY = Math.max(190, height * 0.5) - 15
+    const tokenPositionById = tokenPositions(common.tokens, width, baselineY)
+    return new Map(
+      nodes.map((node) => [
+        node.id,
+        tokenPositionById.get(node.tokenId) ?? { x: width / 2, y: baselineY },
+      ]),
+    )
+  }
   if (view === "constituency") {
     return constituencyGeometry(width, height, common.specimen, common.tokens).phrasePosition
   }
@@ -1045,7 +1467,7 @@ function networkNodePositions(view, width, height, nodes, common) {
     }]))
   }
   if (view === "word-tree") {
-    return wordTreePositions(width, height, nodes, common.direction)
+    return wordTreePositions(width, height, nodes, common.direction, edges)
   }
   if (view === "phrase-net") return phraseNetPositions(width, height, nodes)
   if (view === "variants") {
@@ -1135,6 +1557,7 @@ export default function SentenceStructureStage({
         plot.height,
         layoutNodes,
         common,
+        layoutEdges,
       )
       return {
         sceneNodes: layoutNodes.map((node, index) => {
@@ -1219,6 +1642,7 @@ export default function SentenceStructureStage({
   const structuralEmptyText = view === "word-tree"
     ? "No matching source paths. Try another subject or corpus."
     : "No matching phrase relationships. Try X and Y in Shakespeare."
+  const frameDescription = `A deterministic corpus-derived ${VIEW_NAMES[view] ?? view} structure for ${specimen?.text}`
 
   return (
     <div className="sentence-stage__host" ref={hostRef}>
@@ -1239,7 +1663,7 @@ export default function SentenceStructureStage({
             margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
             enableHover
             accessibleTable
-            description={`An authored ${view} structure for ${specimen?.text}`}
+            description={frameDescription}
             summary={summaryText}
             onClick={handleFrameClick}
             animate={!reducedMotion}
@@ -1257,7 +1681,7 @@ export default function SentenceStructureStage({
             margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
             enableHover
             accessibleTable
-            description={`An authored ${view} structure for ${specimen?.text}`}
+            description={frameDescription}
             summary={summaryText}
             onClick={handleFrameClick}
             animate={!reducedMotion}

@@ -517,7 +517,6 @@ export const ProcessSankey = forwardRef(function ProcessSankey<TNode extends Dat
       getData: () => (rawEdges ?? []) as unknown as Datum[],
       getScales: () => null,
     },
-    deps: [isControlled, looksLikeEdge, resolveEdgeId, nodeIdAccessor, rawEdges, writePushedEdges, writePushedNodes],
   })
 
   // Single source of truth for edge id derivation — both rendering

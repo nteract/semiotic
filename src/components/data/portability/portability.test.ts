@@ -20,15 +20,27 @@ import {
   toVegaLiteResult,
 } from "./vegaLite"
 
-function loadSchema(name: string): any {
+type JsonSchemaValue = string | number | boolean | null | JsonSchemaValue[] | object
+
+interface PublishedSchema {
+  $schema: string
+  $id: string
+  required: string[]
+  properties: Record<string, PublishedSchema>
+  $defs: Record<string, PublishedSchema>
+  const: string
+  examples: JsonSchemaValue[]
+  enum: string[]
+}
+
+function loadSchema(name: string): PublishedSchema {
   // vitest runs with cwd at the repo root, where /spec lives.
   const path = join(process.cwd(), "spec", "v0.1", name)
   return JSON.parse(readFileSync(path, "utf8"))
 }
 
 function createSchemaValidator() {
-  const Constructor = (Ajv2020 as any).default ?? Ajv2020
-  return new Constructor({ strict: false, allErrors: true, validateFormats: false })
+  return new Ajv2020({ strict: false, allErrors: true, validateFormats: false })
 }
 
 // ── Published schemas: structure + sync with the runtime surface ─────────────
@@ -90,10 +102,13 @@ describe("published JSON Schemas (/spec/v0.1)", () => {
 
   it("label every domain field with x-idid-status", () => {
     const statuses = new Set(["shipped", "proposed", "spec"])
-    const walk = (node: any) => {
-      if (node && typeof node === "object") {
-        if (node["x-idid-status"]) expect(statuses.has(node["x-idid-status"])).toBe(true)
-        for (const v of Object.values(node)) walk(v)
+    const walk = (node: JsonSchemaValue) => {
+      if (Array.isArray(node)) {
+        node.forEach(walk)
+      } else if (node && typeof node === "object") {
+        const status = Reflect.get(node, "x-idid-status")
+        if (typeof status === "string") expect(statuses.has(status)).toBe(true)
+        for (const value of Object.values(node)) walk(value as JsonSchemaValue)
       }
     }
     ;[capability, audience, annotation].forEach(walk)
@@ -173,11 +188,11 @@ describe("validatePortableCapability", () => {
   })
 
   it("rejects a variant missing key/label", () => {
-    const result = validatePortableCapability({
+    const result: ReturnType<typeof validatePortableCapability> = Reflect.apply(validatePortableCapability, null, [{
       component: "BarChart",
       rubric: { familiarity: 5, accuracy: 5, precision: 4 },
-      variants: [{ label: "no key" } as any],
-    })
+      variants: [{ label: "no key" }],
+    }])
     expect(result.valid).toBe(false)
   })
 
@@ -203,10 +218,10 @@ describe("validatePortableAudienceProfile", () => {
   })
 
   it("rejects bad direction, weight, exposure, modality", () => {
-    expect(validatePortableAudienceProfile({ targets: { X: { direction: "up" } as any } }).valid).toBe(false)
+    expect(Reflect.apply(validatePortableAudienceProfile, null, [{ targets: { X: { direction: "up" } } }]).valid).toBe(false)
     expect(validatePortableAudienceProfile({ targets: { X: { direction: "increase", weight: 9 } } }).valid).toBe(false)
-    expect(validatePortableAudienceProfile({ exposureLevel: 5 as any }).valid).toBe(false)
-    expect(validatePortableAudienceProfile({ receptionModality: "telepathy" as any }).valid).toBe(false)
+    expect(Reflect.apply(validatePortableAudienceProfile, null, [{ exposureLevel: 5 }]).valid).toBe(false)
+    expect(Reflect.apply(validatePortableAudienceProfile, null, [{ receptionModality: "telepathy" }]).valid).toBe(false)
   })
 
   it("rejects fractional familiarity and target weights", () => {
@@ -230,9 +245,9 @@ describe("validatePortableAnnotation", () => {
   it("rejects bad confidence, createdAt, and closed-union values", () => {
     expect(validatePortableAnnotation({ provenance: { confidence: 2 } }).valid).toBe(false)
     expect(validatePortableAnnotation({ provenance: { createdAt: "last tuesday" } }).valid).toBe(false)
-    expect(validatePortableAnnotation({ lifecycle: { freshness: "ancient" as any } }).valid).toBe(false)
-    expect(validatePortableAnnotation({ lifecycle: { status: "maybe" as any } }).valid).toBe(false)
-    expect(validatePortableAnnotation({ lifecycle: { anchor: "drifting" as any } }).valid).toBe(false)
+    expect(Reflect.apply(validatePortableAnnotation, null, [{ lifecycle: { freshness: "ancient" } }]).valid).toBe(false)
+    expect(Reflect.apply(validatePortableAnnotation, null, [{ lifecycle: { status: "maybe" } }]).valid).toBe(false)
+    expect(Reflect.apply(validatePortableAnnotation, null, [{ lifecycle: { anchor: "drifting" } }]).valid).toBe(false)
   })
 
   it("preserves open-union source/basis strings (no false rejection)", () => {
@@ -411,7 +426,7 @@ describe("attachIDID / readIDID", () => {
     // The original spec still renders as ordinary Vega-Lite.
     expect(enriched.mark).toBe("bar")
     // Input not mutated.
-    expect((spec as any).usermeta).toBeUndefined()
+    expect(spec.usermeta).toBeUndefined()
   })
 
   it("returns undefined when no IDID metadata is present", () => {
@@ -439,9 +454,9 @@ describe("attachIDIDAnnotations / readIDIDAnnotations", () => {
     const enriched = attachIDIDAnnotations(spec, annotations)
     expect(readIDIDAnnotations(enriched)).toEqual(annotations)
     // A representable threshold produced a layered spec with a rule mark.
-    const layers = (enriched as any).layer
+    const layers = enriched.layer
     expect(Array.isArray(layers)).toBe(true)
-    const ruleLayer = layers.find((l: any) => l.usermeta?.idid?.role === "annotation-layer")
+    const ruleLayer = layers!.find((layer) => layer.usermeta?.idid?.role === "annotation-layer")!
     expect(ruleLayer.mark).toBe("rule")
   })
 
@@ -469,7 +484,7 @@ describe("attachIDIDAnnotations / readIDIDAnnotations", () => {
     const enriched = attachIDIDAnnotations(spec, [
       { provenance: { source: "user" } }, // no type → no courtesy mark
     ])
-    expect((enriched as any).layer).toBeUndefined()
+    expect(enriched.layer).toBeUndefined()
     expect(enriched.mark).toBe("line")
     expect(readIDIDAnnotations(enriched)).toHaveLength(1)
   })
@@ -477,8 +492,8 @@ describe("attachIDIDAnnotations / readIDIDAnnotations", () => {
   it("does not mutate the input spec", () => {
     const spec: VegaLiteSpec = { mark: "line", encoding: {} }
     attachIDIDAnnotations(spec, annotations)
-    expect((spec as any).usermeta).toBeUndefined()
-    expect((spec as any).layer).toBeUndefined()
+    expect(spec.usermeta).toBeUndefined()
+    expect(spec.layer).toBeUndefined()
   })
 })
 

@@ -1,3 +1,5 @@
+import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -8,17 +10,17 @@ import { TooltipProvider } from "../../store/TooltipStore"
 // StreamXYFrame; asserting on those requires mocking the frame. Kept in a
 // separate file because the top-level vi.mock hoists and would otherwise
 // replace the real frame in the sibling canvas-render tests.
-let lastXYFrameProps: any = null
+let lastXYFrameProps = {} as CapturedXYFrameProps
 vi.mock("../../stream/StreamXYFrame", () => ({
   __esModule: true,
-  default: React.forwardRef((props: any, _ref: any) => {
+  default: React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
     lastXYFrameProps = props
     return <div className="stream-xy-frame" />
   }),
 }))
 
 describe("RealtimeHistogram — chart mode resolution", () => {
-  beforeEach(() => { lastXYFrameProps = null })
+  beforeEach(() => { lastXYFrameProps = {} as CapturedXYFrameProps })
 
   it("sparkline mode shrinks size and turns axes off", () => {
     // Regression: before the fix only dimensions were threaded through

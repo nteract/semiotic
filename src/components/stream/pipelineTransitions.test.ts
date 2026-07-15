@@ -12,6 +12,7 @@ import {
   type TransitionContext,
   type PrevPosition,
   type PrevPath,
+  type TransitionState,
 } from "./pipelineTransitions"
 import type { CandlestickSceneNode, GlyphSceneNode, PointSceneNode, RectSceneNode, SceneNode, TransitionConfig } from "./types"
 import type { GlyphDef } from "./glyphDef"
@@ -115,7 +116,7 @@ describe("pipelineTransitions — candlestick", () => {
     snapshotPositions(ctx, prior, prevPos, prevPath)
 
     const moved = makeCandle({ x: 100, openY: 70, closeY: 20, highY: 10, lowY: 80 })
-    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+    const state: TransitionState = {
       scene: [moved as SceneNode], exitNodes: [], activeTransition: null,
     }
     startTransition(ctx, transition, state, prevPos, prevPath)
@@ -123,7 +124,7 @@ describe("pipelineTransitions — candlestick", () => {
     // Halfway through the transition. duration=300, ease-out-cubic at t=0.5
     // isn't linearly 0.5, so we assert the direction + bounds rather than
     // the exact midpoint — the contract is "converging toward target".
-    const startTime = state.activeTransition.startTime
+    const startTime = state.activeTransition!.startTime
     advanceTransition(startTime + 150, transition, state, prevPos, prevPath)
     expect(moved.openY).toBeGreaterThan(50)
     expect(moved.openY).toBeLessThan(70)
@@ -140,11 +141,11 @@ describe("pipelineTransitions — candlestick", () => {
     snapshotPositions(ctx, prior, prevPos, prevPath)
 
     const moved = makeCandle({ x: 100, openY: 70, closeY: 20, highY: 10, lowY: 80 })
-    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+    const state: TransitionState = {
       scene: [moved as SceneNode], exitNodes: [], activeTransition: null,
     }
     startTransition(ctx, transition, state, prevPos, prevPath)
-    advanceTransition(state.activeTransition.startTime + 400, transition, state, prevPos, prevPath)
+    advanceTransition(state.activeTransition!.startTime + 400, transition, state, prevPos, prevPath)
 
     expect(moved.openY).toBe(70)
     expect(moved.closeY).toBe(20)
@@ -177,7 +178,7 @@ describe("pipelineTransitions — candlestick", () => {
     snapshotPositions(ctx, prior, prevPos, prevPath)
 
     // New scene is empty — the bar at x=5 has scrolled off
-    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+    const state: TransitionState = {
       scene: [], exitNodes: [], activeTransition: null,
     }
     startTransition(ctx, transition, state, prevPos, prevPath)
@@ -262,11 +263,11 @@ describe("pipelineTransitions — point", () => {
     snapshotPositions(ctx, [makePoint({ pointId: "p1", x: 100, y: 50 })], prevPos, prevPath)
 
     const moved = makePoint({ pointId: "p1", x: 200, y: 90 })
-    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+    const state: TransitionState = {
       scene: [moved as SceneNode], exitNodes: [], activeTransition: null,
     }
     startTransition(ctx, transition, state, prevPos, prevPath)
-    const startTime = state.activeTransition.startTime
+    const startTime = state.activeTransition!.startTime
 
     advanceTransition(startTime + 150, transition, state, prevPos, prevPath)
     expect(moved.x).toBeGreaterThan(100)
@@ -333,11 +334,11 @@ describe("pipelineTransitions — rect", () => {
     snapshotPositions(ctx, [makeRect({ datum: { category: "A" }, y: 50, h: 80 })], prevPos, prevPath)
 
     const moved = makeRect({ datum: { category: "A" }, y: 20, h: 110 })
-    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+    const state: TransitionState = {
       scene: [moved as SceneNode], exitNodes: [], activeTransition: null,
     }
     startTransition(ctx, transition, state, prevPos, prevPath)
-    const startTime = state.activeTransition.startTime
+    const startTime = state.activeTransition!.startTime
 
     advanceTransition(startTime + 150, transition, state, prevPos, prevPath)
     expect(moved.h).toBeGreaterThan(80)
@@ -447,11 +448,11 @@ describe("pipelineTransitions — glyph", () => {
     snapshotPositions(ctx, [makeGlyph({ pointId: "g1", x: 100, y: 50, size: 24 })], prevPos, prevPath)
 
     const moved = makeGlyph({ pointId: "g1", x: 200, y: 90, size: 40 })
-    const state: { scene: SceneNode[]; exitNodes: SceneNode[]; activeTransition: any } = {
+    const state: TransitionState = {
       scene: [moved as SceneNode], exitNodes: [], activeTransition: null,
     }
     startTransition(ctx, transition, state, prevPos, prevPath)
-    const startTime = state.activeTransition.startTime
+    const startTime = state.activeTransition!.startTime
 
     advanceTransition(startTime + 150, transition, state, prevPos, prevPath)
     expect(moved.x).toBeGreaterThan(100)

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { buildWaterfallScene } from "./waterfallScene"
 import type { XYSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 /** Minimal identity scales for testing — no pixel transform */
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
@@ -17,7 +18,7 @@ function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
     resolveColorMap: () => new Map(),
     resolveGroupColor: () => null,
     groupData: (data) => {
-      const map = new Map<string, any[]>()
+      const map = new Map<string, Datum[]>()
       for (const d of data) {
         const key = d.group ?? "default"
         if (!map.has(key)) map.set(key, [])

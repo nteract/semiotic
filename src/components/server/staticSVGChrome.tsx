@@ -9,7 +9,7 @@ import type {
 import type { StreamOrdinalFrameProps } from "../stream/ordinalTypes"
 import type { StreamGeoFrameProps } from "../stream/geoTypes"
 import type { PhysicsSettledSVGOptions } from "../stream/physics/PhysicsSettledSVG"
-import type { PhysicsPipelineStore } from "../stream/physics/PhysicsPipelineStore"
+import type { PhysicsPipelineStore, PhysicsQueuedSpawn } from "../stream/physics/PhysicsPipelineStore"
 import type { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { RenderEvidence } from "./renderEvidence"
 import {
@@ -27,7 +27,7 @@ export type FrameType = RenderEvidence["frameType"]
 
 export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
   config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]
-  initialSpawns?: Array<Record<string, unknown>>
+  initialSpawns?: PhysicsQueuedSpawn[]
   projectionRows?: PhysicsSettledSVGOptions["projectionRows"]
   size?: [number, number]
   _idPrefix?: string
@@ -392,4 +392,3 @@ export function generateAxesSVG(
 }
 
 // ── StreamXYFrame SSR ───────────────────────────────────────────────────
-

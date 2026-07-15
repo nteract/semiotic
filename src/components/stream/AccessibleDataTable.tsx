@@ -1,6 +1,8 @@
 "use client"
 import * as React from "react"
 import { useDataSummary } from "../DataSummaryContext"
+import type { Datum } from "../charts/shared/datumTypes"
+import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
 import {
   extractAllRows,
   type AccessibleSceneNode as AnySceneNode,
@@ -9,16 +11,7 @@ import {
 
 export { extractAllRows } from "./accessibleDataRows"
 export type { DataRow } from "./accessibleDataRows"
-
-const SR_ONLY_STYLE: React.CSSProperties = {
-  position: "absolute",
-  width: 1,
-  height: 1,
-  overflow: "hidden",
-  clip: "rect(0,0,0,0)",
-  whiteSpace: "nowrap",
-  border: 0
-}
+export { AriaLiveTooltip, SR_ONLY_STYLE } from "./AriaLiveTooltip"
 
 // ── Aria-label helpers ──────────────────────────────────────────────────
 
@@ -519,14 +512,14 @@ export function AccessibleDataTable({
 
 interface NetworkAccessibleDataTableProps {
   nodes: Array<{
-    datum?: any
+    datum?: Datum | null
     id?: string
     cx?: number
     cy?: number
     x?: number
     y?: number
   }>
-  edges: Array<{ datum?: any; source?: string; target?: string }>
+  edges: Array<{ datum?: Datum | null; source?: string; target?: string }>
   chartType: string
   tableId?: string
   chartTitle?: string
@@ -616,7 +609,7 @@ export function NetworkAccessibleDataTable({
 
   for (const e of safeEdges) {
     if (!e || typeof e !== "object") continue
-    const raw = e.datum ?? e
+    const raw: Datum = e.datum ?? { source: e.source, target: e.target }
     const srcRaw = typeof raw.source === "object" ? raw.source?.id : raw.source
     const tgtRaw = typeof raw.target === "object" ? raw.target?.id : raw.target
     const hasVal = typeof raw.value === "number" && Number.isFinite(raw.value)
@@ -679,7 +672,7 @@ export function NetworkAccessibleDataTable({
 
   // Show weighted columns when any edge carries a numeric value
   const hasWeights = safeEdges.some((e) => {
-    const raw = e?.datum ?? e
+    const raw: Datum = e?.datum ?? { source: e?.source, target: e?.target }
     return typeof raw?.value === "number" && Number.isFinite(raw.value)
   })
 
@@ -854,31 +847,3 @@ export function SkipToTableLink({ tableId }: { tableId: string }) {
     </a>
   )
 }
-
-// ── AriaLiveTooltip ─────────────────────────────────────────────────────
-
-/**
- * Visually-hidden aria-live region that mirrors tooltip text for screen readers.
- */
-export function AriaLiveTooltip({ hoverPoint }: { hoverPoint: any }) {
-  let text = ""
-  if (hoverPoint) {
-    const data = hoverPoint.data || hoverPoint
-    if (typeof data === "object") {
-      const entries = Object.entries(data).filter(
-        ([, v]) => typeof v !== "object" && typeof v !== "function"
-      )
-      text = `Data point: ${entries.map(([k, v]) => `${k}: ${v}`).join(", ")}`
-    } else {
-      text = `Data point: ${String(data)}`
-    }
-  }
-
-  return (
-    <div aria-live="polite" aria-atomic="true" style={SR_ONLY_STYLE}>
-      {text}
-    </div>
-  )
-}
-
-export { SR_ONLY_STYLE }

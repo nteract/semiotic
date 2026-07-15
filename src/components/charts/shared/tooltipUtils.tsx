@@ -3,6 +3,14 @@ import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import type { HoverData } from "../../realtime/types"
 import type { Datum } from "./datumTypes"
 
+export type TooltipValue = string | number | boolean | Date | Datum | Datum[] | null | undefined
+type TooltipAccessor = string | {
+  bivarianceHack(datum: Datum): TooltipValue
+}["bivarianceHack"]
+type TooltipFormatter = {
+  bivarianceHack(value: TooltipValue, index?: number, allTicks?: number[]): React.ReactNode
+}["bivarianceHack"]
+
 export interface TooltipFieldConfig {
   label: string
   // Parameter is `any` (not `Datum`) specifically so HOC accessors declared
@@ -10,8 +18,8 @@ export interface TooltipFieldConfig {
   // Datum, so a `(TDatum) => X` function isn't assignable to a `(Datum) => X`
   // slot (wider-param rule). The `any` here is a typed escape hatch at the
   // tooltip-field boundary, not a data-shape declaration.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see comment above
-  accessor: string | ((d: any) => any)
+   
+  accessor: TooltipAccessor
   role?: "title" | "x" | "y" | "color" | "size" | "group" | "value"
   /** Per-field formatter. HOCs pass `xFormat`/`yFormat`/`valueFormat` here so
    *  the default tooltip renders values consistently with the axis. Typed
@@ -20,14 +28,14 @@ export interface TooltipFieldConfig {
    *  (`(d, index?, allTicks?) => ReactNode`). A ReactNode return renders
    *  as-is in the tooltip span. If the formatter throws, the tooltip
    *  falls back to the built-in `formatVal`. */
-  format?: (v: any, ...rest: any[]) => React.ReactNode
+  format?: TooltipFormatter
 }
 
 /**
  * Extract a display name from an accessor.
  * Strings return themselves; functions return "value".
  */
-export function accessorName(acc: string | ((...args: any[]) => any)): string {
+export function accessorName(acc: TooltipAccessor): string {
   return typeof acc === "string" ? acc : "value"
 }
 
@@ -46,7 +54,7 @@ export function formatVal(v: unknown): string {
  *  `valueFormat` from breaking the entire tooltip render. Returns
  *  `ReactNode` so HOCs that supply ReactNode-returning axis formatters
  *  (see the `xFormat`/`yFormat` pitfall in CLAUDE.md) render naturally. */
-function applyFormat(value: unknown, fmt?: (v: any, ...rest: any[]) => React.ReactNode): React.ReactNode {
+function applyFormat(value: TooltipValue, fmt?: TooltipFormatter): React.ReactNode {
   if (!fmt) return formatVal(value)
   try {
     const out = fmt(value)
@@ -56,7 +64,7 @@ function applyFormat(value: unknown, fmt?: (v: any, ...rest: any[]) => React.Rea
   }
 }
 
-export function resolveValue(d: Datum, acc: string | ((d: Datum) => any)): unknown {
+export function resolveValue(d: Datum, acc: TooltipAccessor): TooltipValue {
   return typeof acc === "function" ? acc(d) : d[acc]
 }
 
@@ -77,14 +85,14 @@ export type { SmartTooltipEntry, SmartTooltipResult } from "./smartTooltip"
  * the call site is a no-op for the common case.
  */
 export function bandTooltipFields(
-  band: unknown,
-  valueFormat?: (v: any, ...rest: any[]) => React.ReactNode
+  band: { y0Accessor?: TooltipAccessor; y1Accessor?: TooltipAccessor } | Array<{ y0Accessor?: TooltipAccessor; y1Accessor?: TooltipAccessor }> | null | undefined,
+  valueFormat?: TooltipFormatter
 ): TooltipFieldConfig[] {
   if (!band) return []
   // Public API accepts BandConfig | BandConfig[]; normalize to array.
   const list = Array.isArray(band) ? band : [band]
   const fields: TooltipFieldConfig[] = []
-  list.forEach((b: any, i: number) => {
+  list.forEach((b, i) => {
     const y0Label = typeof b?.y0Accessor === "string" ? b.y0Accessor : "low"
     const y1Label = typeof b?.y1Accessor === "string" ? b.y1Accessor : "high"
     // Read from the enriched `bands[i]` array (StreamXYFrame attaches
@@ -93,12 +101,12 @@ export function bandTooltipFields(
     // single-band field made it through.
     fields.push({
       label: y0Label,
-      accessor: (d: any) => d?.bands?.[i]?.y0 ?? (i === 0 ? d?.band?.y0 : undefined),
+      accessor: (d: Datum) => d.bands?.[i]?.y0 ?? (i === 0 ? d.band?.y0 : undefined),
       format: valueFormat,
     })
     fields.push({
       label: y1Label,
-      accessor: (d: any) => d?.bands?.[i]?.y1 ?? (i === 0 ? d?.band?.y1 : undefined),
+      accessor: (d: Datum) => d.bands?.[i]?.y1 ?? (i === 0 ? d.band?.y1 : undefined),
       format: valueFormat,
     })
   })
@@ -161,15 +169,15 @@ export function buildOrdinalTooltip({
   pieData = false,
   valueFormat,
 }: {
-  categoryAccessor: string | ((d: Datum) => any)
-  valueAccessor: string | ((d: Datum) => any)
-  groupAccessor?: string | ((d: Datum) => any)
+  categoryAccessor: TooltipAccessor
+  valueAccessor: TooltipAccessor
+  groupAccessor?: TooltipAccessor
   groupLabel?: string
   pieData?: boolean
   /** Same formatter the HOC passes to the value axis. Threaded here so the
    *  default tooltip shows values consistently with the axis ("$450k", not
    *  "450000"). Override by passing a custom `tooltip` prop. */
-  valueFormat?: (v: any, ...rest: any[]) => React.ReactNode
+  valueFormat?: TooltipFormatter
 }): (d: Datum) => React.ReactNode {
   return (d: Datum) => {
     const datum = pieData

@@ -33,9 +33,12 @@ export function mergeData<T extends Datum>(
   // Resolve nested key accessor (e.g., "properties.iso_a3")
   const getFeatureKey = (feature: GeoJSON.Feature): string => {
     const parts = featureKey.split(".")
-    let val: any = feature
+    type NestedValue = string | number | boolean | object | null | undefined
+    let val: NestedValue = feature
     for (const part of parts) {
-      val = val?.[part]
+      val = val !== null && typeof val === "object"
+        ? (val as Record<string, NestedValue>)[part]
+        : undefined
     }
     return String(val ?? "")
   }

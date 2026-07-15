@@ -6,16 +6,18 @@ import {
   CORPUS_OPTIONS,
   DIRECTION_OPTIONS,
   PHRASE_PATTERN_OPTIONS,
-  SPECIMENS,
   SUBJECT_OPTIONS,
   VIEW_OPTIONS,
   applyTokenRewrites,
   buildPhraseRelationships,
   buildWordTree,
+  createCorpusSpecimen,
+  getSubjectOptionsForCorpus,
   getStructuralSummary,
   relatedEntityCount,
   resolveCorpusSelection,
-  selectSpecimenForFilters,
+  resolveSubjectAnchor,
+  selectCanonicalSentence,
   surfaceText,
   tokenRelatedEntities,
 } from "./sentenceStructureData"
@@ -29,8 +31,8 @@ const VIEW_COPY = {
     eyebrow: "Grammar as architecture",
     question: "Who does what to whom—and where do the modifiers live?",
     explanation:
-      "A curated Reed–Kellogg plate turns grammatical roles into a baseline, dividers, and sloping modifier rails. It is intentionally fixture-driven: the geometry is an editorial explanation, not a general-purpose parser.",
-    frame: "XYCustomChart",
+      "The active Shakespeare sentence becomes a Reed–Kellogg-inspired baseline, dividers, and modifier rails. Change the subject or work and this plate changes with the selected corpus row.",
+    frame: "NetworkCustomChart",
   },
   constituency: {
     number: "02",
@@ -47,7 +49,7 @@ const VIEW_COPY = {
     eyebrow: "Grammar as directed relations",
     question: "Which word depends on which other word?",
     explanation:
-      "Dependency arcs return the words to a line and expose the invisible government between them. In the telescope sentence, only one attachment needs to move for the meaning to change.",
+      "Dependency arcs return the active corpus sentence to a line and expose the invisible government between its words. Alternative attachments reuse exactly the same surface tokens.",
     frame: "XYCustomChart",
   },
   ambiguity: {
@@ -56,7 +58,7 @@ const VIEW_COPY = {
     eyebrow: "One string, several structures",
     question: "How many defensible sentences are hiding in this sentence?",
     explanation:
-      "The parse forest overlays authored alternatives. Shared relationships remain solid; disputed relationships branch, and choosing an interpretation collapses the forest without changing the words.",
+      "The parse forest compares two attachment hypotheses generated for the active corpus sentence. Shared relationships remain solid while the disputed relationship branches.",
     frame: "XYCustomChart",
   },
   semantics: {
@@ -74,7 +76,7 @@ const VIEW_COPY = {
     eyebrow: "Claims need support",
     question: "Which span carries the claim, and which spans qualify it?",
     explanation:
-      "Rhetorical structure treats clauses as nucleus and satellites—cause, evidence, contrast, concession, and elaboration. The analyst specimen contains the richest authored plate.",
+      "Rhetorical structure treats the selected Shakespeare passage as nucleus and satellites—contrast, cause, condition, coordination, or elaboration.",
     frame: "NetworkCustomChart",
   },
   "word-tree": {
@@ -83,7 +85,7 @@ const VIEW_COPY = {
     eyebrow: "A sentence enters a corpus",
     question: "What tends to come before or after this phrase?",
     explanation:
-      "A weighted trie branches from the selected word or subject. Every leaf retains its source sentence, so frequency never severs the path back to reading.",
+      "A weighted corpus path branches through shared openings, then merges structurally identical continuations. Every route retains its Shakespeare sources, so convergence never severs the path back to reading.",
     frame: "NetworkCustomChart",
   },
   "phrase-net": {
@@ -101,7 +103,7 @@ const VIEW_COPY = {
     eyebrow: "Wording is a route, not a verdict",
     question: "Where do editions, paraphrases, and rewrites converge?",
     explanation:
-      "Shared words and meanings converge while substitutions open parallel paths. Rewriting one selected word adds a local route without erasing the authored original.",
+      "Shared words and meanings converge while substitutions open parallel paths. Rewriting one selected word adds a local route without erasing the corpus original.",
     frame: "NetworkCustomChart",
   },
 }
@@ -123,14 +125,15 @@ const POS_HELP = {
 }
 
 const REWRITE_SUGGESTIONS = {
-  saw: ["followed", "noticed", "remembered"],
-  man: ["woman", "astronomer", "traveler"],
-  telescope: ["notebook", "camera", "lantern"],
-  old: ["young", "tired", "quiet"],
-  boats: ["ferries", "skiffs", "vessels"],
-  relatives: ["friends", "scholars", "neighbors"],
-  ideas: ["dreams", "theories", "rumors"],
-  analyst: ["editor", "reviewer", "scientist"],
+  love: ["desire", "devotion", "affection"],
+  familiar: ["companion", "spirit", "guide"],
+  devil: ["tempter", "danger", "riddle"],
+  death: ["fate", "ending", "silence"],
+  time: ["memory", "fortune", "history"],
+  power: ["mercy", "duty", "authority"],
+  great: ["mighty", "honored", "renowned"],
+  true: ["constant", "faithful", "certain"],
+  stars: ["omens", "heavens", "fortunes"],
 }
 
 const DEFAULT_REQUESTED_AMOUNT = 20
@@ -143,7 +146,7 @@ const DEFAULT_FILTERS = Object.freeze({
 const DEFAULT_SELECTION = resolveCorpusSelection(DEFAULT_FILTERS, {
   requestedAmount: DEFAULT_REQUESTED_AMOUNT,
 })
-const DEFAULT_SPECIMEN = selectSpecimenForFilters(DEFAULT_SELECTION.filters, DEFAULT_SELECTION.rows)
+const DEFAULT_SENTENCE = selectCanonicalSentence(DEFAULT_SELECTION.filters, DEFAULT_SELECTION.rows)
 
 function optionLabel(options, value) {
   return options.find((option) => option.value === value)?.label ?? value
@@ -162,10 +165,10 @@ export default function SentenceStructureExplorer() {
   const normalizedCorpora = useMemo(() => CORPUS_OPTIONS.map(normalizedOption), [])
   const requestedAmountRef = useRef(DEFAULT_REQUESTED_AMOUNT)
   const [filters, setFilters] = useState(DEFAULT_SELECTION.filters)
-  const [specimenId, setSpecimenId] = useState(DEFAULT_SPECIMEN?.id ?? null)
+  const [activeSentenceId, setActiveSentenceId] = useState(DEFAULT_SENTENCE?.id ?? null)
   const [selectedTokenIds, setSelectedTokenIds] = useState([])
   const [selectedInterpretationId, setSelectedInterpretationId] = useState(
-    DEFAULT_SPECIMEN?.alternateDependencies?.[0]?.id ?? "default",
+    createCorpusSpecimen(DEFAULT_SENTENCE)?.alternateDependencies?.[0]?.id ?? "default",
   )
   const [direction, setDirection] = useState("forward")
   const [phrasePattern, setPhrasePattern] = useState("X and Y")
@@ -173,13 +176,21 @@ export default function SentenceStructureExplorer() {
   const [rewrites, setRewrites] = useState({})
   const [selectedSourceId, setSelectedSourceId] = useState(null)
   const [announcement, setAnnouncement] = useState("")
-  const [challengeAnswer, setChallengeAnswer] = useState(null)
-  const [challengeScore, setChallengeScore] = useState(0)
-
-  const specimen = useMemo(
-    () => SPECIMENS.find((candidate) => candidate.id === specimenId) ?? null,
-    [specimenId],
+  const corpusSelection = useMemo(
+    () =>
+      resolveCorpusSelection(filters, {
+        requestedAmount: filters.amount,
+      }),
+    [filters],
   )
+  const corpusRows = corpusSelection.rows
+  const activeSentence = useMemo(
+    () =>
+      corpusRows.find((row) => row.id === activeSentenceId) ??
+      selectCanonicalSentence(filters, corpusRows),
+    [activeSentenceId, corpusRows, filters],
+  )
+  const specimen = useMemo(() => createCorpusSpecimen(activeSentence), [activeSentence])
   const activeTokens = useMemo(
     () => applyTokenRewrites(specimen?.tokens ?? [], rewrites),
     [rewrites, specimen],
@@ -188,20 +199,19 @@ export default function SentenceStructureExplorer() {
     () => activeTokens.filter((token) => selectedTokenIds.includes(token.id)),
     [activeTokens, selectedTokenIds],
   )
+  const availableSubjects = useMemo(
+    () => getSubjectOptionsForCorpus(filters.corpus).map(normalizedOption),
+    [filters.corpus],
+  )
+  const subjectAnchor = useMemo(
+    () => resolveSubjectAnchor(corpusRows, filters.subject),
+    [corpusRows, filters.subject],
+  )
   const anchor =
     selectedTokens[0]?.effectiveLemma ??
     selectedTokens[0]?.lemma ??
     selectedTokens[0]?.text ??
-    filters.subject
-  const corpusSelection = useMemo(
-    () =>
-      resolveCorpusSelection(filters, {
-        requestedAmount: filters.amount,
-        preferredSpecimenId: specimenId,
-      }),
-    [filters, specimenId],
-  )
-  const corpusRows = corpusSelection.rows
+    subjectAnchor
   const wordTree = useMemo(
     () =>
       buildWordTree({
@@ -209,7 +219,7 @@ export default function SentenceStructureExplorer() {
         anchor,
         direction,
         amount: filters.amount,
-        maxDepth: 5,
+        maxDepth: 8,
       }),
     [anchor, corpusRows, direction, filters.amount],
   )
@@ -289,7 +299,6 @@ export default function SentenceStructureExplorer() {
     [corpusRows, phraseNet?.sources, selectedSourceId, wordTree?.sources],
   )
   const viewCopy = VIEW_COPY[filters.view] ?? VIEW_COPY["word-tree"]
-  const buffaloMode = /Buffalo buffalo/.test(specimen?.text ?? "")
 
   const definitions = useMemo(
     () => ({
@@ -306,12 +315,13 @@ export default function SentenceStructureExplorer() {
         type: "select",
         label: "Subject",
         searchable: true,
-        options: normalizedSubjects,
+        options: availableSubjects,
         accent: "var(--sentence-teal)",
       },
       corpus: {
         type: "select",
         label: "Corpus",
+        searchable: true,
         options: normalizedCorpora,
         accent: "var(--sentence-gold)",
       },
@@ -322,7 +332,7 @@ export default function SentenceStructureExplorer() {
         accent: "var(--sentence-violet)",
       },
     }),
-    [normalizedCorpora, normalizedSubjects, normalizedViews],
+    [availableSubjects, normalizedCorpora, normalizedViews],
   )
 
   const handleFilterChange = useCallback(
@@ -333,23 +343,30 @@ export default function SentenceStructureExplorer() {
       } else if (["subject", "corpus"].includes(meta?.key) && requestedAmountRef.current === 0) {
         requestedAmountRef.current = DEFAULT_REQUESTED_AMOUNT
       }
-      const selection = resolveCorpusSelection(nextFilters, {
+      const nextSubjectOptions = getSubjectOptionsForCorpus(nextFilters.corpus)
+      const subjectIsAvailable = nextSubjectOptions.some(
+        (option) => option.value === nextFilters.subject,
+      )
+      const compatibleFilters = subjectIsAvailable
+        ? nextFilters
+        : { ...nextFilters, subject: nextSubjectOptions[0]?.value ?? "all" }
+      const selection = resolveCorpusSelection(compatibleFilters, {
         requestedAmount: requestedAmountRef.current,
       })
       setFilters(selection.filters)
 
       if (primaryChanged) {
-        const nextSpecimen = selectSpecimenForFilters(selection.filters, selection.rows)
-        setSpecimenId(nextSpecimen?.id ?? null)
+        const nextSentence = selectCanonicalSentence(selection.filters, selection.rows)
+        const nextSpecimen = createCorpusSpecimen(nextSentence)
+        setActiveSentenceId(nextSentence?.id ?? null)
         setSelectedTokenIds([])
         setRewrites({})
         setSelectedSourceId(null)
-        setChallengeAnswer(null)
         setSelectedInterpretationId(nextSpecimen?.alternateDependencies?.[0]?.id ?? "default")
         setAnnouncement(
           selection.empty
             ? `No matching sentences about ${optionLabel(normalizedSubjects, selection.filters.subject)} in ${optionLabel(normalizedCorpora, selection.filters.corpus)}.`
-            : `${selection.rows.length} matching sentence${selection.rows.length === 1 ? "" : "s"} loaded with ${nextSpecimen?.label ?? "an authored structural plate"}.`,
+            : `${selection.rows.length} matching sentence${selection.rows.length === 1 ? "" : "s"} loaded. Every structural view now follows “${nextSentence?.text ?? "the canonical corpus sentence"}”`,
         )
       } else if (meta?.key === "view") {
         const label = optionLabel(normalizedViews, meta.value)
@@ -378,29 +395,19 @@ export default function SentenceStructureExplorer() {
     [activeTokens, specimen],
   )
 
-  const chooseSpecimen = useCallback(
-    (nextSpecimen) => {
-      const nextCorpus = nextSpecimen.source?.corpus || "all"
-      const nextSubject = nextSpecimen.subjects?.[0] || "all"
-      const selection = resolveCorpusSelection(
-        { ...filters, corpus: nextCorpus, subject: nextSubject },
-        {
-          requestedAmount: requestedAmountRef.current,
-          preferredSpecimenId: nextSpecimen.id,
-        },
-      )
-      setFilters(selection.filters)
-      setSpecimenId(nextSpecimen.id)
+  const chooseCorpusSentence = useCallback(
+    (nextSentence) => {
+      const nextSpecimen = createCorpusSpecimen(nextSentence)
+      setActiveSentenceId(nextSentence.id)
       setSelectedTokenIds([])
       setRewrites({})
       setSelectedSourceId(null)
       setSelectedInterpretationId(nextSpecimen.alternateDependencies?.[0]?.id ?? "default")
-      setChallengeAnswer(null)
       setAnnouncement(
-        `${nextSpecimen.label ?? "Sentence specimen"} loaded with ${selection.rows.length} matching sentence${selection.rows.length === 1 ? "" : "s"} from ${optionLabel(normalizedCorpora, nextCorpus)}. Structural selections were cleared.`,
+        `“${nextSentence.text}” is now the canonical sentence for all nine structural views. Structural selections were cleared.`,
       )
     },
-    [filters, normalizedCorpora],
+    [],
   )
 
   const rewriteToken = useCallback(
@@ -412,40 +419,16 @@ export default function SentenceStructureExplorer() {
         current.includes(tokenId) ? current : [...current, tokenId],
       )
       setAnnouncement(
-        `${token?.text ?? "Word"} changed to ${replacement.trim()}. Word form and the variant route changed; unaffected authored relationships remain stable.`,
+        `${token?.text ?? "Word"} changed to ${replacement.trim()}. Word form and the variant route changed; unaffected derived relationships remain stable.`,
       )
     },
     [activeTokens],
-  )
-
-  const answerChallenge = useCallback(
-    (answer) => {
-      setChallengeAnswer(answer)
-      const correct = answer === "instrument"
-      if (correct && challengeAnswer === null) setChallengeScore((score) => score + 1)
-      const authoredParse = specimen?.alternateDependencies?.find(
-        (parse) => parse.id === answer || parse.id.endsWith(`:${answer}`),
-      )
-      if (specimen?.id === "attachment-ambiguity") {
-        setSelectedInterpretationId(authoredParse?.id ?? answer)
-      }
-      setAnnouncement(
-        correct
-          ? "Correct. Attaching with to saw means the telescope was the instrument of seeing."
-          : "That is the other valid parse: attaching with to man means the man possessed the telescope.",
-      )
-    },
-    [challengeAnswer, specimen],
   )
 
   const chooseInterpretation = useCallback(
     (parseId) => {
       setSelectedInterpretationId(parseId)
       const parse = specimen?.alternateDependencies?.find((candidate) => candidate.id === parseId)
-      if (specimen?.id === "attachment-ambiguity") {
-        if (parseId.endsWith(":instrument")) setChallengeAnswer("instrument")
-        else if (parseId.endsWith(":possession")) setChallengeAnswer("possession")
-      }
       setAnnouncement(`Interpretation changed to ${parse?.label ?? "the selected reading"}.`)
     },
     [specimen],
@@ -466,13 +449,14 @@ export default function SentenceStructureExplorer() {
       className="sentence-explorer"
       style={{ "--sentence-filter-dock-height": `${filterDockSize.height}px` }}
       data-reduced-motion={reducedMotion ? "true" : "false"}
-      data-buffalo-mode={buffaloMode ? "true" : "false"}
       data-corpus-count={corpusRows.length}
       data-specimen-id={specimen?.id ?? "none"}
+      data-corpus-sentence-id={activeSentence?.id ?? "none"}
     >
       <p className="sentence-explorer__lede">
-        Written language arrives one word after another. Grammar does not. Follow the same sentence
-        through nine structures and watch the relationships—not the vocabulary—become the subject.
+        Written language arrives one word after another. Grammar does not. Choose a Shakespeare
+        scope, then follow one canonical sentence through all nine structures while corpus-level
+        paths and phrases remain grounded in the same filtered rows.
       </p>
 
       <section className="sentence-hero" aria-labelledby="sentence-thesis">
@@ -523,7 +507,6 @@ export default function SentenceStructureExplorer() {
             <span>
               {selectedTokenIds.length ? `${selectedTokenIds.length} followed` : "no word followed"}
             </span>
-            {buffaloMode ? <strong>BUFFALO MODE</strong> : null}
           </div>
         </header>
 
@@ -715,7 +698,7 @@ export default function SentenceStructureExplorer() {
                     const related = tokenRelatedEntities(specimen, token.id)
                     const count = relatedEntityCount(related)
                     return (
-                      <li key={token.id}>{count} authored relationships retain this identity</li>
+                      <li key={token.id}>{count} derived relationships retain this identity</li>
                     )
                   })}
                 </ul>
@@ -725,20 +708,6 @@ export default function SentenceStructureExplorer() {
                 Select a word in the ribbon or diagram, then change views.
               </p>
             )}
-            {filters.view === "rhetoric" && !/analyst distrusted/i.test(specimen?.text ?? "") ? (
-              <button
-                type="button"
-                className="sentence-text-link"
-                onClick={() => {
-                  const rhetorical = SPECIMENS.find((candidate) =>
-                    /analyst distrusted/i.test(candidate.text),
-                  )
-                  if (rhetorical) chooseSpecimen(rhetorical)
-                }}
-              >
-                Load the full rhetorical specimen →
-              </button>
-            ) : null}
           </aside>
         </div>
 
@@ -781,28 +750,28 @@ export default function SentenceStructureExplorer() {
       <section className="sentence-specimens" aria-labelledby="specimen-title">
         <header>
           <div>
-            <p className="sentence-kicker">Six authored stress tests</p>
-            <h2 id="specimen-title">Choose a sentence that refuses to stay flat.</h2>
+            <p className="sentence-kicker">The active Shakespeare intersection</p>
+            <h2 id="specimen-title">Choose the canonical sentence all nine views will share.</h2>
           </div>
           <p>
-            Every canonical structure is checked in. No runtime model decides what the demonstration
-            means.
+            The subject and work filters define this list. Word paths and phrase relationships use
+            every row; the other views follow the one canonical row you choose here.
           </p>
         </header>
         <div className="sentence-specimens__grid">
-          {SPECIMENS.map((candidate, index) => (
+          {corpusRows.slice(0, 8).map((candidate, index) => (
             <button
               key={candidate.id}
               type="button"
-              className={candidate.id === specimen?.id ? "is-active" : ""}
-              aria-pressed={candidate.id === specimen?.id}
-              onClick={() => chooseSpecimen(candidate)}
+              className={candidate.id === activeSentence?.id ? "is-active" : ""}
+              aria-pressed={candidate.id === activeSentence?.id}
+              onClick={() => chooseCorpusSentence(candidate)}
             >
-              <span>0{index + 1}</span>
-              <strong>{candidate.label ?? candidate.title}</strong>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{candidate.source?.work ?? "Shakespeare"}</strong>
               <q>{candidate.text}</q>
               <small>
-                {candidate.challenge ?? candidate.note ?? "Authored linguistic specimen"}
+                {candidate.source?.location ?? "corpus passage"} · {candidate.subjects.join(" · ")}
               </small>
             </button>
           ))}
@@ -845,7 +814,7 @@ export default function SentenceStructureExplorer() {
                 )
               })
             ) : (
-              <span>Select a word in the token ribbon to reveal authored rewrite choices.</span>
+              <span>Select a word in the token ribbon to reveal corpus-aligned rewrite choices.</span>
             )}
           </div>
           {Object.keys(rewrites).length ? (
@@ -871,44 +840,27 @@ export default function SentenceStructureExplorer() {
       </section>
 
       <section className="sentence-challenge" aria-labelledby="ambiguity-challenge-title">
-        <div className="sentence-challenge__diagram" aria-hidden="true">
-          <span>I</span>
-          <span>saw</span>
-          <span>the man</span>
-          <span>with the telescope</span>
-          <svg viewBox="0 0 520 120">
-            <path d="M110 102Q260 2 430 102" />
-            <path d="M276 102Q355 43 430 102" />
-          </svg>
-        </div>
+        <blockquote className="sentence-challenge__diagram">“{specimen?.text}”</blockquote>
         <div>
-          <p className="sentence-kicker">Ambiguity challenge · score {challengeScore}</p>
-          <h2 id="ambiguity-challenge-title">Which attachment means “I used the telescope”?</h2>
+          <p className="sentence-kicker">Ambiguity comparison · active corpus sentence</p>
+          <h2 id="ambiguity-challenge-title">One string, two structural hypotheses.</h2>
           <div className="sentence-challenge__answers">
-            <button
-              type="button"
-              aria-pressed={challengeAnswer === "instrument"}
-              onClick={() => answerChallenge("instrument")}
-            >
-              with → saw
-            </button>
-            <button
-              type="button"
-              aria-pressed={challengeAnswer === "possession"}
-              onClick={() => answerChallenge("possession")}
-            >
-              with → man
-            </button>
+            {(specimen?.alternateDependencies ?? []).map((parse) => (
+              <button
+                key={parse.id}
+                type="button"
+                aria-pressed={selectedInterpretationId === parse.id}
+                onClick={() => chooseInterpretation(parse.id)}
+              >
+                {parse.label}
+              </button>
+            ))}
           </div>
-          {challengeAnswer ? (
-            <p className="sentence-challenge__feedback" role="status">
-              {challengeAnswer === "instrument"
-                ? "Yes. The prepositional phrase modifies the act of seeing, so it supplies the instrument."
-                : "That valid structure says the man had the telescope. The words stay fixed; only the attachment moves."}
-            </p>
-          ) : (
-            <p>Choose a relationship, not a paraphrase.</p>
-          )}
+          <p className="sentence-challenge__feedback" role="status">
+            {specimen?.alternateDependencies?.find(
+              (parse) => parse.id === selectedInterpretationId,
+            )?.interpretation ?? "Choose a relationship, not a replacement sentence."}
+          </p>
         </div>
       </section>
 
@@ -916,7 +868,7 @@ export default function SentenceStructureExplorer() {
         <div>
           <p className="sentence-kicker">How this example stays honest</p>
           <h2 id="implementation-title">
-            One controlled sentence. Two frame families. Stable semantic IDs.
+            One corpus sentence. Two frame families. Stable semantic IDs.
           </h2>
         </div>
         <div className="sentence-implementation__grid">
@@ -932,16 +884,15 @@ export default function SentenceStructureExplorer() {
             <span>GEOMETRY</span>
             <h3>XYCustomChart</h3>
             <p>
-              Curated sentence baselines, Reed–Kellogg rails, dependency arcs, and interpretation
-              forests retain keyboard-readable marks.
+              Curated dependency arcs and interpretation forests retain keyboard-readable marks.
             </p>
           </article>
           <article>
             <span>RELATIONSHIPS</span>
             <h3>NetworkCustomChart</h3>
             <p>
-              Phrase, concept, rhetoric, corpus, and variant structures keep the same token-aligned
-              identities in new layouts.
+              Sentence diagrams, phrases, concepts, rhetoric, corpus paths, and variants derive
+              from the same active Shakespeare row and keep token-aligned identities.
             </p>
           </article>
           <article>

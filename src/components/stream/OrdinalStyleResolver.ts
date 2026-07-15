@@ -15,10 +15,10 @@ export class OrdinalStyleResolver {
 
   resolvePieceStyle(
     config: OrdinalPipelineConfig,
-    datum: Datum,
+    datum: Datum | null,
     category?: string
   ): Style {
-    if (typeof config.pieceStyle === "function") {
+    if (datum && typeof config.pieceStyle === "function") {
       const style = config.pieceStyle(datum, category)
       if (style && !style.fill && category) {
         return { ...style, fill: this.getColorFromScheme(config, category) }
@@ -36,10 +36,10 @@ export class OrdinalStyleResolver {
 
   resolveSummaryStyle(
     config: OrdinalPipelineConfig,
-    datum: Datum,
+    datum: Datum | null,
     category?: string
   ): Style {
-    if (typeof config.summaryStyle === "function") {
+    if (datum && typeof config.summaryStyle === "function") {
       return config.summaryStyle(datum, category)
     }
     if (config.summaryStyle && typeof config.summaryStyle === "object") {

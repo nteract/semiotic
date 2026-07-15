@@ -208,7 +208,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
   warnMissingField("FunnelChart", safeData, "valueAccessor", valueAccessor)
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // For single-category funnel, resolve one uniform fill color
   const uniformFill = useMemo(() => {

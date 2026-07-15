@@ -594,7 +594,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
         onClick(wrapped.sourceDatum, { x: event.x, y: event.y })
         return
       }
-      onClick(datum, { x: event.x, y: event.y })
+      if (datum) onClick(datum, { x: event.x, y: event.y })
     },
     [onClick]
   )
@@ -604,7 +604,7 @@ export const GauntletChart = forwardRef(function GauntletChart<TDatum extends Da
       frameProps.beforePaint?.(ctx, bodies)
       if (showTethers) drawTethers(ctx, bodies)
     },
-    [frameProps.beforePaint, showTethers]
+    [frameProps, showTethers]
   )
   const physicsConfig = useMemo(
     () => ({

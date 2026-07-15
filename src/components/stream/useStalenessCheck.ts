@@ -49,5 +49,5 @@ export function useStalenessCheck(
       }
     }, 1000)
     return () => clearInterval(interval)
-  }, [staleness, isStale, scheduleRender])
+  }, [staleness, isStale, scheduleRender, storeRef, setIsStale, dirtyRef])
 }

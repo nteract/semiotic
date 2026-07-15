@@ -17,12 +17,13 @@ import { useCallback, useRef } from "react"
 import { normalizeLinkedBrush } from "./selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import type { ChartAccessor } from "./types"
+import type { Datum } from "./datumTypes"
 
 export interface OrdinalBrushInput {
   brushProp: boolean | undefined
   onBrushProp: ((extent: { r: [number, number] } | null) => void) | undefined
   linkedBrush: string | { name: string; rField?: string } | undefined
-  valueAccessor: ChartAccessor<any, number>
+  valueAccessor: ChartAccessor<Datum, number>
 }
 
 export interface OrdinalBrushResult {

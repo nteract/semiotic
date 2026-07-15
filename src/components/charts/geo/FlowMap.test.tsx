@@ -1,13 +1,16 @@
+import type { CapturedGeoFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamGeoFrameHandle } from "../../stream/geoTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
 import { FlowMap } from "./FlowMap"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { AreasProp } from "../../geo/useReferenceAreas"
+import type { Datum } from "../shared/datumTypes"
 
 // Mock StreamGeoFrame to capture props AND expose a fake imperative
 // handle so push-API tests can spy on `pushLine`/`pushManyLines`/etc.
-let lastGeoFrameProps: any = null
+let lastGeoFrameProps = {} as CapturedGeoFrameProps
 const fakeFrameHandle = {
   push: vi.fn(),
   pushMany: vi.fn(),
@@ -27,7 +30,7 @@ const fakeFrameHandle = {
 vi.mock("../../stream/StreamGeoFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, ref: any) => {
+    default: React.forwardRef<Partial<StreamGeoFrameHandle>, CapturedGeoFrameProps>((props, ref) => {
       lastGeoFrameProps = props
       // Wire the forwarded ref to the fake handle so `useFrameImperativeHandle`
       // routes through it.
@@ -40,7 +43,7 @@ vi.mock("../../stream/StreamGeoFrame", () => {
 
 // Mock useReferenceAreas to return areas directly (skip async loading)
 vi.mock("../../geo/useReferenceAreas", () => ({
-  useReferenceAreas: (areas: any) => areas
+  useReferenceAreas: (areas: AreasProp) => areas
 }))
 
 const sampleNodes = [
@@ -61,7 +64,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("FlowMap", () => {
   beforeEach(() => {
-    lastGeoFrameProps = null
+    lastGeoFrameProps = {} as CapturedGeoFrameProps
     Object.values(fakeFrameHandle).forEach((fn) => {
       fn.mockClear()
     })
@@ -365,7 +368,7 @@ describe("FlowMap", () => {
 
   describe("push API", () => {
     it("translates a pushed flow into a coordinate-resolved line", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof FlowMap>>()
       render(
         <Wrapper>
           <FlowMap ref={ref} nodes={sampleNodes} />
@@ -397,7 +400,7 @@ describe("FlowMap", () => {
           <FlowMap nodes={sampleNodes} flows={sampleFlows} />
         </Wrapper>
       )
-      const xAcc = lastGeoFrameProps.xAccessor as (d: any) => number
+    const xAcc = lastGeoFrameProps.xAccessor as (d: Datum) => number
       // Reads from a node (user shape).
       expect(xAcc({ lon: 100, lat: 50 })).toBe(100)
       // Reads from a synthesized coord (stable key).
@@ -407,13 +410,13 @@ describe("FlowMap", () => {
     it("hybrid xAccessor works with function user accessors", () => {
       // Function accessor: would have silently failed with the old
       // [xAccessor as string] coord-key pattern.
-      const lonFn = (d: any) => d.lon * 2
+    const lonFn = (d: Datum) => Number(d.lon) * 2
       render(
         <Wrapper>
           <FlowMap nodes={sampleNodes} flows={sampleFlows} xAccessor={lonFn} />
         </Wrapper>
       )
-      const xAcc = lastGeoFrameProps.xAccessor as (d: any) => number
+    const xAcc = lastGeoFrameProps.xAccessor as (d: Datum) => number
       // Node shape — falls back to the user function.
       expect(xAcc({ lon: 5 })).toBe(10)
       // Synthesized coord — stable key wins (the user function would
@@ -423,7 +426,7 @@ describe("FlowMap", () => {
     })
 
     it("drops a pushed flow whose endpoints aren't in nodeLookup", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof FlowMap>>()
       render(
         <Wrapper>
           <FlowMap ref={ref} nodes={sampleNodes} />
@@ -434,7 +437,7 @@ describe("FlowMap", () => {
     })
 
     it("batches pushMany into a single pushManyLines call", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof FlowMap>>()
       render(
         <Wrapper>
           <FlowMap ref={ref} nodes={sampleNodes} />
@@ -452,7 +455,7 @@ describe("FlowMap", () => {
     })
 
     it("forwards remove(id) to the frame's removeLine", () => {
-      const ref = React.createRef<any>()
+      const ref = React.createRef<React.ElementRef<typeof FlowMap>>()
       render(
         <Wrapper>
           <FlowMap ref={ref} nodes={sampleNodes} lineIdAccessor="id" />

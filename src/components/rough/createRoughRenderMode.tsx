@@ -2,11 +2,12 @@ import * as React from "react"
 import rough from "roughjs"
 import type { Drawable, OpSet, Options } from "roughjs/bin/core"
 import type { RoughGenerator } from "roughjs/bin/generator"
-import type { SceneRenderBackend, Style } from "../stream/types"
+import type { SceneDatum, SceneRenderBackend, Style } from "../stream/types"
+import type { Datum } from "../charts/shared/datumTypes"
 import { resolveCSSColor } from "../stream/renderers/resolveCSSColor"
 
 type Point = [number, number]
-type RoughSceneNode = Record<string, any> & { type?: string; style?: Style; datum?: unknown }
+type RoughSceneNode = Datum & { type?: string; style?: Style; datum?: SceneDatum }
 
 export interface RoughRenderModeOptions {
   /** Base seed. Each scene identity derives a stable non-zero Rough.js seed. @default 1 */

@@ -9,7 +9,7 @@ import * as React from "react"
 import { act, renderHook } from "@testing-library/react"
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { useFrame } from "./useFrame"
-import type { FrameScheduler, UseFrameInput } from "./useFrame"
+import type { FrameMargin, FrameScheduler, UseFrameInput } from "./useFrame"
 import { ThemeProvider, LIGHT_THEME, DARK_THEME, useThemeSelector } from "../store/ThemeStore"
 import { _resetCSSColorCacheForTest, resolveCSSColor } from "./renderers/resolveCSSColor"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
@@ -93,8 +93,8 @@ describe("useFrame — graphics resolution", () => {
   })
 
   it("invokes function-form graphics with current size + margin", () => {
-    let receivedCtx: any
-    const fg = (ctx: any) => {
+    let receivedCtx: { size: number[]; margin: FrameMargin } | undefined
+    const fg = (ctx: { size: number[]; margin: FrameMargin }) => {
       receivedCtx = ctx
       return React.createElement("g", { id: "fg" })
     }

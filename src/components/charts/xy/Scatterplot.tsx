@@ -276,7 +276,6 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
         frameRef.current?.clear()
       },
     },
-    deps: [wrappedPush, wrappedPushMany, resetSizeDomain],
   })
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────

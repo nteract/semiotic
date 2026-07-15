@@ -7,6 +7,9 @@
  * property flattening that are handled at the call site.
  */
 import type { HoverData } from "../realtime/types"
+import type { Datum } from "../charts/shared/datumTypes"
+
+export type RawHoverDatum = Datum | Datum[] | null
 
 /**
  * Minimal shape a Stream Frame's internal hover handler needs from a pointer
@@ -28,7 +31,7 @@ export function getPointerHitRadius(baseRadius: number, pointerType?: string): n
   return pointerType === "touch" ? Math.max(baseRadius, TOUCH_HIT_RADIUS) : baseRadius
 }
 
-export function normalizeHoverDatum(rawDatum: any): any {
+export function normalizeHoverDatum(rawDatum: RawHoverDatum): Datum | null {
   return Array.isArray(rawDatum) ? rawDatum[0] : rawDatum
 }
 
@@ -40,7 +43,7 @@ export function normalizeHoverDatum(rawDatum: any): any {
  * `nodeOrEdge`, `xValue`, etc. — is layered in via `extra`.
  */
 export function buildHoverData(
-  rawDatum: any,
+  rawDatum: RawHoverDatum,
   x: number,
   y: number,
   extra?: Partial<HoverData>

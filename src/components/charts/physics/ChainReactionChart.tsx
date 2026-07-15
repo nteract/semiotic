@@ -440,7 +440,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     : null
   const downstreamSet = useMemo(
     () => new Set(amplification?.downstreamTaskIDs ?? []),
-    [amplification?.downstreamTaskIDs.join("|")]
+    [amplification?.downstreamTaskIDs]
   )
   const semanticItems = useMemo(
     () => machineSemanticItems(machine, layout, runtime),

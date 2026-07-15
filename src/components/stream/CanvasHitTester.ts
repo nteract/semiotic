@@ -1,11 +1,11 @@
-import type { SceneNode, PointSceneNode, SymbolSceneNode, GlyphSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode } from "./types"
+import type { SceneNode, SceneDatum, PointSceneNode, SymbolSceneNode, GlyphSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode } from "./types"
+import type { Datum } from "../charts/shared/datumTypes"
 import type { RingBuffer } from "../realtime/RingBuffer"
 import type { Quadtree } from "d3-quadtree"
 import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
 import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
-import type { Datum } from "../charts/shared/datumTypes"
 import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
 import { sampleCurvePath } from "./sampleCurvePath"
 
@@ -33,7 +33,7 @@ function getCurveSampledPath(
 
 export interface HitResult {
   node: SceneNode
-  datum: any
+  datum: SceneDatum
   x: number
   y: number
   distance: number
@@ -41,7 +41,7 @@ export interface HitResult {
 
 export interface XHitResult {
   node: SceneNode
-  datum: any
+  datum: SceneDatum
   x: number
   y: number
   y0?: number
@@ -352,7 +352,7 @@ function hitTestCandlestick(node: CandlestickSceneNode, px: number, py: number):
   return null
 }
 
-function hitTestAreaPath(node: { type: "area"; topPath: [number, number][]; datum: any }, px: number, py: number): HitResult | null {
+function hitTestAreaPath(node: { type: "area"; topPath: [number, number][]; datum: SceneDatum }, px: number, py: number): HitResult | null {
   if (node.topPath.length === 0) return null
   const idx = binarySearchPath(node.topPath, px)
   if (idx < 0) return null

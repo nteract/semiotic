@@ -1,3 +1,5 @@
+import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -6,11 +8,11 @@ import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
 
 // Mock StreamXYFrame to capture props
-let lastXYFrameProps: any = null
+let lastXYFrameProps = {} as CapturedXYFrameProps
 vi.mock("../../stream/StreamXYFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
       lastXYFrameProps = props
       return <div className="stream-xy-frame"><svg /></div>
     }),
@@ -18,7 +20,7 @@ vi.mock("../../stream/StreamXYFrame", () => {
 })
 
 beforeEach(() => {
-  lastXYFrameProps = null
+  lastXYFrameProps = {} as CapturedXYFrameProps
 })
 
 // ── Pure segment algorithm ──────────────────────────────────────────────
@@ -354,7 +356,7 @@ describe("DifferenceChart", () => {
         />
       </TooltipProvider>
     )
-    const segments = new Set(lastXYFrameProps.data.map((d: any) => d.__diffSegment))
+    const segments = new Set(lastXYFrameProps.data.map((d) => d.__diffSegment))
     // At least the two overlay line groups
     expect(segments.has("line-A")).toBe(true)
     expect(segments.has("line-B")).toBe(true)
@@ -379,7 +381,7 @@ describe("DifferenceChart", () => {
         />
       </TooltipProvider>
     )
-    const segments = new Set(lastXYFrameProps.data.map((d: any) => d.__diffSegment))
+    const segments = new Set(lastXYFrameProps.data.map((d) => d.__diffSegment))
     expect(segments.has("line-A")).toBe(false)
     expect(segments.has("line-B")).toBe(false)
   })
@@ -540,7 +542,7 @@ describe("DifferenceChart", () => {
 // ── Push API ──────────────────────────────────────────────────────────
 describe("DifferenceChart push API", () => {
   it("exposes push/pushMany/clear/getData via ref", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
     render(
       <TooltipProvider>
         <DifferenceChart
@@ -551,14 +553,14 @@ describe("DifferenceChart push API", () => {
         />
       </TooltipProvider>
     )
-    expect(typeof ref.current.push).toBe("function")
-    expect(typeof ref.current.pushMany).toBe("function")
-    expect(typeof ref.current.clear).toBe("function")
-    expect(typeof ref.current.getData).toBe("function")
+    expect(typeof ref.current!.push).toBe("function")
+    expect(typeof ref.current!.pushMany).toBe("function")
+    expect(typeof ref.current!.clear).toBe("function")
+    expect(typeof ref.current!.getData).toBe("function")
   })
 
   it("push() updates the segmented data flowing to the frame", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
     const { rerender } = render(
       <TooltipProvider>
         <DifferenceChart
@@ -570,8 +572,8 @@ describe("DifferenceChart push API", () => {
       </TooltipProvider>
     )
     // Push two rows where A > B at both points (one segment).
-    ref.current.push({ x: 0, a: 10, b: 5 })
-    ref.current.push({ x: 1, a: 12, b: 7 })
+    ref.current!.push({ x: 0, a: 10, b: 5 })
+    ref.current!.push({ x: 1, a: 12, b: 7 })
     rerender(
       <TooltipProvider>
         <DifferenceChart
@@ -583,32 +585,32 @@ describe("DifferenceChart push API", () => {
       </TooltipProvider>
     )
     // Frame should see both segment rows (2) + two line rows (2 each → 4).
-    const segmentRows = lastXYFrameProps.data.filter((d: any) => d.__diffSegment.startsWith("seg-"))
+    const segmentRows = lastXYFrameProps.data.filter((d) => d.__diffSegment.startsWith("seg-"))
     expect(segmentRows.length).toBe(2)
-    expect(ref.current.getData().length).toBe(2)
+    expect(ref.current!.getData().length).toBe(2)
   })
 
   it("clear() empties the push buffer", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
     const { rerender } = render(
       <TooltipProvider>
         <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
       </TooltipProvider>
     )
-    ref.current.push({ x: 0, a: 10, b: 5 })
-    ref.current.clear()
+    ref.current!.push({ x: 0, a: 10, b: 5 })
+    ref.current!.clear()
     rerender(
       <TooltipProvider>
         <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
       </TooltipProvider>
     )
-    expect(ref.current.getData()).toEqual([])
+    expect(ref.current!.getData()).toEqual([])
   })
 
   it("remove() returns the actually-removed records synchronously", () => {
     // Verifies the ref-backed path: results must be deterministic at
     // call time, not dependent on when React flushes the setState.
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
     render(
       <TooltipProvider>
         <DifferenceChart
@@ -620,21 +622,21 @@ describe("DifferenceChart push API", () => {
         />
       </TooltipProvider>
     )
-    ref.current.pushMany([
+    ref.current!.pushMany([
       { id: "r1", x: 0, a: 10, b: 5 },
       { id: "r2", x: 1, a: 12, b: 8 },
       { id: "r3", x: 2, a: 9, b: 14 },
     ])
-    const removed = ref.current.remove(["r1", "r3"])
+    const removed = ref.current!.remove(["r1", "r3"])
     expect(removed).toHaveLength(2)
-    expect(removed.map((d: any) => d.id).sort()).toEqual(["r1", "r3"])
+    expect(removed.map((d) => d.id).sort()).toEqual(["r1", "r3"])
     // Live buffer should now contain only r2.
-    expect(ref.current.getData()).toHaveLength(1)
-    expect(ref.current.getData()[0].id).toBe("r2")
+    expect(ref.current!.getData()).toHaveLength(1)
+    expect(ref.current!.getData()[0].id).toBe("r2")
   })
 
   it("update() returns the updated records synchronously", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
     render(
       <TooltipProvider>
         <DifferenceChart
@@ -646,15 +648,15 @@ describe("DifferenceChart push API", () => {
         />
       </TooltipProvider>
     )
-    ref.current.push({ id: "r1", x: 0, a: 10, b: 5 })
-    const updated = ref.current.update("r1", (d: any) => ({ ...d, a: 99 }))
+    ref.current!.push({ id: "r1", x: 0, a: 10, b: 5 })
+    const updated = ref.current!.update("r1", (d) => ({ ...d, a: 99 }))
     expect(updated).toHaveLength(1)
     expect(updated[0].a).toBe(99)
-    expect(ref.current.getData()[0].a).toBe(99)
+    expect(ref.current!.getData()[0].a).toBe(99)
   })
 
   it("windowSize bounds the push buffer (FIFO eviction)", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
     render(
       <TooltipProvider>
         <DifferenceChart
@@ -666,17 +668,17 @@ describe("DifferenceChart push API", () => {
         />
       </TooltipProvider>
     )
-    ref.current.pushMany([
+    ref.current!.pushMany([
       { x: 0, a: 10, b: 5 },
       { x: 1, a: 11, b: 6 },
       { x: 2, a: 12, b: 7 },
       { x: 3, a: 13, b: 8 },
       { x: 4, a: 14, b: 9 },
     ])
-    const live = ref.current.getData()
+    const live = ref.current!.getData()
     expect(live).toHaveLength(3)
     // Oldest two rows (x=0, x=1) evicted; last three retained.
-    expect(live.map((d: any) => d.x)).toEqual([2, 3, 4])
+    expect(live.map((d) => d.x)).toEqual([2, 3, 4])
   })
 })
 
@@ -700,7 +702,7 @@ describe("DifferenceChart accessor coercion", () => {
     )
     // Segment rows should carry x as milliseconds (Date.getTime()).
     const segmentRows = lastXYFrameProps.data.filter(
-      (d: any) => d.__diffSegment.startsWith("seg-")
+      (d) => d.__diffSegment.startsWith("seg-")
     )
     expect(segmentRows.length).toBeGreaterThan(0)
     expect(typeof segmentRows[0].__x).toBe("number")
@@ -722,7 +724,7 @@ describe("DifferenceChart accessor coercion", () => {
       </TooltipProvider>
     )
     const segmentRows = lastXYFrameProps.data.filter(
-      (d: any) => d.__diffSegment.startsWith("seg-")
+      (d) => d.__diffSegment.startsWith("seg-")
     )
     expect(segmentRows.length).toBeGreaterThan(0)
     // x and y values must be numbers after coercion, not strings.

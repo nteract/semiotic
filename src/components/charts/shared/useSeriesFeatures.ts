@@ -28,7 +28,7 @@
  */
 "use client"
 import { useEffect, useMemo, useRef, useState } from "react"
-import type { Datum } from "./datumTypes"
+import type { Datum, DatumValue } from "./datumTypes"
 import type { Accessor } from "./types"
 import type { ForecastConfig, AnomalyConfig, ForecastResult } from "./statisticalOverlays"
 import { buildForecastLazy, buildAnomalyAnnotationsLazy } from "./statisticalOverlaysLazy"
@@ -106,8 +106,8 @@ export function useSeriesFeatures(options: SeriesFeaturesOptions): SeriesFeature
     if (!needsX && !needsY) return data
     return data.map((d) => {
       const copy = { ...d }
-      if (needsX) copy[RESOLVED_X_KEY] = (xAccessor as (d: Datum) => any)(d)
-      if (needsY) copy[RESOLVED_Y_KEY] = (yAccessor as (d: Datum) => any)(d)
+      if (needsX) copy[RESOLVED_X_KEY] = (xAccessor as (datum: Datum) => DatumValue)(d)
+      if (needsY) copy[RESOLVED_Y_KEY] = (yAccessor as (datum: Datum) => DatumValue)(d)
       return copy
     })
   }, [data, forecast, anomaly, xAccessor, yAccessor])

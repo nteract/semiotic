@@ -156,7 +156,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
   })
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // Consolidated summary-style — same recipe as BoxPlot/ViolinPlot/
   // Histogram. Lower fillOpacity (0.5) since ridges stack and

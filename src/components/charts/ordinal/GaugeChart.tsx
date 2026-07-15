@@ -325,11 +325,11 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     const tipX = Math.cos(needleAngle) * needleLength
     const tipY = Math.sin(needleAngle) * needleLength
     return { type: "gauge-needle", tipX, tipY, color: needleColor }
-  }, [showNeedle, pct, startAngleDegFinal, sweepRad, innerRadius, needleColor])
+  }, [showNeedle, startAngleDegFinal, pct, sweepRad, innerRadius, radius, needleColor])
 
   // Custom SVG annotation rule for gauge-specific annotations
   const svgAnnotationRules = useMemo(() => {
-    return (ann: any, index: number, context: any) => {
+    return (ann: Datum, index: number, context: Datum) => {
       if (ann.type === "gauge-needle") {
         const cx = (context.width || width) / 2
         const cy = (context.height || height) / 2

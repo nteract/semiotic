@@ -52,7 +52,7 @@ export function buildStatsTooltip(options?: {
       const pieces = Array.isArray(d.data) ? d.data : []
       const va = options.valueAccessor
       const values = pieces
-        .map((p: any) => Number(typeof va === "function" ? va(p) : p[va]))
+        .map((point) => Number(typeof va === "function" ? va(point) : point[va]))
         .filter((v: number) => Number.isFinite(v))
         .sort((a: number, b: number) => a - b)
       const n = values.length

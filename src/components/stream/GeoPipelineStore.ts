@@ -98,7 +98,7 @@ export class GeoPipelineStore implements UpdateResultStore {
 
   // Internal state
   private projection: GeoProjection | null = null
-  private geoPath: GeoPath<any, GeoPermissibleObjects> | null = null
+  private geoPath: GeoPath<void, GeoPermissibleObjects> | null = null
 
   // Base projection state (before zoom) — used to restore on zoom reset
   private baseScale: number = 0
@@ -652,7 +652,7 @@ export class GeoPipelineStore implements UpdateResultStore {
       }
       const pad = config.fitPadding ?? 0
       if (pad >= 1 && typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
-        // eslint-disable-next-line no-console
+         
         console.warn(
           `[semiotic] fitPadding=${pad} looks like pixels, but it's a fraction of the plot (0–0.5). ` +
             `A value >= 1 collapses the projection off-canvas — use e.g. 0.06.`

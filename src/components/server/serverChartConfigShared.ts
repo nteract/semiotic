@@ -5,19 +5,23 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { interpolateViridis } from "../charts/shared/colorPalettes"
 
 export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
+export type ServerAccessorValue = string | number | boolean | Date | null | undefined
+export type ServerAccessor = string | ((datum: Datum) => ServerAccessorValue)
+export type ServerColorScheme = string | string[] | Record<string, string> | undefined
+export type ServerChartData = Datum | Datum[] | null | undefined
 
 export interface ChartConfig {
   frameType: FrameType
   /** Build frame props from HOC-level props */
-  buildProps: (data: any, colorBy: any, colorScheme: any, common: Datum, rest: Datum) => Datum
+  buildProps: (data: ServerChartData, colorBy: ServerAccessor | undefined, colorScheme: ServerColorScheme, common: Datum, rest: Datum) => Datum
 }
 
-export function accessorValue(accessor: any, fallback: string, d: Datum): any {
+export function accessorValue(accessor: ServerAccessor | undefined, fallback: string, d: Datum): ServerAccessorValue {
   if (typeof accessor === "function") return accessor(d)
   return d[accessor || fallback]
 }
 
-export function numericValue(value: any): number {
+export function numericValue(value: ServerAccessorValue): number {
   return value instanceof Date ? value.getTime() : Number(value)
 }
 
@@ -26,9 +30,9 @@ export function viridisColor(i: number, n: number): string {
 }
 
 export function prepareConnectedScatterplotData(
-  data: any,
+  data: ServerChartData,
   rest: Datum,
-): { data: any; orderMap: WeakMap<Datum, { idx: number; total: number }> } {
+): { data: ServerChartData; orderMap: WeakMap<Datum, { idx: number; total: number }> } {
   if (!Array.isArray(data)) {
     return { data, orderMap: new WeakMap() }
   }

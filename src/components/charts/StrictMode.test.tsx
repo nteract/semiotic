@@ -83,7 +83,7 @@ describe("StrictMode compatibility", () => {
   afterEach(() => { restoreCanvas?.(); restoreCanvas = null })
 
   // XY charts
-  const xyCharts: [string, React.ComponentType<any>][] = [
+  const xyCharts: [string, React.ElementType][] = [
     ["LineChart", LineChart],
     ["AreaChart", AreaChart],
     ["StackedAreaChart", StackedAreaChart],
@@ -93,7 +93,15 @@ describe("StrictMode compatibility", () => {
 
   for (const [name, Component] of xyCharts) {
     it(`${name} renders in StrictMode`, () => {
-      const props: any = {
+      const props: {
+        data: typeof xyData
+        xAccessor: string
+        yAccessor: string
+        width: number
+        height: number
+        sizeBy?: string
+        areaBy?: string
+      } = {
         data: xyData,
         xAccessor: "x",
         yAccessor: "y",
@@ -130,7 +138,7 @@ describe("StrictMode compatibility", () => {
   })
 
   // Ordinal charts
-  const ordinalCharts: [string, React.ComponentType<any>, any][] = [
+  const ordinalCharts: [string, React.ElementType, Record<string, string>][] = [
     ["BarChart", BarChart, {}],
     ["StackedBarChart", StackedBarChart, { stackBy: "category" }],
     ["GroupedBarChart", GroupedBarChart, { groupBy: "category" }],
@@ -208,7 +216,7 @@ describe("StrictMode compatibility", () => {
   })
 
   // Hierarchy charts
-  const hierarchyCharts: [string, React.ComponentType<any>][] = [
+  const hierarchyCharts: [string, React.ElementType][] = [
     ["TreeDiagram", TreeDiagram],
     ["Treemap", Treemap],
     ["CirclePack", CirclePack],

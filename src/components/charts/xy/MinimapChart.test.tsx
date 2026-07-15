@@ -1,3 +1,5 @@
+import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -5,9 +7,9 @@ import { MinimapChart } from "./MinimapChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // Track all StreamXYFrame render calls to verify main + overview frames
-const xyFrameRenders: any[] = []
+const xyFrameRenders: CapturedXYFrameProps[] = []
 vi.mock("../../stream/StreamXYFrame", () => {
-  const ForwardRef = React.forwardRef((props: any, _ref: any) => {
+  const ForwardRef = React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
     xyFrameRenders.push(props)
     return <div className="stream-xy-frame"><svg /></div>
   })
@@ -96,8 +98,8 @@ describe("MinimapChart", () => {
     // Should have rendered 2 frames
     expect(xyFrameRenders.length).toBe(2)
     // Main chart should have enableHover true, overview should have enableHover false
-    const mainProps = xyFrameRenders.find((p: any) => p.enableHover === true)
-    const overviewProps = xyFrameRenders.find((p: any) => p.enableHover === false)
+    const mainProps = xyFrameRenders.find((p) => p.enableHover === true)
+    const overviewProps = xyFrameRenders.find((p) => p.enableHover === false)!
     expect(mainProps).toBeDefined()
     expect(overviewProps).toBeDefined()
   })
@@ -109,7 +111,7 @@ describe("MinimapChart", () => {
       </TooltipProvider>
     )
     // The overview frame should have a smaller size based on minimap height
-    const overviewProps = xyFrameRenders.find((p: any) => p.enableHover === false)
+    const overviewProps = xyFrameRenders.find((p) => p.enableHover === false)!
     expect(overviewProps).toBeDefined()
     // Size height should include minimap height + margins
     expect(overviewProps.size[1]).toBeGreaterThanOrEqual(100)
@@ -121,7 +123,7 @@ describe("MinimapChart", () => {
         <MinimapChart data={sampleData} />
       </TooltipProvider>
     )
-    const overviewProps = xyFrameRenders.find((p: any) => p.enableHover === false)
+    const overviewProps = xyFrameRenders.find((p) => p.enableHover === false)!
     // Size[1] = minimapHeight(60) + top(0) + bottom(20) = 80
     expect(overviewProps.size[1]).toBe(80)
   })
@@ -169,7 +171,7 @@ describe("MinimapChart", () => {
         <MinimapChart data={sampleData} width={800} height={500} />
       </TooltipProvider>
     )
-    const mainProps = xyFrameRenders.find((p: any) => p.enableHover === true)
+    const mainProps = xyFrameRenders.find((p) => p.enableHover === true)!
     expect(mainProps.size[0]).toBe(800)
     expect(mainProps.size[1]).toBe(500)
   })
@@ -180,7 +182,7 @@ describe("MinimapChart", () => {
         <MinimapChart data={sampleData} width={800} />
       </TooltipProvider>
     )
-    const overviewProps = xyFrameRenders.find((p: any) => p.enableHover === false)
+    const overviewProps = xyFrameRenders.find((p) => p.enableHover === false)!
     expect(overviewProps.size[0]).toBe(800)
   })
 
@@ -245,7 +247,7 @@ describe("MinimapChart", () => {
         <MinimapChart data={sampleData} brushExtent={[1, 3]} />
       </TooltipProvider>
     )
-    const mainProps = xyFrameRenders.find((p: any) => p.enableHover === true)
+    const mainProps = xyFrameRenders.find((p) => p.enableHover === true)!
     expect(mainProps.xExtent).toEqual([1, 3])
   })
 })

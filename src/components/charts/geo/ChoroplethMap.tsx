@@ -291,7 +291,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     const name = d?.properties?.name || d?.properties?.NAME || d?.name || d?.NAME || "Feature"
     const val = valAcc(d)
 
-    const formatValue = (v: any): string => {
+    const formatValue = (v: string | number | Date | null | undefined): string => {
       if (typeof v !== "number" || !isFinite(v)) return String(v ?? "")
       if (Number.isInteger(v)) return v.toLocaleString()
       return v.toLocaleString(undefined, { maximumFractionDigits: 2 })

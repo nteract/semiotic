@@ -15,17 +15,30 @@ import type { XYSceneContext } from "./types"
 import { buildAggregateRibbons, buildPerSeriesRibbons, partitionRibbons } from "./ribbonScene"
 import { emitPointNodes } from "./emitPointNodes"
 
+interface ColorThresholdAnnotation extends Datum {
+  type: "threshold"
+  color: string
+  value: number
+  thresholdType?: "greater" | "lesser"
+}
+
+function isColorThresholdAnnotation(annotation: Datum): annotation is ColorThresholdAnnotation {
+  return annotation.type === "threshold"
+    && typeof annotation.color === "string"
+    && typeof annotation.value === "number"
+}
+
 export function buildLineScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
   const nodes: SceneNode[] = []
 
   // Extract color thresholds from annotations (if any)
   const colorThresholds = ctx.config.annotations
-    ?.filter((a: any) => a.type === "threshold" && a.color)
-    .map((a: any) => ({
-      value: a.value as number,
-      color: a.color as string,
-      thresholdType: (a.thresholdType || "greater") as "greater" | "lesser"
+    ?.filter(isColorThresholdAnnotation)
+    .map((a) => ({
+      value: a.value,
+      color: a.color,
+      thresholdType: a.thresholdType || "greater"
     }))
 
   // Ribbons (bounds + band) paint first so they sit underneath the lines.

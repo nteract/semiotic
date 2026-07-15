@@ -1,9 +1,10 @@
 /**
- * Authored, deterministic language structures for "The Sentence Is Not the Words".
+ * Deterministic language structures for "The Sentence Is Not the Words".
  *
- * This is intentionally a teaching corpus, not a general-purpose parser. The six
- * specimens keep stable IDs across every representation so a selection can move
- * from a token to a phrase, dependency, concept, rhetorical span, or variant.
+ * Every corpus row is expanded into the same stable teaching model so a selection
+ * can move from a token to a phrase, dependency, concept, rhetorical span, or
+ * variant. This is intentionally a lightweight teaching analysis, not a
+ * general-purpose parser.
  */
 
 export const VIEW_OPTIONS = Object.freeze([
@@ -23,7 +24,7 @@ export const VIEW_OPTIONS = Object.freeze([
 ])
 
 export const SUBJECT_OPTIONS = Object.freeze([
-  { value: "all", label: "many subjects" },
+  { value: "all", label: "any subject" },
   { value: "love", label: "love" },
   { value: "death", label: "death" },
   { value: "power", label: "power" },
@@ -35,11 +36,50 @@ export const SUBJECT_OPTIONS = Object.freeze([
 ])
 
 export const CORPUS_OPTIONS = Object.freeze([
-  { value: "all", label: "the curated corpus" },
   { value: "shakespeare", label: "Shakespeare" },
-  { value: "nineteenth-century-fiction", label: "nineteenth-century fiction" },
-  { value: "grammar-lab", label: "the grammar lab" },
-  { value: "demonstration", label: "the demonstration corpus" },
+  { value: "as-you-like-it", label: "As You Like It", work: "As You Like It" },
+  { value: "hamlet", label: "Hamlet", work: "Hamlet" },
+  {
+    value: "midsummer-nights-dream",
+    label: "A Midsummer Night's Dream",
+    work: "A Midsummer Night's Dream",
+  },
+  { value: "julius-caesar", label: "Julius Caesar", work: "Julius Caesar" },
+  { value: "romeo-and-juliet", label: "Romeo and Juliet", work: "Romeo and Juliet" },
+  { value: "twelfth-night", label: "Twelfth Night", work: "Twelfth Night" },
+  { value: "the-tempest", label: "The Tempest", work: "The Tempest" },
+  {
+    value: "much-ado-about-nothing",
+    label: "Much Ado About Nothing",
+    work: "Much Ado About Nothing",
+  },
+  {
+    value: "merchant-of-venice",
+    label: "The Merchant of Venice",
+    work: "The Merchant of Venice",
+  },
+  {
+    value: "measure-for-measure",
+    label: "Measure for Measure",
+    work: "Measure for Measure",
+  },
+  {
+    value: "alls-well-that-ends-well",
+    label: "All's Well That Ends Well",
+    work: "All's Well That Ends Well",
+  },
+  { value: "henry-iv-part-1", label: "Henry IV, Part 1", work: "Henry IV, Part 1" },
+  { value: "henry-iv-part-2", label: "Henry IV, Part 2", work: "Henry IV, Part 2" },
+  { value: "henry-v", label: "Henry V", work: "Henry V" },
+  { value: "sonnet-116", label: "Sonnet 116", work: "Sonnet 116" },
+  {
+    value: "loves-labors-lost",
+    label: "Love's Labor's Lost",
+    work: "Love's Labor's Lost",
+  },
+  { value: "venus-and-adonis", label: "Venus and Adonis", work: "Venus and Adonis" },
+  { value: "king-lear", label: "King Lear", work: "King Lear" },
+  { value: "cymbeline", label: "Cymbeline", work: "Cymbeline" },
 ])
 
 export const AMOUNT_OPTIONS = Object.freeze([5, 10, 20, 30])
@@ -632,7 +672,7 @@ export const SPECIMENS = Object.freeze([
     kind: "Attachment ambiguity",
     text: "I saw the man with the telescope.",
     source: {
-      corpus: "grammar-lab",
+      corpus: "demonstration",
       work: "Curated ambiguity specimen",
       location: "prepositional-phrase attachment",
     },
@@ -729,7 +769,7 @@ export const SPECIMENS = Object.freeze([
     kind: "Garden path",
     text: "The old man the boats.",
     source: {
-      corpus: "grammar-lab",
+      corpus: "demonstration",
       work: "Curated garden-path specimen",
       location: "lexical-category reanalysis",
     },
@@ -825,7 +865,7 @@ export const SPECIMENS = Object.freeze([
     kind: "Gerund ambiguity",
     text: "Visiting relatives can be annoying.",
     source: {
-      corpus: "grammar-lab",
+      corpus: "demonstration",
       work: "Curated gerund specimen",
       location: "gerund-participle ambiguity",
     },
@@ -928,7 +968,7 @@ export const SPECIMENS = Object.freeze([
     kind: "Semantic anomaly",
     text: "Colorless green ideas sleep furiously.",
     source: {
-      corpus: "grammar-lab",
+      corpus: "demonstration",
       work: "Syntactic Structures",
       author: "Noam Chomsky",
       location: "famous grammaticality example",
@@ -977,7 +1017,7 @@ export const SPECIMENS = Object.freeze([
     kind: "Lexical-category boss level",
     text: "Buffalo buffalo Buffalo buffalo buffalo buffalo Buffalo buffalo.",
     source: {
-      corpus: "grammar-lab",
+      corpus: "demonstration",
       work: "Popular linguistic example",
       location: "homonym and reduced-relative demonstration",
     },
@@ -1046,7 +1086,7 @@ export const SPECIMENS = Object.freeze([
     kind: "Rhetorical structure",
     text: "The analyst distrusted the result because the sample was small, although the effect appeared dramatic.",
     source: {
-      corpus: "grammar-lab",
+      corpus: "demonstration",
       work: "Semiotic demonstration passage",
       author: "Semiotic",
       location: "authored rhetorical specimen",
@@ -1275,6 +1315,41 @@ const shakespeareSentences = [
     { author: "William Shakespeare", work: "Romeo and Juliet", location: "1.1" },
   ),
   makeCorpusSentence(
+    "shakespeare:loves-labors-lost:1-2:love-familiar-devil",
+    "Love is a familiar; love is a devil.",
+    "shakespeare",
+    ["love", "ambiguity", "rhetoric"],
+    { author: "William Shakespeare", work: "Love's Labor's Lost", location: "1.2" },
+  ),
+  makeCorpusSentence(
+    "shakespeare:venus-and-adonis:149:love-spirit",
+    "Love is a spirit all compact of fire, not gross to sink, but light, and will aspire.",
+    "shakespeare",
+    ["love", "nature", "rhetoric"],
+    { author: "William Shakespeare", work: "Venus and Adonis", location: "lines 149–150" },
+  ),
+  makeCorpusSentence(
+    "shakespeare:much-ado:4-1:love-you-heart",
+    "I love you with so much of my heart that none is left to protest.",
+    "shakespeare",
+    ["love", "identity", "rhetoric"],
+    { author: "William Shakespeare", work: "Much Ado About Nothing", location: "4.1" },
+  ),
+  makeCorpusSentence(
+    "shakespeare:king-lear:1-1:love-you-more",
+    "Sir, I love you more than word can wield the matter.",
+    "shakespeare",
+    ["love", "power", "rhetoric"],
+    { author: "William Shakespeare", work: "King Lear", location: "1.1" },
+  ),
+  makeCorpusSentence(
+    "shakespeare:cymbeline:5-5:love-more",
+    "I love thee more and more.",
+    "shakespeare",
+    ["love", "identity"],
+    { author: "William Shakespeare", work: "Cymbeline", location: "5.5" },
+  ),
+  makeCorpusSentence(
     "shakespeare:midsummer:1-1:true-love",
     "The course of true love never did run smooth.",
     "shakespeare",
@@ -1300,6 +1375,13 @@ const shakespeareSentences = [
     "Cowards die many times before their deaths.",
     "shakespeare",
     ["death", "time"],
+    { author: "William Shakespeare", work: "Julius Caesar", location: "2.2" },
+  ),
+  makeCorpusSentence(
+    "shakespeare:julius-caesar:2-2:cowards-and-valiant",
+    "Cowards die many times before their deaths; the valiant never taste of death but once.",
+    "shakespeare",
+    ["death", "time", "power", "rhetoric"],
     { author: "William Shakespeare", work: "Julius Caesar", location: "2.2" },
   ),
   makeCorpusSentence(
@@ -1364,6 +1446,13 @@ const shakespeareSentences = [
     "shakespeare",
     ["power", "identity"],
     { author: "William Shakespeare", work: "Hamlet", location: "1.3" },
+  ),
+  makeCorpusSentence(
+    "shakespeare:hamlet:3-4:cruel-kind",
+    "I must be cruel only to be kind.",
+    "shakespeare",
+    ["ambiguity", "power", "rhetoric"],
+    { author: "William Shakespeare", work: "Hamlet", location: "3.4" },
   ),
   makeCorpusSentence(
     "shakespeare:hamlet:1-3:true-self",
@@ -1521,65 +1610,6 @@ const shakespeareSentences = [
   ),
 ]
 
-const fictionSentences = [
-  makeCorpusSentence(
-    "fiction:austen:pride-and-prejudice:opening",
-    "It is a truth universally acknowledged that a single man in possession of a good fortune must be in want of a wife.",
-    "nineteenth-century-fiction",
-    ["love", "power"],
-    { author: "Jane Austen", work: "Pride and Prejudice", location: "chapter 1" },
-  ),
-  makeCorpusSentence(
-    "fiction:bronte:jane-eyre:walk",
-    "There was no possibility of taking a walk that day.",
-    "nineteenth-century-fiction",
-    ["nature", "time"],
-    { author: "Charlotte Brontë", work: "Jane Eyre", location: "chapter 1" },
-  ),
-  makeCorpusSentence(
-    "fiction:melville:moby-dick:call-me",
-    "Call me Ishmael.",
-    "nineteenth-century-fiction",
-    ["identity", "nature"],
-    { author: "Herman Melville", work: "Moby-Dick", location: "chapter 1" },
-  ),
-  makeCorpusSentence(
-    "fiction:dickens:tale-of-two-cities:opening",
-    "It was the best of times, it was the worst of times.",
-    "nineteenth-century-fiction",
-    ["time", "power"],
-    { author: "Charles Dickens", work: "A Tale of Two Cities", location: "book 1, chapter 1" },
-  ),
-  makeCorpusSentence(
-    "fiction:dickens:david-copperfield:hero",
-    "Whether I shall turn out to be the hero of my own life, or whether that station will be held by anybody else, these pages must show.",
-    "nineteenth-century-fiction",
-    ["identity", "power"],
-    { author: "Charles Dickens", work: "David Copperfield", location: "chapter 1" },
-  ),
-  makeCorpusSentence(
-    "fiction:shelley:frankenstein:rejoice",
-    "You will rejoice to hear that no disaster has accompanied the commencement of an enterprise which you have regarded with such evil forebodings.",
-    "nineteenth-century-fiction",
-    ["nature", "power"],
-    { author: "Mary Shelley", work: "Frankenstein", location: "letter 1" },
-  ),
-  makeCorpusSentence(
-    "fiction:bronte:jane-eyre:no-bird",
-    "I am no bird, and no net ensnares me; I am a free human being with an independent will.",
-    "nineteenth-century-fiction",
-    ["identity", "power", "nature"],
-    { author: "Charlotte Brontë", work: "Jane Eyre", location: "chapter 23" },
-  ),
-  makeCorpusSentence(
-    "fiction:bronte:wuthering-heights:souls",
-    "Whatever our souls are made of, his and mine are the same.",
-    "nineteenth-century-fiction",
-    ["love", "identity"],
-    { author: "Emily Brontë", work: "Wuthering Heights", location: "chapter 9" },
-  ),
-]
-
 const demonstrationSentences = [
   ["i-saw-moon", "I saw the moon through the branches.", ["nature"]],
   ["i-saw-harbor", "I saw the harbor after rain.", ["nature", "time"]],
@@ -1599,6 +1629,16 @@ const demonstrationSentences = [
   ["fear-becomes-power", "Fear becomes power when no one speaks.", ["power"]],
   ["stranger-becomes-family", "A stranger becomes family through care.", ["love", "identity"]],
   ["power-versus-love", "Power versus love is a familiar argument.", ["power", "love"]],
+  [
+    "ambiguity-and-context",
+    "Ambiguity and context can give one sentence two structures.",
+    ["ambiguity"],
+  ],
+  [
+    "rhetoric-and-evidence",
+    "Rhetoric and evidence pull the claim in different directions.",
+    ["rhetoric", "power"],
+  ],
 ].map(([id, text, subjects]) =>
   makeCorpusSentence(`demonstration:${id}`, text, "demonstration", subjects, {
     author: "Semiotic",
@@ -1609,13 +1649,890 @@ const demonstrationSentences = [
 export const CORPUS_SENTENCES = Object.freeze([
   ...specimenCorpusSentences,
   ...shakespeareSentences,
-  ...fictionSentences,
   ...demonstrationSentences,
 ])
 
 export const CORPUS_SENTENCE_BY_ID = Object.freeze(
   Object.fromEntries(CORPUS_SENTENCES.map((sentence) => [sentence.id, sentence])),
 )
+
+/**
+ * One preferred Shakespeare row per topic. These are not a parallel fixture
+ * corpus: every ID points at a row in CORPUS_SENTENCES, and work-specific
+ * filters can fall back to any row inside their exact intersection.
+ */
+export const CANONICAL_SENTENCE_BY_SUBJECT = Object.freeze({
+  all: "shakespeare:loves-labors-lost:1-2:love-familiar-devil",
+  love: "shakespeare:loves-labors-lost:1-2:love-familiar-devil",
+  death: "shakespeare:julius-caesar:2-2:cowards-and-valiant",
+  power: "shakespeare:twelfth-night:2-5:greatness",
+  nature: "shakespeare:julius-caesar:1-2:fault",
+  time: "shakespeare:as-you-like-it:3-2:time-travels",
+  identity: "shakespeare:hamlet:4-5:what-we-may-be",
+  ambiguity: "shakespeare:hamlet:3-4:cruel-kind",
+  rhetoric: "shakespeare:julius-caesar:2-2:cowards-and-valiant",
+})
+
+const CORPUS_ROOT_INDEX = Object.freeze({
+  "shakespeare:loves-labors-lost:1-2:love-familiar-devil": 1,
+  "shakespeare:julius-caesar:2-2:cowards-and-valiant": 1,
+  "shakespeare:twelfth-night:2-5:greatness": 1,
+  "shakespeare:julius-caesar:1-2:fault": 4,
+  "shakespeare:as-you-like-it:3-2:time-travels": 1,
+  "shakespeare:hamlet:4-5:what-we-may-be": 1,
+  "shakespeare:hamlet:3-4:cruel-kind": 2,
+})
+
+const CORPUS_PARAPHRASES = Object.freeze({
+  "shakespeare:loves-labors-lost:1-2:love-familiar-devil":
+    "Love is a companion; love is a tempter.",
+  "shakespeare:julius-caesar:2-2:cowards-and-valiant":
+    "Cowards die repeatedly in fear; the valiant meet death only once.",
+  "shakespeare:twelfth-night:2-5:greatness":
+    "Some inherit greatness, some earn greatness, and some receive greatness unwillingly.",
+  "shakespeare:julius-caesar:1-2:fault":
+    "The fault, dear Brutus, lies not in the stars but in ourselves.",
+  "shakespeare:as-you-like-it:3-2:time-travels":
+    "Time moves at different speeds with different people.",
+  "shakespeare:hamlet:4-5:what-we-may-be":
+    "We know what we are now, but not what we may become.",
+  "shakespeare:hamlet:3-4:cruel-kind":
+    "I must act cruelly only so that I can be kind.",
+})
+
+const DETERMINERS = new Set([
+  "a",
+  "an",
+  "all",
+  "any",
+  "every",
+  "few",
+  "her",
+  "his",
+  "mine",
+  "my",
+  "no",
+  "our",
+  "some",
+  "the",
+  "their",
+  "these",
+  "this",
+  "those",
+  "thy",
+  "your",
+])
+const PRONOUNS = new Set([
+  "he",
+  "her",
+  "herself",
+  "him",
+  "himself",
+  "i",
+  "it",
+  "me",
+  "ourselves",
+  "she",
+  "thee",
+  "them",
+  "themselves",
+  "thou",
+  "us",
+  "we",
+  "what",
+  "which",
+  "who",
+  "whom",
+  "you",
+])
+const AUXILIARIES = new Set([
+  "am",
+  "are",
+  "be",
+  "been",
+  "can",
+  "could",
+  "did",
+  "do",
+  "does",
+  "doth",
+  "had",
+  "has",
+  "hast",
+  "have",
+  "is",
+  "may",
+  "might",
+  "must",
+  "shall",
+  "should",
+  "was",
+  "were",
+  "will",
+  "would",
+])
+const PREPOSITIONS = new Set([
+  "after",
+  "against",
+  "as",
+  "at",
+  "before",
+  "but",
+  "by",
+  "for",
+  "from",
+  "in",
+  "into",
+  "near",
+  "of",
+  "on",
+  "through",
+  "to",
+  "upon",
+  "with",
+  "within",
+  "without",
+])
+const COORDINATORS = new Set(["and", "but", "nor", "or", "yet"])
+const SUBORDINATORS = new Set([
+  "although",
+  "because",
+  "before",
+  "if",
+  "since",
+  "that",
+  "though",
+  "when",
+  "where",
+  "which",
+  "while",
+  "who",
+])
+const ADVERBS = new Set([
+  "again",
+  "directly",
+  "ever",
+  "merely",
+  "never",
+  "not",
+  "now",
+  "oft",
+  "only",
+  "so",
+  "therefore",
+  "too",
+  "universally",
+])
+const KNOWN_VERBS = new Set([
+  "achieve",
+  "alters",
+  "appear",
+  "appeared",
+  "aspire",
+  "becomes",
+  "bends",
+  "commit",
+  "die",
+  "died",
+  "ends",
+  "finds",
+  "give",
+  "govern",
+  "know",
+  "lie",
+  "lies",
+  "looks",
+  "love",
+  "loved",
+  "make",
+  "made",
+  "meet",
+  "moves",
+  "painted",
+  "play",
+  "protest",
+  "run",
+  "say",
+  "see",
+  "sink",
+  "sought",
+  "speak",
+  "taste",
+  "travels",
+  "trust",
+  "wears",
+  "wield",
+  "win",
+])
+const KNOWN_ADJECTIVES = new Set([
+  "blind",
+  "boundless",
+  "compact",
+  "cruel",
+  "deep",
+  "familiar",
+  "good",
+  "great",
+  "kind",
+  "light",
+  "natural",
+  "small",
+  "smooth",
+  "true",
+  "uneasy",
+  "valiant",
+])
+
+function inferCorpusPartOfSpeech(text) {
+  const word = normalizeWord(text)
+  if (/^[^\p{L}\p{N}]+$/u.test(text)) return "PUNCT"
+  if (COORDINATORS.has(word)) return "CCONJ"
+  if (SUBORDINATORS.has(word)) return "SCONJ"
+  if (DETERMINERS.has(word)) return "DET"
+  if (PRONOUNS.has(word)) return "PRON"
+  if (AUXILIARIES.has(word)) return "AUX"
+  if (PREPOSITIONS.has(word)) return "ADP"
+  if (ADVERBS.has(word) || word.endsWith("ly")) return "ADV"
+  if (KNOWN_VERBS.has(word) || /(ed|ing|en)$/.test(word)) return "VERB"
+  if (KNOWN_ADJECTIVES.has(word) || /(ful|less|ous|ive|al)$/.test(word)) return "ADJ"
+  if (/^[A-Z]/.test(text) && word !== "i") return "PROPN"
+  return "NOUN"
+}
+
+function corpusTokenSpecs(sentence, namespace) {
+  const matches = [...sentence.text.matchAll(WORD_OR_PUNCTUATION)]
+  const preliminary = matches.map((match) => ({
+    text: match[0],
+    normalized: normalizeWord(match[0]),
+    partOfSpeech: inferCorpusPartOfSpeech(match[0]),
+  }))
+  for (let index = 0; index < preliminary.length - 1; index += 1) {
+    if (
+      preliminary[index].normalized === "love" &&
+      preliminary[index + 1].partOfSpeech === "AUX"
+    ) {
+      preliminary[index].partOfSpeech = "NOUN"
+    }
+  }
+  for (let index = 1; index < preliminary.length; index += 1) {
+    const token = preliminary[index]
+    const previous = preliminary[index - 1]
+    const next = preliminary[index + 1]
+    if (
+      token.partOfSpeech === "ADJ" &&
+      previous?.partOfSpeech === "DET" &&
+      (!next || ["PUNCT", "AUX", "VERB", "CCONJ", "SCONJ"].includes(next.partOfSpeech))
+    ) {
+      token.partOfSpeech = "NOUN"
+    }
+  }
+  const preferredRoot = CORPUS_ROOT_INDEX[sentence.id]
+  const inferredRoot = preliminary.findIndex(
+    (token) => token.partOfSpeech === "VERB" || token.partOfSpeech === "AUX",
+  )
+  const rootIndex = Number.isInteger(preferredRoot)
+    ? preferredRoot
+    : inferredRoot >= 0
+      ? inferredRoot
+      : preliminary.findIndex((token) => token.partOfSpeech !== "PUNCT")
+  const specs = preliminary.map((token, index) => {
+    const clauseStart = previousIndex(
+      preliminary,
+      index,
+      (candidate) => candidate.partOfSpeech === "PUNCT" && [";", ":"].includes(candidate.text),
+    ) + 1
+    const nextBoundary = nextIndex(
+      preliminary,
+      index,
+      (candidate) => candidate.partOfSpeech === "PUNCT" && [";", ":"].includes(candidate.text),
+    )
+    const clauseEnd = nextBoundary >= 0 ? nextBoundary : preliminary.length
+    const localPredicate = preliminary.findIndex(
+      (candidate, candidateIndex) =>
+        candidateIndex >= clauseStart &&
+        candidateIndex < clauseEnd &&
+        ["VERB", "AUX"].includes(candidate.partOfSpeech),
+    )
+    const clausePredicate = localPredicate >= 0 ? localPredicate : rootIndex
+    const nominal = ["NOUN", "PROPN", "PRON"].includes(token.partOfSpeech)
+    let role = "dependent"
+    let diagramRow = 1
+    if (token.partOfSpeech === "PUNCT") {
+      role = "punctuation"
+      diagramRow = 0
+    } else if (index === rootIndex) {
+      role = "root predicate"
+      diagramRow = 0
+    } else if (index === clausePredicate && ["VERB", "AUX"].includes(token.partOfSpeech)) {
+      role = "clause predicate"
+      diagramRow = 0
+    } else if (nominal && index < clausePredicate) {
+      role = "subject"
+      diagramRow = 0
+    } else if (nominal) {
+      role = "object or complement"
+      diagramRow = 0
+    } else if (["DET", "ADJ", "ADV"].includes(token.partOfSpeech)) {
+      role = "modifier"
+      diagramRow = 2
+    } else if (["ADP", "SCONJ", "CCONJ"].includes(token.partOfSpeech)) {
+      role = "attachment marker"
+      diagramRow = 1
+    } else if (token.partOfSpeech === "VERB" || token.partOfSpeech === "AUX") {
+      role = "clause predicate"
+      diagramRow = 1
+    }
+    const parent = index === rootIndex ? null : rootIndex
+    return [token.text, token.normalized, token.partOfSpeech, role, diagramRow, parent]
+  })
+  return { specs, rootIndex }
+}
+
+function nextIndex(tokens, start, predicate) {
+  for (let index = start + 1; index < tokens.length; index += 1) {
+    if (predicate(tokens[index], index)) return index
+  }
+  return -1
+}
+
+function previousIndex(tokens, start, predicate) {
+  for (let index = start - 1; index >= 0; index -= 1) {
+    if (predicate(tokens[index], index)) return index
+  }
+  return -1
+}
+
+function corpusDependencySpecs(tokens, rootIndex) {
+  const nominal = (token) => ["NOUN", "PROPN", "PRON"].includes(token.partOfSpeech)
+  const content = (token) => !["PUNCT", "DET", "CCONJ", "SCONJ", "ADP"].includes(token.partOfSpeech)
+  return tokens.flatMap((token, index) => {
+    if (index === rootIndex) return []
+    const clauseStart = previousIndex(
+      tokens,
+      index,
+      (candidate) => candidate.partOfSpeech === "PUNCT" && [";", ":"].includes(candidate.text),
+    ) + 1
+    const nextClauseBoundary = nextIndex(
+      tokens,
+      index,
+      (candidate) => candidate.partOfSpeech === "PUNCT" && [";", ":"].includes(candidate.text),
+    )
+    const clauseEnd = nextClauseBoundary >= 0 ? nextClauseBoundary : tokens.length
+    const localPredicate = tokens.findIndex(
+      (candidate, candidateIndex) =>
+        candidateIndex >= clauseStart &&
+        candidateIndex < clauseEnd &&
+        ["VERB", "AUX"].includes(candidate.partOfSpeech),
+    )
+    const clauseGovernor = localPredicate >= 0 ? localPredicate : rootIndex
+    let governor = clauseGovernor
+    let relation = "dep"
+    let label = "dependent"
+    if (token.partOfSpeech === "PUNCT") {
+      relation = "punct"
+      label = "punctuation"
+    } else if (token.partOfSpeech === "DET") {
+      governor = nextIndex(tokens, index, nominal)
+      relation = "det"
+      label = "determiner"
+    } else if (token.partOfSpeech === "ADJ") {
+      governor = nextIndex(tokens, index, nominal)
+      if (governor < 0) governor = rootIndex
+      relation = governor === rootIndex ? "xcomp" : "amod"
+      label = governor === rootIndex ? "predicate quality" : "modifier"
+    } else if (token.partOfSpeech === "ADV") {
+      relation = "advmod"
+      label = "scope or manner"
+    } else if (token.partOfSpeech === "ADP") {
+      relation = "obl"
+      label = "prepositional attachment"
+    } else if (token.partOfSpeech === "SCONJ") {
+      relation = "mark"
+      label = "clause marker"
+    } else if (token.partOfSpeech === "CCONJ") {
+      relation = "cc"
+      label = "coordination"
+    } else if (nominal(token)) {
+      const preposition = previousIndex(
+        tokens,
+        index,
+        (candidate, candidateIndex) =>
+          candidate.partOfSpeech === "ADP" && candidateIndex >= Math.max(clauseStart, index - 4),
+      )
+      if (preposition >= 0) {
+        governor = preposition
+        relation = "pobj"
+        label = "object of preposition"
+      } else if (index < clauseGovernor) {
+        relation = "nsubj"
+        label = "subject"
+      } else {
+        relation = "obj"
+        label = "object or complement"
+      }
+    } else if (token.partOfSpeech === "AUX") {
+      const verb = nextIndex(
+        tokens,
+        index,
+        (candidate, candidateIndex) =>
+          candidateIndex < clauseEnd && candidate.partOfSpeech === "VERB",
+      )
+      if (index === clauseGovernor && clauseGovernor !== rootIndex) {
+        governor = rootIndex
+        relation = "conj"
+        label = "coordinated predicate"
+      } else {
+        governor = verb >= 0 ? verb : rootIndex
+        relation = "aux"
+        label = "auxiliary"
+      }
+    } else if (token.partOfSpeech === "VERB") {
+      const connector = previousIndex(
+        tokens,
+        index,
+        (candidate, candidateIndex) =>
+          ["CCONJ", "SCONJ"].includes(candidate.partOfSpeech) && candidateIndex > index - 4,
+      )
+      relation = connector >= 0 ? "advcl" : "conj"
+      label = connector >= 0 ? "linked clause" : "coordinated predicate"
+    } else if (content(token)) {
+      relation = "xcomp"
+      label = "predicate complement"
+    }
+    if (governor < 0 || governor === index) governor = rootIndex
+    return [[`generated-${index}`, governor, index, relation, label]]
+  })
+}
+
+function corpusConstituency(specimenId, tokens, rootIndex) {
+  const end = tokens.at(-1)?.partOfSpeech === "PUNCT" ? tokens.length - 1 : tokens.length
+  const leaf = (index) =>
+    makePhrase(
+      specimenId,
+      `token-${index}`,
+      tokens[index].partOfSpeech === "PUNCT" ? "PUNCT" : tokens[index].partOfSpeech,
+      index,
+      index + 1,
+    )
+  const clause = (start, clauseEnd, clauseIndex) => {
+    const predicate = tokens.findIndex(
+      (token, tokenIndex) =>
+        tokenIndex >= start &&
+        tokenIndex < clauseEnd &&
+        ["VERB", "AUX"].includes(token.partOfSpeech),
+    )
+    const split = predicate >= start ? predicate : Math.min(start + 1, clauseEnd)
+    const clauseChildren = []
+    if (split > start) {
+      clauseChildren.push(
+        makePhrase(
+          specimenId,
+          `clause-${clauseIndex}-subject`,
+          "NP",
+          start,
+          split,
+          Array.from({ length: split - start }, (_, offset) => leaf(start + offset)),
+        ),
+      )
+    }
+    if (split < clauseEnd) {
+      clauseChildren.push(
+        makePhrase(
+          specimenId,
+          `clause-${clauseIndex}-predicate`,
+          "VP",
+          split,
+          clauseEnd,
+          Array.from({ length: clauseEnd - split }, (_, offset) => leaf(split + offset)),
+        ),
+      )
+    }
+    return makePhrase(
+      specimenId,
+      `clause-${clauseIndex}`,
+      "S",
+      start,
+      clauseEnd,
+      clauseChildren,
+    )
+  }
+  const separators = tokens
+    .map((token, index) => ({ token, index }))
+    .filter(({ token, index }) => index < end && token.partOfSpeech === "PUNCT" && [";", ":"].includes(token.text))
+    .map(({ index }) => index)
+  const children = []
+  let clauseStart = 0
+  separators.forEach((separator, clauseIndex) => {
+    if (separator > clauseStart) children.push(clause(clauseStart, separator, clauseIndex))
+    children.push(leaf(separator))
+    clauseStart = separator + 1
+  })
+  if (clauseStart < end) children.push(clause(clauseStart, end, separators.length))
+  if (end < tokens.length) children.push(leaf(end))
+  return makePhrase(specimenId, "sentence", "S", 0, tokens.length, children)
+}
+
+function corpusSemanticGraph(specimenId, tokens, dependencies) {
+  const contentIndexes = tokens
+    .map((token, index) => ({ token, index }))
+    .filter(({ token }) =>
+      ["ADJ", "ADV", "NOUN", "PROPN", "PRON", "VERB", "AUX"].includes(token.partOfSpeech),
+    )
+    .map(({ index }) => index)
+    .slice(0, 10)
+  const contentSet = new Set(contentIndexes)
+  const nodeSpecs = contentIndexes.map((index) => {
+    const token = tokens[index]
+    const type = ["VERB", "AUX"].includes(token.partOfSpeech)
+      ? "event"
+      : ["ADJ", "ADV"].includes(token.partOfSpeech)
+        ? "quality"
+        : "entity"
+    return { id: `token-${index}`, label: token.text, type, tokenIndexes: [index] }
+  })
+  let edgeSpecs = dependencies
+    .map((edge, index) => {
+      const sourceIndex = Number(edge.sourceTokenId.split(":t").at(-1))
+      const targetIndex = Number(edge.targetTokenId.split(":t").at(-1))
+      if (!contentSet.has(sourceIndex) || !contentSet.has(targetIndex)) return null
+      return [
+        `relation-${index}`,
+        `token-${sourceIndex}`,
+        `token-${targetIndex}`,
+        edge.relation,
+        edge.label,
+      ]
+    })
+    .filter(Boolean)
+  if (!edgeSpecs.length && contentIndexes.length > 1) {
+    edgeSpecs = contentIndexes.slice(1).map((index, edgeIndex) => [
+      `claim-${edgeIndex}`,
+      `token-${contentIndexes[0]}`,
+      `token-${index}`,
+      "related",
+      "participates in claim",
+    ])
+  }
+  return makeSemanticGraph(specimenId, nodeSpecs, edgeSpecs)
+}
+
+function rhetoricRelation(tokens, start, end) {
+  const words = tokens.slice(start, end).map((token) => normalizeWord(token.text))
+  if (words.some((word) => ["but", "although", "yet"].includes(word))) return "contrast"
+  if (words.some((word) => ["because", "for", "since"].includes(word))) return "cause"
+  if (words.includes("if")) return "condition"
+  if (words.includes("and")) return "coordination"
+  return "elaboration"
+}
+
+function corpusRhetoric(specimenId, tokens) {
+  const sentenceEnd = tokens.at(-1)?.partOfSpeech === "PUNCT" ? tokens.length - 1 : tokens.length
+  const starts = [0]
+  for (let index = 1; index < sentenceEnd; index += 1) {
+    const word = normalizeWord(tokens[index].text)
+    const previous = tokens[index - 1]?.text
+    if ([";", ":"].includes(previous) || ["although", "because", "but", "if", "yet"].includes(word)) {
+      starts.push(index)
+    }
+  }
+  if (starts.length === 1 && sentenceEnd > 5) {
+    const comma = tokens.findIndex((token) => token.text === ",")
+    starts.push(comma > 1 ? comma + 1 : Math.max(2, Math.floor(sentenceEnd / 2)))
+  }
+  const uniqueStarts = [...new Set(starts)]
+    .filter((start) => start >= 0 && start < sentenceEnd)
+    .sort((left, right) => left - right)
+    .slice(0, 3)
+  const spans = uniqueStarts.map((start, index) => ({
+    start,
+    end: uniqueStarts[index + 1] ?? sentenceEnd,
+  }))
+  const nodeSpecs = spans.map((span, index) => {
+    const relation = index === 0 ? "central claim" : rhetoricRelation(tokens, span.start, span.end)
+    return {
+      id: `span-${index}`,
+      label: index === 0 ? "main claim" : `${relation} span`,
+      role: index === 0 ? "nucleus" : "satellite",
+      relation,
+      tokenStart: span.start,
+      tokenEnd: span.end,
+    }
+  })
+  const edgeSpecs = nodeSpecs.slice(1).map((node, index) => [
+    `relation-${index}`,
+    "span-0",
+    node.id,
+    node.relation,
+    node.relation,
+  ])
+  return makeRhetoric(specimenId, nodeSpecs, edgeSpecs, "span-0")
+}
+
+function corpusVariant(specimenId, canonicalTokens, text, id, label) {
+  const namespace = `${specimenId}:variant:${id}`
+  const { specs } = corpusTokenSpecs({ id: namespace, text }, namespace)
+  const tokens = makeTokens(namespace, text, specs)
+  const unusedCanonical = new Set(canonicalTokens.map((token) => token.id))
+  const alignments = []
+  for (const token of tokens) {
+    const normalized = normalizeWord(token.text)
+    const canonical = canonicalTokens.find(
+      (candidate) => unusedCanonical.has(candidate.id) && normalizeWord(candidate.text) === normalized,
+    )
+    if (!canonical) continue
+    unusedCanonical.delete(canonical.id)
+    alignments.push(Object.freeze({ variantTokenId: token.id, tokenId: canonical.id }))
+  }
+  return Object.freeze({
+    id: namespace,
+    label,
+    text,
+    kind: "corpus-aligned reading",
+    tokens,
+    alignments: Object.freeze(alignments),
+  })
+}
+
+function corpusAlternateParses(specimenId, tokens, rootIndex, dependencySpecs) {
+  const markedPivotIndex = tokens.findIndex((token) =>
+    ["and", "as", "before", "but", "only", "or", "that", "which", "with"].includes(
+      normalizeWord(token.text),
+    ),
+  )
+  const postPunctuationPivot = tokens.findIndex(
+    (token, index) =>
+      index > 0 && [";", ":"].includes(tokens[index - 1]?.text) && token.partOfSpeech !== "PUNCT",
+  )
+  const usablePivot = markedPivotIndex >= 0
+    ? markedPivotIndex
+    : postPunctuationPivot >= 0
+      ? postPunctuationPivot
+      : Math.max(0, tokens.findLastIndex((token) => token.partOfSpeech !== "PUNCT"))
+  const canonicalEdge = dependencySpecs.find(([, , target]) => target === usablePivot)
+  const canonicalGovernor = canonicalEdge?.[1] ?? rootIndex
+  const content = (token) => !["PUNCT", "DET", "CCONJ", "SCONJ", "ADP"].includes(token.partOfSpeech)
+  let alternativeGovernor = postPunctuationPivot === usablePivot && canonicalGovernor !== rootIndex
+    ? rootIndex
+    : nextIndex(tokens, usablePivot, content)
+  if (alternativeGovernor < 0 || alternativeGovernor === canonicalGovernor) {
+    alternativeGovernor = previousIndex(tokens, usablePivot, content)
+  }
+  if (alternativeGovernor === canonicalGovernor) {
+    alternativeGovernor = tokens.findIndex(
+      (token, index) => index !== usablePivot && index !== canonicalGovernor && content(token),
+    )
+  }
+  if (alternativeGovernor < 0 || alternativeGovernor === usablePivot) alternativeGovernor = rootIndex
+  const describeToken = (index) => {
+    const token = tokens[index]
+    if (!token) return "the main predicate"
+    const matches = tokens
+      .map((candidate, candidateIndex) => ({ candidate, candidateIndex }))
+      .filter(({ candidate }) => normalizeWord(candidate.text) === normalizeWord(token.text))
+    if (matches.length < 2) return `“${token.text}”`
+    const occurrence = matches.findIndex(({ candidateIndex }) => candidateIndex === index)
+    const ordinal = ["first", "second", "third"][occurrence] ?? `${occurrence + 1}th`
+    return `${ordinal} “${token.text}”`
+  }
+  const pivotReference = describeToken(usablePivot)
+  const canonicalGovernorReference = describeToken(canonicalGovernor)
+  const alternativeGovernorReference = describeToken(alternativeGovernor)
+  const alternateEdges = dependencySpecs.map((edge) =>
+    edge[2] === usablePivot
+      ? [
+          `${edge[0]}-alternative`,
+          alternativeGovernor,
+          usablePivot,
+          edge[3],
+          `alternative attachment to ${alternativeGovernorReference}`,
+          0.42,
+        ]
+      : edge,
+  )
+  return [
+    {
+      id: "primary",
+      label: "Primary attachment",
+      interpretation: `${pivotReference} attaches to ${canonicalGovernorReference}.`,
+      rootIndex,
+      edges: dependencySpecs,
+    },
+    {
+      id: "alternative",
+      label: "Alternative attachment",
+      interpretation: `${pivotReference} attaches to ${alternativeGovernorReference}, changing the grouping without changing the words.`,
+      rootIndex,
+      edges: alternateEdges,
+    },
+  ]
+}
+
+const CORPUS_SPECIMEN_CACHE = new Map()
+
+/** Turn any selected corpus row into the complete shared structure model. */
+export function createCorpusSpecimen(sentence) {
+  if (!sentence?.id || !sentence?.text) return null
+  if (CORPUS_SPECIMEN_CACHE.has(sentence.id)) return CORPUS_SPECIMEN_CACHE.get(sentence.id)
+  const id = `corpus-specimen:${sentence.id}`
+  const { specs, rootIndex } = corpusTokenSpecs(sentence, id)
+  const tokens = makeTokens(id, sentence.text, specs)
+  const dependencySpecs = corpusDependencySpecs(tokens, rootIndex)
+  const dependencies = makeDependencyEdges(id, dependencySpecs)
+  const constituency = corpusConstituency(id, tokens, rootIndex)
+  const paraphrase = CORPUS_PARAPHRASES[sentence.id]
+  const punctuationReading = sentence.text.replace(/[.,;:!?]+$/u, "")
+  const variantText = paraphrase || punctuationReading
+  const variantLabel = paraphrase ? "Structural paraphrase" : "Unpunctuated reading"
+  const variants = [corpusVariant(id, tokens, variantText, "reading", variantLabel)]
+  const specimen = Object.freeze({
+    id,
+    corpusSentenceId: sentence.id,
+    label: `${sentence.source?.work ?? "Corpus"} · ${sentence.source?.location ?? "selected passage"}`,
+    kind: "Corpus-derived sentence",
+    text: sentence.text,
+    source: Object.freeze(sentence.source ?? { corpus: sentence.corpus }),
+    subjects: Object.freeze(sentence.subjects ?? []),
+    note: "Every structural view is derived from this selected corpus row.",
+    challenge: "Compare the two generated attachment hypotheses without changing the words.",
+    tokens,
+    rootTokenId: tokenId(id, rootIndex),
+    constituency,
+    phrases: flattenPhrases(constituency),
+    dependencies,
+    alternateDependencies: Object.freeze(
+      corpusAlternateParses(id, tokens, rootIndex, dependencySpecs).map((parse) =>
+        makeParse(id, parse),
+      ),
+    ),
+    semantics: corpusSemanticGraph(id, tokens, dependencies),
+    rhetoric: corpusRhetoric(id, tokens),
+    variants: Object.freeze(variants),
+    sentenceDiagram: makeSentenceDiagram(id, tokens, dependencies),
+    lexicalAlternatives: Object.freeze([]),
+  })
+  CORPUS_SPECIMEN_CACHE.set(sentence.id, specimen)
+  return specimen
+}
+
+function corpusStructureScore(sentence) {
+  const words = sentence.tokens?.length ?? tokenizeCorpusText(sentence.text, sentence.id).length
+  const clauseMarkers = (sentence.text.match(/[,;:]|\b(?:and|although|because|but|if|only|or|which|with)\b/gi) || []).length
+  const idealLength = Math.max(0, 18 - Math.abs(11 - words))
+  return clauseMarkers * 12 + idealLength
+}
+
+/** Pick a canonical row only from the exact active corpus intersection. */
+export function selectCanonicalSentence(filters = {}, rows) {
+  const workingRows =
+    rows || resolveCorpusSelection(filters, { requestedAmount: filters.amount }).rows
+  if (!workingRows.length) return null
+  const preferredId = CANONICAL_SENTENCE_BY_SUBJECT[filters.subject || "all"]
+  const preferred = workingRows.find((row) => row.id === preferredId)
+  if (preferred) return preferred
+  return [...workingRows].sort(
+    (left, right) =>
+      corpusStructureScore(right) - corpusStructureScore(left) || left.id.localeCompare(right.id),
+  )[0]
+}
+
+/** Match an aggregate Shakespeare scope, a single work, or the demonstration corpus. */
+export function sentenceMatchesCorpus(sentence, corpus = "shakespeare") {
+  if (corpus === "all") return true
+  if (corpus === "shakespeare" || corpus === "demonstration") {
+    return sentence.corpus === corpus
+  }
+  const option = CORPUS_OPTIONS.find((candidate) => candidate.value === corpus)
+  return Boolean(
+    option?.work && sentence.corpus === "shakespeare" && sentence.source?.work === option.work,
+  )
+}
+
+/**
+ * Return only subject choices represented in the selected corpus scope. Keeping
+ * this list coupled to the rows prevents the controlled filter from offering an
+ * empty subject/work intersection.
+ */
+export function getSubjectOptionsForCorpus(corpus, sentences = CORPUS_SENTENCES) {
+  const corpusRows = sentences.filter((sentence) => sentenceMatchesCorpus(sentence, corpus))
+  return SUBJECT_OPTIONS.filter(
+    (option) =>
+      option.value === "all" ||
+      corpusRows.some((sentence) => sentence.subjects.includes(option.value)),
+  )
+}
+
+const SUBJECT_ANCHOR_WORDS = Object.freeze({
+  love: ["love", "loved", "lovers"],
+  death: ["death", "deaths", "die", "died"],
+  power: ["power", "powers", "greatness", "crown", "king", "authority", "valour"],
+  nature: ["nature", "natural", "world", "stars", "sea", "tide", "sun", "spring"],
+  time: ["time", "times", "past", "never"],
+  identity: ["identity", "self", "selves", "ourselves", "we"],
+  ambiguity: ["ambiguity", "ambiguous", "with", "visiting", "buffalo"],
+  rhetoric: ["rhetoric", "rhetorical", "claim", "because", "although", "analyst"],
+})
+
+const ANCHOR_STOP_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "as",
+  "at",
+  "be",
+  "but",
+  "by",
+  "for",
+  "from",
+  "if",
+  "in",
+  "is",
+  "it",
+  "no",
+  "not",
+  "of",
+  "on",
+  "or",
+  "that",
+  "the",
+  "their",
+  "them",
+  "then",
+  "there",
+  "this",
+  "to",
+  "was",
+  "were",
+  "what",
+  "when",
+  "which",
+  "who",
+  "with",
+])
+
+/** Pick a word that actually occurs in the active rows for the word-tree root. */
+export function resolveSubjectAnchor(sentences = [], subject = "love") {
+  const rows = sentences || []
+  const tokenCounts = new Map()
+  const tokenLabels = new Map()
+  for (const sentence of rows) {
+    for (const token of sentence.tokens || tokenizeCorpusText(sentence.text, sentence.id)) {
+      tokenCounts.set(token.normalized, (tokenCounts.get(token.normalized) || 0) + 1)
+      if (!tokenLabels.has(token.normalized)) tokenLabels.set(token.normalized, token.text)
+    }
+  }
+
+  const preferredWords = SUBJECT_ANCHOR_WORDS[subject] || [subject]
+  const represented = preferredWords
+    .map((word, index) => ({ word, index, count: tokenCounts.get(word) || 0 }))
+    .filter((candidate) => candidate.count > 0)
+    .sort((left, right) => right.count - left.count || left.index - right.index)[0]
+  if (represented) return tokenLabels.get(represented.word) || represented.word
+
+  const fallback = [...tokenCounts.entries()]
+    .filter(([word]) => word.length > 1 && !ANCHOR_STOP_WORDS.has(word))
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))[0]?.[0]
+  return (fallback && tokenLabels.get(fallback)) || fallback || subject
+}
 
 export function filterCorpusSentences({
   corpus = "all",
@@ -1628,7 +2545,7 @@ export function filterCorpusSentences({
     Number.isFinite(Number(amount)) ? Number(amount) : sentences.length,
   )
   return sentences
-    .filter((sentence) => corpus === "all" || sentence.corpus === corpus)
+    .filter((sentence) => sentenceMatchesCorpus(sentence, corpus))
     .filter((sentence) => subject === "all" || sentence.subjects.includes(subject))
     .slice(0, safeAmount)
 }
@@ -1645,7 +2562,7 @@ export function resolveCorpusSelection(
   const corpus = filters.corpus || "all"
   const subject = filters.subject || "all"
   const matchingRows = sentences
-    .filter((sentence) => corpus === "all" || sentence.corpus === corpus)
+    .filter((sentence) => sentenceMatchesCorpus(sentence, corpus))
     .filter((sentence) => subject === "all" || sentence.subjects.includes(subject))
   const numericAmount = Number(requestedAmount)
   const requested = Math.max(
@@ -1670,44 +2587,13 @@ export function resolveCorpusSelection(
   }
 }
 
-const SPECIMENS_BY_SUBJECT = Object.freeze({
-  all: SPECIMENS.map((specimen) => specimen.id),
-  love: ["attachment-ambiguity", "gerund-ambiguity"],
-  death: ["rhetorical-claim", "colorless-green"],
-  power: ["buffalo", "rhetorical-claim"],
-  nature: ["colorless-green", "garden-path"],
-  time: ["garden-path", "rhetorical-claim"],
-  identity: ["gerund-ambiguity", "buffalo", "garden-path"],
-  ambiguity: ["attachment-ambiguity", "gerund-ambiguity", "garden-path"],
-  rhetoric: ["rhetorical-claim", "attachment-ambiguity"],
-})
-
-const CORPUS_SPECIMEN_OFFSETS = Object.freeze({
-  all: 0,
-  shakespeare: 0,
-  "nineteenth-century-fiction": 1,
-  "grammar-lab": 0,
-  demonstration: 1,
-})
-
-/** Pick the authored plate deterministically from the same active filter state. */
+/**
+ * Backward-compatible name for callers that previously selected an unrelated
+ * demonstration fixture. The returned specimen now always wraps a row inside
+ * the exact active corpus intersection.
+ */
 export function selectSpecimenForFilters(filters = {}, rows) {
-  const workingRows =
-    rows || resolveCorpusSelection(filters, { requestedAmount: filters.amount }).rows
-  if (!workingRows.length) return null
-  const candidates = SPECIMENS_BY_SUBJECT[filters.subject] || SPECIMENS_BY_SUBJECT.all
-  const authoredCandidateIds = [
-    ...new Set(
-      workingRows
-        .map((row) => row.source?.specimenId)
-        .filter((id) => id && candidates.includes(id)),
-    ),
-  ]
-  if (authoredCandidateIds.length === 1) return getSpecimen(authoredCandidateIds[0])
-  const corpusOffset = CORPUS_SPECIMEN_OFFSETS[filters.corpus] || 0
-  const amountOffset = Math.max(0, Math.floor(Number(filters.amount) || 0))
-  const id = candidates[(corpusOffset + amountOffset) % candidates.length]
-  return getSpecimen(id)
+  return createCorpusSpecimen(selectCanonicalSentence(filters, rows))
 }
 
 export function recoverSourceSentences(sourceIds, sentences = CORPUS_SENTENCES) {
@@ -1917,7 +2803,7 @@ export function getDependencyParse(specimenOrId, parseId) {
   if (!parseId || parseId === "canonical") {
     return {
       id: `${specimen.id}:parse:canonical`,
-      label: "Authored reading",
+      label: "Canonical reading",
       rootTokenId: specimen.rootTokenId,
       edges: specimen.dependencies,
     }
@@ -1949,9 +2835,9 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
   const activeTokens = options.tokens || specimen.tokens
   const activeSentence = surfaceText(activeTokens) || specimen.text
   const tokenById = new Map(activeTokens.map((token) => [token.id, token]))
-  const root = tokenById.get(specimen.rootTokenId) || specimen.tokens.find(
-    (token) => token.id === specimen.rootTokenId,
-  )
+  const root =
+    tokenById.get(specimen.rootTokenId) ||
+    specimen.tokens.find((token) => token.id === specimen.rootTokenId)
   let text = ""
   let items = []
 
@@ -1961,11 +2847,12 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
       .map((node) => tokenById.get(node.tokenId)?.text ?? node.label)
     text = `${activeSentence} places ${baseline.join(", ")} on the main line and suspends modifiers beneath the words they describe.`
     items = specimen.sentenceDiagram.nodes.map(
-      (node) => `${tokenById.get(node.tokenId)?.text ?? node.label}: ${node.role}${node.baseline ? ", main line" : ", modifier line"}`,
+      (node) =>
+        `${tokenById.get(node.tokenId)?.text ?? node.label}: ${node.role}${node.baseline ? ", main line" : ", modifier line"}`,
     )
   } else if (normalizedView === "constituency") {
     const majorPhrases = specimen.phrases.filter((phrase) => phrase.depth === 1)
-    text = `${activeSentence} is authored as ${specimen.phrases.length} nested phrase spans. Its largest units are ${majorPhrases.map((phrase) => phrase.label).join(", ")}.`
+    text = `${activeSentence} is represented as ${specimen.phrases.length} nested phrase spans. Its largest units are ${majorPhrases.map((phrase) => phrase.label).join(", ")}.`
     items = majorPhrases.map((phrase) => {
       const words = activeTokens
         .slice(phrase.tokenStart, phrase.tokenEnd)
@@ -1975,14 +2862,15 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
     })
   } else if (normalizedView === "dependency") {
     const activeParse = getDependencyParse(specimen, options.interpretationId)
-    const activeRoot = activeTokens.find(
-      (token) => token.id === (activeParse?.rootTokenId || specimen.rootTokenId),
-    ) || root
+    const activeRoot =
+      activeTokens.find(
+        (token) => token.id === (activeParse?.rootTokenId || specimen.rootTokenId),
+      ) || root
     const activeEdges = activeParse?.edges || specimen.dependencies
     const reading = activeParse?.interpretation
       ? ` The active interpretation is “${activeParse.label}”: ${activeParse.interpretation}.`
       : ""
-    text = `${activeRoot.text} is the authored root. ${activeEdges.length} directed relationships connect governors to dependents without changing the visible word order.${reading}`
+    text = `${activeRoot.text} is the structural root. ${activeEdges.length} directed relationships connect governors to dependents without changing the visible word order.${reading}`
     items = activeEdges
       .filter((edge) => edge.relation !== "punct")
       .map((edge) => {
@@ -1996,7 +2884,7 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
       const activeReading = activeParse?.interpretation
         ? ` The active reading is “${activeParse.label}”: ${activeParse.interpretation}.`
         : ""
-      text = `${activeSentence} has ${specimen.alternateDependencies.length} authored interpretations in this demonstration.${activeReading}`
+      text = `${activeSentence} has ${specimen.alternateDependencies.length} attachment hypotheses derived for this corpus row.${activeReading}`
       items = specimen.alternateDependencies.map(
         (parse) =>
           `${parse.label}${Number.isFinite(parse.probability) ? ` (${Math.round(parse.probability * 100)}%)` : ""}: ${parse.interpretation}`,
@@ -2018,7 +2906,10 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
   } else if (normalizedView === "rhetoric") {
     if (specimen.rhetoric) {
       const nucleus = specimen.rhetoric.nodes.find((node) => node.role === "nucleus")
-      text = `The nucleus is “${nucleus?.label}.” Satellite spans explain its cause and acknowledge a concession.`
+      const relations = [
+        ...new Set(specimen.rhetoric.edges.map((edge) => edge.relation).filter(Boolean)),
+      ]
+      text = `The nucleus is “${nucleus?.label}.” Satellite spans express ${relations.join(", ") || "elaboration"} in the selected corpus sentence.`
       items = specimen.rhetoric.edges.map((edge) => {
         const source = specimen.rhetoric.nodes.find((node) => node.id === edge.source)?.label
         const target = specimen.rhetoric.nodes.find((node) => node.id === edge.target)?.label
@@ -2031,7 +2922,7 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
     const readerRewrite = activeSentence !== specimen.text ? activeSentence : null
     const alignment = options.alignment ? ` The rows are aligned by ${options.alignment}.` : ""
     const rewrite = readerRewrite ? ` The reader rewrite currently reads “${readerRewrite}”.` : ""
-    text = `${specimen.variants.length} authored rewrite${specimen.variants.length === 1 ? "" : "s"} preserve alignments back to the canonical sentence.${alignment}${rewrite}`
+    text = `${specimen.variants.length} corpus-aligned reading${specimen.variants.length === 1 ? "" : "s"} preserve alignments back to the canonical sentence.${alignment}${rewrite}`
     items = specimen.variants.map((variant) => `${variant.label}: ${variant.text}`)
     if (readerRewrite) items.push(`Your rewrite: ${readerRewrite}`)
   } else if (normalizedView === "word-tree") {
@@ -2053,7 +2944,7 @@ export function getStructuralSummary(specimenOrId, view = "dependency", options 
     const graph = options.phraseNet
     text = graph
       ? `${graph.edges?.length || 0} relationship${graph.edges?.length === 1 ? "" : "s"} connect the words occupying X and Y in “${pattern}.” Every edge retains its complete source phrases.`
-      : `The corpus view connects the words occupying X and Y in the authored pattern “${pattern},” with complete source phrases attached to every edge.`
+      : `The corpus view connects the words occupying X and Y in the pattern “${pattern},” with complete source phrases attached to every edge.`
     items = graph?.edges?.length
       ? graph.edges.map(
           (edge) =>
@@ -2174,10 +3065,35 @@ function encodedPath(parts) {
     .join("/")
 }
 
+function compareWordTreeStrings(left, right) {
+  return String(left).localeCompare(String(right), "en-US")
+}
+
+function sortedWordTreeValues(values) {
+  return [...new Set(values)].sort(compareWordTreeStrings)
+}
+
+function emptyWordTreeMetadata() {
+  return {
+    pathCount: 0,
+    retainedPathCount: 0,
+    trieNodeCount: 0,
+    dagNodeCount: 0,
+    mergedNodeCount: 0,
+    maxDepth: 0,
+    maxSharedDepth: 0,
+    maxSharedPrefixDepth: 0,
+    convergenceCount: 0,
+    maxIndegree: 0,
+    maxConvergentSuffixSpan: 0,
+  }
+}
+
 /**
- * Build a weighted forward or backward context trie. Each node retains all of
- * the source sentence IDs that pass through it, and `sources` contains the
- * corresponding complete records.
+ * Build a weighted forward or backward context graph. Prefixes are first
+ * collected in a trie, then structurally identical suffix subtries are merged
+ * into an exact acyclic graph. Node and edge path memberships retain the
+ * provenance needed to recover sources without introducing context paths.
  */
 export function buildWordTree(input = {}, anchorArgument, directionArgument, amountArgument) {
   const options = normalizeWordTreeOptions(input, anchorArgument, directionArgument, amountArgument)
@@ -2209,6 +3125,7 @@ export function buildWordTree(input = {}, anchorArgument, directionArgument, amo
       edges: [],
       matches: [],
       sources: [],
+      metadata: emptyWordTreeMetadata(),
     }
   }
 
@@ -2249,19 +3166,24 @@ export function buildWordTree(input = {}, anchorArgument, directionArgument, amo
       edges: [],
       matches: [],
       sources: [],
+      metadata: emptyWordTreeMetadata(),
     }
   }
 
-  function internalNode(label, normalized, depth) {
+  function internalNode(label, normalized, depth, parent = null) {
     return {
       label,
       token: label,
       normalized,
       depth,
+      parent,
+      labels: new Set([label]),
       count: 0,
       terminalCount: 0,
       sourceIds: new Set(),
       terminalSourceIds: new Set(),
+      pathIds: new Set(),
+      terminalPathIds: new Set(),
       children: new Map(),
     }
   }
@@ -2270,69 +3192,272 @@ export function buildWordTree(input = {}, anchorArgument, directionArgument, amo
   for (const match of matches) {
     rootInternal.count += 1
     rootInternal.sourceIds.add(match.sourceId)
+    rootInternal.pathIds.add(match.id)
     let current = rootInternal
     for (const contextToken of match.contextTokens) {
       if (!current.children.has(contextToken.normalized)) {
         current.children.set(
           contextToken.normalized,
-          internalNode(contextToken.text, contextToken.normalized, current.depth + 1),
+          internalNode(contextToken.text, contextToken.normalized, current.depth + 1, current),
         )
       }
       current = current.children.get(contextToken.normalized)
+      current.labels.add(contextToken.text)
       current.count += 1
       current.sourceIds.add(match.sourceId)
+      current.pathIds.add(match.id)
     }
     current.terminalCount += 1
     current.terminalSourceIds.add(match.sourceId)
+    current.terminalPathIds.add(match.id)
   }
 
   const rootId = `word-tree:${direction}:${encodedPath(anchorTokens)}`
-  const nodes = []
-  const edges = []
+  const pathSourceIds = new Map(matches.map((match) => [match.id, match.sourceId]))
+  const canonicalStates = []
+  const canonicalBySignature = new Map()
+  const trieState = new Map()
+  const edgeContributions = []
+  let trieNodeCount = 0
 
-  function serializeNode(internal, parentId = null, path = []) {
-    const id = parentId ? `${rootId}/${encodedPath(path)}` : rootId
-    const publicNode = {
-      id,
-      label: internal.label,
-      token: internal.token,
-      normalized: internal.normalized,
-      depth: internal.depth,
-      parentId,
-      count: internal.count,
-      terminalCount: internal.terminalCount,
-      sourceIds: [...internal.sourceIds],
-      sourceId: [...internal.terminalSourceIds][0] || [...internal.sourceIds][0] || null,
-      terminalSourceIds: [...internal.terminalSourceIds],
-      path: [anchor, ...path.map((part) => part.label)],
-      leaf: internal.children.size === 0,
-      children: [],
-    }
-    nodes.push(publicNode)
-    const children = [...internal.children.values()]
-      .filter((child) => child.count >= minFrequency)
-      .sort(
-        (left, right) =>
-          right.count - left.count || left.normalized.localeCompare(right.normalized),
-      )
-    for (const child of children) {
-      const childPath = [...path, { label: child.label, normalized: child.normalized }]
-      const childNode = serializeNode(child, id, childPath)
-      publicNode.children.push(childNode)
-      edges.push({
-        id: `${id}->${childNode.id}`,
-        source: id,
-        target: childNode.id,
-        count: child.count,
-        weight: child.count,
-        sourceIds: childNode.sourceIds,
-        sourceId: childNode.sourceId,
-      })
-    }
-    return publicNode
+  function preferredInternalLabel(internal) {
+    return sortedWordTreeValues(internal.labels)[0] || internal.normalized
   }
 
-  const root = serializeNode(rootInternal)
+  function canonicalizeSuffix(internal, path = [], rootNode = false) {
+    trieNodeCount += 1
+    const retainedChildren = [...internal.children.values()]
+      .filter((child) => child.count >= minFrequency)
+      .sort((left, right) => compareWordTreeStrings(left.normalized, right.normalized))
+    const childStates = retainedChildren.map((child) => {
+      const label = preferredInternalLabel(child)
+      return {
+        internal: child,
+        state: canonicalizeSuffix(child, [...path, { label, normalized: child.normalized }], false),
+      }
+    })
+    const signature = JSON.stringify([
+      internal.normalized,
+      internal.terminalPathIds.size > 0,
+      childStates.map(({ internal: child, state }) => [child.normalized, state.signature]),
+    ])
+    let state = rootNode ? null : canonicalBySignature.get(signature)
+    if (!state) {
+      state = {
+        signature,
+        root: rootNode,
+        labels: new Set(),
+        pathIds: new Set(),
+        sourceIds: new Set(),
+        terminalPathIds: new Set(),
+        terminalSourceIds: new Set(),
+        depths: new Set(),
+        occurrences: [],
+        childStates: childStates.map(({ state: childState }) => childState),
+        suffixSpan: rootNode
+          ? Math.max(0, ...childStates.map(({ state: childState }) => childState.suffixSpan))
+          : 1 + Math.max(0, ...childStates.map(({ state: childState }) => childState.suffixSpan)),
+      }
+      canonicalStates.push(state)
+      if (!rootNode) canonicalBySignature.set(signature, state)
+    }
+
+    for (const label of internal.labels) state.labels.add(label)
+    for (const pathId of internal.pathIds) state.pathIds.add(pathId)
+    for (const sourceId of internal.sourceIds) state.sourceIds.add(sourceId)
+    for (const pathId of internal.terminalPathIds) state.terminalPathIds.add(pathId)
+    for (const sourceId of internal.terminalSourceIds) state.terminalSourceIds.add(sourceId)
+    state.depths.add(internal.depth)
+    state.occurrences.push({
+      internal,
+      depth: internal.depth,
+      labels: path.map((part) => part.label),
+      normalizedPath: path.map((part) => part.normalized),
+    })
+    trieState.set(internal, state)
+
+    for (const { internal: child, state: childState } of childStates) {
+      edgeContributions.push({
+        source: state,
+        target: childState,
+        pathIds: child.pathIds,
+      })
+    }
+    return state
+  }
+
+  const rootState = canonicalizeSuffix(rootInternal, [], true)
+
+  function compareOccurrences(left, right) {
+    return (
+      left.depth - right.depth ||
+      compareWordTreeStrings(
+        left.normalizedPath.join("\u0000"),
+        right.normalizedPath.join("\u0000"),
+      ) ||
+      compareWordTreeStrings(left.labels.join("\u0000"), right.labels.join("\u0000"))
+    )
+  }
+
+  for (const state of canonicalStates) {
+    state.occurrences.sort(compareOccurrences)
+    state.canonicalOccurrence = state.occurrences[0]
+    state.id = state.root
+      ? rootId
+      : `${rootId}/${encodedPath(state.canonicalOccurrence.normalizedPath)}`
+  }
+
+  const edgeMap = new Map()
+  for (const contribution of edgeContributions) {
+    const edgeId = `${contribution.source.id}->${contribution.target.id}`
+    if (!edgeMap.has(edgeId)) {
+      edgeMap.set(edgeId, {
+        id: edgeId,
+        source: contribution.source.id,
+        target: contribution.target.id,
+        pathIds: new Set(),
+        sourceIds: new Set(),
+        suffixSpan: contribution.target.suffixSpan,
+      })
+    }
+    const edge = edgeMap.get(edgeId)
+    for (const pathId of contribution.pathIds) {
+      edge.pathIds.add(pathId)
+      const sourceId = pathSourceIds.get(pathId)
+      if (sourceId) edge.sourceIds.add(sourceId)
+    }
+  }
+
+  const stateById = new Map(canonicalStates.map((state) => [state.id, state]))
+  const outgoingEdges = new Map(canonicalStates.map((state) => [state.id, []]))
+  const incomingEdges = new Map(canonicalStates.map((state) => [state.id, []]))
+  for (const edge of edgeMap.values()) {
+    outgoingEdges.get(edge.source).push(edge)
+    incomingEdges.get(edge.target).push(edge)
+  }
+  function compareCanonicalEdges(left, right) {
+    const leftTarget = stateById.get(left.target)
+    const rightTarget = stateById.get(right.target)
+    return (
+      right.pathIds.size - left.pathIds.size ||
+      compareWordTreeStrings(
+        preferredInternalLabel(leftTarget.canonicalOccurrence.internal),
+        preferredInternalLabel(rightTarget.canonicalOccurrence.internal),
+      ) ||
+      compareWordTreeStrings(left.target, right.target)
+    )
+  }
+  for (const outgoing of outgoingEdges.values()) outgoing.sort(compareCanonicalEdges)
+  for (const incoming of incomingEdges.values()) {
+    incoming.sort((left, right) => compareWordTreeStrings(left.source, right.source))
+  }
+
+  const orderedStates = []
+  const visitedStates = new Set()
+  function visitState(state) {
+    if (visitedStates.has(state.id)) return
+    visitedStates.add(state.id)
+    orderedStates.push(state)
+    for (const edge of outgoingEdges.get(state.id) || []) visitState(stateById.get(edge.target))
+  }
+  visitState(rootState)
+
+  const nodeById = new Map()
+  for (const state of orderedStates) {
+    const pathIds = sortedWordTreeValues(state.pathIds)
+    const sourceIds = sortedWordTreeValues(state.sourceIds)
+    const terminalPathIds = sortedWordTreeValues(state.terminalPathIds)
+    const terminalSourceIds = sortedWordTreeValues(state.terminalSourceIds)
+    const parentIds = (incomingEdges.get(state.id) || []).map((edge) => edge.source)
+    const canonicalParent = state.canonicalOccurrence.internal.parent
+      ? trieState.get(state.canonicalOccurrence.internal.parent)?.id
+      : null
+    const occurrencePaths = state.occurrences.map((occurrence) => [anchor, ...occurrence.labels])
+    const depths = [...state.depths].sort((left, right) => left - right)
+    const label = state.root ? anchor : preferredInternalLabel(state.canonicalOccurrence.internal)
+    nodeById.set(state.id, {
+      id: state.id,
+      label,
+      token: label,
+      normalized: state.root
+        ? anchorTokens.join(" ")
+        : state.canonicalOccurrence.internal.normalized,
+      depth: state.canonicalOccurrence.depth,
+      minDepth: depths[0] || 0,
+      maxDepth: depths[depths.length - 1] || 0,
+      depths,
+      parentId: canonicalParent,
+      parentIds,
+      indegree: parentIds.length,
+      outdegree: (outgoingEdges.get(state.id) || []).length,
+      count: pathIds.length,
+      terminalCount: terminalPathIds.length,
+      sourceIds,
+      sourceId: terminalSourceIds[0] || sourceIds[0] || null,
+      terminalSourceIds,
+      pathIds,
+      terminalPathIds,
+      path: occurrencePaths[0],
+      paths: occurrencePaths,
+      suffixSpan: state.suffixSpan,
+      convergent: parentIds.length > 1,
+      leaf: (outgoingEdges.get(state.id) || []).length === 0,
+      children: [],
+    })
+  }
+
+  const edges = []
+  for (const state of orderedStates) {
+    for (const internalEdge of outgoingEdges.get(state.id) || []) {
+      const pathIds = sortedWordTreeValues(internalEdge.pathIds)
+      const sourceIds = sortedWordTreeValues(internalEdge.sourceIds)
+      edges.push({
+        id: internalEdge.id,
+        source: internalEdge.source,
+        target: internalEdge.target,
+        count: pathIds.length,
+        weight: pathIds.length,
+        sourceIds,
+        sourceId: sourceIds[0] || null,
+        pathIds,
+        suffixSpan: internalEdge.suffixSpan,
+      })
+    }
+    nodeById.get(state.id).children = (outgoingEdges.get(state.id) || []).map((edge) =>
+      nodeById.get(edge.target),
+    )
+  }
+
+  const nodes = orderedStates.map((state) => nodeById.get(state.id))
+  const root = nodeById.get(rootId)
+  const convergenceNodes = nodes.filter((node) => node.indegree > 1)
+  const retainedPathIds = new Set(nodes.flatMap((node) => node.terminalPathIds))
+  let maxSharedPrefixDepth = 0
+  let sharedPrefix = rootInternal
+  while (sharedPrefix) {
+    const sharedChildren = [...sharedPrefix.children.values()].filter(
+      (child) => child.count >= minFrequency && child.pathIds.size === rootInternal.pathIds.size,
+    )
+    if (sharedChildren.length !== 1) break
+    sharedPrefix = sharedChildren[0]
+    maxSharedPrefixDepth = sharedPrefix.depth
+  }
+  const metadata = {
+    pathCount: matches.length,
+    retainedPathCount: retainedPathIds.size,
+    trieNodeCount,
+    dagNodeCount: nodes.length,
+    mergedNodeCount: Math.max(0, trieNodeCount - nodes.length),
+    maxDepth: Math.max(0, ...nodes.map((node) => node.maxDepth)),
+    maxSharedDepth: Math.max(
+      0,
+      ...nodes.filter((node) => node.pathIds.length > 1).map((node) => node.maxDepth),
+    ),
+    maxSharedPrefixDepth,
+    convergenceCount: convergenceNodes.length,
+    maxIndegree: Math.max(0, ...nodes.map((node) => node.indegree)),
+    maxConvergentSuffixSpan: Math.max(0, ...convergenceNodes.map((node) => node.suffixSpan)),
+  }
   const sourceIds = unique(matches.map((match) => match.sourceId))
   return {
     anchor,
@@ -2343,6 +3468,7 @@ export function buildWordTree(input = {}, anchorArgument, directionArgument, amo
     edges,
     matches,
     sources: sentences.filter((sentence) => sourceIds.includes(sentence.id)),
+    metadata,
   }
 }
 
@@ -2350,7 +3476,72 @@ export function recoverWordTreeSources(wordTree, nodeId) {
   const node = wordTree?.nodes?.find((candidate) => candidate.id === nodeId)
   if (!node) return []
   const sourceIds = new Set(node.sourceIds || [])
+  if (!sourceIds.size && node.pathIds?.length) {
+    const pathIds = new Set(node.pathIds)
+    for (const match of wordTree.matches || []) {
+      if (pathIds.has(match.id)) sourceIds.add(match.sourceId)
+    }
+  }
   return (wordTree.sources || []).filter((source) => sourceIds.has(source.id))
+}
+
+/**
+ * Enumerate only graph paths supported by a single original match. Intersecting
+ * path IDs at every edge makes this useful both for source recovery and for
+ * verifying that suffix convergence has not created a cross-branch sentence.
+ */
+export function enumerateWordTreePaths(wordTree) {
+  if (!wordTree?.root) return []
+  const nodeById = new Map((wordTree.nodes || []).map((node) => [node.id, node]))
+  const outgoing = new Map()
+  for (const edge of wordTree.edges || []) {
+    if (!outgoing.has(edge.source)) outgoing.set(edge.source, [])
+    outgoing.get(edge.source).push(edge)
+  }
+  const matchById = new Map((wordTree.matches || []).map((match) => [match.id, match]))
+  const paths = []
+
+  function walk(node, activePathIds, nodeIds, edgeIds, tokens, normalizedTokens) {
+    const active = new Set(activePathIds)
+    for (const pathId of node.terminalPathIds || []) {
+      if (!active.has(pathId)) continue
+      const match = matchById.get(pathId)
+      paths.push({
+        id: pathId,
+        pathId,
+        sourceId: match?.sourceId || null,
+        nodeIds,
+        edgeIds,
+        tokens,
+        normalizedTokens,
+      })
+    }
+    for (const edge of outgoing.get(node.id) || []) {
+      const edgePathIds = new Set(edge.pathIds || [])
+      const nextPathIds = activePathIds.filter((pathId) => edgePathIds.has(pathId))
+      if (!nextPathIds.length || nodeIds.includes(edge.target)) continue
+      const child = nodeById.get(edge.target)
+      if (!child) continue
+      walk(
+        child,
+        nextPathIds,
+        [...nodeIds, child.id],
+        [...edgeIds, edge.id],
+        [...tokens, child.label],
+        [...normalizedTokens, child.normalized],
+      )
+    }
+  }
+
+  walk(
+    wordTree.root,
+    wordTree.root.pathIds || [],
+    [wordTree.root.id],
+    [],
+    [wordTree.root.label],
+    [wordTree.root.normalized],
+  )
+  return paths.sort((left, right) => compareWordTreeStrings(left.pathId, right.pathId))
 }
 
 function normalizePhraseOptions(input, pattern, amount) {

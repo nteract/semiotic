@@ -1,3 +1,5 @@
+import type { CapturedOrdinalFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -5,11 +7,11 @@ import { FunnelChart } from "./FunnelChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock OrdinalFrame to capture props
-let lastOrdinalFrameProps: any = null
+let lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
 vi.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, _ref: any) => {
+    default: React.forwardRef<Partial<StreamOrdinalFrameHandle>, CapturedOrdinalFrameProps>((props, _ref) => {
       lastOrdinalFrameProps = props
       return <div className="stream-ordinal-frame"><svg /></div>
     })
@@ -18,7 +20,7 @@ vi.mock("../../stream/StreamOrdinalFrame", () => {
 
 describe("FunnelChart", () => {
   beforeEach(() => {
-    lastOrdinalFrameProps = null
+    lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
   })
 
   const sampleData = [
@@ -402,7 +404,7 @@ describe("FunnelChart", () => {
   // ── Push API ──────────────────────────────────────────────────────
 
   it("ref exposes push, pushMany, getData, and clear", () => {
-    const ref = React.createRef<any>()
+    const ref = React.createRef<React.ElementRef<typeof FunnelChart>>()
     render(
       <TooltipProvider>
         <FunnelChart ref={ref} stepAccessor="step" valueAccessor="value" />
@@ -410,10 +412,10 @@ describe("FunnelChart", () => {
     )
 
     expect(ref.current).toBeTruthy()
-    expect(typeof ref.current.push).toBe("function")
-    expect(typeof ref.current.pushMany).toBe("function")
-    expect(typeof ref.current.getData).toBe("function")
-    expect(typeof ref.current.clear).toBe("function")
+    expect(typeof ref.current!.push).toBe("function")
+    expect(typeof ref.current!.pushMany).toBe("function")
+    expect(typeof ref.current!.getData).toBe("function")
+    expect(typeof ref.current!.clear).toBe("function")
   })
 
   // ── frameProps passthrough ────────────────────────────────────────

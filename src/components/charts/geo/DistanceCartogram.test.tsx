@@ -1,3 +1,5 @@
+import type { CapturedGeoFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { StreamGeoFrameHandle } from "../../stream/geoTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
@@ -6,7 +8,7 @@ import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
 
 // Mock StreamGeoFrame to capture props and expose ref handle
-let lastGeoFrameProps: any = null
+let lastGeoFrameProps = {} as CapturedGeoFrameProps
 const mockGetCartogramLayout = vi.fn(() => ({
   cx: 300, cy: 200, maxCost: 22, availableRadius: 150
 }))
@@ -14,7 +16,7 @@ const mockGetCartogramLayout = vi.fn(() => ({
 vi.mock("../../stream/StreamGeoFrame", () => {
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, ref: any) => {
+    default: React.forwardRef<Partial<StreamGeoFrameHandle>, CapturedGeoFrameProps>((props, ref) => {
       lastGeoFrameProps = props
       React.useImperativeHandle(ref, () => ({
         push: vi.fn(),
@@ -49,7 +51,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("DistanceCartogram", () => {
   beforeEach(() => {
-    lastGeoFrameProps = null
+    lastGeoFrameProps = {} as CapturedGeoFrameProps
     mockGetCartogramLayout.mockClear()
   })
 
@@ -284,7 +286,7 @@ describe("DistanceCartogram", () => {
       )
       // foregroundGraphics is set (may be null initially until cartogram layout is read)
       // The prop should exist on the forwarded props
-      expect("foregroundGraphics" in lastGeoFrameProps || lastGeoFrameProps.foregroundGraphics === undefined).toBeTruthy()
+      expect("foregroundGraphics" in lastGeoFrameProps).toBeTruthy()
     })
 
     it("showRings defaults to true", () => {

@@ -195,7 +195,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
   })
 
   const themeCategorical = useThemeCategorical()
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [safeData])
+  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // PieChart's `effectiveColorBy` may differ from the raw `colorBy`
   // prop (e.g. when it derives from `categoryAccessor` for the

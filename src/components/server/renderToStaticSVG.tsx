@@ -28,6 +28,7 @@ import { renderOrdinalFrame } from "./staticOrdinal"
 import { renderNetworkFrame } from "./staticNetwork"
 import { renderGeoFrame } from "./staticGeo"
 import { renderPhysicsFrame } from "./staticPhysics"
+import type { SharpFactory, SharpModule } from "./optionalImageTypes"
 
 export function renderToStaticSVG(
   frameType: FrameType,
@@ -203,7 +204,7 @@ function renderChartInternal(
   // Top-level props win so renderChart mirrors the React HOC API.
   const framePropsOverrides = rest.frameProps || {}
   const topLevelFrameProps = pickDefinedProps(rest, COMMON_FRAME_PROP_KEYS)
-  const common: ThemeAwareProps & { size: [number, number]; margin?: any; colorScheme?: any; legendPosition?: string } = {
+  const common: Datum & ThemeAwareProps & { size: [number, number] } = {
     ...framePropsOverrides,
     ...topLevelFrameProps,
     theme, title, description, showLegend, showGrid, background, className, annotations,
@@ -226,15 +227,24 @@ function renderChartInternal(
   const frameProps2 = config.buildProps(data, colorBy, colorScheme, common, rest)
 
   // Dispatch to the appropriate frame renderer
-  const renderers: Record<string, (p: any, sink?: EvidenceSink) => string> = {
-    xy: renderStreamXYFrame,
-    ordinal: renderOrdinalFrame,
-    network: renderNetworkFrame,
-    geo: renderGeoFrame,
-    physics: renderPhysicsFrame,
+  let svg: string
+  switch (config.frameType) {
+    case "xy":
+      svg = renderStreamXYFrame(frameProps2 as StreamXYFrameProps & ThemeAwareProps, sink)
+      break
+    case "ordinal":
+      svg = renderOrdinalFrame(frameProps2 as StreamOrdinalFrameProps & ThemeAwareProps, sink)
+      break
+    case "network":
+      svg = renderNetworkFrame(frameProps2 as StreamNetworkFrameProps & ThemeAwareProps, sink)
+      break
+    case "geo":
+      svg = renderGeoFrame(frameProps2 as StreamGeoFrameProps & ThemeAwareProps, sink)
+      break
+    case "physics":
+      svg = renderPhysicsFrame(frameProps2 as StaticPhysicsFrameProps, sink)
+      break
   }
-  const renderFn = renderers[config.frameType]
-  let svg = renderFn(frameProps2, sink)
 
   // GaugeChart post-processing: inject needle SVG. The gauge config's
   // buildProps attaches a `__gauge` descriptor (see serverChartConfigs.ts —
@@ -327,10 +337,10 @@ export async function renderToImage(
   // The variable specifier defeats static bundler resolution so sharp stays
   // out of edge/browser-oriented server bundles until this Node-only raster
   // export path is actually called.
-  let sharp: any
+  let sharp: SharpFactory
   try {
     const moduleName = "sharp"
-    const sharpModule = await import(moduleName)
+    const sharpModule: SharpModule = await import(moduleName)
     sharp = sharpModule.default ?? sharpModule
   } catch {
     throw new Error(

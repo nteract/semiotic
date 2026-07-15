@@ -10,12 +10,13 @@
  */
 import { describe, it, expect } from "vitest"
 import { enrichDatumWithBand, type ResolvedRibbon } from "./ribbonScene"
+import type { Datum } from "../../charts/shared/datumTypes"
 
 function makeBandRibbon(overrides: Partial<ResolvedRibbon> = {}): ResolvedRibbon {
   return {
     kind: "band",
-    getTop: (d: any) => d.hi,
-    getBottom: (d: any) => d.lo,
+      getTop: (d: Datum) => d.hi,
+      getBottom: (d: Datum) => d.lo,
     perSeries: true,
     interactive: false,
     ...overrides,
@@ -25,8 +26,8 @@ function makeBandRibbon(overrides: Partial<ResolvedRibbon> = {}): ResolvedRibbon
 function makeBoundsRibbon(): ResolvedRibbon {
   return {
     kind: "bounds",
-    getTop: (d: any) => d.y + 5,
-    getBottom: (d: any) => d.y - 5,
+      getTop: (d: Datum) => Number(d.y) + 5,
+      getBottom: (d: Datum) => Number(d.y) - 5,
     perSeries: true,
     interactive: false,
   }
@@ -71,12 +72,12 @@ describe("enrichDatumWithBand", () => {
     const datum = { x: 1, p10: 0, p25: 5, p75: 15, p90: 20 }
     const enriched = enrichDatumWithBand(datum, [
       makeBandRibbon({
-        getTop: (d: any) => d.p90,
-        getBottom: (d: any) => d.p10,
+        getTop: (d: Datum) => d.p90,
+        getBottom: (d: Datum) => d.p10,
       }),
       makeBandRibbon({
-        getTop: (d: any) => d.p75,
-        getBottom: (d: any) => d.p25,
+        getTop: (d: Datum) => d.p75,
+        getBottom: (d: Datum) => d.p25,
       }),
     ])
     expect(enriched.bands).toEqual([
@@ -88,7 +89,7 @@ describe("enrichDatumWithBand", () => {
   })
 
   it("skips bands whose accessors return NaN at this datum", () => {
-    const datum = { x: 1, lo: 5, hi: 15 } as any
+    const datum: Datum = { x: 1, lo: 5, hi: 15 }
     const enriched = enrichDatumWithBand(datum, [
       makeBandRibbon(), // valid
       makeBandRibbon({

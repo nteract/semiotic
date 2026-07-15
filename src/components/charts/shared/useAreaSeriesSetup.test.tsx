@@ -3,6 +3,7 @@ import React from "react"
 import { renderHook } from "@testing-library/react"
 import { useAreaSeriesSetup } from "./useAreaSeriesSetup"
 import { TooltipProvider } from "../../store/TooltipStore"
+import type { Datum } from "./datumTypes"
 
 const wrapper = ({ children }: { children: React.ReactNode }) =>
   <TooltipProvider>{children}</TooltipProvider>
@@ -73,7 +74,7 @@ describe("useAreaSeriesSetup", () => {
     })
 
     it("flattens pre-grouped area-object format", () => {
-      const data: any[] = [
+    const data: Datum[] = [
         { coordinates: [{ x: 1, y: 10 }, { x: 2, y: 20 }] },
         { coordinates: [{ x: 1, y: 5 }] },
       ]
